@@ -1,0 +1,116 @@
+--[[
+
+20070823 kgoodwin wrote
+
+20080618 kgoodwin NB!  K.DLL (editor core) directly accesses the contents of
+                  this file's global ext_map (see display.cpp), even though the
+                  core Lua code reads it using the table returned by
+                  fxn_extmapping on each GetFocus event...
+
+--]]
+
+local function cc(bg,fg) return bg*16 + fg end
+
+local Black    = 0
+local Blue     = 1
+local Green    = 2
+local Cyan     = 3
+local Red      = 4
+local Purple   = 5
+local Yellow   = 6
+local White    = 7
+local            INTENSE = 8
+local Gray     = INTENSE + 0
+local hiBlue   = INTENSE + 1
+local hiGreen  = INTENSE + 2
+local hiCyan   = INTENSE + 3
+local hiRed    = INTENSE + 4
+local hiPink   = INTENSE + 5
+local hiYellow = INTENSE + 6
+local hiWhite  = INTENSE + 7
+
+local darkColors =
+   {
+   text            = cc(   Black  ,   Yellow ),
+   cursorShadow    = cc(   Green  , hiYellow ),
+   cppc            = cc(   Gray   , hiWhite  ),
+   hilight         = cc(   Cyan   , hiWhite  ),
+   selection       = cc(   Green  , hiWhite  ),
+   wordUnderCursor = cc( hiWhite  ,   Cyan   ),
+   dimmed          = cc(   Blue   , hiGreen  ),
+   litStr          = cc(   Blue   , hiRed    ),
+   }
+
+local stdColors =
+   {
+   text            = cc(   Blue   , hiYellow ),
+   cursorShadow    = cc(   Green  , hiYellow ),
+   cppc            = cc(   Gray   , hiWhite  ),
+   hilight         = cc(   Cyan   , hiWhite  ),
+   selection       = cc(   Green  , hiWhite  ),
+   wordUnderCursor = cc( hiWhite  ,   Cyan   ),
+   dimmed          = cc(   Blue   , hiGreen  ),
+   litStr          = cc(   Blue   , hiPink   ),
+   litStr          = cc(   Black  , hiCyan  ),
+   litStr          = cc(   Green  , hiCyan  ),
+   litStr          = cc(   Black  , hiCyan  ),
+   litStr          = cc(   Black  , hiRed  ),
+   }
+
+local Color = {}
+      Color.mt = { __index = stdColors }
+
+local function colors( tbl, meta )
+   setmetatable( tbl, meta or Color.mt )
+   return tbl
+   end
+
+local text_settings  = { colors = stdColors, eolCommentDelim = "", rmargin = 80 }
+local bat_settings   = { colors = stdColors, eolCommentDelim = "rem ", rmargin = 80 }
+local clang_settings = { colors = stdColors, eolCommentDelim = "//", rmargin = 80, lang="C" }
+local lua_settings   = { colors = DeepCopy(stdColors), eolCommentDelim = "--", rmargin = 125, lang="Lua" }
+      lua_settings.colors.dimmed = cc( Blue, hiPink )
+
+local python_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125, lang="Python" }
+local perl_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125 }
+
+ext_map = {  -- ref'd from C
+   c            = clang_settings                       ,
+   cc           = clang_settings                       ,
+   cs           = clang_settings                       , -- C# is mostly like C++
+   cpp          = clang_settings                       ,
+   cxx          = clang_settings                       ,
+   h            = clang_settings                       ,
+   hpp          = clang_settings                       ,
+   bat          = bat_settings                         ,
+   lua          = lua_settings                         ,
+   luastate     = lua_settings                         ,
+   luaedit      = lua_settings                         ,
+   pl           = perl_settings                        ,
+   pm           = perl_settings                        ,
+   py           = python_settings                      ,
+   mak          = perl_settings                        ,
+   kdb          = text_settings                        ,
+   txt          = text_settings                        ,
+   filesettings = { colors = stdColors, rmargin = 80 } ,
+   [""]         = { colors = stdColors }               ,
+   ["<>"]       = { colors = stdColors }               ,
+   ["*"]        = { colors = stdColors }               ,
+   -- ["*"]     = colors{ colors = stdColors }         ,
+   }
+
+fxn_extmapping = function( curfn )     -- print( "### GetFocus-match: '" .. curfn .. "'" )
+   --print( 'ext_map["<>"] = '..(ext_map["<>"] and "defined" or "not defined?") )
+   local rv
+   local nmext = NameExtOf( curfn )
+   local ext   = ExtOf    ( curfn )
+   if     curfn:match("^<")              then  -- print( "### GetFocus-match on PSEUDO -> '" .. curfn .. "'" )
+      rv = ext_map["<>"]
+   elseif nmext and   ext_map[nmext]     then  -- print( "### GetFocus-match on name -> '" .. nmext .. "'" )
+      rv = ext_map[nmext]
+   elseif ext_map   and   ext_map[ext  ] then  -- print( "### GetFocus-match on ext  -> '" .. ext   .. "'" )
+      rv = ext_map[ext  ]
+   else                                        -- print( "### NO GetFocus-match on   -> '" .. curfn .. "'" )
+      end
+   return rv
+   end

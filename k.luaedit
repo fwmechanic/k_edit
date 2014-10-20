@@ -1,0 +1,3935 @@
+--
+--
+--  Copyright 2006-2009 by Kevin L. Goodwin; All rights reserved
+--
+
+--[[
+
+lua_intf.cpp
+http://www.lua.org/pil/
+http://lua-users.org/wiki/StringRecipes
+http://lua-users.org/lists/lua-l/
+file://c:/klg/k/lua-5.1/doc/contents.html
+
+TODO LIST
+
+   EdFxns to write in Lua
+   ----------------------
+
+   something that evaluates Lua expression (for simple math if nothing else!)
+
+
+   EdFxns to rewrite in Lua
+   ------------------------
+
+   dif       -- Do this one!!!
+   vrepeat
+   ascii2hex
+   lblankdel
+   magic
+   makebox
+
+
+   Other
+   -----
+
+   todo: split edfxn's between C and lua based on ArgType.
+     EX: emacsnewl
+         NOARG: old C function
+         TEXTARG: execute
+     requirement: if Lua code isn't loaded, C version should work on its own as it always did.
+
+]]
+
+----------------------------------------------------------------------------------------------------
+-- NB: for 'strict' to work, { LUA_DBLIBNAME, luaopen_debug }, in lua_intf.cpp
+--     must be compiled (costs 4KB in kx.dll)
+
+require "strict"
+require "show"
+
+----------------------------------------------------------------------------------------------------
+
+function fmt(...) return string.format(...) end
+
+Min = math.min
+Max = math.max
+
+filesettings  = nil
+focusSettings = nil
+
+local logf = FBUF.log()
+
+--[[ 20070807 kgoodwin BUGBUG
+
+   a strangely complex topic: doing a "printf" to a FBUF: the concern is that
+   since FBUF's are LINE, not STREAM, oriented, the default behavior is just to
+   print printf output on a new (last) line.  But in many cases we want a printf
+   to logically start on the actual last line, perhaps to append to existing
+   content added by a previous printf.  With the current logic, this is
+   impossible...
+
+--]]
+
+function FBUF:PutLastLines( arr )
+   if type(arr) == "string" then arr = split_ch_tbl( arr, "\n" ) end
+   for _,line in ipairs( arr ) do
+      self:PutLastLine( line )
+      end
+   end
+
+
+function GetCurrentFBUF()      return FBUF.new() end
+function GetCurrentFilename()  return FBUF.new():Name()  end
+
+local print  = function ( s ) logf:PutLastLine( tostring(s) ) end  -- log facility (override of print function)
+local printf = function (...) print( fmt(...) )     end
+print( "Lua calling!  Current file is " .. GetCurrentFilename() .."\n" )
+
+function Msgf(...)  Msg( fmt(...) )  end
+
+require "util"
+require "tu"
+require "Menu"
+
+
+-- NB!  "ONLY nil and false are considered "false"!  THE NUMBER 0 AND THE EMPTY STRING are _TRUE_
+
+   -- ifx = "IF-eXpression": like C's ?: operator
+   --
+   -- 'a and b or c' is equivalent to the C expression 'a ? b : c'
+   --
+   -- *** BUT, if b is false/nil, then c is chosen/executed, even if a is true ***
+   --     so the following is NOT a good impl
+   --
+   -- function ifx( expr, trueval, falseval )  return expr and trueval or falseval  end
+   --
+
+function ifx( expr, trueval, falseval )  if expr then return trueval end  return falseval  end
+
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
+   end
+
+function string.ends(String,End)
+   return End=='' or string.sub(String,-string.len(End))==End
+   end
+
+function int( x )         return math.floor( x )              end  -- it's UN-BE-LEEEEEEEEEV-ABLE that this is not builtin!
+
+function logBaseN(x,N)    return math.log(x)/math.log(N)      end
+function log10(x)         return math.log10(x)                end
+
+function widthBaseN(x,N)  return 1 + int( logBaseN( x, N ) )  end
+function widthDecimal(x)  return widthBaseN(x,10)             end
+
+function str_setlen( str, len, pad )  -- because string.format does not allow width/precision fields > 99
+   if #str > len then return str:sub(1,len) end
+   pad = pad or " "
+   local pl = len - #str
+   return str .. (pad:rep(pl)):sub(1,pl)
+   end
+
+----------------------------------------------------------------------------------------------------
+
+function arg2box( arg )  return  arg.fbuf, arg.view, arg.minY, arg.maxY, arg.minX or 1, arg.maxX or MAXCOL  end
+
+do
+   local function HasEdFxnSignature( tbl )
+      return type(tbl)      == "table"
+         and type(tbl.name) == "string"
+         and type(tbl.attr) == "number"
+      end
+
+   local s_EdFxns = {}
+
+   function AddEdFxn( tbl )
+      if not HasEdFxnSignature( tbl ) then return Msg( "AddEdFxn: malformed tbl param!!!" ) end
+
+      local name, help = tbl.name, tbl.help or ""
+      printf( "AddEdFxn adding ArgType=%03X: '%s', '%s'", tbl.attr, name, help )
+      if s_EdFxns[ name ] then  printf( "overriding EdFxn %s", name )  end
+
+      CmdIdxAddLuaFunc( name, tbl.attr, help )  -- <-- register name w/C++ core
+
+      s_EdFxns[ name ] = tbl
+      if tbl.key then SetKeyOk( name, tbl.key ) end
+      end
+
+   function AddEdStringFxn( name, fxn, key, help ) -- common idiom
+      AddEdFxn{ name = name, attr = BOXSTR+TEXTARG, TEXTARG = function( arg ) return fxn( arg.text ) end, help=help or name, key=key }
+      end
+
+   AddEdFxn{ name = "mom", help = "Menu of Lua-based commands", key="alt+m", attr = NOARG
+      , NOARG = function( arg )
+         local cmdnms,len = {}, 0
+         printf( "mom arg.fMeta = %s", tostring(arg.fMeta) )
+         for nm,efx in pairs(s_EdFxns) do
+            if (not arg.fMeta or (efx.help and efx.help:match "^[Mm]enu")) and _bin.bitand( efx.attr, NOARG ) ~= 0 then
+               len = (len > #efx.name) and len or #efx.name
+               cmdnms[1+#cmdnms] = efx.name
+               end
+            end
+
+         if #cmdnms == 0 then  return Msg( "No NOARG CMDs?" )  end
+
+         local fmts = "%-" .. len .. "s = %s"
+         table.sort( cmdnms )
+         local choices = {}
+         for _,nm in ipairs( cmdnms ) do
+            local efx = s_EdFxns[nm]
+            choices[1+#choices] = { fmt( fmts, efx.name, (efx.help and #efx.help>0) and efx.help or efx.name ), efx.name }
+            end
+
+         local _,fxnm = Menu.new( { title="Lua-based commands", choices=choices } ):PickOne()
+         if fxnm then  return fExecute( fxnm )  end
+         return false
+         end
+      }
+
+   function GetEdFxn_FROM_C( nm )  -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
+      local rv = s_EdFxns[ nm ]
+      print( "GetEdFxn_FROM_C=("..nm..")".." -> "..tostring(rv) )
+      return rv
+      end
+
+   -- these were wr with the idea of pulling the CmdIdx for Lua EdFxns into Lua
+   -- (s_EdFxns), so Lua EdFxns would be completely managed from Lua, avoiding
+   -- language/domain-boundary issues; problem is, I think the overall system of
+   -- CMDs and PCMDs will be severely broken if Lua EdFxns aren't bound to
+   -- CMDs...
+   --
+   -- function EdFxnAttrs( name )  return ifx( s_EdFxns[ name ], s_EdFxns[ name ].attr, 0 )  end
+   -- function ExecEdFxn( name, arg ) end
+end
+
+
+function Assign( tbl )
+   for _,val in ipairs( tbl ) do
+      if not AssignStrOk( val ) then
+         return Msgf( "assign: '%s' failed", val )
+         end
+      end
+   return true
+   end
+
+function SwitchToFile( fname ) FBUF.new( fname ):PutFocusOn() end
+
+function PathOf   ( str )  return str:match( "^(.-)[^\\/]*$" )   end
+function Path_Name( str )  return str:match( "^(.-)([^\\/]*)$" ) end
+function NameExtOf( str )  return str:match( "[\\/]([^\\/]*)$" ) end
+function NameOf   ( str )  return NameExtOf(str):gsub( "%.[^%.]*$","") end
+function ExtOf    ( str )  return str:match( "%.([^%.]*)$" )     end
+
+
+-- WARNING: unlike PathOf, PrettyPath does not generate an ever-shrinking string
+-- (because of the annoying "c:\" anomaly), so you shouldn't use it in a loop
+-- where the loop terminating condition relates to the returned path string
+-- shrinking to nothing! PrettyPath is only intended for use when
+-- 1) generating bare directory strings for the user to look at (EX: EdFxn "dirs"), or
+-- 2) generating directory strings which will become EnvVar values
+
+function PrettyPath( path )
+   if path:match( "^%a:\\$" ) then return path end
+   return path:gsub( "[\\/]$", "" )
+   end
+
+do
+local cwd = GetCwd()
+print( "GetCwd='" ..  cwd .. " PathOf='" ..  PathOf( cwd ) .. "'  '".. PrettyPath( PathOf( cwd ) ).."'" )
+end
+
+-- Makes a deep copy of a table.  This version of DeepCopy
+-- properly handles duplicate subtables, including cycles.
+-- (The Seen argument is only for recursive calls.)
+local function DeepCopy(Src, Seen)
+   local Dest
+   if Seen then  -- This will only set Dest if Src has been seen before:
+      Dest = Seen[Src]
+   else  -- Top-level call; create the Seen table:
+      Seen = {}
+      end
+   -- If Src is new, copy it into Dest:
+   if not Dest then  -- Make a fresh table and record it as seen:
+      Dest = {}
+      Seen[Src] = Dest
+      for Key, Val in pairs(Src) do
+         Key = type(Key) == "table" and DeepCopy(Key, Seen) or Key
+         Val = type(Val) == "table" and DeepCopy(Val, Seen) or Val
+         Dest[Key] = Val
+         end
+      end
+   return Dest
+   end
+
+
+-- array/table-related functions
+
+function array_max_strlen( ary )
+   local maxlen = 0
+   for _,val in ipairs( ary ) do maxlen = Max( maxlen, #val ) end
+   return maxlen
+   end
+
+-- string-related functions
+
+function string.a_gmatches( str, pat )
+   local rv = {}
+   for token in string.gmatch( str, pat ) do  rv[ #rv+1 ] = token  end
+   return rv
+   end
+
+function pat_nocase( s )  return s:gsub( "%a", function (ch) return "["..ch:upper() ..ch:lower() .."]" end )  end  -- escape a string such that alpha chars match either case
+
+function FactorOutCommonLeadingPath( fnm_ary )
+   local function rtn_none() return "", fnm_ary, array_max_strlen(fnm_ary) end
+   if #fnm_ary < 2 then return rtn_none() end
+   local pfxlen = 1e6
+   local s1 = fnm_ary[1]
+   for ix=2,#fnm_ary do
+       pfxlen = Min( pfxlen, CommonStrlenI( s1, fnm_ary[ix] ) )
+       end
+   if 0==pfxlen then return rtn_none() end
+   s1 = s1:sub(1,pfxlen)                       -- print( "pfxlen="..tostring(pfxlen).." s1="..s1 )
+   s1 = s1:gsub("[^\\/]*$","")                 -- print( "s1-partial="..s1 )
+
+   local rv = {}
+   local nmWMax = 0
+   for ix, val in ipairs( fnm_ary ) do
+      local ay = val:sub( #s1+1 )
+      rv[1+#rv] = ay
+      nmWMax = Max( nmWMax, #ay )
+      end
+
+   return s1, rv, nmWMax
+   end
+
+----------------------------------------------------------------------------------------------------
+do
+
+   local curf_fmap_ = {
+   -- curfile
+      curfileext  = ExtOf     ,
+      curfilename = Path_Name ,
+      curfilepath = PathOf    ,
+      }
+   local curf_map = { curfile = "" }
+   local function curf_fmappy( tb, ky )
+      if type(ky) ~= "string" then -- print( "curf_fmappy w/"..type(ky) )
+         return
+         end
+      ky = ky:lower()
+      -- print( ky.." ?>" )
+      local nv = curf_fmap_[ky] and curf_fmap_[ky]( curf_map.curfile )
+      tb[ky] = nv
+      -- print( "curf_fmappy ".. ky.." -> ".. (nv or "(nil)") )
+      return nv
+      end
+   local fnmt = { __index = curf_fmappy }
+
+   function SetCurFName( curfn )
+      if curf_map.curfile and curf_map.curfile ~= curfn then
+         -- print( "SetCurFName ".. curfn )
+         curf_map = { curfile = curfn }
+         setmetatable( curf_map, fnmt )
+         end
+      end
+
+   -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
+   local function envReplacer( espec )
+      local rv = curf_map[espec] or GetenvOrNil( espec )
+      print( "   envReplacer: '"..espec.."' -> '" .. (rv or "(nil)") .. "'" )
+      return rv
+      end
+
+   -- patEnvName excludes '|' and ';' since "filename grammar" patterns include
+   -- [^|;] since "filename grammar" is overloaded to allow "Literal lists of
+   -- path components separated by VBARs ('|')"
+   --
+   local EnvNamePat  = "([^|;]-)"
+   local EnvSpecPats = {        -- note that '%', not '\', is the Lua-pattern metachar escaper!
+                       "%$"   ..EnvNamePat.. ":"  ,
+                       "%$%(" ..EnvNamePat.. "%)" ,
+                       "%%"   ..EnvNamePat.. "%%" ,
+                       "%${"  ..EnvNamePat.. "}"  ,
+                       }
+
+   function StrExpandEnvVars( str ) -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
+      -- print( "StrExpandEnvVars+("..str..")" )
+      for _, pat in ipairs(EnvSpecPats) do
+         str = str:gsub( pat, envReplacer )
+         end
+      -- print( "StrExpandEnvVars-("..str..")" )
+      return str
+      end
+
+--[[ -- "unit test" for StrExpandEnvVars
+
+   AddEdFxn{ name = "envx", help = "tests Lua's StrExpandEnvVars", key="alt+k", attr = TEXTARG + BOXSTR
+      , TEXTARG = function ( arg )
+           local result = StrExpandEnvVars( arg.text )
+           print( result )
+           Msg( result )
+           return true
+           end
+      }
+--]]
+
+end
+
+--###################  useful generators
+
+do
+   function CwdToRoot() -- generator
+      local dir = 0     -- iterator variable
+      return function()  -- iterator function
+         if dir == 0 then  dir = GetCwd()
+         elseif dir  then
+            dir = PathOf( dir:sub( 1, -2 ) )
+            if not IsDir(dir) then  dir = nil  end
+            end
+      -- if dir  then  print( dir:Name() )  end
+         return dir
+         end
+      end
+
+   function a_CwdToRoot()  -- crude, but...
+      local rv = {}
+      for dir in CwdToRoot() do rv[1+#rv] = dir end
+      return rv
+      end
+
+   --[[
+   print( "++++++++++ test CwdToRoot()" )
+   local ix = 20  -- "deadman switch"
+   for dir in CwdToRoot() do
+      ix=ix-1
+      if ix < 1 then break end
+      print( "'"..dir.."', PP='"..PrettyPath( dir ).."'" .. ", IsDir="..tostring(IsDir(dir)) )
+      end
+   print( "---------- test CwdToRoot()" )
+   --
+      ]]
+end
+
+local mtFBUF = FBUF:getmetatable()
+
+function mtFBUF:RawLines()  -- generator: fastest, tabs unconverted
+   return   function( self, lnum )
+               lnum = lnum + 1
+               if lnum <= self:LastLine() then return lnum, self:GetLineRaw( lnum ) end
+               end
+          , self
+          , 0
+   end
+
+function mtFBUF:Lines()  -- generator: a little less fast, any tabs expanded to spaces
+   return   function( self, lnum )
+               lnum = lnum + 1
+               if lnum <= self:LastLine() then return lnum, self:GetLine( lnum ) end
+               end
+          , self
+          , 0
+   end
+
+function FBUF.new_empty_may_create( fnm )
+   local  rv = assert( FBUF.new_may_create( fnm ), "couldn't open \""..fnm.."\" ???" )
+          rv:MakeEmpty()
+   return rv
+   end
+
+
+-- this is redundant to the numeric for stmt/loop
+-- function range( min, max )   -- generator (assumes int params)
+--    return function()
+--       if min <= max then
+--          local rv = min
+--          min = min + 1
+--          return rv
+--          end
+--       end
+--    end
+
+
+function AllFbufs()   -- generator
+   local iter = 0
+   return function()
+      if iter == 0 then  iter = FBUF:first()
+      elseif iter  then  iter = iter:Next()
+      --  if iter  then  print( iter:Name() )
+          end
+      return iter
+      end
+   end
+
+function AllWins()   -- generator
+   local state = 0
+   return function()
+      if state == nil then return  end
+      state = state + 1
+      local rv = Win.getn(state)
+      if rv == nil then  state = nil  end
+      return state,rv
+      end
+   end
+
+--[[
+
+AddEdFxn{ name = "wins", help = "wins", attr = NOARG
+   , NOARG = function()
+      print( "Window-list" )
+      for ix,win in AllWins() do
+         printf( "%d H=%d: %s", ix, win:Height(), win:CurFBUF():Name() )
+         end
+      end
+   }
+
+--]]
+
+--###################  end useful iterators
+
+function SplitCurWndHoriz( percentage )  return SplitCurWnd( 0, percentage ), Win.cur() end
+function SplitCurWndVert ( percentage )  return SplitCurWnd( 1, percentage ), Win.cur() end
+
+function TopLeftWin( w1, w2 )
+   if w1 < w2 then return w1,w2 end
+   return w2,w1
+   end
+
+
+AddEdFxn{ name = "dirs", help = "open <dirs> buffer", key="alt+f", attr = NOARG
+   , NOARG = function ( arg )
+      local dirs = {}
+      local out = FBUF.new_empty_may_create( "<dirs>" )
+
+      for fbuf in AllFbufs() do
+         local path = PrettyPath( PathOf( fbuf:Name() ):lower() )
+         if #path > 0 then
+            if not dirs[ path ] then  dirs[ path ] = true  end
+            end
+         end
+
+      for dir, _ in pairs( dirs ) do  out:InsLineSortedAscending( dir )  end
+
+      out:ScrollAllCursorsToBof()
+      out:PutFocusOn()
+      return true
+      end
+   }
+
+----------------------------------------------------------------------------------------------------
+
+local function EditorHelpFile()
+   return FBUF.new( StrExpandEnvVars( "$KINIT:khelp.txt" ) )
+   end
+
+AddEdFxn{ name = "edhelp", help = "goto editor help for a keyword", key="F1", attr = NOARG+TEXTARG+BOXSTR+NULLEOW
+   , NOARG = function ( arg ) return EditorHelpFile():PutFocusOn() ~= nil end  -- simply switch to help file
+   , TEXTARG = function ( arg )
+      local hf = EditorHelpFile()         -- print( "'"..hf:Name().."'" )
+      local key = "^ÄÄ"..pat_nocase( arg.text ) .. (arg.text:match"%s" and "Ä" or " ")
+      for lnum, line in hf:RawLines() do  -- DBG( line )
+         if line:match( key ) then
+            local hv = hf:PutFocusOn()
+            hv:MoveCursor( lnum, 1 )
+            Msgf( "found help entry for '%s'", arg.text )
+            return true
+            end
+         end
+
+      return Msgf( "no help entry found for '%s'", arg.text )
+      end
+   }
+
+----------------------------------------------------------------------------------------------------
+
+function basicSerialize (o)
+   if type(o) == "number" then return tostring(o)
+   else                        return string.format("%q", o)  end  -- assume it is a string
+   end
+
+function mtFBUF:serialize (name, value, saved)
+   saved = saved or {}         -- initial value
+   self:cat(name .. " = ")     -- cat(" = ") doesn't work cuz of automatic trailing space deletion, patched below
+   if type(value) == "number" or type(value) == "string" then
+      self:cat( basicSerialize(value) .. "\n" )
+   elseif type(value) == "table" then
+      if saved[value] then
+         self:cat( saved[value] .. "\n" ) -- use its previous name
+      else
+         saved[value] = name   -- save name for next time
+         self:cat( "{}\n" )     -- create a new table
+         for k,v in pairs(value) do      -- save its fields
+            local fieldname = string.format("%s[%s]", name, basicSerialize(k))
+            self:serialize(fieldname, v, saved)
+         end
+      end
+   else
+      -- error("cannot serialize a " .. type(value))
+      self:cat( "("..type(value)..")\n" )
+   end
+
+   -- print( "++++++++++++  _G[] dump  +++++++++++++" )     for ix, val in pairs(_G)      do logf:serialize( ix, val ) end
+   -- print( "------------  _G[] dump  -------------" )
+end
+
+do
+   local function serializeIt( varName )
+      logf:KeepTrailSpcs()  -- so self:cat(name .. " = ") works as desired
+      print( "--\n-- serializing '"..varName.."'\n--\n" )
+      logf:serialize( varName, valueof( varName ) )
+      logf:DiscardTrailSpcs()
+      return true
+      end
+
+   AddEdFxn{ name = "lser", help = "serialize named Lua object (dflt=\"G_\") to <lua>", attr = TEXTARG + NOARG
+      , TEXTARG = function ( arg ) return serializeIt( arg.text ) end
+      ,   NOARG = function ( arg ) return serializeIt( "_G"     ) end
+      }
+end
+
+--
+-- Note that here in Lua-land, the first line of a file is numbered _1_, not _0_ as in C++ land!!!
+--
+
+-- Msg( str..'X='..arg.cursorX..' Y='..arg.cursorY )
+
+
+function GotoFileLineCol( fnm, line, column )
+   printf( " GotoFileLineCol fnm='%s',line=%d,column=%d", fnm, line, column )
+   local fb = FBUF.new( fnm )
+   if not fb then
+      return fb
+      end
+
+   local vw = fb:PutFocusOn()
+   vw:MoveCursor( line, column )
+   return fb, vw
+   end
+
+
+do -- local scope for private functions and data that implement EdFxn "tgs"
+
+   local s_tags
+       , s_expandedTags
+       , s_alias_to
+       , s_tagsFilename
+       , s_tagsFiletime
+       , s_taggedFilePathsLC
+       , s_taggedFilesLc
+       , s_prevTagLookedUp
+
+   --
+   -- Read Exuberant Tags output file
+   -- My canonical Exuberant Tags command-line is:
+   --
+   -- ctags --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -Lfile_containing_names_of_files
+   --
+   local function read_tags_file()
+      local tagF
+      for dir in CwdToRoot() do
+         local fn = dir .. "tags"
+         if IsFile( fn ) then
+            -- tagF = io.open( fn, "rt" )
+            s_tagsFilename = fn
+            tagF = FBUF.new( fn )
+            tagF:SetNoEdit()
+            s_tagsFilename = tagF:Name()
+            s_tagsFiletime = tagF:ModifyTimeOfDiskFile()
+            break
+            end
+         end
+      if not tagF then return Msg( "no tag file found!" ) end
+      Msgf( "reading from %s", s_tagsFilename )
+
+      -- clear/init static vars
+      s_tags              = {}
+      s_expandedTags      = {}
+      s_alias_to          = {}
+      s_taggedFilePathsLC = {}
+      s_taggedFilesLc     = {}
+      s_prevTagLookedUp   = nil
+
+      collectgarbage( "collect" )
+
+      local tbl = {}
+      local tagCount = 0
+      local fnmCount = 0
+      local prevtag,lnum1,isFnm
+
+      local function addtidx( tag, min, max )
+         s_tags[tag] = {min, max}  -- HUGE amounts of RAM are taken up by THIS TABLE [s_tags] (and it's index-data, presumably)
+         if isFnm then isFnm = nil
+            local lcfnm = tag:lower()
+            -- print( "file tag:"..tag.."->"..lcfnm )
+            s_taggedFilesLc[lcfnm] = tag
+            fnmCount = 1+fnmCount
+            end
+         tagCount = 1+tagCount
+         end
+
+      local ll
+      for lnum, line in tagF:RawLines() do  -- DBG( line )
+         --
+         -- 04-Aug-2000 klg NOTE!!!  fields of tags file are split ONLY on TAB!  This is because some tags
+         --                          generated by Exuberant Tags can contain spaces (EX: "operator !=").
+         --
+         local tag = line:match("^[^\t]+")
+         if tag ~= prevtag then
+            if prevtag then
+               addtidx( prevtag, lnum1, lnum-1 )
+               end
+            prevtag = tag
+            lnum1 = lnum
+            end
+--[[
+         local path = PrettyPath( PathOf( fname ) )
+         if path then
+            local pathLC = path:lower()
+            s_taggedFilePathsLC[pathLC] = s_taggedFilePathsLC[pathLC] or path
+            end
+--]]
+         if line:match '\t1;"\tfile$' then isFnm = true end
+         ll = lnum
+         end
+
+      if prevtag then
+         addtidx( prevtag, lnum1, ll )
+         end
+
+--[[
+      Putenv( "TAGBASE=" .. PrettyPath( PathOf( s_tagsFilename ) ) )
+      Putenv( "TAGZ="    .. table.concat( tu.t_keys_array( s_taggedFilePathsLC ), ";" ) )
+--]]
+      local msg = fmt( "%d tags in %d files loaded from %s", tagCount, fnmCount, s_tagsFilename )
+      Msg( msg )  print( msg )
+      collectgarbage( "collect" )
+      return true
+      end
+
+   local function ExpandTags( tagStr )
+      if s_expandedTags[tagStr] then return s_expandedTags[tagStr] end
+      local tagF = FBUF.new( s_tagsFilename )
+      tagF:SetNoEdit()
+      print( "ExpandTags( "..tagStr.." )" )
+      local expanded = {}
+      for lnum = s_tags[tagStr][1],s_tags[tagStr][2] do
+         local line = tagF:GetLineRaw( lnum )
+         local tfl,ttype = split_str( line, ';"\t' )  -- tfl = tag + filename + lineNum, ttype = attributes
+         assert( ttype )  -- DBG( "Line "..lnum.." tfl='"..tfl.."' attributes='"..ttype.."'" )
+         local tag,fname,lineNum = split_ch( tfl, "\t" )
+         assert( lineNum )
+      -- printf( "Line %d tag='%s' file='%s' lineNum='%s' attributes='%s'", lnum, tag, fname, lineNum, ttype )
+
+         -- we ARE going to add an entry, so clean up ttype for better comprehension
+         ttype = ttype:gsub( ":?\t"          , "-" )
+         ttype = ttype:gsub( "::<anonymous>" , "" )   -- noise-text
+         ttype = ttype:gsub( ":$"            , "" )
+         local subs
+         ttype, subs = ttype:gsub( "-file$", "" )
+         local fS = ifx( subs>0, "(static)", "" )
+
+         local tsep, tname  = "", ttype:match( ":[%w_]+$" ) or ""
+         if tname then
+            -- if tag == "View" then print ("ttype='"..ttype.."' tname ='"..tname.."' len=".. tname:len() )  end
+            tsep  = ":"
+            ttype = ttype:sub( 1, -(tname:len()+1) )
+            tname = tname:sub( 2 )
+            end
+
+         ttype = ttype:lower()
+                                                 --  arg "View" tgs  arg "View" gototag
+                                                              -- tag..":"                              end
+         if ttype == "function-class"  then  tsep = ""  ttype = ifx( tname == tag, "ctor", "method" ) end
+         if ttype == "member-class"    then  tsep = ":"  ttype = "class-member" end
+         if ttype == "member-struct"   then  tsep = ":"  ttype = "struct" end
+         if ttype == "enumerator-enum" then  tsep = ":"  ttype = "enumerator" end
+
+      -- if ttype == "file"            then s_taggedFilesLc[ tag:lower() ] = tag end
+
+         if  ttype:match("typeref:") -- was == "typedef-typeref:struct"
+         and tname ~= tag
+            then -- printf( "alias: %s -> %s", tname, tag )
+            s_alias_to[tname] = tag
+            end
+
+      -- printf( "tag = '%s' ttype='%s' tname='%s'", tag, ttype, tname or "==tagname" )
+
+         ttype = ttype         .. fS
+      -- if tname then  ttype = ttype .. tsep .. tname end
+         local tv =
+            {
+            fname     = fname   ,
+            lineNum   = lineNum ,
+            tagType   = ttype   ,
+            tagTypeNm = #tname > 1 and tname or nil ,
+         -- tagLine   = lnum    ,
+            }
+         expanded[1+#expanded] = tv
+         end
+      s_expandedTags[tagStr] = expanded
+      print( "ExpandTags( "..tagStr.." ) ["..#expanded.."]" )
+      return expanded
+      end
+
+
+   local function patch_tag( tv )
+      if tv.tagTypeNm then
+         local att = {}
+         for tnm in tv.tagTypeNm:gmatch("[^:]+") do
+            printf( "patch_tag: %s", tnm )
+            while s_alias_to[tnm] do
+               tnm = s_alias_to[tnm]
+               end
+            if tnm:match("^__anon%d+$") then tnm = "?" end
+            printf( "patch_tag -> %s", tnm )
+            att[1+#att] = tnm
+            end
+         tv.tagType = tv.tagType..":"..table.concat( att, "::" )
+         tv.tagTypeNm = nil
+         end
+      return tv
+      end
+
+   local function DefinedTag( tag ) return s_tags[ tag ] and tag  end
+
+   local function fs( s )  return function(tag) return fmt( s, tag ) end end
+   local tag_variants = {
+        fs "%s_Vect"       -- SNDK-Firmware-specific !!!
+      , fs "%s"            -- *** IDENTITY ***  those before supercede, those after are used iff identity is not in s_tags
+      , fs "l_edfunc_%s"   -- lua fxn wr in C?  (hardly works since macros mask true fxn names)
+      ,    string.lower    -- might have typed the wrong case of a function name or, in windoze a filename
+      , fs "_%s"
+      }
+   local function ExistingTagVariant( tagstr )
+      for _,fxn in ipairs(tag_variants) do
+         local tag = DefinedTag( fxn( tagstr ) )
+         if tag then return tag end
+         end
+      return s_taggedFilesLc[tagstr:lower()]  -- last change: is it a tagged file's name (with difference case)?
+      end
+
+
+   local function gotoTag( tagStr, fSaveCurLocn )  -- fSaveCurLocn s/b false for a recursive call (see "alias tags" in k_all.awk...)
+      AddToSearchLog( tagStr )
+      local origTagStr = tagStr
+      tagStr = ExistingTagVariant( tagStr )
+
+      if not tagStr then
+         return Msgf( "tag '%s' not defined", origTagStr ) end
+
+      if fSaveCurLocn then LocnListInsertCursor() end
+
+      s_prevTagLookedUp = tagStr
+      local tagEntryNum = 1
+      local a_taginfo = ExpandTags( tagStr )
+      if #a_taginfo > 1 then
+         local ttWMax, lnumWMax, fnames = 0,0,{}
+         for _, tv in ipairs( a_taginfo ) do  -- dope loop
+            patch_tag( tv )
+            fnames[ #fnames+1 ] = tv.fname  -- print( "anm=" .. tv.fname )
+            ttWMax   = Max( ttWMax  , #tv.tagType )
+            lnumWMax = Max( lnumWMax, widthDecimal(tv.lineNum) )
+            end
+
+         local commonLeadingPath, fnm_suffix_ary, nmWMax = FactorOutCommonLeadingPath( fnames )
+         local choice, choices = {}, {}
+         for ix, tv in ipairs( a_taginfo ) do  -- menu-setup loop
+            choices[1+#choices] = str_setlen( tv.tagType, ttWMax ).." @ "..str_setlen( fnm_suffix_ary[ ix ], nmWMax ).. " ".. fmt( "%"..lnumWMax.."d", tv.lineNum )
+            end
+
+         tagEntryNum = Menu.new{ title=fmt( "Tags for '%s' in %s", tagStr, commonLeadingPath ), choices=choices }:PickOne()
+         if not tagEntryNum then  return false  end
+         end
+
+      local tagInfo = assert( a_taginfo[ tagEntryNum ], tagStr .."[".. tagEntryNum.."] is undefined" )
+      local fb,vw = GotoFileLineCol( tagInfo.fname, tagInfo.lineNum, 1 )
+      if not fb then
+         Msg( "cannot open file "..tagInfo.fname )
+         return
+         end
+      local ldat = fb:GetLine( tagInfo.lineNum )
+      if not ldat then
+         Msg( "tag refers to nonexistent line.  Are tags up to date?" )
+         return
+         end
+
+      print( "tagInfo.tagType="..tagInfo.tagType )
+
+      local msg = fmt( "%s[%d], a tagfile mark", tagStr, tagEntryNum )
+      if tagInfo.tagType == "file" then
+         vw:MoveCursor(  tagInfo.lineNum, 1 )
+      else
+         local stx,endx = ldat:find( tagStr, 1, true )
+         if stx then
+            vw:HiliteMatch( tagInfo.lineNum, stx, endx - stx + 1 )
+            vw:MoveCursor(  tagInfo.lineNum, stx )
+         else
+            msg = "tag string not found: tags file out of sync (edits may have occurred)"
+            end
+         end
+      Msg( msg )
+      end
+
+   local function GotoTag( tagstr )
+      if (not s_tags
+          or s_tagsFiletime ~= ModifyTimeOfDiskFile( s_tagsFilename )
+         ) and not read_tags_file() then return false end
+      if tagstr then return gotoTag( tagstr, true ) end
+      return true
+      end
+
+   AddEdFxn{ name = "tags", help = "Lua tags function", attr = NOARG+NOARGWUC+TEXTARG+BOXSTR, key = "alt+u"
+      , NOARG   = function(arg)  if arg.fMeta then return read_tags_file() end
+                                 return GotoTag( s_prevTagLookedUp )  end
+      , TEXTARG = function(arg)  return GotoTag( arg.text )           end
+   --  NULLARG+   , NULLARG = function(arg)  return s_tagsFilename and SwitchToFile( s_tagsFilename ) end
+      }
+
+end  -- local scope for private functions and data the implement tgs EdFxn
+
+
+-- TopN: iterator that accepts 'max' and a 'tbl' having the structure
+--       {
+--        key = <anything>,
+--        tbl[key] = number (EX: count of times key has been observed)
+--       }
+--
+--    and returns during iteration, in descending tbl[key] order, the first
+--    'max' elements in tbl as (count, val), where
+--       val   === key (of tbl) and
+--       count === tbl[key]
+--
+function TopN( max, tbl )
+   local new = {}      -- iterator variable
+   for val_, count_ in pairs( tbl ) do  new[1+#new] = { val=val_, count=count_ }  end
+   local comp = function( e1, e2 )  return e1.count > e2.count  end  -- sorts in _descending_ order
+   table.sort( new, comp )
+   if max > #new then  max = #new  end
+   -- print( "max=" .. max )
+   local iterIx = 0    -- iterator variable
+   return function ()  -- iterator function
+      if iterIx >= max then return end
+      iterIx = iterIx + 1
+      local tbl = new[iterIx]
+      return tbl.count, tbl.val
+      end
+   end
+
+
+do --- event handler registration and invocation
+   local s_eventHandlers = {}
+   function AddEventHandler( tb )
+      for evnm,evfx in pairs(tb) do
+         tu.t_append( s_eventHandlers, evnm, evfx )
+         end
+      end
+   function CallEventHandlers( evnm )  -- <<<********* called from C!!!  DO NOT RENAME!!!
+      for _,evfx in ipairs( s_eventHandlers[evnm] or {} ) do
+         evfx()
+         end
+      end
+end
+
+do
+   -- [[
+
+   function WriteViews()
+      local idx = {}
+      local wn = 0
+      for ix,win in AllWins() do
+         wn = wn + 1
+         printf( "%d H=%d: %s", ix, win:Height(), win:CurFBUF():Name() )
+         local vn = 0
+         local vw = win:CurView()
+         while vw do
+            vn = vn + 1
+            local nm, pos = vw:FName(), fmt( "curYX={%d %d} ulcYX={%d %d}", vw:GetCursorYX() )
+            idx[ nm ] = idx[ nm ] or {}
+            idx[ nm ][ pos ] = true
+            -- printf( "w%d, v%d = %s = %s", wn, vn, nm, pos )
+            vw = vw:Next()
+            end
+         end
+      local fh = assert( io.open( "Views.stat", "w" ) )
+      for nm,t_pos in pairs( idx ) do
+         for pos,_ in pairs( t_pos ) do
+            printf( "%s = %s", nm, pos )
+            fh:write( nm, " ", pos, "\n" )
+            end
+         end
+      fh:close()
+      end
+   AddEdFxn{ name = "wrvws", NOARG = WriteViews, help = "write view status", attr = NOARG, key = "" }
+
+   --]]
+
+   local function WriteStatusFile()
+      local savelist = { ["<search-keys>"] = { maxlines = 100 } }
+      local fnm = StateFilename( "lua" )
+      -- print( "StateFilename = "..fnm )
+      local fbDest = FBUF.new_empty_may_create( fnm )
+      fbDest:SetBackupMode_Bak()
+      for fnm,attribs in pairs(savelist) do
+         -- DBG( "WriteStatusFile <- " .. fnm )
+         local fbSrc = FBUF.new( fnm )
+         if fbSrc then
+            local lcnt = fbSrc:LineCount()
+            -- DBG( "WriteStatusFile <- " .. fnm .. " x "..lcnt .. " lines" )
+            lcnt = Min( lcnt, attribs.maxlines or lcnt )
+            fbDest:PutLastLine( fmt( "%s %d", fbSrc:Name(), lcnt ) )
+            if lcnt > 0 then
+               fbDest:CopyLines( fbDest:LastLine()+1, fbSrc, 1, lcnt )
+               end
+            end
+         end
+
+      fbDest:WriteToDisk( fbDest:Name() )
+      end
+
+   AddEdFxn{ name = "wrst", NOARG = WriteStatusFile, help = "write status file", attr = NOARG, key = "" }
+   AddEventHandler{         EXIT  = WriteStatusFile }
+end
+
+
+local function RecoverStatusFile()  -- ******  CAREFUL!  This is called every time the editor starts up, to recover content like <search-keys>
+   local fnm = StateFilename( "lua" )
+   -- print( "StateFilename = "..fnm )
+   local fbs = FBUF.new( fnm )
+   if not fbs then printf( "Lua.RecoverStatusFile: file '%s' does not exist", fnm ) return end
+   local lNum, last = 1, fbs:LastLine()
+   while lNum <= last do
+      local line = fbs:GetLineRaw( lNum )
+      local destfnm, srcLines = line:match( "(<.+>)%s(%d+)" )
+      if not destfnm then printf( "Lua.RecoverStatusFile: file \"%s\" line %d has bad data", fnm, lNum ) return end
+      srcLines = srcLines + 0  -- coerce to number, else "srcLines > 0" is a runtime error
+      if srcLines > 0 then   -- anything to write?
+         local destfb = FBUF.new( destfnm )
+         assert( destfb, "couldn't open ".. destfnm )
+         if destfb:LineCount() ~= 0 then
+            printf( "Lua.RecoverStatusFile: not re-recovering non-empty \"%s\"", destfnm )
+         else
+            printf( "Lua.RecoverStatusFile: recovering %d lines of \"%s\"", srcLines, destfnm )
+            destfb:MakeEmpty()
+            destfb:CopyLines( 1, fbs, lNum+1, lNum+srcLines )
+            end
+         end
+      lNum = lNum + 1 + srcLines
+      end
+   end
+
+
+do --- counting files switched to, fxn "mvf" to choose among them
+   local s_hitCount = {}
+   AddEventHandler{
+      GETFOCUS = function()
+         local fb = FBUF.new()
+         -- if fb:IsPseudo() then return end
+         local curfn = fb:Name()
+         SetCurFName( curfn )
+         -- DBG( "### ---------------> '" .. curfn .. "'" )
+         focusSettings = filesettings and filesettings.fxn_extmapping and filesettings.fxn_extmapping( curfn )
+         tu.t_accum( s_hitCount, curfn, 1 )
+         end
+      }
+
+   AddEdFxn{ name = "mvf", key = "alt+f1", help = "Menu: Most (frequently) Visited Files menu/chooser", attr = NOARG
+      , NOARG = function ( arg )
+         local curf = GetCurrentFilename()
+         local choices,widfmt = {}
+         for count, fnm in TopN( 20, s_hitCount ) do
+            if fnm ~= curf then
+               widfmt = widfmt or "%"..widthDecimal( count ).."d"  -- first count is the largest, by TopN
+               choices[1+#choices] = { fmt( widfmt.." %s", count, fnm ), fnm }
+               end
+            end
+
+         if #choices == 0 then  return Msg( "No other files switched to?" )  end
+
+         local _,fnm = Menu.new( { title="Most Visited Files", choices=choices } ):PickOne()
+         if fnm then  SwitchToFile( fnm )  end
+         return true
+         end
+      }
+end
+
+
+
+local function fn_execute_TEXTARG( cmd ) return function(str) assert(#str>0,cmd.." invoked w/nul param") return fExecute( "arg \""..str.."\" "..cmd )  end  end
+
+setfile = fn_execute_TEXTARG( "setfile" )
+shex    = fn_execute_TEXTARG( "shex" )
+
+--------------------------------------------------------------------------------------
+
+local classHexit = "[0-9a-fA-f]"
+
+local patBkupDir,wcBkupDir = "[\\/]%.kbackup[\\/]"
+                           ,       ".kbackup/"
+local patBkupExt,wcBkupExt = "%."..string.rep( "%d", 8 ).."_"..string.rep( "%d", 6 ).."$"
+                           ,  "."..string.rep( "?" , 8 ).."_"..string.rep( "?" , 6 )
+
+function BackupBaseFileNameExists( fnm )
+   assert( IsBackupFBuf( fnm ), fnm .. " is not a backup file" )
+   fnm = fnm:gsub( patBkupExt, "" )
+   fnm = fnm:gsub( patBkupDir, "/" )
+   print( fnm )
+   assert( IsFile( fnm ), "backed up file '"..fnm.."' does not exist" )
+   return fnm
+   end
+
+function IsBackupFBuf( fnm ) return IsFile( fnm ) and fnm:match( patBkupDir .. ".*" .. patBkupExt )  end
+
+function BackupFBufName( fnm )
+   local ps, ns = Path_Name( fnm )
+   return ps .. wcBkupDir .. ns .. wcBkupExt
+   end
+
+function OpenBackupWcFBuf( fnm )
+   if IsBackupFBuf( fnm )
+      then setfile( BackupBaseFileNameExists( fnm ) )
+      else setfile( BackupFBufName          ( fnm ) )
+      end
+   end
+
+AddEdFxn{ name = "bax", help = "open wildcard buffer listing .kbackup files ", attr = NOARG+BOXSTR+TEXTARG, key = ""
+   , NOARG   = function( arg ) return OpenBackupWcFBuf( FBUF.new():Name() )  end
+   , TEXTARG = function( arg ) return OpenBackupWcFBuf( arg.text )           end
+   }
+
+--[[  BUGBUG convert the following C++ code into 'diff' function below
+#ifdef fn_dif
+
+BOXSTR + NOARG + TEXTARG + NULLARG + NULLEOW
+
+// write tools to work with contents of '.kbackup' directories.
+//    hook into GUI diff tool:
+//       challenge: how to specify the 2 files?
+//          "backup dir" == "directory with "index" file having K indexfilemagichdr"
+//          "backup file" is file in "backup dir" having final extension that's a 3-digit hex number
+//          if curfile == "backup file", then diff file vs. its basenamed file in parent dir
+//          if curfile != "backup file", switch to "backup dir" listing _of that file_
+//          if curfile == "backup dir" listing, and cursor is over filename, run diff vs. its basenamed file
+
+bool ARG::dif()
+   {
+   switch( d_argType )
+      {
+      case TEXTARG:
+           if( !IsBackupFBuf( d_textarg.pText ) )
+              return Msg( "'%s' is not a backup file", d_textarg.pText );
+
+           { // if cursor is over filename, run diff vs. its basenamed file
+           if( !BackupBaseFileNameExists( newFname, sizeof newFname, g_CurFBuf()->Name() ) )
+              return false;
+
+           return runDiff( d_textarg.pText, newFname );
+           }
+
+      case NOARG:
+           if( IsBackupFBuf( g_CurFBuf()->Name() ) )
+              {
+              // diff g_CurFBuf() vs. its basenamed file (in parent dir)
+              if( !BackupBaseFileNameExists( newFname, sizeof newFname, g_CurFBuf()->Name() ) )
+                 return false;
+
+              return runDiff( g_CurFBuf()->Name(), newFname );
+              }
+           else
+              {
+              // switch to listing of all backups of g_CurFBuf()
+              //
+              BackupFBufName( dest, sizeof dest, g_CurFBuf()->Name() );
+              safeStrcat(     dest, sizeof dest, ".???" );
+              return fExecute( FmtStr<MAX_PATH>( "arg \"%s\" setfile", dest ) );
+              }
+      }
+   }
+
+#endif
+
+-- ]]
+
+function dquoteSpacyName( name )  return  ifx( name:match( "%s" ), fmt( '"%s"', name ), name )  end
+
+function FnmFromCli( val )
+   local fnm, opts = split_str( val, " [-]" )
+   if not IsFile( fnm ) then  return nil, fmt( "'%s' is not a file", fnm )  end
+   if opts then opts = " -" .. opts  else opts = " " end
+   return fnm, opts
+   end
+
+function FnmFromEnvVar( envvarnm )
+   local val = GetenvOrNil( envvarnm )
+   if not val           then  return nil, "env var "..envvarnm.." is not set"            end
+   local fnm, opts = split_str( val, " -" )
+   if not IsFile( fnm ) then  return nil, fmt( "'%s' (from %s) is not a file", fnm, envvarnm )  end
+   if opts then opts = " -" .. opts  else opts = " " end
+   return fnm, opts
+   end
+
+-- arg ".kbackup\k.lua.005 k.lua" difc
+
+function runEmbShell( cmd ) fExecute( 'arg "EMBSHELL> '..cmd..'" runchild' ) end
+
+do
+   local function dfltEnvVarPgm( envnm, dflt )
+      local fnm = FnmFromEnvVar( envnm )
+      if not fnm then Putenv( envnm.."="..dflt ) end
+      end
+
+   function a_filenames( text )
+      local rv = {}
+      for _,fnm in ipairs( string.a_gmatches( text, "%S+" ) ) do
+         if IsFile( fnm ) then rv[1+#rv] = fnm
+            end
+         end
+      if #rv == 0 then
+         for _,fnm in ipairs( string.a_gmatches( text, "%S+" ) ) do
+            if IsDir( fnm ) then rv[1+#rv] = fnm
+               end
+            end
+         end
+      return rv
+      end
+
+   local function dodiff( diff_cmdline, fxn_run_cmd, text, fmtrun )
+      fmtrun = fmtrun or '%s %s %s'
+      local nms = a_filenames( text )
+      assert( #nms >= 2, "couldn't find enough filenames" )
+      local cmd = fmt( fmtrun, diff_cmdline, nms[1], nms[2] )  printf( "dodiff: '%s'", cmd )
+      fxn_run_cmd( cmd )
+      end
+
+   function add_diff_edfxn( fxnm, diff_env_varnm, diff_cmdline, fxn_run_cmd, fmtrun )
+      -- dfltEnvVarPgm( diff_env_varnm, diff_cmdline )
+      AddEdFxn{ name = fxnm, help = "Run "..diff_cmdline.." oldfile newfile, where oldfile newfile come from the arg or the current line", attr = NOARG+BOXSTR+TEXTARG, key = ""
+         , TEXTARG = function ( arg )  dodiff( diff_cmdline, fxn_run_cmd, arg.text                       , fmtrun ) end
+         , NOARG   = function ( arg )  dodiff( diff_cmdline, fxn_run_cmd, arg.fbuf:GetLine( arg.cursorY ), fmtrun ) end
+         }
+      end
+
+   local patVN = '%a:'
+   local patNm = '[^%c:%*%?"<>]'
+   local patNmIllChars = '[<>"|]'
+   local patNotNmIllChars = '[^<>"|:]+'
+   local patDS = '[\\/]+'
+   local patNotDS = '[^\\/]+'
+
+   local function find_filenames( lbuf )
+
+      -- heuristic searching for filenames in a string
+
+      -- since double quotes are not allowed in Windows filenames, and are commonly used to wrap filenames containing spaces, lets extract any such first:
+      local dqd = {}
+      lbuf = lbuf:gsub( '"(.-)"', function(mm)  -- printf( "dq='%s'", mm )
+         dqd[1+#dqd] = mm
+         return ""
+         end )
+
+      -- look for colons being used as splitters (thus to be treated as filename terminators)
+      local oFnmStart = {}
+      local oSepColons = {}
+      do
+         local stix = 1
+         while true do -- printf( ":?'%s'", lbuf:sub(stix) )
+            local st = lbuf:find(":",stix)
+            if not st then break end
+            if lbuf:sub(st+1,st+1):match( patDS )  then -- probably part of a filename
+               if st > 1 then
+                  oFnmStart[1+#oFnmStart] = st-1
+                  end
+            else
+               oSepColons[1+#oSepColons] = st
+               end
+            stix = st+1
+            end
+      end
+
+--[[
+AddEdFxn adding ArgType=403: 'difg', 'Run c:/_tools/diffmerge/diffmerge.exe oldfile newfile, where oldfile newfile come from the arg or the current line', ..\..\k\k.cpp
+--]]
+
+      do -- ./ or ../ almost always signals the _start_ of a file/pathname, and while legally _can_ appear _within_ one, practically never does
+         local pat = "%.%.?" .. patDS
+         local stix = 1
+         while true do -- printf( "..?'%s'", lbuf:sub(stix) )
+            local st = lbuf:find(pat,stix)
+            if not st then break end
+            oFnmStart[1+#oFnmStart] = st
+            stix = st
+            printf( "..?'%s'", lbuf:sub(stix) )
+            local st2,en2 = lbuf:find('[^%.\\/]+',stix)
+            if not st2 then
+               break
+               end
+            stix = en2+1
+            end
+      end
+
+--[[
+
+      local vols = {}
+      do
+         local stix = 1
+         while true do
+            printf( "vol?'%s'", lbuf:sub(stix) )
+            local st,en = lbuf:find(patVN,stix)
+            if not st then break end
+            local stnm,ennm = lbuf:find(patNotNmIllChars,en+1)
+            if stnm then
+               printf( "vol='%s'", lbuf:sub(st,ennm) ) -- note that this may easily be "too big a bite"
+               while true do
+                  local cand = lbuf:sub(st,ennm)
+                  if _dir.name_isfile(cand) then
+                     vols[1+#vols] = cand
+                     break
+                     end
+                  -- walk backward one set of alphanum chars
+                  for ix=ennm,st,-1 do
+                     if not lbuf:sub(ix,ix):match("[%w_]") then ennm = ix break end
+                     end
+                  end
+
+               vols[1+#vols] = st
+               stix = ennm+1
+            else
+               stix = en+1
+               end
+            end
+      end
+
+      -- brute-force search for valid filenames: can generate THOUSANDS of calls to _dir.name_isfile
+
+      local fnms,nums = {},{}
+      local st = 1
+      while st < #lbuf do
+         for iy = #lbuf,st,-1 do
+            local poss = lbuf:sub( st, iy )
+            printf( "poss='%s'", poss )
+            --************* BEGIN Windows filename tricks:
+            local oColon = poss:find(":")  -- ':' is only legal at position 1
+            if oColon then
+               printf( "oColon=%d", oColon )
+               if oColon == 1 then
+                  break
+                  end
+
+               if oColon > 2 then
+                  st = st + oColon - 3
+                  printf( "st=%d", st )
+                  break
+                  end
+               end
+
+            local oPipe = poss:find(patNmIllChars)
+            if oPipe then
+               st = st + oPipe
+               break
+               end
+
+            --*************
+            if _dir.name_isfile(poss) then
+               printf( "*fnm='%s'", poss )
+               fnms[1+#fnms] = { fnm=poss, st=st, nd=iy }
+               --st = iy
+               --break
+               end
+            end
+         st = st + 1
+         end
+--]]
+
+      end
+
+   AddEdFxn{ name = "xf", help = "extract filenames from string", attr = NOARG+BOXSTR+TEXTARG, key = ""
+      , TEXTARG = function ( arg )  find_filenames( arg.text ) end
+      , NOARG   = function ( arg )  find_filenames( arg.fbuf:GetLine( arg.cursorY ) ) end
+      }
+
+end
+
+local dynamic_fbufs = -- bugbug this s/b automated
+   {
+   "<ascii>"         ,
+   "<CMD/SWI/Keys>"  ,
+   "<env>"           ,
+   "<env_>"          ,
+   "<files>"         ,
+   "<macdefs>"       ,
+   "<usage>"         ,
+   }
+
+AddEdFxn{ name = "sb", help = "Menu: System Buffers", attr = NOARG, key = ""
+   , NOARG = function ( arg )
+      local choices = {}
+      for fbuf in AllFbufs() do  if fbuf:HasGlobalPtr() then choices[1+#choices] = fbuf:Name()  end  end
+      for _,name in ipairs(dynamic_fbufs) do                 choices[1+#choices] = name              end
+      table.sort( choices )
+      local _,fnm = Menu.new{ title="System Buffers", choices=choices }:PickOne()
+      if fnm then  SwitchToFile( fnm )  end
+      end
+   }
+
+
+function ary_to_fbuf( fnm, ary )
+   local fbDest = FBUF.new_empty_may_create( fnm )
+   for _,text in ipairs(ary) do fbDest:PutLastLine( text ) end
+   return fbDest
+   end
+
+local function DirMenu( title, choices, pseudo_dest )
+   local _,rv = Menu.new{ title=title, choices = tu.a_flatten{ "write to "..pseudo_dest, choices } }:PickOne()
+   if not rv then  return  end
+   print( "rv=".. tostring(rv) )
+   if rv:match("^write to ") then
+      ary_to_fbuf( pseudo_dest, choices ) -- :PutFocusOn()
+      return pseudo_dest
+   else
+      return rv
+      end
+   end
+
+
+AddEdFxn{ name = "dp", help = "Menu: Dirs of Parent", attr = NOARG, key = ""
+   , NOARG = function ( arg )
+      local choices = {}
+      for dir in CwdToRoot() do choices[1+#choices] = PrettyPath( dir ) end
+      local choice = DirMenu( "Dirs of Parent", choices, "<"..GetCwd().."-parent-dirs>" )
+      if choice then  fChangeFile( choice )  end
+      end
+   }
+
+
+AddEdFxn{ name = "dc", help = "Menu: Dirs of Child", attr = NOARG, key = ""
+   , NOARG = function ( arg )
+      local dirs = GetChildDirs()
+      table.sort( dirs )
+      local choices = tu.a_grep( function(s) return not s:find( "\\.svn" ) and not s:find( "\\k_backup" ) end, dirs )
+      local choice = DirMenu( "Child Dirs", choices, "<"..GetCwd().."child-dirs>" )
+      if choice then fChangeFile( choice )  end
+      end
+   }
+
+---------------------------------------------------------------------------------------------------
+
+local function DeleteLinesMatching( matchfxn, fbuf, view, y0, y1 )
+   y0 = y0 or 1
+   y1 = y1 or fbuf:LastLine()
+   -- printf( "DeleteLinesMatching [%d..%d]", y0, y1 )
+   local cursorY = view and view:GetCursorYX() or 0
+   local del,plus,delcnt,decY,next = {}, {}, 0, 0, 0
+   for lnum = y0,y1 do
+      local line = fbuf:GetLine( lnum )
+      if line and matchfxn( line ) then
+         if lnum == next then  -- coalesce adjacent-line matches to minimize (expensive) DelLine calls
+            plus[#del] = (plus[#del] or 0) + 1
+         else
+            del[1+#del] = lnum - delcnt
+            end
+         delcnt = delcnt + 1
+         if lnum < cursorY then decY = decY + 1 end
+         next = lnum + 1
+         end
+      end
+
+   for ix, lnum in ipairs( del ) do
+      fbuf:DelLine( lnum, lnum + (plus[ix] or 0) )
+      end
+
+   if view and decY > 0 then
+      local _,cursorX = view:GetCursorYX()
+      -- printf( "DeleteLinesMatching cursorYX[%d,%d]", _,cursorX )
+      view:MoveCursor( cursorY - decY, cursorX )
+      Msgf( "deleted %d lines using %d delops", delcnt, #del )
+      end
+   end
+
+
+local matchbufnum = 0
+local function matches( pat, infbuf, trim )
+   AddToSearchLog( pat )
+   local tb = {}
+   for lnum, ltxt in infbuf:RawLines() do  -- DBG( ltxt )
+      for st in ltxt:gmatch( pat ) do
+         tb[1+#tb] = trim and trim(st) or st
+         end
+      end
+   ary_to_fbuf( "<matches"..matchbufnum..">", tb ):PutFocusOn()
+   matchbufnum = 1+matchbufnum
+   end
+
+AddEdFxn{ name = "matches", help = "<matchn> contains all Lua pattern matches", attr = MODIFIES+BOXSTR+TEXTARG, key = "shift+f3"
+   , TEXTARG = function ( arg ) matches( arg.text, arg.fbuf ) end
+   }
+
+local url_pat = '(https?://[^"]+)'
+AddEdFxn{ name = "https", help = "<matchn> contains all Lua pattern matches", attr = NOARG, key = "shift+f9"
+   , NOARG = function ( arg ) matches( url_pat, arg.fbuf
+                , function(st)
+                   local trail = st:match(".+HTML="..url_pat)
+                   return trail or st
+                   end
+                )
+                end
+   }
+
+local function Arg2MultilineKey( arg )
+--  box
+   end
+
+local function MultilineStrip( arg )
+   local mlk = Arg2MultilineKey( arg )
+   -- actually strip ...
+   --[[
+
+   from bugs.txt:
+
+   multiline strip; new multi-ine key concept (yes, it's weird;
+   maybe most closely matches "grep domains" concept?):
+   - linearg matches series of whole lines,
+     - IOW the 1st candidate line completely matches the 1st key line,
+       2nd candidate line matches the 2nd key line, etc.  to the last
+       key line, in which case there is A MATCH and all candidate lines
+       are deleted.
+
+   - boxarg  matches series of lines partially matching.
+     - same as line version except a line is considered to match if
+       contains any match on each key line.
+
+     - Obviously this could serve as a useful standalone search function too...
+
+
+   fbuf:GetLineSeg( iy, xLeft, xRight )  end
+
+
+   --]]
+   end
+
+AddEdFxn{ name = "strip", help = "delete lines matching literal str (arg) or Lua pattern (arg arg)", attr = MODIFIES+BOXSTR+TEXTARG, key = "ctrl+shift+f3"
+   , TEXTARG = function ( arg )
+               local litpat = arg.argCount == 1
+               if litpat                         then arg.text = util.pattern_escape_magic    ( arg.text )  end
+               if not Get_SearchCaseSensitive()  then arg.text = util.case_insensitive_pattern( arg.text )  end
+               -- Msgf("strip: %s '%s' (%s)", arg.fbuf:Name(), arg.text, litpat and "lit" or "pat" )
+               DeleteLinesMatching( function( st ) return st:find( arg.text ) end, arg.fbuf, arg.view )
+               end
+   -- WIP
+   , BOXARG =  function ( arg ) -- WIP: delete all line sequences that sequentially match the text in the box
+               return MultilineStrip( arg )
+               end
+   , LINEARG = function ( arg ) -- WIP: delete all line sequences that sequentially match the selected lines
+               return MultilineStrip( arg )
+               end
+   }
+
+local glock_help = "All future grep output for current file to a single <grep_N>"
+Lua_from_C_lookup_glock = nil
+do
+   local glock = {}
+   local function setglock(haystack,gbufnm)
+      glock[haystack] = gbufnm
+      Msg( "glock["..haystack.."] = "..gbufnm )
+      end
+
+   local function do_Lua_from_C_lookup_glock( fnm ) return glock[fnm] or "" end
+   Lua_from_C_lookup_glock = function( fnm ) local rv = do_Lua_from_C_lookup_glock( fnm ) printf("glock[%s]->'%s'",fnm,rv) return rv end
+
+
+   AddEdFxn{ name = "glock", help = glock_help, attr = NOARG
+      , NOARG = function ( arg )
+                  local fnm = arg.fbuf:IsGrepBuf()
+                  if fnm then
+                     setglock( fnm, arg.fbuf:Name() )
+                  else -- scan thru fbuf list looking for any grep-buf targeting the current file
+                     local curfnm = arg.fbuf:Name()
+                     for fbuf in AllFbufs() do
+                        local fnm = fbuf:IsGrepBuf()
+                        if fnm and fnm == curfnm then
+                           setglock( curfnm, fbuf:Name() )
+                           break
+                           end
+                        end
+                     end
+                  end
+      }
+end
+
+--[[
+  show a pseudofile containing a list of all FBUFs which are greps of a given file, or perhaps better, show, for each FBUF
+  having any greps extant, list the subject FBUF-name and each of the associated grep bufs
+--]]
+   AddEdFxn{ name = "glist", help = "list grep buffers", attr = NOARG
+      , NOARG = function ( arg )
+                  local gl = {}
+                  for fbuf in AllFbufs() do
+                     local fnm,glc = fbuf:IsGrepBuf()
+                     if fnm then
+                        local gnm = fbuf:Name()
+                        tu.t_append( gl, fnm, fmt("%-9s %6d", gnm, fbuf:LineCount() - glc ) )
+                        end
+                     end
+
+                  local fbo
+                  for fnm,a_gb in tu.PairsBySortedKeys(gl) do
+                     fbo = fbo or assert( FBUF.new_empty_may_create( "<glist>" ) )
+                     fbo:PutLastLine( fnm )
+                     for _,gnm in ipairs(a_gb) do
+                        fbo:PutLastLine( ""..gnm )
+                        end
+                     end
+                  if fbo then fbo:PutFocusOn() end
+                  end
+      }
+
+
+do
+   local gm_choices = {
+      { "List all grep buffers"                 , "glist" },
+      { "Merge all same-src grep-buffers"       , "gmg"   },
+      { glock_help                              , "glock" },
+      }
+   AddEdFxn{ name = "gm", help = "Menu of grep-related commands", attr = NOARG
+      , NOARG = function( arg )
+         local _,fxnm = Menu.new( { title="grep-related commands", choices=gm_choices } ):PickOne()
+         if fxnm then  return fExecute( fxnm )  end
+         return false
+         end
+      }
+end
+
+
+
+--[[
+/////////////////////////////////////////////////////////////////////////////////
+//
+// arg <boxarg>  LBlankDel  Delete lines which are blank (whitespace
+// arg <linearg> LBlankDel  chars or no chars) in the selected
+//                          region.  Useful for quickly filtering
+//                          garbage lines out of grep lists, etc.
+//
+// 13-Feb-1992 klg:
+//   if meta, delete only those lines which DO contain something in the box
+//   if 2 args, delete only from char to right of box to EOL
+//
+//   FUTURE: if 3 args, delete only from char to left of box to start of line?
+//
+// Delete lines which are blank (whitespace
+// chars or no chars) in the selected
+// region.  Useful for quickly filtering
+// garbage lines out of grep lists, etc.
+//
+//
+// 13-Feb-1992 klg:
+//   if meta, delete only those lines which DO contain something in the box
+//   if 2 args, delete only from char to right of box to EOL
+//
+//   FUTURE: if 3 args, delete only from char to left of box to start of line?
+// --]]
+
+local function DelBlankLines( fInvert, arg, xMin, xMax )
+   local fbuf, view, y0, y1, xLeft, xRight = arg2box( arg )
+   xMin = xMin or xLeft
+   xMax = xMax or xRight
+   local pat = fInvert and "%S" or "^%s*$"
+   DeleteLinesMatching( function( st ) return string.match( st:sub( xMin, xMax ), pat ) end, fbuf, view, y0, y1 )
+   end
+
+AddEdFxn{ name = "lblankdel", help = "delete lines matching ...", attr = MODIFIES+NOARG+BOXARG+LINEARG, key = "alt+o"
+   , NOARG   = function( arg ) DelBlankLines( arg.fMeta, arg, 1, MAXCOL ) end
+   , LINEARG = function( arg ) DelBlankLines( arg.fMeta, arg ) end
+   , BOXARG  = function( arg ) DelBlankLines( arg.fMeta, arg ) end
+   }
+
+---------------------------------------------------------------------------------------------------
+
+function boxContent( arg )
+   local fbuf, vw, y0, y1, xLeft, xRight = arg2box( arg )
+   local rv = {}
+   for iy = y0,y1 do  rv[1+#rv] = fbuf:GetLineSeg( iy, xLeft, xRight )  end
+   return rv
+   end
+
+function sum_cols_dope( ary )
+   local fHexCh, fLeading0s = false, false
+   for _,st in ipairs(ary) do
+      if st:match( "^%s*0%d"  ) then fLeading0s = true end
+      if st:match( "[a-fA-F]" ) then fHexCh     = true end
+      end
+
+   return (fHexCh or fLeading0s) and 16 or 10, fLeading0s
+   end
+
+function sum_cols( ary, base )
+   local sum = 0
+   local numbersAdded = 0
+   for _,st in ipairs(ary) do
+      local num = tonumber( st, base )
+      if num then
+         numbersAdded = numbersAdded + 1
+         sum = sum + num
+         end
+      end
+
+   return sum, numbersAdded
+   end
+
+function fmtNum( num, base, width, leading0s )
+   leading0s = ifx( leading0s, "0", "" )
+   local pfx = "%"..leading0s..width
+   if     base == 16 then return fmt( pfx.."X", num )
+   elseif base == 10 then return fmt( pfx.."d", num )
+   else                   error( "cannot fmtNum to "..base )
+      end
+   end
+
+--     0000cc
+--     0000cc
+--     0000cc
+--     0000cc
+
+AddEdFxn{ name = "sumcol", attr = MODIFIES+BOXARG, key = "alt+num+", help = ""
+   , BOXARG  = function( arg )
+      local bc = boxContent( arg )
+      local base, leading0s = sum_cols_dope( bc )
+      Msgf( "sumcol base = %d", base )
+      local sum, cnt = sum_cols( bc, base )
+      if cnt > 0 then
+         local st = fmtNum( sum, base, arg.maxX - arg.minX + 1, leading0s )
+         local xtraWide = #st - (arg.maxX - arg.minX + 1)
+         local pad = string.rep( " ", arg.minX-1-xtraWide )
+         arg.fbuf:InsLine( arg.maxY+1, pad .. st )
+         end
+      end
+   }
+
+function mtFBUF:swap_lines( y0, y1, xLeft, xRight )
+
+   -- [5932] K! 1755 < 1756
+   -- [5932] K! GetLineSeg [1754,021E94B4 L 55][37..2147483646]P:021E94D9,021E94EA (19)
+   -- [5932] K! PutLineSeg L 1754 [37..2147483646] <= '' )
+
+   xLeft  = xLeft  or 1
+   xRight = xRight or MAXCOL
+   while y0 < y1 do  -- DBG( tostring(y0).." < "..tostring(y1) )
+      local seg0 = self:GetLineSeg( y0, xLeft, xRight )  -- print( "seg0="..seg0.."|" )
+      local seg1 = self:GetLineSeg( y1, xLeft, xRight )  -- print( "seg1="..seg1.."|" )
+      self:PutLineSeg( y0, seg1, xLeft, xRight, false )
+      self:PutLineSeg( y1, seg0, xLeft, xRight, false )
+      y0 = y0 + 1
+      y1 = y1 - 1
+      end
+   end
+
+AddEdFxn{ name = "swapline", help = "Cursor line and line below are swapped.  NULLARG: only segment of lines from cursor to EOL is swapped"
+        , attr = MODIFIES+NOARG+NULLARG+LINEARG+BOXARG, key = "alt+z"
+   , NOARG   = function( arg ) arg.fbuf:swap_lines( arg.cursorY, arg.cursorY+1 ) end
+   , NULLARG = function( arg ) arg.fbuf:swap_lines( arg.cursorY, arg.cursorY+1, arg.cursorX ) end
+   , LINEARG = function( arg ) arg.fbuf:swap_lines( arg.minY, arg.maxY ) end
+   , BOXARG  = function( arg ) arg.fbuf:swap_lines( arg.minY, arg.maxY, arg.minX, arg.maxX ) end
+   }
+
+
+local function for_LINEBOX( arg, ... )
+   local fxns = {...}
+   assert( #fxns > 0, "internal error: no functions passed to for_LINEBOX" )
+   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
+      for _,fx in ipairs(fxns) do
+         fx( arg.fbuf:GetLineSeg( iy, arg.minX, arg.maxX ) )
+         end
+      end
+   end
+
+local function gsub_linearg( arg, pat, replacement )
+   local total = 0
+   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
+      local new, cnt = (arg.fbuf:GetLine( iy )):gsub( "[\\/][^\\/]+$", "" )
+      if cnt > 0 then
+         arg.fbuf:PutLine( iy, new )
+         total = total + cnt
+         end
+      end
+   Msgf( "%d replacements made", total )
+   end
+
+local function xform_linearg( arg, gsubfunc )
+   local total = 0
+   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
+      local line = arg.fbuf:GetLine( iy )
+      local new, cnt = gsubfunc( line )
+      if cnt > 0 then
+         arg.fbuf:PutLine( iy, new )
+         total = total + cnt
+         end
+      end
+   Msgf( "%d replacements made", total )
+   end
+
+local function xform_boxarg( arg, gsubfunc )
+   local total = 0
+   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
+      local line = arg.fbuf:GetLineSeg( iy, arg.minX, arg.maxX )
+      local new, cnt = gsubfunc( line )
+      if cnt > 0 then
+         arg.fbuf:PutLineSeg( iy, new, arg.minX, arg.maxX, false )
+         total = total + cnt
+         end
+      end
+   Msgf( "%d replacements made", total )
+   end
+
+local function gsub_URL_escape( s )
+   local cnt1,cnt2
+   s,cnt1 = s:gsub( '[#&="+%%%c%s]', function(c) return string.format( "%%%02X", c:byte() ) end )
+   s,cnt2 = s:gsub( " ", "+" )
+   return s, cnt1+cnt2
+   end
+
+local function gsub_URL_unescape( s )
+   local cnt1,cnt2
+   s,cnt1 = s:gsub( "&#(%d+);", function(c) return string.char(c) end )
+   s,cnt2 = s:gsub( " ", "+" )
+   return s, cnt1+cnt2
+   end
+
+
+AddEdFxn{ name = "urlunenc", key = "", attr = LINEARG, help = "convert &#45; into text"
+   , LINEARG = function( arg ) xform_linearg( arg, gsub_URL_unescape ) end
+   , BOXARG  = function( arg ) xform_boxarg(  arg, gsub_URL_unescape ) end
+   }
+
+do
+-- [[
+AddEdFxn{ name = "stat", key = "", attr = NOARG, help = "assumes curfile contains filenames, 1 per line; appends stat info to each"
+   , NOARG = function( arg )
+      for lnum, line in arg.fbuf:Lines() do  -- DBG( line )
+         local fnm
+         local delim = line:match( "^(["..'"'.."|])" )
+         if delim then fnm = line:match("^"..delim.."(.-)"..delim)
+         else          fnm = line:match("^(%S+)")
+                       delim = ""
+            end
+         if fnm then
+            local stat = io.stat( fnm )
+            local lbuf = delim..fnm..delim
+
+            if not stat then lbuf = (" "):rep(35)  .. lbuf
+            else             lbuf = os.date( "%Y.%m.%d %H:%M:%S",stat.mtime )..fmt( " %s %9d ", stat.mode, stat.size )..lbuf
+               end
+            arg.fbuf:PutLine( lnum, lbuf )
+            end
+         end
+      end
+   }
+
+--]]
+end
+
+
+do
+   local function rmvTrailingPathComponent(st)  return st:gsub( "[\\/][^\\/]+$", "" )  end
+
+   AddEdFxn{ name = "gsub", help = "", attr = MODIFIES+LINEARG, key = "alt+q"
+      , LINEARG = function( arg )  xform_linearg( arg, rmvTrailingPathComponent ) end
+      }
+end
+
+do -- BUGBUG for some reason if you put '|' in sep_chs, string.a_gmatches has no matches
+   local sep_chs = "%s,.;:+-"
+         a_sep_ch = "["..sep_chs.."]"
+         series_of_non_sep_chs = "[^"..sep_chs.."]+"  -- "[^%s,.;:+-|]+"
+end
+
+AddEdFxn{ name = "swapchar", help = "Chars at cursor and to right of cursor are swapped", attr = MODIFIES+NOARG+BOXARG, key = "ctrl+s"
+   , NOARG   = function( arg )
+      local seg = arg.fbuf:GetLineSeg( arg.cursorY, arg.cursorX, arg.cursorX+1 )
+      arg.fbuf:PutLineSeg( arg.cursorY, string.char( seg:byte(2) or 0x20, seg:byte(1) or 0x20 ), arg.cursorX, arg.cursorX+1, false )
+      end
+   , BOXARG  = function( arg )
+      if arg.minY ~= arg.maxY then return Msg( "only single-line BOXARG supported" ) end
+      local seg = arg.fbuf:GetLineSeg( arg.minY, arg.minX, arg.maxX )
+
+      -- alternative #1: sepstr <= ", "
+
+      -- alternative #2: sepstr <= the most frequently occurring nonwhite sep, followed by optional space
+      local seps = {}
+      for sep in seg:gmatch( a_sep_ch )  do seps[ sep ] = (seps[ sep ] or 0) + 1  end
+      local sepstr
+      for sep,cnt in tu.pairsBySortedValues( seps, tu.descending ) do
+         if sep ~= " " then sepstr = sep  break  end
+         end
+
+      if sepstr and seps[" "] then sepstr = sepstr .. " " end    -- a, b, c, d, e, f
+      sepstr = sepstr or " "                                     -- 1+2+3*4, 7
+
+      -- alternative #3: save all sep strs in their own array, reverse it and feed it back into the reversed list of non-sep tokens
+
+      printf( "'%s', '%s', '%s'", a_sep_ch, series_of_non_sep_chs, sepstr )
+      seg = table.concat( tu.a_reverse( string.a_gmatches( seg, series_of_non_sep_chs ) ), sepstr )
+      arg.fbuf:PutLineSeg( arg.minY, seg, arg.minX, arg.maxX, false )
+      end
+   }
+
+local function CurLocnStr()
+   local fb, vw = FBUF.CurView()
+   local y , x   = vw:GetCursorYX()
+   return fb:Name() .. "|" .. y .. "|" .. x
+   end
+
+----------------------------------------------------------------------------------------------------- Module Mark
+
+--  The "mark" facility inside the editor has one big advantage: it is updated when edits are made.
+--
+--  26-Jun-1997 klg
+
+local nextmsgFBufName
+local nextmsg_engine
+
+do
+   local llHd, llCur, marknum, llSize = nil, nil, 0, 0
+
+   -- the mark namespace is global; add a prefix so our marks don't collide with other potential uses
+   local function marknum_to_markname( marknum ) return  "LocnList" .. marknum  end
+
+   function LocnListInsertCursor()  -- ************* <-- this is called by C++, so it CAN'T be local *************
+      if llCur and llCur.locnstr == CurLocnStr() then Msg( "did not define redundant mark" ) end
+      MarkDefineAtCurPos( marknum_to_markname(marknum) )
+      local locnstr = CurLocnStr()
+      if llCur then
+         llCur.next = { marknum=marknum, locnstr=locnstr, locNum=llCur.locNum+1, prev=llCur }
+         llCur      = llCur.next
+         llSize     = llCur.locNum
+      else
+         llHd       = { marknum=marknum, locnstr=locnstr, locNum=1                          }
+         llCur      = llHd
+         llSize     = 1
+         end
+
+      marknum = marknum + 1
+      end
+
+   ------------------------------------------------------------------------- EdFxn LocnList
+
+   AddEdFxn{ name = "traverselocnlist", help = "Lua traverselocnlist", attr = NOARG+NULLARG, key = ""
+      , NULLARG = function( arg )
+         LocnListInsertCursor()
+         Msg( "Current cursor position added at end of list" )
+         end
+      , NOARG = function( arg )
+         if not llCur then            return Msg( "Location List is empty" )  end
+         local atCur = llCur.locnstr == CurLocnStr()
+         if arg.fMeta then  -- move to previous locn
+            if atCur then
+               if not llCur.prev then return Msg( "Head of list reached" ) end
+               llCur = llCur.prev
+               end
+            -- else (if not at cur), move to cur (which is done by falling thru)
+         else
+            if not llCur.next then return Msg( "Tail of list reached" ) end
+            llCur = llCur.next
+            end
+
+         MarkGoto( marknum_to_markname(llCur.marknum) )
+         Msgf( "At list entry %d of %d", llCur.locNum, llSize )
+         end
+      }
+   Assign{
+        "traverselocnlist:alt+right"
+      , "backtravlocnlist:=meta traverselocnlist"
+      , "backtravlocnlist:alt+left"
+      }
+
+   local fnm_to_f_in_tree
+   local function lookupFnm( fnm )
+      if not fnm_to_f_in_tree then
+         print("generating lookupFnm")
+         fnm_to_f_in_tree = {}
+         for _,nm in ipairs(_dir.read_names( "./", 1 )) do
+            local fnm = nm:match("[^\\/]+$")
+            if fnm then
+               -- print("lookupFnm "..fnm)
+               tu.t_append( fnm_to_f_in_tree, fnm:lower(), nm )
+               end
+            end
+         end
+      fnm = fnm:lower()
+      if fnm_to_f_in_tree[fnm] and #fnm_to_f_in_tree[fnm] == 1 then print("match:",fnm_to_f_in_tree[fnm] ) return fnm_to_f_in_tree[fnm][1] end
+      end
+
+   local function GotoFileYX_Msg_( fnm, line, col, msg, patnm, cols )
+      printf( "GotoFileYX_Msg(pat=%s,fnm='%s',line=%d, col=%d)", patnm, fnm, line, col, msg )
+      local mc = 1
+      while #fnm and mc > 0 do
+         printf( "fnm='%s'", fnm )
+         if _dir.name_isfile(fnm) then break end
+         local lfnm = lookupFnm(fnm)
+         if lfnm then printf("found lfnm='%s' ",lfnm) end
+         if lfnm then fnm = lfnm break end
+         printf( "fnm+'%s'", fnm )
+         fnm,mc = fnm:gsub("^[^/\\]+[/\\]","")
+         printf( "fnm-'%s',mc=%d", fnm, mc )
+         end
+
+      local fb,vw = GotoFileLineCol( fnm, line, col )
+      if cols then  vw:HiliteMatch( line, col, cols )  end
+      -- printf( "%s (%s)|%s|", msg, patnm, lbuf )
+      Msg( msg )
+      return fnm
+      end
+
+-- [[
+   local function gofileline_dif( fbuf, cursorY )  -- arg.fbuf, arg.cursorY
+      printf( "gofileline_dif(fbuf.nm='%s',line=%d)", fbuf:Name(), cursorY )
+      local iy = cursorY
+      local ybase
+      for yy=iy,1,-1 do
+         local str = fbuf:GetLine( yy )
+         printf( "gofileline_dif: line[%d]=%s", yy,str )
+         local n1,n2,n3,n4 = str:match"@@ ([-+]%d+),(%d+) ([-+]%d+),(%d+) @@"
+         if n4 and not ybase then
+            ybase = n3
+            printf( "gofileline_dif: ybase=%d", ybase )
+            end
+         local fnm = str:match"%+%+%+ b/(.+)"
+         if fnm then
+            printf( "gofileline_dif: fnm=%s", fnm )
+            return GotoFileYX_Msg_( fnm, ybase+(cursorY-yy)-2, 1, "dif", "dif", 0 )
+            end
+         end
+      end
+--]]
+
+   function gofileline( l1buf, lbuf, fSaveLocn, fnmToNotMatch )
+      fnm_to_f_in_tree = nil
+
+      local function GotoFileYX_Msg( fnm, line, col, msg, patnm, cols )
+         if fnmToNotMatch and fnmToNotMatch == fnm then return end
+         if fSaveLocn then LocnListInsertCursor() end
+         return GotoFileYX_Msg_( fnm, line, col, msg, patnm, cols )
+         end
+
+      local function ParseErr() Msgf( "Parse of line failed!  Update gofileline() in k.lua:%s", lbuf ) end
+
+      local fnm = l1buf:match( "^%*GREP%* (.+)$" )
+      local emsg, line, extra
+      if fnm then -- <grep_n> pseudofile hyperlink: dest fnm
+         local xLineBegin
+         line,xLineBegin = lbuf:match( "^%s*(%d+)%s()" )
+         if not line then return ParseErr() end
+         fnm = fnm:gsub( "^\"(.*)\"$", function(tok) return tok end )  -- in <grep> files, fnames containing spaces are wrapped in '"': unwrap
+
+         -- direct use of following 2 API's is a bit "impure", but the means justify the end  :-)
+         local fb, vw = FBUF.CurView()
+         local _,xCur = vw:GetCursorYX()
+         xCur = (xCur > xLineBegin) and (xCur - xLineBegin) or 1
+
+         return GotoFileYX_Msg( fnm, line, xCur, "grep Hyperlink", "grep" )
+         end
+
+      -- ../../Source/system/rom/locincludes/AOM_rm_dstructs.h:122:2: #error "Use up-to-date Header Structure in Flashware"
+      do local col
+      fnm, line, col, emsg = lbuf:match( "^(%S[^:%s]+):(%d+):(%d+):%s+(.+)" )
+      if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "MW C" ) then return fnm end
+      end
+
+      -- Python cmdline interpreter
+      --
+      -- Traceback (most recent call last):
+      --   File "C:\stardes\code\des_v2_1_fe_v2_4_star_v7_1_ps_v2_0\python\RunDES.py", line 73, in <module>
+      --     TracesScript=__import__("RunDESfull_IOmeterFullTest")
+      --   File "C:\stardes\code\des_v2_1_fe_v2_4_star_v7_1_ps_v2_0\python\RunDESfull_IOmeterFullTest.py", line 14, in <module>
+      --     import RunDESfull as script
+      --   File "C:\stardes\code\des_v2_1_fe_v2_4_star_v7_1_ps_v2_0\python\RunDESfull.py", line 36, in <module>
+      --     import CreateEmptyStartState as CreateStartState
+      --
+      fnm, line = lbuf:match( '^%s+File "([^"]+)", line (%d+)' )
+      if line and GotoFileYX_Msg( fnm, line, 1, "", "Python" ) then return fnm end
+
+      -- Perl cmdline interpreter  Use of uninitialized value $syn_updatePer in string eq at C:\klg\d\cscrape\cscrape.pl line 1083.
+      --                           Died at C:\klg\d\cscrape\cscrape.pl line 1083.
+      -- common: at C:\klg\d\cscrape\cscrape.pl line 1083.
+      emsg, fnm, line  = lbuf:match( "(%S.*)%sat (%S.*)%sline%s(%d+)%." )
+      if line and GotoFileYX_Msg( fnm, line, 1, emsg, "Perl" ) then return fnm end
+
+      -- GCC
+      fnm, line, emsg = lbuf:match( "^([^ :]+):(%d+): (.+)$" )
+      if not emsg then
+         fnm, line, emsg = lbuf:match( "^(.+):(%d+):(%d+): (error: .+)$" )
+         if not emsg then
+            fnm, line, emsg = lbuf:match( "^(.+):(%d+):(%d+): (warning: .+)$" )
+            if not emsg then
+               fnm, line, emsg = lbuf:match( "^(.+):(%d+):(%d+): (note: .+)$" )
+               end
+            end
+         end
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "gcc" ) then return fnm end
+
+      -- GCC w/o emsg
+      fnm, line = lbuf:match( "^([^ :]+):(%d+)" )
+      if line and GotoFileYX_Msg( fnm, line, 1, "", "gcc w/o emsg" ) then return fnm end
+
+      -- Lua cmdline interpreter  lua: asicgen.lua:20: 'then' expected near '='
+      local luaMsig = "(%S+):(%d+):?%s+(.+)$"
+      fnm, line, emsg = lbuf:match( "^[Ll]ua:%s+"..luaMsig )
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "Lua" ) then return fnm end
+
+      fnm, line, emsg = lbuf:match( "^%s*"..luaMsig )
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "LuaRT1" ) then return fnm end
+
+      fnm, line, emsg = lbuf:match( "[Ll]ua%.exe:%s+"..luaMsig )
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "LuaRT2" ) then return fnm end
+
+      -- HighC (Metaware) "../../../Source/BE/FRM/frm.c(573) : warning 652: value: Variable is never used."
+      fnm, line, emsg = lbuf:match( "^([^ :]+)%((%d+)%)%s?:%s(.+)$" )
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "highc" ) then return fnm end
+
+                       -- "E:\ws\cad2\Make\lib.lua:212: attempt to call method 'write' (a nil value)"
+      fnm, line, emsg = lbuf:match( "^([^ :]+):(%d+):%s(.+)$" )
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "highc" ) then return fnm end
+
+      -- cppcheck
+      fnm, line, emsg = lbuf:match( "^%[([^:]+):(%d+)][%s:]+(.+)$" )
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "cppcheck" ) then return fnm end
+
+      -- ARMCC "../../Source/be/apiincludes/BE_PublicTypes.h", line 33: Warning:  #66-D: enumeration value is out of "int" range
+      fnm, line, emsg = lbuf:match( '^"([^"]+)", line (%d+): (.+)$' )
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "gcc" ) then return fnm end
+
+      -- Borland C++
+      do               local pat_flx =                                  " ([^ ]+) (%d+): (.*)$"
+                       emsg, fnm, line, extra = lbuf:match( "^(Error)"  ..pat_flx )
+      if not emsg then emsg, fnm, line, extra = lbuf:match( "^(Warning)"..pat_flx ) end
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg..": "..extra, "Borland C++" ) then return fnm end
+      end
+
+      -- Borland TASM
+      do               local pat_flx =                                        " ([^(]+)%((%d+)%) (.*)$"
+                       emsg, fnm, line, extra = lbuf:match( "^(%*%*Error%*%*)"..pat_flx )
+      if not emsg then emsg, fnm, line, extra = lbuf:match( "^(%*Warning%*)"  ..pat_flx ) end
+      if emsg and GotoFileYX_Msg( fnm, line, 1, string.gsub( emsg..": "..extra, "%*", "", "Borland TASM" ) ) then return fnm end
+      end
+
+      -- Borland Delphi 5
+      fnm, line, emsg = lbuf:match( "^(%S+)%((%d+)%) (.+)$" )
+      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "Borland Delphi 5" ) then return fnm end
+
+      -- MSVC 12: c:\cecil\ws5_go\cecil_v1_0\trunk\test\sim_params\unittest.cpp(43): error C2664: 'ParamSection_intf::ParamSection_intf(const ParamSection_intf &)' : cannot convert argument 1 from 'ParamSetSpec' to 'const ParamSectionSpec &' [C:\cecil\ws5_go\Cecil_v1_0\trunk\test\sim_params\msvc120\paramTest\paramTest.vcxproj]
+      do
+      fnm, line, emsg = lbuf:match( "^(%S+)%((%d+)%):%s+(.+)" )
+      if emsg and GotoFileYX_Msg( fnm, line, 0, emsg, "MSVC 12" ) then return fnm end
+      end
+
+      -- MSVC-like: e:/ws/fij1rc1/source/be/fps/fps.c(205,24): info: Unexpected array subscript
+      do local col
+      fnm, line, col, emsg = lbuf:match( "^(%S+)%((%d+),(%d+)%):%s+(.+)" )
+      if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "SNDK-instrumenter" ) then return fnm end
+      end
+
+      -- generic: "c:\klg\sn\k\k.lua 870 10L7"
+      do local col, wid
+      fnm, line, col, wid, emsg = lbuf:match( "^(%S+)%s+(%d+)%s(%d+)L(%d+):%s+(.+)" )
+      if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "K internal, Y,X", wid ) then return fnm end
+      end
+
+      -- generic
+
+      fnm, line = lbuf:match( "^(%S+)%s+(%d+)" )
+      if line and GotoFileYX_Msg( fnm, line, 1, fnm.." "..line, "K internal, Y only" ) then return fnm end
+
+      return ParseErr()
+      end
+
+   AddEdFxn{ name = "gotofileline", key = "alt+g", attr = NOARG+BOXSTR+BOXARG+TEXTARG, help = "jumps to the file location described on the current line"
+      , NOARG   = function( arg ) return nil ~= (gofileline( arg.fbuf:GetLine( 1 ), arg.fbuf:GetLine( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
+                                              or gofileline_dif( arg.fbuf, arg.cursorY ))
+                     end
+      , TEXTARG = function( arg ) return nil ~=  gofileline( ""                   , arg.text                       , arg.fbuf:Name() ~= nextmsgFBufName() ) end
+      }
+end
+
+--
+-- runchild - given a command line (arg.text), run it:
+--
+--    STYLE             DESCRIPTION
+--  ----------  -----------------------------------------------------------------------
+--  GUI>        as Win32::CreateProcess DETACHED_PROCESS (CANNOT run console apps (including DOS apps) this way)
+--  EMBSHELL>   within a $(COMSPEC) shell; stdout and stderr are bound to the <compile> file, so the shell is pretty much "captive/non-interactive"
+--  CON>        open a new window running arg.text within it; arg.text _may_ be a shell, or could be something like GRANDVIEW.EXE
+--  NEWSHELL>   open a new shell ($(COMSPEC)) window and make arg.text its first command (shell left open for further user interaction)
+--  WINRUN>     using Win32::ShellExecute
+--  MACRO>      as an editor macro
+--
+-- command line (arg.text) expansions:
+--   $(varname) : expands to EnvVar varname
+--   "$%"       : anywhere -> CurrentFilename
+--
+-- more tech details:
+--   "GUI>"  uses a custom call to Win32::CreateProcess as a DETACHED_PROCESS
+--   "CON>"  uses a custom call to Win32::CreateProcess w/ CREATE_NEW_CONSOLE (these appear to be fully detached; they live on after editor termination)
+--
+
+
+local lpnm = "LUA_PATH"
+function runchild( str )
+   local optn, rc
+   str = str:gsub( "^([a-zA-Z]+)(>%s*)", function(s) optn = optn or s:upper() return "" end )
+   str = str:gsub( "$%%", GetCurrentFilename() )
+
+   if optn == "MACRO" then
+      local rc = fExecute( str )
+      print( optn" \""..str.."\" returned "..tostring(rc) )
+      return rc
+      end
+
+   -- printf( "OPTN=%s", optn )
+   str = StrExpandEnvVars( str ) -- do NOT this for "MACRO" execute because it does its own ExpandEnvStrs equivalent, which is double-backslash-safe
+   str = str:gsub( "[\\/] ", " " )  -- if last char in ExpandEnvStrs rv was from EnvExpansion, string will end in "\": fix it
+   str = str:gsub( "[\\/]$", ""  )  -- if last char in ExpandEnvStrs rv was from EnvExpansion, string will end in "\": fix it
+
+   if str == "" and optn ~= "NEWSHELL" then  return false  end
+
+   if optn == "NEWSHELL" then  -- 'NEWSHELL' converts itself to 'CON' !!!
+      optn = "CON"
+      str = Getenv("COMSPEC").." /K "..str
+      end
+
+   -- in case the child process runs "something Lua", we don't want our Lua-specific env settings to override theirs
+   local lua_path_val = Getenv( lpnm )
+                        Putenv( lpnm.."=" )  -- empty
+   local function pop_lp() if lua_path_val then Putenv( lpnm.."="..lua_path_val ) end end
+
+   local function pr_rslt( rc )
+      pop_lp()
+      local st = optn.." '"..str.."' returned "..tostring(rc) .. (rc ~= 0 and (" ("..OsErrStr()..")" ) or "")
+      print( st )
+      return rc
+      end
+
+   if optn == "CON"      then  return pr_rslt( StartConProcess(          str ) )  end
+   if optn == "WINRUN"   then  return pr_rslt( StartShellExecuteProcess( str ) )  end
+   if optn == "GUI"      then  return pr_rslt( StartGuiProcess(          str ) )  end
+   if optn == "EMBSHELL" then
+      -- execute as secondary child shell "$(COMSPEC) /c str" embedded within the editor
+      --
+      -- An "interesting" side effect of running the internal 'compile' function is that the "console
+      -- hotkeys", Ctrl+C and Ctrl+S, become inactive as editor keystrokes until the child process
+      -- terminates.
+      --
+      -- 11-Mar-2000 klg
+      --
+      local cmdline = "arg \""..nextmsgFBufName().."\" setfile  arg arg \""..str.."\" compile"
+      print( "runchild compile: "..cmdline )
+      local rv = fExecute( cmdline )
+      pop_lp()
+      return rv
+      end
+
+   pop_lp()
+
+   Msgf( "%s is unknown runchild option: %s", optn, str )
+   end
+
+
+AddEdFxn{ name = "runchild", key = "alt+f11", attr = BOXSTR+TEXTARG, help = "runs child process"
+   , TEXTARG = function( arg ) return runchild( arg.text ) end
+   }
+
+AddEdFxn{ name = "sh", attr = NOARG, help = "open shell in dir of current file"
+--[[ macro-language equivalent:
+     sh:=arg cwd _spush  \
+             arg meta curfilepath setfile  \
+             arg "NEWSHELL>" runchild  \
+         arg _spop setfile
+--]]
+   , NOARG = function( arg )
+             local cwd = GetCwd()
+             local newwd = arg.fbuf:IsPseudo() and PathOf( arg.fbuf:Name() )
+             local switchwd = newwd and #newwd > 0 and cwd:lower() ~= newwd:lower()
+             if switchwd then
+             -- print( "cwd in sh=", GetCwd() )
+                setfile( newwd ) -- set cwd to dir of current file
+                end
+             local rv=runchild( "NEWSHELL>" )
+             if switchwd then setfile( cwd ) end
+             return rv
+             end
+   }
+
+
+print( "runchild is a "..type(runchild) )
+
+local function log(st) print(st) return st end
+
+do
+   local urls = {
+      http  = true,
+      https = true,
+      file  = true,
+      ftp   = true,
+      }
+
+   local function HasUrlPrefix( str )
+      local url = str:match( "^(%a+)://" )
+      return url ~= nil and urls[ url ] ~= nil
+      end
+
+   local exts = {
+      exe = true,
+   -- mp3 = true,
+   -- m3u = true,
+      }
+
+   local work_org = "nowhere"
+
+   function ExecutedURL( strToExecute )
+      if strToExecute:match( '%*' ) then return false end -- some URL's have '?' () not sure about '*'
+
+      -- If you want browser to open your URL in a NEW window (or tab), change the
+      -- browser settings (Options|Advanced ...  in FireFox)
+
+      local ext = strToExecute:match( "%.([^.]+)$" )
+      if (ext and exts[ ext:lower() ]) or HasUrlPrefix( strToExecute ) then
+         if strToExecute:match( "://[^/]+%."..work_org.."%.com/" )
+         or strToExecute:match( "^https://"..work_org.."%.webex%.com/" )
+            then     -- work-internal websites are unpredictably nonfunctional when viewed with Firefox, so with this hack we force use of MSIE in this special case
+            StartShellExecuteProcess( strToExecute, "iexplore.exe" ) -- http://stackoverflow.com/questions/8180661/force-opening-a-webpage-with-internet-explorer
+         else
+            StartShellExecuteProcess( strToExecute )
+            end
+         return true
+         end
+
+      return false
+      end
+end
+
+do
+
+   local stk = {}
+   local function spush( st )  stk[1+#stk] = st  end
+
+   -- note the non-obvious mapping of attr to function-key (e.g. CURSORFUNC & MACROFUNC both map to NOARG functions)
+   -- this is documented in column "Actually can be set in ARG::Abc?" where NOARG is defined
+   AddEdFxn{ name = "_spush", attr = TEXTARG+BOXSTR    , TEXTARG = function( arg ) spush( arg.text    ) end }
+   AddEdFxn{ name = "_sdup" , attr = CURSORFUNC        , NOARG   = function()      spush( stk[#stk]   ) end }
+   AddEdFxn{ name = "_sover", attr = CURSORFUNC        , NOARG   = function()      spush( stk[#stk-1] ) end }
+   AddEdFxn{ name = "_sdrop", attr = CURSORFUNC        , NOARG   = function()      stk[#stk] = nil      end }
+   AddEdFxn{ name = "_sswap", attr = CURSORFUNC        , NOARG   = function()      stk[#stk-1],stk[#stk] = stk[#stk],stk[#stk-1] end }
+   AddEdFxn{ name = "_spop" , attr = MACROFUNC+KEEPMETA, NOARG   = function()  local tos = stk[#stk]  stk[#stk] = nil  return PushVariableMacro( tos ) end }
+   AddEdFxn{ name = "_st_encodeurltxt", attr = NOARG   , NOARG   = function( arg ) stk[#stk] = gsub_URL_escape( stk[#stk] ) end , help = "macro-helper" }
+
+   do
+      local dt_macs = {
+         cur_s   = "%S" ,
+         cur_min = "%M" ,
+         cur_h   = "%H" ,
+         cur_dow = "%A" ,
+         cur_woy = "%W" ,
+         cur_d   = "%d" ,
+         cur_mon = "%m" ,
+         cur_y2  = "%y" ,
+         cur_y4  = "%Y" ,
+         }
+      dt_macs.cur_hhmm            = dt_macs.cur_h .. dt_macs.cur_min
+      dt_macs.cur_hhmmss          = dt_macs.cur_hhmm .. dt_macs.cur_s
+      dt_macs.cur_hh_mm_ss        = dt_macs.cur_h .. ":" .. dt_macs.cur_min .. ":" .. dt_macs.cur_s
+      dt_macs.cur_yy              = dt_macs.cur_y2
+      dt_macs.cur_yymmdd          = dt_macs.cur_y2 .. dt_macs.cur_mon .. dt_macs.cur_d
+      dt_macs.cur_yyyy            = dt_macs.cur_y4
+      dt_macs.cur_yyyymmdd        = dt_macs.cur_y4 .. dt_macs.cur_mon .. dt_macs.cur_d
+      dt_macs.cur_yyyymmdd_hhmm   = dt_macs.cur_yyyymmdd .. "_" .. dt_macs.cur_hhmm
+      dt_macs.cur_yyyymmdd_hhmmss = dt_macs.cur_yyyymmdd .. "_" .. dt_macs.cur_hhmmss
+
+      for fxnm, fmtst in pairs(dt_macs) do
+         AddEdFxn{ name = fxnm, attr = MACROFUNC+KEEPMETA, NOARG = function() return PushVariableMacro( os.date(fmtst) ) end }
+         end
+   end
+
+
+   local function LuaPat_escape( s ) return s:gsub( "%%", "%%%%" ) end
+
+   UrlSrchTag = "$sstr$"
+   local UrlSrchTagEscaped = "%$sstr%$"  -- bugbug s/b LuaPat_escape( UrlSrchTag )
+
+   function goUrl( url ) -- NB:  url param contains a magic string which is replaced with the escaped str value
+      return function(str)
+         str = str or ""
+         str = gsub_URL_escape( str )
+         str = LuaPat_escape( str )
+         printf( ": '%s'", str )
+         local fnm = url:gsub( UrlSrchTagEscaped , str )
+         shex( fnm )  printf( ": '%s'", fnm )
+         end
+      end
+
+   local function OpenUrlMenu( urlChoices, str )
+      local _,fxUrl = Menu.new( urlChoices ):PickOne()
+      -- print( "URL="..url )
+      -- if fxUrl then fxUrl( str ) end
+      return fxUrl and fxUrl( str )
+      end
+
+   function OpenUrlOrMenu( arg, tMenu )  -- used by "websearch" in user.lua
+      if arg.argCount == 1 then tMenu.choices[ tMenu.choices.default ][ 2 ]( arg.text or "testing" )
+      else                      OpenUrlMenu( tMenu, arg.text )
+         end
+      end
+end
+
+
+AddEdFxn{ name = "infloop", attr = NOARG, help = "to verify Ctrl+Break handling in Lua", NOARG = function( arg ) Msg("looping: hit Ctrl+break to exit") while true do end end }
+
+do
+   local caseMenu = { title="Case"      , choices = { default = 1
+                                                    , { "Significant" , function(s) return s         end }
+                                                    , { "Ignored"     , function(s) return s:lower() end }
+                                                    }
+                    }
+   local ordrMenu = { title="Order"     , choices = { default = 1
+                                                    , { "Ascending"   , function(s1, s2) return s1 < s2 end }
+                                                    , { "Descending"  , function(s1, s2) return s1 > s2 end }
+                                                    }
+                    }
+   local dupsMenu = { title="Duplicates", choices = { default = 1
+                                                    , { "Keep"        , function(s1, s2) return false end }
+                                                    , { "Discard"     , function(s1, s2) return true  end }
+                                                    }
+                    }
+   local function Menu_to_SortFunctions()
+      local _,Fkeycond = Menu.new( caseMenu ):PickOne()  if not Fkeycond then return end
+      local _,Fsort    = Menu.new( ordrMenu ):PickOne()  if not Fsort    then return end
+      local _,FrmvDups = Menu.new( dupsMenu ):PickOne()  if not FrmvDups then return end
+      return Fkeycond, Fsort, FrmvDups
+      end
+
+   local s_dupFbNum = 0
+   local function dupFbGen()
+      s_dupFbNum = s_dupFbNum + 1
+      return FBUF.new( "<dups"..s_dupFbNum..">" )
+      end
+
+   function mtFBUF:SortLineRange( y0, y1, xLeft, xRight, Fkeycond, Fsort, FrmvDups )
+      local msg = fmt( "keygen(%d)", y1-y0+1 )  Msg( msg )
+
+      local lcache = {}
+      for line = y0, y1 do
+         local key = Fkeycond( self:GetLineSeg( line, xLeft, xRight ) )
+         if key then lcache[ #lcache+1 ] = { key = key, whole_line= self:GetLineRaw( line ) } end
+         end
+
+      msg = msg..fmt( ", sorting(%d)", #lcache )  Msg( msg )
+      table.sort( lcache, function(s1, s2) return  Fsort( s1.key, s2.key )  end )
+
+      if FrmvDups() then
+         Msg( msg..", finding dups" )
+         local removed = {}
+         for ix=2,#lcache do
+            if lcache[ix-1].key == lcache[ix].key then
+               removed[1+#removed] = ix-1
+               end
+            end
+         msg = msg..fmt(", dups(%d)", #removed )  Msg( msg )
+         if #removed > 0 then
+            local fbDups = dupFbGen()
+            for _,ix in ipairs(removed) do
+               fbDups:PutLastLine( lcache[ix].whole_line )
+               lcache[ix].whole_line = nil
+               end
+            msg = msg..fmt( " to %s", fbDups:Name() )  Msg( msg )
+            self:DelLine( y0, y0+#removed-1 )
+            end
+         end
+
+      msg = msg..fmt( ", writeback" )  Msg( msg )
+      local prevRmvs = 0
+      for ix,tbl in ipairs( lcache ) do
+         if tbl.whole_line then  self:PutLine( y0+ix-1-prevRmvs, tbl.whole_line )
+         else                    prevRmvs = 1+ prevRmvs
+            end
+         end
+      msg = msg..fmt( "(%d)", #lcache-prevRmvs )  Msg( msg )
+      end
+
+   function mtFBUF:SortLineRangeInteractive( y0, y1, xLeft, xRight )
+      xLeft  = xLeft  or 1
+      xRight = xRight or MAXCOL
+      local Fkeycond, Fsort, FrmvDups = Menu_to_SortFunctions()
+      if not Fkeycond then Msg( "user cancelled sort" ) return end
+      self:SortLineRange( y0, y1, xLeft, xRight, Fkeycond, Fsort, FrmvDups )
+      end
+
+   function SortLineRange_from_C( fbuf, y0, y1, xLeft, xRight, fCaseIgnored, fOrdrAscending, fDupsKeep )
+      local Fkeycond, Fsort, FrmvDups = Bools_to_SortFunctions( fCaseIgnored, fOrdrAscending, fDupsKeep )  -- C defaults true, true, false
+      fbuf:SortLineRange( y0, y1, xLeft, xRight, Fkeycond, Fsort, FrmvDups )
+      end
+
+   AddEdFxn{ name = "sort", help = "sort a range of lines given a key selection (LINEARG, BOXARG); menus specify ascend/descend, case sens, interpretation of numeric chars"
+           , attr = MODIFIES+BOXARG+LINEARG, key = "alt+9"
+      , LINEARG = function( arg ) arg.fbuf:SortLineRangeInteractive( arg.minY, arg.maxY ) end
+      , BOXARG  = function( arg ) arg.fbuf:SortLineRangeInteractive( arg.minY, arg.maxY, arg.minX, arg.maxX ) end
+      }
+end
+
+do
+   local prev_start_indent = tu.t_values_table{ "if", "else", "elif", "elsif", "elseif", "for", "foreach", "do", "while", "else", "function", "sub" }
+   local prev_end_indent   = tu.t_values_table{ "{", "do", "then" }
+   local prev_end_undent   = tu.t_values_table{ "}", "end" }
+
+   function Softcr_col_from_C_( fb, yCur ) -- return 0  end
+
+   -- [[
+      -- all line names are in the state BEFORE the new line is inserted
+      local prevline, nextline = fb:GetLine( yCur ) or "", fb:GetLine( yCur+1 ) or ""
+
+      printf( "Softcr_col_from_C: prevline(%d) = '%s'", yCur  , prevline or "" )
+      printf( "Softcr_col_from_C: nextline(%d) = '%s'", yCur+1, nextline or "" )
+
+      local prev_spcs, prev_leadword = prevline:match( "^%s*()(%w+)" )
+      local prev_trailtok            = prevline:match( "(%S+)%s*$" )
+
+      printf( "Softcr_col_from_C: prev_leadword = '%s', prev_trailtok = '%s'", prev_leadword or "", prev_trailtok or "" )
+
+      if prev_leadword then
+         if prev_start_indent[prev_leadword] or prev_end_indent[prev_trailtok] then
+            return prev_spcs+3
+            end
+         end
+
+      if prev_spcs then
+         if prev_end_undent[prev_leadword] then return prev_spcs-3 end
+         return prev_spcs
+         end
+
+      return 0
+      end
+   -- ]]
+
+   function Softcr_col_from_C( fb, yCur ) -- return 0  end
+      local rv = Softcr_col_from_C_( fb, yCur )
+      printf( "Softcr_col_from_C(%d) -> %d", yCur, rv )
+      return rv
+      end
+
+end
+
+
+function mtFBUF:IsLineBlank( yLine )
+   local line = self:GetLineRaw( yLine )
+   return not (line and line:match( "%S" ))
+   end
+
+function mtFBUF:LastNonBlankLine( yStart )
+   for yLine=yStart, self:LastLine() do if self:IsLineBlank( yLine ) then return yLine-1 end end
+   return self:LastLine()
+   end
+
+function mtFBUF:LongestLine()
+   local rvLNum, rvLen = -1, 0
+   for yLine,text in self:Lines() do
+      if rvLen  < #text then
+         rvLen  = #text
+         rvLNum = yLine
+         end
+      end
+   return rvLen,rvLNum
+   end
+
+function mtFBUF:AvgLineLen()
+   local cnt,sum = 0,0
+   for yLine,text in self:Lines() do
+      if #text > 0
+         -- and text:match( "^%s" )
+         then
+         cnt = cnt + 1
+         sum = sum + #text
+         end
+      end
+   local rv = int(sum/cnt)
+   Msgf( "using AvgLineLen = %d (%d/%d)", rv, sum, cnt )
+   return rv
+   end
+
+
+AddEdFxn{ name = "ll", help = "Move cursor to longest line", attr = NOARG+NULLARG, key = ""
+   , NOARG   = function(arg)
+      local Len,LNum = arg.fbuf:LongestLine()
+      -- if arg.fMeta then
+         AssignStrOk( "width:" ..Len+1 )
+      -- end
+      arg.view:MoveCursor( LNum, Len )
+      end
+}
+
+local mtView = View:getmetatable()
+
+function mtView:GetLineCompile( yLine )
+   local yLine = self:Get_LineCompile()
+   -- printf( "%s::Get_LineCompile() = %d", tostring(self), yLine )
+   return yLine
+   end
+
+function mtView:SetLineCompile( yLine )
+   -- DBG( fmt( "%s::Set_LineCompile( %d )", tostring(self), yLine ) )
+   -- printf(   "%s::Set_LineCompile( %d )", tostring(self), yLine )
+   self:Set_LineCompile( yLine )
+   end
+
+      -- ObjectShow( mtView, "mtView TABLE" )
+
+function mtFBUF:normalizeLineRange( yMin, yMax )
+   if yMin > yMax then
+      yMin,  yMax = yMax, yMin
+      end
+
+   if yMin < 1               then yMin = 1               end
+   if yMax > self:LastLine() then yMax = self:LastLine() end
+
+   return yMin, yMax
+   end
+
+
+do -- see justify.cpp for missing functionality
+   function mtFBUF:JustifyRect( yMin, yMax, xMin, xMax )
+      yMin, yMax = self:normalizeLineRange( yMin, yMax )
+
+      -- printf( "JustifyRect: Y=%d, %d, X=%d, %d", yMin, yMax, xMin, xMax )
+      if self:GetLine( yMin ) == "" then return end
+
+      ----------------------  extract line segments into combined lbuf
+
+      local comment = "[#/-]"  -- not great, but a minimal abstraction
+      local lnpat = "^(%s*)("..comment.."+)%s+"
+      local maxPrefixSpcs = 0
+      local prefixes = {}  -- better approach is prolly to notice a common leading string
+                           -- and change the args to this fxn accordingly
+                           -- the hole in this (non-integrated) approach is how to handle
+                           -- added lines (how will they be prefixed)?
+
+      local abuf = {}
+      for yLine=yMin, yMax do
+         local nl = self:GetLine( yLine )
+         -- printf( "[%d] nl=|%s|", yLine, nl )
+         abuf[1+#abuf] = nl:gsub( lnpat
+            , function(spc,pfx)
+               if spc then maxPrefixSpcs = Max( maxPrefixSpcs, spc:len() ) end
+               prefixes[1+#prefixes] = pfx or ""
+               return ""
+               end
+            )
+         -- printf( "[%d] nl=|%s|", yLine, abuf[#abuf] )
+         end
+      -- printf( "#lines = %d", #abuf )
+      -- for ix,ln in ipairs(abuf) do
+      --    printf( "  [%d] nl=|%s|", ix, ln )
+      --    end
+
+      local lbuf = util.trim( table.concat(abuf," ") )
+      -- DBG( lbuf )
+      -- printf( "(%d..%d) lbuf[%d]=|%s|-", yMin, yMax, #lbuf, lbuf )
+      -- if true then return end
+
+      if false then
+         local uniques = {}
+         for _,pfx in ipairs(prefixes) do
+            uniques[pfx] = uniques[pfx] or 0
+            uniques[pfx] = 1+uniques[pfx]
+            end
+         end
+
+      ----------------------  pack words into lines
+
+      local maxLen = xMax - xMin + 1
+      local lines, ob = {}, ""
+      local function prep_tok( tok ) return tok:gsub( "([.?!])$", "%1 " ) end
+
+      lbuf:gsub( "%S+"
+       , function(tok)
+            if #ob + #tok > maxLen then
+               lines[ #lines+1 ] = util.trim( ob )
+               ob = prep_tok( tok )
+            else
+               ob = ob.." "..prep_tok( tok )  -- why we need util.trim( ob ) elsewhere
+               end
+            end
+         )
+      if #ob > 0 then lines[ #lines+1 ] = util.trim( ob ) end
+
+      -- for ix,tt in ipairs( lines ) do printf( "%3d: %s|", ix, tt ) end
+
+      ----------------------  adjust number of lines
+      local  yDelta = #lines - (yMax - yMin + 1)  -- printf( "yDelta = %d", yDelta )
+      if     yDelta > 0 then  self:InsBlankLinesBefore( yMax+1,        yDelta      )
+      elseif yDelta < 0 then  self:DelLine            ( yMin, yMin + (-yDelta - 1) )  end
+
+      ----------------------  write lines to fbuf
+   -- local prefix = self:GetLineSeg( yMin, 1, xMin-1 )  -- printf( "prefix=|%s|", prefix ) -- get prefix BEFORE
+      local prefix = string.rep( ' ', xMin-1 )
+      for iy,text in ipairs(lines) do
+         local ltxt = prefix..text
+         -- printf( "ltxt=|%s|", ltxt )
+         self:PutLine( yMin+iy-1, ltxt )
+         end
+      end
+
+   local function getRmargin()
+      local rv = focusSettings and focusSettings.rmargin
+      if rv then  Msgf( "using focusSettings.rmargin = %d", rv ) end
+      return rv
+      end
+
+   AddEdFxn{ name = "justify", help = "justify paragraph", attr = MODIFIES+NOARG+BOXARG+LINEARG, key = "alt+j"
+      , NOARG = function(arg)
+        return arg.fbuf:JustifyRect(
+             arg.cursorY
+           , arg.fbuf:LastNonBlankLine( arg.cursorY )
+           , arg.fbuf:GetLine( arg.cursorY ):match( "^%s+()" ) or 1
+           , getRmargin() or arg.fbuf:AvgLineLen()
+           )
+        end
+      , BOXARG = function(arg)
+        return arg.fbuf:JustifyRect( arg.minY, arg.maxY, arg.minX, arg.maxX )
+        end
+      , LINEARG = function(arg)
+        return arg.fbuf:JustifyRect( arg.minY, arg.maxY, arg.minX, arg.maxX )
+        end
+   }
+
+end
+
+do -- gmake gnumake
+   local len2spcspat = { "^ ",
+                         "^  ",
+                         "^   ",
+                         "^    ",
+                         "^     ",
+                         "^      ",
+                         "^       ",
+                         "^        ",
+                       }
+
+   local spaces_8 = (" "):rep( 8 )
+   local newPrefix = spaces_8 -- or "\t"
+   local function preTabLineRange( fbuf, first, last )
+         fbuf:SetTabconvOk( 1 )  -- so succeeding PutLine ops will convert leading spaces to tabs
+         local tabwidth = fbuf:TabWidth()
+         for lnum = first, last do
+            local line = fbuf:GetLine( lnum ) -- DBG( line )
+            if line then
+               local ldSpcs = line:match( "^%s+" )
+               if ldSpcs then         -- make sure every line that has leading whitespace
+                  local len = #ldSpcs
+                  if len > tabwidth then len = tabwidth end
+                  line = line:gsub( len2spcspat[len], newPrefix )  -- has at least 8 spaces
+                  fbuf:PutLine( lnum, line )
+                  end
+               end
+            end
+         end
+
+
+   AddEdFxn{ name = "pretab", help = "to- GNU-make file-format converter", attr = NOARG+LINEARG, key = ""
+      -- convert current file to be GNU make compatible: convert all lines with
+      -- any leading whitespace to have (at least) a single leading tab
+      -- 20071208 kgoodwin
+      , LINEARG = function(arg)  preTabLineRange( arg.fbuf, arg.minY, arg.maxY            )  end
+      , NOARG   = function(arg)  preTabLineRange( arg.fbuf, 1       , arg.fbuf:LastLine() )  end
+      }
+end
+
+do
+   local maxuserbits = 1
+
+   local function normbitstr( bitstr )
+      printf( "normbitstr <- %s", bitstr )
+      bitstr = bitstr:gsub("^0+","")
+      maxuserbits = Max( maxuserbits, #bitstr )
+      if maxuserbits > #bitstr then
+         bitstr = ("0"):rep(maxuserbits - #bitstr)..bitstr
+         end
+      printf( "normbitstr -> %s", bitstr )
+      return bitstr
+      end
+
+   local function chkbitstr( bitstr )
+      printf( "chkbitstr <- %s", bitstr )
+      local _
+      _,bitstr = bitstr:match("^(0[Bb])([01_]+)$")
+      bitstr = bitstr:gsub("_","")
+      assert(_,"missing 0b arg prefix")
+      maxuserbits = Max( maxuserbits, #bitstr )
+      --assert(#bitstr % 8 == 0,"bits%8!=0")
+      printf( "chkbitstr -> %s", bitstr )
+      return bitstr
+      end
+
+   local function b_( bitstr, bits )  --printf( "b_ %s", bitstr )
+      bits = bits or 8
+      bitstr = chkbitstr( bitstr )
+      local rv={}
+      for ix=1,int(#bitstr / bits) do
+         rv[1+#rv] = bitstr:sub( ((ix-1)*bits)+1, ix*bits )
+         end
+      return "0b"..table.concat( rv,"_" ), "b_"..tostring(bits)
+      end
+
+   local function x2b( hexstr )
+      return "0b"..normbitstr( hexstr2bitstr( hexstr )), "x2b"
+      end
+
+   local function b2x( bitstr )
+      return "0x"..bitstr2hexstr( chkbitstr( bitstr ) ), "b2x"
+      end
+
+   local function bswapN( bitstr, bits )
+      bitstr = chkbitstr( bitstr )
+      bitstr = normbitstr( bitstr )
+      local rv={}
+      for ix=1,int(#bitstr / bits) do
+         rv[1+#rv] = bitstr:sub( ((ix-1)*bits)+1, ix*bits ):reverse( )
+         end
+      return "0b"..table.concat(rv), "bswap"..tostring(bits)
+      end
+
+   local function bswap2( bitstr ) return bswapN( bitstr, 2 ) end
+   local function bswap8( bitstr ) return bswapN( bitstr, 8 ) end
+
+   local function bswapall( bitstr )
+      return "0b"..chkbitstr( bitstr ):reverse(), "bswapall"
+      end
+
+   local function bsl( bitstr, bits )
+      bits = bits or 1
+      bitstr = normbitstr( chkbitstr( bitstr )..("0"):rep(bits) )
+      return "0b"..bitstr, "bsl"..tostring(bits)
+      end
+
+   local function bsr( bitstr, bits )
+      bits = bits or 1
+      bitstr = chkbitstr( bitstr )
+      bitstr = normbitstr( ("0"):rep(bits)..bitstr:sub(1,#bitstr-bits) )
+      return "0b"..bitstr, "bsr"..tostring(bits)
+      end
+
+   local function bitxform( xform )
+      return function(arg)
+         local text = arg.text or arg.fbuf:GetLine( arg.minY )
+         text = text:match"%S+"
+         local rslt,anno = xform( text )
+         if not rslt:match"^0x" then rslt = rslt .. " ("..b2x(rslt)..")" end
+         arg.fbuf:InsLine( arg.minY+1, rslt..(anno and (" <-- "..anno) or "") )
+         fExecute("down")
+         end
+      end
+
+   local gm_choices = {
+      { "hex -> binary"               , bitxform( x2b )      },
+      { "binary -> hex"               , bitxform( b2x )      },
+      { "shift left"                  , bitxform( bsl )      },
+      { "shift right"                 , bitxform( bsr )      },
+      { "reverse bits in each byte"   , bitxform( bswap8 )   },
+      { "reverse bit-pairs"           , bitxform( bswap2 )   },
+      { "reverse all bits"            , bitxform( bswapall ) },
+
+      }
+
+   local function bits( arg )
+      if arg.text then maxuserbits = tonumber( arg.text ) arg.text = nil end
+      local _,fx = Menu.new( { title="bit-related commands", choices=gm_choices } ):PickOne()
+      if fx then  return fx( arg )  end
+      return false
+      end
+
+   AddEdFxn{ name = "bits", help = "Menu of bit-related commands", attr = NOARG+TEXTARG
+      , NOARG   = bits
+      , TEXTARG = bits
+      }
+end
+
+
+function a_map(   fx,ary )   local rv = {} for ky,val in ipairs(ary) do rv[ ky ] = fx(val)   end return rv end
+
+   function EnqueueCompileJobs( ary )
+      return enqueue_compile_jobs( a_map( StrExpandEnvVars, ary ) )
+      end
+
+   AddEdFxn{ name = "test", help = "", attr = NOARG+NULLARG+TEXTARG , key = "alt+n"
+      , NOARG   = function(arg)
+           EnqueueCompileJobs{
+              "@echo %CD% %date% %time%",
+              "@echo %curfilepath% %date:~10%%date:~4,2%%date:~7,2% %time%",
+              "@echo 1",
+              "@echo  01",
+              "@echo 021",
+              "@echo 031",
+              "@echo 041",
+              "@echo 051",
+              "@echo 061",
+              "@echo 071",
+              "@echo 081",
+              "@echo 091",
+              "@echo 101",
+              "@echo 111",
+              "@echo 121",
+              "@echo 131",
+              "@echo 141",
+              "@echo 151",
+              "@echo 161",
+              "@echo 171",
+              "@echo 181",
+              "@echo 191",
+              "@echo 201",
+              "@echo 211",
+              "@echo 221",
+              "@echo 231",
+              "@echo 241",
+              "@echo 251",
+              "@echo 261",
+              "-ls *.bat | grep -i do",
+              "-..\\tools\\false.exe",
+              "-../tools/false.exe",
+              "echo 281",
+              "echo 291",
+              "echo 301",
+              "-@doh!",
+              "@-doh!",
+              "  @-doh!",
+              "  @-    doh!",
+              "echo 321",
+              "echo 331",
+              "echo 331",
+           }
+        end
+      , NULLARG = function(arg) nextmsg_engine(arg, 1) end
+      , TEXTARG = function(arg) nextmsg_newsection( arg.text ) end
+      }
+
+
+--////////////////////////////////////////////////////////////////////////
+--
+-- AlignCol
+--
+--     If the cursor is on a word (series of non-space chars), moves that
+--     word right until first char of word is under cursor.
+--
+--     If the cursor is NOT on a word (ie.  on whitespace), deletes
+--     all whitespace from the cursor to the next word to the right of the
+--     cursor.
+--
+-- Arg <boxarg> AlignCol  <ex-CollapseLeft>
+--
+--     For each line in the box, all whitespace from the left side of the
+--     box to [the first nonwhite char OR right side of the box] is deleted.
+--
+-- Arg Arg <boxarg> AlignCol <ex-PushRight>
+--
+--     For each line segment in the box, whitespace is added to move the
+--     leftmost nonspace character to the left until it is just outside the
+--     box area.
+--
+--////////////////////////////////////////////////////////////////////////
+
+function string.bisect( str, ix )  return str:sub(1,ix-1), str:sub(ix)  end
+
+local function alignLeft( arg, iy )
+   local ltxt = arg.fbuf:GetLine( iy )
+   local prefix, seg = string.bisect( ltxt, arg.minX )
+   if seg == "" then return end
+
+   if seg:match( "^%S" ) then
+      -- 19-Nov-1991 klg if cursor on nonspace char, insert spaces in front of
+      --                 'word' until first char of word is at cursor position
+      local wordPre = ''
+      prefix = prefix:gsub( "%S+$"
+         , function( st )  wordPre = st  return string.rep( ' ', #wordPre )  end
+         )
+
+      arg.fbuf:PutLine( iy, prefix .. wordPre .. seg )
+      return true
+      end
+
+   local sseg, ldwhite = seg:gsub( "^%s+", "" )
+   if ldwhite then  arg.fbuf:PutLine( iy, prefix .. sseg )  return true  end
+   end
+
+local function pushRight( arg, iy )
+   local ltxt = arg.fbuf:GetLine( iy )
+   local prefix, seg = string.bisect( ltxt, arg.minX )
+   local segWidth = arg.maxX - arg.minX + 1
+   local oLeftNonspc = seg:match( "()%S" )-1
+   local fill = segWidth - Min( oLeftNonspc, segWidth )  -- printf( "segWidth=%d, oLeftNonspc=%d, fill=%d", segWidth, oLeftNonspc, fill )
+   if fill > 0 then
+      arg.fbuf:PutLine( iy, prefix .. (" "):rep(fill) .. seg )
+      end
+   end
+
+AddEdFxn{ name = "aligncol", help = "align columns", attr = MODIFIES+KEEPMETA+NOARG+BOXARG, key = "alt+a"
+   , NOARG = function(arg)
+     if not alignLeft( arg, arg.cursorY ) then
+        local ltxt = arg.fbuf:GetLine( arg.cursorY )
+        local prefix, seg = string.bisect( ltxt, arg.cursorX )
+        if #seg > 0 then
+           local sseg, ldwhite = seg:gsub( "^%s+", "" )
+           if ldwhite then
+              arg.fbuf:PutLine( arg.cursorY, prefix .. sseg )
+              end
+           end
+        end
+     end
+   , BOXARG = function(arg)
+     local fx = arg.argCount == 1 and alignLeft or pushRight
+     for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
+        fx( arg, iy )
+        end
+     end
+
+--[[ a
+      b
+          c
+              d
+                  e
+                   f
+                  e
+              d
+          c
+      b
+     a ]]
+
+   }
+
+AddEdFxn{ name = "splitline", help = "", attr = NOARG
+   , help="split single line into multiple lines on whitespace"
+   , NOARG   = function(arg)
+        local yIns = arg.cursorY
+        local ltxt = arg.fbuf:GetLine( yIns )
+        for tok in ltxt:gmatch( "%S+" ) do
+           if yIns == arg.cursorY then
+              yIns = 1+yIns
+              arg.fbuf:InsLine( yIns, "" )
+              arg.view:MoveCursor( yIns+1, 1 )
+              end
+           yIns = 1+yIns
+           arg.fbuf:InsLine( yIns, tok )
+           end
+        if yIns ~= arg.cursorY then
+           yIns = 1+yIns
+           arg.fbuf:InsLine( yIns, "" )
+           end
+        end
+   }
+
+do -- test io.popen
+   -- local fh = io.popen( "dir *.cpp" )
+   -- for line in fh:Lines() do print( line ) end
+end
+
+nextmsg_setbufnm_FROM_C   = true  -- CAREFUL called from C++
+nextmsg_newsection_FROM_C = true  -- CAREFUL called from C++
+
+do
+   --[[
+
+   Nextmsg
+
+      Advances to next error message or MFGrep match listed in the <compile>
+      pseudofile.
+
+   Arg <number> Nextmsg
+
+      Moves to the nth message in the current set of messages, where n is
+      specified by <number>.
+
+      To move relative to the current message, use a signed number. For
+      example, when <number> is +1, the editor moves to the next message,
+      and when it is -1, the editor moves to the previous message.
+
+   Arg Nextmsg        [not yet implemented]
+
+      Move to the next message within current set of messages that does not
+      refer to current file.
+
+   Arg Meta Nextmsg   [not yet implemented]
+
+      Advance to next "set" of error messages, in which a set corresponds
+      to all the messages for a single compile or search.
+
+      After executing this command, you cannot move back to the previous
+      set. You can still view all sets of messages in the <compile> pseudo
+      file until it is deleted.
+
+   Arg Arg Arg meta nextmsg
+
+      If the current file is the <compile> pseudo file, sets the message on the
+      line prior to the cursor as the current error message and (in effect)
+      executes Nextmsg.  Net result is jumping to the message under the cursor
+      after making it the current error message.
+
+      If the current file is not the <compile> pseudo file, switches to the
+      <compile> pseudo file and sets the cursor at the current error
+      message.
+
+      'arg arg arg meta nextmsg' is expected to be a macro (assigned to a key)
+
+   Returns
+
+   True:  Message found
+   False: No more messages found
+
+   -----------------------------------------------------------------------------
+
+   issues:
+
+      knowing when a new batch of messages have been written
+
+   nextmsg family of functionality: what are the useful "subcommands"?
+
+   When the current FBUF _is not_ the <compile> buffer:
+
+   3.  advance to next/prev "message-set", in which a "set" corresponds to
+   all the messages for a single compile or search.
+
+   When the current FBUF _is_ the <compile> buffer:
+
+   1.  switch the <compile> cursor to the current line (this may move the
+   <compile> cursor into an entirely different "message-set").
+
+   Notes:
+
+   a) the user may edit the <compile> buffer at any time, so it is unwise to
+   save line numbers within the <compile> buffer for use as boundary "fences".
+
+   ]]
+
+
+   function window_for_compile( fnm, percentage, lines )
+      local atBotton -- implemented but not used 20120121 kgoodwin
+      local newwin, oldwin = Win.by_filename( fnm )
+      if newwin then return newwin:CurView() end  -- window exists already?
+      oldwin = Win.cur()
+      percentage = atBotton and 100-percentage or percentage
+      newwin = SplitCurWndHoriz(     percentage )
+      if not newwin then return end  -- couldn't create window?
+      assert( newwin ~= oldwin )
+      if not atBotton then  newwin, oldwin = TopLeftWin( newwin, oldwin )  end  -- swap so newwin is before (above) oldwin
+      newwin:MakeCurrent()
+      local fb = FBUF.new( fnm )
+      fb:PutFocusOn()
+      local vw = newwin:CurView()
+      if vw:GetLineCompile() > 0 then
+         vw:MoveCursor( vw:GetLineCompile(), 1 )
+         end
+
+      fExecute( "window" )   -- flip back to previous window
+   -- oldwin:MakeCurrent()
+      return vw, fb, newwin
+      end
+
+   local function w4comp()  return window_for_compile( nextmsgFBufName(), 25 )  end
+
+   AddEdFxn{ name = "SplitWnd25pct", attr = TEXTARG, TEXTARG = function(arg) window_for_compile( arg.text, 25 )  end }
+
+   local kszCompileHdr = "+^-^+"
+   function nextmsg_newsection_FROM_C( srch_sr )  -- CALLED FROM C++
+      local nmfb = FBUF.new( nextmsgFBufName() )
+   -- if nmfb:LineCount() > 0 then  nmfb:MakeEmpty() end -- BUGBUG should archive <compile> buffers instead!!!
+      if nmfb:LineCount() > 0 then nmfb:PutLastLine( "" ) end
+
+      nmfb:PutLastLine( kszCompileHdr.." "..srch_sr )
+      nmfb:PutLastLine( "" )
+      local nmvw = w4comp()
+      nmvw:Set_LineCompile( nmfb:LastLine() )
+      local curline = nmvw:GetLineCompile()
+      printf( "nextmsg_newsection_FROM_C: %s curline = %d", tostring(nmvw), curline )
+   -- DispRefreshWholeScreenNow();
+      end
+
+   local nextmsgFBuf,IsLineCompileSectionHdr
+
+   do
+      local function dedup_nextmsgs()  -- 20100923 kgoodwin nasty-ass code which removes later duplicate search results to minimize clutter
+         -- printf( "dedup_nextmsgs()" )
+         local nmfb, nmvw, fReopen = nextmsgFBuf()
+         if nmfb then
+            local sections = {}
+            local todel = {}
+            local lb = {}
+            local yStart = 1
+            for yLine,text in nmfb:Lines() do
+               if #lb > 0 and IsLineCompileSectionHdr( yLine,text ) then
+                  local key = table.concat(lb)
+                  lb = {}                -- printf( "{%d,%d} %s", yStart, yLine-1, key )
+                  if sections[key] then  -- printf( "a dup" )
+                     todel[1+#todel] = { yStart, yLine-1 }
+                  else  -- printf( "new section" )
+                     sections[key] = yStart
+                     end
+                  yStart = yLine
+                  end
+               lb[1+#lb] = text
+               end
+
+            local key = table.concat(lb)
+            -- printf( "{%d,%d} %s", yStart, nmfb:LastLine(), key )
+            local yStartOfView
+            if sections[key] then
+               yStartOfView = sections[key]
+               todel[1+#todel] = { yStart, nmfb:LastLine() }
+               end
+
+            for ix=#todel,1,-1 do
+               local el = assert( todel[ix] )
+               nmfb:DelLine( el[1], el[2] )
+               end
+
+            if nmvw and yStartOfView then
+               nmvw:SetLineCompile( yStartOfView )
+               end
+            end
+         end
+
+      AddEdFxn{ name = "mfgrep_done_nextmsg_FROM_C", help = "", attr = NOARG
+         , NOARG = function(arg)
+                   dedup_nextmsgs()
+                   nextmsg_engine(arg, 1)
+                   end
+         }
+   end
+
+   if false then -- 20120205 kgoodwin new impl
+
+      local nxtmsgbufs = {}
+      nextmsg_setbufnm_FROM_C = function(st)      nxtmsgbufs[1+#nxtmsgbufs] = st  end  -- CAREFUL called from C++
+      nextmsgFBufName         = function() return nxtmsgbufs[  #nxtmsgbufs] or "<search-results>" end
+
+      IsLineCompileSectionHdr = function( yLine,ldata )
+         return 1 == yLine
+         end
+
+      nextmsgFBuf = function( arg )
+         local nmbfnm = nxtmsgbufs[#nxtmsgbufs] or arg.fbuf:Name()
+         local win = Win.by_filename( nmbfnm )
+         if win then  return win:CurFBUF(), win:CurView(), false  end
+         local vw, fb, win = window_for_compile( nmbfnm, 25 )
+         if win then return fb, vw, true end
+         return nil, "no visible "..nmbfnm
+         end
+
+      local prevFnmGoneTo
+      nextmsg_engine = function(arg,direction)
+         assert( arg.argCount <= 2, "test assert" )
+
+         local nmfb, nmvw, fReopen = assert( nextmsgFBuf(arg) )
+         local searchedFnm, metaLines = arg.fbuf:IsGrepBuf()
+         local curline = nmvw:GetLineCompile()
+         -- printf( "engine: %s curline = %d", tostring(nmvw), curline )
+
+         local fToNextFile = arg.argCount >= 1
+         while true do
+            curline = Min( nmfb:LastLine(), curline ) + direction
+            -- DBG("curline="..curline)
+            local ldata = nmfb:GetLine( curline )
+            if nil == ldata then
+               -- we've reached the end of the current section; wrap (move to opposite end of section)
+               Msgf( "no %s messages (%d)", ifx(direction>0,"more","prev"), curline )
+               while true do
+                  curline = curline - direction  -- back up one
+                  -- printf( "loop: %s curline = %d", tostring(nmvw), curline )
+                  local ldata = nmfb:GetLine( curline )
+                  if nil == ldata then
+                     nmvw:SetLineCompile( curline )
+                     return
+                     end
+                  end
+               end
+
+            local fnm = gofileline( "", ldata, false, ifx(fToNextFile, prevFnmGoneTo, nil) )
+            if fnm then
+               prevFnmGoneTo = fnm
+               -- DBG(tostring(nmvw)..":SetLineCompile="..curline)
+               nmvw:SetLineCompile( curline )
+               return
+               end
+            end
+         end
+
+   else
+
+      local nextmsgFBufName_ = "<search-results>"
+      nextmsg_setbufnm_FROM_C = function(st)  nextmsgFBufName_ = st  end  -- CAREFUL called from C++
+      nextmsgFBufName    = function()   return nextmsgFBufName_ end
+
+      IsLineCompileSectionHdr = function( yLine,ldata )
+         return ldata:match( "^%+^%-^%+%s+(.*)" )
+         end
+
+      local prevFnmGoneTo = nil
+
+      nextmsgFBuf = function( arg )
+         local win = Win.by_filename( nextmsgFBufName() )
+         if win then  return win:CurFBUF(), win:CurView(), false  end
+         local vw, fb, win = w4comp()
+         if win then return fb, vw, true end
+         return nil, "no visible "..nextmsgFBufName()
+         end
+
+      nextmsg_engine = function(arg,direction)
+         assert( arg.argCount <= 2, "test assert" )
+
+         local nmfb, nmvw, fReopen = assert( nextmsgFBuf() )
+         if fReopen then
+            arg.argCount = 2  -- force popup menu
+            end
+
+         local searchedFnm, metaLines = arg.fbuf:IsGrepBuf()
+         if searchedFnm then  -- copy any current <grep.%d+> buffer content into nmfb
+            nextmsg_newsection_FROM_C( arg.fbuf:Name() .. " metalines="..tostring(metaLines) )
+            for lnum=1+metaLines,arg.fbuf:LastLine() do
+               nmfb:PutLastLine( searchedFnm .." ".. arg.fbuf:GetLine(lnum) )
+               end
+            end
+
+         local curline = nmvw:GetLineCompile()
+         printf( "engine: %s curline = %d", tostring(nmvw), curline )
+         local fToNextFile = false
+
+         if arg.argCount==1 then
+            fToNextFile = true
+         elseif arg.argCount>1 then  -- popup menu?
+            local choice_ = {}
+            local snum = 0
+            for yLine,text in nmfb:Lines() do
+               local compileCmd = IsLineCompileSectionHdr( yLine,text )
+               if compileCmd then
+                  snum = snum + 1
+                  choice_[ #choice_+1 ] = { fmt( "Section %d: %s", snum, compileCmd ), yLine }
+                  end
+               end
+
+            if #choice_ == 0 then  Msg( "No header strings found" ) return  end
+
+            local line = choice_[1][2]
+            local choices = tu.a_cat(
+                    not fReopen and { { "--- Next File ---", 1-2 }, { "--- Prev File ---", -1-2 } } or {}
+                  , #choice_ > 1 and choice_ or {}
+                  )
+
+            if #choices > 0 then
+               local _
+               _,line = Menu.new{ title="<compile> entries", choices=choices }:PickOne()
+               end
+
+            if not line then return end
+            if line < 0 then  -- next or previous _file_?
+               fToNextFile = true
+               direction = line + 2
+            else
+               curline,prevFnmGoneTo = line,nil
+               end
+            end
+
+         while true do
+            curline = Min( nmfb:LastLine(), curline ) + direction
+            -- DBG("curline="..curline)
+            local ldata = nmfb:GetLine( curline )
+            if nil == ldata or IsLineCompileSectionHdr( curline,ldata ) then
+               -- we've reached the end of the current section; wrap (move to opposite end of section)
+               Msgf( "no %s messages (%d)", ifx(direction>0,"more","prev"), curline )
+               while true do
+                  curline = curline - direction  -- back up one
+                  printf( "loop: %s curline = %d", tostring(nmvw), curline )
+                  local ldata = nmfb:GetLine( curline )
+                  if nil == ldata or IsLineCompileSectionHdr( curline,ldata ) then
+                     nmvw:SetLineCompile( curline )
+                     return
+                     end
+                  end
+               end
+
+            local fnm = gofileline( "", ldata, false, ifx(fToNextFile, prevFnmGoneTo, nil) )
+            if fnm then
+               prevFnmGoneTo = fnm
+               -- DBG(tostring(nmvw)..":SetLineCompile="..curline)
+               nmvw:SetLineCompile( curline )
+               return
+               end
+            end
+         end
+
+      end
+
+   AddEdFxn{ name = "nextmsg", help = "next message", attr = NOARG+NULLARG+TEXTARG , key = "alt+n"
+      , NOARG   = function(arg) nextmsg_engine(arg, 1) end
+      , NULLARG = function(arg) nextmsg_engine(arg, 1) end
+      , TEXTARG = function(arg) nextmsg_newsection_FROM_C( arg.text ) end
+      }
+   AddEdFxn{ name = "prevmsg", help = "previous message", attr = NOARG+NULLARG , key = "alt+p"
+      , NOARG   = function(arg) nextmsg_engine(arg,-1) end
+      , NULLARG = function(arg) nextmsg_engine(arg,-1) end
+      }
+
+
+   --[[
+
+   nextmsg family of functionality: what are the useful "subcommands"?
+
+   When the current FBUF _is not_ the <compile> buffer:
+
+   1.  advance to the next/prev decodable msgline, switch to the location given
+   by the decoded msgline
+
+   2.  advance to the next/prev decodable msgline, whose decoded-location is not
+   in the current file (the location given by the currently-decoded msgline)
+
+   3.  advance to next/prev "message-set", in which a "set" corresponds to
+   all the messages for a single compile or search.
+
+   When the current FBUF _is_ the <compile> buffer:
+
+   1.  switch the <compile> cursor to the current line (this may move the
+   <compile> cursor into an entirely different "message-set").
+
+   Notes:
+
+   a) the user may edit the <compile> buffer AT ANY TIME, so it is unwise to
+      save in Lua (or C++) line numbers within the <compile> buffer for use as
+      boundary "fences".
+
+   ]]
+
+   --[[ new implementation of nextmsg/prevmsg
+
+   20120122 Expand nextmsg functionality big-time:
+
+            add a <nextmsg-bufs> (NMB) buffer
+               contains the names of sysbufs which nextmsg was iterating over
+            new entries are lines appended to NMB (by API) (maybe with descriptive text)
+             * nm on a <mfgrep.n> buffer  existing default usage
+             * nm on a <grep.n> buffer    new usage added recently, fixed today
+             * nm on a wildcard buffer    something long-needed   warning: can contain spaces!
+             * nm on an arbitrary pseudofile (containing filenames) something long-needed
+             * nm on compiler output      something long-needed
+
+            User operations:
+            - noarg nextmsg will (open the NMB.tos buffer as a subwindow if it isn't already) and "advanced to" the next message
+            - noarg prevmsg will do the same (except previous, duh)
+                * actually, if the window is newly opened, the CURRENT, not next/prev message, should be "advanced to"
+            - start using current buffer as a nextmsg iteration source  'nularg nextmsg'  ?
+            - start using named buffer as a nextmsg iteration source    'textarg nextmsg' ?
+            - move to prev/next NMB entry                               arg arg nularg nextmsg ?
+            - can manually edit NMB to remove uninteresting unneeded entries
+
+            Internal/impl:
+             - API: add NMB entry (bufnm+descriptive text)
+             - API: activate NMB entry (bufnm) (does window mgmt, etc.)
+             - _may_ need different parsers for different buffer content types
+
+   local nmbNm = "<nextmsg-bufs>"
+   function NMB_add_entry( bnm, descript )
+      assert( nul==bnm:match"%s" )   -- no spaces allowed in buffer name!
+      local nmb = FBUF.new( nmbNm )
+      nmb:PutLastLine( bnm.." "descript )
+      end
+
+   function NMB_activate_entry( bnm )
+      local nmb = FBUF.new( nmbNm )
+      local lnum = -1
+      for ln, line in nmb:RawLines() do  -- DBG( line )
+         line = line:match"^%S+"  -- no spaces allowed in buffer name!
+         if line==bnm then
+            lnum = ln
+            break
+            end
+         end
+      local last = nmb:LastLine()
+      if lnum ~= last then -- swap line content
+         local tmp = nmb:GetLineRaw(lnum)
+         nmb:PutLine( lnum, nmb:GetLineRaw( last ) )
+         nmb:PutLine( last, tmp )
+         end
+      -- do the windowing doodle
+      end
+
+   ]]
+
+end
+
+--------------------------------------------------------------------------------------
+
+--[[
+
+   CPP navigation functions:
+
+   CPP directives === #if|#ifdef|#ifndef|#elif|#else|#endif
+
+   cpp
+
+      NULLARG:
+
+       starts navigation of the select-case(s) defined by the nesting level of
+       the CPP directive found on the current line, or if none found, the
+       innermost nested CPP directive select-case(s).
+
+   Q1: Presentation?  Menu?  Pseudofile with grep or nextmsg syntax?
+       Maybe a navigator-adjunct pseudofile functionality should be defined
+       (i.e.  a pseudofile which acts as a "style-sheet" for a real file?) Or
+       better, a Lua table?  Either of these would necessarily be hooked into the
+       core display (and cursor movement) editor code.  Which segues into a
+       closely related functionality: syntax highlighting...
+
+       Which brings me back around to the two big questions about closely
+       integrating Lua with the K core: (1) dealing with errors that disable core
+       functionality (or worse yet, destroy an existing session), and (b)
+       avoiding performance problems when Lua is integrated into the
+       display-redrawing process (for instance, for each line, comment parsing,
+       and for each non-comment word, doing a keyword table-lookup for
+       highlighting purposes).  Which segues to another design dilemma: how to
+       do effective (if not perfect) comment parsing, taking into account the
+       possibility that comment delimiters located in literal strings should be
+       ignored.  Which means parsing literal strings.  Which means parsing the
+       escape-sequences in literal strings...  Arrrrrrrrrrgh!
+
+       For the C language family, one slightly oddball thought is to run the
+       displayed file thru an external CPP.  Of course this won't achieve
+       exactly the desired result because all of the #included files will be
+       inlined in the CPP output.  In a way this is more useful output because it
+       IS THE TRUE INPUT to the COMPILER.  But in order to get THIS to work, you
+       need to:
+
+          a) CORRECTLY define the INCLUDE path,
+          b) CORRECTLY define the set of external (defined outside the source code) CPP symbols.
+
+       But how do you do this, given that the editor does not define the build
+       process (unless "the editor" is an IDE like Visual Studio)?  Either by
+          (a) running the actual project build process and examining the actual
+          compiler command-lines used and parsing out the CPP symbol definitions
+          used (but this is 100% build-process specific.  The checker I use at
+          work, CodeSonar, seems to accomplish this by "snooping" the build
+          process of the project.  Their implementation is quite advanced; it's
+          overkill (in terms of the amount of complexity and work needed) and is
+          also an OS-dependent solution.  And of course they actually BUILD THE
+          PROJECT, which takes MINUTES, which aren't available during a
+          display-redraw or if the user asks for info about a single source
+          file).
+
+
+do
+   local function cpp_if( curline )
+      local
+      for lnum in range( curline, maxlin ) do
+         local ltxt = arg.fbuf:GetLine( lnum )
+         end
+      getline
+   end
+
+AddEdFxn{ name = "#if", attr = NOARG
+   , NOARG = function(arg) cpp_if( arg.cursorY )  end
+   }
+
+end
+
+-- ]]
+
+local wcx_bufnames = 0
+
+function MultiWcx( nm, a_wc, a_strip )
+   local all_rel_wcs = true
+   for _,wc in ipairs(a_wc) do
+      if wc:match "^%a:[\\/]" then all_rel_wcs = false end
+      end
+   local fb = FBUF.new_empty_may_create( nm..(all_rel_wcs and ("@"..GetCwd()) or "") )
+   for _,wc in ipairs(a_wc) do
+      -- print( "+++ "..wc )
+      fb:ExpandWildcardSorted( wc )
+      end
+   if a_strip and #a_strip > 0 then
+      local new = {}
+      for _,str in ipairs(a_strip) do new[1+#new] = str:gsub("/","\\") end
+      a_strip = new
+      local function match_strips( st )
+         for _,pat in ipairs(a_strip) do
+            if st:find( pat ) then return true end
+            end
+         end
+      DeleteLinesMatching( match_strips, fb )
+      end
+   fb:ClearUndo();
+   fb:UnDirty();
+   return fb
+   end
+
+--##################################################################################################
+
+--[[
+
+EdFxn ARG PROCESSING PATTERNS
+
+--]]
+
+local function NonBlankLinesAroundCursor(arg)
+   if arg.fbuf:IsLineBlank( arg.cursorY ) then return nil, "cursor not in a paragraph?" end
+   local min,max = arg.cursorY,arg.cursorY
+   for lnum = arg.cursorY-1,1,-1 do
+      if arg.fbuf:IsLineBlank( lnum ) then break end
+      min = lnum
+      end
+
+   for lnum = arg.cursorY+1,arg.fbuf:LastLine() do
+      if arg.fbuf:IsLineBlank( lnum ) then break end
+      max = lnum
+      end
+
+   return min,max
+   end
+
+do
+
+   AddEdFxn{ name = "bookmarklet", help = '"compile" code into packed javascript bookmarklet', attr = NOARG, key = "alt+j"
+      , NOARG   = function(arg)
+                  local acc,min,max = {},assert( NonBlankLinesAroundCursor(arg) )
+                  for lnum = min,max do acc[1+#acc] = util.trim( arg.fbuf:GetLine( lnum ) ) end
+                  local rslt = table.concat(acc)
+                  arg.fbuf:InsLine( min, rslt )
+                  arg.view:MoveCursor( min, arg.cursorX )
+                  Msgf( "%d chars", #rslt )
+                  end
+      }
+
+end
+
+do
+
+      local function func1(x)  assert(x) end
+      local function func2()   func1() end
+
+      AddEdFxn{ name = "x", help = "Generate Lua error always"
+              , attr = NOARG -- ,  key = "alt+9"
+         , NOARG = function( arg ) func2() end
+         }
+
+end
+
+do
+   --[[
+
+   more ideas 20070408 kgoodwin
+
+   to merge multiple workspaces (which is the set found in a CwdToRoot() scan),
+   make the ws's "closer to" the cwd each have as their metatable the
+   next-closest ws
+
+   ]]
+
+   local function strict_fenv( env )  -- stolen from strict.lua: logic that strict.lua applies to _G is applied to the env table
+      env = env or {}
+      local strict_mt = {}
+      strict_mt.__declared = {}
+
+      strict_mt.__newindex = function (t, n, v)
+        if not strict_mt.__declared[n] then
+          local w = debug.getinfo(2, "S").what
+          if w ~= "main" and w ~= "C" then
+            error("assign to undeclared variable '"..n.."'", 2)
+          end
+          strict_mt.__declared[n] = true
+        end
+        rawset(t, n, v)
+      end
+
+      strict_mt.__index = function (t, n)
+        if not strict_mt.__declared[n] and debug.getinfo(2, "S").what ~= "C" then
+          error("variable '"..n.."' is not declared", 2)
+        end
+        return rawget(t, n)
+      end
+
+      setmetatable(env, strict_mt)
+      return env
+      end
+
+   local function a_cross( a1, a2 )
+      local rv = {}
+      for _,v1 in ipairs( a1 ) do
+         for _,v2 in ipairs( a2 ) do
+            rv[1+#rv] = v1..v2
+            end
+         end
+      return rv
+      end
+
+   local ws_fnm = "k.workspace"
+   local workspaces = {}
+
+   local prev = {}
+   local function compileWorkspace( dir, fnm )
+      local fullnm = dir .. fnm
+      if not IsFile( fullnm ) then return end
+      local fxn,emsg = loadfile( fullnm )
+      if emsg then
+         Msg( emsg )
+      else
+         print( "loaded "..fullnm )
+         local env = strict_fenv( { wsdir=dir, a_cross=a_cross, a_cat=tu.a_cat, show=ObjectShow } )
+         setfenv( fxn, env )
+         fxn()
+         workspaces[fullnm] = env                     -- ObjectShow( env, "prod.lua for "..fullnm )
+         prev = {}
+      end
+      --assert( fxn, emsg ) doesn't work right 20070408 kgoodwin
+      end
+
+   AddEdFxn{ name = "ws", help = "", attr = NOARG+NULLARG , key = "F12"
+      , NOARG   = function(arg)
+         local dirs = a_CwdToRoot()
+         local cmp_slen = function( e1, e2 )  return #e1 < #e2  end  -- sorts in _ascending_ order
+         table.sort( dirs, cmp_slen )
+         for _,dir in ipairs(dirs) do compileWorkspace( dir, ws_fnm ) end
+         --[[local childDirs = GetChildDirs()
+         table.sort( childDirs )
+         for _,dir in ipairs(childDirs) do compileWorkspace( dir, ws_fnm ) end
+         ]]
+         end
+      , NULLARG = function(arg)
+         print( "loaded workspaces" )
+         for fnm,tbl in pairs(workspaces) do
+            print( "   ".. fnm )
+            end
+         end
+      }
+
+   function load_str( str, env )
+      local fxn = assert( loadstring( "return " .. str ) )         -- print( "compiled something" )
+      env = env or {}
+      env._G = env
+      setfenv( fxn, env )
+      local ok,rv = pcall( fxn )
+      if not ok then return end
+      return rv
+      end
+
+   function load_str_msg( str, env )
+      local rv = load_str( str, env )
+      return rv and type(rv)=="number" and fmt("%f = 0x%X",rv,rv) or rv
+      end
+
+   local function eval08X( lseg ) return fmt( "0x%08X", load_str( lseg ) ), 1 end
+
+   AddEdFxn{ name = "eval", help = "evaluate Lua string", attr = TEXTARG+BOXSTR+BOXARG , key = "F12"
+      , TEXTARG = function(arg) Msg( assert( load_str_msg( arg.text ) ) ) end
+      , BOXARG =  function(arg) xform_boxarg( arg,  eval08X ) end
+      }
+
+   function load_env( fnm, env )
+      if not IsFile( fnm ) then return end
+      print( "loading "..fnm )
+      local ok,fxn = pcall( loadfile, fnm )         -- print( "compiled something" )
+      if not ok then return  end
+      env = env or {}
+      env._G = env
+      setfenv( fxn, env )
+      if not pcall( fxn ) then return end
+      -- ObjectShow( env, "prod.lua for "..fnm )
+      return env
+      end
+
+end
+
+
+local function stat_grep( fbuf )
+   local tgtfnm,mlc = fbuf:IsGrepBuf()
+   if not tgtfnm then return nil, fbuf:Name().." is not a *GREP* fbuf" end
+   local  tfb = assert( FBUF.new( tgtfnm ) )
+   return tfb,mlc+1  -- +1 for line numbering difference
+   end
+
+AddEdFxn{ name = "bt", help = "", attr = NOARG
+   , help="xlat *GREP* file of ARC elfdump disasm to insert preceding function labels"
+   , NOARG   = function(arg)
+      local tfb,mlc = assert( stat_grep( gb ) )
+      local lcopy = {}
+      for iy=mlc,gb:LastLine() do
+         lcopy[1+#lcopy] = gb:GetLineRaw( iy )
+         end
+
+      for _,ln in ipairs(lcopy) do
+         local lnm = ln:match( "^%s*(%d+)%s" )
+         assert( lnm )
+         for iy=lnm-1,1,-1 do
+            local tln = tfb:GetLineRaw( iy )
+            if tln:match("^%S+:$") then
+               local gln = fmt("%6d",iy).."  "..tln
+               gb:InsLineSortedAscending(gln,mlc)
+               break
+               end
+            end
+         end
+      end
+   }
+
+local function word_before_or_at(text,ix,pat)
+   pat = pat or "%S"
+   -- this seems far too complex for what it does, but it works... 20100221 kgoodwin
+   if text:sub(ix,ix):match(pat) then
+      local under = text:sub(ix):match(pat.."+")
+      local before = text:sub(1,ix-1):reverse():match("^"..pat.."+")
+      before = before and before:reverse() or ""
+      return before .. under, ix - #before
+      end
+
+   local lnr = text:sub(1,ix-1):reverse()
+   local tp,before = lnr:match("()("..pat.."+)")
+   if before then
+      return before:reverse(), #lnr - tp - 1
+      end
+   end
+
+do
+
+   local lua_tabacts = {
+      lf     = function( ln ) return ln:gsub("lf", "local function ^() return end" ) end,
+      ["if"] = function( ln ) return ln:gsub("if", "if ^ then end" ) end,
+      ["for"]= function( ln ) return ln:gsub("for", "for ^ky,vl in " ) end,
+      ["ip"] = function( ln ) return ln:gsub("ip", "ipairs(^) do" ) end,
+      ["p"]  = function( ln ) return ln:gsub("p" , "pairs(^) do"  ) end,
+      }
+
+   local c_tabacts = {
+      ["#in"  ]= function( ln ) return ln:gsub( "#in"   , "#include ^" ) end,
+      ["#el"  ]= function( ln ) return ln:gsub( "#el"   , "#else^"     ) end,
+      ["#else"]= function( ln ) return ln:gsub( "#else" , "#elif ^"    ) end,
+      ["#elif"]= function( ln ) return ln:gsub( "#elif" , "#else^"     ) end,
+      ["#en"  ]= function( ln ) return ln:gsub( "#en"   , "#endif^"    ) end,
+      ["if"   ]= function( ln ) return ln:gsub( "if"    , "if( ^ ) {}" ) end,
+      ["for"  ]= function( ln ) return ln:gsub( "for"   , "for( ^ix=0; ix<max; ++ix ) {}" ) end,
+      }
+
+   local tabacts_by_ext = {
+      lua      = lua_tabacts ,
+      luaedit  = lua_tabacts ,
+      luastate = lua_tabacts ,
+      c        = c_tabacts   ,
+      cpp      = c_tabacts   ,
+      h        = c_tabacts   ,
+      }
+
+   local tabacts_generic = {
+      dt = function( ln,tok ) return ln:gsub(tok, os.date("%Y%m%d") ) end,
+      tm = function( ln,tok ) return ln:gsub(tok, os.date("%H%M%S") ) end,
+      }
+
+   AddEdFxn{ name = "tabact", attr = NOARG, key="", help = "expand word under or prior to cursor according to tabact defns"
+      , NOARG = function( arg )
+         local fb = arg.fbuf
+         local fext = fb:Name():match("[^.]+$")
+         fext = fext and fext:lower()
+         local ln = fb:GetLine( arg.cursorY )
+         local tok,x = word_before_or_at(ln,arg.cursorX)
+         if not tok then return end
+         Msgf("tabact:%d@%s",x,tok)
+         -- _finally_ have tok and x!  Do what we can
+         local fx = (fext and tabacts_by_ext[fext] and tabacts_by_ext[fext][tok]) or tabacts_generic[tok]
+         if fx then
+            local nuln = fx(ln,tok,x)
+            local nux = nuln:match("()%^")
+            if nux then
+               nuln = nuln:gsub("%^","")
+               end
+            fb:PutLine( arg.cursorY, nuln )
+            if nux then
+               arg.view:MoveCursor( arg.cursorY, nux )
+               end
+            end
+         end
+
+      }
+
+end
+
+---[[
+do
+
+   AddEdFxn{ name = "tabx", attr = NOARG, help = "expand tabs to spaces (columns)"
+      , NOARG = function( arg )
+         local lns = {}
+         local max = {}
+         for lnum, line in arg.fbuf:RawLines() do  -- DBG( line )
+            local seg = {}
+            for txt in line:gmatch("[^\t]+") do
+               seg[1+#seg] = txt
+               max[#seg] = max[#seg] and #txt < max[#seg] and max[#seg] or #txt
+               end
+            lns[1+#lns] = seg
+            end
+
+         for _,segs in ipairs(lns) do
+            local line = ""
+            for sn,seg in ipairs(segs) do
+               line = line .. str_setlen( seg, 1+max[sn] )
+               end
+            arg.fbuf:PutLastLine( line )
+            end
+         end
+      }
+
+   -- convert capture
+
+
+end
+--]]
+
+
+--##################################################################################################
+
+printf( "_bin.shiftl: 0x%08X", _bin.shiftl( 0xF, 28 ) )
+
+assert( _bin.shiftl( 0x8, 28 ) == 0x80000000 )
+assert( _bin.shiftl( 0xF, 28 ) == 0xF0000000 )
+assert( _bin.shiftr( 0xF0000000, 28 ) == 0xF )
+assert( _bin.shiftr( 0xFF00FF00, 16 ) == 0xFF00 )
+assert( _bin.bitand( 0xFF00FF00, 0xFFFF0000 ) == 0xFF000000 )
+assert( _bin.bit( 31 ) == 0x80000000 )
+assert( _bin.bits( 0 ) == 0 )
+assert( _bin.bits( 1 ) == 1 )
+assert( _bin.bits( 31 ) == 0x7FFFFFFF )
+assert( _bin.shiftl( _bin.bits( 31 ), 1 ) == 0xFFFFFFFE )
+
+printf( "cwd=%s", _dir.current("/") )
+
+--[[
+
+assert( _dir.create( ".." ) )
+assert( _dir.create( "."  ) )
+
+do
+   local dirs = _dir.read_names( "./", 1 )    -- read once to fill the filesystem/OS cache
+   local start = _win.NowSeconds()
+   local dirs = _dir.read_dirnames( "./", 1 )
+   printf( "_dir.read_dirnames took %f", _win.NowSeconds() - start )
+end
+
+do
+   local start = _win.NowSeconds()
+   local dirs = _dir.read_names( "./", 1 )
+   printf( "_dir.read_names    took %f", _win.NowSeconds() - start )
+end
+
+for _,dir in ipairs(dirs) do
+   printf( "   %s", dir )
+   end
+
+--]]
+
+function ReadPseudoFileOk_FROM_C( fb )  -- return Lua true (not (rv==nil or rv==false)) if this code rewrites fb content
+   print( "ReadPseudoFileOk_FROM_C("..fb:Name()..")" )
+   end
+
+printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )
+
+filesettings = load_env( RsrcFilename( "filesettings" ), { print = print, NameExtOf = NameExtOf, ExtOf = ExtOf, DeepCopy=DeepCopy } )
+
+print( "runchild is a "..type(runchild) )
+
+require "user"
+
+do
+   RecoverStatusFile()
+   Msg( "Lua Editor functions loaded" );
+end

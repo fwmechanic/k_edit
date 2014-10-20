@@ -1,0 +1,13 @@
+-- bring ObjectShow !!!
+
+local a_wsdir  = { wsdir }
+local a_luasrc = { wsdir.."lua-5.1/src/" }
+local wc_c = { "*.h", "*.c", "*.cpp" }
+
+mfx = {
+   ksrc = a_cross( a_wsdir , wc_c ),
+   luac = a_cross( a_luasrc, wc_c ),
+   }
+   mfx.all_c = a_cat( mfx.ksrc, mfx.luac )
+
+show( mfx )

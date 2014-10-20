@@ -1,0 +1,39 @@
+LUA_A=$(LIB_PFX)lua$(LIB_SFX)
+
+CORE_O=\
+ lapi$(OBJ_SFX)         \
+ lcode$(OBJ_SFX)        \
+ ldebug$(OBJ_SFX)       \
+ ldo$(OBJ_SFX)          \
+ ldump$(OBJ_SFX)        \
+ lfunc$(OBJ_SFX)        \
+ lgc$(OBJ_SFX)          \
+ llex$(OBJ_SFX)         \
+ lmem$(OBJ_SFX)         \
+ lobject$(OBJ_SFX)      \
+ lopcodes$(OBJ_SFX)     \
+ lparser$(OBJ_SFX)      \
+ lstate$(OBJ_SFX)       \
+ lstring$(OBJ_SFX)      \
+ ltable$(OBJ_SFX)       \
+ ltm$(OBJ_SFX)          \
+ lundump$(OBJ_SFX)      \
+ lvm$(OBJ_SFX)          \
+ lzio$(OBJ_SFX)
+
+LIB_O=\
+ lauxlib$(OBJ_SFX)   \
+ lbaselib$(OBJ_SFX)  \
+ ldblib$(OBJ_SFX)    \
+ liolib$(OBJ_SFX)    \
+ lmathlib$(OBJ_SFX)  \
+ loadlib$(OBJ_SFX)   \
+ loslib$(OBJ_SFX)    \
+ lpack$(OBJ_SFX)     \
+ $(PCRE_OBJ)         \
+ lstrlib$(OBJ_SFX)   \
+ ltablib$(OBJ_SFX)   \
+ lundump$(OBJ_SFX)   \
+ linit$(OBJ_SFX)     \
+ lpeg$(OBJ_SFX)      \
+ k_lib$(OBJ_SFX)

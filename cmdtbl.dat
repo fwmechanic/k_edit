@@ -1,0 +1,169 @@
+#
+# This file is read by cmdtbl.lua, which creates:
+#
+#   ctout.kc     initializers for CmdTbl (array of CMD)
+#   ctout.kh     extern declaration for all functions (ARG:: methods)
+#                #define fn_funcnm       this can be used (#ifdef fn_funcnm) to conditionally compile only those ARG::methods not commented out in this file
+#   ctout.list   summary/listing file for debug/perusal
+#
+
+# column 1 contains
+# [space] always enabled
+# w       enabled for Win32 only
+
+# name of function in editor (seen by user)
+# |            name of ARG::method that implements the function
+# |            |              CMD attributes
+# |            |              |                                      help text (seen by user)
+# |            |              |                                      |
+# |            |              |                                      |
+  !a           assignlog                 NOARG
+  arg          arg                       KEEPMETA                    , Begins an argument to a function or begins a selection
+  ascii2hex    ascii2hex                 BOXSTR + TEXTARG            , selected text converted to hex -> <clipboard>
+  assign       assign                    BOXARG + MARKARG + NUMARG + NULLEOL + NOARG + LINEARG + BOXSTR + TEXTARG , Assigns a function to a keystroke, defines a macro, or sets a switch
+  backtab      backtab        CURSORFUNC
+  balch        balch          CURSORFUNC , Moves cursor to matching brace or paren ( {[( <-> )]} )
+  balln        balln          CURSORFUNC , Moves cursor to next/prev same-scope C-preprocessor conditional
+  begfile      begfile        CURSORFUNC , Move cursor to beginning of file
+  begline      begline        CURSORFUNC , Move cursor to leftmost nonblank character on line, or to column one
+  boxstream    boxstream      CURSORFUNC , Toggles between box selection mode and stream selection mode
+  bp           bp                        NOARG
+  cancel       cancel                    BOXARG + STREAMARG + NOARG + LINEARG + NULLARG + TEXTARG + BOXSTR , Cancels current selection, argument, or operation
+  cc           cc                        NOARG        , Interactive color selection
+  cdelete      cdelete        MODIFIES+CURSORFUNC     , Deletes prev character, excluding line breaks. If cursor is in column 1, Cdelete move cursor to end of previous line
+# cfx          cfx                       BOXSTR + TEXTARG
+w cliptext     cliptext                  KEEPMETA+NOARG+NULLARG , Like lasttext, except Windows Clipboard data is inserted on dialog line
+  compile      compile                   BOXSTR + NOARG + TEXTARG + NULLARG
+  copy         copy                      BOXARG + MARKARG + NUMARG + NULLEOL + STREAMARG + NOARG + LINEARG + TEXTARG , Copies cursor line to clipboard
+# csort        csort                     BOXARG + LINEARG
+w ctwk         ctwk                      NOARG , console tweaks
+
+# cur_s        cur_s         MACROFUNC+ KEEPMETA , string: ss (seconds: strftime( "%S" )
+# cur_min      cur_min       MACROFUNC+ KEEPMETA , string: mm (minutes: strftime( "%M" )
+# cur_h        cur_h         MACROFUNC+ KEEPMETA , string: hh (hours:   strftime( "%H" )
+# cur_dow      cur_dow       MACROFUNC+ KEEPMETA , string: day of week  strftime( "%A" )
+# cur_woy      cur_woy       MACROFUNC+ KEEPMETA , string: week of year strftime( "%W" )
+# cur_d        cur_d         MACROFUNC+ KEEPMETA , string: day of month strftime( "%d" )
+# cur_mon      cur_mon       MACROFUNC+ KEEPMETA , string: month        strftime( "%m" )
+# cur_y2       cur_y2        MACROFUNC+ KEEPMETA , string: year, 2digit strftime( "%y" )
+# cur_y4       cur_y4        MACROFUNC+ KEEPMETA , string: year, 4digit strftime( "%Y" )
+
+  cwd          cwd            MACROFUNC+ KEEPMETA , string: current directory
+  debug        debug                     NOARG + TEXTARG , NOARG: Clears the status bar.  TEXTARG: like message but used for debug
+  delete       delete_        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG
+# deltalogtm   deltalogtm     MODIFIES + NULLARG+BOXARG+LINEARG , Converts instances of absolute timestamps in ISO ??60 format to time-deltas
+# dif          dif                       BOXSTR + NOARG + TEXTARG + NULLARG + NULLEOW
+  dirty        dirty                     KEEPMETA+NOARG , Returns true if current file is dirty
+# dispmstk     dispmstk       CURSORFUNC
+  down         down           CURSORFUNC , Move cursor down one line
+  dvlog        dvlog                     TEXTARG , write string to DbgView using Win32's OutputDebugString
+  eds          eds            CURSORFUNC , Show internal undo/redo details
+  emacscdel    emacscdel      MODIFIES + NOARG , Deletes previous character.  If cursor is in column 1, moves cursor to end of previous line. This is similar to Cdelete, but Cdelete never deletes line breaks
+  emacsnewl    emacsnewl      MODIFIES + NOARG , In insert mode, starts a new line.  The editor automatically positions cursor on new line, according to Softcr switch setting.
+  endfile      endfile        CURSORFUNC , Move cursor to end of file without changing its column position
+  endline      endline        CURSORFUNC , Move cursor to immediate right of last character on line.  META: Move cursor one column past active window width
+  erasebuf     erasebuf       MODIFIES + KEEPMETA+              TEXTARG
+  execute      execute                   NUMARG + NULLEOL + LINEARG + BOXARG + BOXSTR + TEXTARG , Executes functions and macros by name. You can use the macro flow-control and macro prompt directives
+  exit         exit                      NOARG + NULLARG , Cause this editor process to terminate
+  ext          ext                       NOARG+NULLARG+TEXTARG+BOXSTR , Jump to .krsrc file, at start of extension-section for current file.  If multiple sections exist, allow user to select
+  false        false_                    BOXARG + STREAMARG + NOARG + LINEARG
+  fg           fg                        NOARG+TEXTARG , 'fgrep': grep pattern is logical OR of all lines of curfile; nextfile is searched, results into <grep_n>
+  files        files                     NOARG + NULLARG , Switches to <files>, containing a list of all files known to the editor
+# findfile     findfile                  BOXSTR + TEXTARG + NOARG
+  flipcase     flipcase       MODIFIES + KEEPMETA+NOARG+BOXARG+NULLEOW , Flips case of char under cursor, or selection; also: '+' <-> '-'
+w fromwinclip  fromwinclip               NOARG , Windows Clipboard ==> <clipboard>
+  ftab         ftab                      NOARG , Interactively change the editor's tab width and tab visibility
+# glds         glds                      NOARG , test harness for Win32::GetLogicalDriveStrings
+  gmg          gmg                       NOARG , Merge all <grep_n> buffers having a common source buffer into the topmost matching <grep_n>, deleting the others
+  graphic      graphic        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG  # this help will not show
+  grep         grep                      NOARG+NULLEOW+TEXTARG+BOXSTR , Searches curfile for matches, copies these as numbered lines to <grep_n>, switches to <grep_n>
+  home         home           CURSORFUNC , Moves cursor to window's Upper-Left corner.  META: Moves cursor to window's Lower-Right corner
+# in           in                        NOARG
+  initialize   initialize                NOARG + BOXSTR + NULLEOW + TEXTARG , Discards all current settings, then reads the statements from the main ([K]) section of .krsrc.
+  insert       insert         MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , NOARG: Inserts a space character at cursor, independent of insert/overtype mode.  NULARG: breaks line at cursor.  SELARG: Inserts space chars into selected area
+  insertmode   insertmode                NOARG , Toggles between insert mode and overtype mode
+# justify      justify        MODIFIES + NOARG+BOXARG+LINEARG+TEXTARG+NULLARG , Justifies paragraph
+# kbfast       kbfast                    NOARG , Set keyboard repeat delay and rate at fastest universally supported speed
+# killall      killall                   NOARG , kill all pty child processes
+  lastselect   lastselect                NOARG + KEEPMETA , Duplicates the last selection.  The Arg count and Meta state that were previously in effect are not duplicatedÄÄonly the selection.  The new Arg count is one.
+  lasttext     lasttext                  BOXARG+STREAMARG+NOARG+LINEARG+NULLARG+KEEPMETA,Displays last TEXTARG: you can edit the text and execute any function that accepts a TEXTARG, or, if you cancel an edited TEXTARG, the editor retains the edited text.  If you execute Lasttext again, the edited text appears.
+# lblankdel    lblankdel      MODIFIES + BOXARG+LINEARG , Delete lines or part of lines, based on whether segments of lines are blank or not. META: delete only those lines which DO contain something in the box; if 2 args, delete only from [char to right of box..EOL]
+  ldelete      ldelete        MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Deletes line at cursor -> <clipboard>.  META: <clipboard> not altered. NULARG: text from cursor to EOL -> <clipboard>.  BOX/LINEARG del'd -> <clipboard>
+  left         left           CURSORFUNC , Moves cursor one character to left.  META: Moves cursor to first column in window
+  linsert      linsert        MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , NOARG: Inserts one blank line above current line.  NULARG: Inserts or deletes blanks at beginning of line to move first nonblank character to cursor.
+  longline     longline       CURSORFUNC , Moves cursor to longest line in selection range or current file
+  lua          lua                       NOARG + NULLARG , Compile and execute the primary Lua editor source file, k.lua
+  makebox      makebox        MODIFIES + NOARG+BOXARG , Draw box using OEM box-/line-draw charset (specific chars selected interactively)
+  mark         mark                      BOXSTR + NOARG + TEXTARG + NULLARG
+# mergefilenames mergeFilenames          NOARG + BOXSTR + TEXTARG
+  message      message                   NOARG + TEXTARG , NOARG: Clears the status bar.  TEXTARG: Displays <textarg> on status line
+  meta         meta                      KEEPMETA , Modifies the action of the function it is used with.  Refer to individual functions for specific information.  You can use the Meta and Arg function prefixes in any order
+  mfgrep       mfgrep                    BOXSTR + NOARG + TEXTARG + NULLEOW , Multi-file search
+  mfreplace    mfreplace      MODIFIES + NOARG + NULLARG , Interactive multi-file replace
+# mgl          mgl                       NOARG
+  mks          showmarks                 NOARG+NULLARG , Switch to <marks.N>, containing a dump of the current mark-state
+  mlines       mlines                    WINDOWFUNC + NOARG + NULLARG + TEXTARG
+  mpage        mpage          CURSORFUNC , scroll cursor up one page
+  mpara        mpara          CURSORFUNC , scroll cursor up one paragraph
+  mib          mib            CURSORFUNC , scroll cursor to top of current indent block
+  pib          pib            CURSORFUNC , scroll cursor up bottom of current indent block
+  msearch      msearch                   BOXSTR + NOARG + TEXTARG + NULLEOW , Backward search
+  mword        mword          CURSORFUNC , Moves cursor to first char of prev word.  META: Moves cursor to first char following prev word
+  newline      newline        CURSORFUNC
+  nextselbuf   nextselbuf                NOARG
+  noedit       noedit         CURSORFUNC
+# note         note                      NOARG+TEXTARG+BOXARG+LINEARG+NULLARG
+  numlines     numlines       MODIFIES + KEEPMETA
+  paste        paste          MODIFIES + BOXARG + NULLEOL + STREAMARG + NOARG + LINEARG + TEXTARG
+# pcre         pcre                      NOARG
+  plines       plines         WINDOWFUNC + NOARG + NULLARG + TEXTARG
+  popd         popd                      NOARG + KEEPMETA ,
+  ppage        ppage          CURSORFUNC , scroll cursor down one page
+  ppara        ppara          CURSORFUNC , scroll cursor down one paragraph
+  prompt       prompt                    BOXSTR + NOARG + TEXTARG + NULLEOW + KEEPMETA
+  psearch      psearch                   BOXSTR + NOARG + TEXTARG + NULLEOW , Forward search
+  pword        pword          CURSORFUNC , Moves cursor to first char of next word.  META: Moves cursor to first char following next word
+  qreplace     qreplace       MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Interactive single-file (or arg-region) replace
+  quik         quik           CURSORFUNC
+  record       record                    NOARG + NULLARG + TEXTARG
+  redo         redo                      NOARG , Redo most recently undone major edit step
+  refresh      refresh                   NOARG + NULLARG + TEXTARG +           BOXSTR + BOXARG + LINEARG
+  repeat       repeat                    NOARG , Repeat most recently performed edit action
+  replace      replace        MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Non-interactive single-file (or arg-region) replace
+  resize       resize                    NOARG , Interactively resize the Windows Console in which the editor is running
+  restcur      restcur        CURSORFUNC+KEEPMETA
+  right        right          CURSORFUNC
+# rmeds        rmeds                     NOARG , Delete all undo (and redo) information for the current file
+  rw           rw                        NOARG , If current file on disk is readonly, make it read-writeable
+  saveall      saveall                   NOARG , Save all dirty files to disk (alias: arg arg arg setfile -> saveall)
+  savecur      savecur        CURSORFUNC+KEEPMETA
+  savescreen   savescreen                NOARG+TEXTARG+BOXSTR , save screen content including color, cursor position, etc. to TEXT file (dflt='savescreen')
+  sdelete      sdelete        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG
+  searchlog    searchlog                 NOARG+TEXTARG , Switch to <searchlog>
+  selcmd       selcmd         MODIFIES + NULLEOL + TEXTARG + BOXARG + STREAMARG + LINEARG
+  setenv       setenv                    TEXTARG + BOXARG + LINEARG
+  seteol       seteol                    NOARG + NULLARG , 1xarg: set UNIX EOL mode 2xarg: set DOS EOL mode
+  setfile      setfile                   BOXSTR + NOARG + TEXTARG + NULLARG , Switch to another (TEXTARG/BOXSTR) file, 2xArg: save curfile [as TEXTARG], 3xArg: save all files and tmpfile
+  setwindow    setwindow                 NOARG + NULLARG
+# shell        shell                     BOXARG + NULLEOL + NOARG + LINEARG + TEXTARG
+  shex         shex                      BOXSTR + TEXTARG , execute arg string with Win32's ShellExecute's default verb
+  sinsert      sinsert        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG
+  stream       stream                    STREAMARG , stream-to-string test
+# strftime     strftime                  TEXTARG , strftime
+# su           silentUpdate              NOARG , SilentUpdate mode: if disk file is detected to be newer than editor version, it will be immediately updated w/o prompting the user
+  sync         sync                      NOARG , For each opened file, if the disk file is newer, re-read the file
+  tab          tab            CURSORFUNC
+  tell         tell                      BOXSTR + NOARG + TEXTARG, Describe a key assignment or macro
+w towinclip    towinclip                 NOARG+BOXARG+LINEARG+TEXTARG+NULLEOW , <clipboard> ==> Windows Clipboard
+  true         true_                     BOXARG + STREAMARG + NOARG + LINEARG
+  udelete      udelete        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , user interface delete; works intuitively in both stream and box modes
+  unassigned   unassigned                BOXARG + STREAMARG + NOARG + LINEARG + NULLARG + TEXTARG  # this help will not show
+  undo         undo                      NOARG , Undo one major edit step
+  up           up             CURSORFUNC , move cursor up one line
+  vrepeat      vrepeat        MODIFIES + BOXARG , Vertically repeat (1xArg=insert, 2xArg=ovrwrt) top line of BOXARG selection in other lines of box
+w waitcompiledone waitcompiledone        NOARG + NUMARG + TEXTARG + LINEARG
+# waitkey15    waitkey15                 NOARG , test func
+# wct          wct                       NOARG + TEXTARG + BOXSTR
+  window       window                    NOARG + NULLARG
+  wrstatefile  wrstatefile               NOARG , write the editor state (history) file
+  xquote       xquote         MODIFIES + NOARG , interactively enter a charter at the cursor position, in hex

@@ -1,0 +1,85 @@
+--[[
+
+   this all started from
+
+   20110127  state-save saves merge of ALL windows' content (currently, when restore happens,
+             only window #1 is recovered, and state unique to other windows is never restored).
+
+   Now that the Lua framework (this file) kinda exists, I have to confront and plan out WHAT I WANT this system TO ACTUALLY
+   DO
+
+   1. recover state from arbitrary files
+   2. ? maintain state during editing session?  Or just suck it from editor @ end?
+   3. ? be queryable from within editing session?  If so, how?
+   4. ? be aware of file-open operations during editing session?  or OWN such ops?
+   5. save current state into arbitrary files
+
+   Ultimately, a lot of the answers depend on what "arbitrary files" are and
+   what they're supposed to contain.  I've considered this in vague context, but
+   not deeply.  I think what I want is to store all state in ONE file (in a
+   central location like %APPDATA%) (to maximize locality of reference for disk
+   cache purposes), but store complex data within this file.  Or maybe create a
+   dir off of %APPDATA% and store a number of statefiles within.
+
+   What do I want to do
+
+--]]
+
+require "strict"
+require "show"
+require "util"
+require "tu"
+
+do --- event handler registration and invocation
+   local s_eventHandlers = {}
+   function AddEventHandler( tb )
+      for evnm,evfx in pairs(tb) do
+         tu.t_append( s_eventHandlers, evnm, evfx )
+         end
+      end
+   function CallEventHandlers( evnm )  -- <<<********* called from C!!!  DO NOT RENAME!!!
+      for _,evfx in ipairs( s_eventHandlers[evnm] or {} ) do
+         evfx()
+         end
+      end
+end
+
+--[[
+
+   local function WriteStatusFile()
+      local savelist = { ["<search-keys>"] = { maxlines = 100 } }
+      local fnm = StateFilename( "lua" )
+      -- print( "StateFilename = "..fnm )
+      local fbDest = FBUF.new_empty_may_create( fnm )
+      fbDest:SetBackupMode_Bak()
+      for fnm,attribs in pairs(savelist) do
+         -- DBG( "WriteStatusFile <- " .. fnm )
+         local fbSrc = FBUF.new( fnm )
+         if fbSrc then
+            local lcnt = fbSrc:LineCount()
+            -- DBG( "WriteStatusFile <- " .. fnm .. " x "..lcnt .. " lines" )
+            lcnt = Min( lcnt, attribs.maxlines or lcnt )
+            fbDest:PutLastLine( fmt( "%s %d", fbSrc:Name(), lcnt ) )
+            if lcnt > 0 then
+               fbDest:CopyLines( fbDest:LastLine()+1, fbSrc, 1, lcnt )
+               end
+            end
+         end
+
+      fbDest:WriteToDisk( fbDest:Name() )
+      end
+
+
+AddEventHandler{         EXIT  = WriteStatusFile }
+
+AddEventHandler{ EXIT  = -- this works, but drops its file in the cwd...
+     function()
+        local ofh = assert( io.open( "kstate.txt", "w" ) )
+        ofh:write("--------------------  EXIT event  -------------------------\n")
+        ofh:write("--------------------  EXIT event  -------------------------\n")
+        ofh:write("--------------------  EXIT event  -------------------------\n")
+        ofh:close()
+        end
+   }
+
+--]]

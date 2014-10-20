@@ -1,0 +1,801 @@
+[k k-main] #*****************************       === GLOBAL LOAD ===   *****************************
+
+   # === SWITCHES ===
+   #
+   # BOOLEAN
+      insmode:      YES # Powerup in INSERT MODE
+      boxmode:      YES # we like boxes!
+      editreadonly: NO  # prevent editing of read-only files (adjunct to Clearcase,PVCS)
+      wordwrap:     NO  # NO is default
+      askexit:      NO  # YES to avoid exiting the editor by accident
+      softcr:       YES # Get rid of funky CR response
+      case:         NO  # CASE INSENSITIVE searches & replaces
+      errprompt:    YES # [allow]/prevent "press any key" sequence following error
+      beep:no
+      usemouse:yes
+      memusgink:yes
+
+      # langhilites:no  # note that this will not affect any file loaded first at editor startup :-(
+      cachesrchmisses : no
+
+   # TEXT
+      #tagfile:!tags
+
+   # NUMERIC
+   #
+   #   0xF9 (centered dot, strong)
+   #   0xFA (centered dot, faint)
+      traildisp: 0xFA trailspace:yes
+   #  trailspace:no
+      rmargin:  76
+      vscroll:   1
+      hscroll:   1
+      cursorsize:1
+
+   #  luagcstep:10
+
+   #  dialogtop:1
+      dt:= arg "dialogtop:invert" assign cancel
+
+      longline:alt+\
+      savescreen:ctrl+k
+      #ws:=arg "wordchars:nonwhite" assign
+      wc:=arg "wordchars:_" assign
+      wu:=arg "wordchars:-._~:/?#[]@!$&'()*+,;=%" assign
+
+
+   #€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
+   #€                                                                         €
+   #€                        === COLOR MACROS ===                             €
+   #€                                                                         €
+   #€ Switch format: [backgndnib][foregndnib]                                 €
+   #€ Keep 'hgcolor' non-blinking!!!                                          €
+   #€ InfColor includes qreplace's locating string to be replaced             €
+   #€                                                                         €
+   #€ Color: Blk:0 Blu:1 Grn:2 Cyn:3 Red:4 Pnk:5 Brn:6 LGr:7                  €
+   #€        DGr:8 LBl:9 LGr:A LCy:B LRd:C LPk:D Yel:E Wht:F (flash if bkgnd) €
+   #€ Mono:  Blk:0 LGr:7 ALL OTHERS = Wht ( >8 flashes if backgnd )           €
+   #€                                                                         €
+   #€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
+
+   colorerr    : 4f
+   colorinf    : 5e
+   colorinf    : e0
+  #colornoise  : 0a
+   colorsta    : 2f
+
+   testsetfile:=setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+
+   # TAB <--> SPACE conversion parameters (pertains TO MODIFIED LINES ONLY!)
+      realtabs:no       #tabs expanded into spaces
+      tabwidth:4
+
+   unix:=cancel arg seteol
+   dos:=cancel arg arg seteol
+   # forceplateol:yes # sledgehammer
+
+   con:=cancel arg "<console>" setfile
+
+   # an autostart macro that changes fgcolor colors overrides the extension-specific
+   # color setings for the first file in a way that looks like a BUG
+   # autostart:=setcolor
+   # autostart:=kbfast
+
+   nobadeol:=replace "" nl "" nl  # BUGBUG doesn't work
+   nobadeol:alt+0
+
+   st:=savetmpfile
+
+   nl:=newline
+   nln:=newline <n
+   # tab:tab
+   arg:tab
+
+   comf:=arg "<compile>" setfile
+
+   # kk:=comf arg "kk" compile
+   # kk_cmd:="kk.pl && regr_test"
+   # kk_outf:=
+   kk_compil:=cancel saveall arg arg kk_cmd execute <Y arg "kk_setout:shift+F5" assign
+   kk_setout:=cancel arg kk_outf setfile arg "kk_compil:shift+F5" assign
+   kk_compil:shift+F5
+
+   netstat:=comf arg "netstat -o -n -a" compile
+   tree:=comf arg "tree" compile
+   treef := comf arg "tree /f" compile
+   # dif := comf arg "dif" compile
+   dv    := arg "GUI> dbgview.exe" runchild
+   gv    := arg "CON> c:/klg/scripts/gv.bat" runchild
+   anno  := arg "EMBSHELL> svn annotate $%" runchild
+   shenv := arg "EMBSHELL> set" runchild
+   #csort:alt+8
+
+   quik:ctrl+a
+
+   lua:alt+L
+   # killall:pause
+
+   sysscripts:=arg "$K_SCRIPTS:/_system/$COMPUTERNAME:*.*" setfile
+
+   # cursor move to end (top/bottom) of current-indent zone (ctrl+shift+up/down)
+   mib:ctrl+shift+up
+   pib:ctrl+shift+down
+
+   tabs:=arg "tabconv:1" assign  arg "Realtabs:yes" assign arg "now tabs" message
+   spcs:=arg "tabconv:0" assign  arg "Realtabs:no"  assign arg "now spcs" message
+
+   #  TouchAll - Touch (modify benignly) all nonblank lines
+   TouchAll:=savecur begfile arg arg replace "^?" nl "\$0" nl restcur
+   noTabs:=spcs TouchAll
+   noSpcs:=tabs TouchAll
+
+   col1:=meta begline begline
+   cola:=meta begline begline
+
+   mv0:= begfile begline "move " arg begline ppara vrepeat ppara begline "m30"
+
+   ? :=->false arg "True" message => :>false arg "False" message
+   ! := Meta Message
+
+   show_asgn:=_spush _sdup arg _spop assign arg _spop !
+
+   c :=cancel arg "case:INVERT" show_asgn
+   cy:=cancel arg "case:YES" show_asgn
+   cn:=cancel arg "case:NO"  show_asgn
+
+   um:=cancel arg "usemouse:YES" show_asgn
+   nm:=cancel arg "usemouse:NO"  show_asgn
+
+   mg:=arg "mfspec" tell
+   selcmd:alt+0
+
+   find:=_spush arg arg _spop begline "for /r %f in (" endline ") do @echo %f" execute
+   mak:=arg "*.mak" find
+
+   tree:=arg "." find
+
+   endlesstree:= :>start tree waitcompiledone =>start
+
+   # all:=arg "*" find
+   # foo:=arg "foo" find
+   # arg "*.cpp" find
+   # arg "*.bat" find
+   # arg "*" find
+   # arg "atlogin.bat" find
+
+   # arg "$(*.c|*.cpp|*.h|*.asm)|" setfile
+   # arg "$(*.c;*.cpp;*.h;*.asm)|" setfile
+
+   cpp:= arg arg "\s*#(if|endif|else|elif|ifdef|ifndef)" grep
+
+   testmac1:= qreplace "`"  nl      "'"  nl <a        # doesn't work: macro.cpp code looks for prompt code in nl macro code
+   testmac2:= qreplace "`"  newline "'"  newline <n   # works: macro.cpp code finds prompt in inline macro code
+   testmac3:= qreplace "`"  nln     "'"  nln          # works: macro.cpp code finds prompt in nln macro code
+
+   #∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞
+   #∞                 === GLOBAL Key Reassignments ===                     ∞
+   #∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞
+   #newcancel:=cancel setwindow
+   #newcancel:esc
+   #
+   # FUNCTION KEYS  (<F1>,<Alt+F1> & <Ctrl+F1>)
+   #
+   Nextmsg:alt+n    # leave key directly assigned to nextmsg so there is easy access to nextmsg variants
+   # PrevMsg:=arg "-1" nextmsg
+   PrevMsg:alt+p
+
+   setnextmsg:=arg arg arg meta nextmsg
+   setnextmsg:F5
+
+ # copy:alt+/        # laptop
+   ldelete:alt+;     # laptop
+
+   #window:         `
+   window:         F6
+   metanoedit:=meta noedit # only affect current file
+   metanoedit:     F8
+   Meta:           F9
+   Arg:           F10
+   lasttext_endl:=lasttext endline
+   lasttext_endl:alt+d
+   lastselect:alt+s
+
+   mlines:shift+up
+   plines:shift+down
+
+
+   jhp:=meta mpara ppara pword savecur justify restcur down arg justify up
+   jhp:ctrl+J
+
+   #
+   # ARG & BLOCK><Clipboard functions
+   #
+   meta :num/
+  #tag:shift+center
+
+   ta :=arg "<textargs>" setfile
+   mfs:=arg "<mfspec>"   setfile
+   mf :=mfs
+   mfx:=arg "mffile:=" curfile assign arg "mffile updated" message
+   mfx:alt+m
+
+   del_no_clip:=delete
+   del_no_clip:del
+
+   exitsaveall:=cancel exit <A
+   # exitsaveall:alt+f4
+
+   clip:=cancel arg "<clipboard>" setfile
+   clip:alt+y
+
+   #
+   # CURSOR/File movement
+   #
+   # CisQuote macro: for quoting CIS emails
+   cq:= "    " justify left left left ">> " delete delete delete arg arg  \
+        left left left meta ppara up vrepeat
+
+   xbak := arg "\.kbackup\" strip  arg "\Backup\" strip  arg "\.hg\" strip  arg "\.git\" strip  arg "\.svn\" strip
+
+   unsigned:= replace "unsigned char"  nl "uint8_t"  nl  \
+              replace "unsigned short" nl "uint16_t" nl  \
+              replace "unsigned long"  nl "uint32_t" nl
+
+   # deltalogtm:alt+f8
+
+   curline2wintop:=cancel arg Plines
+   curline2wintop:Shift+Home
+   curline2winbottom:=cancel arg Mlines
+   curline2winbottom:Shift+End
+   con:=arg "<console>" setfile endfile
+   env:=arg "<env>" setfile
+ # env:Alt+E
+   #tag:ctrl+m
+   Refresh:Ctrl+R       #File Refresh analogous to Norton Commander's 'reread disk'
+
+   # meta up = top of window# meta down = bottom of window
+   topOfWindow:=    meta up
+   topOfWindow:     alt+up
+   bottomOfWindow:= meta down
+   bottomOfWindow:  alt+down
+   mpara:ctrl+up
+   ppara:ctrl+down
+   pparap:=ppara ?
+   pparap:shift+pgdn
+   mparap:=mpara ?
+   mparap:shift+pgup
+
+   conmsg1 := con endfile arg ">" msearch msearch down col1  # used in kc.bat!
+
+   macdone:=arg arg "macro done" message
+
+   #selword: selects the word at the cursor (or before cursor if not on a word)
+   selword:=pword ->eof mword arg pword => :>eof mword pword arg pword
+   selword:ctrl+center
+   selword:ctrl+space
+
+   #selindent: selects a column in the whitespace of the indent of the block in which the cursor currently resides
+   selindent:= mib -> cola arg pib left  # mib+pib ordered so cursor left at TOP of ib (so pastes afterwards work logically)
+   selindent:ctrl+space
+
+   qword:=selword ldelete """""" left paste
+   qword:alt+q
+
+   m2f:=arg arg "{:i#}:b*\::b*{:i#}" psearch
+   m2sw:=arg arg replace "{:i+}:b*\::b*{:i+}" nl "$2    $1" nl
+
+   #  Delete the current word and execute it
+   expand:=selword lasttext cancel lastselect meta sdelete lasttext execute
+   #expand:ctrl+space
+
+   with_nothing :=nl arg nl <Y   # to complete 'replace' fxn
+
+   repeat:ctrl+enter
+   #recordvalue:ctrl+@
+   go:=arg "Testing: hit <ctrl+break> to break out" message :>begin recordvalue =>begin
+   # test mfgrep
+   #recordvalue:=arg "cache:no" assign arg "mov" mfgrep
+
+   num:="@begin(numbered)"
+
+   aligncol:alt+a
+   flipcase:alt+c
+   grep:ctrl+F3
+   oldgrep:=grep
+   oldgrep:ctrl+F4
+   fgrep:=fg
+   fgrep:alt+e
+   lblankdel:alt+o
+   topOfSearchlog:=arg "1" searchlog
+   topOfSearchlog:alt+F3
+   swapchar:ctrl+s
+   swapline:alt+z
+   vrepeat:alt+v
+   MakeBox:alt+Num/
+   towinclip:ctrl+num+
+   cliptext:shift+ins
+   hike:25
+
+
+   # splitcompilewnd25pct := arg "<compile>" splitwnd25pct
+
+   #mfgw:=_spush splitcompilewnd25pct arg _spop mfgrep
+   #mfgw:shift+F4
+   mfgrep:shift+F4
+
+   njustify:= justify begline
+   njustify:ctrl+b
+
+   # npj=NumberedParaJustify
+   npj:=mpara justify pword down arg justify
+
+   # remove file from <info-file>
+   zap:=dirty +>cant arg refresh => :>cant arg "can't remove: file is dirty" message
+
+   test2:= arg cur_hh_mm_ss message
+
+   #∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞
+   #∞                          === TOGGLERS ===                            ∞
+   #∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞
+
+   # obsolete because Begline now implements this exact behavior (but macro still works too!)
+   #toggle_begline:= Begline +> meta Begline  # togl between leftmost nonblank (first) and col 0
+   #toggle_begline:home
+
+   asnMsg:= message arg lasttext assign
+
+   tabconvsome:=cancel arg "tabconv:1" assign arg "tabconvnone:shift+tab" assign
+   tabconvnone:=cancel arg "tabconv:0" assign arg "tabconvsome:shift+tab" assign
+   tabconvsome:shift+tab
+
+   softcrtogl:= cancel arg "softcr:invert" assign
+   softcrtogl:shift+enter
+
+   wwraptogl:= cancel arg "wordwrap:invert" assign
+   # wwraptogl:alt+w
+
+   #bak:=arg "backup:bak" assign arg "BAK" message
+   noundel_on:= cancel arg "backup: none"  asnMsg arg "noundel_off:alt+q" assign
+   noundel_off:=cancel arg "backup: undel" asnMsg arg "noundel_on :alt+q" assign
+   noundel_on:alt+q
+   arg:alt+q   # laptop
+
+#   box   :=boxstream +>nxt boxstream  :>nxt Arg "ldelete:Num-" Assign
+#   stream:=boxstream ->nxt boxstream  :>nxt Arg "sdelete:Num-" Assign
+#   set_box:=   box     arg "BOX mode"    message   \
+#                       arg "set_stream:alt+b" assign
+#   set_stream:=stream  arg "STREAM mode" message   \
+#                       arg "set_box:alt+b" assign
+#   set_stream:         alt+B                       # "initial state"
+   boxstream:alt+B
+
+   hoist:=cancel arg setwindow
+   hoist:ctrl+H
+
+   beta:="·"
+   formfeed:=""
+
+   # so we don't modify the file:
+   #metapbal:=meta pbal +> arg "balancing {+( not found" message
+   #metapbal:ctrl+]
+   #argpbal:= arg  pbal +> arg "balancing )+} not found" message
+   balch:ctrl+9
+   balln:ctrl+[
+
+   # close all windows except the one the cursor is currently in:
+   1window:= :>nxtwin window -> meta window =>nxtwin
+   1window:alt+`
+
+   newhelp:=cancel arg "<CMD-SWI-Keys>" setfile
+   newhelp:alt+h
+
+
+        # cur_yyyymmdd " kgoodwin "
+   dttag:=cur_yyyymmdd_hhmmss
+   dttag:Ctrl+D
+   compile:ctrl+z
+
+   accbuf:=Arg "<acc>" Setfile
+
+   accum:=Copy accbuf Endfile Paste Setfile
+   #accum:alt+num+
+
+   clrbuf:=Begfile Arg Endfile meta delete ldelete Begfile setfile
+   clraccbuf:=accbuf clrbuf
+
+   index:=Arg "<maintain-deleted>" setfile Arg arg "!ix/d|sort +1" paste
+
+   #compileCurrFile:=cancel saveall arg compile arg "<compile>" setfile
+   #compileCurrFile:F12
+
+   #copymsgs:=copy arg "<compile>" setfile begfile endfile ->paste begfile arg endfile :>paste paste nextmsg
+   #copymsgs:F12
+
+   # FILE edit check
+   rdonly:=meta noedit +>edtble Arg "File is EDITABLE" ! =>end :>edtble Arg "File is EDITABLE" ! :>end meta noedit
+
+   bcc:= "/* "  # C comments
+   ecc:=endline " */"
+
+   c2ansi:=replace "/*" nl "//" nl  lastselect replace "*/" nl arg <y nl
+   # c2ansi:alt+y
+
+   ##########################################################################################
+   #
+   # http://www.sfwriter.com/wordstar.htm      sel-mode
+   #
+   # sel-mode:=arg " "
+   # sel-mode:tab
+   #
+   # WordStar adopted ^E, ^S, ^D, and ^X.  Again, looking at a typewriter keyboard
+   # makes the logic of this plain.  These four keys are arranged in a diamond under
+   # the left hand:
+   #
+   #                               E
+   #                              S D
+   #                               X
+ #  up:sel_e
+ #  down:sel_x
+ #  left:sel_s
+ #  right:sel_d
+   #
+   # Such positional, as opposed to alphabetic, mnemonics form a large part of the
+   # WordStar interface.  Additional cursor movement commands are clustered around
+   # the E/S/D/X diamond:
+   #
+   #                             W E R
+   #                            A S D F
+   #                             Z X C
+ #  mword:sel_a
+ #  pword:sel_f
+ #  mlines:sel_w
+ #  plines:sel_z
+ #  mpage:sel_r
+ #  ppage:sel_c
+   #
+   # ^A and ^F, on the home typing row, move the cursor left and right by words.  ^W
+   # and ^Z, to the left of the cursor-up and cursor-down commands, scroll the screen
+   # up and down by single lines.  ^R and ^C, to the right of the cursor-up and
+   # cursor-down commands, scroll the screen up and down a page at a time (a "page"
+   # in the computer sense of a full screen of text).
+   #
+   ##########################################################################################
+
+   # quik:ctrl+'    # experimental version of an old ws.dll extension
+
+
+   work_notes:=arg "c:/ws/notes.txt" setfile
+   work_notes:Alt+1
+
+   foodlog:=cancel Arg myscripts "foodlog.kdb" SetFile tslog
+   foodlog:Alt+2
+
+   #∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞
+   #∞                      === QUICK FILE ACCESS ===                       ∞
+   #∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞∞
+   #
+   # Alt+3 NO META: CURRENT FILENAME->prompt META: FULL PATH OF CURRENT FILE->prompt
+   # Gives you the name of the current file on the prompt line
+   # (meta gets you the FULL PATH, no meta gives you just the filename)
+   # edf:=meta +>lcl arg curfile =>rl :>lcl arg curfilename curfileext :>rl cancel lasttext endline
+   edf:=arg curfile endline
+   edf:Alt+3
+
+   myscripts:="c:\klg\pers\"
+
+
+   #
+   # Alt+4  worklog file
+   setworklog:=cancel Arg myscripts "*.txt" SetFile
+   setworklog:Alt+4
+
+   kdb:=arg myscripts "*.kdb" setfile
+   tslog:=endfile emacsnewl begline cur_yyyymmdd_hhmm " " cur_dow
+
+   worklog:=cancel Arg myscripts "work.kdb" SetFile
+
+   worklog:= meta arg cur_y4 "_wk" cur_woy ".log" SetFile -> tslog
+   worklog:Alt+4
+
+   daily:=cancel Arg myscripts "daily_notes.kdb" SetFile tslog
+   daily:Alt+5
+
+   exts :=arg "%.[^.\\]+$" matches
+
+   # Alt+6  C manual
+   set_C_manual:=cancel Arg myscripts "n869.txt" SetFile
+   # set_C_manual:Alt+6
+
+   bpl:= arg "<bpng>" ww mfx setfile cy
+
+   #*************************************************************************
+
+   recbegin:= cancel arg "<record>" splitwnd25pct arg "endRecording:alt+r" assign lasttext message record
+   endRecording:=record 1window arg "recbegin:alt+r" assign
+   recbegin:alt+r
+   #endRecording:=record 1window arg "recbegin:alt+r" assign
+   #recbegin:alt+r
+
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+   cp_to_mf := cancel begfile arg endfile copy mf endfile paste
+   wcchasm  := arg "*.h|"   setfile cp_to_mf  \
+               arg "*.i|"   setfile cp_to_mf  \
+               arg "*.c|"   setfile cp_to_mf  \
+               arg "*.asm|" setfile cp_to_mf  \
+               arg "*.config|" setfile cp_to_mf  \
+               mfx
+
+   filter_srcs := begfile begline  \
+                  arg     "\.kbackup" strip   \
+                  arg     "\Doxyfile" strip   \
+                  arg     "\UTEST\" strip   \
+                  arg     "\SSA_UnitTest\" strip   \
+                  arg     "\UnitTests\" strip   \
+                  arg     "\TargetTests\" strip   \
+                  arg arg "%.vcproj$" strip   \
+                  arg arg "%.sln$" strip   \
+                  arg arg "%.libs?$" strip    \
+                  arg arg "%.a?a?a$" strip    \
+                  mfx setfile
+
+   stripdotdirs := cancel arg arg "[/\]%..+[/\]" strip
+   s.d := stripdotdirs
+
+   srcs    := arg "<srcs>"    ww filter_srcs  arg "case:yes" assign
+   srcs_rl := arg "<srcs_rl>" ww filter_srcs
+
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+   resize:alt+w
+   ftab:ctrl+tab
+   cd2file:=arg meta curfilepath setfile  # set cwd to dir of current file
+   cd:=cd2file setfile meta tags
+
+   eth:= cancel arg "http://www.speedtest.net/" setfile \
+         cancel Arg myscripts "etheric.kdb" setfile endfile emacsnewl begline cur_yyyymmdd "_" cur_hhmmss " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Buffalo WLAN)"
+
+   #
+   # ALT+#key (Alt+1, ..., Alt+9, Alt+0)
+   #
+   # initfilemenu:Alt+1
+   # systemfilemenu:Alt+2
+
+
+[k-menu]
+   menu:alt+m                    # allframes = MACRO> arg arg "[0-9][0-9][0-9][rt]x" grep
+   listmenu:=arg "Lists/Logs" menu
+   # listmenu:alt+L
+   pseudomenu:=arg "Pseudo" menu
+   pseudomenu:alt+,
+
+[k-W.5.1] # WinXP
+   delims: {[(          # test code
+
+[k-W.6.1] # Win7
+   delims: {[(          # test code
+
+[k-W.6.2] # Win8
+   delims: {[(          # test code
+
+
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+#€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
+#€                    === FILE EXTENSION TAGS ===                            €
+#€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
+   #€Color: Blk:0 Blu:1 Grn:2 Cyn:3 Red:4 Pnk:5 Brn:6 LGr:7                  €
+   #€       DGr:8 LBl:9 LGr:A LCy:B LRd:C LPk:D Yel:E Wht:F (BRIGHT if bkgnd)€
+   #€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
+
+ux_1:="*" curfileext
+ux_2:=""ux_1""
+ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
+
+
+[k-..] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
+   delims: {[(
+   mfspec_:="*.*"
+
+[k-.bat] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
+   wordchars:$_
+
+[k-.*]  # wildcard expansion
+
+[k-.]  # USED IF FILE HAS NO EXTENSION
+   mfspec_:="*."
+   rmargin:80
+
+[k-.<>]  # PSEUDOFILE
+
+[k-.~dat] # qq --filter output file
+   rm:= "rm " mword arg arg execute setfile
+
+[k-.lua]
+   delims: {[(
+   mfspec_:="*.lua"
+   rmargin:80
+
+[k-.pl k-.pm]
+   # wordchars:@$%
+   delims: {[(
+   mfspec_:="*.pl;*.pm"
+   rmargin:80
+
+[k-.spa]
+   wordwrap:yes
+   rmargin:77
+
+[k-.tcl]
+   mfspec_:="$TAGZ:*.tcl"
+   rmargin:80
+
+[k-.cmd]
+   tabwidth:8
+   mfspec_:="*.cmd"
+   delims: {[(`
+
+[k-.mak k-.mik]
+   delims: {[(
+   #graphic:tab # using GNU make, we need ability to insert literal tabs
+   tabwidth:8
+   mfspec_:="*.mak;*.mik"
+
+[k-.cod]
+   # wordchars:@$?
+   tabwidth:8
+   mfspec_:="*.cod"
+   hl:=arg arg "(?-i)^\s+(if|else|for|while|do).*$" searchall
+
+[k-.list]
+   mfspec_:="*.list" # need "%Fd" which inserts path of file from which this command is executed
+
+[k-.journl]
+   mfspec_:="*.list" # need "%Fd" which inserts path of file from which this command is executed
+   jentry:=endfile begline cur_yymmdd " " cur_hhmmss " "
+   jentry:alt+j
+
+[k-.pas k-.dpr]
+   mfspec_:="*.pas;*.dpr"
+   rmargin:100
+
+[k-.mod k-.def]
+   mfspec_:="*.def;*.mod"
+
+[k-.asm k-.inc]
+   mfspec_:="*.inc;*.asm;*.map"
+   call:=savecur arg "call" searchall restcur
+   rmargin:100
+
+[k-.fclog]
+   mfspec_:="*.fclog"
+
+[k-.xml k-.html k-.htm k-.dtd k-.vpj k-.vpw]
+   delims: <
+
+[k-.py k-.cs]
+   wucminlen:1
+
+[k-.c k-.cpp k-.cc k-.cxx k-32.kc k-.h k-.hpp k-.hxx k-32.kh]
+   # backup:bak
+   swapovl:=psearch pword mword arg pword pword swapchar pword right
+   swapovl:ctrl+e
+
+   delims: {[(
+   wucminlen:1
+   mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"
+   # mfspec_:="%TAGZ%\<*.h;*.hpp;*.hxx;*.kh;*.c;*.cpp;*.cc;*.cxx;*.kc>"
+   # mfspec_:= "%TAGZ%\*.h;%TAGZ%\*.hpp;$(TAGZ)\*.hxx;$TAGZ:\*.kh;$(TAGZ)\*.c;$TAGZ:\*.cpp;$TAGZ:\*.cc;$TAGZ:\*.cxx;$TAGZ:\*.kc"
+   #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
+   #tabwidth:3
+    tabwidth:4
+   # fxh:=arg arg "!fxnhdr" paste
+   # flh:=arg arg "!flhdr" paste
+   rmargin:80
+
+   # decb:=replace "for (" nl "for(" nl      replace "if (" nl "if(" nl        replace "while (" nl "while(" nl
+
+   #
+   # this elegant macro causes the name of the include file to be
+   # inserted into the include file (at the current cursor position)
+   #
+   #  Fixed: this is because "arg execute" takes a NULLEOL arg
+   #  21-Apr-1993 klg Changed "execute" attribute to NULLEOW
+   #
+   #include:= arg arg "[<\"]" psearch cancel right savecur arg arg "[>\"]" psearch arg restcur setfile <N
+
+   #- Expand macros:
+   #- newblock:=begline down tab linsert "}" begline linsert "{"
+   #- for :=right backtab "for( " savecur "init# while# eachTime )" newblock restcur
+   #- while:=right backtab "while( )" left savecur newblock restcur
+   #- if:=right backtab "if(  )" left savecur newblock restcur
+   #- else:=right backtab "else" newblock
+
+   l0:= arg arg "^[~ \t]" grep
+   fnhd:= arg arg "^(:i:b)*:i\(" grep  # finds all function decl lines
+
+   nwblock:=tab linsert "}" begline linsert "{"
+   nwblock:alt+]
+
+   # bcc:alt+,
+   # ecc:alt+.
+
+[k-.txt]
+   nofor:=cancel replace "í" nl "'" nl    replace "ì" nl """ nl  replace "î" nl """ nl
+
+   rmargin:60
+   mfspec_:="*.txt"
+   join:= begline endline arg delete
+   join:num*
+   nxtspceol:=arg arg "\s$" psearch
+   nxtspceol:num/
+   joinallspeceol:= :>again nxtspceol -> join =>again
+
+[k-.e]
+   mfspec_:="*.e"
+
+[k-.kdb]
+   delims: {[(
+   mfspec_:="*.kdb"
+   rmargin:80
+
+[k-.!!!]
+   mfspec_:="*.!!!"
+
+[k-.awk k-.twk k-.twl k-.kxt k-.kxl]
+   #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
+   mfspec_:="%TAGZ%\<*.twk;*.twl;*.awk;*.kxt;*.kxl>"
+   rmargin:100
+
+[k-.fclog]
+   tmd:=arg arg "^\d{8}:\d{6}.\d{6}" grep
+
+[k-.tabbed]
+   tabwidth:3
+   realtabs:yes
+   tabconv:2
+   tabalign:yes
+
+
+[test]
+   #
+   # GetMac - Load a file of macros or assignments.
+   #
+   # Usage: Arg 'file' GetMac where <file> is the base name of
+   #        a file in the INIT directory
+   #
+   GetMac := cancel lasttext begline "$INIT:" endline ".MAC"  \
+             setfile <n +>Ok   lasttext begline               \
+             "Can't find \"" endline "\"" message =>          \
+        :>Ok begfile arg endfile assign ->  arg refresh
+
+
+   # given
+   # ------------------------------------------
+   # See
+   #
+   # this that the other
+   # and more still
+   # ------------------------------------------
+   #
+   # I want
+   # ------------------------------------------
+   # See this that the other and more still
+   # ------------------------------------------
+   #
+   see:= arg arg "See$" psearch -> arg ppara endline endline justify ppara
+   see:alt+f
