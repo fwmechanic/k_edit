@@ -16,13 +16,7 @@
 
 void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
    buf[ bufBytes - 1 ] = '\0';
-   const auto rv(
-#if defined(_WIN32)
-                  _vsnprintf
-#else
-                   vsnprintf
-#endif
-                            ( buf, bufBytes, format, val ) );
+   const auto rv( WL( _vsnprintf, vsnprintf )( buf, bufBytes, format, val ) );
    if( rv == -1 || buf[ bufBytes - 1 ] != 0 ) {
       buf[ bufBytes - 1 ] = '\0';
       STATIC_CONST char fmt[] = "%s: STRING TRUNCATED: '%s'";

@@ -7,13 +7,6 @@
 #pragma once
 
 #if defined(_WIN32)
-#   define WL(ww,ll)  ww
-#else
-#   define WL(ww,ll)  ll
-#endif
-
-
-#if defined(_WIN32)
    #define FNM_CASE_SENSITIVE 0
 #else
    #define FNM_CASE_SENSITIVE 1

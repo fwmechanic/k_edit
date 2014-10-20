@@ -7,6 +7,13 @@
 #define  DEBUG_LOGGING  1
 #define  OLDGREP  0
 
+// porting abbreviation tool
+#if defined(_WIN32)
+#   define WL(ww,ll)  ww
+#else
+#   define WL(ww,ll)  ll
+#endif
+
 #if defined(_WIN32)
    #define  MOUSE_SUPPORT  1
 #else

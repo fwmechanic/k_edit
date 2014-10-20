@@ -9,6 +9,15 @@
 #include "my_types.h"
 #include "ed_mem.h" // for Strdup()
 
+#ifndef WL
+   // porting abbreviation tool
+   #if defined(_WIN32)
+   #   define WL(ww,ll)  ww
+   #else
+   #   define WL(ww,ll)  ll
+   #endif
+#endif
+
 // PChar vs PCChar
 #define TF_Ptr template<typename Ptr>
 
@@ -156,25 +165,9 @@ extern  PChar _strlwr( PChar buf );
 
 #endif
 
-STIL int Strnicmp( PCChar string1, PCChar string2, size_t count ) { return
-#if defined(_WIN32)
-   _strnicmp
-#else
-   strncasecmp
-#endif
-              ( string1, string2, count );
-   }
-
-STIL int Stricmp( PCChar string1, PCChar string2 ) { return
-#if defined(_WIN32)
-   _strcmpi
-#else
-   strcasecmp
-#endif
-             ( string1, string2 );
-   }
-
-STIL int Strcmp( PCChar string1, PCChar string2 ) { return strcmp( string1, string2 ); }
+STIL int Strnicmp( PCChar string1, PCChar string2, size_t count ) { return WL( _strnicmp, strncasecmp )( string1, string2, count ); }
+STIL int Stricmp ( PCChar string1, PCChar string2 )               { return WL( _strcmpi , strcasecmp  )( string1, string2 ); }
+STIL int Strcmp  ( PCChar string1, PCChar string2 )               { return      strcmp                 ( string1, string2 ); }
 
 extern size_t Strnspn  ( PCChar str1, PCChar eos1, PCChar needle );
 extern size_t Strncspn ( PCChar str1, PCChar eos1, PCChar needle );

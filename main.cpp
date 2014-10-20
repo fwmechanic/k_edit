@@ -1128,13 +1128,7 @@ STATIC_FXN ptrdiff_t memdelta() {
 //     not point to the same environment that _environ does (the latter is the
 //     one that's modified by _putenv())
 //
-GLOBAL_VAR char ** &g_envp =
-#if defined(_WIN32)
-                             _environ /* '_environ' is a MSVC-specific facility! */
-#else
-                              environ /* '_environ' is a Linux-specific facility! */
-#endif
-                                     ;
+GLOBAL_VAR char ** &g_envp = WL( _environ, environ );
 extern void TestMQ();
 
 #ifdef APP_IN_DLL
