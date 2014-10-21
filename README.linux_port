@@ -1,0 +1,16 @@
+
+Guidelines
+
+* "when in Rome..." please adhere to my (arguably weird) coding conventions
+
+Key goals
+
+* when I use K, for better or worse, and in direct contravention of the
+  "fingers on home keys" mantra of vi etc., most of the time my right hand is
+  over the numeric keypad; cursor keys, arg (center key), cut, copy, paste are
+  all "at hand".  A KEY GOAL is to preserve this capability in Linux.
+
+* http://fte.sourceforge.net/ seems to have a nicely structured architecture
+  supporting multiple/diverse screen+kybd I/O environments.  While my immediate
+  goals for K are far less diverse (ncurses should be totally sufficient?),
+  adopting FTE's framework in toto _MIGHT_ be a net win...
