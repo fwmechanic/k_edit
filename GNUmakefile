@@ -266,9 +266,9 @@ CMDTBL_OUTPUTS := cmdtbl.h
 # !!! in Lua-5.1/src/Makefile, PLAT=mingw, LUA_T=lua (not lua.exe)
 LUA_T=.$(DIRSEP)lua$(EXE_EXT)
 
-CLEAN_ARGS := $(OBJS) *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map
+CLEAN_ARGS := $(OBJS) *.d *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map
 
-ZAP_ARGS := $(EXE_TGTS) $(LUA_T) *.d
+ZAP_ARGS := $(EXE_TGTS) $(LUA_T)
 
 all : tags
 
