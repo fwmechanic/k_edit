@@ -210,7 +210,7 @@ CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtt
 #####################################################################################################################
 
 LIBLUA := liblua.a
-LIBS   := -static-libgcc -static-libstdc++ -lgcc $(OS_LIBS) $(LUA_DIR)/$(LIBLUA) $(PCRE_LIB) #  -lmcheck (seems not to exist in MinGW)
+LIBS   := -static-libgcc -static-libstdc++ -lgcc -lboost_filesystem -lboost_system $(OS_LIBS) $(LUA_DIR)/$(LIBLUA) $(PCRE_LIB) #  -lmcheck (seems not to exist in MinGW)
 
 CPP_OPTS:=
 

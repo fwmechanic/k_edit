@@ -97,6 +97,15 @@ std::string Path::GetCwd() {
    }
 
 std::string Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
+#ifdef BOOST_LIB_VERSION
+   boost::filesystem::path src( pszFilename );
+   boost::system::error_code ec;
+   auto boost_dest( canonical( src, ec ) );
+   // std::string destgs( boost_dest.generic_string() );
+   // DBG( "%s Boost '%s' -> '%s'", __func__, pszFilename, destgs.c_str() );
+   std::string dests( boost_dest.string() );
+   DBG( "%s Boost '%s' -> '%s'", __func__, pszFilename, dests.c_str() );
+#endif
    /* old code, works fine but uses Win32 API explicitly
       GetFullPathName combines the FILENAME with the current drive and directory
       name and returns a fully qualified (aka, absolute) path name.  Note that

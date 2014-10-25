@@ -659,7 +659,7 @@ void SearchEnvDirListForFile( PXbuf dest, const PCChar pszSrc, bool fKeepNameWil
          }
       CfxFilenameGenerator mfg( path.c_str(), ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
-         dest->cat_ch( Path::PATH_SEP_CH ); dest->cat( fname.c_str() );               VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest->kbuf() );
+         dest->cat( fname.c_str() );                                                  VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest->kbuf() );
          return;
          }
       else {
@@ -703,11 +703,6 @@ std::string CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
    DB && DBG( "%s post-expansion='%s'", __func__, xb.kbuf() );
 
    const auto rv( Path::Absolutize( xb.kbuf() ) );
-   if( rv.length() == 0 ) {
-      DB && DBG( "%s- NULL (Path::Absolutize)", __func__ );
-      return std::string( "" );
-      }
-
    DB && DBG( "%s- '%s'", __func__, rv.c_str() );
    return rv;
    }

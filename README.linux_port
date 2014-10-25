@@ -2,6 +2,14 @@
 Guidelines
 
 * "when in Rome..." please adhere to my (arguably weird) coding conventions
+  * NO TABS ALLOWED ANYWHERE (except where required in makefiles)
+  * 3 spaces per indent level
+  * https://en.wikipedia.org/wiki/Indent_style#Ratliff_style which is same as
+    https://en.wikipedia.org/wiki/Indent_style#Banner_style ? both modified by
+      if( bool ) { }  // yes
+      if (bool)  { }  // NO!
+      function( my, params ); // yes
+      function (my,params);   // NO!
 
 Key goals
 
