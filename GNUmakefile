@@ -142,7 +142,10 @@ CXXWARN := -Woverloaded-virtual -Wold-style-cast -Wzero-as-null-pointer-constant
 C_OPTS_COMMON  := $(GCC_OPTZ) $(CWARN) -funsigned-char $(TRAPV) $(CC_OUTPUT)
 C_OPTS_LUA_REF := -I$(LUA_DIR)
 
-LINK_OPTS_COMMON_ := -fno-exceptions -fno-rtti $(STRIP) -Wl,-stats $(PLAT_LINK_OPTS)
+#                 -fno-exceptions
+USE_EXCEPTIONS := -fexceptions
+
+LINK_OPTS_COMMON_ := $(USE_EXCEPTIONS) -fno-rtti $(STRIP) -Wl,-stats $(PLAT_LINK_OPTS)
 ifdef DBG_BUILD
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
 else
@@ -203,7 +206,7 @@ CXX_D_FLAGS = -std=gnu++11 -DUSE_PCRE=$(USE_PCRE) $(APP_IN_DLL_CPP)
 # CPPFLAGS is used when compiling both .c and .cpp, CFLAGS only for .c, CXXFLAGS only for .cpp
 CPPFLAGS = -DWINVER=0x0501
 CFLAGS   = $(C_OPTS_COMMON) $(C_OPTS_DBG)
-CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) -fno-exceptions -fno-rtti $(C_OPTS_LUA_REF) $(KEEPASM) $(C_OPTS_DBG)
+CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtti $(C_OPTS_LUA_REF) $(KEEPASM) $(C_OPTS_DBG)
 #####################################################################################################################
 
 LIBLUA := liblua.a
