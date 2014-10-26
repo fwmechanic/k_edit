@@ -116,7 +116,7 @@ class FilelistCfxFilenameGenerator : public PathStrGenerator {
    PFBUF                  d_pFBuf;
    LINE                   d_curLine = 0;
    CfxFilenameGenerator  *d_pCfxGen = nullptr;
-   Xbuf                   d_xb;
+   Path::str_t            d_xb;
 
    public:
 

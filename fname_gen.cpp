@@ -147,18 +147,6 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
    return 1;
    }
 
-int FBUF::GetLineIsolateFilename( PXbuf pXb, LINE yLine, COL xCol ) const {
-   PCChar bos, eos;
-   if( !PeekRawLineExists( yLine, &bos, &eos ) )
-      return -1;
-
-   const auto pXmin( PtrOfColWithinStringRegionNoEos( g_CurFBuf()->TabWidth(), bos, eos, xCol ) );
-   int oMin, oMax;
-   if( !IsolateFilename( &oMin, &oMax, pXmin, eos ) ) return 0;
-   pXb->cpy( pXmin+oMin, oMax-oMin );
-   return 1;
-   }
-
 //------------------------------------------------------------------------------
 
 //
@@ -210,9 +198,9 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
          }
       RTN_false_ON_BRK;
 
-      const auto glif_rv( d_pFBuf->GetLineIsolateFilename( &d_xb, d_curLine++, 0 ) );
+      const auto glif_rv( d_pFBuf->GetLineIsolateFilename( d_xb, d_curLine++, 0 ) );
       if( glif_rv < 0 ) return false;  // no more lines
-      if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_xb.kbuf(), ONLY_FILES );
+      if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_xb.c_str(), ONLY_FILES );
       }
    }
 
