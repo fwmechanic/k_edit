@@ -52,18 +52,18 @@ int Path::strcmp( const Path::str_t &name1, const Path::str_t &name2 ) {
    return WL( Stricmp, Strcmp )( name1.c_str(), name2.c_str() );
    }
 
-Path::str_t Path::CpyDirOk( PCChar pSrcFullname ) {                                       0 && DBG( "%s  in =%s'", __func__, pSrcFullname );
+Path::str_t Path::CpyDirnm( PCChar pSrcFullname ) {                                       0 && DBG( "%s  in =%s'", __func__, pSrcFullname );
    Path::str_t rv( pSrcFullname, PPastLastPathSep( pSrcFullname ) - pSrcFullname );       0 && DBG( "%s  out=%s'", __func__, rv.c_str()   );
    return rv;
    }
 
-Path::str_t Path::CpyFnameOk( PCChar pSrcFullname ) { // DOES NOT include the trailing "." !!!
+Path::str_t Path::CpyFnm( PCChar pSrcFullname ) { // DOES NOT include the trailing "." !!!
    const auto pC( PPastLastPathSep( pSrcFullname ) );
    auto pEnd( Path::IsDotOrDotDot( pC ) ? Eos( pC ) : PAtLastDotOrEos( pC ) );
    return Path::str_t( pC, pEnd - pC );
    }
 
-Path::str_t Path::CpyExtOk( PCChar pSrcFullname ) { // if pSrcFullname contains an extension, prepends a leading "."
+Path::str_t Path::CpyExt( PCChar pSrcFullname ) { // if pSrcFullname contains an extension, prepends a leading "."
    const auto pC( PPastLastPathSep( pSrcFullname ) );
    if( Path::IsDotOrDotDot( pC ) ) {
       return Path::str_t( "" );
@@ -71,19 +71,19 @@ Path::str_t Path::CpyExtOk( PCChar pSrcFullname ) { // if pSrcFullname contains 
    return Path::str_t( PAtLastDotOrEos( pC ) );
    }
 
-Path::str_t Path::CpyFnameExtOk( PCChar pSrcFullname ) {
-   return Path::CpyFnameOk( pSrcFullname ) + Path::CpyExtOk( pSrcFullname );
+Path::str_t Path::CpyFnameExt( PCChar pSrcFullname ) {
+   return Path::CpyFnm( pSrcFullname ) + Path::CpyExt( pSrcFullname );
    }
 
 Path::str_t Path::Union( PCChar pFirst, PCChar pSecond ) { enum { DB=0 };
-   // dest = (Path::CpyDirOk  ( pFirst ) || Path::CpyDirOk  ( pSecond ))
-   //      + (Path::CpyFnameOk( pFirst ) || Path::CpyFnameOk( pSecond ))
-   //      + (Path::CpyExtOk  ( pFirst ) || Path::CpyExtOk  ( pSecond ))
-   auto dir( Path::CpyDirOk  ( pFirst ) ); if( dir.empty() )  dir = Path::CpyDirOk  ( pSecond );  DB && DBG( "RExt:dir '%s'", dir.c_str() );
-   auto fnm( Path::CpyFnameOk( pFirst ) ); if( fnm.empty() )  fnm = Path::CpyFnameOk( pSecond );  DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
+   // dest = (Path::CpyDirnm( pFirst ) || Path::CpyDirnm( pSecond ))
+   //      + (Path::CpyFnm  ( pFirst ) || Path::CpyFnm  ( pSecond ))
+   //      + (Path::CpyExt  ( pFirst ) || Path::CpyExt  ( pSecond ))
+   auto dir( Path::CpyDirnm( pFirst ) ); if( dir.empty() )  dir = Path::CpyDirnm( pSecond );  DB && DBG( "RExt:dir '%s'", dir.c_str() );
+   auto fnm( Path::CpyFnm  ( pFirst ) ); if( fnm.empty() )  fnm = Path::CpyFnm  ( pSecond );  DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
    if( !Path::IsDotOrDotDot( fnm.c_str() ) ) {
-      auto ext( Path::CpyExtOk( pFirst ) ); if( ext.empty() )  ext = Path::CpyExtOk( pSecond );
-      fnm += ext;                                                                                       DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
+      auto ext( Path::CpyExt( pFirst ) ); if( ext.empty() )  ext = Path::CpyExt( pSecond );
+      fnm += ext;                                                                             DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
       }
 
    // following code was once commented out since this code

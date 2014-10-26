@@ -917,7 +917,7 @@ STATIC_FXN bool vsPrintfAssign( PCChar pFormat, ... ) {
 
 Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    const auto pbuf( fb->Name() );
-   auto dest( Path::CpyExtOk( pbuf ) );
+   auto dest( Path::CpyExt( pbuf ) );
    if( dest.empty() ) {
       dest = (!fb->FnmIsDiskWritable() ? ".<>" : ".");
       }
@@ -947,15 +947,15 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
 #else
    DefineMacro( "curfile", fb->Name() );
 #endif
-   DefineMacro( "curfilename", Path::CpyFnameOk( fb->Name() ).c_str() );
-   DefineMacro( "curfilepath", Path::CpyDirOk  ( fb->Name() ).c_str() );
+   DefineMacro( "curfilename", Path::CpyFnm  ( fb->Name() ).c_str() );
+   DefineMacro( "curfilepath", Path::CpyDirnm( fb->Name() ).c_str() );
 
    std::string ext;  // param to BOTH DefineMacro and LoadFileExtRsrcIniSection()!
    if( FnmIsLogicalWildcard( fb->Name() ) ) {
       ext = ".*";
       }
    else {
-      ext = Path::CpyExtOk( fb->Name() );
+      ext = Path::CpyExt( fb->Name() );
       if( ext.empty() )
          ext = !fb->FnmIsDiskWritable() ? ".<>" : ".";
       }
@@ -1316,7 +1316,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       { ".hpp", ftype1_C },
       };
 
-   const auto pb( Path::CpyExtOk( Name() ) );
+   const auto pb( Path::CpyExt( Name() ) );
    0 && DBG( "%s EXT=%s", __func__, pb.c_str() );
    for( const auto &e2t : ext_2_type ) {
       if( Stricmp( e2t.ext, pb.c_str() ) == 0 ) {
@@ -1390,7 +1390,7 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                      // In Win32/MSVC RTL, rename() FAILS if the destination already exists
                      if( !unlinkOk( BAK_FileNm.c_str() ) ) {
                         if( errno != ENOENT ) {
-                           return Msg( "Can't delete %s - %s", Path::CpyFnameExtOk( BAK_FileNm.c_str() ).c_str(), strerror( errno ) );
+                           return Msg( "Can't delete %s - %s", Path::CpyFnameExt( BAK_FileNm.c_str() ).c_str(), strerror( errno ) );
                            }
                         }
 #endif

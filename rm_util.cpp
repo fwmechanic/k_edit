@@ -34,7 +34,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) {
       }
    }
 
-   auto dest( Path::CpyDirOk( pszFileName ) + szBakDirNm );
+   auto dest( Path::CpyDirnm( pszFileName ) + szBakDirNm );
    {
    FileAttribs fd( dest.c_str() );
    if( fd.Exists() && fd.IsDir() ) {
@@ -49,7 +49,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) {
       0 && DBG("SFMG  mkdir '%s'", dest.c_str() );
       }
    }
-   const auto filenameNoPath( Path::CpyFnameExtOk( pszFileName ) );  0 && DBG("SFMG  B '%s'", filenameNoPath.c_str() );
+   const auto filenameNoPath( Path::CpyFnameExt( pszFileName ) );  0 && DBG("SFMG  B '%s'", filenameNoPath.c_str() );
 
    char tbuf[32];
    {

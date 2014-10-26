@@ -458,7 +458,7 @@ DirListGenerator::DirListGenerator( PCChar dirName ) {
          if( !Path::IsDotOrDotDot( pbuf.c_str() ) )
             AddName( pbuf.c_str() );
 
-         0 && DBG( "   PBUF='%s' DBUF='%s'", pbuf.c_str(), Path::CpyFnameOk( pbuf.c_str() ).c_str() );
+         0 && DBG( "   PBUF='%s' DBUF='%s'", pbuf.c_str(), Path::CpyFnm( pbuf.c_str() ).c_str() );
          }
       }
    }
@@ -636,12 +636,12 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
          goto OUTPUT_EQ_INPUT;
          }
 
-      const auto fname( Path::CpyFnameExtOk( pszSrc ) );                              VERBOSE && DBG( "%s *** '%s' name='%s'", __func__, pszSrc, fname.c_str() );
+      const auto fname( Path::CpyFnameExt( pszSrc ) );                                VERBOSE && DBG( "%s *** '%s' name='%s'", __func__, pszSrc, fname.c_str() );
       if( HasWildcard( fname.c_str() ) ) {
          goto OUTPUT_EQ_INPUT;
          }
 
-      auto path( Path::CpyDirOk( pszSrc ) );                                          VERBOSE && DBG( "%s *** '%s' path='%s'", __func__, pszSrc, path.c_str() );
+      auto path( Path::CpyDirnm( pszSrc ) );                                          VERBOSE && DBG( "%s *** '%s' path='%s'", __func__, pszSrc, path.c_str() );
       if( path.empty() ) {
          path = ".";   // supply "." so CfxFilenameGenerator works
          }

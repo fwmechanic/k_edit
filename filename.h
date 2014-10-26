@@ -40,10 +40,10 @@ namespace Path {
 
    extern bool  SetCwdOk        ( PCChar dnm );
    extern str_t GetCwd    ();
-   extern str_t CpyDirOk     ( PCChar pSrcFullname );
-   extern str_t CpyFnameOk   ( PCChar pSrcFullname );
-   extern str_t CpyExtOk     ( PCChar pSrcFullname );
-   extern str_t CpyFnameExtOk( PCChar pSrcFullname );
+   extern str_t CpyDirnm   ( PCChar pSrcFullname );
+   extern str_t CpyFnm     ( PCChar pSrcFullname );
+   extern str_t CpyExt     ( PCChar pSrcFullname );
+   extern str_t CpyFnameExt( PCChar pSrcFullname );
    extern str_t Union        ( PCChar pFirst, PCChar pSecond );
    extern str_t Absolutize   ( PCChar pszFilename );
    // extern

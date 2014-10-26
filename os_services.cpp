@@ -16,8 +16,8 @@ OsEnv::OsEnv( PCChar argv0 ) {
    argv0 = pb;
 #else
 #endif
-   d_exe_path = Path::CpyDirOk  ( argv0 ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-   d_exe_name = Path::CpyFnameOk( argv0 ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
+   d_exe_path = Path::CpyDirnm( argv0 ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+   d_exe_name = Path::CpyFnm  ( argv0 ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
    }
 
 GLOBAL_CONST OsEnv *g_Process;
