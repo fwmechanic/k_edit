@@ -243,7 +243,7 @@ class StrSubstituterGenerator {
    ~StrSubstituterGenerator();
 
    void SetBaseStr( PCChar pBase ) { d_pBaseString = pBase; }
-   bool GetNextString( PChar dest, size_t sizeofDest );
+   bool GetNextString( std::string &st );
 
    void AddMultiExpandableSeg( PCChar pValue, int chValDelim, int xReplStart, int replLen );
 
@@ -298,9 +298,9 @@ void StrSubstituterGenerator::NextCombination() {
    d_fCombinationsExhaused = true;
    }
 
-bool StrSubstituterGenerator::GetNextString( PChar dest, size_t sizeofDest ) {
+bool StrSubstituterGenerator::GetNextString( std::string &st ) {
    if( d_fCombinationsExhaused ) {
-      if( sizeofDest > 0 )  dest[0] = '\0';
+      st.clear();
       return false;
       }
 
@@ -309,10 +309,11 @@ bool StrSubstituterGenerator::GetNextString( PChar dest, size_t sizeofDest ) {
 
    DLINKC_FIRST_TO_LASTA(d_SubStrSubstituter,dlink,pSSS) {
       const auto prevLitLen( pSSS->d_xReplStart - (pLit - pLit0) );
-      snprintf_full( &dest, &sizeofDest, "%*.*s%s", pd2Int(prevLitLen), pd2Int(prevLitLen), pLit, pSSS->d_values[ pSSS->d_valueIdx ] );
+      st.append( pLit, prevLitLen );
+      st.append( pSSS->d_values[ pSSS->d_valueIdx ] );
       pLit += prevLitLen + pSSS->d_replLen;
       }
-   snprintf_full( &dest, &sizeofDest, "%s", pLit );
+   st.append( pLit );
 
    NextCombination();
    return true;
@@ -533,10 +534,9 @@ NEXT_WILDCARD_MATCH:
 
    if( d_pSSG ) {
 NEXT_SSG_COMBINATION:
-      pathbuf pbuf;
-      if( d_pSSG->GetNextString( BSOB(pbuf) ) ) {
-         MFSPEC_D && DBG( "%s+ WcGen <= '%s'", __func__, pbuf );
-         d_pWcGen = new WildcardFilenameGenerator( pbuf, d_matchMode );
+      if( d_pSSG->GetNextString( dest ) ) {
+         MFSPEC_D && DBG( "%s+ WcGen <= '%s'", __func__, dest.c_str() );
+         d_pWcGen = new WildcardFilenameGenerator( dest.c_str(), d_matchMode );
          goto NEXT_WILDCARD_MATCH;
          }
 
