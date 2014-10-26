@@ -2188,10 +2188,9 @@ bool ARG::balch() {
 bool View::next_balln( LINE yStart, bool fStopOnElse ) {
    const auto pFbuf( FBuf() );
    auto nest(0);
-   Xbuf xb;
    for( auto iy(yStart + 1) ; iy < pFbuf->LineCount() ; ++iy ) {
       auto fStop(false);
-      switch( FBOP::IsCppConditional( &xb, pFbuf, iy ) ) {
+      switch( FBOP::IsCppConditional( pFbuf, iy ) ) {
          case cppcNone : break;
          case cppcIf   : ++nest; break;
          case cppcElif : //lint -fallthrough
@@ -2209,10 +2208,9 @@ bool View::next_balln( LINE yStart, bool fStopOnElse ) {
 bool View::prev_balln( LINE yStart, bool fStopOnElse ) {
    const auto pFbuf( FBuf() );
    auto nest(0);
-   Xbuf xb;
    for( auto iy(yStart - 1) ; iy >= 0 ; --iy ) {
       auto fStop(false);
-      switch( FBOP::IsCppConditional( &xb, pFbuf, iy ) ) {
+      switch( FBOP::IsCppConditional( pFbuf, iy ) ) {
          case cppcNone : break;
          case cppcEnd  : ++nest; break;
          case cppcElif : //lint -fallthrough
@@ -2232,8 +2230,7 @@ bool ARG::balln() {
    const FBufLocnNow cp;
    PCV;
    const auto pFbuf( g_CurFBuf() );
-   Xbuf xb;
-   switch( FBOP::IsCppConditional( &xb, pFbuf, d_noarg.cursor.lin ) ) {
+   switch( FBOP::IsCppConditional( pFbuf, d_noarg.cursor.lin ) ) {
       case cppcNone : pcv->prev_balln( d_noarg.cursor.lin, true  ); break;
       case cppcIf   : //lint -fallthrough
       case cppcElif : //lint -fallthrough

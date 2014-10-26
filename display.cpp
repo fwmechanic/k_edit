@@ -441,8 +441,8 @@ private:
 
    bool   SetNewWuc( PCChar snew, PCChar snewEos, LINE lin, COL col );
 
-   std::string  d_xbCandidate;
-   std::string  d_xbSel;    // d_xbSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
+   std::string  d_stCandidate;
+   std::string  d_stSel;    // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
 
    COL          d_wucLen;
    LINE         d_yWuc;     // BUGBUG need to set d_yWuc = -1 (or d_wucbuf[0] = 0) if edits occur
@@ -452,7 +452,7 @@ private:
 bool HiliteAddin_WordUnderCursor::SetNewWuc( PCChar snew, PCChar snewEos, LINE lin, COL col ) {
    enum { DBG_HL_EVENT=0 };
    const auto new_wucLen(snewEos - snew);
-   d_xbSel.clear();
+   d_stSel.clear();
    if(   d_yWuc == lin
       && d_wucLen == new_wucLen
       && 0 == memcmp( Strings(), snew, d_wucLen )
@@ -547,11 +547,11 @@ PCChar GetWordUnderPoint( PCFBUF pFBuf, Point *cursor, COL *len ) {
    }
 
 void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
-   if( d_view.GetBOXSTR_Selection( d_xbCandidate ) && !IsStringBlank( d_xbCandidate.c_str() ) ) {
-      if( d_xbSel != d_xbCandidate ) {
-         d_xbSel = d_xbCandidate;
-         // d_xbSel.cat_ch( 0 );  // d_xbSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
-         0 && DBG( "BOXSTR=%s|", d_xbSel.c_str() );
+   if( d_view.GetBOXSTR_Selection( d_stCandidate ) && !IsStringBlank( d_stCandidate.c_str() ) ) {
+      if( d_stSel != d_stCandidate ) {
+         d_stSel = d_stCandidate;
+         // d_stSel.cat_ch( 0 );  // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
+         0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
          d_yWuc = -1;
          d_xWuc = -1;
          Reset();
@@ -590,7 +590,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    auto fb( CFBuf() );
    PCChar bos, eos;
    if( fb->PeekRawLineExists( yLine, &bos, &eos ) ) {
-      auto keyStart( Strings()[0] ? Strings() : (d_xbSel.empty() ? nullptr : d_xbSel.c_str()) );
+      auto keyStart( Strings()[0] ? Strings() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
       if( keyStart ) {
          for( auto pCh( bos ) ; ; ) { PCChar found(nullptr); int mlen;
             for( auto pC(keyStart) ; *pC ;  ) {
@@ -621,14 +621,14 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    }
 
 
-cppc IsCppConditional( PCChar pLine, PInt pxPound ) { // *pLine points to getLineRaw() data (tabs still there, not expanded)
+STATIC_FXN cppc IsCppConditional( PCChar ps, PCChar eos, PInt pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
    *pxPound = -1;
-   auto p1( StrPastAnyWhitespace( pLine ));
-   if( !*p1 || !('#' == *p1 || '%' == *p1 || '!' == *p1) ) return cppcNone;
-   *pxPound = p1 - pLine;
-   p1 = StrPastAnyWhitespace( p1+1 );
-   if( !*p1 || !isWordChar(*p1) ) return cppcNone;
-   const auto len( StrPastWord( p1 ) - p1 );
+   auto p1( StrPastAnyWhitespace( ps, eos ) );
+   if( p1==eos || !('#' == *p1 || '%' == *p1 || '!' == *p1) ) return cppcNone;
+   *pxPound = p1 - ps;
+   p1 = StrPastAnyWhitespace( p1+1, eos );
+   if( p1==eos || !isWordChar(*p1) ) return cppcNone;
+   const auto len( StrPastWord( p1, eos ) - p1 );
    STATIC_CONST struct {
       int     len;
       PCChar  nm;
@@ -653,11 +653,11 @@ cppc IsCppConditional( PCChar pLine, PInt pxPound ) { // *pLine points to getLin
    return cppcNone;
    }
 
-cppc FBOP::IsCppConditional( PXbuf pxb, PCFBUF fb, LINE yLine ) { // *pLine points to getLineRaw() data (tabs still there, not expanded)
-   linebuf lbuf; // copy to lbuf because non-copy API's don't yield an ASCIZ string
-   fb->getLineRaw( pxb, yLine );
+cppc FBOP::IsCppConditional( PCFBUF fb, LINE yLine ) { // *pLine points to getLineRaw() data (tabs still there, not expanded)
+   PCChar bos, eos;
+   fb->PeekRawLineExists( yLine, &bos, &eos );
    COL xPound;
-   return ::IsCppConditional( pxb->c_str(), &xPound );
+   return ::IsCppConditional( bos, eos, &xPound );
    }
 
 class HiliteAddin_CPPcond_Hilite : public HiliteAddin {
@@ -735,8 +735,8 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE yyy0, LINE yyy1 ) {
    for( auto iy(0) ; iy < ViewLines() ; ++iy ) {
       auto &line( d_PerViewableLine[ iy ].line );
       line.xMax = fb->getLineTabx( &d_xb, Origin().lin + iy );
-      auto lbuf( d_xb.c_str() ); // copy to lbuf because non-copy API's don't yield an ASCIZ string
-      switch( (line.acppc = IsCppConditional( lbuf, &line.xPound )) ) {
+      auto lbuf( d_xb.c_str() );
+      switch( (line.acppc = IsCppConditional( lbuf, lbuf+line.xMax, &line.xPound )) ) {
          default:       break;
          case cppcIf  : --upDowns;
    #if SOLO_ELSE_HACK

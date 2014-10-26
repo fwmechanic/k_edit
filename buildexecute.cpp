@@ -787,7 +787,7 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
 
    pathbuf     pbTabxBase; pbTabxBase[0] = '\0';
    PDirMatches pDirContent(nullptr);
-   Xbuf xbTmp;
+   std::string stTmp;
 
    while(1) { //******************************************************************
       // BUGBUG GetTextargString_CMD_reader may prevent the following
@@ -906,8 +906,8 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
       else if( func == fn_right ) {
          if( g_CurFBuf() && xb.len() == xCursor ) {
             const auto xx( xColInFile + xCursor );
-            g_CurFBuf()->GetLineSeg( xbTmp, g_CursorLine(), xx, xx );
-            xb.poke( xCursor, xbTmp.c_str()[0] );
+            g_CurFBuf()->GetLineSeg( stTmp, g_CursorLine(), xx, xx );
+            xb.poke( xCursor, stTmp[0] );
             }
          ++xCursor;
          }
