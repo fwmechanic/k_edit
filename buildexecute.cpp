@@ -1380,11 +1380,13 @@ bool ARG::selcmd() { // selcmd:alt+0
    while( 1 ) {
       bool fGotAnyInputFromKbd;
       const auto GtaTermCmd( GetTextargString( cmdNameBuf, prompt_, 0, nullptr, gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
-      if( !GtaTermCmd || GtaTermCmd->IsFnCancel() )
+      if( !GtaTermCmd || GtaTermCmd->IsFnCancel() ) {
          return fnMsg( "cancelled" );
+         }
 
-      if( fGotAnyInputFromKbd )
+      if( fGotAnyInputFromKbd ) {
          AddToTextargStack( cmdNameBuf.c_str() );
+         }
 
       const PCCMD newCmd( CmdFromName( cmdNameBuf.c_str() ) );
       if( !newCmd ) {
@@ -1458,9 +1460,9 @@ bool ARG::unassigned() {
 
 bool ARG::boxstream() {
    g_fBoxMode = !g_fBoxMode;
-   if( ArgCount() > 0 )
+   if( ArgCount() > 0 ) {
       ExtendSelectionHilite( g_CurView()->Cursor() );
-
+      }
    return g_fBoxMode;
    }
 
@@ -1607,9 +1609,9 @@ bool ARG::execute() {
     // NOT StrToNextMacroTermOrEos to parse comments, etc.
 
     case TEXTARG:  if( d_cArg == 1 ) { // meta is passed thru to macro invoked
-                      Xbuf strToExecute( d_fMeta?kszMeta_:"", d_textarg.pText );  // *** MUST *** COPY d_textarg.pText to stack buffer (strToExecute)
-                      StrToNextMacroTermOrEos( strToExecute.wbuf() )[0] = '\0';
-                      rv = fExecute( strToExecute.c_str(), false );                //              else nested macros get broken!
+                      std::string strToExecute( (d_fMeta?kszMeta_:"") + std::string( d_textarg.pText ) );  // *** MUST *** COPY d_textarg.pText to stack buffer (strToExecute)
+                      strToExecute.erase( StrToNextMacroTermOrEos( strToExecute.c_str() ) - strToExecute.c_str() );
+                      rv = fExecute( strToExecute.c_str(), false );                                        //              else nested macros get broken!
                       }
                    else { // hacky-kludgy way to get direct access to shell cmds w/o a new key asgnmt: arg arg "ls -l" execute
                       Path::str_t cmd( d_textarg.pText );
