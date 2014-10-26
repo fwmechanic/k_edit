@@ -687,21 +687,30 @@ void SearchEnvDirListForFile( PXbuf dest, bool fKeepNameWildcard ) {
    SearchEnvDirListForFile( dest, tmp, fKeepNameWildcard );
    }
 
+STATIC_FXN void SearchEnvDirListForFile( std::string &st, bool fKeepNameWildcard=false ) {
+   Xbuf dest;
+   SearchEnvDirListForFile( &dest, st.c_str(), fKeepNameWildcard );
+   st = dest.kbuf();
+   }
+
 std::string CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
    if( FBUF::FnmIsPseudo( pszSrc ) ) {                               DB && DBG( "%s- (FnmIsPseudo) '%s'", __func__, pszSrc );
       return std::string( pszSrc );
       }
 
-   Xbuf xb( pszSrc );
-   if( !LuaCtxt_Edit::ExpandEnvVarsOk( &xb ) ) {
-      if( '$' == pszSrc[0] )
-         SearchEnvDirListForFile( &xb );
-      else
-         xb.cpy( pszSrc );
+   std::string xb( pszSrc );
+   if( LuaCtxt_Edit::ExpandEnvVarsOk( xb ) ) {
+      DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, xb.c_str() );
       }
-   DB && DBG( "%s post-expansion='%s'", __func__, xb.kbuf() );
+   else {
+      if( '$' == pszSrc[0] )
+         SearchEnvDirListForFile( xb );
+      else
+         xb = pszSrc;
+      }
+   DB && DBG( "%s post-expansion='%s'", __func__, xb.c_str() );
 
-   const auto rv( Path::Absolutize( xb.kbuf() ) );
-   DB && DBG( "%s- '%s'", __func__, rv.c_str() );
-   return rv;
+   xb = Path::Absolutize( xb.c_str() );
+   DB && DBG( "%s- '%s'", __func__, xb.c_str() );
+   return xb;
    }
