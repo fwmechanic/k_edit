@@ -19,6 +19,8 @@
 #include "my_types.h"
 
 namespace Path {
+   typedef std::string str_t; //
+
    template<typename CharPtr> STIL CharPtr StrToNextPathSepOrEos(  CharPtr pszToSearch          ) { return StrToNextOrEos ( pszToSearch , PATH_SEP_SRCH_STR ); }
    template<typename CharPtr> STIL CharPtr StrToPrevPathSepOrNull( CharPtr pBuf, CharPtr pInBuf ) { return StrToPrevOrNull( pBuf, pInBuf, PATH_SEP_SRCH_STR ); }
 
@@ -37,21 +39,21 @@ namespace Path {
    extern bool  IsDotOrDotDot( PCChar pC );
 
    extern bool  SetCwdOk        ( PCChar dnm );
-   extern std::string GetCwd    ();
-   extern std::string CpyDirOk     ( PCChar pSrcFullname );
-   extern std::string CpyFnameOk   ( PCChar pSrcFullname );
-   extern std::string CpyExtOk     ( PCChar pSrcFullname );
-   extern std::string CpyFnameExtOk( PCChar pSrcFullname );
-   extern std::string Union        ( PCChar pFirst, PCChar pSecond );
-   extern std::string Absolutize   ( PCChar pszFilename );
+   extern str_t GetCwd    ();
+   extern str_t CpyDirOk     ( PCChar pSrcFullname );
+   extern str_t CpyFnameOk   ( PCChar pSrcFullname );
+   extern str_t CpyExtOk     ( PCChar pSrcFullname );
+   extern str_t CpyFnameExtOk( PCChar pSrcFullname );
+   extern str_t Union        ( PCChar pFirst, PCChar pSecond );
+   extern str_t Absolutize   ( PCChar pszFilename );
    // extern
-          std::string CanonizeCase ( PCChar fnmBuf )
+          str_t CanonizeCase ( PCChar fnmBuf )
 #if defined(_WIN32)
       ;
 #else
-      { return std::string( fnmBuf ); }
+      { return str_t( fnmBuf ); }
 #endif
    ;
-   extern int   strcmp( const std::string &name1, const std::string &name2 ); // with appropriate case-sensitivity
+   extern int   strcmp( const str_t &name1, const str_t &name2 ); // with appropriate case-sensitivity
    extern char  DelimChar( PCChar fnm );
    };

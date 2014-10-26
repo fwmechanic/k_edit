@@ -1149,7 +1149,7 @@ STATIC_FXN PChar DupTextMacroValue( PCChar macroName ) {
    return Strdup( tokStrt, txtLen );
    }
 
-STATIC_FXN PStringGenerator GrepMultiFilenameGenerator( PChar nmBuf=nullptr, size_t sizeofBuf=0 ) {
+STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, size_t sizeofBuf=0 ) {
    {
    auto mfspec_text( DupTextMacroValue( "mffile" ) );
    if( mfspec_text ) {
@@ -1205,7 +1205,7 @@ STATIC_FXN PStringGenerator GrepMultiFilenameGenerator( PChar nmBuf=nullptr, siz
 
 #ifdef fn_mgl
 bool ARG::mgl() {
-   StringGenerator *pGen = GrepMultiFilenameGenerator();
+   PathStrGenerator *pGen = GrepMultiFilenameGenerator();
    if( pGen ) {
       auto ix(0);
       pathbuf pbuf;
@@ -1242,7 +1242,7 @@ bool ARG::mfgrep() {
    pathbuf gen_info;
    auto pGen( GrepMultiFilenameGenerator( gen_info, sizeof gen_info ) );
    if( pGen ) { 1 && DBG( "%s using %s", __PRETTY_FUNCTION__, gen_info );
-      std::string pbuf;
+      Path::str_t pbuf;
       while( pGen->VGetNextName( pbuf ) )
          MFGrepProcessFile( pbuf.c_str(), pSrchr );
 
@@ -1344,7 +1344,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
          ErrorDialogBeepf( "GrepMultiFilenameGenerator -> nil" );
          }
       else {
-         std::string pbuf;
+         Path::str_t pbuf;
          while( pGen->VGetNextName( pbuf ) )
             MFReplaceProcessFile( pbuf.c_str(), &mrcw );
 
@@ -1485,7 +1485,7 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       ED && DBG( "wcBuf='%s'" , wcBuf  );
       ED && DBG( "dirBuf='%s'", dirBuf );
 
-      std::string pbuf, fbuf;
+      Path::str_t pbuf, fbuf;
       DirListGenerator dlg( dirBuf );
       Xbuf xb;
       while( dlg.VGetNextName( pbuf ) ) {                          ED && DBG( "pbuf='%s'", pbuf.c_str() );
@@ -1500,7 +1500,7 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
    else {
       CfxFilenameGenerator wcg( pszWildcardString, FILES_AND_DIRS );
       Xbuf xb;
-      std::string fbuf;
+      Path::str_t fbuf;
       while( wcg.VGetNextName( fbuf ) ) {
          const auto chars( fbuf.length() );  ED && DBG( "wcg=%s", fbuf.c_str() );
          if( chars > 2 && strcmp( fbuf.c_str()+chars-2, PATH_SEP_STR "." ) == 0 )

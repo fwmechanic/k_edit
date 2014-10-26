@@ -78,10 +78,10 @@ LUAFUNC_(GetChildDirs) {
    #if USE_STATE_ELB
       auto pXb( get_xb( L ) );
    #else
-      Xbuf xb; auto pXb(&xb);
+      Path::str_t xb;
    #endif
-   for( int tblIdx=1 ; dlg.VGetNextName( pXb ) ; ++tblIdx ) {
-      lua_pushstring( L, pXb->kbuf() );
+   for( int tblIdx=1 ; dlg.VGetNextName( xb ) ; ++tblIdx ) {
+      lua_pushstring( L, xb.c_str() );
       lua_rawseti( L, -2, tblIdx );
       }
    return 1;  // return the table

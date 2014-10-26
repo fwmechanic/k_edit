@@ -6,18 +6,18 @@
 
 #include "ed_main.h"
 
-class StringGenerator {  // interface class
-   NO_COPYCTOR(StringGenerator);
-   NO_ASGN_OPR(StringGenerator);
+class PathStrGenerator {  // interface class
+   NO_COPYCTOR(PathStrGenerator);
+   NO_ASGN_OPR(PathStrGenerator);
 
 public:
-   StringGenerator() {}
-   virtual bool VGetNextName( std::string &dest ) = 0;
+   PathStrGenerator() {}
+   virtual bool VGetNextName( Path::str_t &dest ) = 0;
    virtual bool VGetNextName( PXbuf dest ) = 0;
-   virtual ~StringGenerator() {}
-   }; STD_TYPEDEFS( StringGenerator )
+   virtual ~PathStrGenerator() {}
+   }; STD_TYPEDEFS( PathStrGenerator )
 
-class WildcardFilenameGenerator : public StringGenerator {
+class WildcardFilenameGenerator : public PathStrGenerator {
    NO_COPYCTOR(WildcardFilenameGenerator);
    NO_ASGN_OPR(WildcardFilenameGenerator);
 
@@ -26,11 +26,11 @@ class WildcardFilenameGenerator : public StringGenerator {
 public:
    WildcardFilenameGenerator( PCChar string, WildCardMatchMode matchMode=ONLY_FILES ) : d_dm( string, nullptr, matchMode ) {}
    // DTOR auto-generated
-   bool VGetNextName( std::string &dest ) override;
+   bool VGetNextName( Path::str_t &dest ) override;
    bool VGetNextName( PXbuf dest ) override;
    };
 
-class DirListGenerator : public StringGenerator {
+class DirListGenerator : public PathStrGenerator {
    NO_COPYCTOR( DirListGenerator );
    NO_ASGN_OPR( DirListGenerator );
 
@@ -45,7 +45,7 @@ public:
    ~DirListGenerator();
 
    bool VGetNextName( PXbuf dest ) override;
-   bool VGetNextName( std::string &dest ) override;
+   bool VGetNextName( Path::str_t &dest ) override;
    };
 
 
@@ -87,7 +87,7 @@ public:
 
 class StrSubstituterGenerator;  // "static"
 
-class CfxFilenameGenerator : public StringGenerator {
+class CfxFilenameGenerator : public PathStrGenerator {
    NO_COPYCTOR(CfxFilenameGenerator);
    NO_ASGN_OPR(CfxFilenameGenerator);
 
@@ -107,13 +107,13 @@ class CfxFilenameGenerator : public StringGenerator {
 
    CfxFilenameGenerator( PCChar macroText, WildCardMatchMode matchMode );
    bool VGetNextName( PXbuf dest ) override;
-   bool VGetNextName( std::string &dest ) override;
+   bool VGetNextName( Path::str_t &dest ) override;
    virtual ~CfxFilenameGenerator();
    };
 
 //-----------------------------------
 
-class FilelistCfxFilenameGenerator : public StringGenerator {
+class FilelistCfxFilenameGenerator : public PathStrGenerator {
    NO_COPYCTOR( FilelistCfxFilenameGenerator );
    NO_ASGN_OPR( FilelistCfxFilenameGenerator );
 
@@ -126,7 +126,7 @@ class FilelistCfxFilenameGenerator : public StringGenerator {
 
    FilelistCfxFilenameGenerator( PFBUF pFBuf ) : d_pFBuf( pFBuf ) {}
    bool VGetNextName( PXbuf dest ) override;
-   bool VGetNextName( std::string &dest ) override;
+   bool VGetNextName( Path::str_t &dest ) override;
    virtual ~FilelistCfxFilenameGenerator() { Delete0( d_pCfxGen ); }
    };
 

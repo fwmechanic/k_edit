@@ -60,7 +60,7 @@ STIL void setfield(  lua_State *L, PCChar key, lua_CFunction val ) { lua_pushcfu
 STIL void setglobal( lua_State *L, PCChar key, PCChar val ) { lua_pushstring(  L, val ); lua_setglobal( L, key ); }
 STIL void setglobal( lua_State *L, PCChar key, int    val ) { lua_pushinteger( L, val ); lua_setglobal( L, key ); }
 
-#define  USE_STATE_ELB  1
+#define  USE_STATE_ELB  0
 
  #if USE_STATE_ELB
  extern PXbuf get_xb( lua_State *L );
