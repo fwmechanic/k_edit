@@ -835,7 +835,7 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
       if( pCmd->d_argData.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          if( !pDirContent ) {
             if( pbTabxBase[0] == 0 ) // no prev'ly used WC?
-               SafeStrcpy( pbTabxBase, xb.c_str() );  // create based on curr Linebuffer contents
+               SafeStrcpy( pbTabxBase, xb.c_str() );  // create based on curr content
 
             pDirContent = new DirMatches( pbTabxBase, HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
             }

@@ -2363,9 +2363,7 @@ STATIC_FXN bool NeedRedrawScreen() {
    }
 
 
-STATIC_FXN COL GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite ) {
-   const auto scrnCols( EditScreenCols() );
-   Assert( sizeof DestLineBuf > scrnCols );
+STATIC_FXN void GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf, const COL scrnCols, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite ) {
    memset( PChar(DestLineBuf), H__, scrnCols ); //***** initial assumption: this line is a horizontal border ('Í')
    DestLineBuf[ scrnCols ] = 0;
    alc.PutColor( 0, scrnCols, g_colorWndBorder );
@@ -2373,8 +2371,6 @@ STATIC_FXN COL GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf,
    for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
       g_Win(ix)->GetLineForDisplay( ix, DestLineBuf, alc, pFirstPossibleHiLite, yDisplayLine );
       }
-
-   return scrnCols;
    }
 
 STATIC_FXN void RedrawScreen() {
@@ -2387,6 +2383,7 @@ STATIC_FXN void RedrawScreen() {
    #endif
 
    const auto yDispMin( MinDispLine() );
+   const auto scrnCols( EditScreenCols() );
    const auto yTop(0), yBottom( EditScreenLines() );
    ShowDraws( DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom ); )
    PCHiLiteRec pFirstPossibleHiLite(nullptr);
@@ -2394,9 +2391,10 @@ STATIC_FXN void RedrawScreen() {
       if( s_paScreenLineNeedsRedraw->IsBitSet( yLine ) ) {
          ShowDraws( ch = '0' + (yLine % 10); )
          Linebuf    lineBuf;
+         Assert( sizeof lineBuf > scrnCols );
          LineColors alc;
-         const auto cols( GetLineForDisplay( yLine, lineBuf, alc, pFirstPossibleHiLite ) );
-         VidWrStrColors( yDispMin+yLine, 0, lineBuf, cols, &alc, false );
+         GetLineForDisplay( yLine, lineBuf, scrnCols, alc, pFirstPossibleHiLite );
+         VidWrStrColors( yDispMin+yLine, 0, lineBuf, scrnCols, &alc, false );
          }
       ShowDraws( *pLbf++ = ch; )
       }
