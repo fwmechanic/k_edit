@@ -926,7 +926,7 @@ Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
          dest = ".*";
       }
 
-   dest = dest.substr( 1 ); // zap the leading '.'
+   dest.erase( 0, 1 ); // zap the leading '.'
 #if !FNM_CASE_SENSITIVE
    string_tolower( dest );
 #endif
@@ -947,20 +947,14 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
    dbllinebuf dblbuf;
    Pathbuf pbuf( fb->Name() );
    DoubleBackslashes( BSOB(dblbuf), pbuf );
-   vsPrintfAssign( "curfile:=\"%s\"", dblbuf );
+   DefineMacro( "curfile", dblbuf );
 #else
-   vsPrintfAssign( "curfile:=\"%s\"", fb->Name() );
+   DefineMacro( "curfile", fb->Name() );
 #endif
    //--------------------------------------------------------------------------
-   {
-   const auto fnm( Path::CpyFnameOk( fb->Name() ) );
-   vsPrintfAssign( "curfilename:=\"%s\"", fnm.c_str() );
-   }
+   DefineMacro( "curfilename", Path::CpyFnameOk( fb->Name() ).c_str() );
    //--------------------------------------------------------------------------
-   {
-   const auto dnm( Path::CpyDirOk( fb->Name() ) );
-   vsPrintfAssign( "curfilepath:=\"%s\"", dnm.c_str() );
-   }
+   DefineMacro( "curfilepath", Path::CpyDirOk( fb->Name() ).c_str() );
    //--------------------------------------------------------------------------
    //
    // Path::CpyExtOk MUST BE THE LAST ASSIGNMENT TO pbuf because its output is
@@ -973,7 +967,7 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
    auto ext( Path::CpyExtOk( fb->Name() ) );
    if( ext.empty() )
       ext = !fb->FnmIsDiskWritable() ? ".<>" : ".";
-   vsPrintfAssign( "curfileext:=\"%s\"", ext.c_str() );
+   DefineMacro( "curfileext", ext.c_str() );
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    if( !fb->IsRsrcLdBlocked() )
       LoadFileExtRsrcIniSection( fHasWildcard ? ".*" : ext.c_str() );

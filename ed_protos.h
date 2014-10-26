@@ -286,6 +286,7 @@ extern   void  FBufRead_Assign_Win32( PFBUF pFBuf );
 extern   void  AssignLogTag( PCChar tag );
 #define        AssignStrOk( str )   AssignStrOk_( str, __FUNCTION__ )
 extern   bool  AssignStrOk_( PCChar pszStringToAssign, CPCChar __function__ );
+extern   bool  DefineMacro( PCChar pszMacroName, PCChar pszMacroCode );
 extern   bool  AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
 
 extern   void  UnbindMacrosFromKeys();

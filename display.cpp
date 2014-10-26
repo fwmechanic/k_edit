@@ -213,21 +213,21 @@ STATIC_VAR PRbTree s_FES_idx;
 STATIC_FXN inline PFileExtensionSetting IdxNodeToFES( PRbNode pNd ) { return static_cast<PFileExtensionSetting>( rb_val(pNd) ); }  // type-safe conversion function
 
 struct FileExtensionSetting {
-   PChar      d_ext;  // rbtree key
-   ViewColors d_colors;
-   char       d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
-   PChar      d_lang;
+   Path::str_t d_ext;  // rbtree key
+   ViewColors  d_colors;
+   char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
+   PChar       d_lang;
 
    void  Update();
 
-   FileExtensionSetting( PCChar ext ) : d_ext( Strdup( ext ) ) { Update(); }
-   ~FileExtensionSetting() { Free0( d_ext ); }
+   FileExtensionSetting( Path::str_t ext ) : d_ext( ext ) { Update(); }
+   ~FileExtensionSetting() {}
 
    }; STD_TYPEDEFS( FileExtensionSetting )
 
 void FileExtensionSetting::Update() {
    linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
-   snprintf_full( &pbuf, &kybufBytes, "filesettings.ext_map.%s.", d_ext );
+   snprintf_full( &pbuf, &kybufBytes, "filesettings.ext_map.%s.", d_ext.c_str() );
    safeStrcpy( pbuf, kybufBytes, "eolCommentDelim" );
    LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );
    safeStrcpy( pbuf, kybufBytes, "lang" );
@@ -257,12 +257,12 @@ void CloseFileExtensionSettings() {
    }
 
 
-STATIC_FXN PFileExtensionSetting InitFileExtensionSetting( PCChar ext ) {
+STATIC_FXN PFileExtensionSetting InitFileExtensionSetting( Path::str_t ext ) {
    int equal;
-   auto pNd( rb_find_gte_gen( &equal, s_FES_idx, ext, rb_strcmpi ) );
+   auto pNd( rb_find_gte_gen( &equal, s_FES_idx, ext.c_str(), rb_strcmpi ) );
    if( equal ) return IdxNodeToFES( pNd );
    auto pNew( new FileExtensionSetting( ext ) );
-   rb_insert_before( s_FES_idx, pNd, pNew->d_ext, pNew );
+   rb_insert_before( s_FES_idx, pNd, pNew->d_ext.c_str(), pNew );
    return pNew;
    }
 
@@ -290,7 +290,7 @@ PU8 View::ColorIdx2Var( int colorIdx ) {
 
 PFileExtensionSetting View::GetFileExtensionSettings() {
    if( !d_pFES ) {
-      d_pFES = ::InitFileExtensionSetting( FBOP::GetRsrcExt( d_pFBuf ).c_str() );
+      d_pFES = ::InitFileExtensionSetting( FBOP::GetRsrcExt( d_pFBuf ) );
       }
    return d_pFES;
    }

@@ -14,8 +14,6 @@ bool CMD::IsFnCancel()     const { return &ARG::cancel     == d_func || fn_cance
 bool CMD::IsFnUnassigned() const { return &ARG::unassigned == d_func || fn_unassigned == d_func; }
 bool CMD::IsFnGraphic()    const { return &ARG::graphic    == d_func || fn_graphic    == d_func; }
 
-STATIC_FXN bool DefineMacro( PCChar pszMacroName , PCChar pszMacroCode );
-
 GLOBAL_VAR PFBUF g_pFBufAssignLog;
 
 GLOBAL_CONST char szAssignLog[] = "<a!>";
@@ -41,8 +39,7 @@ void AssignLogTag( PCChar tag ) {
        g_pFBufAssignLog->FmtLastLine( "===== %s ====================", tag );
    }
 
-bool AssignStrOk_( PCChar param, CPCChar __function__ ) { // make a local copy so param can be a PCChar
-   enum {DBGEN=0};
+bool AssignStrOk_( PCChar param, CPCChar __function__ ) { enum {DBGEN=0}; // make a local copy so param can be a PCChar
    ALLOCA_STRDUP( pszStringToAssign, slen, param, Strlen(param) )
    const auto pName( StrPastAnyWhitespace( pszStringToAssign ) );
    StrTruncTrailWhitespace( pName );
@@ -65,7 +62,7 @@ void CMD::RedefMacro( PCChar newDefn ) {
    }
 
 
-STATIC_FXN bool DefineMacro( PCChar pszMacroName, PCChar pszMacroCode ) { 0 && DBG( "%s '%s'='%s'", __func__, pszMacroName, pszMacroCode );
+bool DefineMacro( PCChar pszMacroName, PCChar pszMacroCode ) { 0 && DBG( "%s '%s'='%s'", __func__, pszMacroName, pszMacroCode );
    const auto pCmd( CmdFromName( pszMacroName ) );
    if( pCmd ) {
       if( !pCmd->IsRealMacro() )
@@ -488,7 +485,7 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
          return CleanupPendingMacroStream();
 
       if( MacroRuntimeStkEntry::GotLitCh==got ) { 0 && DBG( "%s LIT '%c'", __func__, token[0] );
-         STATIC_VAR CMD macro_graphic = { "macro_graphic", &ARG::graphic };
+         STATIC_VAR CMD macro_graphic = { .d_name="macro_graphic", .d_func=&ARG::graphic };
          macro_graphic.d_argData.Ascii    = token[0];
          macro_graphic.d_argData.EdKcEnum = token[0];
          return &macro_graphic;
