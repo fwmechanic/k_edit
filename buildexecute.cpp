@@ -1599,15 +1599,15 @@ bool ARG::execute() {
                       rv = fExecute( strToExecute.kbuf(), false );                //              else nested macros get broken!
                       }
                    else { // hacky-kludgy way to get direct access to shell cmds w/o a new key asgnmt: arg arg "ls -l" execute
-                      Xbuf cmd( d_textarg.pText );
-                      LuaCtxt_Edit::ExpandEnvVarsOk( &cmd ); // BEFORE fChangeFile so curfile envvar expansions are correct
-                      0 && DBG( "execute (%Iu) '%s'", strlen(cmd.kbuf()), cmd.kbuf() );
+                      Path::str_t cmd( d_textarg.pText );
+                      LuaCtxt_Edit::ExpandEnvVarsOk( cmd ); // BEFORE fChangeFile so curfile envvar expansions are correct
+                      0 && DBG( "execute (%Iu) '%s'", cmd.length(), cmd.c_str() );
                     #if 1
-                      StartInternalShellJob( new StringList( cmd.kbuf() ), false );
+                      StartInternalShellJob( new StringList( cmd.c_str() ), false );
                       rv = true;
                     #else
                       fChangeFile( szCompile );
-                      rv = CompilePty_CmdsAsyncExec( StringList( cmd.kbuf() ), true ) > 0;
+                      rv = CompilePty_CmdsAsyncExec( StringList( cmd.c_str() ), true ) > 0;
                     #endif
                       }
                    break;

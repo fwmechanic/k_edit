@@ -927,7 +927,6 @@ STATIC_FXN PChar Lua_s2h( lua_State *L, PCChar functionName, PCChar src ) {
    return sbDest.d_pBuf;
    }
 
-bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( PXbuf pxb ) { return Lua_x2x( L_edit, "StrExpandEnvVars"        , pxb ); }
 bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( Path::str_t &st ) { return Lua_S2S( L_edit, "StrExpandEnvVars"  , st  ); }
 bool  LuaCtxt_Edit::from_C_lookup_glock( PXbuf pxb ) { return Lua_x2x( L_edit, "Lua_from_C_lookup_glock" , pxb ); }
 

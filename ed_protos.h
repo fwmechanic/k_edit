@@ -510,7 +510,6 @@ namespace LuaCtxt_Edit {
    // there is no efficiency difference, since the Lua result has to be copied into
    // dest regardless.
    //
-   extern bool  ExpandEnvVarsOk( PXbuf pxb );
    extern bool  ExpandEnvVarsOk( Path::str_t &st );
 
    extern bool  from_C_lookup_glock( PXbuf pxb );
