@@ -1491,33 +1491,6 @@ COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
 //         then dest[0] = '\0' and retVal (chars returned in dest) == 0
 //
 // returns strlen of returned line
-COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
-   const auto tw( TabWidth() );
-   PCChar lnptr; size_t lnchars;
-   if(  yLine >= 0
-     && xLeftIncl <= xRightIncl
-     && PeekRawLineExists( yLine, &lnptr, &lnchars )
-     && xLeftIncl < StrCols( tw, lnptr, lnptr+lnchars )
-     ) {
-# if 1
-      const auto pLeft ( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xLeftIncl  ) );
-      const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
-      const auto chars( pRight - pLeft + 1 );
-      0 && DBG( "%s [%d,%p L %Iu][%d..%d]P:%p,%p (%Iu)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, 1+chars );
-      st.assign( pLeft, chars );
-# else
-      Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
-      const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
-      const auto buf( pXb->wresize( size ) );
-      const auto rv( PrettifyStrcpy( buf, size, lnptr, lnchars, tw, ' ', xLeftIncl ) );
-# endif
-      }
-   else {
-      st.clear();
-      }
-   return st.length();
-   }
-
 COL FBUF::GetLineSeg( Xbuf &pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
    const auto tw( TabWidth() );
    PCChar lnptr; size_t lnchars;
@@ -1553,6 +1526,46 @@ COL FBUF::GetLineSeg( Xbuf &pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) con
       return 0;
       }
    }
+
+#if 0
+
+COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const { // temp shim
+   Xbuf xb;
+   const auto rv( GetLineSeg( xb, yLine, xLeftIncl, xRightIncl ) );
+   st = xb.c_str();
+   return rv;
+   }
+
+#else
+
+COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
+   const auto tw( TabWidth() );
+   PCChar lnptr; size_t lnchars;
+   if(  yLine >= 0
+     && xLeftIncl <= xRightIncl
+     && PeekRawLineExists( yLine, &lnptr, &lnchars )
+     && xLeftIncl < StrCols( tw, lnptr, lnptr+lnchars )
+     ) {
+# if 1
+      const auto pLeft ( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xLeftIncl  ) );
+      const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
+      const auto chars( pRight - pLeft + 1 );
+      0 && DBG( "%s [%d,%p L %Iu][%d..%d]P:%p,%p (%Iu)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, 1+chars );
+      st.assign( pLeft, chars );
+# else
+      Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
+      const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
+      const auto buf( pXb->wresize( size ) );
+      const auto rv( PrettifyStrcpy( buf, size, lnptr, lnchars, tw, ' ', xLeftIncl ) );
+# endif
+      }
+   else {
+      st.clear();
+      }
+   return st.length();
+   }
+
+# endif
 
 // open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;
 //    original dest[xIns] is moved to dest[xIns+insertCols]
