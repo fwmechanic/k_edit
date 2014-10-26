@@ -52,11 +52,11 @@ STATIC_FXN void CreateGrepBufFromLinerange( PFBUF fromfile, PFBUF outfile, LINE 
    const auto copiedLines(yBottom-yTop+1);
    const auto lwidth( uint_log_10( fromfile->LineCount() ) );
 
-   SprintfLinebuf Line1( "*GREP* %s", fromfile->Name() );
+   SprintfBuf Line1( "*GREP* %s", fromfile->Name() );
    const auto L1Len( Strlen( Line1 ) );
    imgBufBytes += L1Len;
 
-   SprintfLinebuf Line2( "%s lines"     , outfile->Name()    );
+   SprintfBuf Line2( "%s lines"     , outfile->Name()    );
    const auto L2Len( Strlen( Line2 ) );
    imgBufBytes += L2Len;
 

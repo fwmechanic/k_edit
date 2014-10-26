@@ -219,7 +219,7 @@ bool ARG::BadArg() const {
    }
 
 bool ARG::ErrPause( PCChar fmt, ...  ) const {
-   SprintfLinebuf title( "'%s' %s", CmdName(), fmt );
+   SprintfBuf title( "'%s' %s", CmdName(), fmt );
    va_list args;
    va_start( args, fmt );
    VErrorDialogBeepf( title, args );
@@ -228,7 +228,7 @@ bool ARG::ErrPause( PCChar fmt, ...  ) const {
    }
 
 bool ARG::fnMsg( PCChar fmt, ... ) const { // like ::Msg(), but prefixes the name of the active EdFxn
-   SprintfLinebuf title( "%s: %s", CmdName(), fmt );
+   SprintfBuf title( "%s: %s", CmdName(), fmt );
    va_list args;
    va_start( args, fmt );
    VMsg( title, args );

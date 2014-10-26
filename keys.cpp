@@ -77,7 +77,7 @@ void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite ) {
       if( pCmd == &Cmd ) {
          char keyNm[50];
          StrFromEdkc( BSOB(keyNm), &pCmd - g_Key2CmdTbl );
-         pFBufToWrite->PutLastLine( SprintfLinebuf( "%s%-*s # %s"
+         pFBufToWrite->PutLastLine( SprintfBuf( "%s%-*s # %s"
                , cmdNm.k_str()
                , g_MaxKeyNameLen
                , keyNm
@@ -89,7 +89,7 @@ void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite ) {
       }
 
    if( !fFoundAssignment )
-      pFBufToWrite->PutLastLine( SprintfLinebuf( "%s%-*s # %s", cmdNm.k_str(), g_MaxKeyNameLen, "", pText ) );
+      pFBufToWrite->PutLastLine( SprintfBuf( "%s%-*s # %s", cmdNm.k_str(), g_MaxKeyNameLen, "", pText ) );
    }
 
 

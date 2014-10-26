@@ -381,7 +381,7 @@ void UpdateConsoleTitle() {
       + s_bats.Changed()
      ) {
       Win32::SetConsoleTitle(
-         SprintfDbllinebuf
+         Sprintf2xBuf
             ( "%s %s %s%s"
 #if     DISP_LL_STATS
               "%s%s%s"

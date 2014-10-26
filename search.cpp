@@ -497,7 +497,7 @@ GLOBAL_CONST char kszCompileHdr[] = "+^-^+";
 void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digression!
 #if 1
    LuaCtxt_Edit::nextmsg_setbufnm( szSearchRslts );
-   LuaCtxt_Edit::nextmsg_newsection_ok( SprintfLinebuf( "mfgrep::%s %s", FSearcher.IsRegex() ? "regex" : "str", FSearcher.SrchStr()) );
+   LuaCtxt_Edit::nextmsg_newsection_ok( SprintfBuf( "mfgrep::%s %s", FSearcher.IsRegex() ? "regex" : "str", FSearcher.SrchStr()) );
 #else
 
    if( d_pOutputFile->LineCount() > 0 )
@@ -2311,7 +2311,7 @@ bool ARG::mword() { return PMword( false,                               d_fMeta 
 #define TAGP_(x)  tag_( __FILE__, __LINE__, x )
 
 void tag_( PCChar file, int line, PCChar paux=0 ) {
-   PutULC( SprintfLinebuf( "%s:%i%s", file, line, paux?paux:"" ) );
+   PutULC( SprintfBuf( "%s:%i%s", file, line, paux?paux:"" ) );
    }
 
 #else
@@ -2555,7 +2555,7 @@ LINE CGrepper::WriteOutput
          if( d_MatchingLines[iy] )
             ++numberedMatches;
       {
-      SprintfLinebuf LastMetaLine( "%s %d %s", outfile->Name(), numberedMatches, thisMetaLine );
+      SprintfBuf LastMetaLine( "%s %d %s", outfile->Name(), numberedMatches, thisMetaLine );
       outfile->InsLine( grepHdrLines, LastMetaLine.k_str() );
       }
       Xbuf xbIns;
@@ -2603,7 +2603,7 @@ LINE CGrepper::WriteOutput
       }
 
    pathbuf pbuf;
-   SprintfLinebuf Line1( "*GREP* %s", origSrchfnm ? origSrchfnm : d_SrchFile->UserName( BSOB(pbuf) ) );
+   SprintfBuf Line1( "*GREP* %s", origSrchfnm ? origSrchfnm : d_SrchFile->UserName( BSOB(pbuf) ) );
    const auto Line1Len( Strlen( Line1 ) );
    s_pFbufLog->FmtLastLine( "%s", Line1.k_str() );
    imgBufBytes += Line1Len;
@@ -2617,7 +2617,7 @@ LINE CGrepper::WriteOutput
             ++numberedMatches;
          }
 
-   SprintfLinebuf LastMetaLine( "%s %i %s t=%6.3f", outfile->Name(), numberedMatches, thisMetaLine, PerfCnt );
+   SprintfBuf LastMetaLine( "%s %i %s t=%6.3f", outfile->Name(), numberedMatches, thisMetaLine, PerfCnt );
    auto LastMetaLineLen( Strlen( LastMetaLine ) );
    imgBufBytes += LastMetaLineLen;
 
@@ -2697,7 +2697,7 @@ bool ARG::grep() {
    // create aux header for THIS search
    //
    const auto fUseRegEx( d_cArg > 1 );
-   SprintfLinebuf auxHdrBuf( "%s'%s'%s, by Grep, case:%s"
+   SprintfBuf auxHdrBuf( "%s'%s'%s, by Grep, case:%s"
       , fNegate   ? "*NOT* " : ""
       , srchTextBuf.c_str()
       , fUseRegEx ? " (RE)"  : ""
@@ -2753,7 +2753,7 @@ bool ARG::fg() { // fgrep
 
    // create aux header for THIS search
    //
-   SprintfLinebuf auxHdrBuf(
+   SprintfBuf auxHdrBuf(
         "fgrep keys from %s case:%s"
       , curfile->Name()
       , g_fCase ? "sen" : "ign"

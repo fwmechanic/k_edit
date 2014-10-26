@@ -3354,7 +3354,7 @@ void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset
    const auto pszSearchStrLen( Strlen(pszSearchStr) );
 
    const char kszRexFail[] = "Regex err %s: %s ";
-   SprintfLinebuf buf( kszRexFail, errMsg, pszSearchStr );
+   SprintfBuf buf( kszRexFail, errMsg, pszSearchStr );
    0 && DBG( "%s", buf.k_str() );
    0 && DBG( "%s, errOffset=%d", buf.k_str(), errOffset );
 

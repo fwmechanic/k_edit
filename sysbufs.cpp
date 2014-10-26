@@ -333,7 +333,7 @@ STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) { // sorted traversal
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsRealMacro() )
-         pFBuf->PutLastLine( SprintfLinebuf( "%-*s %s", nmLen, pCmd->Name(), pCmd->MacroText() ) );
+         pFBuf->PutLastLine( SprintfBuf( "%-*s %s", nmLen, pCmd->Name(), pCmd->MacroText() ) );
       }
    }
 
@@ -427,7 +427,7 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
          StringOfAllKeyNamesFnIsAssignedTo( BSOB(lbuf), Cmd, "," );
          }
       Xbuf xbIns;
-      FBOP::InsLineSortedDescending( uc->fbOut, &xbIns, 0, SprintfLinebuf( "%*u  %-*s  %s", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name(), lbuf ) );
+      FBOP::InsLineSortedDescending( uc->fbOut, &xbIns, 0, SprintfBuf( "%*u  %-*s  %s", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name(), lbuf ) );
       }
    }
 

@@ -746,15 +746,12 @@ void FreeAllMacroDefs() {
    CmdIdxRmvCmdsByFunction( fn_runmacro() );
    }
 
-
-//
-// This is factored code that ARG::tell originally used inline.
-//
 // BUGBUG  doesn't seem to handle the "don't break line within macro string
 // literal" problem!  Is this actually needed?
 //
-STATIC_FXN bool PutStringIntoCurfileAtCursor( PCChar pszString, PXbuf pxb ) {
-   while( *pszString )
+STATIC_FXN bool PutStringIntoCurfileAtCursor( PXbuf pxb, PCChar pszString, PCChar eos=nullptr ) {
+   if( !eos ) eos = Eos( pszString );
+   while( pszString < eos )
       if( !PutCharIntoCurfileAtCursor( *pszString++, pxb ) )
          return false;
 
@@ -771,7 +768,7 @@ STATIC_FXN void PutMacroStringIntoCurfileAtCursor( PCChar pStr ) {
    Xbuf xb;
    for( ; *pStr; ++pStr ) {
       if( ' ' == *pStr && g_CursorCol() >= g_iRmargin ) {
-         PutStringIntoCurfileAtCursor( "  \\", &xb );
+         PutStringIntoCurfileAtCursor( &xb, "  \\" );
          g_CurView()->MoveCursor( g_CursorLine() + 1, FBOP::GetSoftcrIndent( g_CurFBuf() ) );
          }
       else {
@@ -1044,7 +1041,7 @@ bool ARG::record() {
 #else
          if( g_pFbufRecord->LineCount() > 0 ) { g_pFbufRecord->PutLastLine( " " ); }
 #endif
-         g_pFbufRecord->PutLastLine( SprintfLinebuf( "%s:=", pMacroName ) );
+         g_pFbufRecord->PutLastLine( SprintfBuf( "%s:=", pMacroName ) );
          s_macro_defn_first_line = g_pFbufRecord->LastLine();
 
          if( f_cArg_GT_1 )

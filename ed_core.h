@@ -99,8 +99,8 @@ typedef char pathbuf[_MAX_PATH+1];    // Pathname buffer
 
 typedef  FixedCharArray<BUFBYTES>     Linebuf;       STD_TYPEDEFS( Linebuf )
 
-typedef  FmtStr<BUFBYTES>    SprintfLinebuf;
-typedef  FmtStr<2*BUFBYTES>  SprintfDbllinebuf;
+typedef  FmtStr<BUFBYTES>    SprintfBuf;
+typedef  FmtStr<2*BUFBYTES>  Sprintf2xBuf;
 
 
 //=============================================================================
