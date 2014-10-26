@@ -148,7 +148,7 @@ w fromwinclip  fromwinclip               NOARG , Windows Clipboard ==> <clipboar
 # shell        shell                     BOXARG + NULLEOL + NOARG + LINEARG + TEXTARG
   shex         shex                      BOXSTR + TEXTARG , execute arg string with Win32's ShellExecute's default verb
   sinsert      sinsert        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG
-  stream       stream                    STREAMARG , stream-to-string test
+# stream       stream                    STREAMARG , stream-to-string test
 # strftime     strftime                  TEXTARG , strftime
 # su           silentUpdate              NOARG , SilentUpdate mode: if disk file is detected to be newer than editor version, it will be immediately updated w/o prompting the user
   sync         sync                      NOARG , For each opened file, if the disk file is newer, re-read the file

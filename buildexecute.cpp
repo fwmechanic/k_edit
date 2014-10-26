@@ -557,6 +557,8 @@ STATIC_FXN PXbuf StreamArgToString( PXbuf dest, PFBUF pfb, Rect stream ) {
    return dest;
    }
 
+#ifdef fn_stream
+
 bool ARG::stream() {  // test for StreamArgToString
    auto cArg(0);      // stream:alt+k
    switch( d_argType ) {
@@ -571,6 +573,8 @@ bool ARG::stream() {  // test for StreamArgToString
       }
    return true;
    }
+
+#endif
 
 //-------------------------------
 
@@ -1188,10 +1192,10 @@ bool ARG::lasttext() {
    }
 
 bool ARG::prompt() {
-   Xbuf xb;
+   std::string xb;
    switch( d_argType ) {
       default:        return BadArg();
-      case TEXTARG:   xb.cpy( d_textarg.pText );  break;
+      case TEXTARG:   xb = d_textarg.pText;  break;
       }
 
    auto cArg( d_cArg );
@@ -1201,7 +1205,7 @@ bool ARG::prompt() {
    TextArgBuffer()->clear();
 
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( TextArgBuffer(), xb.kbuf(), 0, nullptr, gts_fKbInputOnly+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
+   const auto pCmd( GetTextargString( TextArgBuffer(), xb.c_str(), 0, nullptr, gts_fKbInputOnly+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
    if( !pCmd || pCmd->IsFnCancel() )
       return false;
 
@@ -1615,23 +1619,22 @@ bool ARG::execute() {
     case BOXARG:   //lint -fallthrough
     case LINEARG:  0 && DBG( "%s: d_cArg=%d", __func__ , d_cArg );
                    if( d_cArg == 1 ) {
-                      Xbuf dest;
+                      std::string dest;
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {
                             StrToNextMacroTermOrEos( aw.buf() )[0] = '\0';  0 && DBG( "2: '%s'", aw.buf() );
-                            dest.cat( aw.buf() );
-                            dest.cat( " "  );
+                            dest += aw.buf();
+                            dest += " ";
                             }
                          }
 
-                      if( !dest.len() )
+                      if( dest.empty() )
                          return false;
 
-                      rv = fExecute( dest.kbuf(), false );
+                      rv = fExecute( dest.c_str(), false );
                       }
                    else {
                       auto pSL( new StringList() );
-                      Xbuf src;
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {
                             1 && DBG( "--- %s", aw.buf() );
