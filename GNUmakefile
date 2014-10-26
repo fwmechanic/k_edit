@@ -142,8 +142,8 @@ CXXWARN := -Woverloaded-virtual -Wold-style-cast -Wzero-as-null-pointer-constant
 C_OPTS_COMMON  := $(GCC_OPTZ) $(CWARN) -funsigned-char $(TRAPV) $(CC_OUTPUT)
 C_OPTS_LUA_REF := -I$(LUA_DIR)
 
-#                 -fno-exceptions
-USE_EXCEPTIONS := -fexceptions
+#                 -fexceptions
+USE_EXCEPTIONS := -fno-exceptions
 
 LINK_OPTS_COMMON_ := $(USE_EXCEPTIONS) -fno-rtti $(STRIP) -Wl,-stats $(PLAT_LINK_OPTS)
 ifdef DBG_BUILD
