@@ -1466,7 +1466,6 @@ STATIC_FXN void InsFnm( PFBUF pFbuf, PXbuf pxb, PCChar fnm, const bool fSorted )
 int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted ) { enum { ED=1 }; ED && DBG( "%s '%s'", __func__, pszWildcardString );
    auto rv(0);
    const PCChar pVbar( strrchr( pszWildcardString, '|' ) );
-   Xbuf xb, fbuf;
    if( pVbar ) {
       // the wildcard (or plain searchkey) to be applied recursively has been
       // merged by earlier processing into the full path based on the cwd, as
@@ -1486,25 +1485,28 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       ED && DBG( "wcBuf='%s'" , wcBuf  );
       ED && DBG( "dirBuf='%s'", dirBuf );
 
-      std::string pbuf;
+      std::string pbuf, fbuf;
       DirListGenerator dlg( dirBuf );
+      Xbuf xb;
       while( dlg.VGetNextName( pbuf ) ) {                          ED && DBG( "pbuf='%s'", pbuf.c_str() );
          WildcardFilenameGenerator wcg( FmtStr<_MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf.c_str(), wcBuf ), ONLY_FILES );
          fbuf.clear();
-         while( wcg.VGetNextName( &fbuf ) ) {
-            InsFnm( fb, &xb, fbuf.kbuf(), fSorted );
+         while( wcg.VGetNextName( fbuf ) ) {
+            InsFnm( fb, &xb, fbuf.c_str(), fSorted );
             ++rv;
             }
          }
       }
    else {
       CfxFilenameGenerator wcg( pszWildcardString, FILES_AND_DIRS );
-      while( wcg.VGetNextName( &fbuf ) ) {
-         const auto chars( fbuf.len() );  ED && DBG( "wcg=%s", fbuf.kbuf() );
-         if( chars > 2 && strcmp( fbuf.kbuf()+chars-2, PATH_SEP_STR "." ) == 0 )
+      Xbuf xb;
+      std::string fbuf;
+      while( wcg.VGetNextName( fbuf ) ) {
+         const auto chars( fbuf.length() );  ED && DBG( "wcg=%s", fbuf.c_str() );
+         if( chars > 2 && strcmp( fbuf.c_str()+chars-2, PATH_SEP_STR "." ) == 0 )
             continue; // drop the meaningless "." entry:
 
-         InsFnm( fb, &xb, fbuf.kbuf(), fSorted );
+         InsFnm( fb, &xb, fbuf.c_str(), fSorted );
          ++rv;
          }
       }
