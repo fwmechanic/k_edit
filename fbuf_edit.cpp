@@ -1465,6 +1465,18 @@ bool FBUF::PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos ) cons
    return rv;
    }
 
+
+// returns strlen of returned line
+COL FBUF::getLineRaw( std::string &st, LINE yLine ) const {
+   PCChar ptr; size_t chars;
+   if( PeekRawLineExists( yLine, &ptr, &chars ) ) {
+      st.assign( ptr, chars );
+      }
+   else {
+      st.clear();
+      }
+   return st.length();
+   }
 // returns strlen of returned line
 COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
    PCChar ptr; size_t chars;

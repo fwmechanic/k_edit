@@ -949,9 +949,10 @@ bool SearchSpecifier::HasError() const { return false; }
 bool SearchSpecifier::IsRegex()  const { return false; }
 #endif
 
-STATIC_FXN bool SetNewSearchSpecifierOK( PCChar rawStr, bool fRegex ) {
+STATIC_FXN bool SetNewSearchSpecifierOK( PCChar rawStr, PCChar eos, bool fRegex ) {
+   if( !eos ) eos = Eos( rawStr );
    VS_( if( s_searchSpecifier ) { s_searchSpecifier->Dbgf( "befor" ); } )
-   auto ssNew( new SearchSpecifier( rawStr, Strlen(rawStr), fRegex ) );
+   auto ssNew( new SearchSpecifier( rawStr, eos - rawStr, fRegex ) );
 #if USE_PCRE
    const auto err( ssNew->HasError() );
    if( err ) {
@@ -962,7 +963,7 @@ STATIC_FXN bool SetNewSearchSpecifierOK( PCChar rawStr, bool fRegex ) {
       {
       Delete0( s_searchSpecifier );
       s_searchSpecifier = ssNew;
-      g_SavedSearchString_Buf.cpy( rawStr );  // HACK to let ARG::grep inherit prev search strings
+      g_SavedSearchString_Buf.cpy( rawStr, eos - rawStr );  // HACK to let ARG::grep inherit prev search strings
       }
    VS_( s_searchSpecifier->Dbgf( "after" ); )
    return
@@ -973,7 +974,6 @@ STATIC_FXN bool SetNewSearchSpecifierOK( PCChar rawStr, bool fRegex ) {
 #endif
                ;
    }
-
 
 STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, PCChar str ) { // deletes all duplicates of the inserted line
    const auto argLen( Strlen( str ) );
@@ -1055,7 +1055,7 @@ STATIC_FXN bool SearchSpecifierOK( ARG *pArg ) {
 
       case TEXTARG: SearchLogSwap();
                     AddToSearchLog( pArg->d_textarg.pText );
-                    if( !SetNewSearchSpecifierOK( pArg->d_textarg.pText, pArg->d_cArg >= 2 ) )
+                    if( !SetNewSearchSpecifierOK( pArg->d_textarg.pText, nullptr, pArg->d_cArg >= 2 ) )
                        return ErrorDialogBeepf( "bad search specifier '%s'", pArg->d_textarg.pText );
                     break;
 
@@ -1069,7 +1069,7 @@ STATIC_FXN bool SearchSpecifierOK( ARG *pArg ) {
 
                        Xbuf xb;
                        g_pFBufSearchLog->getLineRaw( &xb, 0 );                                                       \
-                       if( !SetNewSearchSpecifierOK( xb.c_str(), false ) )
+                       if( !SetNewSearchSpecifierOK( xb.c_str(), nullptr, false ) )
                           return ErrorDialogBeepf( "bad search specifier '%s'", xb.c_str() );
                        }
                     break;
@@ -1299,7 +1299,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
 
  #if REPLC_CLASSES
 
-   if( !SetNewSearchSpecifierOK( g_SnR_szSearch.c_str(), d_cArg >= 2 ) ) {
+   if( !SetNewSearchSpecifierOK( g_SnR_szSearch.c_str(), nullptr, d_cArg >= 2 ) ) {
       return false; // RegexCompile internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
       }
 
@@ -1463,7 +1463,7 @@ STATIC_FXN void InsFnm( PFBUF pFbuf, PXbuf pxb, PCChar fnm, const bool fSorted )
    if( fSorted ) FBOP::InsLineSortedAscending( pFbuf, pxb, 0, pb ); else pFbuf->PutLastLine( pb );
    }
 
-int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted ) { enum { ED=1 }; ED && DBG( "%s '%s'", __func__, pszWildcardString );
+int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted ) { enum { ED=0 }; ED && DBG( "%s '%s'", __func__, pszWildcardString );
    auto rv(0);
    const PCChar pVbar( strrchr( pszWildcardString, '|' ) );
    if( pVbar ) {
@@ -2519,7 +2519,7 @@ STATIC_FXN PCChar strnstr( PCChar haystack, int haystackLen, PCChar needle, int 
 
 
 void CGrepper::FindAllMatches( PCChar pSrchStr, bool fUseRegEx ) {
-   if( !SetNewSearchSpecifierOK( pSrchStr, fUseRegEx ) )
+   if( !SetNewSearchSpecifierOK( pSrchStr, nullptr, fUseRegEx ) )
       return;
 
    CGrepperMatchHandler mh( *this );

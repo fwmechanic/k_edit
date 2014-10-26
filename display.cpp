@@ -655,7 +655,7 @@ STATIC_FXN cppc IsCppConditional( PCChar ps, PCChar eos, PInt pxPound ) { // *pL
    return cppcNone;
    }
 
-cppc FBOP::IsCppConditional( PCFBUF fb, LINE yLine ) { // *pLine points to getLineRaw() data (tabs still there, not expanded)
+cppc FBOP::IsCppConditional( PCFBUF fb, LINE yLine ) {
    PCChar bos, eos;
    fb->PeekRawLineExists( yLine, &bos, &eos );
    COL xPound;

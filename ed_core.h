@@ -1442,6 +1442,7 @@ public:
 private:
    COL            getLine_(               PXbuf pXb, LINE yLine, int chExpandTabs=0 ) const;
 public:
+   COL            getLineRaw(       std::string &st, LINE yLine ) const;
    COL            getLineRaw(             PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, 0   ); }
    COL            getLineTabx(            PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, ' ' ); }
    COL            getLineTabxPerRealtabs( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, g_fRealtabs ?0:' ' ); }
