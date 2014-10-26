@@ -629,7 +629,6 @@ struct ARG {
    void  EndPt( Point *pPt ) const;
    bool  Within( const Point &pt, COL len=-1 ) const;
    bool  Beyond( const Point &pt ) const;
-   COL   GetLine( PXbuf pXb, LINE yLine ) const;
    COL   GetLine( std::string &st, LINE yLine ) const;
    void  ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const;
    void  GetColumnRange( COL *pxMin, COL *pxMax ) const;
@@ -702,9 +701,9 @@ class ArgLineWalker {
    // If the Point is manipulated by other agents like FileSearcher, it's best
    // to use ARG:: methods directly.
    //
-   CPCARG  d_Arg;
-   Point   d_pt;
-   Xbuf    d_xb;
+   CPCARG       d_Arg;
+   Point        d_pt;
+   std::string  d_st;
 
 public:
 
@@ -718,10 +717,10 @@ public:
    bool   Within( COL len=-1 )  const { return d_Arg->Within( d_pt, len ); }
    LINE   Line()                const { return d_pt.lin; }
    LINE   Col ()                const { return d_pt.col; }
-   COL    GetLine()                   { return d_Arg->GetLine( &d_xb, d_pt.lin ); }
+   COL    GetLine()                   { return d_Arg->GetLine( d_st, d_pt.lin ); }
    bool   NextLine()                  { d_pt.col = 0; ++d_pt.lin; return Beyond(); }
-   PChar  wbuf()                const { return d_xb.wbuf(); } // BUGBUG rmv this!
-   PCChar kbuf()                const { return /*const_cast<PCChar>*/(d_xb.wbuf()); }
+   void   buf_erase( size_t pos )     {        d_st.erase( pos ); }
+   PCChar kbuf()                const { return d_st.c_str(); }
    };
 
 

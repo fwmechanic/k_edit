@@ -1591,20 +1591,11 @@ void ARG::ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const {
       }
    }
 
-#if 0
 COL ARG::GetLine( std::string &st, LINE yLine ) const { // setup x constraints and call GetLineSeg
    COL xLeftIncl, xRightIncl;
    ColsOfArgLine( yLine, &xLeftIncl, &xRightIncl );
    d_pFBuf->GetLineSeg( st, yLine, xLeftIncl, xRightIncl );
    return st.length();
-   }
-#endif
-
-COL ARG::GetLine( PXbuf pXb, LINE yLine ) const { // setup x constraints and call GetLineSeg
-   COL xLeftIncl, xRightIncl;
-   ColsOfArgLine( yLine, &xLeftIncl, &xRightIncl );
-   d_pFBuf->GetLineSeg( pXb, yLine, xLeftIncl, xRightIncl );
-   return pXb->len();
    }
 
 bool ARG::execute() {
@@ -1641,7 +1632,7 @@ bool ARG::execute() {
                       std::string dest;
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {
-                            StrToNextMacroTermOrEos( aw.wbuf() )[0] = '\0';  0 && DBG( "2: '%s'", aw.kbuf() );
+                            aw.buf_erase( StrToNextMacroTermOrEos( aw.kbuf() ) - aw.kbuf() );  0 && DBG( "2: '%s'", aw.kbuf() );
                             dest += aw.kbuf();
                             dest += " ";
                             }
