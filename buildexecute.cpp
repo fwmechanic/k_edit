@@ -25,8 +25,8 @@
    STATIC_VAR Xbuf  s_textArgBuffer;
    STIL       Xbuf &TextArgBuffer() { return s_textArgBuffer; }
 #else
-   STATIC_VAR Xbuf s_macroTextArgBuffer, s_userTextArgBuffer;
-   STIL       Xbuf *TextArgBuffer() { return Interpreter::Interpreting() ?  &s_macroTextArgBuffer : &s_userTextArgBuffer; }
+   STATIC_VAR Xbuf  s_macroTextArgBuffer, s_userTextArgBuffer;
+   STIL       Xbuf &TextArgBuffer() { return Interpreter::Interpreting() ? s_macroTextArgBuffer : s_userTextArgBuffer; }
 #endif
 
 STATIC_VAR Point s_SelAnchor;
