@@ -842,7 +842,7 @@ CALL_LUA_FUNCTION:
                   {
                   size_t srcBytes;
                   auto pSrc( lua_tolstring(L, nres, &srcBytes) );
-                  va_arg(vl, PXbuf)->cpy( pSrc, srcBytes+1 );
+                  va_arg(vl, PXbuf)->assign( pSrc, srcBytes+1 );
                   }
                   break;
 

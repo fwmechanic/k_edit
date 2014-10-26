@@ -294,12 +294,12 @@ class Xbuf {
    Xbuf( PCChar str )
       : d_buf      ( nullptr )
       , d_buf_bytes( 0 )
-      { cpy( str ); }
+      { assign( str ); }
 
    Xbuf( PCChar str, size_t len_ )
       : d_buf      ( nullptr )
       , d_buf_bytes( 0 )
-      { cpy( str, len_ ); }
+      { assign( str, len_ ); }
 
    Xbuf( PCChar str1, PCChar str2 )
       : d_buf      ( nullptr )
@@ -352,7 +352,7 @@ public:
       return pnul ? pnul - d_buf : 0;
       }
 
-   PCChar cpy( PCChar str ) {
+   PCChar assign( PCChar str ) {
       const size_t len_( Strlen(str) );
       const auto rv( wresize( 1+len_ ) );
       memcpy( rv, str, len_ );
@@ -360,7 +360,7 @@ public:
       return rv;
       }
 
-   PCChar cpy( PCChar str, const size_t len_ ) {
+   PCChar assign( PCChar str, const size_t len_ ) {
       const auto rv( wresize( 1+len_ ) );
       memcpy( rv, str, len_ );
       rv[len_] = '\0';

@@ -107,7 +107,7 @@ bool ARG::towinclip() {
       *bufptr++ = '\0'; // buffer terminator
       }
    else if( d_argType == TEXTARG ) {
-      lbuf.cpy( d_textarg.pText );
+      lbuf.assign( d_textarg.pText );
 
 SINGLE_LINE: // HACK O'RAMA!
 
@@ -175,20 +175,20 @@ bool ARG::fromwinclip() {
 
 void WinClipGetFirstLine( PXbuf xb ) {
    if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) )
-      xb->cpy( ClipUnavail );
+      xb->assign( ClipUnavail );
    else {
       if( !Win32::IsClipboardFormatAvailable(CF_TEXT) )
-         xb->cpy( "CF_TEXT format data not available" );
+         xb->assign( "CF_TEXT format data not available" );
       else {
          auto hglb( Win32::GetClipboardData( CF_TEXT ) );
          if( !hglb )
-            xb->cpy( "GetClipboardData failed" );
+            xb->assign( "GetClipboardData failed" );
          else {
             const auto pClip( PCChar(Win32::GlobalLock( hglb )) );
             if( !pClip )
-               xb->cpy( "GlobalLock on ClipboardData failed" );
+               xb->assign( "GlobalLock on ClipboardData failed" );
             else {
-               xb->cpy( pClip, StrToNextOrEos( pClip, "\x0D\x0A" ) - pClip );
+               xb->assign( pClip, StrToNextOrEos( pClip, "\x0D\x0A" ) - pClip );
                Win32::GlobalUnlock( hglb );
                }
             }

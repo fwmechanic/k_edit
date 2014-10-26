@@ -89,7 +89,13 @@ extern   bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *
               , gts_DfltResponse      = BIT(1)
               , gts_OnlyNewlAffirms   = BIT(2)
               };
-extern   PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd );
+
+typedef
+//       std::string
+         Xbuf
+                      TAB_T;
+
+extern   PCCMD GetTextargString( TAB_T &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd );
 
 extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests=false );
 

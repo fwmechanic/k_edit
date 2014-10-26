@@ -38,7 +38,7 @@ class CapturedStrings {
       }
    void Set( int ix, PCChar src, int srcLen ) {
       if( ix < d_maxCount )
-         d_pCs[ix].cpy( src, srcLen );
+         d_pCs[ix].assign( src, srcLen );
       }
 
    };  STD_TYPEDEFS( CapturedStrings )

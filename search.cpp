@@ -2569,7 +2569,7 @@ LINE CGrepper::WriteOutput
          if( d_MatchingLines[iy] ) {
             char buf[20]; auto pB( buf ); auto cbB( sizeof buf );
             snprintf_full( &pB, &cbB, "%*d  ", lwidth, iy + 1 );
-            xb.cpy( buf, pB - buf );
+            xb.assign( buf, pB - buf );
 
             PCChar ptr; size_t chars;
             d_SrchFile->PeekRawLineExists( iy, &ptr, &chars );
