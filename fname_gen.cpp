@@ -135,6 +135,18 @@ STATIC_FXN bool IsolateFilename( PInt pMin, PInt pMax, PCChar pSrc, PCChar eos )
    return true;
    }
 
+int FBUF::GetLineIsolateFilename( std::string &st, LINE yLine, COL xCol ) const {
+   PCChar bos, eos;
+   if( !PeekRawLineExists( yLine, &bos, &eos ) )
+      return -1;
+
+   const auto pXmin( PtrOfColWithinStringRegionNoEos( g_CurFBuf()->TabWidth(), bos, eos, xCol ) );
+   int oMin, oMax;
+   if( !IsolateFilename( &oMin, &oMax, pXmin, eos ) ) return 0;
+   st.assign( pXmin+oMin, oMax-oMin );
+   return 1;
+   }
+
 int FBUF::GetLineIsolateFilename( PXbuf pXb, LINE yLine, COL xCol ) const {
    PCChar bos, eos;
    if( !PeekRawLineExists( yLine, &bos, &eos ) )
@@ -648,13 +660,12 @@ void SearchEnvDirListForFile( PXbuf dest, const PCChar pszSrc, bool fKeepNameWil
          goto OUTPUT_EQ_INPUT;
 
       auto path( Path::CpyDirOk( pszSrc ) );                                          VERBOSE && DBG( "%s *** '%s' path='%s'", __func__, pszSrc, path.c_str() );
-      if( path.length() > 0 ) {
-         const auto chars( path.length() );
-         if( chars > 3 && Path::IsPathSepCh( path[chars-1] ) )
-            path.resize( chars-1 );  // remove the trailing PathSepCh so CfxFilenameGenerator works
+      if( path.empty() ) {
+         path = ".";   // supply "." so CfxFilenameGenerator works
          }
       else {
-         path = ".";   // supply "." so CfxFilenameGenerator works
+         if( path.length() > 3 && Path::IsPathSepCh( path.back() ) )
+            path.pop_back();  // remove the trailing PathSepCh so CfxFilenameGenerator works
          }
       CfxFilenameGenerator mfg( path.c_str(), ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
@@ -662,9 +673,8 @@ void SearchEnvDirListForFile( PXbuf dest, const PCChar pszSrc, bool fKeepNameWil
          return;
          }
       else {
-         dest->wresize( 1+sizeof(pathbuf) ); // HACK CITY!!!
          const auto abs_pb( Path::Absolutize( pszSrc ) );
-         if( abs_pb.length() == 0 ) {                                                 VERBOSE && DBG( "%s '%s' =;> '%s'"     , __func__, pszSrc, dest->kbuf() );
+         if( abs_pb.empty() ) {                                                       VERBOSE && DBG( "%s '%s' =;> '%s'"     , __func__, pszSrc, abs_pb.c_str() );
             return;
             }
          dest->cpy( abs_pb.c_str() );
@@ -687,7 +697,7 @@ void SearchEnvDirListForFile( PXbuf dest, bool fKeepNameWildcard ) {
    SearchEnvDirListForFile( dest, tmp, fKeepNameWildcard );
    }
 
-STATIC_FXN void SearchEnvDirListForFile( std::string &st, bool fKeepNameWildcard=false ) {
+void SearchEnvDirListForFile( std::string &st, bool fKeepNameWildcard ) {
    Xbuf dest;
    SearchEnvDirListForFile( &dest, st.c_str(), fKeepNameWildcard );
    st = dest.kbuf();
@@ -698,19 +708,19 @@ std::string CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
       return std::string( pszSrc );
       }
 
-   std::string xb( pszSrc );
-   if( LuaCtxt_Edit::ExpandEnvVarsOk( xb ) ) {
-      DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, xb.c_str() );
+   std::string st( pszSrc );
+   if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {
+      DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
       }
    else {
       if( '$' == pszSrc[0] )
-         SearchEnvDirListForFile( xb );
+         SearchEnvDirListForFile( st );
       else
-         xb = pszSrc;
+         st = pszSrc;
       }
-   DB && DBG( "%s post-expansion='%s'", __func__, xb.c_str() );
+   DB && DBG( "%s post-expansion='%s'", __func__, st.c_str() );
 
-   xb = Path::Absolutize( xb.c_str() );
-   DB && DBG( "%s- '%s'", __func__, xb.c_str() );
-   return xb;
+   st = Path::Absolutize( st.c_str() );
+   DB && DBG( "%s- '%s'", __func__, st.c_str() );
+   return st;
    }

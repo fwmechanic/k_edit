@@ -644,13 +644,14 @@ STATIC_FXN bool OpenRsrcFileFailed() {
    if( s_pFBufRsrc ) return false;
 
    STATIC_VAR std::string s_pszRsrcFilename;
-   if( s_pszRsrcFilename.empty() )  s_pszRsrcFilename = g_Process->ExePath() + static_cast<std::string>(".krsrc");
-   Xbuf bufName;
-   SearchEnvDirListForFile( &bufName, s_pszRsrcFilename.c_str() );
+   if( s_pszRsrcFilename.empty() ) {
+      s_pszRsrcFilename = g_Process->ExePath() + static_cast<std::string>(".krsrc");
+      SearchEnvDirListForFile( s_pszRsrcFilename );
+      }
 
-   0 && DBG( "%s opens Rsrc file '%s'", FUNC, bufName.kbuf() );
+   0 && DBG( "%s opens Rsrc file '%s'", FUNC, s_pszRsrcFilename.c_str() );
 
-   FBOP::FindOrAddFBuf( bufName.kbuf(), &s_pFBufRsrc );
+   FBOP::FindOrAddFBuf( s_pszRsrcFilename.c_str(), &s_pFBufRsrc );
    return s_pFBufRsrc->ReadDiskFileNoCreateFailed();
    }
 

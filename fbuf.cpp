@@ -1608,11 +1608,11 @@ STATIC_FXN bool IfOnlyOneFilespecInCurWcFileSwitchToIt() {
    if( pFBuf->LineCount() != 1 )
       return true;
 
-   Xbuf xb;
-   if( pFBuf->GetLineIsolateFilename( &xb, 0, 0 ) < 1 ) // read first line from pseudofile
+   std::string xb;
+   if( pFBuf->GetLineIsolateFilename( xb, 0, 0 ) < 1 ) // read first line from pseudofile
       return Msg( "GetLineIsolateFilename(0) failed!" );
 
-   const auto pFn( xb.kbuf() );
+   const auto pFn( xb.c_str() );
    if( IsDir( pFn ) )
       return true;
 
@@ -1879,7 +1879,7 @@ bool ARG::shex() {
 
 bool ARG::setfile() {
    MainThreadPerfCounter pc;
-   Xbuf xb;
+   std::string xb;
 
    switch( d_argType ) {
     default:      return BadArg(); //--------------------------------------------
@@ -1887,7 +1887,7 @@ bool ARG::setfile() {
     case NOARG:   {
                   const auto nxtvw( DLINK_NEXT( g_CurView(), dlinkViewsOfWindow ) );
                   if( !nxtvw ) return fnMsg( "no alternate file" );
-                  xb.cpy( nxtvw->FBuf()->Name() );
+                  xb = nxtvw->FBuf()->Name();
                   } break; //-------------------------------------------------------
 
     case NULLARG: if( d_cArg > 1 ) {
@@ -1896,7 +1896,7 @@ bool ARG::setfile() {
                      return g_CurFBuf()->WriteToDisk() == false;   // *** 'arg arg setfile' saves current file to disk
                      }
 
-                  if( g_CurFBuf()->GetLineIsolateFilename( &xb, d_nullarg.cursor.lin, d_nullarg.cursor.col ) < 1 ) // read first line from pseudofile
+                  if( g_CurFBuf()->GetLineIsolateFilename( xb, d_nullarg.cursor.lin, d_nullarg.cursor.col ) < 1 ) // read first line from pseudofile
                      return false;
                   break; //-------------------------------------------------------
 
@@ -1906,21 +1906,21 @@ bool ARG::setfile() {
 
                      // ADD TBD special handling for wildcard specs when d_cArg >= 2
                      }
-                  xb.cpy( d_textarg.pText );
+                  xb = d_textarg.pText;
                   break; //-------------------------------------------------------
     }
-   0 && DBG( "%s: %s", __func__, xb.kbuf() );
+   0 && DBG( "%s: %s", __func__, xb.c_str() );
 
    if( d_argType != NOARG ) { // for NOARG we HAVE a definitive name, skip the following reinterpretations
-      if( LuaCtxt_Edit::ExecutedURL( xb.kbuf() ) )  // WINDOWS-ONLY HOOK
+      if( LuaCtxt_Edit::ExecutedURL( xb.c_str() ) )  // WINDOWS-ONLY HOOK
          return true;
 
-      LuaCtxt_Edit::ExpandEnvVarsOk( &xb );
-      SearchEnvDirListForFile( &xb, true );
+      LuaCtxt_Edit::ExpandEnvVarsOk( xb );
+      SearchEnvDirListForFile( xb, true );
       }
 
-   const auto rv( fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( xb.kbuf() ) );
-   DBG( "### %s t=%9.6f %s", __func__, pc.Capture(), xb.kbuf() );
-   0 && DBG( "%s: %s", __func__, xb.kbuf() );
+   const auto rv( fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( xb.c_str() ) );
+   DBG( "### %s t=%9.6f %s", __func__, pc.Capture(), xb.c_str() );
+   0 && DBG( "%s: %s", __func__, xb.c_str() );
    return rv;
    }
