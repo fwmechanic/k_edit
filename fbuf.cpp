@@ -1608,11 +1608,11 @@ STATIC_FXN bool IfOnlyOneFilespecInCurWcFileSwitchToIt() {
    if( pFBuf->LineCount() != 1 )
       return true;
 
-   std::string xb;
-   if( pFBuf->GetLineIsolateFilename( xb, 0, 0 ) < 1 ) // read first line from pseudofile
+   std::string fnm;
+   if( pFBuf->GetLineIsolateFilename( fnm, 0, 0 ) < 1 ) // read first line from pseudofile
       return Msg( "GetLineIsolateFilename(0) failed!" );
 
-   const auto pFn( xb.c_str() );
+   const auto pFn( fnm.c_str() );
    if( IsDir( pFn ) )
       return true;
 

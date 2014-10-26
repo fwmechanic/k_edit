@@ -12,6 +12,7 @@ class StringGenerator {  // interface class
 
 public:
    StringGenerator() {}
+   virtual bool VGetNextName( std::string &dest ) = 0;
    virtual bool VGetNextName( PXbuf dest ) = 0;
    virtual ~StringGenerator() {}
    }; STD_TYPEDEFS( StringGenerator )
@@ -25,6 +26,7 @@ class WildcardFilenameGenerator : public StringGenerator {
 public:
    WildcardFilenameGenerator( PCChar string, WildCardMatchMode matchMode=ONLY_FILES ) : d_dm( string, nullptr, matchMode ) {}
    // DTOR auto-generated
+   bool VGetNextName( std::string &dest ) override;
    bool VGetNextName( PXbuf dest ) override;
    };
 
@@ -43,6 +45,7 @@ public:
    ~DirListGenerator();
 
    bool VGetNextName( PXbuf dest ) override;
+   bool VGetNextName( std::string &dest ) override;
    };
 
 
@@ -104,6 +107,7 @@ class CfxFilenameGenerator : public StringGenerator {
 
    CfxFilenameGenerator( PCChar macroText, WildCardMatchMode matchMode );
    bool VGetNextName( PXbuf dest ) override;
+   bool VGetNextName( std::string &dest ) override;
    virtual ~CfxFilenameGenerator();
    };
 
@@ -122,6 +126,7 @@ class FilelistCfxFilenameGenerator : public StringGenerator {
 
    FilelistCfxFilenameGenerator( PFBUF pFBuf ) : d_pFBuf( pFBuf ) {}
    bool VGetNextName( PXbuf dest ) override;
+   bool VGetNextName( std::string &dest ) override;
    virtual ~FilelistCfxFilenameGenerator() { Delete0( d_pCfxGen ); }
    };
 

@@ -1242,9 +1242,9 @@ bool ARG::mfgrep() {
    pathbuf gen_info;
    auto pGen( GrepMultiFilenameGenerator( gen_info, sizeof gen_info ) );
    if( pGen ) { 1 && DBG( "%s using %s", __PRETTY_FUNCTION__, gen_info );
-      Xbuf pbuf;
-      while( pGen->VGetNextName( &pbuf ) )
-         MFGrepProcessFile( pbuf.kbuf(), pSrchr );
+      std::string pbuf;
+      while( pGen->VGetNextName( pbuf ) )
+         MFGrepProcessFile( pbuf.c_str(), pSrchr );
 
       Delete0( pGen );
       }
@@ -1344,9 +1344,9 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
          ErrorDialogBeepf( "GrepMultiFilenameGenerator -> nil" );
          }
       else {
-         Xbuf pbuf;
-         while( pGen->VGetNextName( &pbuf ) )
-            MFReplaceProcessFile( pbuf.kbuf(), &mrcw );
+         std::string pbuf;
+         while( pGen->VGetNextName( pbuf ) )
+            MFReplaceProcessFile( pbuf.c_str(), &mrcw );
 
          Delete0( pGen );
 
@@ -1466,7 +1466,7 @@ STATIC_FXN void InsFnm( PFBUF pFbuf, PXbuf pxb, PCChar fnm, const bool fSorted )
 int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted ) { enum { ED=1 }; ED && DBG( "%s '%s'", __func__, pszWildcardString );
    auto rv(0);
    const PCChar pVbar( strrchr( pszWildcardString, '|' ) );
-   Xbuf xb, pbuf, fbuf;
+   Xbuf xb, fbuf;
    if( pVbar ) {
       // the wildcard (or plain searchkey) to be applied recursively has been
       // merged by earlier processing into the full path based on the cwd, as
@@ -1486,9 +1486,10 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       ED && DBG( "wcBuf='%s'" , wcBuf  );
       ED && DBG( "dirBuf='%s'", dirBuf );
 
+      std::string pbuf;
       DirListGenerator dlg( dirBuf );
-      while( dlg.VGetNextName( &pbuf ) ) {                          ED && DBG( "pbuf='%s'", pbuf.kbuf() );
-         WildcardFilenameGenerator wcg( FmtStr<_MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf.kbuf(), wcBuf ), ONLY_FILES );
+      while( dlg.VGetNextName( pbuf ) ) {                          ED && DBG( "pbuf='%s'", pbuf.c_str() );
+         WildcardFilenameGenerator wcg( FmtStr<_MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf.c_str(), wcBuf ), ONLY_FILES );
          fbuf.clear();
          while( wcg.VGetNextName( &fbuf ) ) {
             InsFnm( fb, &xb, fbuf.kbuf(), fSorted );

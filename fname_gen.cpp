@@ -191,6 +191,12 @@ int FBUF::GetLineIsolateFilename( PXbuf pXb, LINE yLine, COL xCol ) const {
 // ...Generator object
 //
 
+bool WildcardFilenameGenerator::VGetNextName( std::string &dest ) {
+   RTN_false_ON_BRK;
+   dest = d_dm.GetNext();
+   return !dest.empty();
+   }
+
 bool WildcardFilenameGenerator::VGetNextName( PXbuf dest ) {
    RTN_false_ON_BRK;
    const auto rslt( d_dm.GetNext() );
@@ -204,6 +210,23 @@ bool WildcardFilenameGenerator::VGetNextName( PXbuf dest ) {
    }
 
 //-----------------------------------
+
+bool FilelistCfxFilenameGenerator::VGetNextName( std::string &dest ) {
+   dest.clear();
+   while( true ) {
+      if( d_pCfxGen ) {
+         if( d_pCfxGen->VGetNextName( dest ) )
+            return true;
+
+         Delete0( d_pCfxGen );
+         }
+      RTN_false_ON_BRK;
+
+      const auto glif_rv( d_pFBuf->GetLineIsolateFilename( &d_xb, d_curLine++, 0 ) );
+      if( glif_rv < 0 ) return false;  // no more lines
+      if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_xb.kbuf(), ONLY_FILES );
+      }
+   }
 
 bool FilelistCfxFilenameGenerator::VGetNextName( PXbuf dest ) {
    dest->clear();
@@ -439,6 +462,17 @@ bool ARG::cfx() {
 
 //------------------------------------------------------------------------------
 
+bool DirListGenerator::VGetNextName( std::string &dest ) {
+   if( d_output.IsEmpty() )
+      return false;
+
+   auto pEl( d_output.First() );
+   DLINK_REMOVE_FIRST( d_output, pEl, dlink );
+   dest = pEl->string;
+   FreeStringListEl( pEl );
+   return true;
+   }
+
 bool DirListGenerator::VGetNextName( PXbuf dest ) {
    if( d_output.IsEmpty() )
       return false;
@@ -534,6 +568,47 @@ CfxFilenameGenerator::CfxFilenameGenerator( PCChar macroText, WildCardMatchMode 
 CfxFilenameGenerator::~CfxFilenameGenerator() {
    Delete0( d_pWcGen );
    Delete0( d_pSSG );
+   }
+
+bool CfxFilenameGenerator::VGetNextName( std::string &dest ) {
+   RTN_false_ON_BRK;
+   dest.clear();
+
+   if( d_pWcGen ) {
+NEXT_WILDCARD_MATCH:
+      if( d_pWcGen->VGetNextName( dest ) ) {
+         MFSPEC_D && DBG( "%s+ '%s'", __func__, dest.c_str() );
+         return true;
+         }
+      Delete0( d_pWcGen );
+      }
+
+   if( d_pSSG ) {
+NEXT_SSG_COMBINATION:
+      pathbuf pbuf;
+      if( d_pSSG->GetNextString( BSOB(pbuf) ) ) {
+         MFSPEC_D && DBG( "%s+ WcGen <= '%s'", __func__, pbuf );
+         d_pWcGen = new WildcardFilenameGenerator( pbuf, d_matchMode );
+         goto NEXT_WILDCARD_MATCH;
+         }
+
+      Delete0( d_pSSG );
+      }
+   d_pszEntrySuffix = d_splitLine.GetNext(
+#if DICING
+                                           d_pszEntrySuffix
+#endif
+                                                            );
+
+   if( d_pszEntrySuffix ) {
+      MFSPEC_D && DBG( "%s+ ENVMAP <= '%s'", __func__, d_pszEntrySuffix );
+      d_pSSG = new StrSubstituterGenerator;
+      CFX_to_SSG( d_pszEntrySuffix, d_pSSG );
+      goto NEXT_SSG_COMBINATION;
+      }
+
+   MFSPEC_D && DBG( "%s- Exhausted", __func__ );
+   return false;
    }
 
 bool CfxFilenameGenerator::VGetNextName( PXbuf dest ) {
