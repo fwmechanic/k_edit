@@ -1593,7 +1593,7 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    extern void    LuaSortLineRange( PFBUF fb, LINE y0, LINE y1, COL xLeft, COL xRight, bool fCaseIgnored=true, bool fOrdrAscending=true, bool fDupsKeep=false );
 
    // remove line
-   bool PopFirstLine( PXbuf pxb, PFBUF pFbuf );
+   bool           PopFirstLine( std::string &st, PFBUF pFbuf );
 
    //************ char-level ops
    extern void    PutChar( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, PXbuf pxb );

@@ -860,8 +860,8 @@ STIL void ClrInRecordDQuote() {        s_fInRecordDQuote = false ; }
 
 STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
    const auto lastLine( g_pFbufRecord->LastLine() );
-   std::string xb;
-   g_pFbufRecord->getLineRaw( xb, lastLine );
+   std::string st;
+   g_pFbufRecord->getLineRaw( st, lastLine );
 
    linebuf lbufNew;
    if( pCmd->IsFnGraphic() ) {
@@ -884,24 +884,24 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       }
    else {
       if( RecordingInDQuote() ) {
-         xb += "\" ";
+         st += "\" ";
          ClrInRecordDQuote();
          }
       else {
-         xb += " ";
+         st += " ";
          }
 
       SafeStrcpy( lbufNew, pCmd->Name() );
       }
 
-   if( xb.length() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
-      xb += " \\";
-      g_pFbufRecord->PutLine( lastLine  , xb.c_str() );
+   if( st.length() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
+      st += " \\";
+      g_pFbufRecord->PutLine( lastLine  , st.c_str() );
       g_pFbufRecord->PutLine( lastLine+1, lbufNew    );
       }
    else {
-      xb += lbufNew;
-      g_pFbufRecord->PutLine( lastLine  , xb.c_str() );
+      st += lbufNew;
+      g_pFbufRecord->PutLine( lastLine  , st.c_str() );
       }
 
    MoveCursorToEofAllWindows( g_pFbufRecord );

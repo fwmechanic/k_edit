@@ -1067,10 +1067,11 @@ STATIC_FXN bool SearchSpecifierOK( ARG *pArg ) {
                           return ErrorDialogBeepf( "No search string specified, %s empty", szSearchLog );
                           }
 
-                       Xbuf xb;
-                       g_pFBufSearchLog->getLineRaw( &xb, 0 );                                                       \
-                       if( !SetNewSearchSpecifierOK( xb.c_str(), nullptr, false ) )
-                          return ErrorDialogBeepf( "bad search specifier '%s'", xb.c_str() );
+                       PCChar bos, eos;
+                       g_pFBufSearchLog->PeekRawLineExists( 0, &bos, &eos );
+                       if( !SetNewSearchSpecifierOK( bos, eos, false ) ) {
+                          return ErrorDialogBeepf( "bad search specifier '%s'", std::string( bos, eos - bos ).c_str() );
+                          }
                        }
                     break;
       }

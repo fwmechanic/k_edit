@@ -65,9 +65,9 @@ STATIC_FXN int NumberOfCmdlineFilesRemaining() {
    }
 
 STATIC_FXN bool SwitchToNextCmdlineFile() {
-   Xbuf xb;
-   while( FBOP::PopFirstLine( &xb, g_pFBufCmdlineFiles ) ) {
-      auto pNxtArg( xb.c_str() );  DBG( "%s trying %s", FUNC, pNxtArg );
+   std::string sb;
+   while( FBOP::PopFirstLine( sb, g_pFBufCmdlineFiles ) ) {
+      auto pNxtArg( sb.c_str() );  DBG( "%s trying %s", FUNC, pNxtArg );
       const auto fOptT( pNxtArg[0] == '|' );
       const auto pFnm( pNxtArg + (fOptT ? 1 : 0) );
       if( fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( pFnm ) ) {

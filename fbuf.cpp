@@ -164,11 +164,11 @@ PFBUF FBOP::FindOrAddFBuf( PCChar filename, PFBUF *ppGlobalPtr ) {
    return AddFBuf( filename, ppGlobalPtr );
    }
 
-bool FBOP::PopFirstLine( PXbuf pxb, PFBUF pFbuf ) {
+bool FBOP::PopFirstLine( std::string &st, PFBUF pFbuf ) {
    if( !pFbuf || pFbuf->LineCount() == 0 )
       return false;
 
-   pFbuf->getLineRaw( pxb, 0 );
+   pFbuf->getLineRaw( st, 0 );
    pFbuf->DelLine( 0 );
    return true;
    }
@@ -1031,8 +1031,8 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
 
 
 bool ARG::popd() { // arg "_sdup" _spush arg "fn" _spush arg _spop _spop msearch
-   Xbuf xb;
-   return FBOP::PopFirstLine( &xb, g_pFBufCwd ) ? fChangeFile( xb.c_str(), false ) : ErrPause( "empty cwd stack" );
+   std::string ts;
+   return FBOP::PopFirstLine( ts, g_pFBufCwd ) ? fChangeFile( ts.c_str(), false ) : ErrPause( "empty cwd stack" );
    }
 
 
