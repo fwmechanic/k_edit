@@ -302,18 +302,6 @@ STATIC_FXN void TermNulleow( std::string &st ) {
       }
    }
 
-STATIC_FXN void TermNulleow( Xbuf &pxb ) {
-   const auto pStart( pxb.c_str() );
-   for( auto pCh( pStart ); *pCh; ++pCh ) {
-      if(  pCh > pStart  // we ignore the first char (think about it!)
-        && !isWordChar( *pCh )
-        ) {
-         pxb.mid_term( pCh - pStart );
-         break;
-         }
-      }
-   }
-
 bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { // intended use: selection-smart CURSORFUNC's
    const auto Cursor( g_CurView()->Cursor() );
    if( g_iArgCount ) {
@@ -372,7 +360,8 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
          if( pWuc ) {
             d_argType       = TEXTARG;
             d_textarg.ulc   = Cursor;
-            d_textarg.pText = TextArgBuffer().assign( pWuc, len );
+            TextArgBuffer().assign( pWuc, len );
+            d_textarg.pText = TextArgBuffer().c_str();
                                                                                                           DB && DBG( "NOARGWUC='%s'", d_textarg.pText );
             return false; //==============================================================================
             }
@@ -1024,271 +1013,6 @@ PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pC
    }
 
 //--------------------------------------------------------------
-// pCmd  if valid (currently only when we're called by ArgMainLoop) will be
-//       ARG::graphic, the first char of a typed arg.
-PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
-   enum { DBG_GTA=1 };
-
-   DBG_GTA && DBG( "+%s CMD='%s' dest='%s' flags=%X prompt='%s'"
-      , __func__
-      , pCmd?pCmd->Name():""
-      , xb.c_str()
-      , flags
-      , pszPrompt?pszPrompt:""
-      );
-
-   const auto xColInFile( pCmd ? s_SelAnchor.col : g_CursorCol() );   0 && DBG( "%s+ xColInFile=%d (%d : %d)", __func__, xColInFile, s_SelAnchor.col, g_CursorCol() );
-
-   auto fBellAndFreezeKbInput( false );
-   const auto fSavedMeta( g_fMeta );      0 && DBG( "%s+ g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
-
-   *pfGotAnyInputFromKbd = false;
-
-   auto textargStackPos(-1);
-
-   pathbuf     pbTabxBase; pbTabxBase[0] = '\0';
-   PDirMatches pDirContent(nullptr);
-   std::string stTmp;
-
-   while(1) { //******************************************************************
-      // BUGBUG GetTextargString_CMD_reader may prevent the following
-      // fBellAndFreezeKbInput code from achieving it's intended task
-      //
-      if( fBellAndFreezeKbInput ) {
-         // goal is to freeze the KB input so if user holds tab down, he
-         // can easily get back to the display of pbTabxBase.
-         //
-         // fBellAndFreezeKbInput exists because where fBellAndFreezeKbInput is
-         // set is temporarily prior to RefreshPromptAndEditInput being called;
-         // freezing there shows the old dialog line content, which is not
-         // useful.  Defer the freeze to here, when the latest dialog line
-         // content has actually been displayed, is the answer.
-         //
-         fBellAndFreezeKbInput = false;
-
-         Bell();
-         FlushKeyQueueAnythingFlushed();
-         WaitForKey( 1 );
-         }
-
-      const auto fInitialStringSelected( ToBOOL(flags & gts_DfltResponse) );
-
-      if( !pCmd ) {
-         EditPrompt ep( pszPrompt, xb.c_str(), fInitialStringSelected ? g_colorError : g_colorInfo, xCursor );
-         GetTextargString_CMD_reader gtas( ep );
-         pCmd = gtas.GetNextCMD( ToBOOL(flags & gts_fKbInputOnly) );
-         if( !pCmd )
-            break;
-
-         *pfGotAnyInputFromKbd |= gtas.GotAnyInputFromKbd();
-         }
-
-      //=============== switch( pCmd->d_func ) ===============
-
-      const funcCmd func( pCmd->d_func );
-
-      //##############  Begin TabX  ##############
-      if( pCmd->d_argData.EdKcEnum != EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
-         Delete0( pDirContent );
-         pbTabxBase[0] = '\0'; // forget prev used WC
-         }
-
-      if( pCmd->d_argData.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
-         if( !pDirContent ) {
-            if( pbTabxBase[0] == 0 ) // no prev'ly used WC?
-               SafeStrcpy( pbTabxBase, xb.c_str() );  // create based on curr content
-
-            pDirContent = new DirMatches( pbTabxBase, HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
-            }
-         Path::str_t nxt;
-         do {
-            nxt = pDirContent->GetNext();
-            } while( Path::IsDotOrDotDot( nxt.c_str() ) );
-
-         if( !nxt.empty() ) {
-            xb.assign( nxt.c_str() );
-            xCursor = xb.length();  // past end
-            }
-         else {
-            Delete0( pDirContent );
-            xb.assign( pbTabxBase );
-            auto buf( xb.c_str() ); // show user seed in case he wants to edit
-            xCursor = FirstWildcardOrEos( buf ) - buf;
-            fBellAndFreezeKbInput = true;
-            }
-         }
-         //##############  End   TabX  ##############
-
-   #ifdef fn_dispmstk
-      else if( func == fn_dispmstk ) {
-         noargNoMeta.dispmstk();
-         }
-   #endif
-      else if( func == fn_newline || func == fn_emacsnewl ) {
-         if( flags & gts_OnlyNewlAffirms )
-            break;
-         Bell();
-         }
-      else if( func == fn_graphic ) {
-         if( fInitialStringSelected ) {
-            xCursor = 0;
-            xb.mid_term( xCursor );
-            }
-         if( InInsertMode() ) {
-            xb.insert_hole( xCursor );
-            }
-         xb.poke( xCursor++, pCmd->d_argData.chAscii() );
-         }
-      else if( func == fn_insertmode ) {
-         noargNoMeta.insertmode();
-         }
-      else if( func == fn_up ) {
-         if( textargStackPos < 0 ) {
-            AddToTextargStack( xb.c_str() );
-            textargStackPos = 0;
-            }
-         if( textargStackPos < g_pFBufTextargStack->LastLine() ) {
-            xCursor = g_pFBufTextargStack->getLineRaw( &xb, ++textargStackPos );
-            }
-         }
-      else if( func == fn_down ) {
-         if( textargStackPos > 0 ) {
-            xCursor = g_pFBufTextargStack->getLineRaw( &xb, --textargStackPos );
-            }
-         }
-      else if( func == fn_meta ) {
-         noargNoMeta.meta();
-         }
-      else if( func == fn_left  ) {
-         if( xCursor > 0 ) {
-            --xCursor;
-            }
-         }
-      else if( func == fn_right ) {
-         if( g_CurFBuf() && xb.length() == xCursor ) {
-            const auto xx( xColInFile + xCursor );
-            g_CurFBuf()->GetLineSeg( stTmp, g_CursorLine(), xx, xx );
-            xb.poke( xCursor, stTmp[0] );
-            }
-         ++xCursor;
-         }
-      else if( func == fn_begline || func == fn_home ) {
-         xCursor = 0;
-         }
-      else if( func == fn_endline ) {
-         xCursor = xb.length();  // past end
-         }
-      else if( func == fn_cdelete || func == fn_emacscdel ) {
-         if( xCursor > 0 ) {
-            --xCursor;
-            if( xCursor < xb.length() ) {
-               if( InInsertMode() ) {
-                  xb.collapse_hole( xCursor );
-                  }
-               else {
-                  xb.poke( xCursor, xCursor == xb.length() ? 0 : ' ' );
-                  }
-               }
-            }
-         }
-      else if( func == fn_delete || func == fn_sdelete ) {
-         xb.collapse_hole( xCursor );
-         }
-      else if( func == fn_insert || func == fn_sinsert ) {
-         xb.insert_hole( xCursor );
-         xb.poke( xCursor, ' ' );
-         }
-      else if( func == fn_arg ) {
-         if( 0 && xCursor >= xb.length() ) {  // experimental: allow arg to (in specific circumstances) increase the arg count
-            ++g_iArgCount;          // hack a: works but prompt for this fxn is not updated, so not visible to the user
-            break;                  // hack b: return PCMD==arg does NOT work; hit Assert( ArgCount() == 0 ); below
-            }
-         else
-            xb.mid_term( xCursor );      // center=arg: delete all chars at or following (under or to the right of) the cursor
-         }
-      else if( func == fn_restcur ) {     // alt+center=alg+arg: does the converse of arg:
-         xb.collapse_hole( 0, xCursor ); // delete all chars preceding (to the left of) the cursor
-         xCursor = 0;
-         }
-      else if( func == fn_pword ) {
-         const auto pb( xb.c_str() ); const auto len( xb.length() );
-         while( xCursor < len ) {
-            ++xCursor;
-            if( !isWordChar( pb[xCursor] ) && isWordChar( pb[xCursor+1] ) ) {
-               ++xCursor;
-               break;
-               }
-            }
-         }
-      else if( func == fn_mword ) {
-         const auto pb( xb.c_str() ); const auto len( xb.length() );
-         if( xCursor >= len ) xCursor = len - 1;
-         while( xCursor > 0 ) {
-            if( --xCursor == 0 )
-               break;
-            if( !isWordChar( pb[xCursor-1] ) && isWordChar( pb[xCursor] ) )
-               break;
-            }
-         }
-      else if( func == fn_flipcase ) {
-         if( xCursor < xb.length() ) {
-            auto pb( xb.c_str() );
-            xb.poke( xCursor, FlipCase( pb[xCursor] ) );
-            }
-         }
-      else if( pCmd->NameMatch( "swapchar" ) ) {
-         if( xCursor < xb.length() ) {
-            auto pb( xb.c_str() );
-            const auto c0( pb[xCursor+0] );
-            const auto c1( pb[xCursor+1] );
-            xb.poke( xCursor+0, c1 );
-            xb.poke( xCursor+1, c0 );
-            }
-         }
-      else if( pCmd->d_argType & CURSORFUNC ) {
-         Bell(); // unsupported CURSORFUNC?
-         }
-      else if( func == fn_cancel ) {
-         break;
-         }
-      else if( !(flags & gts_OnlyNewlAffirms) ) { // any function (not immediate-executed above) _except_ *newl confirms
-         break;
-         }
-      else {
-         Bell();
-         }
-
-      //====== Some editing or cursor movement was done and we will be
-      //====== continuing to edit.  Consume meta + pCmd, do bounds check(s)
-
-      if( !(pCmd->d_argType & KEEPMETA) )
-         g_fMeta = false;
-
-      pCmd = nullptr;
-
-      flags &= ~gts_DfltResponse;
-
-      } //*************************** while **********************************
-
-   Delete0( pDirContent );
-
-   DBG_GTA && DBG( "-%s CMD='%s' arg='%s'"
-      , __func__
-      , pCmd?pCmd->Name():""
-      , xb.c_str()
-      );
-
-   g_fMeta = fSavedMeta;
-
-   if( *pfGotAnyInputFromKbd ) {
-      ViewCursorRestorer cr;
-      }
-
-   0 && DBG( "%s- g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
-   return pCmd;
-   }
-
-//--------------------------------------------------------------
 
 GLOBAL_VAR bool s_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
@@ -1402,7 +1126,7 @@ bool fExecute( PCChar strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%s'", 
    return g_fFuncRetVal;
    }
 
-STATIC_FXN bool GetTextargStringNXeq( Xbuf &xb, int cArg, COL xCursor ) {
+STATIC_FXN bool GetTextargStringNXeq( TAB_T &xb, int cArg, COL xCursor ) {
    while( cArg-- )
       IncArgCnt();
 
@@ -1429,7 +1153,7 @@ bool ARG::cliptext() { // patterned after lasttext
                     break;
       }
 
-   WinClipGetFirstLine( &TextArgBuffer() );
+   WinClipGetFirstLine( TextArgBuffer() );
    return GetTextargStringNXeq( TextArgBuffer(), cArg, 0 );
    }
 
@@ -1441,7 +1165,7 @@ bool ARG::lasttext() {
       default:        return BadArg();
       case NULLARG:   cArg = d_cArg;  //lint -fallthrough
       case NOARG:     cArg++;
-                      TextArgBuffer().can_deref();
+                      // TextArgBuffer().can_deref();
                       break;
 
       case LINEARG:   g_CurFBuf()->GetLineSeg( TextArgBuffer(), d_linearg.yMin, 0, COL_MAX );

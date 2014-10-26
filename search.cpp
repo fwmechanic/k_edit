@@ -1293,7 +1293,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    DispDoPendingRefreshesIfNotInMacro();
    {
    bool fGotAnyInputFromKbd;
-   Xbuf xb;
+   TAB_T xb;
    const auto pCmd( GetTextargString( xb, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
    g_SnR_szSearch = xb.c_str();
    if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.empty() )
@@ -1323,7 +1323,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
 
    {
    bool fGotAnyInputFromKbd;
-   Xbuf xb;
+   TAB_T xb;
    const auto pCmd( GetTextargString( xb, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
    g_SnR_szReplacement = xb.c_str();
    if( !pCmd || pCmd->IsFnCancel() )

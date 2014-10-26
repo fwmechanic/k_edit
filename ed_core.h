@@ -473,6 +473,9 @@ public:
    };  STD_TYPEDEFS( Xbuf )
 
 
+typedef std::string TAB_T;
+
+
 class LineInfo { // LineInfo is a standalone class since it is used by both FBUF and various subclasses of EditRec (undo/redo)
    friend class FBUF;
 

@@ -173,22 +173,22 @@ bool ARG::fromwinclip() {
    }
 
 
-void WinClipGetFirstLine( PXbuf xb ) {
+void WinClipGetFirstLine( TAB_T &xb ) {
    if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) )
-      xb->assign( ClipUnavail );
+      xb.assign( ClipUnavail );
    else {
       if( !Win32::IsClipboardFormatAvailable(CF_TEXT) )
-         xb->assign( "CF_TEXT format data not available" );
+         xb.assign( "CF_TEXT format data not available" );
       else {
          auto hglb( Win32::GetClipboardData( CF_TEXT ) );
          if( !hglb )
-            xb->assign( "GetClipboardData failed" );
+            xb.assign( "GetClipboardData failed" );
          else {
             const auto pClip( PCChar(Win32::GlobalLock( hglb )) );
             if( !pClip )
-               xb->assign( "GlobalLock on ClipboardData failed" );
+               xb.assign( "GlobalLock on ClipboardData failed" );
             else {
-               xb->assign( pClip, StrToNextOrEos( pClip, "\x0D\x0A" ) - pClip );
+               xb.assign( pClip, StrToNextOrEos( pClip, "\x0D\x0A" ) - pClip );
                Win32::GlobalUnlock( hglb );
                }
             }
