@@ -303,7 +303,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
 
    {
    pFBuf->getLineTabxPerRealtabs( &d_xb, cur.lin );
-   NOAUTO CPCChar frags[] = { pFBuf->Name(), FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ), d_xb.kbuf() };
+   NOAUTO CPCChar frags[] = { pFBuf->Name(), FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ), d_xb.c_str() };
    d_pOutputFile->PutLastLine( frags, ELEMENTS(frags) );
    }
 
@@ -737,9 +737,9 @@ class ReplaceCharWalker : public CharWalker {
         bool fDoReplaceQuery
       , bool fSearchCase
       )
-      : d_pszSearch         ( g_SnR_szSearch.kbuf()      )
+      : d_pszSearch         ( g_SnR_szSearch.c_str()      )
       , d_searchLen         ( g_SnR_szSearch.len()       )
-      , d_pszReplace        ( g_SnR_szReplacement.kbuf() )
+      , d_pszReplace        ( g_SnR_szReplacement.c_str() )
       , d_replaceLen        ( g_SnR_szReplacement.len()  )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_strncmp_fxn       ( fSearchCase ? strncmp : Strnicmp )
@@ -1069,8 +1069,8 @@ STATIC_FXN bool SearchSpecifierOK( ARG *pArg ) {
 
                        Xbuf xb;
                        g_pFBufSearchLog->getLineRaw( &xb, 0 );                                                       \
-                       if( !SetNewSearchSpecifierOK( xb.kbuf(), false ) )
-                          return ErrorDialogBeepf( "bad search specifier '%s'", xb.kbuf() );
+                       if( !SetNewSearchSpecifierOK( xb.c_str(), false ) )
+                          return ErrorDialogBeepf( "bad search specifier '%s'", xb.c_str() );
                        }
                     break;
       }
@@ -1293,13 +1293,13 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    {
    bool fGotAnyInputFromKbd;
    const auto pCmd( GetTextargString( &g_SnR_szSearch, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
-   if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.kbuf()[0] == 0 )
+   if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.c_str()[0] == 0 )
       return false;
    }
 
  #if REPLC_CLASSES
 
-   if( !SetNewSearchSpecifierOK( g_SnR_szSearch.kbuf(), d_cArg >= 2 ) ) {
+   if( !SetNewSearchSpecifierOK( g_SnR_szSearch.c_str(), d_cArg >= 2 ) ) {
       return false; // RegexCompile internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
       }
 
@@ -1309,7 +1309,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    s_fSearchNReplaceUsingRegExp = d_cArg >= 2;
    if( s_fSearchNReplaceUsingRegExp ) {
       RegexDestroy( s_pSandR_CompiledSearchPattern );
-      s_pSandR_CompiledSearchPattern = RegexCompile( g_SnR_szSearch.kbuf(), g_fCase );
+      s_pSandR_CompiledSearchPattern = RegexCompile( g_SnR_szSearch.c_str(), g_fCase );
       if( !s_pSandR_CompiledSearchPattern ) {
          return false; // RegexCompile internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
          }
@@ -1325,12 +1325,12 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
       return false;
    }
 
-   if( fMultiFileReplace && g_SnR_szReplacement.kbuf()[0] == 0 && !Confirm( "Empty replacement string, confirm: " ) )
+   if( fMultiFileReplace && g_SnR_szReplacement.c_str()[0] == 0 && !Confirm( "Empty replacement string, confirm: " ) )
       return false;
 
 #if USE_PCRE
    if(   s_fSearchNReplaceUsingRegExp
-      && !CheckRegExpReplacementString( s_pSandR_CompiledSearchPattern, g_SnR_szReplacement.kbuf() )
+      && !CheckRegExpReplacementString( s_pSandR_CompiledSearchPattern, g_SnR_szReplacement.c_str() )
      )
       return ErrorDialogBeepf( "Invalid replacement pattern" );
 #endif
@@ -1438,7 +1438,7 @@ void FBOP::InsLineSorted_( PFBUF fb, PXbuf xb, bool descending, LINE ySkipLeadin
       //                ( (yMax + yMin) / 2 );           // old overflow-susceptible version
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
       const auto xbChars( fb->getLineTabxPerRealtabs( xb, cmpLine ) );
-      CPCChar pXb( xb->kbuf() );
+      CPCChar pXb( xb->c_str() );
       auto cmp( stricmp_eos( ptr, eos, pXb, pXb+xbChars ) * cmpSignMul );
       if( 0 == cmp ) {
          cmp = strcmp_eos( ptr, eos, pXb, pXb+xbChars ) * cmpSignMul;
@@ -1894,7 +1894,7 @@ void FileSearcher::VFindMatches_() {
          //***** Search A LINE:
          const auto lnChars( d_pFBuf->getLineTabxPerTabDisp( &d_xb, curPt.lin ) );
          VPrepLine_( d_xb.wbuf() );
-         const auto bos( d_xb.kbuf() );
+         const auto bos( d_xb.c_str() );
          const auto eos( bos+lnChars );
          const PtrCol pcc( tw, bos, eos );
          const auto lnCols( pcc.cols() );
@@ -1930,7 +1930,7 @@ void FileSearcher::VFindMatches_() {
       for( auto curPt(d_start) ; curPt > d_end && !ExecutionHaltRequested() ; --curPt.lin, curPt.col = COL_MAX ) {
          const auto lnChars( d_pFBuf->getLineTabxPerTabDisp( &d_xb, curPt.lin ) );
          VPrepLine_( d_xb.wbuf() );
-         const auto bos( d_xb.kbuf() );
+         const auto bos( d_xb.c_str() );
          const auto eos( bos+lnChars );
          const PtrCol pcc( tw, bos, eos );
 
@@ -2152,7 +2152,7 @@ CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos,
 char View::CharUnderCursor() {
    Xbuf xb;
    const auto chars( g_CurFBuf()->getLineTabx( &xb, Cursor().lin ) );
-   return Cursor().col >= chars ? 0 : xb.kbuf()[ Cursor().col ];
+   return Cursor().col >= chars ? 0 : xb.c_str()[ Cursor().col ];
    }
 
 bool View::PBalFindMatching( bool fSetHilite, Point *pPt ) {
@@ -2543,9 +2543,9 @@ LINE CGrepper::WriteOutput
    )
    {
    Xbuf xb( d_SrchFile->Name() );
-   0 && DBG( " ->%s|", xb.kbuf() );
+   0 && DBG( " ->%s|", xb.c_str() );
    if( LuaCtxt_Edit::from_C_lookup_glock( &xb ) && !xb.is_clear() ) {
-      const auto gbnm( xb.kbuf() );
+      const auto gbnm( xb.c_str() );
       0 && DBG( "LuaCtxt_Edit::from_C_lookup_glock ->%s|", gbnm );
       const auto outfile( OpenFileNotDir_NoCreate( gbnm ) );
       pathbuf GrepFBufname;
@@ -2572,7 +2572,7 @@ LINE CGrepper::WriteOutput
             PCChar ptr; size_t chars;
             d_SrchFile->PeekRawLineExists( iy, &ptr, &chars );
             xb.cat( ptr, chars );
-            FBOP::InsLineSortedAscending( outfile, &xbIns, grepHdrLines, xb.kbuf() );
+            FBOP::InsLineSortedAscending( outfile, &xbIns, grepHdrLines, xb.c_str() );
             }
       outfile->PutFocusOn();
       Msg( "%d lines %s", numberedMatches, "added" );
@@ -2671,7 +2671,7 @@ bool ARG::grep() {
    if( !SearchSpecifierOK( this ) )
       return false;
 
-   Xbuf        srchTextBuf( g_SavedSearchString_Buf.kbuf() );  // we mangle the search string below so make a copy
+   Xbuf        srchTextBuf( g_SavedSearchString_Buf.c_str() );  // we mangle the search string below so make a copy
          auto  pszSrchStr( srchTextBuf.wbuf() );
    const auto  fNegate( strncmp( pszSrchStr, "!!", 2 ) == 0 );
    if( fNegate ) {
@@ -2702,7 +2702,7 @@ bool ARG::grep() {
    const auto fUseRegEx( d_cArg > 1 );
    SprintfLinebuf auxHdrBuf( "%s'%s'%s, by Grep, case:%s"
       , fNegate   ? "*NOT* " : ""
-      , srchTextBuf.kbuf()
+      , srchTextBuf.c_str()
       , fUseRegEx ? " (RE)"  : ""
       , g_fCase   ? "sen"    : "ign"
       );
@@ -2780,7 +2780,7 @@ bool ARG::fg() { // fgrep
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
       const auto len( curfile->getLineTabx( &xb, line ) );
       if( 0 == len ) {
-         memcpy( pB, xb.kbuf(), len+1 );
+         memcpy( pB, xb.c_str(), len+1 );
                  pB  +=         len+1;
          }
       }

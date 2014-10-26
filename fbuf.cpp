@@ -339,7 +339,7 @@ void FBUF::CalcIndent( bool fWholeFileScan ) { 0 && DBG( "%s *******************
    Xbuf xb;
    for( auto yLine(0) ; yLine < LineCount() ; ++yLine ) {
       getLineTabx( &xb, yLine );
-      const auto goodIndentValue( maxIn.addSample( xb.kbuf(), false ) );
+      const auto goodIndentValue( maxIn.addSample( xb.c_str(), false ) );
       if( goodIndentValue && !fWholeFileScan ) {
          d_IndentIncrement = goodIndentValue;
          return;
@@ -572,7 +572,7 @@ PFBUF FindFBufByName( PCChar pFullName ) {
 // indent/softcr
 
 STATIC_FXN bool SliceStrRtnFirstLastTokens( PXbuf pxb, PPCChar pszFirstTok, PPCChar pszLastTok ) {
-   auto pC( StrPastAnyWhitespace( pxb->kbuf() ) );
+   auto pC( StrPastAnyWhitespace( pxb->c_str() ) );
    if( *pC == 0 )
       return false;
 
@@ -584,7 +584,7 @@ STATIC_FXN bool SliceStrRtnFirstLastTokens( PXbuf pxb, PPCChar pszFirstTok, PPCC
    //
    pC = StrPastWord( pC+1 );
    if( *pC ) {
-      pxb->mid_term( pC-pxb->kbuf() ); // place backtrack-stopper
+      pxb->mid_term( pC-pxb->c_str() ); // place backtrack-stopper
       pC = Eos( pC + 1 );
 
       while( *(--pC) != 0 && *pC != ' ' )
@@ -693,7 +693,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) {
    fb->getLineTabx( &xb, yStart );
    COL rv;
    {
-   const auto lbuf0( xb.kbuf() );
+   const auto lbuf0( xb.c_str() );
          auto pX( StrPastAnyWhitespace( lbuf0 ) );
    pX = *pX ? pX : lbuf0;
    rv = pX - lbuf0;  // Assert( rv >= 0 );
@@ -710,7 +710,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) {
    }
    fb->getLineTabx( &xb, yStart + 1 );
    {
-   auto lbuf1( xb.kbuf() );  auto pY( StrPastAnyWhitespace( lbuf1 ) );
+   auto lbuf1( xb.c_str() );  auto pY( StrPastAnyWhitespace( lbuf1 ) );
    if( lbuf1[0] && *pY )
       rv = pY - lbuf1;
    }
@@ -871,7 +871,7 @@ bool ARG::refresh() {
                    auto rmvCount( 0 );
                    for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                       if( aw.GetLine() ) {
-                         rmvCount += RmvFileByName( aw.kbuf() );
+                         rmvCount += RmvFileByName( aw.c_str() );
                          ++attemptCount;
                          }
                       }
@@ -1074,7 +1074,7 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
 
 bool ARG::popd() { // arg "_sdup" _spush arg "fn" _spush arg _spop _spop msearch
    Xbuf xb;
-   return FBOP::PopFirstLine( &xb, g_pFBufCwd ) ? fChangeFile( xb.kbuf(), false ) : ErrPause( "empty cwd stack" );
+   return FBOP::PopFirstLine( &xb, g_pFBufCwd ) ? fChangeFile( xb.c_str(), false ) : ErrPause( "empty cwd stack" );
    }
 
 

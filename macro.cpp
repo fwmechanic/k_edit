@@ -703,7 +703,7 @@ bool ARG::assign() {
     case NOARG:   {
                   Xbuf xb;
                   g_CurFBuf()->getLineTabxPerRealtabs( &xb, d_noarg.cursor.lin );
-                  return AssignStrOk( xb.kbuf() );
+                  return AssignStrOk( xb.c_str() );
                   }
 
     case TEXTARG: {
@@ -727,7 +727,7 @@ bool ARG::assign() {
 
     case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                      if( aw.GetLine() ) {
-                        if( !AssignStrOk( aw.kbuf() ) ) {
+                        if( !AssignStrOk( aw.c_str() ) ) {
                            g_CurView()->MoveCursor( aw.Line(), aw.Col() );
                            return false;
                            }
@@ -936,7 +936,7 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
          fDone = true;
          }
 
-      g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.kbuf() );
+      g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.c_str() );
 
       if( fDone )
          return;
@@ -1181,14 +1181,14 @@ AL2MSS MacroScanIntf::AppendLineToMacroSrcString() {
          }
 
       const auto oNewLineSeg( d_dest.len() );
-      d_dest.cat( d_src.kbuf() );
+      d_dest.cat( d_src.c_str() );
       CPChar parse( d_dest.wbuf() + oNewLineSeg );  DBGEN && DBG( "L %d |%s|", d_yMacCur + 1, parse );
       const auto continues( ParseRawMacroText_ContinuesNextLine( parse ) );
-      if( !continues && !IsStringBlank( d_dest.kbuf() ) ) {
+      if( !continues && !IsStringBlank( d_dest.c_str() ) ) {
          return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
          }
       }
-   return (d_dest.can_deref(),!IsStringBlank( d_dest.kbuf() )) ? HAVE_CONTENT: BLANK_LINE;
+   return (d_dest.can_deref(),!IsStringBlank( d_dest.c_str() )) ? HAVE_CONTENT: BLANK_LINE;
    }
 
 bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) {
@@ -1206,8 +1206,8 @@ bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd,
       const auto rslt( msi.AppendLineToMacroSrcString() );
       DBGEN && DBG( "%s L %d rslt=%d", __func__, msi.d_yMacCur, rslt );
       switch( rslt ) {
-         case HAVE_CONTENT       :  DBGEN && DBG( "assigning --- |%s|", dest->kbuf() );
-                                    if( !AssignStrOk( dest->kbuf() ) ) { DBGEN && DBG( "%s atom failed '%s'", __func__, dest->kbuf() );
+         case HAVE_CONTENT       :  DBGEN && DBG( "assigning --- |%s|", dest->c_str() );
+                                    if( !AssignStrOk( dest->c_str() ) ) { DBGEN && DBG( "%s atom failed '%s'", __func__, dest->c_str() );
                                        if( pErrorPt ) {
                                           pErrorPt->Set( msi.d_yMacCur, 0 );
                                           }

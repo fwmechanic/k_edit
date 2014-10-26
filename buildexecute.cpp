@@ -303,7 +303,7 @@ STATIC_FXN void TermNulleow( std::string &st ) {
    }
 
 STATIC_FXN void TermNulleow( PXbuf pxb ) {
-   const auto pStart( pxb->kbuf() );
+   const auto pStart( pxb->c_str() );
    for( auto pCh( pStart ); *pCh; ++pCh ) {
       if(  pCh > pStart  // we ignore the first char (think about it!)
         && !isWordChar( *pCh )
@@ -351,7 +351,7 @@ bool ARG::BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax ) {
    d_argType         = TEXTARG;
    d_textarg.ulc.col = xMin;
    d_textarg.ulc.lin = yOnly;
-   d_textarg.pText   = TextArgBuffer()->kbuf();
+   d_textarg.pText   = TextArgBuffer()->c_str();
    0 && DBG( "BOXSTR='%s'", d_textarg.pText );
    return false;
    }
@@ -393,22 +393,22 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
 
    auto NumArg_value(0);
    if( fHaveLiteralTextarg ) {
-      if( (d_pCmd->d_argType & NUMARG) && StrSpnSignedInt( TextArgBuffer()->kbuf() ) ) {
-         if( (NumArg_value = atoi( TextArgBuffer()->kbuf() )) ) {
+      if( (d_pCmd->d_argType & NUMARG) && StrSpnSignedInt( TextArgBuffer()->c_str() ) ) {
+         if( (NumArg_value = atoi( TextArgBuffer()->c_str() )) ) {
             s_SelAnchor.lin = Max( 0, s_SelAnchor.lin + NumArg_value + (NumArg_value > 0) ? (-1) : (+1) );
             }
          }
       else {
          FBufLocn locn;
-         if( (d_pCmd->d_argType & MARKARG) && d_pFBuf->FindMark( TextArgBuffer()->kbuf(), &locn ) ) {
+         if( (d_pCmd->d_argType & MARKARG) && d_pFBuf->FindMark( TextArgBuffer()->c_str(), &locn ) ) {
             s_SelAnchor = locn.Pt();
-                                                                                                          DB && DBG( "FillArgStruct MarkFound '%s'", TextArgBuffer()->kbuf() );
+                                                                                                          DB && DBG( "FillArgStruct MarkFound '%s'", TextArgBuffer()->c_str() );
             }
          else { // enum { DB=1 };
             if( d_pCmd->d_argType & TEXTARG ) {
                d_argType       = TEXTARG;
                d_textarg.ulc   = Cursor;
-               d_textarg.pText = TextArgBuffer()->kbuf();
+               d_textarg.pText = TextArgBuffer()->c_str();
                                                                                                           DB && DBG( "TEXTARG='%s'", d_textarg.pText );
                return false; //===========================================================================
                }
@@ -423,7 +423,7 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
          if( d_pCmd->d_argType & NULLEOW ) { TermNulleow( TextArgBuffer() ); }
          d_argType       = TEXTARG;
          d_textarg.ulc   = Cursor;
-         d_textarg.pText = TextArgBuffer()->kbuf();
+         d_textarg.pText = TextArgBuffer()->c_str();
                                                                                                           DB && DBG( "NULLEO%c='%s'", (d_pCmd->d_argType & NULLEOW)?'W':'C', d_textarg.pText );
          return false; //=================================================================================
          }
@@ -577,7 +577,7 @@ bool ARG::stream() {  // test for StreamArgToString
       case STREAMARG: {
                       Xbuf xb;
                       StreamArgToString( &xb, g_CurFBuf(), d_streamarg );
-                      DBG( "Stream:%s|", xb.kbuf() );
+                      DBG( "Stream:%s|", xb.c_str() );
                       }
                       break;
       }
@@ -771,7 +771,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
    DBG_GTA && DBG( "+%s CMD='%s' dest='%s' flags=%X prompt='%s'"
       , __func__
       , pCmd?pCmd->Name():""
-      , xb->kbuf()
+      , xb->c_str()
       , flags
       , pszPrompt?pszPrompt:""
       );
@@ -813,7 +813,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
       const auto fInitialStringSelected( ToBOOL(flags & gts_DfltResponse) );
 
       if( !pCmd ) {
-         EditPrompt ep( pszPrompt, xb->kbuf(), fInitialStringSelected ? g_colorError : g_colorInfo, xCursor );
+         EditPrompt ep( pszPrompt, xb->c_str(), fInitialStringSelected ? g_colorError : g_colorInfo, xCursor );
          GetTextargString_CMD_reader gtas( ep );
          pCmd = gtas.GetNextCMD( ToBOOL(flags & gts_fKbInputOnly) );
          if( !pCmd )
@@ -835,7 +835,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
       if( pCmd->d_argData.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          if( !pDirContent ) {
             if( pbTabxBase[0] == 0 ) // no prev'ly used WC?
-               SafeStrcpy( pbTabxBase, xb->kbuf() );  // create based on curr Linebuffer contents
+               SafeStrcpy( pbTabxBase, xb->c_str() );  // create based on curr Linebuffer contents
 
             pDirContent = new DirMatches( pbTabxBase, HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
             }
@@ -851,7 +851,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
          else {
             Delete0( pDirContent );
             xb->cpy( pbTabxBase );
-            auto buf( xb->kbuf() ); // show user seed in case he wants to edit
+            auto buf( xb->c_str() ); // show user seed in case he wants to edit
             xCursor = FirstWildcardOrEos( buf ) - buf;
             fBellAndFreezeKbInput = true;
             }
@@ -883,7 +883,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
          }
       else if( func == fn_up ) {
          if( textargStackPos < 0 ) {
-            AddToTextargStack( xb->kbuf() );
+            AddToTextargStack( xb->c_str() );
             textargStackPos = 0;
             }
          if( textargStackPos < g_pFBufTextargStack->LastLine() ) {
@@ -907,7 +907,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
          if( g_CurFBuf() && xb->len() == xCursor ) {
             const auto xx( xColInFile + xCursor );
             g_CurFBuf()->GetLineSeg( &xbTmp, g_CursorLine(), xx, xx );
-            xb->poke( xCursor, xbTmp.kbuf()[0] );
+            xb->poke( xCursor, xbTmp.c_str()[0] );
             }
          ++xCursor;
          }
@@ -950,7 +950,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
          xCursor = 0;
          }
       else if( func == fn_pword ) {
-         const auto pb( xb->kbuf() ); const auto len( xb->len() );
+         const auto pb( xb->c_str() ); const auto len( xb->len() );
          while( xCursor < len ) {
             ++xCursor;
             if( !isWordChar( pb[xCursor] ) && isWordChar( pb[xCursor+1] ) ) {
@@ -960,7 +960,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
             }
          }
       else if( func == fn_mword ) {
-         const auto pb( xb->kbuf() ); const auto len( xb->len() );
+         const auto pb( xb->c_str() ); const auto len( xb->len() );
          if( xCursor >= len ) xCursor = len - 1;
          while( xCursor > 0 ) {
             if( --xCursor == 0 )
@@ -971,13 +971,13 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
          }
       else if( func == fn_flipcase ) {
          if( xCursor < xb->len() ) {
-            auto pb( xb->kbuf() );
+            auto pb( xb->c_str() );
             xb->poke( xCursor, FlipCase( pb[xCursor] ) );
             }
          }
       else if( pCmd->NameMatch( "swapchar" ) ) {
          if( xCursor < xb->len() ) {
-            auto pb( xb->kbuf() );
+            auto pb( xb->c_str() );
             const auto c0( pb[xCursor+0] );
             const auto c1( pb[xCursor+1] );
             xb->poke( xCursor+0, c1 );
@@ -1014,7 +1014,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
    DBG_GTA && DBG( "-%s CMD='%s' arg='%s'"
       , __func__
       , pCmd?pCmd->Name():""
-      , xb->kbuf()
+      , xb->c_str()
       );
 
    g_fMeta = fSavedMeta;
@@ -1099,7 +1099,7 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
 
          s_fHaveLiteralTextarg = true;
          if( fGotAnyInputFromKbd )
-            AddToTextargStack( pxb->kbuf() );
+            AddToTextargStack( pxb->c_str() );
 
          // a valid pCmd was invoked by user to exit GetTextargString; execute it
          // (BuildExecute() grabs from TextArgBuffer()()).
@@ -1153,7 +1153,7 @@ STATIC_FXN bool GetTextargStringNXeq( PXbuf xb, int cArg, COL xCursor ) {
 
    s_fHaveLiteralTextarg = true;
    if( fGotAnyInputFromKbd )
-      AddToTextargStack( xb->kbuf() );
+      AddToTextargStack( xb->c_str() );
 
    return pCmd->BuildExecute();
    }
@@ -1221,7 +1221,7 @@ bool ARG::prompt() {
 
    s_fHaveLiteralTextarg = true;
    if( fGotAnyInputFromKbd )
-      AddToTextargStack( TextArgBuffer()->kbuf() );
+      AddToTextargStack( TextArgBuffer()->c_str() );
 
    return true;
    }
@@ -1385,16 +1385,16 @@ bool ARG::selcmd() { // selcmd:alt+0
          return fnMsg( "cancelled" );
 
       if( fGotAnyInputFromKbd )
-         AddToTextargStack( cmdNameBuf.kbuf() );
+         AddToTextargStack( cmdNameBuf.c_str() );
 
-      const PCCMD newCmd( CmdFromName( cmdNameBuf.kbuf() ) );
+      const PCCMD newCmd( CmdFromName( cmdNameBuf.c_str() ) );
       if( !newCmd ) {
-         fnMsg( "'%s' is unknown cmd", cmdNameBuf.kbuf() );
+         fnMsg( "'%s' is unknown cmd", cmdNameBuf.c_str() );
          continue;
          }
 
       0 && DBG( "%s [1] d_argType=0x%X", __func__, d_argType );
-      0 && DBG( "%s [2] CMD=%s, d_argType=0x%X", __func__, cmdNameBuf.kbuf(), newCmd->d_argType );
+      0 && DBG( "%s [2] CMD=%s, d_argType=0x%X", __func__, cmdNameBuf.c_str(), newCmd->d_argType );
       const auto box2str( d_argType == BOXARG && (newCmd->d_argType & BOXSTR) && d_boxarg.flMin.lin == d_boxarg.flMax.lin );
       0 && DBG( "%s [3] boxs=%d %d %d", __func__, box2str, d_boxarg.flMin.lin, d_boxarg.flMax.lin );
       if( (newCmd->d_argType & d_argType) || box2str ) {
@@ -1438,8 +1438,8 @@ bool ARG::selcmd() { // selcmd:alt+0
          default:         return fnMsg( "bad arg for '%s'", newCmd->Name() );
          case BOXARG:     //lint -fallthrough
          case LINEARG:    //lint -fallthrough
-         case STREAMARG:  return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.kbuf(), 0 );
-         case TEXTARG:    return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.kbuf(), d_textarg.pText );
+         case STREAMARG:  return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), 0 );
+         case TEXTARG:    return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), d_textarg.pText );
          }
 #endif
 
@@ -1610,7 +1610,7 @@ bool ARG::execute() {
     case TEXTARG:  if( d_cArg == 1 ) { // meta is passed thru to macro invoked
                       Xbuf strToExecute( d_fMeta?kszMeta_:"", d_textarg.pText );  // *** MUST *** COPY d_textarg.pText to stack buffer (strToExecute)
                       StrToNextMacroTermOrEos( strToExecute.wbuf() )[0] = '\0';
-                      rv = fExecute( strToExecute.kbuf(), false );                //              else nested macros get broken!
+                      rv = fExecute( strToExecute.c_str(), false );                //              else nested macros get broken!
                       }
                    else { // hacky-kludgy way to get direct access to shell cmds w/o a new key asgnmt: arg arg "ls -l" execute
                       Path::str_t cmd( d_textarg.pText );
@@ -1632,8 +1632,8 @@ bool ARG::execute() {
                       std::string dest;
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {
-                            aw.buf_erase( StrToNextMacroTermOrEos( aw.kbuf() ) - aw.kbuf() );  0 && DBG( "2: '%s'", aw.kbuf() );
-                            dest += aw.kbuf();
+                            aw.buf_erase( StrToNextMacroTermOrEos( aw.c_str() ) - aw.c_str() );  0 && DBG( "2: '%s'", aw.c_str() );
+                            dest += aw.c_str();
                             dest += " ";
                             }
                          }
@@ -1647,8 +1647,8 @@ bool ARG::execute() {
                       auto pSL( new StringList() );
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {
-                            1 && DBG( "--- %s", aw.kbuf() );
-                            pSL->AddStr( aw.kbuf() );
+                            1 && DBG( "--- %s", aw.c_str() );
+                            pSL->AddStr( aw.c_str() );
                             }
                          }
                       StartInternalShellJob( pSL, false );

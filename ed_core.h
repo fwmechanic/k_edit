@@ -315,7 +315,7 @@ class Xbuf {
 
 public:
    PChar                  wbuf()      const { return d_buf;       }
-   PCChar                 kbuf()      const { return d_buf;       }
+   PCChar                 c_str()     const { return d_buf;       }
    size_t                 buf_bytes() const { return d_buf_bytes; }
    void                   clear()           { poke( 0, '\0' );    }
    bool                   is_clear()  const
@@ -406,7 +406,7 @@ public:
          rv[count] = '\0';
          return rv;
          }
-      return kbuf();
+      return c_str();
       }
 
    //-----------------------------------------------------------------------
@@ -467,7 +467,7 @@ public:
       va_list val; va_start(val, format);
       vFmtStr( format, val );
       va_end(val);
-      return kbuf();
+      return c_str();
       }
 
    };  STD_TYPEDEFS( Xbuf )
@@ -720,7 +720,7 @@ public:
    COL    GetLine()                   { return d_Arg->GetLine( d_st, d_pt.lin ); }
    bool   NextLine()                  { d_pt.col = 0; ++d_pt.lin; return Beyond(); }
    void   buf_erase( size_t pos )     {        d_st.erase( pos ); }
-   PCChar kbuf()                const { return d_st.c_str(); }
+   PCChar c_str()               const { return d_st.c_str(); }
    };
 
 

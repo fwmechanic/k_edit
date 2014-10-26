@@ -546,7 +546,7 @@ void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
    for( auto ix(0); ix<elems; ++ix ) {
       xb.cat( pa[ix] );
       }
-   PutLine( yLine, xb.kbuf(), xb.kbuf()+xb.len(), &xb2 );
+   PutLine( yLine, xb.c_str(), xb.c_str()+xb.len(), &xb2 );
    }
 
 //
@@ -701,7 +701,7 @@ void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollaps
    Xbuf xb, xb2;
    for( auto yLine( yTop ); yLine <= yBottom; ++yLine ) {
       GetLineWithSegRemoved( this, &xb, yLine, xLeft, boxWidth, fCollapse );
-      PutLine( yLine, xb.kbuf(), nullptr, &xb2 );
+      PutLine( yLine, xb.c_str(), nullptr, &xb2 );
       }
    }
 
@@ -1006,7 +1006,7 @@ void FBOP::PutChar( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, 
    if( fInsert ) {
       AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+1, yLine );
       }
-   fb->PutLine( yLine, pxb->kbuf() );
+   fb->PutLine( yLine, pxb->c_str() );
    }
 
 
@@ -1309,7 +1309,7 @@ bool PutCharIntoCurfileAtCursor( int theChar, PXbuf pxb ) { PCFV;
 
       if( g_iRmargin + 5 <= xCol ) {
          pcf->GetLineForInsert( pxb, yLine, xCol, 0 );
-         const auto lbuf( pxb->kbuf() );
+         const auto lbuf( pxb->c_str() );
          for( auto ix( xCol - 1 ); ix > 1; --ix ) {
             if(   lbuf[ix-1] == ' '
                && lbuf[ix  ] == ' '
@@ -1541,7 +1541,7 @@ COL FBUF::GetLineSeg( PXbuf pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) con
       const auto rv( PrettifyStrcpy( buf, size, lnptr, lnchars, tw, ' ', xLeftIncl ) );
 # endif
       if( 0 ) {
-         auto xbuf( pXb->kbuf() );
+         auto xbuf( pXb->c_str() );
          linebuf lb;
          PrettifyStrcpy( lb, sizeof lb, xbuf, Strlen(xbuf), 1, '^', 0, g_chTrailSpaceDisp );
          DBG( "%s [%d][%d..%d]S:%d=|%s|", __func__, yLine, xLeftIncl, xRightIncl, Strlen(lb), lb );
@@ -1725,7 +1725,7 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
       const auto inslen( Min( inslen_, holewidth ) );
       DE && DBG( "%s [%d L gap/inslen=%d/%d]", __func__, xLeftIncl, holewidth, inslen );
       const auto lchars( GetLineForInsert( &xb, lineNum, xLeftIncl, fInsert ? holewidth : 0 ) );
-      const auto lcols( StrCols( TabWidth(), xb.kbuf(), xb.kbuf()+lchars ) );
+      const auto lcols( StrCols( TabWidth(), xb.c_str(), xb.c_str()+lchars ) );
       const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );
       DE && DBG( "%s GL4Ins: cch/col=%d/%d maxCol=%d", __func__, lchars, lcols, maxCol );
       Assert( lcols >= xLeftIncl );
@@ -2088,7 +2088,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       const auto pDestSplit( PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst ) ); // dest text PAST insertion point
       memcpy( pDestSplit, pSrc, taillen + 1 );
       }
-   FBdest->PutLine( yDst, xbFirst.kbuf() );
+   FBdest->PutLine( yDst, xbFirst.c_str() );
 
    AdjMarksForInsertion( FBdest, FBdest, xDst     , yDst     , COL_MAX, yDst     , xSrcEnd-1, yDstLast );
    AdjMarksForInsertion( FBsrc , FBdest,         0, ySrcEnd  , xSrcEnd, ySrcEnd  ,         0, yDstLast );
@@ -2145,7 +2145,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
          }
       else {
          FBsrc->GetLineForInsert( &xbs, ySrc, xSrcRight + 1, 0 );
-         const auto srcbos( xbs.kbuf() );
+         const auto srcbos( xbs.c_str() );
          const auto srceos( Eos(srcbos) );
          const auto pSegStart( PtrOfColWithinStringRegion( tws, srcbos, srceos, xSrcLeft  )     );
          const auto pSegEnd  ( PtrOfColWithinStringRegion( tws, srcbos, srceos, xSrcRight ) + 1 );
@@ -2157,7 +2157,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
          memmove( pInsPt + segWidth, pInsPt   , Strlen(pInsPt)+1 );
          memcpy(  pInsPt           , pSegStart, segWidth         );
          }
-      FBdest->PutLine( yDst, xbd.kbuf() );
+      FBdest->PutLine( yDst, xbd.c_str() );
       }
    }
 

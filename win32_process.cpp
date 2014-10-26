@@ -499,11 +499,11 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    const auto comspec( getComspec() );
    STATIC_CONST char comspecTransient[] = " /c ";
    CommandLine->FmtStr( "-%s%s%s", shell?comspec:"", shell?comspecTransient:"", pS ); // leading '-' is (at most) for PutLastLogLine _only_
-   0 && DBG( "%s: CommandLine='%s'", __func__, CommandLine->kbuf() );
+   0 && DBG( "%s: CommandLine='%s'", __func__, CommandLine->c_str() );
    const auto pXeq(      CommandLine->wbuf() + 1 );  // skip the '-' always (stupid Win32::CreateProcessA takes PChar cmdline param)
-   const auto pXeqConst( CommandLine->kbuf() + 1 );  // skip the '-' always (for internal use)
+   const auto pXeqConst( CommandLine->c_str() + 1 );  // skip the '-' always (for internal use)
    if( !(cmdFlags & NO_ECHO_CMDLN) ) {
-      PutLastLogLine( pfLogBuf, CommandLine->kbuf() + ((cmdFlags & IGNORE_ERROR) ? 0 : 1 ) );
+      PutLastLogLine( pfLogBuf, CommandLine->c_str() + ((cmdFlags & IGNORE_ERROR) ? 0 : 1 ) );
       }
 
    ConsoleSpawnHandles csh;
@@ -544,7 +544,7 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
       TPipeReader pipeReader( csh.hOutPipeRd() );
       while( 1 ) {
          if( pipeReader.GetFilteredLine( xb ) ) {
-            PutLastLogLine( pfLogBuf, xb->kbuf() );
+            PutLastLogLine( pfLogBuf, xb->c_str() );
             } // as long as data isn't exhausted, don't even check for process death
          else if( 0 == Win32::WaitForSingleObject( pPI->hProcess, 0 ) ) { // NO WAIT, CHECK ONLY!
             // process has terminated;
@@ -1206,7 +1206,7 @@ bool ARG::shell() {
       case LINEARG: //lint -fallthrough
       case BOXARG : for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                        if( aw.GetLine() ) {
-                          if( !RunChildSpawnOrSystem( aw.kbuf() ) ) {
+                          if( !RunChildSpawnOrSystem( aw.c_str() ) ) {
                              g_CurView()->MoveCursor( aw.Line(), aw.Col() );
                              return false;
                              }

@@ -307,7 +307,7 @@ bool ARG::vrepeat() {
    Xbuf xb;
    auto lx( d_boxarg.flMin.lin );
    g_CurFBuf()->GetLineSeg( &xb, lx++, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
-   CPCChar inbuf( xb.kbuf() );
+   CPCChar inbuf( xb.c_str() );
    0 && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
 
    const auto fInsertArg( d_cArg < 2 );

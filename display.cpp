@@ -657,7 +657,7 @@ cppc FBOP::IsCppConditional( PXbuf pxb, PCFBUF fb, LINE yLine ) { // *pLine poin
    linebuf lbuf; // copy to lbuf because non-copy API's don't yield an ASCIZ string
    fb->getLineRaw( pxb, yLine );
    COL xPound;
-   return ::IsCppConditional( pxb->kbuf(), &xPound );
+   return ::IsCppConditional( pxb->c_str(), &xPound );
    }
 
 class HiliteAddin_CPPcond_Hilite : public HiliteAddin {
@@ -735,7 +735,7 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE yyy0, LINE yyy1 ) {
    for( auto iy(0) ; iy < ViewLines() ; ++iy ) {
       auto &line( d_PerViewableLine[ iy ].line );
       line.xMax = fb->getLineTabx( &d_xb, Origin().lin + iy );
-      auto lbuf( d_xb.kbuf() ); // copy to lbuf because non-copy API's don't yield an ASCIZ string
+      auto lbuf( d_xb.c_str() ); // copy to lbuf because non-copy API's don't yield an ASCIZ string
       switch( (line.acppc = IsCppConditional( lbuf, &line.xPound )) ) {
          default:       break;
          case cppcIf  : --upDowns;

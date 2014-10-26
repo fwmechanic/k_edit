@@ -98,7 +98,7 @@ bool ARG::towinclip() {
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
          const PCChar bs( bufptr );
          const auto chars( pFBuf->GetLineSeg( &lbuf, lineNum, xLeft, xRight ) );
-         memcpy( bufptr, lbuf.kbuf(), chars );
+         memcpy( bufptr, lbuf.c_str(), chars );
          bufptr += chars;
          *bufptr++ = 0x0D; // line terminator '\r\n'
          *bufptr++ = 0x0A;
@@ -112,12 +112,12 @@ bool ARG::towinclip() {
 SINGLE_LINE: // HACK O'RAMA!
 
       const auto blen( lbuf.len() );
-      Msg( "%s->WinClip %Iu|%s|", ArgTypeName(), blen, lbuf.kbuf() );
+      Msg( "%s->WinClip %Iu|%s|", ArgTypeName(), blen, lbuf.c_str() );
 
       if( !PrepClip( blen, &hglbCopy, &hglbBytes, &bufptr ) )
          return false;
 
-      memcpy( bufptr, lbuf.kbuf(), blen+1 );
+      memcpy( bufptr, lbuf.c_str(), blen+1 );
       }
    else
       return BadArg();

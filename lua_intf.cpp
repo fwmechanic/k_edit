@@ -789,7 +789,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
        case 'b':  lua_pushboolean(  L, va_arg(vl, int   ) != 0            );  break; // NB: boolean is an int-sized thing!
        case 's':  lua_pushstring(   L, va_arg(vl, PCChar)                 );  break;
        case 'S':  lua_pushstring(   L, va_arg(vl, std::string *)->c_str() );  break;
-       case 'x':  lua_pushstring(   L, va_arg(vl, PXbuf )->kbuf()         );  break;
+       case 'x':  lua_pushstring(   L, va_arg(vl, PXbuf )->c_str()         );  break;
        case '>':  goto CALL_LUA_FUNCTION;
        }
       luaL_checkstack( L, 1, "too many arguments" );

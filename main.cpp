@@ -67,7 +67,7 @@ STATIC_FXN int NumberOfCmdlineFilesRemaining() {
 STATIC_FXN bool SwitchToNextCmdlineFile() {
    Xbuf xb;
    while( FBOP::PopFirstLine( &xb, g_pFBufCmdlineFiles ) ) {
-      auto pNxtArg( xb.kbuf() );  DBG( "%s trying %s", FUNC, pNxtArg );
+      auto pNxtArg( xb.c_str() );  DBG( "%s trying %s", FUNC, pNxtArg );
       const auto fOptT( pNxtArg[0] == '|' );
       const auto pFnm( pNxtArg + (fOptT ? 1 : 0) );
       if( fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( pFnm ) ) {
@@ -214,7 +214,7 @@ STATIC_FXN bool recovSRC( PCChar lbuf ) {
       g_SnR_szSearch.cpy( lbuf+KSTRLEN(kszSRC) );
    return fFailed;
    }
-STATIC_FXN void saveSRC( FILE *fout ) { fprintf( fout, "%s%s\n", kszSRC, g_SnR_szSearch.kbuf() ); }
+STATIC_FXN void saveSRC( FILE *fout ) { fprintf( fout, "%s%s\n", kszSRC, g_SnR_szSearch.c_str() ); }
 
 STATIC_CONST char kszDST[] = "DST:";
 STATIC_FXN bool recovDST( PCChar lbuf ) {
@@ -223,7 +223,7 @@ STATIC_FXN bool recovDST( PCChar lbuf ) {
       g_SnR_szReplacement.cpy( lbuf+KSTRLEN(kszDST) );
    return fFailed;
    }
-STATIC_FXN void saveDST( FILE *fout ) { fprintf( fout, "%s%s\n", kszDST, g_SnR_szReplacement.kbuf() ); }
+STATIC_FXN void saveDST( FILE *fout ) { fprintf( fout, "%s%s\n", kszDST, g_SnR_szReplacement.c_str() ); }
 
 typedef bool (*fxnLineRecov)( PCChar lbuf );
 typedef void (*fxnLineSave) ( FILE *fout );
@@ -262,7 +262,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
          DBG( "%s hit EOF (or rd err) while trying to sync at line %d of tmpfile", FUNC, ix+1 );
          return;
          }
-      const auto buf( xb.kbuf() );
+      const auto buf( xb.c_str() );
       if( !stateF_lineprocessor[ ix ].lpRecov( buf ) ) {
          DBG_RECOV && DBG( "recover %s syncd on line %d", stateF_lineprocessor[ ix ].description, ix+1 );
          DBG_RECOV && DBG( "recover %s syncd on: '%s'"  , stateF_lineprocessor[ ix ].description, buf );
@@ -275,7 +275,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
          DBG( "%s hit EOF (or rd err) at line %d of tmpfile", FUNC, ix+1 );
          return;
          }
-      const auto buf( xb.kbuf() );
+      const auto buf( xb.c_str() );
       if( stateF_lineprocessor[ ix ].lpRecov &&
           stateF_lineprocessor[ ix ].lpRecov( buf )
         ) {
@@ -996,7 +996,7 @@ bool ARG::setenv() {
 
       case LINEARG: //lint -fallthrough
       case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
-                       if( aw.GetLine() && !PutEnvChkOk( aw.kbuf() ) ) {
+                       if( aw.GetLine() && !PutEnvChkOk( aw.c_str() ) ) {
                           return false;
                           }
                        }
