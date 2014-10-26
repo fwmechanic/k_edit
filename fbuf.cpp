@@ -918,7 +918,7 @@ STATIC_FXN bool vsPrintfAssign( PCChar pFormat, ... ) {
 Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    const auto pbuf( fb->Name() );
    auto dest( Path::CpyExtOk( pbuf ) );
-   if( dest.length() == 0 ) {
+   if( dest.empty() ) {
       dest = (!fb->FnmIsDiskWritable() ? ".<>" : ".");
       }
    else {
@@ -971,7 +971,7 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
    //
    {
    auto ext( Path::CpyExtOk( fb->Name() ) );
-   if( ext.length() == 0 )
+   if( ext.empty() )
       ext = !fb->FnmIsDiskWritable() ? ".<>" : ".";
    vsPrintfAssign( "curfileext:=\"%s\"", ext.c_str() );
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -996,7 +996,7 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
 STATIC_FXN bool xlat_fnm( PChar dest, size_t sizeof_dest, PCChar pszName ) {
    dest[0] = '\0';
    auto tmp( CompletelyExpandFName_wEnvVars( pszName ) );
-   auto fNameIsValid( tmp.length() > 0 );  // at least: path-absolutize wildcard-specs
+   auto fNameIsValid( !tmp.empty() );  // at least: path-absolutize wildcard-specs
    if( fNameIsValid ) {
       safeStrcpy( dest, sizeof_dest, tmp.c_str() );
       }
@@ -1527,7 +1527,7 @@ bool FBUF::WriteToDisk( PCChar pszSavename ) {
    Path::str_t dest;
    if( pszSavename && *pszSavename ) {
       dest = Path::Absolutize( pszSavename );
-      if( dest.length() == 0 ) {
+      if( dest.empty() ) {
          return Msg( "Cannot resolve '%s'", pszSavename );
          }
       }

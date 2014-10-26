@@ -79,10 +79,10 @@ Path::str_t Path::Union( PCChar pFirst, PCChar pSecond ) { enum { DB=0 };
    // dest = (Path::CpyDirOk  ( pFirst ) || Path::CpyDirOk  ( pSecond ))
    //      + (Path::CpyFnameOk( pFirst ) || Path::CpyFnameOk( pSecond ))
    //      + (Path::CpyExtOk  ( pFirst ) || Path::CpyExtOk  ( pSecond ))
-   auto dir( Path::CpyDirOk  ( pFirst ) ); if( dir.length() == 0 )  dir = Path::CpyDirOk  ( pSecond );  DB && DBG( "RExt:dir '%s'", dir.c_str() );
-   auto fnm( Path::CpyFnameOk( pFirst ) ); if( fnm.length() == 0 )  fnm = Path::CpyFnameOk( pSecond );  DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
+   auto dir( Path::CpyDirOk  ( pFirst ) ); if( dir.empty() )  dir = Path::CpyDirOk  ( pSecond );  DB && DBG( "RExt:dir '%s'", dir.c_str() );
+   auto fnm( Path::CpyFnameOk( pFirst ) ); if( fnm.empty() )  fnm = Path::CpyFnameOk( pSecond );  DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
    if( !Path::IsDotOrDotDot( fnm.c_str() ) ) {
-      auto ext( Path::CpyExtOk( pFirst ) ); if( ext.length() == 0 )  ext = Path::CpyExtOk( pSecond );
+      auto ext( Path::CpyExtOk( pFirst ) ); if( ext.empty() )  ext = Path::CpyExtOk( pSecond );
       fnm += ext;                                                                                       DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
       }
 
