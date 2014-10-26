@@ -495,21 +495,21 @@ DirListGenerator::DirListGenerator( PCChar dirName ) {
       AddName( pStartDir.c_str() );
       }
 
-   Xbuf pbuf;
+   std::string pbuf;
    while( auto pNxt=d_input.First() ) {
       DLINK_REMOVE_FIRST( d_input, pNxt, dlink );
-      pbuf.FmtStr( "%s" PATH_SEP_STR "*", pNxt->string );
+      pbuf = std::string( pNxt->string ) + (PATH_SEP_STR "*");
       FreeStringListEl( pNxt );
 
-      0 && DBG( "Looking in ='%s'", pbuf.kbuf() );
+      0 && DBG( "Looking in ='%s'", pbuf.c_str() );
 
-      WildcardFilenameGenerator wcg( pbuf.kbuf(), ONLY_DIRS );
+      WildcardFilenameGenerator wcg( pbuf.c_str(), ONLY_DIRS );
 
-      while( wcg.VGetNextName( &pbuf ) ) {
-         if( !Path::IsDotOrDotDot( pbuf.kbuf() ) )
-            AddName( pbuf.kbuf() );
+      while( wcg.VGetNextName( pbuf ) ) {
+         if( !Path::IsDotOrDotDot( pbuf.c_str() ) )
+            AddName( pbuf.c_str() );
 
-         0 && DBG( "   PBUF='%s' DBUF='%s'", pbuf.kbuf(), Path::CpyFnameOk( pbuf.kbuf() ).c_str() );
+         0 && DBG( "   PBUF='%s' DBUF='%s'", pbuf.c_str(), Path::CpyFnameOk( pbuf.c_str() ).c_str() );
          }
       }
    }
@@ -722,7 +722,7 @@ NEXT_SSG_COMBINATION:
 // parameter into
 //
 
-void SearchEnvDirListForFile( PXbuf dest, const PCChar pszSrc, bool fKeepNameWildcard ) { enum { VERBOSE=1 };
+STATIC_FXN void SearchEnvDirListForFile( std::string &dest, const PCChar pszSrc, bool fKeepNameWildcard ) { enum { VERBOSE=1 };
    if( fKeepNameWildcard ) {
       if(  ToBOOL( strchr( pszSrc, Path::chEnvSep ) )  // presence of Path::chEnvSep overrides fKeepNameWildcard (since what
         || FBUF::FnmIsPseudo( pszSrc )                 // follows only makes sense if pszSrc is a single filename)
@@ -744,7 +744,7 @@ void SearchEnvDirListForFile( PXbuf dest, const PCChar pszSrc, bool fKeepNameWil
          }
       CfxFilenameGenerator mfg( path.c_str(), ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
-         dest->cat( fname.c_str() );                                                  VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest->kbuf() );
+         dest += fname.c_str();                                                       VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
          }
       else {
@@ -752,30 +752,23 @@ void SearchEnvDirListForFile( PXbuf dest, const PCChar pszSrc, bool fKeepNameWil
          if( abs_pb.empty() ) {                                                       VERBOSE && DBG( "%s '%s' =;> '%s'"     , __func__, pszSrc, abs_pb.c_str() );
             return;
             }
-         dest->cpy( abs_pb.c_str() );
+         dest = abs_pb;
          }
       }
    else { // normal expansion
       CfxFilenameGenerator mfg( pszSrc, ONLY_FILES );
-      if( mfg.VGetNextName( dest ) ) {  /* only care about FIRST match */             VERBOSE && DBG( "%s '%s' =:> '%s'"     , __func__, pszSrc, dest->kbuf() );
+      if( mfg.VGetNextName( dest ) ) {  /* only care about FIRST match */             VERBOSE && DBG( "%s '%s' =:> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
          }
       }
 
 OUTPUT_EQ_INPUT:
-   dest->cpy( pszSrc );                                                               VERBOSE && DBG( "%s '%s' => NO MATCH!", __func__, pszSrc );
-   }
-
-
-void SearchEnvDirListForFile( PXbuf dest, bool fKeepNameWildcard ) {
-   ALLOCA_STRDUP( tmp, srcLen, dest->kbuf(), dest->len() );
-   SearchEnvDirListForFile( dest, tmp, fKeepNameWildcard );
+   dest = pszSrc;                                                                     VERBOSE && DBG( "%s '%s' => NO MATCH!", __func__, pszSrc );
    }
 
 void SearchEnvDirListForFile( std::string &st, bool fKeepNameWildcard ) {
-   Xbuf dest;
-   SearchEnvDirListForFile( &dest, st.c_str(), fKeepNameWildcard );
-   st = dest.kbuf();
+   ALLOCA_STRDUP( tmp, srcLen, st.c_str(), st.length() );
+   SearchEnvDirListForFile( st, tmp, fKeepNameWildcard );
    }
 
 std::string CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };

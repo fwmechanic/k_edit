@@ -440,8 +440,6 @@ extern PCChar  LastExtTagLoaded();
 extern   COL   FirstNonBlankCh( PCChar str, int chars );
 extern   bool  PutCharIntoCurfileAtCursor( int theChar, PXbuf pxb );
 
-extern   void  SearchEnvDirListForFile( PXbuf dest, const PCChar pszSrc, bool fKeepNameWildcard=false );
-extern   void  SearchEnvDirListForFile( PXbuf dest, bool fKeepNameWildcard=false );
 extern   void  SearchEnvDirListForFile( std::string &st, bool fKeepNameWildcard=false );
 
 extern  std::string CompletelyExpandFName_wEnvVars( PCChar pszSrc );
