@@ -906,29 +906,27 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    }
 
 Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
-   const auto pbuf( fb->Name() );
-   auto dest( Path::CpyExt( pbuf ) );
-   if( dest.empty() ) {
-      dest = (!fb->FnmIsDiskWritable() ? ".<>" : ".");
+   Path::str_t rv;
+   if( FnmIsLogicalWildcard( fb->Name() ) ) {
+      rv = ".*";
       }
    else {
-      if( FnmIsLogicalWildcard( pbuf ) )
-         dest = ".*";
+      rv = Path::CpyExt( fb->Name() );
+      if( rv.empty() )
+         rv = !fb->FnmIsDiskWritable() ? ".<>" : ".";
       }
 
-   dest.erase( 0, 1 ); // zap the leading '.'
 #if !FNM_CASE_SENSITIVE
-   string_tolower( dest );
+   string_tolower( rv );
 #endif
 
-   0 && DBG( "%s '%s'", __func__, dest.c_str() );
-   return dest;
+   0 && DBG( "%s '%s'", __func__, rv.c_str() );
+   return rv;
    }
 
-void FBOP::AssignFromRsrc( PCFBUF fb ) {
+void FBOP::AssignFromRsrc( PCFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
    // 1. assigns "curfile..." macros based on this FBUF
    // 2. loads rsrc file section for extension of this FBUF
-   0 && DBG( "%s '%s'", __func__, fb->Name() );
 #if MACRO_BACKSLASH_ESCAPES
    dbllinebuf dblbuf;
    Pathbuf pbuf( fb->Name() );
@@ -939,23 +937,23 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
 #endif
    DefineMacro( "curfilename", Path::CpyFnm  ( fb->Name() ).c_str() );
    DefineMacro( "curfilepath", Path::CpyDirnm( fb->Name() ).c_str() );
-
-   std::string ext;  // param to BOTH DefineMacro and LoadFileExtRsrcIniSection()!
-   if( FnmIsLogicalWildcard( fb->Name() ) ) {
-      ext = ".*";
-      }
-   else {
-      ext = Path::CpyExt( fb->Name() );
-      if( ext.empty() )
-         ext = !fb->FnmIsDiskWritable() ? ".<>" : ".";
-      }
+   const auto ext( FBOP::GetRsrcExt( fb ) );
    DefineMacro( "curfileext", ext.c_str() );
-   // must have set ALL OF curfile, curfilepath, curfilename, curfileext BEFORE calling LoadFileExtRsrcIniSection()
-   if( !fb->IsRsrcLdBlocked() )
-      LoadFileExtRsrcIniSection( ext.c_str() );
-   //--------------------------------------------------------------------------
+   if( !fb->IsRsrcLdBlocked() ) {
+      LoadFileExtRsrcIniSection( ext.c_str() ); // call only after curfile, curfilepath, curfilename, curfileext assigned
+      }
    }
 
+
+STATIC_FXN Path::str_t xlat_fnm( PCChar pszName ) {
+   auto rv( CompletelyExpandFName_wEnvVars( pszName ) );
+   if( rv.empty() ) {
+      ErrorDialogBeepf( "Cannot access %s - %s", pszName, strerror( errno ) );
+      const auto fb( FindFBufByName( pszName ) );
+      if( fb )  DeleteAllViewsOntoFbuf( fb );
+      }
+   return rv;
+   }
 
 // Prefer OpenFileNotDir_ in lieu of fChangeFile if you don't want to have the
 // PFBUF-stack-order affected (any new FBuf opened is placed at BOTTOM/END of list)
@@ -967,28 +965,13 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
 //   * OpenFileNotDir_CreateSilently
 // instead.
 //
-
-STATIC_FXN bool xlat_fnm( PChar dest, size_t sizeof_dest, PCChar pszName ) {
-   dest[0] = '\0';
-   auto tmp( CompletelyExpandFName_wEnvVars( pszName ) );
-   auto fNameIsValid( !tmp.empty() );  // at least: path-absolutize wildcard-specs
-   if( fNameIsValid ) {
-      safeStrcpy( dest, sizeof_dest, tmp.c_str() );
-      }
-   else { // at least: path-absolutize wildcard-specs
-      ErrorDialogBeepf( "Cannot access %s - %s", pszName, strerror( errno ) );
-      const auto fb( FindFBufByName( pszName ) );
-      if( fb )  DeleteAllViewsOntoFbuf( fb );
-      }
-   return fNameIsValid;
-   }
-
 PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heavily patterned after fChangeFile, but w/o reliance on global vars
-   pathbuf fnamebuf;                                             DP && DBG( "OFND+     '%s'", pszName );
-   if( !xlat_fnm( BSOB(fnamebuf), pszName ) )
+                                                                 DP && DBG( "OFND+     '%s'", pszName );
+   const auto fnamebuf( xlat_fnm( pszName ) );
+   if( fnamebuf.empty() )
       return nullptr;
 
-   CPCChar pFnm( fnamebuf );                                     DP && DBG( "OFND xlat='%s'", pFnm );
+   CPCChar pFnm( fnamebuf.c_str() );                             DP && DBG( "OFND xlat='%s'", pFnm );
    auto pFBuf( FindFBufByName( pFnm ) );
    if( !pFBuf ) {
       if( !FBUF::FnmIsPseudo( pFnm ) ) {
@@ -1059,15 +1042,16 @@ bool ARG::popd() { // arg "_sdup" _spush arg "fn" _spush arg _spop _spop msearch
 // SEE ALSO: OpenFileNotDir_
 //
 bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "%s+ '%s'", __func__, pszName );
-   pathbuf fnamebuf;
-   if( !xlat_fnm( BSOB(fnamebuf), pszName ) ) {  DP && DBG( "%s- xlat_fnm FAIL '%s'", __func__, pszName );
+   const auto fnamebuf( xlat_fnm( pszName ) );
+   if( fnamebuf.empty() ) {  DP && DBG( "%s- xlat_fnm FAIL '%s'", __func__, pszName );
       return false;
       }
 
-   auto pFBuf( FindFBufByName( fnamebuf ) );     DP && DBG( "%s '%s' -->PFBUF %p", __func__, fnamebuf, pFBuf );
+   CPCChar pFnm( fnamebuf.c_str() );
+   auto pFBuf( FindFBufByName( pFnm ) );     DP && DBG( "%s '%s' -->PFBUF %p", __func__, pFnm, pFBuf );
    if( !pFBuf ) {
       auto fCwdChanged( false );
-      if( SetCwdOk( fnamebuf, fCwdSave, &fCwdChanged ) ) {
+      if( SetCwdOk( pFnm, fCwdSave, &fCwdChanged ) ) {
          if( fCwdChanged ) { // if cwd changed, display new cwd's contents
             0 && DBG( "%s recurse", __func__ );
             fChangeFile( "*", false ); // recursive, but will only nest ONE level
@@ -1075,7 +1059,7 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "
          DP && DBG( "%s- SetCwdOk '%s'", __func__, pszName );
          return true;
          }
-      pFBuf = AddFBuf( fnamebuf );
+      pFBuf = AddFBuf( pFnm );
       }
    const auto rv( nullptr != pFBuf->PutFocusOn() );
    DP && DBG( "%s- PutFocusOn=%c '%s'", __func__, rv?'t':'f', pszName );

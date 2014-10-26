@@ -290,7 +290,9 @@ PU8 View::ColorIdx2Var( int colorIdx ) {
 
 PFileExtensionSetting View::GetFileExtensionSettings() {
    if( !d_pFES ) {
-      d_pFES = ::InitFileExtensionSetting( FBOP::GetRsrcExt( d_pFBuf ) );
+      auto ext( FBOP::GetRsrcExt( d_pFBuf ) );
+      ext.erase( 0, 1 ); // zap the leading '.'
+      d_pFES = ::InitFileExtensionSetting( ext );
       }
    return d_pFES;
    }
