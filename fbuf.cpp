@@ -964,13 +964,19 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
    // be set BEFORE LoadFileExtRsrcIniSection() is called.
    //
    {
-   auto ext( Path::CpyExtOk( fb->Name() ) );
-   if( ext.empty() )
-      ext = !fb->FnmIsDiskWritable() ? ".<>" : ".";
+   std::string ext;
+   if( fHasWildcard ) {
+      ext = ".*";
+      }
+   else {
+      ext = Path::CpyExtOk( fb->Name() );
+      if( ext.empty() )
+         ext = !fb->FnmIsDiskWritable() ? ".<>" : ".";
+      }
    DefineMacro( "curfileext", ext.c_str() );
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    if( !fb->IsRsrcLdBlocked() )
-      LoadFileExtRsrcIniSection( fHasWildcard ? ".*" : ext.c_str() );
+      LoadFileExtRsrcIniSection( ext.c_str() );
    }
    //--------------------------------------------------------------------------
    }
