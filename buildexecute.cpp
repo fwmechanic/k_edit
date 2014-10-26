@@ -846,7 +846,7 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
 
          if( !nxt.empty() ) {
             xb.cpy( nxt.c_str() );
-            xCursor = xb.len();  // past end
+            xCursor = xb.length();  // past end
             }
          else {
             Delete0( pDirContent );
@@ -904,7 +904,7 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
             }
          }
       else if( func == fn_right ) {
-         if( g_CurFBuf() && xb.len() == xCursor ) {
+         if( g_CurFBuf() && xb.length() == xCursor ) {
             const auto xx( xColInFile + xCursor );
             g_CurFBuf()->GetLineSeg( stTmp, g_CursorLine(), xx, xx );
             xb.poke( xCursor, stTmp[0] );
@@ -915,17 +915,17 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
          xCursor = 0;
          }
       else if( func == fn_endline ) {
-         xCursor = xb.len();  // past end
+         xCursor = xb.length();  // past end
          }
       else if( func == fn_cdelete || func == fn_emacscdel ) {
          if( xCursor > 0 ) {
             --xCursor;
-            if( xCursor < xb.len() ) {
+            if( xCursor < xb.length() ) {
                if( InInsertMode() ) {
                   xb.collapse_hole( xCursor );
                   }
                else {
-                  xb.poke( xCursor, xCursor == xb.len() ? 0 : ' ' );
+                  xb.poke( xCursor, xCursor == xb.length() ? 0 : ' ' );
                   }
                }
             }
@@ -938,7 +938,7 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
          xb.poke( xCursor, ' ' );
          }
       else if( func == fn_arg ) {
-         if( 0 && xCursor >= xb.len() ) {  // experimental: allow arg to (in specific circumstances) increase the arg count
+         if( 0 && xCursor >= xb.length() ) {  // experimental: allow arg to (in specific circumstances) increase the arg count
             ++g_iArgCount;          // hack a: works but prompt for this fxn is not updated, so not visible to the user
             break;                  // hack b: return PCMD==arg does NOT work; hit Assert( ArgCount() == 0 ); below
             }
@@ -950,7 +950,7 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
          xCursor = 0;
          }
       else if( func == fn_pword ) {
-         const auto pb( xb.c_str() ); const auto len( xb.len() );
+         const auto pb( xb.c_str() ); const auto len( xb.length() );
          while( xCursor < len ) {
             ++xCursor;
             if( !isWordChar( pb[xCursor] ) && isWordChar( pb[xCursor+1] ) ) {
@@ -960,7 +960,7 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
             }
          }
       else if( func == fn_mword ) {
-         const auto pb( xb.c_str() ); const auto len( xb.len() );
+         const auto pb( xb.c_str() ); const auto len( xb.length() );
          if( xCursor >= len ) xCursor = len - 1;
          while( xCursor > 0 ) {
             if( --xCursor == 0 )
@@ -970,13 +970,13 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
             }
          }
       else if( func == fn_flipcase ) {
-         if( xCursor < xb.len() ) {
+         if( xCursor < xb.length() ) {
             auto pb( xb.c_str() );
             xb.poke( xCursor, FlipCase( pb[xCursor] ) );
             }
          }
       else if( pCmd->NameMatch( "swapchar" ) ) {
-         if( xCursor < xb.len() ) {
+         if( xCursor < xb.length() ) {
             auto pb( xb.c_str() );
             const auto c0( pb[xCursor+0] );
             const auto c1( pb[xCursor+1] );
@@ -1197,7 +1197,7 @@ bool ARG::lasttext() {
                       cArg = d_cArg;
                       break;
       }
-   return GetTextargStringNXeq( TextArgBuffer(), cArg, TextArgBuffer().len() );
+   return GetTextargStringNXeq( TextArgBuffer(), cArg, TextArgBuffer().length() );
    }
 
 bool ARG::prompt() {

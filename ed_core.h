@@ -344,7 +344,7 @@ public:
 
    PCChar kresize( size_t size ) { return wresize( size ); }
 
-   size_t len() {
+   size_t length() {
 #if !XBUF_CAN_DEREF_0
       if( !d_buf ) return 0;
 #endif
@@ -390,7 +390,7 @@ public:
       }
 
    PCChar cat_ch( char ch ) {
-      const auto slen( len() );
+      const auto slen( length() );
       const auto rv( wresize( slen+2 ) );
       rv[slen] = ch;
       rv[slen+1] = '\0';
@@ -398,7 +398,7 @@ public:
       }
 
    PCChar pad_right( char ch, int count ) {
-      const auto slen( len() );
+      const auto slen( length() );
       if( slen < count ) {
          const auto rv( wresize( count+1 ) );
          const auto fillcount( count - slen );
@@ -429,7 +429,7 @@ public:
 
    PCChar poke( int xCol, char ch, char fillch=' ' ) {
       const auto rv( wresize( 1+xCol ) );
-      const auto len0( len() );
+      const auto len0( length() );
       if( xCol > len0 ) {
          memset( rv+len0, fillch, xCol-len0 );
          }

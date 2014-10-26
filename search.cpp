@@ -713,12 +713,12 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
    return false;
    }
 
-STATIC_VAR Xbuf g_SavedSearchString_Buf ;
-GLOBAL_VAR Xbuf g_SnR_szSearch          ;
-GLOBAL_VAR Xbuf g_SnR_szReplacement     ;
+STATIC_VAR std::string g_SavedSearchString_Buf ;
+GLOBAL_VAR std::string g_SnR_szSearch          ;
+GLOBAL_VAR std::string g_SnR_szReplacement     ;
 
 class ReplaceCharWalker : public CharWalker {
-   Xbuf              d_xb;
+   Xbuf              d_xbb;
    CPCChar           d_pszSearch ;
    int               d_searchLen ;
    CPCChar           d_pszReplace;
@@ -738,9 +738,9 @@ class ReplaceCharWalker : public CharWalker {
       , bool fSearchCase
       )
       : d_pszSearch         ( g_SnR_szSearch.c_str()      )
-      , d_searchLen         ( g_SnR_szSearch.len()       )
+      , d_searchLen         ( g_SnR_szSearch.length()       )
       , d_pszReplace        ( g_SnR_szReplacement.c_str() )
-      , d_replaceLen        ( g_SnR_szReplacement.len()  )
+      , d_replaceLen        ( g_SnR_szReplacement.length()  )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_strncmp_fxn       ( fSearchCase ? strncmp : Strnicmp )
       , d_iReplacementsPoss ( 0 )
@@ -821,12 +821,12 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
 
 
 #if RAW_REPLACE
-   const auto lbuf( d_xb.resize( 1+(eos - ptr) + d_replaceLen - d_searchLen ) );
-   pFBuf->getLineRaw( &d_xb, curPt->lin );
+   const auto lbuf( d_xbb.resize( 1+(eos - ptr) + d_replaceLen - d_searchLen ) );
+   pFBuf->getLineRaw( &d_xbb, curPt->lin );
    const auto pMatch( lbuf + (pxCur - ptr) );
 #else
-   const auto lbuf( d_xb.wresize( 1+FBOP::LineCols( pFBuf, curPt->lin ) + d_replaceLen - d_searchLen ) );
-   pFBuf->getLineTabxPerRealtabs( &d_xb, curPt->lin );
+   const auto lbuf( d_xbb.wresize( 1+FBOP::LineCols( pFBuf, curPt->lin ) + d_replaceLen - d_searchLen ) );
+   pFBuf->getLineTabxPerRealtabs( &d_xbb, curPt->lin );
    const auto pMatch( lbuf + curPt->col );
 #endif
 
@@ -963,7 +963,7 @@ STATIC_FXN bool SetNewSearchSpecifierOK( PCChar rawStr, PCChar eos, bool fRegex 
       {
       Delete0( s_searchSpecifier );
       s_searchSpecifier = ssNew;
-      g_SavedSearchString_Buf.cpy( rawStr, eos - rawStr );  // HACK to let ARG::grep inherit prev search strings
+      g_SavedSearchString_Buf.assign( rawStr, eos - rawStr );  // HACK to let ARG::grep inherit prev search strings
       }
    VS_( s_searchSpecifier->Dbgf( "after" ); )
    return
@@ -1292,8 +1292,10 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    DispDoPendingRefreshesIfNotInMacro();
    {
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( g_SnR_szSearch, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
-   if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.c_str()[0] == 0 )
+   Xbuf xb;
+   const auto pCmd( GetTextargString( xb, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
+   g_SnR_szSearch = xb.c_str();
+   if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.empty() )
       return false;
    }
 
@@ -1320,7 +1322,9 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
 
    {
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( g_SnR_szReplacement, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
+   Xbuf xb;
+   const auto pCmd( GetTextargString( xb, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
+   g_SnR_szReplacement = xb.c_str();
    if( !pCmd || pCmd->IsFnCancel() )
       return false;
    }

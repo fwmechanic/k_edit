@@ -546,7 +546,7 @@ void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
    for( auto ix(0); ix<elems; ++ix ) {
       xb.cat( pa[ix] );
       }
-   PutLine( yLine, xb.c_str(), xb.c_str()+xb.len(), &xb2 );
+   PutLine( yLine, xb.c_str(), xb.c_str()+xb.length(), &xb2 );
    }
 
 //
@@ -661,7 +661,7 @@ bool ARG::emacscdel() {
 
 STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, PXbuf pXb, const LINE yLine, const COL xLeft, const COL boxWidth, bool fCollapse ) {
    pf->getLineTabxPerRealtabs( pXb, yLine );
-   const auto xEolNul( pXb->len() );
+   const auto xEolNul( pXb->length() );
    if( xEolNul <= xLeft )
       return;
 
@@ -1002,7 +1002,7 @@ bool ARG::linsert() { PCF;
 
 void FBOP::PutChar( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, PXbuf pxb ) {
    fb->GetLineForInsert( pxb, yLine, xCol, fInsert ? 1 : 0 );
-   PtrOfColWithinStringRegionNoEos( fb->TabWidth(), pxb->wbuf(), pxb->wbuf()+pxb->len(), xCol )[0] = theChar;
+   PtrOfColWithinStringRegionNoEos( fb->TabWidth(), pxb->wbuf(), pxb->wbuf()+pxb->length(), xCol )[0] = theChar;
    if( fInsert ) {
       AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+1, yLine );
       }
@@ -1588,7 +1588,7 @@ int FBUF::GetLineForInsert( PXbuf pXb, const LINE yLine, COL xIns, COL insertCol
    auto       dest     ( pXb->wbuf() );
    const auto tw       ( TabWidth() );
    auto       lineCols ( StrCols( tw, dest ) );
-   0 && DBG( "%s: gLTPR |%s| L %Iu/%d (%d)", __func__, dest, pXb->len(), lineCols, xIns );
+   0 && DBG( "%s: gLTPR |%s| L %Iu/%d (%d)", __func__, dest, pXb->length(), lineCols, xIns );
    // Assert( lineCols == lineChars );
 
    if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
@@ -1623,6 +1623,8 @@ int FBUF::GetLineForInsert( PXbuf pXb, const LINE yLine, COL xIns, COL insertCol
 //--------------------------------------------------------------------------------------------------
 
 #ifdef fn_csort
+
+#error
 
 struct LineSortRec {
    LINE    yLine;
@@ -2095,7 +2097,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
    const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
    const auto twd( FBdest->TabWidth() );
    {
-   const auto pDestSplit( PtrOfColWithinStringRegion( twd, xbFirst.wbuf(), xbFirst.wbuf()+xbFirst.len(), xDst ) ); // dest text PAST insertion point
+   const auto pDestSplit( PtrOfColWithinStringRegion( twd, xbFirst.wbuf(), xbFirst.wbuf()+xbFirst.length(), xDst ) ); // dest text PAST insertion point
    auto taillen( Strlen( pDestSplit ) );
    auto srcbuf( xbLast.wresize( xSrcEnd + taillen + 1 ) );  // worst case, ignores possible tab compression
    strcpy( PtrOfColWithinStringRegion( twd, srcbuf, Eos(srcbuf), xSrcEnd ), pDestSplit ); // dest text PAST insertion point -> srcbuf past xSrcEnd
@@ -2106,7 +2108,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
    //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
    if( FBsrc ) {
       FBsrc->GetLineForInsert( &xbLast, ySrcStart, xSrcStart, 0 );
-      const auto pSrc( PtrOfColWithinStringRegion( FBsrc->TabWidth(), xbLast.wbuf(), xbLast.wbuf()+xbLast.len(), xSrcStart ) );
+      const auto pSrc( PtrOfColWithinStringRegion( FBsrc->TabWidth(), xbLast.wbuf(), xbLast.wbuf()+xbLast.length(), xSrcStart ) );
             auto taillen( Strlen( pSrc ) );
       const auto dstbuf( xbFirst.wresize( xDst + taillen + 1 ) );
       const auto pDestSplit( PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst ) ); // dest text PAST insertion point

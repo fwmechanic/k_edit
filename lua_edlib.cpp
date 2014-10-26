@@ -410,7 +410,7 @@ FBUF_(GetLine) {
       Xbuf xb; auto pXb(&xb);
  #endif
       pf->getLineTabx( pXb, lnum );
-      R_lstr( pXb->c_str(), pXb->len() );
+      R_lstr( pXb->c_str(), pXb->length() );
       }
    R_nil();
    }
@@ -438,7 +438,7 @@ FBUF_(GetLineSeg) {
       Xbuf xb; auto pXb(&xb);
  #endif
       const auto chars( pf->GetLineSeg( *pXb, lnum, xLeftIncl, xRightIncl ) );
-      R_lstr( pXb->c_str(), pXb->len() );
+      R_lstr( pXb->c_str(), pXb->length() );
       }
    R_nil();
    }

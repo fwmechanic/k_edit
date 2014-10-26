@@ -29,8 +29,8 @@ extern PFBUF g_pFBufConsole      ;
 extern PFBUF g_pFbufClipboard    ;
 extern PFBUF g_pFBufCmdlineFiles ;
 
-extern Xbuf  g_SnR_szSearch          ;
-extern Xbuf  g_SnR_szReplacement     ;
+extern std::string  g_SnR_szSearch      ;
+extern std::string  g_SnR_szReplacement ;
 
 
 enum { EdKC_Count = 256+273+90

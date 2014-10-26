@@ -860,8 +860,8 @@ STIL void ClrInRecordDQuote() {        s_fInRecordDQuote = false ; }
 
 STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
    const auto lastLine( g_pFbufRecord->LastLine() );
-   Xbuf xb;
-   g_pFbufRecord->getLineRaw( &xb, lastLine );
+   std::string xb;
+   g_pFbufRecord->getLineRaw( xb, lastLine );
 
    linebuf lbufNew;
    if( pCmd->IsFnGraphic() ) {
@@ -884,22 +884,24 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       }
    else {
       if( RecordingInDQuote() ) {
-         xb.cat( "\" " );
+         xb += "\" ";
          ClrInRecordDQuote();
          }
       else {
-         xb.cat( " " );
+         xb += " ";
          }
 
       SafeStrcpy( lbufNew, pCmd->Name() );
       }
 
-   if( xb.len() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
-      g_pFbufRecord->PutLine( lastLine  , xb.cat( " \\" ) );
-      g_pFbufRecord->PutLine( lastLine+1, lbufNew   );
+   if( xb.length() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
+      xb += " \\";
+      g_pFbufRecord->PutLine( lastLine  , xb.c_str() );
+      g_pFbufRecord->PutLine( lastLine+1, lbufNew    );
       }
    else {
-      g_pFbufRecord->PutLine( lastLine  , xb.cat( lbufNew ) );
+      xb += lbufNew;
+      g_pFbufRecord->PutLine( lastLine  , xb.c_str() );
       }
 
    MoveCursorToEofAllWindows( g_pFbufRecord );
@@ -1174,7 +1176,7 @@ AL2MSS MacroScanIntf::AppendLineToMacroSrcString() {
          return FOUND_TAG;
          }
 
-      const auto oNewLineSeg( d_dest.len() );
+      const auto oNewLineSeg( d_dest.length() );
       d_dest.cat( d_src.c_str() );
       CPChar parse( d_dest.wbuf() + oNewLineSeg );  DBGEN && DBG( "L %d |%s|", d_yMacCur + 1, parse );
       const auto continues( ParseRawMacroText_ContinuesNextLine( parse ) );

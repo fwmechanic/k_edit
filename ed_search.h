@@ -29,7 +29,7 @@ class CapturedStrings {
    // a nonexistent capture (both have Len()==0, and Str()=="")
    //
    PCChar Str( int ix ) const { return (ix < d_maxCount) ? PCChar(d_pCs[ix].c_str()) : ""; }
-   int    Len( int ix ) const { return (ix < d_maxCount) ?        d_pCs[ix].len()   : 0 ; }
+   int    Len( int ix ) const { return (ix < d_maxCount) ?        d_pCs[ix].length()   : 0 ; }
    int    Count()       const { return       d_maxCount; }
 
    void Clear() {

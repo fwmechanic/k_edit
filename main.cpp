@@ -211,7 +211,7 @@ STATIC_CONST char kszSRC[] = "SRC:";
 STATIC_FXN bool recovSRC( PCChar lbuf ) {
    const auto fFailed( ToBOOL( Strnicmp( lbuf, kszSRC, KSTRLEN(kszSRC) ) ) );
    if( !fFailed )
-      g_SnR_szSearch.cpy( lbuf+KSTRLEN(kszSRC) );
+      g_SnR_szSearch = lbuf+KSTRLEN(kszSRC);
    return fFailed;
    }
 STATIC_FXN void saveSRC( FILE *fout ) { fprintf( fout, "%s%s\n", kszSRC, g_SnR_szSearch.c_str() ); }
@@ -220,7 +220,7 @@ STATIC_CONST char kszDST[] = "DST:";
 STATIC_FXN bool recovDST( PCChar lbuf ) {
    const auto fFailed( ToBOOL( Strnicmp( lbuf, kszDST, KSTRLEN(kszDST) ) ) );
    if( !fFailed )
-      g_SnR_szReplacement.cpy( lbuf+KSTRLEN(kszDST) );
+      g_SnR_szReplacement = lbuf+KSTRLEN(kszDST);
    return fFailed;
    }
 STATIC_FXN void saveDST( FILE *fout ) { fprintf( fout, "%s%s\n", kszDST, g_SnR_szReplacement.c_str() ); }

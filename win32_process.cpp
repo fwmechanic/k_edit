@@ -348,7 +348,7 @@ int TPipeReader::GetFilteredLine( PXbuf xb ) {
 
          case HTAB:  { // expand to spaces            01234567
                      STATIC_CONST char tabspaces[] = "        ";
-                     xb->cat( tabspaces+( xb->len() & (MAX_TAB_WIDTH-1)) );
+                     xb->cat( tabspaces+( xb->length() & (MAX_TAB_WIDTH-1)) );
                      }break;
 
          default:    xb->cat_ch( lastCh );
@@ -358,7 +358,7 @@ int TPipeReader::GetFilteredLine( PXbuf xb ) {
 
 END_OF_LINE:
 
-   return !(lastCh == EMPTY && 0 == xb->len());
+   return !(lastCh == EMPTY && 0 == xb->length());
    }
 
 
