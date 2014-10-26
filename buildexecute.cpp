@@ -1165,7 +1165,6 @@ bool ARG::lasttext() {
       default:        return BadArg();
       case NULLARG:   cArg = d_cArg;  //lint -fallthrough
       case NOARG:     cArg++;
-                      // TextArgBuffer().can_deref();
                       break;
 
       case LINEARG:   g_CurFBuf()->GetLineSeg( TextArgBuffer(), d_linearg.yMin, 0, COL_MAX );

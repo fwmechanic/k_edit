@@ -269,7 +269,6 @@ class Xbuf {
    // ever-growing line buffer intended to be used for all lines touched over
    // the duration of a command or operation, in lieu of malloc'ing a buffer for
    // each line touched.
-   #define  XBUF_CAN_DEREF_0  1
 
    PChar                  d_buf;
    size_t                 d_buf_bytes;
@@ -278,11 +277,7 @@ class Xbuf {
    public:
 
    Xbuf()
-#if XBUF_CAN_DEREF_0
       : d_buf      ( &ds_empty )
-#else
-      : d_buf      ( nullptr )
-#endif
       , d_buf_bytes( 0 )
       {}
 
@@ -307,9 +302,7 @@ class Xbuf {
       { cpy2( str1, str2 ); }
 
    ~Xbuf() {
-        #if XBUF_CAN_DEREF_0
           if( &ds_empty==d_buf ) {} else
-        #endif
           { Free_( d_buf ); }
           }
 
@@ -319,24 +312,12 @@ public:
    size_t                 buf_bytes() const { return d_buf_bytes; }
    void                   clear()           { poke( 0, '\0' );    }
    bool                   is_clear()  const
-#if XBUF_CAN_DEREF_0
                                             { return !(         d_buf[0]); }
-#else
-                                            { return !(d_buf && d_buf[0]); }
-#endif
-   void                   can_deref()
-#if XBUF_CAN_DEREF_0
-                                            {}
-#else
-                                            { if(!d_buf) clear(); }
-#endif
 
    PChar wresize( size_t size ) {
       if( d_buf_bytes < size ) {
           d_buf_bytes = ROUNDUP_TO_NEXT_POWER2( size, 512 );
-#if XBUF_CAN_DEREF_0
           if( &ds_empty==d_buf ) { d_buf = nullptr; }
-#endif
           ReallocArray( d_buf, d_buf_bytes, __func__ );
          }
       return d_buf;
@@ -345,9 +326,6 @@ public:
    PCChar kresize( size_t size ) { return wresize( size ); }
 
    size_t length() {
-#if !XBUF_CAN_DEREF_0
-      if( !d_buf ) return 0;
-#endif
       const auto pnul( CPChar( memchr( d_buf, 0, d_buf_bytes ) ) );
       return pnul ? pnul - d_buf : 0;
       }

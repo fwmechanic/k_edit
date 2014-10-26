@@ -1184,7 +1184,7 @@ AL2MSS MacroScanIntf::AppendLineToMacroSrcString() {
          return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
          }
       }
-   return (d_dest.can_deref(),!IsStringBlank( d_dest.c_str() )) ? HAVE_CONTENT: BLANK_LINE;
+   return !IsStringBlank( d_dest.c_str() ) ? HAVE_CONTENT : BLANK_LINE;
    }
 
 bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) {
