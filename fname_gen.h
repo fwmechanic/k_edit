@@ -13,7 +13,6 @@ class PathStrGenerator {  // interface class
 public:
    PathStrGenerator() {}
    virtual bool VGetNextName( Path::str_t &dest ) = 0;
-   virtual bool VGetNextName( PXbuf dest ) = 0;
    virtual ~PathStrGenerator() {}
    }; STD_TYPEDEFS( PathStrGenerator )
 
@@ -27,7 +26,6 @@ public:
    WildcardFilenameGenerator( PCChar string, WildCardMatchMode matchMode=ONLY_FILES ) : d_dm( string, nullptr, matchMode ) {}
    // DTOR auto-generated
    bool VGetNextName( Path::str_t &dest ) override;
-   bool VGetNextName( PXbuf dest ) override;
    };
 
 class DirListGenerator : public PathStrGenerator {
@@ -44,7 +42,6 @@ public:
    DirListGenerator( PCChar dirName=nullptr );
    ~DirListGenerator();
 
-   bool VGetNextName( PXbuf dest ) override;
    bool VGetNextName( Path::str_t &dest ) override;
    };
 
@@ -106,7 +103,6 @@ class CfxFilenameGenerator : public PathStrGenerator {
    public:
 
    CfxFilenameGenerator( PCChar macroText, WildCardMatchMode matchMode );
-   bool VGetNextName( PXbuf dest ) override;
    bool VGetNextName( Path::str_t &dest ) override;
    virtual ~CfxFilenameGenerator();
    };
@@ -125,7 +121,6 @@ class FilelistCfxFilenameGenerator : public PathStrGenerator {
    public:
 
    FilelistCfxFilenameGenerator( PFBUF pFBuf ) : d_pFBuf( pFBuf ) {}
-   bool VGetNextName( PXbuf dest ) override;
    bool VGetNextName( Path::str_t &dest ) override;
    virtual ~FilelistCfxFilenameGenerator() { Delete0( d_pCfxGen ); }
    };
