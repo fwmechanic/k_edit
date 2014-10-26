@@ -1518,6 +1518,42 @@ COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl
    return st.length();
    }
 
+COL FBUF::GetLineSeg( Xbuf &pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
+   const auto tw( TabWidth() );
+   PCChar lnptr; size_t lnchars;
+   if(  yLine >= 0
+     && xLeftIncl <= xRightIncl
+     && PeekRawLineExists( yLine, &lnptr, &lnchars )
+     && xLeftIncl < StrCols( tw, lnptr, lnptr+lnchars )
+     ) {
+# if 1
+      const auto pLeft ( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xLeftIncl  ) );
+      const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
+      const auto chars( pRight - pLeft + 1 );
+      const auto bufsize( 1+chars );
+      0 && DBG( "%s [%d,%p L %Iu][%d..%d]P:%p,%p (%Iu)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, bufsize );
+      const auto buf( pXb.wresize( bufsize ) );
+      const auto rv( safeStrcpy( buf, bufsize, pLeft, pRight+1 ) );
+# else
+      Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
+      const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
+      const auto buf( pXb.wresize( size ) );
+      const auto rv( PrettifyStrcpy( buf, size, lnptr, lnchars, tw, ' ', xLeftIncl ) );
+# endif
+      if( 0 ) {
+         auto xbuf( pXb.c_str() );
+         linebuf lb;
+         PrettifyStrcpy( lb, sizeof lb, xbuf, Strlen(xbuf), 1, '^', 0, g_chTrailSpaceDisp );
+         DBG( "%s [%d][%d..%d]S:%d=|%s|", __func__, yLine, xLeftIncl, xRightIncl, Strlen(lb), lb );
+         }
+      return rv;
+      }
+   else {
+      pXb.clear();
+      return 0;
+      }
+   }
+
 COL FBUF::GetLineSeg( PXbuf pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
    const auto tw( TabWidth() );
    PCChar lnptr; size_t lnchars;
