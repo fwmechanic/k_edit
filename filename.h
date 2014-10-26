@@ -44,7 +44,14 @@ namespace Path {
    extern std::string CpyFnameExtOk( PCChar pSrcFullname );
    extern std::string Union        ( PCChar pFirst, PCChar pSecond );
    extern std::string Absolutize   ( PCChar pszFilename );
-   extern std::string CanonizeCase ( PCChar fnmBuf );
+   // extern
+          std::string CanonizeCase ( PCChar fnmBuf )
+#if defined(_WIN32)
+      ;
+#else
+      { return std::string( fnmBuf ); }
+#endif
+   ;
    extern int   strcmp( const std::string &name1, const std::string &name2 ); // with appropriate case-sensitivity
    extern char  DelimChar( PCChar fnm );
    };

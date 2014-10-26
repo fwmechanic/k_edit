@@ -512,6 +512,8 @@ namespace LuaCtxt_Edit {
    // dest regardless.
    //
    extern bool  ExpandEnvVarsOk( PXbuf pxb );
+   extern bool  ExpandEnvVarsOk( std::string &st );
+
    extern bool  from_C_lookup_glock( PXbuf pxb );
    extern void  LocnListInsertCursor();  // intf into Lua locn-list subsys
 

@@ -548,12 +548,11 @@ NEXT_SSG_COMBINATION:
 
       Delete0( d_pSSG );
       }
-
+   d_pszEntrySuffix = d_splitLine.GetNext(
 #if DICING
-   d_pszEntrySuffix = d_splitLine.GetNext( d_pszEntrySuffix );
-#else
-   d_pszEntrySuffix = d_splitLine.GetNext();
+                                           d_pszEntrySuffix
 #endif
+                                                            );
 
    if( d_pszEntrySuffix ) {
       MFSPEC_D && DBG( "%s+ ENVMAP <= '%s'", __func__, d_pszEntrySuffix );

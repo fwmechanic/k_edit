@@ -233,6 +233,7 @@ const std::string DirMatches::GetNext() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#if defined(_WIN32)
 std::string Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 };
    /* If a filesystem is NOT case sensitive, we could, by typing different
       casings of the filename, open the same file into multiple edit buffers,
@@ -295,6 +296,7 @@ std::string Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 
                                                                        DBG_ABS_PATH && DBG( "%s- rv='%s'", __func__, pbs.c_str() );
    return pbs;
    }
+#endif
 
 bool FileOrDirExists( PCChar pszFileName ) {
    FileAttribs fa( pszFileName );

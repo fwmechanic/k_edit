@@ -782,13 +782,14 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
    for( narg=0 ; *szSig ; ++narg, ++szSig ) {
       switch( *szSig ) {
        default:   return Msg( "%s: invalid param-type[%Id] (%c)", szFuncnm, (szSig - pszSigStart), szSig[0] );
-       case 'F':  l_construct_FBUF( L, va_arg(vl, PFBUF )         );  break;
-       case 'V':  l_construct_View( L, va_arg(vl, PView )         );  break;
-       case 'd':  lua_pushnumber(   L, va_arg(vl, double)         );  break;
-       case 'i':  lua_pushinteger(  L, va_arg(vl, int   )         );  break;
-       case 'b':  lua_pushboolean(  L, va_arg(vl, int   ) != 0    );  break; // NB: boolean is an int-sized thing!
-       case 's':  lua_pushstring(   L, va_arg(vl, PCChar)         );  break;
-       case 'x':  lua_pushstring(   L, va_arg(vl, PXbuf )->kbuf() );  break;
+       case 'F':  l_construct_FBUF( L, va_arg(vl, PFBUF )                 );  break;
+       case 'V':  l_construct_View( L, va_arg(vl, PView )                 );  break;
+       case 'd':  lua_pushnumber(   L, va_arg(vl, double)                 );  break;
+       case 'i':  lua_pushinteger(  L, va_arg(vl, int   )                 );  break;
+       case 'b':  lua_pushboolean(  L, va_arg(vl, int   ) != 0            );  break; // NB: boolean is an int-sized thing!
+       case 's':  lua_pushstring(   L, va_arg(vl, PCChar)                 );  break;
+       case 'S':  lua_pushstring(   L, va_arg(vl, std::string *)->c_str() );  break;
+       case 'x':  lua_pushstring(   L, va_arg(vl, PXbuf )->kbuf()         );  break;
        case '>':  goto CALL_LUA_FUNCTION;
        }
       luaL_checkstack( L, 1, "too many arguments" );
@@ -826,6 +827,14 @@ CALL_LUA_FUNCTION:
                   auto psd( va_arg(vl, PStrDest) );
                   psd->BindBuf( pDest, srcBytes );
                   psd->CopyTo( pSrc, srcBytes );
+                  }
+                  break;
+
+       case 'S':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
+                  {
+                  size_t srcBytes;
+                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );
+                  va_arg(vl, std::string *)->assign( pSrc, srcBytes );
                   }
                   break;
 
@@ -906,6 +915,10 @@ STIL bool Lua_x2x( lua_State *L, PCChar functionName, PXbuf pxb ) {
    return callLuaOk( L, functionName, "x>x", pxb, pxb );
    }
 
+STIL bool Lua_S2S( lua_State *L, PCChar functionName, std::string &inout ) {
+   return callLuaOk( L, functionName, "S>S", &inout, &inout );
+   }
+
 STATIC_FXN PChar Lua_s2h( lua_State *L, PCChar functionName, PCChar src ) {
    StrDest sbDest( 0, 0 );
    const auto ok( callLuaOk( L, functionName, "s>h", src, &sbDest ) );
@@ -915,8 +928,8 @@ STATIC_FXN PChar Lua_s2h( lua_State *L, PCChar functionName, PCChar src ) {
    }
 
 bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( PXbuf pxb ) { return Lua_x2x( L_edit, "StrExpandEnvVars"        , pxb ); }
+bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( std::string &st ) { return Lua_S2S( L_edit, "StrExpandEnvVars"  , st  ); }
 bool  LuaCtxt_Edit::from_C_lookup_glock( PXbuf pxb ) { return Lua_x2x( L_edit, "Lua_from_C_lookup_glock" , pxb ); }
-
 
 //
 // reliable reading of Lua global variables (including '.'-separated table expressions) from C
