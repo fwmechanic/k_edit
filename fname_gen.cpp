@@ -637,8 +637,9 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
          }
 
       const auto fname( Path::CpyFnameExtOk( pszSrc ) );                              VERBOSE && DBG( "%s *** '%s' name='%s'", __func__, pszSrc, fname.c_str() );
-      if( HasWildcard( fname.c_str() ) )
+      if( HasWildcard( fname.c_str() ) ) {
          goto OUTPUT_EQ_INPUT;
+         }
 
       auto path( Path::CpyDirOk( pszSrc ) );                                          VERBOSE && DBG( "%s *** '%s' path='%s'", __func__, pszSrc, path.c_str() );
       if( path.empty() ) {
@@ -650,7 +651,7 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
          }
       CfxFilenameGenerator mfg( path.c_str(), ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
-         dest += fname.c_str();                                                       VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
+         dest += fname;                                                               VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
          }
       else {
