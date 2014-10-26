@@ -936,13 +936,9 @@ Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    }
 
 void FBOP::AssignFromRsrc( PCFBUF fb ) {
-   // there are TWO purposes for this function:
-   // 1. assign "curfile..." macros based on this FBUF
-   // 2. load rsrc file section for extension of this FBUF
-   //
+   // 1. assigns "curfile..." macros based on this FBUF
+   // 2. loads rsrc file section for extension of this FBUF
    0 && DBG( "%s '%s'", __func__, fb->Name() );
-   const auto fHasWildcard( FnmIsLogicalWildcard( fb->Name() ) );
-   //--------------------------------------------------------------------------
 #if MACRO_BACKSLASH_ESCAPES
    dbllinebuf dblbuf;
    Pathbuf pbuf( fb->Name() );
@@ -951,21 +947,11 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
 #else
    DefineMacro( "curfile", fb->Name() );
 #endif
-   //--------------------------------------------------------------------------
    DefineMacro( "curfilename", Path::CpyFnameOk( fb->Name() ).c_str() );
-   //--------------------------------------------------------------------------
-   DefineMacro( "curfilepath", Path::CpyDirOk( fb->Name() ).c_str() );
-   //--------------------------------------------------------------------------
-   //
-   // Path::CpyExtOk MUST BE THE LAST ASSIGNMENT TO pbuf because its output is
-   // param to LoadFileExtRsrcIniSection() called at end of this function!
-   //
-   // Also, we want ALL OF curfile, curfilepath, curfilename and curfileext to
-   // be set BEFORE LoadFileExtRsrcIniSection() is called.
-   //
-   {
-   std::string ext;
-   if( fHasWildcard ) {
+   DefineMacro( "curfilepath", Path::CpyDirOk  ( fb->Name() ).c_str() );
+
+   std::string ext;  // param to BOTH DefineMacro and LoadFileExtRsrcIniSection()!
+   if( FnmIsLogicalWildcard( fb->Name() ) ) {
       ext = ".*";
       }
    else {
@@ -974,10 +960,9 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {
          ext = !fb->FnmIsDiskWritable() ? ".<>" : ".";
       }
    DefineMacro( "curfileext", ext.c_str() );
-   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   // must have set ALL OF curfile, curfilepath, curfilename, curfileext BEFORE calling LoadFileExtRsrcIniSection()
    if( !fb->IsRsrcLdBlocked() )
       LoadFileExtRsrcIniSection( ext.c_str() );
-   }
    //--------------------------------------------------------------------------
    }
 
