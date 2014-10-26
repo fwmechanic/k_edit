@@ -48,34 +48,34 @@ bool Path::IsDotOrDotDot( PCChar pC ) { // true if pC _ends with_ "\.." or "\." 
        ;
    }
 
-int Path::strcmp( const std::string &name1, const std::string &name2 ) {
+int Path::strcmp( const Path::str_t &name1, const Path::str_t &name2 ) {
    return WL( Stricmp, Strcmp )( name1.c_str(), name2.c_str() );
    }
 
-std::string Path::CpyDirOk( PCChar pSrcFullname ) {                                       0 && DBG( "%s  in =%s'", __func__, pSrcFullname );
-   std::string rv( pSrcFullname, PPastLastPathSep( pSrcFullname ) - pSrcFullname );       0 && DBG( "%s  out=%s'", __func__, rv.c_str()   );
+Path::str_t Path::CpyDirOk( PCChar pSrcFullname ) {                                       0 && DBG( "%s  in =%s'", __func__, pSrcFullname );
+   Path::str_t rv( pSrcFullname, PPastLastPathSep( pSrcFullname ) - pSrcFullname );       0 && DBG( "%s  out=%s'", __func__, rv.c_str()   );
    return rv;
    }
 
-std::string Path::CpyFnameOk( PCChar pSrcFullname ) { // DOES NOT include the trailing "." !!!
+Path::str_t Path::CpyFnameOk( PCChar pSrcFullname ) { // DOES NOT include the trailing "." !!!
    const auto pC( PPastLastPathSep( pSrcFullname ) );
    auto pEnd( Path::IsDotOrDotDot( pC ) ? Eos( pC ) : PAtLastDotOrEos( pC ) );
-   return std::string( pC, pEnd - pC );
+   return Path::str_t( pC, pEnd - pC );
    }
 
-std::string Path::CpyExtOk( PCChar pSrcFullname ) { // if pSrcFullname contains an extension, prepends a leading "."
+Path::str_t Path::CpyExtOk( PCChar pSrcFullname ) { // if pSrcFullname contains an extension, prepends a leading "."
    const auto pC( PPastLastPathSep( pSrcFullname ) );
    if( Path::IsDotOrDotDot( pC ) ) {
-      return std::string( "" );
+      return Path::str_t( "" );
       }
-   return std::string( PAtLastDotOrEos( pC ) );
+   return Path::str_t( PAtLastDotOrEos( pC ) );
    }
 
-std::string Path::CpyFnameExtOk( PCChar pSrcFullname ) {
+Path::str_t Path::CpyFnameExtOk( PCChar pSrcFullname ) {
    return Path::CpyFnameOk( pSrcFullname ) + Path::CpyExtOk( pSrcFullname );
    }
 
-std::string Path::Union( PCChar pFirst, PCChar pSecond ) { enum { DB=0 };
+Path::str_t Path::Union( PCChar pFirst, PCChar pSecond ) { enum { DB=0 };
    // dest = (Path::CpyDirOk  ( pFirst ) || Path::CpyDirOk  ( pSecond ))
    //      + (Path::CpyFnameOk( pFirst ) || Path::CpyFnameOk( pSecond ))
    //      + (Path::CpyExtOk  ( pFirst ) || Path::CpyExtOk  ( pSecond ))
@@ -118,7 +118,7 @@ DirMatches::~DirMatches() {
 DirMatches::DirMatches( PCChar pszPrefix, PCChar pszSuffix, WildCardMatchMode wcMode, bool fAbsolutize )
    : d_wcMode( wcMode )
    , d_fTriedFirst(false)
-   , d_buf( std::string(pszPrefix ? pszPrefix : "") + std::string(pszSuffix ? pszSuffix : "") )
+   , d_buf( Path::str_t(pszPrefix ? pszPrefix : "") + Path::str_t(pszSuffix ? pszSuffix : "") )
 #if defined(_WIN32)
    , d_hFindFile( Win32::Invalid_Handle_Value() )
 #else

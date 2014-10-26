@@ -1100,7 +1100,7 @@ public:
 
    //************ FBUF name
 private:
-   std::string    d_filename; // on heap
+   Path::str_t    d_filename; // on heap
    bool           d_fFnmDiskWritable;
    void           ChangeName( PCChar newName );  // THE ONLY PLACE WHERE AN FBUF's NAME MAY BE SET!!!
 
@@ -1450,7 +1450,7 @@ public:
 
    int            GetLineForInsert     (  PXbuf pXb, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( PXbuf pXb, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
-   int            GetLineIsolateFilename( std::string &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
+   int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
 
    bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, size_t *pChars ) const; // returns RAW line content BY REFERENCE
    bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos  ) const; // returns RAW line content BY REFERENCE
@@ -1568,7 +1568,7 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    extern void    CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd );
 
    extern void    AssignFromRsrc( PCFBUF fb );
-   extern std::string GetRsrcExt( PCFBUF fb );
+   extern Path::str_t GetRsrcExt( PCFBUF fb );
 
 
    //************ Insert Lines in sorted order

@@ -215,8 +215,8 @@ class MainThreadPerfCounter : public PerfCounter {
 
 
 class OsEnv {
-   std::string d_exe_path;  // "C:\dir1\dir2\" (includes trailing '\')
-   std::string d_exe_name;  // "k"
+   Path::str_t d_exe_path;  // "C:\dir1\dir2\" (includes trailing '\')
+   Path::str_t d_exe_name;  // "k"
 
    public: //===================================================================
 
@@ -271,7 +271,7 @@ enum WildCardMatchMode { ONLY_FILES=1, ONLY_DIRS=2, FILES_AND_DIRS=ONLY_FILES | 
 class DirMatches {
    const WildCardMatchMode d_wcMode;
    bool                    d_fTriedFirst;
-   std::string             d_buf;
+   Path::str_t             d_buf;
    size_t                  d_ixDest;
 
 #if defined(_WIN32)
@@ -293,5 +293,5 @@ class DirMatches {
     DirMatches( PCChar pszPrefix, PCChar pszSuffix=nullptr, WildCardMatchMode wcMode=FILES_AND_DIRS, bool fAbsolutize=true );
    ~DirMatches();
 
-   const std::string GetNext();
+   const Path::str_t GetNext();
    }; STD_TYPEDEFS(DirMatches)

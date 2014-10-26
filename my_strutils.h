@@ -245,10 +245,6 @@ STIL void insert_hole( PChar b, size_t sizeof_b, int xCol, int insertWidth=1 )
    memmove( b+xCol+insertWidth, b+xCol, (sizeof_b-1) - (xCol+insertWidth) );
    }
 
-namespace Path {  // hack!
-   extern std::string  Absolutize( PCChar pszFilename );
-   };
-
 template <int elements>
 class FixedCharArray {
    char b[ elements ];

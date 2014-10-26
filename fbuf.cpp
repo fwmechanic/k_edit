@@ -915,7 +915,7 @@ STATIC_FXN bool vsPrintfAssign( PCChar pFormat, ... ) {
    return AssignStrOk( outbuf );
    }
 
-std::string FBOP::GetRsrcExt( PCFBUF fb ) {
+Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    const auto pbuf( fb->Name() );
    auto dest( Path::CpyExtOk( pbuf ) );
    if( dest.length() == 0 ) {
@@ -1442,7 +1442,7 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
 
 bool FBUF::write_to_disk( PCChar destFileNm ) {
    // BUGBUG there are security-hazard file/directory race conditions to be found here!
-   std::string destFnm( destFileNm );
+   Path::str_t destFnm( destFileNm );
 
 #if 0
    //
@@ -1524,7 +1524,7 @@ void FBUF::ChangeName( PCChar newName ) { // THE ONLY PLACE WHERE AN FBUF's NAME
    }
 
 bool FBUF::WriteToDisk( PCChar pszSavename ) {
-   std::string dest;
+   Path::str_t dest;
    if( pszSavename && *pszSavename ) {
       dest = Path::Absolutize( pszSavename );
       if( dest.length() == 0 ) {
@@ -1533,7 +1533,7 @@ bool FBUF::WriteToDisk( PCChar pszSavename ) {
       }
 
    const auto fFnmChanging( dest[0] && !NameMatch( dest.c_str() ) );
-   std::string pseudoFnm;
+   Path::str_t pseudoFnm;
    PPFBUF gp( nullptr );  // if it has a gp, it is a pseudo file
    if( !fFnmChanging )             dest      = Name();
    else if( (gp=GetGlobalPtr()) )  pseudoFnm = Name();  // if it is a pseudo file w/a gp, it needs to hang around
@@ -1608,7 +1608,7 @@ STATIC_FXN bool IfOnlyOneFilespecInCurWcFileSwitchToIt() {
    if( pFBuf->LineCount() != 1 )
       return true;
 
-   std::string fnm;
+   Path::str_t fnm;
    if( pFBuf->GetLineIsolateFilename( fnm, 0, 0 ) < 1 ) // read first line from pseudofile
       return Msg( "GetLineIsolateFilename(0) failed!" );
 
@@ -1879,7 +1879,7 @@ bool ARG::shex() {
 
 bool ARG::setfile() {
    MainThreadPerfCounter pc;
-   std::string fnm;
+   Path::str_t fnm;
 
    switch( d_argType ) {
     default:      return BadArg(); //--------------------------------------------

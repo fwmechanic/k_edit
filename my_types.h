@@ -186,6 +186,10 @@ STD_TYPEDEF2( char, Char )
 STD_TYPEDEF2( void, Void )
 STD_TYPEDEF2( int , Int  )
 
+namespace Path {
+   typedef std::string str_t;
+   };
+
 // readability template macros
 
 template<typename T> inline T    Min( T t1, T t2 )    { return t1 < t2 ? t1 : t2; }

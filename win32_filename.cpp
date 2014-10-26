@@ -85,7 +85,7 @@ STATIC_FXN void LowerDriveLetter( PChar pbuf ) {
        pbuf[0] = tolower( pbuf[0] );
    }
 
-std::string Path::GetCwd() {
+Path::str_t Path::GetCwd() {
    pathbuf pbuf;
    if( !_getcwd( BSOB( pbuf ) ) )
       pbuf[0] = '\0';
@@ -93,17 +93,17 @@ std::string Path::GetCwd() {
       LowerDriveLetter( pbuf );
 
    _strlwr( pbuf );
-   return std::string( pbuf );
+   return Path::str_t( pbuf );
    }
 
-std::string Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
+Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
 #ifdef BOOST_LIB_VERSION
    boost::filesystem::path src( pszFilename );
    boost::system::error_code ec;
    auto boost_dest( canonical( src, ec ) );
-   // std::string destgs( boost_dest.generic_string() );
+   // Path::str_t destgs( boost_dest.generic_string() );
    // DBG( "%s Boost '%s' -> '%s'", __func__, pszFilename, destgs.c_str() );
-   std::string dests( boost_dest.string() );
+   Path::str_t dests( boost_dest.string() );
    DBG( "%s Boost '%s' -> '%s'", __func__, pszFilename, dests.c_str() );
 #endif
    /* old code, works fine but uses Win32 API explicitly
@@ -118,7 +118,7 @@ std::string Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
    if( !Win32::GetFullPathName( pszFilename, sizeof pbuf, pbuf, &dummy ) ) {
       // DEBUG_FXN &&
       DBG( "%s- '%s' -> '%s'", __func__, pszFilename, pbuf );
-      return std::string("");
+      return Path::str_t("");
       }
    }
    // site:microsoft.com Win32 File Namespaces
@@ -127,7 +127,7 @@ std::string Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
    if( memcmp( pbuf, kszDevicePrefix, KSTRLEN(kszDevicePrefix) ) == 0 ) { // Win32::GetFullPathName returned a DEVICE-space name?
       // DEBUG_FXN &&
       DBG( "%s- '%s' -> '%s' is a DEVICE so FAILS", __func__, pszFilename, pbuf );
-      return std::string("");
+      return Path::str_t("");
       }
 
    DEBUG_FXN && DBG( "%s+ '%s' -> '%s'", __func__, pszFilename, pbuf );
@@ -211,15 +211,15 @@ bool DirMatches::FoundNext() {
 #endif
    }
 
-const std::string DirMatches::GetNext() {
+const Path::str_t DirMatches::GetNext() {
    if( d_ixDest == std::string::npos ) // already hit no-more-matches condition?
-      return std::string("");
+      return Path::str_t("");
 
    while( FoundNext() && !KeepMatch() )
       continue;
 
    if( d_ixDest == std::string::npos ) // already hit no-more-matches condition?
-      return std::string("");
+      return Path::str_t("");
 
    d_buf.replace( d_ixDest, std::string::npos, d_Win32_FindData.cFileName );
    if( ToBOOL(d_Win32_FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !Path::IsDotOrDotDot( d_buf.c_str() ) )
@@ -234,7 +234,7 @@ const std::string DirMatches::GetNext() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if defined(_WIN32)
-std::string Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 };
+Path::str_t Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 };
    /* If a filesystem is NOT case sensitive, we could, by typing different
       casings of the filename, open the same file into multiple edit buffers,
       and accidentally make parallel edits; leading to A DISASTER!
@@ -260,7 +260,7 @@ std::string Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 
       pNxtComponent++;
       }
 
-   std::string pbs( fnmBuf, pNxtComponent-fnmBuf ); // since path may grow due to (8.3-equivalent) -> longname expansion, we accumulate in pb
+   Path::str_t pbs( fnmBuf, pNxtComponent-fnmBuf ); // since path may grow due to (8.3-equivalent) -> longname expansion, we accumulate in pb
    if( hasDriveLetter ) {
       pbs[0] = tolower( pbs[0] );
       }

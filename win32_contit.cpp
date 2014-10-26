@@ -117,7 +117,7 @@ STATIC_VAR EditorFilesStatus s_edfs;
 //
 class CwdStatus : public TitleBarContributor {
    bool  d_fChanged;
-   std::string d_buf;
+   Path::str_t d_buf;
 
 public:
 

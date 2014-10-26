@@ -71,9 +71,9 @@ extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list va
 #define   use_vsnprintf  chkdVsnprintf
 
 #include "my_strutils.h"
+#include "filename.h"
 #include "dlink.h"
 #include "stringlist.h"
-#include "filename.h"
 #include "ed_core.h"
 
 #include "ed_os_generic.h"

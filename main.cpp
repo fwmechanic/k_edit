@@ -319,7 +319,7 @@ PChar RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext ) {
    return safeSprintf( dest, sizeofDest, "%s%s.%s", g_Process->ExePath(), g_Process->ExeName(), ext );
    }
 
-STATIC_VAR std::string s_stateFileDir;
+STATIC_VAR Path::str_t s_stateFileDir;
 
 PChar StateFilename( PChar dest, size_t sizeofDest, PCChar ext ) {
    return safeSprintf( dest, sizeofDest, "%s%s.%s", s_stateFileDir.c_str(), g_Process->ExeName(), ext );
@@ -643,9 +643,9 @@ STATIC_VAR PFBUF s_pFBufRsrc;
 STATIC_FXN bool OpenRsrcFileFailed() {
    if( s_pFBufRsrc ) return false;
 
-   STATIC_VAR std::string s_pszRsrcFilename;
+   STATIC_VAR Path::str_t s_pszRsrcFilename;
    if( s_pszRsrcFilename.empty() ) {
-      s_pszRsrcFilename = g_Process->ExePath() + static_cast<std::string>(".krsrc");
+      s_pszRsrcFilename = g_Process->ExePath() + static_cast<Path::str_t>(".krsrc");
       SearchEnvDirListForFile( s_pszRsrcFilename );
       }
 
@@ -845,7 +845,7 @@ STATIC_FXN int ReinitializeMacros( bool fEraseExistingMacros ) {
 
 //-------------------------------------------------------------------------------------------------------
 
-STATIC_VAR std::string s_szLastFileExtSectionLoaded;
+STATIC_VAR Path::str_t s_szLastFileExtSectionLoaded;
 
 STATIC_FXN bool LdFileExtRsrcSectionFound( PCChar pszSectionName ) {
    auto fDummy(0);

@@ -2726,7 +2726,7 @@ bool ARG::fg() { // fgrep
 
    if( TEXTARG == d_argType ) {
       srchfile = curfile;
-      std::string keysFnm( "$FGS" PATH_SEP_STR );  keysFnm += d_textarg.pText;
+      Path::str_t keysFnm( "$FGS" PATH_SEP_STR );  keysFnm += d_textarg.pText;
       curfile = OpenFileNotDir_NoCreate( keysFnm.c_str() );
       if( !curfile )
          return Msg( "Couldn't open '%s' [1]", origSrchFnm );

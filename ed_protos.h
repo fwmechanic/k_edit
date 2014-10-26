@@ -440,9 +440,9 @@ extern PCChar  LastExtTagLoaded();
 extern   COL   FirstNonBlankCh( PCChar str, int chars );
 extern   bool  PutCharIntoCurfileAtCursor( int theChar, PXbuf pxb );
 
-extern   void  SearchEnvDirListForFile( std::string &st, bool fKeepNameWildcard=false );
+extern   void  SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard=false );
 
-extern  std::string CompletelyExpandFName_wEnvVars( PCChar pszSrc );
+extern  Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc );
 
 extern  FileStat GetFileStat( PCChar fname );
 
@@ -511,7 +511,7 @@ namespace LuaCtxt_Edit {
    // dest regardless.
    //
    extern bool  ExpandEnvVarsOk( PXbuf pxb );
-   extern bool  ExpandEnvVarsOk( std::string &st );
+   extern bool  ExpandEnvVarsOk( Path::str_t &st );
 
    extern bool  from_C_lookup_glock( PXbuf pxb );
    extern void  LocnListInsertCursor();  // intf into Lua locn-list subsys

@@ -26,7 +26,7 @@ class Getopt
 
    protected:
 
-   std::string d_pgm; // name w/o path or extension
+   Path::str_t d_pgm; // name w/o path or extension
 
    public:
 

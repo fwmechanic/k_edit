@@ -135,7 +135,7 @@ STATIC_FXN bool IsolateFilename( PInt pMin, PInt pMax, PCChar pSrc, PCChar eos )
    return true;
    }
 
-int FBUF::GetLineIsolateFilename( std::string &st, LINE yLine, COL xCol ) const {
+int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const {
    PCChar bos, eos;
    if( !PeekRawLineExists( yLine, &bos, &eos ) )
       return -1;
@@ -191,7 +191,7 @@ int FBUF::GetLineIsolateFilename( PXbuf pXb, LINE yLine, COL xCol ) const {
 // ...Generator object
 //
 
-bool WildcardFilenameGenerator::VGetNextName( std::string &dest ) {
+bool WildcardFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    RTN_false_ON_BRK;
    dest = d_dm.GetNext();
    return !dest.empty();
@@ -199,7 +199,7 @@ bool WildcardFilenameGenerator::VGetNextName( std::string &dest ) {
 
 //-----------------------------------
 
-bool FilelistCfxFilenameGenerator::VGetNextName( std::string &dest ) {
+bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    dest.clear();
    while( true ) {
       if( d_pCfxGen ) {
@@ -246,7 +246,7 @@ class StrSubstituterGenerator {
       }; STD_TYPEDEFS( SubStrSubstituter )
 
    bool                         d_fCombinationsExhaused;
-   std::string                  d_pBaseString;
+   Path::str_t                  d_pBaseString;
    DLinkHead<SubStrSubstituter> d_SubStrSubstituter;
 
    public:
@@ -433,7 +433,7 @@ bool ARG::cfx() {
 
 //------------------------------------------------------------------------------
 
-bool DirListGenerator::VGetNextName( std::string &dest ) {
+bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
    if( d_output.IsEmpty() )
       return false;
 
@@ -451,14 +451,14 @@ void DirListGenerator::AddName( PCChar name ) {
 
 DirListGenerator::DirListGenerator( PCChar dirName ) {
    NewScope {
-      std::string pStartDir( dirName ? dirName : Path::GetCwd() );
+      Path::str_t pStartDir( dirName ? dirName : Path::GetCwd() );
       AddName( pStartDir.c_str() );
       }
 
-   std::string pbuf;
+   Path::str_t pbuf;
    while( auto pNxt=d_input.First() ) {
       DLINK_REMOVE_FIRST( d_input, pNxt, dlink );
-      pbuf = std::string( pNxt->string ) + (PATH_SEP_STR "*");
+      pbuf = Path::str_t( pNxt->string ) + (PATH_SEP_STR "*");
       FreeStringListEl( pNxt );
 
       0 && DBG( "Looking in ='%s'", pbuf.c_str() );
@@ -530,7 +530,7 @@ CfxFilenameGenerator::~CfxFilenameGenerator() {
    Delete0( d_pSSG );
    }
 
-bool CfxFilenameGenerator::VGetNextName( std::string &dest ) {
+bool CfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    RTN_false_ON_BRK;
    dest.clear();
 
@@ -640,7 +640,7 @@ NEXT_SSG_COMBINATION:
 // parameter into
 //
 
-STATIC_FXN void SearchEnvDirListForFile( std::string &dest, const PCChar pszSrc, bool fKeepNameWildcard ) { enum { VERBOSE=1 };
+STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc, bool fKeepNameWildcard ) { enum { VERBOSE=1 };
    if( fKeepNameWildcard ) {
       if(  ToBOOL( strchr( pszSrc, Path::chEnvSep ) )  // presence of Path::chEnvSep overrides fKeepNameWildcard (since what
         || FBUF::FnmIsPseudo( pszSrc )                 // follows only makes sense if pszSrc is a single filename)
@@ -684,17 +684,17 @@ OUTPUT_EQ_INPUT:
    dest = pszSrc;                                                                     VERBOSE && DBG( "%s '%s' => NO MATCH!", __func__, pszSrc );
    }
 
-void SearchEnvDirListForFile( std::string &st, bool fKeepNameWildcard ) {
+void SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard ) {
    ALLOCA_STRDUP( tmp, srcLen, st.c_str(), st.length() );
    SearchEnvDirListForFile( st, tmp, fKeepNameWildcard );
    }
 
-std::string CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
+Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
    if( FBUF::FnmIsPseudo( pszSrc ) ) {                               DB && DBG( "%s- (FnmIsPseudo) '%s'", __func__, pszSrc );
-      return std::string( pszSrc );
+      return Path::str_t( pszSrc );
       }
 
-   std::string st( pszSrc );
+   Path::str_t st( pszSrc );
    if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {
       DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
       }

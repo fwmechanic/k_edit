@@ -825,7 +825,7 @@ PCCMD GetTextargString( PXbuf xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
 
             pDirContent = new DirMatches( pbTabxBase, HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
             }
-         std::string nxt;
+         Path::str_t nxt;
          do {
             nxt = pDirContent->GetNext();
             } while( Path::IsDotOrDotDot( nxt.c_str() ) );

@@ -315,6 +315,6 @@ PChar _strlwr( PChar buf ) {
 
 #endif
 
-void string_tolower( std::string &inout ) {
+void string_tolower( Path::str_t &inout ) {
    std::transform( inout.begin(), inout.end(), inout.begin(), ::tolower );
    }
