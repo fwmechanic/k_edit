@@ -27,7 +27,7 @@ char FlipCase( char ch ) {
    }
 
 STATIC_FXN PChar GetLineSeg_( PFBUF pfb, PXbuf xb, LINE yLine, COL xLeftIncl, COL xRightIncl ) {
-   pfb->GetLineSeg( xb, yLine, xLeftIncl, xRightIncl );
+   pfb->GetLineSeg( *xb, yLine, xLeftIncl, xRightIncl );
    return xb->wbuf();
    }
 
@@ -306,7 +306,7 @@ int uint_log_10( int num ) {
 bool ARG::vrepeat() {
    Xbuf xb;
    auto lx( d_boxarg.flMin.lin );
-   g_CurFBuf()->GetLineSeg( &xb, lx++, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
+   g_CurFBuf()->GetLineSeg( xb, lx++, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
    CPCChar inbuf( xb.c_str() );
    0 && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
 

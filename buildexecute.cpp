@@ -906,7 +906,7 @@ PCCMD GetTextargString( Xbuf &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int
       else if( func == fn_right ) {
          if( g_CurFBuf() && xb.len() == xCursor ) {
             const auto xx( xColInFile + xCursor );
-            g_CurFBuf()->GetLineSeg( &xbTmp, g_CursorLine(), xx, xx );
+            g_CurFBuf()->GetLineSeg( xbTmp, g_CursorLine(), xx, xx );
             xb.poke( xCursor, xbTmp.c_str()[0] );
             }
          ++xCursor;

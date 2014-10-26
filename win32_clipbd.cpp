@@ -81,14 +81,14 @@ bool ARG::towinclip() {
       Msg( "%s->WinClip %d lines", srcNm ? srcNm : ArgTypeName(), (yMax - yMin)+1 );
 
       if( yMax == yMin ) {
-         pFBuf->GetLineSeg( &lbuf, yMin, xLeft, xRight ); // read line into our buffer
+         pFBuf->GetLineSeg( lbuf, yMin, xLeft, xRight ); // read line into our buffer
          goto SINGLE_LINE; // HACK O'RAMA!
          }
 
       // determine # of chars on each line
       long size(0);
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
-         size += pFBuf->GetLineSeg( &lbuf, lineNum, xLeft, xRight ) + 2; // + 2 for '\r\n'
+         size += pFBuf->GetLineSeg( lbuf, lineNum, xLeft, xRight ) + 2; // + 2 for '\r\n'
          }
 
       if( !PrepClip( size, &hglbCopy, &hglbBytes, &bufptr ) ) // +1 for trailing '\0'
@@ -97,7 +97,7 @@ bool ARG::towinclip() {
       // copy source data into into *bufptr
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
          const PCChar bs( bufptr );
-         const auto chars( pFBuf->GetLineSeg( &lbuf, lineNum, xLeft, xRight ) );
+         const auto chars( pFBuf->GetLineSeg( lbuf, lineNum, xLeft, xRight ) );
          memcpy( bufptr, lbuf.c_str(), chars );
          bufptr += chars;
          *bufptr++ = 0x0D; // line terminator '\r\n'
