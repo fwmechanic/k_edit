@@ -905,16 +905,6 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    return rv;
    }
 
-STATIC_FXN bool vsPrintfAssign( PCChar pFormat, ... ) ATTR_FORMAT(1, 2); // cannot merge this and following line: "error: attributes are not allowed on a function-definition"
-STATIC_FXN bool vsPrintfAssign( PCChar pFormat, ... ) {
-   va_list ap;
-   va_start( ap, pFormat );
-   FixedCharArray<(BUFBYTES*2)+1> outbuf;
-   outbuf.Vsprintf( pFormat, ap );
-   va_end( ap );
-   return AssignStrOk( outbuf );
-   }
-
 Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    const auto pbuf( fb->Name() );
    auto dest( Path::CpyExt( pbuf ) );
