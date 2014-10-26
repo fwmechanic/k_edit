@@ -40,8 +40,8 @@ void ClearArgAndSelection() { PCV;
 
    if( g_iArgCount ) {
       0 && DBG( "ClearArgAndSelection()+" );
+   //      MoveCursor
       pcv->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );
-   // pcv->MoveCursor          ( s_SelAnchor.lin, s_SelAnchor.col );
       0 && DBG( "ClearArgAndSelection()-" );
       g_iArgCount = 0;
       }
@@ -292,6 +292,16 @@ void ARG::ConvertStreamargToLineargOrBoxarg() {
       }
    }
 
+STATIC_FXN void TermNulleow( std::string &st ) {
+   for( auto it=st.begin() ; it < st.end(); it++ ) {
+      const auto idx( std::distance( st.begin(), it ) );
+      if( idx > 0 && !isWordChar( *it ) ) {
+         st.erase( idx );
+         break;
+         }
+      }
+   }
+
 STATIC_FXN void TermNulleow( PXbuf pxb ) {
    const auto pStart( pxb->kbuf() );
    for( auto pCh( pStart ); *pCh; ++pCh ) {
@@ -322,14 +332,14 @@ bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { 
       }
    }
 
-bool View::GetBOXSTR_Selection( PXbuf xb ) {
+bool View::GetBOXSTR_Selection( std::string &st ) {
    if( this == g_CurView() ) {
       const auto cursor( Cursor() );
       if( g_iArgCount /* && s_SelAnchor.lin == cursor.lin */ ) {
          0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
          const auto xMin( Min( s_SelAnchor.col, cursor.col ) );
          const auto xMax( Max( s_SelAnchor.col, cursor.col ) );
-         FBuf()->GetLineSeg( xb, cursor.lin, xMin, xMax-1 );
+         FBuf()->GetLineSeg( st, cursor.lin, xMin, xMax-1 );
          return true;
          }
       }
@@ -1581,6 +1591,15 @@ void ARG::ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const {
       }
    }
 
+#if 0
+COL ARG::GetLine( std::string &st, LINE yLine ) const { // setup x constraints and call GetLineSeg
+   COL xLeftIncl, xRightIncl;
+   ColsOfArgLine( yLine, &xLeftIncl, &xRightIncl );
+   d_pFBuf->GetLineSeg( st, yLine, xLeftIncl, xRightIncl );
+   return st.length();
+   }
+#endif
+
 COL ARG::GetLine( PXbuf pXb, LINE yLine ) const { // setup x constraints and call GetLineSeg
    COL xLeftIncl, xRightIncl;
    ColsOfArgLine( yLine, &xLeftIncl, &xRightIncl );
@@ -1622,8 +1641,8 @@ bool ARG::execute() {
                       std::string dest;
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {
-                            StrToNextMacroTermOrEos( aw.buf() )[0] = '\0';  0 && DBG( "2: '%s'", aw.buf() );
-                            dest += aw.buf();
+                            StrToNextMacroTermOrEos( aw.wbuf() )[0] = '\0';  0 && DBG( "2: '%s'", aw.kbuf() );
+                            dest += aw.kbuf();
                             dest += " ";
                             }
                          }
@@ -1637,8 +1656,8 @@ bool ARG::execute() {
                       auto pSL( new StringList() );
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {
-                            1 && DBG( "--- %s", aw.buf() );
-                            pSL->AddStr( aw.buf() );
+                            1 && DBG( "--- %s", aw.kbuf() );
+                            pSL->AddStr( aw.kbuf() );
                             }
                          }
                       StartInternalShellJob( pSL, false );

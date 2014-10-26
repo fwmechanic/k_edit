@@ -871,7 +871,7 @@ bool ARG::refresh() {
                    auto rmvCount( 0 );
                    for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                       if( aw.GetLine() ) {
-                         rmvCount += RmvFileByName( aw.buf() );
+                         rmvCount += RmvFileByName( aw.kbuf() );
                          ++attemptCount;
                          }
                       }

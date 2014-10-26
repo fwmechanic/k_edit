@@ -1206,7 +1206,7 @@ bool ARG::shell() {
       case LINEARG: //lint -fallthrough
       case BOXARG : for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                        if( aw.GetLine() ) {
-                          if( !RunChildSpawnOrSystem( aw.buf() ) ) {
+                          if( !RunChildSpawnOrSystem( aw.kbuf() ) ) {
                              g_CurView()->MoveCursor( aw.Line(), aw.Col() );
                              return false;
                              }

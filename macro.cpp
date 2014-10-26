@@ -727,7 +727,7 @@ bool ARG::assign() {
 
     case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                      if( aw.GetLine() ) {
-                        if( !AssignStrOk( aw.buf() ) ) {
+                        if( !AssignStrOk( aw.kbuf() ) ) {
                            g_CurView()->MoveCursor( aw.Line(), aw.Col() );
                            return false;
                            }

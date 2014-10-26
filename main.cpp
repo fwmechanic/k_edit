@@ -996,7 +996,7 @@ bool ARG::setenv() {
 
       case LINEARG: //lint -fallthrough
       case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
-                       if( aw.GetLine() && !PutEnvChkOk( aw.buf() ) ) {
+                       if( aw.GetLine() && !PutEnvChkOk( aw.kbuf() ) ) {
                           return false;
                           }
                        }

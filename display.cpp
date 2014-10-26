@@ -441,8 +441,8 @@ private:
 
    bool   SetNewWuc( PCChar snew, PCChar snewEos, LINE lin, COL col );
 
-   Xbuf         d_xbCandidate;
-   Xbuf         d_xbSel;    // d_xbSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
+   std::string  d_xbCandidate;
+   std::string  d_xbSel;    // d_xbSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
 
    COL          d_wucLen;
    LINE         d_yWuc;     // BUGBUG need to set d_yWuc = -1 (or d_wucbuf[0] = 0) if edits occur
@@ -547,11 +547,11 @@ PCChar GetWordUnderPoint( PCFBUF pFBuf, Point *cursor, COL *len ) {
    }
 
 void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
-   if( d_view.GetBOXSTR_Selection( &d_xbCandidate ) && !IsStringBlank( d_xbCandidate.kbuf() ) ) {
-      if( 0!=strcmp( d_xbSel.kbuf(), d_xbCandidate.kbuf() ) ) {
-         d_xbSel.cpy( d_xbCandidate.kbuf(), d_xbCandidate.len() );
-         d_xbSel.cat_ch( 0 );  // d_xbSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
-         0 && DBG( "BOXSTR=%s|", d_xbSel.kbuf() );
+   if( d_view.GetBOXSTR_Selection( d_xbCandidate ) && !IsStringBlank( d_xbCandidate.c_str() ) ) {
+      if( d_xbSel != d_xbCandidate ) {
+         d_xbSel = d_xbCandidate;
+         // d_xbSel.cat_ch( 0 );  // d_xbSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
+         0 && DBG( "BOXSTR=%s|", d_xbSel.c_str() );
          d_yWuc = -1;
          d_xWuc = -1;
          Reset();
@@ -590,7 +590,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    auto fb( CFBuf() );
    PCChar bos, eos;
    if( fb->PeekRawLineExists( yLine, &bos, &eos ) ) {
-      auto keyStart( Strings()[0] ? Strings() : (!d_xbSel.is_clear() ? d_xbSel.kbuf() : nullptr ) );
+      auto keyStart( Strings()[0] ? Strings() : (d_xbSel.empty() ? nullptr : d_xbSel.c_str()) );
       if( keyStart ) {
          for( auto pCh( bos ) ; ; ) { PCChar found(nullptr); int mlen;
             for( auto pC(keyStart) ; *pC ;  ) {

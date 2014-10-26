@@ -630,6 +630,7 @@ struct ARG {
    bool  Within( const Point &pt, COL len=-1 ) const;
    bool  Beyond( const Point &pt ) const;
    COL   GetLine( PXbuf pXb, LINE yLine ) const;
+   COL   GetLine( std::string &st, LINE yLine ) const;
    void  ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const;
    void  GetColumnRange( COL *pxMin, COL *pxMax ) const;
    int   GetLineRange( LINE *yTop, LINE *yBottom ) const;
@@ -713,13 +714,14 @@ public:
       d_Arg->BeginPt( &d_pt );
       }
 
-   bool  Beyond()              const { return d_Arg->Beyond( d_pt ); }
-   bool  Within( COL len=-1 )  const { return d_Arg->Within( d_pt, len ); }
-   LINE  Line()                const { return d_pt.lin; }
-   LINE  Col ()                const { return d_pt.col; }
-   COL   GetLine()                   { return d_Arg->GetLine( &d_xb, d_pt.lin ); }
-   bool  NextLine()                  { d_pt.col = 0; ++d_pt.lin; return Beyond(); }
-   PChar buf()                 const { return d_xb.wbuf(); }
+   bool   Beyond()              const { return d_Arg->Beyond( d_pt ); }
+   bool   Within( COL len=-1 )  const { return d_Arg->Within( d_pt, len ); }
+   LINE   Line()                const { return d_pt.lin; }
+   LINE   Col ()                const { return d_pt.col; }
+   COL    GetLine()                   { return d_Arg->GetLine( &d_xb, d_pt.lin ); }
+   bool   NextLine()                  { d_pt.col = 0; ++d_pt.lin; return Beyond(); }
+   PChar  wbuf()                const { return d_xb.wbuf(); } // BUGBUG rmv this!
+   PCChar kbuf()                const { return /*const_cast<PCChar>*/(d_xb.wbuf()); }
    };
 
 
@@ -951,7 +953,7 @@ public:
    char         CharUnderCursor(); // cursor being a View concept...
    bool         PBalFindMatching( bool fSetHilite, Point *pPt );
 
-   bool         GetBOXSTR_Selection( PXbuf xb );
+   bool         GetBOXSTR_Selection( std::string &st );
 
    Point        d_LastSelectBegin, d_LastSelectEnd;
 
@@ -1447,6 +1449,7 @@ public:
    COL            getLineTabxPerTabDisp ( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, fTabDisp()?0:' ' ); }
 
    COL            GetLineSeg(             PXbuf pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
+   COL            GetLineSeg(       std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
 
    int            GetLineForInsert     (  PXbuf pXb, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
