@@ -426,6 +426,6 @@ void RefreshCheckAllWindowsFBufs() {
 
    DispDoPendingRefreshes(); // BUGBUG leaving this work to the IdleThread can cause a CRASH
 
-   if( updates ) Msg( "%d file%s updated when you switched back", updates, Add_s( updates ) );
-   else          Msg( "no files changed" );
+   if( updates ) { Msg( "%d file%s updated when you switched back", updates, Add_s( updates ) ); }
+// else          { Msg( "no files changed" ); }
    }
