@@ -250,20 +250,6 @@ struct Rect {
    };  STD_TYPEDEFS( Rect )
 
 
-class SRPP { // string ref ptr + ptr
-   PCChar d_bos;
-   PCChar d_eos;
-
-public:
-   SRPP() : d_bos(nullptr), d_eos(nullptr) {}
-   SRPP( PCChar bos_ )              : d_bos(bos_), d_eos(Eos(bos_)) {}
-   SRPP( PCChar bos_, PCChar eos_ ) : d_bos(bos_), d_eos(eos_) {}
-
-   PCChar bos() const { return d_bos; }
-   PCChar eos() const { return d_eos; }
-   };  STD_TYPEDEFS( SRPP )
-
-
 class Xbuf {
    // ever-growing string class :-) which implements an ...
    // ever-growing line buffer intended to be used for all lines touched over
