@@ -852,8 +852,8 @@ PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pC
                xb.erase( xCursor );
                }
             }
-         0 && DBG( "graphic @ x=%d (stlen=%d)", xCursor, xb.length() );
-         if( xCursor > xb.length() ) { 0 && DBG( "append %d spaces", xCursor - xb.length() );
+         0 && DBG( "graphic @ x=%d (stlen=%Iu)", xCursor, xb.length() );
+         if( xCursor > xb.length() ) { 0 && DBG( "append %Iu spaces", xCursor - xb.length() );
             xb.append( xCursor - xb.length(), ' ' );
             }
          const auto ch( pCmd->d_argData.chAscii() );
@@ -902,7 +902,7 @@ PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pC
             --xCursor;
             }
          }
-      else if( func == fn_right ) {                                      0 && DBG( "right: %d, %d", xCursor, xb.length() );
+      else if( func == fn_right ) {                                      0 && DBG( "right: %d, %Iu", xCursor, xb.length() );
          if( g_CurFBuf() && xb.length() == xCursor ) {
             const auto xx( xColInFile + xCursor );
             const auto chars( g_CurFBuf()->GetLineSeg( stTmp, g_CursorLine(), xx, xx ) );    0 && DBG( "%d='%s' L=%d", xx, stTmp.c_str(), chars );
