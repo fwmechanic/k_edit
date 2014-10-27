@@ -102,28 +102,28 @@ extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltIntera
 
 
 namespace Video {
-   void Startup( bool fForceNewConsole );
+   void  Startup( bool fForceNewConsole );
    Point ParentConsoleWindowSize();
    Point GetMaxConsoleSize();
 
-   void GetScreenSize(PPoint rv);
-   bool SetScreenSizeOk( int yHeight, int xWidth );
+   void  GetScreenSize(PPoint rv);
+   bool  SetScreenSizeOk( int yHeight, int xWidth );
 
-   bool GetCursorState( Point *pt, bool *pfVisible );
+   bool  GetCursorState( Point *pt, bool *pfVisible );
 
-   bool SetCursorLocnOk( LINE yLine, COL xCol );
-   bool SetCursorSizeOk( bool fBigCursor );
-   bool SetCursorVisibilityChanged( bool fVisible );
+   bool  SetCursorLocnOk( LINE yLine, COL xCol );
+   bool  SetCursorSizeOk( bool fBigCursor );
+   bool  SetCursorVisibilityChanged( bool fVisible );
 
-   COL  BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
-   void BufferFlushToScreen();
+   COL   BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
+   void  BufferFlushToScreen();
 
    #define VIDEO_API_SUPPORTED_SCROLL  0
    #if     VIDEO_API_SUPPORTED_SCROLL
-   void Scroll( LINE ulc_yLine, COL ulc_xCol, LINE lrc_yLine, COL lrc_xCol, LINE deltaLine );
+   void  Scroll( LINE ulc_yLine, COL ulc_xCol, LINE lrc_yLine, COL lrc_xCol, LINE deltaLine );
    #endif
-   bool WriteToFileOk( FILE *ofh );
-   bool SetConsolePalette( const unsigned palette[16] );
+   bool  WriteToFileOk( FILE *ofh );
+   bool  SetConsolePalette( const unsigned palette[16] );
    }
 
 // Display

@@ -552,7 +552,7 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
    if( d_view.GetBOXSTR_Selection( d_stCandidate ) && !IsStringBlank( d_stCandidate.c_str() ) ) {
       if( d_stSel != d_stCandidate ) {
          d_stSel = d_stCandidate;
-         // d_stSel.cat_ch( 0 );  // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
+         d_stSel.push_back( 0 );  // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
          0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
          d_yWuc = -1;
          d_xWuc = -1;
