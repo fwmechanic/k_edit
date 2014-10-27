@@ -353,7 +353,7 @@ public:
       return cat( str, Strlen(str) );
       }
 
-   PCChar cat_ch( char ch ) {
+   PCChar push_back( char ch ) {
       const auto slen( length() );
       const auto rv( wresize( slen+2 ) );
       rv[slen] = ch;

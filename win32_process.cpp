@@ -351,7 +351,7 @@ int TPipeReader::GetFilteredLine( PXbuf xb ) {
                      xb->cat( tabspaces+( xb->length() & (MAX_TAB_WIDTH-1)) );
                      }break;
 
-         default:    xb->cat_ch( lastCh );
+         default:    xb->push_back( lastCh );
                      break;
          }
       }
