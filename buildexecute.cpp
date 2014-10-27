@@ -699,10 +699,10 @@ void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszP
    {
    const auto editTextShown( Min( EditScreenCols() - promptLen, editTextLen ) );
    VideoFlusher vf;
-   VidWrStrColor( DialogLine(), 0        , d_pszPrompt            , promptLen    , g_colorStatus   , false );
-   VidWrStrColor( DialogLine(), promptLen, d_pszEditText+oEditText, editTextShown, d_colorAttribute, false );
+   VidWrStrColor( DialogLine(), 0        , d_pszPrompt            , promptLen    , d_colorAttribute, false );
+   VidWrStrColor( DialogLine(), promptLen, d_pszEditText+oEditText, editTextShown, g_colorStatus   , false );
    if( promptLen + editTextShown < EditScreenCols() )
-      VidWrStrColor( DialogLine(), promptLen+editTextShown, " "   , 1            , g_colorInfo     , true  );
+      VidWrStrColor( DialogLine(), promptLen+editTextShown, " "   , 1            , d_colorAttribute, true  );
    }
 
    CursorLocnOutsideView_Set( DialogLine(), d_xCursor - oEditText + promptLen );
