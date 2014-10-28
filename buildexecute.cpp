@@ -777,8 +777,8 @@ PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pC
          // fBellAndFreezeKbInput exists because where fBellAndFreezeKbInput is
          // set is temporarily prior to RefreshPromptAndEditInput being called;
          // freezing there shows the old dialog line content, which is not
-         // useful.  Defer the freeze to here, when the latest dialog line
-         // content has actually been displayed, is the answer.
+         // useful; instead defer the freeze to here, when the latest dialog
+         // line content has actually been displayed.
          //
          fBellAndFreezeKbInput = false;
 
