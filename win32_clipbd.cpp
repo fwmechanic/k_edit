@@ -173,7 +173,7 @@ bool ARG::fromwinclip() {
    }
 
 
-void WinClipGetFirstLine( TAB_T &xb ) {
+void WinClipGetFirstLine( std::string &xb ) {
    if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) )
       xb.assign( ClipUnavail );
    else {

@@ -22,11 +22,11 @@
 #define  SINGLE_TextArgBuffer  1
 
 #if SINGLE_TextArgBuffer
-   STATIC_VAR TAB_T  s_textArgBuffer;
-   STIL       TAB_T &TextArgBuffer() { return s_textArgBuffer; }
+   STATIC_VAR std::string  s_textArgBuffer;
+   STIL       std::string &TextArgBuffer() { return s_textArgBuffer; }
 #else
-   STATIC_VAR TAB_T  s_macroTextArgBuffer, s_userTextArgBuffer;
-   STIL       TAB_T &TextArgBuffer() { return Interpreter::Interpreting() ? s_macroTextArgBuffer : s_userTextArgBuffer; }
+   STATIC_VAR std::string  s_macroTextArgBuffer, s_userTextArgBuffer;
+   STIL       std::string &TextArgBuffer() { return Interpreter::Interpreting() ? s_macroTextArgBuffer : s_userTextArgBuffer; }
 #endif
 
 STATIC_VAR Point s_SelAnchor;
@@ -1140,7 +1140,7 @@ bool fExecute( PCChar strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%s'", 
    return g_fFuncRetVal;
    }
 
-STATIC_FXN bool GetTextargStringNXeq( TAB_T &xb, int cArg, COL xCursor ) {
+STATIC_FXN bool GetTextargStringNXeq( std::string &xb, int cArg, COL xCursor ) {
    while( cArg-- )
       IncArgCnt();
 
@@ -1372,7 +1372,7 @@ STATIC_FXN bool BuildXeqArgCmdStr( bool fMeta, int cArg, PCChar cmdName, PCChar 
 bool ARG::selcmd() { // selcmd:alt+0
                      // mb:=makebox
    0 && DBG( "%s [0] d_argType=0x%X", __func__, d_argType );
-   TAB_T cmdNameBuf;
+   std::string cmdNameBuf;
    cmdNameBuf.assign("");
    FmtStr<40> prompt_( "cmd name? [%d] ", d_cArg );
    while( 1 ) {
