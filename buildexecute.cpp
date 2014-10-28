@@ -739,10 +739,16 @@ PCCMD GetTextargString_CMD_reader::GetNextCMD( bool fKbInputOnly ) {
       }
    }
 
+STATIC_FXN void Bell_FlushKeyQueue_WaitForKey() {
+   Bell();
+   FlushKeyQueueAnythingFlushed();
+   WaitForKey( 1 );
+   }
+
 //--------------------------------------------------------------
 // pCmd  if valid (currently only when we're called by ArgMainLoop) will be
 //       ARG::graphic, the first char of a typed arg.
-PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
+STATIC_FXN PCCMD GetTextargString_( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
    enum { DBG_GTA=1 };
 
    DBG_GTA && DBG( "+%s CMD='%s' dest='%s' flags=%X prompt='%s'"
@@ -781,10 +787,7 @@ PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pC
          // line content has actually been displayed.
          //
          fBellAndFreezeKbInput = false;
-
-         Bell();
-         FlushKeyQueueAnythingFlushed();
-         WaitForKey( 1 );
+         Bell_FlushKeyQueue_WaitForKey();
          }
 
       const auto fInitialStringSelected( ToBOOL(flags & gts_DfltResponse) );
@@ -1006,6 +1009,21 @@ PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pC
 
    0 && DBG( "%s- g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
    return pCmd;
+   }
+
+PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
+   // catch (& hide) std::string-related exceptions in GetTextargString_
+   try {
+      return GetTextargString_( xb, pszPrompt, xCursor, pCmd, flags, pfGotAnyInputFromKbd );
+      }
+   catch( const std::out_of_range& exc ) {
+      Msg( "caught std::out_of_range %s", exc.what() );
+      }
+   catch( ... ) {
+      Msg( "caught other exception" );
+      }
+   Bell_FlushKeyQueue_WaitForKey();
+   return nullptr;
    }
 
 //--------------------------------------------------------------
