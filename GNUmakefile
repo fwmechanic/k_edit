@@ -20,6 +20,8 @@
 
 # 'ifdef ComSpec' -> 'if building on Windows'
 ifdef ComSpec
+PLAT = mingw
+export PLAT
 
 # SHELL=cmd is a nasty hack since it is (a) nonportable and (b) has to be
 # done in every makefile (in the event of recursive make'ing), rather than
@@ -37,11 +39,14 @@ ifdef ComSpec
 # on each release.
 #
 SHELL=cmd
+export SHELL
 
 CMDTBL_ARG=win32
 # dflt $(RM) for MinGW is rm -f
 RM= del /F /Q
+export RM
 MV = move
+export MV
 EXE_EXT := .exe
 DLL_EXT := .dll
 OS_LIBS := -lpsapi
@@ -53,6 +58,8 @@ LS_L_TAIL := | FIND "/"
 DIRSEP := \\
 
 else
+PLAT = linux
+export PLAT
 
    # Linux build
    # sudo apt-get install -y libncurses5-dev
@@ -60,6 +67,9 @@ else
 
 CMDTBL_ARG=other
 MV = mv
+export MV
+RM= del /F /Q
+export RM
 EXE_EXT :=
 DLL_EXT := .so
 OS_LIBS := -lncurses
@@ -189,6 +199,7 @@ PLAT_OBJS := \
 endif
 
 USE_PCRE := 1
+export USE_PCRE
 ifneq (0,$(USE_PCRE))
 PCRE_OBJ := pcre_intf.o
 PCRE_LIB := -lpcre
@@ -338,6 +349,7 @@ endif
 # patch GNU make 4.0 (or nuwen GCC 11.6 distro) bug by replacing dflt .c compile rule
 
 CC = gcc
+export CC
 
 # end patch
 #######################################################################################

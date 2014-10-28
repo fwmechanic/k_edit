@@ -5,29 +5,16 @@
 # == CHANGE THE SETTINGS BELOW TO SUIT YOUR ENVIRONMENT =======================
 
 # Your platform. See PLATS for possible values.
-ifdef ComSpec
 PLAT= none
-PLAT= mingw    # 20120622 kgoodwin
-SHELL=cmd      # 20140409 kgoodwin see comment in ..\..\gnumakefile (oh, the agony)
-else
-PLAT=linux
-endif
 
 # CC= gcc
 CFLAGS= -O2 -Wall $(MYCFLAGS)
 AR= ar rcu
 RANLIB= ranlib
 
-ifdef ComSpec
-# dflt $(RM) for MinGW is rm -f
-RM= del /F /Q
-endif
-
 LIBS= -lm $(MYLIBS)
 
-USE_PCRE := 1
-
-ifneq (0,$(USE_PCRE))
+ifdef USE_PCRE
 PCRE_OBJ = \
 lpcre$(OBJ_SFX) \
 lpcre_f$(OBJ_SFX) \
@@ -47,8 +34,6 @@ MYLIBS=
 
 #######################################################################################
 # patch GNU make 4.0 (or nuwen GCC 11.6 distro) bug by replacing dflt .c compile rule
-
-CC = gcc
 
 %.o: %.c
 #  recipe to execute (built-in):
