@@ -1293,9 +1293,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    DispDoPendingRefreshesIfNotInMacro();
    {
    bool fGotAnyInputFromKbd;
-   TAB_T xb;
-   const auto pCmd( GetTextargString( xb, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
-   g_SnR_szSearch = xb.c_str();
+   const auto pCmd( GetTextargString( g_SnR_szSearch, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
    if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.empty() )
       return false;
    }
@@ -1323,9 +1321,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
 
    {
    bool fGotAnyInputFromKbd;
-   TAB_T xb;
-   const auto pCmd( GetTextargString( xb, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
-   g_SnR_szReplacement = xb.c_str();
+   const auto pCmd( GetTextargString( g_SnR_szReplacement, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
    if( !pCmd || pCmd->IsFnCancel() )
       return false;
    }
