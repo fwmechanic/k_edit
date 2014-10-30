@@ -924,6 +924,11 @@ Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    return rv;
    }
 
+STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, PCChar pszMacroString ) { 0 && DBG( "%s '%s'='%s'", __func__, pszMacroName, pszMacroString );
+   const std::string str( "\"" + std::string(pszMacroString) + "\"" );
+   return DefineMacro( pszMacroName, str.c_str() );
+   }
+
 void FBOP::AssignFromRsrc( PCFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
    // 1. assigns "curfile..." macros based on this FBUF
    // 2. loads rsrc file section for extension of this FBUF
@@ -931,14 +936,14 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Nam
    dbllinebuf dblbuf;
    Pathbuf pbuf( fb->Name() );
    DoubleBackslashes( BSOB(dblbuf), pbuf );
-   DefineMacro( "curfile", dblbuf );
+   DefineStrMacro( "curfile", dblbuf );
 #else
-   DefineMacro( "curfile", fb->Name() );
+   DefineStrMacro( "curfile", fb->Name() );
 #endif
-   DefineMacro( "curfilename", Path::CpyFnm  ( fb->Name() ).c_str() );
-   DefineMacro( "curfilepath", Path::CpyDirnm( fb->Name() ).c_str() );
+   DefineStrMacro( "curfilename", Path::CpyFnm  ( fb->Name() ).c_str() );
+   DefineStrMacro( "curfilepath", Path::CpyDirnm( fb->Name() ).c_str() );
    const auto ext( FBOP::GetRsrcExt( fb ) );
-   DefineMacro( "curfileext", ext.c_str() );
+   DefineStrMacro( "curfileext", ext.c_str() );
    if( !fb->IsRsrcLdBlocked() ) {
       LoadFileExtRsrcIniSection( ext.c_str() ); // call only after curfile, curfilepath, curfilename, curfileext assigned
       }
