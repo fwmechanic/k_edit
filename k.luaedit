@@ -703,6 +703,10 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       return true
       end
 
+   local ignored_ttype = {
+      anchor = true  -- hacky way to ignore html tags swept in by use of raw -R ctags scanning (--exclude=_wildcard_ unavail on Win32)
+      }
+
    local function ExpandTags( tagStr )
       if s_expandedTags[tagStr] then return s_expandedTags[tagStr] end
       local tagF = FBUF.new( s_tagsFilename )
@@ -713,55 +717,56 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          local line = tagF:GetLineRaw( lnum )
          local tfl,ttype = split_str( line, ';"\t' )  -- tfl = tag + filename + lineNum, ttype = attributes
          assert( ttype )  -- DBG( "Line "..lnum.." tfl='"..tfl.."' attributes='"..ttype.."'" )
-         local tag,fname,lineNum = split_ch( tfl, "\t" )
-         assert( lineNum )
-      -- printf( "Line %d tag='%s' file='%s' lineNum='%s' attributes='%s'", lnum, tag, fname, lineNum, ttype )
+         if not ignored_ttype[ttype] then
+            local tag,fname,lineNum = split_ch( tfl, "\t" )
+            assert( lineNum )
+         -- printf( "Line %d tag='%s' file='%s' lineNum='%s' attributes='%s'", lnum, tag, fname, lineNum, ttype )
 
-         -- we ARE going to add an entry, so clean up ttype for better comprehension
-         ttype = ttype:gsub( ":?\t"          , "-" )
-         ttype = ttype:gsub( "::<anonymous>" , "" )   -- noise-text
-         ttype = ttype:gsub( ":$"            , "" )
-         local subs
-         ttype, subs = ttype:gsub( "-file$", "" )
-         local fS = ifx( subs>0, "(static)", "" )
+            -- we ARE going to add an entry, so clean up ttype for better comprehension
+            ttype = ttype:gsub( ":?\t"          , "-" )
+            ttype = ttype:gsub( "::<anonymous>" , "" )   -- noise-text
+            ttype = ttype:gsub( ":$"            , "" )
+            local subs
+            ttype, subs = ttype:gsub( "-file$", "" )
+            local fS = ifx( subs>0, "(static)", "" )
 
-         local tsep, tname  = "", ttype:match( ":[%w_]+$" ) or ""
-         if tname then
-            -- if tag == "View" then print ("ttype='"..ttype.."' tname ='"..tname.."' len=".. tname:len() )  end
-            tsep  = ":"
-            ttype = ttype:sub( 1, -(tname:len()+1) )
-            tname = tname:sub( 2 )
+            local tsep, tname  = "", ttype:match( ":[%w_]+$" ) or ""
+            if tname then
+               -- if tag == "View" then print ("ttype='"..ttype.."' tname ='"..tname.."' len=".. tname:len() )  end
+               tsep  = ":"
+               ttype = ttype:sub( 1, -(tname:len()+1) )
+               tname = tname:sub( 2 )
+               end
+
+            ttype = ttype:lower()
+                                                    --  arg "View" tgs  arg "View" gototag
+                                                                 -- tag..":"                              end
+            if ttype == "function-class"  then  tsep = ""  ttype = ifx( tname == tag, "ctor", "method" ) end
+            if ttype == "member-class"    then  tsep = ":"  ttype = "class-member" end
+            if ttype == "member-struct"   then  tsep = ":"  ttype = "struct" end
+            if ttype == "enumerator-enum" then  tsep = ":"  ttype = "enumerator" end
+
+         -- if ttype == "file"            then s_taggedFilesLc[ tag:lower() ] = tag end
+
+            if  ttype:match("typeref:") -- was == "typedef-typeref:struct"
+            and tname ~= tag
+               then -- printf( "alias: %s -> %s", tname, tag )
+               s_alias_to[tname] = tag
+               end
+
+         -- printf( "tag = '%s' ttype='%s' tname='%s'", tag, ttype, tname or "==tagname" )
+
+            ttype = ttype         .. fS
+         -- if tname then  ttype = ttype .. tsep .. tname end
+            local tv = {
+               fname     = fname   ,
+               lineNum   = lineNum ,
+               tagType   = ttype   ,
+               tagTypeNm = #tname > 1 and tname or nil ,
+            -- tagLine   = lnum    ,
+               }
+            expanded[1+#expanded] = tv
             end
-
-         ttype = ttype:lower()
-                                                 --  arg "View" tgs  arg "View" gototag
-                                                              -- tag..":"                              end
-         if ttype == "function-class"  then  tsep = ""  ttype = ifx( tname == tag, "ctor", "method" ) end
-         if ttype == "member-class"    then  tsep = ":"  ttype = "class-member" end
-         if ttype == "member-struct"   then  tsep = ":"  ttype = "struct" end
-         if ttype == "enumerator-enum" then  tsep = ":"  ttype = "enumerator" end
-
-      -- if ttype == "file"            then s_taggedFilesLc[ tag:lower() ] = tag end
-
-         if  ttype:match("typeref:") -- was == "typedef-typeref:struct"
-         and tname ~= tag
-            then -- printf( "alias: %s -> %s", tname, tag )
-            s_alias_to[tname] = tag
-            end
-
-      -- printf( "tag = '%s' ttype='%s' tname='%s'", tag, ttype, tname or "==tagname" )
-
-         ttype = ttype         .. fS
-      -- if tname then  ttype = ttype .. tsep .. tname end
-         local tv =
-            {
-            fname     = fname   ,
-            lineNum   = lineNum ,
-            tagType   = ttype   ,
-            tagTypeNm = #tname > 1 and tname or nil ,
-         -- tagLine   = lnum    ,
-            }
-         expanded[1+#expanded] = tv
          end
       s_expandedTags[tagStr] = expanded
       print( "ExpandTags( "..tagStr.." ) ["..#expanded.."]" )

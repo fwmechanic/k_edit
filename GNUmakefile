@@ -286,8 +286,10 @@ ZAP_ARGS := $(EXE_TGTS) $(LUA_T)
 
 all : tags
 
+TAGS_CMDLN = ctags$(EXE_EXT) --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -R
+
 tags : $(EXE_TGTS)
-	ctags$(EXE_EXT) --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -R
+		$(TAGS_CMDLN)
 
 $(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat
 	$(LUA_T) cmdtbl.lua $(CMDTBL_ARG) < cmdtbl.dat
