@@ -615,7 +615,6 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
        , s_alias_to
        , s_tagsFilename
        , s_tagsFiletime
-       , s_taggedFilePathsLC
        , s_taggedFilesLc
        , s_prevTagLookedUp
 
@@ -647,7 +646,6 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       s_tags              = {}
       s_expandedTags      = {}
       s_alias_to          = {}
-      s_taggedFilePathsLC = {}
       s_taggedFilesLc     = {}
       s_prevTagLookedUp   = nil
 
@@ -684,13 +682,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
             prevtag = tag
             lnum1 = lnum
             end
---[[
-         local path = PrettyPath( PathOf( fname ) )
-         if path then
-            local pathLC = path:lower()
-            s_taggedFilePathsLC[pathLC] = s_taggedFilePathsLC[pathLC] or path
-            end
---]]
+
          local tfnm = line:match( '^[^\t]+\t([^\t]+)\t1;"\tfile$' )
          if tfnm then
             tfbuf:InsLineSortedAscending( tfnm:gsub( '^%.\\', tagDirnm ) )
