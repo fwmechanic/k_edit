@@ -622,14 +622,15 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
    --
    -- Read Exuberant Tags output file
    -- My canonical Exuberant Tags command-line is:
-   --
-   -- ctags --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -Lfile_containing_names_of_files
+   -- tagcr.bat:
+   -- ctags --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -R
    --
    local function read_tags_file()
-      local tagF
+      local tagF, tagDirnm
       for dir in CwdToRoot() do
          local fn = dir .. "tags"
          if IsFile( fn ) then
+            tagDirnm = dir
             -- tagF = io.open( fn, "rt" )
             s_tagsFilename = fn
             tagF = FBUF.new( fn )
@@ -652,7 +653,11 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
 
       collectgarbage( "collect" )
 
+      local tfbufnm = "<tagged-files>"
+      local tfbuf = FBUF.new_empty_may_create( "<tagged-files>" )
+
       local tbl = {}
+      local tfCount = 0
       local tagCount = 0
       local fnmCount = 0
       local prevtag,lnum1,isFnm
@@ -689,7 +694,11 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
             s_taggedFilePathsLC[pathLC] = s_taggedFilePathsLC[pathLC] or path
             end
 --]]
-         if line:match '\t1;"\tfile$' then isFnm = true end
+         local tfnm = line:match( '^[^\t]+\t([^\t]+)\t1;"\tfile$' )
+         if tfnm then
+            tfbuf:InsLineSortedAscending( tfnm:gsub( '^%.\\', tagDirnm ) )
+            isFnm = true
+            end
          ll = lnum
          end
 
@@ -701,6 +710,8 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       Putenv( "TAGBASE=" .. PrettyPath( PathOf( s_tagsFilename ) ) )
       Putenv( "TAGZ="    .. table.concat( tu.t_keys_array( s_taggedFilePathsLC ), ";" ) )
 --]]
+      AssignStrOk( 'mffile:='..(tfbuf:LineCount() > 0 and ('"'..tfbufnm..'"') or "") )
+
       local msg = fmt( "%d tags in %d files loaded from %s", tagCount, fnmCount, s_tagsFilename )
       Msg( msg )  print( msg )
       collectgarbage( "collect" )
