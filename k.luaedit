@@ -653,14 +653,9 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
 
       collectgarbage( "collect" )
 
-      local tfbufnm = "<tagged-files>"
-      local tfbuf = FBUF.new_empty_may_create( "<tagged-files>" )
-
-      local tbl = {}
-      local tfCount = 0
       local tagCount = 0
       local fnmCount = 0
-      local prevtag,lnum1,isFnm
+      local isFnm
 
       local function addtidx( tag, min, max )
          s_tags[tag] = {min, max}  -- HUGE amounts of RAM are taken up by THIS TABLE [s_tags] (and it's index-data, presumably)
@@ -673,7 +668,9 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          tagCount = 1+tagCount
          end
 
-      local ll
+      local tfbufnm = "<tagged-files>"
+      local tfbuf = FBUF.new_empty_may_create( tfbufnm )
+      local ll,prevtag,lnum1
       for lnum, line in tagF:RawLines() do  -- DBG( line )
          --
          -- 04-Aug-2000 klg NOTE!!!  fields of tags file are split ONLY on TAB!  This is because some tags
@@ -706,10 +703,6 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          addtidx( prevtag, lnum1, ll )
          end
 
---[[
-      Putenv( "TAGBASE=" .. PrettyPath( PathOf( s_tagsFilename ) ) )
-      Putenv( "TAGZ="    .. table.concat( tu.t_keys_array( s_taggedFilePathsLC ), ";" ) )
---]]
       AssignStrOk( 'mffile:='..(tfbuf:LineCount() > 0 and ('"'..tfbufnm..'"') or "") )
 
       local msg = fmt( "%d tags in %d files loaded from %s", tagCount, fnmCount, s_tagsFilename )
