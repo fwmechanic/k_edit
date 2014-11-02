@@ -22,7 +22,6 @@ public:
    int  ColOfNextTabStop       ( int col ) const { return col + FillCountToNextTabStop( col ); }
    int  ColOfPrevTabStop       ( int col ) const { return col - ((d_tabWidth == 0) ? 0 : 1 + ((col - 1) % d_tabWidth)); }
    bool ColAtTabStop           ( int col ) const { return (col % d_tabWidth) == 0; }
-   int  Width                  ()          const { return d_tabWidth; }
    };
 
 
