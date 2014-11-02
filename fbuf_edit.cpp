@@ -203,7 +203,10 @@ COL FBOP::LineCols( PCFBUF fb, LINE yLine ) {
    return fb->PeekRawLineExists( yLine, &bos, &eos ) ? StrCols( fb->TabWidth(), bos, eos ) : 0;
    }
 
-STATIC_FXN int spcs2tabs_outside_quotes( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, const Tabber &tabr ) {
+//      const Tabber &TabberParam;
+typedef const Tabber  TabberParam;  // 3 calls using this type take less code (-512 byte GCC incr)
+
+STATIC_FXN int spcs2tabs_outside_quotes( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, TabberParam tabr ) {
    auto quoteCh( '\0' );
    auto destCol( 0 );
    auto pC( pDest );
@@ -280,7 +283,7 @@ TO_ELSE:
    return pC - pDest;
    }
 
-STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, const Tabber &tabr ) {
+STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, TabberParam tabr ) {
    NOAUTO CPCChar pDestStart( pDest );
    const auto     pSrcPastEnd( pszSrc + srcChars );
    auto    xCol(0);
@@ -317,7 +320,7 @@ STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, PCChar pszSrc, int
    return pDest - pDestStart;
    }
 
-STATIC_FXN int spcs2tabs_leading( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, const Tabber &tabr ) {
+STATIC_FXN int spcs2tabs_leading( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, TabberParam tabr ) {
    NOAUTO CPCChar pDestStart( pDest );
    const auto     pSrcPastEnd( pszSrc + srcChars );
    auto    xCol( 0 );
