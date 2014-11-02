@@ -986,19 +986,12 @@ class HiliteAddin_StreamParse : public HiliteAddin {
    void add_hl_rgn( int color, LINE yulc, COL xulc, LINE ylrc, COL xlrc ) {
       if( !d_hl_rgn_array ) { ++d_num_hl_rgns_found; return; } // efficiency hack!
       0 && DBG( "%02X: %d,%d-%d,%d", color, yulc, xulc, ylrc, xlrc );
-      {
-      auto pFile( CFBuf() );
-      const auto tw( pFile->TabWidth() );
-      PCChar bos, eos;
-      if( pFile->PeekRawLineExists( yulc, &bos, &eos ) ) { xulc = ColOfPtr( tw, bos, bos+xulc, eos ); }
-      if( pFile->PeekRawLineExists( ylrc, &bos, &eos ) ) { xlrc = ColOfPtr( tw, bos, bos+xlrc, eos ); }
-      }
       auto &rc = d_hl_rgn_array[d_hl_rgn_array_insIdx++];
       rc.color         = color;
       rc.rgn.flMin.lin = yulc;
-      rc.rgn.flMin.col = xulc;
+      rc.rgn.flMin.col = xulc; // note this is a RAW col value
       rc.rgn.flMax.lin = ylrc;
-      rc.rgn.flMax.col = xlrc;
+      rc.rgn.flMax.col = xlrc; // note this is a RAW col value
       }
 
    unsigned d_FbufContentRev = 0;
@@ -1041,16 +1034,16 @@ bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
    if( !(d_ixCache < d_num_hl_rgns_found) ) return false;
    0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, d_ixCache, d_hl_rgn_array[d_ixCache].rgn.flMin.lin, d_hl_rgn_array[d_ixCache].rgn.flMax.lin );
    if( yLine < d_hl_rgn_array[d_ixCache].rgn.flMin.lin ) return false;
-   auto xMaxOfLine( COL_MAX );
-   {
-   auto pFile( CFBuf() );
+   const auto pFile( CFBuf() );
+   const auto tw( pFile->TabWidth() );
    PCChar bos, eos;
-   if( pFile->PeekRawLineExists( yLine, &bos, &eos ) ) { const auto tw( pFile->TabWidth() ); xMaxOfLine = ColOfPtr( tw, bos, eos-1, eos ); }
-   }
+   auto xMaxOfLine( COL_MAX );
+   if( pFile->PeekRawLineExists( yLine, &bos, &eos ) ) { xMaxOfLine = ColOfPtr( tw, bos, eos-1, eos ); }
    for( auto ix=d_ixCache ; ix < d_num_hl_rgns_found && 0==d_hl_rgn_array[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
       const auto &comment( d_hl_rgn_array[ix] );
-      const auto xMin( comment.rgn.flMin.lin == yLine ? comment.rgn.flMin.col : 0 );
-      const auto xMax( comment.rgn.flMax.lin == yLine ? comment.rgn.flMax.col : xMaxOfLine );
+      COL xMin=0; COL xMax=xMaxOfLine;
+      if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfPtr( tw, bos, bos+comment.rgn.flMin.col, eos ); }
+      if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfPtr( tw, bos, bos+comment.rgn.flMax.col, eos ); }
       0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
       alcc.PutColor( xMin, xMax-xMin+1, comment.color );
       }
