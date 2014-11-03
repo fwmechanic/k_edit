@@ -642,7 +642,7 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
       const auto fCmdFromInterpreter( Interpreter::Interpreting() );
       const auto fInterpreting_VariableMacro( fCmdFromInterpreter && Interpreter::Interpreting_VariableMacro() );
       const auto pCmd(
-         fCmdFromInterpreter ?                               Interpreter::CmdFromCurMacro()
+         fCmdFromInterpreter ?                                Interpreter::CmdFromCurMacro()
                              : ( VWritePrompt(), DispDoPendingRefreshes(), CmdFromKbdForExec() )
          );
 

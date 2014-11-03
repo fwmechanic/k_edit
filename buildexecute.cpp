@@ -748,6 +748,7 @@ STATIC_FXN void Bell_FlushKeyQueue_WaitForKey() {
 //--------------------------------------------------------------
 // pCmd  if valid (currently only when we're called by ArgMainLoop) will be
 //       ARG::graphic, the first char of a typed arg.
+
 STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
    enum { DBG_GTA=1 };
 
@@ -768,7 +769,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
 
    auto textargStackPos(-1);
 
-   pathbuf     pbTabxBase; pbTabxBase[0] = '\0';
+   std::string pbTabxBase;
    PDirMatches pDirContent(nullptr);
    std::string stTmp;
 
@@ -799,7 +800,8 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          if( !pCmd )
             break;
 
-         *pfGotAnyInputFromKbd |= gtas.GotAnyInputFromKbd();
+         if( gtas.GotAnyInputFromKbd() )
+            *pfGotAnyInputFromKbd = true;
          }
 
       //=============== switch( pCmd->d_func ) ===============
@@ -809,15 +811,15 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       //##############  Begin TabX  ##############
       if( pCmd->d_argData.EdKcEnum != EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          Delete0( pDirContent );
-         pbTabxBase[0] = '\0'; // forget prev used WC
+         pbTabxBase.clear(); // forget prev used WC
          }
 
       if( pCmd->d_argData.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          if( !pDirContent ) {
-            if( pbTabxBase[0] == 0 ) // no prev'ly used WC?
-               SafeStrcpy( pbTabxBase, stb.c_str() );  // create based on curr content
+            if( pbTabxBase.empty() ) // no prev'ly used WC?
+               pbTabxBase = stb;  // create based on curr content
 
-            pDirContent = new DirMatches( pbTabxBase, HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
+            pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase.c_str() ) ? nullptr : "*", FILES_AND_DIRS, false );
             }
          Path::str_t nxt;
          do {
@@ -831,7 +833,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          else {
             Delete0( pDirContent );
             stb = pbTabxBase;
-            auto buf( stb.c_str() ); // show user seed in case he wants to edit
+            const auto buf( stb.c_str() ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
             xCursor = FirstWildcardOrEos( buf ) - buf;
             fBellAndFreezeKbInput = true;
             }
@@ -883,7 +885,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       else if( func == fn_insertmode ) {
          noargNoMeta.insertmode();
          }
-      else if( func == fn_up ) {
+      else if( func == fn_up ) { //======================================================
          if( textargStackPos < 0 ) {
             AddToTextargStack( stb.c_str() );
             textargStackPos = 0;
@@ -896,7 +898,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          if( textargStackPos > 0 ) {
             xCursor = g_pFBufTextargStack->getLineRaw( stb, --textargStackPos );
             }
-         }
+         }                       //======================================================
       else if( func == fn_meta ) {
          noargNoMeta.meta();
          }
@@ -981,8 +983,8 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          Bell();
          }
 
-      //====== Some editing or cursor movement was done and we will be
-      //====== continuing to edit.  Consume meta + pCmd, do bounds check(s)
+      //====== Some editing or cursor movement was done and we will be continuing to edit.
+      //====== Consume meta + pCmd
 
       if( !(pCmd->d_argType & KEEPMETA) )
          g_fMeta = false;
