@@ -221,7 +221,7 @@ namespace Interpreter {
 
       int    chGetAnyMacroPromptResponse();
 
-      bool   BranchToLabel( PChar pszBranchToken );
+      bool   BranchToLabel( PCChar pszBranchToken );
       bool   Breaks()          const { return ToBOOL(d_flags & breakOutHere ); }
       bool   IsVariableMacro() const { return ToBOOL(d_flags & variableMacro); }
 
@@ -331,12 +331,12 @@ int Interpreter::MacroRuntimeStkEntry::chGetAnyMacroPromptResponse() { // return
 
 // if  rv, tos.d_pCurTxt points at token AFTER matching branch label
 // if !rv, NO matching branch label was found!
-bool Interpreter::MacroRuntimeStkEntry::BranchToLabel( PChar pszBranchToken ) {
-   pszBranchToken[0] = ':';     // pszBranchToken[0] is branch prefix char [=+-]; change to label-DEFINITION prefix
+bool Interpreter::MacroRuntimeStkEntry::BranchToLabel( PCChar pszBranchToken ) {
+   // pszBranchToken[0] = ':';     // pszBranchToken[0] is branch prefix char [=+-]; change to label-DEFINITION prefix
    d_pCurTxt = d_pStartOfText;  // start from beginning
    linebuf token;  MacroRuntimeStkEntry::eGot got;
    while( EXHAUSTED != (got=GetNextTokenIsLiteralCh( BSOB(token) )) )
-      if( GotToken==got && Stricmp( pszBranchToken, token ) == 0 )
+      if( GotToken==got && (':'==token[0]) && Stricmp( pszBranchToken+1, token+1 ) == 0 )
          return true;
 
    return false;
@@ -479,7 +479,7 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
 
    auto &tos( TOS() );
 
-   linebuf token;  NOAUTO MacroRuntimeStkEntry::eGot got;
+   linebuf token; NOAUTO MacroRuntimeStkEntry::eGot got;
    while( MacroRuntimeStkEntry::EXHAUSTED != (got=tos.GetNextTokenIsLiteralCh( BSOB(token) )) ) {
       if( ExecutionHaltRequested() )                // testme:= popd popd
          return CleanupPendingMacroStream();
@@ -491,8 +491,7 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
          return &macro_graphic;
          }
 
-      0 && DBG( "%s non-LIT '%s'", __func__, token );
-      {
+      { 0 && DBG( "%s non-LIT '%s'", __func__, token );
       const auto pCmd( CmdFromName( token ) );
       if( pCmd ) { 0 && DBG( "%s CMD '%s'", __func__, pCmd->Name() );
          return pCmd;
@@ -504,11 +503,11 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
       //
       const auto cond( token[0] );
       if( (':' == cond || '=' == cond || '+' == cond || '-' == cond) && '>' == token[1] ) {
-         if(  (                  '=' == cond)  // branch always?
-           || ( g_fFuncRetVal && '+' == cond)  // branch if prev cmd true?
-           || (!g_fFuncRetVal && '-' == cond)  // branch if prev cmd false?
+         if(  ('=' == cond                  )  // branch always?
+           || ('+' == cond &&  g_fFuncRetVal)  // branch if prev cmd true?
+           || ('-' == cond && !g_fFuncRetVal)  // branch if prev cmd false?
            ) { // perform branch
-            if( 0 == token[2] ) // no dest-label at all means return from macro
+            if( '\0' == token[2] ) // absence of dest-label means return from macro
                break;
 
             if( !tos.BranchToLabel( token ) )

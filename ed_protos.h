@@ -92,7 +92,7 @@ extern   bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *
 
 extern   PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd );
 
-extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests=false );
+extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests );
 
 extern   bool Confirm( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
 

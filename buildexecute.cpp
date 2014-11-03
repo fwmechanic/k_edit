@@ -1133,7 +1133,7 @@ bool fExecute( PCChar strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%s'", 
    if( fInternalExec )  ++g_fExecutingInternal;
 
    if( Interpreter::PushMacroStringOk( strToExecute, Interpreter::breakOutHere ) )
-      FetchAndExecuteCMDs();
+      FetchAndExecuteCMDs( false );
 
    if( fInternalExec )  --g_fExecutingInternal;
 
