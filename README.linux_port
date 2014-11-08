@@ -1,11 +1,12 @@
 
 Guidelines
 
-* "when in Rome..." please adhere to my (arguably weird) coding conventions
+* "when in Rome..." please adhere to my coding conventions:
   * NO TABS ALLOWED ANYWHERE (except where required in makefiles)
   * 3 spaces per indent level
   * https://en.wikipedia.org/wiki/Indent_style#Ratliff_style which is same as
-    https://en.wikipedia.org/wiki/Indent_style#Banner_style ? both modified by
+    https://en.wikipedia.org/wiki/Indent_style#Banner_style ?
+    both modified by:
       if( bool ) { }  // yes
       if (bool)  { }  // NO!
       function( my, params ); // yes
@@ -22,3 +23,12 @@ Key goals
   supporting multiple/diverse screen+kybd I/O environments.  While my immediate
   goals for K are far less diverse (ncurses should be totally sufficient?),
   adopting FTE's framework in toto _MIGHT_ be a net win...
+
+
+Major Tasks
+
+- screen output
+- reading/processing normal input (keyboard, screen-size change, mouse) events
+  - react to screen-size changes (even w/>1 window extant)
+- command and dflt-key-mapping tables
+- signal handling
