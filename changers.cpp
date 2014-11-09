@@ -130,10 +130,10 @@ class ConsoleSizeChanger : public KeyChanger
    int       d_numFonts;
 
    void ResizeScreen( int newX, int newY ) {
-      if( newY <= 20 )  return;
-      if( newX <= 32 )  return;
-      ::ResizeScreen( newX, newY );
-      d_wcfc.GetFontInfo();
+      if( CanResizeContent( newX, newY ) ) {
+         ::ResizeScreen( newX, newY );
+         d_wcfc.GetFontInfo();
+         }
       }
 
    bool SetFont( int idx ) {
@@ -178,9 +178,6 @@ class ConsoleSizeChanger : public KeyChanger
    };
 
 bool ARG::resize() {
-   if( !CanResizeScreen() )
-      return false;
-
    ConsoleSizeChanger ssc;
    return ssc.Run();
    }

@@ -8,7 +8,7 @@ GLOBAL_VAR TGlobalStructs g__;
 
 GLOBAL_VAR PFBUF s_curFBuf;       // not literally static (s_), but s/b treated as such!
 
-enum { BORDER_WIDTH = 1 };
+enum { BORDER_WIDTH = 1, };
 
 STIL bool CanCreateWin()  { return g__.iWindowCount < ELEMENTS(g__.aWindow); }
 
@@ -21,12 +21,47 @@ bool Win::GetCursorForDisplay( Point *pt ) {
    return true;
    }
 
-int CanResizeScreen() {
-   if( 1 == g_iWindowCount() )
+bool CanResizeContent( int newX, int newY ) {
+   if(   1 == g_iWindowCount()
+      && newX >= MIN_WIN_HEIGHT
+      && newY >= MIN_WIN_WIDTH
+     )
       return true;
 
-   Msg( "Cannot change screen parameters when windows present" );
-   WaitForKey( 1 );
+   auto maxWinsOnAnyLine(0); // max # of wnds on any display line
+   {
+   const auto yTop(0), yBottom( EditScreenLines() );
+   for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) {
+      auto winsOnLine(0);
+      for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
+         if( g_Win( iw )->VisibleOnDisplayLine( yLine ) ) ++winsOnLine;
+         }
+      maxWinsOnAnyLine = Max( maxWinsOnAnyLine, winsOnLine );
+      }
+   }
+   auto maxWinsOnAnyCol(0); // max # of wnds on any display row
+   {
+   const auto xLeft(0), xRight( EditScreenCols() );
+   for( auto xCol(xLeft) ; xCol < xRight; ++xCol ) {
+      auto winsOnCol(0);
+      for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
+         if( g_Win( iw )->VisibleOnDisplayCol( xCol ) ) ++winsOnCol;
+         }
+      maxWinsOnAnyCol = Max( maxWinsOnAnyCol, winsOnCol );
+      }
+   }
+
+   DBG( "%s maxWinsOnAnyLine=%d, maxWinsOnAnyCol=%d", __func__, maxWinsOnAnyLine, maxWinsOnAnyCol );
+
+   if( 0&&newY > MIN_WIN_HEIGHT * maxWinsOnAnyLine
+       && newX > MIN_WIN_WIDTH  * maxWinsOnAnyCol
+     )
+      return true;
+
+/*
+
+*/
+
    return false;
    }
 
@@ -154,12 +189,12 @@ void SetWindow0() { // Used during ReadStateFile processing only!
    SetWindowIdx( 0 );
    }
 
-int cmp_win( PCWin pw1, PCWin pw2 ) {
-   if( pw1->d_UpLeft.lin < pw2->d_UpLeft.lin )   return -1;
-   if( pw1->d_UpLeft.lin > pw2->d_UpLeft.lin )   return  1;
-   if( pw1->d_UpLeft.col < pw2->d_UpLeft.col )   return -1;
-   if( pw1->d_UpLeft.col > pw2->d_UpLeft.col )   return  1;
-                                                 return  0;
+int cmp_win( PCWin w1, PCWin w2 ) {
+   if( w1->d_UpLeft.lin < w2->d_UpLeft.lin )   return -1; // w1 < w2
+   if( w1->d_UpLeft.lin > w2->d_UpLeft.lin )   return  1; // w1 > w2
+   if( w1->d_UpLeft.col < w2->d_UpLeft.col )   return -1; // w1 < w2
+   if( w1->d_UpLeft.col > w2->d_UpLeft.col )   return  1; // w1 > w2
+                                               return  0; // w1 = w2 ?
    }
 
 STATIC_FXN int CDECL__ qsort_cmp_win( PCVoid p1, PCVoid p2 ) {
@@ -176,6 +211,14 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
    if( !CanCreateWin() ) {
       Msg( "Too many windows" );
       return nullptr;
+      }
+
+   if( g_iWindowCount() > 1 ) {
+      const auto existingSplitVertical( g__.aWindow[ 0 ]->d_UpLeft.lin == g__.aWindow[ 1 ]->d_UpLeft.lin );
+      if( existingSplitVertical != fSplitVertical ) {
+         Msg( "cannot split %s when previous splits %s", fSplitVertical?"Vertical":"Horizontal", existingSplitVertical?"Vertical":"Horizontal" );
+         return nullptr;
+         }
       }
 
    const auto pWin( g_CurWin() );

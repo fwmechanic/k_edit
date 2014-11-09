@@ -3233,7 +3233,7 @@ void Win::GetLineForDisplay
    const auto isActiveWindow( this == g_CurWin() );       // checkWins( FmtStr<30>( "<Line %d/win %d>", yLineOfDisplay, winNum ) );
    const auto oRightBorder( d_UpLeft.col + d_Size.col );  0 && DBG( "L%05d w%d [%03d..%03d]", yLineOfDisplay, winNum, this->d_UpLeft.col, oRightBorder - 1 );
 
-   if( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ) {
+   if( VisibleOnDisplayLine( yLineOfDisplay ) ) {
       NewScope {
          auto pView( CurView() );
          const auto yLineOfFile( pView->Origin().lin - d_UpLeft.lin + yLineOfDisplay );

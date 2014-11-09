@@ -239,7 +239,7 @@ extern bool  Msg(  PCChar pszFormat, ... ) ATTR_FORMAT(1, 2);
 extern void  MsgClr();
 extern void  VErrorDialogBeepf( PCChar format, va_list args );
 extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
-extern int   CanResizeScreen();
+extern bool  CanResizeContent( int newX, int newY );
 extern bool  ResizeScreen( int newX, int newY );
 extern void  EditorSetScreenSize( Point newSize );
 

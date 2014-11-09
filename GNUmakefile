@@ -117,7 +117,8 @@ endif
 LUA_DIR=lua-5.1/src
 
 CC_OUTPUT := # --save-temp
-# -fstack-protector gens link error
+# -fstack-protector    gens link error
+# -fsanitize=undefined gens link errors (is supposed to work on Linux x64 w/GCC 4.9.2 only)
 # -fstrict-overflow -Wstrict-overflow=2
 TRAPV := -ftrapv
 GCC_OPTZ := -Os

@@ -953,6 +953,9 @@ public:
 
    void      Event_Win_Resized( LINE newHeight, COL newWidth );
 
+   bool      VisibleOnDisplayLine( LINE yLineOfDisplay ) const { return( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ); }
+   bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
+
    bool      GetCursorForDisplay( Point *pt );
    void      GetLineForDisplay( int winNum, PChar DestLineBuf, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite, const LINE yDisplayLine );
    }; // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
