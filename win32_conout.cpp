@@ -115,7 +115,7 @@ public: //**************************************************
 
 private://**************************************************
 
-   void SetNewScreenSize( int yHeight, int xWidth );
+   void SetNewScreenSize( const Point &newSize );
 
    int  FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE yMax, COL xMin, COL xMax );
    bool SetConsoleCursorInfoOk();
@@ -254,11 +254,11 @@ TConsoleOutputControl::TConsoleOutputControl( int yHeight, int xWidth )
    d_xyState.cursor = csbi.CursorPosition();
    }
 
-void TConsoleOutputControl::SetNewScreenSize( int yHeight, int xWidth ) {
-   d_xyState.size.lin = yHeight; // the ONLY place d_xyState.size is written!
-   d_xyState.size.col = xWidth;  // the ONLY place d_xyState.size is written!
+void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
+   d_xyState.size.lin = newSize.lin; // the ONLY place d_xyState.size is written!
+   d_xyState.size.col = newSize.col;  // the ONLY place d_xyState.size is written!
 
-   const auto cells( yHeight * xWidth );
+   const auto cells( d_xyState.size.lin * d_xyState.size.col );
    DBG( "+%s (%dx%d) cells=%d->%d (x %Iu = %Iu)", __func__, d_xyState.size.col, d_xyState.size.lin, d_OutputBufferCacheAllocdCells, cells
       , sizeof(*d_pascOutputBufferCache)
       , sizeof(*d_pascOutputBufferCache) * cells
@@ -283,8 +283,6 @@ void TConsoleOutputControl::SetNewScreenSize( int yHeight, int xWidth ) {
    }
 
    NullifyUpdtLineRange();
-
-   Event_ScreenSizeChanged( d_xyState.size );
    DBG( "-%s (%dx%d)", __func__, d_xyState.size.col, d_xyState.size.lin );
    }
 
@@ -589,7 +587,6 @@ bool TConsoleOutputControl::SetConsoleSizeOk( Point &newSize ) {
    if( newSize.col > sizeof(Linebuf)-1 ) { newSize.col = sizeof(Linebuf)-1; }
 
    auto retVal(false);
-
    if(   winSize.col == bufSize.col && bufSize.col == newSize.col
       && winSize.lin == bufSize.lin && bufSize.lin == newSize.lin
      ) {
@@ -637,8 +634,9 @@ bool TConsoleOutputControl::SetConsoleSizeOk( Point &newSize ) {
 SIZE_OK:
 
       win_fully_on_desktop();
-      SetNewScreenSize( newSize.lin, newSize.col );
+      SetNewScreenSize( newSize );
 
+      Event_ScreenSizeChanged( newSize );
       retVal = true;
       } while(0); // NOT a loop; just so I can use break (not goto) above
 

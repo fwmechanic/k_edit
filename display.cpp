@@ -3095,6 +3095,8 @@ STATIC_FXN bool EditorScreenSizeAllowed( const Point &newSize ) { // checks EDIT
    return WinsCanResizeContent( newSize );
    }
 
+// if newSize is not supported, and a supported size can be switched to:
+//    it will be switched to, newSize will be updated, "OK" status will be returned
 bool VideoSwitchModeToXYOk( Point &newSize ) {
    return EditorScreenSizeAllowed( newSize ) && Video::SetScreenSizeOk( newSize );
    }
