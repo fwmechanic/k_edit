@@ -17,7 +17,7 @@ PStringListEl NewStringListEl( PCChar str, PCChar pEos ) { // pEos points past l
    }
 
 void InsStringListEl( PStringListHead pSlhd, PCChar str, PCChar pEos ) {
-   DBG("%s: %s", __func__, str );
+   0 && DBG("%s: %s", __func__, str );
    auto pIns( NewStringListEl( str, pEos ) );
    DLINK_INSERT_LAST( *pSlhd, pIns, dlink );
    }
