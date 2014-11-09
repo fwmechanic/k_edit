@@ -25,7 +25,7 @@ STATIC_FXN int NonWinDisplayLines() { return ScreenLines() - EditScreenLines(); 
 STATIC_FXN int NonWinDisplayCols()  { return 0; }
 
 
-bool WinsCanResizeContent( const Point &newSize ) {
+bool Wins_CanResizeContent( const Point &newSize ) {
    const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
    auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
    if( existingSplitVertical ) {
@@ -88,6 +88,11 @@ void Win::Event_Win_Resized( LINE newHeight, COL newWidth ) {
    DLINKC_FIRST_TO_LAST( ViewHd, dlinkViewsOfWindow, pv ) {
       pv->Event_Win_Resized( newHeight, newWidth );
       }
+   }
+
+void Wins_ScreenSizeChanged( const Point &newSize ) {
+   if( g_iWindowCount() == 1 )
+      g_CurWin()->Event_Win_Resized( EditScreenLines(), EditScreenCols() );
    }
 
 STATIC_FXN int PWinToWidx( PWin pWin ) {

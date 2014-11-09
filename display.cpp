@@ -2457,8 +2457,7 @@ void Event_ScreenSizeChanged( const Point &newSize ) {
 
    DeleteUp( s_paScreenLineNeedsRedraw, new srd_linevect ( EditScreenLines() ) );
 
-   if( g_iWindowCount() == 1 )
-      g_CurWin()->Event_Win_Resized( EditScreenLines(), EditScreenCols() );
+   Wins_ScreenSizeChanged( newSize );
 
    DispNeedsRedrawTotal();
    }
@@ -3092,7 +3091,7 @@ void ddi_console() {
 
 STATIC_FXN bool EditorScreenSizeAllowed( const Point &newSize ) { // checks EDITOR rules for whether new screen size is OK
    if( newSize.col <= g_iHscroll )        return Msg( "newSize.col (%d) <= g_iHscroll (%d)", newSize.col, g_iHscroll );
-   return WinsCanResizeContent( newSize );
+   return Wins_CanResizeContent( newSize );
    }
 
 // if newSize is not supported, and a supported size can be switched to:

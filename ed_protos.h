@@ -240,7 +240,8 @@ extern void  MsgClr();
 extern void  VErrorDialogBeepf( PCChar format, va_list args );
 extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
 
-extern bool  WinsCanResizeContent( const Point &newSize );
+extern bool  Wins_CanResizeContent( const Point &newSize );
+extern void  Wins_ScreenSizeChanged( const Point &newSize );
 extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 // if newSize is not supported, and a supported size can be switched to:
