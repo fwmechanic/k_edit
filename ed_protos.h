@@ -107,7 +107,7 @@ namespace Video {
    Point GetMaxConsoleSize();
 
    void  GetScreenSize(PPoint rv);
-   bool  SetScreenSizeOk( int yHeight, int xWidth );
+   bool  SetScreenSizeOk( Point &newSize );
 
    bool  GetCursorState( Point *pt, bool *pfVisible );
 
@@ -240,11 +240,11 @@ extern void  MsgClr();
 extern void  VErrorDialogBeepf( PCChar format, va_list args );
 extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
 
-extern bool  CanResizeContent( Point newSize );
+extern bool  WinsCanResizeContent( const Point &newSize );
 extern bool  ResizeScreen( Point newSize );
 extern void  EditorScreenSizeChanged( Point newSize );
 
-extern bool  VideoSwitchModeToXY( int newWidth, int newHeight );
+extern bool  VideoSwitchModeToXYOk( Point &newSize );
 extern COL   VidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol );
 
 class VideoFlusher

@@ -197,11 +197,10 @@ STATIC_CONST char kszSCRN[] = "SCRN:";
 STATIC_FXN bool recovScrnDims( PCChar lbuf ) {
    auto fFailed( ToBOOL( Strnicmp( lbuf, kszSCRN, KSTRLEN(kszSCRN) ) ) );
    if( !fFailed ) {
-      LINE newHeight;
-      COL  newWidth ;
-      fFailed = 2 != sscanf( lbuf+KSTRLEN(kszSCRN), "%dx%d", &newWidth, &newHeight );
+      Point newSize;
+      fFailed = 2 != sscanf( lbuf+KSTRLEN(kszSCRN), "%dx%d", &newSize.col, &newSize.lin );
       if( !fFailed )
-         VideoSwitchModeToXY( newWidth, newHeight );
+         VideoSwitchModeToXYOk( newSize );
       }
    return fFailed;
    }

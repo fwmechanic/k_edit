@@ -2456,7 +2456,7 @@ bool ResizeScreen( Point newSize ) {
    //   1: minimum-sizecheck
    //   2: resize
 
-   const auto fVModeSwOk( VideoSwitchModeToXY( newSize.col, newSize.lin ) );
+   const auto fVModeSwOk( VideoSwitchModeToXYOk( newSize ) );
    if( !fVModeSwOk )
       Msg( "Not supported by video display" );
 
@@ -3102,13 +3102,13 @@ void ddi_console() {
 
 //***********************************************************************************************
 
-STATIC_FXN bool EditorScreenSizeOk( int newWidth, int newHeight ) { // checks EDITOR rules for whether new screen size is OK
-   if( newWidth <= g_iHscroll )        return Msg( "newWidth (%d) <= g_iHscroll (%d)", newWidth, g_iHscroll );
-   return true;
+STATIC_FXN bool EditorScreenSizeOk( const Point &newSize ) { // checks EDITOR rules for whether new screen size is OK
+   if( newSize.col <= g_iHscroll )        return Msg( "newSize.col (%d) <= g_iHscroll (%d)", newSize.col, g_iHscroll );
+   return WinsCanResizeContent( newSize );
    }
 
-bool VideoSwitchModeToXY( int newWidth, int newHeight ) {
-   return EditorScreenSizeOk( newWidth, newHeight ) && Video::SetScreenSizeOk( newHeight, newWidth );
+bool VideoSwitchModeToXYOk( Point &newSize ) {
+   return EditorScreenSizeOk( newSize ) && Video::SetScreenSizeOk( newSize );
    }
 
 void DispNeedsRedrawCursorMoved() { if( g_CurView() ) g_CurView()->ForceCursorMovedCondition(); }
