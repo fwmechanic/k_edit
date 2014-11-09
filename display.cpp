@@ -2451,7 +2451,19 @@ LINE MinDispLine() { return g_fDialogTop ? 2 : 0          ; }
 LINE DialogLine()  { return g_fDialogTop ? 1 : s_iHeight-2; }
 LINE StatusLine()  { return g_fDialogTop ? 0 : s_iHeight-1; }
 
-void EditorSetScreenSize( Point newSize ) {
+bool ResizeScreen( Point newSize ) {
+   // BUGBUG need to support resizing in a multiple window enviromnent:
+   //   1: minimum-sizecheck
+   //   2: resize
+
+   const auto fVModeSwOk( VideoSwitchModeToXY( newSize.col, newSize.lin ) );
+   if( !fVModeSwOk )
+      Msg( "Not supported by video display" );
+
+   return fVModeSwOk;
+   }
+
+void EditorScreenSizeChanged( Point newSize ) {
    s_iHeight = newSize.lin; // THE ONLY PLACE WHERE THIS VARIABLE IS ASSIGNED!!!
    s_iWidth  = newSize.col; // THE ONLY PLACE WHERE THIS VARIABLE IS ASSIGNED!!!
 

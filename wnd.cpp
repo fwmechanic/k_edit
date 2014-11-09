@@ -24,7 +24,8 @@ bool Win::GetCursorForDisplay( Point *pt ) {
 STATIC_FXN int NonWinDisplayLines() { return ScreenLines() - EditScreenLines(); }
 STATIC_FXN int NonWinDisplayCols()  { return 0; }
 
-bool CanResizeContent( int newX, int newY ) {
+
+bool CanResizeContent( Point newSize ) {
    const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
    auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
    if( existingSplitVertical ) {
@@ -35,8 +36,8 @@ bool CanResizeContent( int newX, int newY ) {
       min_size_x += MIN_WIN_WIDTH;
       min_size_y += (g_iWindowCount() * MIN_WIN_HEIGHT) + (BORDER_WIDTH * (g_iWindowCount() - 1));
       }
-   if(   newX >= min_size_x
-      && newY >= min_size_y
+   if(   newSize.col >= min_size_x
+      && newSize.lin >= min_size_y
      ) {
       return true;
       }
@@ -66,25 +67,13 @@ bool CanResizeContent( int newX, int newY ) {
       }
 
       DBG( "%s maxWinsOnAnyLine=%d, maxWinsOnAnyCol=%d", __func__, maxWinsOnAnyLine, maxWinsOnAnyCol );
-      if( 0&&newY > MIN_WIN_HEIGHT * maxWinsOnAnyLine
-          && newX > MIN_WIN_WIDTH  * maxWinsOnAnyCol
+      if( 0&&newSize.lin > MIN_WIN_HEIGHT * maxWinsOnAnyLine
+          && newSize.col > MIN_WIN_WIDTH  * maxWinsOnAnyCol
         )
          return true;
       }
 
    return false;
-   }
-
-bool ResizeScreen( int newX, int newY ) {
-   // BUGBUG need to support resizing in a multiple window enviromnent:
-   //   1: minimum-sizecheck
-   //   2: resize
-
-   const auto fVModeSwOk( VideoSwitchModeToXY( newX, newY ) );
-   if( !fVModeSwOk )
-      Msg( "Not supported by video display" );
-
-   return fVModeSwOk;
    }
 
 void View::Event_Win_Resized( LINE newHeight, COL newWidth ) { 0 && DBG( "%s %s", __func__, d_pFBuf->Name() );

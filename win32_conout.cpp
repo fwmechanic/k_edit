@@ -104,6 +104,7 @@ public: //**************************************************
    void  GetSizeCursorLocn( W32_ScreenSize_CursorLocn *cxy ); // not const cuz hits mutex!
    Point GetMaxConsoleSize();                                 // not const cuz hits mutex!
    bool  GetCursorState( Point *pt, bool *pfVisible );        // not const cuz hits mutex!
+   bool  ConsoleSizeSupported( const int newY, const int newX ) const;
    bool  SetConsoleSizeOk( int yHeight, int xWidth );
    bool  SetCursorLocnOk( LINE yLine, COL xCol );
    bool  SetCursorSizeOk( bool fBigCursor );
@@ -283,7 +284,7 @@ void TConsoleOutputControl::SetNewScreenSize( int yHeight, int xWidth ) {
 
    NullifyUpdtLineRange();
 
-   EditorSetScreenSize( d_xyState.size );
+   EditorScreenSizeChanged( d_xyState.size );
    DBG( "-%s (%dx%d)", __func__, d_xyState.size.col, d_xyState.size.lin );
    }
 
@@ -553,15 +554,32 @@ Point TConsoleOutputControl::GetMaxConsoleSize() {
       DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
       return Point(0,0);
       }
-   return csbi.MaxBufSize();
+   auto rv( csbi.MaxBufSize() );
+   NoMoreThan( &rv.col, static_cast<int>(sizeof(Linebuf)-1) );
+   return rv;
    }
 
-bool TConsoleOutputControl::SetConsoleSizeOk( int yHeight, int xWidth ) {
+bool TConsoleOutputControl::ConsoleSizeSupported( const int newY, const int newX ) const {
+   const Win32::ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "console resize" );
+   FmtStr<80> trying( "%s+ Ask(%dx%d)", __func__, newX, newY );
+   if( !csbi.isValid() ) {
+      DBG( "%s", trying.k_str() );
+      DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
+      return false;
+      }
+   const auto maxSize( csbi.MaxBufSize() );
+
+   if( newY > maxSize.lin )       { return false; }
+   if( newX > maxSize.col )       { return false; }
+   if( newX > sizeof(Linebuf)-1 ) { return false; }
+   return true;
+   }
+
+bool TConsoleOutputControl::SetConsoleSizeOk( const int newY, const int newX ) {
    enum { DODBG = 0 };
    AutoMutex mtx( d_mutex );  //##################################################
 
-   FmtStr<80> trying( "%s+ Ask(%dx%d)", __func__, xWidth, yHeight );
-
+   FmtStr<80> trying( "%s+ Ask(%dx%d)", __func__, newX, newY );
    DODBG && DBG( "%s", trying.k_str() );
 
    // NB: GetLargestConsoleWindowSize()'s retVal will change if the console
@@ -582,26 +600,21 @@ bool TConsoleOutputControl::SetConsoleSizeOk( int yHeight, int xWidth ) {
    const auto maxSize( csbi.MaxBufSize() );
    DODBG && DBG( "%s + Win=(%4d,%4d), Buf=(%4d,%4d) Max=(%4d,%4d)", __func__, winSize.col, winSize.lin, bufSize.col, bufSize.lin, maxSize.col, maxSize.lin );
 
-   if( yHeight > maxSize.lin )
-       yHeight = maxSize.lin;
-
-   if( xWidth > maxSize.col )
-       xWidth = maxSize.col;
-
-   if( xWidth > sizeof(Linebuf)-1 )
-       xWidth = sizeof(Linebuf)-1;
+   if( newY > maxSize.lin )       { return false; }
+   if( newX > maxSize.col )       { return false; }
+   if( newX > sizeof(Linebuf)-1 ) { return false; }
 
    auto retVal(false);
 
-   if(   winSize.col == bufSize.col && bufSize.col == xWidth
-      && winSize.lin == bufSize.lin && bufSize.lin == yHeight
+   if(   winSize.col == bufSize.col && bufSize.col == newX
+      && winSize.lin == bufSize.lin && bufSize.lin == newY
      ) {
       DODBG && DBG( "%s - Nothing to do", __func__ );
       goto SIZE_OK;
       }
 
    do { // NOT a loop; just so I can use break (instead of goto) in this block
-      if( yHeight < winSize.lin || xWidth < winSize.col ) {
+      if( newY < winSize.lin || newX < winSize.col ) {
          // *** Either or BOTH of desired width OR height are LESS THAN current values.
          // *** SHRINK Screen Buffer mapping to minimum to meet
          // *** the requirements of the SetConsoleScreenBufferSize API:
@@ -610,13 +623,13 @@ bool TConsoleOutputControl::SetConsoleSizeOk( int yHeight, int xWidth ) {
          // height of the (screen buffer's) WINDOW.  The specified dimensions also
          // cannot be less than the minimum size allowed by the system."
          //
-         if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, Min( int(bufSize.lin), yHeight ), Min( int(bufSize.col), xWidth ) ) ) {
+         if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, Min( int(bufSize.lin), newY ), Min( int(bufSize.col), newX ) ) ) {
             DBG( "%s shrinking SetConsoleWindowInfo FAILED!", trying.k_str() );
             break;
             }
          }
 
-      if( !SetConsoleBufferSizeOk( d_hConsoleScreenBuffer, yHeight, xWidth ) ) {
+      if( !SetConsoleBufferSizeOk( d_hConsoleScreenBuffer, newY, newX ) ) {
          // *** ConsoleScreenBuffer resize failed (likely too small): restore window mapping and exit
          Win32::SetConsoleWindowInfo( d_hConsoleScreenBuffer, 1, &csbi.srWindow() );
          DBG( "%s SetConsoleScreenBufferSize FAILED!", trying.k_str() );
@@ -624,7 +637,7 @@ bool TConsoleOutputControl::SetConsoleSizeOk( int yHeight, int xWidth ) {
          }
 
       //lint -e{734}
-      if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, yHeight, xWidth ) ) {
+      if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, newY, newX ) ) {
          DBG( "%s growing SetConsoleWindowSizeOk FAILED!", trying.k_str() );
          break;
          }
@@ -640,7 +653,7 @@ bool TConsoleOutputControl::SetConsoleSizeOk( int yHeight, int xWidth ) {
 SIZE_OK:
 
       win_fully_on_desktop();
-      SetNewScreenSize( yHeight, xWidth );
+      SetNewScreenSize( newY, newX );
 
       retVal = true;
       } while(0); // NOT a loop; just so I can use break (not goto) above

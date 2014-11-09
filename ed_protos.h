@@ -239,9 +239,10 @@ extern bool  Msg(  PCChar pszFormat, ... ) ATTR_FORMAT(1, 2);
 extern void  MsgClr();
 extern void  VErrorDialogBeepf( PCChar format, va_list args );
 extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
-extern bool  CanResizeContent( int newX, int newY );
-extern bool  ResizeScreen( int newX, int newY );
-extern void  EditorSetScreenSize( Point newSize );
+
+extern bool  CanResizeContent( Point newSize );
+extern bool  ResizeScreen( Point newSize );
+extern void  EditorScreenSizeChanged( Point newSize );
 
 extern bool  VideoSwitchModeToXY( int newWidth, int newHeight );
 extern COL   VidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol );

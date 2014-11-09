@@ -129,9 +129,10 @@ class ConsoleSizeChanger : public KeyChanger
    int       d_fontNow;
    int       d_numFonts;
 
-   void ResizeScreen( int newX, int newY ) {
-      if( CanResizeContent( newX, newY ) ) {
-         ::ResizeScreen( newX, newY );
+   void Resize_Screen( int newX, int newY ) {
+      Point newSize{ .lin=newY, .col=newX };
+      if( CanResizeContent( newSize ) ) {
+         ::ResizeScreen( newSize );
          d_wcfc.GetFontInfo();
          }
       }
@@ -160,21 +161,22 @@ class ConsoleSizeChanger : public KeyChanger
                            , d_wcfc.GetFontAspectRatio( d_fontNow )
                            );
                       }
-   void actionEsc  () { d_wcfc.SetOrigFont();   ResizeScreen( d_origWidth        , d_origHeight    ); }
-   void actionDown () {                         ResizeScreen( EditScreenCols()   , ScreenLines()+1 ); }
-   void actionUp   () {                         ResizeScreen( EditScreenCols()   , ScreenLines()-1 ); }
-   void actionRight() {                         ResizeScreen( EditScreenCols()+1 , ScreenLines()   ); }
-   void actionLeft () {                         ResizeScreen( EditScreenCols()-1 , ScreenLines()   ); }
+   void actionEsc  () { d_wcfc.SetOrigFont();   Resize_Screen( d_origWidth        , d_origHeight    ); }
+   void actionDown () {                         Resize_Screen( EditScreenCols()   , ScreenLines()+1 ); }
+   void actionUp   () {                         Resize_Screen( EditScreenCols()   , ScreenLines()-1 ); }
+   void actionRight() {                         Resize_Screen( EditScreenCols()+1 , ScreenLines()   ); }
+   void actionLeft () {                         Resize_Screen( EditScreenCols()-1 , ScreenLines()   ); }
    void actionPlus () { for(auto ix(d_fontNow+1); ix <= d_numFonts-1; ++ix) if( SetFont( ix ) ) return; }
    void actionMinus() { for(auto ix(d_fontNow-1); ix >= 0           ; --ix) if( SetFont( ix ) ) return; }
-   void actionStar     () { ResizeScreen( 10000, 10000 ); }  // will get resized downward
+// void actionStar     () { Resize_Screen( 10000, 10000 ); }  // will get resized downward
+   void actionStar     () { const auto maxSize( Video::GetMaxConsoleSize() );  Resize_Screen( maxSize.col-1   , maxSize.lin-1 ); }
    // maxSize.? -1 cuz GetMaxConsoleSize (Win32 API) doesn't seem to account for sizes of window borders
-// void actionCtrlRight() { const auto maxSize( Video::GetMaxConsoleSize() );  ResizeScreen( maxSize.col-1   , ScreenLines() ); }
-// void actionCtrlDown () { const auto maxSize( Video::GetMaxConsoleSize() );  ResizeScreen( EditScreenCols(), maxSize.lin-1 ); }
-   void actionCtrlRight() { ResizeScreen( ((EditScreenCols()*4)/3),   ScreenLines()       ); }
-   void actionCtrlLeft () { ResizeScreen( ((EditScreenCols()*3)/4),   ScreenLines()       ); }
-   void actionCtrlDown () { ResizeScreen(   EditScreenCols(),       ((ScreenLines()*4)/3) ); }
-   void actionCtrlUp   () { ResizeScreen(   EditScreenCols(),       ((ScreenLines()*3)/4) ); }
+// void actionCtrlRight() { Resize_Screen( ((EditScreenCols()*4)/3),   ScreenLines()       ); }
+   void actionCtrlRight() { const auto maxSize( Video::GetMaxConsoleSize() );  Resize_Screen( maxSize.col-1   , ScreenLines() ); }
+   void actionCtrlDown () { const auto maxSize( Video::GetMaxConsoleSize() );  Resize_Screen( EditScreenCols(), maxSize.lin-1 ); }
+// void actionCtrlDown () { Resize_Screen(   EditScreenCols(),       ((ScreenLines()*4)/3) ); }
+   void actionCtrlLeft () { Resize_Screen( ((EditScreenCols()*3)/4),   ScreenLines()       ); }
+   void actionCtrlUp   () { Resize_Screen(   EditScreenCols(),       ((ScreenLines()*3)/4) ); }
    };
 
 bool ARG::resize() {
