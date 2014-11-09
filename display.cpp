@@ -2451,19 +2451,7 @@ LINE MinDispLine() { return g_fDialogTop ? 2 : 0          ; }
 LINE DialogLine()  { return g_fDialogTop ? 1 : s_iHeight-2; }
 LINE StatusLine()  { return g_fDialogTop ? 0 : s_iHeight-1; }
 
-bool ResizeScreen( Point newSize ) {
-   // BUGBUG need to support resizing in a multiple window enviromnent:
-   //   1: minimum-sizecheck
-   //   2: resize
-
-   const auto fVModeSwOk( VideoSwitchModeToXYOk( newSize ) );
-   if( !fVModeSwOk )
-      Msg( "Not supported by video display" );
-
-   return fVModeSwOk;
-   }
-
-void EditorScreenSizeChanged( Point newSize ) {
+void Event_ScreenSizeChanged( const Point &newSize ) {
    s_iHeight = newSize.lin; // THE ONLY PLACE WHERE THIS VARIABLE IS ASSIGNED!!!
    s_iWidth  = newSize.col; // THE ONLY PLACE WHERE THIS VARIABLE IS ASSIGNED!!!
 
@@ -3102,13 +3090,13 @@ void ddi_console() {
 
 //***********************************************************************************************
 
-STATIC_FXN bool EditorScreenSizeOk( const Point &newSize ) { // checks EDITOR rules for whether new screen size is OK
+STATIC_FXN bool EditorScreenSizeAllowed( const Point &newSize ) { // checks EDITOR rules for whether new screen size is OK
    if( newSize.col <= g_iHscroll )        return Msg( "newSize.col (%d) <= g_iHscroll (%d)", newSize.col, g_iHscroll );
    return WinsCanResizeContent( newSize );
    }
 
 bool VideoSwitchModeToXYOk( Point &newSize ) {
-   return EditorScreenSizeOk( newSize ) && Video::SetScreenSizeOk( newSize );
+   return EditorScreenSizeAllowed( newSize ) && Video::SetScreenSizeOk( newSize );
    }
 
 void DispNeedsRedrawCursorMoved() { if( g_CurView() ) g_CurView()->ForceCursorMovedCondition(); }

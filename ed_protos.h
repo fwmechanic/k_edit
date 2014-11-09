@@ -241,8 +241,7 @@ extern void  VErrorDialogBeepf( PCChar format, va_list args );
 extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
 
 extern bool  WinsCanResizeContent( const Point &newSize );
-extern bool  ResizeScreen( Point newSize );
-extern void  EditorScreenSizeChanged( Point newSize );
+extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 extern bool  VideoSwitchModeToXYOk( Point &newSize );
 extern COL   VidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol );

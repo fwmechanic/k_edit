@@ -104,7 +104,6 @@ public: //**************************************************
    void  GetSizeCursorLocn( W32_ScreenSize_CursorLocn *cxy ); // not const cuz hits mutex!
    Point GetMaxConsoleSize();                                 // not const cuz hits mutex!
    bool  GetCursorState( Point *pt, bool *pfVisible );        // not const cuz hits mutex!
-   bool  ConsoleSizeSupported( const int newY, const int newX ) const;
    bool  SetConsoleSizeOk( Point &newSize );
    bool  SetCursorLocnOk( LINE yLine, COL xCol );
    bool  SetCursorSizeOk( bool fBigCursor );
@@ -285,7 +284,7 @@ void TConsoleOutputControl::SetNewScreenSize( int yHeight, int xWidth ) {
 
    NullifyUpdtLineRange();
 
-   EditorScreenSizeChanged( d_xyState.size );
+   Event_ScreenSizeChanged( d_xyState.size );
    DBG( "-%s (%dx%d)", __func__, d_xyState.size.col, d_xyState.size.lin );
    }
 
@@ -560,22 +559,6 @@ Point TConsoleOutputControl::GetMaxConsoleSize() {
    return rv;
    }
 
-bool TConsoleOutputControl::ConsoleSizeSupported( const int newY, const int newX ) const {
-   const Win32::ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "console resize" );
-   FmtStr<80> trying( "%s+ Ask(%dx%d)", __func__, newX, newY );
-   if( !csbi.isValid() ) {
-      DBG( "%s", trying.k_str() );
-      DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
-      return false;
-      }
-   const auto maxSize( csbi.MaxBufSize() );
-
-   if( newY > maxSize.lin )       { return false; }
-   if( newX > maxSize.col )       { return false; }
-   if( newX > sizeof(Linebuf)-1 ) { return false; }
-   return true;
-   }
-
 bool TConsoleOutputControl::SetConsoleSizeOk( Point &newSize ) {
    enum { DODBG = 0 };
    AutoMutex mtx( d_mutex );  //##################################################
@@ -601,9 +584,9 @@ bool TConsoleOutputControl::SetConsoleSizeOk( Point &newSize ) {
    const auto maxSize( csbi.MaxBufSize() );
    DODBG && DBG( "%s + Win=(%4d,%4d), Buf=(%4d,%4d) Max=(%4d,%4d)", __func__, winSize.col, winSize.lin, bufSize.col, bufSize.lin, maxSize.col, maxSize.lin );
 
-   if( newSize.lin > maxSize.lin )       { return false; }
-   if( newSize.col > maxSize.col )       { return false; }
-   if( newSize.col > sizeof(Linebuf)-1 ) { return false; }
+   if( newSize.lin > maxSize.lin )       { newSize.lin = maxSize.lin      ; }
+   if( newSize.col > maxSize.col )       { newSize.col = maxSize.col      ; }
+   if( newSize.col > sizeof(Linebuf)-1 ) { newSize.col = sizeof(Linebuf)-1; }
 
    auto retVal(false);
 

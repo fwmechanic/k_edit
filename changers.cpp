@@ -131,8 +131,7 @@ class ConsoleSizeChanger : public KeyChanger
 
    void Resize_Screen( int newX, int newY ) {
       Point newSize{ .lin=newY, .col=newX };
-      if( WinsCanResizeContent( newSize ) ) {
-         ::ResizeScreen( newSize );
+      if( VideoSwitchModeToXYOk( newSize ) && newSize.lin==newY && newSize.col==newX ) {
          d_wcfc.GetFontInfo();
          }
       }
