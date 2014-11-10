@@ -156,6 +156,9 @@ void Win::Maximize() {
    d_UpLeft.lin = 0;
    d_Size.col = EditScreenCols();
    d_Size.lin = EditScreenLines();
+   d_size_scale.col = 100 * scale_scale;
+   d_size_scale.lin = 100 * scale_scale;
+   DBG( "%s", __func__ );
    }
 
 Win::Win() {
@@ -163,24 +166,32 @@ Win::Win() {
    }
 
 Win::Win( Win &parent, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! parent is a reference since this is a COPY CTOR
-   // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
-   //
    parent.DispNeedsRedrawAllLines(); // in the horizontal-split case this is somewhat overkill...
 
-   if( fSplitVertical ) {
-             d_Size.lin  = parent.d_Size.lin                                         ;
-             d_Size.col  = parent.d_Size.col   - ColumnOrLineToSplitAt - 2           ;
-      parent.d_Size.col -=        d_Size.col                           + BORDER_WIDTH; // <-- !!!!
-           d_UpLeft.lin  = parent.d_UpLeft.lin                                       ;
-           d_UpLeft.col  = parent.d_UpLeft.col + parent.d_Size.col     + BORDER_WIDTH;
-      }
-   else {
-             d_Size.lin  = parent.d_Size.lin   - ColumnOrLineToSplitAt - 2           ;
-             d_Size.col  = parent.d_Size.col                                         ;
-      parent.d_Size.lin -=        d_Size.lin                           + BORDER_WIDTH; // <-- !!!!
-           d_UpLeft.lin  = parent.d_UpLeft.lin + parent.d_Size.lin     + BORDER_WIDTH;
-           d_UpLeft.col  = parent.d_UpLeft.col                                       ;
-      }
+   // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
+   #define SPLIT_IT( aaa, bbb )                                                                       \
+             d_Size.aaa  = parent.d_Size.aaa                                         ;                \
+      const auto src_size( parent.d_Size.bbb );                                                       \
+             d_Size.bbb  = parent.d_Size.bbb   - ColumnOrLineToSplitAt - 2           ;                \
+      parent.d_Size.bbb -=        d_Size.bbb                           + BORDER_WIDTH; /* <-- !!!! */ \
+           d_UpLeft.aaa  = parent.d_UpLeft.aaa                                       ;                \
+           d_UpLeft.bbb  = parent.d_UpLeft.bbb + parent.d_Size.bbb     + BORDER_WIDTH;                \
+      const auto src_size_scale( parent.d_size_scale.bbb );                                           \
+      /* ASSUMES uniform split-type */                                                                \
+       d_size_scale.aaa  = 100 * scale_scale;                                                         \
+       d_size_scale.bbb  = (src_size_scale * d_Size.bbb) / src_size;                                  \
+       parent.d_size_scale.bbb -= d_size_scale.bbb;                                                   \
+       0 &&                                                                                           \
+       DBG( "%s: src=%d=%d%%, this=%d=%d%%, parent=%d=%d%%", __func__,                                \
+                    src_size  ,          src_size_scale/scale_scale                                   \
+           , parent.d_Size.bbb, parent.d_size_scale.bbb/scale_scale                                   \
+           ,        d_Size.bbb,        d_size_scale.bbb/scale_scale                                   \
+          );
+
+   if( fSplitVertical ) {  SPLIT_IT( lin, col )  }
+   else                 {  SPLIT_IT( col, lin )  }
+
+   #undef SPLIT_IT
 
    parent.Event_Win_Resized( parent.d_Size.lin, parent.d_Size.col );
 
@@ -327,11 +338,16 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 0 && DBG( "%s
          }
       }
    }
-
    DestroyViewList( &pWinToClose->ViewHd );
 
-   if( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin )  pWinToMergeTo->d_Size.col += pWinToClose->d_Size.col + BORDER_WIDTH;
-   else                                                            pWinToMergeTo->d_Size.lin += pWinToClose->d_Size.lin + BORDER_WIDTH;
+   const auto fSplitVertical( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin );
+   #define  WIN_SIZE_MERGE( aaa ) \
+      pWinToMergeTo->d_Size.aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH;
+
+   if( fSplitVertical ) { WIN_SIZE_MERGE( col ) }
+   else                 { WIN_SIZE_MERGE( lin ) }
+
+   #undef  WIN_SIZE_MERGE
 
    NoGreaterThan( &pWinToMergeTo->d_UpLeft.col, pWinToClose->d_UpLeft.col );
    NoGreaterThan( &pWinToMergeTo->d_UpLeft.lin, pWinToClose->d_UpLeft.lin );

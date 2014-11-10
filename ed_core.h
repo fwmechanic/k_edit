@@ -938,6 +938,10 @@ struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win 
    Point     d_Size;   // public: exposed
    Point     d_UpLeft; // public: exposed
 
+private:
+   enum { scale_scale = 1000 };
+   Point     d_size_scale;
+
 public:
              Win();
              Win( PCChar pC );
