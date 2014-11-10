@@ -21,61 +21,6 @@ bool Win::GetCursorForDisplay( Point *pt ) {
    return true;
    }
 
-STATIC_FXN int NonWinDisplayLines() { return ScreenLines() - EditScreenLines(); }
-STATIC_FXN int NonWinDisplayCols()  { return 0; }
-
-
-bool Wins_CanResizeContent( const Point &newSize ) {
-   const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
-   auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
-   if( existingSplitVertical ) {
-      min_size_x += (g_iWindowCount() * MIN_WIN_WIDTH)  + (BORDER_WIDTH * (g_iWindowCount() - 1));
-      min_size_y += MIN_WIN_HEIGHT;
-      }
-   else {
-      min_size_x += MIN_WIN_WIDTH;
-      min_size_y += (g_iWindowCount() * MIN_WIN_HEIGHT) + (BORDER_WIDTH * (g_iWindowCount() - 1));
-      }
-   if(   newSize.col >= min_size_x
-      && newSize.lin >= min_size_y
-     ) {
-      return true;
-      }
-
-   if( 0 ) {
-      auto maxWinsOnAnyLine(0); // max # of wnds on any display line
-      {
-      const auto yTop(0), yBottom( EditScreenLines() );
-      for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) {
-         auto winsOnLine(0);
-         for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
-            if( g_Win( iw )->VisibleOnDisplayLine( yLine ) ) ++winsOnLine;
-            }
-         maxWinsOnAnyLine = Max( maxWinsOnAnyLine, winsOnLine );
-         }
-      }
-      auto maxWinsOnAnyCol(0); // max # of wnds on any display row
-      {
-      const auto xLeft(0), xRight( EditScreenCols() );
-      for( auto xCol(xLeft) ; xCol < xRight; ++xCol ) {
-         auto winsOnCol(0);
-         for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
-            if( g_Win( iw )->VisibleOnDisplayCol( xCol ) ) ++winsOnCol;
-            }
-         maxWinsOnAnyCol = Max( maxWinsOnAnyCol, winsOnCol );
-         }
-      }
-
-      DBG( "%s maxWinsOnAnyLine=%d, maxWinsOnAnyCol=%d", __func__, maxWinsOnAnyLine, maxWinsOnAnyCol );
-      if( 0&&newSize.lin > MIN_WIN_HEIGHT * maxWinsOnAnyLine
-          && newSize.col > MIN_WIN_WIDTH  * maxWinsOnAnyCol
-        )
-         return true;
-      }
-
-   return false;
-   }
-
 void View::Event_Win_Resized( LINE newHeight, COL newWidth ) { 0 && DBG( "%s %s", __func__, d_pFBuf->Name() );
    HiliteAddin_Event_WinResized();
    }
@@ -90,9 +35,102 @@ void Win::Event_Win_Resized( LINE newHeight, COL newWidth ) {
       }
    }
 
+STATIC_FXN int NonWinDisplayLines() { return ScreenLines() - EditScreenLines(); }
+STATIC_FXN int NonWinDisplayCols()  { return 0; }
+
+bool Wins_CanResizeContent( const Point &newSize ) {
+   const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
+   auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
+   if( existingSplitVertical ) {
+      min_size_x += (g_iWindowCount() * MIN_WIN_WIDTH)  + (BORDER_WIDTH * (g_iWindowCount() - 1));
+      min_size_y += MIN_WIN_HEIGHT;
+      }
+   else {
+      min_size_x += MIN_WIN_WIDTH;
+      min_size_y += (g_iWindowCount() * MIN_WIN_HEIGHT) + (BORDER_WIDTH * (g_iWindowCount() - 1));
+      }
+   return    g_iWindowCount() == 1
+          && newSize.col >= min_size_x
+          && newSize.lin >= min_size_y;
+   }
+
 void Wins_ScreenSizeChanged( const Point &newSize ) {
-   if( g_iWindowCount() == 1 )
+   if( g_iWindowCount() == 1 ) {
       g_CurWin()->Event_Win_Resized( EditScreenLines(), EditScreenCols() );
+      }
+   else { // multiwindow resize
+/*
+      if( 0 ) {
+         const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
+         auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
+         if( existingSplitVertical ) {
+            }
+         else { // splitHoriz
+            const Point newWinSize( newSize, -(NonWinDisplayLines()+g_iWindowCount()-1), -NonWinDisplayCols() );
+            auto shrinkableWins(0);
+            auto curWinSizeY = 0;
+            Point newWinSizes[ ELEMENTS(g__.aWindow) ];
+            for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
+               const auto sizeY( g_Win( iw )->d_Size.lin );
+               if( sizeY > MIN_WIN_HEIGHT ) {
+                  ++shrinkableWins;
+                  }
+               else {
+                  newWinSizes[iw].lin = sizeY;
+                  }
+               curWinSizeY += sizeY;
+               newWinSizes[iw].col = newWinSize.col;
+               }
+            if( newWinSize.lin > curWinSizeY ) {
+               // grow all windows proportionally
+               for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
+                  const auto sizeY( g_Win( iw )->d_Size.lin )
+                  if( sizeY > MIN_WIN_HEIGHT ) {
+                     ++shrinkableWins;
+                     }
+                  else {
+                     newWinSizes[iw].lin = sizeY;
+                     }
+                  }
+               }
+            else {
+               // shrink all windows (except min-sized) proportionally
+               }
+            }
+
+         if( 0 ) {
+            auto maxWinsOnAnyLine(0); // max # of wnds on any display line
+            {
+            const auto yTop(0), yBottom( EditScreenLines() );
+            for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) {
+               auto winsOnLine(0);
+               for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
+                  if( g_Win( iw )->VisibleOnDisplayLine( yLine ) ) ++winsOnLine;
+                  }
+               maxWinsOnAnyLine = Max( maxWinsOnAnyLine, winsOnLine );
+               }
+            }
+            auto maxWinsOnAnyCol(0); // max # of wnds on any display row
+            {
+            const auto xLeft(0), xRight( EditScreenCols() );
+            for( auto xCol(xLeft) ; xCol < xRight; ++xCol ) {
+               auto winsOnCol(0);
+               for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
+                  if( g_Win( iw )->VisibleOnDisplayCol( xCol ) ) ++winsOnCol;
+                  }
+               maxWinsOnAnyCol = Max( maxWinsOnAnyCol, winsOnCol );
+               }
+            }
+
+            DBG( "%s maxWinsOnAnyLine=%d, maxWinsOnAnyCol=%d", __func__, maxWinsOnAnyLine, maxWinsOnAnyCol );
+            if( 0&&newSize.lin > MIN_WIN_HEIGHT * maxWinsOnAnyLine
+                && newSize.col > MIN_WIN_WIDTH  * maxWinsOnAnyCol
+              )
+               return true;
+            }
+         }
+  */
+      }
    }
 
 STATIC_FXN int PWinToWidx( PWin pWin ) {
