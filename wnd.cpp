@@ -114,11 +114,16 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                   0 && DBG( "sizeY %d->%d ulcY-newSizeY=%d", sizeY, newSizeY, delta );
                   if( iw==0 && delta > 0 ) { newSizeY += delta; }
                   pW->Event_Win_Reposition( ulcY - newSizeY, pW->d_UpLeft.col );
-                  pW->Event_Win_Resized( newSizeY, pW->d_Size.col );
+                  pW->Event_Win_Resized( newSizeY, newWinSize.col );
                   ulcY -= newSizeY + BORDER_WIDTH;
                   }
                }
-            else {
+            else if( newWinSize.col != g_Win(0)->d_Size.col ) {
+               const auto sizeY( g_Win(0)->d_Size.col );
+               for( signed iw(g_iWindowCount()-1) ; iw >= 0 ; --iw ) { // iw MUST be signed int!
+                  const auto pW( g_Win(iw) );
+                  pW->Event_Win_Resized( pW->d_Size.lin, newWinSize.col );
+                  }
                // shrink all windows (except min-sized) proportionally
                }
             }

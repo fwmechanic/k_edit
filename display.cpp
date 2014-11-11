@@ -368,7 +368,7 @@ protected:
    NO_COPYCTOR(HiliteAddin);
    NO_ASGN_OPR(HiliteAddin);
 
-   void DispNeedsRedrawAllLines() { d_view.wr_Win()->DispNeedsRedrawAllLines(); }
+   void DispNeedsRedrawAllLines() { d_view.Win()->DispNeedsRedrawAllLines(); }
    };
 
 //--------------------------------------------------------------------------
@@ -665,7 +665,10 @@ cppc FBOP::IsCppConditional( PCFBUF fb, LINE yLine ) {
 class HiliteAddin_CPPcond_Hilite : public HiliteAddin {
    void VFbufLinesChanged( LINE yMin, LINE yMax ) override { refresh( yMin, yMax ); }
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
-   void VWinResized() override;
+   void VWinResized() override {
+      ReallocArray( d_PerViewableLine, ViewLines(), "d_PerViewableLine resize" );
+      d_fWLC_called = false;
+      }
 
 public:
 
@@ -698,11 +701,11 @@ private:
          }      level;
       };
 
-   PerViewableLineInfo *d_PerViewableLine;
+   PerViewableLineInfo *d_PerViewableLine = nullptr;
    Xbuf d_xb;
 
    int close_level( int level_ix, int yLast );
-   void refresh( LINE yyy0, LINE yyy1 );
+   void refresh( LINE, LINE );
    };
 
 
@@ -721,7 +724,7 @@ int HiliteAddin_CPPcond_Hilite::close_level( int level_ix, int yLast ) {
    return level.containing_level_idx;
    }
 
-void HiliteAddin_CPPcond_Hilite::refresh( LINE yyy0, LINE yyy1 ) {
+void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
    d_fWLC_called = true;
    // pass 1: fill in line.{ xMax, cppc?, xPound? }
    auto maxUnIfdEnds(0);
@@ -840,12 +843,6 @@ bool HiliteAddin_CPPcond_Hilite::VHilitLine( LINE yLine, COL xIndent, LineColors
    #endif
 
 #endif
-
-
-void HiliteAddin_CPPcond_Hilite::VWinResized() {
-   ReallocArray( d_PerViewableLine, ViewLines(), "d_PerViewableLine resize" );
-   d_fWLC_called = false;
-   }
 
 
 void View::Set_LineCompile( LINE yLine ) {
@@ -2346,7 +2343,7 @@ void DispNeedsRedrawAllLinesAllWindows_() {
    s_paScreenLineNeedsRedraw->SetAllBits();
    }
 
-void Win::DispNeedsRedrawAllLines() { 0 && DBG( "All=0..%d", g_CurWin()->d_Size.lin );
+void Win::DispNeedsRedrawAllLines() const { 0 && DBG( "All=0..%d", g_CurWin()->d_Size.lin );
    for( auto lineWithinWin(0); lineWithinWin < d_Size.lin; ++lineWithinWin ) {
       const auto yLine( lineWithinWin + d_UpLeft.lin );
       Assert( yLine < EditScreenLines() );

@@ -797,9 +797,9 @@ public:
 
    time_t       TmFocusedOn() const { return d_tmFocusedOn; }
 
-   PCFBUF       CFBuf() const { return d_pFBuf; }
-   PFBUF        FBuf()  const { return d_pFBuf; }
-   PCWin        Win()   const { return d_pWin ; }
+   PCFBUF       CFBuf()  const { return d_pFBuf; }
+   PFBUF        FBuf()   const { return d_pFBuf; }
+   PCWin        Win()    const { return d_pWin ; }
    PWin         wr_Win() const { return d_pWin ; }
    bool         ActiveInWin();
 
@@ -952,7 +952,7 @@ public:
 
    void      Write( FILE *fout ) const;
    PView     CurView() { return ViewHd.First(); }
-   void      DispNeedsRedrawAllLines();
+   void      DispNeedsRedrawAllLines() const;
 
    void      Event_Win_Reposition( LINE ulcY, COL ulcX );
    void      Event_Win_Resized( LINE newHeight, COL newWidth );
