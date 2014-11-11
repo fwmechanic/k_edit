@@ -687,13 +687,13 @@ private:
    bool d_fWLC_called;
 
    struct PerViewableLineInfo {
-      struct    Line {
+      struct    {
          cppc   acppc;
          COL    xPound;
          COL    xMax;
          int    level_ix;
          }      line;
-      struct    Level {
+      struct    {
          int    containing_level_idx;
          LINE   yMin;
          LINE   yMax;
@@ -710,15 +710,15 @@ private:
 
 
 int HiliteAddin_CPPcond_Hilite::close_level( int level_ix, int yLast ) {
-   PerViewableLineInfo::Level &level( d_PerViewableLine[ level_ix ].level );
+   auto &level( d_PerViewableLine[ level_ix ].level );
    level.yMax = yLast;
    for( auto ixLine(level.yMin) ; ixLine <= level.yMax ; ++ixLine ) {
-      PerViewableLineInfo::Line &line( d_PerViewableLine[ ixLine ].line );
+      auto &line( d_PerViewableLine[ ixLine ].line );
       NoLessThan( &level.xBox, line.xMax+1 );
       }
    // push out xBox of containing levels so they don't collide with this level's xBox
    for( auto bump(0) ; level_ix > -1 ; level_ix = d_PerViewableLine[ level_ix ].level.containing_level_idx, bump += 2 ) {
-      PerViewableLineInfo::Level &cont_level( d_PerViewableLine[ level_ix ].level );
+      auto &cont_level( d_PerViewableLine[ level_ix ].level );
       NoLessThan( &cont_level.xBox, level.xBox + bump );
       }
    return level.containing_level_idx;
