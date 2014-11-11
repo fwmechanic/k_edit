@@ -18,7 +18,6 @@ struct conin_statics {
 
    Win32::HANDLE         hStdin;
    Win32::DWORD          InitialConsoleInputMode;
-   int                   CIB_MaxElements;
    Win32::DWORD          CIB_ValidElements;
    Win32::DWORD          CIB_IdxRead;
    Mutex                 mutex;
@@ -176,8 +175,7 @@ void Conin_Init() {
    DBG( "INITIAL s_Conin.hStdin=%p", s_Conin.hStdin );
    s_Conin.CIB_ValidElements = 0;
    s_Conin.CIB_IdxRead       = 0;
-   s_Conin.CIB_MaxElements   = conin_statics::CIB_DFLT_ELEMENTS;
-   s_Conin.vINPUT_RECORD.resize( s_Conin.CIB_MaxElements );
+   s_Conin.vINPUT_RECORD.resize( conin_statics::CIB_DFLT_ELEMENTS );
 
    s_Conin.InitialConsoleInputMode = GetConsoleInputMode();
 
@@ -249,11 +247,10 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
       return nullptr;
 
    if( 0 == s_Conin.CIB_ValidElements ) {
-      if( s_Conin.CIB_MaxElements > conin_statics::CIB_MIN_ELEMENTS ) {
+      if( s_Conin.vINPUT_RECORD.size() > conin_statics::CIB_MIN_ELEMENTS ) {
+         0 && DBG( "s_Conin.vINPUT_RECORD.size() was %Iu, now %d", s_Conin.vINPUT_RECORD.size(), conin_statics::CIB_MIN_ELEMENTS );
          auto dummy(false);  GotHereDialog( &dummy );  // it's doubtful this is ever executed?
-         0 && DBG( "s_Conin.CIB_MaxElements was %d, now %d", s_Conin.CIB_MaxElements, conin_statics::CIB_MIN_ELEMENTS );
-         s_Conin.CIB_MaxElements = conin_statics::CIB_MIN_ELEMENTS;
-         s_Conin.vINPUT_RECORD.resize( s_Conin.CIB_MaxElements );
+         s_Conin.vINPUT_RECORD.resize( conin_statics::CIB_MIN_ELEMENTS );
          }
 
       fWaitingOnInput = true;
@@ -515,9 +512,7 @@ STATIC_FXN void InsertConinRecord( const Win32::INPUT_RECORD &ir ) {
 
    if( s_Conin.CIB_IdxRead == 0 ) { // trying to insert w/no leading gap?
       s_Conin.vINPUT_RECORD.insert( s_Conin.vINPUT_RECORD.begin(), ir );
-      enum { INS_RECS = 4 };
-      s_Conin.CIB_MaxElements += INS_RECS;
-      s_Conin.CIB_IdxRead = INS_RECS;
+      s_Conin.CIB_IdxRead++;
       }
    else {
       s_Conin.vINPUT_RECORD[--s_Conin.CIB_IdxRead] = ir;
