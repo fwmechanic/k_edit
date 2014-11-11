@@ -937,10 +937,8 @@ struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win 
    ViewHead  ViewHd;   // public: exposed
    Point     d_Size;   // public: exposed
    Point     d_UpLeft; // public: exposed
-
-private:
-   enum { scale_scale = 1000 };
-   Point     d_size_scale;
+   Point     d_size_pct;
+   int       d_wnum;
 
 public:
              Win();
@@ -955,6 +953,7 @@ public:
    PView     CurView() { return ViewHd.First(); }
    void      DispNeedsRedrawAllLines();
 
+   void      Event_Win_Reposition( LINE ulcY, COL ulcX );
    void      Event_Win_Resized( LINE newHeight, COL newWidth );
 
    bool      VisibleOnDisplayLine( LINE yLineOfDisplay ) const { return( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ); }

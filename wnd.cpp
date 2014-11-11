@@ -25,13 +25,29 @@ void View::Event_Win_Resized( LINE newHeight, COL newWidth ) { 0 && DBG( "%s %s"
    HiliteAddin_Event_WinResized();
    }
 
-void Win::Event_Win_Resized( LINE newHeight, COL newWidth ) {
-   d_Size.col = newWidth;
-   d_Size.lin = newHeight;
-   auto pv( ViewHd.First() );
-   pv->EnsureWinContainsCursor();
-   DLINKC_FIRST_TO_LAST( ViewHd, dlinkViewsOfWindow, pv ) {
-      pv->Event_Win_Resized( newHeight, newWidth );
+void Win::Event_Win_Resized( const LINE newHeight, const COL newWidth ) {
+   if(   newHeight != d_Size.lin
+      || newWidth  != d_Size.col
+     ) {
+      DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newHeight, newWidth );
+      d_Size.lin = newHeight;
+      d_Size.col = newWidth ;
+
+      auto pv( ViewHd.First() );
+      pv->EnsureWinContainsCursor();
+      DLINKC_FIRST_TO_LAST( ViewHd, dlinkViewsOfWindow, pv ) {
+         pv->Event_Win_Resized( newHeight, newWidth );
+         }
+      }
+   }
+
+void Win::Event_Win_Reposition( const LINE ulcY, const COL ulcX ) {
+   if(   ulcY != d_UpLeft.lin
+      || ulcX != d_UpLeft.col
+     ) {
+      DBG( "%s[%d] ulcYX(%d,%d)->(%d,%d)", __func__, d_wnum,  d_UpLeft.lin, d_UpLeft.col, ulcY, ulcX );
+      d_UpLeft.lin = ulcY;
+      d_UpLeft.col = ulcX;
       }
    }
 
@@ -49,9 +65,12 @@ bool Wins_CanResizeContent( const Point &newSize ) {
       min_size_x += MIN_WIN_WIDTH;
       min_size_y += (g_iWindowCount() * MIN_WIN_HEIGHT) + (BORDER_WIDTH * (g_iWindowCount() - 1));
       }
-   return    g_iWindowCount() == 1
-          && newSize.col >= min_size_x
-          && newSize.lin >= min_size_y;
+   const auto rv(// g_iWindowCount() == 1 &&
+                    newSize.col >= min_size_x
+                 && newSize.lin >= min_size_y
+                );
+   DBG( "can%s resize", rv?"":"not" );
+   return rv;
    }
 
 void Wins_ScreenSizeChanged( const Point &newSize ) {
@@ -59,8 +78,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
       g_CurWin()->Event_Win_Resized( EditScreenLines(), EditScreenCols() );
       }
    else { // multiwindow resize
-/*
-      if( 0 ) {
+      if( 1 ) {
          const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
          auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
          if( existingSplitVertical ) {
@@ -82,15 +100,19 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                newWinSizes[iw].col = newWinSize.col;
                }
             if( newWinSize.lin > curWinSizeY ) {
+               DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
                // grow all windows proportionally
-               for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
-                  const auto sizeY( g_Win( iw )->d_Size.lin )
-                  if( sizeY > MIN_WIN_HEIGHT ) {
-                     ++shrinkableWins;
-                     }
-                  else {
-                     newWinSizes[iw].lin = sizeY;
-                     }
+               auto ulcY( EditScreenLines() );
+               for( signed iw(g_iWindowCount()-1) ; iw >= 0 ; --iw ) { // iw MUST be signed int!
+                  const auto pW( g_Win( iw ) );
+                  const auto sizeY( pW->d_Size.lin );
+                  int newSizeY( (newWinSize.lin * static_cast<double>(pW->d_size_pct.lin)) / 100 );
+                  NoLessThan( &newSizeY, sizeY );
+                  DBG( "sizeY %d->%d ulcY-newSizeY=%d", sizeY, newSizeY, ulcY - newSizeY );
+                  if( iw==0 && ulcY - newSizeY > 0 ) { const int delta = ulcY - newSizeY;  newSizeY += delta; }
+                  pW->Event_Win_Reposition( ulcY - newSizeY, pW->d_UpLeft.col );
+                  pW->Event_Win_Resized( newSizeY, pW->d_Size.col );
+                  ulcY -= newSizeY + BORDER_WIDTH;
                   }
                }
             else {
@@ -98,6 +120,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                }
             }
 
+/*
          if( 0 ) {
             auto maxWinsOnAnyLine(0); // max # of wnds on any display line
             {
@@ -128,8 +151,8 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
               )
                return true;
             }
-         }
   */
+         }
       }
    }
 
@@ -156,8 +179,8 @@ void Win::Maximize() {
    d_UpLeft.lin = 0;
    d_Size.col = EditScreenCols();
    d_Size.lin = EditScreenLines();
-   d_size_scale.col = 100 * scale_scale;
-   d_size_scale.lin = 100 * scale_scale;
+   d_size_pct.col = 100;
+   d_size_pct.lin = 100;
    DBG( "%s", __func__ );
    }
 
@@ -176,16 +199,15 @@ Win::Win( Win &parent, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! p
       parent.d_Size.bbb -=        d_Size.bbb                           + BORDER_WIDTH; /* <-- !!!! */ \
            d_UpLeft.aaa  = parent.d_UpLeft.aaa                                       ;                \
            d_UpLeft.bbb  = parent.d_UpLeft.bbb + parent.d_Size.bbb     + BORDER_WIDTH;                \
-      const auto src_size_scale( parent.d_size_scale.bbb );                                           \
-      /* ASSUMES uniform split-type */                                                                \
-       d_size_scale.aaa  = 100 * scale_scale;                                                         \
-       d_size_scale.bbb  = (src_size_scale * d_Size.bbb) / src_size;                                  \
-       parent.d_size_scale.bbb -= d_size_scale.bbb;                                                   \
-       0 &&                                                                                           \
+      const auto src_size_pct( parent.d_size_pct.bbb );                                               \
+       d_size_pct.aaa  = 100; /* _ASSUMING_ uniform split-type */                                     \
+       d_size_pct.bbb  = (src_size_pct * d_Size.bbb) / src_size;                                      \
+       parent.d_size_pct.bbb -= d_size_pct.bbb;                                                       \
+       1 &&                                                                                           \
        DBG( "%s: src=%d=%d%%, this=%d=%d%%, parent=%d=%d%%", __func__,                                \
-                    src_size  ,          src_size_scale/scale_scale                                   \
-           , parent.d_Size.bbb, parent.d_size_scale.bbb/scale_scale                                   \
-           ,        d_Size.bbb,        d_size_scale.bbb/scale_scale                                   \
+                    src_size  ,          src_size_pct                                                 \
+           , parent.d_Size.bbb, parent.d_size_pct.bbb                                                 \
+           ,        d_Size.bbb,        d_size_pct.bbb                                                 \
           );
 
    if( fSplitVertical ) {  SPLIT_IT( lin, col )  }
@@ -203,6 +225,7 @@ Win::Win( Win &parent, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! p
    }
 
 Win::Win( PCChar pC ) { // Used during ReadStateFile processing ONLY!
+   d_wnum = 0;
    0 && DBG( "RdSF: WIN-GEOM '%s'", pC );
    sscanf( pC, " %d %d %d %d "
       , &d_UpLeft.col
@@ -257,6 +280,7 @@ STATIC_FXN int CDECL__ qsort_cmp_win( PCVoid p1, PCVoid p2 ) {
 STATIC_FXN void SortWinArray() {
    const auto tmpCurWin( g_CurWin() );  // needed to update g_CurWin()
    qsort( g__.aWindow, g_iWindowCount(), sizeof(g__.aWindow[0]), qsort_cmp_win );
+   for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) { g__.aWindow[iw]->d_wnum = iw; }
    SetWindowIdx( PWinToWidx( tmpCurWin ) );  // update g_CurWin()
    }
 
