@@ -354,16 +354,15 @@ public:
 
 protected:
 
-   PCFBUF       CFBuf()     const { return d_view.CFBuf(); }
-   const View  &view()      const { return d_view; }
-   const Point &Cursor()    const { return d_view.Cursor(); }
-   const Point &Origin()    const { return d_view.Origin(); }
-         LINE   ViewLines() const { return d_view.Win()->d_Size.lin ; }
-         LINE   ViewCols()  const { return d_view.Win()->d_Size.col ; }
+         PCFBUF CFBuf()               const { return d_view.CFBuf(); }
+         LINE   Get_LineCompile()     const { return d_view.Get_LineCompile(); }
+   const Point &Cursor()              const { return d_view.Cursor(); }
+   const Point &Origin()              const { return d_view.Origin(); }
+         LINE   ViewLines()           const { return d_view.Win()->d_Size.lin ; }
+         LINE   ViewCols()            const { return d_view.Win()->d_Size.col ; }
          LINE   MaxVisibleFbufLine()  const { return Origin().lin + ViewLines() - 1; }
-   int          ColorIdx2Attr( int colorIdx ) const { return *d_view.ColorIdx2Var( colorIdx ); }
-   bool         isActiveWindow()  const { return d_view.Win() == g_CurWin(); }
-   LINE         Get_LineCompile() const { return d_view.Get_LineCompile(); }
+         bool   isActiveWindow()      const { return d_view.Win() == g_CurWin(); }
+   int  ColorIdx2Attr( int colorIdx ) const { return *d_view.ColorIdx2Var( colorIdx ); }
 
    NO_COPYCTOR(HiliteAddin);
    NO_ASGN_OPR(HiliteAddin);
@@ -666,25 +665,25 @@ class HiliteAddin_CPPcond_Hilite : public HiliteAddin {
    void VFbufLinesChanged( LINE yMin, LINE yMax ) override { refresh( yMin, yMax ); }
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
    void VWinResized() override {
-      ReallocArray( d_PerViewableLine, ViewLines(), "d_PerViewableLine resize" );
-      d_fWLC_called = false;
+      d_PerViewableLine.resize( ViewLines() );
+      d_need_refresh = false;
       }
 
 public:
 
    HiliteAddin_CPPcond_Hilite( PView pView )
       : HiliteAddin( pView )
-      , d_fWLC_called( false )
       {
-      AllocArrayZ( d_PerViewableLine, ViewLines(), "d_PerViewableLine" );
+      d_PerViewableLine.resize( ViewLines() );
+      d_need_refresh = false;
       }
 
-   ~HiliteAddin_CPPcond_Hilite() { Free0( d_PerViewableLine ); }
+   ~HiliteAddin_CPPcond_Hilite() {}
    PCChar Name() const override { return "CPPcond"; }
 
 private:
 
-   bool d_fWLC_called;
+   bool d_need_refresh;
 
    struct PerViewableLineInfo {
       struct    {
@@ -701,7 +700,7 @@ private:
          }      level;
       };
 
-   PerViewableLineInfo *d_PerViewableLine = nullptr;
+   std::vector<PerViewableLineInfo> d_PerViewableLine ;
    Xbuf d_xb;
 
    int close_level( int level_ix, int yLast );
@@ -725,7 +724,7 @@ int HiliteAddin_CPPcond_Hilite::close_level( int level_ix, int yLast ) {
    }
 
 void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
-   d_fWLC_called = true;
+   d_need_refresh = true;
    // pass 1: fill in line.{ xMax, cppc?, xPound? }
    auto maxUnIfdEnds(0);
    {
@@ -796,7 +795,7 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
    }
 
 bool HiliteAddin_CPPcond_Hilite::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
-   if( !d_fWLC_called )  // BUGBUG fix this!!!!!!!!!!
+   if( !d_need_refresh )  // BUGBUG fix this!!!!!!!!!!
       refresh( 0, 0 );
 
    const auto lineInWindow( yLine - Origin().lin );

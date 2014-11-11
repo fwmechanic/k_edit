@@ -41,13 +41,14 @@
 #include <climits>
 
 // std C++ headers
-#include <string>
 #include <memory>
 #include <utility>  // for std::move,std::swap
+#include <string>
 #if !defined(_WIN32)
    // Linux-specific string fxns: strcasecmp, strncasecmp, etc.
    #include "strings.h"
 #endif
+#include <vector>
 
 // standard-ish C headers
 #include <malloc.h>    // for alloca()
