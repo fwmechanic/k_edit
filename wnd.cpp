@@ -99,7 +99,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                curWinSizeY += sizeY;
                newWinSizes[iw].col = newWinSize.col;
                }
-            if( newWinSize.lin > curWinSizeY ) {
+            if( newWinSize.lin != curWinSizeY ) {
                0 && DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
                // grow all windows proportionally
                auto ulcY( EditScreenLines() );
@@ -107,7 +107,9 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                   const auto pW( g_Win( iw ) );
                   const auto sizeY( pW->d_Size.lin );
                   int newSizeY( (newWinSize.lin * static_cast<double>(pW->d_size_pct.lin)) / 100 );
-                  NoLessThan( &newSizeY, sizeY );
+                  if( newWinSize.lin > curWinSizeY ) {
+                     NoLessThan( &newSizeY, sizeY );
+                     }
                   const auto delta( ulcY - newSizeY );
                   0 && DBG( "sizeY %d->%d ulcY-newSizeY=%d", sizeY, newSizeY, delta );
                   if( iw==0 && delta > 0 ) { newSizeY += delta; }

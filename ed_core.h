@@ -799,8 +799,9 @@ public:
 
    PCFBUF       CFBuf() const { return d_pFBuf; }
    PFBUF        FBuf()  const { return d_pFBuf; }
-   PWin         Win()   const { return d_pWin ; }
-   PWin         ActiveInWin();
+   PCWin        Win()   const { return d_pWin ; }
+   PWin         wr_Win() const { return d_pWin ; }
+   bool         ActiveInWin();
 
    struct ULC_Cursor {
       Point     Origin;
@@ -964,7 +965,7 @@ public:
    }; // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
 
 
-inline PWin View::ActiveInWin() { return d_pWin->CurView() == this ? d_pWin : nullptr; }
+inline bool View::ActiveInWin() { return d_pWin->CurView() == this; }
 
 
 //---------------------------------------------------------------------------------------------------------------------

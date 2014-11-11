@@ -368,7 +368,7 @@ protected:
    NO_COPYCTOR(HiliteAddin);
    NO_ASGN_OPR(HiliteAddin);
 
-   void DispNeedsRedrawAllLines() { d_view.Win()->DispNeedsRedrawAllLines(); }
+   void DispNeedsRedrawAllLines() { d_view.wr_Win()->DispNeedsRedrawAllLines(); }
    };
 
 //--------------------------------------------------------------------------
@@ -3307,7 +3307,7 @@ void FBUF::UnlinkView( PView pv ) {
    }
 
 STATIC_FXN void KillView( PView pv ) { // destroy an arbitrary View
-   DLINK_REMOVE( pv->Win()->ViewHd, pv, dlinkViewsOfWindow );
+   DLINK_REMOVE( pv->wr_Win()->ViewHd, pv, dlinkViewsOfWindow );
    pv->FBuf()->UnlinkView( pv );
    delete pv;
    }
@@ -3328,8 +3328,8 @@ void KillTheCurrentView() {
 
 bool FBUF::UnlinkAllViews() {
    while( auto pEl=d_dhdViewsOfFBUF.First() ) {
-      DLINK_REMOVE_FIRST( d_dhdViewsOfFBUF  , pEl, dlinkViewsOfFBUF   );
-      DLINK_REMOVE      ( pEl->Win()->ViewHd, pEl, dlinkViewsOfWindow );
+      DLINK_REMOVE_FIRST( d_dhdViewsOfFBUF     , pEl, dlinkViewsOfFBUF   );
+      DLINK_REMOVE      ( pEl->wr_Win()->ViewHd, pEl, dlinkViewsOfWindow );
       delete pEl;
       }
    return private_RemovedFBuf();
