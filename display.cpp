@@ -844,6 +844,7 @@ bool HiliteAddin_CPPcond_Hilite::VHilitLine( LINE yLine, COL xIndent, LineColors
 
 void HiliteAddin_CPPcond_Hilite::VWinResized() {
    ReallocArray( d_PerViewableLine, ViewLines(), "d_PerViewableLine resize" );
+   d_fWLC_called = false;
    }
 
 

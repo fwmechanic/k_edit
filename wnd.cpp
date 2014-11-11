@@ -69,7 +69,7 @@ bool Wins_CanResizeContent( const Point &newSize ) {
                     newSize.col >= min_size_x
                  && newSize.lin >= min_size_y
                 );
-   DBG( "can%s resize", rv?"":"not" );
+   0 && DBG( "can%s resize", rv?"":"not" );
    return rv;
    }
 
@@ -100,7 +100,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                newWinSizes[iw].col = newWinSize.col;
                }
             if( newWinSize.lin > curWinSizeY ) {
-               DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
+               0 && DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
                // grow all windows proportionally
                auto ulcY( EditScreenLines() );
                for( signed iw(g_iWindowCount()-1) ; iw >= 0 ; --iw ) { // iw MUST be signed int!
@@ -108,8 +108,9 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                   const auto sizeY( pW->d_Size.lin );
                   int newSizeY( (newWinSize.lin * static_cast<double>(pW->d_size_pct.lin)) / 100 );
                   NoLessThan( &newSizeY, sizeY );
-                  DBG( "sizeY %d->%d ulcY-newSizeY=%d", sizeY, newSizeY, ulcY - newSizeY );
-                  if( iw==0 && ulcY - newSizeY > 0 ) { const int delta = ulcY - newSizeY;  newSizeY += delta; }
+                  const auto delta( ulcY - newSizeY );
+                  0 && DBG( "sizeY %d->%d ulcY-newSizeY=%d", sizeY, newSizeY, delta );
+                  if( iw==0 && delta > 0 ) { newSizeY += delta; }
                   pW->Event_Win_Reposition( ulcY - newSizeY, pW->d_UpLeft.col );
                   pW->Event_Win_Resized( newSizeY, pW->d_Size.col );
                   ulcY -= newSizeY + BORDER_WIDTH;

@@ -798,8 +798,8 @@ public:
    time_t       TmFocusedOn() const { return d_tmFocusedOn; }
 
    PCFBUF       CFBuf() const { return d_pFBuf; }
-   PFBUF        FBuf() const { return d_pFBuf; }
-   PWin         Win()  const { return d_pWin ; }
+   PFBUF        FBuf()  const { return d_pFBuf; }
+   PWin         Win()   const { return d_pWin ; }
    PWin         ActiveInWin();
 
    struct ULC_Cursor {
