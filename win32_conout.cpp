@@ -258,10 +258,10 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
       , sizeof(d_vOutputBufferCache[0]) * cells
       );
    if( d_vOutputBufferCache.size() < cells ) {
-       d_vOutputBufferCache.resize( cells );
+       d_vOutputBufferCache.resize(  cells );
        }
    if( d_vLineControl.size() < d_xyState.size.lin ) {
-       d_vLineControl.resize( d_xyState.size.lin );
+       d_vLineControl.resize(  d_xyState.size.lin );
        }
    {
    auto pChIB( &d_vOutputBufferCache[0] );
@@ -277,7 +277,6 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
    NullifyUpdtLineRange();
    DBG( "-%s (%dx%d)", __func__, d_xyState.size.col, d_xyState.size.lin );
    }
-
 
 
 GLOBAL_VAR volatile bool g_fSystemShutdownOrLogoffRequested;
