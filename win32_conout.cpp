@@ -75,8 +75,6 @@ class TConsoleOutputControl {
    bool              d_fCursorVisible;
    bool              d_fBigCursor;
 
-   int               d_OutputBufferCacheAllocdCells;
-   ScreenCell       *d_pascOutputBufferCache;
    std::vector<ScreenCell> d_vOutputBufferCache;
 
    struct {
@@ -228,8 +226,6 @@ STATIC_FXN Win32::HANDLE NewConsoleScreenBuffer( PCChar tag ) {
 TConsoleOutputControl::TConsoleOutputControl( int yHeight, int xWidth )
    : d_hConsoleScreenBuffer         ( NewConsoleScreenBuffer( "#1" ) )
    , d_fCursorVisible               ( true )
-   , d_OutputBufferCacheAllocdCells ( 0 )
-   , d_pascOutputBufferCache        ( nullptr )
    {
    0 && DBG( "%s", __func__ );
 
@@ -256,22 +252,19 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
    d_xyState.size.lin = newSize.lin; // the ONLY place d_xyState.size is written!
    d_xyState.size.col = newSize.col;  // the ONLY place d_xyState.size is written!
 
-   const auto cells( d_xyState.size.lin * d_xyState.size.col );
-   DBG( "+%s (%dx%d) cells=%d->%d (x %Iu = %Iu)", __func__, d_xyState.size.col, d_xyState.size.lin, d_OutputBufferCacheAllocdCells, cells
-      , sizeof(*d_pascOutputBufferCache)
-      , sizeof(*d_pascOutputBufferCache) * cells
+   const size_t cells( d_xyState.size.lin * d_xyState.size.col );
+   DBG( "+%s (%dx%d) cells=%Iu->%Iu (x %Iu = %Iu)", __func__, d_xyState.size.col, d_xyState.size.lin, d_vOutputBufferCache.size(), cells
+      , sizeof(d_vOutputBufferCache[0])
+      , sizeof(d_vOutputBufferCache[0]) * cells
       );
-   if( d_OutputBufferCacheAllocdCells < cells ) {
+   if( d_vOutputBufferCache.size() < cells ) {
        d_vOutputBufferCache.resize( cells );
-       d_OutputBufferCacheAllocdCells = cells;
-       ReallocArray( d_pascOutputBufferCache, d_OutputBufferCacheAllocdCells, "d_pascOutputBufferCache" );
        }
    if( d_vLineControl.size() < d_xyState.size.lin ) {
        d_vLineControl.resize( d_xyState.size.lin );
        }
    {
-   auto pChI_( &d_vOutputBufferCache[0] );
-   auto pChIB( d_pascOutputBufferCache );
+   auto pChIB( &d_vOutputBufferCache[0] );
    const auto pPastEnd( &d_vLineControl[d_xyState.size.lin] );
    for(  auto pLC     ( &d_vLineControl[0])
       ; pLC < pPastEnd
@@ -739,7 +732,7 @@ int  TConsoleOutputControl::FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE 
    // Win32::WriteConsoleOutput will write a minimum rectangle (WriteRegion)
    // based on the min/max dirty column taken across the line range being
    // written.  Win32::WriteConsoleOutput will read
-   // d_pascOutputBufferCache/d_hConsoleScreenBuffer directly, using bufferSize
+   // d_vOutputBufferCache/d_hConsoleScreenBuffer directly, using bufferSize
    // to determine its geometry.
 
    // convert everything to Win32-isms
@@ -786,8 +779,7 @@ int  TConsoleOutputControl::FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE 
 
    for( auto iy(yMin); iy <= yMax ; ++iy ) {
       for( auto ix(xMin); ix <= xMax ; ++ix ) {
-         auto pCel_( &d_vOutputBufferCache[ (iy*d_xyState.size.col)+ix ] );
-         auto pCell( d_pascOutputBufferCache+(iy*d_xyState.size.col)+ix );
+         auto pCell( &d_vOutputBufferCache[ (iy*d_xyState.size.col)+ix ] );
          const auto ch( pCell->Char.AsciiChar );
          if( ch < ' ' || ch > 0x7E ) { DBG( "*** writing junk (0x%02X) to WriteConsoleOutput[%3d][%3d]", ch, iy, ix ); }
       // else           { DBG( "*** first char is '%c'", ch ); }
@@ -800,8 +792,7 @@ int  TConsoleOutputControl::FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE 
    if( !
          Win32::WriteConsoleOutputA(  // <---------------------------------------------------
               d_hConsoleScreenBuffer  // <---------------------------------------------------
-//          , &d_vOutputBufferCache[0] // The data to be written to the console screen buffer; treated as the origin of a two-dimensional array of CHAR_INFO structures whose size is specified by the dwBufferSize parameter. The total size of the array must be less than 64K.
-            , d_pascOutputBufferCache // The data to be written to the console screen buffer; treated as the origin of a two-dimensional array of CHAR_INFO structures whose size is specified by the dwBufferSize parameter. The total size of the array must be less than 64K.
+            , &d_vOutputBufferCache[0] // The data to be written to the console screen buffer; treated as the origin of a two-dimensional array of CHAR_INFO structures whose size is specified by the dwBufferSize parameter. The total size of the array must be less than 64K.
             , bufferSize              // The size of the buffer pointed to by the lpBuffer parameter, in character cells.
             , bufferCoords            // The coordinates of the upper-left cell in the buffer pointed to by the lpBuffer parameter.
             , &WrittenRegion          // ON INPUT , the structure members specify the upper-left and lower-right coordinates of the console screen buffer rectangle to write to.
@@ -978,10 +969,8 @@ bool TConsoleOutputControl::WriteToFileOk( FILE *ofh ) { // would be const but u
         d_fBigCursor         ,
       };
    if( sizeof fhdr != fwrite( &fhdr, 1, sizeof fhdr, ofh ) ) { DBG( "%s fwrite of fhdr FAILED", __func__ ); return false; }
-   auto pPastEn_( &d_vOutputBufferCache[ d_xyState.size.lin * d_xyState.size.col ] );
-   auto pPastEnd( d_pascOutputBufferCache + (d_xyState.size.lin * d_xyState.size.col) );
-// for( auto pCI(&d_vOutputBufferCache[0]); pCI < pPastEnd; ++pCI ) {
-   for( auto pCI(d_pascOutputBufferCache); pCI < pPastEnd; ++pCI ) {
+   auto pPastEnd( &d_vOutputBufferCache[ d_xyState.size.lin * d_xyState.size.col ] );
+   for( auto pCI(&d_vOutputBufferCache[0]); pCI < pPastEnd; ++pCI ) {
       U8 entry[2] = { pCI->Char.AsciiChar, U8(pCI->Attributes) };
       if( sizeof entry != fwrite( entry, 1, sizeof entry, ofh ) ) { DBG( "%s fwrite of entry FAILED", __func__ ); return false; }
       }
