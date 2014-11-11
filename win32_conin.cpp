@@ -22,6 +22,7 @@ struct conin_statics {
    Win32::DWORD          CIB_ValidElements;
    Win32::DWORD          CIB_IdxRead;
    Mutex                 mutex;
+   std::vector<Win32::INPUT_RECORD> vINPUT_RECORD;
    Win32::PINPUT_RECORD  paINPUT_RECORD;
 
    conin_statics() : mutex() {};
@@ -65,7 +66,8 @@ bool FlushKeyQueueAnythingFlushed() {
       }
 
    0 && DBG( "NumberOfConsoleEventsPending = %ld", NumberOfConsoleEventsPending );
-   const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, s_Conin.paINPUT_RECORD, s_Conin.CIB_MaxElements, &s_Conin.CIB_ValidElements ) );
+// const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, &s_Conin.vINPUT_RECORD , s_Conin.vINPUT_RECORD.size(), &s_Conin.CIB_ValidElements ) );
+   const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin,  s_Conin.paINPUT_RECORD, s_Conin.CIB_MaxElements     , &s_Conin.CIB_ValidElements ) );
    0 && DBG( "s_Conin.CIB_ValidElements = %ld", s_Conin.CIB_ValidElements );
    if( !ok ) {
       linebuf oseb;
@@ -177,6 +179,7 @@ void Conin_Init() {
    s_Conin.CIB_ValidElements = 0;
    s_Conin.CIB_IdxRead       = 0;
    s_Conin.CIB_MaxElements   = conin_statics::CIB_DFLT_ELEMENTS;
+   s_Conin.vINPUT_RECORD.resize( s_Conin.CIB_MaxElements );
    AllocArrayNZ( s_Conin.paINPUT_RECORD, s_Conin.CIB_MaxElements, "paINPUT_RECORD" );
 
    s_Conin.InitialConsoleInputMode = GetConsoleInputMode();
@@ -248,11 +251,12 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
    if( fWaitingOnInput )
       return nullptr;
 
-   if( !s_Conin.CIB_ValidElements ) {
+   if( 0 == s_Conin.CIB_ValidElements ) {
       if( s_Conin.CIB_MaxElements > conin_statics::CIB_MIN_ELEMENTS ) {
          auto dummy(false);  GotHereDialog( &dummy );  // it's doubtful this is ever executed?
          0 && DBG( "s_Conin.CIB_MaxElements was %d, now %d", s_Conin.CIB_MaxElements, conin_statics::CIB_MIN_ELEMENTS );
          s_Conin.CIB_MaxElements = conin_statics::CIB_MIN_ELEMENTS;
+         s_Conin.vINPUT_RECORD.resize( s_Conin.CIB_MaxElements );
          ReallocArray( s_Conin.paINPUT_RECORD, s_Conin.CIB_MaxElements, "paINPUT_RECORD" );
          }
 
@@ -304,7 +308,8 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
 
       0 && DBG( "%s s_Conin.hStdin=%p, GetStdHandle.Stdin=%p", __func__, s_Conin.hStdin, Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
 
-      const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, s_Conin.paINPUT_RECORD, s_Conin.CIB_MaxElements, &s_Conin.CIB_ValidElements ) );
+//    const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, &s_Conin.vINPUT_RECORD , s_Conin.vINPUT_RECORD.size(), &s_Conin.CIB_ValidElements ) );
+      const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin,  s_Conin.paINPUT_RECORD, s_Conin.CIB_MaxElements     , &s_Conin.CIB_ValidElements ) );
       if( !ok ) {
          1 && DBG( "%s s_Conin.hStdin=%p, GetStdHandle.Stdin=%p", __func__, s_Conin.hStdin, Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
          linebuf oseb;
@@ -317,7 +322,8 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
       s_Conin.CIB_IdxRead = 0;
       }
 
-   const auto rv( s_Conin.paINPUT_RECORD + s_Conin.CIB_IdxRead );
+   const auto rva( &s_Conin.vINPUT_RECORD[ s_Conin.CIB_IdxRead ] );
+   const auto rv ( s_Conin.paINPUT_RECORD + s_Conin.CIB_IdxRead );
    --s_Conin.CIB_ValidElements;
    ++s_Conin.CIB_IdxRead;
    return rv;
@@ -514,11 +520,15 @@ STATIC_FXN void InsertConinRecord( const Win32::INPUT_RECORD &ir ) {
    AutoMutex mtx( s_Conin.mutex );
 
    if( s_Conin.CIB_IdxRead == 0 ) { // trying to insert w/no leading gap?
+      s_Conin.vINPUT_RECORD.insert( s_Conin.vINPUT_RECORD.begin(), ir );
       enum { INS_RECS = 4 };
       s_Conin.CIB_MaxElements += INS_RECS;
       ReallocArray( s_Conin.paINPUT_RECORD, s_Conin.CIB_MaxElements, "s_Conin.paINPUT_RECORD" );
       MoveArray( &s_Conin.paINPUT_RECORD[INS_RECS], &s_Conin.paINPUT_RECORD[0], s_Conin.CIB_ValidElements );
       s_Conin.CIB_IdxRead = INS_RECS;
+      }
+   else {
+      s_Conin.vINPUT_RECORD[--s_Conin.CIB_IdxRead] = ir;
       }
 
    s_Conin.paINPUT_RECORD[--s_Conin.CIB_IdxRead] = ir;
@@ -746,6 +756,7 @@ bool KbHit() { // BUGBUG does this actually WORK? 20081215 kgoodwin NO it doesn'
    AutoMutex mtx( s_Conin.mutex );
 
    if( s_Conin.CIB_IdxRead < s_Conin.CIB_ValidElements ) {
+      auto &inre_( s_Conin.vINPUT_RECORD[ s_Conin.CIB_IdxRead ] );
       auto &inrec( s_Conin.paINPUT_RECORD[ s_Conin.CIB_IdxRead ] );
       if( inrec.EventType == KEY_EVENT && inrec.Event.KeyEvent.bKeyDown )
          return true;

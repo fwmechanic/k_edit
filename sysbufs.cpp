@@ -354,8 +354,8 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
    for( auto ix(0) ; g_envp[ ix ] ; ++ix )
       ++envEntries;
 
-   PPCChar lines;
-   AllocArrayNZ( lines, envEntries, __func__ );
+   PPCChar             lines  ;
+   AllocArrayNZ(       lines  , envEntries, __func__ );
 
    for( auto ix(0) ; g_envp[ ix ] ; ++ix )
       lines[ix] =  g_envp[ ix ];

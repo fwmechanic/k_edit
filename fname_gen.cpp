@@ -228,8 +228,10 @@ class StrSubstituterGenerator {
 
       SubStrSubstituter( PCChar pValue, int chValDelim, const int xReplStart_, const int replLen_ );
       ~SubStrSubstituter() {
-         if(   d_values )  Free0( d_values[0] );
-         Free0(d_values);
+         if( d_values ) {
+            Free0( d_values[0] ); // d_values[1..n] point within same alloc as d_values[0]
+            Free0( d_values    );
+            }
          }
       }; STD_TYPEDEFS( SubStrSubstituter )
 
