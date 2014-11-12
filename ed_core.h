@@ -910,7 +910,7 @@ public:
    void         HiliteAddin_Event_WinResized();
    void         HiliteAddin_Event_FBUF_content_changed( LINE yMinChangedLine, LINE yMaxChangedLine );
 
-   void         Event_Win_Resized( LINE newHeight, COL newWidth );
+   void         Event_Win_Resized( const Point &newSize );
    void         ViewEvent_LineInsDel( LINE yLine, LINE lineDelta );
    void         PokeOriginLine_HACK( LINE yLine ) { d_current.Origin.lin = yLine; }
 
@@ -954,8 +954,8 @@ public:
    PView     CurView() { return ViewHd.First(); }
    void      DispNeedsRedrawAllLines() const;
 
-   void      Event_Win_Reposition( LINE ulcY, COL ulcX );
-   void      Event_Win_Resized( LINE newHeight, COL newWidth );
+   void      Event_Win_Reposition( const Point &newUlc );
+   void      Event_Win_Resized( const Point &newSize );
 
    bool      VisibleOnDisplayLine( LINE yLineOfDisplay ) const { return( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ); }
    bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
