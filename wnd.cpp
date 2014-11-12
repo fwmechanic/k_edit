@@ -28,15 +28,15 @@ void View::Event_Win_Resized( const Point &newSize ) { 0 && DBG( "%s %s", __func
    }
 
 void Win::Event_Win_Reposition( const Point &newUlc ) {
-   if( d_UpLeft != newUlc ) { 0 && DBG( "%s[%d] ulcYX(%d,%d)->(%d,%d)", __func__, d_wnum,  d_UpLeft.lin, d_UpLeft.col, newUlc.lin, newUlc.col );
+   if( d_UpLeft != newUlc ) { 1 && DBG( "%s[%d] ulcYX(%d,%d)->(%d,%d)", __func__, d_wnum,  d_UpLeft.lin, d_UpLeft.col, newUlc.lin, newUlc.col );
        d_UpLeft  = newUlc;
       }
    }
 
 void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
-   if( d_Size != newSize ) { 0 && DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
+   if( d_Size != newSize ) { 1 && DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
        d_Size  = newSize;
-      if( d_size_pct != newSizePct ) { 0 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  d_size_pct.lin, d_size_pct.col, newSizePct.lin, newSizePct.col );
+      if( d_size_pct != newSizePct ) { 1 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  d_size_pct.lin, d_size_pct.col, newSizePct.lin, newSizePct.col );
           d_size_pct  = newSizePct;
          }
       auto pv( ViewHd.First() );
@@ -80,44 +80,46 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
       }
    else { // multiwindow resize
       if( 1 ) {
+         #define MW_RESIZE( aaa, bbb )                                                                                      \
+            auto curNonBorderSize( 0 ); /* excluding borders */                                                             \
+            for( const auto &pWin : g__.aWindow ) {                                                                         \
+               curNonBorderSize += pWin->d_Size.aaa;                                                                        \
+               }                                                                                                            \
+            if( newNonBorderSize.aaa != curNonBorderSize ) { /* grow/shrink all windows proportional to their d_size_pct */ \
+               1 && DBG( "%s :%d->%d", __func__, curNonBorderSize, newNonBorderSize.aaa );                                  \
+               auto ulc( newNonBorderSize.aaa + (BORDER_WIDTH*(g_iWindowCount()-1)) );                                      \
+               for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {                                     \
+                  const auto pW( *it );                                                                                     \
+                  const auto size_( pW->d_Size.aaa );                                                                       \
+                  int newSize_( (newNonBorderSize.aaa * static_cast<double>(pW->d_size_pct.aaa)) / 100 );                   \
+                  if( newNonBorderSize.aaa > curNonBorderSize ) {                                                           \
+                     NoLessThan( &newSize_, size_ );                                                                        \
+                     }                                                                                                      \
+                  const auto delta( ulc - newSize_ );                                                                       \
+                  const auto iw( std::distance( g__.aWindow.begin(), it.base()) -1 );                                       \
+                  1 && DBG( "Win[%Id] size_ %d->%d delta=%d", iw, size_, newSize_, delta );                                 \
+                  if( 0==iw && delta > 0 ) { newSize_ += delta; }  /* 0th element and space left?  consume it! */           \
+                  { Point Pos; Pos.aaa=ulc - newSize_, Pos.bbb=pW->d_UpLeft    .bbb, pW->Event_Win_Reposition( Pos ); }     \
+                  { Point Pos; Pos.aaa=      newSize_, Pos.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized   ( Pos ); }     \
+                  ulc -= newSize_ + BORDER_WIDTH;                                                                           \
+                  }                                                                                                         \
+               }                                                                                                            \
+            else if( newNonBorderSize.bbb != g_Win(0)->d_Size.bbb ) { /* the easy dimension */                              \
+               const auto size_( g_Win(0)->d_Size.bbb );                                                                    \
+               for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {                                     \
+                  const auto pW( *it );                                                                                     \
+                  { Point Pos; Pos.aaa=pW->d_Size.aaa, Pos.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized( Pos ); }        \
+                  }                                                                                                         \
+               }                                                                                                            \
+
          const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
-         auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
-         if( existingSplitVertical ) {
-            }
-         else { // splitHoriz
-            auto curNonBorderSize( 0 ); // excluding borders
-            for( const auto &pWin : g__.aWindow ) {
-               curNonBorderSize += pWin->d_Size.lin;
-               }
-            if( newNonBorderSize.lin != curNonBorderSize ) { // grow/shrink all windows proportional to their d_size_pct
-               0 && DBG( "%s Y:%d->%d", __func__, curNonBorderSize, newNonBorderSize.lin );
-               auto ulcY( newNonBorderSize.lin + (BORDER_WIDTH*(g_iWindowCount()-1)) );
-               for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {
-                  const auto pW( *it );
-                  const auto sizeY( pW->d_Size.lin );
-                  int newSizeY( (newNonBorderSize.lin * static_cast<double>(pW->d_size_pct.lin)) / 100 );
-                  if( newNonBorderSize.lin > curNonBorderSize ) {
-                     NoLessThan( &newSizeY, sizeY );
-                     }
-                  const auto delta( ulcY - newSizeY );
-                  const auto iw( std::distance( g__.aWindow.begin(), it.base()) -1 );
-                  0 && DBG( "Win[%Id] sizeY %d->%d delta=%d", iw, sizeY, newSizeY, delta );
-                  if( 0==iw && delta > 0 ) { newSizeY += delta; }  // 0th element and space left?  consume it!
-                  pW->Event_Win_Reposition( {.lin=ulcY - newSizeY, .col=pW->d_UpLeft.col} );
-                  pW->Event_Win_Resized( {.lin=newSizeY, .col=newNonBorderSize.col} );
-                  ulcY -= newSizeY + BORDER_WIDTH;
-                  }
-               }
-            else if( newNonBorderSize.col != g_Win(0)->d_Size.col ) { // the easy dimension
-               const auto sizeY( g_Win(0)->d_Size.col );
-               for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {
-                  const auto pW( *it );
-                  pW->Event_Win_Resized( {.lin=pW->d_Size.lin, .col=newNonBorderSize.col} );
-                  }
-               }
-            }
+         if( existingSplitVertical ) { MW_RESIZE( col, lin ) } // splitVert
+         else                        { MW_RESIZE( lin, col ) } // splitHoriz
+
+         #undef MW_RESIZE
 
 /*
+         auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
          if( 0 ) {
             auto maxWinsOnAnyLine(0); // max # of wnds on any display line
             {
