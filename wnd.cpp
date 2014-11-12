@@ -210,8 +210,8 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! 
             d_UpLeft.aaa  = parent.d_UpLeft.aaa                                     ; \
             d_UpLeft.bbb  = parent.d_UpLeft.bbb + newParentSize.bbb + BORDER_WIDTH  ; \
           d_size_pct.aaa  = 100 /* _ASSUMING_ uniform split-type */                 ; \
-          d_size_pct.bbb  = (parent.d_size_pct.bbb * d_Size.bbb) / parent.d_Size.bbb; \
-       newParentSizePct.bbb -= d_size_pct.bbb;                                        \
+          d_size_pct.bbb  = (parent.d_size_pct.bbb * d_Size.bbb) / (parent.d_Size.bbb-BORDER_WIDTH); \
+    newParentSizePct.bbb -= d_size_pct.bbb                                          ; \
        1 &&                                                                           \
        DBG( "%s: src=%d=%d%%->%d=%d%%, new=%d=%d%%", __func__,                        \
              parent.d_Size.bbb, parent.d_size_pct.bbb                                 \
