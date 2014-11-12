@@ -29,8 +29,10 @@ void View::Event_Win_Resized( const Point &newSize ) { 0 && DBG( "%s %s", __func
 
 void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
    if( d_Size != newSize ) { DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
-      d_Size = newSize;
-      d_size_pct = newSizePct;
+       d_Size  = newSize;
+      if( d_size_pct != newSizePct ) { DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  d_size_pct.lin, d_size_pct.col, newSizePct.lin, newSizePct.col );
+          d_size_pct  = newSizePct;
+         }
       auto pv( ViewHd.First() );
       pv->EnsureWinContainsCursor();
       DLINKC_FIRST_TO_LAST( ViewHd, dlinkViewsOfWindow, pv ) {
@@ -355,7 +357,7 @@ STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
    #undef MERGEABLE
    }
 
-STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 0 && DBG( "%s merge %d to %d of %d", __func__, winToClose, wixToMergeTo, g_iWindowCount() );
+STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %d", __func__, winToClose, wixToMergeTo, g_iWindowCount() );
    const auto pWinToMergeTo( g_Win( wixToMergeTo ) );
    auto pWinToClose( g_Win( winToClose ) );
 
@@ -374,21 +376,24 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 0 && DBG( "%s
    }
    DestroyViewList( &pWinToClose->ViewHd );
 
-   const auto fSplitVertical( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin );
-   Point newSize( pWinToMergeTo->d_Size   );
-   #define  WIN_SIZE_MERGE( aaa )  newSize.aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH;
+   Point newSizePct( pWinToMergeTo->d_size_pct );
+   Point newSize(    pWinToMergeTo->d_Size     );
+   Point newUlc (    pWinToMergeTo->d_UpLeft   );
+   #define  WIN_SIZE_MERGE( aaa )                                 \
+         newSize.aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH  ; \
+         newSizePct.aaa += pWinToClose->d_size_pct.aaa          ; \
+         NoGreaterThan( &newUlc.aaa, pWinToClose->d_UpLeft.aaa ); \
 
+   const auto fSplitVertical( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin );
    if( fSplitVertical ) { WIN_SIZE_MERGE( col ) }
    else                 { WIN_SIZE_MERGE( lin ) }
 
    #undef  WIN_SIZE_MERGE
 
-   Point newUlc ( pWinToMergeTo->d_UpLeft );
-   NoGreaterThan( &newUlc.col, pWinToClose->d_UpLeft.col );
-   NoGreaterThan( &newUlc.lin, pWinToClose->d_UpLeft.lin );
-   Delete0( pWinToClose );
+   Delete0( pWinToClose ); //----------------------------------------------------------------------
+
    pWinToMergeTo->Event_Win_Reposition( newUlc ); // before sorting
-   pWinToMergeTo->Event_Win_Resized( newSize );
+   pWinToMergeTo->Event_Win_Resized( newSize, newSizePct );
 
    g__.aWindow.erase( g__.aWindow.begin() + winToClose );
    if( winToClose < wixToMergeTo )
