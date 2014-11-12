@@ -27,10 +27,16 @@ void View::Event_Win_Resized( const Point &newSize ) { 0 && DBG( "%s %s", __func
    HiliteAddin_Event_WinResized();
    }
 
+void Win::Event_Win_Reposition( const Point &newUlc ) {
+   if( d_UpLeft != newUlc ) { 0 && DBG( "%s[%d] ulcYX(%d,%d)->(%d,%d)", __func__, d_wnum,  d_UpLeft.lin, d_UpLeft.col, newUlc.lin, newUlc.col );
+       d_UpLeft  = newUlc;
+      }
+   }
+
 void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
-   if( d_Size != newSize ) { DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
+   if( d_Size != newSize ) { 0 && DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
        d_Size  = newSize;
-      if( d_size_pct != newSizePct ) { DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  d_size_pct.lin, d_size_pct.col, newSizePct.lin, newSizePct.col );
+      if( d_size_pct != newSizePct ) { 0 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  d_size_pct.lin, d_size_pct.col, newSizePct.lin, newSizePct.col );
           d_size_pct  = newSizePct;
          }
       auto pv( ViewHd.First() );
@@ -43,12 +49,6 @@ void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
 
 void Win::Event_Win_Resized( const Point &newSize ) {
    Event_Win_Resized( newSize, d_size_pct );
-   }
-
-void Win::Event_Win_Reposition( const Point &newUlc ) {
-   if( d_UpLeft != newUlc ) { DBG( "%s[%d] ulcYX(%d,%d)->(%d,%d)", __func__, d_wnum,  d_UpLeft.lin, d_UpLeft.col, newUlc.lin, newUlc.col );
-      d_UpLeft = newUlc;
-      }
    }
 
 STATIC_FXN int NonWinDisplayLines() { return ScreenLines() - EditScreenLines(); }
@@ -74,7 +74,7 @@ bool Wins_CanResizeContent( const Point &newSize ) {
    }
 
 void Wins_ScreenSizeChanged( const Point &newSize ) {
-   const Point newWinSize( newSize, -(NonWinDisplayLines()+g_iWindowCount()-1), -NonWinDisplayCols() );
+   const Point newWinSize( newSize, -(NonWinDisplayLines()+(BORDER_WIDTH*(g_iWindowCount()-1))), -NonWinDisplayCols() );
    if( g_iWindowCount() == 1 ) {
       g_CurWin()->Event_Win_Resized( newWinSize );
       }
@@ -100,9 +100,9 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                newWinSizes[iw].col = newWinSize.col;
                }
             if( newWinSize.lin != curWinSizeY ) {
-               1 && DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
+               0 && DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
                // grow all windows proportionally
-               auto ulcY( newWinSize.lin );
+               auto ulcY( newWinSize.lin + (BORDER_WIDTH*(g_iWindowCount()-1)) );
                for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {
                   const auto pW( *it );
                   const auto sizeY( pW->d_Size.lin );
@@ -111,9 +111,8 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                      NoLessThan( &newSizeY, sizeY );
                      }
                   const auto delta( ulcY - newSizeY );
-                  1 && DBG( "sizeY %d->%d delta=%d", sizeY, newSizeY, delta );
                   const auto iw( std::distance( g__.aWindow.begin(), it.base()) -1 );
-                  1 && DBG( "iw===%Id %d", iw, delta );
+                  0 && DBG( "Win[%Id] sizeY %d->%d delta=%d", iw, sizeY, newSizeY, delta );
                   if( 0==iw && delta > 0 ) { newSizeY += delta; }  // 0th element and space left?  consume it!
                   pW->Event_Win_Reposition( {.lin=ulcY - newSizeY, .col=pW->d_UpLeft.col} );
                   pW->Event_Win_Resized( {.lin=newSizeY, .col=newWinSize.col} );
@@ -379,10 +378,10 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
    Point newSizePct( pWinToMergeTo->d_size_pct );
    Point newSize(    pWinToMergeTo->d_Size     );
    Point newUlc (    pWinToMergeTo->d_UpLeft   );
-   #define  WIN_SIZE_MERGE( aaa )                                 \
-         newSize.aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH  ; \
-         newSizePct.aaa += pWinToClose->d_size_pct.aaa          ; \
-         NoGreaterThan( &newUlc.aaa, pWinToClose->d_UpLeft.aaa ); \
+   #define  WIN_SIZE_MERGE( aaa )                                   \
+         newSize   .aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH ; \
+         newSizePct.aaa += pWinToClose->d_size_pct.aaa            ; \
+         NoGreaterThan( &newUlc.aaa, pWinToClose->d_UpLeft.aaa )  ; \
 
    const auto fSplitVertical( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin );
    if( fSplitVertical ) { WIN_SIZE_MERGE( col ) }

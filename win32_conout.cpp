@@ -253,10 +253,10 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
    d_xyState.size.col = newSize.col;  // the ONLY place d_xyState.size is written!
 
    const size_t cells( d_xyState.size.lin * d_xyState.size.col );
-   DBG( "+%s (%dx%d) cells=%Iu->%Iu (x %Iu = %Iu)", __func__, d_xyState.size.col, d_xyState.size.lin, d_vOutputBufferCache.size(), cells
-      , sizeof(d_vOutputBufferCache[0])
-      , sizeof(d_vOutputBufferCache[0]) * cells
-      );
+   0 && DBG( "+%s (%dx%d) cells=%Iu->%Iu (x %Iu = %Iu)", __func__, d_xyState.size.col, d_xyState.size.lin, d_vOutputBufferCache.size(), cells
+         , sizeof(d_vOutputBufferCache[0])
+         , sizeof(d_vOutputBufferCache[0]) * cells
+         );
    if( d_vOutputBufferCache.size() < cells ) {
        d_vOutputBufferCache.resize(  cells );
        }
@@ -275,7 +275,7 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
    }
 
    NullifyUpdtLineRange();
-   DBG( "-%s (%dx%d)", __func__, d_xyState.size.col, d_xyState.size.lin );
+   0 && DBG( "-%s (%dx%d)", __func__, d_xyState.size.col, d_xyState.size.lin );
    }
 
 
