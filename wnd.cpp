@@ -27,15 +27,20 @@ void View::Event_Win_Resized( const Point &newSize ) { 0 && DBG( "%s %s", __func
    HiliteAddin_Event_WinResized();
    }
 
-void Win::Event_Win_Resized( const Point &newSize ) {
+void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
    if( d_Size != newSize ) { DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
       d_Size = newSize;
+      d_size_pct = newSizePct;
       auto pv( ViewHd.First() );
       pv->EnsureWinContainsCursor();
       DLINKC_FIRST_TO_LAST( ViewHd, dlinkViewsOfWindow, pv ) {
          pv->Event_Win_Resized( newSize );
          }
       }
+   }
+
+void Win::Event_Win_Resized( const Point &newSize ) {
+   Event_Win_Resized( newSize, d_size_pct );
    }
 
 void Win::Event_Win_Reposition( const Point &newUlc ) {
@@ -93,20 +98,21 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                newWinSizes[iw].col = newWinSize.col;
                }
             if( newWinSize.lin != curWinSizeY ) {
-               0 && DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
+               1 && DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
                // grow all windows proportionally
-               auto ulcY( EditScreenLines() );
-               for( signed iw(g_iWindowCount()-1) ; iw >= 0 ; --iw ) { // iw MUST be signed int!
-           /// for( auto it( g__.aWindow.rbegin(); it < g__.aWindow.rbegin(); ++it ) ) { // iw MUST be signed int!
-                  const auto pW( g_Win( iw ) );
+               auto ulcY( newWinSize.lin );
+               for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {
+                  const auto pW( *it );
                   const auto sizeY( pW->d_Size.lin );
                   int newSizeY( (newWinSize.lin * static_cast<double>(pW->d_size_pct.lin)) / 100 );
                   if( newWinSize.lin > curWinSizeY ) {
                      NoLessThan( &newSizeY, sizeY );
                      }
                   const auto delta( ulcY - newSizeY );
-                  0 && DBG( "sizeY %d->%d ulcY-newSizeY=%d", sizeY, newSizeY, delta );
-                  if( iw==0 && delta > 0 ) { newSizeY += delta; }
+                  1 && DBG( "sizeY %d->%d delta=%d", sizeY, newSizeY, delta );
+                  const auto iw( std::distance( g__.aWindow.begin(), it.base()) -1 );
+                  1 && DBG( "iw===%Id %d", iw, delta );
+                  if( 0==iw && delta > 0 ) { newSizeY += delta; }  // 0th element and space left?  consume it!
                   pW->Event_Win_Reposition( {.lin=ulcY - newSizeY, .col=pW->d_UpLeft.col} );
                   pW->Event_Win_Resized( {.lin=newSizeY, .col=newWinSize.col} );
                   ulcY -= newSizeY + BORDER_WIDTH;
@@ -114,8 +120,8 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                }
             else if( newWinSize.col != g_Win(0)->d_Size.col ) {
                const auto sizeY( g_Win(0)->d_Size.col );
-               for( signed iw(g_iWindowCount()-1) ; iw >= 0 ; --iw ) { // iw MUST be signed int!
-                  const auto pW( g_Win(iw) );
+               for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {
+                  const auto pW( *it );
                   pW->Event_Win_Resized( {.lin=pW->d_Size.lin, .col=newWinSize.col} );
                   }
                // shrink all windows (except min-sized) proportionally
@@ -190,28 +196,27 @@ Win::Win() {
    Maximize();
    }
 
-Win::Win( Win &parent, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! parent is a reference since this is a COPY CTOR
-   parent.DispNeedsRedrawAllLines(); // in the horizontal-split case this is somewhat overkill...
+Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! parent_ is a reference since this is a COPY CTOR
+   parent_.DispNeedsRedrawAllLines(); // in the horizontal-split case this is somewhat overkill...
 
    // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
-   const auto &parentULC ( parent.d_UpLeft );
-   const auto &parentSize( parent.d_Size   );
-   Point newParentSize( parentSize );
-   #define SPLIT_IT( aaa, bbb )                                                   \
-             d_Size.aaa  = parentSize.aaa                                       ; \
-             d_Size.bbb  = parentSize.bbb - ColumnOrLineToSplitAt - 2           ; \
-      newParentSize.bbb  = parentSize.bbb - (d_Size.bbb          + BORDER_WIDTH); \
-           d_UpLeft.aaa  = parentULC.aaa                                        ; \
-           d_UpLeft.bbb  = parentULC.bbb + newParentSize.bbb     + BORDER_WIDTH ; \
-      const auto src_size_pct( parent.d_size_pct.bbb );                           \
-       d_size_pct.aaa  = 100; /* _ASSUMING_ uniform split-type */                 \
-       d_size_pct.bbb  = (src_size_pct * d_Size.bbb) / parentSize.bbb;            \
-       parent.d_size_pct.bbb -= d_size_pct.bbb;                                   \
-       1 &&                                                                       \
-       DBG( "%s: src=%d=%d%%, this=%d=%d%%, parent=%d=%d%%", __func__,            \
-                parentSize.bbb,          src_size_pct                             \
-           , parent.d_Size.bbb, parent.d_size_pct.bbb                             \
-           ,        d_Size.bbb,        d_size_pct.bbb                             \
+   const auto &parent( parent_ );
+   Point       newParentSize( parent.d_Size );
+   Point       newParentSizePct( parent.d_size_pct );
+   #define SPLIT_IT( aaa, bbb )                                                       \
+              d_Size.aaa  = parent.d_Size.aaa                                       ; \
+              d_Size.bbb  = parent.d_Size.bbb - ColumnOrLineToSplitAt - 2           ; \
+       newParentSize.bbb -= d_Size.bbb      + BORDER_WIDTH                          ; \
+            d_UpLeft.aaa  = parent.d_UpLeft.aaa                                     ; \
+            d_UpLeft.bbb  = parent.d_UpLeft.bbb + newParentSize.bbb + BORDER_WIDTH  ; \
+          d_size_pct.aaa  = 100 /* _ASSUMING_ uniform split-type */                 ; \
+          d_size_pct.bbb  = (parent.d_size_pct.bbb * d_Size.bbb) / parent.d_Size.bbb; \
+       newParentSizePct.bbb -= d_size_pct.bbb;                                        \
+       1 &&                                                                           \
+       DBG( "%s: src=%d=%d%%->%d=%d%%, new=%d=%d%%", __func__,                        \
+             parent.d_Size.bbb, parent.d_size_pct.bbb                                 \
+           , newParentSize.bbb,  newParentSizePct.bbb                                 \
+           ,        d_Size.bbb,        d_size_pct.bbb                                 \
           );
 
    if( fSplitVertical ) {  SPLIT_IT( lin, col )  }
@@ -219,10 +224,10 @@ Win::Win( Win &parent, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! p
 
    #undef SPLIT_IT
 
-   parent.Event_Win_Resized( newParentSize ); // feed newParentSize back into parent
+   parent_.Event_Win_Resized( newParentSize, newParentSizePct ); // feed newParentSize back into parent
 
    // clone all of original window's Views in a new list bound to the new window  !BUGBUG a different approach should be created!
-   for( auto view( parent.CurView() ) ; view ; view = DLINK_NEXT( view, dlinkViewsOfWindow ) ) {
+   for( auto view( parent_.CurView() ) ; view ; view = DLINK_NEXT( view, dlinkViewsOfWindow ) ) {
       auto dupdPF( new View( *view, this ) ); // DO NOT inline the 'new View( ... )' into DLINK_INSERT_LAST _macro_ !!!
       DLINK_INSERT_LAST( ViewHd, dupdPF, dlinkViewsOfWindow );
       }
