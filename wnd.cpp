@@ -28,15 +28,15 @@ void View::Event_Win_Resized( const Point &newSize ) { 0 && DBG( "%s %s", __func
    }
 
 void Win::Event_Win_Reposition( const Point &newUlc ) {
-   if( d_UpLeft != newUlc ) { 1 && DBG( "%s[%d] ulcYX(%d,%d)->(%d,%d)", __func__, d_wnum,  d_UpLeft.lin, d_UpLeft.col, newUlc.lin, newUlc.col );
+   if( d_UpLeft != newUlc ) { 0 && DBG( "%s[%d] ulcYX(%d,%d)->(%d,%d)", __func__, d_wnum,  d_UpLeft.lin, d_UpLeft.col, newUlc.lin, newUlc.col );
        d_UpLeft  = newUlc;
       }
    }
 
 void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
-   if( d_Size != newSize ) { 1 && DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
+   if( d_Size != newSize ) { 0 && DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
        d_Size  = newSize;
-      if( d_size_pct != newSizePct ) { 1 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  d_size_pct.lin, d_size_pct.col, newSizePct.lin, newSizePct.col );
+      if( d_size_pct != newSizePct ) { 0 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  d_size_pct.lin, d_size_pct.col, newSizePct.lin, newSizePct.col );
           d_size_pct  = newSizePct;
          }
       auto pv( ViewHd.First() );
@@ -74,19 +74,21 @@ bool Wins_CanResizeContent( const Point &newSize ) {
    }
 
 void Wins_ScreenSizeChanged( const Point &newSize ) {
-   const Point newNonBorderSize( newSize, -(NonWinDisplayLines()+(BORDER_WIDTH*(g_iWindowCount()-1))), -NonWinDisplayCols() );
+   const Point newWinRgnSize( newSize, -NonWinDisplayLines(), -NonWinDisplayCols() );
    if( g_iWindowCount() == 1 ) {
-      g_CurWin()->Event_Win_Resized( newNonBorderSize );
+      g_CurWin()->Event_Win_Resized( newWinRgnSize );
       }
    else { // multiwindow resize
       if( 1 ) {
          #define MW_RESIZE( aaa, bbb )                                                                                      \
+            Point newNonBorderSize( newWinRgnSize );                                                                        \
+                  newNonBorderSize.aaa -= BORDER_WIDTH*(g_iWindowCount()-1);                                                \
             auto curNonBorderSize( 0 ); /* excluding borders */                                                             \
             for( const auto &pWin : g__.aWindow ) {                                                                         \
                curNonBorderSize += pWin->d_Size.aaa;                                                                        \
                }                                                                                                            \
             if( newNonBorderSize.aaa != curNonBorderSize ) { /* grow/shrink all windows proportional to their d_size_pct */ \
-               1 && DBG( "%s :%d->%d", __func__, curNonBorderSize, newNonBorderSize.aaa );                                  \
+               0 && DBG( "%s %s:%d->%d", __func__, #aaa, curNonBorderSize, newNonBorderSize.aaa );                          \
                auto ulc( newNonBorderSize.aaa + (BORDER_WIDTH*(g_iWindowCount()-1)) );                                      \
                for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {                                     \
                   const auto pW( *it );                                                                                     \
@@ -97,7 +99,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                      }                                                                                                      \
                   const auto delta( ulc - newSize_ );                                                                       \
                   const auto iw( std::distance( g__.aWindow.begin(), it.base()) -1 );                                       \
-                  1 && DBG( "Win[%Id] size_ %d->%d delta=%d", iw, size_, newSize_, delta );                                 \
+                  0 && DBG( "Win[%Id] size_.%s %d->%d delta=%d", iw, #aaa, size_, newSize_, delta );                        \
                   if( 0==iw && delta > 0 ) { newSize_ += delta; }  /* 0th element and space left?  consume it! */           \
                   { Point Pos; Pos.aaa=ulc - newSize_, Pos.bbb=pW->d_UpLeft    .bbb, pW->Event_Win_Reposition( Pos ); }     \
                   { Point Pos; Pos.aaa=      newSize_, Pos.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized   ( Pos ); }     \
@@ -105,7 +107,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                   }                                                                                                         \
                }                                                                                                            \
             else if( newNonBorderSize.bbb != g_Win(0)->d_Size.bbb ) { /* the easy dimension */                              \
-               const auto size_( g_Win(0)->d_Size.bbb );                                                                    \
+               0 && DBG( "%s %s:%d->%d", __func__, #bbb, g_Win(0)->d_Size.bbb, newNonBorderSize.bbb );                      \
                for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {                                     \
                   const auto pW( *it );                                                                                     \
                   { Point Pos; Pos.aaa=pW->d_Size.aaa, Pos.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized( Pos ); }        \
