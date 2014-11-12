@@ -80,7 +80,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
          else { // splitHoriz
             auto shrinkableWins(0);
             auto curWinSizeY = 0;
-            Point newWinSizes[ ELEMENTS(g__.aWindow) ];
+            Point newWinSizes[ MAX_WINDOWS ];
             for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
                const auto sizeY( g_Win( iw )->d_Size.lin );
                if( sizeY > MIN_WIN_HEIGHT ) {
@@ -97,6 +97,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                // grow all windows proportionally
                auto ulcY( EditScreenLines() );
                for( signed iw(g_iWindowCount()-1) ; iw >= 0 ; --iw ) { // iw MUST be signed int!
+           /// for( auto it( g__.aWindow.rbegin(); it < g__.aWindow.rbegin(); ++it ) ) { // iw MUST be signed int!
                   const auto pW( g_Win( iw ) );
                   const auto sizeY( pW->d_Size.lin );
                   int newSizeY( (newWinSize.lin * static_cast<double>(pW->d_size_pct.lin)) / 100 );
@@ -282,7 +283,6 @@ STATIC_FXN int CDECL__ qsort_cmp_win( PCVoid p1, PCVoid p2 ) {
 
 STATIC_FXN void SortWinArray() {
    const auto tmpCurWin( g_CurWin() );  // needed to update g_CurWin()
-// qsort( g__.aWindow, g_iWindowCount(), sizeof(g__.aWindow[0]), qsort_cmp_win );
    std::sort( g__.aWindow.begin(), g__.aWindow.end() );
    { int iw(0); for( const auto &win : g__.aWindow ) { win->d_wnum = iw++; } }
    SetWindowIdx( PWinToWidx( tmpCurWin ) );  // update g_CurWin()
@@ -380,7 +380,8 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 0 && DBG( "%s
    NoGreaterThan( &newUlc.col, pWinToClose->d_UpLeft.col );
    NoGreaterThan( &newUlc.lin, pWinToClose->d_UpLeft.lin );
    Delete0( pWinToClose );
-   pWinToMergeTo->Event_Win_Reposition( newUlc );
+   pWinToMergeTo->Event_Win_Reposition( newUlc ); // before sorting
+   pWinToMergeTo->Event_Win_Resized( newSize );
 
    g__.aWindow.erase( g__.aWindow.begin() + winToClose );
    if( winToClose < wixToMergeTo )
@@ -388,7 +389,6 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 0 && DBG( "%s
 
    SetWindowIdx( wixToMergeTo );
    SortWinArray();
-   pWinToMergeTo->Event_Win_Resized( newSize );
    SetWindowSetValidView( -1 );
    }
 
@@ -521,9 +521,8 @@ bool ARG::window() {
 
 void RefreshCheckAllWindowsFBufs() {
    // first collect affected PFBUF's, avoiding dups
-   PFBUF pfbufs[ 1+ELEMENTS(g__.aWindow) ] = { nullptr }; // 1+ = room for trailing nullptr end-marker
-   for( auto ix(0) ; ix < g_iWindowCount() ; ++ix ) {
-      const auto pWin( g_Win( ix ) );
+   PFBUF pfbufs[ 1+MAX_WINDOWS ] = { nullptr }; // 1+ = room for trailing nullptr end-marker
+   for( auto &pWin : g__.aWindow ) {
       if( pWin->CurView() && pWin->CurView()->FBuf() ) { // look ONLY at each window's (one) visible FBUF
          const auto pFBuf( pWin->CurView()->FBuf() );
          // insert, avoiding duplication, into pfbufs[]
