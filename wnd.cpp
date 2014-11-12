@@ -74,9 +74,9 @@ bool Wins_CanResizeContent( const Point &newSize ) {
    }
 
 void Wins_ScreenSizeChanged( const Point &newSize ) {
-   const Point newWinSize( newSize, -(NonWinDisplayLines()+(BORDER_WIDTH*(g_iWindowCount()-1))), -NonWinDisplayCols() );
+   const Point newNonBorderSize( newSize, -(NonWinDisplayLines()+(BORDER_WIDTH*(g_iWindowCount()-1))), -NonWinDisplayCols() );
    if( g_iWindowCount() == 1 ) {
-      g_CurWin()->Event_Win_Resized( newWinSize );
+      g_CurWin()->Event_Win_Resized( newNonBorderSize );
       }
    else { // multiwindow resize
       if( 1 ) {
@@ -85,29 +85,18 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
          if( existingSplitVertical ) {
             }
          else { // splitHoriz
-            auto shrinkableWins(0);
-            auto curWinSizeY = 0;
-            Point newWinSizes[ MAX_WINDOWS ];
-            for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
-               const auto sizeY( g_Win( iw )->d_Size.lin );
-               if( sizeY > MIN_WIN_HEIGHT ) {
-                  ++shrinkableWins;
-                  }
-               else {
-                  newWinSizes[iw].lin = sizeY;
-                  }
-               curWinSizeY += sizeY;
-               newWinSizes[iw].col = newWinSize.col;
+            auto curNonBorderSize( 0 ); // excluding borders
+            for( const auto &pWin : g__.aWindow ) {
+               curNonBorderSize += pWin->d_Size.lin;
                }
-            if( newWinSize.lin != curWinSizeY ) {
-               0 && DBG( "%s Y:%d->%d", __func__, curWinSizeY, newWinSize.lin );
-               // grow all windows proportionally
-               auto ulcY( newWinSize.lin + (BORDER_WIDTH*(g_iWindowCount()-1)) );
+            if( newNonBorderSize.lin != curNonBorderSize ) { // grow/shrink all windows proportional to their d_size_pct
+               0 && DBG( "%s Y:%d->%d", __func__, curNonBorderSize, newNonBorderSize.lin );
+               auto ulcY( newNonBorderSize.lin + (BORDER_WIDTH*(g_iWindowCount()-1)) );
                for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {
                   const auto pW( *it );
                   const auto sizeY( pW->d_Size.lin );
-                  int newSizeY( (newWinSize.lin * static_cast<double>(pW->d_size_pct.lin)) / 100 );
-                  if( newWinSize.lin > curWinSizeY ) {
+                  int newSizeY( (newNonBorderSize.lin * static_cast<double>(pW->d_size_pct.lin)) / 100 );
+                  if( newNonBorderSize.lin > curNonBorderSize ) {
                      NoLessThan( &newSizeY, sizeY );
                      }
                   const auto delta( ulcY - newSizeY );
@@ -115,17 +104,16 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                   0 && DBG( "Win[%Id] sizeY %d->%d delta=%d", iw, sizeY, newSizeY, delta );
                   if( 0==iw && delta > 0 ) { newSizeY += delta; }  // 0th element and space left?  consume it!
                   pW->Event_Win_Reposition( {.lin=ulcY - newSizeY, .col=pW->d_UpLeft.col} );
-                  pW->Event_Win_Resized( {.lin=newSizeY, .col=newWinSize.col} );
+                  pW->Event_Win_Resized( {.lin=newSizeY, .col=newNonBorderSize.col} );
                   ulcY -= newSizeY + BORDER_WIDTH;
                   }
                }
-            else if( newWinSize.col != g_Win(0)->d_Size.col ) {
+            else if( newNonBorderSize.col != g_Win(0)->d_Size.col ) { // the easy dimension
                const auto sizeY( g_Win(0)->d_Size.col );
                for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {
                   const auto pW( *it );
-                  pW->Event_Win_Resized( {.lin=pW->d_Size.lin, .col=newWinSize.col} );
+                  pW->Event_Win_Resized( {.lin=pW->d_Size.lin, .col=newNonBorderSize.col} );
                   }
-               // shrink all windows (except min-sized) proportionally
                }
             }
 
