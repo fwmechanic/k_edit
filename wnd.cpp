@@ -354,7 +354,6 @@ STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
 
 STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 0 && DBG( "%s merge %d to %d of %d", __func__, winToClose, wixToMergeTo, g_iWindowCount() );
    const auto pWinToMergeTo( g_Win( wixToMergeTo ) );
-   {
    auto pWinToClose( g_Win( winToClose ) );
 
    {
@@ -373,31 +372,31 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 0 && DBG( "%s
    DestroyViewList( &pWinToClose->ViewHd );
 
    const auto fSplitVertical( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin );
-   #define  WIN_SIZE_MERGE( aaa ) \
-      pWinToMergeTo->d_Size.aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH;
+   Point newSize( pWinToMergeTo->d_Size   );
+   #define  WIN_SIZE_MERGE( aaa )  newSize.aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH;
 
    if( fSplitVertical ) { WIN_SIZE_MERGE( col ) }
    else                 { WIN_SIZE_MERGE( lin ) }
 
    #undef  WIN_SIZE_MERGE
 
-   NoGreaterThan( &pWinToMergeTo->d_UpLeft.col, pWinToClose->d_UpLeft.col );
-   NoGreaterThan( &pWinToMergeTo->d_UpLeft.lin, pWinToClose->d_UpLeft.lin );
+   Point newUlc ( pWinToMergeTo->d_UpLeft );
+   NoGreaterThan( &newUlc.col, pWinToClose->d_UpLeft.col );
+   NoGreaterThan( &newUlc.lin, pWinToClose->d_UpLeft.lin );
    Delete0( pWinToClose );
-   }
+   pWinToMergeTo->Event_Win_Reposition( newUlc.lin, newUlc.col );
 
    for( auto ix( winToClose+1 ); ix < g_iWindowCount(); ++ix )
       g__.aWindow[ ix-1 ] = g__.aWindow[ ix ];  // move "the bubble" to the end
 
    g__.aWindow[ --g__.iWindowCount ] = nullptr; // drop "the bubble"
 
-   pWinToMergeTo->Event_Win_Resized( pWinToMergeTo->d_Size.lin, pWinToMergeTo->d_Size.col );
-
    if( winToClose < wixToMergeTo )
       --wixToMergeTo;
 
    SetWindowIdx( wixToMergeTo );
    SortWinArray();
+   pWinToMergeTo->Event_Win_Resized( newSize.lin, newSize.col );
    SetWindowSetValidView( -1 );
    }
 

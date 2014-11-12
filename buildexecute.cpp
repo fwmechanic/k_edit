@@ -1019,10 +1019,10 @@ PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pC
       return GetTextargString_( xb, pszPrompt, xCursor, pCmd, flags, pfGotAnyInputFromKbd );
       }
    catch( const std::out_of_range& exc ) {
-      Msg( "caught std::out_of_range %s", exc.what() );
+      Msg( "%s caught std::out_of_range %s", __func__, exc.what() );
       }
    catch( ... ) {
-      Msg( "caught other exception" );
+      Msg( "%s caught other exception", __func__ );
       }
    Bell_FlushKeyQueue_WaitForKey();
    return nullptr;

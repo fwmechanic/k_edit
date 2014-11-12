@@ -666,7 +666,7 @@ class HiliteAddin_CPPcond_Hilite : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
    void VWinResized() override {
       d_PerViewableLine.resize( ViewLines() );
-      d_need_refresh = false;
+      d_need_refresh = true;
       }
 
 public:
@@ -675,7 +675,7 @@ public:
       : HiliteAddin( pView )
       {
       d_PerViewableLine.resize( ViewLines() );
-      d_need_refresh = false;
+      d_need_refresh = true;
       }
 
    ~HiliteAddin_CPPcond_Hilite() {}
@@ -683,7 +683,7 @@ public:
 
 private:
 
-   bool d_need_refresh;
+   bool d_need_refresh = false;
 
    struct PerViewableLineInfo {
       struct    {
@@ -724,7 +724,6 @@ int HiliteAddin_CPPcond_Hilite::close_level( int level_ix, int yLast ) {
    }
 
 void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
-   d_need_refresh = true;
    // pass 1: fill in line.{ xMax, cppc?, xPound? }
    auto maxUnIfdEnds(0);
    {
@@ -792,28 +791,36 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
    while( level_idx > -1 ) {
       level_idx = close_level( level_idx, ViewLines()-1 );
       }
+   d_need_refresh = false;
    }
 
 bool HiliteAddin_CPPcond_Hilite::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
-   if( !d_need_refresh )  // BUGBUG fix this!!!!!!!!!!
-      refresh( 0, 0 );
+   try {
+      if( d_need_refresh )  // BUGBUG fix this!!!!!!!!!!
+         refresh( 0, 0 );
 
-   const auto lineInWindow( yLine - Origin().lin );
-   Assert( lineInWindow < ViewLines() );
-   const auto &line( d_PerViewableLine[ lineInWindow ].line );
+      const auto lineInWindow( yLine - Origin().lin );
+      Assert( lineInWindow >= 0 && lineInWindow < ViewLines() );
+      const auto &line( d_PerViewableLine[ lineInWindow ].line );
 
-   // highlight any CPPcond that occurs on this line
-   if( cppcNone != line.acppc ) { // ..\scripts\dups.pl  crash! unless SOLO_ELSE_HACK
-      alcc.PutColor( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, COLOR::CPH );
+      // highlight any CPPcond that occurs on this line
+      if( cppcNone != line.acppc ) { // ..\scripts\dups.pl  crash! unless SOLO_ELSE_HACK
+         alcc.PutColor( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, COLOR::CPH );
+         }
+
+      // continue any "surrounds" of other highlit CPPconds above/below
+      for( auto level_idx(line.level_ix) ; level_idx > -1 ; level_idx = d_PerViewableLine[ level_idx ].level.containing_level_idx ) {
+         auto &level( d_PerViewableLine[ level_idx ].level );
+         const auto xBar( level.xBox );
+         alcc.PutColor( xBar, 1, COLOR::CPH );
+         }
       }
-
-   // continue any "surrounds" of other highlit CPPconds above/below
-   for( auto level_idx(line.level_ix) ; level_idx > -1 ; level_idx = d_PerViewableLine[ level_idx ].level.containing_level_idx ) {
-      auto &level( d_PerViewableLine[ level_idx ].level );
-      const auto xBar( level.xBox );
-      alcc.PutColor( xBar, 1, COLOR::CPH );
+   catch( const std::out_of_range& exc ) {
+      Msg( "%s caught std::out_of_range %s", __func__, exc.what() );
       }
-
+   catch( ... ) {
+      Msg( "%s caught other exception", __func__ );
+      }
    return false;
    }
 
