@@ -938,13 +938,13 @@ struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win 
    ViewHead  ViewHd;   // public: exposed
    Point     d_Size;   // public: exposed
    Point     d_UpLeft; // public: exposed
-   Point     d_size_pct;
    int       d_wnum;
 
 public:
              Win();
              Win( PCChar pC );
              Win( Win &rhs, bool fSplitVertical, int ColumnOrLineToSplitAt );
+             ~Win();
 
    void      Maximize();
 
@@ -963,6 +963,11 @@ public:
 
    bool      GetCursorForDisplay( Point *pt );
    void      GetLineForDisplay( int winNum, PChar DestLineBuf, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite, const LINE yDisplayLine );
+
+public: // std pimpl implemenations declare it as private, but we have "special needs"
+   class impl;
+   std::unique_ptr<impl> pimpl;
+
    }; // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
 
 

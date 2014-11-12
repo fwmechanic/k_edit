@@ -4,6 +4,15 @@
 
 #include "ed_main.h"
 
+class Win::impl {
+   Point     d_size_pct;
+public:
+   const Point &SizePct() const { return d_size_pct; }
+   void  SizePct_set( const Point &src )  { d_size_pct = src; }
+   };
+
+Win::~Win() = default;
+
 GLOBAL_VAR TGlobalStructs g__;
 
 GLOBAL_VAR PFBUF s_curFBuf;       // not literally static (s_), but s/b treated as such!
@@ -36,8 +45,8 @@ void Win::Event_Win_Reposition( const Point &newUlc ) {
 void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
    if( d_Size != newSize ) { 0 && DBG( "%s[%d] size(%d,%d)->(%d,%d)", __func__, d_wnum,  d_Size.lin, d_Size.col, newSize.lin, newSize.col );
        d_Size  = newSize;
-      if( d_size_pct != newSizePct ) { 0 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  d_size_pct.lin, d_size_pct.col, newSizePct.lin, newSizePct.col );
-          d_size_pct  = newSizePct;
+      if( pimpl->SizePct() != newSizePct ) { 0 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  pimpl->SizePct().lin, pimpl->SizePct().col, newSizePct.lin, newSizePct.col );
+          pimpl->SizePct_set( newSizePct );
          }
       auto pv( ViewHd.First() );
       pv->EnsureWinContainsCursor();
@@ -48,7 +57,7 @@ void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
    }
 
 void Win::Event_Win_Resized( const Point &newSize ) {
-   Event_Win_Resized( newSize, d_size_pct );
+   Event_Win_Resized( newSize, pimpl->SizePct() );
    }
 
 STATIC_FXN int NonWinDisplayLines() { return ScreenLines() - EditScreenLines(); }
@@ -93,7 +102,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {                                     \
                   const auto pW( *it );                                                                                     \
                   const auto size_( pW->d_Size.aaa );                                                                       \
-                  int newSize_( (newNonBorderSize.aaa * static_cast<double>(pW->d_size_pct.aaa)) / 100 );                   \
+                  int newSize_( (newNonBorderSize.aaa * static_cast<double>(pW->pimpl->SizePct().aaa)) / 100 );             \
                   if( newNonBorderSize.aaa > curNonBorderSize ) {                                                           \
                      NoLessThan( &newSize_, size_ );                                                                        \
                      }                                                                                                      \
@@ -181,12 +190,11 @@ void Win::Maximize() {
    d_UpLeft.lin = 0;
    d_Size.col = EditScreenCols();
    d_Size.lin = EditScreenLines();
-   d_size_pct.col = 100;
-   d_size_pct.lin = 100;
+   { Point tmp{ .lin=100, .col=100 }; pimpl->SizePct_set( tmp ); }
    DBG( "%s", __func__ );
    }
 
-Win::Win() {
+Win::Win() : pimpl{ new impl{} } {
    Maximize();
    }
 
@@ -196,22 +204,25 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! 
    // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
    const auto &parent( parent_ );
    Point       newParentSize( parent.d_Size );
-   Point       newParentSizePct( parent.d_size_pct );
+   Point       newParentSizePct( parent.pimpl->SizePct() );
    #define SPLIT_IT( aaa, bbb )                                                       \
               d_Size.aaa  = parent.d_Size.aaa                                       ; \
               d_Size.bbb  = parent.d_Size.bbb - ColumnOrLineToSplitAt - 2           ; \
        newParentSize.bbb -= d_Size.bbb      + BORDER_WIDTH                          ; \
             d_UpLeft.aaa  = parent.d_UpLeft.aaa                                     ; \
             d_UpLeft.bbb  = parent.d_UpLeft.bbb + newParentSize.bbb + BORDER_WIDTH  ; \
-          d_size_pct.aaa  = 100 /* _ASSUMING_ uniform split-type */                 ; \
-          d_size_pct.bbb  = (parent.d_size_pct.bbb * d_Size.bbb)                      \
-                          / (parent.d_Size.bbb-BORDER_WIDTH)                        ; \
-    newParentSizePct.bbb -= d_size_pct.bbb                                          ; \
+   { Point tmp{ .aaa=100 /* _ASSUMING_ uniform split-type */                          \
+              , .bbb= (parent.pimpl->SizePct().bbb * d_Size.bbb)                      \
+                    / (parent.d_Size.bbb-BORDER_WIDTH)                                \
+              };                                                                      \
+     pimpl->SizePct_set( tmp );                                                       \
+   }                                                                                  \
+    newParentSizePct.bbb -= pimpl->SizePct().bbb                                    ; \
        1 &&                                                                           \
        DBG( "%s: src=%d=%d%%->%d=%d%%, new=%d=%d%%", __func__,                        \
-             parent.d_Size.bbb, parent.d_size_pct.bbb                                 \
-           , newParentSize.bbb,  newParentSizePct.bbb                                 \
-           ,        d_Size.bbb,        d_size_pct.bbb                                 \
+             parent.d_Size.bbb, parent.pimpl->SizePct().bbb                           \
+           , newParentSize.bbb,        newParentSizePct.bbb                           \
+           ,        d_Size.bbb,        pimpl->SizePct().bbb                           \
           );
 
    if( fSplitVertical ) {  SPLIT_IT( lin, col )  }
@@ -367,12 +378,12 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
    }
    DestroyViewList( &pWinToClose->ViewHd );
 
-   Point newSizePct( pWinToMergeTo->d_size_pct );
+   Point newSizePct( pWinToMergeTo->pimpl->SizePct() );
    Point newSize(    pWinToMergeTo->d_Size     );
    Point newUlc (    pWinToMergeTo->d_UpLeft   );
    #define  WIN_SIZE_MERGE( aaa )                                   \
          newSize   .aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH ; \
-         newSizePct.aaa += pWinToClose->d_size_pct.aaa            ; \
+         newSizePct.aaa += pWinToClose->pimpl->SizePct()  .aaa    ; \
          NoGreaterThan( &newUlc.aaa, pWinToClose->d_UpLeft.aaa )  ; \
 
    const auto fSplitVertical( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin );
