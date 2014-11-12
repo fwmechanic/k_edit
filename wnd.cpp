@@ -194,11 +194,15 @@ void Win::Maximize() {
    DBG( "%s", __func__ );
    }
 
-Win::Win() : pimpl{ new impl{} } {
+Win::Win()
+   : pimpl{ new impl{} }
+   {
    Maximize();
    }
 
-Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! parent_ is a reference since this is a COPY CTOR
+Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
+   : pimpl{ new impl{} }
+   { // ! parent_ is a reference since this is a COPY CTOR
    parent_.DispNeedsRedrawAllLines(); // in the horizontal-split case this is somewhat overkill...
 
    // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
@@ -239,7 +243,9 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt ) { // ! 
       }
    }
 
-Win::Win( PCChar pC ) { // Used during ReadStateFile processing ONLY!
+Win::Win( PCChar pC ) // Used during ReadStateFile processing ONLY!
+   : pimpl{ new impl{} }
+   {
    d_wnum = 0;
    0 && DBG( "RdSF: WIN-GEOM '%s'", pC );
    sscanf( pC, " %d %d %d %d "
