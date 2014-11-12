@@ -687,7 +687,7 @@ Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
 
    Path::str_t st( pszSrc );
    if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {
-      DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
+      DB && DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
       }
    else {
       if( '$' == pszSrc[0] )
