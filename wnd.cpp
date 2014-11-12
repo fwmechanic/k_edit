@@ -8,11 +8,13 @@ GLOBAL_VAR TGlobalStructs g__;
 
 GLOBAL_VAR PFBUF s_curFBuf;       // not literally static (s_), but s/b treated as such!
 
-enum { BORDER_WIDTH = 1, };
+enum { BORDER_WIDTH =  1 };
+enum { MAX_WINDOWS  = 10 };
 
-STIL bool CanCreateWin()  { return g__.iWindowCount < ELEMENTS(g__.aWindow); }
+STIL bool CanCreateWin()  { return g_iWindowCount() < MAX_WINDOWS; }
 
-#define  AssertPWin( pWin )   Assert( (pWin) >= g__.aWindow && (pWin) < g__.aWindow[ g__.iWindowCount ] )
+#define  AssertPWin( pWin )   Assert( (pWin) >= g__.aWindow && (pWin) <= g__.aWindow[ g_iWindowCount()-1 ] )
+#define  AssertWidx( widx )   Assert( widx >= 0 && widx < g_iWindowCount() );
 
 bool Win::GetCursorForDisplay( Point *pt ) {
    const auto pcv( ViewHd.First() );
@@ -245,19 +247,19 @@ Win::Win( PCChar pC ) { // Used during ReadStateFile processing ONLY!
    }
 
 STATIC_FXN PWin SaveNewWin( PWin newWin ) {
-   g__.aWindow[ g__.iWindowCount++ ] = newWin;
+   g__.aWindow.push_back( newWin );
    return newWin;
    }
 
 STATIC_FXN void SetWindowIdx( int widx ) {
-   Assert( widx >= 0 && widx < g_iWindowCount() );
+   AssertWidx( widx );
    g__.ixCurrentWin = widx;
    }
 
 void InitNewWin( PCChar pC ) { // Used during ReadStateFile processing only!
    if( CanCreateWin() ) {
       SaveNewWin( new Win(pC) );
-      SetWindowIdx( g__.iWindowCount-1 );
+      SetWindowIdx( g_iWindowCount()-1 );
       }
    }
 
@@ -287,8 +289,9 @@ STATIC_FXN int CDECL__ qsort_cmp_win( PCVoid p1, PCVoid p2 ) {
 
 STATIC_FXN void SortWinArray() {
    const auto tmpCurWin( g_CurWin() );  // needed to update g_CurWin()
-   qsort( g__.aWindow, g_iWindowCount(), sizeof(g__.aWindow[0]), qsort_cmp_win );
-   for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) { g__.aWindow[iw]->d_wnum = iw; }
+// qsort( g__.aWindow, g_iWindowCount(), sizeof(g__.aWindow[0]), qsort_cmp_win );
+   std::sort( g__.aWindow.begin(), g__.aWindow.end() );
+   { int iw(0); for( const auto &win : g__.aWindow ) { win->d_wnum = iw++; } }
    SetWindowIdx( PWinToWidx( tmpCurWin ) );  // update g_CurWin()
    }
 
@@ -386,11 +389,7 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 0 && DBG( "%s
    Delete0( pWinToClose );
    pWinToMergeTo->Event_Win_Reposition( newUlc.lin, newUlc.col );
 
-   for( auto ix( winToClose+1 ); ix < g_iWindowCount(); ++ix )
-      g__.aWindow[ ix-1 ] = g__.aWindow[ ix ];  // move "the bubble" to the end
-
-   g__.aWindow[ --g__.iWindowCount ] = nullptr; // drop "the bubble"
-
+   g__.aWindow.erase( g__.aWindow.begin() + winToClose );
    if( winToClose < wixToMergeTo )
       --wixToMergeTo;
 

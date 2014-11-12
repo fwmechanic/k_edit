@@ -1598,14 +1598,13 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
 
 struct TGlobalStructs  // in a struct for easier debugger access
    {
-   PWin  aWindow[ 10 ]; // MAX_WINDOWS=ELEMENTS(aWindow)
-   int   iWindowCount;
+   std::vector<PWin> aWindow;
    int   ixCurrentWin;
    };
 
 extern TGlobalStructs g__;
 
-STIL int          g_iWindowCount() { return  g__.iWindowCount         ; }
+STIL int          g_iWindowCount() { return  g__.aWindow.size()       ; }
 STIL int          g_CurWindowIdx() { return  g__.ixCurrentWin         ; }
 STIL PWin         g_Win( int ix )  { return  g__.aWindow[ ix ]        ; }
 STIL PWin         g_CurWin()       { return  g_Win( g__.ixCurrentWin ); }

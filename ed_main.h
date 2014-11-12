@@ -43,6 +43,7 @@
 // std C++ headers
 #include <memory>
 #include <utility>  // for std::move,std::swap
+#include <algorithm>
 #include <string>
 #if !defined(_WIN32)
    // Linux-specific string fxns: strcasecmp, strncasecmp, etc.
