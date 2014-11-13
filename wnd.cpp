@@ -215,21 +215,20 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
        newParentSize.bbb = parent.d_Size.bbb -   (this->d_Size.bbb  + BORDER_WIDTH) ; \
       this->d_UpLeft.aaa = parent.d_UpLeft.aaa                                      ; \
       this->d_UpLeft.bbb = parent.d_UpLeft.bbb + (newParentSize.bbb + BORDER_WIDTH) ; \
-    { Point tmp                                                                     ; \
-      tmp.aaa = 100 /* _ASSUMING_ uniform split-type */                             ; \
-      tmp.bbb = (parent.pimpl->SizePct().bbb * this->d_Size.bbb)                      \
-              / (parent.d_Size.bbb - BORDER_WIDTH)                                  ; \
-      this->pimpl->SizePct_set( tmp );                                                \
-    }                                                                                 \
-    newParentSizePct.aaa = parent.pimpl->SizePct().aaa                              ; \
-    newParentSizePct.bbb = parent.pimpl->SizePct().bbb                                \
-                         -  this->pimpl->SizePct().bbb                              ; \
-       1 &&                                                                           \
-       DBG( "%s: src=%d=%d%%->%d=%d%%, new=%d=%d%%", __func__,                        \
-            parent.d_Size.bbb, parent.pimpl->SizePct().bbb                            \
-          , newParentSize.bbb,        newParentSizePct.bbb                            \
-          ,  this->d_Size.bbb,  this->pimpl->SizePct().bbb                            \
-          );                                                                          \
+      { Point tmp                                                                   ; \
+        tmp.aaa = 100 /* _ASSUMING_ uniform split-type */                           ; \
+        tmp.bbb = (parent.pimpl->SizePct().bbb * this->d_Size.bbb)                    \
+                / (parent.d_Size.bbb - BORDER_WIDTH)                                ; \
+        this->pimpl->SizePct_set( tmp );                                              \
+      }                                                                               \
+      newParentSizePct.aaa = parent.pimpl->SizePct().aaa                            ; \
+      newParentSizePct.bbb = parent.pimpl->SizePct().bbb                              \
+                           -  this->pimpl->SizePct().bbb                            ; \
+      1 && DBG( "%s: src=%d=%d%%->%d=%d%%, new=%d=%d%%", __func__,                    \
+                parent.d_Size.bbb, parent.pimpl->SizePct().bbb                        \
+              , newParentSize.bbb,        newParentSizePct.bbb                        \
+              ,  this->d_Size.bbb,  this->pimpl->SizePct().bbb                        \
+              );                                                                      \
 
    if( fSplitVertical ) {  SPLIT_IT( lin, col )  }
    else                 {  SPLIT_IT( col, lin )  }
