@@ -110,8 +110,8 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                   const auto iw( std::distance( g__.aWindow.begin(), it.base()) -1 );                                       \
                   0 && DBG( "Win[%Id] size_.%s %d->%d delta=%d", iw, #aaa, size_, newSize_, delta );                        \
                   if( 0==iw && delta > 0 ) { newSize_ += delta; }  /* 0th element and space left?  consume it! */           \
-                  { Point Pos; Pos.aaa=ulc - newSize_, Pos.bbb=pW->d_UpLeft    .bbb, pW->Event_Win_Reposition( Pos ); }     \
-                  { Point Pos; Pos.aaa=      newSize_, Pos.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized   ( Pos ); }     \
+                  { Point tmp; tmp.aaa=ulc - newSize_, tmp.bbb=pW->d_UpLeft    .bbb, pW->Event_Win_Reposition( tmp ); }     \
+                  { Point tmp; tmp.aaa=      newSize_, tmp.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized   ( tmp ); }     \
                   ulc -= newSize_ + BORDER_WIDTH;                                                                           \
                   }                                                                                                         \
                }                                                                                                            \
@@ -119,7 +119,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                0 && DBG( "%s %s:%d->%d", __func__, #bbb, g_Win(0)->d_Size.bbb, newNonBorderSize.bbb );                      \
                for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {                                     \
                   const auto pW( *it );                                                                                     \
-                  { Point Pos; Pos.aaa=pW->d_Size.aaa, Pos.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized( Pos ); }        \
+                  { Point tmp; tmp.aaa=pW->d_Size.aaa, tmp.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized( tmp ); }        \
                   }                                                                                                         \
                }                                                                                                            \
 
