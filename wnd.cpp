@@ -206,27 +206,30 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
    parent_.DispNeedsRedrawAllLines(); // in the horizontal-split case this is somewhat overkill...
 
    // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
-   const auto &parent( parent_ );
-   Point       newParentSize( parent.d_Size );
-   Point       newParentSizePct( parent.pimpl->SizePct() );
+   const auto &parent( parent_ ); // parent_ SHALL NOT be modified until this dims have been set
+   Point       newParentSize;
+   Point       newParentSizePct;
    #define SPLIT_IT( aaa, bbb )                                                       \
-              d_Size.aaa  = parent.d_Size.aaa                                       ; \
-              d_Size.bbb  = parent.d_Size.bbb - ColumnOrLineToSplitAt - 2           ; \
-       newParentSize.bbb -= d_Size.bbb      + BORDER_WIDTH                          ; \
-            d_UpLeft.aaa  = parent.d_UpLeft.aaa                                     ; \
-            d_UpLeft.bbb  = parent.d_UpLeft.bbb + newParentSize.bbb + BORDER_WIDTH  ; \
-   { Point tmp{ .aaa=100 /* _ASSUMING_ uniform split-type */                          \
-              , .bbb= (parent.pimpl->SizePct().bbb * d_Size.bbb)                      \
-                    / (parent.d_Size.bbb-BORDER_WIDTH)                                \
-              };                                                                      \
-     pimpl->SizePct_set( tmp );                                                       \
-   }                                                                                  \
-    newParentSizePct.bbb -= pimpl->SizePct().bbb                                    ; \
+        this->d_Size.aaa  = parent.d_Size.aaa                                       ; \
+        this->d_Size.bbb  = parent.d_Size.bbb - ColumnOrLineToSplitAt - 2           ; \
+       newParentSize.aaa  = parent.d_Size.aaa                                       ; \
+       newParentSize.bbb -= this->d_Size.bbb  + BORDER_WIDTH                        ; \
+      this->d_UpLeft.aaa  = parent.d_UpLeft.aaa                                     ; \
+      this->d_UpLeft.bbb  = parent.d_UpLeft.bbb + newParentSize.bbb + BORDER_WIDTH  ; \
+    { Point tmp                                                                     ; \
+      tmp.aaa = 100 /* _ASSUMING_ uniform split-type */                             ; \
+      tmp.bbb = (parent.pimpl->SizePct().bbb * this->d_Size.bbb)                      \
+              / (parent.d_Size.bbb - BORDER_WIDTH)                                  ; \
+      this->pimpl->SizePct_set( tmp );                                                \
+    }                                                                                 \
+    newParentSizePct.aaa = parent.pimpl->SizePct().aaa                              ; \
+    newParentSizePct.bbb = parent.pimpl->SizePct().bbb                                \
+                         - this ->pimpl->SizePct().bbb                              ; \
        1 &&                                                                           \
        DBG( "%s: src=%d=%d%%->%d=%d%%, new=%d=%d%%", __func__,                        \
              parent.d_Size.bbb, parent.pimpl->SizePct().bbb                           \
            , newParentSize.bbb,        newParentSizePct.bbb                           \
-           ,        d_Size.bbb,        pimpl->SizePct().bbb                           \
+           ,  this->d_Size.bbb,        pimpl->SizePct().bbb                           \
           );
 
    if( fSplitVertical ) {  SPLIT_IT( lin, col )  }
