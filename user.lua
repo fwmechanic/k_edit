@@ -116,6 +116,7 @@ local URL_GoogBobOil     = goSiteSrch( "bobistheoilguy.com" )
 local URL_GoogAdvRider   = goSiteSrch( "www.advrider.com" )
 local URL_GoogAdvRiderXRL= goUrl( googl.."search?q=site%3Aadvrider.com%2Fforums%2Fshowthread.php+inurl%3A%22t%3D114834%22" .. UrlSrchTag )
 local URL_Thumpertalk    = goSiteSrch( "www.thumpertalk.com" )
+local URL_canistream_it  = goUrl( "http://www.canistream.it/search/term/" .. UrlSrchTag )
 local URL_Wikipedia      = goUrl( "http://en.wikipedia.org/wiki/" .. UrlSrchTag )
 local URL_Ebay           = goUrl( ebySrchHdr .. ebySpecEndingFirst .. ebyTail1 .. UrlSrchTag .. ebyTail2 )
 local URL_Ebay_NewList   = goUrl( ebySrchHdr .. ebySpecNewlyListed .. ebyTail1 .. UrlSrchTag .. ebyTail2 )
@@ -135,6 +136,7 @@ AddEdStringFxn( "bobistheoilguy" , URL_GoogBobOil    )
 AddEdStringFxn( "bing"           , URL_Bing          )
 AddEdStringFxn( "thumpertalk"    , URL_Thumpertalk   )
 AddEdStringFxn( "mefi"           , URL_Metafilter    )
+AddEdStringFxn( "canistream.it"  , URL_canistream_it )
 AddEdStringFxn( "wikipedia"      , URL_Wikipedia     )
 AddEdStringFxn( "ebay"           , URL_Ebay          , "alt+7" )
 AddEdStringFxn( "craigslist"     , URL_Craigslist    )
@@ -173,6 +175,7 @@ do
         , { "ADVrider-XRL"      , URL_GoogAdvRiderXRL  }
         , { "ThumperTalk"       , URL_Thumpertalk   }
         , { "Metafilter"        , URL_Metafilter    }
+        , { "canistream.it"     , URL_canistream_it }
         , { "Wikipedia"         , URL_Wikipedia     }
         , { "EBay"              , URL_Ebay          }
         , { "Craigslist"        , URL_Craigslist    }
