@@ -295,10 +295,6 @@ int cmp_win( PCWin w1, PCWin w2 ) {
                                                return  0; // w1 = w2 ?
    }
 
-STATIC_FXN int CDECL__ qsort_cmp_win( PCVoid p1, PCVoid p2 ) {
-   return cmp_win( *PPCWin( p1 ), *PPCWin( p2 ) );
-   }
-
 STATIC_FXN void SortWinArray() {
    const auto tmpCurWin( g_CurWin() );  // needed to update g_CurWin()
    std::sort( g__.aWindow.begin(), g__.aWindow.end(), cmp_win );
