@@ -301,7 +301,7 @@ STATIC_FXN int CDECL__ qsort_cmp_win( PCVoid p1, PCVoid p2 ) {
 
 STATIC_FXN void SortWinArray() {
    const auto tmpCurWin( g_CurWin() );  // needed to update g_CurWin()
-   std::sort( g__.aWindow.begin(), g__.aWindow.end() );
+   std::sort( g__.aWindow.begin(), g__.aWindow.end(), cmp_win );
    { int iw(0); for( const auto &win : g__.aWindow ) { win->d_wnum = iw++; } }
    SetWindowIdx( PWinToWidx( tmpCurWin ) );  // update g_CurWin()
    }
