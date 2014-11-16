@@ -488,15 +488,6 @@ AddEdFxn{ name = "wins", help = "wins", attr = NOARG
 
 --###################  end useful iterators
 
-function SplitCurWndHoriz( percentage )  return SplitCurWnd( 0, percentage ), Win.cur() end
-function SplitCurWndVert ( percentage )  return SplitCurWnd( 1, percentage ), Win.cur() end
-
-function TopLeftWin( w1, w2 )
-   if w1 < w2 then return w1,w2 end
-   return w2,w1
-   end
-
-
 AddEdFxn{ name = "dirs", help = "open <dirs> buffer", key="alt+f", attr = NOARG
    , NOARG = function ( arg )
       local dirs = {}
@@ -3100,17 +3091,22 @@ do
 
    ]]
 
+   local function SplitCurWndHoriz( percentage )  return SplitCurWnd( 0, percentage ), Win.cur() end
+   local function SplitCurWndVert ( percentage )  return SplitCurWnd( 1, percentage ), Win.cur() end
+
+   local function TopLeftWin( w1, w2 )
+      if w1 < w2 then return w1,w2 end
+      return w2,w1
+      end
 
    function window_for_compile( fnm, percentage, lines )
-      local atBotton -- implemented but not used 20120121 kgoodwin
       local newwin, oldwin = Win.by_filename( fnm )
       if newwin then return newwin:CurView() end  -- window exists already?
       oldwin = Win.cur()
-      percentage = atBotton and 100-percentage or percentage
       newwin = SplitCurWndHoriz(     percentage )
       if not newwin then return end  -- couldn't create window?
       assert( newwin ~= oldwin )
-      if not atBotton then  newwin, oldwin = TopLeftWin( newwin, oldwin )  end  -- swap so newwin is before (above) oldwin
+      newwin, oldwin = TopLeftWin( newwin, oldwin )  -- swap so newwin is before (above) oldwin
       newwin:MakeCurrent()
       local fb = FBUF.new( fnm )
       fb:PutFocusOn()

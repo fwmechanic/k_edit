@@ -287,7 +287,7 @@ void SetWindow0() { // Used during ReadStateFile processing only!
    SetWindowIdx( 0 );
    }
 
-int cmp_win( PCWin w1, PCWin w2 ) { // used by Lua lib
+int cmp_win( PCWin w1, PCWin w2 ) { // used by Lua: l_register_Win_object
    if( w1->d_UpLeft.lin < w2->d_UpLeft.lin )   return -1; // w1 < w2
    if( w1->d_UpLeft.lin > w2->d_UpLeft.lin )   return  1; // w1 > w2
    if( w1->d_UpLeft.col < w2->d_UpLeft.col )   return -1; // w1 < w2
@@ -568,4 +568,120 @@ void RefreshCheckAllWindowsFBufs() {
 
    if( updates ) { Msg( "%d file%s updated when you switched back", updates, Add_s( updates ) ); }
 // else          { Msg( "no files changed" ); }
+   }
+
+void Wins_WriteStateFile( FILE *ofh ) {
+   // 20140330 new
+   //
+   // Since we never recover multiple windows at startup time, but we want to
+   // preserve user file-visited state to the max extent possible, we save a
+   // single list of View state merged from all windows views, prioritizing View
+   // info pertaining to the more recent visits over that of earlier visits.
+   //
+   // how: walk all Window's View lists (which are de facto sorted in descending
+   // d_tmFocusedOn order), in parallel (collectively) from most- to
+   // least-recently visited, saving most recently visited View (pertaining to an
+   // unsaved FBUF) to state file (and marking the ref'd FBUF as saved).
+   //
+   // outcome: each historically-visited file is referenced by a single entry in
+   // the state file (containing info for the most recent visit)
+   //
+   // pro: choosing info to save based upon recentness of visit is much better
+   //      than the old hacky algo.
+   //
+   // con: previous-visit (even if from current session) info is discarded.
+   //
+   // for now, this is an acceptable tradeoff
+
+   // DO!  NOT!  DESTROY/ALTER  THE  VIEW  LIST  IN  THIS  FUNCTION  !!!
+   // DO!  NOT!  DESTROY/ALTER  THE  FBUF  LIST  IN  THIS  FUNCTION  !!!
+   // just because we are writing the state file does NOT mean we are exiting the editor!
+
+   // merge all active Views of all windows into a single list ordered by d_tmFocusedOn
+
+   { // call NotSavedToStateFile() on all FBUFs (this is our (Statefile write code) private data in FBUF, so OK to modify)
+#if FBUF_TREE
+   PRbNode pNd;
+   rb_traverse( pNd, g_FBufIdx )
+#else
+   DLINKC_FIRST_TO_LASTA(g_FBufHead,dlinkAllFBufs,pFBuf)
+#endif
+      {
+#if FBUF_TREE
+      auto pFBuf( IdxNodeToFBUF( pNd ) );
+#endif
+      pFBuf->NotSavedToStateFile();
+      }
+   }
+
+   enum { DV=0 };
+   class {
+      PCView  d_pVw;
+   public:
+      PCView View() const     { return d_pVw; }
+      void Init( PCView pVw ) { d_pVw = pVw; }
+      STATIC_FXN bool skip_( PCView pv ) {
+         if( !pv ) return false;   // counterintuitive: nullptr is "valid" in the sense that we don't want to skip from it to the entry following it
+         const auto &fbuf( *pv->FBuf() );
+         const auto alreadySaved( fbuf.IsSavedToStateFile() );  const auto chAlreadySaved  ( alreadySaved   ? 'S' : '-' );
+         const auto notDiskNm( !fbuf.FnmIsDiskWritable() );     const auto chNotOnDisk     ( notDiskNm      ? 'D' : '-' );
+         const auto explicitForget( fbuf.ToForgetOnExit() );    const auto chExplicitForget( explicitForget ? 'F' : '-' );
+         const auto skip( alreadySaved || notDiskNm || explicitForget );
+         DV && DBG( "%c=%c%c%c %s", (skip?'1':'0'), chAlreadySaved, chNotOnDisk, chExplicitForget, fbuf.Name() );
+         return skip;
+         }
+      void Next()             { d_pVw = DLINK_NEXT( d_pVw, dlinkViewsOfWindow ); }
+      void ToSaveCand()       { while( skip_( d_pVw ) ) { DV && DBG("skipping %s", d_pVw->FBuf()->Name() );
+                                   Next();
+                                   }
+                              }
+      } hds[ MAX_WINDOWS ];
+   auto hdsMax( 0 );
+   for( auto pWin : g__.aWindow ) {
+      if( !pWin->ViewHd.IsEmpty() ) {
+         hds[hdsMax++].Init( pWin->ViewHd.First() );
+         }
+      }
+
+   auto iFilesSaved(0);
+   while( 1 ) {
+      class not_anon {
+         int    d_vw4s_ix    ;
+         time_t d_tmFocusedOn;
+      public:
+         not_anon()
+           : d_vw4s_ix     (-1)
+           , d_tmFocusedOn (-1)
+           {}
+         int  get_idx()  const { return d_vw4s_ix; }
+         bool is_empty() const { return d_vw4s_ix == -1; }
+         void cmp( int ix, time_t tNew ) {
+            if( is_empty() || tNew > d_tmFocusedOn ) {
+               d_vw4s_ix     = ix;
+               d_tmFocusedOn = tNew;
+               }
+            }
+         };
+      not_anon best;
+      for( auto ix(0) ; ix < hdsMax; ++ix ) {
+         hds[ix].ToSaveCand();
+         if( hds[ix].View() ) { DV && DBG("hds[%d] %8Id %s", ix, hds[ix].View()->TmFocusedOn(), hds[ix].View()->FBuf()->Name() );
+            best.cmp( ix, hds[ix].View()->TmFocusedOn() );
+            }
+         }
+      if( best.is_empty() ) { break; /*################################################*/ }
+
+      // we have an entry to write to the statefile
+      auto &hd( hds[ best.get_idx() ] );
+      const auto pv( hd.View() );
+      DV && DBG("hds[%d] %8Id %s  *** SAVING ***", best.get_idx(), pv->TmFocusedOn(), pv->FBuf()->Name() );
+      pv->Write( ofh );  ++iFilesSaved;
+      pv->FBuf()->SetSavedToStateFile(); // prevent saving state for this file again
+      hd.Next();
+      }
+
+   if( iFilesSaved == 0 ) {
+      fprintf( ofh, " %s|0 0 0 0\n", szNoFile );
+      }
+   fprintf( ofh, ".\n" ); // EoF marker (just so if you look at the file you can confirm that this process completed)
    }

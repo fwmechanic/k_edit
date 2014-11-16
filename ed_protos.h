@@ -242,6 +242,8 @@ extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
 
 extern bool  Wins_CanResizeContent( const Point &newSize );
 extern void  Wins_ScreenSizeChanged( const Point &newSize );
+extern void  Wins_WriteStateFile( FILE *ofh );
+
 extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 // if newSize is not supported, and a supported size can be switched to:
@@ -250,8 +252,7 @@ extern bool  VideoSwitchModeToXYOk( Point &newSize );
 
 extern COL   VidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol );
 
-class VideoFlusher
-   {
+class VideoFlusher {
    bool d_fWantToFlush;
    public:
    VideoFlusher( bool fWantToFlush_=true ) : d_fWantToFlush(fWantToFlush_) {}

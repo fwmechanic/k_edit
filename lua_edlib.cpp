@@ -763,9 +763,9 @@ STATIC_FXN void l_register_Win_object( lua_State *L ) {
    STATIC_CONST luaL_reg metamethods[] = {
       { "__eq", l_Win_mmethod__eq },
       { "__lt", l_Win_mmethod__lt },
-      { "__le", l_Win_mmethod__le },
-      { "__gt", l_Win_mmethod__gt },
-      { "__ge", l_Win_mmethod__ge },
+//    { "__le", l_Win_mmethod__le },
+//    { "__gt", l_Win_mmethod__gt },
+//    { "__ge", l_Win_mmethod__ge },
       { 0 , 0 }
       };
 
