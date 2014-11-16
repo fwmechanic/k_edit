@@ -478,7 +478,7 @@ int l_construct_Win( lua_State *L, PWin pWin ) {
    }
 
 int l_construct_Win( lua_State *L, int winIdx ) {
-   return l_construct_Win( L, winIdx >= 0 && winIdx < g_iWindowCount() ? g__.aWindow[ winIdx ] : 0 );
+   return l_construct_Win( L, winIdx >= 0 && winIdx < g_iWindowCount() ? g_Win( winIdx ) : 0 );
    }
 
 
