@@ -287,7 +287,7 @@ void SetWindow0() { // Used during ReadStateFile processing only!
    SetWindowIdx( 0 );
    }
 
-int cmp_win( PCWin w1, PCWin w2 ) {
+int cmp_win( PCWin w1, PCWin w2 ) { // used by Lua lib
    if( w1->d_UpLeft.lin < w2->d_UpLeft.lin )   return -1; // w1 < w2
    if( w1->d_UpLeft.lin > w2->d_UpLeft.lin )   return  1; // w1 > w2
    if( w1->d_UpLeft.col < w2->d_UpLeft.col )   return -1; // w1 < w2
@@ -297,7 +297,7 @@ int cmp_win( PCWin w1, PCWin w2 ) {
 
 STATIC_FXN void SortWinArray() {
    const auto tmpCurWin( g_CurWin() );  // needed to update g_CurWin()
-   std::sort( g__.aWindow.begin(), g__.aWindow.end(), cmp_win );
+   std::sort( g__.aWindow.begin(), g__.aWindow.end(), []( PCWin w1, PCWin w2 ) { return w1->d_UpLeft < w2->d_UpLeft; } );
    { int iw(0); for( const auto &win : g__.aWindow ) { win->d_wnum = iw++; } }
    SetWindowIdx( PWinToWidx( tmpCurWin ) );  // update g_CurWin()
    }
@@ -411,7 +411,7 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
 
 STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %d", __func__, winToClose, g_iWindowCount() );
    for( auto ix(0) ; ix < g_iWindowCount() ; ++ix )
-      if( WindowsCanBeMerged( winToClose, ix ) ) {
+      if( winToClose != ix && WindowsCanBeMerged( winToClose, ix ) ) {
          CloseWindow_( winToClose, ix );
          return true;
          }
@@ -428,9 +428,9 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
       SetWindowIdx( widx );
       }
 
-   const auto pWin( g_CurWin() );
-   const auto iw( g_CurWindowIdx() );
-   ViewHead &vh( g_CurViewHd() );
+   const auto  pWin( g_CurWin() );
+   const auto  iw( g_CurWindowIdx() );
+         auto &vh( g_CurViewHd() );
    DD && DBG( "%s Win[%d]", __func__, iw );
    for( auto try_(0); !vh.IsEmpty(); ++try_ ) {
       const auto fb( vh.First()->FBuf() );     DD && DBG( "%s try %d=%s", __func__, try_, fb->Name() );
