@@ -421,7 +421,7 @@ STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %d", __func__,
    }
 
 
-// SetWindowSetValidView is used to prep (ensure validity, i.e. displayability) of the window's current View+FBUF
+// SetWindowSetValidView is used to prep (ensure validity, i.e. displayability of) the window's current View+FBUF
 // note that it is used at editor startup to discard any leading filenames (whether from cmdline or history), as
 // well as when switching between windows post-startup
 //
@@ -430,8 +430,8 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
       SetWindowIdx( widx );
       }
 
-   const auto  pWin( g_CurWin() );
    const auto  iw( g_CurWindowIdx() );
+   const auto  pWin( g_CurWin() );
          auto &vh( g_CurViewHd() );
    DD && DBG( "%s Win[%d]", __func__, iw );
    for( auto try_(0); !vh.IsEmpty(); ++try_ ) {

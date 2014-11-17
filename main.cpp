@@ -332,21 +332,38 @@ STATIC_FXN FILE *fopen_tmpfile( PCChar pModeStr ) {
    return rv;
    }
 
-STATIC_FXN void InitFromStateFile() { enum { DD=0 }; DD && DBG( "%s+", FUNC );
-   {
+STATIC_FXN void RecoverFromStateFile() {
    const auto ifh( fopen_tmpfile( "rt" ) );
    if( ifh ) {
       RecoverFromStateFile( ifh );
       fclose( ifh );
       }
    }
-   SetWindow0();                                       DD && DBG( "%s %d windows", FUNC, g_iWindowCount() );
 
+STATIC_FXN void WriteStateFile( FILE *ofh ) {
+   for( const auto &sflp : stateF_lineprocessor )
+      if( sflp.lpSave )
+          sflp.lpSave( ofh );
+
+   Wins_WriteStateFile( ofh );
+   }
+
+void WriteStateFile() {
+   auto ofh( fopen_tmpfile( "wt" ) );
+   if( ofh ) {
+      WriteStateFile( ofh );
+      fclose( ofh );
+      }
+   }
+
+STATIC_FXN void InitFromStateFile() { enum { DD=0 };   DD && DBG( "%s+", FUNC );
+   RecoverFromStateFile();
+   SetWindow0();                                       DD && DBG( "%s %d windows", FUNC, g_iWindowCount() );
    if( !SwitchToNextCmdlineFile()
        && USER_INTERRUPT == ExecutionHaltRequested()
-     )
+     ) {
       EditorExit( 1, false );
-
+      }
    for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {  DD && DBG( "%s Win[%d]", FUNC, iw );
       SetWindowSetValidView( iw );
       }                                                DD && DBG( "%s back to Win[0]", FUNC );
@@ -358,19 +375,6 @@ STATIC_FXN void InitFromStateFile() { enum { DD=0 }; DD && DBG( "%s+", FUNC );
 //*************************************************************************************************
 //*************************************************************************************************
 //*************************************************************************************************
-
-void WriteStateFile() {
-   auto ofh( fopen_tmpfile( "wt" ) );
-   if( !ofh )  return;
-
-   for( const auto &sflp : stateF_lineprocessor )
-      if( sflp.lpSave )
-          sflp.lpSave( ofh );
-
-   Wins_WriteStateFile( ofh );
-   fclose( ofh );
-   }
-
 
 void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    if( processExitCode != 0 ) {                          DV && DBG("%s invoking SW_BP", __func__ );

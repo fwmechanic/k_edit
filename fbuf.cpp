@@ -505,9 +505,7 @@ bool FBUF::private_RemovedFBuf() { // adjusts g_CurFBuf() as necessary: does NOT
 // the active window (its file history).
 //
 
-PView FBUF::PutFocusOn() {
-   enum { DBG_OK=0 };
-   DBG_OK && DBG( "%s+ %s", __func__, this->Name() );
+PView FBUF::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, this->Name() );
    {
    bool fContentChanged;
    if( !this->HasLines() || this->IsAutoRead() ) {
