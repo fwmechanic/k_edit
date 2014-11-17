@@ -166,9 +166,10 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
    }
 
 STATIC_FXN int PWinToWidx( PCWin tgt ) {
-   for( auto ix(0) ; ix < g_iWindowCount(); ++ix )
-      if( g_Win( ix ) == tgt )
-         return ix;
+   for( auto it( g__.aWindow.cbegin() ) ; it != g__.aWindow.cend() ; ++it ) {
+      if( *it == tgt )
+         return std::distance( g__.aWindow.cbegin(), it );
+      }
 
    Assert( !"couldn't find PWin!" );
    return -1;
@@ -297,7 +298,7 @@ int cmp_win( PCWin w1, PCWin w2 ) { // used by Lua: l_register_Win_object
 STATIC_FXN void SortWinArray() {
    const auto tmpCurWin( g_CurWin() );  // needed to update g_CurWin()
    std::sort( g__.aWindow.begin(), g__.aWindow.end(), []( PCWin w1, PCWin w2 ) { return w1->d_UpLeft < w2->d_UpLeft; } );
-   { int iw(0); for( const auto &win : g__.aWindow ) { win->d_wnum = iw++; } }
+   for( auto it( g__.aWindow.begin() ) ; it != g__.aWindow.end() ; ++it ) { (*it)->d_wnum = std::distance( g__.aWindow.begin(), it ); }
    SetWindowIdx( PWinToWidx( tmpCurWin ) );  // update g_CurWin()
    }
 
@@ -409,11 +410,13 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
    }
 
 STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %d", __func__, winToClose, g_iWindowCount() );
-   for( auto ix(0) ; ix < g_iWindowCount() ; ++ix )
+   for( auto it( g__.aWindow.begin() ) ; it != g__.aWindow.end() ; ++it ) {
+      const auto ix( std::distance( g__.aWindow.begin(), it ) );
       if( winToClose != ix && WindowsCanBeMerged( winToClose, ix ) ) {
          CloseWindow_( winToClose, ix );
          return true;
          }
+      }
    return false;  // cannot close
    }
 
