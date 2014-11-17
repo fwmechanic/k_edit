@@ -674,7 +674,7 @@ void TMouseEvent::Process() { // usemouse:yes
    // was: MouseMovedCmdExec( d_mousePosition.lin - g_CurWin()->UpLeft.lin, d_mousePosition.col - g_CurWin()->UpLeft.col, d_flags );
    // now inlined
 
-   PCWV;
+   PCWrV;
    const auto yLine( d_mousePosition.lin - pcw->d_UpLeft.lin );
    const auto xCol ( d_mousePosition.col - pcw->d_UpLeft.col );
 

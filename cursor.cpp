@@ -37,7 +37,7 @@ STIL COL CurLineLenTabs2Spcs() {
    return FBOP::LineCols( g_CurFBuf(), g_CursorLine() );
    }
 
-bool ARG::right() { PCWV;
+bool ARG::right() { PCWrV;
    const auto xNewCol( d_fMeta
                     ? pcw->d_Size.col + pcv->Origin().col - 1
                     : ConstrainCursorX( pcv->FBuf(), g_CursorLine(), g_CursorCol(), +1 )
@@ -71,7 +71,7 @@ bool ARG::endline() {
    return CurView_MoveCursor_fMoved( g_CursorLine(), d_fMeta || (g_CursorCol() == xEoLn) ? xEoWin : xEoLn );
    }
 
-bool ARG::home() { PCWV;
+bool ARG::home() { PCWrV;
    const FBufLocnNow cp;
    if( d_fMeta ) {
       pcv->MoveCursor(
@@ -250,7 +250,7 @@ bool ARG::setwindow() { PCV;
     }
    }
 
-bool ARG::pmlines( int direction ) { PCWV;
+bool ARG::pmlines( int direction ) { PCWrV;
    switch( d_argType ) {
     default:      return BadArg();
     case NULLARG: pcv->ScrollOrigin_Y_Abs( direction > 0 ? g_CursorLine() : g_CursorLine() - pcw->d_Size.lin + 1 );
@@ -277,7 +277,7 @@ bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
    for( auto ix(0), max=g_iWindowCount() ; ix < max ; ++ix ) {
       const auto pWin( g_Win(ix) );
       if( (fIncludeCurWindow || pWin != g_CurWin()) && pWin->CurView()->FBuf() == pFBuf ) {
-         const auto pView( pWin->CurView() );
+         const auto pView( pWin->CurViewWr() );
          const auto yCursor( pFBuf->LastLine() + CURSOR_ON_LINE_AFTER_LAST );
          const auto yOrigin( Max( yCursor - pWin->d_Size.lin + 1, 0 ) );
          if(   0       != pView->Cursor().col

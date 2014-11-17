@@ -870,7 +870,7 @@ public:
                    , PCHiLiteRec        &pFirstPossibleHiLite
                    , bool                isActiveWindow
                    , bool                isCursorLine
-                   );
+                   ) const;
 
    void         GetLineForDisplay
                    ( PChar              pTextBuf
@@ -879,7 +879,7 @@ public:
                    , LINE               yLineOfFile
                    , bool               isActiveWindow
                    , COL                xWidth
-                   );
+                   ) const;
 
 private:
    LINE         d_LineCompile = -1;
@@ -929,8 +929,7 @@ private:
 public:
    PFileExtensionSetting GetFileExtensionSettings();
 
-   PU8       ColorIdx2Var ( int colorIdx );
-   int       ColorIdx2Attr( int colorIdx ) { return *ColorIdx2Var( colorIdx ); }
+   int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
 
 
@@ -951,7 +950,8 @@ public:
    bool      operator< ( const Win &rhs ) const { return d_UpLeft < rhs.d_UpLeft; }
 
    void      Write( FILE *fout ) const;
-   PView     CurView() { return ViewHd.First(); }
+   PCView    CurView()   const { return ViewHd.First(); }
+   PView     CurViewWr() const { return ViewHd.First(); }
    void      DispNeedsRedrawAllLines() const;
 
    void      Event_Win_Reposition( const Point &newUlc );
@@ -961,8 +961,8 @@ public:
    bool      VisibleOnDisplayLine( LINE yLineOfDisplay ) const { return( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ); }
    bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
 
-   bool      GetCursorForDisplay( Point *pt );
-   void      GetLineForDisplay( int winNum, PChar DestLineBuf, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite, const LINE yDisplayLine );
+   bool      GetCursorForDisplay( Point *pt ) const;
+   void      GetLineForDisplay( int winNum, PChar DestLineBuf, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
 
 public: // std pimpl implemenations declare it as private, but we have "special needs"
    class impl;
@@ -1612,16 +1612,20 @@ extern TGlobalStructs g__;
 
 STIL int          g_iWindowCount() { return  g__.aWindow.size()       ; }
 STIL int          g_CurWindowIdx() { return  g__.ixCurrentWin         ; }
-STIL PWin         g_Win( int ix )  { return  g__.aWindow[ ix ]        ; }
-STIL PWin         g_CurWin()       { return  g_Win( g__.ixCurrentWin ); }
-STIL ViewHead    &g_CurViewHd()    { return *(&g_CurWin()->ViewHd)  ; } // directly dependent on s_CurWindowIdx
+STIL PCWin        g_Win( int ix )  { return  g__.aWindow[ ix ]        ; }
+STIL PWin         g_WinWr( int ix ){ return  g__.aWindow[ ix ]        ; }
+STIL PCWin        g_CurWin()       { return  g_Win( g__.ixCurrentWin ); }
+STIL PWin         g_CurWinWr()     { return  g_WinWr( g__.ixCurrentWin ); }
+STIL ViewHead    &g_CurViewHd()    { return *(&g_CurWinWr()->ViewHd)  ; } // directly dependent on s_CurWindowIdx
 STIL PView        g_CurView()      { return  g_CurViewHd().First()  ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
 
 // *** I'm not totally sure I like these, but it beats repeating g_CurWin() and g_CurView() multiple times in the code
 
 #define PCW        const auto pcw( g_CurWin()          )
+#define PCWr       const auto pcw( g_CurWinWr()        )
 #define PCV        const auto pcv( g_CurView()         )
 #define PCWV  PCW; const auto pcv( pcw->ViewHd.First() )
+#define PCWrV PCWr;const auto pcv( pcw->ViewHd.First() )
 
 STIL const Point &g_Cursor()       { return  g_CurView()->Cursor(); } // NOT CACHED since can change independent of s_CurWindowIdx changing
 STIL LINE         g_CursorLine()   { return  g_Cursor().lin       ; } // NOT CACHED since can change independent of s_CurWindowIdx changing

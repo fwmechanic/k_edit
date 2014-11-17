@@ -79,7 +79,7 @@ class LineColors {
    };
 
 class LineColorsClipped {
-   View  &d_view ;
+   const View &d_view ;
 
          LineColors &d_alc;
    const int d_idxWinLeft ;  // LineColors ix of leftmost visible char
@@ -88,8 +88,8 @@ class LineColorsClipped {
 
    public:
 
-   LineColorsClipped( PView pView, LineColors &alc, int idxWinLeft, int colWinLeft, int width )
-      : d_view( *pView )
+   LineColorsClipped( const View &view, LineColors &alc, int idxWinLeft, int colWinLeft, int width )
+      : d_view        ( view )
       , d_alc         ( alc         )
       , d_idxWinLeft  ( idxWinLeft  )
       , d_colWinLeft  ( colWinLeft  )
@@ -281,13 +281,6 @@ GLOBAL_CONST PU8 g_colorVars[] = {
 
 static_assert( ELEMENTS(g_colorVars) == (COLOR::COLOR_COUNT - COLOR::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == COLOR::COLOR_COUNT" );
 
-PU8 View::ColorIdx2Var( int colorIdx ) {
-   if( colorIdx < COLOR::VIEW_COLOR_COUNT )  return GetFileExtensionSettings()->d_colors + colorIdx;
-   if( colorIdx < COLOR::COLOR_COUNT )       return g_colorVars[ colorIdx   - COLOR::VIEW_COLOR_COUNT ];
-                                             return g_colorVars[ COLOR::ERR - COLOR::VIEW_COLOR_COUNT ];
-   }
-
-
 PFileExtensionSetting View::GetFileExtensionSettings() {
    if( !d_pFES ) {
       auto ext( FBOP::GetRsrcExt( d_pFBuf ) );
@@ -295,6 +288,14 @@ PFileExtensionSetting View::GetFileExtensionSettings() {
       d_pFES = ::InitFileExtensionSetting( ext );
       }
    return d_pFES;
+   }
+
+int View::ColorIdx2Attr( int colorIdx ) const {
+   if( colorIdx < COLOR::VIEW_COLOR_COUNT )  return d_pFES
+                                                  ?  d_pFES->d_colors[ colorIdx ]
+                                                  : *g_colorVars[ COLOR::ERR - COLOR::VIEW_COLOR_COUNT ];
+   if( colorIdx < COLOR::COLOR_COUNT )       return *g_colorVars[ colorIdx   - COLOR::VIEW_COLOR_COUNT ];
+                                             return *g_colorVars[ COLOR::ERR - COLOR::VIEW_COLOR_COUNT ];
    }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -362,7 +363,7 @@ protected:
          LINE   ViewCols()            const { return d_view.Win()->d_Size.col ; }
          LINE   MaxVisibleFbufLine()  const { return Origin().lin + ViewLines() - 1; }
          bool   isActiveWindow()      const { return d_view.Win() == g_CurWin(); }
-   int  ColorIdx2Attr( int colorIdx ) const { return *d_view.ColorIdx2Var( colorIdx ); }
+   int  ColorIdx2Attr( int colorIdx ) const { return d_view.ColorIdx2Attr( colorIdx ); }
 
    NO_COPYCTOR(HiliteAddin);
    NO_ASGN_OPR(HiliteAddin);
@@ -2141,6 +2142,8 @@ void View::PutFocusOn() {
    enum { DBG_OK=0 };
    DBG_OK && DBG( "%s+ %s", __func__, this->FBuf()->Name() );
 
+   GetFileExtensionSettings();
+
    // BUGBUG This causes the View list to link to self; don't know why!?
    // ViewHead &cvwHd = g_CurViewHd();
    // DLINK_INSERT_FIRST( cvwHd, this, dlink );
@@ -2410,8 +2413,8 @@ void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // fo
 
    0 && DBG( "Prime FL [%d..%d]", yMin, yMax );
    for( int ix=0 ; ix < g_iWindowCount() ; ++ix ) {
-      const auto pWin ( g_Win(ix)       );
-      const auto pView( pWin->CurView() );
+      const auto pWin ( g_Win(ix)         );
+      const auto pView( pWin->CurViewWr() );
       if( pView && pView->FBuf() == fb ) {
          NewScope { // hilighting: if the word moves under the cursor, it's the same as the cursor moving
             Point cursor;
@@ -3132,7 +3135,7 @@ void View::InsertHiLitesOfLineSeg
    ,       PCHiLiteRec        &pFirstPossibleHiLite
    , const bool                isActiveWindow
    , const bool                isCursorLine
-   ) {
+   ) const {
    enum { EXCLUSIVE_VIEWHILITES = 0 };
    if( EXCLUSIVE_VIEWHILITES && d_pHiLites ) {
       const int hls( d_pHiLites->InsertHiLitesOfLineSeg( yLine, xIndent, xMax, alcc, pFirstPossibleHiLite ) );  0 && DBG( "%d hls=%d", yLine, hls );
@@ -3196,7 +3199,7 @@ void View::GetLineForDisplay
    , const LINE               yLineOfFile
    , const bool               isActiveWindow
    , const COL                xWidth
-   ) {
+   ) const {
    enum { PCT_WIDTH=7 };
    memset( pTextBuf, ' ', xWidth );  // dflt for line seg is spaces
 
@@ -3234,15 +3237,15 @@ void Win::GetLineForDisplay
    , LineColors  &alc
    , PCHiLiteRec &pFirstPossibleHiLite
    , const LINE   yLineOfDisplay
-   ) {
+   ) const {
    const auto isActiveWindow( this == g_CurWin() );       // checkWins( FmtStr<30>( "<Line %d/win %d>", yLineOfDisplay, winNum ) );
    const auto oRightBorder( d_UpLeft.col + d_Size.col );  0 && DBG( "L%05d w%d [%03d..%03d]", yLineOfDisplay, winNum, this->d_UpLeft.col, oRightBorder - 1 );
 
    if( VisibleOnDisplayLine( yLineOfDisplay ) ) {
       NewScope {
-         auto pView( CurView() );
+         const auto pView( CurView() );
          const auto yLineOfFile( pView->Origin().lin - d_UpLeft.lin + yLineOfDisplay );
-         LineColorsClipped alcc( pView, alc, d_UpLeft.col, pView->Origin().col, d_Size.col );
+         LineColorsClipped alcc( *pView, alc, d_UpLeft.col, pView->Origin().col, d_Size.col );
          pView->GetLineForDisplay( destLineBuf + d_UpLeft.col, alcc, pFirstPossibleHiLite, yLineOfFile, isActiveWindow, d_Size.col );
          }
 
@@ -3292,7 +3295,7 @@ PView FBUF::PutFocusOnView() { enum{ DD=0 };
          }
       }
    if( !myView ) { DD&&DBG("%s(%s) not found, creating", __func__, Name() ); // a View for this was not found?  Create and insert at head
-      myView = new View( this, g_CurWin() );
+      myView = new View( this, g_CurWinWr() );
       }
    DLINK_INSERT_FIRST( cvwHd, myView, dlinkViewsOfWindow );
    }

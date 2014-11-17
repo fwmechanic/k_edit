@@ -29,7 +29,7 @@
   boxstream    boxstream      CURSORFUNC , Toggles between box selection mode and stream selection mode
   bp           bp                        NOARG
   cancel       cancel                    BOXARG + STREAMARG + NOARG + LINEARG + NULLARG + TEXTARG + BOXSTR , Cancels current selection, argument, or operation
-  cc           cc                        NOARG        , Interactive color selection
+# cc           cc                        NOARG        , Interactive color selection
   cdelete      cdelete        MODIFIES+CURSORFUNC     , Deletes prev character, excluding line breaks. If cursor is in column 1, Cdelete move cursor to end of previous line
 # cfx          cfx                       BOXSTR + TEXTARG
 w cliptext     cliptext                  KEEPMETA+NOARG+NULLARG , Like lasttext, except Windows Clipboard data is inserted on dialog line

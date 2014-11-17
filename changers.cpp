@@ -82,6 +82,8 @@ bool KeyChanger::Run() {
 //************************************************************************************************************
 #if defined(_WIN32)
 
+#ifdef fn_cc
+
 class ColorChanger : public KeyChanger
    {
    NO_COPYCTOR(ColorChanger);
@@ -111,9 +113,11 @@ class ColorChanger : public KeyChanger
    };
 
 bool ARG::cc() {
-   ColorChanger ccc( * g_CurView()->ColorIdx2Var( COLOR::FG ) );
+   ColorChanger ccc( *g_CurView()->ColorIdx2Var( COLOR::FG ) );
    return ccc.Run();
    }
+
+#endif
 
 //************************************************************************************************************
 

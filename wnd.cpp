@@ -22,10 +22,9 @@ enum { MAX_WINDOWS  = 10 };
 
 STIL bool CanCreateWin()  { return g_iWindowCount() < MAX_WINDOWS; }
 
-#define  AssertPWin( pWin )   Assert( (pWin) >= g__.aWindow && (pWin) <= g__.aWindow[ g_iWindowCount()-1 ] )
 #define  AssertWidx( widx )   Assert( widx >= 0 && widx < g_iWindowCount() );
 
-bool Win::GetCursorForDisplay( Point *pt ) {
+bool Win::GetCursorForDisplay( Point *pt ) const {
    const auto pcv( ViewHd.First() );
    pt->lin = d_UpLeft.lin + (pcv->Cursor().lin - pcv->Origin().lin) + MinDispLine();
    pt->col = d_UpLeft.col + (pcv->Cursor().col - pcv->Origin().col);
@@ -67,12 +66,12 @@ bool Wins_CanResizeContent( const Point &newSize ) {
    const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
    auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
    if( existingSplitVertical ) {
-      min_size_x += (g_iWindowCount() * MIN_WIN_WIDTH)  + (BORDER_WIDTH * (g_iWindowCount() - 1));
-      min_size_y += MIN_WIN_HEIGHT;
+      min_size_x += (MIN_WIN_WIDTH  * g_iWindowCount()) + (BORDER_WIDTH * (g_iWindowCount() - 1));
+      min_size_y +=  MIN_WIN_HEIGHT;
       }
    else {
-      min_size_x += MIN_WIN_WIDTH;
-      min_size_y += (g_iWindowCount() * MIN_WIN_HEIGHT) + (BORDER_WIDTH * (g_iWindowCount() - 1));
+      min_size_x +=  MIN_WIN_WIDTH;
+      min_size_y += (MIN_WIN_HEIGHT * g_iWindowCount()) + (BORDER_WIDTH * (g_iWindowCount() - 1));
       }
    const auto rv(// g_iWindowCount() == 1 &&
                     newSize.col >= min_size_x
@@ -85,7 +84,7 @@ bool Wins_CanResizeContent( const Point &newSize ) {
 void Wins_ScreenSizeChanged( const Point &newSize ) {
    const Point newWinRgnSize( newSize, -NonWinDisplayLines(), -NonWinDisplayCols() );
    if( g_iWindowCount() == 1 ) {
-      g_CurWin()->Event_Win_Resized( newWinRgnSize );
+      g_CurWinWr()->Event_Win_Resized( newWinRgnSize );
       }
    else { // multiwindow resize
       if( 1 ) {
@@ -166,9 +165,9 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
       }
    }
 
-STATIC_FXN int PWinToWidx( PWin pWin ) {
+STATIC_FXN int PWinToWidx( PCWin tgt ) {
    for( auto ix(0) ; ix < g_iWindowCount(); ++ix )
-      if( g_Win( ix ) == pWin )
+      if( g_Win( ix ) == tgt )
          return ix;
 
    Assert( !"couldn't find PWin!" );
@@ -316,7 +315,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
          }
       }
 
-   const auto pWin( g_CurWin() );
+   const auto pWin( g_CurWinWr() );
    if(   ( fSplitVertical && (ColumnOrLineToSplitAt < MIN_WIN_WIDTH  || pWin->d_Size.col - ColumnOrLineToSplitAt < MIN_WIN_WIDTH ))
       || (!fSplitVertical && (ColumnOrLineToSplitAt < MIN_WIN_HEIGHT || pWin->d_Size.lin - ColumnOrLineToSplitAt < MIN_WIN_HEIGHT))
      ) {
@@ -340,7 +339,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
       g_CurView()->PokeOriginLine_HACK( svUlcLine );
 // g_CurView()->MoveCursor( svCursLocn );
 
-   newWin->CurView()->HiliteAddins_Init();  // here since not called by SetWindowSetValidView
+   newWin->CurViewWr()->HiliteAddins_Init();  // here since not called by SetWindowSetValidView
    return newWin;
    }
 
@@ -363,8 +362,8 @@ STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
    }
 
 STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %d", __func__, winToClose, wixToMergeTo, g_iWindowCount() );
-   const auto pWinToMergeTo( g_Win( wixToMergeTo ) );
-   auto pWinToClose( g_Win( winToClose ) );
+   const auto pWinToMergeTo( g_WinWr( wixToMergeTo ) );
+         auto pWinToClose  ( g_WinWr( winToClose   ) );
 
    {
    DLINKC_FIRST_TO_LASTA( pWinToClose->ViewHd, dlinkViewsOfWindow, pv ) {

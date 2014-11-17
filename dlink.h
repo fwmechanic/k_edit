@@ -60,10 +60,10 @@ public: // the intended "public interface"
 
    void Clear()          { dl_first = dl_last = nullptr; count = 0; }
    bool IsEmpty()  const { return dl_first == nullptr; }
-   CP   First()    const { return CP(dl_first); }
-   P    First()          { return    dl_first ; }
-   CP   Last ()    const { return CP(dl_last) ; }
-   P    Last ()          { return    dl_last  ; }
+   CP   FirstK()   const { return CP(dl_first); } // probably never needed; DO NOT rename First()
+   P    First()    const { return    dl_first ; }
+   CP   LastK()    const { return CP(dl_last) ; } // probably never needed; DO NOT rename Last()
+   P    Last ()    const { return    dl_last  ; }
    DLINK_COUNT( unsigned Count() const { return count; } )
    };
 

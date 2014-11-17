@@ -172,7 +172,7 @@ STATIC_FXN void InitNewView_File( PChar filename ) {
       0 && DBG( "%s dropping '%s'", FUNC, filename );
       }
    else {
-      auto pView( new View( FBOP::FindOrAddFBuf( filename ), g_CurWin(), pNextTokenStart ) );
+      auto pView( new View( FBOP::FindOrAddFBuf( filename ), g_CurWinWr(), pNextTokenStart ) );
       auto &cvwHd( g_CurViewHd() );
       DLINK_INSERT_LAST( cvwHd, pView, dlinkViewsOfWindow ); // push_back()
       0 && DBG( "%p %s %s", pView, filename, pNextTokenStart );
@@ -391,8 +391,8 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
                                                          DV && DBG("%s CloseFileExtensionSettings();", __func__ );
    CloseFileExtensionSettings();
                                                          DV && DBG("%s DestroyViewList(%d);", __func__, g_iWindowCount() );
-   for( auto ix(0) ; ix < g_iWindowCount(); ++ix )
-      DestroyViewList( &g_Win( ix )->ViewHd );
+   for( auto &win : g__.aWindow )
+      DestroyViewList( &win->ViewHd );
                                                          DV && DBG("%s RemoveFBufOnly();", __func__ );
    while( auto pFb = g_FBufHead.First() )
       pFb->RemoveFBufOnly();

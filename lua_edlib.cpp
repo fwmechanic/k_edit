@@ -478,7 +478,7 @@ int l_construct_Win( lua_State *L, PWin pWin ) {
    }
 
 int l_construct_Win( lua_State *L, int winIdx ) {
-   return l_construct_Win( L, winIdx >= 0 && winIdx < g_iWindowCount() ? g_Win( winIdx ) : 0 );
+   return l_construct_Win( L, winIdx >= 0 && winIdx < g_iWindowCount() ? g_WinWr( winIdx ) : 0 );
    }
 
 
@@ -499,8 +499,8 @@ STATIC_FXN int l_Win_mmethod__ge ( lua_State *L ) { R_bool( l_cmp_Win_1_2( L ) >
 //---------------------------
 
 
-STATIC_FXN int l_Win_function_cur ( lua_State *L ) { return l_construct_Win( L, g_CurWin() ); }
-STATIC_FXN int l_Win_function_getn( lua_State *L ) { return l_construct_Win( L, I_(1)-1    ); }
+STATIC_FXN int l_Win_function_cur ( lua_State *L ) { return l_construct_Win( L, g_CurWinWr() ); }
+STATIC_FXN int l_Win_function_getn( lua_State *L ) { return l_construct_Win( L, I_(1)-1      ); }
 
 STATIC_FXN int l_Win_function_by_filename( lua_State *L ) { // Beware!  There MAY BE more than one window onto a given file
    auto pFnm = S_(1);
