@@ -4,6 +4,13 @@ Guidelines
 * "when in Rome..." please adhere to my coding conventions:
   * NO TABS ALLOWED ANYWHERE (except where required in makefiles)
   * 3 spaces per indent level
+  * DO NOT slavishly WRAP source code LINES @ 80th column; I haven't used a
+    no-more-than-80-column terminal ... _ever_ (and I've been using Linux via
+    xterms and putty off and on for > 10 years; since it's now essential that
+    my devenv include the ability to run a browser (Firefox), I can foresee NO
+    situation in which I'll be developing K under an 80-column constraint).
+    BTW monitors have a pro-more-columns-bias aspect ratio, so the ease of
+    accomodating
   * https://en.wikipedia.org/wiki/Indent_style#Ratliff_style which is same as
     https://en.wikipedia.org/wiki/Indent_style#Banner_style ?
     both modified by:
@@ -31,4 +38,5 @@ Major Tasks
 - reading/processing normal input (keyboard, screen-size change, mouse) events
   - react to screen-size changes (even w/>1 window extant) [done 20141111]
 - command and dflt-key-mapping tables
+- child processes and stdout/err capturing to buffer
 - signal handling
