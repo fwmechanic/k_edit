@@ -5,8 +5,8 @@ Features:
 ========
 
 "Reverse-polish" user-command mode wherein the command-argument ("arg") is
-provided (using various selection or data-entry modes) before the command is
-selected, and the command's execution behavior adapts to the type of argument
+provided (using various selection or data-entry modes or argtypes) before the command is
+invoked, and the command's execution behavior adapts to the actual argtype
 received.
 
 Can switch between line and box (column) selection mode simply by varying the
@@ -15,13 +15,11 @@ shape of the selection.
 Infinite undo/redo.
 
 K has no "project files" (although I'm starting to consider something like
-them); instead K can perform multi-file greps (mfgrep) targeting a set of files
-named in another file.  K supports powerful recursive (tree) directory scanning
-with output to pseudofile, so, when combined with file-filtering edfuncs such
+them); instead, K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and  can perform multi-file greps and replaces targeting sets of files named in another file.  K supports powerful recursive (tree) directory scanning with output to pseudofile, so, when combined with file-filtering `function`s such
 as grep, strip, etc.  it's easy to quickly construct a buffer containing only
 the names of all of the files of interest to you.  And since this is based on
 current dir-tree content, it's more likely to be complete and correct than a
-"project" that has to be maintained.
+"project file" which must be independently maintained (and thus tends to fall out of sync with project reality).
 
 Limitations
 ========
