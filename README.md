@@ -142,6 +142,8 @@ Basic Tutorial
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are all methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
  * `psearch` (`F3`) and `msearch` (`F4`) are forward and backward text searches respectively.
     * `xsearch` (w/o arg) searches for the next occurrence of the current search key, in the particular direction
+    * `arg "searchkey" xsearch` changes the current search key to "searchkey" and searches for the next occurrence of it, in the particular direction.
+    * `alt+F3` opens a buffer containing previous search keys.
  * `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
  * `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
  * the cursor keys should all work as expected, and serve to extend the arg selection if one is in effect.
