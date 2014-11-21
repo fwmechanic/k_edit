@@ -122,10 +122,11 @@ on how to compile K for use with DrMinGW and `gdb`.
 Basic Function/Command Tutorial
 ========
 
- * to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
+Command line invocation: to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
+
  * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all).
- * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions.
- * `Alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
+ * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to `function`; this can serve to modify the behavior of `function` (EX: `setfile`)
+ * `alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
     * switches with current values (and comments regarding effect).
     * functions with current key assignment (and comments regarding effect).
     * macros with current definition
@@ -153,7 +154,7 @@ Basic Function/Command Tutorial
      * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection is subject to the replace operation.
      * `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple files.
      * Regular-expression replacement is not support (yet)
- * the cursor keys should all work as expected, and serve to extend the arg selection if one is in effect.
+ * the cursor keys (in concert with ctrl and alt key-qualifiers) should all work as expected, and serve to extend the arg selection if one is in effect.
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
  * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` keys on the numpad are used to move text between locations in buffers.
@@ -161,14 +162,14 @@ Basic Function/Command Tutorial
     * `arg "editor command string" execute` executes an editor command (a.k.a. macro) string.
     * `arg arg "CMD.exe shell command string" execute` executes an editor command (a.k.a. macro) string.
 
-Arg types in a nutshell
+Argtypes in a Nutshell
 ========
 
 Legend: `function` is the editor function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.  
 
 Different `ARG::function()`s (and therefore `function`s) are specified as accepting different argtypes, and the editor command invocation processing code (see `buildexecute.cpp`) which calls `ARG::function()`s will present the user's Arg values to `ARG::function()`s differently depending on these specifications.  The association of `function` name to `ARG::function()`, its acceptable argtypes, and its help-text is sourced from `cmdtbl.dat` which is preprocessed by `cmdtbl.lua` into `cmdtbl.h` at build time:
 
- * `NOARG`: no arg prefix was in effect when the function was invoked.  Only the cursor position is passed to `ARG::function()`.
+ * `NOARG`: no arg prefix was active when the function was invoked.  Only the cursor position is passed to `ARG::function()`.
  * `NULLARG`: when the function is invoked with an `arg` prefix but without intervening cursor movement or entry of literal characters.  Depending on other argtype qualifiers, the actual arg seen by `ARG::function()` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
      * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`); `ARG::function()` is invoked receiving a TEXTARG (string value) containing the string read from buffer text content:
         * `NULLEOL` from the cursor position and extending to the end of the line.  
@@ -177,9 +178,9 @@ Different `ARG::function()`s (and therefore `function`s) are specified as accept
              * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position. 
  * `TEXTARG`: a string value is passed to `ARG::function()`.  Generated when 
       * a literal string arg entered: `arg` <user types characters to create the string text> `function`
-      * a segment of a single line is selected by `arg` followed by horizontal cursor movement followed by `function`.  Internally, if `ARG::function()` is specified as consuming TEXTARG qualified with `BOXSTR`, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()`.
- * `BOXARG`: if `function` is specified as accepting BOXARG, the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` behaviors) or a different line.  This argtype is passed to `ARG::function()` as a pair of Point coordinates (ulc, lrc), which `ARG::function()` uses to perform its processing.
- * `LINEARG`: if `function` is specified as accepting LINEARG the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different line, while not moving the cursor to a different column.
+      * a segment of a single line is selected by `arg` followed by horizontal cursor movement followed by `function`.  Internally, if `ARG::function()` is specified as consuming TEXTARG qualified with `BOXSTR`, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
+ * `BOXARG`: if `function` is specified as accepting BOXARG, the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` behaviors) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
+ * `LINEARG`: if `function` is specified as accepting LINEARG the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
  * `STREAMARG`: this argtype is seldom used and should be considered "under development."
 
 Historical Notes
