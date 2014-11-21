@@ -114,12 +114,12 @@ Debug/Development
 I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
 the DBG macros which are sprinkled liberally throughout the source code.
 
-The "distro" of MinGW which I use pointedly DOES NOT include GDB.  I only use
+The "distro" of MinGW which I use pointedly DOES NOT include `gdb` (updt: the newest (64-bit-only) MinGW distro I use does include `gdb`, and I have used it a couple of times).  I only use
 a debugger to debug crashes, so I use DrMinGW as a minimalist way of obtaining
-a symbolic stack-trace when a crash occurs.  See gnumakefile for instructions
-on how to compile K for use with DrMinGW.
+a symbolic stack-trace when a crash occurs.  See GNUmakefile for instructions
+on how to compile K for use with DrMinGW and `gdb`.
 
-Basic Tutorial
+Basic Function/Command Tutorial
 ========
 
  * to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
@@ -161,6 +161,16 @@ Basic Tutorial
     * `arg "editor command string" execute` executes an editor command (a.k.a. macro) string.
     * `arg arg "CMD.exe shell command string" execute` executes an editor command (a.k.a. macro) string.
 
+Arg types in a nutshell
+========
+
+Legend: `function` is the editor function (`ARG::function()`) consuming the xxxARG.  Note that different `ARG::function()`s are specified as accepting different Arg-types, and the editor command invocation processing (see `buildexecute.cpp`) which calls `ARG::function()`s can present the user's Arg values to `ARG::function()`s differently depending on these specifications (the association of `ARG::function()`, acceptable Arg-types, and help-text is sourced from `cmdtbl.dat` which is preprocessed by cmdtbl.lua at build time):
+
+ * `NOARG`: no arg prefix was in effect when the function was invoked.
+ * `TEXTARG`: a string value is passed to `ARG::function()`.  The user can 
+      * a literal string arg was entered: `arg` <user types characters to create the string text> `function`
+      * a segment of a single line is selected by `arg` followed by horizontal cursor movement function invocation followed by `function`.  Internally this is called a BOXSTR arg; if the ARG::function is specified as consuming such an arg-type, this selected text is transformed into a string value (common with all TEXTARG invocations) which is passed to ARG::function when it is invoked with a BOXSTR arg.
+ * BOXARG: 
 
 Historical Notes
 ========
