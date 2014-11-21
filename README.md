@@ -32,11 +32,10 @@ maybe once a year, and it's easy enough to head/tail/grep to chop a huge
 64-bit version becomes available, this ceiling will be raised considerably.
 
 Since I'm a native English speaking US native, there is no support for
-displaying Unicode/MBCS/etc.  Lately (very rarely) I get hit with problems
-related to non-ASCII filenames: when I download music, it has occasionally
+displaying Unicode/MBCS/etc. (and hey, it's a freaking text-editor, not a word processor!).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, it has occasionally
 happened that file or dir-names contain characters which have to be TRANSLATED
 into the charset that K uses.  If I then construct a cmdline to rename said
-file/dir, the command will fail because the filename (containing the translated
+file/dir (a task I often perform with K), the command will fail because the filename (containing the translated
 character instead of the original character) will not exist.  As with the "lack
 of VM" limitation, this is rarely annoying, and will only be resolved (a large
 undertaking) if it becomes much more annoying to me (which seems unlikely).
