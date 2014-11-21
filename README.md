@@ -130,9 +130,9 @@ Basic Tutorial
     * functions with current key assignment (and comments regarding effect).
     * macros with current definition
  * `alt+F2` opens file history buffer; it contents reflect a stack of filenames, current on top
- * `setfile` (`F2`) function is very powerful
-    * `arg "name of thing to open" setfile` opens the thing; thing can be file or URL (latter is opened in dflt browser)
-    * `setfile` (by itself) switches between two most recently viewed files.
+ * `setfile` (`F2`) function is very powerful:
+    * `setfile` (by itself) switches between two most recently viewed files/buffers.
+    * `arg "name of thing to open" setfile` opens the thing; thing can be file or URL (latter is opened in dflt browser).
     * `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
     * `arg arg arg setfile` saves all dirty buffers to disk
     * `arg "text containing wildcard" setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
@@ -148,6 +148,9 @@ Basic Tutorial
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
  * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` keys on the numpad are used to move text between locations in buffers.
+ * `execute` (`ctrl+x`):
+    * `arg "editor command string" execute` executes an editor command (a.k.a. macro) string.
+    * `arg arg "CMD.exe shell command string" execute` executes an editor command (a.k.a. macro) string.
 
 
 Historical Notes
