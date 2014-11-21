@@ -175,11 +175,12 @@ Different `ARG::function()`s (and therefore `function`s) are specified as accept
              * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the TEXTARG value, truncating it at the first whitespace character or in other "magical" ways (using `FBUF::GetLineIsolateFilename()`).
         * `NULLEOW` from the cursor position and including all contiguous "word characters" up to the end of that line (if the cursor is positioned in the middle of a word, NULLEOW passes only the trailing substring of the word to `ARG::function()`). 
              * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position. 
- * `TEXTARG`: a string value is passed to `ARG::function()`.  The user can 
-      * a literal string arg was entered: `arg` <user types characters to create the string text> `function`
-      * a segment of a single line is selected by `arg` followed by horizontal cursor movement function invocation followed by `function`.  Internally this is called a BOXSTR arg; if `ARG::function()` is specified as consuming such an Arg-type, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()` when it is invoked with a `BOXSTR` arg.
- * `BOXARG`: if a `function` is specified as accepting BOXARG (not BOXSTR), the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same or a different line.  This Arg-type is passed to `ARG::function()` as a pair of Point coordinates (ulc, lrc), which `ARG::function()` uses to perform its processing.
- * `LINEARG`:: if a `function` is specified as accepting LINEARG the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different line, while not moving the cursor to a different column.
+ * `TEXTARG`: a string value is passed to `ARG::function()`.  Generated when 
+      * a literal string arg entered: `arg` <user types characters to create the string text> `function`
+      * a segment of a single line is selected by `arg` followed by horizontal cursor movement followed by `function`.  Internally, if `ARG::function()` is specified as consuming TEXTARG qualified with `BOXSTR`, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()`.
+ * `BOXARG`: if `function` is specified as accepting BOXARG, the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` behaviors) or a different line.  This argtype is passed to `ARG::function()` as a pair of Point coordinates (ulc, lrc), which `ARG::function()` uses to perform its processing.
+ * `LINEARG`: if `function` is specified as accepting LINEARG the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different line, while not moving the cursor to a different column.
+ * `STREAMARG`: this argtype is seldom used and should be considered "under development."
 
 Historical Notes
 ========
