@@ -119,6 +119,33 @@ a debugger to debug crashes, so I use DrMinGW as a minimalist way of obtaining
 a symbolic stack-trace when a crash occurs.  See gnumakefile for instructions
 on how to compile K for use with DrMinGW.
 
+Basic Tutorial
+========
+
+ * alt+F4 exits the editor
+ * arg function is assigned to "goto" (numeric keypad 5 key with numlock off (the state I always use).  Arg is used to introduce arguments to other editor functions.
+ * Alt+H opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
+    * switches with current values (and comments regarding effect).
+    * functions with current key assignment (and comments regarding effect).
+    * macros with current definition
+ * alt+F2 opens file history buffer; it contents reflect a stack of filenames, current on top
+ * setfile (F2) function is very powerful
+    * arg "name of thing to open" setfile   opens the thing; thing can be file or URL (latter is opened in dflt browser)
+    * setfile (by itself) switches between two most recently viewed files.
+ * tags (alt+u) function: looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
+    * the K build invokes ctags.exe (Exuberant Tags) to rebuild the tags database after each successful build
+    * the set of tags navigated to for a linklist which is traversed via alt+left and alt+right.  Locations hyperlinked from are also added to this list, allowing easy return.
+    * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are all methods of ARG:: and can be tags-looked up (providing the best possible documentation to the user: the source code!).
+ * psearch (F3) and msearch (F4) are forward and backward text searches respectively.
+    * noarg xsearch searches for the next occurrence of the current search key, in the particular direction
+ * grep (ctrl+F3) creates a new buffer containing one line for each line matching the search key.  gotofileline (alt+g) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
+ * mfgrep (shift+F4) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
+ * the cursor keys should all work as expected, and serve to extend the arg selection if one is in effect.
+ * function resize (alt+w) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
+ * ctrl+c and ctrl+v xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
+ * the + (copy selection into <clipboard>), - (cut selection into <clipboard>) and ins keys on the numpad are used to move text between locations in buffers.
+
+
 Historical Notes
 ========
 
