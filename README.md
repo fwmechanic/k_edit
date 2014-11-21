@@ -140,12 +140,19 @@ Basic Tutorial
     * the K build invokes `ctags.exe` (Exuberant Tags) to rebuild the tags database after each successful build.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are all methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
- * `psearch` (`F3`) and `msearch` (`F4`) are forward and backward text searches respectively.
-    * `xsearch` (w/o arg) searches for the next occurrence of the current search key, in the particular direction
+ * `psearch` (`F3`) and `msearch` (`F4`) (referred to as `xsearch` in the following text) are forward and backward text searches respectively.
+    * `xsearch` (w/o arg) searches for the next occurrence of the current search key, in the particular direction.
     * `arg "searchkey" xsearch` changes the current search key to "searchkey" and searches for the next occurrence of it, in the particular direction.
     * `alt+F3` opens a buffer containing previous search keys.
  * `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
  * `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
+ * Regular-expression search is supported.
+ * text-replace operations
+     * noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
+     * noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
+     * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection is subject to the replace operation.
+     * `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple files.
+     * Regular-expression replacement is not support (yet)
  * the cursor keys should all work as expected, and serve to extend the arg selection if one is in effect.
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
