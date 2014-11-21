@@ -164,13 +164,18 @@ Basic Function/Command Tutorial
 Arg types in a nutshell
 ========
 
-Legend: `function` is the editor function (`ARG::function()`) consuming the xxxARG.  Note that different `ARG::function()`s are specified as accepting different Arg-types, and the editor command invocation processing (see `buildexecute.cpp`) which calls `ARG::function()`s can present the user's Arg values to `ARG::function()`s differently depending on these specifications (the association of `ARG::function()`, acceptable Arg-types, and help-text is sourced from `cmdtbl.dat` which is preprocessed by cmdtbl.lua at build time):
+Legend: `function` is the editor function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.  Note that different `ARG::function()`s (and therefore `function`s) are specified as accepting different Arg-types, and the editor command invocation processing (see `buildexecute.cpp`) which calls `ARG::function()`s can present the user's Arg values to `ARG::function()`s differently depending on these specifications.  The association of `function` name to `ARG::function()`, its acceptable Arg-types, and its help-text is sourced from `cmdtbl.dat` which is preprocessed by `cmdtbl.lua` into `cmdtbl.h` at build time:
 
  * `NOARG`: no arg prefix was in effect when the function was invoked.
- * `TEXTARG`: a string value is passed to `ARG::function()`.  The user can 
+ * `NULLARG`: when the function is invoked with an `arg` prefix but without intervening cursor movement or entry of literal characters.  Depending on other argtype qualifiers, the actual arg seen by `ARG::function()` can vary:
+     * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL; `ARG::function() is invoked  receiving a TEXTARG  string value containing the string taken from buffer text
+        * `NULLEOL` from the cursor position and extending to the end of the line.
+        * `NULLEOW` from the cursor position and including all contiguous "word characters" up to the end of that line.
+ `arg` prefix but without intervening cursor movement or entry of literal characters, * `TEXTARG`: a string value is passed to `ARG::function()`.  The user can 
       * a literal string arg was entered: `arg` <user types characters to create the string text> `function`
-      * a segment of a single line is selected by `arg` followed by horizontal cursor movement function invocation followed by `function`.  Internally this is called a BOXSTR arg; if the ARG::function is specified as consuming such an arg-type, this selected text is transformed into a string value (common with all TEXTARG invocations) which is passed to ARG::function when it is invoked with a BOXSTR arg.
- * BOXARG: 
+      * a segment of a single line is selected by `arg` followed by horizontal cursor movement function invocation followed by `function`.  Internally this is called a BOXSTR arg; if `ARG::function()` is specified as consuming such an Arg-type, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()` when it is invoked with a `BOXSTR` arg.
+ * `BOXARG`: if a `function` is specified as accepting BOXARG (not BOXSTR), the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same or a different line.  This Arg-type is passed to `ARG::function()` as a pair of Point coordinates (ulc, lrc), which `ARG::function()` uses to perform its processing.
+ * `LINEARG`:: if a `function` is specified as accepting LINEARG the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different line, while not moving the cursor to a different column.
 
 Historical Notes
 ========
