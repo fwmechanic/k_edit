@@ -129,16 +129,16 @@ Basic Tutorial
     * switches with current values (and comments regarding effect).
     * functions with current key assignment (and comments regarding effect).
     * macros with current definition
- * `alt+F2` opens file history buffer; it contents reflect a stack of filenames, current on top
  * `setfile` (`F2`) function is very powerful:
     * `setfile` (by itself) switches between two most recently viewed files/buffers.
     * `arg "name of thing to open" setfile` opens the thing; thing can be file or URL (latter is opened in dflt browser).
     * `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
     * `arg arg arg setfile` saves all dirty buffers to disk
     * `arg "text containing wildcard" setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
+ * `alt+F2` opens file history buffer; its contents reflect a stack of filenames, current on top.  Use `arg setfile` to switch among them.
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
-    * the K build invokes `ctags.exe` (Exuberant Tags) to rebuild the tags database after each successful build
-    * the set of tags navigated to for a linklist which is traversed via alt+left and alt+right.  Locations hyperlinked from are also added to this list, allowing easy return.
+    * the K build invokes `ctags.exe` (Exuberant Tags) to rebuild the tags database after each successful build.
+    * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are all methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
  * `psearch` (`F3`) and `msearch` (`F4`) are forward and backward text searches respectively.
     * `xsearch` (w/o arg) searches for the next occurrence of the current search key, in the particular direction
