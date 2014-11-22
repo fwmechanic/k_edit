@@ -44,12 +44,9 @@ the 32-bit version may be the better (more efficient) one (unless your use case 
 editing > 2GB files).
 
 The last nuwen.net MinGW release that supports building 32-bit apps is 10.4
-(w/GCC 4.8.1), released 2013/08/01.  All newer releases build 64-bit apps only
-(the first 64-bit used to build K is 11.6 (w/GCC 4.8.2)).
+(w/GCC 4.8.1), released 2013/08/01 (updt: this version is no longer available on the nuwen.net site).  All newer releases build 64-bit apps only (the first 64-bit used to build K is 11.6 (w/GCC 4.8.2)).
 
-The MinGW distro is downloaded as a self-extracting-GUI 7z archive.  I decompress the
-32-bit version into `c:\_tools` (therefore `c:\_tools\MinGW`; `mingw.bat` assumes
-this), while I decompress the 64-bit version into `c:\_tools\MinGW64`;
+The nuwen.net MinGW distros downloads are self-extracting-GUI 7z archives.  I decompress the 32-bit version into `c:\_tools` (therefore `c:\_tools\MinGW`; `mingw.bat` assumes this), while I decompress the 64-bit version into `c:\_tools\MinGW64`;
 `mingw64.bat` assumes this).
 
 To build:
