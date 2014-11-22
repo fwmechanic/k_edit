@@ -186,8 +186,7 @@ Historical Notes
 ========
 
 K is heavily based upon Microsoft's M editor (released as M.EXE for DOS, and
-MEP.EXE for OS/2 and Windows NT), which I used starting in 1988.  According to
-http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx
+MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using in 1988.  [According to a member of the original Windows NT development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
 > system editor (Better than VI!) [They ended up with "M", the "Microsoft
@@ -212,8 +211,8 @@ Express Edition).  While I used these MS build tools, I used WinDbg, part of a
 free (as of 2011/07/13) "Debugging Tools for Windows" from MS, to debug crashes.
 
 Anyway, I have no fondness for Visual Studio, nor for installers, so when I
-finally [I found a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
-and didn't have to pay a significant code-size price for doing so (updt: K.exe has gown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the code to take great
+finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
+and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the code to take great
 advantage of the major generic features of C++11.  As a result, K no longer
 compiles with the MSVC 7.1 compiler.
 
