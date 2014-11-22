@@ -69,8 +69,7 @@ To switch build mode between 32-bit and 64-bit:
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
 
-Release Fileset
-========
+# Release Fileset
 
 A release is the minimum fileset needed to run the editor
 
@@ -81,14 +80,12 @@ run `krls outputdirname`  (this is currently broken)
   exe file (all the installer does is self-extract, so calling it an
   "installer" is a major stretch.
 
-Deployment (a.k.a. "installation")
-========
+# Deployment (a.k.a. "installation")
 
 K was designed to be "copy and run" (a "release") anywhere.  I have
 successfully run it from network shares and "thumb drives".
 
-Persistent Footprint (a.k.a. spoor)
-========
+# Persistent Footprint (a.k.a. spoor)
 
 Editor state
 
@@ -98,8 +95,7 @@ Editor state
 
 is stored in files in `%APPDATA%\Kevins Editor\*`
 
-Debug/Development
-========
+# Debug/Development
 
 I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
 the DBG macros which are sprinkled liberally throughout the source code.
@@ -109,11 +105,9 @@ a debugger to debug crashes, so I use DrMinGW as a minimalist way of obtaining
 a symbolic stack-trace when a crash occurs.  Open GNUmakefile, search for "DBG_BUILD" for instructions
 on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
-Tutorial
-========
+# Tutorial
 
-Essential Functions
---------
+## Essential Functions
 
 Command line invocation: to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
 
@@ -160,8 +154,7 @@ Once in the editor, various `function`s are available:
     * `arg arg` "CMD.exe shell command string" `execute` executes an editor command (a.k.a. macro) string.
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
 
-Argtypes
---------
+## Argtypes
 
 Legend: `function` is the editor function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.  
 
@@ -181,8 +174,7 @@ Different `ARG::function()`s (and therefore `function`s) are specified as accept
  * `LINEARG`: if `function` is specified as accepting LINEARG the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
  * `STREAMARG`: this argtype is seldom used and should be considered "under development."
 
-Historical Notes
-========
+# Historical Notes
 
 K is heavily based upon Microsoft's M editor (released as M.EXE for DOS, and
 MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
