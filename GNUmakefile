@@ -283,7 +283,7 @@ CMDTBL_OUTPUTS := cmdtbl.h
 # !!! in Lua-5.1/src/Makefile, PLAT=mingw, LUA_T=lua (not lua.exe)
 LUA_T=.$(DIRSEP)lua$(EXE_EXT)
 
-CLEAN_ARGS := $(OBJS) *.d *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map
+CLEAN_ARGS = $(OBJS) *.d *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLS_PKG_FILES)
 
 ZAP_ARGS := $(EXE_TGTS) $(LUA_T)
 
@@ -328,6 +328,8 @@ WINDRES=
 endif
 
 RLS_FILES = $(BUILT_RLS_FILES) $(UNBUILT_RLS_FILES)
+
+RLS_PKG_FILES = $(TGT)_rls.7z $(TGT)_rls.exe
 
 .PHONY: rls
 rls: $(RLS_FILES)
