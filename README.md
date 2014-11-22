@@ -122,6 +122,7 @@ Basic Function/Command Tutorial
 Command line invocation: to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
 
 Once in the editor, various `function`s are available:
+
  * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to `function`; this can serve to modify the behavior of `function` (EX: `setfile`)
  * `alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
