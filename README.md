@@ -1,10 +1,9 @@
-[TOC]
-
 K is my personal Win32 programmer's text editor, whose design is derived
 from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
-Features
-========
+[TOC]
+
+# Features
 
 "Reverse-polish" function-execution mode wherein the user creates the function-argument ("arg") using various selection or data-entry modes or argtypes, before the function is
 invoked; the function's execution behavior adapts to the actual argtype it receives.
@@ -18,8 +17,7 @@ K has no "project files"; instead, K is integrated with [Exuberant Ctags](http:/
 the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
 "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
-Limitations
-========
+# Limitations
 
 K has no "virtual memory" mechanism (as M did); edited files are loaded in
 toto into RAM; K WILL CRASH if you attempt to open a file that is larger than
@@ -36,8 +34,7 @@ character instead of the original character) will not exist.  As with the "lack
 of VM" limitation, this is rarely annoying, and will only be resolved (a large
 undertaking) if it becomes much more annoying to me (which seems unlikely).
 
-Building
-========
+# Building
 
 Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW.
 
@@ -218,4 +215,4 @@ and didn't have to pay a significant code-size price for doing so (updt: K.exe's
 advantage of the major generic features of C++11.  As a result, K no longer
 compiles with the MSVC 7.1 compiler.
 
-[sucky Markdown Syntax Reference](http://daringfireball.net/projects/markdown/syntax)
+[README Markdown Syntax Reference](https://confluence.atlassian.com/display/STASH/Markdown+syntax+guide)
