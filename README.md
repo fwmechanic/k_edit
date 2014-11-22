@@ -33,21 +33,14 @@ undertaking) if it becomes much more annoying to me (which seems unlikely).
 
 # Building
 
-Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW.
+Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW. 
 
-K can be built as a 32-bit or 64-bit app.  The 64-bit build is recent (first release 2014/02/09) but
-it's working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get
-an assertion failure related to console reads; I have never had this happen on Win 8.x
-(but targeting HD+ (1600x900) resolution).  Per
-[Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx)
-the 32-bit version may be the better (more efficient) one (unless your use case includes
-editing > 2GB files).
+The nuwen.net MinGW distro downloads are self-extracting-GUI 7z archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  
 
-The last nuwen.net MinGW release that supports building 32-bit apps is 10.4
-(w/GCC 4.8.1), released 2013/08/01 (updt: this version is no longer available on the nuwen.net site).  All newer releases build 64-bit apps only (the first 64-bit used to build K is 11.6 (w/GCC 4.8.2)).
+I use the following 1-line bat files (stored outside the K repo) to setup MinGW for building K (or any other C/C++ project):
 
-The nuwen.net MinGW distros downloads are self-extracting-GUI 7z archives.  I decompress the 32-bit version into `c:\_tools` (therefore `c:\_tools\MinGW`; `mingw.bat` assumes this), while I decompress the 64-bit version into `c:\_tools\MinGW64`;
-`mingw64.bat` assumes this).
+ * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
+ * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
 
 To build:
 
@@ -56,12 +49,25 @@ To build:
     make clean  & rem unnecessary first time
     make -j
 
-To switch build mode between 32-bit and 64-bit:
+To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 
     make zap    & rem clean plus nuke all lua.exe related
 
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
+
+## Stability notes
+
+The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and this version is no longer available from the nuwen.net site.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Win32 platform is clearly x64 only. 
+
+The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
+
+# Debug/Development
+
+I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
+the DBG macros which are sprinkled liberally throughout the source code.
+
+Prior to release 11.6, nuwen.net MinGW *purposely* DID NOT include `gdb`; the newest (64-bit-only) MinGW distros now include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  It is necessary to build K w/full debug information in order to use either DrMinGW or `gdb`: open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`).
 
 # Release Fileset
 
@@ -89,16 +95,6 @@ Editor state
 
 is stored in files in `%APPDATA%\Kevins Editor\*`
 
-# Debug/Development
-
-I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
-the DBG macros which are sprinkled liberally throughout the source code.
-
-The "distro" of MinGW which I use pointedly DOES NOT include `gdb` (updt: the newest (64-bit-only) MinGW distro I use does include `gdb`, and I have used it a couple of times).  I only use
-a debugger to debug crashes, so I use DrMinGW as a minimalist way of obtaining
-a symbolic stack-trace when a crash occurs.  Open GNUmakefile, search for "DBG_BUILD" for instructions
-on how to modify that file to build K most suitably for DrMinGW and `gdb`.
-
 # Tutorial
 
 ## Command line invocation
@@ -109,7 +105,7 @@ on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
 ## Essential Functions
 
-The editor implements a large number of `function`s, all of which the user can invoke. Every key has one `function` bound to it (and the user is completely free to change these bindings), and `function`s can also be invoked within macros and via the `execute` `function`.  Following are some of the most commonly used `function`s:
+The editor implements a large number of functions, all of which the user can invoke. Every key has one function bound to it (and the user is completely free to change these bindings), and functions can also be invoked within macros and via the `execute` function.  Following are some of the most commonly used functions:
 
  * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to `function`; this can serve to modify the behavior of `function` (EX: `setfile`)
@@ -137,7 +133,7 @@ The editor implements a large number of `function`s, all of which the user can i
  * `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
  * `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
  * Regular-expression search is supported.
- * text-replace `functions` (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
+ * text-replace functions (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
      * noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
      * noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
      * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
@@ -194,6 +190,8 @@ scroll-wheel) because I have no interest in mice or GUIs.  The current (since
 of its key modules, is included herein, and lua.exe, built herein, is used in
 an early build step.
 
+## Toolchain notes
+
 Until 2012/06, I compiled K using MSVC 7.1 (Free 32-bit command line build
 toolset offered by MS in 2003, since withdrawn, replaced by Visual Studio
 Express Edition).  While I used these MS build tools, I used WinDbg, part of a
@@ -204,5 +202,10 @@ finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the code to take great
 advantage of the major generic features of C++11.  As a result, K no longer
 compiles with the MSVC 7.1 compiler.
+
+Per
+[Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx)
+the 32-bit version may be the better (more efficient) one (unless your use case includes
+editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."
 
 [README Markdown Syntax Reference](https://confluence.atlassian.com/display/STASH/Markdown+syntax+guide)
