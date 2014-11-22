@@ -27,7 +27,7 @@ maybe once a year, and it's easy enough to head/tail/grep to chop a huge
 64-bit version raises this ceiling considerably.
 
 (Since I'm a English speaking US native) there is no support for
-displaying Unicode/MBCS/etc. (and hey, it's a freaking text-editor, not a word processor!).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
+displaying Unicode/MBCS/etc. (and hey, it's a text-editor, not a word processor!).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
 into the charset that K uses.  If I then construct a cmdline to rename said
 file/dir (a task I often perform with K), the command will fail because the filename (containing the translated
 character instead of the original character) will not exist.  As with the "lack
@@ -107,11 +107,15 @@ on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
 # Tutorial
 
+## Command line invocation
+
+ * to edit the previously edited file, run `k`
+ * to edit file `filename`, run `k filename`
+ * run `k -h` to display cmdline invocation help. 
+
 ## Essential Functions
 
-Command line invocation: to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
-
-Once in the editor, various `function`s are available:
+The editor implements a large number of `function`s, all of which the user can invoke. Every key has one `function` bound to it (and the user is completely free to change these bindings), and `function`s can also be invoked within macros and via the `execute` `function`.  Following are some of the most commonly used `function`s:
 
  * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to `function`; this can serve to modify the behavior of `function` (EX: `setfile`)
@@ -162,16 +166,16 @@ Different `ARG::function()`s (and therefore `function`s) are specified as accept
 
  * `NOARG`: no arg prefix was active when the function was invoked.  Only the cursor position is passed to `ARG::function()`.
  * `NULLARG`: when the function is invoked with an `arg` prefix but without intervening cursor movement or entry of literal characters.  Depending on other argtype qualifiers, the actual arg seen by `ARG::function()` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
-     * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`); `ARG::function()` is invoked receiving a TEXTARG (string value) containing the string read from buffer text content:
+     * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`); `ARG::function()` is invoked receiving a `TEXTARG` (string value) containing the string read from buffer text content:
         * `NULLEOL` from the cursor position and extending to the end of the line.  
-             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the TEXTARG value, truncating it at the first whitespace character or in other "magical" ways (using `FBUF::GetLineIsolateFilename()`).
-        * `NULLEOW` from the cursor position and including all contiguous "word characters" up to the end of that line (if the cursor is positioned in the middle of a word, NULLEOW passes only the trailing substring of the word to `ARG::function()`). 
+             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` value, truncating it at the first whitespace character or in other "magical" ways (using `FBUF::GetLineIsolateFilename()`).
+        * `NULLEOW` from the cursor position and including all contiguous "word characters" up to the end of that line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`). 
              * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position. 
  * `TEXTARG`: a string value is passed to `ARG::function()`.  Generated when 
       * a literal string arg entered: `arg` <user types characters to create the string text> `function`
-      * a segment of a single line is selected by `arg` followed by horizontal cursor movement followed by `function`.  Internally, if `ARG::function()` is specified as consuming TEXTARG qualified with `BOXSTR`, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
- * `BOXARG`: if `function` is specified as accepting BOXARG, the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` behaviors) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
- * `LINEARG`: if `function` is specified as accepting LINEARG the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
+      * a segment of a single line is selected by `arg` followed by horizontal cursor movement followed by `function`.  Internally, if `ARG::function()` is specified as consuming `TEXTARG` qualified with `BOXSTR`, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
+ * `BOXARG`: if `function` is specified as accepting `BOXARG`, the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` behaviors) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
+ * `LINEARG`: if `function` is specified as accepting `LINEARG` the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
  * `STREAMARG`: this argtype is seldom used and should be considered "under development."
 
 # Historical Notes
