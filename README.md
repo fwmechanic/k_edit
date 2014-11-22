@@ -33,12 +33,7 @@ undertaking) if it becomes much more annoying to me (which seems unlikely).
 
 # Building
 
-Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW. The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and this version is no longer available from the nuwen.net site.  So, while I continue to build K as both 32- and 64- bit .exe's (and I can supply a copy of nuwen.net MinGW 10.4), the future of K on the Win32 platform is clearly x64 only... 
-
-The 64-bit build is relatively recent (first release 2014/02/09) but it's working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads; I have never had this happen on Win 8.x (but targeting HD+ (1600x900) resolution).  Per
-[Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx)
-the 32-bit version may be the better (more efficient) one (unless your use case includes
-editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."
+Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW. 
 
 The nuwen.net MinGW distro downloads are self-extracting-GUI 7z archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  
 
@@ -60,6 +55,19 @@ To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
+
+## Stability notes
+
+The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and this version is no longer available from the nuwen.net site.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Win32 platform is clearly x64 only. 
+
+The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
+
+# Debug/Development
+
+I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
+the DBG macros which are sprinkled liberally throughout the source code.
+
+Prior to release 11.6, nuwen.net MinGW pointed DID NOT include `gdb`; the newest (64-bit-only) MinGW distros now include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  It is necessary to build K w/full debug information in order to use either DrMinGW or `gdb`: open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`).
 
 # Release Fileset
 
@@ -86,16 +94,6 @@ Editor state
  *  function usage accuulation
 
 is stored in files in `%APPDATA%\Kevins Editor\*`
-
-# Debug/Development
-
-I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
-the DBG macros which are sprinkled liberally throughout the source code.
-
-The "distro" of MinGW which I use pointedly DOES NOT include `gdb` (updt: the newest (64-bit-only) MinGW distro I use does include `gdb`, and I have used it a couple of times).  I only use
-a debugger to debug crashes, so I use DrMinGW as a minimalist way of obtaining
-a symbolic stack-trace when a crash occurs.  Open GNUmakefile, search for "DBG_BUILD" for instructions
-on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
 # Tutorial
 
@@ -192,6 +190,8 @@ scroll-wheel) because I have no interest in mice or GUIs.  The current (since
 of its key modules, is included herein, and lua.exe, built herein, is used in
 an early build step.
 
+## Toolchain notes
+
 Until 2012/06, I compiled K using MSVC 7.1 (Free 32-bit command line build
 toolset offered by MS in 2003, since withdrawn, replaced by Visual Studio
 Express Edition).  While I used these MS build tools, I used WinDbg, part of a
@@ -202,5 +202,10 @@ finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the code to take great
 advantage of the major generic features of C++11.  As a result, K no longer
 compiles with the MSVC 7.1 compiler.
+
+Per
+[Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx)
+the 32-bit version may be the better (more efficient) one (unless your use case includes
+editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."
 
 [README Markdown Syntax Reference](https://confluence.atlassian.com/display/STASH/Markdown+syntax+guide)
