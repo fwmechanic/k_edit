@@ -327,13 +327,12 @@ else
 WINDRES=
 endif
 
-RLS_FILE = $(TGT).7z
-
 RLS_FILES = $(BUILT_RLS_FILES) $(UNBUILT_RLS_FILES)
 
 .PHONY: rls
 rls: $(RLS_FILES)
-	7z a $(RLS_FILE) $(RLS_FILES)
+	7z a      $(TGT)_rls.7z  $(RLS_FILES)
+	7z a -sfx $(TGT)_rls.exe $(RLS_FILES)
 
 ifdef APP_IN_DLL
 
