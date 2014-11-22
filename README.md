@@ -56,12 +56,9 @@ To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
 
-## Release Fileset
+## Release file
 
-A release is the minimum fileset needed to run the editor.  To create it, the external tool [7z.exe](http://www.7-zip.org/) must be in `PATH`, and a special (.PHONY) make target `rls` builds `k.7z`: `make rls` creates `k.7z`.  Decompress and run `k.exe`
-
-K was designed to be "copy and run" (a "release") anywhere.  I have
-successfully run it from network shares and "thumb drives".
+A release is the minimum fileset needed to run the editor.  To create it, the external tool [7z.exe](http://www.7-zip.org/) is required and must be in `PATH`. `make rls` creates `k.7z`.  Decompress and run `k.exe`.  K was designed to be "copy and run" (a "release") anywhere.  I have successfully run it from network shares and "thumb drives".
 
 ## Stability notes
 
