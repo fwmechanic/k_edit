@@ -67,7 +67,7 @@ The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *
 I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
 the DBG macros which are sprinkled liberally throughout the source code.
 
-Prior to release 11.6, nuwen.net MinGW pointed DID NOT include `gdb`; the newest (64-bit-only) MinGW distros now include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  It is necessary to build K w/full debug information in order to use either DrMinGW or `gdb`: open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`).
+Prior to release 11.6, nuwen.net MinGW *purposely* DID NOT include `gdb`; the newest (64-bit-only) MinGW distros now include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  It is necessary to build K w/full debug information in order to use either DrMinGW or `gdb`: open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`).
 
 # Release Fileset
 
