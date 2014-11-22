@@ -125,10 +125,10 @@ The editor implements a large number of `function`s, all of which the user can i
     * macros with current definition
  * `setfile` (`F2`) function is very powerful:
     * `setfile` (w/o `arg`) switches between two most recently viewed files/buffers.
-    * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
-    * `arg setfile` opens the "thing" whose name starts at the cursor.
+    * `arg setfile` opens the "openable thing" (see below) whose name starts at the cursor.
     * `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
     * `arg arg arg setfile` saves all dirty buffers to disk
+    * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
  * `alt+F2` opens file history buffer; its contents reflect a stack of filenames, current on top.  Use `arg setfile` to switch among them.
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
