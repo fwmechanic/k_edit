@@ -1,5 +1,5 @@
 K is my personal Win32 programmer's text editor, whose design is derived
-from Microsoft's "M" editor which was derived from the "Z" editor.
+from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
 Features:
 ========
@@ -27,8 +27,7 @@ maybe once a year, and it's easy enough to head/tail/grep to chop a huge
 64-bit version raises this ceiling considerably.
 
 (Since I'm a English speaking US native) there is no support for
-displaying Unicode/MBCS/etc. (and hey, it's a freaking text-editor, not a word processor!).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, it has occasionally
-happened that file or dir-names contain characters which have to be TRANSLATED
+displaying Unicode/MBCS/etc. (and hey, it's a freaking text-editor, not a word processor!).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
 into the charset that K uses.  If I then construct a cmdline to rename said
 file/dir (a task I often perform with K), the command will fail because the filename (containing the translated
 character instead of the original character) will not exist.  As with the "lack
