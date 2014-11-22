@@ -4,22 +4,17 @@ from Microsoft's "M" editor which was derived from the "Z" editor.
 Features:
 ========
 
-"Reverse-polish" user-command mode wherein the command-argument ("arg") is
-provided (using various selection or data-entry modes or argtypes) before the command is
-invoked, and the command's execution behavior adapts to the actual argtype
-received.
+"Reverse-polish" function-execution mode wherein the user creates the function-argument ("arg") using various selection or data-entry modes or argtypes, before the function is
+invoked; the function's execution behavior adapts to the actual argtype it receives.
 
 Can switch between line and box (column) selection mode simply by varying the
 shape of the selection.
 
 Infinite undo/redo.
 
-K has no "project files" (although I'm starting to consider something like
-them); instead, K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and  can perform multi-file greps and replaces targeting sets of files named in another file.  K supports powerful recursive (tree) directory scanning with output to pseudofile, so, when combined with file-filtering `function`s such
-as grep, strip, etc.  it's easy to quickly construct a buffer containing only
-the names of all of the files of interest to you.  And since this is based on
-current dir-tree content, it's more likely to be complete and correct than a
-"project file" which must be independently maintained (and thus tends to fall out of sync with project reality).
+K has no "project files"; instead, K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering `function`s such as grep, strip, etc. it's easy to quickly construct a buffer containing only
+the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
+"project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
 Limitations
 ========
@@ -28,10 +23,10 @@ K has no "virtual memory" mechanism (as M did); edited files are loaded in
 toto into RAM; K WILL CRASH if you attempt to open a file that is larger than
 the biggest malloc'able block available to the K process.  I get hit by this
 maybe once a year, and it's easy enough to head/tail/grep to chop a huge
-(usually some sort of log) file into manageable pieces.  Also, if/when a
-64-bit version becomes available, this ceiling will be raised considerably.
+(usually some sort of log) file into manageable pieces.  Also, the 
+64-bit version raises this ceiling considerably.
 
-Since I'm a native English speaking US native, there is no support for
+(Since I'm a English speaking US native) there is no support for
 displaying Unicode/MBCS/etc. (and hey, it's a freaking text-editor, not a word processor!).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, it has occasionally
 happened that file or dir-names contain characters which have to be TRANSLATED
 into the charset that K uses.  If I then construct a cmdline to rename said
@@ -45,7 +40,7 @@ Building
 
 Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW.
 
-K can be built as a 32-bit or 64-bit app.  The 64-bit build is recent (20140209) but
+K can be built as a 32-bit or 64-bit app.  The 64-bit build is recent (first release 2014/02/09) but
 it's working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get
 an assertion failure related to console reads; I have never had this happen on Win 8.x
 (but targeting HD+ (1600x900) resolution).  Per
@@ -54,10 +49,10 @@ the 32-bit version may be the better (more efficient) one (unless your use case 
 editing > 2GB files).
 
 The last nuwen.net MinGW release that supports building 32-bit apps is 10.4
-(w/GCC 4.8.1), released 20130801.  All newer releases build 64-bit apps only
+(w/GCC 4.8.1), released 2013/08/01.  All newer releases build 64-bit apps only
 (the first 64-bit used to build K is 11.6 (w/GCC 4.8.2)).
 
-The MinGW distro is downloaded as a self-extracting archive.  I decompress the
+The MinGW distro is downloaded as a self-extracting-GUI 7z archive.  I decompress the
 32-bit version into `c:\_tools` (therefore `c:\_tools\MinGW`; `mingw.bat` assumes
 this), while I decompress the 64-bit version into `c:\_tools\MinGW64`;
 `mingw64.bat` assumes this).
@@ -101,7 +96,7 @@ Editor state
 
  *  files edited (including window/cursor position)
  *  search history
- *  command usage count (history)
+ *  function usage accuulation
 
 is stored in files in `%APPDATA%\Kevins Editor\*`
 
@@ -113,8 +108,8 @@ the DBG macros which are sprinkled liberally throughout the source code.
 
 The "distro" of MinGW which I use pointedly DOES NOT include `gdb` (updt: the newest (64-bit-only) MinGW distro I use does include `gdb`, and I have used it a couple of times).  I only use
 a debugger to debug crashes, so I use DrMinGW as a minimalist way of obtaining
-a symbolic stack-trace when a crash occurs.  See GNUmakefile for instructions
-on how to compile K for use with DrMinGW and `gdb`.
+a symbolic stack-trace when a crash occurs.  Open GNUmakefile, search for "DBG_BUILD" for instructions
+on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
 Basic Function/Command Tutorial
 ========
