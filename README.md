@@ -121,6 +121,7 @@ Basic Function/Command Tutorial
 
 Command line invocation: to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
 
+Once in the editor, various `function`s are available:
  * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to `function`; this can serve to modify the behavior of `function` (EX: `setfile`)
  * `alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
@@ -128,7 +129,7 @@ Command line invocation: to edit file filename, run `k filename`.  For cmdline i
     * functions with current key assignment (and comments regarding effect).
     * macros with current definition
  * `setfile` (`F2`) function is very powerful:
-    * `setfile` (by itself) switches between two most recently viewed files/buffers.
+    * `setfile` (w/o `arg`) switches between two most recently viewed files/buffers.
     * `arg "name of thing to open" setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg setfile` opens the "thing" whose name starts at the cursor.
     * `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
@@ -136,10 +137,10 @@ Command line invocation: to edit file filename, run `k filename`.  For cmdline i
     * `arg "text containing wildcard" setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
  * `alt+F2` opens file history buffer; its contents reflect a stack of filenames, current on top.  Use `arg setfile` to switch among them.
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
-    * the K build invokes `ctags.exe` (Exuberant Tags) to rebuild the tags database after each successful build.
+    * `ctags.exe` [Exuberant Ctags](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
-    * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are all methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
- * `psearch` (`F3`) and `msearch` (`F4`) (referred to as `xsearch` in the following text) are forward and backward text searches respectively.
+    * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
+ * `psearch` (`F3`) and `msearch` (`F4`) (referred to as `xsearch` in the following text) are forward and backward text search functions respectively.
     * `xsearch` (w/o arg) searches for the next occurrence of the current search key, in the particular direction.
     * `arg "searchkey" xsearch` changes the current search key to "searchkey" and searches for the next occurrence of it, in the particular direction.
     * `alt+F3` opens a buffer containing previous search keys.
