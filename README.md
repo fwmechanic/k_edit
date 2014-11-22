@@ -130,11 +130,11 @@ Once in the editor, various `function`s are available:
     * macros with current definition
  * `setfile` (`F2`) function is very powerful:
     * `setfile` (w/o `arg`) switches between two most recently viewed files/buffers.
-    * `arg "name of thing to open" setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
+    * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg setfile` opens the "thing" whose name starts at the cursor.
     * `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
     * `arg arg arg setfile` saves all dirty buffers to disk
-    * `arg "text containing wildcard" setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
+    * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
  * `alt+F2` opens file history buffer; its contents reflect a stack of filenames, current on top.  Use `arg setfile` to switch among them.
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
     * `ctags.exe` [Exuberant Ctags](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
@@ -142,24 +142,26 @@ Once in the editor, various `function`s are available:
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
  * `psearch` (`F3`) and `msearch` (`F4`) (referred to as `xsearch` in the following text) are forward and backward text search functions respectively.
     * `xsearch` (w/o arg) searches for the next occurrence of the current search key, in the particular direction.
-    * `arg "searchkey" xsearch` changes the current search key to "searchkey" and searches for the next occurrence of it, in the particular direction.
+    * `arg xsearch` changes the current search key to the word in the buffer starting at the cursor and searches for the next occurrence of it, in the particular direction.
+    * `arg` "searchkey" `xsearch` changes the current search key to "searchkey" and searches for the next occurrence of it, in the particular direction.
     * `alt+F3` opens a buffer containing previous search keys.
  * `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
  * `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
  * Regular-expression search is supported.
- * text-replace operations
+ * text-replace `functions` (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
      * noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
      * noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
-     * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection is subject to the replace operation.
+     * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
      * `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple files.
-     * Regular-expression replacement is not support (yet)
- * the cursor keys (in concert with ctrl and alt key-qualifiers) should all work as expected, and serve to extend the arg selection if one is in effect.
+     * Regular-expression replacement is not (yet) supported.
+ * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
  * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` keys on the numpad are used to move text between locations in buffers.
  * `execute` (`ctrl+x`):
     * `arg "editor command string" execute` executes an editor command (a.k.a. macro) string.
     * `arg arg "CMD.exe shell command string" execute` executes an editor command (a.k.a. macro) string.
+ * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
 
 Argtypes
 --------
