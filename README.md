@@ -56,6 +56,13 @@ To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
 
+## Release Fileset
+
+A release is the minimum fileset needed to run the editor.  To create it, the external tool [7z.exe](http://www.7-zip.org/) must be in `PATH`, and a special (.PHONY) make target `rls` builds `k.7z`: `make rls` creates `k.7z`.  Decompress and run `k.exe`
+
+K was designed to be "copy and run" (a "release") anywhere.  I have
+successfully run it from network shares and "thumb drives".
+
 ## Stability notes
 
 The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and this version is no longer available from the nuwen.net site.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Win32 platform is clearly x64 only. 
@@ -68,22 +75,6 @@ I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx)
 the DBG macros which are sprinkled liberally throughout the source code.
 
 Prior to release 11.6, nuwen.net MinGW *purposely* DID NOT include `gdb`; the newest (64-bit-only) MinGW distros now include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  It is necessary to build K w/full debug information in order to use either DrMinGW or `gdb`: open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`).
-
-# Release Fileset
-
-A release is the minimum fileset needed to run the editor
-
-run `krls outputdirname`  (this is currently broken)
-
-1. outputdirname must already exist.  It may be relative to the cwd.
-1. the output of this process also includes a self-extracting "installer"
-  exe file (all the installer does is self-extract, so calling it an
-  "installer" is a major stretch.
-
-# Deployment (a.k.a. "installation")
-
-K was designed to be "copy and run" (a "release") anywhere.  I have
-successfully run it from network shares and "thumb drives".
 
 # Persistent Footprint (a.k.a. spoor)
 
