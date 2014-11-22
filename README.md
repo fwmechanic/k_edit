@@ -33,21 +33,19 @@ undertaking) if it becomes much more annoying to me (which seems unlikely).
 
 # Building
 
-Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW.
+Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW. The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and this version is no longer available from the nuwen.net site.  So, while I continue to build K as both 32- and 64- bit .exe's (and I can supply a copy of nuwen.net MinGW 10.4), the future of K on the Win32 platform is clearly x64 only... 
 
-K can be built as a 32-bit or 64-bit app.  The 64-bit build is recent (first release 2014/02/09) but
-it's working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get
-an assertion failure related to console reads; I have never had this happen on Win 8.x
-(but targeting HD+ (1600x900) resolution).  Per
+The 64-bit build is relatively recent (first release 2014/02/09) but it's working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads; I have never had this happen on Win 8.x (but targeting HD+ (1600x900) resolution).  Per
 [Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx)
 the 32-bit version may be the better (more efficient) one (unless your use case includes
-editing > 2GB files).
+editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."
 
-The last nuwen.net MinGW release that supports building 32-bit apps is 10.4
-(w/GCC 4.8.1), released 2013/08/01 (updt: this version is no longer available on the nuwen.net site).  All newer releases build 64-bit apps only (the first 64-bit used to build K is 11.6 (w/GCC 4.8.2)).
+The nuwen.net MinGW distro downloads are self-extracting-GUI 7z archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  
 
-The nuwen.net MinGW distros downloads are self-extracting-GUI 7z archives.  I decompress the 32-bit version into `c:\_tools` (therefore `c:\_tools\MinGW`; `mingw.bat` assumes this), while I decompress the 64-bit version into `c:\_tools\MinGW64`;
-`mingw64.bat` assumes this).
+I use the following 1-line bat files (stored outside the K repo) to setup MinGW for building K (or any other C/C++ project):
+
+ * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
+ * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
 
 To build:
 
@@ -56,7 +54,7 @@ To build:
     make clean  & rem unnecessary first time
     make -j
 
-To switch build mode between 32-bit and 64-bit:
+To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 
     make zap    & rem clean plus nuke all lua.exe related
 
