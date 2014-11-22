@@ -260,6 +260,8 @@ OBJS := \
  $(PLAT_OBJS)   \
  wnd.o
 
+UNBUILT_RLS_FILES = .krsrc k.luaedit strict.lua user.lua README.md menu.lua show.lua tu.lua util.lua re.lua
+
 TGT:=k
 
 ifdef APP_IN_DLL
@@ -325,7 +327,17 @@ else
 WINDRES=
 endif
 
+RLS_FILE = $(TGT).7z
+
+RLS_FILES = $(BUILT_RLS_FILES) $(UNBUILT_RLS_FILES)
+
+.PHONY: rls
+rls: $(RLS_FILES)
+	7z a $(RLS_FILE) $(RLS_FILES)
+
 ifdef APP_IN_DLL
+
+BUILT_RLS_FILES = $(TGT)$(EXE_EXT) $(ED_DLL)$(DLL_EXT)
 
 $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
 	$(LINK) $^ $(LINK_MAP) -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)k.map
@@ -339,6 +351,8 @@ $(ED_DLL)$(DLL_EXT): $(OBJS) $(LUA_DIR)/$(LIBLUA)
 	@$(LS_L) $@ $(LS_L_TAIL)
 
 else
+
+BUILT_RLS_FILES = $(TGT)$(EXE_EXT)
 
 $(TGT)$(EXE_EXT): $(OBJS) $(WINDRES)
 	@$(LUA_T) datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
