@@ -186,7 +186,7 @@ Historical Notes
 ========
 
 K is heavily based upon Microsoft's M editor (released as M.EXE for DOS, and
-MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using in 1988.  [According to a member of the original Windows NT development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
+MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
 > system editor (Better than VI!) [They ended up with "M", the "Microsoft
