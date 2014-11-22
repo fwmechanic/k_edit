@@ -1,54 +1,41 @@
 K is my personal Win32 programmer's text editor, whose design is derived
-from Microsoft's "M" editor which was derived from the "Z" editor.
+from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
-Features:
-========
+[TOC]
 
-"Reverse-polish" user-command mode wherein the command-argument ("arg") is
-provided (using various selection or data-entry modes) before the command is
-selected, and the command's execution behavior adapts to the type of argument
-received.
+# Features
 
-Can switch between line and box (column) selection mode simply by varying the
-shape of the selection.
+ * **Z**: "Reverse-polish" function-execution mode wherein the user creates the function-argument ("arg") using various selection or data-entry modes or argtypes, before the function is invoked; the function's execution behavior adapts to the actual argtype it receives.
+ * **Z**: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
+ * Copy and run.  No installation necessary.  Can be run from removable storage.
+ * Infinite undo/redo.
+ * "syntax highlighting" (of comments, literal strings and characters *only*)
+ * highlights C/C++ preprocessor conditional regions
+ * File/Source-code navigation: K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering `function`s such as grep, strip, etc. it's easy to quickly construct a buffer containing only
+the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
+"project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
-Infinite undo/redo.
+# Limitations
 
-K has no "project files" (although I'm starting to consider something like
-them); instead K can perform multi-file greps (mfgrep) targeting a set of files
-named in another file.  K supports powerful recursive (tree) directory scanning
-with output to pseudofile, so, when combined with file-filtering edfuncs such
-as grep, strip, etc.  it's easy to quickly construct a buffer containing only
-the names of all of the files of interest to you.  And since this is based on
-current dir-tree content, it's more likely to be complete and correct than a
-"project" that has to be maintained.
-
-Limitations
-========
-
-K has no "virtual memory" mechanism (as M did); edited files are loaded in
+ * K is a Win32 Console app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+ * K has no "virtual memory" mechanism (as M did); edited files are loaded in
 toto into RAM; K WILL CRASH if you attempt to open a file that is larger than
 the biggest malloc'able block available to the K process.  I get hit by this
 maybe once a year, and it's easy enough to head/tail/grep to chop a huge
-(usually some sort of log) file into manageable pieces.  Also, if/when a
-64-bit version becomes available, this ceiling will be raised considerably.
-
-Since I'm a native English speaking US native, there is no support for
-displaying Unicode/MBCS/etc.  Lately (very rarely) I get hit with problems
-related to non-ASCII filenames: when I download music, it has occasionally
-happened that file or dir-names contain characters which have to be TRANSLATED
+(usually some sort of log) file into manageable pieces.  Also, the 
+64-bit version raises this ceiling considerably.
+ * K operates on ASCII files; is has no support for Unicode/MBCS/etc. content (it's a text-editor, not a word processor).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
 into the charset that K uses.  If I then construct a cmdline to rename said
-file/dir, the command will fail because the filename (containing the translated
+file/dir (a task I often perform with K), the command will fail because the filename (containing the translated
 character instead of the original character) will not exist.  As with the "lack
 of VM" limitation, this is rarely annoying, and will only be resolved (a large
 undertaking) if it becomes much more annoying to me (which seems unlikely).
 
-Building
-========
+# Building
 
 Prerequisite: I use the [nuwen.net distribution](http://nuwen.net/mingw.html) of MinGW.
 
-K can be built as a 32-bit or 64-bit app.  The 64-bit build is recent (20140209) but
+K can be built as a 32-bit or 64-bit app.  The 64-bit build is recent (first release 2014/02/09) but
 it's working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get
 an assertion failure related to console reads; I have never had this happen on Win 8.x
 (but targeting HD+ (1600x900) resolution).  Per
@@ -57,12 +44,9 @@ the 32-bit version may be the better (more efficient) one (unless your use case 
 editing > 2GB files).
 
 The last nuwen.net MinGW release that supports building 32-bit apps is 10.4
-(w/GCC 4.8.1), released 20130801.  All newer releases build 64-bit apps only
-(the first 64-bit used to build K is 11.6 (w/GCC 4.8.2)).
+(w/GCC 4.8.1), released 2013/08/01 (updt: this version is no longer available on the nuwen.net site).  All newer releases build 64-bit apps only (the first 64-bit used to build K is 11.6 (w/GCC 4.8.2)).
 
-The MinGW distro is downloaded as a self-extracting archive.  I decompress the
-32-bit version into `c:\_tools` (therefore `c:\_tools\MinGW`; `mingw.bat` assumes
-this), while I decompress the 64-bit version into `c:\_tools\MinGW64`;
+The nuwen.net MinGW distros downloads are self-extracting-GUI 7z archives.  I decompress the 32-bit version into `c:\_tools` (therefore `c:\_tools\MinGW`; `mingw.bat` assumes this), while I decompress the 64-bit version into `c:\_tools\MinGW64`;
 `mingw64.bat` assumes this).
 
 To build:
@@ -79,8 +63,7 @@ To switch build mode between 32-bit and 64-bit:
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
 
-Release Fileset
-========
+# Release Fileset
 
 A release is the minimum fileset needed to run the editor
 
@@ -91,38 +74,42 @@ run `krls outputdirname`  (this is currently broken)
   exe file (all the installer does is self-extract, so calling it an
   "installer" is a major stretch.
 
-Deployment (a.k.a. "installation")
-========
+# Deployment (a.k.a. "installation")
 
 K was designed to be "copy and run" (a "release") anywhere.  I have
 successfully run it from network shares and "thumb drives".
 
-Persistent Footprint (a.k.a. spoor)
-========
+# Persistent Footprint (a.k.a. spoor)
 
 Editor state
 
  *  files edited (including window/cursor position)
  *  search history
- *  command usage count (history)
+ *  function usage accuulation
 
 is stored in files in `%APPDATA%\Kevins Editor\*`
 
-Debug/Development
-========
+# Debug/Development
 
 I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
 the DBG macros which are sprinkled liberally throughout the source code.
 
 The "distro" of MinGW which I use pointedly DOES NOT include `gdb` (updt: the newest (64-bit-only) MinGW distro I use does include `gdb`, and I have used it a couple of times).  I only use
 a debugger to debug crashes, so I use DrMinGW as a minimalist way of obtaining
-a symbolic stack-trace when a crash occurs.  See GNUmakefile for instructions
-on how to compile K for use with DrMinGW and `gdb`.
+a symbolic stack-trace when a crash occurs.  Open GNUmakefile, search for "DBG_BUILD" for instructions
+on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
-Basic Function/Command Tutorial
-========
+# Tutorial
 
-Command line invocation: to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
+## Command line invocation
+
+ * to edit the previously edited file, run `k`
+ * to edit file `filename`, run `k filename`
+ * run `k -h` to display cmdline invocation help. 
+
+## Essential Functions
+
+The editor implements a large number of `function`s, all of which the user can invoke. Every key has one `function` bound to it (and the user is completely free to change these bindings), and `function`s can also be invoked within macros and via the `execute` `function`.  Following are some of the most commonly used `function`s:
 
  * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to `function`; this can serve to modify the behavior of `function` (EX: `setfile`)
@@ -131,40 +118,41 @@ Command line invocation: to edit file filename, run `k filename`.  For cmdline i
     * functions with current key assignment (and comments regarding effect).
     * macros with current definition
  * `setfile` (`F2`) function is very powerful:
-    * `setfile` (by itself) switches between two most recently viewed files/buffers.
-    * `arg "name of thing to open" setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
-    * `arg setfile` opens the "thing" whose name starts at the cursor.
+    * `setfile` (w/o `arg`) switches between two most recently viewed files/buffers.
+    * `arg setfile` opens the "openable thing" (see below) whose name starts at the cursor.
     * `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
     * `arg arg arg setfile` saves all dirty buffers to disk
-    * `arg "text containing wildcard" setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
+    * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
+    * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
  * `alt+F2` opens file history buffer; its contents reflect a stack of filenames, current on top.  Use `arg setfile` to switch among them.
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
-    * the K build invokes `ctags.exe` (Exuberant Tags) to rebuild the tags database after each successful build.
+    * `ctags.exe` [Exuberant Ctags](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
-    * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are all methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
- * `psearch` (`F3`) and `msearch` (`F4`) (referred to as `xsearch` in the following text) are forward and backward text searches respectively.
+    * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
+ * `psearch` (`F3`) and `msearch` (`F4`) (referred to as `xsearch` in the following text) are forward and backward text search functions respectively.
     * `xsearch` (w/o arg) searches for the next occurrence of the current search key, in the particular direction.
-    * `arg "searchkey" xsearch` changes the current search key to "searchkey" and searches for the next occurrence of it, in the particular direction.
+    * `arg xsearch` changes the current search key to the word in the buffer starting at the cursor and searches for the next occurrence of it, in the particular direction.
+    * `arg` "searchkey" `xsearch` changes the current search key to "searchkey" and searches for the next occurrence of it, in the particular direction.
     * `alt+F3` opens a buffer containing previous search keys.
  * `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
  * `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
  * Regular-expression search is supported.
- * text-replace operations
+ * text-replace `functions` (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
      * noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
      * noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
-     * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection is subject to the replace operation.
+     * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
      * `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple files.
-     * Regular-expression replacement is not support (yet)
- * the cursor keys (in concert with ctrl and alt key-qualifiers) should all work as expected, and serve to extend the arg selection if one is in effect.
+     * Regular-expression replacement is not (yet) supported.
+ * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
  * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` keys on the numpad are used to move text between locations in buffers.
  * `execute` (`ctrl+x`):
-    * `arg "editor command string" execute` executes an editor command (a.k.a. macro) string.
-    * `arg arg "CMD.exe shell command string" execute` executes an editor command (a.k.a. macro) string.
+    * `arg` "editor command string" `execute` executes an editor command (a.k.a. macro) string.
+    * `arg arg` "CMD.exe shell command string" `execute` executes an editor command (a.k.a. macro) string.
+ * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
 
-Argtypes in a Nutshell
-========
+## Argtypes
 
 Legend: `function` is the editor function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.  
 
@@ -172,24 +160,22 @@ Different `ARG::function()`s (and therefore `function`s) are specified as accept
 
  * `NOARG`: no arg prefix was active when the function was invoked.  Only the cursor position is passed to `ARG::function()`.
  * `NULLARG`: when the function is invoked with an `arg` prefix but without intervening cursor movement or entry of literal characters.  Depending on other argtype qualifiers, the actual arg seen by `ARG::function()` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
-     * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`); `ARG::function()` is invoked receiving a TEXTARG (string value) containing the string read from buffer text content:
+     * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`); `ARG::function()` is invoked receiving a `TEXTARG` (string value) containing the string read from buffer text content:
         * `NULLEOL` from the cursor position and extending to the end of the line.  
-             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the TEXTARG value, truncating it at the first whitespace character or in other "magical" ways (using `FBUF::GetLineIsolateFilename()`).
-        * `NULLEOW` from the cursor position and including all contiguous "word characters" up to the end of that line (if the cursor is positioned in the middle of a word, NULLEOW passes only the trailing substring of the word to `ARG::function()`). 
+             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` value, truncating it at the first whitespace character or in other "magical" ways (using `FBUF::GetLineIsolateFilename()`).
+        * `NULLEOW` from the cursor position and including all contiguous "word characters" up to the end of that line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`). 
              * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position. 
  * `TEXTARG`: a string value is passed to `ARG::function()`.  Generated when 
       * a literal string arg entered: `arg` <user types characters to create the string text> `function`
-      * a segment of a single line is selected by `arg` followed by horizontal cursor movement followed by `function`.  Internally, if `ARG::function()` is specified as consuming TEXTARG qualified with `BOXSTR`, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
- * `BOXARG`: if `function` is specified as accepting BOXARG, the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` behaviors) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
- * `LINEARG`: if `function` is specified as accepting LINEARG the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
+      * a segment of a single line is selected by `arg` followed by horizontal cursor movement followed by `function`.  Internally, if `ARG::function()` is specified as consuming `TEXTARG` qualified with `BOXSTR`, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
+ * `BOXARG`: if `function` is specified as accepting `BOXARG`, the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` behaviors) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
+ * `LINEARG`: if `function` is specified as accepting `LINEARG` the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
  * `STREAMARG`: this argtype is seldom used and should be considered "under development."
 
-Historical Notes
-========
+# Historical Notes
 
 K is heavily based upon Microsoft's M editor (released as M.EXE for DOS, and
-MEP.EXE for OS/2 and Windows NT), which I used starting in 1988.  According to
-http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx
+MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
 > system editor (Better than VI!) [They ended up with "M", the "Microsoft
@@ -214,9 +200,9 @@ Express Edition).  While I used these MS build tools, I used WinDbg, part of a
 free (as of 2011/07/13) "Debugging Tools for Windows" from MS, to debug crashes.
 
 Anyway, I have no fondness for Visual Studio, nor for installers, so when I
-finally [I found a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
-and didn't have to pay a significant code-size price for doing so (updt: K.exe has gown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the code to take great
+finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
+and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the code to take great
 advantage of the major generic features of C++11.  As a result, K no longer
 compiles with the MSVC 7.1 compiler.
 
-[sucky Markdown Syntax Reference](http://daringfireball.net/projects/markdown/syntax)
+[README Markdown Syntax Reference](https://confluence.atlassian.com/display/STASH/Markdown+syntax+guide)
