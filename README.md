@@ -100,7 +100,7 @@ is stored in files in `%APPDATA%\Kevins Editor\*`
 The editor implements a large number of functions, all of which the user can invoke. Every key has one function bound to it (and the user is completely free to change these bindings), and functions can also be invoked within macros and via the `execute` function.  Following are some of the most commonly used functions:
 
  * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
- * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to `function`; this can serve to modify the behavior of `function` (EX: `setfile`)
+ * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this can serve to modify the behavior of `anyfunction` (EX: `setfile`)
  * `alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
     * switches with current values (and comments regarding effect).
     * functions with current key assignment (and comments regarding effect).
@@ -175,12 +175,7 @@ for MS's DOS "M" programmer's text editor which was included with Microsoft
 bloated-up M into PWB (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf)
 then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I
 preferred the simpler yet tremendously powerful M, so starting around 1991 I
-wrote my own version, K, with many enhancements.  True to its DOS heritage, K
-is a Win32 Console App (with no substantive mouse support aside from the
-scroll-wheel) because I have no interest in mice or GUIs.  The current (since
-2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few
-of its key modules, is included herein, and lua.exe, built herein, is used in
-an early build step.
+wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no substantive mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
 ## Toolchain notes
 
@@ -189,15 +184,13 @@ toolset offered by MS in 2003, since withdrawn, replaced by Visual Studio
 Express Edition).  While I used these MS build tools, I used WinDbg, part of a
 free (as of 2011/07/13) "Debugging Tools for Windows" from MS, to debug crashes.
 
-Anyway, I have no fondness for Visual Studio, nor for installers, so when I
-finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
-and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the code to take great
+I have no fondness for Visual Studio, nor for installers, so when I finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
+and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
 advantage of the major generic features of C++11.  As a result, K no longer
 compiles with the MSVC 7.1 compiler.
 
 Per
 [Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx)
-the 32-bit version may be the better (more efficient) one (unless your use case includes
-editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."
+the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."
 
 [README Markdown Syntax Reference](https://confluence.atlassian.com/display/STASH/Markdown+syntax+guide)
