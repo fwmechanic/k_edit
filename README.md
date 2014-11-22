@@ -11,7 +11,7 @@ from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.t
  * Infinite undo/redo.
  * "syntax highlighting" (of comments, literal strings and characters *only*)
  * highlights C/C++ preprocessor conditional regions
- * File/Source-code navigation: K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering `function`s such as grep, strip, etc. it's easy to quickly construct a buffer containing only
+ * File/Source-code navigation: K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc. it's easy to quickly construct a buffer containing only
 the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
 "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
@@ -112,6 +112,7 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg arg arg setfile` saves all dirty buffers to disk
     * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
+    * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
  * `alt+F2` opens file history buffer; its contents reflect a stack of filenames, current on top.  Use `arg setfile` to switch among them.
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
     * `ctags.exe` [Exuberant Ctags](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
@@ -150,13 +151,13 @@ Different `ARG::function()`s (and therefore `function`s) are specified as accept
  * `NULLARG`: when the function is invoked with an `arg` prefix but without intervening cursor movement or entry of literal characters.  Depending on other argtype qualifiers, the actual arg seen by `ARG::function()` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
      * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`); `ARG::function()` is invoked receiving a `TEXTARG` (string value) containing the string read from buffer text content:
         * `NULLEOL` from the cursor position and extending to the end of the line.  
-             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` value, truncating it at the first whitespace character or in other "magical" ways (using `FBUF::GetLineIsolateFilename()`).
+             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` value, truncating it at the first whitespace character or in other "magical" ways (see `FBUF::GetLineIsolateFilename()`).
         * `NULLEOW` from the cursor position and including all contiguous "word characters" up to the end of that line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`). 
              * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position. 
- * `TEXTARG`: a string value is passed to `ARG::function()`.  Generated when 
-      * a literal string arg entered: `arg` <user types characters to create the string text> `function`
-      * a segment of a single line is selected by `arg` followed by horizontal cursor movement followed by `function`.  Internally, if `ARG::function()` is specified as consuming `TEXTARG` qualified with `BOXSTR`, this selected text is transformed into a string value (common with all `TEXTARG` invocations) which is passed to `ARG::function()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
- * `BOXARG`: if `function` is specified as accepting `BOXARG`, the user (with the editor in boxmode, the default) to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` behaviors) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
+ * `TEXTARG`: a string value is passed to `ARG::anyfunction()`.  Generated when 
+      * a literal string arg entered: `arg` <user types characters to create the string text> `anyfunction`
+      * `arg` <horizontal cursor movement selecting a segment of the current line> `anyfunction`.  Internally, if `ARG::anyfunction()` is specified as consuming `TEXTARG` qualified with `BOXSTR`, this selected text is transformed into a `TEXTARG` (string value) which is passed to `ARG::anyfunction()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
+ * `BOXARG`: if `ARG::anyfunction()` is specified as accepting `BOXARG`, the user (with the editor in boxmode, the default), to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` caveat above) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
  * `LINEARG`: if `function` is specified as accepting `LINEARG` the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
  * `STREAMARG`: this argtype is seldom used and should be considered "under development."
 
