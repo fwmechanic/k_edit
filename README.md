@@ -5,19 +5,18 @@ from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.t
 
 # Features
 
-"Reverse-polish" function-execution mode wherein the user creates the function-argument ("arg") using various selection or data-entry modes or argtypes, before the function is
-invoked; the function's execution behavior adapts to the actual argtype it receives.
-
-Can switch between line and box (column) selection mode simply by varying the
-shape of the selection.
-
-Infinite undo/redo.
-
-K has no "project files"; instead, K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering `function`s such as grep, strip, etc. it's easy to quickly construct a buffer containing only
+ * **Z**: "Reverse-polish" function-execution mode wherein the user creates the function-argument ("arg") using various selection or data-entry modes or argtypes, before the function is invoked; the function's execution behavior adapts to the actual argtype it receives.
+ * **Z**: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
+ * Infinite undo/redo.
+ * "syntax highlighting" (of comments, literal strings and characters *only*)
+ * highlights C/C++ preprocessor conditional regions
+ * File/Source-code navigation: K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering `function`s such as grep, strip, etc. it's easy to quickly construct a buffer containing only
 the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
 "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
 # Limitations
+
+K is a Win32 Console app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors).  The UI is fairly minimal.
 
 K has no "virtual memory" mechanism (as M did); edited files are loaded in
 toto into RAM; K WILL CRASH if you attempt to open a file that is larger than
@@ -26,8 +25,7 @@ maybe once a year, and it's easy enough to head/tail/grep to chop a huge
 (usually some sort of log) file into manageable pieces.  Also, the 
 64-bit version raises this ceiling considerably.
 
-(Since I'm a English speaking US native) there is no support for
-displaying Unicode/MBCS/etc. (and hey, it's a text-editor, not a word processor!).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
+K operates on ASCII files; is has no support for Unicode/MBCS/etc. content (it's a text-editor, not a word processor).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
 into the charset that K uses.  If I then construct a cmdline to rename said
 file/dir (a task I often perform with K), the command will fail because the filename (containing the translated
 character instead of the original character) will not exist.  As with the "lack
