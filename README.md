@@ -7,6 +7,7 @@ from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.t
 
  * **Z**: "Reverse-polish" function-execution mode wherein the user creates the function-argument ("arg") using various selection or data-entry modes or argtypes, before the function is invoked; the function's execution behavior adapts to the actual argtype it receives.
  * **Z**: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
+ * Copy and run.  No installation necessary.  Can be run from removable storage.
  * Infinite undo/redo.
  * "syntax highlighting" (of comments, literal strings and characters *only*)
  * highlights C/C++ preprocessor conditional regions
@@ -16,16 +17,14 @@ the names of all of the files of interest to you, and have the multi-file-aware 
 
 # Limitations
 
-K is a Win32 Console app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors).  The UI is fairly minimal.
-
-K has no "virtual memory" mechanism (as M did); edited files are loaded in
+ * K is a Win32 Console app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+ * K has no "virtual memory" mechanism (as M did); edited files are loaded in
 toto into RAM; K WILL CRASH if you attempt to open a file that is larger than
 the biggest malloc'able block available to the K process.  I get hit by this
 maybe once a year, and it's easy enough to head/tail/grep to chop a huge
 (usually some sort of log) file into manageable pieces.  Also, the 
 64-bit version raises this ceiling considerably.
-
-K operates on ASCII files; is has no support for Unicode/MBCS/etc. content (it's a text-editor, not a word processor).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
+ * K operates on ASCII files; is has no support for Unicode/MBCS/etc. content (it's a text-editor, not a word processor).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
 into the charset that K uses.  If I then construct a cmdline to rename said
 file/dir (a task I often perform with K), the command will fail because the filename (containing the translated
 character instead of the original character) will not exist.  As with the "lack
