@@ -1,7 +1,9 @@
+[TOC]
+
 K is my personal Win32 programmer's text editor, whose design is derived
 from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
-Features:
+Features
 ========
 
 "Reverse-polish" function-execution mode wherein the user creates the function-argument ("arg") using various selection or data-entry modes or argtypes, before the function is
@@ -110,8 +112,11 @@ a debugger to debug crashes, so I use DrMinGW as a minimalist way of obtaining
 a symbolic stack-trace when a crash occurs.  Open GNUmakefile, search for "DBG_BUILD" for instructions
 on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
-Basic Function/Command Tutorial
+Tutorial
 ========
+
+Essential Functions
+--------
 
 Command line invocation: to edit file filename, run `k filename`.  For cmdline invocation help, run `k -h`
 
@@ -156,8 +161,8 @@ Once in the editor, various `function`s are available:
     * `arg "editor command string" execute` executes an editor command (a.k.a. macro) string.
     * `arg arg "CMD.exe shell command string" execute` executes an editor command (a.k.a. macro) string.
 
-Argtypes in a Nutshell
-========
+Argtypes
+--------
 
 Legend: `function` is the editor function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.  
 
