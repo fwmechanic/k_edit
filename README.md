@@ -7,14 +7,17 @@ from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.t
 
  * **Z**: "Reverse-polish" function-execution mode wherein the user creates the function-argument ("xxxARG") using various selection or data-entry modes or argtypes, before the function is invoked; the function's execution behavior adapts to the actual argtype it receives.
  * **Z**: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
- * Copy and run.  No installation necessary.  Can be run from removable storage.
- * Infinite undo/redo.
- * "syntax highlighting" (of comments, literal strings and characters *only*)
- * highlights C/C++ preprocessor conditional regions
- * File/Source-code navigation: K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc. it's easy to quickly construct a buffer containing only
+ * No installation: copy and run, delete when done. Run from removable storage.
+ * Edit undo/redo limited only by available memory (effectively infinite).
+ * (Partial) syntax highlighting (C/C++, Lua, Python)
+     * comments
+     * literal strings/characters
+     * C/C++ preprocessor conditional regions
+ * Powerful file/source-code navigation
+     * K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), enabling a hypertext-linking experience between tagged items in your programming project.
+     * K can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc. it's easy to quickly construct a buffer containing only
 the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
 "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
- * no installation needed: copy and run, delete when done.
 
 # Limitations
 
@@ -97,9 +100,9 @@ The following outline describes all possible argtypes.  Different `ARG::function
  * `NOARG`: if `function` is invoked with no arg prefix active.  Only the cursor position is passed to `ARG::function()`.
  * `NULLARG`: if `function` is invoked with an `arg` prefix active but without intervening cursor movement or entry of literal characters.  The actual argtype received by `ARG::function()` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
      * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`), `ARG::function()` receives a `TEXTARG` (string value) containing a string value read from buffer text content:
-        * `NULLEOL`: from the cursor position and extending to the end of the line.  
+        * `NULLEOL`: from cursor to end of the line.
              * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` string value, truncating it at the first whitespace character or in other "magical" ways (see `FBUF::GetLineIsolateFilename()`).
-        * `NULLEOW`: from the cursor position and including all contiguous "word characters" up to the end of that line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`). 
+        * `NULLEOW`: from cursor and including all contiguous "word characters" through end of line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`). 
              * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position. 
  * `TEXTARG`: when a string value is passed to `ARG::anyfunction()`.  Generated when: 
       * a literal string arg entered: `arg` <user types characters to create the string text> `anyfunction`
@@ -175,7 +178,7 @@ then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I
 preferred the simpler yet tremendously powerful M, so starting in 1991 I
 wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
-2014/11/23: I just discovered the ["Q" Text Editor](http://www.schulenberg.com/page2.htm) which is another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN!
+2014/11/23: I just discovered the ["Q" Text Editor](http://www.schulenberg.com/page2.htm) which is another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
 
 ## Toolchain notes
 
