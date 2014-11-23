@@ -157,9 +157,9 @@ The editor implements a large number of functions, all of which the user can inv
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
- * `websearch` (`alt+6`): perform web search on string
+ * `websearch` (`alt+6`): perform web search on string (opens in default browser)
      * `arg` "search string" `websearch`: perform Google web search for "search string"
-     * `arg arg` "search string" `websearch`: display menu of all available search engines (see `user.lua`) and web search for "search string" using the chosen search engine.
+     * `arg arg` "search string" `websearch`: display menu of all available search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
 
 # Historical Notes
 
@@ -174,15 +174,12 @@ K development started (in spirit) in 1988 when I started writing extensions
 for the Microsoft "M" Editor which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next MSC releases (6.0, 6.0a, 7.x) MS soon
 bloated-up M into PWB (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf)
 then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I
-preferred the simpler yet tremendously powerful M, so starting around 1991 I
+preferred the simpler yet tremendously powerful M, so starting in 1991 I
 wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
 ## Toolchain notes
 
-Until 2012/06, I compiled K using the free MSVC++ 7.1 32-bit command line
-toolset offered by MS in 2003 (since withdrawn, replaced by Visual Studio
-Express Edition).  While I used these MS build tools, I used WinDbg, part of a
-free (as of 2011/07/13) "Debugging Tools for Windows" from MS, to debug crashes.
+Until 2012/06, I compiled K using the free "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  While I used these MS build tools, I used [WinDbg](http://en.wikipedia.org/wiki/WinDbg), to debug crashes.
 
 I have no fondness for Visual Studio, nor for installers, so when I finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
