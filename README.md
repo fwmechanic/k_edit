@@ -18,7 +18,7 @@ the names of all of the files of interest to you, and have the multi-file-aware 
 
 # Limitations
 
- * K is a Win32 Console app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+ * K is a Win32 Console app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors)).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
  * K has no "virtual memory" mechanism (as M did); edited files are loaded in
 toto into RAM; K WILL CRASH if you attempt to open a file that is larger than
 the biggest malloc'able block available to the K process.  I get hit by this
@@ -27,9 +27,7 @@ maybe once a year, and it's easy enough to head/tail/grep to chop a huge
 64-bit version raises this ceiling considerably.
  * K operates on ASCII files; is has no support for Unicode/MBCS/etc. content (it's a text-editor, not a word processor).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
 into the charset that K uses.  If I then construct a cmdline to rename said
-file/dir (a task I often perform with K), the command will fail because the filename (containing the translated
-character instead of the original character) will not exist.  As with the "lack
-of VM" limitation, this is rarely annoying, and will only be resolved (a large
+file/dir (a task I often perform with K), the command will fail because the filename (containing the translated character instead of the original character) will not exist.  As with the "lack of VM" limitation, this is rarely annoying, and will only be resolved (a large
 undertaking) if it becomes much more annoying to me (which seems unlikely).
 
 # Building
