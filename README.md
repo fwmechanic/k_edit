@@ -175,6 +175,8 @@ then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I
 preferred the simpler yet tremendously powerful M, so starting in 1991 I
 wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
+2014/11/23: I just discovered the ["Q" Text Editor](http://www.schulenberg.com/page2.htm) which is another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN!
+
 ## Toolchain notes
 
 Until 2012/06, I compiled K using the free "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  While I used these MS build tools, I used [WinDbg](http://en.wikipedia.org/wiki/WinDbg), to debug crashes.
