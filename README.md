@@ -14,6 +14,7 @@ from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.t
  * File/Source-code navigation: K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), and can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc. it's easy to quickly construct a buffer containing only
 the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
 "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
+ * no installation needed: copy and run, delete when done.
 
 # Limitations
 
@@ -33,17 +34,20 @@ undertaking) if it becomes much more annoying to me (which seems unlikely).
 
 # Building
 
-Prerequisite: the [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html).  The downloads are self-extracting-GUI 7z archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
+## External build dependencies
 
- * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
- * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
+* GCC from the [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html).  The downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
+     * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
+     * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
+ * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K, and must be in `PATH`.
+ * `7z.exe` ([7zip](http://www.7-zip.org/)) is invoked when building the `rls` `make` target, and must be in `PATH`.
 
-To build:
+## To build
 
     cd K-repo-root
     mingw.bat   & rem run once to put MinGW exes in shell's PATH
     make clean  & rem unnecessary the first time
-    make -j
+    make -j     & the build is parallel-make-safe
 
 To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 
@@ -52,11 +56,9 @@ To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
 
-## Release files
+## Create Release files
 
-A release is the minimum fileset needed to run the editor.  Two versions of the release file are built by `make rls`: `k_rls.7z` and `k_rls.exe` (a self-extracting archive). 
-
-The external tool [7z.exe](http://www.7-zip.org/) is required and must be in `PATH` for  `make rls` to run correctly. 
+A release file is a 7zip archive containing the minimum fileset needed to use the editor.  Two variants of the release file are created by `make rls`: `k_rls.7z` and `k_rls.exe` (a self-extracting-console archive). 
 
 Use: decompress the release file in an empty directory and run `k.exe`.  K was designed to be "copy and run" (a "release") anywhere.  I have successfully run it from network shares and "thumb drives".
 
