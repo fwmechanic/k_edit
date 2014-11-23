@@ -135,10 +135,10 @@ The editor implements a large number of functions, all of which the user can inv
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
- * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` keys on the numpad are used to move text between locations in buffers.
+ * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers.
  * `execute` (`ctrl+x`):
-    * `arg` "editor command string" `execute` executes an editor command (a.k.a. macro) string.
-    * `arg arg` "CMD.exe shell command string" `execute` executes an editor command (a.k.a. macro) string.
+    * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
+    * `arg arg` "CMD.exe shell command string" `execute` executes a CMD.exe shell (a.k.a. DOS) command string with stdout and stderr captured to an editor buffer.
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
 
 ## Argtypes
