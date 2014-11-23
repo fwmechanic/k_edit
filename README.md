@@ -157,6 +157,9 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
     * `arg arg` "CMD.exe shell command string" `execute` executes a CMD.exe shell (a.k.a. DOS) command string with stdout and stderr captured to an editor buffer.
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
+ * `websearch` (`alt+6`): perform web search on string
+     * `arg` "search string" `websearch`: perform Google web search for "search string"
+     * `arg arg` "search string" `websearch`: display menu of all available search engines (see `user.lua`) and web search for "search string" using the chosen search engine.
 
 # Historical Notes
 
