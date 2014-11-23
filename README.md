@@ -68,20 +68,17 @@ The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *
 
 # Debug/Development
 
-I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from
-the DBG macros which are sprinkled liberally throughout the source code.
+I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from the DBG macros which are sprinkled liberally throughout the source code.
 
-Prior to release 11.6, nuwen.net MinGW *purposely* DID NOT include `gdb`; the newest (64-bit-only) MinGW distros now include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  It is necessary to build K w/full debug information in order to use either DrMinGW or `gdb`: open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`).
+The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable (e.g. when nuwen.net MinGW distros omitted `gdb`) I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
-# Persistent Footprint (a.k.a. spoor)
+# Editor State Files
 
-Editor state
+K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*`.  Information stored in state files includes:
 
  *  files edited (including window/cursor position)
- *  search history
- *  function usage accuulation
-
-is stored in files in `%APPDATA%\Kevins Editor\*`
+ *  search-key and replace-string history
+ *  function invocation accumulator-counters
 
 # Tutorial
 
@@ -95,13 +92,13 @@ is stored in files in `%APPDATA%\Kevins Editor\*`
 
 Legend: `function` is the editor function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.  
 
-Different `ARG::function()`s (and therefore `function`s) are specified as accepting different argtypes, and the editor command invocation processing code (see `buildexecute.cpp`) which calls `ARG::function()`s will present the user's Arg values to `ARG::function()`s differently depending on these specifications.  The association of `function` name to `ARG::function()`, its acceptable argtypes, and its help-text is sourced from `cmdtbl.dat` which is preprocessed by `cmdtbl.lua` into `cmdtbl.h` at build time:
+The following outline describes all possible argtypes.  Different `ARG::function()`s (and therefore `function`s) are specified as accepting particular argtypes (one or more), and the editor command invocation processing code (see `buildexecute.cpp`) which calls `ARG::function()`s will present the user's arg value to the invoked `ARG::function()` differently depending on these specifications.  The association of `function` name to `ARG::function()`, its acceptable argtypes, and its help-text is sourced from `cmdtbl.dat` which is preprocessed by `cmdtbl.lua` into `cmdtbl.h` at build time:
 
  * `NOARG`: no arg prefix was active when the function was invoked.  Only the cursor position is passed to `ARG::function()`.
- * `NULLARG`: when the function is invoked with an `arg` prefix but without intervening cursor movement or entry of literal characters.  Depending on other argtype qualifiers, the actual arg seen by `ARG::function()` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
-     * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`); `ARG::function()` is invoked receiving a `TEXTARG` (string value) containing the string read from buffer text content:
+ * `NULLARG`: when the function is invoked with an `arg` prefix but without intervening cursor movement or entry of literal characters.  The actual argtype received by `ARG::function()` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
+     * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`); `ARG::function()` receives a `TEXTARG` (string value) containing the string read from buffer text content:
         * `NULLEOL` from the cursor position and extending to the end of the line.  
-             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` value, truncating it at the first whitespace character or in other "magical" ways (see `FBUF::GetLineIsolateFilename()`).
+             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` string value, truncating it at the first whitespace character or in other "magical" ways (see `FBUF::GetLineIsolateFilename()`).
         * `NULLEOW` from the cursor position and including all contiguous "word characters" up to the end of that line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`). 
              * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position. 
  * `TEXTARG`: a string value is passed to `ARG::anyfunction()`.  Generated when 
