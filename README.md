@@ -131,6 +131,11 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
     * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
  * `alt+F2` opens file history buffer; its contents reflect a stack of filenames, current on top.  Use cursor movement functions and `arg setfile` to switch among them.
+ * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
+ * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers.
+ * `execute` (`ctrl+x`):
+    * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
+    * `arg arg` "CMD.exe shell command string" `execute` executes a CMD.exe shell (a.k.a. DOS) command string with stdout and stderr captured to an editor buffer.
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
     * `ctags.exe` [Exuberant Ctags](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
@@ -151,11 +156,6 @@ The editor implements a large number of functions, all of which the user can inv
      * Regular-expression replacement is not (yet) supported.
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
- * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
- * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers.
- * `execute` (`ctrl+x`):
-    * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
-    * `arg arg` "CMD.exe shell command string" `execute` executes a CMD.exe shell (a.k.a. DOS) command string with stdout and stderr captured to an editor buffer.
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
  * `websearch` (`alt+6`): perform web search on string
      * `arg` "search string" `websearch`: perform Google web search for "search string"
@@ -171,17 +171,16 @@ MEP.EXE for OS/2 and Windows NT), which was first released, and which I first st
 > Editor" which was a derivative of the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html)].
 
 K development started (in spirit) in 1988 when I started writing extensions
-for MS's DOS "M" programmer's text editor which was included with Microsoft
-(not _Visual_) C 5.1.  In the next MSC releases (6.0, 6.0a, 7.x) MS soon
+for the Microsoft "M" Editor which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next MSC releases (6.0, 6.0a, 7.x) MS soon
 bloated-up M into PWB (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf)
 then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I
 preferred the simpler yet tremendously powerful M, so starting around 1991 I
-wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no substantive mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
+wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
 ## Toolchain notes
 
-Until 2012/06, I compiled K using MSVC 7.1 (Free 32-bit command line build
-toolset offered by MS in 2003, since withdrawn, replaced by Visual Studio
+Until 2012/06, I compiled K using the free MSVC++ 7.1 32-bit command line
+toolset offered by MS in 2003 (since withdrawn, replaced by Visual Studio
 Express Edition).  While I used these MS build tools, I used WinDbg, part of a
 free (as of 2011/07/13) "Debugging Tools for Windows" from MS, to debug crashes.
 
