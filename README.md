@@ -6,15 +6,17 @@ from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.t
 # Features
 
  * **Z**: "Reverse-polish" function-execution mode wherein the user creates the function-argument ("xxxARG") using various selection or data-entry modes or argtypes, before the function is invoked; the function's execution behavior adapts to the actual argtype it receives.
+     * This allows each editor function (one bound to each key) to potentially perform many different operations, minimizing consumption of the "keyboard namespace".  EX: `setfile` (described below).
  * **Z**: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
- * No installation: copy and run, delete when done. Run from removable storage.
- * Edit undo/redo limited only by available memory (effectively infinite).
- * (Partial) syntax highlighting (C/C++, Lua, Python)
+ * **M**: No installation: copy and run, delete when done. Run from removable storage.
+ * **M**: Edit undo/redo limited only by available memory (effectively infinite).
+ * **M**: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` of being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; **use DVCS**!
+ * **K**: (Partial) syntax highlighting (C/C++, Lua, Python)
      * comments
      * literal strings/characters
      * C/C++ preprocessor conditional regions
- * Powerful file/source-code navigation
-     * K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), enabling a hypertext-linking experience between tagged items in your programming project.
+ * **K**: Powerful file/source-code navigation
+     * K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), enabling a hypertext-linking experience navigating amongst tagged items in your programming project.
      * K can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc. it's easy to quickly construct a buffer containing only
 the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
 "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
