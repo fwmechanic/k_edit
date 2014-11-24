@@ -24,6 +24,7 @@ cmdtbl.h
 fxns
 tags
 tagsonly
+k_rls.*
 k.RES
 k_D.LRF
 k_E.lrf
