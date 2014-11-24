@@ -2754,7 +2754,8 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
    const auto fnLen( pfh->Namestr().length() );
    const auto cfpath( Path::CpyDirnm( pfh->Name() ) );
    const auto commonLen( Path::CommonPrefixLen( cwdbuf, cfpath ) ); 0 && DBG( "%s|%s (%Iu)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
-   const auto uniqPathLen( cfpath.length() - commonLen );
+   const auto divergentPath( commonLen < cwdlen );
+   const auto uniqPathLen( divergentPath ? cfpath.length() - commonLen : 0 );
    const auto uniqLen( fnLen - commonLen - uniqPathLen );
    //
    //-----------------------------------------------------------------------
