@@ -40,6 +40,7 @@ namespace Path {
 
    extern bool  SetCwdOk        ( PCChar dnm );
    extern str_t GetCwd    ();
+   extern str_t GetCwd_ps (); // w/trailing pathsep to make it comparable with CpyDirnm() retval
    extern str_t CpyDirnm   ( PCChar pSrcFullname );
    extern str_t CpyFnm     ( PCChar pSrcFullname );
    extern str_t CpyExt     ( PCChar pSrcFullname );
@@ -54,6 +55,16 @@ namespace Path {
       { return str_t( fnmBuf ); }
 #endif
    ;
-   extern int   strcmp( const str_t &name1, const str_t &name2 ); // with appropriate case-sensitivity
+
+   STIL bool PathChEq( const char c1, const char c2 ) {
+#if defined(_WIN32)
+      return ::tolower( c1 ) == ::tolower( c2 );
+#else
+      return          ( c1 ) ==          ( c2 );
+#endif
+      }
+   extern bool eq( const str_t &name1, const str_t &name2 ); // with appropriate case-sensitivity
+   str_t::size_type CommonLen( const std::string &s1, const std::string &s2 );
+
    extern char  DelimChar( PCChar fnm );
    };

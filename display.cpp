@@ -2749,44 +2749,11 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
    // different color than the remainder of pfh->Name().  This is quite a
    // hassle...
    //
-   const auto cwdbuf( Path::GetCwd() );
+   const auto cwdbuf( Path::GetCwd_ps() );
    const auto cwdlen( cwdbuf.length() );
    const auto fnLen( Strlen(pfh->Name()) );
-   // since commonLen may actually end up ==
-   auto commonLen( CommonStrlenI( cwdbuf.c_str(), pfh->Name() ) );
-
-   if( commonLen > 3 && cwdlen == commonLen ) {
-      // if cwd is common with name of curfile (curfile is in cwd or
-      // one of its children), AND cwd is not a "n:\" case (root dir of drive
-      // letter), then:
-      //
-      // a) cwd does NOT contain a trailing '\' (nature of the Win32 API
-      //    underlayng Path::GetCwd()), and
-      //
-      // b) we WANT to include this trailing '\' (which is present in
-      //    pfh->Name()) in commonLen.
-      //
-      ++commonLen;
-      }
-   else {
-      if( true ) {
-         commonLen = 0; // 20121119 partial cwd-match equals no match
-         }
-      else {
-         // commonLen, based on a simple char-by-char string cmp, may end in the
-         // middle of a directory name (eg.  CommonStrlenI( "c:\klg\sn",
-         // "c:\klg\scripts" ) yields a common string "c:\klg\s", which should be
-         // truncated to "c:\klg\"
-         //
-         0 && DBG( "1|%s|", pfh->Name() );
-         0 && DBG( "2|%s|", cwdbuf.c_str() );
-         while( (commonLen-1) > 0 && !Path::IsPathSepCh( pfh->Name()[commonLen-1] ) ) {
-            0 && DBG( "'%c'", pfh->Name()[commonLen-1] );
-            --commonLen;
-            }
-         }
-      }
-
+   const auto cfpath( Path::CpyDirnm( pfh->Name() ) );
+   const auto commonLen( Path::CommonLen( cwdbuf, cfpath ) ); 0 && DBG( "%s|%s (%d)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
    const auto uniqLen( fnLen - commonLen );
    //
    //-----------------------------------------------------------------------

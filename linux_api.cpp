@@ -9,7 +9,7 @@ void AssertDialog_( PCChar function, int line ) {
    abort();
    }
 
-Path::str_t Path::GetCwd() { // qiuck and dirty AND relies on GLIBC getcwd( nullptr, 0 ) semantics which are NONPORTABLE
+Path::str_t Path::GetCwd() { // quick and dirty AND relies on GLIBC getcwd( nullptr, 0 ) semantics which are NONPORTABLE
    PChar mallocd_cwd = getcwd( nullptr, 0 );
    Path::str_t rv( mallocd_cwd );
    free( mallocd_cwd );

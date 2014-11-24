@@ -1020,7 +1020,7 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
       return false;
       }
    const auto cwdAfter( Path::GetCwd() );
-   *pfCwdChanged = ToBOOL(Path::strcmp( cwdBefore, cwdAfter ));
+   *pfCwdChanged = !Path::eq( cwdBefore, cwdAfter );
    if( !*pfCwdChanged ) {
       Msg( "cwd unchanged" );
       }

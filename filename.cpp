@@ -48,8 +48,28 @@ bool Path::IsDotOrDotDot( PCChar pC ) { // true if pC _ends with_ "\.." or "\." 
        ;
    }
 
-int Path::strcmp( const Path::str_t &name1, const Path::str_t &name2 ) {
-   return WL( Stricmp, Strcmp )( name1.c_str(), name2.c_str() );
+bool Path::eq( const Path::str_t &name1, const Path::str_t &name2 ) {
+   if( name1.size() != name2.size() ) {
+      return false;
+      }
+   for( str_t::size_type ix( 0 ); ix < name1.size() ; ++ix ) {
+      if( !PathChEq( name1[ix], name2[ix] ) ) {
+         return false;
+         }
+      }
+
+   return true;
+   }
+
+Path::str_t::size_type Path::CommonLen( const std::string &s1, const std::string &s2 ) {
+   typedef Path::str_t::size_type s_t;
+   const s_t past_end_ix( Min( s1.size(), s2.size() ) );
+   s_t oPathSep( 0 );
+   for( s_t ix( 0 ); ix < past_end_ix ; ++ix ) {
+      if( !PathChEq( s1[ix], s2[ix] ) ) { break;             }
+      if( IsPathSepCh( s1[ix] ) )       { oPathSep = ix + 1; }
+      }
+   return oPathSep;
    }
 
 Path::str_t Path::CpyDirnm( PCChar pSrcFullname ) {                                       0 && DBG( "%s  in =%s'", __func__, pSrcFullname );

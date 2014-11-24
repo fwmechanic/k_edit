@@ -69,7 +69,7 @@ LUAFUNC_(Msg)         {
    RZ;
    }
 LUAFUNC_(GetCwd)      {
-   R_str( ( Path::GetCwd() + PATH_SEP_STR ).c_str() );
+   R_str( Path::GetCwd_ps().c_str() );
    }
 LUAFUNC_(GetChildDirs) {
    lua_newtable(L);  // result
