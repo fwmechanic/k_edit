@@ -2671,7 +2671,7 @@ public:
 void ColoredLine::Cat( int ColorIdx, PCChar src, int srcChars ) {
    const auto attr( g_CurView()->ColorIdx2Attr( ColorIdx ) );
    const auto cpyLen( SmallerOf( srcChars, (int(sizeof(d_charBuf))-1) - d_curLen) );
-   if( cpyLen ) { 0 && DBG( "Cat:PC=[%3d..%3d] %02X %s", d_curLen, d_curLen+cpyLen-1, attr, src );
+   if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3d..%3d] %02X %s", d_curLen, d_curLen+cpyLen-1, attr, src );
       d_alc.PutColor( d_curLen, cpyLen, attr );
       memcpy( d_charBuf + d_curLen, src, cpyLen );
       d_curLen += cpyLen;
@@ -2744,10 +2744,12 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
          );
 
    //-----------------------------------------------------------------------
-   //
    // Display that part of pfh->Name() which is common with the cwd in a
-   // different color than the remainder of pfh->Name().  This is quite a
-   // hassle...
+   // different color than the remainder of pfh->Name().  Display any part
+   // of the path of pfh->Name() that diverges from the cwd in an again
+   // different color.  Purpose: so user can tell at a glance whether
+   // curfile is (or more importantly, is not) within cwd subtree, and if
+   // so, how deep within.
    //
    const auto cwdbuf( Path::GetCwd_ps() );
    const auto cwdlen( cwdbuf.length() );
