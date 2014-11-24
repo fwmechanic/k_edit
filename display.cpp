@@ -2753,7 +2753,7 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
    const auto cwdlen( cwdbuf.length() );
    const auto fnLen( Strlen(pfh->Name()) );
    const auto cfpath( Path::CpyDirnm( pfh->Name() ) );
-   const auto commonLen( Path::CommonLen( cwdbuf, cfpath ) ); 0 && DBG( "%s|%s (%d)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
+   const auto commonLen( Path::CommonLen( cwdbuf, cfpath ) ); 0 && DBG( "%s|%s (%Iu)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
    const auto uniqLen( fnLen - commonLen );
    //
    //-----------------------------------------------------------------------
