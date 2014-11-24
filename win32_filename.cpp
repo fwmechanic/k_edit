@@ -98,7 +98,7 @@ Path::str_t Path::GetCwd() {
 
 Path::str_t Path::GetCwd_ps() {
    auto rv( Path::GetCwd() );
-   if( rv.size() > 0 ) {
+   if( rv.length() > 0 ) {
       rv += PATH_SEP_STR;
       }
    return rv;

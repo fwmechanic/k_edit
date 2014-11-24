@@ -64,7 +64,7 @@ namespace Path {
 #endif
       }
    extern bool eq( const str_t &name1, const str_t &name2 ); // with appropriate case-sensitivity
-   str_t::size_type CommonLen( const std::string &s1, const std::string &s2 );
+   str_t::size_type CommonPrefixLen( const std::string &s1, const std::string &s2 );
 
    extern char  DelimChar( PCChar fnm );
    };

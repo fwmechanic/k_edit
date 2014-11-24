@@ -49,21 +49,20 @@ bool Path::IsDotOrDotDot( PCChar pC ) { // true if pC _ends with_ "\.." or "\." 
    }
 
 bool Path::eq( const Path::str_t &name1, const Path::str_t &name2 ) {
-   if( name1.size() != name2.size() ) {
+   if( name1.length() != name2.length() ) {
       return false;
       }
-   for( str_t::size_type ix( 0 ); ix < name1.size() ; ++ix ) {
+   for( str_t::size_type ix( 0 ); ix < name1.length() ; ++ix ) {
       if( !PathChEq( name1[ix], name2[ix] ) ) {
          return false;
          }
       }
-
    return true;
    }
 
-Path::str_t::size_type Path::CommonLen( const std::string &s1, const std::string &s2 ) {
+Path::str_t::size_type Path::CommonPrefixLen( const std::string &s1, const std::string &s2 ) {
    typedef Path::str_t::size_type s_t;
-   const s_t past_end_ix( Min( s1.size(), s2.size() ) );
+   const s_t past_end_ix( Min( s1.length(), s2.length() ) );
    s_t oPathSep( 0 );
    for( s_t ix( 0 ); ix < past_end_ix ; ++ix ) {
       if( !PathChEq( s1[ix], s2[ix] ) ) { break;             }

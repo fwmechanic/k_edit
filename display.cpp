@@ -2753,8 +2753,9 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
    const auto cwdlen( cwdbuf.length() );
    const auto fnLen( Strlen(pfh->Name()) );
    const auto cfpath( Path::CpyDirnm( pfh->Name() ) );
-   const auto commonLen( Path::CommonLen( cwdbuf, cfpath ) ); 0 && DBG( "%s|%s (%Iu)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
-   const auto uniqLen( fnLen - commonLen );
+   const auto commonLen( Path::CommonPrefixLen( cwdbuf, cfpath ) ); 0 && DBG( "%s|%s (%Iu)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
+   const auto uniqPathLen( cfpath.length() - commonLen );
+   const auto uniqLen( fnLen - commonLen - uniqPathLen );
    //
    //-----------------------------------------------------------------------
 
@@ -2808,10 +2809,10 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
       #endif
       }
    else {
-      if( commonLen ) {
-         out.Cat( COLOR::HG, pfh->Name(), commonLen );
-         }
-      out.Cat( COLOR::FG, pfh->Name()+commonLen, uniqLen );
+      auto pfnm( pfh->Name() );
+      if( commonLen   ) { out.Cat( COLOR::HG , pfnm, commonLen   ); pfnm += commonLen  ; }
+      if( uniqPathLen ) { out.Cat( COLOR::ERR, pfnm, uniqPathLen ); pfnm += uniqPathLen; }
+      if( uniqLen     ) { out.Cat( COLOR::FG , pfnm, uniqLen     ); pfnm += uniqLen    ; }
       }
 
    out.Cat( cl );                       0 && DBG( "%s+", __func__ );
