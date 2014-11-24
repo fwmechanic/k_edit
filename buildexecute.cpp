@@ -1033,8 +1033,8 @@ PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pC
 GLOBAL_VAR bool s_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
 STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
-   // Called on first invocation (ie.  when g_iArgCount 0) of ARG::Arg or
-   // ARG::Lastselect.  Subsequent invocations of ARG::Arg are handled
+   // Called on first invocation (ie.  when g_iArgCount 0) of ARG::arg or
+   // ARG::Lastselect.  Subsequent invocations of ARG::arg are handled
    // inline...
    {
    PCV;
@@ -1229,7 +1229,7 @@ bool ARG::arg() {
    // ArgMainLoop internally processes arg's rx'd, so there is no need for the
    // ArgCount() checking code found in lastselect()
    //
-   // corollary: ARG::Arg() can only be called when ArgCount() == 0
+   // corollary: ARG::arg() can only be called when ArgCount() == 0
    //
    Assert( ArgCount() == 0 );
    return ArgMainLoop( false );
