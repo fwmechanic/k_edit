@@ -2466,16 +2466,6 @@ char toLower( int ch ) {
 
 //--------------------------------------------------------------
 
-int CommonStrlenI( PCChar s1, PCChar s2 ) {
-   const auto s1_init(s1);
-   while( *s1 && *s2 && (toLower( *s1 ) == toLower( *s2 )) ) {
-      ++s1;
-      ++s2;
-      }
-
-   return s1 - s1_init;
-   }
-
 STATIC_FXN PCChar strnstri( PCChar haystack, int haystackLen, PCChar needle, int needleLen ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
    const auto pEnd( haystack + haystackLen - needleLen + 1 ); // stop looking at
    while( haystack < pEnd ) {
@@ -2502,7 +2492,7 @@ STATIC_FXN PCChar strnstri( PCChar haystack, int haystackLen, PCChar needle, int
 STATIC_FXN PCChar strnstr( PCChar haystack, int haystackLen, PCChar needle, int needleLen ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
    auto pEnd( haystack + haystackLen - needleLen + 1 ); // stop looking at
    while( haystack < pEnd ) {
-      if(        ( haystack[0] ) == needle[0] ) {
+      if( haystack[0] == needle[0] ) {
          auto pH( haystack );
          auto pN( needle   );
          do {

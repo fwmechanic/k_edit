@@ -287,7 +287,7 @@ function FactorOutCommonLeadingPath( fnm_ary )
    local pfxlen = 1e6
    local s1 = fnm_ary[1]
    for ix=2,#fnm_ary do
-       pfxlen = Min( pfxlen, CommonStrlenI( s1, fnm_ary[ix] ) )
+       pfxlen = Min( pfxlen, Path_CommonPrefixLen( s1, fnm_ary[ix] ) )
        end
    if 0==pfxlen then return rtn_none() end
    s1 = s1:sub(1,pfxlen)                       -- print( "pfxlen="..tostring(pfxlen).." s1="..s1 )

@@ -53,7 +53,8 @@ LUAFUNC_(VidWrStrColorFlush) { 0 && DBG("%s: %d, %d", __func__, I_(1), I_(2) );
    VidWrStrColorFlush( I_(1), I_(2), S_(3), I_(4), I_(5), LuaBool(6) );
    RZ;
    }
-LUAFUNC_(l_CommonStrlenI)    { R_int( CommonStrlenI( S_(1), S_(2) ) ); }
+LUAFUNC_(Path_CommonPrefixLen) { R_int( Path::CommonPrefixLen( S_(1), S_(2) ) ); }
+
 LUAFUNC_(AddToSearchLog)     { AddToSearchLog( S_(1) ); RZ; }
 LUAFUNC_(l_AssignStrOk)      { R_bool( AssignStrOk( S_(1) ) ); }
 LUAFUNC_(PushVariableMacro)  { R_bool( PushVariableMacro( S_(1) ) ); }
@@ -643,7 +644,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        { "CmdIdxAddLuaFunc"            , CmdIdxAddLuaFunc            },
        { "SetKeyOk"                    , SetKeyOk                    },
        { "DBG"                         , DBG                         },
-       { "CommonStrlenI"               , l_CommonStrlenI             },
+       { "Path_CommonPrefixLen"        , Path_CommonPrefixLen        },
        { "MarkDefineAtCurPos"          , MarkDefineAtCurPos          },
        { "MarkGoto"                    , MarkGoto                    },
        { "GetChildDirs"                , GetChildDirs                },

@@ -1085,15 +1085,16 @@ private:
 public:
    bool           FnmIsDiskWritable() const { return d_fFnmDiskWritable; }
    PCChar         Name() const { return d_filename.c_str(); }
+   const Path::str_t &Namestr() const { return d_filename; }
 
    char           UserNameDelimChar() const;
    PChar          UserName( PChar dest, size_t destSize ) const;
    int            UserNameLen() const {
-                     const auto len( Strlen( Name() ) );
+                     const auto len( d_filename.length() );
                      return UserNameDelimChar() ? len + 2 : len;
                      }
 
-   bool           NameMatch( PCChar name ) const { return Stricmp( Name(), name ) == 0; }
+   bool           NameMatch( PCChar name ) const { return Path::eq( d_filename, name ); }
                                                       //  _strcmp
 
    STATIC_FXN bool FnmIsPseudo( PCChar name )   { return  name[0] == '<'; }
