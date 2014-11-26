@@ -60,8 +60,6 @@ public:
       }
    };
 
-typedef TConsoleOutputCacheLineInfo *PLineControl;
-
 struct W32_ScreenSize_CursorLocn {
    Point size;
    Point cursor;
@@ -90,7 +88,7 @@ public: //**************************************************
 
    TConsoleOutputControl( int yHeight, int xWidth );
 
-   bool WriteToFileOk( FILE *ofh );
+   bool WriteToFileOk( FILE *ofh ); // debug/test facility
 
    Win32::HANDLE GetConsoleScreenBufferHandle() const { return d_hConsoleScreenBuffer; }
 
@@ -376,17 +374,6 @@ COL Video::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineW
    return s_EditorScreen ? s_EditorScreen->WriteLineSegToConsoleBuffer( pszStringToDisp, StringLen, yLineWithinConsoleWindow, xColWithinConsoleWindow, colorAttribute, fPadWSpcs ) : 0;
    }
 
-STIL int UpdtCell( TConsoleOutputCacheLineInfo &lc, int xColWithinConsoleWindow, ScreenCell *pCI, const ScreenCell &ch_info ) {
-   if(   ch_info.Attributes     != pCI->Attributes
-      || ch_info.Char.AsciiChar != pCI->Char.AsciiChar
-     ) {
-      lc.ColUpdated( xColWithinConsoleWindow );
-      *pCI = ch_info;
-      return 1;
-      }
-   return 0;
-   }
-
 COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
    AutoMutex mtx( d_mutex );
 
@@ -403,27 +390,28 @@ COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar pszStringToDisp, 
    const auto padLen( fPadWSpcs ? maxConChars - StringLen : 0 );
 
    auto updtdCells(0);
-
-   ScreenCell ch_info;
-   ch_info.Attributes = colorAttribute;
-
    auto &lc( d_vLineControl[yLineWithinConsoleWindow] );
    auto pCI( lc.BufPtrOfCol( xColWithinConsoleWindow ) );
+   auto UpdtCell = [&]( char newCh ) {
+      if(   pCI->Char.AsciiChar == newCh
+         && pCI->Attributes     == colorAttribute
+        ) { return; }
+      pCI->Char.AsciiChar = newCh;
+      pCI->Attributes     = colorAttribute;
+      lc.ColUpdated( xColWithinConsoleWindow );
+      ++updtdCells;
+      };
+
    for( auto ix(0); ix < StringLen; ++ix, ++pCI, ++xColWithinConsoleWindow ) {
-      ch_info.Char.AsciiChar = *pszStringToDisp++;
-      updtdCells += UpdtCell( lc, xColWithinConsoleWindow, pCI, ch_info );
+      UpdtCell( *pszStringToDisp++ );
       }
-
-   ch_info.Char.AsciiChar = ' '; // pad
    for( auto ix(0); ix < padLen; ++ix, ++pCI, ++xColWithinConsoleWindow ) {
-      updtdCells += UpdtCell( lc, xColWithinConsoleWindow, pCI, ch_info );
+      UpdtCell( ' ' ); // pad
       }
-
    if( updtdCells ) {
       NoMoreThan( &d_LineToUpdt.first, yLineWithinConsoleWindow );
       NoLessThan( &d_LineToUpdt.last , yLineWithinConsoleWindow );
       }
-
    return StringLen + padLen;
    }
 
