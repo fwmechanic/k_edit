@@ -118,10 +118,6 @@ namespace Video {
    COL   BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
    void  BufferFlushToScreen();
 
-   #define VIDEO_API_SUPPORTED_SCROLL  0
-   #if     VIDEO_API_SUPPORTED_SCROLL
-   void  Scroll( LINE ulc_yLine, COL ulc_xCol, LINE lrc_yLine, COL lrc_xCol, LINE deltaLine );
-   #endif
    bool  WriteToFileOk( FILE *ofh );
    bool  SetConsolePalette( const unsigned palette[16] );
    }

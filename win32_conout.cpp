@@ -376,11 +376,11 @@ COL Video::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineW
    return s_EditorScreen ? s_EditorScreen->WriteLineSegToConsoleBuffer( pszStringToDisp, StringLen, yLineWithinConsoleWindow, xColWithinConsoleWindow, colorAttribute, fPadWSpcs ) : 0;
    }
 
-STIL int UpdtCell( const PLineControl lc, int xColWithinConsoleWindow, ScreenCell *pCI, const ScreenCell &ch_info ) {
+STIL int UpdtCell( TConsoleOutputCacheLineInfo &lc, int xColWithinConsoleWindow, ScreenCell *pCI, const ScreenCell &ch_info ) {
    if(   ch_info.Attributes     != pCI->Attributes
       || ch_info.Char.AsciiChar != pCI->Char.AsciiChar
      ) {
-      lc->ColUpdated( xColWithinConsoleWindow );
+      lc.ColUpdated( xColWithinConsoleWindow );
       *pCI = ch_info;
       return 1;
       }
@@ -400,7 +400,6 @@ COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar pszStringToDisp, 
 
    const auto maxConChars( d_xyState.size.col - xColWithinConsoleWindow );
    Min( &StringLen, maxConChars );
-   // if( 78==yLineWithinConsoleWindow ) DBG( "%d: '%*s'", yLineWithinConsoleWindow, StringLen, pszStringToDisp );
    const auto padLen( fPadWSpcs ? maxConChars - StringLen : 0 );
 
    auto updtdCells(0);
@@ -408,15 +407,14 @@ COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar pszStringToDisp, 
    ScreenCell ch_info;
    ch_info.Attributes = colorAttribute;
 
-   const auto lc( &d_vLineControl[yLineWithinConsoleWindow] );
-   auto pCI( lc->BufPtrOfCol( xColWithinConsoleWindow ) );
+   auto &lc( d_vLineControl[yLineWithinConsoleWindow] );
+   auto pCI( lc.BufPtrOfCol( xColWithinConsoleWindow ) );
    for( auto ix(0); ix < StringLen; ++ix, ++pCI, ++xColWithinConsoleWindow ) {
       ch_info.Char.AsciiChar = *pszStringToDisp++;
       updtdCells += UpdtCell( lc, xColWithinConsoleWindow, pCI, ch_info );
       }
 
-   ch_info.Char.AsciiChar = ' ';
-
+   ch_info.Char.AsciiChar = ' '; // pad
    for( auto ix(0); ix < padLen; ++ix, ++pCI, ++xColWithinConsoleWindow ) {
       updtdCells += UpdtCell( lc, xColWithinConsoleWindow, pCI, ch_info );
       }
@@ -887,54 +885,6 @@ void TConsoleOutputControl::FlushConsoleBufferToScreen() {
 #endif
       }
    }
-
-
-#if VIDEO_API_SUPPORTED_SCROLL
-
-void Video::Scroll( LINE yUpperLeftCorner, COL xUpperLeftCorner, LINE yLowerRightCorner, COL xLowerRightCorner, LINE deltaLine ) {
-   if( s_EditorScreen )
-       s_EditorScreen->ScrollConsole( yUpperLeftCorner, xUpperLeftCorner, yLowerRightCorner, xLowerRightCorner, deltaLine );
-   }
-
-void TConsoleOutputControl::ScrollConsole(
-     LINE yUpperLeftCorner , COL xUpperLeftCorner
-   , LINE yLowerRightCorner, COL xLowerRightCorner
-   , LINE deltaLine
-   ) {
-   if( deltaLine == 0 )
-      return;
-
-   AutoMutex mtx( d_mutex );  //##################################################
-
-   if( d_LineToUpdt.first <= d_LineToUpdt.last )  // any flushes pending (maybe interrupted)?
-      FlushConsoleBufferToScreen();               // complete them
-
-   Win32::COORD dwDestinationOrigin;
-   dwDestinationOrigin.X  = xUpperLeftCorner;
-   dwDestinationOrigin.Y  = yUpperLeftCorner;
-   if( deltaLine > 0 )  dwDestinationOrigin.Y = yUpperLeftCorner - deltaLine;
-
-   Win32::SMALL_RECT ScrollRectangle;
-   ScrollRectangle.Left   = xUpperLeftCorner;
-   ScrollRectangle.Top    = yUpperLeftCorner;
-   ScrollRectangle.Right  = xLowerRightCorner;
-   ScrollRectangle.Bottom = yLowerRightCorner;
-   if( deltaLine > 0 )  ScrollRectangle.Top    += deltaLine;
-   else                 ScrollRectangle.Bottom += deltaLine;
-
-   ScreenCell Fill;
-   Fill.Char.AsciiChar = ' ';
-   Fill.Attributes = d_W32ConAttr;
-
-   ScrollConsoleScreenBufferA( d_hConsoleScreenBuffer, &ScrollRectangle, nullptr, dwDestinationOrigin, &Fill );
-
-         auto pLC      ( &d_vLineControl[ yUpperLeftCorner      ] );
-   const auto pPastEnd ( &d_vLineControl[ yLowerRightCorner + 1 ] );
-   for( ; pLC < pPastEnd ; ++pLC )
-      pLC->Undirty();
-   }
-
-#endif
 
 
 void Video::GetScreenSize( PPoint rv ) { // returning 8 byte struct msvc
