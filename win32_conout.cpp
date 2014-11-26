@@ -374,45 +374,44 @@ COL Video::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineW
    return s_EditorScreen ? s_EditorScreen->WriteLineSegToConsoleBuffer( pszStringToDisp, StringLen, yLineWithinConsoleWindow, xColWithinConsoleWindow, colorAttribute, fPadWSpcs ) : 0;
    }
 
-COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
+COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars, LINE yConsole, int xConsole, const int attr, bool fPadWSpcs ) {
    AutoMutex mtx( d_mutex );
 
-   if(   yLineWithinConsoleWindow >= d_xyState.size.lin
-      || xColWithinConsoleWindow  >= d_xyState.size.col
-      || (StringLen == 0 && !fPadWSpcs)
+   if(   yConsole  >= d_xyState.size.lin
+      || xConsole  >= d_xyState.size.col
+      || (srcChars == 0 && !fPadWSpcs)
      ) {
       0 && DBG( "%s BAILS!", __func__ );
       return 0;
       }
 
-   const auto maxConChars( d_xyState.size.col - xColWithinConsoleWindow );
-   Min( &StringLen, maxConChars );
-   const auto padLen( fPadWSpcs ? maxConChars - StringLen : 0 );
-
+   const auto maxConChars( d_xyState.size.col - xConsole );
+   Min( &srcChars, maxConChars );
+   const auto padLen( fPadWSpcs ? maxConChars - srcChars : 0 );
    auto updtdCells(0);
-   auto &lc( d_vLineControl[yLineWithinConsoleWindow] );
-   auto pCI( lc.BufPtrOfCol( xColWithinConsoleWindow ) );
+   auto &lc( d_vLineControl[ yConsole ] );
+   auto pCI( lc.BufPtrOfCol( xConsole ) );
    auto UpdtCell = [&]( char newCh ) {
       if(   pCI->Char.AsciiChar == newCh
-         && pCI->Attributes     == colorAttribute
+         && pCI->Attributes     == attr
         ) { return; }
       pCI->Char.AsciiChar = newCh;
-      pCI->Attributes     = colorAttribute;
-      lc.ColUpdated( xColWithinConsoleWindow );
+      pCI->Attributes     = attr;
+      lc.ColUpdated( xConsole );
       ++updtdCells;
       };
 
-   for( auto ix(0); ix < StringLen; ++ix, ++pCI, ++xColWithinConsoleWindow ) {
-      UpdtCell( *pszStringToDisp++ );
+   for( auto ix(0); ix < srcChars; ++ix, ++pCI, ++xConsole ) {
+      UpdtCell( *src++ );
       }
-   for( auto ix(0); ix < padLen; ++ix, ++pCI, ++xColWithinConsoleWindow ) {
+   for( auto ix(0); ix < padLen; ++ix, ++pCI, ++xConsole ) {
       UpdtCell( ' ' ); // pad
       }
    if( updtdCells ) {
-      NoMoreThan( &d_LineToUpdt.first, yLineWithinConsoleWindow );
-      NoLessThan( &d_LineToUpdt.last , yLineWithinConsoleWindow );
+      NoMoreThan( &d_LineToUpdt.first, yConsole );
+      NoLessThan( &d_LineToUpdt.last , yConsole );
       }
-   return StringLen + padLen;
+   return srcChars + padLen;
    }
 
 
@@ -455,7 +454,6 @@ STATIC_FXN bool SetConsoleWindowSizeOk( const Win32::HANDLE d_hConsoleScreenBuff
 // should be, resulting in the right border (and part of the right console
 // character column) being off the right edge of the screen.  Likewise at the
 // bottom...
-
 
 void win_fully_on_desktop() {
    enum { SHOWDBG = 0 };
