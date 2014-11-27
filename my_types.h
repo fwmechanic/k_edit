@@ -26,7 +26,7 @@
 #else
 #   define PR__i64 "ll"
 #endif
-#if __x86_64__ || __ppc64__
+#if defined(__x86_64__) || defined(__ppc64__)
 // #define ENVIRONMENT64
 #if defined(_WIN32)
 #   define PR_SIZET "I"
@@ -36,7 +36,7 @@
 #   define PR_PTRDIFFT "t"
 #endif
 #else
-#   define ENVIRONMENT32
+// #   define ENVIRONMENT32
 #   define PR_SIZET ""
 #   define PR_PTRDIFFT ""
 #endif
