@@ -59,15 +59,11 @@ extern int  DbgPopf( PCChar fmt, ... ) ATTR_FORMAT(1, 2);
 extern void FreeAllMacroDefs();
 
 
-extern CmdData CmdDataFromNextKey();
-extern CmdData CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes );
-
-
 extern PCChar ProgramVersion();
 extern PCChar ExecutableFormat();
 
-extern PChar Getenv( PCChar pStart, int len );
-extern PChar GetenvStrdup( PCChar pszEnvName );
+extern PChar  Getenv( PCChar pStart, int len );
+extern PChar  GetenvStrdup( PCChar pszEnvName );
 
 extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
 extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
@@ -84,8 +80,34 @@ extern   bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *
               , gts_DfltResponse      = BIT(1)
               , gts_OnlyNewlAffirms   = BIT(2)
               };
-
 extern   PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd );
+
+//
+// CMD_reader embeds a VWritePrompt() hook in GetNextCMD_ExpandAnyMacros for writing
+// screen prompt if the keyboard is going to be read.  This (base) class defines
+// a empty VWritePrompt(), so it better not read the keyboard!
+//
+// This is largely guaranteed by calling GetNextCMD_ExpandAnyMacros( true ), and
+// will largely NOT be guaranteed by calling GetNextCMD_ExpandAnyMacros( false ),
+// which is why, for clients of this (base) class, we only publicly export
+// GetNextCMD(), which is a wrapper around GetNextCMD_ExpandAnyMacros( true )
+//
+class CMD_reader {
+protected:
+
+   bool d_fAnyInputFromKbd;
+
+   virtual void  VWritePrompt();
+   virtual void  VUnWritePrompt();
+           PCCMD GetNextCMD_ExpandAnyMacros( bool fRtnOnMacroHalt );
+
+public:
+
+   CMD_reader() : d_fAnyInputFromKbd( false ) {}
+
+   PCCMD GetNextCMD()               { return GetNextCMD_ExpandAnyMacros( true ); }
+   bool  GotAnyInputFromKbd() const { return d_fAnyInputFromKbd; }
+   };
 
 extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests );
 
@@ -133,6 +155,9 @@ extern void    WaitForKey( int secondsToWait );
 extern bool    KbHit();
 extern void    FlushKeyQueuePrimeScreenRedraw();
 extern void    ConsoleReleaseOnExit();
+
+extern CmdData CmdDataFromNextKey();
+extern CmdData CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes );
 
 //--------------------------------------------------------------------------------------------
 
@@ -271,7 +296,6 @@ extern   bool  Wins_CanResizeContent( const Point &newSize );
 extern   void  Wins_ScreenSizeChanged( const Point &newSize );
 extern   void  Wins_WriteStateFile( FILE *ofh );
 
-
 //------------ Assign
 
 extern   bool  SetSwitch( PCChar pszSwitchName, PCChar pszNewValue );
@@ -296,8 +320,41 @@ extern   void  StrFromCmd( PChar pKeyStringBuf, size_t pKeyStringBufBytes, const
 extern   void  EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd );
 extern   int   ShowAllUnassignedKeys( PFBUF pFBuf );
 
+// extern   PChar StringOfAllKeyNamesFnIsAssignedTo( PCMD pCmdToFind, PChar pDestBuf, size_t sizeofDest );
+// extern   PChar NameToKeys( PCChar pszName, PChar pDestBuf, size_t sizeofDest );
+
 extern  PCCMD  CmdFromKbdForExec();
 extern  PCCMD  CmdFromKbdForInfo( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes );
+
+extern   char  CharAsciiFromKybd();
+extern   void  FlushKeyQueue();
+
+extern  PChar  ArgTypeNames( PChar buf, size_t sizeofBuf, int argval );
+
+//------------ Macro execution
+
+namespace Interpreter
+   {
+   bool  Interpreting();
+   bool  Interpreting_VariableMacro();
+
+   enum  { AskUser = -1, UseDflt = 0 }; // special cases rtnd by chGetAnyMacroPromptResponse(), must not be [1..0xFF] (valid/useful ascii chars)
+   int   chGetAnyMacroPromptResponse();
+
+   enum macroRunFlags
+      { insideDQuotedString   = BIT(0)
+      , variableMacro         = BIT(1)
+      , breakOutHere          = BIT(2)
+      };
+
+   bool  PushMacroStringOk( PCChar pszMacroString, int macroFlags );
+   }
+
+extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );
+extern   bool  fExecuteSafe( PCChar str );
+extern   bool  PushVariableMacro( PCChar strToExecute );
+
+extern   void  CleanupAnyExecutionHaltRequest(); // must NOT be declared _within_ Main, where it would get a DLLX attribute
 
 //------------ FileExtensionSettings
 
@@ -329,38 +386,6 @@ typedef void (*CmdVisit)( PCCMD pCmd, void *pCtxt );
 extern  void WalkAllCMDs( void *pCtxt, CmdVisit visit );
 
 extern  void cmdusage_updt();
-//------------
-
-extern   char  CharAsciiFromKybd();
-extern   void  FlushKeyQueue();
-
-extern  PChar  ArgTypeNames( PChar buf, size_t sizeofBuf, int argval );
-
-// extern   PChar StringOfAllKeyNamesFnIsAssignedTo( PCMD pCmdToFind, PChar pDestBuf, size_t sizeofDest );
-// extern   PChar NameToKeys( PCChar pszName, PChar pDestBuf, size_t sizeofDest );
-
-namespace Interpreter
-   {
-   bool  Interpreting();
-   bool  Interpreting_VariableMacro();
-
-   enum  { AskUser = -1, UseDflt = 0 }; // special cases rtnd by chGetAnyMacroPromptResponse(), must not be [1..0xFF] (valid/useful ascii chars)
-   int   chGetAnyMacroPromptResponse();
-
-   enum macroRunFlags
-      { insideDQuotedString   = BIT(0)
-      , variableMacro         = BIT(1)
-      , breakOutHere          = BIT(2)
-      };
-
-   bool  PushMacroStringOk( PCChar pszMacroString, int macroFlags );
-   }
-
-extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );
-extern   bool  fExecuteSafe( PCChar str );
-extern   bool  PushVariableMacro( PCChar strToExecute );
-
-extern   void  CleanupAnyExecutionHaltRequest(); // must NOT be declared _within_ Main, where it would get a DLLX attribute
 
 //-------------------------------------------------------------------------------------------------
 //
@@ -372,36 +397,6 @@ extern   void  AdjMarksForInsertion( PCFBUF pFBufSrc,PFBUF pFBufDest,int xLeft,i
 extern   void  AdjustMarksForLineDeletion( PFBUF pFBuf,int xLeft,int yTop,int xRight,int yBottom );
 extern   void  AdjMarksForBoxDeletion( PFBUF pFBuf, COL xLeft, LINE yTop, COL xRight, LINE yBottom );
 extern   void  AdjustMarksForLineInsertion( LINE Line,int LineDelta,PFBUF pFBuf );
-//
-//-------------------------------------------------------------------------------------------------
-
-
-//
-// CMD_reader embeds a VWritePrompt() hook in GetNextCMD_ExpandAnyMacros for writing
-// screen prompt if the keyboard is going to be read.  This (base) class defines
-// a empty VWritePrompt(), so it better not read the keyboard!
-//
-// This is largely guaranteed by calling GetNextCMD_ExpandAnyMacros( true ), and
-// will largely NOT be guaranteed by calling GetNextCMD_ExpandAnyMacros( false ),
-// which is why, for clients of this (base) class, we only publicly export
-// GetNextCMD(), which is a wrapper around GetNextCMD_ExpandAnyMacros( true )
-//
-class CMD_reader {
-protected:
-
-   bool d_fAnyInputFromKbd;
-
-   virtual void  VWritePrompt();
-   virtual void  VUnWritePrompt();
-           PCCMD GetNextCMD_ExpandAnyMacros( bool fRtnOnMacroHalt );
-
-public:
-
-   CMD_reader() : d_fAnyInputFromKbd( false ) {}
-
-   PCCMD GetNextCMD()               { return GetNextCMD_ExpandAnyMacros( true ); }
-   bool  GotAnyInputFromKbd() const { return d_fAnyInputFromKbd; }
-   };
 
 //------------ Pseudofile readers (ONLY call from ReadPseudoFileOk system!)
 
