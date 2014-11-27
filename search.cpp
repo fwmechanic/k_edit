@@ -2302,25 +2302,6 @@ STATIC_FXN bool PMword( bool fSearchFwd, bool fMeta ) {
 bool ARG::pword() { return PMword( true , (ArgCount() > 0) ? !d_fMeta : d_fMeta ); }
 bool ARG::mword() { return PMword( false,                               d_fMeta ); }
 
-
-//***************************************************************************************
-//***************************************************************************************
-
-#define  ULCTAG  0
-#if ULCTAG
-#define TAG_()    tag_( __FILE__, __LINE__    )
-#define TAGP_(x)  tag_( __FILE__, __LINE__, x )
-
-void tag_( PCChar file, int line, PCChar paux=0 ) {
-   PutULC( SprintfBuf( "%s:%i%s", file, line, paux?paux:"" ) );
-   }
-
-#else
-#define TAG_()
-#define TAGP_(x)
-#endif
-
-
 //********************************************************************************************
 //
 // Grep variations

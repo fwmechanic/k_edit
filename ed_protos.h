@@ -56,8 +56,6 @@ extern int  uint_log_10( int lmax );
 
 extern int  DbgPopf( PCChar fmt, ... ) ATTR_FORMAT(1, 2);
 
-extern void PutULC( PCChar msg );
-
 extern void FreeAllMacroDefs();
 
 
