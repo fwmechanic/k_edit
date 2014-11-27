@@ -327,8 +327,7 @@ extern  PChar  ArgTypeNames( PChar buf, size_t sizeofBuf, int argval );
 
 //------------ Macro execution
 
-namespace Interpreter
-   {
+namespace Interpreter {
    bool  Interpreting();
    bool  Interpreting_VariableMacro();
 
