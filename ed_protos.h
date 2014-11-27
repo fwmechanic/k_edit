@@ -103,14 +103,12 @@ extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltIntera
 
 namespace Video {
    void  Startup( bool fForceNewConsole );
-   Point ParentConsoleWindowSize();
    Point GetMaxConsoleSize();
 
    void  GetScreenSize(PPoint rv);
    bool  SetScreenSizeOk( Point &newSize );
 
    bool  GetCursorState( Point *pt, bool *pfVisible );
-
    bool  SetCursorLocnOk( LINE yLine, COL xCol );
    bool  SetCursorSizeOk( bool fBigCursor );
    bool  SetCursorVisibilityChanged( bool fVisible );
