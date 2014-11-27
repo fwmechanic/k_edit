@@ -537,7 +537,7 @@ PCChar GetWordUnderPoint( PCFBUF pFBuf, Point *cursor, COL *len ) {
          const auto wordCols( xMax - xMin );
          const auto wordChars( pPastEnd - pStart );
          // this degree of paranoia only matters if the definition of a WORD includes a tab
-         if( 0 && wordCols != wordChars )  DBG( "%s wordCols=%d != wordChars=%Id", __func__, wordCols, wordChars );
+         if( 0 && wordCols != wordChars )  DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT "d", __func__, wordCols, wordChars );
 
          // return everything
          cursor->col = xMin;
@@ -601,7 +601,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                if( afind && (!found || (afind < found)) ) {
                   found = afind; mlen = len;
                   // Assert( afind+len <= eos );
-                  0 && DBG( "WUC-find: y=%d, x=%Id", yLine, found-bos );
+                  0 && DBG( "WUC-find: y=%d, x=%" PR_PTRDIFFT "d", yLine, found-bos );
                   }
                pC += len+1;
                }
@@ -2751,7 +2751,7 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
    const auto cwdlen( cwdbuf.length() );
    const auto fnLen( pfh->Namestr().length() );
    const auto cfpath( Path::CpyDirnm( pfh->Name() ) );
-   const auto commonLen( Path::CommonPrefixLen( cwdbuf, cfpath ) ); 0 && DBG( "%s|%s (%Iu)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
+   const auto commonLen( Path::CommonPrefixLen( cwdbuf, cfpath ) ); 0 && DBG( "%s|%s (%" PR_SIZET "u)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
    const auto divergentPath( commonLen < cwdlen );
    const auto uniqPathLen( divergentPath ? cfpath.length() - commonLen : 0 );
    const auto uniqLen( fnLen - commonLen - uniqPathLen );

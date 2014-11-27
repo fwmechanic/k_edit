@@ -33,7 +33,7 @@ int CDECL__ main( int argc, char *argv[], char *envp[] ) {
    char  buf[ MAX_PATH+1 ];
    const auto len( GetModuleFileName( nullptr, buf, sizeof buf ) );
    if( len >= sizeof(buf) ) {
-      fprintf( stderr, "GetModuleFileName rv (%lu) >= sizeof(buf) (%Iu)\n", len, sizeof(buf) );
+      fprintf( stderr, "GetModuleFileName rv (%lu) >= sizeof(buf) (%" PR_SIZET "u)\n", len, sizeof(buf) );
       return 1;
       }
 

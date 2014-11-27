@@ -1941,7 +1941,7 @@ void FileSearcher::VFindMatches_() {
 
          const auto maxCharsToSearch( pLast - bos );
 
-         0 && DBG( "MaxCh2s=%Id", maxCharsToSearch );
+         0 && DBG( "MaxCh2s=%" PR_PTRDIFFT "d", maxCharsToSearch );
 
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to

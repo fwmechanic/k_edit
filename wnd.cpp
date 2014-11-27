@@ -107,7 +107,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                      }                                                                                                      \
                   const auto delta( ulc - newSize_ );                                                                       \
                   const auto iw( std::distance( g__.aWindow.begin(), it.base()) -1 );                                       \
-                  0 && DBG( "Win[%Id] size_.%s %d->%d delta=%d", iw, #aaa, size_, newSize_, delta );                        \
+                  0 && DBG( "Win[%" PR_PTRDIFFT "d] size_.%s %d->%d delta=%d", iw, #aaa, size_, newSize_, delta );                        \
                   if( 0==iw && delta > 0 ) { newSize_ += delta; }  /* 0th element and space left?  consume it! */           \
                   { Point tmp; tmp.aaa=ulc - newSize_, tmp.bbb=pW->d_UpLeft    .bbb, pW->Event_Win_Reposition( tmp ); }     \
                   { Point tmp; tmp.aaa=      newSize_, tmp.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized   ( tmp ); }     \

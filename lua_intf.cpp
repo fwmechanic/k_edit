@@ -228,7 +228,7 @@ STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
    s_LuaHeapSize += delta;
 
    if( nsize == 0 ) {
-      DBG_LUA_ALLOC && ptr && DBG( "%s %Iu free %5Iu (%5Iu/%5Iu) P=            %p", __func__, s_LuaHeapSize, delta, osize, nsize, ptr );
+      DBG_LUA_ALLOC && ptr && DBG( "%s %" PR_SIZET "u free %5Iu (%5Iu/%5Iu) P=            %p", __func__, s_LuaHeapSize, delta, osize, nsize, ptr );
       free( ptr );   // ANSI requires that free(nullptr) has no effect
       return nullptr;
       }
@@ -236,7 +236,7 @@ STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
    // most of this conditional code is for debug/logging purposes
 
    const PVoid rv( realloc( ptr, nsize ) );  // ANSI requires that realloc(nullptr, size) == malloc(size)
-   DBG_LUA_ALLOC && DBG( "%s %Iu %s %5Iu (%5Iu/%5Iu) P=%p -> %p", __func__, s_LuaHeapSize, ptr ? "real" : "new ", delta, osize, nsize, ptr, rv );
+   DBG_LUA_ALLOC && DBG( "%s %" PR_SIZET "u %s %5Iu (%5Iu/%5Iu) P=%p -> %p", __func__, s_LuaHeapSize, ptr ? "real" : "new ", delta, osize, nsize, ptr, rv );
 
    return rv;
    }
@@ -579,7 +579,7 @@ STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void
     if( !*pL ) { DBG( "%s- lua_newstate FAILED", __func__ );
        return false;
        }
-    DBG_LUA_ALLOC && DBG( "%s lua_newstate (%Iu bytes)  ******************************************", __func__, heapChange );
+    DBG_LUA_ALLOC && DBG( "%s lua_newstate (%" PR_SIZET "u bytes)  ******************************************", __func__, heapChange );
    }
 
    {
@@ -781,7 +781,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
    int narg;
    for( narg=0 ; *szSig ; ++narg, ++szSig ) {
       switch( *szSig ) {
-       default:   return Msg( "%s: invalid param-type[%Id] (%c)", szFuncnm, (szSig - pszSigStart), szSig[0] );
+       default:   return Msg( "%s: invalid param-type[%" PR_PTRDIFFT "d] (%c)", szFuncnm, (szSig - pszSigStart), szSig[0] );
        case 'F':  l_construct_FBUF( L, va_arg(vl, PFBUF )                 );  break;
        case 'V':  l_construct_View( L, va_arg(vl, PView )                 );  break;
        case 'd':  lua_pushnumber(   L, va_arg(vl, double)                 );  break;
@@ -946,7 +946,7 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) {
    for( PChar pc(rvNm); pc < rvNm + rvlen; ++pc )
       if( *pc == '.' ) {
          *pc = '\0';
-         if( !(depth < ELEMENTS(name)) ) { 0 && DBG( "%s MAX DEPTH (%Iu) exceeded: %s", __func__, ELEMENTS(name), pcRvalNm );
+         if( !(depth < ELEMENTS(name)) ) { 0 && DBG( "%s MAX DEPTH (%" PR_SIZET "u) exceeded: %s", __func__, ELEMENTS(name), pcRvalNm );
             return false;
             }
          name[depth++] = pc+1;

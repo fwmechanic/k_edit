@@ -21,7 +21,7 @@ GLOBAL_VAR FBufHead g_FBufHead;
 // All inlines that alloc mem call this (terminating) function in their error-path
 //
 void MemErrFatal( PCChar opn, size_t byteCount, PCChar msg ) {
-   Msg( "%s %s( %Iu ) failed: %s", __func__, opn, byteCount, msg );
+   Msg( "%s %s( %" PR_SIZET "u ) failed: %s", __func__, opn, byteCount, msg );
    EditorExit( 4, false );
    }
 
@@ -385,7 +385,7 @@ FileStat GetFileStat( PCChar pszFilename ) { enum { DB=0 };
       const auto fbytes( fio::SeekEoF( fh ) );
       rv.Refresh( fh );
       fio::Close( fh );
-      DB&&DBG("%s: %I64d bytes", pszFilename, fbytes );
+      DB&&DBG("%s: %" PR__i64 "u bytes", pszFilename, fbytes );
       }
    return rv;
    }

@@ -12,6 +12,39 @@
 #define STIL  static inline
 
 #include <cinttypes>
+
+// Memory models
+//                           short int  long    long long    ptr/size_t
+// x64 Windows LLP64 IL32P64   16  32    32         64          64
+// x64 Linux   LP64  I32LP64   16  32    64         64          64
+// 32  <both>   ??     ??      16  32    32         32?         32
+
+// Check GCC
+#if __GNUC__
+#if defined(_WIN32)
+#   define PR__i64 "I64"
+#else
+#   define PR__i64 "ll"
+#endif
+#if __x86_64__ || __ppc64__
+// #define ENVIRONMENT64
+#if defined(_WIN32)
+#   define PR_SIZET "I"
+#   define PR_PTRDIFFT "I"
+#else
+#   define PR_SIZET "z"
+#   define PR_PTRDIFFT "t"
+#endif
+#else
+#   define ENVIRONMENT32
+#   define PR_SIZET ""
+#   define PR_PTRDIFFT ""
+#endif
+#else
+#error only GCC supported!
+#endif
+
+
 #include <string>
 
 #ifdef __GNUC__

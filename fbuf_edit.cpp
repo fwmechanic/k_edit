@@ -674,7 +674,7 @@ STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, PXbuf pXb, const LINE yLine, co
 
    const auto xRight( xLeft + boxWidth );
    if( xRight >= xEolNul ) { // trailing segment of line is being deleted?
-      0 && DBG( "%s trim, %Id <= %d '%c'", __func__, xEolNul, xRight, *pxLeft );
+      0 && DBG( "%s trim, %" PR_SIZET "u <= %d '%c'", __func__, xEolNul, xRight, *pxLeft );
       *pxLeft = '\0'; // the first (leftmost) char in the selected box
       return;
       }
@@ -1518,7 +1518,7 @@ COL FBUF::GetLineSeg( Xbuf &pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) con
       const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
       const auto chars( pRight - pLeft + 1 );
       const auto bufsize( 1+chars );
-      0 && DBG( "%s [%d,%p L %Iu][%d..%d]P:%p,%p (%Iu)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, bufsize );
+      0 && DBG( "%s [%d,%p L %" PR_SIZET "u][%d..%d]P:%p,%p (%" PR_SIZET "u)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, bufsize );
       const auto buf( pXb.wresize( bufsize ) );
       const auto rv( safeStrcpy( buf, bufsize, pLeft, pRight+1 ) );
 # else
@@ -1564,7 +1564,7 @@ COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl
       const auto pLeft ( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xLeftIncl  ) );
       const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
       const auto chars( pRight - pLeft + 1 );
-      0 && DBG( "%s [%d,%p L %Iu][%d..%d]P:%p,%p (%Iu)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, 1+chars );
+      0 && DBG( "%s [%d,%p L %" PR_SIZET "u][%d..%d]P:%p,%p (%" PR_SIZET "u)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, 1+chars );
       st.assign( pLeft, chars );
 # else
       Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
@@ -1590,7 +1590,7 @@ int FBUF::GetLineForInsert( PXbuf pXb, const LINE yLine, COL xIns, COL insertCol
    auto       dest     ( pXb->wbuf() );
    const auto tw       ( TabWidth() );
    auto       lineCols ( StrCols( tw, dest ) );
-   0 && DBG( "%s: gLTPR |%s| L %Iu/%d (%d)", __func__, dest, pXb->length(), lineCols, xIns );
+   0 && DBG( "%s: gLTPR |%s| L %" PR_SIZET "u/%d (%d)", __func__, dest, pXb->length(), lineCols, xIns );
    // Assert( lineCols == lineChars );
 
    if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
@@ -2177,7 +2177,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
          const auto srceos( Eos(srcbos) );
          const auto pSegStart( PtrOfColWithinStringRegion( tws, srcbos, srceos, xSrcLeft  )     );
          const auto pSegEnd  ( PtrOfColWithinStringRegion( tws, srcbos, srceos, xSrcRight ) + 1 );
-         const auto segWidth ( pSegEnd - pSegStart );  0 && DBG( "%s segWidth=%Iu", __func__, segWidth );
+         const auto segWidth ( pSegEnd - pSegStart );  0 && DBG( "%s segWidth=%" PR_SIZET "u", __func__, segWidth );
          const auto srcchars(  FBdest->GetLineForInsert( &xbd, yDst, xDst, 0 ) );
          const auto dstbuf( xbd.wresize( srcchars + segWidth + 1 ) );
          const auto pInsPt(    PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst )     );
@@ -2283,7 +2283,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
               CP_OEMCP  // but we can't (and may never), so this is the safest choice
             );
          const auto utf8len( Win32::WideCharToMultiByte( cp, 0, pszTextUTF16, utf16len, nullptr, 0, nullptr, nullptr ) ); // note this returns an int (even in x64)
-         0 && DBG( "reading UTF-16 file \"%s\": fileBytes=%I64d, utf16len=%Iu, utf8len=%d", Name(), fileBytes, utf16len, utf8len );
+         0 && DBG( "reading UTF-16 file \"%s\": fileBytes=%" PR__i64 "u, utf16len=%" PR_SIZET "u, utf8len=%d", Name(), fileBytes, utf16len, utf8len );
          PChar utf16buf;
          AllocBytesNZ( utf16buf, utf16len+1, __func__ );
          utf16buf[utf16len] = '\0';
@@ -2484,7 +2484,7 @@ IS_EOL:
 
 void FBUF::ImgBufAlloc( size_t bufBytes, int PreallocLines ) {
    d_ImgBufBytesWritten = 0;
-   0 && DBG( "ImgBufAlloc Bytes=%Iu, Lines=%d", bufBytes, PreallocLines );
+   0 && DBG( "ImgBufAlloc Bytes=%" PR_SIZET "u, Lines=%d", bufBytes, PreallocLines );
    d_cbOrigFileImage = bufBytes;
    AllocArrayNZ( d_pOrigFileImage, bufBytes, __func__ );
    SetLineCount( 0 );

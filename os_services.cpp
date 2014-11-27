@@ -22,7 +22,7 @@ OsEnv::OsEnv( PCChar argv0 ) {
    const auto len( Win32::GetModuleFileName( nullptr, BSOB(pb) ) );
    char exe_all   [ _MAX_PATH+1 ];  // "C:\dir1\dir2\k.exe"
    if( len >= sizeof(exe_all) ) {
-      DBG( "GetModuleFileName rv (%ld) >= sizeof(pb) (%Iu)\n", len, sizeof(pb) );
+      DBG( "GetModuleFileName rv (%ld) >= sizeof(pb) (%" PR_SIZET "u)\n", len, sizeof(pb) );
       Win32::ExitProcess( 1 );
       }
    argv0 = pb;

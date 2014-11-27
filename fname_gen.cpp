@@ -36,7 +36,7 @@ void ChopAscizzOnDelim( PChar cur, const PCChar pszDelim ) {
       cur = StrPastAny( c0, pszDelim );     // move cur past any extra delims
       if( c0 != cur ) { // moved past extra delims? collapse trailing non-delim content (starting @cur) to c0
          const auto shortenBy ( cur - c0  );
-         const auto chars2move( eos - cur );  0 && DBG( "moving %Iu <- %Iu L %Iu (eos=%Iu, -%Iu)", c0-p0, cur-p0, chars2move, eos-p0, shortenBy );
+         const auto chars2move( eos - cur );  0 && DBG( "moving %" PR_PTRDIFFT "u <- %" PR_PTRDIFFT "u L %" PR_PTRDIFFT "u (eos=%" PR_PTRDIFFT "u, -%" PR_PTRDIFFT "u)", c0-p0, cur-p0, chars2move, eos-p0, shortenBy );
          memmove( c0, cur, chars2move );
          eos -= shortenBy;
          }

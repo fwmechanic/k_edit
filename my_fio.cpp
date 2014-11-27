@@ -65,7 +65,7 @@ int fio::Read( int fh, PVoid pBuf, size_t bytesToRead ) {
    }
 
 int fio::Write( int fh, PCVoid pBuf, size_t bytesToWrite ) {
-   auto rv( WL( _write, write )( fh, pBuf, bytesToWrite ) );  0 && DBG( "%s [%d]: %Iu -> %d", __func__, fh, bytesToWrite, rv );
+   auto rv( WL( _write, write )( fh, pBuf, bytesToWrite ) );  0 && DBG( "%s [%d]: %" PR_SIZET "u -> %d", __func__, fh, bytesToWrite, rv );
    if( rv == -1 )
        rv = 0;
    return rv;

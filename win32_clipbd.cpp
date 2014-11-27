@@ -112,7 +112,7 @@ bool ARG::towinclip() {
 SINGLE_LINE: // HACK O'RAMA!
 
       const auto blen( lbuf.length() );
-      Msg( "%s->WinClip %Iu|%s|", ArgTypeName(), blen, lbuf.c_str() );
+      Msg( "%s->WinClip %" PR_SIZET "u|%s|", ArgTypeName(), blen, lbuf.c_str() );
 
       if( !PrepClip( blen, &hglbCopy, &hglbBytes, &bufptr ) )
          return false;

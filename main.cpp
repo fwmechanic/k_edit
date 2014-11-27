@@ -554,7 +554,7 @@ STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE star
                0 && DBG( "%s '%.*s'", FUNC, pd2Int(tagLen), pTagStart );
                return yLine + 1;
                }
-            0 && DBG( "FindRsrcTag- '%.*s' L %Id", pd2Int(tagLen), pTagStart, tagLen );
+            0 && DBG( "FindRsrcTag- '%.*s' L %" PR_PTRDIFFT "d", pd2Int(tagLen), pTagStart, tagLen );
             }
          }
       }

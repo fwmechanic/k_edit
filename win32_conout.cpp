@@ -251,7 +251,7 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
    d_xyState.size.col = newSize.col;  // the ONLY place d_xyState.size is written!
 
    const size_t cells( d_xyState.size.lin * d_xyState.size.col );
-   0 && DBG( "+%s (%dx%d) cells=%Iu->%Iu (x %Iu = %Iu)", __func__, d_xyState.size.col, d_xyState.size.lin, d_vOutputBufferCache.size(), cells
+   0 && DBG( "+%s (%dx%d) cells=%" PR_SIZET "u->%" PR_SIZET "u (x %" PR_SIZET "u = %" PR_SIZET "u)", __func__, d_xyState.size.col, d_xyState.size.lin, d_vOutputBufferCache.size(), cells
          , sizeof(d_vOutputBufferCache[0])
          , sizeof(d_vOutputBufferCache[0]) * cells
          );
@@ -753,7 +753,7 @@ int  TConsoleOutputControl::FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE 
 #if LOG_CONSOLE_WRITES
    {
    const size_t write_bytes( (xMax-xMin+1) * (yMax-yMin+1) * sizeof(ScreenCell) );
-   if( write_bytes > MAX_CON_WR_BYTES ) { DBG( "*** WriteConsoleOutput w/too-large buffer: %Iu", write_bytes ); }
+   if( write_bytes > MAX_CON_WR_BYTES ) { DBG( "*** WriteConsoleOutput w/too-large buffer: %" PR_SIZET "u", write_bytes ); }
    }
 
    for( auto iy(yMin); iy <= yMax ; ++iy ) {
@@ -1201,7 +1201,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
 
    const Point bufsize( parentCsbi.srWindow().Bottom, parentCsbi.BufferSize().col );
    enum { CON_DBG = 0 };
-   CON_DBG && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %Iu bytes) = %Iu bytes", bufsize.col, bufsize.lin, sizeof(ScreenCell), bufsize.col * bufsize.lin * sizeof(ScreenCell) );
+   CON_DBG && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET "u bytes) = %" PR_SIZET "u bytes", bufsize.col, bufsize.lin, sizeof(ScreenCell), bufsize.col * bufsize.lin * sizeof(ScreenCell) );
    if( g_pFBufConsole->LineCount() == 0 ) {
       enum { maxReadConsoleBufsize = 48*1024 };
 
@@ -1212,7 +1212,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
       // done with it."  20090818 kgoodwin
 
       const auto max_lines( maxReadConsoleBufsize / (bufsize.col * sizeof(ScreenCell)) );
-      CON_DBG && DBG( "max_lines = %Iu, 0x%IX bytes", max_lines, max_lines * bufsize.col * sizeof(ScreenCell) );
+      CON_DBG && DBG( "max_lines = %" PR_SIZET "u, 0x%" PR_SIZET "X bytes", max_lines, max_lines * bufsize.col * sizeof(ScreenCell) );
       ScreenCell *buf;
       AllocArrayNZ( buf, max_lines * bufsize.col, "<console> copy buffer" );
       Win32::COORD bufSize;
