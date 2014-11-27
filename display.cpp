@@ -3009,7 +3009,7 @@ STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, PCLineColors, b
    return Strlen( src );
    }
 
-DisplayDriverApi ddi =
+GLOBAL_VAR DisplayDriverApi g_DDI =
    { streamDisplayNoise
    , streamDisplayNoiseBlank
    , streamVidWrStrColor
@@ -3017,10 +3017,10 @@ DisplayDriverApi ddi =
    };
 
 void ddi_console() {
-   ddi.DisplayNoise      = conDisplayNoise       ;
-   ddi.DisplayNoiseBlank = conDisplayNoiseBlank  ;
-   ddi.VidWrStrColor     = conVidWrStrColor      ;
-   ddi.VidWrStrColors    = conVidWrStrColors     ;
+   g_DDI.DisplayNoise      = conDisplayNoise       ;
+   g_DDI.DisplayNoiseBlank = conDisplayNoiseBlank  ;
+   g_DDI.VidWrStrColor     = conVidWrStrColor      ;
+   g_DDI.VidWrStrColors    = conVidWrStrColors     ;
    }
 
 //***********************************************************************************************

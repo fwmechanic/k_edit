@@ -214,15 +214,15 @@ struct DisplayDriverApi
    COL   (*VidWrStrColors     )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, PCLineColors alc, bool fUserSeesNow );
    };
 
-extern DisplayDriverApi ddi;
+extern DisplayDriverApi g_DDI;
 extern void ddi_console();
 
-#define DisplayNoise( buffer )   (ddi.DisplayNoise( buffer ))
-#define DisplayNoiseBlank()      (ddi.DisplayNoiseBlank())
-#define VidWrStrColor( yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol )\
-   (ddi.VidWrStrColor( yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol ))
+#define DisplayNoise( buffer )   (g_DDI.DisplayNoise( buffer ))
+#define DisplayNoiseBlank()      (g_DDI.DisplayNoiseBlank())
+#define VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol )\
+ (g_DDI.VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol ))
 #define VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fUserSeesNow )\
-   (ddi.VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fUserSeesNow ))
+ (g_DDI.VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fUserSeesNow ))
 
 extern int   DispRawDialogStr( PCChar lbuf );
 extern int   VMsg( PCChar pszFormat, va_list val );
