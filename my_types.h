@@ -35,10 +35,12 @@
 #   define PR_SIZET "z"
 #   define PR_PTRDIFFT "t"
 #endif
+#   define PR_TIMET "ld"
 #else
 // #   define ENVIRONMENT32
 #   define PR_SIZET ""
 #   define PR_PTRDIFFT ""
+#   define PR_TIMET "l"
 #endif
 #else
 #error only GCC supported!
