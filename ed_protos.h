@@ -39,8 +39,10 @@ STIL int pd2Int( ptrdiff_t pd ) {
    if( pd >= 0 ) return (pd <= INT_MAX) ? static_cast<int>(pd) : INT_MAX;
    else          return (pd >= INT_MIN) ? static_cast<int>(pd) : INT_MIN;
    }
-
 #endif
+
+extern   int   uint_log_10( int lmax );
+
 
 typedef int (CDECL__ * pfx_strcmp )( const char *, const char * );
 typedef int (CDECL__ * pfx_strncmp)( const char *, const char *, size_t );
@@ -56,13 +58,6 @@ public:
 PFBUF    PseudoBuf( ePseudoBufType PseudoBufType, int fNew );
 
 extern bool merge_grep_buf( PFBUF dest, PFBUF src );
-
-extern int  uint_log_10( int lmax );
-
-extern int  DbgPopf( PCChar fmt, ... ) ATTR_FORMAT(1, 2);
-
-extern void FreeAllMacroDefs();
-
 
 extern PCChar ProgramVersion();
 extern PCChar ExecutableFormat();
@@ -109,6 +104,7 @@ public:
 
 extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests );
 
+extern   int  DbgPopf( PCChar fmt, ... ) ATTR_FORMAT(1, 2);
 extern   bool Confirm( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
 
     enum ConfirmResponse { crYES, crNO, crCANCEL };
@@ -307,6 +303,7 @@ extern   void  AssignLogTag( PCChar tag );
 #define        AssignStrOk( str )   AssignStrOk_( str, __FUNCTION__ )
 extern   bool  AssignStrOk_( PCChar pszStringToAssign, CPCChar __function__ );
 extern   bool  DefineMacro( PCChar pszMacroName, PCChar pszMacroCode );
+extern   void  FreeAllMacroDefs();
 extern   bool  SetKeyOk( PCChar pszCmdName, PCChar pszKeyName );
 extern   bool  AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
 
