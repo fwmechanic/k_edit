@@ -2494,7 +2494,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
       }
 
    DBG( "%s(y=%d,x=%d) from %s", __func__, newPt.lin, newPt.col, from );
-   Video::SetCursorLocnOk( newPt.lin, newPt.col );
+   Video::SetCursorLocn( newPt.lin, newPt.col );
 
    #else
 
@@ -2503,7 +2503,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
    s_CursorLocnOutsideView.lin = y;
    s_CursorLocnOutsideView.col = x;
    0 && DBG( "%s(y=%d,x=%d)", __func__, y, x );
-   Video::SetCursorLocnOk( y, x );
+   Video::SetCursorLocn( y, x );
 
    #endif
 
@@ -2520,10 +2520,6 @@ bool CursorLocnOutsideView_Get( Point *pt ) {
       return true;
       }
    return false;
-   }
-
-PCChar SetCursorShape( bool fBlockCursor ) {
-   return Video::SetCursorSizeOk( fBlockCursor ) ? nullptr : "CursorSize: Cannot set Cursor size";
    }
 
 STATIC_FXN void DrawStatusLine();
@@ -2577,7 +2573,7 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
 
    if( fCursorMovePending ) {
       did |= 0x0000000C;
-      Video::SetCursorLocnOk( cursorNew.lin, cursorNew.col );
+      Video::SetCursorLocn( cursorNew.lin, cursorNew.col );
       DISP_LL_STAT_COLLECT(++d_stats.cursorScrolls);
       }
 
@@ -3092,8 +3088,8 @@ void swidCursorsize( PChar dest, size_t sizeofDest, void *src ) {
 PCChar swixCursorsize( PCChar param ) {
    const auto val( atoi( param ) );
    switch( val ) {
-      case 0:   SetCursorShape( ToBOOL(g_iCursorSize=val) ); return nullptr;
-      case 1:   SetCursorShape( ToBOOL(g_iCursorSize=val) ); return nullptr;
+      case 0:   Video::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
+      case 1:   Video::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
       default:  return "CursorSize: Value must be 0 or 1";
       }
    }

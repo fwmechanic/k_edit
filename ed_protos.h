@@ -109,8 +109,8 @@ namespace Video {
    bool  SetScreenSizeOk( Point &newSize );
 
    bool  GetCursorState( Point *pt, bool *pfVisible );
-   bool  SetCursorLocnOk( LINE yLine, COL xCol );
-   bool  SetCursorSizeOk( bool fBigCursor );
+   void  SetCursorLocn( LINE yLine, COL xCol );
+   void  SetCursorSize( bool fBigCursor );
    bool  SetCursorVisibilityChanged( bool fVisible );
 
    COL   BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
@@ -132,7 +132,6 @@ extern   void  HideCursor();
 //    ~CursorHider() { UnhideCursor(); }
 //    };
 
-extern PCChar  SetCursorShape( bool fBlockCursor );
 extern void    Bell();
 extern void    WaitForKey();
 extern void    WaitForKey( int secondsToWait );

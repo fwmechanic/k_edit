@@ -101,8 +101,8 @@ public: //**************************************************
    Point GetMaxConsoleSize();                                 // not const cuz hits mutex!
    bool  GetCursorState( Point *pt, bool *pfVisible );        // not const cuz hits mutex!
    bool  SetConsoleSizeOk( Point &newSize );
-   bool  SetCursorLocnOk( LINE yLine, COL xCol );
-   bool  SetCursorSizeOk( bool fBigCursor );
+   void  SetCursorLocn( LINE yLine, COL xCol );
+   void  SetCursorSize( bool fBigCursor );
    bool  SetCursorVisibilityChanged( bool fVisible );
    COL   WriteLineSegToConsoleBuffer( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
    void  FlushConsoleBufferToScreen();
@@ -114,7 +114,7 @@ private://**************************************************
    void SetNewScreenSize( const Point &newSize );
 
    int  FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE yMax, COL xMin, COL xMax );
-   bool SetConsoleCursorInfoOk();
+   void SetConsoleCursorInfo();
    };
 
 STATIC_VAR TConsoleOutputControl *s_EditorScreen;
@@ -301,34 +301,34 @@ COORD WINAPI GetConsoleFontSize(HANDLE hConsoleOutput,DWORD nFont);
 //--------------------------------------------------------------------------------------------
 
 
-bool TConsoleOutputControl::SetConsoleCursorInfoOk() {
+void TConsoleOutputControl::SetConsoleCursorInfo() {
    Win32::CONSOLE_CURSOR_INFO ConsoleCursorInfo;
    ConsoleCursorInfo.bVisible = d_fCursorVisible ? TRUE : FALSE;
    ConsoleCursorInfo.dwSize = d_fBigCursor ? 100 : 25;
-   return ToBOOL(Win32::SetConsoleCursorInfo( d_hConsoleScreenBuffer, &ConsoleCursorInfo )); // NZ if OK
+   if( 0 == Win32::SetConsoleCursorInfo( d_hConsoleScreenBuffer, &ConsoleCursorInfo ) ) {
+      DBG( "**************** Win32::SetConsoleCursorInfo FAILED *********************" );
+      }
    }
 
 
-bool Video::SetCursorSizeOk( bool fBigCursor ) {
-   if(        s_EditorScreen )
-       return s_EditorScreen->SetCursorSizeOk( fBigCursor );
-
-   return 0;
+void Video::SetCursorSize( bool fBigCursor ) {
+   if( s_EditorScreen )
+       s_EditorScreen->SetCursorSize( fBigCursor );
    }
 
-bool TConsoleOutputControl::SetCursorSizeOk( bool fBigCursor ) {
+void TConsoleOutputControl::SetCursorSize( bool fBigCursor ) {
    d_fBigCursor = fBigCursor;
-   return SetConsoleCursorInfoOk();
+   SetConsoleCursorInfo();
    }
 
 
-bool TConsoleOutputControl::SetCursorVisibilityChanged( bool fVisible ) {
-   if( !fVisible &&  d_fCursorVisible ) DBG( "**************** Making CURSOR INVISIBLE *********************" );
-   if(  fVisible && !d_fCursorVisible ) DBG( "**************** Making CURSOR   VISIBLE *********************" );
+bool TConsoleOutputControl::SetCursorVisibilityChanged( bool fVisible ) { enum { DV=0 };
+   if( !fVisible &&  d_fCursorVisible ) { DV && DBG( "**************** Making CURSOR INVISIBLE *********************" ); }
+   if(  fVisible && !d_fCursorVisible ) { DV && DBG( "**************** Making CURSOR   VISIBLE *********************" ); }
    const auto retVal( d_fCursorVisible != fVisible );
    d_fCursorVisible = fVisible;
 
-   SetConsoleCursorInfoOk();
+   SetConsoleCursorInfo();
    return retVal;
    }
 
@@ -348,12 +348,11 @@ bool Video::SetCursorVisibilityChanged( bool fVisible ) {
    return s_EditorScreen ? s_EditorScreen->SetCursorVisibilityChanged( fVisible ) : 0;
    }
 
-bool Video::SetCursorLocnOk( LINE yLine, COL xCol ) {
-   return s_EditorScreen ? s_EditorScreen->SetCursorLocnOk( yLine, xCol ) : 0;
+void Video::SetCursorLocn( LINE yLine, COL xCol ) {
+   if( s_EditorScreen ) s_EditorScreen->SetCursorLocn( yLine, xCol );
    }
 
-bool TConsoleOutputControl::SetCursorLocnOk( LINE yLine, COL xCol ) {
-   auto rv(false);
+void TConsoleOutputControl::SetCursorLocn( LINE yLine, COL xCol ) {
    const Point newPt( yLine, xCol );
    AutoMutex mtx( d_mutex );
    if( d_xyState.cursor != newPt ) {
@@ -363,11 +362,8 @@ bool TConsoleOutputControl::SetCursorLocnOk( LINE yLine, COL xCol ) {
       if( Win32::SetConsoleCursorPosition( d_hConsoleScreenBuffer, dwCursorPosition ) ) {
          0 && DBG( "%lX %s(y=%d,x=%d)", Win32::GetCurrentThreadId(), __func__, yLine, xCol );
          d_xyState.cursor = newPt;
-         rv = true;
          }
       }
-
-   return rv;
    }
 
 COL Video::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
