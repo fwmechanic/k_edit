@@ -457,6 +457,8 @@ STATIC_FXN void FBufRead_AsciiTbl( PFBUF pFBuf, int ) {
    }
 
 
+typedef void (*FbufReaderFxn)( PFBUF, int );
+
 STATIC_FXN void CallFbufReader( PFBUF pFBuf, FbufReaderFxn readerFxn, int instance ) {
    pFBuf->MakeEmpty();
 

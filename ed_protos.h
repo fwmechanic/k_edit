@@ -62,9 +62,6 @@ extern void FreeAllMacroDefs();
 extern PCChar ProgramVersion();
 extern PCChar ExecutableFormat();
 
-extern PChar  Getenv( PCChar pStart, int len );
-extern PChar  GetenvStrdup( PCChar pszEnvName );
-
 extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
 extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
 extern  void   swid_ch(  PChar dest, size_t sizeofDest, char ch );
@@ -400,8 +397,6 @@ extern   void  AdjustMarksForLineInsertion( LINE Line,int LineDelta,PFBUF pFBuf 
 
 //------------ Pseudofile readers (ONLY call from ReadPseudoFileOk system!)
 
-typedef void (*FbufReaderFxn)( PFBUF, int );
-
 extern   bool  ReadPseudoFileOk( PFBUF pFBuf );
 extern   int   IsWFilesName( PCChar pszName );
 
@@ -437,6 +432,9 @@ extern   void  SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard=
 extern  Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc );
 
 extern  FileStat GetFileStat( PCChar fname );
+
+extern  PChar  Getenv( PCChar pStart, int len );
+extern  PChar  GetenvStrdup( PCChar pszEnvName );
 
 extern  bool   PutEnvOk( PCChar varName, PCChar varValue );
 extern  bool   PutEnvOk( PCChar szNameEqualsVal );
