@@ -85,7 +85,7 @@ STATIC_FXN bool SwitchToNextCmdlineFile() {
 STATIC_CONST char kszThisProgVersion[] = "2.0";
 STATIC_CONST char kszTmpFBufMagic[] = "FMT0";
 
-PCChar kszProgramVersion() {
+PCChar ProgramVersion() {
    STATIC_VAR char szProgramVersion[40];
    if( !szProgramVersion[0] )
       safeSprintf( BSOB(szProgramVersion), "Kevin's Editor %s", kszThisProgVersion );
@@ -93,7 +93,7 @@ PCChar kszProgramVersion() {
    return szProgramVersion;
    }
 
-PCChar kszExecutableFormat() {
+PCChar ExecutableFormat() {
    STATIC_CONST char kszExecutableFormat_[] =
 #ifdef __x86_64
         "x64"
@@ -181,7 +181,7 @@ STATIC_FXN void InitNewView_File( PChar filename ) {
 
 //*************************************************************************************************
 
-STATIC_FXN void saveProgVer ( FILE *fout ) { fprintf( fout, "%s\n" , kszProgramVersion() ); }
+STATIC_FXN void saveProgVer ( FILE *fout ) { fprintf( fout, "%s\n" , ProgramVersion() ); }
 STATIC_FXN void saveTsNow ( FILE *fout ) {
    linebuf lbuf;
    auto now( time( nullptr ) );
@@ -929,9 +929,9 @@ void kGetopt::VErrorOut( PCChar msg ) {
 " -e N=V set environment variable N=V within the editor and it's children\n"
 " -x mac eXecute a function or macro at startup\n"
 " -t fn  edit file fn, which will forgotten by next editor session\n"
-      , kszProgramVersion()
+      , ProgramVersion()
       , kszDtTmOfBuild
-      , kszExecutableFormat()
+      , ExecutableFormat()
       , kszDtTmOfBuild
 #ifdef __GNUC__
    #if !defined(__GNUC_PATCHLEVEL__)

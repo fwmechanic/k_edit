@@ -143,7 +143,7 @@ void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
 
 STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
-   pFBuf->FmtLastLine( "%s, %s, compiled %s", kszProgramVersion(), kszExecutableFormat(), kszDtTmOfBuild );
+   pFBuf->FmtLastLine( "%s, %s, compiled %s", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild );
    pFBuf->PutLastLine( " " );
    pFBuf->FmtLastLine( "#-------------------- %s", "Win32 Status" );
    FBufRead_Assign_Win32( pFBuf );

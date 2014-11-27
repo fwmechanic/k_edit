@@ -36,8 +36,7 @@ typedef int (CDECL__ * pfx_strncmp)( const char *, const char *, size_t );
 
 //--------------------------------------------------------------------------------------------
 
-class BoolOneShot // simple utility functor
-   {
+class BoolOneShot { // simple utility functor
    bool first;
 
    public:
@@ -55,8 +54,6 @@ extern bool merge_grep_buf( PFBUF dest, PFBUF src );
 
 extern int  uint_log_10( int lmax );
 
-extern int  KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word );
-
 extern int  DbgPopf( PCChar fmt, ... ) ATTR_FORMAT(1, 2);
 
 extern void PutULC( PCChar msg );
@@ -68,8 +65,8 @@ extern CmdData CmdDataFromNextKey();
 extern CmdData CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes );
 
 
-extern PCChar kszProgramVersion();
-extern PCChar kszExecutableFormat();
+extern PCChar ProgramVersion();
+extern PCChar ExecutableFormat();
 
 extern PChar Getenv( PCChar pStart, int len );
 extern PChar GetenvStrdup( PCChar pszEnvName );
@@ -231,10 +228,6 @@ extern void  MsgClr();
 extern void  VErrorDialogBeepf( PCChar format, va_list args );
 extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
 
-extern bool  Wins_CanResizeContent( const Point &newSize );
-extern void  Wins_ScreenSizeChanged( const Point &newSize );
-extern void  Wins_WriteStateFile( FILE *ofh );
-
 extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 // if newSize is not supported, and a supported size can be switched to:
@@ -260,6 +253,8 @@ extern   void  KillTheCurrentView();
 extern   bool  FbufKnown( PFBUF pFBuf );
 extern  PFBUF  FindFBufByName( PCChar pName );
 
+//------------ Window APIs
+
 extern   void  CreateWindow0();
 extern   void  InitNewWin( PCChar pC );
 extern   void  SetWindow0();
@@ -274,6 +269,11 @@ extern   void  SetWindowSetValidView_( PWin pWin );
 extern   void  RefreshCheckAllWindowsFBufs();
 extern   bool  SwitchToWinContainingPointOk( const Point &pt );
 
+extern   bool  Wins_CanResizeContent( const Point &newSize );
+extern   void  Wins_ScreenSizeChanged( const Point &newSize );
+extern   void  Wins_WriteStateFile( FILE *ofh );
+
+
 //------------ Assign
 
 extern   bool  SetSwitch( PCChar pszSwitchName, PCChar pszNewValue );
@@ -284,13 +284,14 @@ extern   void  AssignLogTag( PCChar tag );
 #define        AssignStrOk( str )   AssignStrOk_( str, __FUNCTION__ )
 extern   bool  AssignStrOk_( PCChar pszStringToAssign, CPCChar __function__ );
 extern   bool  DefineMacro( PCChar pszMacroName, PCChar pszMacroCode );
+extern   bool  SetKeyOk( PCChar pszCmdName, PCChar pszKeyName );
 extern   bool  AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
 
 extern   void  UnbindMacrosFromKeys();
 extern   int   edkcFromKeyname( PCChar pszKeyStr );
+extern   int   KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word );
 extern   bool  FlushKeyQueueAnythingFlushed();
 
-extern   bool  SetKeyOk( PCChar pszCmdName, PCChar pszKeyName );
 extern   void  PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite );
 extern   void  StrFromEdkc( PChar pKeyStringBuf, size_t pKeyStringBufBytes, int EdKC );
 extern   void  StrFromCmd( PChar pKeyStringBuf, size_t pKeyStringBufBytes, const CMD &CmdToFind );
@@ -302,9 +303,9 @@ extern  PCCMD  CmdFromKbdForInfo( PChar pKeyStringBuffer, size_t pKeyStringBuffe
 
 //------------ FileExtensionSettings
 
-extern void InitFileExtensionSettings();
-extern void Reread_FileExtensionSettings();
-extern void CloseFileExtensionSettings();
+extern  void   InitFileExtensionSettings();
+extern  void   Reread_FileExtensionSettings();
+extern  void   CloseFileExtensionSettings();
 
 //------------ CmdIdx
 
