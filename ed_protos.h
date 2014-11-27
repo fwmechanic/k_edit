@@ -318,14 +318,10 @@ extern   void  StrFromCmd( PChar pKeyStringBuf, size_t pKeyStringBufBytes, const
 extern   void  EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd );
 extern   int   ShowAllUnassignedKeys( PFBUF pFBuf );
 
-// extern   PChar StringOfAllKeyNamesFnIsAssignedTo( PCMD pCmdToFind, PChar pDestBuf, size_t sizeofDest );
-// extern   PChar NameToKeys( PCChar pszName, PChar pDestBuf, size_t sizeofDest );
-
+extern   void  StringOfAllKeyNamesFnIsAssignedTo( PChar pDestBuf, size_t sizeofDest, PCCMD pCmdToFind, PCChar sep );
 extern  PCCMD  CmdFromKbdForExec();
 extern  PCCMD  CmdFromKbdForInfo( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes );
-
 extern   char  CharAsciiFromKybd();
-extern   void  FlushKeyQueue();
 
 extern  PChar  ArgTypeNames( PChar buf, size_t sizeofBuf, int argval );
 

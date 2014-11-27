@@ -39,7 +39,7 @@ void StrFromCmd( PChar dest, size_t sizeofDest, const CMD &CmdToFind ) {
       }
    }
 
-PChar StringOfAllKeyNamesFnIsAssignedTo( PChar dest, size_t sizeofDest, PCCMD pCmdToFind, PCChar sep ) {
+void StringOfAllKeyNamesFnIsAssignedTo( PChar dest, size_t sizeofDest, PCCMD pCmdToFind, PCChar sep ) {
    dest[0] = '\0';
    if( pCmdToFind != pCMD_graphic ) {
       auto pCur( dest );
@@ -54,7 +54,6 @@ PChar StringOfAllKeyNamesFnIsAssignedTo( PChar dest, size_t sizeofDest, PCCMD pC
             }
          }
       }
-   return dest;
    }
 
 void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite ) {

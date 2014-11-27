@@ -423,7 +423,6 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
          SafeStrcpy( lbuf, "(many)" );
          }
       else {
-         extern PChar StringOfAllKeyNamesFnIsAssignedTo( PChar pDestBuf, size_t sizeofDest, PCCMD pCmdToFind, PCChar sep );
          StringOfAllKeyNamesFnIsAssignedTo( BSOB(lbuf), Cmd, "," );
          }
       Xbuf xbIns;
