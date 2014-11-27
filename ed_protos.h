@@ -12,6 +12,17 @@
 #error undefined PTRDIFF_MAX
 #endif
 
+//------------------------------------------------------------------------------
+//
+extern void AssertDialog_( PCChar function, int line );
+extern void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum );
+#define Assert( expr )  if( expr ) {} else { AssertDialog_( __func__, __LINE__ ); /*SW_BP;*/ }
+#define BadParamIf( rv , expr )  if( !expr ) {} else { AssertDialog_( __func__, __LINE__ ); return rv ; }
+#define GotHereDialog( pfDialogShown )  GotHereDialog_( pfDialogShown, __func__, __LINE__ )
+//
+//------------------------------------------------------------------------------
+
+
 // so far (20140209) I haven't been able to figure out a way to annotate
 // a field width or field precision printf format sub-string such that a value
 // of type larger than int (e.g.  ptrdiff_t in x64 compile mode) can be passed.
@@ -34,18 +45,12 @@ STIL int pd2Int( ptrdiff_t pd ) {
 typedef int (CDECL__ * pfx_strcmp )( const char *, const char * );
 typedef int (CDECL__ * pfx_strncmp)( const char *, const char *, size_t );
 
-//--------------------------------------------------------------------------------------------
-
 class BoolOneShot { // simple utility functor
    bool first;
-
-   public:
-
+public:
    BoolOneShot() : first(true) {}
    int operator() () { const bool rv( first ); first = false; return rv; }
    };
-
-//--------------------------------------------------------------------------------------------
 
                enum ePseudoBufType { GREP_BUF, SEL_BUF, };
 PFBUF    PseudoBuf( ePseudoBufType PseudoBufType, int fNew );
@@ -61,10 +66,6 @@ extern void FreeAllMacroDefs();
 
 extern PCChar ProgramVersion();
 extern PCChar ExecutableFormat();
-
-extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
-extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
-extern  void   swid_ch(  PChar dest, size_t sizeofDest, char ch );
 
 //----------- Arg and Selection
 
@@ -113,6 +114,7 @@ extern   bool Confirm( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
     enum ConfirmResponse { crYES, crNO, crCANCEL };
 extern   ConfirmResponse Confirm_wCancel( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
 extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... ) ATTR_FORMAT(4, 5);
+
 
 
 namespace Video {
@@ -220,11 +222,9 @@ extern int DispScreenRedraws();
 #endif//DISP_LL_STATS
 
 //--------------------------------------------------------------------------------------------
-
 // Display Driver
 
-struct DisplayDriverApi
-   {
+struct DisplayDriverApi {
    void  (*DisplayNoise)( PCChar buffer );
    void  (*DisplayNoiseBlank)();
    COL   (*VidWrStrColor      )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, int colorAttribute, bool fPadWSpcsToEol );
@@ -268,7 +268,6 @@ class VideoFlusher {
 extern   bool  fChangeFile( PCChar pszName, bool fCwdSave=true );
 extern   bool  fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( PCChar pbuf );
 
-
 extern   void  KillTheCurrentView();
 extern   bool  FbufKnown( PFBUF pFBuf );
 extern  PFBUF  FindFBufByName( PCChar pName );
@@ -296,6 +295,11 @@ extern   void  Wins_WriteStateFile( FILE *ofh );
 //------------ Assign
 
 extern   bool  SetSwitch( PCChar pszSwitchName, PCChar pszNewValue );
+
+extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
+extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
+extern  void   swid_ch(  PChar dest, size_t sizeofDest, char ch );
+
 extern   void  FBufRead_Assign_Switches( PFBUF pFBuf );
 extern   void  FBufRead_Assign_Win32( PFBUF pFBuf );
 
@@ -384,10 +388,8 @@ extern  void WalkAllCMDs( void *pCtxt, CmdVisit visit );
 
 extern  void cmdusage_updt();
 
-//-------------------------------------------------------------------------------------------------
-//
-// Mark module (deprecated)
-//
+//------------ Mark module (deprecated)
+
 extern   void  MarkDefineAtCurPos( PCChar pszNewMarkName );
 extern   bool  MarkGoto( PCChar pszMarkname );
 extern   void  AdjMarksForInsertion( PCFBUF pFBufSrc,PFBUF pFBufDest,int xLeft,int yTop,int xRight,int yBottom,int xDest,int yDest );
@@ -399,7 +401,6 @@ extern   void  AdjustMarksForLineInsertion( LINE Line,int LineDelta,PFBUF pFBuf 
 
 extern   bool  ReadPseudoFileOk( PFBUF pFBuf );
 extern   int   IsWFilesName( PCChar pszName );
-
 extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
 
 //------------ Pseudofile writers
@@ -444,18 +445,6 @@ extern  void   SetCwdChanged( PCChar newName );
 extern  bool   MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );
 
 extern  PCChar GetWordUnderPoint( PCFBUF pFBuf, Point *cursor, COL *len );
-
-//------------------------------------------------------------------------------
-//
-#define Assert( expr )  if( expr ) {} else { AssertDialog_( __func__, __LINE__ ); /*SW_BP;*/ }
-#define BadParamIf( rv , expr )  if( !expr ) {} else { AssertDialog_( __func__, __LINE__ ); return rv ; }
-extern void AssertDialog_( PCChar function, int line );
-#define GotHereDialog( pfDialogShown )  GotHereDialog_( pfDialogShown, __func__, __LINE__ )
-extern void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum );
-extern void ShowWinViewCnt( PCChar tag );  // debug!
-//
-//------------------------------------------------------------------------------
-
 
 
 //#####################  functionality implemented in  Lua  #####################
