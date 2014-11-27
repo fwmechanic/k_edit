@@ -68,7 +68,7 @@ export PLAT
 CMDTBL_ARG=other
 MV = mv
 export MV
-RM= del /F /Q
+RM= rm -f
 export RM
 EXE_EXT :=
 DLL_EXT := .so

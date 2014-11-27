@@ -47,15 +47,11 @@ namespace Path {
    extern str_t CpyFnameExt( PCChar pSrcFullname );
    extern str_t Union        ( PCChar pFirst, PCChar pSecond );
    extern str_t Absolutize   ( PCChar pszFilename );
-   // extern
-          str_t CanonizeCase ( PCChar fnmBuf )
 #if defined(_WIN32)
-      ;
+   extern str_t CanonizeCase ( PCChar fnmBuf );
 #else
-      { return str_t( fnmBuf ); }
+   STIL   str_t CanonizeCase ( PCChar fnmBuf ) { return str_t( fnmBuf ); }
 #endif
-   ;
-
    STIL bool PathChEq( const char c1, const char c2 ) {
 #if defined(_WIN32)
       return ::tolower( c1 ) == ::tolower( c2 );
