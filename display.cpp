@@ -2979,72 +2979,35 @@ VideoFlusher::~VideoFlusher() {
    }
 
 
-STATIC_FXN COL conVidWrStrColor(
-     LINE   yLineWithinConsoleWindow
-   , COL    xColWithinConsoleWindow
-   , PCChar pszStringToDisp
-   , COL    StringLen
-   , int    colorAttribute
-   , bool   fPadWSpcs
-   ) { 0 && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, colorAttribute, fPadWSpcs, pszStringToDisp );
-   COL charsWritten(0);
-   if( pszStringToDisp ) {
-      charsWritten = Video::BufferWriteString(
-           pszStringToDisp
-         , StringLen
-         , yLineWithinConsoleWindow
-         , xColWithinConsoleWindow
-         , colorAttribute
-         , fPadWSpcs
-         );
-
+STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { 0 && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
+   if( src ) {
+      const auto charsWritten( Video::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
       if( charsWritten ) {
          DISP_LL_STAT_COLLECT(++d_stats.screenRedraws);
          VideoFlushData.fDidVideoWrite = true;
+         return charsWritten;
          }
       }
-
-   return charsWritten;
+   return 0;
    }
 
-COL VidWrStrColorFlush(
-     LINE   yLineWithinConsoleWindow
-   , COL    xColWithinConsoleWindow
-   , PCChar pszStringToDisp
-   , size_t StringLen
-   , int    colorAttribute
-   , bool   fPadWSpcs
-   ) {
+COL VidWrStrColorFlush( LINE yConsole, COL xConsole, PCChar src, size_t srcChars, int attr, bool fPadWSpcs ) {
    VideoFlusher vf;
-   return VidWrStrColor(
-        yLineWithinConsoleWindow
-      , xColWithinConsoleWindow
-      , pszStringToDisp
-      , StringLen
-      , colorAttribute
-      , fPadWSpcs
-      );
+   return VidWrStrColor( yConsole, xConsole, src, srcChars, attr, fPadWSpcs );
    }
 
 //***********************************************************************************************
 
 void streamDisplayNoise( PCChar buffer ) {}
 void streamDisplayNoiseBlank() {}
-COL  streamVidWrStrColor(
-     LINE   yLineWithinConsoleWindow
-   , COL    xColWithinConsoleWindow
-   , PCChar pszStringToDisp
-   , COL    StringLen
-   , int    colorAttribute
-   , bool   fPadWSpcs
-   )
-   { fprintf( stderr, "%s\n", pszStringToDisp );
-   return Strlen( pszStringToDisp );
+COL streamVidWrStrColor( LINE, COL, PCChar src, COL, int, bool ) {
+   fprintf( stderr, "%s\n", src );
+   return Strlen( src );
    }
 
-COL  streamVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, PCLineColors alc, bool fUserSeesNow )
-   { fprintf( stderr, "%s\n", pszStringToDisp );
-   return Strlen( pszStringToDisp );
+COL streamVidWrStrColors( LINE, COL, PCChar src, COL, PCLineColors, bool ) {
+   fprintf( stderr, "%s\n", src );
+   return Strlen( src );
    }
 
 DisplayDriverApi ddi =

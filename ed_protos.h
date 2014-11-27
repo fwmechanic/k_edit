@@ -217,10 +217,8 @@ struct DisplayDriverApi
 extern DisplayDriverApi ddi;
 extern void ddi_console();
 
-#define DisplayNoise( buffer )\
-   (ddi.DisplayNoise( buffer ))
-#define DisplayNoiseBlank()\
-   (ddi.DisplayNoiseBlank())
+#define DisplayNoise( buffer )   (ddi.DisplayNoise( buffer ))
+#define DisplayNoiseBlank()      (ddi.DisplayNoiseBlank())
 #define VidWrStrColor( yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol )\
    (ddi.VidWrStrColor( yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol ))
 #define VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fUserSeesNow )\
