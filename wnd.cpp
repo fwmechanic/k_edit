@@ -667,7 +667,7 @@ void Wins_WriteStateFile( FILE *ofh ) {
       not_anon best;
       for( auto ix(0) ; ix < hdsMax; ++ix ) {
          hds[ix].ToSaveCand();
-         if( hds[ix].View() ) { DV && DBG("hds[%d] %8Id %s", ix, hds[ix].View()->TmFocusedOn(), hds[ix].View()->FBuf()->Name() );
+         if( hds[ix].View() ) { DV && DBG("hds[%d] %8" PR_PTRDIFFT "d %s", ix, hds[ix].View()->TmFocusedOn(), hds[ix].View()->FBuf()->Name() );
             best.cmp( ix, hds[ix].View()->TmFocusedOn() );
             }
          }
@@ -676,7 +676,7 @@ void Wins_WriteStateFile( FILE *ofh ) {
       // we have an entry to write to the statefile
       auto &hd( hds[ best.get_idx() ] );
       const auto pv( hd.View() );
-      DV && DBG("hds[%d] %8Id %s  *** SAVING ***", best.get_idx(), pv->TmFocusedOn(), pv->FBuf()->Name() );
+      DV && DBG("hds[%d] %8" PR_PTRDIFFT "d %s  *** SAVING ***", best.get_idx(), pv->TmFocusedOn(), pv->FBuf()->Name() );
       pv->Write( ofh );  ++iFilesSaved;
       pv->FBuf()->SetSavedToStateFile(); // prevent saving state for this file again
       hd.Next();

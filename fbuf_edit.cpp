@@ -2218,7 +2218,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    MakeEmpty();
    rdNoiseSeek();
    auto fileBytes( fio::SeekEoF( hFile ) );
-   0 && DBG( "fio::SeekEoF returns 0x%08I64X", fileBytes );
+   0 && DBG( "fio::SeekEoF returns 0x%08" PR__i64 "X", fileBytes );
    Assert( fileBytes >= 0 );
    fio::SeekBoF( hFile );
    if( fileBytes > UINT_MAX ) {

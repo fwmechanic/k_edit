@@ -228,7 +228,7 @@ STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
    s_LuaHeapSize += delta;
 
    if( nsize == 0 ) {
-      DBG_LUA_ALLOC && ptr && DBG( "%s %" PR_SIZET "u free %5Iu (%5Iu/%5Iu) P=            %p", __func__, s_LuaHeapSize, delta, osize, nsize, ptr );
+      DBG_LUA_ALLOC && ptr && DBG( "%s %" PR_SIZET "u free %5" PR_SIZET "u (%5" PR_SIZET "u/%5" PR_SIZET "u) P=            %p", __func__, s_LuaHeapSize, delta, osize, nsize, ptr );
       free( ptr );   // ANSI requires that free(nullptr) has no effect
       return nullptr;
       }
@@ -236,7 +236,7 @@ STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
    // most of this conditional code is for debug/logging purposes
 
    const PVoid rv( realloc( ptr, nsize ) );  // ANSI requires that realloc(nullptr, size) == malloc(size)
-   DBG_LUA_ALLOC && DBG( "%s %" PR_SIZET "u %s %5Iu (%5Iu/%5Iu) P=%p -> %p", __func__, s_LuaHeapSize, ptr ? "real" : "new ", delta, osize, nsize, ptr, rv );
+   DBG_LUA_ALLOC && DBG( "%s %" PR_SIZET "u %s %5" PR_SIZET "u (%5" PR_SIZET "u/%5" PR_SIZET "u) P=%p -> %p", __func__, s_LuaHeapSize, ptr ? "real" : "new ", delta, osize, nsize, ptr, rv );
 
    return rv;
    }

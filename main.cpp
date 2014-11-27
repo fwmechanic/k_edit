@@ -1004,7 +1004,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
    enum { DBGFXN=1 };
    ThisProcessInfo::Init( argv[0] );
 
-   DBGFXN && DBG( "### %s @ENTRY mem =%7Id", __func__, memdelta() );
+   DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT "d", __func__, memdelta() );
 
    TestMQ();
 
@@ -1065,11 +1065,11 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
      }
 
    {
-                                 DBGFXN && DBG( "### %s t=0 mem+=%7Id", __func__, memdelta() );
+                                 DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
    MainThreadPerfCounter pc;
 
    Video::Startup( fForceNewConsole );
-                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7Id thru Video::Startup"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru Video::Startup"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
 
    CreateWindow0();
    s_pFbufLog->PutFocusOn();
@@ -1081,7 +1081,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
       AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb ) );
       MainThreadPerfCounter px;
       LuaCtxt_Edit::InitOk( pb );
-                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7Id LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb );
+                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb );
       }
    }
    {
@@ -1091,17 +1091,17 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
       AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb ) );
       MainThreadPerfCounter px;
       LuaCtxt_State::InitOk( pb );
-                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7Id LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb );
+                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb );
       }
    }
 
    register_atexit_search();
 
-   InitFromStateFile();          DBGFXN && DBG( "### %s t=%6.3f mem+=%7Id thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-   ReinitializeMacros( false );  DBGFXN && DBG( "### %s t=%6.3f mem+=%7Id thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   InitFromStateFile();          DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   ReinitializeMacros( false );  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    MsgClr(); // hack this is the earliest that it will actually have the effect of clearing the dialog line on startup (which is REALLY necessary in dialogtop mode)
-   InitJobQueues();              DBGFXN && DBG( "### %s t=%6.3f mem+=%7Id thru InitJobQueues"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7Id done"                   , __func__, pc.Capture(), memdelta() );
+   InitJobQueues();              DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru InitJobQueues"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d done"                   , __func__, pc.Capture(), memdelta() );
    }
 
    win_fully_on_desktop();
