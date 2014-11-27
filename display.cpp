@@ -2998,14 +2998,13 @@ COL VidWrStrColorFlush( LINE yConsole, COL xConsole, PCChar src, size_t srcChars
 
 //***********************************************************************************************
 
-void streamDisplayNoise( PCChar buffer ) {}
-void streamDisplayNoiseBlank() {}
-COL streamVidWrStrColor( LINE, COL, PCChar src, COL, int, bool ) {
+STATIC_FXN void streamDisplayNoise( PCChar buffer ) {}
+STATIC_FXN void streamDisplayNoiseBlank() {}
+STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, int, bool ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
-
-COL streamVidWrStrColors( LINE, COL, PCChar src, COL, PCLineColors, bool ) {
+STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, PCLineColors, bool ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
