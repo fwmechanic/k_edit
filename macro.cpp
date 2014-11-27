@@ -264,6 +264,10 @@ STATIC_FXN bool Interpreter::AnyStackEntryBreaksOut() {
    return false;
    }
 
+namespace Interpreter {
+   bool  Interpreting_VariableMacro();
+   }
+
 bool Interpreter::Interpreting_VariableMacro() { return Interpreting() && TOS().IsVariableMacro(); }
 
 // PushMacroStringOk - "enqueue" a macro string for later consumption/execution

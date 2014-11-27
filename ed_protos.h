@@ -329,7 +329,6 @@ extern  PChar  ArgTypeNames( PChar buf, size_t sizeofBuf, int argval );
 
 namespace Interpreter {
    bool  Interpreting();
-   bool  Interpreting_VariableMacro();
 
    enum  { AskUser = -1, UseDflt = 0 }; // special cases rtnd by chGetAnyMacroPromptResponse(), must not be [1..0xFF] (valid/useful ascii chars)
    int   chGetAnyMacroPromptResponse();
@@ -346,7 +345,6 @@ namespace Interpreter {
 extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );
 extern   bool  fExecuteSafe( PCChar str );
 extern   bool  PushVariableMacro( PCChar strToExecute );
-
 extern   void  CleanupAnyExecutionHaltRequest(); // must NOT be declared _within_ Main, where it would get a DLLX attribute
 
 //------------ FileExtensionSettings
