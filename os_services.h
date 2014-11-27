@@ -213,21 +213,11 @@ class MainThreadPerfCounter : public PerfCounter {
 
    }; STD_TYPEDEFS(MainThreadPerfCounter)
 
-
-class OsEnv {
-   Path::str_t d_exe_path;  // "C:\dir1\dir2\" (includes trailing '\')
-   Path::str_t d_exe_name;  // "k"
-
-   public: //===================================================================
-
-   OsEnv( PCChar argv0 );
-
-   PCChar ExePath() const { return d_exe_path.c_str(); }  // includes trailing '\'
-   PCChar ExeName() const { return d_exe_name.c_str(); }
-   };
-
-extern const OsEnv *g_Process;
-
+namespace ThisProcessInfo {
+   void   Init( PCChar argv0 );
+   PCChar ExePath();  // includes trailing '\'
+   PCChar ExeName();
+   }
 
 // all this InterlockedExchange gyration because SetUserInterrupt() is called
 // from multiple threads (whereas g_fSystemShutdownOrLogoffRequested is not...)

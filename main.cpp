@@ -315,13 +315,13 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
    }
 
 PChar RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext ) {
-   return safeSprintf( dest, sizeofDest, "%s%s.%s", g_Process->ExePath(), g_Process->ExeName(), ext );
+   return safeSprintf( dest, sizeofDest, "%s%s.%s", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), ext );
    }
 
 STATIC_VAR Path::str_t s_stateFileDir;
 
 PChar StateFilename( PChar dest, size_t sizeofDest, PCChar ext ) {
-   return safeSprintf( dest, sizeofDest, "%s%s.%s", s_stateFileDir.c_str(), g_Process->ExeName(), ext );
+   return safeSprintf( dest, sizeofDest, "%s%s.%s", s_stateFileDir.c_str(), ThisProcessInfo::ExeName(), ext );
    }
 
 STATIC_FXN FILE *fopen_tmpfile( PCChar pModeStr ) {
@@ -508,7 +508,7 @@ STATIC_FXN bool OpenRsrcFileFailed() {
 
    STATIC_VAR Path::str_t s_pszRsrcFilename;
    if( s_pszRsrcFilename.empty() ) {
-      s_pszRsrcFilename = g_Process->ExePath() + static_cast<Path::str_t>(".krsrc");
+      s_pszRsrcFilename = ThisProcessInfo::ExePath() + static_cast<Path::str_t>(".krsrc");
       SearchEnvDirListForFile( s_pszRsrcFilename );
       }
 
@@ -575,7 +575,7 @@ class RsrcSectionWalker {
    };
 
 RsrcSectionWalker::RsrcSectionWalker( PCChar pszSectionName ) : d_lnum(0) {
-   d_tagbuf.Strcpy( g_Process->ExeName() );
+   d_tagbuf.Strcpy( ThisProcessInfo::ExeName() );
    if( pszSectionName && *pszSectionName )
       d_tagbuf.SprintfCat( "-%s", pszSectionName );
 
@@ -875,7 +875,7 @@ GLOBAL_CONST char kszTMPDIR[] = "$APPDATA:" PATH_SEP_STR "Kevins Editor";
 
 STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    PutEnvOk( "K_RUNNING?", "yes"               );
-   PutEnvOk( "KINIT"     , g_Process->ExePath() );
+   PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
 
 #if defined(_WIN32)
    #define  HOME_ENVVAR_NM  "APPDATA"
@@ -1002,7 +1002,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 #endif
    {
    enum { DBGFXN=1 };
-   g_Process = new OsEnv( argv[0] );
+   ThisProcessInfo::Init( argv[0] );
 
    DBGFXN && DBG( "### %s @ENTRY mem =%7Id", __func__, memdelta() );
 

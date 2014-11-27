@@ -1,6 +1,18 @@
 
 #include "ed_main.h"
 
+class OsEnv {
+   Path::str_t d_exe_path;  // "C:\dir1\dir2\" (includes trailing '\')
+   Path::str_t d_exe_name;  // "k"
+
+   public: //===================================================================
+
+   OsEnv( PCChar argv0 );
+
+   PCChar ExePath() const { return d_exe_path.c_str(); }  // includes trailing '\'
+   PCChar ExeName() const { return d_exe_name.c_str(); }
+   };
+
 OsEnv::OsEnv( PCChar argv0 ) {
 #if defined(_WIN32)
    argv0 = argv0; // suppress  warning: parameter 'argv0' set but not used
@@ -20,8 +32,14 @@ OsEnv::OsEnv( PCChar argv0 ) {
    d_exe_name = Path::CpyFnm  ( argv0 ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
    }
 
-GLOBAL_CONST OsEnv *g_Process;
+STATIC_VAR OsEnv *g_Process;
 
+void ThisProcessInfo::Init( PCChar argv0 ) {
+   g_Process = new OsEnv( argv0 );
+   }
+
+PCChar ThisProcessInfo::ExePath() { return g_Process->ExePath(); }  // includes trailing '\'
+PCChar ThisProcessInfo::ExeName() { return g_Process->ExeName(); }
 
 volatile InterlockedExchangeOperand s_fHaltExecution;
 
