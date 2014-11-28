@@ -111,7 +111,7 @@ private://**************************************************
 
    void  SetNewScreenSize( const Point &newSize );
 
-   int   FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE yMax, COL xMin, COL xMax );
+   int   WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL xMin, COL xMax );
    void  SetConsoleCursorInfo();
    };
 
@@ -658,17 +658,14 @@ void Win32ConsoleFontChanger::SetFont( Win32::DWORD idx ) {
       }
    }
 
-void Video::BufferFlushToScreen() {
-   if( s_EditorScreen )
-       s_EditorScreen->FlushConsoleBufferToScreen();
-   }
+void Video::BufferFlushToScreen() { if( s_EditorScreen ) s_EditorScreen->FlushConsoleBufferToScreen(); }
 
 GLOBAL_VAR int g_WriteConsoleOutputCalls;
 GLOBAL_VAR int g_WriteConsoleOutputLines;
 
 #define  LOG_CONSOLE_WRITES  0
 
-int  TConsoleOutputControl::FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE yMax, COL xMin, COL xMax ) {
+int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL xMin, COL xMax ) {
    // Win32::WriteConsoleOutput will write a minimum rectangle (WriteRegion)
    // based on the min/max dirty column taken across the line range being
    // written.  Win32::WriteConsoleOutput will read
@@ -676,97 +673,67 @@ int  TConsoleOutputControl::FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE 
    // to determine its geometry.
 
    // convert everything to Win32-isms
+   auto              srcBuffer     ( &d_vOutputBufferCache[0] );
+   Win32::COORD      srcBufferDims ; srcBufferDims.X = d_xyState.size.col; srcBufferDims.Y = d_xyState.size.lin;
+   Win32::COORD      srcOrigin     ; srcOrigin.X = xMin; srcOrigin.Y = yMin;
+   Win32::SMALL_RECT destRect      ; destRect.Top = yMin; destRect.Bottom = yMax; destRect.Left = xMin; destRect.Right = xMax;
 
-   Win32::COORD       bufferSize;
-                      bufferSize.X       = d_xyState.size.col;
-                      bufferSize.Y       = d_xyState.size.lin;
-
-   Win32::COORD       bufferCoords;
-                      bufferCoords.X     = xMin;
-                      bufferCoords.Y     = yMin;
-
-   Win32::SMALL_RECT  WriteRegion;
-                      WriteRegion.Top    = yMin;
-                      WriteRegion.Bottom = yMax;
-                      WriteRegion.Left   = xMin;
-                      WriteRegion.Right  = xMax;
-
-   Assert( WriteRegion.Left    >= 0 );
-   Assert( WriteRegion.Right   >= 0 );
-   Assert( WriteRegion.Left    <= WriteRegion.Right  );
-   Assert( WriteRegion.Top     <= WriteRegion.Bottom );
-   Assert( WriteRegion.Top     >= 0 );
-   Assert( WriteRegion.Top     <  bufferSize.Y );
-   Assert( WriteRegion.Bottom  >= 0 );
-   Assert( WriteRegion.Bottom  <  bufferSize.Y );
-
-   auto               WrittenRegion      ( WriteRegion );
-
-   Assert( WrittenRegion.Left    >= 0 );
-   Assert( WrittenRegion.Right   >= 0 );
-   Assert( WrittenRegion.Left    <= WrittenRegion.Right  );
-   Assert( WrittenRegion.Top     <= WrittenRegion.Bottom );
-   Assert( WrittenRegion.Top     >= 0 );
-   Assert( WrittenRegion.Top     <  bufferSize.Y );
-   Assert( WrittenRegion.Bottom  >= 0 );
-   Assert( WrittenRegion.Bottom  <  bufferSize.Y );
-
-#if LOG_CONSOLE_WRITES
-   {
-   const size_t write_bytes( (xMax-xMin+1) * (yMax-yMin+1) * sizeof(ScreenCell) );
-   if( write_bytes > MAX_CON_WR_BYTES ) { DBG( "*** WriteConsoleOutput w/too-large buffer: %" PR_SIZET "u", write_bytes ); }
-   }
-
-   for( auto iy(yMin); iy <= yMax ; ++iy ) {
-      for( auto ix(xMin); ix <= xMax ; ++ix ) {
-         auto pCell( &d_vOutputBufferCache[ (iy*d_xyState.size.col)+ix ] );
-         const auto ch( pCell->Char.AsciiChar );
-         if( ch < ' ' || ch > 0x7E ) { DBG( "*** writing junk (0x%02X) to WriteConsoleOutput[%3d][%3d]", ch, iy, ix ); }
-      // else           { DBG( "*** first char is '%c'", ch ); }
+   if( 0 ) {
+      Assert( destRect.Left    >= 0 );
+      Assert( destRect.Right   >= 0 );
+      Assert( destRect.Left    <= destRect.Right  );
+      Assert( destRect.Top     <= destRect.Bottom );
+      Assert( destRect.Top     >= 0 );
+      Assert( destRect.Top     <  srcBufferDims.Y );
+      Assert( destRect.Bottom  >= 0 );
+      Assert( destRect.Bottom  <  srcBufferDims.Y );
+      }
+   if( LOG_CONSOLE_WRITES ) {
+      const size_t write_bytes( (xMax-xMin+1) * (yMax-yMin+1) * sizeof(ScreenCell) );
+      if( write_bytes > MAX_CON_WR_BYTES ) { DBG( "*** WriteConsoleOutput w/too-large buffer: %" PR_SIZET "u", write_bytes ); }
+      for( auto iy(yMin); iy <= yMax ; ++iy ) {
+         for( auto ix(xMin); ix <= xMax ; ++ix ) {
+            auto pCell( &d_vOutputBufferCache[ (iy*d_xyState.size.col)+ix ] );
+            const auto ch( pCell->Char.AsciiChar );
+            if( ch < ' ' || ch > 0x7E ) { DBG( "*** writing junk (0x%02X) to WriteConsoleOutput[%3d][%3d]", ch, iy, ix ); }
+         // else           { DBG( "*** first char is '%c'", ch ); }
+            }
          }
-      }
-   DBG( "*** junk-check done" );
-
-#endif
-
-   if( !
-         Win32::WriteConsoleOutputA(  // <---------------------------------------------------
-              d_hConsoleScreenBuffer  // <---------------------------------------------------
-            , &d_vOutputBufferCache[0] // The data to be written to the console screen buffer; treated as the origin of a two-dimensional array of CHAR_INFO structures whose size is specified by the dwBufferSize parameter. The total size of the array must be less than 64K.
-            , bufferSize              // The size of the buffer pointed to by the lpBuffer parameter, in character cells.
-            , bufferCoords            // The coordinates of the upper-left cell in the buffer pointed to by the lpBuffer parameter.
-            , &WrittenRegion          // ON INPUT , the structure members specify the upper-left and lower-right coordinates of the console screen buffer rectangle to write to.
-                                      // ON OUTPUT, the structure members specify the actual rectangle that was used.
-            )
-     ) {
-      linebuf oseb;
-      DBG( "%s FAILED: %s", "WriteConsoleOutput", OsErrStr( BSOB(oseb) ) );
+      DBG( "*** junk-check done" );
       }
 
-#if (1 || LOG_CONSOLE_WRITES)
-   if(  WrittenRegion.Top    != WriteRegion.Top
-     || WrittenRegion.Bottom != WriteRegion.Bottom
-     || WrittenRegion.Left   != WriteRegion.Left
-     || WrittenRegion.Right  != WriteRegion.Right
-     ) {
-       DBG( "*** WriteConsoleOutput WrittenRegion != WriteRegion" );
-       }
-#endif
+   const auto before( destRect );
+   if( !Win32::WriteConsoleOutputA(
+             d_hConsoleScreenBuffer // dest buffer handle
+           , srcBuffer      // The data to be written to the console screen buffer; treated as the origin of a two-dimensional array of CHAR_INFO structures whose size is specified by srcBufferDims. The total size of the array must be less than 64K.
+           , srcBufferDims  // The X,Y size of the buffer pointed to by the lpBuffer parameter, in character cells.
+           , srcOrigin      // The coordinates of the upper-left cell in the buffer pointed to by the lpBuffer parameter.
+           , &destRect      // ON INPUT , the structure members specify the upper-left and lower-right coordinates of the console screen buffer rectangle to write to.
+                            // ON OUTPUT, the structure members specify the actual rectangle that was used.
+           )
+     ) { linebuf oseb; DBG( "%s FAILED: %s", "WriteConsoleOutput", OsErrStr( BSOB(oseb) ) ); }
 
-#if LOG_CONSOLE_WRITES
-   g_WriteConsoleOutputCalls++;
-   g_WriteConsoleOutputLines += WriteRegion.Bottom - WriteRegion.Top + 1;
-   DBG( "%s --- Win32::WriteConsoleOutput [%3d..%3d], [%3d..%3d]", __func__, WriteRegion.Top, WriteRegion.Bottom, WriteRegion.Left, WriteRegion.Right );
-   return 1;
-#else
-   return 0;
-#endif
+   if( LOG_CONSOLE_WRITES &&
+       (  before.Top    != destRect.Top
+       || before.Bottom != destRect.Bottom
+       || before.Left   != destRect.Left
+       || before.Right  != destRect.Right
+       )
+     ) { DBG( "*** WriteConsoleOutput before != destRect" ); }
+
+   if( LOG_CONSOLE_WRITES ) {
+      g_WriteConsoleOutputCalls++;
+      g_WriteConsoleOutputLines += destRect.Bottom - destRect.Top + 1;
+      DBG( "%s --- Win32::WriteConsoleOutput [%3d..%3d], [%3d..%3d]", __func__, destRect.Top, destRect.Bottom, destRect.Left, destRect.Right );
+      return 1;
+      }
+   else {
+      return 0;
+      }
    }
 
 void TConsoleOutputControl::FlushConsoleBufferToScreen() {
-#if LOG_CONSOLE_WRITES
    auto ConWriteCount(0);
-#endif
    AutoMutex mtx( d_mutex );  //##################################################
 
 #define  CONSOLE_VIDEO_FLUSH_MODE   1
@@ -780,13 +747,11 @@ void TConsoleOutputControl::FlushConsoleBufferToScreen() {
    // Win32::WriteConsoleOutputA many many times
 
    if( d_LineToUpdt.first <= d_LineToUpdt.last ) {
-#if LOG_CONSOLE_WRITES
-      DBG( "%s *** line range %d..%d", __func__, d_LineToUpdt.first, d_LineToUpdt.last );
-#endif
+      LOG_CONSOLE_WRITES && DBG( "%s *** line range %d..%d", __func__, d_LineToUpdt.first, d_LineToUpdt.last );
 
 #if  CONSOLE_VIDEO_FLUSH_MODE
-      auto yLine( d_LineToUpdt.first );
-      while( yLine <= d_LineToUpdt.last ) {
+      for( auto yLine( d_LineToUpdt.first ) ; yLine <= d_LineToUpdt.last ; ) {
+         // find next sequence of dirty lines
          for( ; yLine <= d_LineToUpdt.last; ++yLine )
             if( d_vLineControl[yLine].fLineDirty() )  //*** skip leading not-dirty lines
                break;
@@ -795,37 +760,34 @@ void TConsoleOutputControl::FlushConsoleBufferToScreen() {
             break;
 
          const auto firstDirtyLine( yLine ); // drop anchor
-         auto xMin(COL_MAX);  auto xMax(-1);
          for( ; yLine < d_LineToUpdt.last; ++yLine )
             if( !d_vLineControl[yLine+1].fLineDirty() )
                break;
 
+         // next sequence of dirty lines = [firstDirtyLine..yLine];
+         // find minimum dirty column-set [xMin..xMax] across this range of lines
+         auto xMin(COL_MAX);  auto xMax(-1);
          for( auto iy(firstDirtyLine); iy <= yLine; ++iy ) {
             auto & lc( d_vLineControl[iy] );
-            if( lc.fLineDirty() ) {
+            // Assert( lc.fLineDirty() );
+            // if( lc.fLineDirty() )
+               {
                lc.BoundValidColumns( &xMin, &xMax );
                lc.Undirty();
                }
             }
-
-         Assert( xMin != COL_MAX );
-
+         // Assert( xMin != COL_MAX );
 #else
          const auto xMin(0);  const auto xMax(d_xyState.size.col-1);
          const auto firstDirtyLine( d_LineToUpdt.first );
          const auto yLine         ( d_LineToUpdt.last  );
 #endif
-#if LOG_CONSOLE_WRITES
-         ConWriteCount +=
-#endif
-         FlushConsoleBufferLineRangeToWin32( firstDirtyLine, yLine, xMin, xMax );
+         ConWriteCount += WriteConsoleOutput_wrap( firstDirtyLine, yLine, xMin, xMax );
 #if  CONSOLE_VIDEO_FLUSH_MODE
          }
 #endif
       NullifyUpdtLineRange();
-#if LOG_CONSOLE_WRITES
-      DBG( "%s *** %d calls", __func__, ConWriteCount );
-#endif
+      LOG_CONSOLE_WRITES && DBG( "%s *** %d calls", __func__, ConWriteCount );
       }
    }
 
