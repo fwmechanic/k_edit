@@ -35,7 +35,7 @@
 #else
 #   define PR_SIZET "z"
 #   define PR_PTRDIFFT "t"
-#   define PR_TIMET "ll"
+#   define PR_TIMET "l"
 #endif
 #else
 // #   define ENVIRONMENT32
