@@ -123,7 +123,6 @@ void VidInitApiError( PCChar errmsg ) {
    fprintf( stderr, "%s", errmsg );
    }
 
-
 class ConsoleScreenBufferInfo {
    Win32::HANDLE                     d_hCSB;
    bool                              d_isValid;
@@ -149,42 +148,31 @@ public:
 
 ConsoleScreenBufferInfo::ConsoleScreenBufferInfo( Win32::HANDLE hCSB, PCChar name, bool fFailQuietly )
    : d_hCSB( hCSB )
-   {
-   // NB: Win32::GetLargestConsoleWindowSize RESULT will CHANGE as font of
-   //     console is changed (via window-properties dialogs) as we run.
+   { // NB: Win32::GetLargestConsoleWindowSize RESULT can CHANGE as console font is changed (via window-properties dialogs) as we run.
    d_maxSize = Win32::GetLargestConsoleWindowSize( d_hCSB );
    //  /----------------------------------\ <-- documented GetLargestConsoleWindowSize API failure indicator
    if( d_maxSize.X == 0 || d_maxSize.Y == 0 || !GetConsoleScreenBufferInfo( d_hCSB, &d_csbi ) ) {
       d_isValid = false;
       if( name && !fFailQuietly ) {
-         linebuf oseb;
-         VidInitApiError( FmtStr<120>( "Win32::GetConsoleScreenBufferInfo on %s FAILED: %s", name, OsErrStr( BSOB(oseb) ) ) );
+         linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::GetConsoleScreenBufferInfo on %s FAILED: %s", name, OsErrStr( BSOB(oseb) ) ) );
          }
       }
    else {
       d_isValid = true;
-
-#if 0
-      // NOTE that sadly we CANNOT create/expand console windows beyond GetLargestConsoleWindowSize
-      // (we _sometimes_ desire to do this when running on a homogenous multi-monitor rig)
-      // because SetConsoleWindowInfo fails.  This is apparently an OS limitation, and I get NO hits
-      // on the web that indicate this is even considered a problem, much less offer a workaround.
-      //
-      // 20100324 kgoodwin
-
-      const auto smcxvs = Win32::GetSystemMetrics(SM_CXVIRTUALSCREEN), smcxs = Win32::GetSystemMetrics(SM_CXSCREEN);
-      const auto smcyvs = Win32::GetSystemMetrics(SM_CYVIRTUALSCREEN), smcys = Win32::GetSystemMetrics(SM_CYSCREEN);
-
-      const auto ratX = (double)smcxvs / smcxs;
-      const auto ratY = (double)smcyvs / smcys;
-
-      d_maxSize.X *= ratX;
-      d_maxSize.Y *= ratY;
-
-      DBG( "smcxvs=%d, smcxs=%d, ratX=%5.3f, d_maxSize.X=%d", smcxvs, smcxs, ratX, d_maxSize.X );
-      DBG( "smcyvs=%d, smcys=%d, ratY=%5.3f, d_maxSize.Y=%d", smcxvs, smcxs, ratX, d_maxSize.Y );
-#endif
-
+      if( 0 ) {
+         // NOTE that sadly we CANNOT create/expand console windows beyond GetLargestConsoleWindowSize
+         // (we _sometimes_ desire to do this when running on a homogenous multi-monitor rig)
+         // because SetConsoleWindowInfo fails.  This is apparently an OS limitation, and I get NO hits
+         // on the web that indicate this is even considered a problem, much less offer a workaround.
+         //
+         // 20100324 kgoodwin
+         const auto smcxvs = Win32::GetSystemMetrics(SM_CXVIRTUALSCREEN); const auto smcxs = Win32::GetSystemMetrics(SM_CXSCREEN);
+         const auto smcyvs = Win32::GetSystemMetrics(SM_CYVIRTUALSCREEN); const auto smcys = Win32::GetSystemMetrics(SM_CYSCREEN);
+         const auto ratX = (double)smcxvs / smcxs;
+         const auto ratY = (double)smcyvs / smcys;
+         d_maxSize.X *= ratX;  DBG( "smcxvs=%d, smcxs=%d, ratX=%5.3f, d_maxSize.X=%d", smcxvs, smcxs, ratX, d_maxSize.X );
+         d_maxSize.Y *= ratY;  DBG( "smcyvs=%d, smcys=%d, ratY=%5.3f, d_maxSize.Y=%d", smcxvs, smcxs, ratX, d_maxSize.Y );
+         }
       if( name ) {
          const auto winSize( WindowSize() );
          const auto bufSize( BufferSize() );
@@ -197,21 +185,16 @@ ConsoleScreenBufferInfo::ConsoleScreenBufferInfo( Win32::HANDLE hCSB, PCChar nam
       }
    }
 
-
-//
 // Given a ConsoleScreenBuffer handle, create a COC and init it with/using the
 // dimensions, dflt colors, etc. of that ConsoleScreenBuffer
 //
-
 STATIC_FXN Win32::HANDLE NewConsoleScreenBuffer( PCChar tag ) {
    0 && DBG( "%s+ from %s", __func__, tag );
    const auto hcsb( Win32::CreateConsoleScreenBuffer( (GENERIC_READ | GENERIC_WRITE), (FILE_SHARE_READ|FILE_SHARE_WRITE), nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr ) );
    if( hcsb == Win32::Invalid_Handle_Value() ) {
-      linebuf oseb;
-      VidInitApiError( FmtStr<120>( "Win32::CreateConsoleScreenBuffer FAILED: 0x%08lX=%s", Win32::GetLastError(), OsErrStr( BSOB(oseb) ) ) );
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::CreateConsoleScreenBuffer FAILED: 0x%08lX=%s", Win32::GetLastError(), OsErrStr( BSOB(oseb) ) ) );
       exit( 1 );
       }
-   0 && DBG( "Win32::CreateConsoleScreenBuffer" );
    0 && DBG( "%s- from %s", __func__, tag );
    return hcsb;
    }
@@ -224,27 +207,24 @@ TConsoleOutputControl::TConsoleOutputControl( int yHeight, int xWidth )
 
    // associate d_hConsoleScreenBuffer w/"the window" FIRST so that csbi, which
    // is derived from d_hConsoleScreenBuffer, will return correct window dims
-
    if( Win32::SetConsoleActiveScreenBuffer( d_hConsoleScreenBuffer ) == 0 ) {
-      linebuf oseb;
-      VidInitApiError( FmtStr<120>( "Win32::SetConsoleActiveScreenBuffer FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleActiveScreenBuffer FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
       exit( 1 );
       }
 
-   Point newSize{ .lin=yHeight, .col=xWidth };
+   Point newSize; newSize.lin=yHeight; newSize.col=xWidth;
    SetConsoleSizeOk( newSize );
 
    const ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "new editor console" );
-   if( !csbi.isValid() )
+   if( !csbi.isValid() ) {
       exit( 1 ); // error-msgs already displayed, just bail
-
+      }
    d_xyState.cursor = csbi.CursorPosition();
    }
 
 void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
    d_xyState.size.lin = newSize.lin; // the ONLY place d_xyState.size is written!
-   d_xyState.size.col = newSize.col;  // the ONLY place d_xyState.size is written!
-
+   d_xyState.size.col = newSize.col; // the ONLY place d_xyState.size is written!
    const size_t cells( d_xyState.size.lin * d_xyState.size.col );
    0 && DBG( "+%s (%dx%d) cells=%" PR_SIZET "u->%" PR_SIZET "u (x %" PR_SIZET "u = %" PR_SIZET "u)", __func__, d_xyState.size.col, d_xyState.size.lin, d_vOutputBufferCache.size(), cells
          , sizeof(d_vOutputBufferCache[0])
@@ -252,14 +232,11 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
          );
    d_vOutputBufferCache.resize( cells              );
    d_vLineControl      .resize( d_xyState.size.lin );
-   {
    auto pChIB( &d_vOutputBufferCache[0] );
    for( auto &lc : d_vLineControl ) {
       lc.Init( pChIB, pChIB + d_xyState.size.col );
       pChIB += d_xyState.size.col;
       }
-   }
-
    NullifyUpdtLineRange();
    0 && DBG( "-%s (%dx%d)", __func__, d_xyState.size.col, d_xyState.size.lin );
    }
@@ -504,8 +481,7 @@ Point Video::GetMaxConsoleSize() {
 Point TConsoleOutputControl::GetMaxConsoleSize() {
    AutoMutex mtx( d_mutex );  //##################################################
    const ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "console resize" );
-   if( !csbi.isValid() ) {
-      DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
+   if( !csbi.isValid() ) { DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
       return Point(0,0);
       }
    auto rv( csbi.MaxBufSize() );
@@ -677,7 +653,7 @@ void Win32ConsoleFontChanger::SetFont( Win32::DWORD idx ) {
       if( write_bytes > MAX_CON_WR_BYTES ) {
          xWidth = MAX_CON_WR_BYTES / ((yHeight-2) * sizeof(ScreenCell));
          }
-      Point newSize{ .lin=yHeight, .col=xWidth };
+      Point newSize; newSize.lin=yHeight; newSize.col=xWidth;
       Video::SetScreenSizeOk( newSize );
       }
    }
