@@ -12,53 +12,12 @@
 // see for good explanations:
 // http://www.adrianxw.dk/SoftwareSite/Consoles/Consoles5.html
 
-
-//
 //  BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT
 //  BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT
 //  BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT
 //  BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT BEGIN CONSOLE_OUTPUT
-//
 
 typedef Win32::CHAR_INFO ScreenCell; // this is copied from our cache by Win32::WriteConsoleOutputA
-
-class TConsoleOutputCacheLineInfo {
-   COL         d_xMinDirty;
-   COL         d_xMaxDirty;
-   ScreenCell *d_paCHAR_INFO_BufStart;
-
-public:
-
-   bool fLineDirty() const { return d_xMinDirty <= d_xMaxDirty; }
-
-   void ColUpdated( int col ) {
-      Min( &d_xMinDirty, col );
-      Max( &d_xMaxDirty, col );
-      }
-
-   void BoundValidColumns( COL *minColUpdated, COL *maxColUpdated ) const {
-      Min( minColUpdated, d_xMinDirty );
-      Max( maxColUpdated, d_xMaxDirty );
-      }
-
-   ScreenCell *BufPtrOfCol( int col ) const {
-      return d_paCHAR_INFO_BufStart + col;
-      }
-
-   void Undirty() {
-      d_xMinDirty = INT_MAX;
-      d_xMaxDirty = -1;
-      }
-
-   void Init( ScreenCell *pChIB, ScreenCell *pChIB_pastend ) {
-      Undirty();
-      d_paCHAR_INFO_BufStart = pChIB;
-      for( ; pChIB < pChIB_pastend; ++pChIB ) {
-         pChIB->Attributes     = 0;  // attribute and char of actual data WILL NOT BE 0 : 0,
-         pChIB->Char.AsciiChar = '\0';  // ensuring initial actual data write will be "dirtying"
-         }
-      }
-   };
 
 struct W32_ScreenSize_CursorLocn {
    Point size;
@@ -66,6 +25,45 @@ struct W32_ScreenSize_CursorLocn {
    };
 
 class TConsoleOutputControl {
+
+   class TConsoleOutputCacheLineInfo {
+      COL         d_xMinDirty;
+      COL         d_xMaxDirty;
+      ScreenCell *d_paCHAR_INFO_BufStart;
+
+   public:
+
+      bool fLineDirty() const { return d_xMinDirty <= d_xMaxDirty; }
+
+      void ColUpdated( int col ) {
+         Min( &d_xMinDirty, col );
+         Max( &d_xMaxDirty, col );
+         }
+
+      void BoundValidColumns( COL *minColUpdated, COL *maxColUpdated ) const {
+         Min( minColUpdated, d_xMinDirty );
+         Max( maxColUpdated, d_xMaxDirty );
+         }
+
+      ScreenCell *BufPtrOfCol( int col ) const {
+         return d_paCHAR_INFO_BufStart + col;
+         }
+
+      void Undirty() {
+         d_xMinDirty = INT_MAX;
+         d_xMaxDirty = -1;
+         }
+
+      void Init( ScreenCell *pChIB, ScreenCell *pChIB_pastend ) {
+         Undirty();
+         d_paCHAR_INFO_BufStart = pChIB;
+         for( ; pChIB < pChIB_pastend; ++pChIB ) {
+            pChIB->Attributes     = 0;  // attribute and char of actual data WILL NOT BE 0 : 0,
+            pChIB->Char.AsciiChar = '\0';  // ensuring initial actual data write will be "dirtying"
+            }
+         }
+      };
+
    const Win32::HANDLE d_hConsoleScreenBuffer;
 
    std::vector<TConsoleOutputCacheLineInfo> d_vLineControl; // one per line
@@ -111,10 +109,10 @@ public: //**************************************************
 
 private://**************************************************
 
-   void SetNewScreenSize( const Point &newSize );
+   void  SetNewScreenSize( const Point &newSize );
 
-   int  FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE yMax, COL xMin, COL xMax );
-   void SetConsoleCursorInfo();
+   int   FlushConsoleBufferLineRangeToWin32( LINE yMin, LINE yMax, COL xMin, COL xMax );
+   void  SetConsoleCursorInfo();
    };
 
 STATIC_VAR TConsoleOutputControl *s_EditorScreen;
@@ -255,12 +253,8 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
          , sizeof(d_vOutputBufferCache[0])
          , sizeof(d_vOutputBufferCache[0]) * cells
          );
-   if( d_vOutputBufferCache.size() < cells ) {
-       d_vOutputBufferCache.resize(  cells );
-       }
-   if( d_vLineControl.size() < d_xyState.size.lin ) {
-       d_vLineControl.resize(  d_xyState.size.lin );
-       }
+   d_vOutputBufferCache.resize( cells              );
+   d_vLineControl      .resize( d_xyState.size.lin );
    {
    auto pChIB( &d_vOutputBufferCache[0] );
    for( auto &lc : d_vLineControl ) {
@@ -272,9 +266,6 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
    NullifyUpdtLineRange();
    0 && DBG( "-%s (%dx%d)", __func__, d_xyState.size.col, d_xyState.size.lin );
    }
-
-
-GLOBAL_VAR volatile bool g_fSystemShutdownOrLogoffRequested;
 
 HANDLE_CTRL_CLOSE_EVENT( volatile bool g_fProcessExitRequested; )
 

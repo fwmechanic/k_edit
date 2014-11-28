@@ -182,6 +182,7 @@ void Conin_Init() {
    ConsoleInputAcquire();
    }
 
+GLOBAL_VAR volatile bool g_fSystemShutdownOrLogoffRequested;
 
 STATIC_FXN Win32::BOOL K_STDCALL CtrlBreakHandler( Win32::DWORD dwCtrlType ) {
    // NB: This function is called from/on a BRAND NEW THREAD created by the OS
