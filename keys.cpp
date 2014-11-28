@@ -116,8 +116,8 @@ void WaitForKey( int secondsToWait ) {
 
    SpinChar sc;
 
-   const auto timeEnd( time( nullptr ) + secondsToWait + 1 );
-   time_t timeNow;
+   auto timeNow( time( nullptr ) );
+   const auto timeEnd( timeNow + secondsToWait + 1 );
    auto maxWidth(0);
    do {
       if( FlushKeyQueueAnythingFlushed() )

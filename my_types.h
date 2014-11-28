@@ -31,11 +31,12 @@
 #if defined(_WIN32)
 #   define PR_SIZET "I"
 #   define PR_PTRDIFFT "I"
+#   define PR_TIMET "I64"
 #else
 #   define PR_SIZET "z"
 #   define PR_PTRDIFFT "t"
+#   define PR_TIMET "ll"
 #endif
-#   define PR_TIMET "ld"
 #else
 // #   define ENVIRONMENT32
 #   define PR_SIZET ""
