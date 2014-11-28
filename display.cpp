@@ -2969,12 +2969,12 @@ void View::ScrollOriginYX( LINE yLine, COL xCol ) {
 
 STATIC_VAR struct {
    bool fDidVideoWrite;
-   } VideoFlushData;
+   } s_VideoFlushData;
 
 VideoFlusher::~VideoFlusher() {
-   if( d_fWantToFlush && VideoFlushData.fDidVideoWrite ) {
+   if( d_fWantToFlush && s_VideoFlushData.fDidVideoWrite ) {
       Video::BufferFlushToScreen();
-      VideoFlushData.fDidVideoWrite = false;
+      s_VideoFlushData.fDidVideoWrite = false;
       }
    }
 
@@ -2984,7 +2984,7 @@ STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL sr
       const auto charsWritten( Video::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
       if( charsWritten ) {
          DISP_LL_STAT_COLLECT(++d_stats.screenRedraws);
-         VideoFlushData.fDidVideoWrite = true;
+         s_VideoFlushData.fDidVideoWrite = true;
          return charsWritten;
          }
       }

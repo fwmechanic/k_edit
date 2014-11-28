@@ -263,12 +263,9 @@ void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
        }
    {
    auto pChIB( &d_vOutputBufferCache[0] );
-   const auto pPastEnd( &d_vLineControl[d_xyState.size.lin] );
-   for(  auto pLC     ( &d_vLineControl[0])
-      ; pLC < pPastEnd
-      ; ++pLC, pChIB += d_xyState.size.col
-      ) {
-      pLC->Init( pChIB, pChIB + d_xyState.size.col );
+   for( auto &lc : d_vLineControl ) {
+      lc.Init( pChIB, pChIB + d_xyState.size.col );
+      pChIB += d_xyState.size.col;
       }
    }
 
