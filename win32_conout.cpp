@@ -1183,13 +1183,11 @@ bool ARG::ctwk() {
 //   BEGIN INIT_N_MISC  BEGIN INIT_N_MISC  BEGIN INIT_N_MISC  BEGIN INIT_N_MISC  BEGIN INIT_N_MISC  BEGIN INIT_N_MISC
 //
 
-STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, const Win32::ConsoleScreenBufferInfo &parentCsbi ) {
+STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, const Win32::ConsoleScreenBufferInfo &parentCsbi ) { enum { CON_DBG = 0 };
    // scrollback buffer may be vast, and is absolutely empty below parentCsbi.srWindow().Bottom,
    // so to save time and RAM, don't read below parentCsbi.srWindow().Bottom
-
-   const Point bufsize( parentCsbi.srWindow().Bottom, parentCsbi.BufferSize().col );
-   enum { CON_DBG = 0 };
-   CON_DBG && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET "u bytes) = %" PR_SIZET "u bytes", bufsize.col, bufsize.lin, sizeof(ScreenCell), bufsize.col * bufsize.lin * sizeof(ScreenCell) );
+   const Point src_size( parentCsbi.srWindow().Bottom, parentCsbi.BufferSize().col );
+   CON_DBG && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET "u bytes) = %" PR_SIZET "u bytes", src_size.col, src_size.lin, sizeof(ScreenCell), src_size.col * src_size.lin * sizeof(ScreenCell) );
    if( g_pFBufConsole->LineCount() == 0 ) {
       enum { maxReadConsoleBufsize = 48*1024 };
 
@@ -1199,51 +1197,44 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
       // assume the limit is much smaller than the documented limit and be
       // done with it."  20090818 kgoodwin
 
-      const auto max_lines( maxReadConsoleBufsize / (bufsize.col * sizeof(ScreenCell)) );
-      CON_DBG && DBG( "max_lines = %" PR_SIZET "u, 0x%" PR_SIZET "X bytes", max_lines, max_lines * bufsize.col * sizeof(ScreenCell) );
-      ScreenCell *buf;
-      AllocArrayNZ( buf, max_lines * bufsize.col, "<console> copy buffer" );
-      Win32::COORD bufSize;
-      bufSize.X  = bufsize.col;
-      bufSize.Y  = max_lines;
-      auto lcnt( max_lines );
-      for( auto iy(0) ; iy < bufsize.lin ; iy += lcnt ) {
-         if( lcnt > bufsize.lin - iy )
-             lcnt = bufsize.lin - iy;
-
-         Win32::COORD bufPos = {0,0};
-         Win32::SMALL_RECT copyFromRect;
-         copyFromRect.Left   = 0;
-         copyFromRect.Top    = iy;
-         copyFromRect.Right  = bufsize.col-1;
-         copyFromRect.Bottom = iy + lcnt - 1;
-         CON_DBG && DBG( "ReadConsoleOutputA( bufSize=(%dx%d), bufPos=(%d,%d), copyFromRect=[(%d,%d),(%d,%d)] )", bufSize.X, bufSize.Y, bufPos.X, bufPos.X
-            , copyFromRect.Left
-            , copyFromRect.Top
-            , copyFromRect.Right
-            , copyFromRect.Bottom
-            );
-         if( Win32::ReadConsoleOutputA( hConout, buf, bufSize, bufPos, &copyFromRect ) == 0 ) {
+      Win32::COORD dest_buf_size;
+      dest_buf_size.X  = src_size.col;
+      dest_buf_size.Y  = ( maxReadConsoleBufsize / (src_size.col * sizeof(ScreenCell)) );
+      CON_DBG && DBG( "dest_buf_size.Y = %u, 0x%" PR_SIZET "X bytes", dest_buf_size.Y, dest_buf_size.Y * src_size.col * sizeof(ScreenCell) );
+      ScreenCell *dest_buf;
+      AllocArrayNZ( dest_buf, dest_buf_size.Y * src_size.col, "<console> copy buffer" );
+      std::string chbuf;
+      auto lcnt( dest_buf_size.Y );
+      for( auto iy(0) ; iy < src_size.lin ; iy += lcnt ) {
+         if( lcnt > src_size.lin - iy ) {
+             lcnt = src_size.lin - iy;
+             }
+         Win32::COORD bufPos = {0,0};          // const for all iterations, but since Win32 API does not take as const, best to rewrite each iter
+         Win32::SMALL_RECT srcRgn;
+         srcRgn.Left   = 0;              // const for all iterations, but Win32 API documents this as "[in, out]", we must rewrite each iter
+         srcRgn.Right  = src_size.col-1; // const for all iterations, but Win32 API documents this as "[in, out]", we must rewrite each iter
+         srcRgn.Top    = iy;
+         srcRgn.Bottom = iy + lcnt - 1;
+         CON_DBG && DBG( "ReadConsoleOutputA srcRgn: Y=(%4d,%4d), X=(%d,%d)", srcRgn.Top, srcRgn.Bottom, srcRgn.Left, srcRgn.Right );
+         if( Win32::ReadConsoleOutputA( hConout, dest_buf, dest_buf_size, bufPos, &srcRgn ) == 0 ) {
             linebuf oseb;
             g_pFBufConsole->PutLastLine( "***/" );
             g_pFBufConsole->FmtLastLine( "*** Win32::ReadConsoleOutputA FAILED: %s ***", OsErrStr( BSOB(oseb) ) );
             g_pFBufConsole->PutLastLine( "***\\" );
             }
          else {
-            auto pc(buf);
+            auto pc( dest_buf );
             for( auto jy(0); jy < lcnt; ++jy ) {
-               linebuf lbuf;
-               auto jx(0);
-               for( ; jx < bufsize.col; ++jx ) {
-                  lbuf[jx] = (pc++)->Char.AsciiChar;
+               chbuf.clear();
+               for( auto jx(0) ; jx < src_size.col ; ++jx ) {
+                  chbuf.push_back( (pc++)->Char.AsciiChar );
                   }
-               lbuf[jx] = '\0';
-               g_pFBufConsole->PutLastLine( lbuf );
+               g_pFBufConsole->PutLastLine( chbuf.c_str() );
                }
             }
          }
 
-      Free0( buf );
+      Free0( dest_buf );
 
       g_pFBufConsole->ClearUndo();
       g_pFBufConsole->UnDirty();
@@ -1340,47 +1331,21 @@ void Video::Startup( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&DB
          Win32::CloseHandle( hConout ); // side effect of not closing parent console (CMD.exe) handle is that subsequent writes or ours to stdout (e.g. from Lua io.write()) go to the parent console
          }
       }
-   }
-   CON_DBG&&DBG( "%s 30", __PRETTY_FUNCTION__ );
-
+   }                                                                                       CON_DBG&&DBG( "%s 30", __PRETTY_FUNCTION__ );
    // PHASE 1: stderr
    Win32::CloseHandle( Win32::GetStdHandle( Win32::Std_Error_Handle() ) ); // we have no use for this handle
-
-   //------------------------------------------------------------------------------------------------------------------------------------
-
    if( fNewConsole ) {
-      {
       const auto fFreeConOK( Win32::FreeConsole() != 0 ); // detach from any associated console
-      CON_DBG && DBG( "Win32::FreeConsole() %s" , fFreeConOK  ? "succeeded" : "FAILED" );
-      }
-
+                                                                                           CON_DBG&&DBG( "Win32::FreeConsole() %s" , fFreeConOK  ? "succeeded" : "FAILED" );
       const auto fAllocConOK( Win32::AllocConsole() != 0 ); // attach to a new console
-      if( fAllocConOK ) {
-         CON_DBG && DBG( "Win32::AllocConsole() succeeded" );
-         }
-      else {
-         linebuf oseb;
-         CON_DBG && DBG( "Win32::AllocConsole() FAILED: %s", OsErrStr( BSOB(oseb) ) );
-         }
-      }
-   CON_DBG&&DBG( "%s 40", __PRETTY_FUNCTION__ );
-
-   //------------------------------------------------------------------------------------------------------------------------------------
-   // Win32::HANDLE hConout = Win32::CreateFile( "CONOUT$", GENERIC_READ|GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, 0L );
-   s_EditorScreen = new TConsoleOutputControl( initialWinSize.lin, initialWinSize.col );
-
-   CON_DBG&&DBG( "%s 50", __PRETTY_FUNCTION__ );
-   //====================================================================================================================================
-
-   Conin_Init();
-
-   //------------------------------------------------------------------------------------------------------------------------------------
-   CON_DBG&&DBG( "%s 60", __PRETTY_FUNCTION__ );
-
+      if( fAllocConOK ) {  CON_DBG && DBG( "Win32::AllocConsole() succeeded" ); }
+      else { linebuf oseb; CON_DBG && DBG( "Win32::AllocConsole() FAILED: %s", OsErrStr( BSOB(oseb) ) ); }
+      }                                                                                    CON_DBG&&DBG( "%s 40", __PRETTY_FUNCTION__ );
+   s_EditorScreen = new TConsoleOutputControl( initialWinSize.lin, initialWinSize.col );   CON_DBG&&DBG( "%s 50", __PRETTY_FUNCTION__ );
+   Conin_Init();                                                                           CON_DBG&&DBG( "%s 60", __PRETTY_FUNCTION__ );
    ddi_console();
    DBG( "%s-", __PRETTY_FUNCTION__ );
    }
-
 
 void ConsoleReleaseOnExit() {
    if( s_hParentActiveConsoleScreenBuffer ) {
