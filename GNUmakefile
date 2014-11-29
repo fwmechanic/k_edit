@@ -23,23 +23,24 @@ ifdef ComSpec
 PLAT = mingw
 export PLAT
 
-# SHELL=cmd is a nasty hack since it is (a) nonportable and (b) has to be
-# done in every makefile (in the event of recursive make'ing), rather than
-# being inherited from the "parent" make process.  Therefore I had to also
-# add it to Lua-5.1\src\Makefile
-#
-# Why is it necessary? Because msysgit (for some install variants) puts a
-# directory "C:\Program Files (x86)\Git\bin" which contains an instance
-# of sh.exe, in PATH.  In the past I've renamed this file to sh_.exe and
-# lived to tell the tale, but my use case for git (perhaps uniquely) did
-# not include `git clone`, which I've lately started to use.  `git clone`
-# fails if it cannot find (its) sh.exe.  And I've found it useful to have
-# this dir in PATH since these versions of the "unix utils" tend to be
-# quite up-to-date and "come for free" since I religiously update msysgit
-# on each release.
-#
+# By default GNU make searches $(PATH) for an executable named 'sh' (in the
+# Mingw case, 'sh.exe'), and if found, uses it as the shell which executes all
+# child build command lines.  Msysgit (for some install variants) puts a
+# directory "C:\Program Files (x86)\Git\bin", which contains an instance of
+# sh.exe, in PATH.  This causes make to use msysgit's sh.exe when executing
+# build steps, which (unless I decided to formally adopt Msysgit as a
+# prerequisite build-tool for K) causes the K build to fail (since this makefle
+# is written for the default MS shell, 'CMD.exe').  In the past I've renamed
+# this file to sh_.exe and lived to tell the tale, but my use case for git
+# (perhaps uniquely) did not, until recently, include `git clone` which fails
+# if it cannot find (its) sh.exe.  Also I've found it useful to have this dir
+# in PATH since these versions of the "unix utils" tend to be quite up-to-date
+# and "come for free" since I religiously update msysgit on each release,
+# renaming sh.exe to sh_.exe is no longer an option.  'SHELL=cmd' forces use of
+# CMD.exe even if an sh.exe is present in $(PATH)
+
 SHELL=cmd
-export SHELL
+export SHELL # inherited by child (recursive) makes such as that which builds $(LUA_T)
 
 CMDTBL_ARG=win32
 # dflt $(RM) for MinGW is rm -f
