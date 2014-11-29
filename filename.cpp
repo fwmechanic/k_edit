@@ -124,6 +124,13 @@ bool Path::SetCwdOk( PCChar dnm ) {
    return !( WL( _chdir, chdir )( dnm ) == -1);
    }
 
+Path::str_t Path::GetCwd_ps() {
+   auto rv( Path::GetCwd() );
+   if( rv.length() > 0 ) {
+      rv += PATH_SEP_STR;
+      }
+   return rv;
+   }
 
 DirMatches::~DirMatches() {
 #if defined(_WIN32)

@@ -147,7 +147,7 @@ void DBG_init() {
          perror( "strftime returned 0" );
          exit(EXIT_FAILURE);
          }
-      fprintf( ofh_DBG, "opened %s @ ", buf, tmstr );
+      fprintf( ofh_DBG, "opened %s @ %s\n", buf, tmstr );
       }
    }
 

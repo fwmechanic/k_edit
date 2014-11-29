@@ -301,7 +301,9 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "cursorsize"     , Fxn2TPfx( swixCursorsize          ), swinFXN_STR , swidCursorsize _AHELP( "0:small, 1:large" ) },
  { "delims"         , Fxn2TPfx( swixDelims              ), swinFXN_BOOL, swidDelims     _AHELP( "string containing delimiters" ) },
  { "dialogtop"      , Var2TPfx( g_fDialogTop            ), swinVAR_BOOL, swidBool       _AHELP( "dialog & status lines placed at top (yes) or bottom (no) of screen" ) },
+#if defined(_WIN32)
  { "dvlogcmds"      , Var2TPfx( g_fDvlogcmds            ), swinVAR_BOOL, swidBool       _AHELP( "log non-cursor-movement cmds to DbgView using Windows' OutputDebugString()" ) },
+#endif
  { "editreadonly"   , Var2TPfx( g_fEditReadonly         ), swinVAR_BOOL, swidBool       _AHELP( "allow (yes) or prevent (no) editing of files which are not writable on disk" ) },
  { "errprompt"      , Var2TPfx( g_fErrPrompt            ), swinVAR_BOOL, swidBool       _AHELP( "error message display pauses with \"Press any key...\" prompt" ) },
  { "fastsearch"     , Var2TPfx( g_fFastsearch           ), swinVAR_BOOL, swidBool       _AHELP( "use fast search algorithm (when key contains no spaces)" ) },

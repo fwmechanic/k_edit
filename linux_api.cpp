@@ -17,11 +17,3 @@ Path::str_t Path::GetCwd() { // quick and dirty AND relies on GLIBC getcwd( null
    }
 
 PCChar OsVerStr() { return "Linux"; }
-
-int EditorLoadCount() {
-   return 1;
-   }
-
-size_t GetProcessMem() {
-   return 1024;
-   }

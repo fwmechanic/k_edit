@@ -359,7 +359,8 @@ BUILT_RLS_FILES = $(TGT)$(EXE_EXT)
 
 $(TGT)$(EXE_EXT): $(OBJS) $(WINDRES)
 	@$(LUA_T) datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
-	@echo linking $@&& g++ $^ $(LINK_MAP) -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map
+	@echo linking $@&& g++ $^ $(LINK_MAP) -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map 2>link.errs
+	@$(LUA_T) bld_link_unref.lua <link.errs > link.unref
 	@objdump -p $@ > $@.exp
 	@$(LS_L) $@ $(LS_L_TAIL)
 

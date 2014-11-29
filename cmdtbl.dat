@@ -33,7 +33,7 @@
   cdelete      cdelete        MODIFIES+CURSORFUNC     , Deletes prev character, excluding line breaks. If cursor is in column 1, Cdelete move cursor to end of previous line
 # cfx          cfx                       BOXSTR + TEXTARG
 w cliptext     cliptext                  KEEPMETA+NOARG+NULLARG , Like lasttext, except Windows Clipboard data is inserted on dialog line
-  compile      compile                   BOXSTR + NOARG + TEXTARG + NULLARG
+w compile      compile                   BOXSTR + NOARG + TEXTARG + NULLARG
   copy         copy                      BOXARG + MARKARG + NUMARG + NULLEOL + STREAMARG + NOARG + LINEARG + TEXTARG , Copies cursor line to clipboard
 # csort        csort                     BOXARG + LINEARG
 w ctwk         ctwk                      NOARG , console tweaks
@@ -56,7 +56,7 @@ w ctwk         ctwk                      NOARG , console tweaks
   dirty        dirty                     KEEPMETA+NOARG , Returns true if current file is dirty
 # dispmstk     dispmstk       CURSORFUNC
   down         down           CURSORFUNC , Move cursor down one line
-  dvlog        dvlog                     TEXTARG , write string to DbgView using Win32's OutputDebugString
+w dvlog        dvlog                     TEXTARG , write string to DbgView using Win32's OutputDebugString
   eds          eds            CURSORFUNC , Show internal undo/redo details
   emacscdel    emacscdel      MODIFIES + NOARG , Deletes previous character.  If cursor is in column 1, moves cursor to end of previous line. This is similar to Cdelete, but Cdelete never deletes line breaks
   emacsnewl    emacsnewl      MODIFIES + NOARG , In insert mode, starts a new line.  The editor automatically positions cursor on new line, according to Softcr switch setting.
@@ -130,14 +130,14 @@ w fromwinclip  fromwinclip               NOARG , Windows Clipboard ==> <clipboar
   refresh      refresh                   NOARG + NULLARG + TEXTARG +           BOXSTR + BOXARG + LINEARG
   repeat       repeat                    NOARG , Repeat most recently performed edit action
   replace      replace        MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Non-interactive single-file (or arg-region) replace
-  resize       resize                    NOARG , Interactively resize the Windows Console in which the editor is running
+w resize       resize                    NOARG , Interactively resize the Windows Console in which the editor is running
   restcur      restcur        CURSORFUNC+KEEPMETA
   right        right          CURSORFUNC
 # rmeds        rmeds                     NOARG , Delete all undo (and redo) information for the current file
   rw           rw                        NOARG , If current file on disk is readonly, make it read-writeable
   saveall      saveall                   NOARG , Save all dirty files to disk (alias: arg arg arg setfile -> saveall)
   savecur      savecur        CURSORFUNC+KEEPMETA
-  savescreen   savescreen                NOARG+TEXTARG+BOXSTR , save screen content including color, cursor position, etc. to TEXT file (dflt='savescreen')
+w savescreen   savescreen                NOARG+TEXTARG+BOXSTR , save screen content including color, cursor position, etc. to TEXT file (dflt='savescreen')
   sdelete      sdelete        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG
   searchlog    searchlog                 NOARG+TEXTARG , Switch to <searchlog>
   selcmd       selcmd         MODIFIES + NULLEOL + TEXTARG + BOXARG + STREAMARG + LINEARG

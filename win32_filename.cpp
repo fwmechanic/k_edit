@@ -96,14 +96,6 @@ Path::str_t Path::GetCwd() {
    return Path::str_t( pbuf );
    }
 
-Path::str_t Path::GetCwd_ps() {
-   auto rv( Path::GetCwd() );
-   if( rv.length() > 0 ) {
-      rv += PATH_SEP_STR;
-      }
-   return rv;
-   }
-
 Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
 #ifdef BOOST_LIB_VERSION
    boost::filesystem::path src( pszFilename );

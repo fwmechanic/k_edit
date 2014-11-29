@@ -1015,7 +1015,7 @@ int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
 
       d_processInfo.dwProcessId = INVALID_dwProcessId;
       Msg( "Win32::TerminateApp returned %s", msg );
-      return true;
+      return 1;
       }
 
    return 1; // !IsThreadActive();
