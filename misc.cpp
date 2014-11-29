@@ -27,26 +27,6 @@ PChar GetenvStrdup( PCChar pszEnvName ) {
    return penv;
    }
 
-#if !NO_LOG
-
-int DBG( char const *kszFormat, ...  ) {
-   va_list args;  va_start(args, kszFormat);
-
-   STATIC_CONST char prefix[] = "K! ";
-   enum { PFX_LEN = KSTRLEN(prefix) };
-
-   char szBuffer[257];
-   memcpy( szBuffer, prefix, PFX_LEN+1 );
-   vsnprintf(szBuffer+PFX_LEN, (sizeof(szBuffer)-1)-PFX_LEN, kszFormat, args);
-
-   DebugLog(szBuffer);
-
-   va_end(args);
-   return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
-   }
-
-#endif
-
 STATIC_FXN void CreateGrepBufFromLinerange( PFBUF fromfile, PFBUF outfile, LINE yTop, LINE yBottom ) {
    auto imgBufBytes(0);
    const auto copiedLines(yBottom-yTop+1);

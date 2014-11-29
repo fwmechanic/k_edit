@@ -13,6 +13,8 @@
     // #define DBG()  (1)
     // STIL version results in almost NO code size change since the params are all evaluated even if the function does nothing
     STIL int DBG( char const *kszFormat, ... ) ATTR_FORMAT(1, 2) { return 1; }
+    STIL void DBG_init() {}
 #else
     extern int DBG( char const *kszFormat, ... ) ATTR_FORMAT(1, 2);
+    extern void DBG_init();
 #endif

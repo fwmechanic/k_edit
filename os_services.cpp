@@ -97,3 +97,68 @@ void MainThreadPerfCounter::ResumeAll() {
           pCur->Start_( now );
       }
    }
+
+
+#if !NO_LOG
+
+#if defined(_WIN32)
+
+void DBG_init() {}
+
+int DBG( char const *kszFormat, ...  ) {
+   va_list args;  va_start(args, kszFormat);
+
+   STATIC_CONST char prefix[] = "K! ";
+   enum { PFX_LEN = KSTRLEN(prefix) };
+
+   char szBuffer[257];
+   memcpy( szBuffer, prefix, PFX_LEN+1 );
+   vsnprintf(szBuffer+PFX_LEN, (sizeof(szBuffer)-1)-PFX_LEN, kszFormat, args);
+
+   DebugLog(szBuffer);
+
+   va_end(args);
+   return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
+   }
+
+#else
+
+// Linux version
+
+STATIC FILE *ofh_DBG;
+
+void DBG_init() {
+   pathbuf buf;
+   snprintf( BSOB( buf ), "%s%s.%d", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), getpid() );
+   if( !ofh_DBG ) {
+      ofh_DBG = fopen( buf, "W" );
+      if( ofh_DBG == nullptr ) {
+         perror("DBG_init() fopen");
+         exit(EXIT_FAILURE);
+         }
+      const auto tnow( time( nullptr ) );
+      const auto lt( localtime( &tnow ) );
+      if( lt == nullptr ) {
+         perror("localtime");
+         exit(EXIT_FAILURE);
+         }
+      char tmstr[100];
+      if( strftime( BSOB(tmstr), "%Y%m%dT%H:%M:%S", lt ) == 0 ) {
+         perror( "strftime returned 0" );
+         exit(EXIT_FAILURE);
+         }
+      fprintf( ofh_DBG, "opened %s @ ", buf, tmstr );
+      }
+   }
+
+int DBG( char const *kszFormat, ...  ) {
+   va_list args;  va_start(args, kszFormat);
+   vfprintf( ofh_DBG ? ofh_DBG : stdout, kszFormat, args );
+   va_end(args);
+   if( ofh_DBG ) { fflush( ofh_DBG ); }
+   return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
+   }
+
+#endif
+
+#endif

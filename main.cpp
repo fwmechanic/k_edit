@@ -1001,9 +1001,10 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
 int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 #endif
    {
-   enum { DBGFXN=1 };
    ThisProcessInfo::Init( argv[0] );
+   DBG_init();
 
+   enum { DBGFXN=1 };
    DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT "d", __func__, memdelta() );
 
    TestMQ();
