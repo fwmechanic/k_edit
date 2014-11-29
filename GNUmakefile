@@ -294,10 +294,10 @@ all : tags
 TAGS_CMDLN = ctags$(EXE_EXT) --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -R
 
 tags : $(EXE_TGTS)
-		$(TAGS_CMDLN)
+	$(TAGS_CMDLN)
 
-$(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat
-	$(LUA_T) cmdtbl.lua $(CMDTBL_ARG) < cmdtbl.dat
+$(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat bld_cmdtbl.lua
+	$(LUA_T) bld_cmdtbl.lua $(CMDTBL_ARG) < cmdtbl.dat
 
 cleanliblua:
 	cd $(LUA_DIR) && $(MAKE) clean
@@ -348,7 +348,7 @@ $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
 	@$(LS_L) $@ $(LS_L_TAIL)
 
 $(ED_DLL)$(DLL_EXT): $(OBJS) $(LUA_DIR)/$(LIBLUA)
-	@$(LUA_T) datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
+	@$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
 	@echo linking $@&& g++ -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)kx.map
 	@objdump -p $@ > $@.exp
 	@$(LS_L) $@ $(LS_L_TAIL)
@@ -358,7 +358,7 @@ else
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT)
 
 $(TGT)$(EXE_EXT): $(OBJS) $(WINDRES)
-	@$(LUA_T) datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
+	@$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
 	@echo linking $@&& g++ $^ $(LINK_MAP) -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs > link.unref
 	@objdump -p $@ > $@.exp
 	@$(LS_L) $@ $(LS_L_TAIL)
