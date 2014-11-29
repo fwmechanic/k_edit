@@ -125,7 +125,7 @@ int DBG( char const *kszFormat, ...  ) {
 
 // Linux version
 
-STATIC FILE *ofh_DBG;
+STATIC_VAR FILE *ofh_DBG;
 
 void DBG_init() {
    pathbuf buf;
