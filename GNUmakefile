@@ -221,8 +221,10 @@ CFLAGS   = $(C_OPTS_COMMON) $(C_OPTS_DBG)
 CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtti $(C_OPTS_LUA_REF) $(KEEPASM) $(C_OPTS_DBG)
 #####################################################################################################################
 
+# BOOST_LIBS := -lboost_filesystem -lboost_system
+
 LIBLUA := liblua.a
-LIBS   := -static-libgcc -static-libstdc++ -lgcc -lboost_filesystem -lboost_system $(OS_LIBS) $(LUA_DIR)/$(LIBLUA) $(PCRE_LIB) #  -lmcheck (seems not to exist in MinGW)
+LIBS   := -static-libgcc -static-libstdc++ -lgcc $(BOOST_LIBS) $(OS_LIBS) $(LUA_DIR)/$(LIBLUA) $(PCRE_LIB) #  -lmcheck (seems not to exist in MinGW)
 
 CPP_OPTS:=
 
