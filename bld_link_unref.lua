@@ -1,6 +1,10 @@
 require "strict"
 require "tu"
 
+local ofnm = "link.unref"
+
+local ofh = assert( io.open( ofnm, "wt" ) )
+
 local unrefs = {}
 
 for line in io.lines() do
@@ -13,9 +17,10 @@ for line in io.lines() do
 local unrefdCount = 0
 for nm, count in pairs( unrefs ) do  -- print( "-> \"" .. ix, tb.fxn .. "\"" )
 -- for nm, count in tu.pairsBySortedValues( unrefs ) do  -- print( "-> \"" .. ix, tb.fxn .. "\"" )
-   io.write( string.format("%3d", count), "  '", nm, "'\n" )
+   ofh:write( string.format("%3d", count), "  '", nm, "'\n" )
    unrefdCount = 1+ unrefdCount
    end
 
-io.stderr:write( unrefdCount, " undefined references", "\n" )
+
+io.stderr:write( unrefdCount, " undefined references, see ", ofnm, "\n" )
 os.exit(1)
