@@ -1,4 +1,6 @@
-
+//
+//  Copyright 2014 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
+//
 
 #include <vector>
 #include <ncurses.h>
@@ -14,18 +16,6 @@
 #define PC_PURPLE  5
 #define PC_YELLOW  6
 #define PC_WHITE   7
-
-static const int pc_to_ncurses_color[] = {
-    [PC_BLACK ] = COLOR_BLACK  ,
-    [PC_BLUE  ] = COLOR_BLUE   ,
-    [PC_GREEN ] = COLOR_GREEN  ,
-    [PC_CYAN  ] = COLOR_CYAN   ,
-    [PC_RED   ] = COLOR_RED    ,
-    [PC_PURPLE] = COLOR_MAGENTA,
-    [PC_YELLOW] = COLOR_YELLOW ,
-    [PC_WHITE ] = COLOR_WHITE  ,
-    };
-
 
 static void set_pcattr( int attr ) {
    attr &= 0x7F; // ncurses does not have "high intensity" background attr, so clear it
@@ -46,6 +36,16 @@ static void set_pcattr( int attr ) {
       }
    if( 0 == color_pr_num ) {
       s_color_map.emplace_back( attr );
+      static const int pc_to_ncurses_color[] = {
+          [PC_BLACK ] = COLOR_BLACK  ,
+          [PC_BLUE  ] = COLOR_BLUE   ,
+          [PC_GREEN ] = COLOR_GREEN  ,
+          [PC_CYAN  ] = COLOR_CYAN   ,
+          [PC_RED   ] = COLOR_RED    ,
+          [PC_PURPLE] = COLOR_MAGENTA,
+          [PC_YELLOW] = COLOR_YELLOW ,
+          [PC_WHITE ] = COLOR_WHITE  ,
+          };
       const auto pcfg(  attr       & 0x7 ); const auto ncfg( pc_to_ncurses_color[pcfg] );
       const auto pcbg( (attr >> 4) & 0x7 ); const auto ncbg( pc_to_ncurses_color[pcbg] );
       color_pr_num = 1+ (s_color_map.size() - 1);
@@ -69,7 +69,7 @@ void Video::SetCursorLocn( int yLine, int xCol ) {
 int Video::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
-   if( xColWithinConsoleWindow >= sizeX ) { return 0; }
+   if( sizeY==sizeY && xColWithinConsoleWindow >= sizeX ) { return 0; }
    int slen = StringLen;
    for( auto ix(0) ; ix < slen; ++ix ) {
       if( '\0' == pszStringToDisp[ix] ) {
