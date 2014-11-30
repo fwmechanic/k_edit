@@ -31,4 +31,7 @@ namespace Video {
 
    bool  WriteToFileOk( FILE *ofh );
    bool  SetConsolePalette( const unsigned palette[16] );
+
+   int   DbgPopf( PCChar fmt, ... ) ATTR_FORMAT(1, 2);
+   bool  Confirm( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
    }

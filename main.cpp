@@ -478,7 +478,7 @@ bool ARG::exit() {
                   const auto filesRemaining( NumberOfCmdlineFilesRemaining() );
                   fToNextFile =
                      (   filesRemaining
-                      && !Confirm( "You have %d more file%s to edit.  Are you sure you want to exit? "
+                      && !Video::Confirm( "You have %d more file%s to edit.  Are you sure you want to exit? "
                                  , filesRemaining
                                  , Add_s( filesRemaining )
                                  )
@@ -493,7 +493,7 @@ bool ARG::exit() {
 
    if( fToNextFile && SwitchToNextCmdlineFile()     ) { DBG( "%s ********* switching to another file *********", FUNC );  return false; }
    if( !KillAllBkgndProcesses()                     ) { DBG( "%s ********* !KillAllBkgndProcesses() *********" , FUNC );  return false; }
-   if( g_fAskExit && !Confirm( "Exit the Editor?" ) ) { DBG( "%s ********* user cancelled exit A *********"    , FUNC );  return false; }
+   if( g_fAskExit && !Video::Confirm( "Exit the Editor?" ) ) { DBG( "%s ********* user cancelled exit A *********"    , FUNC );  return false; }
    if( SaveAllDirtyFilesUserEscaped()               ) { DBG( "%s ********* user cancelled exit B *********"    , FUNC );  return false; }
 
    DBG( "%s exiting ===========================================================", FUNC );
@@ -629,7 +629,7 @@ bool ARG::ext() {
                     return true;
                     }
 
-                 if( Confirm( "Stop here (%d of %d)? ", ix, count ) )
+                 if( Video::Confirm( "Stop here (%d of %d)? ", ix, count ) )
                     return true;
                  }
               }

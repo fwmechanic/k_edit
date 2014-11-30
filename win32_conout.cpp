@@ -118,7 +118,7 @@ private://**************************************************
 STATIC_VAR TConsoleOutputControl *s_EditorScreen;
 
 void VidInitApiError( PCChar errmsg ) {
-   DbgPopf(         "%s", errmsg );
+   Video::DbgPopf(         "%s", errmsg );
    DBG(             "%s", errmsg );
    fprintf( stderr, "%s", errmsg );
    }

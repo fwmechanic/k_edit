@@ -104,9 +104,6 @@ public:
 
 extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests );
 
-extern   int  DbgPopf( PCChar fmt, ... ) ATTR_FORMAT(1, 2);
-extern   bool Confirm( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
-
     enum ConfirmResponse { crYES, crNO, crCANCEL };
 extern   ConfirmResponse Confirm_wCancel( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
 extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... ) ATTR_FORMAT(4, 5);

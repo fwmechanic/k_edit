@@ -21,7 +21,7 @@ void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
       buf[ bufBytes - 1 ] = '\0';
       STATIC_CONST char fmt[] = "%s: STRING TRUNCATED: '%s'";
    // STATIC_VAR bool alerted;
-   // if( !alerted )  DbgPopf( fmt, __func__, buf );
+   // if( !alerted )  Video::DbgPopf( fmt, __func__, buf );
    // else
                       DBG(     fmt, __func__, buf );
    // alerted = true;
@@ -31,7 +31,7 @@ void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
 STATIC_FXN void StrTruncd_( PCChar fxnm, int truncd, PCChar src, PCChar dst ) {
    STATIC_CONST char fmt[] = "%s: STRING TRUNCATED by %d chars\nsrc: '%s'\ndst: '%s'";
 // STATIC_VAR bool alerted;    BUGBUG fix this
-// if( !alerted )  DbgPopf( fmt, fxnm, truncd, src, dst );
+// if( !alerted )  Video::DbgPopf( fmt, fxnm, truncd, src, dst );
 // else
                    DBG(     fmt, fxnm, truncd, src, dst );
 // alerted = true;
