@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <ncurses.h>
+#include <stdio.h>
+#include "vid.h"
 
 
 #define PC_BLACK   0
@@ -19,7 +21,7 @@ static const int pc_to_ncurses_color[] = {
     [PC_GREEN ] = COLOR_GREEN  ,
     [PC_CYAN  ] = COLOR_CYAN   ,
     [PC_RED   ] = COLOR_RED    ,
-    [PC_PURPLE] = COLOR_PURPLE ,
+    [PC_PURPLE] = COLOR_MAGENTA,
     [PC_YELLOW] = COLOR_YELLOW ,
     [PC_WHITE ] = COLOR_WHITE  ,
     };
@@ -36,9 +38,9 @@ static void set_pcattr( int attr ) {
    auto color_pr_num( 0 );
    {
    static std::vector<int> s_color_map; // mapping of attributes to ncurses API's is dynamic (vs. on PC's it's fixed)
-   for( auto it( s_color_map.cbegin() ; it != s_color_map.cend() ; ++it ) {
+   for( auto it( s_color_map.cbegin() ) ; it != s_color_map.cend() ; ++it ) {
       if( *it == attr ) {
-         color_pr_num( 1+ std::distance( s_color_map.cbegin(), it ) );
+         color_pr_num = 1+ std::distance( s_color_map.cbegin(), it );
          break;
          }
       }
@@ -47,30 +49,34 @@ static void set_pcattr( int attr ) {
       const auto pcfg(  attr       & 0x7 ); const auto ncfg( pc_to_ncurses_color[pcfg] );
       const auto pcbg( (attr >> 4) & 0x7 ); const auto ncbg( pc_to_ncurses_color[pcbg] );
       color_pr_num = 1+ (s_color_map.size() - 1);
-      init_pair( rv, ncfg, ncbg );
+      init_pair( color_pr_num, ncfg, ncbg );
       }
    }
-   attr_set( COLOR_PAIR(color_pr_num) | ncfg_bold );
+   attrset( COLOR_PAIR(color_pr_num) | ncfg_bold );
    }
 void Video::SetCursorSize( bool fBigCursor ) {}
-static Point s_cursor_pos;
-bool Video::GetCursorState( Point *pt, bool *pfVisible ) {
+static YX_t s_cursor_pos;
+bool Video::GetCursorState( YX_t *pt, bool *pfVisible ) {
    *pt = s_cursor_pos;
    *pfVisible = true;
+   return true;
    }
 bool Video::SetCursorVisibilityChanged( bool fVisible ) { return false; }
-void Video::SetCursorLocn( LINE yLine, COL xCol ) {
+void Video::SetCursorLocn( int yLine, int xCol ) {
    s_cursor_pos.lin = yLine;
    s_cursor_pos.col = xCol;
    }
-COL Video::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
+int Video::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
    if( xColWithinConsoleWindow >= sizeX ) { return 0; }
    int slen = StringLen;
-   { PCChar pNul = memchr( pszStringToDisp, 0, StringLen );
-     if( pNul ) { slen = pNul - pszStringToDisp; }
-   }
+   for( auto ix(0) ; ix < slen; ++ix ) {
+      if( '\0' == pszStringToDisp[ix] ) {
+         slen = ix;
+         break;
+         }
+      }
    int maxX_notwritten = xColWithinConsoleWindow + slen;
    if( slen > 0 ) {
       if( maxX_notwritten > sizeX ) { slen -= (maxX_notwritten - sizeX); }
@@ -84,12 +90,12 @@ COL Video::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineW
       }
    return slen;
    }
-bool Video::SetScreenSizeOk( Point &newSize ) { return false; }
-void Video::GetScreenSize( PPoint rv ) {
+bool Video::SetScreenSizeOk( YX_t &newSize ) { return false; }
+void Video::GetScreenSize( YX_t *rv ) {
    getmaxyx( stdscr, rv->lin, rv->col );
    }
-Point Video::GetMaxConsoleSize() {
-   Point rv;
+YX_t Video::GetMaxConsoleSize() {
+   YX_t rv;
    Video::GetScreenSize( &rv );
    return rv;
    }
@@ -101,15 +107,19 @@ bool Video::WriteToFileOk( FILE *ofh ) {
    return false;
    }
 bool Video::SetConsolePalette( const unsigned palette[16] ) { return false; }
-void Video::Startup( bool fForceNewConsole ) {
+bool Video::StartupOk( bool fForceNewConsole ) {
    initscr();
    if(has_colors() == FALSE) {
       endwin();
-      printf("Your terminal does not support color\n");
-      exit(1);
+      fprintf( stderr, "Your terminal does not support color\n" );
+      return false;
       }
 
    start_color();
    keypad(stdscr, TRUE);
    noecho();
+   return true;
+   }
+void Video::Shutdown() {
+   endwin();
    }

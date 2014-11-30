@@ -14,18 +14,19 @@ struct YX_t {
    };
 
 namespace Video {
-   void  Startup( bool fForceNewConsole );
+   bool  StartupOk( bool fForceNewConsole );
+   void  Shutdown();
    YX_t  GetMaxConsoleSize();
 
    void  GetScreenSize( YX_t *rv);
    bool  SetScreenSizeOk( YX_t &newSize );
 
    bool  GetCursorState( YX_t *pt, bool *pfVisible );
-   void  SetCursorLocn( LINE yLine, COL xCol );
+   void  SetCursorLocn( int yLine, int xCol );
    void  SetCursorSize( bool fBigCursor );
    bool  SetCursorVisibilityChanged( bool fVisible );
 
-   COL   BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
+   int   BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
    void  BufferFlushToScreen();
 
    bool  WriteToFileOk( FILE *ofh );

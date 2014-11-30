@@ -128,7 +128,6 @@ extern void    WaitForKey();
 extern void    WaitForKey( int secondsToWait );
 extern bool    KbHit();
 extern void    FlushKeyQueuePrimeScreenRedraw();
-extern void    ConsoleReleaseOnExit();
 
 extern CmdData CmdDataFromNextKey();
 extern CmdData CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes );

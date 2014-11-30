@@ -1191,7 +1191,7 @@ STATIC_FXN PCChar ftNm( const Win32::DWORD ft ) {
 
 STATIC_VAR Win32::HANDLE s_hParentActiveConsoleScreenBuffer = nullptr;
 
-void Video::Startup( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&DBG( "%s+", __PRETTY_FUNCTION__ );
+bool Video::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&DBG( "%s+", __PRETTY_FUNCTION__ );
    {
    Win32::STARTUPINFO startupInfo = { sizeof startupInfo };
    GetStartupInfo( &startupInfo );
@@ -1281,9 +1281,10 @@ void Video::Startup( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&DB
    Conin_Init();                                                                           CON_DBG&&DBG( "%s 60", __PRETTY_FUNCTION__ );
    ddi_console();
    DBG( "%s-", __PRETTY_FUNCTION__ );
+   return true;
    }
 
-void ConsoleReleaseOnExit() {
+void Video::Shutdown() {
    if( s_hParentActiveConsoleScreenBuffer ) {
       Win32::SetConsoleActiveScreenBuffer( s_hParentActiveConsoleScreenBuffer );
       }

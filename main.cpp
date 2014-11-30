@@ -402,8 +402,8 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
       pFb->RemoveFBufOnly();
 
    // finally, garbage-collect the bits and pieces:
-                                                         DV && DBG("%s ConsoleReleaseOnExit();", __func__ );
-   ConsoleReleaseOnExit();
+                                                         DV && DBG("%s Video::Shutdown();", __func__ );
+   Video::Shutdown();
                                                                DBG("%s calling exit(%d);", __func__, processExitCode );
    exit( processExitCode );
    }
@@ -1069,7 +1069,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
                                  DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
    MainThreadPerfCounter pc;
 
-   Video::Startup( fForceNewConsole );
+   if( !Video::StartupOk( fForceNewConsole ) ) { exit( 1 ); }
                                  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru Video::Startup"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
 
    CreateWindow0();
