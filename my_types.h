@@ -50,11 +50,7 @@
 
 #include <string>
 
-#ifdef __GNUC__
-#define ATTR_FORMAT(xx,yy) __attribute__ ((format (printf, xx, yy)))
-#else
-#define ATTR_FORMAT(xx,yy)
-#endif
+#include "attr_format.h"
 
 #if !defined(__GNUC__)
 #define __func__  __FUNCTION__

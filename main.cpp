@@ -993,7 +993,6 @@ STATIC_FXN ptrdiff_t memdelta() {
 //     one that's modified by _putenv())
 //
 GLOBAL_VAR char ** &g_envp = WL( _environ, environ );
-extern void TestMQ();
 
 #ifdef APP_IN_DLL
 DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint from K.EXE
@@ -1007,7 +1006,10 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
    enum { DBGFXN=1 };
    DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT "d", __func__, memdelta() );
 
+#if defined(_Win32)
+   extern void TestMQ();
    TestMQ();
+#endif
 
    0 && DBG( "Got to Main!!!" );
 

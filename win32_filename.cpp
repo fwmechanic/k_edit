@@ -229,6 +229,43 @@ const Path::str_t DirMatches::GetNext() {
    return d_buf;
    }
 
+DirMatches::~DirMatches() {
+#if defined(_WIN32)
+   if( d_hFindFile != Win32::Invalid_Handle_Value() ) {
+      Win32::FindClose( d_hFindFile );
+      }
+#else
+#endif
+   }
+
+DirMatches::DirMatches( PCChar pszPrefix, PCChar pszSuffix, WildCardMatchMode wcMode, bool fAbsolutize )
+   : d_wcMode( wcMode )
+   , d_buf( Path::str_t(pszPrefix ? pszPrefix : "") + Path::str_t(pszSuffix ? pszSuffix : "") )
+#if defined(_WIN32)
+   , d_hFindFile( Win32::Invalid_Handle_Value() )
+#else
+#endif
+   { // prep the buffer
+   if( fAbsolutize ) {
+      d_buf = Path::Absolutize( d_buf.c_str() );
+      }
+
+#if defined(_WIN32)
+   const bool hasDriveLetter( isalpha( d_buf[0] ) && d_buf[1] == ':' ); // leading c: ?
+   if( hasDriveLetter ) {
+      d_buf[0] = tolower( d_buf[0] );
+      }
+#endif
+
+   { // hackaround
+   auto pDest = Path::StrToPrevPathSepOrNull( d_buf.c_str(), PCChar(nullptr) );
+   if( pDest )
+      d_ixDest = (pDest - d_buf.c_str()) + 1; // point past pathsep
+   else
+      d_ixDest = 0;
+   }
+   }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "attr_format.h"
+
 struct YX_t {
    int  lin;
    int  col;
@@ -32,6 +34,6 @@ namespace Video {
    bool  WriteToFileOk( FILE *ofh );
    bool  SetConsolePalette( const unsigned palette[16] );
 
-   int   DbgPopf( PCChar fmt, ... ) ATTR_FORMAT(1, 2);
-   bool  Confirm( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
+   int   DbgPopf( const char *fmt, ... ) ATTR_FORMAT(1, 2);
+   bool  Confirm( const char *pszPrompt, ... ) ATTR_FORMAT(1, 2);
    }
