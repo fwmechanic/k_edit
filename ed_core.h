@@ -183,6 +183,8 @@ extern U8 g_colorError    ; // ERR
 #define  HILITE_CPP_CONDITIONALS  1
 
 
+#include "vid.h"
+
 struct Point {   // file location
    LINE    lin;
    COL     col;
@@ -202,6 +204,8 @@ struct Point {   // file location
    bool operator> ( const Point &rhs ) const { return lin > rhs.lin || (lin == rhs.lin && col > rhs.col); }
    bool operator>=( const Point &rhs ) const { return !(*this < rhs); }
    bool operator<=( const Point &rhs ) const { return !(*this > rhs); }
+
+   Point( const YX_t &src ) : lin( src.lin ), col( src.col) {}
 
    }; // HAS CTORS, so union canNOT HAS-A one of these
 

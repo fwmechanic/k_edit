@@ -2536,10 +2536,10 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
    Point cursorNew;
    bool  fCursorMovePending;
    {
-   Point cursorNow; bool fCursorVisible;
+   YX_t cursorNow; bool fCursorVisible;
    CursorLocnOutsideView_Get( &cursorNew ) || pcw->GetCursorForDisplay( &cursorNew );
    Video::GetCursorState( &cursorNow, &fCursorVisible );
-   fCursorMovePending = (cursorNew != cursorNow);
+   fCursorMovePending = (cursorNew.lin != cursorNow.lin || cursorNew.col != cursorNow.col);
    }
 
    auto did(0);
@@ -3033,7 +3033,10 @@ STATIC_FXN bool EditorScreenSizeAllowed( const Point &newSize ) { // checks EDIT
 // if newSize is not supported, and a supported size can be switched to:
 //    it will be switched to, newSize will be updated, "OK" status will be returned
 bool VideoSwitchModeToXYOk( Point &newSize ) {
-   return EditorScreenSizeAllowed( newSize ) && Video::SetScreenSizeOk( newSize );
+   YX_t pass; pass.lin = newSize.lin; pass.col = newSize.col;
+   const auto rv( EditorScreenSizeAllowed( newSize ) && Video::SetScreenSizeOk( pass ) );
+   newSize.lin = pass.lin; newSize.col = pass.col;
+   return rv;
    }
 
 void DispNeedsRedrawCursorMoved() { if( g_CurView() ) g_CurView()->ForceCursorMovedCondition(); }

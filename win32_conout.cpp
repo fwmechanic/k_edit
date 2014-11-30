@@ -20,8 +20,8 @@
 typedef Win32::CHAR_INFO ScreenCell; // this is copied from our cache by Win32::WriteConsoleOutputA
 
 struct W32_ScreenSize_CursorLocn {
-   Point size;
-   Point cursor;
+   YX_t size;
+   YX_t cursor;
    };
 
 class TConsoleOutputControl {
@@ -96,9 +96,9 @@ public: //**************************************************
       }
 
    void  GetSizeCursorLocn( W32_ScreenSize_CursorLocn *cxy ); // not const cuz hits mutex!
-   Point GetMaxConsoleSize();                                 // not const cuz hits mutex!
-   bool  GetCursorState( Point *pt, bool *pfVisible );        // not const cuz hits mutex!
-   bool  SetConsoleSizeOk( Point &newSize );
+   YX_t  GetMaxConsoleSize();                                 // not const cuz hits mutex!
+   bool  GetCursorState( YX_t *pt, bool *pfVisible );        // not const cuz hits mutex!
+   bool  SetConsoleSizeOk( YX_t &newSize );
    void  SetCursorLocn( LINE yLine, COL xCol );
    void  SetCursorSize( bool fBigCursor );
    bool  SetCursorVisibilityChanged( bool fVisible );
@@ -109,7 +109,7 @@ public: //**************************************************
 
 private://**************************************************
 
-   void  SetNewScreenSize( const Point &newSize );
+   void  SetNewScreenSize( const YX_t &newSize );
 
    int   WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL xMin, COL xMax );
    void  SetConsoleCursorInfo();
@@ -136,13 +136,13 @@ public:
 
    const Win32::SMALL_RECT & srWindow() const { return d_csbi.srWindow; }
 
-   Point WindowSize()     const { return Point( d_csbi.srWindow.Bottom - d_csbi.srWindow.Top  + 1
-                                              , d_csbi.srWindow.Right  - d_csbi.srWindow.Left + 1
-                                              );
+   YX_t  WindowSize()     const { return YX_t( d_csbi.srWindow.Bottom - d_csbi.srWindow.Top  + 1
+                                             , d_csbi.srWindow.Right  - d_csbi.srWindow.Left + 1
+                                             );
                                 }
-   Point BufferSize()     const { return Point( d_csbi.dwSize          .Y  , d_csbi.dwSize          .X   ); }
-   Point MaxBufSize()     const { return Point( d_maxSize              .Y-1, d_maxSize              .X-1 ); } // -1 because the MAX is sometimes too big (goes off screen) because of window border thickness
-   Point CursorPosition() const { return Point( d_csbi.dwCursorPosition.Y  , d_csbi.dwCursorPosition.X   ); }
+   YX_t  BufferSize()     const { return YX_t( d_csbi.dwSize          .Y  , d_csbi.dwSize          .X   ); }
+   YX_t  MaxBufSize()     const { return YX_t( d_maxSize              .Y-1, d_maxSize              .X-1 ); } // -1 because the MAX is sometimes too big (goes off screen) because of window border thickness
+   YX_t  CursorPosition() const { return YX_t( d_csbi.dwCursorPosition.Y  , d_csbi.dwCursorPosition.X   ); }
    int   Attribute()      const { return d_csbi.wAttributes; }
    };
 
@@ -212,7 +212,7 @@ TConsoleOutputControl::TConsoleOutputControl( int yHeight, int xWidth )
       exit( 1 );
       }
 
-   Point newSize; newSize.lin=yHeight; newSize.col=xWidth;
+   YX_t newSize; newSize.lin=yHeight; newSize.col=xWidth;
    SetConsoleSizeOk( newSize );
 
    const ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "new editor console" );
@@ -222,7 +222,7 @@ TConsoleOutputControl::TConsoleOutputControl( int yHeight, int xWidth )
    d_xyState.cursor = csbi.CursorPosition();
    }
 
-void TConsoleOutputControl::SetNewScreenSize( const Point &newSize ) {
+void TConsoleOutputControl::SetNewScreenSize( const YX_t &newSize ) {
    d_xyState.size.lin = newSize.lin; // the ONLY place d_xyState.size is written!
    d_xyState.size.col = newSize.col; // the ONLY place d_xyState.size is written!
    const size_t cells( d_xyState.size.lin * d_xyState.size.col );
@@ -295,14 +295,15 @@ bool TConsoleOutputControl::SetCursorVisibilityChanged( bool fVisible ) { enum {
    }
 
 
-bool TConsoleOutputControl::GetCursorState( Point *pt, bool *pfVisible ) {
+bool TConsoleOutputControl::GetCursorState( YX_t *pt, bool *pfVisible ) {
    AutoMutex mtx( d_mutex );
    *pt        = d_xyState.cursor;
    *pfVisible = d_fCursorVisible;
    return true;
    }
 
-bool Video::GetCursorState( Point *pt, bool *pfVisible ) {
+bool Video::GetCursorState( YX_t *pt, bool *pfVisible ) {
+   YX_t yx;
    return s_EditorScreen ? s_EditorScreen->GetCursorState( pt, pfVisible ) : 0;
    }
 
@@ -315,7 +316,7 @@ void Video::SetCursorLocn( LINE yLine, COL xCol ) {
    }
 
 void TConsoleOutputControl::SetCursorLocn( LINE yLine, COL xCol ) {
-   const Point newPt( yLine, xCol );
+   const YX_t newPt( yLine, xCol );
    AutoMutex mtx( d_mutex );
    if( d_xyState.cursor != newPt ) {
       Win32::COORD dwCursorPosition;
@@ -470,26 +471,26 @@ STATIC_FXN bool SetConsoleBufferSizeOk( const Win32::HANDLE d_hConsoleScreenBuff
    return true;
    }
 
-bool Video::SetScreenSizeOk( Point &newSize ) {
+bool Video::SetScreenSizeOk( YX_t &newSize ) {
    return s_EditorScreen ? s_EditorScreen->SetConsoleSizeOk( newSize ) : false;
    }
 
-Point Video::GetMaxConsoleSize() {
-   return s_EditorScreen ? s_EditorScreen->GetMaxConsoleSize() : Point(0,0);
+YX_t Video::GetMaxConsoleSize() {
+   return s_EditorScreen ? s_EditorScreen->GetMaxConsoleSize() : YX_t(0,0);
    }
 
-Point TConsoleOutputControl::GetMaxConsoleSize() {
+YX_t TConsoleOutputControl::GetMaxConsoleSize() {
    AutoMutex mtx( d_mutex );  //##################################################
    const ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "console resize" );
    if( !csbi.isValid() ) { DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
-      return Point(0,0);
+      return YX_t(0,0);
       }
    auto rv( csbi.MaxBufSize() );
    NoMoreThan( &rv.col, static_cast<int>(sizeof(Linebuf)-1) );
    return rv;
    }
 
-bool TConsoleOutputControl::SetConsoleSizeOk( Point &newSize ) {
+bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
    enum { DODBG = 0 };
    AutoMutex mtx( d_mutex );  //##################################################
 
@@ -653,7 +654,7 @@ void Win32ConsoleFontChanger::SetFont( Win32::DWORD idx ) {
       if( write_bytes > MAX_CON_WR_BYTES ) {
          xWidth = MAX_CON_WR_BYTES / ((yHeight-2) * sizeof(ScreenCell));
          }
-      Point newSize; newSize.lin=yHeight; newSize.col=xWidth;
+      YX_t newSize; newSize.lin=yHeight; newSize.col=xWidth;
       Video::SetScreenSizeOk( newSize );
       }
    }
@@ -792,7 +793,7 @@ void TConsoleOutputControl::FlushConsoleBufferToScreen() {
    }
 
 
-void Video::GetScreenSize( PPoint rv ) { // returning 8 byte struct msvc
+void Video::GetScreenSize( YX_t *rv ) { // returning 8 byte struct msvc
    W32_ScreenSize_CursorLocn cxy;
    s_EditorScreen->GetSizeCursorLocn( &cxy );
    *rv = cxy.size;

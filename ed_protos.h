@@ -111,27 +111,6 @@ extern   bool Confirm( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
 extern   ConfirmResponse Confirm_wCancel( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
 extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... ) ATTR_FORMAT(4, 5);
 
-
-
-namespace Video {
-   void  Startup( bool fForceNewConsole );
-   Point GetMaxConsoleSize();
-
-   void  GetScreenSize(PPoint rv);
-   bool  SetScreenSizeOk( Point &newSize );
-
-   bool  GetCursorState( Point *pt, bool *pfVisible );
-   void  SetCursorLocn( LINE yLine, COL xCol );
-   void  SetCursorSize( bool fBigCursor );
-   bool  SetCursorVisibilityChanged( bool fVisible );
-
-   COL   BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
-   void  BufferFlushToScreen();
-
-   bool  WriteToFileOk( FILE *ofh );
-   bool  SetConsolePalette( const unsigned palette[16] );
-   }
-
 // Display
 
 extern   void  UnhideCursor();

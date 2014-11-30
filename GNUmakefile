@@ -196,7 +196,8 @@ PLAT_OBJS := \
 else
 
 PLAT_OBJS := \
- linux_api.o
+ linux_api.o \
+ vid_ncurses.o
 
 endif
 
