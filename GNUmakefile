@@ -184,11 +184,11 @@ KEEPASM :=
 ifdef ComSpec
 
 PLAT_OBJS := \
+ conin_win32.o    \
+ conout_win32.o   \
  win32.o          \
  win32_api.o      \
  win32_clipbd.o   \
- win32_conin.o    \
- win32_conout.o   \
  win32_contit.o   \
  win32_filename.o \
  win32_process.o  \
@@ -196,8 +196,8 @@ PLAT_OBJS := \
 else
 
 PLAT_OBJS := \
- linux_api.o \
- vid_ncurses.o
+ con_ncurses.o \
+ linux_api.o
 
 endif
 
