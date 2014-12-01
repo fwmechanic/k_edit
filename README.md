@@ -120,7 +120,7 @@ The editor implements a large number of functions, all of which the user can inv
  * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `undo` (`alt+backspace`) undo the most recent editing operation.  Repeatedly invoking `undo` will successively undo all editing operations.
  * `redo` (`ctrl+backspace`) redo the most recently `undo`ne editing operation.  Repeatedly invoking `redo` will successively redo all `undo`ne editing operations.
- * `arg` is assigned to `goto` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this can serve to modify the behavior of `anyfunction` (EX: `setfile`)
+ * `arg` is assigned to `center` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this can serve to modify the behavior of `anyfunction` (EX: `setfile`)
  * `alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
     * switches with current values (and comments regarding effect).
     * functions with current key assignment (and comments regarding effect).
