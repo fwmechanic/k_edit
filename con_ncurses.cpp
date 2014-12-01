@@ -5,7 +5,7 @@
 #include <vector>
 #include <ncurses.h>
 #include <stdio.h>
-#include "vid.h"
+#include "conio.h"
 
 
 #define PC_BLACK   0

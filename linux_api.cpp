@@ -127,5 +127,5 @@ bool FileOrDirExists( PCChar pszFileName ) {
    }
 
 PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
-   return (0==strerror_r( errno, dest, sizeofDest )) ? dest : nullptr;
+   return strerror_r( errno, dest, sizeofDest );
    }

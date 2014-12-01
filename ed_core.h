@@ -183,7 +183,7 @@ extern U8 g_colorError    ; // ERR
 #define  HILITE_CPP_CONDITIONALS  1
 
 
-#include "vid.h"
+#include "conio.h"
 
 struct Point {   // file location
    LINE    lin;
