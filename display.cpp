@@ -2482,7 +2482,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
       && newPt.isValid()
      ) {
       bool dummy;
-      Video::GetCursorState( &s_CursorLocnBeforeOutsideView, &dummy );
+      ConIO::GetCursorState( &s_CursorLocnBeforeOutsideView, &dummy );
       }
 
    if( newPt.isValid() ) {
@@ -2494,7 +2494,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
       }
 
    DBG( "%s(y=%d,x=%d) from %s", __func__, newPt.lin, newPt.col, from );
-   Video::SetCursorLocn( newPt.lin, newPt.col );
+   ConIO::SetCursorLocn( newPt.lin, newPt.col );
 
    #else
 
@@ -2503,7 +2503,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
    s_CursorLocnOutsideView.lin = y;
    s_CursorLocnOutsideView.col = x;
    0 && DBG( "%s(y=%d,x=%d)", __func__, y, x );
-   Video::SetCursorLocn( y, x );
+   ConIO::SetCursorLocn( y, x );
 
    #endif
 
@@ -2538,7 +2538,7 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
    {
    YX_t cursorNow; bool fCursorVisible;
    CursorLocnOutsideView_Get( &cursorNew ) || pcw->GetCursorForDisplay( &cursorNew );
-   Video::GetCursorState( &cursorNow, &fCursorVisible );
+   ConIO::GetCursorState( &cursorNow, &fCursorVisible );
    fCursorMovePending = (cursorNew.lin != cursorNow.lin || cursorNew.col != cursorNow.col);
    }
 
@@ -2573,7 +2573,7 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
 
    if( fCursorMovePending ) {
       did |= 0x0000000C;
-      Video::SetCursorLocn( cursorNew.lin, cursorNew.col );
+      ConIO::SetCursorLocn( cursorNew.lin, cursorNew.col );
       DISP_LL_STAT_COLLECT(++d_stats.cursorScrolls);
       }
 
@@ -2975,7 +2975,7 @@ STATIC_VAR struct {
 
 VideoFlusher::~VideoFlusher() {
    if( d_fWantToFlush && s_VideoFlushData.fDidVideoWrite ) {
-      Video::BufferFlushToScreen();
+      ConIO::BufferFlushToScreen();
       s_VideoFlushData.fDidVideoWrite = false;
       }
    }
@@ -2983,7 +2983,7 @@ VideoFlusher::~VideoFlusher() {
 
 STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { 0 && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
    if( src ) {
-      const auto charsWritten( Video::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
+      const auto charsWritten( ConIO::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
       if( charsWritten ) {
          DISP_LL_STAT_COLLECT(++d_stats.screenRedraws);
          s_VideoFlushData.fDidVideoWrite = true;
@@ -3036,15 +3036,15 @@ STATIC_FXN bool EditorScreenSizeAllowed( const Point &newSize ) { // checks EDIT
 //    it will be switched to, newSize will be updated, "OK" status will be returned
 bool VideoSwitchModeToXYOk( Point &newSize ) {
    YX_t pass; pass.lin = newSize.lin; pass.col = newSize.col;
-   const auto rv( EditorScreenSizeAllowed( newSize ) && Video::SetScreenSizeOk( pass ) );
+   const auto rv( EditorScreenSizeAllowed( newSize ) && ConIO::SetScreenSizeOk( pass ) );
    newSize.lin = pass.lin; newSize.col = pass.col;
    return rv;
    }
 
 void DispNeedsRedrawCursorMoved() { if( g_CurView() ) g_CurView()->ForceCursorMovedCondition(); }
 
-void UnhideCursor()  { if( Video::SetCursorVisibilityChanged( true  ) )  DispNeedsRedrawCursorMoved(); }
-void HideCursor()    { if( Video::SetCursorVisibilityChanged( false ) )  DispNeedsRedrawCursorMoved(); }
+void UnhideCursor()  { if( ConIO::SetCursorVisibilityChanged( true  ) )  DispNeedsRedrawCursorMoved(); }
+void HideCursor()    { if( ConIO::SetCursorVisibilityChanged( false ) )  DispNeedsRedrawCursorMoved(); }
 
 GLOBAL_VAR int g_iCursorSize = 1;
 
@@ -3055,8 +3055,8 @@ void swidCursorsize( PChar dest, size_t sizeofDest, void *src ) {
 PCChar swixCursorsize( PCChar param ) {
    const auto val( atoi( param ) );
    switch( val ) {
-      case 0:   Video::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
-      case 1:   Video::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
+      case 0:   ConIO::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
+      case 1:   ConIO::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
       default:  return "CursorSize: Value must be 0 or 1";
       }
    }

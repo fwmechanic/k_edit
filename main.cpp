@@ -402,8 +402,8 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
       pFb->RemoveFBufOnly();
 
    // finally, garbage-collect the bits and pieces:
-                                                         DV && DBG("%s Video::Shutdown();", __func__ );
-   Video::Shutdown();
+                                                         DV && DBG("%s ConIO::Shutdown();", __func__ );
+   ConIO::Shutdown();
                                                                DBG("%s calling exit(%d);", __func__, processExitCode );
    exit( processExitCode );
    }
@@ -478,7 +478,7 @@ bool ARG::exit() {
                   const auto filesRemaining( NumberOfCmdlineFilesRemaining() );
                   fToNextFile =
                      (   filesRemaining
-                      && !Video::Confirm( "You have %d more file%s to edit.  Are you sure you want to exit? "
+                      && !ConIO::Confirm( "You have %d more file%s to edit.  Are you sure you want to exit? "
                                  , filesRemaining
                                  , Add_s( filesRemaining )
                                  )
@@ -493,7 +493,7 @@ bool ARG::exit() {
 
    if( fToNextFile && SwitchToNextCmdlineFile()     ) { DBG( "%s ********* switching to another file *********", FUNC );  return false; }
    if( !KillAllBkgndProcesses()                     ) { DBG( "%s ********* !KillAllBkgndProcesses() *********" , FUNC );  return false; }
-   if( g_fAskExit && !Video::Confirm( "Exit the Editor?" ) ) { DBG( "%s ********* user cancelled exit A *********"    , FUNC );  return false; }
+   if( g_fAskExit && !ConIO::Confirm( "Exit the Editor?" ) ) { DBG( "%s ********* user cancelled exit A *********"    , FUNC );  return false; }
    if( SaveAllDirtyFilesUserEscaped()               ) { DBG( "%s ********* user cancelled exit B *********"    , FUNC );  return false; }
 
    DBG( "%s exiting ===========================================================", FUNC );
@@ -629,7 +629,7 @@ bool ARG::ext() {
                     return true;
                     }
 
-                 if( Video::Confirm( "Stop here (%d of %d)? ", ix, count ) )
+                 if( ConIO::Confirm( "Stop here (%d of %d)? ", ix, count ) )
                     return true;
                  }
               }
@@ -1071,8 +1071,8 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
                                  DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
    MainThreadPerfCounter pc;
 
-   if( !Video::StartupOk( fForceNewConsole ) ) { exit( 1 ); }
-                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru Video::Startup"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   if( !ConIO::StartupOk( fForceNewConsole ) ) { exit( 1 ); }
+                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ConIO::Startup"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
 
    CreateWindow0();
    s_pFbufLog->PutFocusOn();

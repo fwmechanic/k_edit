@@ -1326,7 +1326,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
       return false;
    }
 
-   if( fMultiFileReplace && g_SnR_szReplacement.c_str()[0] == 0 && !Video::Confirm( "Empty replacement string, confirm: " ) )
+   if( fMultiFileReplace && g_SnR_szReplacement.c_str()[0] == 0 && !ConIO::Confirm( "Empty replacement string, confirm: " ) )
       return false;
 
 #if USE_PCRE

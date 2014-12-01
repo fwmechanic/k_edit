@@ -99,7 +99,7 @@ void IdleIntegrityCheck() {
 
    if( errors ) {
       DBG( "idleCheck %d ERRORS ***********************************************", errors );
-      Video::DbgPopf( "idleCheck detected %d ERRORS!!!", errors );
+      ConIO::DbgPopf( "idleCheck detected %d ERRORS!!!", errors );
       }
 #endif// DO_IDLE_FILE_VALIDATE
    }
@@ -434,7 +434,7 @@ bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff 
                                       && !SilentUpdateMode()
                                       #endif
                                    // && DBG( "confirming" )
-                                      && !Video::Confirm( "%s has been changed DiskFile %s than buffer:  Refresh? ", Name(), why )
+                                      && !ConIO::Confirm( "%s has been changed DiskFile %s than buffer:  Refresh? ", Name(), why )
                                     )
                                      {
                                      0 && DBG( "not confirmed" );
@@ -815,7 +815,7 @@ STATIC_FXN bool RmvFileByName( PCChar filename ) {
    if( !pfToRm )
       return Msg( "no FBUF for '%s'", filename );
 
-   if( pfToRm->IsDirty() && !Video::Confirm( "Forget DIRTY FBUF '%s'?", filename ) )
+   if( pfToRm->IsDirty() && !ConIO::Confirm( "Forget DIRTY FBUF '%s'?", filename ) )
       return Msg( "Dirty FBUF not forgotten '%s'", filename );
 
    const auto fDidRmv( DeleteAllViewsOntoFbuf( pfToRm ) );
@@ -837,7 +837,7 @@ bool ARG::refresh() {
     case NOARG:    { PCF;
                    if(  pcf->FnmIsDiskWritable() // no confirm if WC file
                      && pcf->IsDirty()           // only confirm if DIRTY file
-                     && !Video::Confirm( "WARNING: current buffer has unsaved edits; are you SURE you want to reread this file? " )
+                     && !ConIO::Confirm( "WARNING: current buffer has unsaved edits; are you SURE you want to reread this file? " )
                      )
                       return false;
 
@@ -849,7 +849,7 @@ bool ARG::refresh() {
     case NULLARG:  if( DLINK_NEXT( g_CurView(), dlinkViewsOfWindow ) == nullptr )
                       return fnMsg( "no alternate file" );
 
-                   if( !Video::Confirm( "Forget the current file (from all windows)?! " ) )
+                   if( !ConIO::Confirm( "Forget the current file (from all windows)?! " ) )
                       return false;
 
                    KillTheCurrentView();
@@ -1211,7 +1211,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          }
 
       if(    !fAllowDiskFileCreate
-         || (!fCreateSilently && !Video::Confirm( "%s does not exist. Create? ", Name() ))
+         || (!fCreateSilently && !ConIO::Confirm( "%s does not exist. Create? ", Name() ))
         ) {
          // SW_BP;
          DBG( "FRd! user denied create" );
@@ -1443,7 +1443,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    {
    FileAttribs dest( destFnm.c_str() );
    if( dest.Exists() && dest.IsReadonly() ) {
-      if(   Video::Confirm( "File '%s' is readonly; overwrite anyway?", destFnm.c_str() )
+      if(   ConIO::Confirm( "File '%s' is readonly; overwrite anyway?", destFnm.c_str() )
          && dest.MakeWritableFailed( destFnm.c_str() )
         )
          return Msg( "Could not make '%s' writable!", destFnm.c_str() );
@@ -1528,7 +1528,7 @@ bool FBUF::WriteToDisk( PCChar pszSavename ) {
       if(  func_stat( dest.c_str(), &stat_buf ) == -1
         || stat_buf.st_size == 0
         ) {
-         Video::DbgPopf( "write_to_disk() leaked!  '%s' does NOT exist (or is 0 bytes) on disk !!!", dest.c_str() );
+         ConIO::DbgPopf( "write_to_disk() leaked!  '%s' does NOT exist (or is 0 bytes) on disk !!!", dest.c_str() );
          }
       }
 
@@ -1550,13 +1550,13 @@ bool FBUF::SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation ) {
    if( pDupFBuf && pDupFBuf == this )
       return Msg( "current filename and new filename are same; nothing done" );
 
-   if( fNeedUserConfirmation && !Video::Confirm( "Do you want to save this file as %s ?", filenameBuf.c_str() ) ) {
+   if( fNeedUserConfirmation && !ConIO::Confirm( "Do you want to save this file as %s ?", filenameBuf.c_str() ) ) {
       FlushKeyQueuePrimeScreenRedraw();
       return false;
       }
 
    if( pDupFBuf ) {
-      if( pDupFBuf->IsDirty() && !Video::Confirm( "You are currently editing the new-named file in a different buffer!  Destroy edits?!" ) )
+      if( pDupFBuf->IsDirty() && !ConIO::Confirm( "You are currently editing the new-named file in a different buffer!  Destroy edits?!" ) )
          return false;
 
       pDupFBuf = pDupFBuf->ForciblyRemoveFBuf();

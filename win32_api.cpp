@@ -90,7 +90,7 @@ PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
 //#############################################################################################################################
 //
 
-int Video::DbgPopf( PCChar fmt, ... ) {
+int ConIO::DbgPopf( PCChar fmt, ... ) {
    FixedCharArray<512> buf;
    va_list val;
    va_start( val, fmt );
@@ -115,7 +115,7 @@ int Video::DbgPopf( PCChar fmt, ... ) {
 
 
 void AssertDialog_( PCChar function, int line ) {
-   Video::DbgPopf( "Assertion failed, %s L %d", function, line );
+   ConIO::DbgPopf( "Assertion failed, %s L %d", function, line );
    }
 
 #if DEBUG_LOGGING
@@ -125,7 +125,7 @@ void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum ) {
    DBG( "%s", msg.k_str() );
 
    if( !*dialogShown )
-      Video::DbgPopf( "%s", msg.k_str() );
+      ConIO::DbgPopf( "%s", msg.k_str() );
 
    *dialogShown = true;
    }
@@ -164,7 +164,7 @@ STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt, va_list v
       }
    }
 
-bool Video::Confirm( PCChar pszPrompt, ... ) {
+bool ConIO::Confirm( PCChar pszPrompt, ... ) {
    va_list val;
    va_start( val, pszPrompt );
    const ConfirmResponse rv( Confirm_( MB_YESNO, pszPrompt, val ) );

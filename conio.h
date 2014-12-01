@@ -15,7 +15,7 @@ struct YX_t {
    bool operator!=( const YX_t &rhs ) const { return !(*this == rhs); }
    };
 
-namespace Video {
+namespace ConIO {
    bool  StartupOk( bool fForceNewConsole );
    void  Shutdown();
    YX_t  GetMaxConsoleSize();

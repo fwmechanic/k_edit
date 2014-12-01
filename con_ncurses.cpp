@@ -54,19 +54,19 @@ static void set_pcattr( int attr ) {
    }
    attrset( COLOR_PAIR(color_pr_num) | ncfg_bold );
    }
-void Video::SetCursorSize( bool fBigCursor ) {}
+void ConIO::SetCursorSize( bool fBigCursor ) {}
 static YX_t s_cursor_pos;
-bool Video::GetCursorState( YX_t *pt, bool *pfVisible ) {
+bool ConIO::GetCursorState( YX_t *pt, bool *pfVisible ) {
    *pt = s_cursor_pos;
    *pfVisible = true;
    return true;
    }
-bool Video::SetCursorVisibilityChanged( bool fVisible ) { return false; }
-void Video::SetCursorLocn( int yLine, int xCol ) {
+bool ConIO::SetCursorVisibilityChanged( bool fVisible ) { return false; }
+void ConIO::SetCursorLocn( int yLine, int xCol ) {
    s_cursor_pos.lin = yLine;
    s_cursor_pos.col = xCol;
    }
-int Video::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
+int ConIO::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
    if( sizeY==sizeY && xColWithinConsoleWindow >= sizeX ) { return 0; }
@@ -90,24 +90,24 @@ int Video::BufferWriteString( const char *pszStringToDisp, int StringLen, int yL
       }
    return slen;
    }
-bool Video::SetScreenSizeOk( YX_t &newSize ) { return false; }
-void Video::GetScreenSize( YX_t *rv ) {
+bool ConIO::SetScreenSizeOk( YX_t &newSize ) { return false; }
+void ConIO::GetScreenSize( YX_t *rv ) {
    getmaxyx( stdscr, rv->lin, rv->col );
    }
-YX_t Video::GetMaxConsoleSize() {
+YX_t ConIO::GetMaxConsoleSize() {
    YX_t rv;
-   Video::GetScreenSize( &rv );
+   ConIO::GetScreenSize( &rv );
    return rv;
    }
-void Video::BufferFlushToScreen() {
+void ConIO::BufferFlushToScreen() {
    move( s_cursor_pos.lin, s_cursor_pos.col );
    refresh();
    }
-bool Video::WriteToFileOk( FILE *ofh ) {
+bool ConIO::WriteToFileOk( FILE *ofh ) {
    return false;
    }
-bool Video::SetConsolePalette( const unsigned palette[16] ) { return false; }
-bool Video::StartupOk( bool fForceNewConsole ) {
+bool ConIO::SetConsolePalette( const unsigned palette[16] ) { return false; }
+bool ConIO::StartupOk( bool fForceNewConsole ) {
    initscr();
    if(has_colors() == FALSE) {
       endwin();
@@ -120,6 +120,6 @@ bool Video::StartupOk( bool fForceNewConsole ) {
    noecho();
    return true;
    }
-void Video::Shutdown() {
+void ConIO::Shutdown() {
    endwin();
    }

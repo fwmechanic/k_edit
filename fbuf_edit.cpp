@@ -2038,7 +2038,7 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
            );
 
    if( FBsrc == FBdest ) {
-      Video::DbgPopf( "%s: src and dest cannot be the same buffer", __func__ );
+      ConIO::DbgPopf( "%s: src and dest cannot be the same buffer", __func__ );
       return;
       }
 
