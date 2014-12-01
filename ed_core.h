@@ -1301,11 +1301,14 @@ public:
    void           SetAutoRead()                       {  d_fAutoRead = true; }
    bool           IsAutoRead()           const { return  d_fAutoRead; }
 
+#if defined(_WIN32)
+   // in Linux we adopt a policy of "we'll determine whether the file is writable or not only when we attempt to write it"
 public:
    bool           IsDiskRO()             const { return  d_fDiskRdOnly; }
 private:
    void           SetDiskRW()                         {  d_fDiskRdOnly = false; }
    void           SetDiskRO()                         {  d_fDiskRdOnly = true; }
+#endif
 
 public:
    bool           IsRsrcLdBlocked()      const { return  d_fInhibitRsrcLoad; }
@@ -1335,7 +1338,9 @@ public:
    void           DiscardTrailSpcs()                  {  d_fPreserveTrailSpc = false; }
    void           KeepTrailSpcs()                     {  d_fPreserveTrailSpc = true;  }
 
+#if defined(_WIN32)
    bool           MakeDiskFileWritable();
+#endif
    bool           CantModify() const;
 
    eSpc2TabConvs  TabConv() const { return d_Tabconv; }

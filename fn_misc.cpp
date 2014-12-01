@@ -26,6 +26,7 @@ bool ARG::seteol() {
    return g_CurFBuf()->SetEolModeChanged( d_cArg >= 2 ? EolCRLF : EolLF );
    }
 
+#if defined(_WIN32)
 bool FBUF::MakeDiskFileWritable() {
    auto fFileROAttrChanged( false );
 
@@ -56,10 +57,16 @@ bool FBUF::MakeDiskFileWritable() {
       );
    return true;
    }
+#endif
+
+
+#ifdef fn_rw
 
 bool ARG::rw() {
    return g_CurFBuf()->MakeDiskFileWritable();
    }
+
+#endif
 
 //**********************************************
 

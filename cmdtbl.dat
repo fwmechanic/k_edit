@@ -134,7 +134,7 @@ w resize       resize                    NOARG , Interactively resize the Window
   restcur      restcur        CURSORFUNC+KEEPMETA
   right        right          CURSORFUNC
 # rmeds        rmeds                     NOARG , Delete all undo (and redo) information for the current file
-  rw           rw                        NOARG , If current file on disk is readonly, make it read-writeable
+w rw           rw                        NOARG , If current file on disk is readonly, make it read-writeable
   saveall      saveall                   NOARG , Save all dirty files to disk (alias: arg arg arg setfile -> saveall)
   savecur      savecur        CURSORFUNC+KEEPMETA
 w savescreen   savescreen                NOARG+TEXTARG+BOXSTR , save screen content including color, cursor position, etc. to TEXT file (dflt='savescreen')

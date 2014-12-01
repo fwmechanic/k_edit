@@ -1025,7 +1025,9 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
       Msg( "cwd unchanged" );
       }
    else {
+#if defined(_WIN32)
       SetCwdChanged( cwdAfter.c_str() );
+#endif
       Msg( "Changed directory to %s", cwdAfter.c_str() );
       if( fSave )  g_pFBufCwd->InsLine( 0, cwdBefore.c_str() );
       }
@@ -1265,6 +1267,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
 
    ClrNoEdit();
 
+#if defined(_WIN32)
    if( IsFileReadonly( Name() ) ) {
       VR_( DBG( "FRd: is RO_FILE" ); )
       SetDiskRO();
@@ -1275,6 +1278,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       VR_( DBG( "FRd: is NOT RO_FILE" ); )
       SetDiskRW();
       }
+#endif
 
    SetLastFileStatFromDisk();
 
@@ -1435,6 +1439,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    if( pStream )  *pStream = '\0';
 #endif
 
+#if defined(_WIN32)
    {
    FileAttribs dest( destFnm.c_str() );
    if( dest.Exists() && dest.IsReadonly() ) {
@@ -1448,6 +1453,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
          }
       }
    }
+#endif
 
    const auto tmpFnm( Path::Union( ".$k$", destFnm.c_str() ) );
    DisplayNoiseBlanker dblank;
@@ -1475,7 +1481,10 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    if( !NameMatch( destFnm.c_str() ) )
       ChangeName( destFnm.c_str() ); //
 
-   SetDiskRW(), UnDirty(), SetLastFileStatFromDisk(); DispNeedsRedrawStatLn();
+#if defined(_WIN32)
+   SetDiskRW(),
+#endif
+   UnDirty(), SetLastFileStatFromDisk(); DispNeedsRedrawStatLn();
    return !Msg( "Saved  %s", Name() ); // xtra spc to match Msg( "Saving %s" ... above
    }
 

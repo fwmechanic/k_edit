@@ -159,7 +159,7 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
 
 //-----------------------------------------------------------------------------------
 
-STIL bool KeepMatch( const WildCardMatchMode want, const unsigned have ) {
+STIL bool KeepMatch_( const WildCardMatchMode want, const unsigned have ) {
    // A directory usually DOES have FILE_ATTRIBUTE_xxx's _besides_
    // FILE_ATTRIBUTE_DIRECTORY (ie.  they look like files), so if the
    // FILE_ATTRIBUTE_DIRECTORY is used, it must be examined alone
@@ -175,8 +175,8 @@ STIL bool KeepMatch( const WildCardMatchMode want, const unsigned have ) {
    return                          false;
    }
 
-bool DirMatches::KeepMatch() const {
-   const auto rv( ::KeepMatch( d_wcMode, d_Win32_FindData.dwFileAttributes ) );
+bool DirMatches::KeepMatch() {
+   const auto rv( KeepMatch_( d_wcMode, d_Win32_FindData.dwFileAttributes ) );
 
    0 && DBG( "want %c, have %c '%s' rv=%d"
            , (d_wcMode & ONLY_DIRS) ? 'D':'d'
@@ -189,7 +189,6 @@ bool DirMatches::KeepMatch() const {
    }
 
 bool DirMatches::FoundNext() {
-#if defined(_WIN32)
    if( !d_fTriedFirst ) {
       d_fTriedFirst = true;
       d_hFindFile = Win32::FindFirstFile( d_buf.c_str(), &d_Win32_FindData );
@@ -206,9 +205,6 @@ bool DirMatches::FoundNext() {
       d_ixDest = std::string::npos; // flag no more matches
 
    return rv;
-#else
-   return false;
-#endif
    }
 
 const Path::str_t DirMatches::GetNext() {
@@ -230,32 +226,24 @@ const Path::str_t DirMatches::GetNext() {
    }
 
 DirMatches::~DirMatches() {
-#if defined(_WIN32)
    if( d_hFindFile != Win32::Invalid_Handle_Value() ) {
       Win32::FindClose( d_hFindFile );
       }
-#else
-#endif
    }
 
 DirMatches::DirMatches( PCChar pszPrefix, PCChar pszSuffix, WildCardMatchMode wcMode, bool fAbsolutize )
    : d_wcMode( wcMode )
    , d_buf( Path::str_t(pszPrefix ? pszPrefix : "") + Path::str_t(pszSuffix ? pszSuffix : "") )
-#if defined(_WIN32)
    , d_hFindFile( Win32::Invalid_Handle_Value() )
-#else
-#endif
    { // prep the buffer
    if( fAbsolutize ) {
       d_buf = Path::Absolutize( d_buf.c_str() );
       }
 
-#if defined(_WIN32)
    const bool hasDriveLetter( isalpha( d_buf[0] ) && d_buf[1] == ':' ); // leading c: ?
    if( hasDriveLetter ) {
       d_buf[0] = tolower( d_buf[0] );
       }
-#endif
 
    { // hackaround
    auto pDest = Path::StrToPrevPathSepOrNull( d_buf.c_str(), PCChar(nullptr) );
@@ -270,7 +258,6 @@ DirMatches::DirMatches( PCChar pszPrefix, PCChar pszSuffix, WildCardMatchMode wc
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_WIN32)
 Path::str_t Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 };
    /* If a filesystem is NOT case sensitive, we could, by typing different
       casings of the filename, open the same file into multiple edit buffers,
@@ -333,7 +320,6 @@ Path::str_t Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 
                                                                        DBG_ABS_PATH && DBG( "%s- rv='%s'", __func__, pbs.c_str() );
    return pbs;
    }
-#endif
 
 bool FileOrDirExists( PCChar pszFileName ) {
    FileAttribs fa( pszFileName );
@@ -343,10 +329,6 @@ bool FileOrDirExists( PCChar pszFileName ) {
 bool IsFileReadonly( PCChar pszFileName ) {
    FileAttribs fa( pszFileName );
    return fa.Exists() && fa.IsReadonly();
-   }
-
-bool Path::IsLegalFnm( PCChar name ) {
-   return StrToNextOrEos( name, Path::InvalidFnmChars() )[0] == '\0';
    }
 
 #ifdef fn_glds

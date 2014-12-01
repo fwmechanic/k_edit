@@ -380,13 +380,21 @@ FBUF_(IsDirty)                  { R_bool( 0 != thisPF()->IsDirty()              
 #ifdef fn_su
 FBUF_(SilentUpdateMode)         { R_bool( 0 != thisPF()->SilentUpdateMode()          ); }
 #endif
+#if defined(_WIN32)
 FBUF_(IsDiskRO)                 { R_bool( 0 != thisPF()->IsDiskRO()                  ); }
+#else
+FBUF_(IsDiskRO)                 { R_bool( false ); }
+#endif
 FBUF_(HasGlobalPtr)             { R_bool( 0 != thisPF()->HasGlobalPtr()              ); }
 FBUF_(ToForgetOnExit)           { R_bool( 0 != thisPF()->ToForgetOnExit()            ); }
 FBUF_(IsPseudo)                 { R_bool( 0 != thisPF()->FnmIsPseudo()               ); }
 FBUF_(IsRsrcLdBlocked)          { R_bool( 0 != thisPF()->IsRsrcLdBlocked()           ); }
 FBUF_(IsNoEdit)                 { R_bool( 0 != thisPF()->IsNoEdit()                  ); }
+#if defined(_WIN32)
 FBUF_(MakeDiskFileWritable)     { R_bool( 0 != thisPF()->MakeDiskFileWritable()      ); }
+#else
+FBUF_(MakeDiskFileWritable)     { R_bool( false ); }
+#endif
 FBUF_(TrailSpcsKept)            { R_bool( 0 != thisPF()->TrailSpcsKept()             ); }
 FBUF_(CantModify)               { R_bool( 0 != thisPF()->CantModify()                ); }
 FBUF_(LineCount)                { R_int(       thisPF()->LineCount()                 ); }

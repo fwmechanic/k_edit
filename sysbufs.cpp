@@ -225,7 +225,11 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
    if( g_fShowFbufDetails && (pFBuf->HasLines() || pFBuf->FnmIsPseudo()) ) {
       char entabStr[] = { 'e', char( '0' + pFBuf->TabConv() ), 0 };
       pFout->FmtLastLine(
+#if defined(_WIN32)
          "%-*s %c%*d L %*u %d%s {%s%s%s%s%s%s}"
+#else
+         "%-*s %c%*d L %*u %d%s {%s%s%s%s%s}"
+#endif
             , max.nmLen, pFBuf->UserName( BSOB(pb) )
                , pFBuf->IsDirty()         ? '*'       : ' '
                        , max.lineCntLog10, pFBuf->LineCount()
@@ -237,7 +241,9 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
       //                     , pFBuf->HasLines()        ? "Lines,"  : ""
                              , pFBuf->ToForgetOnExit()  ? "Txnt,"   : ""
                              , pFBuf->IsNoEdit()        ? "RO,"     : ""
+#if defined(_WIN32)
                              , pFBuf->IsDiskRO()        ? "DiskRO," : ""
+#endif
                              , pFBuf->EolName()
          );
       }
