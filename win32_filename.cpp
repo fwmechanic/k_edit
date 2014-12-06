@@ -97,7 +97,7 @@ Path::str_t Path::GetCwd() {
    }
 
 Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
-#ifdef BOOST_LIB_VERSION
+#if 0 && defined(BOOST_LIB_VERSION)
    boost::filesystem::path src( pszFilename );
    boost::system::error_code ec;
    auto boost_dest( canonical( src, ec ) );

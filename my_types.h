@@ -50,6 +50,15 @@
 
 #include <string>
 
+// driven by https://news.ycombinator.com/item?id=8704318
+// I'm motivated to experiment with boost::string_ref
+// to minimize gratuitious std::string mallocs/copies
+
+// last 32-bit Nuwen MinGW contains Boost 1.54
+// http://www.boost.org/doc/libs/1_54_0/libs/utility/doc/html/string_ref.html
+#include <boost/version.hpp>
+#include <boost/utility/string_ref.hpp>
+
 #include "attr_format.h"
 
 #if !defined(__GNUC__)

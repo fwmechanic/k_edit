@@ -60,7 +60,7 @@ bool Path::eq( const Path::str_t &name1, const Path::str_t &name2 ) {
    return true;
    }
 
-Path::str_t::size_type Path::CommonPrefixLen( const std::string &s1, const std::string &s2 ) {
+Path::str_t::size_type Path::CommonPrefixLen( boost::string_ref s1, boost::string_ref s2 ) {
    typedef Path::str_t::size_type s_t;
    const s_t past_end_ix( Min( s1.length(), s2.length() ) );
    s_t oPathSep( 0 );
