@@ -48,7 +48,7 @@ bool Path::IsDotOrDotDot( PCChar pC ) { // true if pC _ends with_ "\.." or "\." 
        ;
    }
 
-bool Path::eq( const Path::str_t &name1, const Path::str_t &name2 ) {
+bool Path::eq( boost::string_ref name1, boost::string_ref name2 ) {
    if( name1.length() != name2.length() ) {
       return false;
       }

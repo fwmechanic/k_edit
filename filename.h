@@ -59,7 +59,7 @@ namespace Path {
       return          ( c1 ) ==          ( c2 );
 #endif
       }
-   extern bool eq( const str_t &name1, const str_t &name2 ); // with appropriate case-sensitivity
+   extern bool eq( boost::string_ref name1, boost::string_ref name2 ); // with appropriate case-sensitivity
    str_t::size_type CommonPrefixLen( boost::string_ref s1, boost::string_ref s2 );
 
    extern char  DelimChar( PCChar fnm );
