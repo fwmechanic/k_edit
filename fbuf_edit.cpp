@@ -1470,9 +1470,7 @@ bool FBUF::PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos ) cons
 boost::string_ref FBUF::PeekRawLine( LINE lineNum ) const {
    const auto exists( KnownLine( lineNum ) );
    auto len( 0 );
-   if(   exists
-      && (len=LineLength(lineNum)) > 0
-     ) {
+   if( exists && (len=LineLength(lineNum)) > 0 ) {
       return boost::string_ref( d_paLineInfo[ lineNum ].GetLineRdOnly(), len );
       }
    else {
@@ -1482,28 +1480,18 @@ boost::string_ref FBUF::PeekRawLine( LINE lineNum ) const {
 
 // returns strlen of returned line
 COL FBUF::getLineRaw( std::string &st, LINE yLine ) const {
-   PCChar ptr; size_t chars;
-   if( PeekRawLineExists( yLine, &ptr, &chars ) ) {
-      st.assign( ptr, chars );
-      }
-   else {
-      st.clear();
-      }
+   const auto rv( PeekRawLine( yLine ) );
+   st.assign( rv.data(), rv.length() );
    return st.length();
    }
+
 // returns strlen of returned line
 COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
-   PCChar ptr; size_t chars;
-   if( PeekRawLineExists( yLine, &ptr, &chars ) ) {
-      const auto tw( TabWidth() );
-      const auto size( 1+StrCols( tw, ptr, ptr+chars ) );
-      const auto pDest( pXb->wresize( size ) );
-      return PrettifyStrcpy( pDest, size, ptr, chars, tw, chExpandTabs );
-      }
-   else {
-      pXb->clear();
-      return 0;
-      }
+   const auto rv( PeekRawLine( yLine ) );
+   const auto tw( TabWidth() );
+   const auto size( 1+StrCols( tw, rv.data(), rv.data()+rv.length() ) );
+   const auto pDest( pXb->wresize( size ) );
+   return PrettifyStrcpy( pDest, size, rv.data(), rv.length(), tw, chExpandTabs );
    }
 
 
@@ -1553,17 +1541,6 @@ COL FBUF::GetLineSeg( Xbuf &pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) con
       }
    }
 
-#if 0
-
-COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const { // temp shim
-   Xbuf xb;
-   const auto rv( GetLineSeg( xb, yLine, xLeftIncl, xRightIncl ) );
-   st = xb.c_str();
-   return rv;
-   }
-
-#else
-
 COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
    const auto tw( TabWidth() );
    PCChar lnptr; size_t lnchars;
@@ -1590,8 +1567,6 @@ COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl
       }
    return st.length();
    }
-
-# endif
 
 // open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;
 //    original dest[xIns] is moved to dest[xIns+insertCols]

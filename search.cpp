@@ -763,8 +763,6 @@ class ReplaceCharWalker : public CharWalker {
    };
 
 
-#define  RAW_REPLACE  0
-
 // replace @ pMatch (in lbuf), adjust curPt->col and *pColLastPossibleLastMatchChar
 void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMatch, Point *curPt, int *pColLastPossibleLastMatchChar ) {
    0 && DBG("DFPoR+ (%d,%d) LR=%d LoSB=%d", curPt->col, curPt->lin, d_replaceLen, Strlen( lbuf ) );
@@ -820,7 +818,7 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
    ++d_iReplacementsPoss;  //##### it's A REPLACABLE MATCH
 
 
-#if RAW_REPLACE
+#if 0
    const auto lbuf( d_xbb.resize( 1+(eos - ptr) + d_replaceLen - d_searchLen ) );
    pFBuf->getLineRaw( &d_xbb, curPt->lin );
    const auto pMatch( lbuf + (pxCur - ptr) );
