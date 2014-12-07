@@ -50,7 +50,7 @@ STATIC_FXN PCChar PPastLastPathSep( PCChar pPath ) {
       pPath = pNxt + 1;
       }
 
-   1 && DBG( "PPastLastPathSep '%s' -> '%s' (%u)", p0, pPath, DirnmLen( p0 ) );
+   0 && DBG( "PPastLastPathSep '%s' -> '%s' (%" PR_SIZET "u)", p0, pPath, DirnmLen( p0 ) );
    return pPath;
    }
 
