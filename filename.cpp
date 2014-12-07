@@ -7,6 +7,42 @@
 #include "ed_main.h"
 #include <regex>
 
+STATIC_FXN boost::string_ref::size_type DirnmLen( boost::string_ref pPath ) { // a.k.a. IdxOfFnm()
+   const auto rv( pPath.find_last_of( PATH_SEP_SRCH_STR ":" ) );
+   if( boost::string_ref::npos == rv ) {
+      return 0;
+      }
+   else {
+      return rv+1; // include last sep
+      }
+   }
+
+boost::string_ref Path::RefDirnm( boost::string_ref src ) {
+   return src.substr( 0, DirnmLen( src ) );
+   }
+
+boost::string_ref Path::RefFnameExt( boost::string_ref src ) {
+   return src.substr( DirnmLen( src ) );
+   }
+
+boost::string_ref Path::RefFnm( boost::string_ref src ) { // a.k.a. IdxOfFnm()
+   auto fx( Path::RefFnameExt( src ) );
+   const auto idxDot( fx.find_last_of( '.' ) );
+   if( idxDot == boost::string_ref::npos || idxDot == 0 ) {
+      return fx;
+      }
+   return fx.substr( 0, idxDot );
+   }
+
+boost::string_ref Path::RefExt( boost::string_ref src ) { // a.k.a. IdxOfFnm()
+   auto fx( Path::RefFnameExt( src ) );
+   const auto idxDot( fx.find_last_of( '.' ) );
+   if( idxDot == boost::string_ref::npos || idxDot == 0 ) {
+      return boost::string_ref( "", 0 );
+      }
+   return fx.substr( idxDot );
+   }
+
 STATIC_FXN PCChar PPastLastPathSep( PCChar pPath ) {
    const auto p0( pPath );
    decltype(pPath) pNxt;
@@ -14,7 +50,7 @@ STATIC_FXN PCChar PPastLastPathSep( PCChar pPath ) {
       pPath = pNxt + 1;
       }
 
-   0 && DBG( "PPastLastPathSep '%s' -> '%s'", p0, pPath );
+   1 && DBG( "PPastLastPathSep '%s' -> '%s' (%u)", p0, pPath, DirnmLen( p0 ) );
    return pPath;
    }
 
@@ -36,16 +72,31 @@ STATIC_FXN PCChar PAtLastDotOrEos( PCChar pPath ) {
    return pPath;
    }
 
-bool Path::IsDotOrDotDot( PCChar pC ) { // true if pC _ends with_ "\.." or "\." "\..\" or "\.\" or is "." or ".."
-   const auto eos( Eos( pC ) );
-   const auto len( eos - pC );
-   return (len ==1 && 0==strcmp( pC     , "."  ))
-       || (len ==2 && 0==strcmp( pC     , ".." ))
-       || (len > 2 && 0==strcmp( eos - 2, PATH_SEP_STR "." ))
-       || (len > 3 && 0==strcmp( eos - 3, PATH_SEP_STR "." PATH_SEP_STR ))
-       || (len > 3 && 0==strcmp( eos - 3, PATH_SEP_STR ".." ))
-       || (len > 4 && 0==strcmp( eos - 4, PATH_SEP_STR ".." PATH_SEP_STR ))
+// bool Path::IsDotOrDotDot( PCChar pC ) { // true if pC _ends with_ "\.." or "\." "\..\" or "\.\" or is "." or ".."
+//    const auto eos( Eos( pC ) );
+//    const auto len( eos - pC );
+//    return (len ==1 && 0==strcmp( pC     , "."  ))
+//        || (len ==2 && 0==strcmp( pC     , ".." ))
+//        || (len > 2 && 0==strcmp( eos - 2, PATH_SEP_STR "." ))
+//        || (len > 3 && 0==strcmp( eos - 3, PATH_SEP_STR "." PATH_SEP_STR ))
+//        || (len > 3 && 0==strcmp( eos - 3, PATH_SEP_STR ".." ))
+//        || (len > 4 && 0==strcmp( eos - 4, PATH_SEP_STR ".." PATH_SEP_STR ))
+//        ;
+//    }
+
+bool Path::IsDotOrDotDot( boost::string_ref str ) { // true if str _ends with_ "\.." or "\." "\..\" or "\.\" or is "." or ".."
+   const auto pC ( str.data()   );
+   const auto len( str.length() );
+   const auto eos( pC + len );
+   return (len==1 && 0==memcmp( pC, "." , 1 ))
+       || (len==2 && 0==memcmp( pC, "..", 2 ))
+#define LCMP( nn, st )  (len > (nn) && 0==memcmp( eos - (nn), PATH_SEP_STR "." , (nn) ))
+       || LCMP( 2, PATH_SEP_STR "." )
+       || LCMP( 3, PATH_SEP_STR "." PATH_SEP_STR )
+       || LCMP( 3, PATH_SEP_STR ".." )
+       || LCMP( 4, PATH_SEP_STR ".." PATH_SEP_STR )
        ;
+#undef  LCMP
    }
 
 bool Path::eq( boost::string_ref name1, boost::string_ref name2 ) {
@@ -71,28 +122,43 @@ Path::str_t::size_type Path::CommonPrefixLen( boost::string_ref s1, boost::strin
    return oPathSep;
    }
 
-Path::str_t Path::CpyDirnm( PCChar pSrcFullname ) {                                       0 && DBG( "%s  in =%s'", __func__, pSrcFullname );
-   Path::str_t rv( pSrcFullname, PPastLastPathSep( pSrcFullname ) - pSrcFullname );       0 && DBG( "%s  out=%s'", __func__, rv.c_str()   );
-   return rv;
+Path::str_t Path::CpyDirnm( PCChar pSrcFullname ) {           0 && DBG( "%s  in =%s'", __func__, pSrcFullname );
+   const auto rv( Path::RefDirnm( pSrcFullname ) );
+   return Path::str_t( rv.data(), rv.length() );
+   }
+
+Path::str_t Path::CpyFnameExt( PCChar pSrcFullname ) {
+   const auto rv( Path::RefFnameExt( pSrcFullname ) );
+   return Path::str_t( rv.data(), rv.length() );
    }
 
 Path::str_t Path::CpyFnm( PCChar pSrcFullname ) { // DOES NOT include the trailing "." !!!
+#if 1
+   const auto rv( Path::RefFnm( pSrcFullname ) );
+   Path::str_t rv_( rv.data(), rv.length() );           0 && DBG( "%s: '%s'->'%s'", __func__, pSrcFullname, rv_.c_str() );
+   return rv_;
+#else
    const auto pC( PPastLastPathSep( pSrcFullname ) );
    auto pEnd( Path::IsDotOrDotDot( pC ) ? Eos( pC ) : PAtLastDotOrEos( pC ) );
    return Path::str_t( pC, pEnd - pC );
+#endif
    }
 
 Path::str_t Path::CpyExt( PCChar pSrcFullname ) { // if pSrcFullname contains an extension, prepends a leading "."
+#if 1
+   const auto rv( Path::RefExt( pSrcFullname ) );
+   Path::str_t rv_( rv.data(), rv.length() );           0 && DBG( "%s: '%s'->'%s'", __func__, pSrcFullname, rv_.c_str() );
+   return rv_;
+#else
    const auto pC( PPastLastPathSep( pSrcFullname ) );
    if( Path::IsDotOrDotDot( pC ) ) {
       return Path::str_t( "" );
       }
    return Path::str_t( PAtLastDotOrEos( pC ) );
+#endif
    }
 
-Path::str_t Path::CpyFnameExt( PCChar pSrcFullname ) {
-   return Path::CpyFnm( pSrcFullname ) + Path::CpyExt( pSrcFullname );
-   }
+//----------------
 
 Path::str_t Path::Union( PCChar pFirst, PCChar pSecond ) { enum { DB=0 };
    // dest = (Path::CpyDirnm( pFirst ) || Path::CpyDirnm( pSecond ))

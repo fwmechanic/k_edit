@@ -1684,15 +1684,13 @@ bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hid
       }
 
    for( auto yLine( 0 ); yLine < maxLine; ++yLine ) {
-      PCChar pLdata; size_t chars;
-      pFBuf->PeekRawLineExists( yLine, &pLdata, &chars );
-
+      const auto src( pFBuf->PeekRawLine( yLine ) );
       if( ExecutionHaltRequested() ) {
          return FileWrErr( hFile_Write, pszDestName, "User break writing '%s'" );
          }
 
-      if(   (chars && BufdWr::WrFailed( hFile_Write, pLdata   , chars     ))
-         ||           BufdWr::WrFailed( hFile_Write, pszEolStr, eolStrlen )
+      if(   (src.length() && BufdWr::WrFailed( hFile_Write, src.data(), src.length() ))
+         ||                  BufdWr::WrFailed( hFile_Write, pszEolStr , eolStrlen    )
         ) {
          return FileWrErr( hFile_Write, pszDestName, ExecutionHaltRequested() ? "User break writing '%s'" : "Out of space on '%s'" );
          }

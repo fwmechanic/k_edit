@@ -1443,6 +1443,7 @@ public:
 
    bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, size_t *pChars ) const; // returns RAW line content BY REFERENCE
    bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos  ) const; // returns RAW line content BY REFERENCE
+   boost::string_ref PeekRawLine( LINE lineNum ) const; // returns RAW line content BY REFERENCE
 
    //************ PutLine
 public:

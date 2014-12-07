@@ -35,8 +35,7 @@ namespace Path {
    PCChar STIL  WildcardFnmChars()    { return "*?"; }
    PCChar STIL  EnvSepStr()           { return ";"; }
    extern bool  IsLegalFnm  ( PCChar name );
-
-   extern bool  IsDotOrDotDot( PCChar pC );
+   extern bool  IsDotOrDotDot( boost::string_ref str );
 
    extern bool  SetCwdOk        ( PCChar dnm );
    extern str_t GetCwd    ();
@@ -45,6 +44,10 @@ namespace Path {
    extern str_t CpyFnm     ( PCChar pSrcFullname );
    extern str_t CpyExt     ( PCChar pSrcFullname );
    extern str_t CpyFnameExt( PCChar pSrcFullname );
+   extern boost::string_ref RefDirnm( boost::string_ref pPath );
+   extern boost::string_ref RefFnm( boost::string_ref pPath );
+   extern boost::string_ref RefExt( boost::string_ref pPath );
+   extern boost::string_ref RefFnameExt( boost::string_ref pSrcFullname );
    extern str_t Union        ( PCChar pFirst, PCChar pSecond );
    extern str_t Absolutize   ( PCChar pszFilename );
 #if defined(_WIN32)

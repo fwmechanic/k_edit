@@ -1467,6 +1467,18 @@ bool FBUF::PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos ) cons
    return rv;
    }
 
+boost::string_ref FBUF::PeekRawLine( LINE lineNum ) const {
+   const auto exists( KnownLine( lineNum ) );
+   auto len( 0 );
+   if(   exists
+      && (len=LineLength(lineNum)) > 0
+     ) {
+      return boost::string_ref( d_paLineInfo[ lineNum ].GetLineRdOnly(), len );
+      }
+   else {
+      return boost::string_ref( "", 0 );
+      }
+   }
 
 // returns strlen of returned line
 COL FBUF::getLineRaw( std::string &st, LINE yLine ) const {
@@ -2049,9 +2061,8 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
    if( FBsrc ) {
       Xbuf xb;
       for( ; ySrcStart <= ySrcEnd; ++ySrcStart, ++yDestStart ) {
-         PCChar ptr; size_t chars;
-         FBsrc ->PeekRawLineExists( ySrcStart, &ptr, &chars );
-         FBdest->PutLine( yDestStart, ptr, ptr + chars, &xb );
+         const auto src( FBsrc->PeekRawLine( ySrcStart ) );
+         FBdest->PutLine( yDestStart, src.data(), src.data() + src.length(), &xb );
          }
       }
    }
