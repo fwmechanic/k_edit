@@ -46,9 +46,6 @@ public:
    };
 
 
-#define  DICING  1
-#if      DICING
-
 class DicedOnDelimString : public DiceableString {
 public:
    DicedOnDelimString( PCChar str, PCChar pszDelims )
@@ -59,29 +56,6 @@ public:
       }
    };
 
-#else
-
-class SplitString {  // "static"
-   PChar     d_heapString;
-   int       d_argi = 0;
-   int       d_argc = 0;
-   PPChar    d_argv = nullptr;
-
-   void init_SplitString( PCChar pszDelims );
-
-public:
-   SplitString( PCChar str, PCChar pszDelims );
-   ~SplitString();
-   PChar GetNext();
-   void  Restart() { d_argi = 0; }
-   void DBG() const {
-      for( int ix=0; ix < d_argc ; ++ix )
-         ::DBG( "%s: [%d]='%s'", __func__, ix, d_argv[ix] );
-      }
-   };
-
-#endif
-
 class StrSubstituterGenerator;  // "static"
 
 class CfxFilenameGenerator : public PathStrGenerator {
@@ -90,11 +64,7 @@ class CfxFilenameGenerator : public PathStrGenerator {
 
    WildcardFilenameGenerator *d_pWcGen = nullptr;
    StrSubstituterGenerator   *d_pSSG = nullptr;
-#if DICING
    DicedOnDelimString
-#else
-   SplitString
-#endif
                               d_splitLine;
    WildCardMatchMode          d_matchMode;
 

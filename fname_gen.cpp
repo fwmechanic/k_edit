@@ -49,8 +49,6 @@ void ChopAscizzOnDelim( PChar cur, const PCChar pszDelim ) {
 
 //------------------------------------------------------------------------------
 
-#if DICING
-
 void DiceableString::DBG() const {
    auto ix( 0u );
    PCChar cur( nullptr );
@@ -58,35 +56,6 @@ void DiceableString::DBG() const {
       ::DBG( "[%u]=%s|", ix++, cur );
       }
    }
-
-#else
-
-PChar SplitString::GetNext() {
-   return (d_argi < d_argc) ? d_argv[d_argi++] : nullptr;
-   }
-
-void SplitString::init_SplitString( PCChar pszDelims ) { // ::DBG( "%s '%s', '%s'", __func__, string, pszDelims );
-   const auto slen( Strlen( d_heapString ) );
-   const auto max_poss_slots( (slen / 2) + 1 );
-   const auto fcnt( ChopStringFieldsOnDelim( d_heapString, nullptr, max_poss_slots, pszDelims ) );
-   if( fcnt > 0 ) {
-      AllocArrayNZ( d_argv, fcnt );
-      d_argc = ChopStringFieldsOnDelim( d_heapString, d_argv, fcnt, pszDelims );
-      }
-   }
-
-SplitString::SplitString( PCChar str, PCChar pszDelims )
-   : d_heapString( Strdup( str ) )
-   { // ::DBG( "%s '%s', '%s'", __func__, string, pszDelims );
-   init_SplitString( pszDelims );
-   }
-
-SplitString::~SplitString() {
-   Free0( d_argv );
-   Free0( d_heapString );
-   }
-
-#endif
 
 //------------------------------------------------------------------------------
 //
@@ -544,12 +513,7 @@ NEXT_SSG_COMBINATION:
 
       Delete0( d_pSSG );
       }
-   d_pszEntrySuffix = d_splitLine.GetNext(
-#if DICING
-                                           d_pszEntrySuffix
-#endif
-                                                            );
-
+   d_pszEntrySuffix = d_splitLine.GetNext( d_pszEntrySuffix );
    if( d_pszEntrySuffix ) {
       MFSPEC_D && DBG( "%s+ ENVMAP <= '%s'", __func__, d_pszEntrySuffix );
       d_pSSG = new StrSubstituterGenerator;
