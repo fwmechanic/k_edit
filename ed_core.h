@@ -1532,8 +1532,8 @@ extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
 extern COL     StrCols(        COL tabWidth, PCChar ptr, PCChar eos=nullptr );
 
-extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, PCChar pSrc, COL charsInSrc, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
-extern COL     PrettifyStrcpy( PChar pDestBuf, size_t sizeof_dest, PCChar pSrc, COL charsInSrc, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
+extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, boost::string_ref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
+extern COL     PrettifyStrcpy( PChar pDestBuf, size_t sizeof_dest, boost::string_ref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
 
 
 namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Prefer non-member non-friend functions to member functions."

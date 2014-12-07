@@ -248,7 +248,7 @@ FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fI
    , d_SrchDispStr( Strdup( srchStr ) )
    , d_SrchDispStrLen( Strlen(srchStr) )
    {
-   d_SrchDispStrLen = PrettifyStrcpy( d_SrchDispStr, 1+d_SrchDispStrLen, srchStr, Strlen(srchStr), 1, g_chTabDisp, 0, g_chTrailSpaceDisp );
+   d_SrchDispStrLen = PrettifyStrcpy( d_SrchDispStr, 1+d_SrchDispStrLen, srchStr, 1, g_chTabDisp, 0, g_chTrailSpaceDisp );
 
    if( !Interpreter::Interpreting() ) {
       DrawDialog( (('+'==d_dirCh)

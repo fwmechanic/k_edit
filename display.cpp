@@ -3143,9 +3143,7 @@ void View::GetLineForDisplay
       }
    else {
       alcc.PutColor( Origin().col, xWidth, COLOR::FG );
-      PCChar ptr; size_t chars;
-      d_pFBuf->PeekRawLineExists( yLineOfFile, &ptr, &chars );
-      PrettifyMemcpy( pTextBuf, xWidth, ptr, chars, d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->fTrailDisp() ? g_chTrailSpaceDisp : 0 );
+      PrettifyMemcpy( pTextBuf, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->fTrailDisp() ? g_chTrailSpaceDisp : 0 );
       if( DrawVerticalCursorHilite() && isActiveWindow && (xWidth > PCT_WIDTH) && (g_CursorLine() == yLineOfFile) ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
          FmtStr<8> pctst( " %u%% ", percent );

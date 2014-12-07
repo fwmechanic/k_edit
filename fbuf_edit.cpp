@@ -85,8 +85,8 @@ STATIC_FXN COL TabAlignedCol( COL tabWidth, PCChar pS, COL xColTgt ) {
    return xColTgt;
    }
 
-STATIC_FXN bool spacesonly( PCChar ptr, PCChar eos ) {
-   for( ; ptr < eos; ++ptr ) {
+STATIC_FXN bool spacesonly( boost::string_ref::const_iterator ptr, boost::string_ref::const_iterator eos ) {
+   for( ; ptr != eos; ++ptr ) {
       if( *ptr != ' ' )
          return false;
       }
@@ -97,20 +97,19 @@ STATIC_FXN bool spacesonly( PCChar ptr, PCChar eos ) {
 // return value is # of chars actually copied into pDestBuf
 COL PrettifyMemcpy
    ( const PChar pDestBuf, const size_t sizeof_dest
-   , PCChar pSrc, COL srcChars
+   , boost::string_ref src
    , COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs
    ) {
-   // pSrc IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
+   // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
    //
-   if( !chTabExpand || !StrContainsTabs( pSrc, srcChars ) ) {
-      if( xStart > srcChars ) { return 0; }
-      pSrc     += xStart;
-      srcChars -= xStart;
+   if( !chTabExpand || !StrContainsTabs( src.data(), src.length() ) ) {
+      if( xStart > src.length() ) { return 0; }
+      src.remove_prefix( xStart );
 
-      const auto CopyBytes( Min( size_t(srcChars), sizeof_dest ) );
-      memcpy( pDestBuf, pSrc, CopyBytes );
+      const auto CopyBytes( Min( src.length(), sizeof_dest ) );
+      memcpy( pDestBuf, src.data(), CopyBytes );
 
-      if( chTrailSpcs && CopyBytes==srcChars ) {
+      if( chTrailSpcs && CopyBytes==src.length() ) {
          for( auto pC(pDestBuf + CopyBytes - 1) ; *pC == ' ' ; --pC ) {
             *pC = chTrailSpcs;
             }
@@ -126,7 +125,6 @@ COL PrettifyMemcpy
 
    const Tabber tabr( tabWidth );
    const auto pDestRightmostWritable( pDestBuf + sizeof_dest - 1 );
-   const auto pSrcEos( pSrc + srcChars );
          auto pD(pDestBuf);
 
 #define  PD_EFF   (pD - xStart)
@@ -137,8 +135,9 @@ COL PrettifyMemcpy
 
    // COL chWr = 0;
    COL xCol( 0 );
-   while( pSrc < pSrcEos && PD_EFF <= pDestRightmostWritable ) {
-      const auto ch( *pSrc++ );
+   auto it( src.cbegin() );
+   while( it != src.cend() && PD_EFF <= pDestRightmostWritable ) {
+      const auto ch( *it++ );
       if( ch != HTAB ) {
          WR_CHAR(ch);
          }
@@ -159,10 +158,10 @@ COL PrettifyMemcpy
    const auto copyBytes(PD_EFF - pDestBuf);
    if( copyBytes > 0 ) {
       if( chTrailSpcs ) {
-         // pSrc points just after the last source-char copied/xlated;
-         //    pSrc == pSrcEos (if the above loop terminated because pSrc == pSrcEos)
-         // OR pSrc  < pSrcEos (if the above loop terminated due to PD_EFF <= pDestRightmostWritable being false)
-         if( pSrc == pSrcEos || spacesonly( pSrc, pSrcEos ) ) { // _trailing_ spaces on the source side
+         // it points just after the last source-char copied/xlated;
+         //    it == src.cend() (if the above loop terminated because it == src.cend())
+         // OR it  < src.cend() (if the above loop terminated due to PD_EFF <= pDestRightmostWritable being false)
+         if( it == src.cend() || spacesonly( it, src.cend() ) ) { // _trailing_ spaces on the source side
             for( --pD ; PD_EFF >= pDestBuf && *PD_EFF == ' ' ; --pD ) { // xlat all trailing spaces present in dest
                *PD_EFF = chTrailSpcs;
                }
@@ -177,8 +176,8 @@ COL PrettifyMemcpy
 
 // a terminating NUL IS appended!!!  Use PrettifyMemcpy if you DON'T want one.
 // return value is # of chars actually copied into dest - 1; i.e. it does NOT count the terminating NUL
-COL PrettifyStrcpy( const PChar dest, size_t sizeof_dest, PCChar src, COL srcStrlen, COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs ) {
-   const auto chars( PrettifyMemcpy( dest, sizeof_dest-1, src, srcStrlen, tabWidth, chTabExpand, xStart, chTrailSpcs ) );
+COL PrettifyStrcpy( const PChar dest, size_t sizeof_dest, boost::string_ref src, COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs ) {
+   const auto chars( PrettifyMemcpy( dest, sizeof_dest-1, src, tabWidth, chTabExpand, xStart, chTrailSpcs ) );
    dest[chars] = '\0';
    return chars;
    }
@@ -1489,7 +1488,7 @@ COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
    const auto tw( TabWidth() );
    const auto size( 1+StrCols( tw, rv.data(), rv.data()+rv.length() ) );
    const auto pDest( pXb->wresize( size ) );
-   return PrettifyStrcpy( pDest, size, rv.data(), rv.length(), tw, chExpandTabs );
+   return PrettifyStrcpy( pDest, size, rv, tw, chExpandTabs );
    }
 
 
@@ -1523,12 +1522,12 @@ COL FBUF::GetLineSeg( Xbuf &pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) con
       Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
       const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
       const auto buf( pXb.wresize( size ) );
-      const auto rv( PrettifyStrcpy( buf, size, lnptr, lnchars, tw, ' ', xLeftIncl ) );
+      const auto rv( PrettifyStrcpy( buf, size, boost::string_ref( lnptr, lnchars ), tw, ' ', xLeftIncl ) );
 # endif
       if( 0 ) {
          auto xbuf( pXb.c_str() );
          linebuf lb;
-         PrettifyStrcpy( lb, sizeof lb, xbuf, Strlen(xbuf), 1, '^', 0, g_chTrailSpaceDisp );
+         PrettifyStrcpy( lb, sizeof lb, xbuf, 1, '^', 0, g_chTrailSpaceDisp );
          DBG( "%s [%d][%d..%d]S:%d=|%s|", __func__, yLine, xLeftIncl, xRightIncl, Strlen(lb), lb );
          }
       return rv;
@@ -1557,7 +1556,7 @@ COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl
       Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
       const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
       const auto buf( pXb->wresize( size ) );
-      const auto rv( PrettifyStrcpy( buf, size, lnptr, lnchars, tw, ' ', xLeftIncl ) );
+      const auto rv( PrettifyStrcpy( buf, size, boost::string_ref( lnptr, lnchars ), tw, ' ', xLeftIncl ) );
 # endif
       }
    else {
