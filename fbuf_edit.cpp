@@ -103,9 +103,7 @@ COL PrettifyMemcpy
    // pSrc IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
    //
    if( !chTabExpand || !StrContainsTabs( pSrc, srcChars ) ) {
-      if( xStart > srcChars ) {
-         return 0;
-         }
+      if( xStart > srcChars ) { return 0; }
       pSrc     += xStart;
       srcChars -= xStart;
 
@@ -2000,7 +1998,7 @@ int FBUF::ViewCount() {
 //
 //              If this is ALL you're trying to do, USE InsBlankLinesBefore()
 //              INSTEAD!!!  The (pFBufSrc == 0) case exists to support
-//              CopyStream() which has simliar blank-fill variant semantics
+//              CopyStream() which has similar blank-fill variant semantics
 //              which are not worth (from a duplicated-code perspective) moving
 //              to a separate API.
 //
@@ -2150,8 +2148,8 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
 
    const auto boxWidth( xSrcRight - xSrcLeft + 1 );
 
-   const auto tws( FBsrc ? FBsrc->TabWidth() : 0 );
-   const auto twd(         FBdest->TabWidth()    );
+   const auto tws( FBsrc ? FBsrc ->TabWidth() : 0 );
+   const auto twd(         FBdest->TabWidth()     );
    Xbuf xbs,xbd;  // BUGBUG one buffer would be nicer ...
    for( auto ySrc( ySrcTop ); ySrc <= ySrcBottom ; ++ySrc, ++yDst ) {
       if( !FBsrc ) {
@@ -2230,9 +2228,9 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    rdNoiseRead();
 
    struct {
-      int leadWhiteLines;
-      int lead_Tab_Lines;
-      } tabStats = { 0 };
+      int leadWhiteLines = 0;
+      int lead_Tab_Lines = 0;
+      } tabStats;
 
    MainThreadPerfCounter pc;
 
