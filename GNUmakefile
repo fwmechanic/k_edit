@@ -65,6 +65,7 @@ export PLAT
    # Linux build
    # sudo apt-get install -y libncurses5-dev
    # sudo apt-get install -y libpcre3-dev
+   # sudo apt-get install -y libboost-dev
 
 CMDTBL_ARG=other
 MV = mv
