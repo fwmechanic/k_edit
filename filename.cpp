@@ -5,7 +5,6 @@
 //
 
 #include "ed_main.h"
-#include <regex>
 
 STATIC_FXN boost::string_ref::size_type DirnmLen( boost::string_ref pPath ) { // a.k.a. IdxOfFnm()
    const auto rv( pPath.find_last_of( PATH_SEP_SRCH_STR ":" ) );
@@ -21,8 +20,18 @@ boost::string_ref Path::RefDirnm( boost::string_ref src ) {
    return src.substr( 0, DirnmLen( src ) );
    }
 
+Path::str_t Path::CpyDirnm( boost::string_ref src ) {
+   const auto rv( Path::RefDirnm( src ) );
+   return Path::str_t( rv.data(), rv.length() );
+   }
+
 boost::string_ref Path::RefFnameExt( boost::string_ref src ) {
    return src.substr( DirnmLen( src ) );
+   }
+
+Path::str_t Path::CpyFnameExt( boost::string_ref src ) {
+   const auto rv( Path::RefFnameExt( src ) );
+   return Path::str_t( rv.data(), rv.length() );
    }
 
 boost::string_ref Path::RefFnm( boost::string_ref src ) { // a.k.a. IdxOfFnm()
@@ -34,6 +43,12 @@ boost::string_ref Path::RefFnm( boost::string_ref src ) { // a.k.a. IdxOfFnm()
    return fx.substr( 0, idxDot );
    }
 
+Path::str_t Path::CpyFnm( boost::string_ref src ) { // DOES NOT include the trailing "." !!!
+   const auto rv( Path::RefFnm( src ) );
+   Path::str_t rv_( rv.data(), rv.length() );           // 0 && DBG( "%s: '%s'->'%s'", __func__, src, rv_.c_str() );
+   return rv_;
+   }
+
 boost::string_ref Path::RefExt( boost::string_ref src ) { // a.k.a. IdxOfFnm()
    auto fx( Path::RefFnameExt( src ) );
    const auto idxDot( fx.find_last_of( '.' ) );
@@ -43,46 +58,11 @@ boost::string_ref Path::RefExt( boost::string_ref src ) { // a.k.a. IdxOfFnm()
    return fx.substr( idxDot );
    }
 
-STATIC_FXN PCChar PPastLastPathSep( PCChar pPath ) {
-   const auto p0( pPath );
-   decltype(pPath) pNxt;
-   while( *(pNxt=StrToNextOrEos( pPath, PATH_SEP_SRCH_STR ":" )) != 0 ) {
-      pPath = pNxt + 1;
-      }
-
-   0 && DBG( "PPastLastPathSep '%s' -> '%s' (%" PR_SIZET "u)", p0, pPath, DirnmLen( p0 ) );
-   return pPath;
+Path::str_t Path::CpyExt( boost::string_ref src ) { // if src contains an extension, prepends a leading "."
+   const auto rv( Path::RefExt( src ) );
+   Path::str_t rv_( rv.data(), rv.length() );           // 0 && DBG( "%s: '%s'->'%s'", __func__, src, rv_.c_str() );
+   return rv_;
    }
-
-STATIC_FXN PCChar PAtLastDotOrEos( PCChar pPath ) {
-   const auto p0( pPath );
-   decltype(pPath) pNxtDot;
-   if( *(pNxtDot=StrToNextOrEos( pPath, "." )) == 0 ) {
-      0 && DBG( "PAtLastDotOrEos '%s' -> '%s'", p0, pNxtDot );
-      return pNxtDot; // NO DOT: RETURN pEOS
-      }
-
-   pPath = pNxtDot;
-
-   while( *(pNxtDot=StrToNextOrEos( pPath+1, "." )) != 0 ) {
-      pPath = pNxtDot;
-      }
-
-   0 && DBG( "PAtLastDotOrEos '%s' -> '%s'", p0, pPath );
-   return pPath;
-   }
-
-// bool Path::IsDotOrDotDot( PCChar pC ) { // true if pC _ends with_ "\.." or "\." "\..\" or "\.\" or is "." or ".."
-//    const auto eos( Eos( pC ) );
-//    const auto len( eos - pC );
-//    return (len ==1 && 0==strcmp( pC     , "."  ))
-//        || (len ==2 && 0==strcmp( pC     , ".." ))
-//        || (len > 2 && 0==strcmp( eos - 2, PATH_SEP_STR "." ))
-//        || (len > 3 && 0==strcmp( eos - 3, PATH_SEP_STR "." PATH_SEP_STR ))
-//        || (len > 3 && 0==strcmp( eos - 3, PATH_SEP_STR ".." ))
-//        || (len > 4 && 0==strcmp( eos - 4, PATH_SEP_STR ".." PATH_SEP_STR ))
-//        ;
-//    }
 
 bool Path::IsDotOrDotDot( boost::string_ref str ) { // true if str _ends with_ "\.." or "\." "\..\" or "\.\" or is "." or ".."
    const auto pC ( str.data()   );
@@ -122,54 +102,24 @@ Path::str_t::size_type Path::CommonPrefixLen( boost::string_ref s1, boost::strin
    return oPathSep;
    }
 
-Path::str_t Path::CpyDirnm( PCChar pSrcFullname ) {           0 && DBG( "%s  in =%s'", __func__, pSrcFullname );
-   const auto rv( Path::RefDirnm( pSrcFullname ) );
-   return Path::str_t( rv.data(), rv.length() );
-   }
-
-Path::str_t Path::CpyFnameExt( PCChar pSrcFullname ) {
-   const auto rv( Path::RefFnameExt( pSrcFullname ) );
-   return Path::str_t( rv.data(), rv.length() );
-   }
-
-Path::str_t Path::CpyFnm( PCChar pSrcFullname ) { // DOES NOT include the trailing "." !!!
-#if 1
-   const auto rv( Path::RefFnm( pSrcFullname ) );
-   Path::str_t rv_( rv.data(), rv.length() );           0 && DBG( "%s: '%s'->'%s'", __func__, pSrcFullname, rv_.c_str() );
-   return rv_;
-#else
-   const auto pC( PPastLastPathSep( pSrcFullname ) );
-   auto pEnd( Path::IsDotOrDotDot( pC ) ? Eos( pC ) : PAtLastDotOrEos( pC ) );
-   return Path::str_t( pC, pEnd - pC );
-#endif
-   }
-
-Path::str_t Path::CpyExt( PCChar pSrcFullname ) { // if pSrcFullname contains an extension, prepends a leading "."
-#if 1
-   const auto rv( Path::RefExt( pSrcFullname ) );
-   Path::str_t rv_( rv.data(), rv.length() );           0 && DBG( "%s: '%s'->'%s'", __func__, pSrcFullname, rv_.c_str() );
-   return rv_;
-#else
-   const auto pC( PPastLastPathSep( pSrcFullname ) );
-   if( Path::IsDotOrDotDot( pC ) ) {
-      return Path::str_t( "" );
-      }
-   return Path::str_t( PAtLastDotOrEos( pC ) );
-#endif
-   }
-
 //----------------
 
-Path::str_t Path::Union( PCChar pFirst, PCChar pSecond ) { enum { DB=0 };
-   // dest = (Path::CpyDirnm( pFirst ) || Path::CpyDirnm( pSecond ))
-   //      + (Path::CpyFnm  ( pFirst ) || Path::CpyFnm  ( pSecond ))
-   //      + (Path::CpyExt  ( pFirst ) || Path::CpyExt  ( pSecond ))
-   auto dir( Path::CpyDirnm( pFirst ) ); if( dir.empty() )  dir = Path::CpyDirnm( pSecond );  DB && DBG( "RExt:dir '%s'", dir.c_str() );
-   auto fnm( Path::CpyFnm  ( pFirst ) ); if( fnm.empty() )  fnm = Path::CpyFnm  ( pSecond );  DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
-   if( !Path::IsDotOrDotDot( fnm.c_str() ) ) {
-      auto ext( Path::CpyExt( pFirst ) ); if( ext.empty() )  ext = Path::CpyExt( pSecond );
-      fnm += ext;                                                                             DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
+Path::str_t Path::Union( boost::string_ref s1, boost::string_ref s2 ) { enum { DB=0 };
+   // dest = (Path::CpyDirnm( s1 ) || Path::CpyDirnm( s2 ))
+   //      + (Path::CpyFnm  ( s1 ) || Path::CpyFnm  ( s2 ))
+   //      + (Path::CpyExt  ( s1 ) || Path::CpyExt  ( s2 ))
+   auto dir( Path::RefDirnm( s1 ) ); if( dir.empty() )  dir = Path::RefDirnm( s2 );  // DB && DBG( "RExt:dir '%s'", dir.c_str() );
+   auto fnm( Path::RefFnm  ( s1 ) ); if( fnm.empty() )  fnm = Path::RefFnm  ( s2 );  // DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
+   boost::string_ref ext;
+   if( !Path::IsDotOrDotDot( fnm ) ) {
+      ext =  Path::RefExt  ( s1 )  ; if( ext.empty() )  ext = Path::RefExt  ( s2 );  // DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
       }
+
+   Path::str_t rv;
+   rv.reserve( dir.length() + fnm.length() + ext.length() + 1 );
+   rv.append( dir.data(), dir.length() );
+   rv.append( fnm.data(), fnm.length() );
+   rv.append( ext.data(), ext.length() );
 
    // following code was once commented out since this code
    //   converts "path\*." into "path\*", and "path\*" is equiv to "path\*.*",
@@ -178,11 +128,11 @@ Path::str_t Path::Union( PCChar pFirst, PCChar pSecond ) { enum { DB=0 };
    // UPDT: Win32::GetFullPathName does the same thing (converts "path\*." into "path\*")
    //       so I've restoring this code, which helps in other areas.
    //
-   if( fnm.back() == '.' )
-      fnm.pop_back();
+   if( rv.back() == '.' )
+      rv.pop_back();
 
-   DB && DBG( "RExt: '%s' + '%s' -> '%s+%s'", pSecond, pFirst, dir.c_str(), fnm.c_str() );
-   return dir + fnm;
+   // DB && DBG( "RExt: '%s' + '%s' -> '%s+%s'", s2, s1, dir.c_str(), fnm.c_str() );
+   return rv;
    }
 
 

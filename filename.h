@@ -40,15 +40,17 @@ namespace Path {
    extern bool  SetCwdOk        ( PCChar dnm );
    extern str_t GetCwd    ();
    extern str_t GetCwd_ps (); // w/trailing pathsep to make it comparable with CpyDirnm() retval
-   extern str_t CpyDirnm   ( PCChar pSrcFullname );
-   extern str_t CpyFnm     ( PCChar pSrcFullname );
-   extern str_t CpyExt     ( PCChar pSrcFullname );
-   extern str_t CpyFnameExt( PCChar pSrcFullname );
-   extern boost::string_ref RefDirnm( boost::string_ref pPath );
-   extern boost::string_ref RefFnm( boost::string_ref pPath );
-   extern boost::string_ref RefExt( boost::string_ref pPath );
-   extern boost::string_ref RefFnameExt( boost::string_ref pSrcFullname );
-   extern str_t Union        ( PCChar pFirst, PCChar pSecond );
+
+   extern boost::string_ref RefDirnm(    boost::string_ref src );
+   extern boost::string_ref RefFnm(      boost::string_ref src );
+   extern boost::string_ref RefExt(      boost::string_ref src );
+   extern boost::string_ref RefFnameExt( boost::string_ref src );
+
+   extern str_t CpyDirnm   ( boost::string_ref src );
+   extern str_t CpyFnm     ( boost::string_ref src );
+   extern str_t CpyExt     ( boost::string_ref src );
+   extern str_t CpyFnameExt( boost::string_ref src );
+   extern str_t Union      ( boost::string_ref s1, boost::string_ref s2 );
    extern str_t Absolutize   ( PCChar pszFilename );
 #if defined(_WIN32)
    extern str_t CanonizeCase ( PCChar fnmBuf );
