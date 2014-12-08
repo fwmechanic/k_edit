@@ -523,24 +523,28 @@ GLOBAL_VAR int g_iWucMinLen = 2;
 boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto yCursor( cursor->lin );
    const auto xCursor( cursor->col );
-   PCChar bos, eos;
-   if( pFBuf->PeekRawLineExists( yCursor, &bos, &eos ) ) {
-      const auto tw( pFBuf->TabWidth() );
-      const auto xEos( ColOfPtr( tw, bos, eos, eos ) );
-      decltype(bos) pCursor;
-      if( xCursor < xEos && isWordChar( *(pCursor=PtrOfColWithinStringRegionNoEos( tw, bos, eos, xCursor )) ) ) { // cursor on a word?
-         const auto pStart  ( StrWordStart( bos, pCursor ));          // abc   abc
-         const auto pPastEnd( StrPastWord( pCursor, eos  ));          // abc   abc
-         const auto xMin( ColOfPtr( tw, bos, pStart  , eos ) );
-         const auto xMax( ColOfPtr( tw, bos, pPastEnd, eos ) );
-         const auto wordCols( xMax - xMin );
-         const auto wordChars( pPastEnd - pStart );
-         // this degree of paranoia only matters if the definition of a WORD includes a tab
-         if( 0 && wordCols != wordChars )  DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT "d", __func__, wordCols, wordChars );
+   auto rl( pFBuf->PeekRawLine( yCursor ) );
+   if( !rl.empty() ) {
+      const auto tw( pFBuf->TabWidth() );                             // abc   abc
+      const auto xEos( ColOfIdx( tw, rl, rl.length() ) );             // abc   abc
+      if( xCursor < xEos ) {
+         const auto ixC( IdxOfColWithinString( tw, rl, xCursor ) );
+         if( ixC != boost::string_ref::npos && isWordChar( rl[ixC] ) ) {
+            const auto ixFirst( IdxFirstWordCh( rl, ixC ) );
+            const auto ixLast ( IdxLastWordCh ( rl, ixC ) );        0 && DBG( "ix[%" PR_SIZET "u..%" PR_SIZET "u]", ixFirst, ixLast );
+            if( ixFirst != boost::string_ref::npos && ixLast != boost::string_ref::npos ) {
+               const auto xMin( ColOfIdx( tw, rl, ixFirst ) );
+               const auto xMax( ColOfIdx( tw, rl, ixLast  ) );      0 && DBG( "x[%" PR_SIZET "u..%" PR_SIZET "u]", xMin, xMax );
+               const auto wordCols ( xMax   - xMin    + 1 );
+               const auto wordChars( ixLast - ixFirst + 1 );
+               // this degree of paranoia only matters if the definition of a WORD includes a tab
+               if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT "d", __func__, wordCols, wordChars ); }
 
-         // return everything
-         cursor->col = xMin;
-         return boost::string_ref( pStart, wordChars );
+               // return everything
+               cursor->col = xMin;
+               return boost::string_ref( rl.data() + ixFirst, wordChars );
+               }
+            }
          }
       }
    return "";

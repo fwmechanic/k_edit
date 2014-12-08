@@ -148,6 +148,23 @@ PCChar StrWordStart( PCChar bos, PCChar ps ) {
    return ps+1;
    }
 
+
+boost::string_ref::size_type IdxLastWordCh( boost::string_ref src, boost::string_ref::size_type start ) {
+   if( start >= src.length() ) return boost::string_ref::npos;
+   for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+      if( !isWordChar(*it) )  { return std::distance( src.cbegin(), it-1 ); }
+      }
+   return src.length() - 1;
+   }
+
+boost::string_ref::size_type IdxFirstWordCh( boost::string_ref src, boost::string_ref::size_type start ) {
+   if( start >= src.length() ) return boost::string_ref::npos;
+   for( auto it( src.crbegin() + (src.length() - start - 1) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
+      if( !isWordChar(*it) )  { return src.length() - std::distance( src.crbegin(), it ); }
+      }
+   return 0;
+   }
+
 //--------------------------------------------------------------
 
 GLOBAL_VAR Linebuf SwiErrBuf; // shared buffer used to format err msg strings returned by swix functions

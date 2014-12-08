@@ -1523,6 +1523,7 @@ STIL   PCChar  PtrOfColWithinStringRegion( COL tabWidth, PCChar pS, PCChar pEos,
 // PtrOfColWithinStringRegionNoEos: retval < pEos  (therefore retval is ALWAYS deref'able)
 extern PChar   PtrOfColWithinStringRegionNoEos( COL tabWidth, PChar  pS, PChar  pEos, COL xCol );
 STIL   PCChar  PtrOfColWithinStringRegionNoEos( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfColWithinStringRegionNoEos( tabWidth, PChar(pS), PChar(pEos), xCol ); }
+extern boost::string_ref::size_type IdxOfColWithinString( COL tabWidth, boost::string_ref content, const COL colTgt );
 
 extern COL     ColOfPtr                       ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
 extern COL     ColOfIdx                       ( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset );
