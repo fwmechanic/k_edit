@@ -534,7 +534,7 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
             const auto ixLast ( IdxLastWordCh ( rl, ixC ) );        0 && DBG( "ix[%" PR_SIZET "u..%" PR_SIZET "u]", ixFirst, ixLast );
             if( ixFirst != boost::string_ref::npos && ixLast != boost::string_ref::npos ) {
                const auto xMin( ColOfIdx( tw, rl, ixFirst ) );
-               const auto xMax( ColOfIdx( tw, rl, ixLast  ) );      0 && DBG( "x[%" PR_SIZET "u..%" PR_SIZET "u]", xMin, xMax );
+               const auto xMax( ColOfIdx( tw, rl, ixLast  ) );      0 && DBG( "x[%d..%d]", xMin, xMax );
                const auto wordCols ( xMax   - xMin    + 1 );
                const auto wordChars( ixLast - ixFirst + 1 );
                // this degree of paranoia only matters if the definition of a WORD includes a tab
