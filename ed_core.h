@@ -1525,6 +1525,7 @@ extern PChar   PtrOfColWithinStringRegionNoEos( COL tabWidth, PChar  pS, PChar  
 STIL   PCChar  PtrOfColWithinStringRegionNoEos( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfColWithinStringRegionNoEos( tabWidth, PChar(pS), PChar(pEos), xCol ); }
 
 extern COL     ColOfPtr                       ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
+extern COL     ColOfIdx                       ( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset );
 
 //************ tabWidth-dependent string fxns
 extern COL     TabAlignedCol(  COL tabWidth, PCChar pS, PCChar eos, COL xCol, COL xBias );

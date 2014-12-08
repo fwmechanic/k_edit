@@ -921,8 +921,12 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          children do this and are thus preferred if/when the language of the file
          is known */
 
-      auto                                        pComment = Memstr( boost::string_ref( bos                       , eos-bos                ), boost::string_ref( d_eolCommentDelim                                ) );
-      if( !pComment && d_keyLenMinusTrailSpcs ) { pComment = Memstr( boost::string_ref( eos-d_keyLenMinusTrailSpcs, d_keyLenMinusTrailSpcs ), boost::string_ref( d_eolCommentDelim.data(), d_keyLenMinusTrailSpcs ) ); }
+      auto pComment = Memstr( boost::string_ref( bos, eos-bos ), boost::string_ref( d_eolCommentDelim ) );
+      if( !pComment && d_keyLenMinusTrailSpcs ) {
+         if( 0 == memcmp( eos-d_keyLenMinusTrailSpcs, d_eolCommentDelim.data(), d_keyLenMinusTrailSpcs ) ) {
+            pComment = eos-d_keyLenMinusTrailSpcs;
+            }
+         }
       if(  pComment ) {
          const auto tw( CFBuf()->TabWidth() );
          const auto xC( ColOfPtr( tw, bos, pComment, eos ) );

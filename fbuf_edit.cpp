@@ -580,6 +580,29 @@ COL ColOfPtr( COL tabWidth, const PCChar pString, const PCChar pWithinString, co
    return xCol + (pWithinString - pX);
    }
 
+COL ColOfIdx( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset ) {
+   const Tabber tabr( tabWidth );
+   auto xCol( 0 );
+   auto it( content.cbegin() );
+   for( ; it != content.cend(); ++it ) {
+      if( std::distance( content.cbegin(), it ) >= offset )  // we have found or gone past offset
+         return xCol;
+
+      switch( *it ) {
+         default  :  ++xCol;                                break;
+         case HTAB:  xCol = tabr.ColOfNextTabStop( xCol );  break;
+         }
+      }
+
+   if( std::distance( content.cbegin(), it ) >= offset )
+      return xCol;
+
+   // 'pWithinString' actually points _beyond_ end of pString: assume all chars
+   // past EOL are spaces (non-tabs)
+   //
+   return xCol + (offset - content.length());
+   }
+
 //------------------------------------------------------------------------------
 //
 // DeletePrevChar implements ARG::emacscdel _AND_ ARG::cdelete (below)
