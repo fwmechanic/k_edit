@@ -592,7 +592,7 @@ STATIC_FXN PCChar Memstr( boost::string_ref haystack, boost::string_ref needle )
 bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
    auto fb( CFBuf() );
    PCChar bos, eos;
-   if( fb->PeekRawLineExists( yLine, &bos, &eos ) ) {
+   if( fb->PeekRawLineExists( yLine, &bos, &eos ) && (eos > bos) ) {
       auto keyStart( Strings()[0] ? Strings() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
       if( keyStart ) {
          for( auto pCh( bos ) ; ; ) {
