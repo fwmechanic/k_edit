@@ -595,16 +595,18 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    if( fb->PeekRawLineExists( yLine, &bos, &eos ) ) {
       auto keyStart( Strings()[0] ? Strings() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
       if( keyStart ) {
-         for( auto pCh( bos ) ; ; ) { PCChar found(nullptr); int mlen;
+         for( auto pCh( bos ) ; ; ) {
+            PCChar found(nullptr); int mlen;
+            const boost::string_ref haystack( pCh, eos-pCh );
             for( auto pC(keyStart) ; *pC ;  ) {
-               const auto len( Strlen( pC ) );
-               const auto afind( Memstr( boost::string_ref( pCh, eos-pCh ), boost::string_ref( pC, len ) ));
+               const boost::string_ref needle( pC );
+               const auto afind( Memstr( haystack, needle ));
                if( afind && (!found || (afind < found)) ) {
-                  found = afind; mlen = len;
+                  found = afind; mlen = needle.length();
                   // Assert( afind+len <= eos );
                   0 && DBG( "WUC-find: y=%d, x=%" PR_PTRDIFFT "d", yLine, found-bos );
                   }
-               pC += len+1;
+               pC += needle.length() + 1;
                }
             if( !found ) break;
             const auto xFound( ColOfPtr( fb->TabWidth(), bos, found, eos ) );
