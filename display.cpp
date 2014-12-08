@@ -914,14 +914,15 @@ public:
    };
 
 bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
-   PCChar bos, eos;
-   if( CFBuf()->PeekRawLineExists( yLine, &bos, &eos ) ) {
+   const auto rl( CFBuf()->PeekRawLine( yLine ) );
+   if( !rl.empty() ) {
       /* shortcoming: literal strings ARE NOT parsed (in order to ignore comment
          delimiters occurring within them).  HiliteAddin_StreamParse and
          children do this and are thus preferred if/when the language of the file
          is known */
 
-      auto pComment = Memstr( boost::string_ref( bos, eos-bos ), boost::string_ref( d_eolCommentDelim ) );
+      const auto eos( rl.data() + rl.length() );
+      auto pComment = Memstr( rl, d_eolCommentDelim );
       if( !pComment && d_keyLenMinusTrailSpcs ) {
          if( 0 == memcmp( eos-d_keyLenMinusTrailSpcs, d_eolCommentDelim.data(), d_keyLenMinusTrailSpcs ) ) {
             pComment = eos-d_keyLenMinusTrailSpcs;
@@ -929,9 +930,8 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          }
       if(  pComment ) {
          const auto tw( CFBuf()->TabWidth() );
-         const auto xC( ColOfPtr( tw, bos, pComment, eos ) );
-         const auto pPrevNonWhite( StrPastPrevWhitespaceOrNull( bos, eos ) );
-         const auto xPWS( ColOfPtr( tw, bos, pPrevNonWhite, eos ) );
+         const auto xC  ( ColOfIdx( tw, rl, pComment - rl.data()         ) );
+         const auto xPWS( ColOfIdx( tw, rl, rl.find_last_not_of( " \t" ) ) );
          alcc.PutColor( xC, xPWS - xC + 1, COLOR::DIM );
          }
       }
