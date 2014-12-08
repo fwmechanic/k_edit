@@ -413,7 +413,7 @@ extern  void   SetCwdChanged( PCChar newName );
 
 extern  bool   MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );
 
-extern  PCChar GetWordUnderPoint( PCFBUF pFBuf, Point *cursor, COL *len );
+extern  boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
 
 
 //#####################  functionality implemented in  Lua  #####################

@@ -257,7 +257,7 @@ void CloseFileExtensionSettings() {
    }
 
 
-STATIC_FXN PFileExtensionSetting InitFileExtensionSetting( Path::str_t ext ) {
+STATIC_FXN PFileExtensionSetting InitFileExtensionSetting( const Path::str_t &ext ) {
    int equal;
    auto pNd( rb_find_gte_gen( &equal, s_FES_idx, ext.c_str(), rb_strcmpi ) );
    if( equal ) return IdxNodeToFES( pNd );
@@ -441,7 +441,7 @@ private:
    PCChar AddKey( PCChar key, PCChar eos=nullptr ) { return d_sb.AddString( key, eos ); }
    PCChar Strings()                                { return d_sb.Strings()            ; }
 
-   bool   SetNewWuc( PCChar snew, PCChar snewEos, LINE lin, COL col );
+   bool   SetNewWuc( boost::string_ref src, LINE lin, COL col );
 
    std::string  d_stCandidate;
    std::string  d_stSel;    // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
@@ -451,13 +451,12 @@ private:
    COL          d_xWuc;
    };
 
-bool HiliteAddin_WordUnderCursor::SetNewWuc( PCChar snew, PCChar snewEos, LINE lin, COL col ) {
+bool HiliteAddin_WordUnderCursor::SetNewWuc( boost::string_ref src, LINE lin, COL col ) {
    enum { DBG_HL_EVENT=0 };
-   const auto new_wucLen(snewEos - snew);
    d_stSel.clear();
    if(   d_yWuc == lin
-      && d_wucLen == new_wucLen
-      && 0 == memcmp( Strings(), snew, d_wucLen )
+      && d_wucLen == src.length()
+      && 0 == memcmp( Strings(), src.data(), d_wucLen )
      ) {                                                                                                        DBG_HL_EVENT && DBG("unch->%s", Strings() );
       if( d_xWuc != col ) {
           d_xWuc  = col;
@@ -467,12 +466,12 @@ bool HiliteAddin_WordUnderCursor::SetNewWuc( PCChar snew, PCChar snewEos, LINE l
       }
 
    Reset(); // aaa aaa aaa aaa
-   CPCChar wuc( AddKey( snew, snewEos ) );                                                                      DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
+   CPCChar wuc( AddKey( src.data(), src.data() + src.length() ) );                                              DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
    if( !wuc ) {                                                                                                 DBG_HL_EVENT && DBG( "%s toolong", __func__);
       return false;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%s",wuc );
 
-   d_wucLen = new_wucLen;
+   d_wucLen = src.length();
    d_yWuc   = lin;
    d_xWuc   = col;
    if( lin >= 0 ) {                                                                                                                             auto keynum( 1 );
@@ -496,7 +495,7 @@ bool HiliteAddin_WordUnderCursor::SetNewWuc( PCChar snew, PCChar snewEos, LINE l
                }
             }
          }
-      if(1) { // MWDT hexnum variations: 0xdeadbeef, 0xdead_beef (<- old MWDT elfdump format), deadbeef
+      if(0) { // MWDT hexnum variations: 0xdeadbeef, 0xdead_beef (<- old MWDT elfdump format), deadbeef
          if( (d_wucLen > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {
             const int xrun( consec_xdigits( wuc+2 ) );                                                          DBG_HL_EVENT && DBG( "xrun=%d",xrun );
             if( (10==d_wucLen) && (8==xrun) ) {                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, wuc+2 );
@@ -521,7 +520,7 @@ bool HiliteAddin_WordUnderCursor::SetNewWuc( PCChar snew, PCChar snewEos, LINE l
 
 GLOBAL_VAR int g_iWucMinLen = 2;
 
-PCChar GetWordUnderPoint( PCFBUF pFBuf, Point *cursor, COL *len ) {
+boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto yCursor( cursor->lin );
    const auto xCursor( cursor->col );
    PCChar bos, eos;
@@ -541,11 +540,10 @@ PCChar GetWordUnderPoint( PCFBUF pFBuf, Point *cursor, COL *len ) {
 
          // return everything
          cursor->col = xMin;
-         *len = wordChars;
-         return pStart;
+         return boost::string_ref( pStart, wordChars );
          }
       }
-   return nullptr;
+   return "";
    }
 
 void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
@@ -562,11 +560,11 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
       }
    else if( fUpdtWUC ) {
       const auto yCursor( Cursor().lin );
-      auto start( Cursor() );  COL len;
-      auto pWuc( GetWordUnderPoint( CFBuf(), &start, &len ) );
-      if( pWuc ) {
-         if( len >= g_iWucMinLen ) { // WUC is long enough?
-            SetNewWuc( pWuc, pWuc+len, start.lin, start.col );
+      auto start( Cursor() );
+      const auto wuc( GetWordUnderPoint( CFBuf(), &start ) );
+      if( !wuc.empty() ) {
+         if( wuc.length() >= g_iWucMinLen ) { // WUC is long enough?
+            SetNewWuc( wuc, start.lin, start.col );
             }
          }
       else { // NOT ON A WORD
@@ -576,14 +574,13 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
       }
    }
 
-STATIC_FXN PCChar Memstr( PCChar haystack, PCChar haystackEos, PCChar pszNeedle, COL needleLen=0 ) {
-   if( 0 == needleLen ) needleLen = Strlen( pszNeedle );
-   while( (haystackEos - haystack) >= needleLen ) {
-      const auto pMatch1( PCChar(memchr( haystack, pszNeedle[0], (haystackEos - haystack) - (needleLen-1) )) );
-      if( !pMatch1 || 0 == memcmp( pMatch1+1, pszNeedle+1, needleLen-1 ) )
+STATIC_FXN PCChar Memstr( boost::string_ref haystack, boost::string_ref needle ) {
+   while( haystack.length() >= needle.length() ) {
+      const auto pMatch1( PCChar(memchr( haystack.data(), needle[0], haystack.length() - (needle.length()-1) )) );
+      if( !pMatch1 || 0 == memcmp( pMatch1+1, needle.data()+1, needle.length()-1 ) )
          return pMatch1;
 
-      haystack = pMatch1 + 1;
+      haystack.remove_prefix( (pMatch1 - haystack.data()) + 1 );
       }
    return nullptr;
    }
@@ -597,7 +594,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
          for( auto pCh( bos ) ; ; ) { PCChar found(nullptr); int mlen;
             for( auto pC(keyStart) ; *pC ;  ) {
                const auto len( Strlen( pC ) );
-               const auto afind( Memstr( pCh, eos, pC, len ));
+               const auto afind( Memstr( boost::string_ref( pCh, eos-pCh ), boost::string_ref( pC, len ) ));
                if( afind && (!found || (afind < found)) ) {
                   found = afind; mlen = len;
                   // Assert( afind+len <= eos );
@@ -889,13 +886,13 @@ bool HiliteAddin_CompileLine::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
 class HiliteAddin_EolComment : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
 
-   PChar    d_eolCommentDelim;
-   unsigned d_keyLenMinusTrailSpcs;
+   std::string d_eolCommentDelim;
+   size_t      d_keyLenMinusTrailSpcs;
 
 public:
    HiliteAddin_EolComment( PView pView )
    : HiliteAddin( pView )
-   , d_eolCommentDelim( Strdup( d_view.GetFileExtensionSettings()->d_eolCommentDelim ) )
+   , d_eolCommentDelim( d_view.GetFileExtensionSettings()->d_eolCommentDelim )
       { /* 20140630
         all the following annoying hackiness is to allow detection of EOL
         comments occurring at EOL, in the case where the d_eolCommentDelim has
@@ -905,19 +902,14 @@ public:
 
         The better part of valor might be to delete support for this particular comment!
         */
-      const auto eos_key( Eos(d_eolCommentDelim) );
       auto trailSpcs = 0;
-      for( auto pC( eos_key-1 ) ; pC >=d_eolCommentDelim && *pC == ' ' ; --pC ) {
+      for( auto it( d_eolCommentDelim.crbegin() ) ; it != d_eolCommentDelim.crend() && *it == ' ' ; ++it ) {
          ++trailSpcs;
          }
-      if( trailSpcs ) {
-         d_keyLenMinusTrailSpcs = (eos_key - d_eolCommentDelim) - trailSpcs;
-         }
-      else {
-         d_keyLenMinusTrailSpcs = 0;
-         }
+      if( trailSpcs ) { d_keyLenMinusTrailSpcs = d_eolCommentDelim.length() - trailSpcs; }
+      else            { d_keyLenMinusTrailSpcs = 0; }
       }
-   ~HiliteAddin_EolComment() { free( d_eolCommentDelim ); }
+   ~HiliteAddin_EolComment() {}
    PCChar Name() const override { return "EolComment"; }
    };
 
@@ -929,8 +921,8 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          children do this and are thus preferred if/when the language of the file
          is known */
 
-      auto                                        pComment = Memstr( bos                       , eos, d_eolCommentDelim                         );
-      if( !pComment && d_keyLenMinusTrailSpcs ) { pComment = Memstr( eos-d_keyLenMinusTrailSpcs, eos, d_eolCommentDelim, d_keyLenMinusTrailSpcs ); }
+      auto                                        pComment = Memstr( boost::string_ref( bos                       , eos-bos                ), boost::string_ref( d_eolCommentDelim                                ) );
+      if( !pComment && d_keyLenMinusTrailSpcs ) { pComment = Memstr( boost::string_ref( eos-d_keyLenMinusTrailSpcs, d_keyLenMinusTrailSpcs ), boost::string_ref( d_eolCommentDelim.data(), d_keyLenMinusTrailSpcs ) ); }
       if(  pComment ) {
          const auto tw( CFBuf()->TabWidth() );
          const auto xC( ColOfPtr( tw, bos, pComment, eos ) );

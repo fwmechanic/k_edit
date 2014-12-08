@@ -355,12 +355,12 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
 
    if( d_cArg == 0 ) {
       if( d_pCmd->d_argType & NOARGWUC ) {
-         auto start( Cursor );  COL len;
-         const auto pWuc( GetWordUnderPoint( d_pFBuf, &start, &len ) );
-         if( pWuc ) {
+         auto start( Cursor );
+         const auto wuc( GetWordUnderPoint( d_pFBuf, &start ) );
+         if( !wuc.empty() ) {
             d_argType       = TEXTARG;
             d_textarg.ulc   = Cursor;
-            TextArgBuffer().assign( pWuc, len );
+            TextArgBuffer().assign( wuc.data(), wuc.length() );
             d_textarg.pText = TextArgBuffer().c_str();
                                                                                                           DB && DBG( "NOARGWUC='%s'", d_textarg.pText );
             return false; //==============================================================================
