@@ -64,6 +64,7 @@ extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
 extern bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars );
 
 extern   int   StrToInt_variable_base( PCChar pszNumericString, int numberBase );
+extern   boost::string_ref  StrSpnSignedInt( boost::string_ref src );
 extern   bool  StrSpnSignedInt( PCChar pszString );
 extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
