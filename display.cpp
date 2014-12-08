@@ -1040,17 +1040,18 @@ bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
    0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, d_ixCache, d_hl_rgn_array[d_ixCache].rgn.flMin.lin, d_hl_rgn_array[d_ixCache].rgn.flMax.lin );
    if( yLine < d_hl_rgn_array[d_ixCache].rgn.flMin.lin ) return false;
    const auto pFile( CFBuf() );
-   const auto tw( pFile->TabWidth() );
-   PCChar bos, eos;
-   auto xMaxOfLine( COL_MAX );
-   if( pFile->PeekRawLineExists( yLine, &bos, &eos ) ) { xMaxOfLine = ColOfPtr( tw, bos, eos-1, eos ); }
-   for( auto ix=d_ixCache ; ix < d_num_hl_rgns_found && 0==d_hl_rgn_array[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
-      const auto &comment( d_hl_rgn_array[ix] );
-      COL xMin=0; COL xMax=xMaxOfLine;
-      if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfPtr( tw, bos, bos+comment.rgn.flMin.col, eos ); }
-      if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfPtr( tw, bos, bos+comment.rgn.flMax.col, eos ); }
-      0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
-      alcc.PutColor( xMin, xMax-xMin+1, comment.color );
+   const auto rl( pFile->PeekRawLine( yLine ) );
+   if( !rl.empty() ) {
+      const auto tw( pFile->TabWidth() );
+      const auto xMaxOfLine( ColOfIdx( tw, rl, rl.length() - 1 ) );
+      for( auto ix=d_ixCache ; ix < d_num_hl_rgns_found && 0==d_hl_rgn_array[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
+         const auto &comment( d_hl_rgn_array[ix] );
+         COL xMin=0; COL xMax=xMaxOfLine;
+         if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfIdx( tw, rl, comment.rgn.flMin.col ); }
+         if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfIdx( tw, rl, comment.rgn.flMax.col ); }
+         0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
+         alcc.PutColor( xMin, xMax-xMin+1, comment.color );
+         }
       }
    return false;
    }
