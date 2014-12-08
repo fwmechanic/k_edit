@@ -578,47 +578,40 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
       }
    }
 
-STATIC_FXN PCChar Memstr( boost::string_ref haystack, boost::string_ref needle ) {
-   while( haystack.length() >= needle.length() ) {
-      const auto pMatch1( PCChar(memchr( haystack.data(), needle[0], haystack.length() - (needle.length()-1) )) );
-      if( !pMatch1 || 0 == memcmp( pMatch1+1, needle.data()+1, needle.length()-1 ) )
-         return pMatch1;
-
-      haystack.remove_prefix( (pMatch1 - haystack.data()) + 1 );
-      }
-   return nullptr;
-   }
-
 bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
    auto fb( CFBuf() );
-   PCChar bos, eos;
-   if( fb->PeekRawLineExists( yLine, &bos, &eos ) && (eos > bos) ) {
+   const auto rl( fb->PeekRawLine( yLine ) );
+   if( !rl.empty() ) {
       auto keyStart( Strings()[0] ? Strings() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
       if( keyStart ) {
-         for( auto pCh( bos ) ; ; ) {
-            PCChar found(nullptr); int mlen;
-            const boost::string_ref haystack( pCh, eos-pCh );
-            for( auto pC(keyStart) ; *pC ;  ) {
-               const boost::string_ref needle( pC );
-               const auto afind( Memstr( haystack, needle ));
-               if( afind && (!found || (afind < found)) ) {
-                  found = afind; mlen = needle.length();
-                  // Assert( afind+len <= eos );
-                  0 && DBG( "WUC-find: y=%d, x=%" PR_PTRDIFFT "d", yLine, found-bos );
+         const auto tw( fb->TabWidth() );
+         for( auto pCh( rl.data() ) ; ; ) {
+            auto found( boost::string_ref::npos ); int mlen;
+            const boost::string_ref haystack( pCh, (rl.data()+rl.length()) - pCh );
+            for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
+               const boost::string_ref needle( pNeedle );
+               auto afind( haystack.find( needle ) );
+               if( afind != boost::string_ref::npos ) {
+                  afind += haystack.data() - rl.data();
+                  if( found == boost::string_ref::npos || afind < found ) {
+                     found = afind; mlen = needle.length();
+                     // Assert( afind+len <= eos );
+                     // 0 && DBG( "WUC-find: y=%d, x=%" PR_SIZET "d", yLine, found );
+                     }
                   }
-               pC += needle.length() + 1;
+               pNeedle += needle.length() + 1;
                }
-            if( !found ) break;
-            const auto xFound( ColOfPtr( fb->TabWidth(), bos, found, eos ) );
+            if( found == boost::string_ref::npos ) break;
+            const auto xFound( ColOfIdx( tw, rl, found ) );
             if(   -1 == d_yWuc // is a selection pseudo-WUC?
                || // or a true WUC
-                 (  (found == bos || !isWordChar( found[-1] )) && (found+mlen==eos || !isWordChar( found[mlen] )) // only match _whole words_ matching d_wucbuf
+                 (  (found == 0 || !isWordChar( rl[found-1] )) && (found+mlen >= rl.length() || !isWordChar( rl[found+mlen] )) // only match _whole words_ matching d_wucbuf
                  && (yLine != Cursor().lin || Cursor().col < xFound || Cursor().col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
                  )
               ) {
                alcc.PutColor( xFound, mlen, COLOR::WUC );
                }
-            pCh = found + mlen;   // wucwucwucwucwuc
+            pCh += found + mlen;   // wucwucwucwucwuc
             }
          }
       }
@@ -892,8 +885,8 @@ bool HiliteAddin_CompileLine::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
 class HiliteAddin_EolComment : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
 
-   std::string d_eolCommentDelim;
-   size_t      d_keyLenMinusTrailSpcs;
+   std::string       d_eolCommentDelim;
+   boost::string_ref d_eolCommentDelimWOTrailSpcs;
 
 public:
    HiliteAddin_EolComment( PView pView )
@@ -912,8 +905,7 @@ public:
       for( auto it( d_eolCommentDelim.crbegin() ) ; it != d_eolCommentDelim.crend() && *it == ' ' ; ++it ) {
          ++trailSpcs;
          }
-      if( trailSpcs ) { d_keyLenMinusTrailSpcs = d_eolCommentDelim.length() - trailSpcs; }
-      else            { d_keyLenMinusTrailSpcs = 0; }
+      if( trailSpcs ) { d_eolCommentDelimWOTrailSpcs = boost::string_ref( d_eolCommentDelim.data(), d_eolCommentDelim.length() - trailSpcs ); }
       }
    ~HiliteAddin_EolComment() {}
    PCChar Name() const override { return "EolComment"; }
@@ -928,15 +920,15 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          is known */
 
       const auto eos( rl.data() + rl.length() );
-      auto pComment = Memstr( rl, d_eolCommentDelim );
-      if( !pComment && d_keyLenMinusTrailSpcs ) {
-         if( 0 == memcmp( eos-d_keyLenMinusTrailSpcs, d_eolCommentDelim.data(), d_keyLenMinusTrailSpcs ) ) {
-            pComment = eos-d_keyLenMinusTrailSpcs;
+      auto ixTgt = rl.find( d_eolCommentDelim );
+      if( ixTgt == boost::string_ref::npos && !d_eolCommentDelimWOTrailSpcs.empty() ) {
+         if( 0 == memcmp( eos-d_eolCommentDelimWOTrailSpcs.length(), d_eolCommentDelimWOTrailSpcs.data(), d_eolCommentDelimWOTrailSpcs.length() ) ) {
+            ixTgt = (eos-d_eolCommentDelimWOTrailSpcs.length()) - rl.data();
             }
          }
-      if(  pComment ) {
+      if( ixTgt != boost::string_ref::npos ) {
          const auto tw( CFBuf()->TabWidth() );
-         const auto xC  ( ColOfIdx( tw, rl, pComment - rl.data()         ) );
+         const auto xC  ( ColOfIdx( tw, rl, ixTgt                        ) );
          const auto xPWS( ColOfIdx( tw, rl, rl.find_last_not_of( " \t" ) ) );
          alcc.PutColor( xC, xPWS - xC + 1, COLOR::DIM );
          }
