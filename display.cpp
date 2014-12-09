@@ -618,14 +618,16 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    }
 
 
-STATIC_FXN cppc IsCppConditional( PCChar ps, PCChar eos, PInt pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
+STATIC_FXN cppc IsCppConditional( boost::string_ref src, PInt pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
    *pxPound = -1;
-   auto p1( StrPastAnyWhitespace( ps, eos ) );
-   if( p1==eos || !('#' == *p1 || '%' == *p1 || '!' == *p1) ) return cppcNone;
-   *pxPound = p1 - ps;
-   p1 = StrPastAnyWhitespace( p1+1, eos );
-   if( p1==eos || !isWordChar(*p1) ) return cppcNone;
-   const auto len( StrPastWord( p1, eos ) - p1 );
+   auto p1( src.find_first_not_of( " \t" ) );
+   if( p1==boost::string_ref::npos || !('#' == src[p1] || '%' == src[p1] || '!' == src[p1]) ) return cppcNone;
+   *pxPound = p1;
+   src.remove_prefix( p1 + 1 );
+   auto p2( src.find_first_not_of( " \t" ) );
+   if( p2==boost::string_ref::npos || !isWordChar( src[p2] ) ) return cppcNone;
+   src.remove_prefix( p2 );
+   const auto len( StrLastWordCh( src ) + 1 );
    STATIC_CONST struct {
       int     len;
       PCChar  nm;
@@ -644,17 +646,16 @@ STATIC_FXN cppc IsCppConditional( PCChar ps, PCChar eos, PInt pxPound ) { // *pL
       };
 
    for( const auto &cc : cpp_conds )
-      if( (len == cc.len) && (0 == memcmp( p1, cc.nm, len )) )
+      if( (len == cc.len) && (0 == memcmp( src.data(), cc.nm, len )) )
          return cc.acppc;
 
    return cppcNone;
    }
 
 cppc FBOP::IsCppConditional( PCFBUF fb, LINE yLine ) {
-   PCChar bos, eos;
-   fb->PeekRawLineExists( yLine, &bos, &eos );
+   const auto rl( fb->PeekRawLine( yLine ) );
    COL xPound;
-   return ::IsCppConditional( bos, eos, &xPound );
+   return ::IsCppConditional( rl, &xPound );
    }
 
 class HiliteAddin_CPPcond_Hilite : public HiliteAddin {
@@ -731,27 +732,33 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
    #endif
    auto upDowns(0);
    auto fb( CFBuf() );
+   const auto tw( fb->TabWidth() );
    for( auto iy(0) ; iy < ViewLines() ; ++iy ) {
       auto &line( d_PerViewableLine[ iy ].line );
-      line.xMax = fb->getLineTabx( &d_xb, Origin().lin + iy );
-      auto lbuf( d_xb.c_str() );
-      switch( (line.acppc = IsCppConditional( lbuf, lbuf+line.xMax, &line.xPound )) ) {
-         default:       break;
-         case cppcIf  : --upDowns;
+      const auto yFile( Origin().lin + iy );
+      const auto rl( fb->PeekRawLine( yFile ) );
+      line.xMax = ColOfIdx( tw, rl, rl.length() );
+      line.acppc = IsCppConditional( rl, &line.xPound );
+      if( cppcNone != line.acppc ) {
+         line.xPound = ColOfIdx( tw, rl, line.xPound );
+         switch( line.acppc ) {
+            default:       break;
+            case cppcIf  : --upDowns;
    #if SOLO_ELSE_HACK
-                        ++not_elses;
+                           ++not_elses;
    #endif
-                        break;
-         case cppcEnd : ++upDowns; maxUnIfdEnds = Max( maxUnIfdEnds, upDowns );
+                           break;
+            case cppcEnd : ++upDowns; maxUnIfdEnds = Max( maxUnIfdEnds, upDowns );
    #if SOLO_ELSE_HACK
-                        ++not_elses;
+                           ++not_elses;
    #endif
-                        break;
+                           break;
    #if SOLO_ELSE_HACK
-         case cppcElif:
-         case cppcElse: ++elses;
-                        break;
+            case cppcElif:
+            case cppcElse: ++elses;
+                           break;
    #endif
+            }
          }
       }
    #if SOLO_ELSE_HACK

@@ -165,6 +165,13 @@ boost::string_ref::size_type IdxFirstWordCh( boost::string_ref src, boost::strin
    return 0;
    }
 
+boost::string_ref::size_type StrLastWordCh( boost::string_ref src ) {
+   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
+      if( !isWordChar(*it) )  { return std::distance( src.cbegin(), it ) - 1; }
+      }
+   return src.length() - 1;
+   }
+
 //--------------------------------------------------------------
 
 GLOBAL_VAR Linebuf SwiErrBuf; // shared buffer used to format err msg strings returned by swix functions

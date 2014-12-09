@@ -198,6 +198,8 @@ STIL   PChar  StrWordStart( PChar  bos, PChar  ps ) { return PChar(StrWordStart(
 
 extern boost::string_ref::size_type IdxLastWordCh ( boost::string_ref src, boost::string_ref::size_type start );
 extern boost::string_ref::size_type IdxFirstWordCh( boost::string_ref src, boost::string_ref::size_type start );
+extern boost::string_ref::size_type StrLastWordCh(  boost::string_ref src );
+
 //-----------------
 
 extern PCChar StrToPrevOrNull_(   PCChar pBuf, PCChar pInBuf, PCChar toMatch );

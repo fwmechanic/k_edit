@@ -498,10 +498,9 @@ STATIC_FXN PXbuf StreamArgToString( PXbuf dest, PFBUF pfb, Rect stream ) {
       pstr[ix].chars = plast-bos+1;
       }
       for( ++ix, ++yLine ; yLine < yMax ; ++ix, ++yLine ) {
-         PCChar bos; size_t chars;
-         pfb->PeekRawLineExists( yLine, &bos, &chars );
-         pstr[ix].bos   = bos;
-         pstr[ix].chars = chars;
+         const auto rl( pfb->PeekRawLine( yLine ) );
+         pstr[ix].bos   = rl.data();
+         pstr[ix].chars = rl.length();
          }
       {
       PCChar bos; size_t chars;
