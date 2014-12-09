@@ -585,33 +585,33 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
       auto keyStart( Strings()[0] ? Strings() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
       if( keyStart ) {
          const auto tw( fb->TabWidth() );
-         for( auto pCh( rl.data() ) ; ; ) {
-            auto found( boost::string_ref::npos ); int mlen;
-            const boost::string_ref haystack( pCh, (rl.data()+rl.length()) - pCh );
+         for( auto ofs( 0 ) ; ofs < rl.length() ; ) {
+            auto ixMatch( boost::string_ref::npos ); int mlen;
+            auto haystack( rl ); haystack.remove_prefix( ofs );
             for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
                const boost::string_ref needle( pNeedle );
                auto afind( haystack.find( needle ) );
                if( afind != boost::string_ref::npos ) {
                   afind += haystack.data() - rl.data();
-                  if( found == boost::string_ref::npos || afind < found ) {
-                     found = afind; mlen = needle.length();
+                  if( ixMatch == boost::string_ref::npos || afind < ixMatch ) {
+                     ixMatch = afind; mlen = needle.length();
                      // Assert( afind+len <= eos );
-                     // 0 && DBG( "WUC-find: y=%d, x=%" PR_SIZET "d", yLine, found );
+                     // 0 && DBG( "WUC-find: y=%d, x=%" PR_SIZET "d", yLine, ixMatch );
                      }
                   }
                pNeedle += needle.length() + 1;
                }
-            if( found == boost::string_ref::npos ) break;
-            const auto xFound( ColOfIdx( tw, rl, found ) );
+            if( ixMatch == boost::string_ref::npos ) break;
+            const auto xFound( ColOfIdx( tw, rl, ixMatch ) );
             if(   -1 == d_yWuc // is a selection pseudo-WUC?
                || // or a true WUC
-                 (  (found == 0 || !isWordChar( rl[found-1] )) && (found+mlen >= rl.length() || !isWordChar( rl[found+mlen] )) // only match _whole words_ matching d_wucbuf
+                 (  (ixMatch == 0 || !isWordChar( rl[ixMatch-1] )) && (ixMatch+mlen >= rl.length() || !isWordChar( rl[ixMatch+mlen] )) // only match _whole words_ matching d_wucbuf
                  && (yLine != Cursor().lin || Cursor().col < xFound || Cursor().col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
                  )
               ) {
                alcc.PutColor( xFound, mlen, COLOR::WUC );
                }
-            pCh += found + mlen;   // wucwucwucwucwuc
+            ofs += ixMatch + mlen;   // wucwucwucwucwuc
             }
          }
       }
