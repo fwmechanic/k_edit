@@ -553,54 +553,39 @@ void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
 // (pLineBuf).  If pString contains HTABs, returned value will never be the
 // column of a tab fill character (since this doesn't exist in pString).
 //
-COL ColOfPtr( COL tabWidth, const PCChar pString, const PCChar pWithinString, const PCChar pEos ) {
+COL ColOfPtr( COL tabWidth, const PCChar pString, const PCChar pWithinString, PCChar eos ) {
    if( pWithinString < pString )
       return -1;
 
-   const auto eos( pEos ? pEos : Eos( pString ) );
+   if( !eos ) { eos = Eos( pString ); }
    const Tabber tabr( tabWidth );
    auto xCol( 0 );
    auto pX( pString );
    while( pX < eos ) {
-      if( pX >= pWithinString )  // we have found or gone past pWithinString
+      if( pX >= pWithinString ) { // we have found or gone past pWithinString
          return xCol;
-
+         }
       switch( *pX++ ) {
-         default  :  ++xCol;                                break;
-         case HTAB:  xCol = tabr.ColOfNextTabStop( xCol );  break;
+         default  : ++xCol;                                break;
+         case HTAB: xCol = tabr.ColOfNextTabStop( xCol );  break;
          }
       }
-
-   if( pX >= pWithinString )
-      return xCol;
-
-   // 'pWithinString' actually points _beyond_ end of pString: assume all chars
-   // past EOL are spaces (non-tabs)
-   //
-   return xCol + (pWithinString - pX);
+   return xCol + (pWithinString - eos);  // 'pWithinString' actually points _at or beyond_ eos: assume all chars past EOL are spaces (non-tabs)
    }
 
 COL ColOfIdx( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset ) {
    const Tabber tabr( tabWidth );
    auto xCol( 0 );
-   auto it( content.cbegin() );
-   for( ; it != content.cend(); ++it ) {
-      if( std::distance( content.cbegin(), it ) >= offset )  // we have found or gone past offset
+   for( auto it( content.cbegin() ) ; it != content.cend() ; ++it ) {
+      if( std::distance( content.cbegin(), it ) == offset ) {
          return xCol;
-
+         }
       switch( *it ) {
-         default  :  ++xCol;                                break;
-         case HTAB:  xCol = tabr.ColOfNextTabStop( xCol );  break;
+         default  : ++xCol;                                break;
+         case HTAB: xCol = tabr.ColOfNextTabStop( xCol );  break;
          }
       }
-
-   if( std::distance( content.cbegin(), it ) >= offset )
-      return xCol;
-
-   // 'pWithinString' actually points _beyond_ end of pString: assume all chars
-   // past EOL are spaces (non-tabs)
-   //
-   return xCol + (offset - content.length());
+   return xCol + (offset - content.length());  // 'offset' indexes _past_ content: assume all chars past EOL are spaces (non-tabs)
    }
 
 //------------------------------------------------------------------------------
@@ -617,10 +602,8 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
       if( yLine == 0 )
          return false; // no prev char
 
-      --yLine; // operate on prev line
-
+      --yLine; // join current and prev lines
       xCol = FBOP::LineCols( pcf, yLine );
-
       if( InInsertMode() && fEmacsmode )  // eat linebreak
          pcf->DelStream( xCol, yLine, 0, yLine+1 );
 
@@ -670,13 +653,8 @@ DONE_MOVE_CURSOR:
    return true;
    }
 
-bool ARG::cdelete() {
-   return DeletePrevChar( false );
-   }
-
-bool ARG::emacscdel() {
-   return DeletePrevChar( true );
-   }
+bool ARG::cdelete  () { return DeletePrevChar( false ); }
+bool ARG::emacscdel() { return DeletePrevChar( true  ); }
 
 //
 //------------------------------------------------------------------------------
