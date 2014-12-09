@@ -582,7 +582,7 @@ PCCMD CmdFromKbdForExec() {
 #endif
 
    const auto pCmd( g_Key2CmdTbl[ cmddata.EdKcEnum ] );
-   if( !pCmd->IsRealMacro() )
+   if( pCmd && !pCmd->IsRealMacro() )
         pCmd->d_argData = cmddata;
 
    return pCmd;

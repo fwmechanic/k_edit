@@ -293,9 +293,9 @@ PFileExtensionSetting View::GetFileExtensionSettings() {
 int View::ColorIdx2Attr( int colorIdx ) const {
    if( colorIdx < COLOR::VIEW_COLOR_COUNT )  return d_pFES
                                                   ?  d_pFES->d_colors[ colorIdx ]
-                                                  : *g_colorVars[ COLOR::ERR - COLOR::VIEW_COLOR_COUNT ];
+                                                  : *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
    if( colorIdx < COLOR::COLOR_COUNT )       return *g_colorVars[ colorIdx   - COLOR::VIEW_COLOR_COUNT ];
-                                             return *g_colorVars[ COLOR::ERR - COLOR::VIEW_COLOR_COUNT ];
+                                             return *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
    }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -2349,10 +2349,12 @@ typedef BitVector<uint_machineword_t> srd_linevect;
 STATIC_VAR srd_linevect   *s_paScreenLineNeedsRedraw;
 
 void DispNeedsRedrawAllLinesAllWindows_() {
-   s_paScreenLineNeedsRedraw->SetAllBits();
+   if (s_paScreenLineNeedsRedraw) //TODO
+    s_paScreenLineNeedsRedraw->SetAllBits();
    }
 
 void Win::DispNeedsRedrawAllLines() const { 0 && DBG( "All=0..%d", g_CurWin()->d_Size.lin );
+   if (!s_paScreenLineNeedsRedraw) return;//TODO
    for( auto lineWithinWin(0); lineWithinWin < d_Size.lin; ++lineWithinWin ) {
       const auto yLine( lineWithinWin + d_UpLeft.lin );
       Assert( yLine < EditScreenLines() );
@@ -2361,7 +2363,7 @@ void Win::DispNeedsRedrawAllLines() const { 0 && DBG( "All=0..%d", g_CurWin()->d
    }
 
 STATIC_FXN bool NeedRedrawScreen() {
-   return s_paScreenLineNeedsRedraw->IsAnyBitSet();
+   return s_paScreenLineNeedsRedraw ? s_paScreenLineNeedsRedraw->IsAnyBitSet() : false;//TODO
    }
 
 
@@ -2705,18 +2707,18 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
       }
 
    if( pfh->FnmIsDiskWritable() && pfh->EolMode()!=platform_eol ) {
-      if( g_fForcePlatformEol )                                           cl.Cat( COLOR::ERR, "!" );
+      if( g_fForcePlatformEol )                                           cl.Cat( COLOR::ERRM, "!" );
                                                                           cl.Cat( COLOR::INF, pfh->EolName() );
       }
-   if( pfh->IsNoEdit() )                                                  cl.Cat( COLOR::ERR, " !edit!" );
+   if( pfh->IsNoEdit() )                                                  cl.Cat( COLOR::ERRM, " !edit!" );
 #if defined(_WIN32)
-   if( pfh->IsDiskRO() )                                                  cl.Cat( COLOR::ERR, " DiskRO" );
+   if( pfh->IsDiskRO() )                                                  cl.Cat( COLOR::v, " DiskRO" );
 #endif
 
    cl.Cat( COLOR::SEL, FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine(), pfh->LineCount() ) );
    cl.Cat( COLOR::INF, FmtStr<27>( "[%s]", LastExtTagLoaded() ) );
-// cl.Cat( COLOR::ERR, FmtStr<30>( "t%ui%de%d ", pfh->TabWidth(), pfh->IndentIncrement(), pfh->TabConv() ) );
-   cl.Cat( COLOR::ERR, FmtStr<30>( "t%ue%d "   , pfh->TabWidth(),                         pfh->TabConv() ) );
+// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ui%de%d ", pfh->TabWidth(), pfh->IndentIncrement(), pfh->TabConv() ) );
+   cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "   , pfh->TabWidth(),                         pfh->TabConv() ) );
    cl.Cat( COLOR::SEL, FmtStr<20>( "case:%s ", g_fCase ? "sen" : "ign" ) );
 
    if( g_pFbufClipboard ) {
@@ -2812,7 +2814,7 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
    else {
       auto pfnm( pfh->Name() );
       if( commonLen   ) { out.Cat( COLOR::HG , pfnm, commonLen   ); pfnm += commonLen  ; }
-      if( uniqPathLen ) { out.Cat( COLOR::ERR, pfnm, uniqPathLen ); pfnm += uniqPathLen; }
+      if( uniqPathLen ) { out.Cat( COLOR::ERRM, pfnm, uniqPathLen ); pfnm += uniqPathLen; }
       if( uniqLen     ) { out.Cat( COLOR::FG , pfnm, uniqLen     ); pfnm += uniqLen    ; }
       }
 

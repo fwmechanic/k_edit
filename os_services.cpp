@@ -131,7 +131,7 @@ void DBG_init() {
    pathbuf buf;
    snprintf( BSOB( buf ), "%s%s.%d", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), getpid() );
    if( !ofh_DBG ) {
-      ofh_DBG = fopen( buf, "W" );
+      ofh_DBG = fopen( buf, "w" );
       if( ofh_DBG == nullptr ) {
          perror("DBG_init() fopen");
          exit(EXIT_FAILURE);
