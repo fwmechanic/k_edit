@@ -532,7 +532,8 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
          if( ixC != boost::string_ref::npos && isWordChar( rl[ixC] ) ) {
             const auto ixFirst( IdxFirstWordCh( rl, ixC ) );
             const auto ixLast ( IdxLastWordCh ( rl, ixC ) );        0 && DBG( "ix[%" PR_SIZET "u..%" PR_SIZET "u]", ixFirst, ixLast );
-            if( ixFirst != boost::string_ref::npos && ixLast != boost::string_ref::npos ) {
+            // if( ixFirst != boost::string_ref::npos && ixLast != boost::string_ref::npos )
+               {
                const auto xMin( ColOfIdx( tw, rl, ixFirst ) );
                const auto xMax( ColOfIdx( tw, rl, ixLast  ) );      0 && DBG( "x[%d..%d]", xMin, xMax );
                const auto wordCols ( xMax   - xMin    + 1 );
@@ -1540,12 +1541,10 @@ bool HiliteAddin_Diff::VWorthKeeping() {
    }
 
 bool HiliteAddin_Diff::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
-   PCChar ptr; size_t chars;
-   if( CFBuf()->PeekRawLineExists( yLine, &ptr, &chars ) && chars > 0 ) {
-                               //      PutColor( 0, COL_MAX, COLOR::INF );
-           if( '+' == ptr[0] ) { alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgGRN|FGhi ); /*DBG( "+" );*/ }
-      else if( '-' == ptr[0] ) { alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgRED|FGhi ); /*DBG( "-" );*/ }
-                               //      PutColor( 0, COL_MAX, COLOR::ERR );
+   const auto rl( CFBuf()->PeekRawLine( yLine ) );
+   if( !rl.empty() ) {
+           if( '+' == rl[0] ) { alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgGRN|FGhi ); /*DBG( "+" );*/ }
+      else if( '-' == rl[0] ) { alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgRED|FGhi ); /*DBG( "-" );*/ }
       }
    return false;
    }
