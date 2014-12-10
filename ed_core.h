@@ -168,7 +168,7 @@ namespace COLOR { // see color2Lua
       INF=VIEW_COLOR_COUNT,  // information
       STA,  // status line
       WND,  // window border
-      ERR,  // error message
+      ERRM,  // error message
       COLOR_COUNT // MUST BE LAST!
       }; // NO MORE THAN 16 ALLOWED!
    }

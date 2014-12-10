@@ -635,7 +635,7 @@ void View::SetStrHiLite( const Point &pt, COL Cols, int color ) {
    }
 
 void View::SetMatchHiLite( const Point &pt, COL Cols, bool fErrColor ) {
-   const auto colorIdx( fErrColor ? COLOR::ERR : COLOR::SEL );
+   const auto colorIdx( fErrColor ? COLOR::ERRM : COLOR::SEL );
    const auto hiliteWidth( Cols > 0 ? Cols : 1 );
 
    enum { MWHOSMHL = 0 }; // -> MASK_WUC_HILITES_ON_SEARCH_MATCH_HILIT_LINE
