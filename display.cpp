@@ -523,7 +523,7 @@ GLOBAL_VAR int g_iWucMinLen = 2;
 boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto yCursor( cursor->lin );
    const auto xCursor( cursor->col );
-   auto rl( pFBuf->PeekRawLine( yCursor ) );
+   const auto rl( pFBuf->PeekRawLine( yCursor ) );
    if( !rl.empty() ) {
       const auto tw( pFBuf->TabWidth() );                             // abc   abc
       const auto xEos( ColOfIdx( tw, rl, rl.length() ) );             // abc   abc
