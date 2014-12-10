@@ -2711,7 +2711,7 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
       }
    if( pfh->IsNoEdit() )                                                  cl.Cat( COLOR::ERRM, " !edit!" );
 #if defined(_WIN32)
-   if( pfh->IsDiskRO() )                                                  cl.Cat( COLOR::v, " DiskRO" );
+   if( pfh->IsDiskRO() )                                                  cl.Cat( COLOR::ERRM, " DiskRO" );
 #endif
 
    cl.Cat( COLOR::SEL, FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine(), pfh->LineCount() ) );
