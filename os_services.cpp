@@ -128,9 +128,9 @@ int DBG( char const *kszFormat, ...  ) {
 STATIC_VAR FILE *ofh_DBG;
 
 void DBG_init() {
-   pathbuf buf;
-   snprintf( BSOB( buf ), "%s%s.%d", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), getpid() );
    if( !ofh_DBG ) {
+      pathbuf buf;
+      snprintf( BSOB( buf ), "%sDBG_%s.%d", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), getpid() );
       ofh_DBG = fopen( buf, "w" );
       if( ofh_DBG == nullptr ) {
          perror("DBG_init() fopen");
@@ -143,19 +143,22 @@ void DBG_init() {
          exit(EXIT_FAILURE);
          }
       char tmstr[100];
-      if( strftime( BSOB(tmstr), "%Y%m%dT%H:%M:%S", lt ) == 0 ) {
+      if( strftime( BSOB(tmstr), "%Y%m%dT%H%M%S", lt ) == 0 ) {
          perror( "strftime returned 0" );
          exit(EXIT_FAILURE);
          }
+      fprintf( stderr , "opened %s @ %s\n", buf, tmstr );
       fprintf( ofh_DBG, "opened %s @ %s\n", buf, tmstr );
       }
    }
 
 int DBG( char const *kszFormat, ...  ) {
+   auto ofh( ofh_DBG ? ofh_DBG : stdout );
    va_list args;  va_start(args, kszFormat);
-   vfprintf( ofh_DBG ? ofh_DBG : stdout, kszFormat, args );
+   vfprintf( ofh, kszFormat, args );
    va_end(args);
-   if( ofh_DBG ) { fflush( ofh_DBG ); }
+   fputc( '\n', ofh );
+   fflush( ofh );
    return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
    }
 

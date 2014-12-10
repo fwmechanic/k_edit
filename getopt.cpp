@@ -21,6 +21,12 @@ Getopt::Getopt( int argc_, PPCChar argv_, PCChar optset_ )
    , d_pAddlOpt( nullptr )
    , d_pgm( Path::CpyFnm( d_argv[0] ) )
    {
+   if( 0 ) {
+      printf( "d_pgm=%s\n", d_pgm.c_str() );
+      for( auto ix( 0 ) ; ix < argc_ ; ++ix ) {
+         printf( "argv[%d]=%s\n", ix, argv_[ix] );
+         }
+      }
    }
 
 //

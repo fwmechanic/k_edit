@@ -56,7 +56,7 @@ void Bell() {
    }
 
 
-STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 0 && DBG( "%s(%s)", FUNC, filename );
+STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 1 && DBG( "%s(%s)", FUNC, filename );
    g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
    }
 
@@ -879,20 +879,21 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
 
 #if defined(_WIN32)
    #define  HOME_ENVVAR_NM  "APPDATA"
+   #define  HOME_SUBDIR_NM  "Kevins Editor"
 #else
    #define  HOME_ENVVAR_NM  "HOME"
+   #define  HOME_SUBDIR_NM  ".kedit"
 #endif
    const PCChar appdataVal( getenv( HOME_ENVVAR_NM ) );
    if( !appdataVal )          { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
    if( !IsDir( appdataVal ) ) { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
    #undef   HOME_ENVVAR_NM
 
-   STATIC_CONST char kszTmpDir[] = PATH_SEP_STR "Kevins Editor" PATH_SEP_STR;
-   s_stateFileDir = appdataVal;                              0 && DBG( "1: %s", s_stateFileDir.c_str() );
-   s_stateFileDir += PATH_SEP_STR "Kevins Editor";           0 && DBG( "2: %s", s_stateFileDir.c_str() );
+   s_stateFileDir = appdataVal;                     DD && DBG( "1: %s", s_stateFileDir.c_str() );
+   s_stateFileDir += PATH_SEP_STR HOME_SUBDIR_NM;   DD && DBG( "2: %s", s_stateFileDir.c_str() );
    if( !IsDir( s_stateFileDir.c_str() ) ) { mkdirOk( s_stateFileDir.c_str() ); }
    if( !IsDir( s_stateFileDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_stateFileDir.c_str() ); exit( 1 ); }
-   s_stateFileDir += Path::PATH_SEP_CH;              DD && DBG( "s_stateFileDir = '%s'", s_stateFileDir.c_str() );
+   s_stateFileDir += PATH_SEP_CH;              DD && DBG( "s_stateFileDir = '%s'", s_stateFileDir.c_str() );
    PutEnvOk( "K_STATEDIR", s_stateFileDir.c_str() );
    }
 

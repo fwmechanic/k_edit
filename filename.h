@@ -9,9 +9,11 @@
  */
 
 #if defined(_WIN32)
+  #define  PATH_SEP_CH        '\\'
   #define  PATH_SEP_STR       "\\"
   #define  PATH_SEP_SRCH_STR "/\\"
 #else
+  #define  PATH_SEP_CH        '/'
   #define  PATH_SEP_STR       "/"
   #define  PATH_SEP_SRCH_STR  PATH_SEP_STR
 #endif
@@ -24,7 +26,7 @@ namespace Path {
    template<typename CharPtr> STIL CharPtr StrToNextPathSepOrEos(  CharPtr pszToSearch          ) { return StrToNextOrEos ( pszToSearch , PATH_SEP_SRCH_STR ); }
    template<typename CharPtr> STIL CharPtr StrToPrevPathSepOrNull( CharPtr pBuf, CharPtr pInBuf ) { return StrToPrevOrNull( pBuf, pInBuf, PATH_SEP_SRCH_STR ); }
 
-   enum chars : char { chEnvSep = ';', chDirSepMS = '\\', PATH_SEP_CH = chDirSepMS, chDirSepPosix = '/' };
+   enum chars : char { chEnvSep = ';', chDirSepMS = '\\', chDirSepPosix = '/' };
 #if defined(_WIN32)
    bool   STIL  IsPathSepCh( int ch ) { return ch == chDirSepMS || ch == chDirSepPosix; }
 #else
