@@ -111,9 +111,12 @@ endif
 ifdef DBG_BUILD
 STRIP      :=
 C_OPTS_DBG := -g -fno-omit-frame-pointer
+GCC_OPTZ := -O0
 else
 STRIP      := -s
 C_OPTS_DBG :=
+GCC_OPTZ := -Os
+GCC_OPTZ := -O3
 endif
 
 LUA_DIR=lua-5.1/src
@@ -123,8 +126,6 @@ CC_OUTPUT := # --save-temp
 # -fsanitize=undefined gens link errors (is supposed to work on Linux x64 w/GCC 4.9.2 only)
 # -fstrict-overflow -Wstrict-overflow=2
 TRAPV := -ftrapv
-GCC_OPTZ := -Os
-GCC_OPTZ := -O3
 
 #  -Weffc++  -Wpedantic  -Wcast-qual
 CWARN := -Wall -Wextra -W \
