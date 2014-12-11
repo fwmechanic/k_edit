@@ -2982,7 +2982,7 @@ VideoFlusher::~VideoFlusher() {
    }
 
 
-STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { 1 && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
+STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { WL( 0, 1 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
    if( src ) {
       const auto charsWritten( ConIO::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
       if( charsWritten ) {
