@@ -123,9 +123,10 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    start_color();
    keypad(stdscr, TRUE);
    noecho();
-   s_iWidth = GetMaxConsoleSize().lin;
-   s_iHeight = GetMaxConsoleSize().col;//????
-   Event_ScreenSizeChanged(Point(s_iWidth, s_iHeight));
+   const auto sizeNow( GetMaxConsoleSize() );
+   s_iHeight = sizeNow.lin;
+   s_iWidth  = sizeNow.col;
+   Event_ScreenSizeChanged( Point(s_iWidth, s_iHeight) );
    return true;
    }
 void ConIO::Shutdown() {
