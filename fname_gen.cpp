@@ -629,10 +629,15 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
          }
       }
    else { // normal expansion
+#if defined(_WIN32)
       CfxFilenameGenerator mfg( pszSrc, ONLY_FILES );
       if( mfg.VGetNextName( dest ) ) {  /* only care about FIRST match */             VERBOSE && DBG( "%s '%s' =:> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
          }
+#else
+      dest = pszSrc;  /* FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME FIXME */     VERBOSE && DBG( "%s '%s' =:> '%s'"     , __func__, pszSrc, dest.c_str() );
+      return;
+#endif
       }
 
 OUTPUT_EQ_INPUT:

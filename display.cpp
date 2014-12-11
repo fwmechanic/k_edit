@@ -2459,7 +2459,7 @@ LINE MinDispLine() { return g_fDialogTop ? 2 : 0          ; }
 LINE DialogLine()  { return g_fDialogTop ? 1 : s_iHeight-2; }
 LINE StatusLine()  { return g_fDialogTop ? 0 : s_iHeight-1; }
 
-void Event_ScreenSizeChanged( const Point &newSize ) {
+void Event_ScreenSizeChanged( const Point &newSize ) { DBG( "%s %d,%d->%d,%d", __func__, s_iHeight, s_iWidth, newSize.lin, newSize.col );
    s_iHeight = newSize.lin; // THE ONLY PLACE WHERE THIS VARIABLE IS ASSIGNED!!!
    s_iWidth  = newSize.col; // THE ONLY PLACE WHERE THIS VARIABLE IS ASSIGNED!!!
 
@@ -2982,7 +2982,7 @@ VideoFlusher::~VideoFlusher() {
    }
 
 
-STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { 0 && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
+STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { 1 && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
    if( src ) {
       const auto charsWritten( ConIO::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
       if( charsWritten ) {

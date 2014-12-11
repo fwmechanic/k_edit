@@ -18,9 +18,7 @@
 #define PC_YELLOW  6
 #define PC_WHITE   7
 
-extern int s_iWidth ;
-extern int s_iHeight ;
-extern void  Event_ScreenSizeChanged( const Point &newSize );
+// extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 static void set_pcattr( int attr ) {
    attr &= 0x7F; // ncurses does not have "high intensity" background attr, so clear it
@@ -72,6 +70,7 @@ void ConIO::SetCursorLocn( int yLine, int xCol ) {
    s_cursor_pos.col = xCol;
    }
 int ConIO::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
+   DBG( "%s@%d,%d=%*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
    if( sizeY==sizeY && xColWithinConsoleWindow >= sizeX ) { return 0; }
@@ -124,9 +123,10 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    keypad(stdscr, TRUE);
    noecho();
    const auto sizeNow( GetMaxConsoleSize() );
-   s_iHeight = sizeNow.lin;
-   s_iWidth  = sizeNow.col;
-   Event_ScreenSizeChanged( Point(s_iWidth, s_iHeight) );
+   DBG( "%s: size=y,x=%d,%d", __func__, sizeNow.lin, sizeNow.col );
+   Event_ScreenSizeChanged( Point( sizeNow.lin, sizeNow.col ) );
+   ConIO::BufferWriteString( " hello ", 7, 0, 0, 0x15, false );
+   ConIO::BufferWriteString( " world ", 7, 3, 0, 0x13, false );
    return true;
    }
 void ConIO::Shutdown() {
