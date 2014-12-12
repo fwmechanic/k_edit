@@ -52,6 +52,10 @@ require "show"
 
 function fmt(...) return string.format(...) end
 
+local dirsep_os        = _dir.dirsep_os()
+local dirsep_class     = _dir.dirsep_class()
+local not_dirsep_class = dirsep_class:gsub("%[","[^")
+
 Min = math.min
 Max = math.max
 
@@ -215,9 +219,9 @@ function Assign( tbl )
 
 function SwitchToFile( fname ) FBUF.new( fname ):PutFocusOn() end
 
-function PathOf   ( str )  return str:match( "^(.-)[^\\/]*$" )   end
-function Path_Name( str )  return str:match( "^(.-)([^\\/]*)$" ) end
-function NameExtOf( str )  return str:match( "[\\/]([^\\/]*)$" ) end
+function PathOf   ( str )  return str:match( "^(.-)"..not_dirsep_class.."*$" )   end
+function Path_Name( str )  return str:match( "^(.-)("..not_dirsep_class.."*)$" ) end
+function NameExtOf( str )  return str:match( dirsep_class.."("..not_dirsep_class.."*)$" ) end
 function NameOf   ( str )  return NameExtOf(str):gsub( "%.[^%.]*$","") end
 function ExtOf    ( str )  return str:match( "%.([^%.]*)$" )     end
 
@@ -231,7 +235,7 @@ function ExtOf    ( str )  return str:match( "%.([^%.]*)$" )     end
 
 function PrettyPath( path )
    if path:match( "^%a:\\$" ) then return path end
-   return path:gsub( "[\\/]$", "" )
+   return path:gsub( dirsep_class.."$", "" )
    end
 
 do
@@ -291,7 +295,7 @@ function FactorOutCommonLeadingPath( fnm_ary )
        end
    if 0==pfxlen then return rtn_none() end
    s1 = s1:sub(1,pfxlen)                       -- print( "pfxlen="..tostring(pfxlen).." s1="..s1 )
-   s1 = s1:gsub("[^\\/]*$","")                 -- print( "s1-partial="..s1 )
+   s1 = s1:gsub( not_dirsep_class.."*$","")    -- print( "s1-partial="..s1 )
 
    local rv = {}
    local nmWMax = 0
@@ -1056,8 +1060,8 @@ shex    = fn_execute_TEXTARG( "shex" )
 
 local classHexit = "[0-9a-fA-f]"
 
-local patBkupDir,wcBkupDir = "[\\/]%.kbackup[\\/]"
-                           ,       ".kbackup/"
+local patBkupDir,wcBkupDir = dirsep_class.."%.kbackup"..dirsep_class
+                           ,                ".kbackup/"
 local patBkupExt,wcBkupExt = "%."..string.rep( "%d", 8 ).."_"..string.rep( "%d", 6 ).."$"
                            ,  "."..string.rep( "?" , 8 ).."_"..string.rep( "?" , 6 )
 
@@ -1205,8 +1209,8 @@ do
    local patNm = '[^%c:%*%?"<>]'
    local patNmIllChars = '[<>"|]'
    local patNotNmIllChars = '[^<>"|:]+'
-   local patDS = '[\\/]+'
-   local patNotDS = '[^\\/]+'
+   local patDS = dirsep_class.."+"
+   local patNotDS = not_dirsep_class.."+"
 
    local function find_filenames( lbuf )
 
@@ -1397,7 +1401,7 @@ AddEdFxn{ name = "dc", help = "Menu: Dirs of Child", attr = NOARG, key = ""
    , NOARG = function ( arg )
       local dirs = GetChildDirs()
       table.sort( dirs )
-      local choices = tu.a_grep( function(s) return not s:find( "\\.svn" ) and not s:find( "\\k_backup" ) end, dirs )
+      local choices = tu.a_grep( function(s) return not s:find( dirsep_os..".svn" ) and not s:find( dirsep_os.."k_backup" ) end, dirs )
       local choice = DirMenu( "Child Dirs", choices, "<"..GetCwd().."child-dirs>" )
       if choice then fChangeFile( choice )  end
       end
@@ -1735,7 +1739,7 @@ local function for_LINEBOX( arg, ... )
 local function gsub_linearg( arg, pat, replacement )
    local total = 0
    for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
-      local new, cnt = (arg.fbuf:GetLine( iy )):gsub( "[\\/][^\\/]+$", "" )
+      local new, cnt = (arg.fbuf:GetLine( iy )):gsub( dirsep_class..not_dirsep_class.."+$", "" )
       if cnt > 0 then
          arg.fbuf:PutLine( iy, new )
          total = total + cnt
@@ -1819,7 +1823,7 @@ end
 
 
 do
-   local function rmvTrailingPathComponent(st)  return st:gsub( "[\\/][^\\/]+$", "" )  end
+   local function rmvTrailingPathComponent(st)  return st:gsub( dirsep_class..not_dirsep_class.."+$", "" )  end
 
    AddEdFxn{ name = "gsub", help = "", attr = MODIFIES+LINEARG, key = "alt+q"
       , LINEARG = function( arg )  xform_linearg( arg, rmvTrailingPathComponent ) end
@@ -1937,7 +1941,7 @@ do
          print("generating lookupFnm")
          fnm_to_f_in_tree = {}
          for _,nm in ipairs(_dir.read_names( "./", 1 )) do
-            local fnm = nm:match("[^\\/]+$")
+            local fnm = nm:match( not_dirsep_class.."+$" )
             if fnm then
                -- print("lookupFnm "..fnm)
                tu.t_append( fnm_to_f_in_tree, fnm:lower(), nm )
@@ -1958,7 +1962,7 @@ do
          if lfnm then printf("found lfnm='%s' ",lfnm) end
          if lfnm then fnm = lfnm break end
          printf( "fnm+'%s'", fnm )
-         fnm,mc = fnm:gsub("^[^/\\]+[/\\]","")
+         fnm,mc = fnm:gsub( "^"..not_dirsep_class.."+"..dirsep_class, "" )
          printf( "fnm-'%s',mc=%d", fnm, mc )
          end
 
@@ -2175,8 +2179,8 @@ function runchild( str )
 
    -- printf( "OPTN=%s", optn )
    str = StrExpandEnvVars( str ) -- do NOT this for "MACRO" execute because it does its own ExpandEnvStrs equivalent, which is double-backslash-safe
-   str = str:gsub( "[\\/] ", " " )  -- if last char in ExpandEnvStrs rv was from EnvExpansion, string will end in "\": fix it
-   str = str:gsub( "[\\/]$", ""  )  -- if last char in ExpandEnvStrs rv was from EnvExpansion, string will end in "\": fix it
+   str = str:gsub( dirsep_class.." ", " " )  -- if last char in ExpandEnvStrs rv was from EnvExpansion, string will end in "\": fix it
+   str = str:gsub( dirsep_class.."$", ""  )  -- if last char in ExpandEnvStrs rv was from EnvExpansion, string will end in "\": fix it
 
    if str == "" and optn ~= "NEWSHELL" then  return false  end
 
@@ -3530,7 +3534,7 @@ local wcx_bufnames = 0
 function MultiWcx( nm, a_wc, a_strip )
    local all_rel_wcs = true
    for _,wc in ipairs(a_wc) do
-      if wc:match "^%a:[\\/]" then all_rel_wcs = false end
+      if wc:match( "^%a:"..dirsep_class ) then all_rel_wcs = false end
       end
    local fb = FBUF.new_empty_may_create( nm..(all_rel_wcs and ("@"..GetCwd()) or "") )
    for _,wc in ipairs(a_wc) do
@@ -3539,7 +3543,7 @@ function MultiWcx( nm, a_wc, a_strip )
       end
    if a_strip and #a_strip > 0 then
       local new = {}
-      for _,str in ipairs(a_strip) do new[1+#new] = str:gsub("/","\\") end
+      for _,str in ipairs(a_strip) do new[1+#new] = str:gsub( _dir.dirsep_preferred(), _dir.dirsep_os() ) end
       a_strip = new
       local function match_strips( st )
          for _,pat in ipairs(a_strip) do

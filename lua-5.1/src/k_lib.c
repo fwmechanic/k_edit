@@ -6,6 +6,12 @@
 #include <string.h>
 #endif
 
+#if defined(_WIN32)
+#   define WL(ww,ll)  ww
+#else
+#   define WL(ww,ll)  ll
+#endif
+
 #include <sys/stat.h>
 #if defined(_WIN32)
    #define stat  _stat
@@ -237,17 +243,17 @@ void register_k_bin( lua_State *L )
 
 #if      U_DIR_DEF
 
-
-// 20061212 kgoodwin I HATE that Win32 API's insist on capitalizing the drive letter!
-
-#define  FIX_DRIVE_LETTER( buf )  do { if( buf[0] && buf[1] == ':' )  buf[0] = tolower( buf[0] ); } while( 0 )
-
 //
 // THE (one and only) rule for how we decide which pathsep to use: if any '/' is
 // found in the parameter string S_(1), then all pathseps will be '/', else all
 // pathseps will be '\'
 //
 static int pathsep_of_path( const char *path )  { return strchr( path, '/' ) ? '/' : '\\'; }
+
+#if defined(_WIN32)
+
+// 20061212 kgoodwin I HATE that Win32 API's insist on capitalizing the drive letter!
+#define  FIX_DRIVE_LETTER( buf )  do { if( buf[0] && buf[1] == ':' )  buf[0] = tolower( buf[0] ); } while( 0 )
 
 static void tr1( char *buf, int from, int to )
    {
@@ -262,18 +268,19 @@ static void tr_pathsep( char *buf, int pathsep )
    tr1( buf, (pathsep == '/') ? '\\' : '/', pathsep );
    }
 
+#endif
 
 LUAFUNC_(chdir)
    {
    const char *dirnm = S_(1);
-   int ok = (_chdir( dirnm ) == 0);
+   int ok = !( WL( _chdir, chdir )( dirnm ) == -1);
    return push_errno_result(L, ok, dirnm);
    }
 
 LUAFUNC_(create)
    {
    const char *dirnm = S_(1);
-   int ok = (_mkdir( dirnm ) == 0);
+   int ok = (WL( _mkdir( dirnm ), mkdir( dirnm, 0777 ) ) != -1);
    return push_errno_result(L, ok, dirnm);
    }
 
@@ -288,14 +295,10 @@ LUAFUNC_(create)
 // must be empty to be removed.  If this function fails, it returns nil, plus a
 // string describing the error.
 //
-#if 1
 
-// these two implementations work the same: prefer the one that uses RTL
-
-// note that both appear to IGNORE the parts of the string that are not
+// note that we appear to IGNORE the parts of the string that are not
 // relative paths (IOW, those parts are not filtered out for duplicate
 // sequential pathsep chars, nor for incorrectly-cased names
-//
 
 LUAFUNC_(fullpath)
    {
@@ -311,29 +314,6 @@ LUAFUNC_(fullpath)
    tr_pathsep( buf, pathsep );
    R_str( buf );
    }
-
-#else
-
-LUAFUNC_(fullpath)
-   {
-   // GetFullPathName combines the FILENAME with the current drive and directory
-   // name and returns a fully qualified (aka, absolute) path name.  Note that
-   // no attempt is made to convert 8.3 components in the supplied FILENAME to
-   // longnames or vice-versa.
-   //
-   char buf[ _MAX_PATH+1 ];
-   char *dummy;
-   if( !GetFullPathName( S_(1), sizeof buf, buf, &dummy ) )
-      {
-      R_nil();
-      }
-
-   FIX_DRIVE_LETTER( buf );
-   R_str( buf );
-   }
-
-#endif
-
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -436,8 +416,8 @@ LUAFUNC_(read_dirnames)
 #include <sys/stat.h>
 
 static int is_name_stat( lua_State *L, const char *nm, int statflag ) {
-   struct stat statbuf;
-   if( stat( nm, &statbuf ) || 0==(statbuf.st_mode & statflag) ) { R_nil(); }
+   struct WL(_stat,stat) statbuf;
+   if( WL(_stat,stat)( nm, &statbuf ) || 0==(statbuf.st_mode & statflag) ) { R_nil(); }
    R_str( nm );
    }
 
@@ -464,6 +444,7 @@ LUAFUNC_(install) {
    }
 
 LUAFUNC_(current) {
+#if defined(_WIN32)
    char buf[ _MAX_PATH+1+1 ];
    const char *psep = So0_(1);
    const char sep = (psep && pathsep_of_path( psep ) == '/') ? '/' : '\\';
@@ -477,11 +458,26 @@ LUAFUNC_(current) {
    buf[len  ] = sep;
    buf[len+1] = 0  ;
    R_str( buf );
+#else
+   PChar mallocd_cwd = getcwd( nullptr, 0 );
+   luaL_Buffer buf;
+   luaL_buffinit(L, &buf);
+   // convention in _dir module is that returned directories have trailing sep
+   luaL_addstring( &buf, mallocd_cwd );
+   free( mallocd_cwd );
+   luaL_addstring( &buf, "/" ); // no choice about pathsep in linux
+   luaL_pushresult( &buf );
+   return 1;
+#endif
    }
+
+LUAFUNC_(dirsep_class)     { R_str( WL( "[\\/]", "[/]" ) ); }
+LUAFUNC_(dirsep_os)        { R_str( WL( "\\", "/" ) ); }
+LUAFUNC_(dirsep_preferred) { R_str(           "/"   ); }
 
 LUAFUNC_(name_isfile) {
    const char *nm = S_(1);
-   return is_name_stat( L, nm, _S_IFREG );
+   return is_name_stat( L, nm, WL( _S_IFREG, S_IFREG | S_IFLNK ) );
    }
 
 LUAFUNC_(name_isdir) {
@@ -491,21 +487,21 @@ LUAFUNC_(name_isdir) {
    if( len > 0 && (nm[len-1]=='\\' || nm[len-1]=='/') ) {
       nm[len-1] = 0;
       }
-   rv = is_name_stat( L, nm, _S_IFDIR );
+   rv = is_name_stat( L, nm, WL( _S_IFDIR, S_IFDIR ) );
    free( nm );
    return rv;
    }
 
 LUAFUNC_(filesize) {
-   struct stat statbuf;
-   if( stat( S_(1), &statbuf ) )                  { R_nil(); }
+   struct WL(_stat,stat) statbuf;
+   if( WL(_stat,stat)( S_(1), &statbuf ) )        { R_nil(); }
    if( (statbuf.st_mode & _S_IFMT) != _S_IFREG )  { R_nil(); }
    R_int( statbuf.st_size );
    }
 
 LUAFUNC_(rmdir) {
    const char *dirnm = S_(1);
-   const int ok = (_rmdir( dirnm ) == 0);
+   const int ok = ( WL( _rmdir, rmdir )( dirnm ) == 0);
    return push_errno_result(L, ok, dirnm);
    }
 
@@ -522,6 +518,9 @@ static void register__dir( lua_State *L ) {
       LUA_FUNC_I( install       )
       LUA_FUNC_I( name_isfile   )
       LUA_FUNC_I( name_isdir    )
+      LUA_FUNC_I( dirsep_class     )
+      LUA_FUNC_I( dirsep_os        )
+      LUA_FUNC_I( dirsep_preferred )
       LUA_FUNC_I( rmdir         ) // os.remove will not remove directories on Win32; this does!
       { 0, 0 }
       };
@@ -529,7 +528,7 @@ static void register__dir( lua_State *L ) {
    luaL_register(L, "_dir", myLuaFuncs);
    }
 
-#endif//K_BIN_DEF
+#endif//U_DIR_DEF
 
 
 #if defined(_WIN32)
@@ -929,8 +928,8 @@ int sha1_file( char *filename, uchar digest[20] )
 #ifdef LUA_LIB
     size = 0;
     {
-    struct stat statbuf;
-    if( 0 == fstat( fileno(f), &statbuf ) )
+    struct WL(_stat,stat) statbuf;
+    if( 0 == WL(_fstat,fstat)( fileno(f), &statbuf ) )
        size = statbuf.st_size;
     }
 #endif

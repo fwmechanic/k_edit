@@ -310,8 +310,8 @@ $(LUA_DIR)/$(LIBLUA):
 	cd $(LUA_DIR) && $(MAKE) $(LIBLUA)
 
 # !!! in Lua-5.1/src/Makefile, PLAT=mingw, `make lua` builds lua.exe aka $(LUA_T)
-BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) clean&&$(MAKE) lua&&$(MV) $(LUA_T) ../..&&$(MAKE) clean
-BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) lua&&$(MV) $(LUA_T) ../..
+BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) clean&&$(MAKE) test&&$(MV) $(LUA_T) ../..&&$(MAKE) clean
+BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) test&&$(MV) $(LUA_T) ../..
 
 $(LUA_T):
 	$(BLD_LUA_T)

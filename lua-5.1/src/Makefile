@@ -67,7 +67,10 @@ ALL_A= $(LUA_A)
 
 default: $(PLAT)
 
-all:	$(ALL_T)
+all:    $(ALL_T)
+
+test: $(LUA_T)
+	./$(LUA_T) ../test/k_lib.lua
 
 o:	$(ALL_O)
 
@@ -143,7 +146,7 @@ solaris:
 	$(MAKE) all MYCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN" MYLIBS="-ldl"
 
 # list targets that do not create files (but not all makes understand .PHONY)
-.PHONY: all $(PLATS) default o a clean depend echo none
+.PHONY: all test $(PLATS) default o a clean depend echo none
 
 # DO NOT DELETE
 
