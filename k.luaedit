@@ -53,8 +53,10 @@ require "show"
 function fmt(...) return string.format(...) end
 
 local dirsep_os        = _dir.dirsep_os()
+local dirsep_preferred = _dir.dirsep_preferred()
 local dirsep_class     = _dir.dirsep_class()
-local not_dirsep_class = dirsep_class:gsub("%[","[^")
+local function new_non_dirsep_class( st ) return dirsep_class:gsub("%[","[^"..st ) end
+local not_dirsep_class = new_non_dirsep_class("")
 
 Min = math.min
 Max = math.max
@@ -1061,14 +1063,14 @@ shex    = fn_execute_TEXTARG( "shex" )
 local classHexit = "[0-9a-fA-f]"
 
 local patBkupDir,wcBkupDir = dirsep_class.."%.kbackup"..dirsep_class
-                           ,                ".kbackup/"
+                           ,                ".kbackup"..dirsep_preferred
 local patBkupExt,wcBkupExt = "%."..string.rep( "%d", 8 ).."_"..string.rep( "%d", 6 ).."$"
                            ,  "."..string.rep( "?" , 8 ).."_"..string.rep( "?" , 6 )
 
 function BackupBaseFileNameExists( fnm )
    assert( IsBackupFBuf( fnm ), fnm .. " is not a backup file" )
    fnm = fnm:gsub( patBkupExt, "" )
-   fnm = fnm:gsub( patBkupDir, "/" )
+   fnm = fnm:gsub( patBkupDir, dirsep_preferred )
    print( fnm )
    assert( IsFile( fnm ), "backed up file '"..fnm.."' does not exist" )
    return fnm
@@ -1255,7 +1257,7 @@ AddEdFxn adding ArgType=403: 'difg', 'Run c:/_tools/diffmerge/diffmerge.exe oldf
             oFnmStart[1+#oFnmStart] = st
             stix = st
             printf( "..?'%s'", lbuf:sub(stix) )
-            local st2,en2 = lbuf:find('[^%.\\/]+',stix)
+            local st2,en2 = lbuf:find( new_non_dirsep_class("%.")..'+',stix)
             if not st2 then
                break
                end
@@ -1940,7 +1942,7 @@ do
       if not fnm_to_f_in_tree then
          print("generating lookupFnm")
          fnm_to_f_in_tree = {}
-         for _,nm in ipairs(_dir.read_names( "./", 1 )) do
+         for _,nm in ipairs(_dir.read_names( "."..dirsep_preferred, 1 )) do
             local fnm = nm:match( not_dirsep_class.."+$" )
             if fnm then
                -- print("lookupFnm "..fnm)
@@ -3543,7 +3545,7 @@ function MultiWcx( nm, a_wc, a_strip )
       end
    if a_strip and #a_strip > 0 then
       local new = {}
-      for _,str in ipairs(a_strip) do new[1+#new] = str:gsub( _dir.dirsep_preferred(), _dir.dirsep_os() ) end
+      for _,str in ipairs(a_strip) do new[1+#new] = str:gsub( dirsep_preferred, dirsep_os ) end
       a_strip = new
       local function match_strips( st )
          for _,pat in ipairs(a_strip) do
@@ -3892,7 +3894,7 @@ assert( _bin.bits( 1 ) == 1 )
 assert( _bin.bits( 31 ) == 0x7FFFFFFF )
 assert( _bin.shiftl( _bin.bits( 31 ), 1 ) == 0xFFFFFFFE )
 
-printf( "cwd=%s", _dir.current("/") )
+printf( "cwd=%s", _dir.current( dirsep_preferred ) )
 
 --[[
 
@@ -3900,15 +3902,15 @@ assert( _dir.create( ".." ) )
 assert( _dir.create( "."  ) )
 
 do
-   local dirs = _dir.read_names( "./", 1 )    -- read once to fill the filesystem/OS cache
+   local dirs = _dir.read_names( "."..dirsep_preferred, 1 )    -- read once to fill the filesystem/OS cache
    local start = _win.NowSeconds()
-   local dirs = _dir.read_dirnames( "./", 1 )
+   local dirs = _dir.read_dirnames( "."..dirsep_preferred, 1 )
    printf( "_dir.read_dirnames took %f", _win.NowSeconds() - start )
 end
 
 do
    local start = _win.NowSeconds()
-   local dirs = _dir.read_names( "./", 1 )
+   local dirs = _dir.read_names( "."..dirsep_preferred, 1 )
    printf( "_dir.read_names    took %f", _win.NowSeconds() - start )
 end
 
