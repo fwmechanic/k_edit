@@ -57,7 +57,11 @@ void Bell() {
 
 
 STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 1 && DBG( "%s(%s)", FUNC, filename );
-   g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
+      g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
+   // g_pFBufCmdlineFiles->PutLastLine( filename );
+   std::string st;
+   g_pFBufCmdlineFiles->getLineRaw( st, 0 );
+   1 && DBG( "%s readback(%s)", FUNC, st.c_str() );
    }
 
 STATIC_FXN int NumberOfCmdlineFilesRemaining() {
@@ -1035,6 +1039,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 
        case ' ': // NON-OPTION-ARGUMENT
                  AddCmdlineFile( opt.nextarg(), false );
+                 DBG( "%u files to be edited", NumberOfCmdlineFilesRemaining() );
                  break;
 
        case 'a': AddFBuf( szAssignLog, &g_pFBufAssignLog );
@@ -1068,6 +1073,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
        }
      }
 
+   DBG( "%u files to be edited now", NumberOfCmdlineFilesRemaining() );
    {
                                  DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
    MainThreadPerfCounter pc;
@@ -1121,6 +1127,12 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
       }
 
    DispDoPendingRefreshes();
+
+   DBG( "%u files to be edited now", NumberOfCmdlineFilesRemaining() );
+
+#if !defined(_WIN32)
+// exit(0);
+#endif
 
    FetchAndExecuteCMDs( true );  // the mainloop: NEVER RETURNS
    }

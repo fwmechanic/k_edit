@@ -56,11 +56,8 @@
 #include <sys/stat.h>  // for struct _stat
 
 #if defined(_WIN32)
-   // #define stat  _stat
-   // #define fstat _fstat
 #else
    #define _MAX_PATH 513
-   #define _vsnprintf vsnprintf
 #endif
 
 typedef  char                         pathbuf[_MAX_PATH+1];

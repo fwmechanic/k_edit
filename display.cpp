@@ -2525,9 +2525,16 @@ bool CursorLocnOutsideView_Get( Point *pt ) {
 
 STATIC_FXN void DrawStatusLine();
 STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to completion w/o blocking (calling anything that calls GlobalVariableLock)
+#if !defined(_WIN32)
+   DBG( "%s+", __func__ );
+#endif
    PCWV;
    if( !(g_CurFBuf() && pcw && pcv) )
       return;
+
+#if !defined(_WIN32)
+   DBG( "%s: working", __func__ );
+#endif
 
    // PerfCounter pc;
 
@@ -2578,7 +2585,9 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
       DISP_LL_STAT_COLLECT(++d_stats.cursorScrolls);
       }
 
-   // if( did )  DBG( "%s %08X %8.6f", __func__, did, pc.Capture() );
+#if !defined(_WIN32)
+   if( did )  DBG( "%s did=%08X", __func__, did );
+#endif
    }
 
 // public layer around DispUpdt

@@ -413,7 +413,7 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
       lua_rawseti(    pSdsv->L, -2, pSdsv->ix ); \
       ++pSdsv->ix;                               \
       }
-   if( !recurse ) {
+   if( 1 ) {
       int dnLen = strlen( dirname );
       if( dnLen && dirname[dnLen-1] == '/' ) {
          --dnLen;
@@ -521,27 +521,34 @@ LUAFUNC_(install) {
 #else
    // Linux-only magic
    static const char s_link_nm[] = "/proc/self/exe";
-   struct stat sb;
-   if( lstat( s_link_nm, &sb ) == -1 ) {
-      return luaL_error( L, "could not lstat %s", s_link_nm );
+   if( 0 ) {
+      // this is pointless since there is a race condition: between (this)
+      // lstat and the readlink call, the link content could be changed
+      struct stat sb;
+      if( lstat( s_link_nm, &sb ) == -1 ) {
+         return luaL_error( L, "could not lstat %s", s_link_nm );
+         }
       }
-   char *linkname = malloc( sb.st_size + 1 );
-   if( !linkname ) {
-      return luaL_error( L, "could not alloc %u bytes", sb.st_size + 1 );
-      }
-   ssize_t r = readlink( s_link_nm, linkname, sb.st_size + 1 );
-   if( r < 0  ) {
+   size_t bufbytes = PATH_MAX;
+   for(;;) {
+      char *linkname = malloc( bufbytes );
+      if( !linkname ) {
+         return luaL_error( L, "could not alloc %u bytes", bufbytes );
+         }
+      ssize_t r = readlink( s_link_nm, linkname, bufbytes );
+      if( r < 0 ) {
+         free( linkname );
+         R_nil();
+         }
+      if( r < bufbytes ) {
+         linkname[r] = '\0';
+         P_str( linkname );
+         free( linkname );
+         return 1;
+         }
       free( linkname );
-      return luaL_error( L, "readlink failed" );
+      bufbytes *= 2;
       }
-   if( r > sb.st_size ) {
-      free( linkname );
-      return luaL_error( L, "symlink increased in size between lstat() and readlink()" );
-      }
-   linkname[sb.st_size] = '\0';
-   P_str( linkname );
-   free( linkname );
-   return 1;
 #endif
    }
 

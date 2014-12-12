@@ -25,11 +25,40 @@ OsEnv::OsEnv( PCChar argv0 ) {
       DBG( "GetModuleFileName rv (%ld) >= sizeof(pb) (%" PR_SIZET "u)\n", len, sizeof(pb) );
       Win32::ExitProcess( 1 );
       }
-   argv0 = pb;
+   d_exe_path = Path::CpyDirnm( pb ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+   d_exe_name = Path::CpyFnm  ( pb ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
 #else
+   static const char s_link_nm[] = "/proc/self/exe";
+   if( 0 ) {
+      // this is pointless since there is a race condition: between (this)
+      // lstat and the readlink call, the link content could be changed
+      struct stat sb;
+      if( lstat( s_link_nm, &sb ) == -1 ) {
+         perror( "lstat(/proc/self/exe) failed" );
+         }
+      }
+   size_t bufbytes = PATH_MAX;
+   for(;;) {
+      char *linkname = static_cast<PChar>( malloc( bufbytes ) );
+      if( !linkname ) {
+         perror( "readlink(/proc/self/exe) memory exhausted" );
+         }
+      ssize_t r = readlink( s_link_nm, linkname, bufbytes );
+      if( r < 0 ) {
+         free( linkname );
+         perror( "readlink(/proc/self/exe) < 0" );
+         }
+      if( r < bufbytes ) {
+         linkname[r] = '\0';
+         d_exe_path = Path::CpyDirnm( linkname ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+         d_exe_name = Path::CpyFnm  ( linkname ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
+         free( linkname );
+         return;
+         }
+      free( linkname );
+      bufbytes *= 2;
+      }
 #endif
-   d_exe_path = Path::CpyDirnm( argv0 ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-   d_exe_name = Path::CpyFnm  ( argv0 ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
    }
 
 STATIC_VAR OsEnv *g_Process;
