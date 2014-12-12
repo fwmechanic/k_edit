@@ -2,6 +2,9 @@
 #include <windows.h>
 #include <direct.h>
 #else
+#include <unistd.h>  // readlink etc
+#include <sys/types.h>
+#include <dirent.h>
 #include <errno.h>
 #include <string.h>
 #endif
@@ -238,10 +241,12 @@ void register_k_bin( lua_State *L )
 #if defined(_WIN32)
 #define  U_DIR_DEF  1
 #else
-#define  U_DIR_DEF  0
+#define  U_DIR_DEF  1
 #endif
 
 #if      U_DIR_DEF
+
+#if defined(_WIN32)
 
 //
 // THE (one and only) rule for how we decide which pathsep to use: if any '/' is
@@ -249,8 +254,6 @@ void register_k_bin( lua_State *L )
 // pathseps will be '\'
 //
 static int pathsep_of_path( const char *path )  { return strchr( path, '/' ) ? '/' : '\\'; }
-
-#if defined(_WIN32)
 
 // 20061212 kgoodwin I HATE that Win32 API's insist on capitalizing the drive letter!
 #define  FIX_DRIVE_LETTER( buf )  do { if( buf[0] && buf[1] == ':' )  buf[0] = tolower( buf[0] ); } while( 0 )
@@ -302,8 +305,9 @@ LUAFUNC_(create)
 
 LUAFUNC_(fullpath)
    {
-   char buf[ _MAX_PATH+1 ];
    const char *pnm = S_(1);
+#if defined(_WIN32)
+   char buf[ _MAX_PATH+1 ];
    char pathsep = pathsep_of_path( pnm );
    if( !_fullpath( buf, pnm, sizeof buf ) )
       {
@@ -313,6 +317,14 @@ LUAFUNC_(fullpath)
    FIX_DRIVE_LETTER( buf );
    tr_pathsep( buf, pathsep );
    R_str( buf );
+#else
+   char actualpath [PATH_MAX+1];
+   char *rp = realpath( pnm, actualpath );
+   if( !rp ) {
+      return luaL_error( L, "realpath %s returned null", pnm );
+      }
+   R_str( rp );
+#endif
    }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -321,11 +333,15 @@ typedef struct
    {
    lua_State *L;
    int        ix;
+#if defined(_WIN32)
    char       pathsep;
+#endif
    int        fDirsOnly;
    } scand_shvars;
 
-static void scandir( const char *dirname, int recurse, scand_shvars *pSdsv )
+#if defined(_WIN32)
+
+static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
    {
 
 #define  A_PUSH( str )                           \
@@ -370,7 +386,7 @@ static void scandir( const char *dirname, int recurse, scand_shvars *pSdsv )
             _snprintf( buf2, sizeof buf2, "%s%c", buf, pSdsv->pathsep );
             A_PUSH( buf2 );
             if( recurse )  // Get the full path for sub directory
-               scandir( buf, 1, pSdsv );
+               scandir_( buf, 1, pSdsv );
             }
          }
       else // it's a FILE
@@ -386,6 +402,64 @@ static void scandir( const char *dirname, int recurse, scand_shvars *pSdsv )
    FindClose(hList);
    }
 
+#else
+
+static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
+   {
+#if 1
+#define  A_PUSH( str )                           \
+      {                                          \
+      lua_pushstring( pSdsv->L, str );           \
+      lua_rawseti(    pSdsv->L, -2, pSdsv->ix ); \
+      ++pSdsv->ix;                               \
+      }
+   if( !recurse ) {
+      int dnLen = strlen( dirname );
+      if( dnLen && dirname[dnLen-1] == '/' ) {
+         --dnLen;
+         }
+
+      DIR *d = opendir( dirname );
+      if( d ) {
+         struct dirent *dir;
+         while ((dir = readdir(d)) != NULL) { // Traverse through the directory structure (depth first)
+            if( (strcmp(dir->d_name, ".") == 0) || (strcmp(dir->d_name, "..") == 0) )
+               continue;
+
+            char buf[ PATH_MAX+1 ];
+            snprintf( buf, sizeof buf, "%*.*s/%s", dnLen, dnLen, dirname, dir->d_name );
+            struct stat sbuf;
+            if( stat( buf, &sbuf ) == 0 ) {
+               if( sbuf.st_mode & S_IFDIR ) {
+                  int len = strlen( buf );
+                  if( len+1 > sizeof buf ) {
+                     A_PUSH( "** TRUNCATED **" );
+                     }
+                  else {
+                     buf[len] = '/';
+                     buf[len+1] = '\0';
+                     A_PUSH( buf );
+                     buf[len] = '\0';
+                     if( recurse )  // Get the full path for sub directory
+                        scandir_( buf, recurse, pSdsv );
+                     }
+                  }
+               else // it's a FILE
+                  {
+                  if( !pSdsv->fDirsOnly ) {
+                     A_PUSH( buf );
+                     }
+                  }
+               }
+            }
+         closedir(d);
+         }
+      }
+#endif
+   }
+
+#endif
+
 //
 // Return an array of names of all entries (except '.' and '..') contained in
 // the directory named S_(1), optionally (if I_(2)) recursively.
@@ -393,10 +467,12 @@ static int read_names_( lua_State *L, int fDirsOnly )
    {
    const char  *pnm = S_(1);
    scand_shvars sv = { L, 1 };
+#if defined(_WIN32)
    sv.pathsep = pathsep_of_path( pnm );
+#endif
    sv.fDirsOnly = fDirsOnly;
    lua_newtable(L);  // result
-   scandir( pnm, I_(2), &sv );
+   scandir_( pnm, I_(2), &sv );
    return 1;
    }
 
@@ -422,6 +498,7 @@ static int is_name_stat( lua_State *L, const char *nm, int statflag ) {
    }
 
 LUAFUNC_(install) {
+#if defined(_WIN32)
    char buf[ _MAX_PATH+1+1 ];
    const char *psep = So0_(1);
    const char sep = (psep && pathsep_of_path( psep ) == '/') ? '/' : '\\';
@@ -441,6 +518,31 @@ LUAFUNC_(install) {
       }
    R_str( buf );
    }
+#else
+   // Linux-only magic
+   static const char s_link_nm[] = "/proc/self/exe";
+   struct stat sb;
+   if( lstat( s_link_nm, &sb ) == -1 ) {
+      return luaL_error( L, "could not lstat %s", s_link_nm );
+      }
+   char *linkname = malloc( sb.st_size + 1 );
+   if( !linkname ) {
+      return luaL_error( L, "could not alloc %u bytes", sb.st_size + 1 );
+      }
+   ssize_t r = readlink( s_link_nm, linkname, sb.st_size + 1 );
+   if( r < 0  ) {
+      free( linkname );
+      return luaL_error( L, "readlink failed" );
+      }
+   if( r > sb.st_size ) {
+      free( linkname );
+      return luaL_error( L, "symlink increased in size between lstat() and readlink()" );
+      }
+   linkname[sb.st_size] = '\0';
+   P_str( linkname );
+   free( linkname );
+   return 1;
+#endif
    }
 
 LUAFUNC_(current) {
@@ -459,13 +561,13 @@ LUAFUNC_(current) {
    buf[len+1] = 0  ;
    R_str( buf );
 #else
-   PChar mallocd_cwd = getcwd( nullptr, 0 );
+   char *mallocd_cwd = getcwd( NULL, 0 );
    luaL_Buffer buf;
    luaL_buffinit(L, &buf);
    // convention in _dir module is that returned directories have trailing sep
    luaL_addstring( &buf, mallocd_cwd );
    free( mallocd_cwd );
-   luaL_addstring( &buf, "/" ); // no choice about pathsep in linux
+   luaL_addchar( &buf, '/' ); // no choice about pathsep in linux
    luaL_pushresult( &buf );
    return 1;
 #endif
@@ -477,7 +579,7 @@ LUAFUNC_(dirsep_preferred) { R_str(           "/"   ); }
 
 LUAFUNC_(name_isfile) {
    const char *nm = S_(1);
-   return is_name_stat( L, nm, WL( _S_IFREG, S_IFREG | S_IFLNK ) );
+   return is_name_stat( L, nm, WL( _S_IFREG, (S_IFREG | S_IFLNK) ) );
    }
 
 LUAFUNC_(name_isdir) {
@@ -495,7 +597,7 @@ LUAFUNC_(name_isdir) {
 LUAFUNC_(filesize) {
    struct WL(_stat,stat) statbuf;
    if( WL(_stat,stat)( S_(1), &statbuf ) )        { R_nil(); }
-   if( (statbuf.st_mode & _S_IFMT) != _S_IFREG )  { R_nil(); }
+   if( (statbuf.st_mode & WL( _S_IFMT, S_IFMT )) != WL( _S_IFREG, (S_IFREG | S_IFLNK) ) )  { R_nil(); }
    R_int( statbuf.st_size );
    }
 

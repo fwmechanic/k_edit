@@ -19,8 +19,7 @@ do -- test _dir C library
       end
    for ix,nm in ipairs( _dir.read_names( ".."..ods..".."..ods, 0 ) ) do  printf( "%4d: %-40s -> '%s'", ix, nm, _dir.fullpath( nm ) )  end
                                                                          printf( "-----------------------------------------------" )
-   -- local pathx = "..\\..\\*.*"
-   local pathx = ".."..ods..".."..ods.."*.*"
+   local pathx = ".."..ods..".."..ods -- .."*.*"
    printf( "_dir.fullpath '%s' -> '%s'", pathx, _dir.fullpath( pathx ) )
    print( "_dir tests: passed" )
 end
