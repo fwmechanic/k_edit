@@ -423,22 +423,13 @@ public:
       return d_buf;
       }
 
-
    PCChar vFmtStr( PCChar format, va_list val ) {
-#if defined(_WIN32)
-      #define copy  val
-#else
-      va_list copy;       // http://julipedia.meroh.net/2011/09/using-vacopy-to-safely-pass-ap.html
-      va_copy(copy, val); // http://stackoverflow.com/questions/9937505/va-list-misbehavior-on-linux
-#endif
-      const size_t olen( 1+WL(_vsnprintf,vsnprintf)( nullptr, 0   , format, copy ) );
-#if defined(_WIN32)
-      #undef copy
-#else
-      va_end( copy );
-#endif
+      va_list  val_copy;        // http://stackoverflow.com/questions/9937505/va-list-misbehavior-on-linux
+      va_copy( val_copy, val ); // http://julipedia.meroh.net/2011/09/using-vacopy-to-safely-pass-ap.html
+      const auto olen( 1+WL(_vsnprintf,vsnprintf)( nullptr, 0   , format, val_copy ) );
+      va_end( val_copy );
       const auto rv( wresize( olen ) );
-                           WL(_vsnprintf,vsnprintf)( rv     , olen, format, val );
+                         WL(_vsnprintf,vsnprintf)( rv     , olen, format, val );
       return rv;
       }
 
