@@ -5,7 +5,6 @@
 //
 
 #include "ed_main.h"
-// #include <boost/filesystem/operations.hpp>
 
 #define  CALLING_GetVolumeInformation  0
 #if      CALLING_GetVolumeInformation
@@ -97,15 +96,6 @@ Path::str_t Path::GetCwd() {
    }
 
 Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
-#if 0 && defined(BOOST_LIB_VERSION)
-   boost::filesystem::path src( pszFilename );
-   boost::system::error_code ec;
-   auto boost_dest( canonical( src, ec ) );
-   // Path::str_t destgs( boost_dest.generic_string() );
-   // DBG( "%s Boost '%s' -> '%s'", __func__, pszFilename, destgs.c_str() );
-   Path::str_t dests( boost_dest.string() );
-   DBG( "%s Boost '%s' -> '%s'", __func__, pszFilename, dests.c_str() );
-#endif
    /* old code, works fine but uses Win32 API explicitly
       GetFullPathName combines the FILENAME with the current drive and directory
       name and returns a fully qualified (aka, absolute) path name.  Note that

@@ -1130,8 +1130,9 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 
    DBG( "%u files to be edited now", NumberOfCmdlineFilesRemaining() );
 
-#if !defined(_WIN32)
-// exit(0);
+#if 0 && !defined(_WIN32)
+   ConIO::Shutdown();
+   exit(0);
 #endif
 
    FetchAndExecuteCMDs( true );  // the mainloop: NEVER RETURNS

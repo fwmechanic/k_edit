@@ -3,6 +3,7 @@
 //
 #include <ncurses.h>
 #include "ed_main.h"
+#include <boost/filesystem/operations.hpp>
 
 void AssertDialog_( PCChar function, int line ) {
    fprintf( stderr, "Assertion failed, %s L %d", function, line );
@@ -12,17 +13,35 @@ void AssertDialog_( PCChar function, int line ) {
 Path::str_t Path::GetCwd() { // quick and dirty AND relies on GLIBC getcwd( nullptr, 0 ) semantics which are NONPORTABLE
    PChar mallocd_cwd = getcwd( nullptr, 0 );
    Path::str_t rv( mallocd_cwd );
-   free( mallocd_cwd );
+   free( mallocd_cwd );                       DBG( "%s=%s'", __func__, rv.c_str() );
    return rv;
    }
 
 PCChar OsVerStr() { return "Linux"; }
 
 Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
-   if( IsPathSepCh( pszFilename[0] ) ) {
-      return pszFilename;
+   // first approximation based on
+   // http://stackoverflow.com/questions/1746136/how-do-i-normalize-a-pathname-using-boostfilesystem
+   // note that this handles the case where some trailing part does not exist
+   // contrast with canonical() which requires that the passed name exists
+   const auto src( absolute( boost::filesystem::path( pszFilename ) ) );
+
+   // Get canonical version of the existing part of src
+   auto it( src.begin() );
+   auto rv( *it++ );
+   for( ; it != src.end() && exists(rv / *it); ++it ) {
+      rv /= *it;
       }
-   return GetCwd_ps() + pszFilename;
+   rv = canonical(rv);
+   for( ; it != src.end(); ++it ) {  // now blindly append nonexistent components, handling "." and ".."
+      if      (*it == "..") { rv = rv.parent_path(); } // "cancels" trailing rv component
+      else if (*it == "." ) {}                         // nop
+      else                  { rv /= *it; }             // else cat
+      }
+
+   Path::str_t destgs( rv.generic_string() );  DBG( "%s gs '%s' -> '%s'", __func__, pszFilename, destgs.c_str() );
+// Path::str_t dests ( rv.string()         );  DBG( "%s s  '%s' -> '%s'", __func__, pszFilename, dests .c_str() );
+   return destgs;
    }
 
 
@@ -869,5 +888,3 @@ int KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word ){retur
 GLOBAL_CONST int g_MaxKeyNameLen = 0;
 
 CmdData CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ){}
-
-

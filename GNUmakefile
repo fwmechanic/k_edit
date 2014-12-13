@@ -65,7 +65,7 @@ export PLAT
    # Linux build
    # sudo apt-get install -y libncurses5-dev
    # sudo apt-get install -y libpcre3-dev
-   # sudo apt-get install -y libboost-dev
+   # sudo apt-get install -y libboost-dev libboost-system-dev libboost-filesystem-dev
 
 CMDTBL_ARG=other
 MV = mv
@@ -201,6 +201,8 @@ PLAT_OBJS := \
  con_ncurses.o \
  linux_api.o
 
+BOOST_LIBS := -lboost_filesystem -lboost_system
+
 endif
 
 USE_PCRE := 1
@@ -224,8 +226,6 @@ CPPFLAGS = -DWINVER=0x0501
 CFLAGS   = $(C_OPTS_COMMON) $(C_OPTS_DBG)
 CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtti $(C_OPTS_LUA_REF) $(KEEPASM) $(C_OPTS_DBG)
 #####################################################################################################################
-
-# BOOST_LIBS := -lboost_filesystem -lboost_system
 
 LIBLUA := liblua.a
 LIBS   := -static-libgcc -static-libstdc++ -lgcc $(BOOST_LIBS) $(OS_LIBS) $(LUA_DIR)/$(LIBLUA) $(PCRE_LIB) #  -lmcheck (seems not to exist in MinGW)
