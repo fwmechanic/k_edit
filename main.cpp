@@ -1080,6 +1080,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 
    if( !ConIO::StartupOk( fForceNewConsole ) ) { exit( 1 ); }
                                  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ConIO::Startup"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   ddi_console();
 
    CreateWindow0();
    s_pFbufLog->PutFocusOn();

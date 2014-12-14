@@ -2347,13 +2347,17 @@ void DispNeedsRedrawStatLn_()   { s_fStatLnRedraw = true; }
 typedef BitVector<uint_machineword_t> srd_linevect;
 STATIC_VAR srd_linevect   *s_paScreenLineNeedsRedraw;
 
-void DispNeedsRedrawAllLinesAllWindows_() {
-   if (s_paScreenLineNeedsRedraw) //TODO
-    s_paScreenLineNeedsRedraw->SetAllBits();
+#if defined(_WIN32)
+#define  IS_LINUX  0
+#else
+#define  IS_LINUX  1
+#endif
+
+void DispNeedsRedrawAllLinesAllWindows_() { IS_LINUX && DBG( "%s", FUNC );
+   s_paScreenLineNeedsRedraw->SetAllBits();
    }
 
-void Win::DispNeedsRedrawAllLines() const { 0 && DBG( "All=0..%d", g_CurWin()->d_Size.lin );
-   if (!s_paScreenLineNeedsRedraw) return;//TODO
+void Win::DispNeedsRedrawAllLines() const { IS_LINUX && DBG( "%s All=0..%d", FUNC, g_CurWin()->d_Size.lin );
    for( auto lineWithinWin(0); lineWithinWin < d_Size.lin; ++lineWithinWin ) {
       const auto yLine( lineWithinWin + d_UpLeft.lin );
       Assert( yLine < EditScreenLines() );
@@ -2367,6 +2371,7 @@ STATIC_FXN bool NeedRedrawScreen() {
 
 
 STATIC_FXN void GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf, const COL scrnCols, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite ) {
+   IS_LINUX && DBG( "%s y=%d", FUNC, yDisplayLine );
    memset( PChar(DestLineBuf), H__, scrnCols ); //***** initial assumption: this line is a horizontal border ('Í')
    DestLineBuf[ scrnCols ] = 0;
    alc.PutColor( 0, scrnCols, g_colorWndBorder );
@@ -2377,7 +2382,7 @@ STATIC_FXN void GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf
    }
 
 STATIC_FXN void RedrawScreen() {
-#define  SHOW_DRAWS  0
+#define  SHOW_DRAWS  defined(_WIN32)
    #if SHOW_DRAWS
    linebuf lbf;  PChar pLbf = lbf;  *pLbf++ = chLSQ;
    #define  ShowDraws( code )  code
@@ -2412,7 +2417,7 @@ void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // fo
    if( yMin > yMax )
       std::swap( yMin, yMax );
 
-   0 && DBG( "Prime FL [%d..%d]", yMin, yMax );
+   IS_LINUX && DBG( "Prime FL [%d..%d]", yMin, yMax );
    for( int ix=0 ; ix < g_iWindowCount() ; ++ix ) {
       const auto pWin ( g_Win(ix)         );
       const auto pView( pWin->CurViewWr() );
@@ -2423,7 +2428,7 @@ void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // fo
             if( yMin <= cursor.lin && yMax >= cursor.lin )
                pView->ForceCursorMovedCondition();
             }
-         0 && DBG( "Prime win%d [%d..%d]", ix, yMin, yMax );
+         IS_LINUX && DBG( "Prime win%d [%d..%d]", ix, yMin, yMax );
          for( auto wyMin( pWin->d_UpLeft.lin + LargerOf(                     0, yMin - pView->Origin().lin ) ),
                    wyMax( pWin->d_UpLeft.lin + SmallerOf( pWin->d_Size.lin - 1, yMax - pView->Origin().lin ) )
             ; wyMin <= wyMax
@@ -2503,7 +2508,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
 
    s_CursorLocnOutsideView.lin = y;
    s_CursorLocnOutsideView.col = x;
-   0 && DBG( "%s(y=%d,x=%d)", __func__, y, x );
+   IS_LINUX && DBG( "%s(y=%d,x=%d)", __func__, y, x );
    ConIO::SetCursorLocn( y, x );
 
    #endif
@@ -2525,16 +2530,12 @@ bool CursorLocnOutsideView_Get( Point *pt ) {
 
 STATIC_FXN void DrawStatusLine();
 STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to completion w/o blocking (calling anything that calls GlobalVariableLock)
-#if !defined(_WIN32)
-   DBG( "%s+", __func__ );
-#endif
+   IS_LINUX && DBG( "%s+", __func__ );
    PCWV;
    if( !(g_CurFBuf() && pcw && pcv) )
       return;
 
-#if !defined(_WIN32)
-   DBG( "%s: working", __func__ );
-#endif
+   IS_LINUX && DBG( "%s: working", __func__ );
 
    // PerfCounter pc;
 
@@ -2585,9 +2586,7 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
       DISP_LL_STAT_COLLECT(++d_stats.cursorScrolls);
       }
 
-#if !defined(_WIN32)
-   if( did )  DBG( "%s did=%08X", __func__, did );
-#endif
+   if( IS_LINUX && did ) { DBG( "%s did=%08X", __func__, did ); }
    }
 
 // public layer around DispUpdt
@@ -2622,12 +2621,12 @@ void DispRefreshWholeScreenNow_()            { DispNeedsRedrawTotal_(); DispDoPe
 
 STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, PCLineColors alc, bool fUserSeesNow ) {
    VideoFlusher vf( fUserSeesNow );
-   0 && DBG( "%s+", __func__ );
+   IS_LINUX && DBG( "%s+", __func__ );
    auto lastColor(0);
    for( auto ix(0) ; maxCharsToDisp > 0 && alc->inRange( ix ) ; ) {
       lastColor = alc->colorAt( ix );
       const auto segLen( Min( alc->runLength( ix ), maxCharsToDisp ) );
-      0 && DBG( "%s Len=%d", __func__, segLen );
+      IS_LINUX && DBG( "%s Len=%d", __func__, segLen );
       VidWrStrColor( yLine, xCol, pszStringToDisp, segLen, lastColor, 0 );
 
       ix              += segLen;
@@ -2638,7 +2637,7 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
 
    if( ScreenCols() > xCol )  VidWrStrColor( yLine, xCol, " "    , 1, lastColor, true  );
 // else                       VidWrStrColor( yLine, xCol, nullptr, 0, lastColor, false );
-   0 && DBG( "%s-", __func__ );
+   IS_LINUX && DBG( "%s-", __func__ );
    return xCol;
    }
 
@@ -2693,7 +2692,7 @@ void ColoredLine::Cat( const ColoredLine &rhs ) {
    d_alc.Cat( rhs.d_alc );
    }
 
-STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
+STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" );
    ColoredLine cl;
    cl.Cat( COLOR::HG, (EditorLoadCount() > 1) ? FmtStr<15>( " +%u", EditorLoadCount()-1 ).k_str() : "" );
    const auto pfh( g_CurFBuf() );
@@ -2827,7 +2826,7 @@ STATIC_FXN void DrawStatusLine() { 0 && DBG( "*************> UpdtStatLn" );
       }
 
    out.Cat( cl );                       0 && DBG( "%s+", __func__ );
-   out.VidWrLine( StatusLine() );       0 && DBG( "%s-", __func__ );
+   out.VidWrLine( StatusLine() );       IS_LINUX && DBG( "%s-", __func__ );
    }
 
 //--------------------------------------------------------------------------------------

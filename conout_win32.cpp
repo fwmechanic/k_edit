@@ -1279,7 +1279,6 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
       }                                                                                    CON_DBG&&DBG( "%s 40", __PRETTY_FUNCTION__ );
    s_EditorScreen = new TConsoleOutputControl( initialWinSize.lin, initialWinSize.col );   CON_DBG&&DBG( "%s 50", __PRETTY_FUNCTION__ );
    Conin_Init();                                                                           CON_DBG&&DBG( "%s 60", __PRETTY_FUNCTION__ );
-   ddi_console();
    DBG( "%s-", __PRETTY_FUNCTION__ );
    return true;
    }
