@@ -3,6 +3,10 @@
 #
 # When building on Windows, uses MinGW tools from http://nuwen.net/mingw.html
 #
+# When building on (*ubuntu) Linux,
+#   . install_build_tools.sh
+# to install the needed tools & libs, and prep this file to use them
+#
 # gmake automatic variables: http://www.gnu.org/savannah-checkouts/gnu/make/manual/html_node/Automatic-Variables.html
 #
 # $@  The file name of the target of the rule.
@@ -61,11 +65,6 @@ DIRSEP := \\
 else
 PLAT = linux
 export PLAT
-
-   # Linux build
-   # sudo apt-get install -y libncurses5-dev
-   # sudo apt-get install -y libpcre3-dev
-   # sudo apt-get install -y libboost-dev libboost-system-dev libboost-filesystem-dev
 
 CMDTBL_ARG=other
 MV = mv
@@ -353,7 +352,7 @@ $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
 
 $(ED_DLL)$(DLL_EXT): $(OBJS) $(LUA_DIR)/$(LIBLUA)
 	@$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
-	@echo linking $@&& g++ -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)kx.map
+	@echo linking $@&& $(CXX) -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)kx.map
 	@objdump -p $@ > $@.exp
 	@$(LS_L) $@ $(LS_L_TAIL)
 
@@ -363,7 +362,7 @@ BUILT_RLS_FILES = $(TGT)$(EXE_EXT)
 
 $(TGT)$(EXE_EXT): $(OBJS) $(WINDRES)
 	@$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
-	@echo linking $@&& g++ $^ $(LINK_MAP) -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs
+	@echo linking $@&& $(CXX) $^ $(LINK_MAP) -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs
 	@objdump -p $@ > $@.exp
 	@$(LS_L) $@ $(LS_L_TAIL)
 
@@ -372,8 +371,12 @@ endif
 #######################################################################################
 # patch GNU make 4.0 (or nuwen GCC 11.6 distro) bug by replacing dflt .c compile rule
 
+ifeq "$(PLAT)" "mingw"
+
 CC = gcc
 export CC
+
+endif
 
 # end patch
 #######################################################################################
@@ -392,8 +395,8 @@ BLD_C = $(COMPILE.c) $(OUTPUT_OPTION) $<
 
 # GCC _alone_ FTW!  sed, intermed files NOT needed!  https://news.ycombinator.com/item?id=7700812
 # both of these work:
-BLD_CPP_to_D = gcc $(CXX_D_FLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $(basename $<).o
-BLD_CPP_to_D = gcc $(CXX_D_FLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $*.o
+BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $(basename $<).o
+BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $*.o
 
 %.d: %.cpp $(CMDTBL_OUTPUTS)
 	@echo generating $*.d&&$(BLD_CPP_to_D)
