@@ -3034,6 +3034,18 @@ void ddi_console() {
    g_DDI.VidWrStrColors    = conVidWrStrColors     ;
    }
 
+bool ConIO_InitOK( bool fForceNewConsole ) {
+   if( ConIO::StartupOk( fForceNewConsole ) ) {
+      ddi_console();
+      return true;
+      }
+   return false;
+   }
+
+void ConIO_Shutdown() {
+   ConIO::Shutdown();
+   }
+
 //***********************************************************************************************
 
 STATIC_FXN bool EditorScreenSizeAllowed( const Point &newSize ) { // checks EDITOR rules for whether new screen size is OK

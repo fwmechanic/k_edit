@@ -406,8 +406,8 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
       pFb->RemoveFBufOnly();
 
    // finally, garbage-collect the bits and pieces:
-                                                         DV && DBG("%s ConIO::Shutdown();", __func__ );
-   ConIO::Shutdown();
+                                                         DV && DBG("%s ConIO_Shutdown();", __func__ );
+   ConIO_Shutdown();
                                                                DBG("%s calling exit(%d);", __func__, processExitCode );
    exit( processExitCode );
    }
@@ -1078,9 +1078,9 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
                                  DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
    MainThreadPerfCounter pc;
 
-   if( !ConIO::StartupOk( fForceNewConsole ) ) { exit( 1 ); }
-                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ConIO::Startup"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-   ddi_console();
+
+   if( !ConIO_InitOK( fForceNewConsole ) ) { exit( 1 ); }
+                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ConIO_InitOK"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
 
    CreateWindow0();
    s_pFbufLog->PutFocusOn();
@@ -1132,7 +1132,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
    DBG( "%u files to be edited now", NumberOfCmdlineFilesRemaining() );
 
 #if 0 && !defined(_WIN32)
-   ConIO::Shutdown();
+   ConIO_Shutdown();
    exit(0);
 #endif
 

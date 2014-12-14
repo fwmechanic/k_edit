@@ -203,7 +203,8 @@ struct DisplayDriverApi {
    };
 
 extern DisplayDriverApi g_DDI;
-extern void ddi_console();
+extern bool ConIO_InitOK( bool fForceNewConsole );
+extern void ConIO_Shutdown();
 
 #define DisplayNoise( buffer )   (g_DDI.DisplayNoise( buffer ))
 #define DisplayNoiseBlank()      (g_DDI.DisplayNoiseBlank())
