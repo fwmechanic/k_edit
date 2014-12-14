@@ -3027,7 +3027,7 @@ GLOBAL_VAR DisplayDriverApi g_DDI =
    , streamVidWrStrColors
    };
 
-void ddi_console() {
+STATIC_FXN void ddi_console() {
    g_DDI.DisplayNoise      = conDisplayNoise       ;
    g_DDI.DisplayNoiseBlank = conDisplayNoiseBlank  ;
    g_DDI.VidWrStrColor     = conVidWrStrColor      ;

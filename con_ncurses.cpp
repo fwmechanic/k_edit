@@ -65,9 +65,10 @@ bool ConIO::GetCursorState( YX_t *pt, bool *pfVisible ) {
    return true;
    }
 bool ConIO::SetCursorVisibilityChanged( bool fVisible ) { return false; }
-void ConIO::SetCursorLocn( int yLine, int xCol ) {
+void ConIO::SetCursorLocn( int yLine, int xCol ) { DBG( "%s x%d,y=%d", FUNC, yLine, xCol );
    s_cursor_pos.lin = yLine;
    s_cursor_pos.col = xCol;
+   move( s_cursor_pos.lin, s_cursor_pos.col );  DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
    }
 int ConIO::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
    DBG( "%s@%d,%d=%*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
@@ -104,7 +105,7 @@ YX_t ConIO::GetMaxConsoleSize() {
    return rv;
    }
 void ConIO::BufferFlushToScreen() {
-   move( s_cursor_pos.lin, s_cursor_pos.col );
+   move( s_cursor_pos.lin, s_cursor_pos.col );  DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
    refresh();
    }
 bool ConIO::WriteToFileOk( FILE *ofh ) {
