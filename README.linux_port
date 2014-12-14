@@ -34,7 +34,7 @@ Key goals
 
 Major Tasks
 
-- screen output
+- screen output [done 20141214]
 - reading/processing normal input (keyboard, screen-size change, mouse) events
   - react to screen-size changes (even w/>1 window extant) [done 20141111]
 - command and dflt-key-mapping tables
