@@ -214,7 +214,7 @@ class MainThreadPerfCounter : public PerfCounter {
    }; STD_TYPEDEFS(MainThreadPerfCounter)
 
 namespace ThisProcessInfo {
-   void   Init( PCChar argv0 );
+   void   Init();
    PCChar ExePath();  // includes trailing '\'
    PCChar ExeName();
    }

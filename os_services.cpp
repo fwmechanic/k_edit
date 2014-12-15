@@ -7,15 +7,14 @@ class OsEnv {
 
    public: //===================================================================
 
-   OsEnv( PCChar argv0 );
+   OsEnv();
 
    PCChar ExePath() const { return d_exe_path.c_str(); }  // includes trailing '\'
    PCChar ExeName() const { return d_exe_name.c_str(); }
    };
 
-OsEnv::OsEnv( PCChar argv0 ) {
+OsEnv::OsEnv() {
 #if defined(_WIN32)
-   argv0 = argv0; // suppress  warning: parameter 'argv0' set but not used
    pathbuf pb;
    const auto len( Win32::GetModuleFileName( nullptr, BSOB(pb) ) );
    char exe_all   [ _MAX_PATH+1 ];  // "C:\dir1\dir2\k.exe"
@@ -23,8 +22,8 @@ OsEnv::OsEnv( PCChar argv0 ) {
       DBG( "GetModuleFileName rv (%ld) >= sizeof(pb) (%" PR_SIZET "u)\n", len, sizeof(pb) );
       Win32::ExitProcess( 1 );
       }
-   d_exe_path = Path::CpyDirnm( pb ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-   d_exe_name = Path::CpyFnm  ( pb ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
+   d_exe_path = Path::CpyDirnm( pb ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+   d_exe_name = Path::CpyFnm  ( pb ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
 #else
    static const char s_link_nm[] = "/proc/self/exe";
    if( 0 ) {
@@ -48,8 +47,8 @@ OsEnv::OsEnv( PCChar argv0 ) {
          }
       if( r < bufbytes ) {
          linkname[r] = '\0';
-         d_exe_path = Path::CpyDirnm( linkname ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-         d_exe_name = Path::CpyFnm  ( linkname ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
+         d_exe_path = Path::CpyDirnm( linkname ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+         d_exe_name = Path::CpyFnm  ( linkname ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
          free( linkname );
          return;
          }
@@ -61,9 +60,9 @@ OsEnv::OsEnv( PCChar argv0 ) {
 
 STATIC_VAR OsEnv *g_Process;
 
-void ThisProcessInfo::Init( PCChar argv0 ) {
+void ThisProcessInfo::Init() {
+   g_Process = new OsEnv();
    DBG_init();
-   g_Process = new OsEnv( argv0 );
    }
 
 PCChar ThisProcessInfo::ExePath() { return g_Process->ExePath(); }  // includes trailing '\'
