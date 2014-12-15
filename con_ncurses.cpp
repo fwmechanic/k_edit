@@ -60,7 +60,7 @@ bool ConIO::GetCursorState( YX_t *pt, bool *pfVisible ) {
    return true;
    }
 bool ConIO::SetCursorVisibilityChanged( bool fVisible ) { return false; }
-void ConIO::SetCursorLocn( int yLine, int xCol ) { DBG( "%s x%d,y=%d", FUNC, yLine, xCol );
+void ConIO::SetCursorLocn( int yLine, int xCol ) {
    s_cursor_pos.lin = yLine;
    s_cursor_pos.col = xCol;
    move( s_cursor_pos.lin, s_cursor_pos.col );  DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
@@ -92,7 +92,7 @@ int ConIO::BufferWriteString( const char *pszStringToDisp, int StringLen, int yL
    }
 bool ConIO::SetScreenSizeOk( YX_t &newSize ) { return false; }
 void ConIO::GetScreenSize( YX_t *rv ) {
-   getmaxyx( stdscr, rv->lin, rv->col );//??? lin is second parameter in getmaxyx
+   getmaxyx( stdscr, rv->lin, rv->col );
    }
 YX_t ConIO::GetMaxConsoleSize() {
    YX_t rv;
