@@ -16,8 +16,6 @@ class OsEnv {
 OsEnv::OsEnv( PCChar argv0 ) {
 #if defined(_WIN32)
    argv0 = argv0; // suppress  warning: parameter 'argv0' set but not used
-   DBG( "DBGVIEWCLEAR" );    // clear DbgView buffer
-   Win32::SetFileApisToOEM();
    pathbuf pb;
    const auto len( Win32::GetModuleFileName( nullptr, BSOB(pb) ) );
    char exe_all   [ _MAX_PATH+1 ];  // "C:\dir1\dir2\k.exe"
@@ -50,8 +48,8 @@ OsEnv::OsEnv( PCChar argv0 ) {
          }
       if( r < bufbytes ) {
          linkname[r] = '\0';
-         d_exe_path = Path::CpyDirnm( linkname ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-         d_exe_name = Path::CpyFnm  ( linkname ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
+         d_exe_path = Path::CpyDirnm( linkname ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+         d_exe_name = Path::CpyFnm  ( linkname ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
          free( linkname );
          return;
          }
@@ -64,6 +62,7 @@ OsEnv::OsEnv( PCChar argv0 ) {
 STATIC_VAR OsEnv *g_Process;
 
 void ThisProcessInfo::Init( PCChar argv0 ) {
+   DBG_init();
    g_Process = new OsEnv( argv0 );
    }
 
@@ -132,7 +131,10 @@ void MainThreadPerfCounter::ResumeAll() {
 
 #if defined(_WIN32)
 
-void DBG_init() {}
+void DBG_init() {
+   DBG( "DBGVIEWCLEAR" );    // clear DbgView buffer
+   Win32::SetFileApisToOEM();
+   }
 
 int DBG( char const *kszFormat, ...  ) {
    va_list args;  va_start(args, kszFormat);
