@@ -21,7 +21,7 @@
 // extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 static void set_pcattr( int attr ) {
-   attr &= 0x7F; // ncurses does not have "high intensity" background attr, so clear it
+   attr &= 0x7F; // ncurses does not have "high intensity" background attr(???), so clear it
    static unsigned char s_last_pcattr;
    if( s_last_pcattr == attr )  { return; }
    s_last_pcattr = attr;
@@ -30,15 +30,9 @@ static void set_pcattr( int attr ) {
    attr &= 0x77; // clear "bold" (FG high intensity) bit from search key
    auto color_pr_num( 0 );
    {
-   static std::vector<int> s_color_map; // mapping of attributes to ncurses API's is dynamic (vs. on PC's it's fixed)
-   for( auto it( s_color_map.cbegin() ) ; it != s_color_map.cend() ; ++it ) {
-      if( *it == attr ) {
-         color_pr_num = 1+ std::distance( s_color_map.cbegin(), it );
-         break;
-         }
-      }
-   if( 0 == color_pr_num ) {
-      s_color_map.emplace_back( attr );
+   static unsigned char nxt_color_pr_num;
+   static std::array<unsigned char, 256> attr_to_color_pr_num;
+   if( 0 == attr_to_color_pr_num[attr] ) {
       static const int pc_to_ncurses_color[] = {
           [PC_BLACK ] = COLOR_BLACK  ,
           [PC_BLUE  ] = COLOR_BLUE   ,
@@ -51,9 +45,10 @@ static void set_pcattr( int attr ) {
           };
       const auto pcfg(  attr       & 0x7 ); const auto ncfg( pc_to_ncurses_color[pcfg] );
       const auto pcbg( (attr >> 4) & 0x7 ); const auto ncbg( pc_to_ncurses_color[pcbg] );
-      color_pr_num = 1+ (s_color_map.size() - 1);
-      init_pair( color_pr_num, ncfg, ncbg );
+      init_pair( ++nxt_color_pr_num, ncfg, ncbg );
+      attr_to_color_pr_num[attr] = nxt_color_pr_num;
       }
+   color_pr_num = attr_to_color_pr_num[attr];
    }
    attrset( COLOR_PAIR(color_pr_num) | ncfg_bold );
    }
@@ -114,7 +109,7 @@ bool ConIO::WriteToFileOk( FILE *ofh ) {
 bool ConIO::SetConsolePalette( const unsigned palette[16] ) { return false; }
 bool ConIO::StartupOk( bool fForceNewConsole ) {
    initscr();
-   if(has_colors() == FALSE) {
+   if( has_colors() == FALSE ) {
       endwin();
       fprintf( stderr, "Your terminal does not support color\n" );
       return false;
@@ -126,8 +121,8 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    const auto sizeNow( GetMaxConsoleSize() );
    DBG( "%s: size=y,x=%d,%d", __func__, sizeNow.lin, sizeNow.col );
    Event_ScreenSizeChanged( Point( sizeNow.lin, sizeNow.col ) );
-   ConIO::BufferWriteString( " hello ", 7, 0, 0, 0x15, false );
-   ConIO::BufferWriteString( " world ", 7, 3, 0, 0x13, false );
+   // ConIO::BufferWriteString( " hello ", 7, 0, 0, 0x15, false );
+   // ConIO::BufferWriteString( " world ", 7, 3, 0, 0x13, false );
    return true;
    }
 void ConIO::Shutdown() {

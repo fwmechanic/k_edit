@@ -50,8 +50,8 @@ OsEnv::OsEnv( PCChar argv0 ) {
          }
       if( r < bufbytes ) {
          linkname[r] = '\0';
-         d_exe_path = Path::CpyDirnm( linkname ); DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-         d_exe_name = Path::CpyFnm  ( linkname ); DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
+         d_exe_path = Path::CpyDirnm( linkname ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+         d_exe_name = Path::CpyFnm  ( linkname ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
          free( linkname );
          return;
          }
