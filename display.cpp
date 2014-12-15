@@ -441,7 +441,7 @@ private:
    PCChar AddKey( PCChar key, PCChar eos=nullptr ) { return d_sb.AddString( key, eos ); }
    PCChar Strings()                                { return d_sb.Strings()            ; }
 
-   bool   SetNewWuc( boost::string_ref src, LINE lin, COL col );
+   void   SetNewWuc( boost::string_ref src, LINE lin, COL col );
 
    std::string  d_stCandidate;
    std::string  d_stSel;    // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
@@ -451,7 +451,7 @@ private:
    COL          d_xWuc;
    };
 
-bool HiliteAddin_WordUnderCursor::SetNewWuc( boost::string_ref src, LINE lin, COL col ) {
+void HiliteAddin_WordUnderCursor::SetNewWuc( boost::string_ref src, LINE lin, COL col ) {
    enum { DBG_HL_EVENT=0 };
    d_stSel.clear();
    if(   d_yWuc == lin
@@ -462,13 +462,13 @@ bool HiliteAddin_WordUnderCursor::SetNewWuc( boost::string_ref src, LINE lin, CO
           d_xWuc  = col;
           DispNeedsRedrawAllLines();
           }
-      return false;
+      return;
       }
 
    Reset(); // aaa aaa aaa aaa
    CPCChar wuc( AddKey( src.data(), src.data() + src.length() ) );                                              DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
    if( !wuc ) {                                                                                                 DBG_HL_EVENT && DBG( "%s toolong", __func__);
-      return false;
+      return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%s",wuc );
 
    d_wucLen = src.length();
@@ -515,7 +515,6 @@ bool HiliteAddin_WordUnderCursor::SetNewWuc( boost::string_ref src, LINE lin, CO
       }
 
    DispNeedsRedrawAllLines();                                                                                   DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
-   return true;
    }
 
 GLOBAL_VAR int g_iWucMinLen = 2;
