@@ -59,11 +59,16 @@ bool ConIO::GetCursorState( YX_t *pt, bool *pfVisible ) {
    *pfVisible = true;
    return true;
    }
-bool ConIO::SetCursorVisibilityChanged( bool fVisible ) { return false; }
+bool ConIO::SetCursorVisibilityChanged( bool fVisible ) {
+   curs_set( (fVisible ? 1 : 0) );
+   refresh();
+   return false;
+   }
 void ConIO::SetCursorLocn( int yLine, int xCol ) {
    s_cursor_pos.lin = yLine;
    s_cursor_pos.col = xCol;
    move( s_cursor_pos.lin, s_cursor_pos.col );  DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
+   refresh();
    }
 int ConIO::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
    DBG( "%s@%d,%d=%*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
