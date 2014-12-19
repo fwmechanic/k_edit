@@ -49,13 +49,6 @@ EXTERNC void abort() {
 #endif
 
 
-GLOBAL_VAR bool g_fAllowBeep = true; // global/switchval
-
-void ConOut::Bell() {
-   if( g_fAllowBeep )  printf( "%c", 7 );  // write RTL's stdout, which hasn't been touched since startup
-   }
-
-
 STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 1 && DBG( "%s(%s)", FUNC, filename );
       g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
    // g_pFBufCmdlineFiles->PutLastLine( filename );

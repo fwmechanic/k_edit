@@ -1,6 +1,13 @@
 
 #include "ed_main.h"
 
+GLOBAL_VAR bool g_fAllowBeep = true; // global/switchval
+
+void ConOut::Bell() {
+   if( g_fAllowBeep )  fputc( '\a', stdout );  // write RTL's stdout, which hasn't been touched since startup
+   }
+
+
 class OsEnv {
    Path::str_t d_exe_path;  // "C:\dir1\dir2\" (includes trailing '\')
    Path::str_t d_exe_name;  // "k"
