@@ -50,7 +50,7 @@ undertaking) if it becomes much more annoying to me (which seems unlikely).
 ### Ubuntu Linux (14.04, 14.10)
 
  * each time you open a terminal to build K, run `. install_build_tools.sh` (tab-completion is your friend); this operation (which corresponds with executing `mingw.bat` in Windows) will
-    * ensure remap the K build to use GCC 4.8.x
+    * remap the K build to use GCC 4.8.x rather than the default version of GCC
     * install GCC 4.8.x and other build tools/libraries if they're missing; in this case, `sudo apt-get ...` is executed, so you'll be prompted by `sudo` for your password.
 
 ## To build
