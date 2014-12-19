@@ -17,16 +17,15 @@ int ConIO::DbgPopf( PCChar fmt, ... ){ return 0; }
 
 EdKC_Ascii ConIn::CmdDataFromNextKey() {
    EdKC_Ascii rv;
-   rv.Ascii    = 'x';
-   rv.EdKcEnum = 'x';
+   const auto newch( getch() );
+   rv.Ascii    = newch;
+   rv.EdKcEnum = newch;
    return rv;
    }
 
 EdKC_Ascii ConIn::CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
-   pKeyStringBuffer[0] = 'x';
+   const auto rv( ConIn::CmdDataFromNextKey() );
+   pKeyStringBuffer[0] = rv.Ascii;
    pKeyStringBuffer[1] = 0;
-   EdKC_Ascii rv;
-   rv.Ascii    = 'x';
-   rv.EdKcEnum = 'x';
    return rv;
    }
