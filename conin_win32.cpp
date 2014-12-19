@@ -1173,7 +1173,6 @@ struct KeyBytesEnum {
    KEY_DATA    k_d;
    EdKC        EdKC_;
    };
-typedef KeyBytesEnum *PKeyBytesEnum;
 
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
@@ -1209,8 +1208,8 @@ STATIC_FXN KeyBytesEnum GetInputEvent() {
                                                            //    effectiveShiftIdx = shiftNONE;
                                                            //    allShifts = 0;
                                                            //    }
-                                                                                                  }
-      if( anyCtrl && anyShift ) {                            effectiveShiftIdx = shiftCTRL_SHIFT; }
+                     }
+      if( anyCtrl && anyShift ) {                          effectiveShiftIdx = shiftCTRL_SHIFT; }
 
       //*********  translate VK into EdKC  *********
 
