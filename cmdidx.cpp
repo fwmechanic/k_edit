@@ -255,7 +255,7 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
    , IDX_EQ( EdKC_c_9          )  pCMD_unassigned
    , IDX_EQ( EdKC_c_a          )  pCMD_mword
    , IDX_EQ( EdKC_c_b          )  pCMD_unassigned
-   , IDX_EQ( EdKC_c_c          )  pCMD_towinclip
+   , IDX_EQ( EdKC_c_c          )  WL( pCMD_towinclip, pCMD_unassigned )
    , IDX_EQ( EdKC_c_d          )  pCMD_right
    , IDX_EQ( EdKC_c_e          )  pCMD_up
    , IDX_EQ( EdKC_c_f          )  pCMD_pword
@@ -274,7 +274,7 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
    , IDX_EQ( EdKC_c_s          )  pCMD_left
    , IDX_EQ( EdKC_c_t          )  pCMD_tell
    , IDX_EQ( EdKC_c_u          )  pCMD_unassigned
-   , IDX_EQ( EdKC_c_v          )  pCMD_fromwinclip
+   , IDX_EQ( EdKC_c_v          )  WL( pCMD_fromwinclip, pCMD_unassigned )
    , IDX_EQ( EdKC_c_w          )  pCMD_mlines
    , IDX_EQ( EdKC_c_x          )  pCMD_execute
    , IDX_EQ( EdKC_c_y          )  pCMD_ldelete
