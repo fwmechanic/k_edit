@@ -1299,7 +1299,7 @@ void ConIn::WaitForKey() {
    GetKeyBytesEnum( true );
    }
 
-STIL EdKC_Ascii KeyBytesEnum2CmdData( KeyBytesEnum ki ) {
+STIL EdKC_Ascii KeyBytesEnum2EdKC_Ascii( KeyBytesEnum ki ) {
    EdKC_Ascii rv;
    rv.Ascii    = ki.k_d.Ascii;
    rv.EdKcEnum = ki.EdKC_;
@@ -1307,7 +1307,7 @@ STIL EdKC_Ascii KeyBytesEnum2CmdData( KeyBytesEnum ki ) {
    }
 
 EdKC_Ascii ConIn::CmdDataFromNextKey() {
-   return KeyBytesEnum2CmdData( GetKeyBytesEnum( false ) );
+   return KeyBytesEnum2EdKC_Ascii( GetKeyBytesEnum( false ) );
    }
 
 EdKC_Ascii ConIn::CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
@@ -1317,7 +1317,7 @@ EdKC_Ascii ConIn::CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKey
    else
       StrFromEdkc( pKeyStringBuffer, pKeyStringBufferBytes, ki.EdKC_ );
 
-   return KeyBytesEnum2CmdData( ki );
+   return KeyBytesEnum2EdKC_Ascii( ki );
    }
 
 //
