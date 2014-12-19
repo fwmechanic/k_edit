@@ -197,7 +197,8 @@ PLAT_OBJS := \
 else
 
 PLAT_OBJS := \
- con_ncurses.o \
+ conout_ncurses.o \
+ conin_ncurses.o \
  linux_api.o
 
 BOOST_LIBS := -lboost_filesystem -lboost_system
