@@ -517,14 +517,14 @@ STATIC_FXN void InsertConinRecord( const Win32::INPUT_RECORD &ir ) {
    }
 
 
-// This will be used by the Mouse-event handler to simulate keystrokes
+// used by the Mouse-event handler to simulate keystrokes
 
-STATIC_FXN void InsertKeyUpDownInputEventRecord( const RawWinKeydown &pRawWinKeydn ) {
+STATIC_FXN void InsertKeyUpDownInputEventRecord( const RawWinKeydown &rawWinKeydn ) {
    Win32::INPUT_RECORD inrec;
    inrec.EventType                        = KEY_EVENT;
-   inrec.Event.KeyEvent.wVirtualKeyCode   = pRawWinKeydn.wVirtualKeyCode;
-   inrec.Event.KeyEvent.uChar.UnicodeChar = pRawWinKeydn.unicodeChar;
-   inrec.Event.KeyEvent.dwControlKeyState = pRawWinKeydn.dwControlKeyState;
+   inrec.Event.KeyEvent.wVirtualKeyCode   = rawWinKeydn.wVirtualKeyCode;
+   inrec.Event.KeyEvent.uChar.UnicodeChar = rawWinKeydn.unicodeChar;
+   inrec.Event.KeyEvent.dwControlKeyState = rawWinKeydn.dwControlKeyState;
    inrec.Event.KeyEvent.wRepeatCount      = 0;
    inrec.Event.KeyEvent.wVirtualScanCode  = 0;
    inrec.Event.KeyEvent.bKeyDown          = 0;
@@ -611,7 +611,6 @@ TMouseEvent::TMouseEvent( const Win32::MOUSE_EVENT_RECORD &MouseEv ) {
    d_mousePosition.lin = 1+MouseEv.dwMousePosition.Y;
    d_mousePosition.col = 1+MouseEv.dwMousePosition.X;
    }
-
 
 void TMouseEvent::ReinsertMouseEvent( Point mousePosition ) const {
    Win32::INPUT_RECORD inrec;
@@ -799,13 +798,14 @@ STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER ) {
       }
    }
 
-STATIC_FXN void ReadInputEventPrimitive( EdInputEvent &rv ) {
+STATIC_FXN EdInputEvent ReadInputEventPrimitive() {
    while( true ) {
       if( EXPERIMENT_HANDLE_CTRL_CLOSE_EVENT HANDLE_CTRL_CLOSE_EVENT( && g_fProcessExitRequested ) ) {
           HANDLE_CTRL_CLOSE_EVENT( g_fProcessExitRequested = false; )
+          EdInputEvent rv;
           rv.fIsEdKC_EVENT = true;
           rv.   EdKC_EVENT = EdKC_EVENT_ProgramExitRequested;
-          return;
+          return rv;
           }
 
       auto pIR( ReadNextUsefulConsoleInputRecord() );
@@ -815,19 +815,22 @@ STATIC_FXN void ReadInputEventPrimitive( EdInputEvent &rv ) {
 
             case KEY_EVENT:
                  if( IsInterestingKeyEvent( pIR->Event.KeyEvent ) ) {
+                    EdInputEvent rv;
                     rv.fIsEdKC_EVENT            = false;
                     rv.rawkey.unicodeChar       = pIR->Event.KeyEvent.uChar.UnicodeChar;
                     rv.rawkey.wVirtualKeyCode   = pIR->Event.KeyEvent.wVirtualKeyCode;
                     rv.rawkey.dwControlKeyState = pIR->Event.KeyEvent.dwControlKeyState;
-                    return;
+                    return rv;
                     }
                  break;
 
-            case FOCUS_EVENT:
+            case FOCUS_EVENT: {
+                 EdInputEvent rv;
                  rv.fIsEdKC_EVENT = true;
                  rv.   EdKC_EVENT = pIR->Event.FocusEvent.bSetFocus ? EdKC_EVENT_ProgramGotFocus : EdKC_EVENT_ProgramLostFocus;
                  0 && DBG( "*** InputEvent %s ***", pIR->Event.FocusEvent.bSetFocus ? "GotFocus" : "LostFocus" );
-                 return;
+                 return rv;
+                 }
 
 #if MOUSE_SUPPORT
             case MOUSE_EVENT:
@@ -1170,11 +1173,8 @@ struct KeyData_EdKC {
    EdKC        EdKC_; // output
    };
 
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-
 STATIC_FXN KeyData_EdKC GetInputEvent() {
-   EdInputEvent eie;
-   ReadInputEventPrimitive( eie );
+   const auto eie( ReadInputEventPrimitive() );
    if( eie.fIsEdKC_EVENT ) {
       KeyData_EdKC rv;
       rv.k_d.Ascii  = '\0';
@@ -1186,7 +1186,7 @@ STATIC_FXN KeyData_EdKC GetInputEvent() {
 
    const auto &rwkd( eie.rawkey );
    auto edKC(0);
-   auto allShifts(0);;
+   auto allShifts(0);
    const U8 valAscii( 0xFF & rwkd.unicodeChar );
    const U8 valVK(    0xFF & rwkd.wVirtualKeyCode );  0 && DBG( "VK+ %02X", valVK );
    if( valVK < ELEMENTS(normalXlatTbl) ) {
@@ -1219,7 +1219,6 @@ STATIC_FXN KeyData_EdKC GetInputEvent() {
          }
       else                     edKC = VK_shift_to_EdKC( normalXlatTbl , valVK    , effectiveShiftIdx );
       }
-#pragma GCC diagnostic pop
 
    if( edKC == 0 )
        edKC = valAscii;
