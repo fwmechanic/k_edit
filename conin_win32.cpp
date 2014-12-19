@@ -1,4 +1,4 @@
-// index CONSOLE_OUTPUT KEY_DECODING INIT_N_MISC
+// index KEY_DECODING
 
 //
 // Copyright 1991 - 2014 by Kevin L. Goodwin; All rights reserved
@@ -486,8 +486,6 @@ struct RawWinKeydown {
    U16  wVirtualKeyCode  ;
    int  dwControlKeyState;
    };
-STD_TYPEDEFS( RawWinKeydown )
-
 
 struct EdInputEvent {
    enum { evt_KEY, evt_MOUSE, evt_FOCUS } // evt
@@ -498,8 +496,6 @@ struct EdInputEvent {
       EdKC          EdKC_EVENT;
       };
    };
-STD_TYPEDEFS( EdInputEvent )
-
 
 #if MOUSE_SUPPORT
 
@@ -523,12 +519,12 @@ STATIC_FXN void InsertConinRecord( const Win32::INPUT_RECORD &ir ) {
 
 // This will be used by the Mouse-event handler to simulate keystrokes
 
-STATIC_FXN void InsertKeyUpDownInputEventRecord( PRawWinKeydown pRawWinKeydn ) {
+STATIC_FXN void InsertKeyUpDownInputEventRecord( const RawWinKeydown &pRawWinKeydn ) {
    Win32::INPUT_RECORD inrec;
    inrec.EventType                        = KEY_EVENT;
-   inrec.Event.KeyEvent.wVirtualKeyCode   = pRawWinKeydn->wVirtualKeyCode;
-   inrec.Event.KeyEvent.uChar.UnicodeChar = pRawWinKeydn->unicodeChar;
-   inrec.Event.KeyEvent.dwControlKeyState = pRawWinKeydn->dwControlKeyState;
+   inrec.Event.KeyEvent.wVirtualKeyCode   = pRawWinKeydn.wVirtualKeyCode;
+   inrec.Event.KeyEvent.uChar.UnicodeChar = pRawWinKeydn.unicodeChar;
+   inrec.Event.KeyEvent.dwControlKeyState = pRawWinKeydn.dwControlKeyState;
    inrec.Event.KeyEvent.wRepeatCount      = 0;
    inrec.Event.KeyEvent.wVirtualScanCode  = 0;
    inrec.Event.KeyEvent.bKeyDown          = 0;
@@ -543,7 +539,7 @@ STATIC_FXN void InsertKeyUpDownInputEventRecord( U16 wVirtualKeyCode ) {
    rwkd.unicodeChar       = 0;
    rwkd.wVirtualKeyCode   = wVirtualKeyCode;
    rwkd.dwControlKeyState = 0;
-   InsertKeyUpDownInputEventRecord( &rwkd );
+   InsertKeyUpDownInputEventRecord( rwkd );
    }
 
 enum { // editor-generic flags
@@ -803,12 +799,12 @@ STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER ) {
       }
    }
 
-STATIC_FXN void ReadInputEventPrimitive( PEdInputEvent rv ) {
+STATIC_FXN void ReadInputEventPrimitive( EdInputEvent &rv ) {
    while( true ) {
       if( EXPERIMENT_HANDLE_CTRL_CLOSE_EVENT HANDLE_CTRL_CLOSE_EVENT( && g_fProcessExitRequested ) ) {
           HANDLE_CTRL_CLOSE_EVENT( g_fProcessExitRequested = false; )
-          rv->fIsEdKC_EVENT = true;
-          rv->   EdKC_EVENT = EdKC_EVENT_ProgramExitRequested;
+          rv.fIsEdKC_EVENT = true;
+          rv.   EdKC_EVENT = EdKC_EVENT_ProgramExitRequested;
           return;
           }
 
@@ -819,17 +815,17 @@ STATIC_FXN void ReadInputEventPrimitive( PEdInputEvent rv ) {
 
             case KEY_EVENT:
                  if( IsInterestingKeyEvent( pIR->Event.KeyEvent ) ) {
-                    rv->fIsEdKC_EVENT            = false;
-                    rv->rawkey.unicodeChar       = pIR->Event.KeyEvent.uChar.UnicodeChar;
-                    rv->rawkey.wVirtualKeyCode   = pIR->Event.KeyEvent.wVirtualKeyCode;
-                    rv->rawkey.dwControlKeyState = pIR->Event.KeyEvent.dwControlKeyState;
+                    rv.fIsEdKC_EVENT            = false;
+                    rv.rawkey.unicodeChar       = pIR->Event.KeyEvent.uChar.UnicodeChar;
+                    rv.rawkey.wVirtualKeyCode   = pIR->Event.KeyEvent.wVirtualKeyCode;
+                    rv.rawkey.dwControlKeyState = pIR->Event.KeyEvent.dwControlKeyState;
                     return;
                     }
                  break;
 
             case FOCUS_EVENT:
-                 rv->fIsEdKC_EVENT = true;
-                 rv->   EdKC_EVENT = pIR->Event.FocusEvent.bSetFocus ? EdKC_EVENT_ProgramGotFocus : EdKC_EVENT_ProgramLostFocus;
+                 rv.fIsEdKC_EVENT = true;
+                 rv.   EdKC_EVENT = pIR->Event.FocusEvent.bSetFocus ? EdKC_EVENT_ProgramGotFocus : EdKC_EVENT_ProgramLostFocus;
                  0 && DBG( "*** InputEvent %s ***", pIR->Event.FocusEvent.bSetFocus ? "GotFocus" : "LostFocus" );
                  return;
 
@@ -1166,21 +1162,21 @@ struct KEY_DATA {
    };
 
 //
-// KeyBytesEnum - DEEP INTERNAL struct, used ONLY in LOW-LEVEL interface between Win32 and Editor.
+// KeyData_EdKC - DEEP INTERNAL struct, used ONLY in LOW-LEVEL interface between Win32 and Editor.
 //                NOT to be used within any Editor data structures!!!
 //
-struct KeyBytesEnum {
-   KEY_DATA    k_d;
-   EdKC        EdKC_;
+struct KeyData_EdKC {
+   KEY_DATA    k_d;   // input
+   EdKC        EdKC_; // output
    };
 
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
-STATIC_FXN KeyBytesEnum GetInputEvent() {
+STATIC_FXN KeyData_EdKC GetInputEvent() {
    EdInputEvent eie;
-   ReadInputEventPrimitive( &eie );
+   ReadInputEventPrimitive( eie );
    if( eie.fIsEdKC_EVENT ) {
-      KeyBytesEnum rv;
+      KeyData_EdKC rv;
       rv.k_d.Ascii  = '\0';
       rv.k_d.d_VK   = 0;
       rv.k_d.kFlags = 0;
@@ -1239,7 +1235,7 @@ STATIC_FXN KeyBytesEnum GetInputEvent() {
       }
   #endif
 
-   KeyBytesEnum rv;
+   KeyData_EdKC rv;
    rv.k_d.Ascii  = valAscii;
    rv.k_d.d_VK   = valVK;
    rv.k_d.kFlags = allShifts;
@@ -1247,8 +1243,8 @@ STATIC_FXN KeyBytesEnum GetInputEvent() {
    return rv;
    }
 
-STATIC_FXN void RawKeyStr( PChar buf, int bufbytes, const KEY_DATA &k_d ) {
-   safeSprintf( buf, bufbytes, "VK=x%02X, Flags=%s%s%s%s, ch=0x%02X (%c)"
+STATIC_FXN void RawKeyStr( PChar dest, int sizeofDest, const KEY_DATA &k_d ) {
+   safeSprintf( dest, sizeofDest, "VK=x%02X, Flags=%s%s%s%s, ch=0x%02X (%c)"
       ,  k_d.d_VK
       , (k_d.kFlags & KEY_DATA::FLAG_CTRL   ) ? "C" : ""
       , (k_d.kFlags & KEY_DATA::FLAG_ALT    ) ? "A" : ""
@@ -1259,13 +1255,13 @@ STATIC_FXN void RawKeyStr( PChar buf, int bufbytes, const KEY_DATA &k_d ) {
       );
    }
 
-STATIC_FXN KeyBytesEnum GetKeyBytesEnum( bool fFreezeOtherThreads ) { // PRIMARY API for reading a key
+STATIC_FXN KeyData_EdKC GetKeyData_EdKC( bool fFreezeOtherThreads ) { // PRIMARY API for reading a key
    while( true ) {
       const auto fPassThreadBaton( !(fFreezeOtherThreads || KbHit()) );
       if( fPassThreadBaton )  MainThreadGiveUpGlobalVariableLock();
       0 && DBG( "%s %s", __func__, fPassThreadBaton ? "passing" : "holding" );
 
-      const KeyBytesEnum rv( GetInputEvent() );
+      const KeyData_EdKC rv( GetInputEvent() );
 
       if( fPassThreadBaton )  MainThreadWaitForGlobalVariableLock();
 
@@ -1290,10 +1286,10 @@ STATIC_FXN KeyBytesEnum GetKeyBytesEnum( bool fFreezeOtherThreads ) { // PRIMARY
    }
 
 void ConIn::WaitForKey() {
-   GetKeyBytesEnum( true );
+   GetKeyData_EdKC( true );
    }
 
-STIL EdKC_Ascii KeyBytesEnum2EdKC_Ascii( KeyBytesEnum ki ) {
+STIL EdKC_Ascii KeyData_EdKC2EdKC_Ascii( const KeyData_EdKC &ki ) {
    EdKC_Ascii rv;
    rv.Ascii    = ki.k_d.Ascii;
    rv.EdKcEnum = ki.EdKC_;
@@ -1301,17 +1297,17 @@ STIL EdKC_Ascii KeyBytesEnum2EdKC_Ascii( KeyBytesEnum ki ) {
    }
 
 EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
-   return KeyBytesEnum2EdKC_Ascii( GetKeyBytesEnum( false ) );
+   return KeyData_EdKC2EdKC_Ascii( GetKeyData_EdKC( false ) );
    }
 
-EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
-   const auto ki( GetKeyBytesEnum( true ) );
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest ) {
+   const auto ki( GetKeyData_EdKC( true ) );
    if( ki.EdKC_ == 0 )
-      RawKeyStr( pKeyStringBuffer, pKeyStringBufferBytes, ki.k_d );
+      RawKeyStr( dest, sizeofDest, ki.k_d );
    else
-      StrFromEdkc( pKeyStringBuffer, pKeyStringBufferBytes, ki.EdKC_ );
+      StrFromEdkc( dest, sizeofDest, ki.EdKC_ );
 
-   return KeyBytesEnum2EdKC_Ascii( ki );
+   return KeyData_EdKC2EdKC_Ascii( ki );
    }
 
 //

@@ -1,4 +1,4 @@
-// index CONSOLE_OUTPUT KEY_DECODING INIT_N_MISC
+// index CONSOLE_OUTPUT INIT_N_MISC
 
 //
 // Copyright 1991 - 2014 by Kevin L. Goodwin; All rights reserved
