@@ -1301,11 +1301,11 @@ STIL EdKC_Ascii KeyBytesEnum2EdKC_Ascii( KeyBytesEnum ki ) {
    return rv;
    }
 
-EdKC_Ascii ConIn::CmdDataFromNextKey() {
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
    return KeyBytesEnum2EdKC_Ascii( GetKeyBytesEnum( false ) );
    }
 
-EdKC_Ascii ConIn::CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
    const auto ki( GetKeyBytesEnum( true ) );
    if( ki.EdKC_ == 0 )
       RawKeyStr( pKeyStringBuffer, pKeyStringBufferBytes, ki.k_d );

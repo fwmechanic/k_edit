@@ -49,8 +49,8 @@ namespace ConOut {
    }
 
 namespace ConIn {
-   EdKC_Ascii CmdDataFromNextKey();
-   EdKC_Ascii CmdDataFromNextKey_Keystr( char *pKeyStringBuffer, size_t pKeyStringBufferBytes );
+   EdKC_Ascii EdKC_Ascii_FromNextKey();
+   EdKC_Ascii EdKC_Ascii_FromNextKey_Keystr( char *pKeyStringBuffer, size_t pKeyStringBufferBytes );
 
    bool  FlushKeyQueueAnythingFlushed();
    void  WaitForKey();

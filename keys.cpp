@@ -507,7 +507,7 @@ bool SetKeyOk( PCChar pszCmdName, PCChar pszKeyName ) {
    }
 
 char CharAsciiFromKybd() {
-   return ConIn::CmdDataFromNextKey().Ascii;
+   return ConIn::EdKC_Ascii_FromNextKey().Ascii;
    }
 
 void EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd ) {
@@ -668,6 +668,6 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
    }
 
 PCCMD CmdFromKbdForInfo( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
-   const auto cd( ConIn::CmdDataFromNextKey_Keystr( pKeyStringBuffer, pKeyStringBufferBytes ) );
+   const auto cd( ConIn::EdKC_Ascii_FromNextKey_Keystr( pKeyStringBuffer, pKeyStringBufferBytes ) );
    return cd.EdKcEnum == 0 ? pCMD_unassigned : g_Key2CmdTbl[ cd.EdKcEnum ];
    }

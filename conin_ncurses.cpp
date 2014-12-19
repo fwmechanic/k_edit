@@ -15,7 +15,7 @@ bool ConIO::Confirm( PCChar pszPrompt, ... ){ return false; }
 
 int ConIO::DbgPopf( PCChar fmt, ... ){ return 0; }
 
-EdKC_Ascii ConIn::CmdDataFromNextKey() {
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
    EdKC_Ascii rv;
    const auto newch( getch() );
    rv.Ascii    = newch;
@@ -23,8 +23,8 @@ EdKC_Ascii ConIn::CmdDataFromNextKey() {
    return rv;
    }
 
-EdKC_Ascii ConIn::CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
-   const auto rv( ConIn::CmdDataFromNextKey() );
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
+   const auto rv( ConIn::EdKC_Ascii_FromNextKey() );
    pKeyStringBuffer[0] = rv.Ascii;
    pKeyStringBuffer[1] = 0;
    return rv;

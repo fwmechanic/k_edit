@@ -564,7 +564,7 @@ bool ARG::dispmstk() {
 
 
 PCCMD CmdFromKbdForExec() {
-   const auto cmddata( ConIn::CmdDataFromNextKey() );
+   const auto cmddata( ConIn::EdKC_Ascii_FromNextKey() );
 
    if( 0 == cmddata.EdKcEnum && ExecutionHaltRequested() ) { 0 && DBG( "CmdFromKbdForExec sending pCMD_cancel" );
       return pCMD_cancel;
