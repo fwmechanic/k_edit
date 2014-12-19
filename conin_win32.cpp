@@ -1300,9 +1300,9 @@ void ConIn::WaitForKey() {
    }
 
 STIL EdKC_Ascii KeyBytesEnum2CmdData( KeyBytesEnum ki ) {
-   CmdData rv;
-   rv.EdKcEnum = ki.EdKC_;
+   EdKC_Ascii rv;
    rv.Ascii    = ki.k_d.Ascii;
+   rv.EdKcEnum = ki.EdKC_;
    return rv;
    }
 
