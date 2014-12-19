@@ -1,7 +1,7 @@
 //
 // Copyright 2014 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
 //
-#include <ncurses.h>
+
 #include "ed_main.h"
 #include <boost/filesystem/operations.hpp>
 
@@ -135,7 +135,6 @@ DirMatches::DirMatches( PCChar pszPrefix, PCChar pszSuffix, WildCardMatchMode wc
          }
       }
    }
-
 
 bool FileOrDirExists( PCChar pszFileName ) {
    struct stat sbuf;
