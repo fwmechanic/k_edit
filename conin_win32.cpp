@@ -1163,8 +1163,6 @@ struct KEY_DATA {
       FLAG_ALT     = BIT(2),
       FLAG_CTRL    = BIT(3),
       };
-
-   void RawKeyStr( PChar buf, int bufbytes ) const;
    };
 
 //
@@ -1250,19 +1248,17 @@ STATIC_FXN KeyBytesEnum GetInputEvent() {
    return rv;
    }
 
-
-void KEY_DATA::RawKeyStr( PChar buf, int bufbytes ) const {
+STATIC_FXN void RawKeyStr( PChar buf, int bufbytes, const KEY_DATA &k_d ) {
    safeSprintf( buf, bufbytes, "VK=x%02X, Flags=%s%s%s%s, ch=0x%02X (%c)"
-      ,  d_VK
-      , (kFlags & FLAG_CTRL   ) ? "C" : ""
-      , (kFlags & FLAG_ALT    ) ? "A" : ""
-      , (kFlags & FLAG_SHIFT  ) ? "S" : ""
-      , (kFlags & FLAG_NUMLOCK) ? "N" : ""
-      ,  Ascii
-      ,  Ascii
+      ,  k_d.d_VK
+      , (k_d.kFlags & KEY_DATA::FLAG_CTRL   ) ? "C" : ""
+      , (k_d.kFlags & KEY_DATA::FLAG_ALT    ) ? "A" : ""
+      , (k_d.kFlags & KEY_DATA::FLAG_SHIFT  ) ? "S" : ""
+      , (k_d.kFlags & KEY_DATA::FLAG_NUMLOCK) ? "N" : ""
+      ,  k_d.Ascii
+      ,  k_d.Ascii
       );
    }
-
 
 STATIC_FXN KeyBytesEnum GetKeyBytesEnum( bool fFreezeOtherThreads ) { // PRIMARY API for reading a key
    while( true ) {
@@ -1276,7 +1272,7 @@ STATIC_FXN KeyBytesEnum GetKeyBytesEnum( bool fFreezeOtherThreads ) { // PRIMARY
 
       if( rv.EdKC_ < EdKC_COUNT ) {
          if( rv.EdKC_ == 0 ) { // (rv.EdKC_ == 0) corresponds to keys we currently do not decode
-            char ktmp[55];  rv.k_d.RawKeyStr( BSOB(ktmp) );  0 && DBG( "%s(rv.EdKC==0): %s", __func__, ktmp );
+            char ktmp[55];  RawKeyStr( BSOB(ktmp), rv.k_d );  0 && DBG( "%s(rv.EdKC==0): %s", __func__, ktmp );
             }
          else {
             return rv;  // normal exit path
@@ -1293,7 +1289,6 @@ STATIC_FXN KeyBytesEnum GetKeyBytesEnum( bool fFreezeOtherThreads ) { // PRIMARY
       CleanupAnyExecutionHaltRequest();
       }
    }
-
 
 void ConIn::WaitForKey() {
    GetKeyBytesEnum( true );
@@ -1313,7 +1308,7 @@ EdKC_Ascii ConIn::CmdDataFromNextKey() {
 EdKC_Ascii ConIn::CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
    const auto ki( GetKeyBytesEnum( true ) );
    if( ki.EdKC_ == 0 )
-      ki.k_d.RawKeyStr( pKeyStringBuffer, pKeyStringBufferBytes );
+      RawKeyStr( pKeyStringBuffer, pKeyStringBufferBytes, ki.k_d );
    else
       StrFromEdkc( pKeyStringBuffer, pKeyStringBufferBytes, ki.EdKC_ );
 
