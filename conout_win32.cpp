@@ -273,7 +273,7 @@ void TConsoleOutputControl::SetConsoleCursorInfo() {
    }
 
 
-void ConIO::SetCursorSize( bool fBigCursor ) {
+void ConOut::SetCursorSize( bool fBigCursor ) {
    if( s_EditorScreen )
        s_EditorScreen->SetCursorSize( fBigCursor );
    }
@@ -302,16 +302,16 @@ bool TConsoleOutputControl::GetCursorState( YX_t *pt, bool *pfVisible ) {
    return true;
    }
 
-bool ConIO::GetCursorState( YX_t *pt, bool *pfVisible ) {
+bool ConOut::GetCursorState( YX_t *pt, bool *pfVisible ) {
    YX_t yx;
    return s_EditorScreen ? s_EditorScreen->GetCursorState( pt, pfVisible ) : 0;
    }
 
-bool ConIO::SetCursorVisibilityChanged( bool fVisible ) {
+bool ConOut::SetCursorVisibilityChanged( bool fVisible ) {
    return s_EditorScreen ? s_EditorScreen->SetCursorVisibilityChanged( fVisible ) : 0;
    }
 
-void ConIO::SetCursorLocn( LINE yLine, COL xCol ) {
+void ConOut::SetCursorLocn( LINE yLine, COL xCol ) {
    if( s_EditorScreen ) s_EditorScreen->SetCursorLocn( yLine, xCol );
    }
 
@@ -329,7 +329,7 @@ void TConsoleOutputControl::SetCursorLocn( LINE yLine, COL xCol ) {
       }
    }
 
-COL ConIO::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
+COL ConOut::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
    return s_EditorScreen ? s_EditorScreen->WriteLineSegToConsoleBuffer( pszStringToDisp, StringLen, yLineWithinConsoleWindow, xColWithinConsoleWindow, colorAttribute, fPadWSpcs ) : 0;
    }
 
@@ -471,11 +471,11 @@ STATIC_FXN bool SetConsoleBufferSizeOk( const Win32::HANDLE d_hConsoleScreenBuff
    return true;
    }
 
-bool ConIO::SetScreenSizeOk( YX_t &newSize ) {
+bool ConOut::SetScreenSizeOk( YX_t &newSize ) {
    return s_EditorScreen ? s_EditorScreen->SetConsoleSizeOk( newSize ) : false;
    }
 
-YX_t ConIO::GetMaxConsoleSize() {
+YX_t ConOut::GetMaxConsoleSize() {
    return s_EditorScreen ? s_EditorScreen->GetMaxConsoleSize() : YX_t(0,0);
    }
 
@@ -655,11 +655,11 @@ void Win32ConsoleFontChanger::SetFont( Win32::DWORD idx ) {
          xWidth = MAX_CON_WR_BYTES / ((yHeight-2) * sizeof(ScreenCell));
          }
       YX_t newSize; newSize.lin=yHeight; newSize.col=xWidth;
-      ConIO::SetScreenSizeOk( newSize );
+      ConOut::SetScreenSizeOk( newSize );
       }
    }
 
-void ConIO::BufferFlushToScreen() { if( s_EditorScreen ) s_EditorScreen->FlushConsoleBufferToScreen(); }
+void ConOut::BufferFlushToScreen() { if( s_EditorScreen ) s_EditorScreen->FlushConsoleBufferToScreen(); }
 
 GLOBAL_VAR int g_WriteConsoleOutputCalls;
 GLOBAL_VAR int g_WriteConsoleOutputLines;
@@ -793,7 +793,7 @@ void TConsoleOutputControl::FlushConsoleBufferToScreen() {
    }
 
 
-void ConIO::GetScreenSize( YX_t *rv ) { // returning 8 byte struct msvc
+void ConOut::GetScreenSize( YX_t *rv ) { // returning 8 byte struct msvc
    W32_ScreenSize_CursorLocn cxy;
    s_EditorScreen->GetSizeCursorLocn( &cxy );
    *rv = cxy.size;
@@ -832,7 +832,7 @@ bool TConsoleOutputControl::WriteToFileOk( FILE *ofh ) { // would be const but u
    return true;
    }
 
-bool ConIO::WriteToFileOk( FILE *ofh ) {
+bool ConOut::WriteToFileOk( FILE *ofh ) {
    return s_EditorScreen ? s_EditorScreen->WriteToFileOk( ofh ) : false;
    }
 
@@ -840,7 +840,7 @@ STATIC_FXN bool savescreen( CPCChar ofnm ) {
    enum { SHOWDBG=0 };
    const auto ofh( fopen( ofnm, "wb" ) );
    if( !ofh ) { return Msg("open of file \"%s\" FAILED", ofnm ); }   SHOWDBG && DBG( "%s: opened ofh = '%s'", __func__, ofnm );
-   const auto rv( ConIO::WriteToFileOk( ofh ) );
+   const auto rv( ConOut::WriteToFileOk( ofh ) );
    fclose( ofh );                                                    SHOWDBG && DBG( "%s: closed ofh = '%s'", __func__, ofnm );
    Msg( "wrote \"%s\"", ofnm );
    return rv;
@@ -1052,7 +1052,7 @@ bool TConsoleOutputControl::SetConsolePalette( const unsigned palette[16] ) {
    return SetConsoleInfo( hwndConsole, &ci );
    }
 
-bool ConIO::SetConsolePalette( const unsigned palette[16] ) {
+bool ConOut::SetConsolePalette( const unsigned palette[16] ) {
    return s_EditorScreen ? s_EditorScreen->SetConsolePalette( palette ) : false;
    }
 
@@ -1091,7 +1091,7 @@ bool ARG::ctwk() {
         0xff0000, 0xff00ff, 0xffff00, 0xffffff,
    };
 
-   const auto rv( ConIO::SetConsolePalette( fTweaked ? DefaultColors : TweakedColors ) );
+   const auto rv( ConOut::SetConsolePalette( fTweaked ? DefaultColors : TweakedColors ) );
    fTweaked = !fTweaked;
    DBG( "%s done(%u)", __func__, rv );
    Msg( "%s done(%u)", __func__, rv );

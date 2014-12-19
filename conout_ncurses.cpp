@@ -51,25 +51,25 @@ static void set_pcattr( int attr ) {
    }
    attrset( COLOR_PAIR(color_pr_num) | ncfg_bold );
    }
-void ConIO::SetCursorSize( bool fBigCursor ) {}
+void ConOut::SetCursorSize( bool fBigCursor ) {}
 static YX_t s_cursor_pos;
-bool ConIO::GetCursorState( YX_t *pt, bool *pfVisible ) {
+bool ConOut::GetCursorState( YX_t *pt, bool *pfVisible ) {
    *pt = s_cursor_pos;
    *pfVisible = true;
    return true;
    }
-bool ConIO::SetCursorVisibilityChanged( bool fVisible ) {
+bool ConOut::SetCursorVisibilityChanged( bool fVisible ) {
    curs_set( (fVisible ? 1 : 0) );
    refresh();
    return false;
    }
-void ConIO::SetCursorLocn( int yLine, int xCol ) {
+void ConOut::SetCursorLocn( int yLine, int xCol ) {
    s_cursor_pos.lin = yLine;
    s_cursor_pos.col = xCol;
    move( s_cursor_pos.lin, s_cursor_pos.col );  DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
    refresh();
    }
-int ConIO::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
+int ConOut::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
    DBG( "%s@%d,%d=%*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
@@ -94,23 +94,23 @@ int ConIO::BufferWriteString( const char *pszStringToDisp, int StringLen, int yL
       }
    return slen;
    }
-bool ConIO::SetScreenSizeOk( YX_t &newSize ) { return false; }
-void ConIO::GetScreenSize( YX_t *rv ) {
+bool ConOut::SetScreenSizeOk( YX_t &newSize ) { return false; }
+void ConOut::GetScreenSize( YX_t *rv ) {
    getmaxyx( stdscr, rv->lin, rv->col );
    }
-YX_t ConIO::GetMaxConsoleSize() {
+YX_t ConOut::GetMaxConsoleSize() {
    YX_t rv;
-   ConIO::GetScreenSize( &rv );
+   ConOut::GetScreenSize( &rv );
    return rv;
    }
-void ConIO::BufferFlushToScreen() {
+void ConOut::BufferFlushToScreen() {
    move( s_cursor_pos.lin, s_cursor_pos.col );  DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
    refresh();
    }
-bool ConIO::WriteToFileOk( FILE *ofh ) {
+bool ConOut::WriteToFileOk( FILE *ofh ) {
    return false;
    }
-bool ConIO::SetConsolePalette( const unsigned palette[16] ) { return false; }
+bool ConOut::SetConsolePalette( const unsigned palette[16] ) { return false; }
 bool ConIO::StartupOk( bool fForceNewConsole ) {
    initscr();
    if( has_colors() == FALSE ) {
@@ -122,11 +122,11 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    start_color();
    keypad(stdscr, TRUE);
    noecho();
-   const auto sizeNow( GetMaxConsoleSize() );
+   const auto sizeNow( ConOut::GetMaxConsoleSize() );
    DBG( "%s: size=y,x=%d,%d", __func__, sizeNow.lin, sizeNow.col );
    Event_ScreenSizeChanged( Point( sizeNow.lin, sizeNow.col ) );
-   // ConIO::BufferWriteString( " hello ", 7, 0, 0, 0x15, false );
-   // ConIO::BufferWriteString( " world ", 7, 3, 0, 0x13, false );
+   // ConOut::BufferWriteString( " hello ", 7, 0, 0, 0x15, false );
+   // ConOut::BufferWriteString( " world ", 7, 3, 0, 0x13, false );
    return true;
    }
 void ConIO::Shutdown() {

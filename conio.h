@@ -15,9 +15,22 @@ struct YX_t {
    bool operator!=( const YX_t &rhs ) const { return !(*this == rhs); }
    };
 
+struct EdKC_Ascii {
+   unsigned short EdKcEnum;
+            char  Ascii;       // exists because NUMLOCK-masked EdKC values != correct number key ascii values
+   };
+
 namespace ConIO {
    bool  StartupOk( bool fForceNewConsole );
    void  Shutdown();
+
+   int   DbgPopf( const char *fmt, ... ) ATTR_FORMAT(1, 2);
+   bool  Confirm( const char *pszPrompt, ... ) ATTR_FORMAT(1, 2);
+   }
+
+namespace ConOut {
+   void  Bell();
+
    YX_t  GetMaxConsoleSize();
 
    void  GetScreenSize( YX_t *rv);
@@ -33,7 +46,13 @@ namespace ConIO {
 
    bool  WriteToFileOk( FILE *ofh );
    bool  SetConsolePalette( const unsigned palette[16] );
+   }
 
-   int   DbgPopf( const char *fmt, ... ) ATTR_FORMAT(1, 2);
-   bool  Confirm( const char *pszPrompt, ... ) ATTR_FORMAT(1, 2);
+namespace ConIn {
+   EdKC_Ascii CmdDataFromNextKey();
+   EdKC_Ascii CmdDataFromNextKey_Keystr( char *pKeyStringBuffer, size_t pKeyStringBufferBytes );
+
+   bool  FlushKeyQueueAnythingFlushed();
+   void  WaitForKey();
+   bool  KbHit();
    }

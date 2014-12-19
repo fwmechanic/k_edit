@@ -120,14 +120,8 @@ extern   void  HideCursor();
 //    ~CursorHider() { UnhideCursor(); }
 //    };
 
-extern void    Bell();
-extern void    WaitForKey();
 extern void    WaitForKey( int secondsToWait );
-extern bool    KbHit();
 extern void    FlushKeyQueuePrimeScreenRedraw();
-
-extern CmdData CmdDataFromNextKey();
-extern CmdData CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes );
 
 //--------------------------------------------------------------------------------------------
 
@@ -290,7 +284,6 @@ extern   bool  AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, 
 extern   void  UnbindMacrosFromKeys();
 extern   int   edkcFromKeyname( PCChar pszKeyStr );
 extern   int   KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word );
-extern   bool  FlushKeyQueueAnythingFlushed();
 
 extern   void  PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite );
 extern   void  StrFromEdkc( PChar pKeyStringBuf, size_t pKeyStringBufBytes, int EdKC );

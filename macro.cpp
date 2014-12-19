@@ -490,8 +490,8 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
 
       if( MacroRuntimeStkEntry::GotLitCh==got ) { 0 && DBG( "%s LIT '%c'", __func__, token[0] );
          STATIC_VAR CMD macro_graphic = { .d_name="macro_graphic", .d_func=&ARG::graphic };
-         macro_graphic.d_argData.Ascii    = token[0];
-         macro_graphic.d_argData.EdKcEnum = token[0];
+         macro_graphic.d_argData.eka.Ascii    = token[0];
+         macro_graphic.d_argData.eka.EdKcEnum = token[0];
          return &macro_graphic;
          }
 
@@ -564,7 +564,7 @@ bool ARG::dispmstk() {
 
 
 PCCMD CmdFromKbdForExec() {
-   const auto cmddata( CmdDataFromNextKey() );
+   const auto cmddata( ConIn::CmdDataFromNextKey() );
 
    if( 0 == cmddata.EdKcEnum && ExecutionHaltRequested() ) { 0 && DBG( "CmdFromKbdForExec sending pCMD_cancel" );
       return pCMD_cancel;
@@ -583,7 +583,7 @@ PCCMD CmdFromKbdForExec() {
 
    const auto pCmd( g_Key2CmdTbl[ cmddata.EdKcEnum ] );
    if( pCmd && !pCmd->IsRealMacro() )
-        pCmd->d_argData = cmddata;
+        pCmd->d_argData.eka = cmddata;
 
    return pCmd;
    }

@@ -507,7 +507,7 @@ bool SetKeyOk( PCChar pszCmdName, PCChar pszKeyName ) {
    }
 
 char CharAsciiFromKybd() {
-   return CmdDataFromNextKey().Ascii;
+   return ConIn::CmdDataFromNextKey().Ascii;
    }
 
 void EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd ) {
@@ -600,7 +600,7 @@ void WaitForKey( int secondsToWait ) {
 //    return;
 
    secondsToWait = Min( secondsToWait, 1 );
-   FlushKeyQueueAnythingFlushed();
+   ConIn::FlushKeyQueueAnythingFlushed();
 
    SpinChar sc;
 
@@ -608,7 +608,7 @@ void WaitForKey( int secondsToWait ) {
    const auto timeEnd( timeNow + secondsToWait + 1 );
    auto maxWidth(0);
    do {
-      if( FlushKeyQueueAnythingFlushed() )
+      if( ConIn::FlushKeyQueueAnythingFlushed() )
          break;
 
       SleepMs( 50 );
@@ -668,6 +668,6 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
    }
 
 PCCMD CmdFromKbdForInfo( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
-   const auto cd( CmdDataFromNextKey_Keystr( pKeyStringBuffer, pKeyStringBufferBytes ) );
+   const auto cd( ConIn::CmdDataFromNextKey_Keystr( pKeyStringBuffer, pKeyStringBufferBytes ) );
    return cd.EdKcEnum == 0 ? pCMD_unassigned : g_Key2CmdTbl[ cd.EdKcEnum ];
    }

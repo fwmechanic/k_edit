@@ -50,7 +50,7 @@ bool conin_statics::ScanConinBufForKeyDowns() {
    }
 
 
-bool FlushKeyQueueAnythingFlushed() {
+bool ConIn::FlushKeyQueueAnythingFlushed() {
    AutoMutex mtx( s_Conin.mutex );
 
    auto rv( s_Conin.ScanConinBufForKeyDowns() );
@@ -1295,22 +1295,22 @@ STATIC_FXN KeyBytesEnum GetKeyBytesEnum( bool fFreezeOtherThreads ) { // PRIMARY
    }
 
 
-void WaitForKey() {
+void ConIn::WaitForKey() {
    GetKeyBytesEnum( true );
    }
 
-STIL CmdData KeyBytesEnum2CmdData( KeyBytesEnum ki ) {
+STIL EdKC_Ascii KeyBytesEnum2CmdData( KeyBytesEnum ki ) {
    CmdData rv;
    rv.EdKcEnum = ki.EdKC_;
    rv.Ascii    = ki.k_d.Ascii;
    return rv;
    }
 
-CmdData CmdDataFromNextKey() {
+EdKC_Ascii ConIn::CmdDataFromNextKey() {
    return KeyBytesEnum2CmdData( GetKeyBytesEnum( false ) );
    }
 
-CmdData CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
+EdKC_Ascii ConIn::CmdDataFromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
    const auto ki( GetKeyBytesEnum( true ) );
    if( ki.EdKC_ == 0 )
       ki.k_d.RawKeyStr( pKeyStringBuffer, pKeyStringBufferBytes );

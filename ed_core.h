@@ -499,15 +499,13 @@ class LineColorsClipped;  STD_TYPEDEFS( LineColorsClipped )
 
 //-----------------------------------------------------------------------------
 
+#include "conio.h"
+
 union CmdData {
-   struct {
-      U16    EdKcEnum;
-      U8     Ascii;       // exists because NUMLOCK-masked EdKC values != correct number key ascii values
-      };
+   EdKC_Ascii eka;
+   PChar      pszMacroDef;
 
-   PChar     pszMacroDef;
-
-   char  chAscii() const { return Ascii; }
+   char  chAscii() const { return eka.Ascii; }
 
    int   isEmpty() const { return pszMacroDef == nullptr; }
    };

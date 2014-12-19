@@ -46,7 +46,7 @@ LUAFUNC_(OsVer)              { R_str( OsVerStr() ); }
 LUAFUNC_(RsrcFilename)  { pathbuf pb; R_str( RsrcFilename ( BSOB(pb), S_(1) ) ); }
 LUAFUNC_(StateFilename) { pathbuf pb; R_str( StateFilename( BSOB(pb), S_(1) ) ); }
 
-LUAFUNC_(Bell) { Bell(); RZ; }
+LUAFUNC_(Bell) { ConOut::Bell(); RZ; }
 LUAFUNC_(ScreenLines) { R_int( ScreenLines() ); }
 LUAFUNC_(ScreenCols ) { R_int( ScreenCols () ); }
 LUAFUNC_(VidWrStrColorFlush) { 0 && DBG("%s: %d, %d", __func__, I_(1), I_(2) );

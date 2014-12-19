@@ -172,11 +172,11 @@ class ConsoleSizeChanger : public KeyChanger
    void actionPlus () { for(auto ix(d_fontNow+1); ix <= d_numFonts-1; ++ix) if( SetFont( ix ) ) return; }
    void actionMinus() { for(auto ix(d_fontNow-1); ix >= 0           ; --ix) if( SetFont( ix ) ) return; }
 // void actionStar     () { Resize_Screen( 10000, 10000 ); }  // will get resized downward
-   void actionStar     () { const auto maxSize( ConIO::GetMaxConsoleSize() );  Resize_Screen( maxSize.col-1   , maxSize.lin-1 ); }
+   void actionStar     () { const auto maxSize( ConOut::GetMaxConsoleSize() );  Resize_Screen( maxSize.col-1   , maxSize.lin-1 ); }
    // maxSize.? -1 cuz GetMaxConsoleSize (Win32 API) doesn't seem to account for sizes of window borders
 // void actionCtrlRight() { Resize_Screen( ((EditScreenCols()*4)/3),   ScreenLines()       ); }
-   void actionCtrlRight() { const auto maxSize( ConIO::GetMaxConsoleSize() );  Resize_Screen( maxSize.col-1   , ScreenLines() ); }
-   void actionCtrlDown () { const auto maxSize( ConIO::GetMaxConsoleSize() );  Resize_Screen( EditScreenCols(), maxSize.lin-1 ); }
+   void actionCtrlRight() { const auto maxSize( ConOut::GetMaxConsoleSize() );  Resize_Screen( maxSize.col-1   , ScreenLines() ); }
+   void actionCtrlDown () { const auto maxSize( ConOut::GetMaxConsoleSize() );  Resize_Screen( EditScreenCols(), maxSize.lin-1 ); }
 // void actionCtrlDown () { Resize_Screen(   EditScreenCols(),       ((ScreenLines()*4)/3) ); }
    void actionCtrlLeft () { Resize_Screen( ((EditScreenCols()*3)/4),   ScreenLines()       ); }
    void actionCtrlUp   () { Resize_Screen(   EditScreenCols(),       ((ScreenLines()*3)/4) ); }

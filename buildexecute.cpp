@@ -739,8 +739,8 @@ PCCMD GetTextargString_CMD_reader::GetNextCMD( bool fKbInputOnly ) {
    }
 
 STATIC_FXN void Bell_FlushKeyQueue_WaitForKey() {
-   Bell();
-   FlushKeyQueueAnythingFlushed();
+   ConOut::Bell();
+   ConIn::FlushKeyQueueAnythingFlushed();
    WaitForKey( 1 );
    }
 
@@ -808,12 +808,12 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       const funcCmd func( pCmd->d_func );
 
       //##############  Begin TabX  ##############
-      if( pCmd->d_argData.EdKcEnum != EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
+      if( pCmd->d_argData.eka.EdKcEnum != EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          Delete0( pDirContent );
          pbTabxBase.clear(); // forget prev used WC
          }
 
-      if( pCmd->d_argData.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
+      if( pCmd->d_argData.eka.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          if( !pDirContent ) {
             if( pbTabxBase.empty() ) // no prev'ly used WC?
                pbTabxBase = stb;  // create based on curr content
@@ -847,7 +847,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       else if( func == fn_newline || func == fn_emacsnewl ) {
          if( flags & gts_OnlyNewlAffirms )
             break;
-         Bell();
+         ConOut::Bell();
          }
       else if( func == fn_graphic ) {
          if( fInitialStringSelected ) {
@@ -970,7 +970,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
             }
          }
       else if( pCmd->d_argType & CURSORFUNC ) {
-         Bell(); // unsupported CURSORFUNC?
+         ConOut::Bell(); // unsupported CURSORFUNC?
          }
       else if( func == fn_cancel ) {
          break;
@@ -979,7 +979,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          break;
          }
       else {
-         Bell();
+         ConOut::Bell();
          }
 
       //====== Some editing or cursor movement was done and we will be continuing to edit.
@@ -1453,7 +1453,7 @@ bool ARG::selcmd() { // selcmd:alt+0
 
 bool ARG::unassigned() {
    linebuf keynamebuf;
-   StrFromEdkc( BSOB(keynamebuf), d_pCmd->d_argData.EdKcEnum );
+   StrFromEdkc( BSOB(keynamebuf), d_pCmd->d_argData.eka.EdKcEnum );
    return ErrorDialogBeepf( "%s is not assigned to any editor function", keynamebuf );
    }
 

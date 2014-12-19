@@ -51,7 +51,7 @@ EXTERNC void abort() {
 
 GLOBAL_VAR bool g_fAllowBeep = true; // global/switchval
 
-void Bell() {
+void ConOut::Bell() {
    if( g_fAllowBeep )  printf( "%c", 7 );  // write RTL's stdout, which hasn't been touched since startup
    }
 

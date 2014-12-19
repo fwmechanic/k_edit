@@ -2184,22 +2184,22 @@ void View::HiliteAddin_Event_FBUF_content_changed( LINE yMinChangedLine, LINE yM
    }
 
 void FlushKeyQueuePrimeScreenRedraw() {
-   FlushKeyQueueAnythingFlushed();
+   ConIn::FlushKeyQueueAnythingFlushed();
    DispNeedsRedrawTotal();
    }
 
 
 STATIC_FXN void DispErrMsg( PCChar emsg ) { DBG( "!!! '%s'", emsg );
    SetCmdAbend();
-   Bell();
-   FlushKeyQueueAnythingFlushed();
+   ConOut::Bell();
+   ConIn::FlushKeyQueueAnythingFlushed();
    // HideCursor();
    VidWrStrColorFlush( DialogLine(), 0, emsg, Strlen(emsg), g_colorError, true );
 
    if( g_fErrPrompt ) {
       STATIC_CONST char szPAK[] = "Press any key...";
       VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, szPAK, KSTRLEN(szPAK), g_colorError, true );
-      WaitForKey();
+      ConIn::WaitForKey();
     //VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, " ", 1, g_colorError, true );
     //VidWrStrColorFlush( DialogLine(), 0, " ", 1, g_colorError, true );
       }
@@ -2487,7 +2487,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
       && newPt.isValid()
      ) {
       bool dummy;
-      ConIO::GetCursorState( &s_CursorLocnBeforeOutsideView, &dummy );
+      ConOut::GetCursorState( &s_CursorLocnBeforeOutsideView, &dummy );
       }
 
    if( newPt.isValid() ) {
@@ -2499,7 +2499,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
       }
 
    DBG( "%s(y=%d,x=%d) from %s", __func__, newPt.lin, newPt.col, from );
-   ConIO::SetCursorLocn( newPt.lin, newPt.col );
+   ConOut::SetCursorLocn( newPt.lin, newPt.col );
 
    #else
 
@@ -2508,7 +2508,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
    s_CursorLocnOutsideView.lin = y;
    s_CursorLocnOutsideView.col = x;
    IS_LINUX && DBG( "%s(y=%d,x=%d)", __func__, y, x );
-   ConIO::SetCursorLocn( y, x );
+   ConOut::SetCursorLocn( y, x );
 
    #endif
 
@@ -2546,7 +2546,7 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
    {
    YX_t cursorNow; bool fCursorVisible;
    CursorLocnOutsideView_Get( &cursorNew ) || pcw->GetCursorForDisplay( &cursorNew );
-   ConIO::GetCursorState( &cursorNow, &fCursorVisible );
+   ConOut::GetCursorState( &cursorNow, &fCursorVisible );
    fCursorMovePending = (cursorNew.lin != cursorNow.lin || cursorNew.col != cursorNow.col);
    }
 
@@ -2581,7 +2581,7 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
 
    if( fCursorMovePending ) {
       did |= 0x0000000C;
-      ConIO::SetCursorLocn( cursorNew.lin, cursorNew.col );
+      ConOut::SetCursorLocn( cursorNew.lin, cursorNew.col );
       DISP_LL_STAT_COLLECT(++d_stats.cursorScrolls);
       }
 
@@ -2983,7 +2983,7 @@ STATIC_VAR struct {
 
 VideoFlusher::~VideoFlusher() {
    if( d_fWantToFlush && s_VideoFlushData.fDidVideoWrite ) {
-      ConIO::BufferFlushToScreen();
+      ConOut::BufferFlushToScreen();
       s_VideoFlushData.fDidVideoWrite = false;
       }
    }
@@ -2991,7 +2991,7 @@ VideoFlusher::~VideoFlusher() {
 
 STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { WL( 0, 1 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
    if( src ) {
-      const auto charsWritten( ConIO::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
+      const auto charsWritten( ConOut::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
       if( charsWritten ) {
          DISP_LL_STAT_COLLECT(++d_stats.screenRedraws);
          s_VideoFlushData.fDidVideoWrite = true;
@@ -3056,15 +3056,15 @@ STATIC_FXN bool EditorScreenSizeAllowed( const Point &newSize ) { // checks EDIT
 //    it will be switched to, newSize will be updated, "OK" status will be returned
 bool VideoSwitchModeToXYOk( Point &newSize ) {
    YX_t pass; pass.lin = newSize.lin; pass.col = newSize.col;
-   const auto rv( EditorScreenSizeAllowed( newSize ) && ConIO::SetScreenSizeOk( pass ) );
+   const auto rv( EditorScreenSizeAllowed( newSize ) && ConOut::SetScreenSizeOk( pass ) );
    newSize.lin = pass.lin; newSize.col = pass.col;
    return rv;
    }
 
 void DispNeedsRedrawCursorMoved() { if( g_CurView() ) g_CurView()->ForceCursorMovedCondition(); }
 
-void UnhideCursor()  { if( ConIO::SetCursorVisibilityChanged( true  ) )  DispNeedsRedrawCursorMoved(); }
-void HideCursor()    { if( ConIO::SetCursorVisibilityChanged( false ) )  DispNeedsRedrawCursorMoved(); }
+void UnhideCursor()  { if( ConOut::SetCursorVisibilityChanged( true  ) )  DispNeedsRedrawCursorMoved(); }
+void HideCursor()    { if( ConOut::SetCursorVisibilityChanged( false ) )  DispNeedsRedrawCursorMoved(); }
 
 GLOBAL_VAR int g_iCursorSize = 1;
 
@@ -3075,8 +3075,8 @@ void swidCursorsize( PChar dest, size_t sizeofDest, void *src ) {
 PCChar swixCursorsize( PCChar param ) {
    const auto val( atoi( param ) );
    switch( val ) {
-      case 0:   ConIO::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
-      case 1:   ConIO::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
+      case 0:   ConOut::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
+      case 1:   ConOut::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
       default:  return "CursorSize: Value must be 0 or 1";
       }
    }

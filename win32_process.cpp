@@ -749,7 +749,7 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
 
       Delete0( pEl );
       } //**************** outerthreadloop ****************
-   Bell();
+   ConOut::Bell();
    }
 
 
@@ -955,7 +955,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
          }
       FreeStringListEl( pEl );
       } //**************** outerthreadloop ****************
-   Bell();
+   ConOut::Bell();
    }
 
 

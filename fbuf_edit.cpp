@@ -2423,7 +2423,7 @@ IS_EOL:
             } while( pCurImageBuf < pPastImageBufEnd );
 
          if( ExecutionHaltRequested() ) {
-            FlushKeyQueueAnythingFlushed();
+            ConIn::FlushKeyQueueAnythingFlushed();
             MakeEmpty();
             MoveCursorToBofAllViews();
             return true;
