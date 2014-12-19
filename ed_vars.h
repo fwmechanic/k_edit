@@ -33,6 +33,8 @@ extern std::string  g_SnR_szSearch      ;
 extern std::string  g_SnR_szReplacement ;
 
 
+typedef U16 EdKC;
+
 enum { EdKC_Count = 256+273+90
 #if SEL_KEYMAP
                               +(26*2)
