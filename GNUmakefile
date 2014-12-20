@@ -105,7 +105,7 @@ endif
 # d. >q  to exit gdb
 
 # to disable, _comment out_ next line!
-DBG_BUILD := x
+# DBG_BUILD := x
 
 ifdef DBG_BUILD
 STRIP      :=
@@ -266,7 +266,7 @@ OBJS := \
  $(PLAT_OBJS)   \
  wnd.o
 
-UNBUILT_RLS_FILES = .krsrc k.luaedit strict.lua user.lua README.md menu.lua show.lua tu.lua util.lua re.lua
+UNBUILT_RLS_FILES = .krsrc k.luaedit k.filesettings strict.lua user.lua README.md menu.lua show.lua tu.lua util.lua re.lua
 
 TGT:=k
 
