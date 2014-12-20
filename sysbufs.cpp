@@ -476,6 +476,20 @@ STATIC_FXN void CallFbufReader( PFBUF pFBuf, FbufReaderFxn readerFxn, int instan
    }
 
 bool ReadPseudoFileOk( PFBUF pFBuf ) {
+   /* shortcoming  BUGBUG
+
+      This ALWAYS causes *pFBuf to be rewritten, and all associated views'
+      cursor positions reset.  This policy only makes sense for those *pFBuf's
+      for which the backing data is likely to change each time the *pFBuf gets
+      focus; for the others, the loss of cursor position is annoying (and comes
+      with no benefit).
+
+      Also, currently these fbufs are all editable, and it can be disconcerting
+      for a user to edit one of these, switch away, switch back, and have their
+      edits be unrecoverably wiped out
+
+    */
+
    {
    int luaReadOk( false );
    if( LuaCtxt_Edit::ReadPseudoFileOk( pFBuf, &luaReadOk ) && luaReadOk ) {
