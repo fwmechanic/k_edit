@@ -523,7 +523,7 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto yCursor( cursor->lin );
    const auto xCursor( cursor->col );
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
-   if( !rl.empty() ) {
+   if( !rl.empty() ) { 0 && DBG( "newln=%" PR_BSR, BSR(rl) );
       const auto tw( pFBuf->TabWidth() );                             // abc   abc
       const auto xEos( ColOfIdx( tw, rl, rl.length() ) );             // abc   abc
       if( xCursor < xEos ) {

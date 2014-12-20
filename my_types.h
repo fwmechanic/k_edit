@@ -47,7 +47,6 @@
 #error only GCC supported!
 #endif
 
-
 #include <string>
 
 // driven by https://news.ycombinator.com/item?id=8704318
@@ -58,6 +57,14 @@
 // http://www.boost.org/doc/libs/1_54_0/libs/utility/doc/html/string_ref.html
 #include <boost/version.hpp>
 #include <boost/utility/string_ref.hpp>
+
+// we sometimes need to "printf" (DBG) boost::string_ref referents
+// unfortunately static_cast<int> of size_t seems unavoidable per
+// http://stackoverflow.com/questions/19145951/printf-variable-string-length-specifier
+// http://stackoverflow.com/questions/8081613/using-size-t-for-specifying-the-precision-of-a-string-in-cs-printf
+// this is dangerous; hopefully really long strings will not be encountered :-(
+#define BSR(bsr) static_cast<int>(bsr.length()),bsr.data()
+#define PR_BSR ".*s"
 
 #include "attr_format.h"
 
