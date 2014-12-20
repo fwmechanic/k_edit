@@ -39,16 +39,22 @@ undertaking) if it becomes much more annoying to me (which seems unlikely).
 
 ## External build dependencies
 
+### Windows
+
 * GCC from the [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html).  The downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
      * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
      * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
  * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K, and must be in `PATH`.
  * `7z.exe` ([7zip](http://www.7-zip.org/)) is invoked when building the `rls` `make` target, and must be in `PATH`.
 
+### Ubuntu Linux (14.04, 14.10)
+
+ * each time you open a terminal to build K, run `. install_build_tools.sh` (tab-completion is your friend); this operation (which corresponds with executing `mingw.bat` in Windows) will
+    * remap the K build to use GCC 4.8.x rather than the default version of GCC
+    * install GCC 4.8.x and other build tools/libraries if they're missing; in this case, `sudo apt-get ...` is executed, so you'll be prompted by `sudo` for your password.
+
 ## To build
 
-    cd K-repo-root
-    mingw.bat   & rem run once to put MinGW exes in shell's PATH
     make clean  & rem unnecessary the first time
     make -j     & the build is parallel-make-safe
 
@@ -79,7 +85,7 @@ The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used 
 
 # Editor State Files
 
-K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*`.  Information stored in state files includes:
+K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*` (`~/.kedit` on Linux).  Information stored in state files includes:
 
  *  files edited (including window/cursor position)
  *  search-key and replace-string history
