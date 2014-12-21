@@ -1502,11 +1502,9 @@ boost::string_ref FBUF::PeekRawLine( LINE lineNum ) const {
       }
    }
 
-// returns strlen of returned line
-COL FBUF::getLineRaw( std::string &st, LINE yLine ) const {
+std::string FBUF::getLineRaw( LINE yLine ) const {
    const auto rv( PeekRawLine( yLine ) );
-   st.assign( rv.data(), rv.length() );
-   return st.length();
+   return std::string( rv.data(), rv.length() );
    }
 
 // returns strlen of returned line
@@ -1685,7 +1683,7 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
          pLSR->keydata[0] = '\0';
          }
 
-      fb->getLineRaw( pLSR->lbuf, yY );
+      pLSR->lbuf = fb->getLineRaw( yY );
       *ppLSR++ = pLSR;
       pLSR = PLineSortRec( PChar(pLSR) + sizeofLSR );
       }

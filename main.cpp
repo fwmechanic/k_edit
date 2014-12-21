@@ -50,11 +50,11 @@ EXTERNC void abort() {
 
 
 STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 1 && DBG( "%s(%s)", FUNC, filename );
-      g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
-   // g_pFBufCmdlineFiles->PutLastLine( filename );
-   std::string st;
-   g_pFBufCmdlineFiles->getLineRaw( st, 0 );
-   1 && DBG( "%s readback(%s)", FUNC, st.c_str() );
+   g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
+   if( 1 ) {
+      const auto st( g_pFBufCmdlineFiles->PeekRawLine( 0 ) );
+      1 && DBG( "%s readback(%" PR_BSR  ")", FUNC, BSR( st ) );
+      }
    }
 
 STATIC_FXN int NumberOfCmdlineFilesRemaining() {
