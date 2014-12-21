@@ -48,7 +48,7 @@ bool ARG::towinclip() {
    Win32::HGLOBAL  hglbCopy;
    int             hglbBytes;
    char           *bufptr; // this WILL TRAVERSE a buffer
-   Xbuf            lbuf;
+   std::string     stbuf;
 
    if(  d_argType == NOARG
      || d_argType == LINEARG
@@ -81,14 +81,14 @@ bool ARG::towinclip() {
       Msg( "%s->WinClip %d lines", srcNm ? srcNm : ArgTypeName(), (yMax - yMin)+1 );
 
       if( yMax == yMin ) {
-         pFBuf->GetLineSeg( lbuf, yMin, xLeft, xRight ); // read line into our buffer
+         pFBuf->GetLineSeg( stbuf, yMin, xLeft, xRight ); // read line into our buffer
          goto SINGLE_LINE; // HACK O'RAMA!
          }
 
       // determine # of chars on each line
       long size(0);
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
-         size += pFBuf->GetLineSeg( lbuf, lineNum, xLeft, xRight ) + 2; // + 2 for '\r\n'
+         size += pFBuf->GetLineSeg( stbuf, lineNum, xLeft, xRight ) + 2; // + 2 for '\r\n'
          }
 
       if( !PrepClip( size, &hglbCopy, &hglbBytes, &bufptr ) ) // +1 for trailing '\0'
@@ -97,8 +97,8 @@ bool ARG::towinclip() {
       // copy source data into into *bufptr
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
          const PCChar bs( bufptr );
-         const auto chars( pFBuf->GetLineSeg( lbuf, lineNum, xLeft, xRight ) );
-         memcpy( bufptr, lbuf.c_str(), chars );
+         const auto chars( pFBuf->GetLineSeg( stbuf, lineNum, xLeft, xRight ) );
+         memcpy( bufptr, stbuf.c_str(), chars );
          bufptr += chars;
          *bufptr++ = 0x0D; // line terminator '\r\n'
          *bufptr++ = 0x0A;
@@ -107,17 +107,17 @@ bool ARG::towinclip() {
       *bufptr++ = '\0'; // buffer terminator
       }
    else if( d_argType == TEXTARG ) {
-      lbuf.assign( d_textarg.pText );
+      stbuf.assign( d_textarg.pText );
 
 SINGLE_LINE: // HACK O'RAMA!
 
-      const auto blen( lbuf.length() );
-      Msg( "%s->WinClip %" PR_SIZET "u|%s|", ArgTypeName(), blen, lbuf.c_str() );
+      const auto blen( stbuf.length() );
+      Msg( "%s->WinClip %" PR_SIZET "u|%s|", ArgTypeName(), blen, stbuf.c_str() );
 
       if( !PrepClip( blen, &hglbCopy, &hglbBytes, &bufptr ) )
          return false;
 
-      memcpy( bufptr, lbuf.c_str(), blen+1 );
+      memcpy( bufptr, stbuf.c_str(), blen+1 );
       }
    else
       return BadArg();

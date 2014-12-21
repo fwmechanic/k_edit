@@ -1434,7 +1434,6 @@ public:
    COL            getLineTabxPerRealtabs( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, g_fRealtabs ?0:' ' ); }
    COL            getLineTabxPerTabDisp ( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, fTabDisp()?0:' ' ); }
 
-   COL            GetLineSeg(             Xbuf &pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
    COL            GetLineSeg(       std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
 
    int            GetLineForInsert     (  PXbuf pXb, LINE yLine, COL xIns , COL insertCols ) const;

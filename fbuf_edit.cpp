@@ -716,12 +716,12 @@ void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
       DelBox( xStart, yStart, xEnd-1, yStart );
       return;
       }
-   std::string xbFirst, xbLast;
-   GetLineSeg( xbFirst, yStart, 0, xStart-1 );
+   std::string stFirst, stLast;
+   GetLineSeg( stFirst, yStart, 0, xStart-1 );
    DelLines( yStart, yEnd - 1 );
-   GetLineSeg( xbLast, yStart, xEnd, COL_MAX );
-   xbFirst += xbLast;
-   PutLine( yStart, xbFirst.c_str() );
+   GetLineSeg( stLast, yStart, xEnd, COL_MAX );
+   stFirst += stLast;
+   PutLine( yStart, stFirst.c_str() );
 
    AdjMarksForInsertion( this, this, xEnd, yStart, COL_MAX, yStart, xStart, yStart );
    }
@@ -1527,42 +1527,6 @@ COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
 //         then dest[0] = '\0' and retVal (chars returned in dest) == 0
 //
 // returns strlen of returned line
-COL FBUF::GetLineSeg( Xbuf &pXb, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
-   const auto tw( TabWidth() );
-   PCChar lnptr; size_t lnchars;
-   if(  yLine >= 0
-     && xLeftIncl <= xRightIncl
-     && PeekRawLineExists( yLine, &lnptr, &lnchars )
-     && xLeftIncl < StrCols( tw, lnptr, lnptr+lnchars )
-     ) {
-# if 1
-      const auto pLeft ( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xLeftIncl  ) );
-      const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
-      const auto chars( pRight - pLeft + 1 );
-      const auto bufsize( 1+chars );
-      0 && DBG( "%s [%d,%p L %" PR_SIZET "u][%d..%d]P:%p,%p (%" PR_SIZET "u)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, bufsize );
-      const auto buf( pXb.wresize( bufsize ) );
-      const auto rv( safeStrcpy( buf, bufsize, pLeft, pRight+1 ) );
-# else
-      Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
-      const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
-      const auto buf( pXb.wresize( size ) );
-      const auto rv( PrettifyStrcpy( buf, size, boost::string_ref( lnptr, lnchars ), tw, ' ', xLeftIncl ) );
-# endif
-      if( 0 ) {
-         auto xbuf( pXb.c_str() );
-         linebuf lb;
-         PrettifyStrcpy( lb, sizeof lb, xbuf, 1, '^', 0, g_chTrailSpaceDisp );
-         DBG( "%s [%d][%d..%d]S:%d=|%s|", __func__, yLine, xLeftIncl, xRightIncl, Strlen(lb), lb );
-         }
-      return rv;
-      }
-   else {
-      pXb.clear();
-      return 0;
-      }
-   }
-
 COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
    const auto tw( TabWidth() );
    PCChar lnptr; size_t lnchars;
