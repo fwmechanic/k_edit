@@ -78,6 +78,7 @@ ext_map = {  -- ref'd from C
    c            = clang_settings                       ,
    cc           = clang_settings                       ,
    cs           = clang_settings                       , -- C# is mostly like C++
+   m            = clang_settings                       , -- Objective C is a superset of C
    cpp          = clang_settings                       ,
    cxx          = clang_settings                       ,
    h            = clang_settings                       ,
