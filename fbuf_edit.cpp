@@ -716,10 +716,9 @@ void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
       DelBox( xStart, yStart, xEnd-1, yStart );
       return;
       }
-   std::string stFirst, stLast;
-   GetLineSeg( stFirst, yStart, 0, xStart-1 );
+   std::string stFirst = GetLineSeg( yStart, 0, xStart-1 );
    DelLines( yStart, yEnd - 1 );
-   GetLineSeg( stLast, yStart, xEnd, COL_MAX );
+   std::string stLast = GetLineSeg( yStart, xEnd, COL_MAX );
    stFirst += stLast;
    PutLine( yStart, stFirst.c_str() );
 
@@ -1520,37 +1519,32 @@ COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
 // gap: [xLeftIncl, xRightIncl]
 // rules:
 //    - if any chars exist in gap
-//         then dest will be filled with these chars:
+//         then rv will be filled with these chars:
 //            WITHOUT trailing-space padding being added
-//            so if the line ends in the middle of the gap, Strlen(dest) < gapChars
+//            so if the line ends in the middle of the gap, rv.length() < gapChars
 //    - if NO chars exist in gap
-//         then dest[0] = '\0' and retVal (chars returned in dest) == 0
-//
-// returns strlen of returned line
-void FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
-   const auto tw( TabWidth() );
-   PCChar lnptr; size_t lnchars;
-   if(  yLine >= 0
-     && xLeftIncl <= xRightIncl
-     && PeekRawLineExists( yLine, &lnptr, &lnchars )
-     && xLeftIncl < StrCols( tw, lnptr, lnptr+lnchars )
-     ) {
-# if 1
-      const auto pLeft ( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xLeftIncl  ) );
-      const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
-      const auto chars( pRight - pLeft + 1 );
-      0 && DBG( "%s [%d,%p L %" PR_SIZET "u][%d..%d]P:%p,%p (%" PR_SIZET "u)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, 1+chars );
-      st.assign( pLeft, chars );
-# else
-      Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
-      const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
-      const auto buf( pXb->wresize( size ) );
-      const auto rv( PrettifyStrcpy( buf, size, boost::string_ref( lnptr, lnchars ), tw, ' ', xLeftIncl ) );
-# endif
+//         then rv.empty() == true
+std::string FBUF::GetLineSeg( LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
+   if( yLine >= 0 && yLine <= LastLine() && xLeftIncl <= xRightIncl ) {
+      const auto rl( PeekRawLine( yLine ) ); const auto lnptr( rl.data() ); const auto lnchars( rl.length() );
+      const auto tw( TabWidth() );
+      if( xLeftIncl < StrCols( tw, lnptr, lnptr + lnchars ) ) {
+      # if 1
+         // BUGBUG this obviously does NOT perform (necessary) tab-expansion (PrettifyStrcpy()) !!!
+         const auto pLeft ( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xLeftIncl  ) );
+         const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
+         const auto chars( pRight - pLeft + 1 );
+         0 && DBG( "%s [%d,%p L %" PR_SIZET "u][%d..%d]P:%p,%p (%" PR_SIZET "u)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, 1+chars );
+         return std::string( pLeft, chars );
+      # else
+         Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
+         const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
+         const auto buf( pXb->wresize( size ) );
+         const auto rv( PrettifyStrcpy( buf, size, boost::string_ref( lnptr, lnchars ), tw, ' ', xLeftIncl ) );
+      # endif
+         }
       }
-   else {
-      st.clear();
-      }
+   return std::string( "" );
    }
 
 // open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;
