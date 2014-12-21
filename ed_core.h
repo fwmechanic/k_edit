@@ -303,6 +303,7 @@ public:
    void                   clear()           { poke( 0, '\0' );    }
    bool                   is_clear()  const
                                             { return !(         d_buf[0]); }
+   boost::string_ref      bsr() { return boost::string_ref( c_str(), length() ); }
 
    PChar wresize( size_t size ) {
       if( d_buf_bytes < size ) {
@@ -1061,6 +1062,9 @@ enum Eol_t { EolLF, EolCRLF };
 extern const Eol_t platform_eol;
 extern PCChar EolName( Eol_t );
 
+STIL boost::string_ref se2bsr( PCChar bos, PCChar eos ) { return boost::string_ref( bos, eos - bos ); }
+STIL boost::string_ref se2bsr( const std::string &str ) { return boost::string_ref( str ); }
+
 class FBUF { // FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
 
 public:
@@ -1451,14 +1455,14 @@ public:
 
    //************ PutLine
 public:
-   void           PutLine( LINE yLine, PCChar pSrc, PCChar eos=nullptr, PXbuf pXb=nullptr ); // WITH UNDO
+   void           PutLine( LINE yLine, boost::string_ref srSrc, PXbuf pXb=nullptr ); // WITH UNDO
    void           PutLine( LINE yLine, CPCChar pa[], int elems );
 
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
-   void           InsLine( LINE yLine, PCChar pSrc, PCChar eos=nullptr, PXbuf pXb=nullptr )  // WITH UNDO
+   void           InsLine( LINE yLine, boost::string_ref srSrc, PXbuf pXb=nullptr )  // WITH UNDO
                      {
                      InsBlankLinesBefore( yLine );
-                     PutLine( yLine, pSrc, eos, pXb );
+                     PutLine( yLine, srSrc, pXb );
                      }
 
    void           PutLineSeg( LINE lineNum, PCChar psz, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );

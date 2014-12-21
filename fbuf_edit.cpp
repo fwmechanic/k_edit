@@ -279,12 +279,14 @@ COL FBOP::LineCols( PCFBUF fb, LINE yLine ) {
 //      const Tabber &TabberParam;
 typedef const Tabber  TabberParam;  // 3 calls using this type take less code (-512 byte GCC incr)
 
-STATIC_FXN int spcs2tabs_outside_quotes( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, TabberParam tabr ) {
+STATIC_FXN int spcs2tabs_outside_quotes( PChar pDest, size_t sizeofDest, boost::string_ref src, TabberParam tabr ) {
    auto quoteCh( '\0' );
    auto destCol( 0 );
    auto pC( pDest );
    auto fNxtChEscaped( false );
    auto fInQuotedRgn(  false );
+         auto pszSrc( src.data() );
+   const auto srcChars( src.length() );
    const auto pSrcPastEnd( pszSrc + srcChars );
 
    while( (pszSrc < pSrcPastEnd) ) {
@@ -356,8 +358,10 @@ TO_ELSE:
    return pC - pDest;
    }
 
-STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, TabberParam tabr ) {
+STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, boost::string_ref src, TabberParam tabr ) {
    NOAUTO CPCChar pDestStart( pDest );
+         auto     pszSrc( src.data() );
+   const auto     srcChars( src.length() );
    const auto     pSrcPastEnd( pszSrc + srcChars );
    auto    xCol(0);
    while( (pszSrc < pSrcPastEnd) && *pszSrc ) {
@@ -393,8 +397,10 @@ STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, PCChar pszSrc, int
    return pDest - pDestStart;
    }
 
-STATIC_FXN int spcs2tabs_leading( PChar pDest, size_t sizeofDest, PCChar pszSrc, int srcChars, TabberParam tabr ) {
+STATIC_FXN int spcs2tabs_leading( PChar pDest, size_t sizeofDest, boost::string_ref src, TabberParam tabr ) {
    NOAUTO CPCChar pDestStart( pDest );
+         auto     pszSrc( src.data() );
+   const auto     srcChars( src.length() );
    const auto     pSrcPastEnd( pszSrc + srcChars );
    auto    xCol( 0 );
    {
@@ -447,11 +453,10 @@ void FBUF::cat( PCChar pszNewLineData ) {
          }
       if( pBuf == pszNewLineData ) {
          getLineTabx( &xb, LastLine() );
-
          PutLine( LastLine(), xb.cat( pBuf, pNL-pBuf ) );
          }
       else {
-         PutLine( LineCount(), pBuf, pNL );
+         PutLine( LineCount(), se2bsr( pBuf, pNL ) );
          }
       if( !pNL ) break;
       pBuf = pNL + 1;
@@ -493,7 +498,7 @@ int FBUF::PutLastMultiline( PCChar buf ) {
          case '\x0A': pSegEnd = pX;  pNxtSegStart = pX + 1 + (pX[1] == '\x0D' ? 1 : 0);  break;
          }
       if( pSegEnd ) {
-         PutLine( LineCount(), pSegStart, pSegEnd );
+         PutLine( LineCount(), se2bsr( pSegStart, pSegEnd ) );
          ++lineCount;
          pX = pSegStart = pNxtSegStart;
          }
@@ -502,7 +507,7 @@ int FBUF::PutLastMultiline( PCChar buf ) {
       }
 
    if( pSegStart < pEos ) {
-      PutLine( LineCount(), pSegStart, pEos );
+      PutLine( LineCount(), se2bsr( pSegStart, pEos ) );
       ++lineCount;
       }
 
@@ -565,7 +570,7 @@ void FBUF::FmtLastLine( PCChar format, ...  ) {
    va_end( val );
    }
 
-void FBUF::PutLine( LINE yLine, PCChar pSrc, PCChar eos, PXbuf pXb ) {
+void FBUF::PutLine( LINE yLine, boost::string_ref srSrc, PXbuf pXb ) {
    // if( IsNoEdit() ) { DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() ); }
    BadParamIf( , IsNoEdit() );
    DirtyFBufAndDisplay();
@@ -581,14 +586,16 @@ void FBUF::PutLine( LINE yLine, PCChar pSrc, PCChar eos, PXbuf pXb ) {
       }
 
    linebuf tcbuf; // must be in scope for the remainder of the function!
-   if( !eos ) eos = Eos( pSrc );
-   auto numch( eos - pSrc );
+         auto numch( srSrc.length() );
+   const auto eos( srSrc.data() + srSrc.length() );
 
+   auto pSrc( srSrc.data() );
    if( TABCONV_0_NO_CONV != d_Tabconv ) {
       PChar pBuf; size_t bufsize;
-      if( numch > sizeof tcbuf-1 || (ColOfPtr( this->TabWidth(), pSrc, eos-1, eos ) > sizeof tcbuf-1-1) ) {
+      const auto lineCols( ColOfIdx( this->TabWidth(), srSrc, srSrc.length() ) );
+      if( srSrc.length() > sizeof tcbuf-1 || (lineCols > sizeof tcbuf-1-1) ) {
          if( pXb ) {
-            bufsize = numch + 1;
+            bufsize = srSrc.length() + 1;
             pBuf    = pXb->wresize( bufsize );
             goto CONVERT;
             }
@@ -602,9 +609,9 @@ CONVERT:
          switch( d_Tabconv ) { // compress spaces into tabs per this->d_Tabconv:
             default:
             case TABCONV_0_NO_CONV:                   Assert( 0 ); break;
-            case TABCONV_1_LEADING_SPCS_TO_TABS:      numch = spcs2tabs_leading       ( pBuf, bufsize, pSrc, numch, tabr ); break;
-            case TABCONV_2_SPCS_NOTIN_QUOTES_TO_TABS: numch = spcs2tabs_outside_quotes( pBuf, bufsize, pSrc, numch, tabr ); break;
-            case TABCONV_3_ALL_SPC_TO_TABS:           numch = spcs2tabs_all           ( pBuf, bufsize, pSrc, numch, tabr ); break;
+            case TABCONV_1_LEADING_SPCS_TO_TABS:      numch = spcs2tabs_leading       ( pBuf, bufsize, srSrc, tabr ); break;
+            case TABCONV_2_SPCS_NOTIN_QUOTES_TO_TABS: numch = spcs2tabs_outside_quotes( pBuf, bufsize, srSrc, tabr ); break;
+            case TABCONV_3_ALL_SPC_TO_TABS:           numch = spcs2tabs_all           ( pBuf, bufsize, srSrc, tabr ); break;
             }
          pSrc = pBuf;
          }
@@ -621,7 +628,7 @@ void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
    for( auto ix(0); ix<elems; ++ix ) {
       xb.cat( pa[ix] );
       }
-   PutLine( yLine, xb.c_str(), xb.c_str()+xb.length(), &xb2 );
+   PutLine( yLine, xb.bsr(), &xb2 );
    }
 
 //
@@ -777,7 +784,7 @@ void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollaps
    Xbuf xb, xb2;
    for( auto yLine( yTop ); yLine <= yBottom; ++yLine ) {
       GetLineWithSegRemoved( this, &xb, yLine, xLeft, boxWidth, fCollapse );
-      PutLine( yLine, xb.c_str(), nullptr, &xb2 );
+      PutLine( yLine, xb.bsr(), &xb2 );
       }
    }
 
@@ -2103,7 +2110,7 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
       Xbuf xb;
       for( ; ySrcStart <= ySrcEnd; ++ySrcStart, ++yDestStart ) {
          const auto src( FBsrc->PeekRawLine( ySrcStart ) );
-         FBdest->PutLine( yDestStart, src.data(), src.data() + src.length(), &xb );
+         FBdest->PutLine( yDestStart, src, &xb );
          }
       }
    }
@@ -2213,26 +2220,22 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
       }
 
    AdjMarksForInsertion( FBsrc, FBdest, xSrcLeft, ySrcTop, xSrcRight, ySrcBottom, xDst, yDst );
-
    const auto boxWidth( xSrcRight - xSrcLeft + 1 );
-
    const auto tws( FBsrc ? FBsrc ->TabWidth() : 0 );
    const auto twd(         FBdest->TabWidth()     );
-   std::string xbs, xbd;  // BUGBUG one buffer would be nicer ...
+   std::string stSrc, stDst;  // BUGBUG one buffer would be nicer ...
    for( auto ySrc( ySrcTop ); ySrc <= ySrcBottom ; ++ySrc, ++yDst ) {
       if( !FBsrc ) {
-         FBdest->GetLineForInsert( xbd, yDst, xDst, boxWidth );
+         FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
          }
       else {
-         FBsrc->GetLineForInsert( xbs, ySrc, xSrcRight + 1, 0 );
-         const auto six0( IdxOfColWithinString( tws, xbs, xSrcLeft  ) );
-         const auto six1( IdxOfColWithinString( tws, xbs, xSrcRight ) );
-         const auto segWidth( six1 - six0 );  1 && DBG( "%s segWidth=%" PR_SIZET "u", __func__, segWidth );
-         const auto srcchars(  FBdest->GetLineForInsert( xbd, yDst, xDst, 0 ) );
-         const auto dix0( IdxOfColWithinString( twd, xbd, xDst ) );
-         xbd.insert( dix0, xbs, six0, six1-six0+1 );
+         FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
+         const auto six0( IdxOfColWithinString( tws, stSrc, xSrcLeft  ) );
+         const auto six1( IdxOfColWithinString( tws, stSrc, xSrcRight ) );
+         FBdest->GetLineForInsert( stDst, yDst, xDst, 0 );
+         stDst.insert( IdxOfColWithinString( twd, stDst, xDst ), stSrc, six0, six1-six0+1 );
          }
-      FBdest->PutLine( yDst, xbd.c_str() );
+      FBdest->PutLine( yDst, stDst.c_str() );
       }
    }
 

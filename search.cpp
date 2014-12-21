@@ -1443,7 +1443,7 @@ void FBOP::InsLineSorted_( PFBUF fb, PXbuf xb, bool descending, LINE ySkipLeadin
       if( cmp < 0 )  yMax = cmpLine - 1;
       }
 
-   fb->InsLine( yMin, ptr, eos, xb );
+   fb->InsLine( yMin, se2bsr( ptr, eos ), xb );
    }
 
 
@@ -2832,7 +2832,7 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
    for( auto iy(1) ; iy < srcHdrLines ; ++iy ) {
       PCChar bos, eos;
       src ->PeekRawLineExists( iy, &bos, &eos );
-      dest->InsLine( destHdrLines++, bos, eos, &xbd );
+      dest->InsLine( destHdrLines++, se2bsr( bos, eos ), &xbd );
       }
    0 && DBG( "%s: %s merg [%d..%d]", __func__, src->Name(), srcHdrLines, src->LineCount()-1 );
    // merge (copy while sorting) all match lines
