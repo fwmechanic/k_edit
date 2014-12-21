@@ -88,7 +88,8 @@ bool ARG::towinclip() {
       // determine # of chars on each line
       long size(0);
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
-         size += pFBuf->GetLineSeg( stbuf, lineNum, xLeft, xRight ) + 2; // + 2 for '\r\n'
+         pFBuf->GetLineSeg( stbuf, lineNum, xLeft, xRight );
+         size += stbuf.length() + 2; // + 2 for '\r\n'
          }
 
       if( !PrepClip( size, &hglbCopy, &hglbBytes, &bufptr ) ) // +1 for trailing '\0'
@@ -97,7 +98,8 @@ bool ARG::towinclip() {
       // copy source data into into *bufptr
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
          const PCChar bs( bufptr );
-         const auto chars( pFBuf->GetLineSeg( stbuf, lineNum, xLeft, xRight ) );
+         pFBuf->GetLineSeg( stbuf, lineNum, xLeft, xRight );
+         const auto chars( stbuf.length() );
          memcpy( bufptr, stbuf.c_str(), chars );
          bufptr += chars;
          *bufptr++ = 0x0D; // line terminator '\r\n'

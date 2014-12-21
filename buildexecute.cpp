@@ -911,7 +911,8 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       else if( func == fn_right ) {                                      0 && DBG( "right: %d, %" PR_SIZET "u", xCursor, stb.length() );
          if( g_CurFBuf() && stb.length() == xCursor ) {
             const auto xx( xColInFile + xCursor );
-            const auto chars( g_CurFBuf()->GetLineSeg( stTmp, g_CursorLine(), xx, xx ) );    0 && DBG( "%d='%s' L=%d", xx, stTmp.c_str(), chars );
+            g_CurFBuf()->GetLineSeg( stTmp, g_CursorLine(), xx, xx );
+            const auto chars( stTmp.length() );                          0 && DBG( "%d='%s' L=%d", xx, stTmp.c_str(), chars );
             if( !stTmp.empty() ) {
                stb.push_back( stTmp[0] );
                }

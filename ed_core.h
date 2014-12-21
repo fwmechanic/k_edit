@@ -1434,7 +1434,8 @@ public:
    COL            getLineTabxPerRealtabs( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, g_fRealtabs ?0:' ' ); }
    COL            getLineTabxPerTabDisp ( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, fTabDisp()?0:' ' ); }
 
-   COL            GetLineSeg(       std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
+   std::string    GetLineSeg(                        LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
+   void           GetLineSeg(       std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
 
    int            GetLineForInsert     (  PXbuf pXb, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found

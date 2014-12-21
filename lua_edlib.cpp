@@ -447,7 +447,7 @@ FBUF_(GetLineSeg) {
       Xbuf xb; auto pXb(&xb);
  #endif
       std::string stbuf;
-      const auto chars( pf->GetLineSeg( stbuf, lnum, xLeftIncl, xRightIncl ) );
+      pf->GetLineSeg( stbuf, lnum, xLeftIncl, xRightIncl );
       R_lstr( stbuf.c_str(), stbuf.length() );
       }
    R_nil();

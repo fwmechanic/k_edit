@@ -1527,7 +1527,7 @@ COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
 //         then dest[0] = '\0' and retVal (chars returned in dest) == 0
 //
 // returns strlen of returned line
-COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
+void FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
    const auto tw( TabWidth() );
    PCChar lnptr; size_t lnchars;
    if(  yLine >= 0
@@ -1551,7 +1551,6 @@ COL FBUF::GetLineSeg( std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl
    else {
       st.clear();
       }
-   return st.length();
    }
 
 // open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;
