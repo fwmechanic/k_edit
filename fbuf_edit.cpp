@@ -103,14 +103,13 @@ STATIC_FXN bool spacesonly( boost::string_ref::const_iterator ptr, boost::string
    #define XLAT_chFill( chFill )
 #endif
 
-// a terminating NUL IS NOT added!!!  Call PrettifyStrcpy if you need a terminating NUL.
-// return value is # of chars actually copied into pDestBuf
-
 // intent (20141221) is that FormatExpandedSeg replace PrettifyStrcpy and PrettifyMemcpy
 // what's preventing this from happening?
 // 1) dest receives a terminating NUL
 // 2) Xbuf offers a writable-string (PChar) interface to the underlying allocated buffer
 //    (while std::string does NOT)
+// 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
+//    display line
 
 void FormatExpandedSeg
    ( std::string &dest, boost::string_ref src
@@ -168,8 +167,6 @@ void FormatExpandedSeg
       }
    }
 
-// a terminating NUL IS NOT added!!!  Call PrettifyStrcpy if you need a terminating NUL.
-// return value is # of chars actually copied into pDestBuf
 std::string FormatExpandedSeg
    ( boost::string_ref src
    , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
@@ -1621,6 +1618,26 @@ std::string FBUF::GetLineSeg( LINE yLine, COL xLeftIncl, COL xRightIncl ) const 
 //    original dest[xIns] is moved to dest[xIns+insertCols]
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
+int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const {
+   auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
+   const auto tw       ( TabWidth() );
+   const auto lineCols ( ColOfIdx( tw, dest, dest.length() ) );
+   // 0 && DBG( "%s: gLTPR |%" PR_BSR "| L %" PR_SIZET "u/%d (%d)", __func__, BSR(dest), lineCols, xIns );
+   // Assert( lineCols == lineChars );
+
+   if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
+      dest.append( xIns - lineCols, ' ' );
+      }
+   if( insertCols > 0 ) {
+      dest.insert( IdxOfColWithinString( tw, dest, xIns ), insertCols, ' ' );
+      }
+   return dest.length();
+   }
+
+// open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;
+//    original dest[xIns] is moved to dest[xIns+insertCols]
+// if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
+//
 int FBUF::GetLineForInsert( PXbuf pXb, const LINE yLine, COL xIns, COL insertCols ) const {
    auto       lineChars( getLineTabxPerRealtabs( pXb, yLine ) );
    auto       dest     ( pXb->wbuf() );
@@ -2201,24 +2218,19 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
 
    const auto tws( FBsrc ? FBsrc ->TabWidth() : 0 );
    const auto twd(         FBdest->TabWidth()     );
-   Xbuf xbs,xbd;  // BUGBUG one buffer would be nicer ...
+   std::string xbs, xbd;  // BUGBUG one buffer would be nicer ...
    for( auto ySrc( ySrcTop ); ySrc <= ySrcBottom ; ++ySrc, ++yDst ) {
       if( !FBsrc ) {
-         FBdest->GetLineForInsert( &xbd, yDst, xDst, boxWidth );
+         FBdest->GetLineForInsert( xbd, yDst, xDst, boxWidth );
          }
       else {
-         FBsrc->GetLineForInsert( &xbs, ySrc, xSrcRight + 1, 0 );
-         const auto srcbos( xbs.c_str() );
-         const auto srceos( Eos(srcbos) );
-         const auto pSegStart( PtrOfColWithinStringRegion( tws, srcbos, srceos, xSrcLeft  )     );
-         const auto pSegEnd  ( PtrOfColWithinStringRegion( tws, srcbos, srceos, xSrcRight ) + 1 );
-         const auto segWidth ( pSegEnd - pSegStart );  0 && DBG( "%s segWidth=%" PR_SIZET "u", __func__, segWidth );
-         const auto srcchars(  FBdest->GetLineForInsert( &xbd, yDst, xDst, 0 ) );
-         const auto dstbuf( xbd.wresize( srcchars + segWidth + 1 ) );
-         const auto pInsPt(    PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst )     );
-         // blow a hole for the to-be-inserted segment, then insert it
-         memmove( pInsPt + segWidth, pInsPt   , Strlen(pInsPt)+1 );
-         memcpy(  pInsPt           , pSegStart, segWidth         );
+         FBsrc->GetLineForInsert( xbs, ySrc, xSrcRight + 1, 0 );
+         const auto six0( IdxOfColWithinString( tws, xbs, xSrcLeft  ) );
+         const auto six1( IdxOfColWithinString( tws, xbs, xSrcRight ) );
+         const auto segWidth( six1 - six0 );  1 && DBG( "%s segWidth=%" PR_SIZET "u", __func__, segWidth );
+         const auto srcchars(  FBdest->GetLineForInsert( xbd, yDst, xDst, 0 ) );
+         const auto dix0( IdxOfColWithinString( twd, xbd, xDst ) );
+         xbd.insert( dix0, xbs, six0, six1-six0+1 );
          }
       FBdest->PutLine( yDst, xbd.c_str() );
       }

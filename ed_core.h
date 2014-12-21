@@ -1431,6 +1431,7 @@ private:
    COL            getLine_(       std::string &dest, LINE yLine, int chExpandTabs=0 ) const;
 public:
    std::string    getLineRaw(                        LINE yLine ) const;
+
    COL            getLineTabx(            PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, ' ' ); }
    COL            getLineTabxPerRealtabs( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, g_fRealtabs ?0:' ' ); }
    COL            getLineTabxPerTabDisp ( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, fTabDisp()?0:' ' ); }
@@ -1439,8 +1440,9 @@ public:
    COL            getLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ?0:' ' ); }
    COL            getLineTabxPerTabDisp ( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, fTabDisp()?0:' ' ); }
 
-   std::string    GetLineSeg(                        LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
-   int            GetLineForInsert     (  PXbuf pXb, LINE yLine, COL xIns , COL insertCols ) const;
+   std::string    GetLineSeg( LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
+   int            GetLineForInsert     (  std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
+   int            GetLineForInsert     (  PXbuf         pXb, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
 
    bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, size_t *pChars ) const; // returns RAW line content BY REFERENCE
