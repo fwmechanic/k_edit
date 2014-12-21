@@ -206,8 +206,7 @@ class FindPrevNextMatchHandler : public FileSearchMatchHandler {
    const bool   d_fIsRegex;
    const PCChar d_SrchStr;
    const size_t d_SrchStrLen;
-   const PChar  d_SrchDispStr;
-         size_t d_SrchDispStrLen;
+   const std::string d_SrchDispStr;
 
    void DrawDialog( PCChar hdr, PCChar trlr );
 
@@ -220,7 +219,6 @@ class FindPrevNextMatchHandler : public FileSearchMatchHandler {
    FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, PCChar srchStr );
    ~FindPrevNextMatchHandler() {
       Free_( PVoid(d_SrchStr) );
-      Free_( PVoid(d_SrchDispStr) );
       }
 
    void VShowResultsNoMacs() override;
@@ -232,11 +230,11 @@ void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
    const auto de_color( 0x5f );
    const auto ss_color( g_fCase ? 0x4f : 0x2f );
    VideoFlusher vf;
-   auto             chars (  VidWrStrColor( DialogLine(), 0    , hdr           , Strlen(hdr)      , g_colorInfo , false ) );
-   if( d_fIsRegex ) chars += VidWrStrColor( DialogLine(), chars, &chRex        , sizeof(chRex)    , de_color    , false );
-                    chars += VidWrStrColor( DialogLine(), chars, d_SrchDispStr , d_SrchDispStrLen , ss_color    , false );
-   if( d_fIsRegex ) chars += VidWrStrColor( DialogLine(), chars, &chRex        , sizeof(chRex)    , de_color    , false );
-                             VidWrStrColor( DialogLine(), chars, trlr          , Strlen(trlr)     , g_colorInfo , true  );
+   auto             chars (  VidWrStrColor( DialogLine(), 0    , hdr                  , Strlen(hdr)            , g_colorInfo , false ) );
+   if( d_fIsRegex ) chars += VidWrStrColor( DialogLine(), chars, &chRex               , sizeof(chRex)          , de_color    , false );
+                    chars += VidWrStrColor( DialogLine(), chars, d_SrchDispStr.data() , d_SrchDispStr.length() , ss_color    , false );
+   if( d_fIsRegex ) chars += VidWrStrColor( DialogLine(), chars, &chRex               , sizeof(chRex)          , de_color    , false );
+                             VidWrStrColor( DialogLine(), chars, trlr                 , Strlen(trlr)           , g_colorInfo , true  );
    }
 
 FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, PCChar srchStr )
@@ -245,11 +243,8 @@ FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fI
    , d_fIsRegex(fIsRegex)
    , d_SrchStr( Strdup( srchStr ) )
    , d_SrchStrLen( Strlen(d_SrchStr) )
-   , d_SrchDispStr( Strdup( srchStr ) )
-   , d_SrchDispStrLen( Strlen(srchStr) )
+   , d_SrchDispStr( FormatExpandedSeg( srchStr, 0, COL_MAX, 1, g_chTabDisp, g_chTrailSpaceDisp ) )
    {
-   d_SrchDispStrLen = PrettifyStrcpy( d_SrchDispStr, 1+d_SrchDispStrLen, srchStr, 1, g_chTabDisp, 0, g_chTrailSpaceDisp );
-
    if( !Interpreter::Interpreting() ) {
       DrawDialog( (('+'==d_dirCh)
                    ? "+Search for "
