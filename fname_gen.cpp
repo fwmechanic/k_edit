@@ -167,9 +167,9 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
          }
       RTN_false_ON_BRK;
 
-      const auto glif_rv( d_pFBuf->GetLineIsolateFilename( d_xb, d_curLine++, 0 ) );
+      const auto glif_rv( d_pFBuf->GetLineIsolateFilename( d_sbuf, d_curLine++, 0 ) );
       if( glif_rv < 0 ) return false;  // no more lines
-      if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_xb.c_str(), ONLY_FILES );
+      if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_sbuf.c_str(), ONLY_FILES );
       }
    }
 
