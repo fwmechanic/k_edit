@@ -95,6 +95,79 @@ STATIC_FXN bool spacesonly( boost::string_ref::const_iterator ptr, boost::string
 
 // a terminating NUL IS NOT added!!!  Call PrettifyStrcpy if you need a terminating NUL.
 // return value is # of chars actually copied into pDestBuf
+void FormatExpandedSeg
+   ( std::string &dest, boost::string_ref src
+   , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
+   ) {
+   // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
+   //
+   dest.clear();
+   if( !chTabExpand || !StrContainsTabs( src.data(), src.length() ) ) {
+      if( xStart <= src.length() ) {
+         src.remove_prefix( xStart );
+         const auto CopyBytes( Min( src.length(), maxChars ) );
+         dest.assign( src.data(), CopyBytes );
+         if( chTrailSpcs && CopyBytes==src.length() ) {
+            for( auto dit( dest.rbegin() ) ; dit != dest.rend() && *dit == ' ' ; ++dit ) {
+               *dit == chTrailSpcs;
+               }
+            }
+         }
+      return;
+      }
+
+   // the only way to solve the problem of "what happens if xStart is in the
+   // middle of a tab-expansion?" is to walk the src string from its beginning,
+   // even though we aren't necessarily _copying_ from the beginning.
+
+   COL xCol( 0 );
+   auto WR_CHAR = [&]( char ch ) { if( xCol++ >= xStart ) { dest.push_back( ch ); } };
+   const Tabber tabr( tabWidth );
+   auto it( src.cbegin() );
+   while( it != src.cend() && dest.length() < maxChars ) {
+      const auto ch( *it++ );
+      if( ch != HTAB ) {
+         WR_CHAR(ch);
+         }
+      else {
+         const auto tgt( tabr.ColOfNextTabStop( xCol ) );
+         auto chFill( chTabExpand );                       // chTabExpand == BIG_BULLET has special behavior:
+         while( xCol < tgt && dest.length() < maxChars ) {   // col containing actual HTAB will disp as BIG_BULLET
+            WR_CHAR(chFill);                               // remaining fill-in chars will show as SMALL_BULLET
+#if defined(_WIN32)
+            if( chFill == BIG_BULLET && USING_MS_OEM_CHARSET ) {
+                chFill = SMALL_BULLET;
+                }
+#endif
+            }
+         }
+      }
+
+   if( chTrailSpcs ) {
+      // it points just after the last source-char copied/xlated;
+      //    it == src.cend() (if the above loop terminated because 'it == src.cend()')
+      // OR it != src.cend() (if the above loop terminated due to 'dest.length() < maxChars' being false)
+      if( it == src.cend() || spacesonly( it, src.cend() ) ) { // _trailing_ spaces on the source side
+         for( auto dit( dest.rbegin() ) ; dit != dest.rend() && *dit == ' ' ; ++dit ) { // xlat all trailing spaces present in dest
+            *dit == chTrailSpcs;
+            }
+         }
+      }
+   }
+
+// a terminating NUL IS NOT added!!!  Call PrettifyStrcpy if you need a terminating NUL.
+// return value is # of chars actually copied into pDestBuf
+std::string FormatExpandedSeg
+   ( boost::string_ref src
+   , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
+   ) {
+   std::string rv;
+   FormatExpandedSeg( rv, src, xStart, maxChars, tabWidth, chTabExpand, chTrailSpcs );
+   return rv;
+   }
+
+// a terminating NUL IS NOT added!!!  Call PrettifyStrcpy if you need a terminating NUL.
+// return value is # of chars actually copied into pDestBuf
 COL PrettifyMemcpy
    ( const PChar pDestBuf, const size_t sizeof_dest
    , boost::string_ref src
@@ -128,13 +201,13 @@ COL PrettifyMemcpy
          auto pD(pDestBuf);
 
 #define  PD_EFF   (pD - xStart)
-#define  WR_CHAR(ch) {                                            \
-         if( PD_EFF >= pDestBuf ) { *PD_EFF = ch; /* ++chWr; */ } \
-         ++pD; ++xCol;                                            \
-         }
 
-   // COL chWr = 0;
    COL xCol( 0 );
+   auto WR_CHAR = [&]( char ch ) {
+      if( PD_EFF >= pDestBuf ) { *PD_EFF = ch; }
+      ++pD; ++xCol;
+      };
+
    auto it( src.cbegin() );
    while( it != src.cend() && PD_EFF <= pDestRightmostWritable ) {
       const auto ch( *it++ );
@@ -172,7 +245,6 @@ COL PrettifyMemcpy
    return 0;
    }
 #undef  PD_EFF
-#undef  WR_CHAR
 
 // a terminating NUL IS appended!!!  Use PrettifyMemcpy if you DON'T want one.
 // return value is # of chars actually copied into dest - 1; i.e. it does NOT count the terminating NUL
@@ -1506,6 +1578,12 @@ std::string FBUF::getLineRaw( LINE yLine ) const {
    return std::string( rv.data(), rv.length() );
    }
 
+COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
+   const auto rl( PeekRawLine( yLine ) );
+   FormatExpandedSeg( dest, rl, 0, COL_MAX, TabWidth(), ' ', chExpandTabs );
+   return dest.length();
+   }
+
 // returns strlen of returned line
 COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
    const auto rv( PeekRawLine( yLine ) );
@@ -1525,24 +1603,9 @@ COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
 //    - if NO chars exist in gap
 //         then rv.empty() == true
 std::string FBUF::GetLineSeg( LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
-   if( yLine >= 0 && yLine <= LastLine() && xLeftIncl <= xRightIncl ) {
-      const auto rl( PeekRawLine( yLine ) ); const auto lnptr( rl.data() ); const auto lnchars( rl.length() );
-      const auto tw( TabWidth() );
-      if( xLeftIncl < StrCols( tw, lnptr, lnptr + lnchars ) ) {
-      # if 1
-         // BUGBUG this obviously does NOT perform (necessary) tab-expansion (PrettifyStrcpy()) !!!
-         const auto pLeft ( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xLeftIncl  ) );
-         const auto pRight( PtrOfColWithinStringRegionNoEos( tw, lnptr, lnptr+lnchars, xRightIncl ) );
-         const auto chars( pRight - pLeft + 1 );
-         0 && DBG( "%s [%d,%p L %" PR_SIZET "u][%d..%d]P:%p,%p (%" PR_SIZET "u)", __func__, yLine, lnptr, lnchars, xLeftIncl, xRightIncl, pLeft, pRight, 1+chars );
-         return std::string( pLeft, chars );
-      # else
-         Constrain( 0, &xRightIncl, COL_MAX-2 ); // prevent size calc (next) from overflowing
-         const auto size( 1 + SmallerOf( xRightIncl - xLeftIncl + 1, StrCols( tw, lnptr, lnptr+lnchars ) ) );
-         const auto buf( pXb->wresize( size ) );
-         const auto rv( PrettifyStrcpy( buf, size, boost::string_ref( lnptr, lnchars ), tw, ' ', xLeftIncl ) );
-      # endif
-         }
+   if( yLine >= 0 && yLine <= LastLine() ) {
+      const auto rl( PeekRawLine( yLine ) );
+      return FormatExpandedSeg( rl, xLeftIncl, xRightIncl - xLeftIncl + 1, TabWidth() );
       }
    return std::string( "" );
    }

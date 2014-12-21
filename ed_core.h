@@ -1428,14 +1428,18 @@ public:
    //************ GetLine
 private:
    COL            getLine_(               PXbuf pXb, LINE yLine, int chExpandTabs=0 ) const;
+   COL            getLine_(       std::string &dest, LINE yLine, int chExpandTabs=0 ) const;
 public:
    std::string    getLineRaw(                        LINE yLine ) const;
    COL            getLineTabx(            PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, ' ' ); }
    COL            getLineTabxPerRealtabs( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, g_fRealtabs ?0:' ' ); }
    COL            getLineTabxPerTabDisp ( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, fTabDisp()?0:' ' ); }
 
-   std::string    GetLineSeg(                        LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
+   COL            getLineTabx(            std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
+   COL            getLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ?0:' ' ); }
+   COL            getLineTabxPerTabDisp ( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, fTabDisp()?0:' ' ); }
 
+   std::string    GetLineSeg(                        LINE yLine, COL xLeftIncl, COL xRightIncl ) const;
    int            GetLineForInsert     (  PXbuf pXb, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
 
@@ -1532,9 +1536,10 @@ extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
 extern COL     StrCols(        COL tabWidth, PCChar ptr, PCChar eos=nullptr );
 
+extern void        FormatExpandedSeg ( std::string &dest, boost::string_ref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
+extern std::string FormatExpandedSeg (                    boost::string_ref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
 extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, boost::string_ref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
 extern COL     PrettifyStrcpy( PChar pDestBuf, size_t sizeof_dest, boost::string_ref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
-
 
 namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Prefer non-member non-friend functions to member functions."
 

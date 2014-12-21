@@ -336,9 +336,9 @@ int MaxIndentAccumulator::addSample( PCChar buf, bool fLastLine ) {
 void FBUF::CalcIndent( bool fWholeFileScan ) { 0 && DBG( "%s ********************************************", __func__ );
    MaxIndentAccumulator maxIn;
    d_IndentIncrement = 0;
-   Xbuf xb;
+   std::string xb;
    for( auto yLine(0) ; yLine < LineCount() ; ++yLine ) {
-      getLineTabx( &xb, yLine );
+      getLineTabx( xb, yLine );
       const auto goodIndentValue( maxIn.addSample( xb.c_str(), false ) );
       if( goodIndentValue && !fWholeFileScan ) {
          d_IndentIncrement = goodIndentValue;
