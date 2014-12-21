@@ -93,8 +93,25 @@ STATIC_FXN bool spacesonly( boost::string_ref::const_iterator ptr, boost::string
    return true;
    }
 
+
+#if defined(_WIN32)
+   #define XLAT_chFill( chFill ) \
+                    if( chFill == BIG_BULLET && USING_MS_OEM_CHARSET ) { \
+                        chFill = SMALL_BULLET;                           \
+                        }
+#else
+   #define XLAT_chFill( chFill )
+#endif
+
 // a terminating NUL IS NOT added!!!  Call PrettifyStrcpy if you need a terminating NUL.
 // return value is # of chars actually copied into pDestBuf
+
+// intent (20141221) is that FormatExpandedSeg replace PrettifyStrcpy and PrettifyMemcpy
+// what's preventing this from happening?
+// 1) dest receives a terminating NUL
+// 2) Xbuf offers a writable-string (PChar) interface to the underlying allocated buffer
+//    (while std::string does NOT)
+
 void FormatExpandedSeg
    ( std::string &dest, boost::string_ref src
    , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
@@ -132,13 +149,9 @@ void FormatExpandedSeg
       else {
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
          auto chFill( chTabExpand );                       // chTabExpand == BIG_BULLET has special behavior:
-         while( xCol < tgt && dest.length() < maxChars ) {   // col containing actual HTAB will disp as BIG_BULLET
+         while( xCol < tgt && dest.length() < maxChars ) { // col containing actual HTAB will disp as BIG_BULLET
             WR_CHAR(chFill);                               // remaining fill-in chars will show as SMALL_BULLET
-#if defined(_WIN32)
-            if( chFill == BIG_BULLET && USING_MS_OEM_CHARSET ) {
-                chFill = SMALL_BULLET;
-                }
-#endif
+            XLAT_chFill( chFill )
             }
          }
       }
@@ -199,9 +212,7 @@ COL PrettifyMemcpy
    const Tabber tabr( tabWidth );
    const auto pDestRightmostWritable( pDestBuf + sizeof_dest - 1 );
          auto pD(pDestBuf);
-
 #define  PD_EFF   (pD - xStart)
-
    COL xCol( 0 );
    auto WR_CHAR = [&]( char ch ) {
       if( PD_EFF >= pDestBuf ) { *PD_EFF = ch; }
@@ -219,11 +230,7 @@ COL PrettifyMemcpy
          auto chFill( chTabExpand );                                 // chTabExpand == BIG_BULLET has special behavior:
          while( pD < limit && PD_EFF <= pDestRightmostWritable ) {   // col containing actual HTAB will disp as BIG_BULLET
             WR_CHAR(chFill);                                         // remaining fill-in chars will show as SMALL_BULLET
-#if defined(_WIN32)
-            if( chFill == BIG_BULLET && USING_MS_OEM_CHARSET ) {
-                chFill = SMALL_BULLET;
-                }
-#endif
+            XLAT_chFill( chFill )
             }
          }
       }
