@@ -1629,7 +1629,7 @@ int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
    auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
    const auto tw       ( TabWidth() );
    const auto lineCols ( ColOfIdx( tw, dest, dest.length() ) );
-   // 0 && DBG( "%s: gLTPR |%" PR_BSR "| L %" PR_SIZET "u/%d (%d)", __func__, BSR(dest), lineCols, xIns );
+   1 && DBG( "%s: gLTPR |%" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
    // Assert( lineCols == lineChars );
 
    if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
@@ -1638,8 +1638,13 @@ int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
    if( insertCols > 0 ) {
       dest.insert( IdxOfColWithinString( tw, dest, xIns ), insertCols, ' ' );
       }
+   1 && DBG( "%s: gLTPR |%" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
    return dest.length();
    }
+/*
+x
+x
+*/
 
 // open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;
 //    original dest[xIns] is moved to dest[xIns+insertCols]
@@ -2215,9 +2220,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
        (  (WithinRangeInclusive( xSrcLeft,                        xDst, xSrcRight ) && WithinRangeInclusive( ySrcTop, yDst                       , ySrcBottom) )
        || (WithinRangeInclusive( xSrcLeft, xSrcRight - xSrcLeft + xDst, xSrcRight ) && WithinRangeInclusive( ySrcTop, yDst - ySrcTop + ySrcBottom, ySrcBottom) )
        )
-     ) {
-      return;
-      }
+     ) { return; }
 
    AdjMarksForInsertion( FBsrc, FBdest, xSrcLeft, ySrcTop, xSrcRight, ySrcBottom, xDst, yDst );
    const auto boxWidth( xSrcRight - xSrcLeft + 1 );
@@ -2232,13 +2235,12 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
          FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
          const auto six0( IdxOfColWithinString( tws, stSrc, xSrcLeft  ) );
          const auto six1( IdxOfColWithinString( tws, stSrc, xSrcRight ) );
-         FBdest->GetLineForInsert( stDst, yDst, xDst, 0 );
-         stDst.insert( IdxOfColWithinString( twd, stDst, xDst ), stSrc, six0, six1-six0+1 );
+         FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
+         stDst.replace( IdxOfColWithinString( twd, stDst, xDst ), boxWidth, stSrc, six0, six1 - six0 + 1 );
          }
-      FBdest->PutLine( yDst, stDst.c_str() );
+      FBdest->PutLine( yDst, stDst );
       }
    }
-
 
 void FBUF::SetLineInfoCount( const LINE linesNeeded ) {
    if( !d_paLineInfo || d_naLineInfoElements < linesNeeded ) { 0 && DBG( "XPf2NL LineInfo[] %s: (%d,%d) -> %d", Name(), LineCount(), d_naLineInfoElements, linesNeeded );
