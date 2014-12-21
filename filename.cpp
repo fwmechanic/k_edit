@@ -70,7 +70,7 @@ bool Path::IsDotOrDotDot( boost::string_ref str ) { // true if str _ends with_ "
    const auto eos( pC + len );
    return (len==1 && 0==memcmp( pC, "." , 1 ))
        || (len==2 && 0==memcmp( pC, "..", 2 ))
-#define LCMP( nn, st )  (len > (nn) && 0==memcmp( eos - (nn), PATH_SEP_STR "." , (nn) ))
+#define LCMP( nn, st )  (len > (nn) && 0==memcmp( eos - (nn), st , (nn) ))
        || LCMP( 2, PATH_SEP_STR "." )
        || LCMP( 3, PATH_SEP_STR "." PATH_SEP_STR )
        || LCMP( 3, PATH_SEP_STR ".." )
