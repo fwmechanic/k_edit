@@ -2381,7 +2381,8 @@ STATIC_FXN void GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf
    }
 
 STATIC_FXN void RedrawScreen() {
-#define  SHOW_DRAWS  defined(_WIN32)
+// #define  SHOW_DRAWS  defined(_WIN32)
+#define  SHOW_DRAWS  0
    #if SHOW_DRAWS
    linebuf lbf;  PChar pLbf = lbf;  *pLbf++ = chLSQ;
    #define  ShowDraws( code )  code
