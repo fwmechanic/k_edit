@@ -1072,7 +1072,6 @@ STATIC_FXN boost::string_ref ParseRawMacroText_ContinuesNextLine( boost::string_
 
    states stateWhereWhitespcLastSeen( outsideQuote );
    states state( outsideQuote );
-
    auto fChIsWhite( true );
 
    #if 0
@@ -1143,77 +1142,58 @@ STATIC_FXN boost::string_ref ParseRawMacroText_ContinuesNextLine( boost::string_
    return rv;
    }
 
-enum AL2MSS {
-   HAVE_CONTENT ,
-   FOUND_TAG    ,
-   BLANK_LINE   ,
-   };
-class MacroScanIntf {
-   PFBUF        d_pFBuf  ;
-public:
-   std::string  d_dest;
-   LINE         d_yMacCur;
-
-   MacroScanIntf( PFBUF pFBuf_, LINE yMacCur_ )
-      : d_pFBuf  ( pFBuf_   )
-      , d_yMacCur( yMacCur_ )
-      {}
-
-   AL2MSS AppendLineToMacroSrcString();
-   };
-
-// reads lines until A MACRO definition is complete (IOW, an EoL w/o continuation char is reached)
-AL2MSS MacroScanIntf::AppendLineToMacroSrcString() { enum { DBGEN=0 };
-   for( ; d_yMacCur <= d_pFBuf->LastLine() ; ++d_yMacCur ) {
-      const auto rl( d_pFBuf->PeekRawLine( d_yMacCur ) );
-      if( !IsolateTagStr( rl ).empty() ) { DBGEN && DBG( "L %d TAG VIOLATION", d_yMacCur );
-         return FOUND_TAG;
-         }
-
-      auto continues( false );
-      const auto parsed( ParseRawMacroText_ContinuesNextLine( rl, continues ) );
-      d_dest.append( parsed.data(), parsed.length() );  DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(d_dest) );
-      if( !continues && !IsStringBlank( d_dest ) ) {
-         DBGEN && DBG( "RTN HvContent" );
-         return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
-         }
-      }
-   DBGEN && DBG( "RTN ?" );
-   return !IsStringBlank( d_dest ) ? HAVE_CONTENT : BLANK_LINE;
-   }
-
-bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) {
-   enum {DBGEN=0};
+bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) { enum {DBGEN=0};
    DBGEN && DBG( "%s: {%s} L [%d..%d]", __func__, title, yStart, yEnd );
-   {
-   const auto lastLine( pFBuf->LastLine() );
-   if( yEnd < 0 || yEnd > lastLine )
-       yEnd = lastLine;
-   }
+   if( yEnd < 0 || yEnd > pFBuf->LastLine() ) {
+      yEnd = pFBuf->LastLine();
+      }
+
+   enum AL2MSS { HAVE_CONTENT, FOUND_TAG, BLANK_LINE, };
+   std::string d_dest;
+   auto d_yMacCur = yStart;
+   // reads lines until A MACRO definition is complete (IOW, an EoL w/o continuation char is reached)
+   auto AppendLineToMacroSrcString = [&]() -> AL2MSS  {
+      for( ; d_yMacCur <= yEnd ; ++d_yMacCur ) {
+         const auto rl( pFBuf->PeekRawLine( d_yMacCur ) );
+         if( !IsolateTagStr( rl ).empty() ) { DBGEN && DBG( "L %d TAG VIOLATION", d_yMacCur );
+            return FOUND_TAG;
+            }
+
+         auto continues( false );
+         const auto parsed( ParseRawMacroText_ContinuesNextLine( rl, continues ) );
+         d_dest.append( parsed.data(), parsed.length() );  DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(d_dest) );
+         if( !continues && !IsStringBlank( d_dest ) ) {
+            DBGEN && DBG( "RTN HvContent" );
+            return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
+            }
+         }
+      DBGEN && DBG( "RTN ?" );
+      return !IsStringBlank( d_dest ) ? HAVE_CONTENT : BLANK_LINE;
+      };
+
    auto fContinueScan( true ); auto fAssignError( false ); auto assignsDone( 0 );
-   MacroScanIntf msi( pFBuf, yStart );
-   for( ; fContinueScan && msi.d_yMacCur <= yEnd ; ++msi.d_yMacCur ) {  DBGEN && DBG( "%s L %d", __func__, msi.d_yMacCur );
-      const auto rslt( msi.AppendLineToMacroSrcString() );
-      DBGEN && DBG( "%s L %d rslt=%d", __func__, msi.d_yMacCur, rslt );
+   for( ; fContinueScan && d_yMacCur <= yEnd ; ++d_yMacCur ) {  DBGEN && DBG( "%s L %d", __func__, d_yMacCur );
+      const auto rslt( AppendLineToMacroSrcString() );
+      DBGEN && DBG( "%s L %d rslt=%d", __func__, d_yMacCur, rslt );
       switch( rslt ) {
-         case HAVE_CONTENT       :  DBGEN && DBG( "assigning --- |%s|", msi.d_dest.c_str() );
-                                    if( !AssignStrOk( msi.d_dest.c_str() ) ) { DBGEN && DBG( "%s atom failed '%s'", __func__, msi.d_dest.c_str() );
+         case HAVE_CONTENT       :  DBGEN && DBG( "assigning --- |%s|", d_dest.c_str() );
+                                    if( !AssignStrOk( d_dest.c_str() ) ) { DBGEN && DBG( "%s atom failed '%s'", __func__, d_dest.c_str() );
                                        if( pErrorPt ) {
-                                          pErrorPt->Set( msi.d_yMacCur, 0 );
+                                          pErrorPt->Set( d_yMacCur, 0 );
                                           }
                                        fAssignError = true;
                                        }
-                                    else {                               DBGEN && DBG( "%s atom OKOKOK '%s'", __func__, msi.d_dest.c_str() );
+                                    else {                                 DBGEN && DBG( "%s atom OKOKOK '%s'", __func__, d_dest.c_str() );
                                        ++assignsDone;
                                        }
-                                    msi.d_dest.clear();
+                                    d_dest.clear();
                                     break;
          case BLANK_LINE         :  /* keep going */        break;
          case FOUND_TAG          :  fContinueScan = false;  break;
          default                 :  fContinueScan = false;  break;
          }
       }
-   DBGEN && DBG( "%s: {%s} L [%d..%d/%d] = %d", __func__, title, yStart, msi.d_yMacCur, yEnd, assignsDone );
+   DBGEN && DBG( "%s: {%s} L [%d..%d/%d] = %d", __func__, title, yStart, d_yMacCur, yEnd, assignsDone );
 
    if( pAssignsDone )  *pAssignsDone = assignsDone;
 
