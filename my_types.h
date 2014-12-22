@@ -34,7 +34,7 @@
 #   define PR_PTRDIFFT "I"
 #   define PR_TIMET "I64"
 #else
-#   define PR_BSRSIZET "ll"
+#   define PR_BSRSIZET "l"
 #   define PR_SIZET "z"
 #   define PR_PTRDIFFT "t"
 #   define PR_TIMET "l"
