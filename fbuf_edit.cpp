@@ -1483,7 +1483,7 @@ boost::string_ref::size_type CaptiveIdxOfCol( COL tabWidth, boost::string_ref co
 STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
    const boost::string_ref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
-      printf( "%s( %s, %d ) -> %d\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
+      printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
       }
    printf( "\n" );
    }
@@ -1491,7 +1491,7 @@ STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
 STATIC_FXN void sweep_FreeIdxOfCol( COL tw, PCChar content ) {
    const boost::string_ref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
-      printf( "%s( %s, %d ) -> %d\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) );
+      printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) );
       }
    printf( "\n" );
    }
@@ -1651,7 +1651,7 @@ int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
       }
    if( insertCols > 0 ) {
       const auto ix( CaptiveIdxOfCol( tw, dest, xIns ) );
-      DB && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d) [%d]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
+      DB && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
       dest.insert( ix, insertCols, ' ' );
       }
    DB && DBG( "%s: gLTPR |%" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );

@@ -29,16 +29,19 @@
 #if defined(__x86_64__) || defined(__ppc64__)
 // #define ENVIRONMENT64
 #if defined(_WIN32)
+#   define PR_BSRSIZET "ll"
 #   define PR_SIZET "I"
 #   define PR_PTRDIFFT "I"
 #   define PR_TIMET "I64"
 #else
+#   define PR_BSRSIZET "ll"
 #   define PR_SIZET "z"
 #   define PR_PTRDIFFT "t"
 #   define PR_TIMET "l"
 #endif
 #else
 // #   define ENVIRONMENT32
+#   define PR_BSRSIZET ""
 #   define PR_SIZET ""
 #   define PR_PTRDIFFT ""
 #   define PR_TIMET "l"

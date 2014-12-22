@@ -567,7 +567,7 @@
    cd:=cd2file setfile meta tags
 
    eth:= cancel arg "http://www.speedtest.net/" setfile \
-         cancel Arg myscripts "etheric.kdb" setfile endfile emacsnewl begline cur_yyyymmdd "_" cur_hhmmss " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Buffalo WLAN)"
+         cancel Arg myscripts "etheric.kdb" setfile endfile emacsnewl begline cur_yyyymmdd "_" cur_hhmmss " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Ubiquiti WLAN)"
 
    #
    # ALT+#key (Alt+1, ..., Alt+9, Alt+0)
