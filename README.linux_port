@@ -2,8 +2,8 @@
 CODING CONVENTIONS *** existing code is uniformly formatted.  Get used to it.
     Some notable divergences from common conventions are called out next:
 
-  * USE NO 1-character identifiers!  Even "ii" is better than "i"!
   * USE NO TABS (except as required in makefiles)
+  * USE NO 1-character identifiers!  Even "ii" is better than "i"!
   * 3 spaces per indent level
   * DO NOT slavishly WRAP source code LINES @ 80th column; I haven't used a
     no-more-than-80-column terminal ... _ever_ (and I've been using Linux via
@@ -24,9 +24,21 @@ CODING CONVENTIONS *** existing code is uniformly formatted.  Get used to it.
 
 Semantic Coding Guidelines
 
-  * When strings are being assembled, prefer std::string, and
-    When strings are being referenced, prefer boost::string_ref
-    Deprecate (pointer to) ASCIZ strings in lieu of the above whereever possible.
+  * When strings are being assembled, prefer std::string
+  * When strings are being referenced, prefer boost::string_ref
+  * Deprecate (pointer to) ASCI_Z_ string in lieu of the above whereever possible.
+  * You will see many duplications of methods and functions along the axis of
+      * std::string vs. Xbuf         param or retval
+      * boost::string_ref vs. PCChar param or retval
+      in all cases, prefer the first to the second (try to rmv the second)
+      this does not mean that the first is as well-tested as the second!
+
+Weaknesses
+
+  * As per #1 coding convention, I eschew tabs; Tabs are responsible for a large
+    amount of cruft in the K code, and even so, are not superbly supported.  if
+    not for GNU Make, I would have long ago declared tab characters an
+    unsupported "feature" and removed from K all related code.
 
 Key goals
 
