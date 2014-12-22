@@ -1329,34 +1329,24 @@ bool ARG::paste() {
    }
 
 
-COL FirstNonBlankCh( PCChar str, int chars ) {
-   const auto pastEnd( str + chars );
-   for( auto st( str ); st < pastEnd; ++st )
-      if( !isWhite( *st ) )
-         return st-str;
+COL FirstNonBlankCh( boost::string_ref src ) {
+   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it )
+      if( !isWhite( *it ) )
+         return std::distance( src.cbegin(), it );
 
    return -1;
    }
 
-bool IsStringBlank( PCChar str, int chars ) {
-   const auto pastEnd( str + chars );
-   while( str < pastEnd )
-      if( !isWhite( *str++ ) )
+bool IsStringBlank( boost::string_ref src ) {
+   for( auto ch : src )
+      if( !isWhite( ch ) )
          return false;
 
    return true;
    }
 
-bool IsStringBlank( PCChar str ) {
-   return IsStringBlank( str, Strlen( str ) );
-   }
-
 bool FBOP::IsLineBlank( PCFBUF fb, LINE yLine ) {
-   PCChar ptr; size_t chars;
-   if( fb->PeekRawLineExists( yLine, &ptr, &chars ) && !IsStringBlank( ptr, chars ) )
-      return false;
-
-   return true;
+   return IsStringBlank( fb->PeekRawLine( yLine ) );
    }
 
 bool FBOP::IsBlank( PCFBUF fb ) {

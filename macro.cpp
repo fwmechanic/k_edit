@@ -1181,11 +1181,11 @@ AL2MSS MacroScanIntf::AppendLineToMacroSrcString() {
       d_dest.cat( d_src.c_str() );
       CPChar parse( d_dest.wbuf() + oNewLineSeg );  DBGEN && DBG( "L %d |%s|", d_yMacCur + 1, parse );
       const auto continues( ParseRawMacroText_ContinuesNextLine( parse ) );
-      if( !continues && !IsStringBlank( d_dest.c_str() ) ) {
+      if( !continues && !IsStringBlank( d_dest.bsr() ) ) {
          return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
          }
       }
-   return !IsStringBlank( d_dest.c_str() ) ? HAVE_CONTENT : BLANK_LINE;
+   return !IsStringBlank( d_dest.bsr() ) ? HAVE_CONTENT : BLANK_LINE;
    }
 
 bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) {

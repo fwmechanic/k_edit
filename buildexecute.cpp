@@ -470,6 +470,8 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
    return true; //========================================================================================
    }
 
+#ifdef fn_stream
+
 STATIC_FXN PXbuf StreamArgToString( PXbuf dest, PFBUF pfb, Rect stream ) {
    dest->clear();
    const auto yMax( Min( pfb->LastLine(), stream.flMax.lin ) );
@@ -542,8 +544,6 @@ STATIC_FXN PXbuf StreamArgToString( PXbuf dest, PFBUF pfb, Rect stream ) {
       }
    return dest;
    }
-
-#ifdef fn_stream
 
 bool ARG::stream() {  // test for StreamArgToString
    auto cArg(0);      // stream:alt+k

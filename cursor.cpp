@@ -52,11 +52,10 @@ COL FBOP::ColOfFirstNonBlankChar( PCFBUF fb, LINE yLine ) {
    if( yLine < 0 ) yLine = g_CursorLine();
 
    if( FBOP::IsLineBlank( fb, yLine ) ) return -1;
-   PCChar ptr; size_t chars;
-   fb->PeekRawLineExists( yLine, &ptr, &chars );
-   const auto ix( FirstNonBlankCh( ptr, chars ) );
+   const auto rl( fb->PeekRawLine( yLine ) );
+   const auto ix( FirstNonBlankCh( rl ) );
    if( ix < 0 ) return -1;
-   return ColOfPtr( fb->TabWidth(), ptr, ptr+ix, ptr+chars );
+   return ColOfFreeIdx( fb->TabWidth(), rl, ix );
    }
 
 bool ARG::begline() {

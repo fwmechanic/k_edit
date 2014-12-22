@@ -551,7 +551,7 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    }
 
 void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
-   if( d_view.GetBOXSTR_Selection( d_stCandidate ) && !IsStringBlank( d_stCandidate.c_str() ) ) {
+   if( d_view.GetBOXSTR_Selection( d_stCandidate ) && !IsStringBlank( d_stCandidate ) ) {
       if( d_stSel != d_stCandidate ) {
          d_stSel = d_stCandidate;
          d_stSel.push_back( 0 );  // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string

@@ -84,8 +84,7 @@ TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
 
 extern char  toLower(     int ch );
-extern bool  IsStringBlank( PCChar str, int chars );
-extern bool  IsStringBlank( PCChar str );
+extern bool  IsStringBlank( boost::string_ref src );
 extern bool  StrEmpty(    PCChar inbuf );
 extern PChar suckwhite(   PChar string, int xMin, int xMax );
 
