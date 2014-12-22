@@ -1067,40 +1067,33 @@ bool ARG::record() {
    }
 
 
-#define  DBG_ASGN_PARSE  0
-
-#if DBG_ASGN_PARSE
-
-STATIC_FXN void showStChange( int line, states statevar, states newval, PCChar pC, PCChar pC_start ) {
-   DBG( "[%3d] %c: St %d -> %d L%d", pC - pC_start, *pC, statevar, newval, line );
-   }
-
-#endif
-
-
-STATIC_FXN bool ParseRawMacroText_ContinuesNextLine( PChar pDest ) {
+STATIC_FXN boost::string_ref ParseRawMacroText_ContinuesNextLine( boost::string_ref src, bool &continues ) {
    enum states { outsideQuote, inQuote, prevCharWhite, contCharSeen };
 
-   PChar pContinuationChar( nullptr );
    states stateWhereWhitespcLastSeen( outsideQuote );
    states state( outsideQuote );
 
    auto fChIsWhite( true );
 
-   #if DBG_ASGN_PARSE
+   #if 0
+   auto showStChange = []( int line, states statevar, states newval, PCChar pC, PCChar pC_start ) {
+      DBG( "[%3d] %c: St %d -> %d L%d", pC - pC_start, *pC, statevar, newval, line );
+      };
    #define  ChangeState( newval )  ( state = newval, showStChange( __LINE__, state, newval, pDest, pHeapBuf ) )
    #else
    #define  ChangeState( newval )  ( state = newval )
    #endif
 
-   for( ; *pDest ; ++pDest ) {
+   auto itEarlyTerm       ( src.cend() );
+   auto itContinuationChar( src.cend() );
+   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
       enum { RSRCFILE_COMMENT_DELIM = '#' };
-      if( RSRCFILE_COMMENT_DELIM == *pDest && fChIsWhite && outsideQuote == stateWhereWhitespcLastSeen ) {
-         *pDest = '\0'; // term string early and force a break from innerLoop
+      if( RSRCFILE_COMMENT_DELIM == *it && fChIsWhite && outsideQuote == stateWhereWhitespcLastSeen ) {
+         itEarlyTerm = it; // term string early and force a break from innerLoop
          break;
          }
 
-      fChIsWhite = isWhite( *pDest );
+      fChIsWhite = isWhite( *it );
 
       switch( state ) {
        default:             break;
@@ -1109,7 +1102,7 @@ STATIC_FXN bool ParseRawMacroText_ContinuesNextLine( PChar pDest ) {
                                stateWhereWhitespcLastSeen = state;
                                ChangeState( prevCharWhite );
                                }
-                            else if( '"' == *pDest ) {
+                            else if( '"' == *it ) {
                                ChangeState( inQuote );
                                }
                             break;
@@ -1118,19 +1111,19 @@ STATIC_FXN bool ParseRawMacroText_ContinuesNextLine( PChar pDest ) {
                                stateWhereWhitespcLastSeen = state;
                                ChangeState( prevCharWhite );
                                }
-                            else if( '"' == *pDest ) {
+                            else if( '"' == *it ) {
                                ChangeState( outsideQuote );
                                }
                             break;
 
-       case prevCharWhite:  if( '\\' == *pDest ) { // continuation char seen?
+       case prevCharWhite:  if( '\\' == *it ) { // continuation char seen?
                                ChangeState( contCharSeen );
-                               pContinuationChar = pDest;
+                               itContinuationChar = it;
                                break;
                                }
                             //lint -fallthrough
        case contCharSeen:   if( !fChIsWhite ) {
-                               if( '"' == *pDest )
+                               if( '"' == *it )
                                   ChangeState( (inQuote == stateWhereWhitespcLastSeen) ? outsideQuote : inQuote );
                                else
                                   ChangeState( stateWhereWhitespcLastSeen );
@@ -1138,14 +1131,16 @@ STATIC_FXN bool ParseRawMacroText_ContinuesNextLine( PChar pDest ) {
                             break;
        }
       }
-
    #undef  ChangeState
 
-   if( contCharSeen == state ) {
-      *(pContinuationChar-1) = '\0'; // the continuation char is always preceded by a space which is NOT included in the macro text
+   continues = contCharSeen == state;
+   if( continues && itEarlyTerm == src.cend() ) {
+      itEarlyTerm = itContinuationChar - 1; // the continuation char is always preceded by a space which is NOT included in the macro text
       }
 
-   return contCharSeen == state;
+   const auto rv( src.substr( 0, std::distance( src.cbegin(), itEarlyTerm ) ) );
+   0 && DBG( "--> %" PR_BSR "|", BSR(rv) );
+   return rv;
    }
 
 enum AL2MSS {
@@ -1154,10 +1149,10 @@ enum AL2MSS {
    BLANK_LINE   ,
    };
 class MacroScanIntf {
-   PFBUF d_pFBuf       ;
-   Xbuf  d_dest, d_src ;
+   PFBUF        d_pFBuf  ;
 public:
-   LINE  d_yMacCur     ;
+   std::string  d_dest;
+   LINE         d_yMacCur;
 
    MacroScanIntf( PFBUF pFBuf_, LINE yMacCur_ )
       : d_pFBuf  ( pFBuf_   )
@@ -1165,27 +1160,26 @@ public:
       {}
 
    AL2MSS AppendLineToMacroSrcString();
-   PXbuf destbuf() { return &d_dest; }
    };
 
 // reads lines until A MACRO definition is complete (IOW, an EoL w/o continuation char is reached)
-AL2MSS MacroScanIntf::AppendLineToMacroSrcString() {
-   enum {DBGEN=0};
+AL2MSS MacroScanIntf::AppendLineToMacroSrcString() { enum { DBGEN=0 };
    for( ; d_yMacCur <= d_pFBuf->LastLine() ; ++d_yMacCur ) {
-      d_pFBuf->getLineTabxPerRealtabs( &d_src, d_yMacCur );
-      if( !IsolateTagStr( boost::string_ref(d_src.wbuf()) ).empty() ) { 0 && DBG( "L %d TAG VIOLATION", d_yMacCur );
+      const auto rl( d_pFBuf->PeekRawLine( d_yMacCur ) );
+      if( !IsolateTagStr( rl ).empty() ) { DBGEN && DBG( "L %d TAG VIOLATION", d_yMacCur );
          return FOUND_TAG;
          }
 
-      const auto oNewLineSeg( d_dest.length() );
-      d_dest.cat( d_src.c_str() );
-      CPChar parse( d_dest.wbuf() + oNewLineSeg );  DBGEN && DBG( "L %d |%s|", d_yMacCur + 1, parse );
-      const auto continues( ParseRawMacroText_ContinuesNextLine( parse ) );
-      if( !continues && !IsStringBlank( d_dest.bsr() ) ) {
+      auto continues( false );
+      const auto parsed( ParseRawMacroText_ContinuesNextLine( rl, continues ) );
+      d_dest.append( parsed.data(), parsed.length() );  DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(d_dest) );
+      if( !continues && !IsStringBlank( d_dest ) ) {
+         DBGEN && DBG( "RTN HvContent" );
          return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
          }
       }
-   return !IsStringBlank( d_dest.bsr() ) ? HAVE_CONTENT : BLANK_LINE;
+   DBGEN && DBG( "RTN ?" );
+   return !IsStringBlank( d_dest ) ? HAVE_CONTENT : BLANK_LINE;
    }
 
 bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) {
@@ -1198,22 +1192,21 @@ bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd,
    }
    auto fContinueScan( true ); auto fAssignError( false ); auto assignsDone( 0 );
    MacroScanIntf msi( pFBuf, yStart );
-   CPXbuf dest( msi.destbuf() );
    for( ; fContinueScan && msi.d_yMacCur <= yEnd ; ++msi.d_yMacCur ) {  DBGEN && DBG( "%s L %d", __func__, msi.d_yMacCur );
       const auto rslt( msi.AppendLineToMacroSrcString() );
       DBGEN && DBG( "%s L %d rslt=%d", __func__, msi.d_yMacCur, rslt );
       switch( rslt ) {
-         case HAVE_CONTENT       :  DBGEN && DBG( "assigning --- |%s|", dest->c_str() );
-                                    if( !AssignStrOk( dest->c_str() ) ) { DBGEN && DBG( "%s atom failed '%s'", __func__, dest->c_str() );
+         case HAVE_CONTENT       :  DBGEN && DBG( "assigning --- |%s|", msi.d_dest.c_str() );
+                                    if( !AssignStrOk( msi.d_dest.c_str() ) ) { DBGEN && DBG( "%s atom failed '%s'", __func__, msi.d_dest.c_str() );
                                        if( pErrorPt ) {
                                           pErrorPt->Set( msi.d_yMacCur, 0 );
                                           }
                                        fAssignError = true;
                                        }
-                                    else {
+                                    else {                               DBGEN && DBG( "%s atom OKOKOK '%s'", __func__, msi.d_dest.c_str() );
                                        ++assignsDone;
                                        }
-                                    dest->clear();
+                                    msi.d_dest.clear();
                                     break;
          case BLANK_LINE         :  /* keep going */        break;
          case FOUND_TAG          :  fContinueScan = false;  break;
