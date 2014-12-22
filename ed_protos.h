@@ -388,7 +388,6 @@ extern PCChar  LastExtTagLoaded();
 
 //------------ misc edit helpers
 
-extern   boost::string_ref::size_type FirstNonBlankCh( boost::string_ref src );
 extern   bool  PutCharIntoCurfileAtCursor( int theChar, PXbuf pxb );
 
 extern   void  SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard=false );

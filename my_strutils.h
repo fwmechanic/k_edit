@@ -83,11 +83,9 @@ STIL         bool   StrContainsTabs( boost::string_ref src )       { return ToBO
 TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
 
-extern bool eqi( boost::string_ref s1, boost::string_ref s2 );
+extern bool  eqi( boost::string_ref s1, boost::string_ref s2 );
 extern char  toLower(     int ch );
 extern bool  IsStringBlank( boost::string_ref src );
-extern bool  StrEmpty(    PCChar inbuf );
-extern PChar suckwhite(   PChar string, int xMin, int xMax );
 
 extern int   consec_xdigits( PCChar pSt, PCChar eos=nullptr );
 extern int   consec_bdigits( PCChar pSt, PCChar eos=nullptr );
@@ -179,12 +177,13 @@ TF_Ptr STIL Ptr  StrPastAny(     Ptr pszToSearch, PCChar pszToSearchFor ) { retu
 TF_Ptr STIL Ptr  StrToNextOrEos( Ptr ps, Ptr eos, PCChar pszToSearchFor ) { return ps + Strncspn( ps, eos, pszToSearchFor ); }
 TF_Ptr STIL Ptr  StrPastAny(     Ptr ps, Ptr eos, PCChar pszToSearchFor ) { return ps + Strnspn ( ps, eos, pszToSearchFor ); }
 
-TF_Ptr STIL Ptr  StrPastAnyBlanks(     Ptr pszToSearch ) { return StrPastAny(     pszToSearch, szSpcTab ); }
+TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr pszToSearch ) { return StrPastAny(     pszToSearch, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, szSpcTab ); }
 
 TF_Ptr STIL Ptr  StrPastAnyBlanks(     Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
+extern boost::string_ref::size_type FirstNonBlankCh( boost::string_ref src );
 extern boost::string_ref::size_type PastAnyBlanksToEnd( boost::string_ref src, boost::string_ref::size_type start );
 extern boost::string_ref::size_type ToNextBlankOrEnd ( boost::string_ref src, boost::string_ref::size_type start );
 

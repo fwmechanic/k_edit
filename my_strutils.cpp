@@ -377,21 +377,3 @@ boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::str
       }
    return std::distance( src.cbegin(), src.end() );
    }
-
-boost::string_ref::size_type find_first_of( boost::string_ref src, boost::string_ref::size_type start, char ky ) {
-   if( start >= src.length() ) return boost::string_ref::npos;
-   for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-      if( ky == *it ) { return std::distance( src.cbegin(), it ); }
-      }
-   return boost::string_ref::npos;
-   }
-
-boost::string_ref::size_type find_first_of( boost::string_ref src, boost::string_ref::size_type start, boost::string_ref key ) {
-   if( start >= src.length() ) return boost::string_ref::npos;
-   for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-      for( auto ky : key ) {
-         if( ky == *it ) { return std::distance( src.cbegin(), it ); }
-         }
-      }
-   return boost::string_ref::npos;
-   }
