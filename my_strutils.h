@@ -83,6 +83,7 @@ STIL         bool   StrContainsTabs( boost::string_ref src )       { return ToBO
 TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
 
+extern bool eqi( boost::string_ref s1, boost::string_ref s2 );
 extern char  toLower(     int ch );
 extern bool  IsStringBlank( boost::string_ref src );
 extern bool  StrEmpty(    PCChar inbuf );
@@ -183,6 +184,9 @@ TF_Ptr STIL Ptr  StrToNextWhitespaceOrEos( Ptr pszToSearch ) { return StrToNextO
 
 TF_Ptr STIL Ptr  StrPastAnyWhitespace(     Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextWhitespaceOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
+
+extern boost::string_ref::size_type PastAnyWhitespace    ( boost::string_ref src, boost::string_ref::size_type start );
+extern boost::string_ref::size_type ToNextWhitespaceOrEos( boost::string_ref src, boost::string_ref::size_type start );
 
 TF_Ptr STIL Ptr  StrToNextWordOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, g_szWordChars ); }
 
