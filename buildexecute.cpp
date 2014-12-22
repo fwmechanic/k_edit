@@ -886,7 +886,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          }
       else if( func == fn_up ) { //======================================================
          if( textargStackPos < 0 ) {
-            AddToTextargStack( stb.c_str() );
+            AddToTextargStack( stb );
             textargStackPos = 0;
             }
          if( textargStackPos < g_pFBufTextargStack->LastLine() ) {
@@ -1101,7 +1101,7 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
 
          s_fHaveLiteralTextarg = true;
          if( fGotAnyInputFromKbd )
-            AddToTextargStack( TextArgBuffer().c_str() );
+            AddToTextargStack( TextArgBuffer() );
 
          // a valid pCmd was invoked by user to exit GetTextargString; execute it
          // (BuildExecute() grabs from TextArgBuffer()()).
@@ -1155,7 +1155,7 @@ STATIC_FXN bool GetTextargStringNXeq( std::string &xb, int cArg, COL xCursor ) {
 
    s_fHaveLiteralTextarg = true;
    if( fGotAnyInputFromKbd )
-      AddToTextargStack( xb.c_str() );
+      AddToTextargStack( xb );
 
    return pCmd->BuildExecute();
    }
@@ -1222,7 +1222,7 @@ bool ARG::prompt() {
 
    s_fHaveLiteralTextarg = true;
    if( fGotAnyInputFromKbd )
-      AddToTextargStack( TextArgBuffer().c_str() );
+      AddToTextargStack( TextArgBuffer() );
 
    return true;
    }
@@ -1387,7 +1387,7 @@ bool ARG::selcmd() { // selcmd:alt+0
          }
 
       if( fGotAnyInputFromKbd ) {
-         AddToTextargStack( cmdNameBuf.c_str() );
+         AddToTextargStack( cmdNameBuf );
          }
 
       const PCCMD newCmd( CmdFromName( cmdNameBuf.c_str() ) );

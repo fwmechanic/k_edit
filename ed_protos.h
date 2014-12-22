@@ -368,8 +368,8 @@ extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
 
 //------------ Pseudofile writers
 
-extern   void  AddToTextargStack( PCChar str );
-extern   void  AddToSearchLog( PCChar str );
+extern   void  AddToTextargStack( boost::string_ref str );
+extern   void  AddToSearchLog   ( boost::string_ref str );
 
 //------------ Editor startup and shutdown
 

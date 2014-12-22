@@ -428,9 +428,8 @@ FBUF_(GetLineRaw) {
    const auto pf( thisPF() );
    const int lnum( I_(2) - 1 );
    if( isValidLineNum( pf, lnum ) ) {
-      PCChar ptr; size_t chars;
-      pf->PeekRawLineExists( lnum, &ptr, &chars );
-      R_lstr( ptr, chars );
+      const auto rl( pf->PeekRawLine( lnum ) );
+      R_lstr( rl.data(), rl.length() );
       }
    R_nil();
    }

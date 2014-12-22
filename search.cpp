@@ -968,16 +968,11 @@ STATIC_FXN bool SetNewSearchSpecifierOK( PCChar rawStr, PCChar eos, bool fRegex 
                ;
    }
 
-STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, PCChar str ) { // deletes all duplicates of the inserted line
-   const auto argLen( Strlen( str ) );
+STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, boost::string_ref str ) { // deletes all duplicates of the inserted line
    for( auto ln(0); ln < pFbuf->LineCount(); ++ln ) {
-      PCChar pLine; size_t chars;
-      if(  pFbuf->PeekRawLineExists( ln, &pLine, &chars ) // loop across all needles in [d_searchKey .. d_searchKey + d_searchKeyStrlen - 1]
-        && chars == argLen
-        && 0 == memcmp( str, pLine, argLen )
-        ) {
-         pFbuf->DelLine( ln );
-         --ln;   // delete ALL duplicate strings
+      const auto rl( pFbuf->PeekRawLine( ln ) );
+      if( rl == str ) { // loop across all needles in [d_searchKey .. d_searchKey + d_searchKeyStrlen - 1]
+         pFbuf->DelLine( ln-- ); // delete ALL duplicate strings
          }
       }
 
@@ -987,12 +982,11 @@ STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, PCChar str ) { // deletes all du
 
 GLOBAL_VAR PFBUF g_pFBufTextargStack;
 
-void AddToTextargStack( PCChar str ) {
-   0 && DBG( "%s: '%s'", __func__, str );
+void AddToTextargStack( boost::string_ref str ) { // 0 && DBG( "%s: '%s'", __func__, str );
    AddLineToLogStack( g_pFBufTextargStack, str );
    }
 
-void AddToSearchLog( PCChar str ) {  // *** CALLED BY LUA Libfunc
+void AddToSearchLog( boost::string_ref str ) {  // *** CALLED BY LUA Libfunc
    AddLineToLogStack( g_pFBufSearchLog, str );
    }
 
