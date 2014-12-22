@@ -1665,12 +1665,12 @@ std::string FBUF::GetLineSeg( LINE yLine, COL xLeftIncl, COL xRightIncl ) const 
 //    original dest[xIns] is moved to dest[xIns+insertCols]
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
-int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const {
+int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
    const auto tw       ( TabWidth() );
    auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
    auto       strCols  ( StrCols( tw, dest.c_str() ) );
    const auto lineCols ( ColOfFreeIdx( tw, dest, dest.length() ) );
-   1 && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d)", __func__, BSR(dest), lineCols, strCols, xIns );
+   DB && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d)", __func__, BSR(dest), lineCols, strCols, xIns );
    // Assert( lineCols == lineChars );
 
    if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
@@ -1678,10 +1678,10 @@ int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
       }
    if( insertCols > 0 ) {
       const auto ix( CaptiveIdxOfCol( tw, dest, xIns ) );
-      1 && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d) [%d]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
+      DB && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d) [%d]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
       dest.insert( ix, insertCols, ' ' );
       }
-   1 && DBG( "%s: gLTPR |%" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
+   DB && DBG( "%s: gLTPR |%" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
    return dest.length();
    }
 /*

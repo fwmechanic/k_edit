@@ -49,11 +49,11 @@ EXTERNC void abort() {
 #endif
 
 
-STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 1 && DBG( "%s(%s)", FUNC, filename );
+STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 0 && DBG( "%s(%s)", FUNC, filename );
    g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
-   if( 1 ) {
+   if( 0 ) {
       const auto st( g_pFBufCmdlineFiles->PeekRawLine( 0 ) );
-      1 && DBG( "%s readback(%" PR_BSR  ")", FUNC, BSR( st ) );
+      DBG( "%s readback(%" PR_BSR  ")", FUNC, BSR( st ) );
       }
    }
 
@@ -64,7 +64,7 @@ STATIC_FXN int NumberOfCmdlineFilesRemaining() {
 STATIC_FXN bool SwitchToNextCmdlineFile() {
    std::string sb;
    while( FBOP::PopFirstLine( sb, g_pFBufCmdlineFiles ) ) {
-      auto pNxtArg( sb.c_str() );  DBG( "%s trying %s", FUNC, pNxtArg );
+      auto pNxtArg( sb.c_str() );  0 && DBG( "%s trying %s", FUNC, pNxtArg );
       const auto fOptT( pNxtArg[0] == '|' );
       const auto pFnm( pNxtArg + (fOptT ? 1 : 0) );
       if( fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( pFnm ) ) {
@@ -72,7 +72,7 @@ STATIC_FXN bool SwitchToNextCmdlineFile() {
             g_CurFBuf()->SetForgetOnExit();
 
          return true;
-         }                        DBG( "%s failed %s", FUNC, pNxtArg );
+         }                         0 && DBG( "%s failed %s", FUNC, pNxtArg );
       }
 
    return false;
@@ -1034,7 +1034,6 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 
        case ' ': // NON-OPTION-ARGUMENT
                  AddCmdlineFile( opt.nextarg(), false );
-                 DBG( "%u files to be edited", NumberOfCmdlineFilesRemaining() );
                  break;
 
        case 'a': AddFBuf( szAssignLog, &g_pFBufAssignLog );
@@ -1068,7 +1067,6 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
        }
      }
 
-   DBG( "%u files to be edited now", NumberOfCmdlineFilesRemaining() );
    {
                                  DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
    MainThreadPerfCounter pc;
@@ -1123,8 +1121,6 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
       }
 
    DispDoPendingRefreshes();
-
-   DBG( "%u files to be edited now", NumberOfCmdlineFilesRemaining() );
 
 #if 0 && !defined(_WIN32)
    ConIO_Shutdown();
