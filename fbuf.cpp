@@ -229,9 +229,9 @@ COL FBOP::MaxCommonLeadingWhitespaceInLinerange( PCFBUF fb, LINE yTop, LINE yBot
    auto leadWhite( COL_MAX );
    const auto tw( fb->TabWidth() );
    for( auto iy(yTop) ; iy <= yBottom; ++iy ) {
-      PCChar bos, eos;
-      if( fb->PeekRawLineExists( iy, &bos, &eos ) ) {
-         NoMoreThan( &leadWhite, ColOfPtr( tw, bos, StrPastAnyWhitespace(bos), eos ) );
+      const auto rl( fb->PeekRawLine( iy ) );
+      if( !rl.empty() && !IsStringBlank( rl ) ) {
+         NoMoreThan( &leadWhite, ColOfFreeIdx( tw, rl, FirstNonBlankCh( rl ) ) );
          }
       }
    return leadWhite == COL_MAX ? 0 : leadWhite;

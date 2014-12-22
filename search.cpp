@@ -386,7 +386,7 @@ class FileSearcher {
 
    public:
 
-   Xbuf                    d_xb;
+   Xbuf                    d_xb; // cannot be std::string cuz d_xb.wbuf()
 
    FileSearchMatchHandler &d_mh;
 
