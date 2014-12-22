@@ -525,16 +525,16 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
    if( !rl.empty() ) { 0 && DBG( "newln=%" PR_BSR, BSR(rl) );
       const auto tw( pFBuf->TabWidth() );                             // abc   abc
-      const auto xEos( ColOfIdx( tw, rl, rl.length() ) );             // abc   abc
+      const auto xEos( ColOfFreeIdx( tw, rl, rl.length() ) );             // abc   abc
       if( xCursor < xEos ) {
-         const auto ixC( IdxOfColWithinString( tw, rl, xCursor ) );
+         const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
          if( ixC != boost::string_ref::npos && isWordChar( rl[ixC] ) ) {
             const auto ixFirst( IdxFirstWordCh( rl, ixC ) );
             const auto ixLast ( IdxLastWordCh ( rl, ixC ) );        0 && DBG( "ix[%" PR_SIZET "u..%" PR_SIZET "u]", ixFirst, ixLast );
             // if( ixFirst != boost::string_ref::npos && ixLast != boost::string_ref::npos )
                {
-               const auto xMin( ColOfIdx( tw, rl, ixFirst ) );
-               const auto xMax( ColOfIdx( tw, rl, ixLast  ) );      0 && DBG( "x[%d..%d]", xMin, xMax );
+               const auto xMin( ColOfFreeIdx( tw, rl, ixFirst ) );
+               const auto xMax( ColOfFreeIdx( tw, rl, ixLast  ) );      0 && DBG( "x[%d..%d]", xMin, xMax );
                const auto wordCols ( xMax   - xMin    + 1 );
                const auto wordChars( ixLast - ixFirst + 1 );
                // this degree of paranoia only matters if the definition of a WORD includes a tab
@@ -600,7 +600,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                pNeedle += needle.length() + 1;
                }
             if( ixBest == boost::string_ref::npos ) break;
-            const auto xFound( ColOfIdx( tw, rl, ixBest ) );
+            const auto xFound( ColOfFreeIdx( tw, rl, ixBest ) );
             if(   -1 == d_yWuc // is a selection pseudo-WUC?
                || // or a true WUC
                  (  (ixBest == 0 || !isWordChar( rl[ixBest-1] )) && (ixBest+mlen >= rl.length() || !isWordChar( rl[ixBest+mlen] )) // only match _whole words_ matching d_wucbuf
@@ -736,10 +736,10 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
       auto &line( d_PerViewableLine[ iy ].line );
       const auto yFile( Origin().lin + iy );
       const auto rl( fb->PeekRawLine( yFile ) );
-      line.xMax = ColOfIdx( tw, rl, rl.length() );
+      line.xMax = ColOfFreeIdx( tw, rl, rl.length() );
       line.acppc = IsCppConditional( rl, &line.xPound );
       if( cppcNone != line.acppc ) {
-         line.xPound = ColOfIdx( tw, rl, line.xPound );
+         line.xPound = ColOfFreeIdx( tw, rl, line.xPound );
          switch( line.acppc ) {
             default:       break;
             case cppcIf  : --upDowns;
@@ -933,8 +933,8 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          }
       if( ixTgt != boost::string_ref::npos ) {
          const auto tw( CFBuf()->TabWidth() );
-         const auto xC  ( ColOfIdx( tw, rl, ixTgt                        ) );
-         const auto xPWS( ColOfIdx( tw, rl, rl.find_last_not_of( " \t" ) ) );
+         const auto xC  ( ColOfFreeIdx( tw, rl, ixTgt                        ) );
+         const auto xPWS( ColOfFreeIdx( tw, rl, rl.find_last_not_of( " \t" ) ) );
          alcc.PutColor( xC, xPWS - xC + 1, COLOR::DIM );
          }
       }
@@ -1042,12 +1042,12 @@ bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
    const auto rl( pFile->PeekRawLine( yLine ) );
    if( !rl.empty() ) {
       const auto tw( pFile->TabWidth() );
-      const auto xMaxOfLine( ColOfIdx( tw, rl, rl.length() - 1 ) );
+      const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
       for( auto ix=d_ixCache ; ix < d_num_hl_rgns_found && 0==d_hl_rgn_array[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
          const auto &comment( d_hl_rgn_array[ix] );
          COL xMin=0; COL xMax=xMaxOfLine;
-         if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfIdx( tw, rl, comment.rgn.flMin.col ); }
-         if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfIdx( tw, rl, comment.rgn.flMax.col ); }
+         if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfFreeIdx( tw, rl, comment.rgn.flMin.col ); }
+         if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfFreeIdx( tw, rl, comment.rgn.flMax.col ); }
          0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
          alcc.PutColor( xMin, xMax-xMin+1, comment.color );
          }

@@ -592,7 +592,7 @@ void FBUF::PutLine( LINE yLine, boost::string_ref srSrc, PXbuf pXb ) {
    auto pSrc( srSrc.data() );
    if( TABCONV_0_NO_CONV != d_Tabconv ) {
       PChar pBuf; size_t bufsize;
-      const auto lineCols( ColOfIdx( this->TabWidth(), srSrc, srSrc.length() ) );
+      const auto lineCols( ColOfFreeIdx( this->TabWidth(), srSrc, srSrc.length() ) );
       if( srSrc.length() > sizeof tcbuf-1 || (lineCols > sizeof tcbuf-1-1) ) {
          if( pXb ) {
             bufsize = srSrc.length() + 1;
@@ -656,7 +656,7 @@ COL ColOfPtr( COL tabWidth, const PCChar pString, const PCChar pWithinString, PC
    return xCol + (pWithinString - eos);  // 'pWithinString' actually points _at or beyond_ eos: assume all chars past EOL are spaces (non-tabs)
    }
 
-COL ColOfIdx( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset ) {
+COL ColOfFreeIdx( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset ) {
    const Tabber tabr( tabWidth );
    auto xCol( 0 );
    for( auto it( content.cbegin() ) ; it != content.cend() ; ++it ) {
@@ -1477,13 +1477,13 @@ PChar PtrOfCol_( COL tabWidth, const PChar pS, const PChar pEos, const COL colTg
 
 // pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
 // retval < pEos
-boost::string_ref::size_type IdxOfColWithinString( COL tabWidth, boost::string_ref content, const COL colTgt ) {
+boost::string_ref::size_type FreeIdxOfCol( COL tabWidth, boost::string_ref content, const COL colTgt ) {
    if( colTgt < 0 )   { return boost::string_ref::npos; }
    if( colTgt == 0 )  { return 0; }
 
 #if 1 // ==0 to test the "realtabs:yes" ... code below
    if( !( /* g_fRealtabs && */ StrContainsTabs( content )) ) { // this is the most common exit path
-      return ((colTgt >= content.length()) ? content.length()-1 : colTgt );
+      return colTgt;
       }
 #endif
 
@@ -1498,8 +1498,48 @@ boost::string_ref::size_type IdxOfColWithinString( COL tabWidth, boost::string_r
          return std::distance( content.cbegin(), it );
          }
       }
-   return boost::string_ref::npos;
+   return content.length() + (colTgt - col);
    }
+
+boost::string_ref::size_type CaptiveIdxOfCol( COL tabWidth, boost::string_ref content, const COL colTgt ) {
+   auto rv( FreeIdxOfCol( tabWidth, content, colTgt ) );
+   if( rv >= content.length() ) return content.length();
+   return rv;
+   }
+
+STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
+   const boost::string_ref bbb( content );
+   for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
+      printf( "%s( %s, %d ) -> %d\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
+      }
+   printf( "\n" );
+   }
+
+STATIC_FXN void sweep_FreeIdxOfCol( COL tw, PCChar content ) {
+   const boost::string_ref bbb( content );
+   for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
+      printf( "%s( %s, %d ) -> %d\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) );
+      }
+   printf( "\n" );
+   }
+
+
+STATIC_FXN void sweep_ColOfFreeIdx( COL tw, PCChar content, int maxCol ) {
+   const boost::string_ref bbb( content );
+   for( int ix( 0 ) ; ix <= maxCol ; ++ix ) {
+      printf( "%s( %s, %d ) -> %d\n", __func__, content, ix, ColOfFreeIdx( tw, bbb, ix ) );
+      }
+   printf( "\n" );
+   }
+
+void test_CaptiveIdxOfCol() {
+   const auto tw( 3 );
+   sweep_CaptiveIdxOfCol( tw, ""    ); sweep_FreeIdxOfCol( tw, ""    ); sweep_ColOfFreeIdx( tw, ""   , 3    );
+   sweep_CaptiveIdxOfCol( tw, "ab"  ); sweep_FreeIdxOfCol( tw, "ab"  ); sweep_ColOfFreeIdx( tw, "ab" , 5    );
+   sweep_CaptiveIdxOfCol( tw, "\tb" ); sweep_FreeIdxOfCol( tw, "\tb" ); sweep_ColOfFreeIdx( tw, "\tb", tw*3 );
+   sweep_CaptiveIdxOfCol( tw, "b\t" ); sweep_FreeIdxOfCol( tw, "b\t" ); sweep_ColOfFreeIdx( tw, "b\t", tw*3 );
+   }
+
 
 // pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
 // retval < pEos
@@ -1626,17 +1666,20 @@ std::string FBUF::GetLineSeg( LINE yLine, COL xLeftIncl, COL xRightIncl ) const 
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
 int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const {
-   auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
    const auto tw       ( TabWidth() );
-   const auto lineCols ( ColOfIdx( tw, dest, dest.length() ) );
-   1 && DBG( "%s: gLTPR |%" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
+   auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
+   auto       strCols  ( StrCols( tw, dest.c_str() ) );
+   const auto lineCols ( ColOfFreeIdx( tw, dest, dest.length() ) );
+   1 && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d)", __func__, BSR(dest), lineCols, strCols, xIns );
    // Assert( lineCols == lineChars );
 
    if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
       dest.append( xIns - lineCols, ' ' );
       }
    if( insertCols > 0 ) {
-      dest.insert( IdxOfColWithinString( tw, dest, xIns ), insertCols, ' ' );
+      const auto ix( CaptiveIdxOfCol( tw, dest, xIns ) );
+      1 && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d) [%d]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
+      dest.insert( ix, insertCols, ' ' );
       }
    1 && DBG( "%s: gLTPR |%" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
    return dest.length();
@@ -2233,10 +2276,10 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
          }
       else {
          FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
-         const auto six0( IdxOfColWithinString( tws, stSrc, xSrcLeft  ) );
-         const auto six1( IdxOfColWithinString( tws, stSrc, xSrcRight ) );
+         const auto six0( CaptiveIdxOfCol( tws, stSrc, xSrcLeft  ) );
+         const auto six1( CaptiveIdxOfCol( tws, stSrc, xSrcRight ) );
          FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
-         stDst.replace( IdxOfColWithinString( twd, stDst, xDst ), boxWidth, stSrc, six0, six1 - six0 + 1 );
+         stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, six0, six1 - six0 + 1 );
          }
       FBdest->PutLine( yDst, stDst );
       }

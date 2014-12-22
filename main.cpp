@@ -998,6 +998,9 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
 int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 #endif
    {
+   extern void test_CaptiveIdxOfCol();
+   //          test_CaptiveIdxOfCol();
+
    ThisProcessInfo::Init();
 
    enum { DBGFXN=1 };
