@@ -21,6 +21,8 @@ CODING CONVENTIONS *** existing code is uniformly formatted.  Get used to it.
       function (my,params);   // NO!
       but: "return yes;"
       not  "return( no );"    // return is not a function call
+  * terminology: to avoid redundancy, do not use the term "whitespace" or "white"
+    (racist!); use "blank" instead.
 
 Semantic Coding Guidelines
 
