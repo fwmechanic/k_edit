@@ -127,11 +127,11 @@ STATIC_FXN bool fgotline( Xbuf *xb, FILE *f ) {
    }
 
 STATIC_FXN void StrStartOfNext2Tokens( PChar pszStringToSplit, PPChar pchTokenStart, PPChar pchNextTokenStart ) {
-   *pchTokenStart = StrPastAnyWhitespace( pszStringToSplit );
-   auto pC( StrToNextWhitespaceOrEos( *pchTokenStart ) );
+   *pchTokenStart = StrPastAnyBlanks( pszStringToSplit );
+   auto pC( StrToNextBlankOrEos( *pchTokenStart ) );
    if( *pC ) {
       *pC++ = '\0';
-      pC = StrPastAnyWhitespace( pC );
+      pC = StrPastAnyBlanks( pC );
       }
 
    *pchNextTokenStart = pC;
@@ -537,8 +537,8 @@ STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE star
       const boost::string_ref tag( IsolateTagStr( rl ) );
       if( !tag.empty() ) { 0 && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
          for( boost::string_ref::size_type ix( 0 ); ix < tag.length() ; ) {
-            const auto ix0( PastAnyWhitespaceToEnd( tag, ix ) );
-            const auto ix1( ToNextWhitespaceOrEnd( tag, ix0 ) );
+            const auto ix0( PastAnyBlanksToEnd( tag, ix ) );
+            const auto ix1( ToNextBlankOrEnd( tag, ix0 ) );
             const auto taglen( ix1 - ix0 );
             const auto atag( tag.substr( ix0, taglen ) );  0 && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
             if( eqi( atag, srKey ) ) {

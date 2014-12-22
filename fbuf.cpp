@@ -225,16 +225,16 @@ void FBUF::MakeEmpty() {
 
 //============================================================================
 
-COL FBOP::MaxCommonLeadingWhitespaceInLinerange( PCFBUF fb, LINE yTop, LINE yBottom ) {
-   auto leadWhite( COL_MAX );
+COL FBOP::MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom ) {
+   auto leadBlank( COL_MAX );
    const auto tw( fb->TabWidth() );
    for( auto iy(yTop) ; iy <= yBottom; ++iy ) {
       const auto rl( fb->PeekRawLine( iy ) );
       if( !rl.empty() && !IsStringBlank( rl ) ) {
-         NoMoreThan( &leadWhite, ColOfFreeIdx( tw, rl, FirstNonBlankCh( rl ) ) );
+         NoMoreThan( &leadBlank, ColOfFreeIdx( tw, rl, FirstNonBlankCh( rl ) ) );
          }
       }
-   return leadWhite == COL_MAX ? 0 : leadWhite;
+   return leadBlank == COL_MAX ? 0 : leadBlank;
    }
 
 //==========================================================================================
@@ -284,7 +284,7 @@ public:
 
 int MaxIndentAccumulator::addSample( PCChar buf, bool fLastLine ) {
    auto fSampled( false );
-   const int indent( StrPastAnyWhitespace(buf) - buf );
+   const int indent( StrPastAnyBlanks(buf) - buf );
    if( indent > 0 && indent < ELEMENTS(d_firstIndentAt) ) {
       ++d_firstIndentAt[indent];
       ++d_sampleCount;
@@ -570,7 +570,7 @@ PFBUF FindFBufByName( PCChar pFullName ) {
 // indent/softcr
 
 STATIC_FXN bool SliceStrRtnFirstLastTokens( PXbuf pxb, PPCChar pszFirstTok, PPCChar pszLastTok ) {
-   auto pC( StrPastAnyWhitespace( pxb->c_str() ) );
+   auto pC( StrPastAnyBlanks( pxb->c_str() ) );
    if( *pC == 0 )
       return false;
 
@@ -692,7 +692,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) {
    COL rv;
    {
    const auto lbuf0( xb.c_str() );
-         auto pX( StrPastAnyWhitespace( lbuf0 ) );
+         auto pX( StrPastAnyBlanks( lbuf0 ) );
    pX = *pX ? pX : lbuf0;
    rv = pX - lbuf0;  // Assert( rv >= 0 );
    switch( fb->FileType() ) {
@@ -708,7 +708,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) {
    }
    fb->getLineTabx( &xb, yStart + 1 );
    {
-   auto lbuf1( xb.c_str() );  auto pY( StrPastAnyWhitespace( lbuf1 ) );
+   auto lbuf1( xb.c_str() );  auto pY( StrPastAnyBlanks( lbuf1 ) );
    if( lbuf1[0] && *pY )
       rv = pY - lbuf1;
    }
@@ -1840,7 +1840,7 @@ STATIC_FXN bool RenameCurFileOk( PCChar pszNewName, bool fNeedUserConfirmation )
 bool ARG::shex() {
    switch( d_argType ) {
     default:      return BadArg();
-    case TEXTARG: StartShellExecuteProcess( StrPastAnyWhitespace( d_textarg.pText ) );
+    case TEXTARG: StartShellExecuteProcess( StrPastAnyBlanks( d_textarg.pText ) );
                   return true;
     }
    }

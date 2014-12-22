@@ -272,7 +272,7 @@ TF_Ptr STIL Ptr analyze_cmdline( Ptr pCmdln, int *flags ) { return const_cast<Pt
 STATIC_FXN void prep_cmdline_( PChar pc ) {
    // CMD shell cannot handle '/' dirsep in argv[0], so xlat to '\'
    const auto chDelim( Path::DelimChar( pc ) );
-   const auto pEoArgv0( chDelim ? strchr(pc+1,chDelim) : StrToNextWhitespaceOrEos( pc ) );
+   const auto pEoArgv0( chDelim ? strchr(pc+1,chDelim) : StrToNextBlankOrEos( pc ) );
    for( ; pc < pEoArgv0 ; ++pc ) {
       if( Path::chDirSepPosix == *pc ) *pc = Path::chDirSepMS;
       }
@@ -1165,7 +1165,7 @@ void StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile )  {
    }
 
 bool RunChildSpawnOrSystem( PCChar pCmdStr ) {
-   const auto cmdStr( StrPastAnyWhitespace( pCmdStr ) );
+   const auto cmdStr( StrPastAnyBlanks( pCmdStr ) );
    if( *cmdStr == 0 )
       return true;
 

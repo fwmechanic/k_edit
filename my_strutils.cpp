@@ -153,8 +153,8 @@ PCChar fxnm( PCChar p0, PCChar pX, PCChar toMatch ) {        \
       }                                                      \
    }
 
-StrToPastPrevOrNull_def( StrToPrevOrNull_  , != ) // do NOT call this directly!  use StrToPrevOrNull or StrToPrevWhitespaceOrNull instead!
-StrToPastPrevOrNull_def( StrPastPrevOrNull_, == ) // do NOT call this directly!  use StrToPrevOrNull or StrToPrevWhitespaceOrNull instead!
+StrToPastPrevOrNull_def( StrToPrevOrNull_  , != ) // do NOT call this directly!  use StrToPrevOrNull or StrToPrevBlankOrNull instead!
+StrToPastPrevOrNull_def( StrPastPrevOrNull_, == ) // do NOT call this directly!  use StrToPrevOrNull or StrToPrevBlankOrNull instead!
 
 #undef StrToPastPrevOrNull_def
 
@@ -330,7 +330,7 @@ void string_tolower( Path::str_t &inout ) {
 
 boost::string_ref::size_type FirstNonBlankCh( boost::string_ref src ) {
    for( auto it( src.cbegin() ) ; it != src.cend() ; ++it )
-      if( !isWhite( *it ) )
+      if( !isBlank( *it ) )
          return std::distance( src.cbegin(), it );
 
    return boost::string_ref::npos;
@@ -338,7 +338,7 @@ boost::string_ref::size_type FirstNonBlankCh( boost::string_ref src ) {
 
 bool IsStringBlank( boost::string_ref src ) {
    for( auto ch : src )
-      if( !isWhite( ch ) )
+      if( !isBlank( ch ) )
          return false;
 
    return true;
@@ -356,7 +356,7 @@ bool eqi( boost::string_ref s1, boost::string_ref s2 ) {
    return true;
    }
 
-boost::string_ref::size_type PastAnyWhitespaceToEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+boost::string_ref::size_type PastAnyBlanksToEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
          if( ' ' != *it && '\t' != *it ) {
@@ -367,7 +367,7 @@ boost::string_ref::size_type PastAnyWhitespaceToEnd( boost::string_ref src, boos
    return std::distance( src.cbegin(), src.end() );
    }
 
-boost::string_ref::size_type ToNextWhitespaceOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
          if( !(' ' != *it && '\t' != *it) ) {

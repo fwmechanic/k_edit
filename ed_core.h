@@ -1603,7 +1603,7 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    STIL void      DelChar( PFBUF fb, Point pt )             { DelChar( fb, pt.col, pt.lin ); }
 
    //************ text-content scanners
-   extern COL     MaxCommonLeadingWhitespaceInLinerange( PCFBUF fb, LINE yTop, LINE yBottom );
+   extern COL     MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom );
    extern PChar   IsGrepBuf( PCFBUF fb, PChar fnmbuf, const size_t sizeof_fnmbuf, int *pGrepHdrLines );
    extern cppc    IsCppConditional( PCFBUF fb, LINE yLine );
 

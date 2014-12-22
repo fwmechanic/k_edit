@@ -323,7 +323,7 @@ bool ARG::vrepeat() {
 
       int    val;
       PCChar fmt;
-      CPCChar pNum( StrPastAnyWhitespace( inbuf ) );
+      CPCChar pNum( StrPastAnyBlanks( inbuf ) );
       if( StrSpnSignedInt( pNum ) ) {
          width            -= pNum - inbuf;
          d_boxarg.flMin.col += pNum - inbuf;

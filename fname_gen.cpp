@@ -93,8 +93,8 @@ STATIC_FXN bool IsolateFilename( PInt pMin, PInt pMax, PCChar pSrc, PCChar eos )
      )
       ++pSrc; // pEnd is set correctly
    else {
-      pSrc = StrPastAnyWhitespace    ( pSrc, eos );
-      pEnd = StrToNextWhitespaceOrEos( pSrc, eos );
+      pSrc = StrPastAnyBlanks    ( pSrc, eos );
+      pEnd = StrToNextBlankOrEos( pSrc, eos );
       }
    if( pSrc >= pEnd ) return false;
 

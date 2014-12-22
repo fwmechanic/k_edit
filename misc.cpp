@@ -139,7 +139,7 @@ STATIC_FXN bool CopyNumberedLinesToNewFile( PFBUF srcfile, PFBUF destfile, ARG *
             auto lineChars( destfile->getLineTabx( &xb, ix ) );
             auto lbuf( xb.wbuf() );
             if( 2 == sscanf( lbuf, "%d%n", &srcfileLine, &npos ) ) {
-               auto pTail( StrPastAnyWhitespace( lbuf + npos ) );
+               auto pTail( StrPastAnyBlanks( lbuf + npos ) );
                if( *pTail ) { DBG( "tail=%s", pTail ); }
 
                PChar bp[2];
@@ -163,7 +163,7 @@ STATIC_FXN bool CopyNumberedLinesToNewFile( PFBUF srcfile, PFBUF destfile, ARG *
    }
 
    if( fUseMFGrepFmt ) {
-      const auto leadWhite( FBOP::MaxCommonLeadingWhitespaceInLinerange( srcfile, yTop, yBottom ) );
+      const auto leadBlanks( FBOP::MaxCommonLeadingBlanksInLinerange( srcfile, yTop, yBottom ) );
       const auto lwidth( uint_log_10( srcfile->LineCount() ) );
       for( auto ix(yTop); ix <= yBottom; ++ix ) {
          PCChar ptr; size_t chars;
@@ -171,7 +171,7 @@ STATIC_FXN bool CopyNumberedLinesToNewFile( PFBUF srcfile, PFBUF destfile, ARG *
          if( !srcfile->PeekRawLineExists( ix, &ptr, &chars ) )
              destfile->FmtLastLine( "%s %*d:", srcfile->Name(), lwidth, ix+1 );
          else
-             destfile->FmtLastLine( "%s %*d: %.*s", srcfile->Name(), lwidth, ix+1, pd2Int(chars-leadWhite), ptr+leadWhite );
+             destfile->FmtLastLine( "%s %*d: %.*s", srcfile->Name(), lwidth, ix+1, pd2Int(chars-leadBlanks), ptr+leadBlanks );
          }
       }
    else {

@@ -478,14 +478,14 @@ void FBUF::cat( PCChar pszNewLineData ) {
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-STATIC_FXN int StrlenWOTrailWhitespace( PCChar pszString, PCChar eos=nullptr ) {
+STATIC_FXN int StrlenWOTrailBlanks( PCChar pszString, PCChar eos=nullptr ) {
    if( !eos ) eos = Eos(pszString);
-   const decltype(pszString) pPrevNonWhite( StrPastPrevWhitespaceOrNull( pszString, eos ) );
-   return pPrevNonWhite ? pPrevNonWhite - pszString + 1 : 0;
+   const decltype(pszString) pPrevNonBlank( StrPastPrevBlankOrNull( pszString, eos ) );
+   return pPrevNonBlank ? pPrevNonBlank - pszString + 1 : 0;
    }
 
-int StrTruncTrailWhitespace( PChar pszString ) {
-   const auto len( StrlenWOTrailWhitespace( pszString ) );
+int StrTruncTrailBlanks( PChar pszString ) {
+   const auto len( StrlenWOTrailBlanks( pszString ) );
    pszString[ len ] = '\0';
    return len;
    }
@@ -629,7 +629,7 @@ CONVERT:
          }
       }
    if( !TrailSpcsKept() )
-      numch = StrlenWOTrailWhitespace( pSrc, pSrc+numch );
+      numch = StrlenWOTrailBlanks( pSrc, pSrc+numch );
 
    UndoReplaceLineContent( yLine, pSrc, numch );  // after all this buildup, JUST WRITE THE DAMNED THING:
    }
@@ -733,7 +733,7 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
       goto DONE_MOVE_CURSOR;
       }
 
-   if( ColOfPtr( tw, lbuf, StrPastAnyWhitespace( lbuf ), eos ) > xCol ) {
+   if( ColOfPtr( tw, lbuf, StrPastAnyBlanks( lbuf ), eos ) > xCol ) {
       xCol = 0;
       goto DONE_MOVE_CURSOR;
       }
@@ -1066,13 +1066,13 @@ bool ARG::linsert() { PCF;
                     Xbuf xb;
                     const auto chars( pcf->getLineTabxPerRealtabs( &xb, d_nullarg.cursor.lin ) );
                     auto lbuf( xb.wbuf() );
-                    const auto pFirstNonWhite( StrPastAnyWhitespace( lbuf ) );
-                    const auto tailLen( Strlen( pFirstNonWhite ) + 1 );
-                    const auto delta( Max( static_cast<ptrdiff_t>(0), pFirstNonWhite - lbuf) - d_nullarg.cursor.col );
+                    const auto pFirstNonBlank( StrPastAnyBlanks( lbuf ) );
+                    const auto tailLen( Strlen( pFirstNonBlank ) + 1 );
+                    const auto delta( Max( static_cast<ptrdiff_t>(0), pFirstNonBlank - lbuf) - d_nullarg.cursor.col );
                     if( delta > 0 ) {
                        lbuf = xb.wresize( chars + delta + 1 );
                        }
-                    memmove( lbuf                       , pFirstNonWhite, tailLen              );
+                    memmove( lbuf                       , pFirstNonBlank, tailLen              );
                     memmove( lbuf + d_nullarg.cursor.col, lbuf          , Strlen( lbuf ) + 1   );
                     memset(  lbuf                       , ' '           , d_nullarg.cursor.col );
                     pcf->PutLine( d_nullarg.cursor.lin, lbuf );
@@ -1133,9 +1133,9 @@ bool ARG::xquote() { // Xquote
 
 #endif
 
-STATIC_FXN COL colPastPrevWhitespace( PCChar ptr, int lineChars, COL startCol ) {
+STATIC_FXN COL colPastPrevBlanks( PCChar ptr, int lineChars, COL startCol ) {
    NoGreaterThan( &startCol, lineChars ); // lineChars does ! include EOL
-   const decltype(ptr) pC( StrPastPrevWhitespaceOrNull( ptr, ptr + startCol ) );
+   const decltype(ptr) pC( StrPastPrevBlankOrNull( ptr, ptr + startCol ) );
    return pC ? pC - ptr : startCol;
    }
 
@@ -1168,7 +1168,7 @@ bool ARG::graphic() {
             const auto chars( pf->getLineTabx( &xb, curLine ) );
             const auto xRight(
                  (d_cArg > 1 || (usrChar == chQuot2 || usrChar == chQuot1 || usrChar == chBackTick))  // word-conforming bracketing of a BOXARG?
-                 ? colPastPrevWhitespace( xb.wbuf(), chars, d_boxarg.flMax.col+1 )
+                 ? colPastPrevBlanks( xb.wbuf(), chars, d_boxarg.flMax.col+1 )
                  : d_boxarg.flMax.col
                );
             FBOP::InsertChar( pf, curLine, xRight+1          , chClosing, &xb );
@@ -1272,7 +1272,7 @@ bool ARG::paste() {
 
                        tmpfilenamebuf[0] = '\0'; // init to 'no tmpfile created'
 
-                       auto pSrcFnm( StrPastAnyWhitespace( d_textarg.pText ) ); // arg arg "!dir" paste
+                       auto pSrcFnm( StrPastAnyBlanks( d_textarg.pText ) ); // arg arg "!dir" paste
                        if( *pSrcFnm == '!' ) {
                           NOAUTO CPCChar pszCmd( pSrcFnm + 1 );
                           const auto tmpx( CompletelyExpandFName_wEnvVars( "$TMP:" PATH_SEP_STR "paste.$k$" ) );
@@ -2312,7 +2312,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    rdNoiseRead();
 
    struct {
-      int leadWhiteLines = 0;
+      int leadBlankLines = 0;
       int lead_Tab_Lines = 0;
       } tabStats;
 
@@ -2429,7 +2429,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
 
          switch( *pCurImageBuf ) {
             case HTAB: ++tabStats.lead_Tab_Lines;
-            case ' ' : ++tabStats.leadWhiteLines; //lint -fallthrough
+            case ' ' : ++tabStats.leadBlankLines; //lint -fallthrough
             default  : break;                     //lint -fallthrough
             }
 
@@ -2504,9 +2504,9 @@ IS_EOL:
       d_Tabconv = TABCONV_0_NO_CONV;
 
       enum { PERCENT_LEAD_BLANK_TO_CAUSE_TABCONV_MODE = 50 };
-      if(  tabStats.leadWhiteLines > 0
+      if(  tabStats.leadBlankLines > 0
         && (    (tabStats.lead_Tab_Lines > (MAX_LINES / 100))  // mk sure no ovflw
-           || (((tabStats.lead_Tab_Lines * 100) / tabStats.leadWhiteLines) > PERCENT_LEAD_BLANK_TO_CAUSE_TABCONV_MODE )
+           || (((tabStats.lead_Tab_Lines * 100) / tabStats.leadBlankLines) > PERCENT_LEAD_BLANK_TO_CAUSE_TABCONV_MODE )
            )
         ) {
          d_Tabconv = TABCONV_1_LEADING_SPCS_TO_TABS;

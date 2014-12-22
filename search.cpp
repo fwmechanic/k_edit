@@ -1124,13 +1124,13 @@ STATIC_FXN PChar DupTextMacroValue( PCChar macroName ) {
       return nullptr;
 
    decltype(macroName) pastTokEnd;
-   auto tokStrt( StrPastAnyWhitespace( pCmd->MacroText() ) );
+   auto tokStrt( StrPastAnyBlanks( pCmd->MacroText() ) );
    0 && DBG( "%s: '%s'", __func__, tokStrt );
    switch( *tokStrt ) {
       case 0:    pastTokEnd = nullptr;                                  break;
       case '"':  pastTokEnd = findDelim( ++tokStrt, "\"", macroName );  break;
       case '\'': pastTokEnd = findDelim( ++tokStrt, "'" , macroName );  break;
-      default:   pastTokEnd = StrToNextWhitespaceOrEos( tokStrt );      break;
+      default:   pastTokEnd = StrToNextBlankOrEos( tokStrt );      break;
       }
 
    if( nullptr == pastTokEnd )  // empty value or bad delim?

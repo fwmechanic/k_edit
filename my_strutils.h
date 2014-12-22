@@ -70,11 +70,11 @@ extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
 extern   char  FlipCase( char ch );
 extern PChar   xlatCh( PChar pStr, int fromCh, int toCh );
-extern   int   StrTruncTrailWhitespace( PChar pszString );
+extern   int   StrTruncTrailBlanks( PChar pszString );
 extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
 
-STIL         bool   isWhite(    char ch ) { return ch == HTAB || ch == ' '; }
+STIL         bool   isBlank(    char ch ) { return ch == HTAB || ch == ' '; }
 STIL         bool   isDecDigit( char ch ) { return ch >= '0'  && ch <= '9'; }
 STIL         bool   StrContainsTabs( PCChar data, int dataBytes )  { return ToBOOL(memchr( data, HTAB, dataBytes  )); }
 STIL         bool   StrContainsTabs( PCChar data, PCChar eos )     { return ToBOOL(memchr( data, HTAB, eos - data )); }
@@ -179,14 +179,14 @@ TF_Ptr STIL Ptr  StrPastAny(     Ptr pszToSearch, PCChar pszToSearchFor ) { retu
 TF_Ptr STIL Ptr  StrToNextOrEos( Ptr ps, Ptr eos, PCChar pszToSearchFor ) { return ps + Strncspn( ps, eos, pszToSearchFor ); }
 TF_Ptr STIL Ptr  StrPastAny(     Ptr ps, Ptr eos, PCChar pszToSearchFor ) { return ps + Strnspn ( ps, eos, pszToSearchFor ); }
 
-TF_Ptr STIL Ptr  StrPastAnyWhitespace(     Ptr pszToSearch ) { return StrPastAny(     pszToSearch, szSpcTab ); }
-TF_Ptr STIL Ptr  StrToNextWhitespaceOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, szSpcTab ); }
+TF_Ptr STIL Ptr  StrPastAnyBlanks(     Ptr pszToSearch ) { return StrPastAny(     pszToSearch, szSpcTab ); }
+TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, szSpcTab ); }
 
-TF_Ptr STIL Ptr  StrPastAnyWhitespace(     Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
-TF_Ptr STIL Ptr  StrToNextWhitespaceOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
+TF_Ptr STIL Ptr  StrPastAnyBlanks(     Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
+TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
-extern boost::string_ref::size_type PastAnyWhitespaceToEnd( boost::string_ref src, boost::string_ref::size_type start );
-extern boost::string_ref::size_type ToNextWhitespaceOrEnd ( boost::string_ref src, boost::string_ref::size_type start );
+extern boost::string_ref::size_type PastAnyBlanksToEnd( boost::string_ref src, boost::string_ref::size_type start );
+extern boost::string_ref::size_type ToNextBlankOrEnd ( boost::string_ref src, boost::string_ref::size_type start );
 
 TF_Ptr STIL Ptr  StrToNextWordOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, g_szWordChars ); }
 
@@ -212,8 +212,8 @@ TF_Ptr STIL Ptr  StrToPrevOrNull(             Ptr pBuf, Ptr pInBuf, PCChar toMat
 TF_Ptr STIL Ptr  StrPastPrevOrNull(           Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return const_cast<Ptr>(StrPastPrevOrNull_( pBuf, pInBuf, toMatch )); }
 
 TF_Ptr STIL Ptr  StrPastPrevWordOrNull(       Ptr pBuf, Ptr pInBuf ) { return StrPastPrevOrNull( pBuf, pInBuf, g_szWordChars ); }
-TF_Ptr STIL Ptr  StrToPrevWhitespaceOrNull(   Ptr pBuf, Ptr pInBuf ) { return StrToPrevOrNull  ( pBuf, pInBuf, szSpcTab      ); }
-TF_Ptr STIL Ptr  StrPastPrevWhitespaceOrNull( Ptr pBuf, Ptr pInBuf ) { return StrPastPrevOrNull( pBuf, pInBuf, szSpcTab      ); }
+TF_Ptr STIL Ptr  StrToPrevBlankOrNull(   Ptr pBuf, Ptr pInBuf ) { return StrToPrevOrNull  ( pBuf, pInBuf, szSpcTab      ); }
+TF_Ptr STIL Ptr  StrPastPrevBlankOrNull( Ptr pBuf, Ptr pInBuf ) { return StrPastPrevOrNull( pBuf, pInBuf, szSpcTab      ); }
 
 //-----------------
 

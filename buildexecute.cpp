@@ -529,7 +529,7 @@ STATIC_FXN PXbuf StreamArgToString( PXbuf dest, PFBUF pfb, Rect stream ) {
       const auto bp( dest->wresize( ttlchars+ix+1 ) ); // +ix for interline space
       auto pd( bp );
       for( auto iy(0); iy <= ix ; ++iy ) {
-         if( pd > bp && !isWhite( *(pd-1) ) && !isWhite( *pstr[iy].bos ) ) {
+         if( pd > bp && !isBlank( *(pd-1) ) && !isBlank( *pstr[iy].bos ) ) {
             *pd++ = ' ';
             }
          if( pstr[iy].chars > 0 ) {

@@ -41,14 +41,14 @@ void AssignLogTag( PCChar tag ) {
 
 bool AssignStrOk_( PCChar param, CPCChar __function__ ) { enum {DBGEN=0}; // make a local copy so param can be a PCChar
    ALLOCA_STRDUP( pszStringToAssign, slen, param, Strlen(param) )
-   const auto pName( StrPastAnyWhitespace( pszStringToAssign ) );
-   StrTruncTrailWhitespace( pName );
+   const auto pName( StrPastAnyBlanks( pszStringToAssign ) );
+   StrTruncTrailBlanks( pName );
    auto pValue( StrToNextOrEos( pName, ":" ) );
    if( 0 == *pValue )                       return Msg( "(from %s) missing ':' in %s", __function__, pName );
    *pValue++ = '\0';
-   StrTruncTrailWhitespace( pName );
-   pValue = StrPastAnyWhitespace( pValue );
-   if( '=' == *pValue )               {auto rv(DefineMacro( pName, StrPastAnyWhitespace( pValue+1 ) ));DBGEN&&DBG( "DefineMacro(%s)->%s",pName,rv?"true":"false" );return rv;}
+   StrTruncTrailBlanks( pName );
+   pValue = StrPastAnyBlanks( pValue );
+   if( '=' == *pValue )               {auto rv(DefineMacro( pName, StrPastAnyBlanks( pValue+1 ) ));DBGEN&&DBG( "DefineMacro(%s)->%s",pName,rv?"true":"false" );return rv;}
    if( !CmdFromName( pName ) )        {auto rv(SetSwitch  ( pName,                       pValue     ));DBGEN&&DBG( "SetSwitch(%s)->%s"  ,pName,rv?"true":"false" );return rv;}
    if( SetKeyOk( pName, pValue ) )          return true;
    if( 0 == *pValue )                       return Msg( "(from %s) Missing key assignment for '%s'", __function__, pName );
@@ -285,7 +285,7 @@ bool Interpreter::PushMacroStringOk( PCChar pszMacroString, int macroFlags ) {
    }
 
 void Interpreter::MacroRuntimeStkEntry::Ctor( PCChar pszMacroString, int macroFlags ) {
-   d_pStartOfText = d_pCurTxt = Strdup( StrPastAnyWhitespace( pszMacroString ) );
+   d_pStartOfText = d_pCurTxt = Strdup( StrPastAnyBlanks( pszMacroString ) );
    d_flags        = macroFlags;
    Advance();
    }
@@ -313,7 +313,7 @@ bool Interpreter::MacroRuntimeStkEntry::Advance() {
       }
    else {
 TO_NXT_TOK:
-      d_pCurTxt = StrPastAnyWhitespace( d_pCurTxt );
+      d_pCurTxt = StrPastAnyBlanks( d_pCurTxt );
       if( '"' == d_pCurTxt[0] ) { 0 && DBG("+DQ1 '%s'",d_pCurTxt);
          d_flags |= insideDQuotedString;
          d_pCurTxt++;
@@ -329,7 +329,7 @@ int Interpreter::MacroRuntimeStkEntry::chGetAnyMacroPromptResponse() { // return
    auto pC( d_pCurTxt ); if( *pC != '<' ) { return UseDflt; }
    ++pC;  if( 0 == *pC || ' ' == *pC )    { return AskUser; }
    const auto response( *pC );              0 && DBG( "macro prompt-response=%c!", response );
-   d_pCurTxt = StrPastAnyWhitespace( pC + 1 );
+   d_pCurTxt = StrPastAnyBlanks( pC + 1 );
    return response;
    }
 
@@ -379,13 +379,13 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( PChar pDestBuf, int 
       }
    else {
       while( '<' == d_pCurTxt[0] ) { // skip any Prompt Directives
-         d_pCurTxt = StrPastAnyWhitespace( StrToNextWhitespaceOrEos( d_pCurTxt ) );
+         d_pCurTxt = StrPastAnyBlanks( StrToNextBlankOrEos( d_pCurTxt ) );
          }
       if( 0 == d_pCurTxt[0] ) {   0 && DBG("GetNxtTok-    %X EXHAUSTED",d_flags);
          return EXHAUSTED;
          }
 
-      CPCChar pPastEndOfToken( StrToNextWhitespaceOrEos( d_pCurTxt ) );
+      CPCChar pPastEndOfToken( StrToNextBlankOrEos( d_pCurTxt ) );
       const auto len( Min( static_cast<ptrdiff_t>(destBufLen-1), pPastEndOfToken - d_pCurTxt ) );
       memcpy( pDestBuf, d_pCurTxt, len );
       pDestBuf[len] = '\0';
@@ -1068,11 +1068,11 @@ bool ARG::record() {
 
 
 STATIC_FXN boost::string_ref ParseRawMacroText_ContinuesNextLine( boost::string_ref src, bool &continues ) {
-   enum states { outsideQuote, inQuote, prevCharWhite, contCharSeen };
+   enum states { outsideQuote, inQuote, prevCharBlank, contCharSeen };
 
-   states stateWhereWhitespcLastSeen( outsideQuote );
+   states stateWhereBlankLastSeen( outsideQuote );
    states state( outsideQuote );
-   auto fChIsWhite( true );
+   auto fChIsBlank( true );
 
    #if 0
    auto showStChange = []( int line, states statevar, states newval, PCChar pC, PCChar pC_start ) {
@@ -1087,45 +1087,45 @@ STATIC_FXN boost::string_ref ParseRawMacroText_ContinuesNextLine( boost::string_
    auto itContinuationChar( src.cend() );
    for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
       enum { RSRCFILE_COMMENT_DELIM = '#' };
-      if( RSRCFILE_COMMENT_DELIM == *it && fChIsWhite && outsideQuote == stateWhereWhitespcLastSeen ) {
+      if( RSRCFILE_COMMENT_DELIM == *it && fChIsBlank && outsideQuote == stateWhereBlankLastSeen ) {
          itEarlyTerm = it; // term string early and force a break from innerLoop
          break;
          }
 
-      fChIsWhite = isWhite( *it );
+      fChIsBlank = isBlank( *it );
 
       switch( state ) {
        default:             break;
 
-       case outsideQuote:   if( fChIsWhite ) {
-                               stateWhereWhitespcLastSeen = state;
-                               ChangeState( prevCharWhite );
+       case outsideQuote:   if( fChIsBlank ) {
+                               stateWhereBlankLastSeen = state;
+                               ChangeState( prevCharBlank );
                                }
                             else if( '"' == *it ) {
                                ChangeState( inQuote );
                                }
                             break;
 
-       case inQuote:        if( fChIsWhite ) {
-                               stateWhereWhitespcLastSeen = state;
-                               ChangeState( prevCharWhite );
+       case inQuote:        if( fChIsBlank ) {
+                               stateWhereBlankLastSeen = state;
+                               ChangeState( prevCharBlank );
                                }
                             else if( '"' == *it ) {
                                ChangeState( outsideQuote );
                                }
                             break;
 
-       case prevCharWhite:  if( '\\' == *it ) { // continuation char seen?
+       case prevCharBlank:  if( '\\' == *it ) { // continuation char seen?
                                ChangeState( contCharSeen );
                                itContinuationChar = it;
                                break;
                                }
                             //lint -fallthrough
-       case contCharSeen:   if( !fChIsWhite ) {
+       case contCharSeen:   if( !fChIsBlank ) {
                                if( '"' == *it )
-                                  ChangeState( (inQuote == stateWhereWhitespcLastSeen) ? outsideQuote : inQuote );
+                                  ChangeState( (inQuote == stateWhereBlankLastSeen) ? outsideQuote : inQuote );
                                else
-                                  ChangeState( stateWhereWhitespcLastSeen );
+                                  ChangeState( stateWhereBlankLastSeen );
                                }
                             break;
        }
