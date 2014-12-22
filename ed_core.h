@@ -1562,7 +1562,6 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    //************ tab-width-dependent line-content-related calcs
 
    extern COL     LineCols(               PCFBUF fb, LINE yLine );
-   extern COL     ColOfFirstNonBlankChar( PCFBUF fb, LINE yLine );
 
    //************ copy LINE/BOX/STREAM file->file
    extern void    CopyLines(  PFBUF FBdest, LINE yDestStart    , PCFBUF FBsrc, LINE ySrcStart, LINE ySrcEnd );
@@ -1603,19 +1602,17 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    STIL void      DelChar( PFBUF fb, Point pt )             { DelChar( fb, pt.col, pt.lin ); }
 
    //************ text-content scanners
-   extern COL     MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom );
    extern PChar   IsGrepBuf( PCFBUF fb, PChar fnmbuf, const size_t sizeof_fnmbuf, int *pGrepHdrLines );
    extern cppc    IsCppConditional( PCFBUF fb, LINE yLine );
 
    extern bool    IsLineBlank( PCFBUF fb, LINE yLine );
    extern bool    IsBlank( PCFBUF fb );
+   extern COL     MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom );
 
    //************ indent
    extern COL     GetSoftcrIndent( PFBUF fb );
    extern COL     GetSoftcrIndentLua( PFBUF fb, LINE yLine );
    extern COL     SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, PXbuf pxb );
-
-   extern bool    SameIndentRange( PCFBUF fb, LINE *yMin, LINE *yMax, LINE start );
    } // namespace FBOP   namespace FBOP   namespace FBOP   namespace FBOP   namespace FBOP   namespace FBOP   namespace FBOP
 
 

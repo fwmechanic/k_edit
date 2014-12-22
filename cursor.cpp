@@ -48,18 +48,16 @@ bool ARG::right() { PCWrV;
    return g_CursorCol() == CurLineLenTabs2Spcs();
    }
 
-COL FBOP::ColOfFirstNonBlankChar( PCFBUF fb, LINE yLine ) {
-   if( yLine < 0 ) yLine = g_CursorLine();
-
-   if( FBOP::IsLineBlank( fb, yLine ) ) return -1;
+STATIC_FXN COL ColOfFirstNonBlankChar( PCFBUF fb, LINE yLine ) {
    const auto rl( fb->PeekRawLine( yLine ) );
+   if( IsStringBlank( rl ) )            return -1;
    const auto ix( FirstNonBlankCh( rl ) );
    if( boost::string_ref::npos == ix ) return -1;
    return ColOfFreeIdx( fb->TabWidth(), rl, ix );
    }
 
 bool ARG::begline() {
-   const auto xFirstNonBlank( FBOP::ColOfFirstNonBlankChar( g_CurFBuf(), g_CursorLine() ) );
+   const auto xFirstNonBlank( ColOfFirstNonBlankChar( g_CurFBuf(), g_CursorLine() ) );
    const auto xTgt( d_fMeta ? 0 : (g_CursorCol() == xFirstNonBlank ? 0 : xFirstNonBlank) );
    return CurView_MoveCursor_fMoved( g_CursorLine(), xTgt );
    }
@@ -341,19 +339,19 @@ bool ARG::mpara() {
    return g_CursorLine() != origLine;
    }
 
-bool FBOP::SameIndentRange( PCFBUF fb, LINE *yMin, LINE *yMax, LINE start ) { // skip language-specific lines
+STATIC_FXN bool SameIndentRange( PCFBUF fb, LINE *yMin, LINE *yMax, LINE start ) { // skip language-specific lines
    *yMin = *yMax = -1;
    auto goal(-1);
    auto yLine( start );
    for( ; yLine; --yLine ) {
-      goal = FBOP::ColOfFirstNonBlankChar( fb, yLine );
+      goal = ColOfFirstNonBlankChar( fb, yLine );
       if( goal >= 0 )
          break;
       }
    if( goal < 0 ) return false;
 
    for( ; yLine ; --yLine ) {
-      const COL dent( FBOP::ColOfFirstNonBlankChar( fb, yLine ) );
+      const COL dent( ColOfFirstNonBlankChar( fb, yLine ) );
       if( dent >= 0 ) {
          if     ( dent == goal ) *yMin = yLine;
          else if( dent <  goal ) break;
@@ -362,7 +360,7 @@ bool FBOP::SameIndentRange( PCFBUF fb, LINE *yMin, LINE *yMax, LINE start ) { //
    if( *yMin < 0 ) *yMin = 0;
 
    for( yLine = start ; yLine < fb->LineCount(); ++yLine ) {
-      const auto dent( FBOP::ColOfFirstNonBlankChar( fb, yLine ) );
+      const auto dent( ColOfFirstNonBlankChar( fb, yLine ) );
       if( dent >= 0 ) {
          if     ( dent == goal ) *yMax = yLine;
          else if( dent <  goal ) break;
@@ -375,7 +373,7 @@ bool FBOP::SameIndentRange( PCFBUF fb, LINE *yMin, LINE *yMax, LINE start ) { //
 
 STATIC_FXN bool cursorToBoundOfIndentBlock( int bottom ) {
    LINE yMin, yMax;
-   const auto rv( FBOP::SameIndentRange( g_CurFBuf(), &yMin, &yMax, g_CursorLine() ) );
+   const auto rv( SameIndentRange( g_CurFBuf(), &yMin, &yMax, g_CursorLine() ) );
    if( !rv ) return false;
    g_CurView()->MoveCursor_NoUpdtWUC( (bottom>0)?yMax:yMin, g_CursorCol() );
    return true;
