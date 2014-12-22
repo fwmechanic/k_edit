@@ -1173,7 +1173,7 @@ AL2MSS MacroScanIntf::AppendLineToMacroSrcString() {
    enum {DBGEN=0};
    for( ; d_yMacCur <= d_pFBuf->LastLine() ; ++d_yMacCur ) {
       d_pFBuf->getLineTabxPerRealtabs( &d_src, d_yMacCur );
-      if( IsolateTagStr( d_src.wbuf() ) ) { 0 && DBG( "L %d TAG VIOLATION", d_yMacCur );
+      if( !IsolateTagStr( boost::string_ref(d_src.wbuf()) ).empty() ) { 0 && DBG( "L %d TAG VIOLATION", d_yMacCur );
          return FOUND_TAG;
          }
 

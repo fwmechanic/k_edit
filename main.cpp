@@ -543,52 +543,31 @@ PChar IsolateTagStr( PChar pszText ) {
    }
 
 STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) {
-   const auto keyLen( Strlen( pszSectionName ) );
-   0 && DBG( "FindRsrcTag: '%s' L %d", pszSectionName, keyLen );
-   Xbuf xb;
+   0 && DBG( "FindRsrcTag: '%s'", pszSectionName );
+   boost::string_ref srKey( pszSectionName );
    for( auto yLine(startLine) ; yLine <= pFBuf->LastLine(); ++yLine ) {
-      pFBuf->getLineTabxPerRealtabs( &xb, yLine );
-      const auto lbuf( xb.wbuf() );
-      const boost::string_ref tag( IsolateTagStr( boost::string_ref(lbuf) ) );
-      if( auto pszTag = IsolateTagStr( lbuf ) ) {
-         if( !tag.empty() ) { 0 && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
-            for( boost::string_ref::size_type ix( 0 ); ix < tag.length() ; ) {
-               const auto ix0( PastAnyWhitespace( tag, ix ) );
-               const auto ix1( ToNextWhitespaceOrEos( tag, ix0 ) );
-               const auto taglen( ix1 - ix0 );
-               const auto atag( tag.substr( ix0, taglen ) );  0 && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
-               if( eqi( atag, pszSectionName ) ) {
-                  if( fHiLiteTag ) {
-                     const auto pView( pFBuf->PutFocusOn() );
-                     pView->SetMatchHiLite( Point(yLine,ix0), taglen, true );
-                     }
-                  const auto rv( yLine + 1 );
-                  1 && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
-                  return rv;
+      const auto rl( pFBuf->PeekRawLine( yLine ) );
+      const boost::string_ref tag( IsolateTagStr( rl ) );
+      if( !tag.empty() ) { 0 && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
+         for( boost::string_ref::size_type ix( 0 ); ix < tag.length() ; ) {
+            const auto ix0( PastAnyWhitespaceToEnd( tag, ix ) );
+            const auto ix1( ToNextWhitespaceOrEnd( tag, ix0 ) );
+            const auto taglen( ix1 - ix0 );
+            const auto atag( tag.substr( ix0, taglen ) );  0 && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
+            if( eqi( atag, srKey ) ) {
+               if( fHiLiteTag ) {
+                  const auto pView( pFBuf->PutFocusOn() );
+                  pView->SetMatchHiLite( Point(yLine,ix0), taglen, true );
                   }
-               ix = ix1;
+               const auto rv( yLine + 1 );
+               1 && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
+               return rv;
                }
-            }
-         if( 0 ) {
-            while( *pszTag ) {
-               const auto pTagStart( StrPastAnyWhitespace( pszTag ) );
-               pszTag = StrToNextWhitespaceOrEos( pTagStart );
-               const auto tagLen( pszTag - pTagStart );
-               if( tagLen == keyLen && strnicmp_LenOfFirstStr( pszSectionName, pTagStart, tagLen ) == 0 ) {
-                  if( fHiLiteTag ) {
-                     const auto pView( pFBuf->PutFocusOn() );
-                     pView->SetMatchHiLite( Point(yLine,pTagStart-lbuf), tagLen, true );
-                     }
-
-                  const auto rv( yLine + 1 );
-                  1 && DBG( "%s# %d * '%.*s'", __func__, rv, pd2Int(tagLen), pTagStart );
-                  return rv;
-                  }
-               0 && DBG( "FindRsrcTag- '%.*s' L %" PR_PTRDIFFT "d", pd2Int(tagLen), pTagStart, tagLen );
-               }
+            ix = ix1;
             }
          }
       }
+
    return -1;
    }
 

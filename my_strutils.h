@@ -185,8 +185,8 @@ TF_Ptr STIL Ptr  StrToNextWhitespaceOrEos( Ptr pszToSearch ) { return StrToNextO
 TF_Ptr STIL Ptr  StrPastAnyWhitespace(     Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextWhitespaceOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
-extern boost::string_ref::size_type PastAnyWhitespace    ( boost::string_ref src, boost::string_ref::size_type start );
-extern boost::string_ref::size_type ToNextWhitespaceOrEos( boost::string_ref src, boost::string_ref::size_type start );
+extern boost::string_ref::size_type PastAnyWhitespaceToEnd( boost::string_ref src, boost::string_ref::size_type start );
+extern boost::string_ref::size_type ToNextWhitespaceOrEnd ( boost::string_ref src, boost::string_ref::size_type start );
 
 TF_Ptr STIL Ptr  StrToNextWordOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, g_szWordChars ); }
 

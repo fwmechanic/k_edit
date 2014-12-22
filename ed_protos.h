@@ -383,7 +383,6 @@ extern   void  EditorExit( int processExitCode, bool fWriteStateFile );
 extern  PChar  RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext );
 extern   bool  LoadRsrcSectionFound( PCChar pszSectionName, PInt pAssignCountAccumulator );
 extern boost::string_ref IsolateTagStr( boost::string_ref src );
-extern  PChar  IsolateTagStr( PChar pszText );
 extern   bool  LoadFileExtRsrcIniSection( PCChar pszSectionName );
 extern PCChar  LastExtTagLoaded();
 

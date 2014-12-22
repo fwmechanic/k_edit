@@ -160,21 +160,23 @@ bool eqi( boost::string_ref s1, boost::string_ref s2 ) {
    return true;
    }
 
-boost::string_ref::size_type PastAnyWhitespace( boost::string_ref src, boost::string_ref::size_type start ) {
-   if( start >= src.length() ) return boost::string_ref::npos;
-   for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-      if( ' ' != *it && '\t' != *it ) {
-         return std::distance( src.cbegin(), it );
+boost::string_ref::size_type PastAnyWhitespaceToEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( ' ' != *it && '\t' != *it ) {
+            return std::distance( src.cbegin(), it );
+            }
          }
       }
    return std::distance( src.cbegin(), src.end() );
    }
 
-boost::string_ref::size_type ToNextWhitespaceOrEos( boost::string_ref src, boost::string_ref::size_type start ) {
-   if( start >= src.length() ) return boost::string_ref::npos;
-   for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-      if( !(' ' != *it && '\t' != *it) ) {
-         return std::distance( src.cbegin(), it );
+boost::string_ref::size_type ToNextWhitespaceOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( !(' ' != *it && '\t' != *it) ) {
+            return std::distance( src.cbegin(), it );
+            }
          }
       }
    return std::distance( src.cbegin(), src.end() );
