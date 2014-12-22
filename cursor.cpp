@@ -54,7 +54,7 @@ COL FBOP::ColOfFirstNonBlankChar( PCFBUF fb, LINE yLine ) {
    if( FBOP::IsLineBlank( fb, yLine ) ) return -1;
    const auto rl( fb->PeekRawLine( yLine ) );
    const auto ix( FirstNonBlankCh( rl ) );
-   if( ix < 0 ) return -1;
+   if( boost::string_ref::npos == ix ) return -1;
    return ColOfFreeIdx( fb->TabWidth(), rl, ix );
    }
 

@@ -515,7 +515,7 @@ STATIC_FXN PXbuf StreamArgToString( PXbuf dest, PFBUF pfb, Rect stream ) {
       for( auto iy(0); iy <= ix ; ++iy ) {
          if( 1 ) {
             auto ow( FirstNonBlankCh( pstr[iy].bos, pstr[iy].chars ) );
-            if( ow < 0 ) {
+            if( boost::string_ref::npos == ow ) {
                pstr[iy].chars = 0;
                }
             else {

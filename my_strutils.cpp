@@ -327,3 +327,71 @@ PChar _strlwr( PChar buf ) {
 void string_tolower( Path::str_t &inout ) {
    std::transform( inout.begin(), inout.end(), inout.begin(), ::tolower );
    }
+
+boost::string_ref::size_type FirstNonBlankCh( boost::string_ref src ) {
+   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it )
+      if( !isWhite( *it ) )
+         return std::distance( src.cbegin(), it );
+
+   return boost::string_ref::npos;
+   }
+
+bool IsStringBlank( boost::string_ref src ) {
+   for( auto ch : src )
+      if( !isWhite( ch ) )
+         return false;
+
+   return true;
+   }
+
+bool eqi( boost::string_ref s1, boost::string_ref s2 ) {
+   if( s1.length() != s2.length() ) {
+      return false;
+      }
+   for( boost::string_ref::size_type ix( 0 ); ix < s1.length() ; ++ix ) {
+      if( ::tolower( s1[ix] ) != ::tolower( s2[ix] ) ) {
+         return false;
+         }
+      }
+   return true;
+   }
+
+boost::string_ref::size_type PastAnyWhitespaceToEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( ' ' != *it && '\t' != *it ) {
+            return std::distance( src.cbegin(), it );
+            }
+         }
+      }
+   return std::distance( src.cbegin(), src.end() );
+   }
+
+boost::string_ref::size_type ToNextWhitespaceOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( !(' ' != *it && '\t' != *it) ) {
+            return std::distance( src.cbegin(), it );
+            }
+         }
+      }
+   return std::distance( src.cbegin(), src.end() );
+   }
+
+boost::string_ref::size_type find_first_of( boost::string_ref src, boost::string_ref::size_type start, char ky ) {
+   if( start >= src.length() ) return boost::string_ref::npos;
+   for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+      if( ky == *it ) { return std::distance( src.cbegin(), it ); }
+      }
+   return boost::string_ref::npos;
+   }
+
+boost::string_ref::size_type find_first_of( boost::string_ref src, boost::string_ref::size_type start, boost::string_ref key ) {
+   if( start >= src.length() ) return boost::string_ref::npos;
+   for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+      for( auto ky : key ) {
+         if( ky == *it ) { return std::distance( src.cbegin(), it ); }
+         }
+      }
+   return boost::string_ref::npos;
+   }

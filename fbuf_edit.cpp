@@ -276,6 +276,18 @@ COL FBOP::LineCols( PCFBUF fb, LINE yLine ) {
    return fb->PeekRawLineExists( yLine, &bos, &eos ) ? StrCols( fb->TabWidth(), bos, eos ) : 0;
    }
 
+bool FBOP::IsLineBlank( PCFBUF fb, LINE yLine ) {
+   return IsStringBlank( fb->PeekRawLine( yLine ) );
+   }
+
+bool FBOP::IsBlank( PCFBUF fb ) {
+   for( auto iy( 0 ); iy < fb->LineCount() ; ++iy )
+      if( !FBOP::IsLineBlank( fb, iy ) )
+         return false;
+
+   return true;
+   }
+
 //      const Tabber &TabberParam;
 typedef const Tabber  TabberParam;  // 3 calls using this type take less code (-512 byte GCC incr)
 
@@ -1326,35 +1338,6 @@ bool ARG::paste() {
                     }
                     return true;
     }
-   }
-
-
-COL FirstNonBlankCh( boost::string_ref src ) {
-   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it )
-      if( !isWhite( *it ) )
-         return std::distance( src.cbegin(), it );
-
-   return -1;
-   }
-
-bool IsStringBlank( boost::string_ref src ) {
-   for( auto ch : src )
-      if( !isWhite( ch ) )
-         return false;
-
-   return true;
-   }
-
-bool FBOP::IsLineBlank( PCFBUF fb, LINE yLine ) {
-   return IsStringBlank( fb->PeekRawLine( yLine ) );
-   }
-
-bool FBOP::IsBlank( PCFBUF fb ) {
-   for( auto iy( 0 ); iy < fb->LineCount() ; ++iy )
-      if( !FBOP::IsLineBlank( fb, iy ) )
-         return false;
-
-   return true;
    }
 
 

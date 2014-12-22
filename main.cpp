@@ -529,19 +529,6 @@ boost::string_ref IsolateTagStr( boost::string_ref src ) {
    return src.substr( 0, ixRSQ );
    }
 
-PChar IsolateTagStr( PChar pszText ) {
-   const auto pStart( StrPastAnyWhitespace( pszText ) );
-   if( *pStart != chLSQ )
-      return nullptr;
-
-   const auto pEnd( StrToNextOrEos( pStart, "]" ) );
-   if( *pEnd == 0 )
-      return nullptr;
-
-   *pEnd = '\0';
-   return pStart + 1;
-   }
-
 STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) {
    0 && DBG( "FindRsrcTag: '%s'", pszSectionName );
    boost::string_ref srKey( pszSectionName );
