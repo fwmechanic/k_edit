@@ -515,7 +515,9 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
    if( !IsStringBlank( rl ) ) {
       const auto maxIx( CaptiveIdxOfCol( tw, rl, xMax+1 ) );
       const auto nonb( PastAnyBlanksToEnd( rl, 0 ) );
-      DBG( "nonb=%" PR_BSRSIZET "u maxIx=%" PR_BSRSIZET "u", nonb, maxIx );
+            // 20141223 KG I give up! Cannot get this to stop warning w/o causing printf in
+            //   sweep_CaptiveIdxOfCol to warn (both are warning on reval of SAME FUNCTION!!!)
+            // 0 && DBG( "nonb=%" PR_BSRSIZET "u maxIx=%" PR_BSRSIZET "u", nonb, maxIx );
       if( nonb < maxIx ) {
          rl.remove_suffix( rl.length() - maxIx );
          rl.remove_prefix( nonb );
