@@ -972,9 +972,9 @@ bool ARG::ldelete() { PCFV;
    switch( d_argType ) {
     default:        return BadArg();
     case NOARG:     PCFV_delete_LINEARG( { d_noarg.cursor.lin, d_noarg.cursor.lin }, !d_fMeta ); break; // Deletes the line at the cursor
-    case NULLARG:   PCFV_delete_ToEOL( d_nullarg.cursor, !d_fMeta ); break;                             // Deletes text from the cursor to the end of the line
-    case LINEARG:   PCFV_delete_LINEARG( d_linearg, !d_fMeta ); break;
-    case BOXARG:    PCFV_delete_BOXARG( d_boxarg, !d_fMeta ); break;
+    case NULLARG:   PCFV_delete_ToEOL( d_nullarg.cursor, !d_fMeta );                             break; // Deletes text from the cursor to the end of the line
+    case LINEARG:   PCFV_delete_LINEARG( d_linearg, !d_fMeta );                                  break;
+    case BOXARG:    PCFV_delete_BOXARG( d_boxarg, !d_fMeta );                                    break;
     }
    return true;
    }
@@ -983,11 +983,11 @@ bool ARG::udelete() { // "user interface" delete; does not convert BOX/LINE/STRE
    switch( d_argType ) {
     default:        return BadArg();
     case NOARG:     PCFV_delete_LINEARG( { d_noarg.cursor.lin, d_noarg.cursor.lin }, !d_fMeta ); break; // Deletes the line at the cursor
-    case NULLARG:   PCFV_delete_ToEOL( d_nullarg.cursor, !d_fMeta ); break;                             // Deletes text from the cursor to the end of the line
-    case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, !d_fMeta ); break;
-    case LINEARG:   PCFV_delete_LINEARG( d_linearg, !d_fMeta ); break;
-    case BOXARG:    PCFV_delete_BOXARG( d_boxarg, !d_fMeta, d_cArg < 2 );
-                    break;
+    case NULLARG:   PCFV_delete_ToEOL( d_nullarg.cursor, !d_fMeta );                             break; // Deletes text from the cursor to the end of the line
+    case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, !d_fMeta );                              break;
+    case LINEARG:   PCFV_delete_LINEARG( d_linearg, !d_fMeta );                                  break;
+    case BOXARG:    PCFV_delete_BOXARG( d_boxarg, !d_fMeta, d_cArg < 2 );                        break;
+
     }
    return true;
    }

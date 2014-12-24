@@ -148,13 +148,13 @@ w savescreen   savescreen                NOARG+TEXTARG+BOXSTR , save screen cont
 # shell        shell                     BOXARG + NULLEOL + NOARG + LINEARG + TEXTARG
   shex         shex                      BOXSTR + TEXTARG , execute arg string with Win32's ShellExecute's default verb
   sinsert      sinsert        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG
-# stream       stream                    STREAMARG , stream-to-string test
+# stream       stream                    STREAMARG , test StreamArgToString
 # strftime     strftime                  TEXTARG , strftime
 # su           silentUpdate              NOARG , SilentUpdate mode: if disk file is detected to be newer than editor version, it will be immediately updated w/o prompting the user
   sync         sync                      NOARG , For each opened file, if the disk file is newer, re-read the file
   tab          tab            CURSORFUNC
   tell         tell                      BOXSTR + NOARG + TEXTARG, Describe a key assignment or macro
-w towinclip    towinclip                 NOARG+BOXARG+LINEARG+TEXTARG+NULLEOW , <clipboard> ==> Windows Clipboard
+w towinclip    towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+NULLEOW , <clipboard> ==> Windows Clipboard
   true         true_                     BOXARG + STREAMARG + NOARG + LINEARG
   udelete      udelete        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , user interface delete; works intuitively in both stream and box modes
   unassigned   unassigned                BOXARG + STREAMARG + NOARG + LINEARG + NULLARG + TEXTARG  # this help will not show

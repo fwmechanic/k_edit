@@ -663,7 +663,8 @@ STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, PCChar pRawBuf, PCChar eo
           :                                                                                  xCol   + delta ;
    }
 
-// CharWalkRect is called by PBalFindMatching, PMword, and GenericReplace
+// CharWalkRect is called by PBalFindMatching, PMword, and
+// GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
 STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fMoveFwd, CharWalker *pWalker ) {
    const auto tw( pFBuf->TabWidth() );
    #define SETUP_LINE_TEXT                                      \
@@ -2434,6 +2435,23 @@ char toLower( int ch ) {
 
 //--------------------------------------------------------------
 
+STATIC_FXN boost::string_ref::size_type strnstr( boost::string_ref haystack, boost::string_ref needle ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
+   if( needle.length() > haystack.length() ) return boost::string_ref::npos;
+   const auto cend( haystack.cend() - needle.length() );
+   for( auto hit( haystack.cbegin() ) ; hit != cend ; ++hit ) {
+      if( *hit == needle[0] ) {
+         auto pH( hit ); auto pN( needle.cbegin() );
+         do {
+            ++pH; ++pN;
+            if( pN == needle.cend() ) {
+                return std::distance( haystack.cbegin(), hit );
+                }
+            } while( *pH == *pN );
+         }
+      }
+   return boost::string_ref::npos;
+   }
+
 STATIC_FXN PCChar strnstri( PCChar haystack, int haystackLen, PCChar needle, int needleLen ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
    const auto pEnd( haystack + haystackLen - needleLen + 1 ); // stop looking at
    while( haystack < pEnd ) {
@@ -2453,10 +2471,6 @@ STATIC_FXN PCChar strnstri( PCChar haystack, int haystackLen, PCChar needle, int
    return nullptr;
    }
 
-//
-// this is 6 TIMES faster(!) than a version which uses 'intrinsic'
-// memcmp which uses rep cmpsd + rep cmpsb + many setup instructions!
-//
 STATIC_FXN PCChar strnstr( PCChar haystack, int haystackLen, PCChar needle, int needleLen ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
    auto pEnd( haystack + haystackLen - needleLen + 1 ); // stop looking at
    while( haystack < pEnd ) {

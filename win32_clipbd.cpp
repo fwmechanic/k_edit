@@ -108,6 +108,10 @@ bool ARG::towinclip() {
          }
       *bufptr++ = '\0'; // buffer terminator
       }
+   else if( d_argType == STREAMARG ) {
+      stbuf = StreamArgToString( g_CurFBuf(), d_streamarg );
+      goto SINGLE_LINE; // HACK O'RAMA!
+      }
    else if( d_argType == TEXTARG ) {
       stbuf.assign( d_textarg.pText );
 

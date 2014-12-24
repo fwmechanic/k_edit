@@ -651,6 +651,8 @@ public:
 
    };  STD_TYPEDEFS( ARG )
 
+extern std::string StreamArgToString( PFBUF pfb, Rect stream );
+
 // PCFV_ fxns operate on the current View/FBUF, using ARG::-typed params
 // intended mostly for use within ARG:: methods
 extern void PCFV_delete_STREAMARG( ARG::STREAMARG_t const &d_streamarg, bool copyToClipboard );

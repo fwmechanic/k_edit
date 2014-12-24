@@ -186,6 +186,7 @@ TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos(
 extern boost::string_ref::size_type FirstNonBlankCh( boost::string_ref src );
 extern boost::string_ref::size_type PastAnyBlanksToEnd( boost::string_ref src, boost::string_ref::size_type start );
 extern boost::string_ref::size_type ToNextBlankOrEnd ( boost::string_ref src, boost::string_ref::size_type start );
+extern void rmv_trail_blanks( std::string &st );
 
 TF_Ptr STIL Ptr  StrToNextWordOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, g_szWordChars ); }
 
