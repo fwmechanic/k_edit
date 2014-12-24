@@ -383,6 +383,7 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    if( fWriteStateFile ) {                               DV && DBG("%s LuaCtxt_ALL::call_EventHandler( \"EXIT\" );", __func__ );
       LuaCtxt_ALL::call_EventHandler( "EXIT" );          DV && DBG("%s WriteStateFile();", __func__ );
       WriteStateFile();
+      cmdusage_updt();
       }
                                                          DV && DBG("%s LuaClose();", __func__ );
    LuaClose();
@@ -547,14 +548,13 @@ STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE star
                   pView->SetMatchHiLite( Point(yLine,ix0), taglen, true );
                   }
                const auto rv( yLine + 1 );
-               1 && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
+               0 && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
                return rv;
                }
             ix = ix1;
             }
          }
       }
-
    return -1;
    }
 

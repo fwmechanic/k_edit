@@ -578,7 +578,7 @@ bool ARG::InitOk( PCCMD pCmd ) {
    return true;
    }
 
-bool ARG::Invoke() {
+bool ARG::Invoke() { 0 && DBG( "%s %s", FUNC, CmdName() );
    d_pCmd->IncrCallCount();
 
    // most of what follows is monitoring activity, not functionality-related...

@@ -523,7 +523,6 @@ STATIC_FXN void DeleteCMD( void *pData, void *pExtra ) {
    }
 
 void CmdIdxClose() {
-   cmdusage_updt();
    rb_dealloc_treev( s_CmdIdxAddins, nullptr, DeleteCMD );
    rb_dealloc_tree(  s_CmdIdxBuiltins );
    }
