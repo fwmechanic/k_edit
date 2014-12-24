@@ -120,7 +120,7 @@ w fromwinclip  fromwinclip               NOARG , Windows Clipboard ==> <clipboar
   popd         popd                      NOARG + KEEPMETA ,
   ppage        ppage          CURSORFUNC , scroll cursor down one page
   ppara        ppara          CURSORFUNC , scroll cursor down one paragraph
-  prompt       prompt                    BOXSTR + NOARG + TEXTARG + NULLEOW + KEEPMETA
+  prompt       prompt                    BOXSTR + TEXTARG + NULLEOW + KEEPMETA
   psearch      psearch                   BOXSTR + NOARG + TEXTARG + NULLEOW , Forward search
   pword        pword          CURSORFUNC , Moves cursor to first char of next word.  META: Moves cursor to first char following next word
   qreplace     qreplace       MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Interactive single-file (or arg-region) replace

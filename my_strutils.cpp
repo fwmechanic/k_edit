@@ -379,8 +379,7 @@ boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::str
    }
 
 void rmv_trail_blanks( std::string &st ) {
-   while( !st.empty() ) {
-      if( isBlank( st.back() ) ) st.pop_back();
-      else break;
+   while( !st.empty() && isBlank( st.back() ) ) {
+      st.pop_back();
       }
    }

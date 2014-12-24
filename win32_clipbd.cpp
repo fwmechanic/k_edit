@@ -2,39 +2,33 @@
 // Copyright 1991 - 2014 by Kevin L. Goodwin; All rights reserved
 //
 
+// Win32 Clipboard interface
+
 #include "ed_main.h"
-
 #include "win32_pvt.h"
-
-//
-//#############################################################################################################################
-//##########################################  Win32 CLIPBOARD INTERFACE  ######################################################
-//#############################################################################################################################
-//
 
 STATIC_CONST char ClipUnavail[] = "Windows Clipboard Unavailable";
 
-STATIC_FXN bool PrepClip( long size, Win32::HGLOBAL *hglbCopy, PInt sizeofHglbCopy, PPChar bufptr ) {
+STATIC_FXN bool PrepClip( long size, Win32::HGLOBAL &hglbCopy, int &sizeofHglbCopy, PChar &bufptr ) {
    if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) ) {
-      *bufptr = nullptr;         // 2 stmts so -O3 optimizer can see the (constant) retval in this path
-      return Msg( ClipUnavail ); // error: can't do the op
+      bufptr = nullptr;
+      return Msg( ClipUnavail );
       }
 
    Win32::EmptyClipboard();
 
    // Allocate a global memory object for the text.
-
    ++size; // for EoL ('\0')
-   DBG( "WinClip new [%lu]", size );
-   *sizeofHglbCopy = size;
-   *hglbCopy = Win32::GlobalAlloc( GMEM_MOVEABLE|GMEM_DDESHARE, size * sizeof(Win32::TCHAR) );
-   if( *hglbCopy == nullptr ) {
+   0 && DBG( "WinClip new [%lu]", size );
+   sizeofHglbCopy = size;
+   hglbCopy = Win32::GlobalAlloc( GMEM_MOVEABLE|GMEM_DDESHARE, size * sizeof(Win32::TCHAR) );
+   if( hglbCopy == nullptr ) {
       Win32::CloseClipboard();
       return Msg( "Win32::GlobalAlloc could not allocate %lu bytes!", size );
       }
 
    // Lock the handle so we can copy text into this buffer
-   *bufptr = PChar(Win32::GlobalLock(*hglbCopy));
+   bufptr = static_cast<PChar>( Win32::GlobalLock( hglbCopy ) );
    return true;
    }
 
@@ -59,7 +53,7 @@ bool ARG::towinclip() {
       PFBUF pFBuf(g_CurFBuf());
       PCChar srcNm(nullptr);
       if( d_argType == NOARG ) {
-         DBG( "NOARG->WinClip" );
+         0 && DBG( "NOARG->WinClip" );
          if( g_pFbufClipboard->LineCount() == 0 )
             return ErrPause( "<clipboard> is empty!" );
          pFBuf = g_pFbufClipboard;
@@ -92,7 +86,7 @@ bool ARG::towinclip() {
          size += stbuf.length() + 2; // + 2 for '\r\n'
          }
 
-      if( !PrepClip( size, &hglbCopy, &hglbBytes, &bufptr ) ) // +1 for trailing '\0'
+      if( !PrepClip( size, hglbCopy, hglbBytes, bufptr ) ) // +1 for trailing '\0'
          return false;
 
       // copy source data into into *bufptr
@@ -113,14 +107,12 @@ bool ARG::towinclip() {
       goto SINGLE_LINE; // HACK O'RAMA!
       }
    else if( d_argType == TEXTARG ) {
-      stbuf.assign( d_textarg.pText );
-
+      stbuf = d_textarg.pText;
 SINGLE_LINE: // HACK O'RAMA!
-
       const auto blen( stbuf.length() );
-      Msg( "%s->WinClip %" PR_SIZET "u|%s|", ArgTypeName(), blen, stbuf.c_str() );
+      Msg( "%s(%" PR_SIZET "u)->WinClip:\"%s\"", ArgTypeName(), blen, stbuf.c_str() );
 
-      if( !PrepClip( blen, &hglbCopy, &hglbBytes, &bufptr ) )
+      if( !PrepClip( blen, hglbCopy, hglbBytes, bufptr ) )
          return false;
 
       memcpy( bufptr, stbuf.c_str(), blen+1 );
@@ -141,13 +133,11 @@ SINGLE_LINE: // HACK O'RAMA!
    return true;
    }
 
-
 // CF_TEXT format seems to be more prevalently generated than CF_OEMTEXT by our
 // beloved GUI apps, so it's what we ask for...
 //
 bool ARG::fromwinclip() {
    auto retVal(false);
-
    if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) )
       ErrPause( ClipUnavail ); // error: can't do the op
    else {
@@ -178,23 +168,22 @@ bool ARG::fromwinclip() {
    return retVal;
    }
 
-
-void WinClipGetFirstLine( std::string &xb ) {
+void WinClipGetFirstLine( std::string &dest ) {
    if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) )
-      xb = ClipUnavail;
+      dest = ClipUnavail;
    else {
       if( !Win32::IsClipboardFormatAvailable(CF_TEXT) )
-         xb = "CF_TEXT format data not available";
+         dest = "CF_TEXT format data not available";
       else {
          auto hglb( Win32::GetClipboardData( CF_TEXT ) );
          if( !hglb )
-            xb = "GetClipboardData failed";
+            dest = "GetClipboardData failed";
          else {
             const auto pClip( PCChar(Win32::GlobalLock( hglb )) );
             if( !pClip )
-               xb = "GlobalLock on ClipboardData failed";
+               dest = "GlobalLock on ClipboardData failed";
             else {
-               xb.assign( pClip, StrToNextOrEos( pClip, "\x0D\x0A" ) - pClip );
+               dest.assign( pClip, StrToNextOrEos( pClip, "\x0D\x0A" ) - pClip );
                Win32::GlobalUnlock( hglb );
                }
             }

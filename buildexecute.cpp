@@ -495,10 +495,8 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
       if( stream.flMin.col < lastCol ) {
          rl.remove_prefix( CaptiveIdxOfCol( tw, rl, stream.flMin.col ) );
          const auto nonb( PastAnyBlanksToEnd( rl, 0 ) );
-         if( nonb < rl.length() ) {
-            rl.remove_prefix( nonb );
-            append_rv( rl );
-            }
+         rl.remove_prefix( nonb );
+         append_rv( rl );
          }
       }
    }
@@ -998,10 +996,10 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
    return pCmd;
    }
 
-PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
+PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
    // catch (& hide) std::string-related exceptions in GetTextargString_
    try {
-      return GetTextargString_( xb, pszPrompt, xCursor, pCmd, flags, pfGotAnyInputFromKbd );
+      return GetTextargString_( dest, pszPrompt, xCursor, pCmd, flags, pfGotAnyInputFromKbd );
       }
    catch( const std::out_of_range& exc ) {
       Msg( "%s caught std::out_of_range %s", __func__, exc.what() );
@@ -1127,18 +1125,18 @@ bool fExecute( PCChar strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%s'", 
    return g_fFuncRetVal;
    }
 
-STATIC_FXN bool GetTextargStringNXeq( std::string &xb, int cArg, COL xCursor ) {
+STATIC_FXN bool GetTextargStringNXeq( std::string &str, int cArg, COL xCursor ) {
    while( cArg-- )
       IncArgCnt();
 
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( xb, FmtStr<25>( "Arg [%d]: ", ArgCount() ), xCursor, nullptr, gts_DfltResponse, &fGotAnyInputFromKbd ) );
+   const auto pCmd( GetTextargString( str, FmtStr<25>( "Arg [%d]: ", ArgCount() ), xCursor, nullptr, gts_DfltResponse, &fGotAnyInputFromKbd ) );
    if( !pCmd ) // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
       return false;
 
    s_fHaveLiteralTextarg = true;
    if( fGotAnyInputFromKbd )
-      AddToTextargStack( xb );
+      AddToTextargStack( str );
 
    return pCmd->BuildExecute();
    }
@@ -1186,11 +1184,10 @@ bool ARG::lasttext() {
    }
 
 bool ARG::prompt() {
-   std::string xb;
-   switch( d_argType ) {
-      default:        return BadArg();
-      case TEXTARG:   xb = d_textarg.pText;  break;
+   if( TEXTARG != d_argType ) {
+      return BadArg();
       }
+   std::string src( d_textarg.pText );
 
    auto cArg( d_cArg );
    while( cArg-- )
@@ -1199,7 +1196,7 @@ bool ARG::prompt() {
    TextArgBuffer().clear();
 
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( TextArgBuffer(), xb.c_str(), 0, nullptr, gts_fKbInputOnly+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
+   const auto pCmd( GetTextargString( TextArgBuffer(), src.c_str(), 0, nullptr, gts_fKbInputOnly+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
    if( !pCmd || pCmd->IsFnCancel() )
       return false;
 
