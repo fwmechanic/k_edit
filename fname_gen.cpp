@@ -480,7 +480,7 @@ CfxFilenameGenerator::CfxFilenameGenerator( PCChar macroText, WildCardMatchMode 
    : d_splitLine( macroText, Path::EnvSepStr() )
    , d_matchMode( matchMode )
    {
-   d_splitLine.DBG();
+   // d_splitLine.DBG();
    MFSPEC_D && DBG( "%s::'%s' (INCOMPLETE)", __func__, macroText );
    // d_splitLine.DBG();
    }
