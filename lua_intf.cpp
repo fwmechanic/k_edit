@@ -789,7 +789,6 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
        case 'b':  lua_pushboolean(  L, va_arg(vl, int   ) != 0            );  break; // NB: boolean is an int-sized thing!
        case 's':  lua_pushstring(   L, va_arg(vl, PCChar)                 );  break;
        case 'S':  lua_pushstring(   L, va_arg(vl, std::string *)->c_str() );  break;
-       case 'x':  lua_pushstring(   L, va_arg(vl, PXbuf )->c_str()         );  break;
        case '>':  goto CALL_LUA_FUNCTION;
        }
       luaL_checkstack( L, 1, "too many arguments" );
@@ -835,14 +834,6 @@ CALL_LUA_FUNCTION:
                   size_t srcBytes;
                   auto pSrc( lua_tolstring(L, nres, &srcBytes) );
                   va_arg(vl, std::string *)->assign( pSrc, srcBytes );
-                  }
-                  break;
-
-       case 'x':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
-                  {
-                  size_t srcBytes;
-                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );
-                  va_arg(vl, PXbuf)->assign( pSrc, srcBytes+1 );
                   }
                   break;
 
