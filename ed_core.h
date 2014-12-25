@@ -496,7 +496,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class LineColors       ;  STD_TYPEDEFS( LineColors )
-class LineColorsClipped;  STD_TYPEDEFS( LineColorsClipped )
+class LineColorsClipped;
 
 //-----------------------------------------------------------------------------
 
