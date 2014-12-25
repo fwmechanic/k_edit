@@ -221,9 +221,9 @@ typedef       PC##name *       PPC##name;
 //
 typedef unsigned int   UI;  STD_TYPEDEFS( UI  )
 typedef uint8_t  U8;        STD_TYPEDEFS( U8 )
-typedef uint16_t U16;       STD_TYPEDEFS( U16 )
-typedef uint32_t U32;       STD_TYPEDEFS( U32 )
-typedef uint64_t U64;       STD_TYPEDEFS( U64 )
+typedef uint16_t U16;
+typedef uint32_t U32;
+typedef uint64_t U64;
 
 typedef signed   int   SI ; STD_TYPEDEFS( SI  )
 typedef  int8_t  S8 ;       STD_TYPEDEFS( S8  )
