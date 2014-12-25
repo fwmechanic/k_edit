@@ -24,9 +24,9 @@ union USwiAct {             // switch location or routine
    };
 
 
-struct SWI; STD_TYPEDEFS( SWI )
+struct SWI;
 
-typedef bool (*pfxDefnswi)( PCSWI pSwi, PCChar pszNewValue );
+typedef bool (*pfxDefnswi)( const SWI *pSwi, PCChar pszNewValue );
 typedef void (*pfxDispswi)( PChar dest, size_t sizeofDest, void *src );
 
 struct SWI {                 // switch definition entry
@@ -215,7 +215,7 @@ extern bool g_fM4backtickquote;
 
 // swin(e)s
 
-STATIC_FXN bool swinVAR_BOOL( PCSWI pSwi, PCChar pszNewValue ) {
+STATIC_FXN bool swinVAR_BOOL( const SWI *pSwi, PCChar pszNewValue ) {
    0 && DBG( "VAR_BOOL nm=%s, val=%s'", pSwi->name, pszNewValue );
    if(   (Stricmp( "no", pszNewValue ) == 0)
       || (Strcmp (  "0" , pszNewValue ) == 0)
@@ -241,7 +241,7 @@ STATIC_FXN bool swinVAR_BOOL( PCSWI pSwi, PCChar pszNewValue ) {
    return ErrorDialogBeepf( "Boolean switch '%s' needs 'yes', 'no', or 'invert' (0/1/-) value", pSwi->name );
    }
 
-STATIC_FXN bool swinCOLOR( PCSWI pSwi, PCChar pszNewValue ) {
+STATIC_FXN bool swinCOLOR( const SWI *pSwi, PCChar pszNewValue ) {
    const auto conv_base( 16 );
    const auto newVal( StrToInt_variable_base( pszNewValue, conv_base ) );
    if( newVal == -1 )
@@ -253,7 +253,7 @@ STATIC_FXN bool swinCOLOR( PCSWI pSwi, PCChar pszNewValue ) {
    return true;
    }
 
-STATIC_FXN bool swinVAR_INT( PCSWI pSwi, PCChar pszNewValue ) {
+STATIC_FXN bool swinVAR_INT( const SWI *pSwi, PCChar pszNewValue ) {
    const auto conv_base( 10 );
    const auto newVal( StrToInt_variable_base( pszNewValue, conv_base ) );
    if( newVal == -1 )
@@ -263,7 +263,7 @@ STATIC_FXN bool swinVAR_INT( PCSWI pSwi, PCChar pszNewValue ) {
    return true;
    }
 
-bool swinWBC_INT( PCSWI pSwi, PCChar pszNewValue ) {
+bool swinWBC_INT( const SWI *pSwi, PCChar pszNewValue ) {
    const auto conv_base( 10 );
    const auto newVal( StrToInt_variable_base( pszNewValue, conv_base ) );
    if( newVal == -1 )
@@ -280,14 +280,14 @@ bool swinWBC_INT( PCSWI pSwi, PCChar pszNewValue ) {
    }
 
 
-STATIC_FXN bool swinFXN_BOOL( PCSWI pSwi, PCChar pszNewValue ) {
+STATIC_FXN bool swinFXN_BOOL( const SWI *pSwi, PCChar pszNewValue ) {
    if( pSwi->act.pFunc( pszNewValue ) )
       return true;
 
    return ErrorDialogBeepf( "%s: Invalid value '%s'", pSwi->name, pszNewValue );
    }
 
-STATIC_FXN bool swinFXN_STR( PCSWI pSwi, PCChar pszNewValue ) {
+STATIC_FXN bool swinFXN_STR( const SWI *pSwi, PCChar pszNewValue ) {
    const auto msg( pSwi->act.pFunc2( pszNewValue ) );
    if( !msg )
       return true;
@@ -366,7 +366,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  };
 
 
-STATIC_FXN PCSWI FindSwitch( PCChar pszSwiName ) {
+STATIC_FXN const SWI *FindSwitch( PCChar pszSwiName ) {
    for( const auto &Swi : s_SwiTable )
       if( Swi.NameMatch( pszSwiName ) )
          return &Swi;
