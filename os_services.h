@@ -196,7 +196,7 @@ protected:
    void   Resume()  { Start(); }
    double Capture() { TCapture now; GetTOD( &now ); return Capture_( now ); }
 
-   }; STD_TYPEDEFS(PerfCounter)
+   };
 
 
 class MainThreadPerfCounter : public PerfCounter {
@@ -211,7 +211,7 @@ class MainThreadPerfCounter : public PerfCounter {
    static void PauseAll();
    static void ResumeAll();
 
-   }; STD_TYPEDEFS(MainThreadPerfCounter)
+   };
 
 namespace ThisProcessInfo {
    void   Init();
