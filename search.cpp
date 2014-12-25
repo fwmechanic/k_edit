@@ -338,9 +338,9 @@ struct SearchSpecifier {
    void   Dbgf( PCChar tag ) const;
    PCChar SrchStr()    const { return d_rawStr ? d_rawStr : ""; }
    int    SrchStrLen() const { return d_rawStrLen; }
-   };  STD_TYPEDEFS( SearchSpecifier )
+   };
 
-STATIC_VAR PSearchSpecifier s_searchSpecifier;
+STATIC_VAR SearchSpecifier *s_searchSpecifier;
 
 #if USE_PCRE
 static void CDECL__ atexit_Search() {
