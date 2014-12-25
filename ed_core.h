@@ -441,7 +441,7 @@ public:
       return c_str();
       }
 
-   };  STD_TYPEDEFS( Xbuf )
+   };  typedef Xbuf *PXbuf;
 
 
 class LineInfo { // LineInfo is a standalone class since it is used by both FBUF and various subclasses of EditRec (undo/redo)
