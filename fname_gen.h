@@ -14,7 +14,7 @@ public:
    PathStrGenerator() {}
    virtual bool VGetNextName( Path::str_t &dest ) = 0;
    virtual ~PathStrGenerator() {}
-   }; STD_TYPEDEFS( PathStrGenerator )
+   };
 
 class WildcardFilenameGenerator : public PathStrGenerator {
    NO_COPYCTOR(WildcardFilenameGenerator);
