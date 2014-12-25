@@ -67,8 +67,6 @@ struct SearchScanMode {
    STATIC_CONST SearchScanMode smFwd    = { true  };
    STATIC_CONST SearchScanMode smBackwd = { false };
 
-   STD_TYPEDEFS( SearchScanMode )
-
 //****************************
 
 class SearchStats { // found only in FileSearchMatchHandler
@@ -2022,18 +2020,18 @@ FileSearcher *NewFileSearcher(
    }
 
 
-bool GenericSearch( ARG *pArg, PCSearchScanMode sm ) {
+bool GenericSearch( ARG *pArg, const SearchScanMode &sm ) {
    if( !SearchSpecifierOK( pArg ) )
       return false;
 
    Point                        curPt;
-   if(      &smBackwd == sm ) { curPt = Point( g_CurView()->Cursor(), 0, -1 ); }
-   else if( &smFwd == sm    ) { curPt = Point( g_CurView()->Cursor(), 0, +1 ); }
+   if(      &smBackwd == &sm ) { curPt = Point( g_CurView()->Cursor(), 0, -1 ); }
+   else if( &smFwd    == &sm ) { curPt = Point( g_CurView()->Cursor(), 0, +1 ); }
    else {   /*suppress warning*/curPt = Point(0,0);  Assert( !"invalid sm value" ); }
 
-   auto mh( new FindPrevNextMatchHandler( sm->d_fSearchForward, s_searchSpecifier->IsRegex(), s_searchSpecifier->SrchStr() ) );
+   auto mh( new FindPrevNextMatchHandler( sm.d_fSearchForward, s_searchSpecifier->IsRegex(), s_searchSpecifier->SrchStr() ) );
 
-   auto pSrchr( NewFileSearcher( FileSearcher::fsTABSAFE_STRING, *sm, *s_searchSpecifier, *mh ) );
+   auto pSrchr( NewFileSearcher( FileSearcher::fsTABSAFE_STRING, sm, *s_searchSpecifier, *mh ) );
    if( !pSrchr ) {
       Delete0( mh );
       return false;
@@ -2052,8 +2050,8 @@ bool GenericSearch( ARG *pArg, PCSearchScanMode sm ) {
    }
 
 
-bool ARG::msearch()   { return GenericSearch( this, &smBackwd ); }
-bool ARG::psearch()   { return GenericSearch( this, &smFwd    ); }
+bool ARG::msearch()   { return GenericSearch( this, smBackwd ); }
+bool ARG::psearch()   { return GenericSearch( this, smFwd    ); }
 
 
 //-------------------------- pbal

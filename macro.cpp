@@ -240,7 +240,7 @@ namespace Interpreter {
 
                                   ; }
 
-      }; STD_TYPEDEFS( MacroRuntimeStkEntry )
+      };
 
    STATIC_VAR  MacroRuntimeStkEntry  s_MacroRuntimeStack[ MAX_MACRO_NESTING ];
    STATIC_VAR  int                   s_ixPastTOS;
