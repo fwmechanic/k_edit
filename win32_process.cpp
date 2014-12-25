@@ -587,7 +587,7 @@ struct Win32pty_job_Q_el {
 
    ~Win32pty_job_Q_el() { Free0( d_PtyXeqParam ); }
 
-   };  STD_TYPEDEFS( Win32pty_job_Q_el )
+   };
 
 class Win32_pty {
    STATIC_VAR Win32_pty             *s_Win32_pty_ListHead;
@@ -722,7 +722,7 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
    Xbuf x1, x2;
    Win32::AutoSignalEvent amce( d_AllJobsDone );
    while( true ) { //**************** outerthreadloop ****************
-      PWin32pty_job_Q_el pEl;
+      Win32pty_job_Q_el *pEl;
       {
       AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
       d_processInfo.dwProcessId = INVALID_dwProcessId;

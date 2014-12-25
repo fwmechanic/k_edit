@@ -601,7 +601,7 @@ class TMouseEvent {
 public:
    TMouseEvent( const Win32::MOUSE_EVENT_RECORD &MouseEv );
    void  Process();
-   }; STD_TYPEDEFS( TMouseEvent )
+   };
 
 
 // MOUSE_EVENT_RECORD  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/mouse_event_record_str.asp
