@@ -993,7 +993,7 @@ enum eFileType
 
 
 struct   NamedPoint;
-typedef  DLinkHead<NamedPoint>  NamedPointHead;  STD_TYPEDEFS( NamedPointHead )
+typedef  DLinkHead<NamedPoint>  NamedPointHead;
 
 
 extern bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ); // a very friendly (with FBUF) function
