@@ -321,7 +321,7 @@ public:
    PCChar kresize( size_t size ) { return wresize( size ); }
 
    size_t length() {
-      const auto pnul( CPChar( memchr( d_buf, 0, d_buf_bytes ) ) );
+      const auto pnul( PChar( memchr( d_buf, 0, d_buf_bytes ) ) );
       return pnul ? pnul - d_buf : 0;
       }
 

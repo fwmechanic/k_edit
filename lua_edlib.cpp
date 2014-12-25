@@ -230,7 +230,7 @@ LUAFUNC_(bitstr2hexstr) {
    const auto bdigits( consec_bdigits( inst ) );
    const auto outchars( (bdigits / 4) + ((bdigits % 4) != 0) );
 
-   CPChar outbuf = PChar( alloca( outchars+1 ) );
+   const PChar outbuf = PChar( alloca( outchars+1 ) );
    outbuf[outchars] = '\0';
    auto pb = outbuf + outchars;
    auto pc = inst + bdigits;

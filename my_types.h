@@ -129,15 +129,6 @@ template<typename T> class TD;
 #define BEYOND_END(ary) ( (ary) + ELEMENTS(ary) )
 #define PAST_END(ary)   BEYOND_END(ary)
 
-// 20141225 DEPRECATED!!! USE NO MORE!!!  STD_TYPEDEF2
-#define STD_TYPEDEF2( basename, name )    \
-typedef       basename *         P##name; \
-typedef const P##name           CP##name; \
-typedef const basename *        PC##name; \
-typedef        P##name *        PP##name; \
-typedef       basename const * const CPC##name; \
-typedef       PC##name *       PPC##name;
-
 //-----
 //
 // Since I've adopted a tactic of always including a trailing 'sizeof buffer'
@@ -223,8 +214,14 @@ typedef  int64_t S64;
 
 typedef  size_t  uint_machineword_t; // 32-bit on i386, 64-bit on x64
 
-STD_TYPEDEF2( char, Char )
-STD_TYPEDEF2( void, Void )
+typedef       char *         PChar;
+typedef const char *        PCChar;
+typedef      PChar *        PPChar;
+typedef char const * const CPCChar;
+typedef     PCChar *       PPCChar;
+
+typedef       void *         PVoid;
+typedef const void *        PCVoid;
 
 namespace Path {
    typedef std::string str_t;
