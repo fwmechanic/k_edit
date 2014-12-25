@@ -300,7 +300,7 @@ STATIC_FXN bool swinFXN_STR( const SWI *pSwi, PCChar pszNewValue ) {
 void swidBool(      PChar dest, size_t sizeofDest, void *src )  { safeStrcpy(  dest, sizeofDest, (*static_cast<bool *>(src)) ? "yes" : "no" ); }
 void swid_int(      PChar dest, size_t sizeofDest, int   val )  { safeSprintf( dest, sizeofDest, "%d", val ); }
 void swidInt(       PChar dest, size_t sizeofDest, void *src )  { swid_int(    dest, sizeofDest, (*static_cast<int *>(src)) ); }
-void swidColorvarx( PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", *PU8(src) ); }
+void swidColorvarx( PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", *static_cast<U8 *>(src) ); }
 // void swidColorx(    PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", g_CurView()->ColorIdx2Attr( int(src) ) ); }
 
 

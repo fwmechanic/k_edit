@@ -272,7 +272,7 @@ void Reread_FileExtensionSettings() { // bugbug need to hook this up to somethin
       }
    }
 
-GLOBAL_CONST PU8 g_colorVars[] = {
+GLOBAL_CONST unsigned char *g_colorVars[] = {
    &g_colorInfo      ,
    &g_colorStatus    ,
    &g_colorWndBorder ,
