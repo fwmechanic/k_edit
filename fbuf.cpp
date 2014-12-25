@@ -505,9 +505,9 @@ bool FBUF::private_RemovedFBuf() { // adjusts g_CurFBuf() as necessary: does NOT
 // the active window (its file history).
 //
 
-PView FBUF::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, this->Name() );
+PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->Name() );
    {
-   bool fContentChanged;
+   bool fContentChanged;                            DB && DBG( "%s+ %s %sHasLines %sIsAutoRead", __func__, this->Name(), this->HasLines()?"":"!", this->IsAutoRead()?"":"!" );
    if( !this->HasLines() || this->IsAutoRead() ) {
       if( this->ReadDiskFileAllowCreateFailed() ) { // content read (wildcard buffer expansion=FBufRead_Wildcard->ExpandWildcard) failed?
          // 20110917 made this change (comment out DeleteAllViewsOntoFbuf)...
@@ -521,7 +521,7 @@ PView FBUF::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__,
 
          DeleteAllViewsOntoFbuf( this );
          return nullptr;
-         }
+         }                                          DB && DBG( "%s+ %s %sHasLines %sIsAutoRead", __func__, this->Name(), this->HasLines()?"":"!", this->IsAutoRead()?"":"!" );
       fContentChanged = true;
       }
    else {
@@ -534,7 +534,7 @@ PView FBUF::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__,
       return g_CurView();
       }
    }
-   DBG_OK && DBG( "%s is %s will be %s", __func__, g_CurFBuf()?g_CurFBuf()->Name():"", this->Name() );
+   DB && DBG( "%s is %s will be %s", __func__, g_CurFBuf()?g_CurFBuf()->Name():"", this->Name() );
 
    FBOP::AssignFromRsrc( this );
 
@@ -548,7 +548,7 @@ PView FBUF::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__,
 
    LuaCtxt_ALL::call_EventHandler( "GETFOCUS" );
 
-   DBG_OK && DBG( "%s- %s", __func__, this->Name() );
+   DB && DBG( "%s- %s", __func__, this->Name() );
 
    return pCurView;
    }
@@ -1058,13 +1058,13 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "
       auto fCwdChanged( false );
       if( SetCwdOk( pFnm, fCwdSave, &fCwdChanged ) ) {
          if( fCwdChanged ) { // if cwd changed, display new cwd's contents
-            0 && DBG( "%s recurse", __func__ );
+            DP && DBG( "%s recurse", __func__ );
             fChangeFile( "*", false ); // recursive, but will only nest ONE level
             }
          DP && DBG( "%s- SetCwdOk '%s'", __func__, pszName );
          return true;
          }
-      pFBuf = AddFBuf( pFnm );
+      pFBuf = AddFBuf( pFnm );               DP && DBG( "%s AddFBuf'%s' -->PFBUF %p", __func__, pFnm, pFBuf );
       }
    const auto rv( nullptr != pFBuf->PutFocusOn() );
    DP && DBG( "%s- PutFocusOn=%c '%s'", __func__, rv?'t':'f', pszName );
@@ -1173,14 +1173,15 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       DialogLdFile( Name() );
 
    d_EolMode = platform_eol;
-
-   if( FnmIsLogicalWildcard( Name() ) ) {
+                                                               0 && DBG( "%s+ %s'", FUNC, Name() );
+   if( FnmIsLogicalWildcard( Name() ) ) {                      0 && DBG( "%s+ %s' FnmIsLogicalWildcard", FUNC, Name() );
       FBufRead_Wildcard( this );
       return true;
       }
 
-   if( FnmIsPseudo() )
+   if( FnmIsPseudo() ) {                                       0 && DBG( "%s+ %s' FnmIsPseudo", FUNC, Name() );
       return ReadPseudoFileOk( this );
+      }
 
    if( !FnmIsDiskWritable() ) {
       return Msg( "%s failed! FnmIs!DiskWritable", __func__ );

@@ -1365,7 +1365,7 @@ AddEdFxn{ name = "sb", help = "Menu: System Buffers", attr = NOARG, key = ""
       for _,name in ipairs(dynamic_fbufs) do                 choices[1+#choices] = name              end
       table.sort( choices )
       local _,fnm = Menu.new{ title="System Buffers", choices=choices }:PickOne()
-      if fnm then  SwitchToFile( fnm )  end
+      if fnm then  fChangeFile( fnm )  end
       end
    }
 
@@ -3922,6 +3922,7 @@ for _,dir in ipairs(dirs) do
 
 function ReadPseudoFileOk_FROM_C( fb )  -- return Lua true (not (rv==nil or rv==false)) if this code rewrites fb content
    print( "ReadPseudoFileOk_FROM_C("..fb:Name()..")" )
+   return false
    end
 
 printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )

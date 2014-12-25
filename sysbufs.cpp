@@ -436,7 +436,7 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
       }
    }
 
-STATIC_FXN void FBufRead_Usage( PFBUF pFBuf, int ) {
+STATIC_FXN void FBufRead_Usage( PFBUF pFBuf, int ) { 0 && DBG( "%s", FUNC );
    cmdusage_updt();
    UsageCtxt uc;
    uc.fbOut        = nullptr;
@@ -475,7 +475,7 @@ STATIC_FXN void CallFbufReader( PFBUF pFBuf, FbufReaderFxn readerFxn, int instan
    pFBuf->SetAutoRead();
    }
 
-bool ReadPseudoFileOk( PFBUF pFBuf ) {
+bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, pFBuf->Name() );
    /* shortcoming  BUGBUG
 
       This ALWAYS causes *pFBuf to be rewritten, and all associated views'
@@ -492,7 +492,7 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) {
 
    {
    int luaReadOk( false );
-   if( LuaCtxt_Edit::ReadPseudoFileOk( pFBuf, &luaReadOk ) && luaReadOk ) {
+   if( LuaCtxt_Edit::ReadPseudoFileOk( pFBuf, &luaReadOk ) && luaReadOk ) {  DB && DBG( "%s %s' Lua read it", FUNC, pFBuf->Name() );
       return true;
       }
    }
@@ -508,9 +508,9 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) {
          { szUsgFile   , FBufRead_Usage         },
          { "<ascii>"   , FBufRead_AsciiTbl      },
       };
-
+                                                     DB && DBG( "%s %s' looping", FUNC, pFBuf->Name() );
    for( const auto &pfR : pseudofileReaders ) {
-      if( pFBuf->NameMatch( pfR.name ) ) {
+      if( pFBuf->NameMatch( pfR.name ) ) {           DB && DBG( "%s %s' matches %s", FUNC, pFBuf->Name(), pfR.name );
          CallFbufReader( pFBuf, pfR.readerFxn, 0 );
          return true;
          }
