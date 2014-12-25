@@ -326,7 +326,7 @@ struct GenericListEl {
       return  d_typeof == IS_INT;
       }
 
-   }; STD_TYPEDEFS( GenericListEl )
+   };
 
 
 struct GenericList {
@@ -347,7 +347,7 @@ GenericList::~GenericList() {
    }
 
 void GenericList::Cat( int num ) {
-   PGenericListEl rv;
+   GenericListEl *rv;
    AllocArrayNZ( rv );
    rv->dlink.clear();
    rv->d_typeof = GenericListEl::IS_INT;
@@ -359,7 +359,7 @@ void GenericList::Cat( PCChar src, size_t len ) {
    if( len == 0 )
        len = Strlen( src );
 
-   PGenericListEl rv = PGenericListEl( // cannot use auto due to 'sizeof( *rv )'
+   GenericListEl *rv = static_cast<GenericListEl *>( // cannot use auto due to 'sizeof( *rv )'
          AllocNZ_(
            sizeof( *rv )     // needed control struct
          + len+1             // space to store string value

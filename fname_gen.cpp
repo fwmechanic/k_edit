@@ -221,7 +221,7 @@ class StrSubstituterGenerator {
    private:
 
    void NextCombination();
-   }; STD_TYPEDEFS( StrSubstituterGenerator )
+   };
 
 
 StrSubstituterGenerator::SubStrSubstituter::SubStrSubstituter( PCChar pValue, int chValDelim, const int xReplStart_, const int replLen_ )
@@ -298,7 +298,7 @@ bool StrSubstituterGenerator::GetNextString( std::string &st ) {
 //
 // You can run this with a NULL pSSG in order to pre-check (examine rv)
 //
-STATIC_FXN int CFX_to_SSG( const PCChar inbuf, const PStrSubstituterGenerator pSSG ) {
+STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
    if( pSSG )  pSSG->SetBaseStr( inbuf );
 
    auto pC( inbuf );
