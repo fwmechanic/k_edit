@@ -1965,7 +1965,7 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
       else {
          if( d_naLineInfoElements < linesNeeded ) {
             const auto linesToAlloc( linesNeeded + LineHeadSpace );
-            PLineInfo pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, "Expanding d_paLineInfo" );
+            LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, "Expanding d_paLineInfo" );
             if( yInsAt > 0 ) {             /* leading subrange exists?  copy it */                           0 && DBG( "%s -mov [%d]<-[%d] L %d", __func__, 0, 0, yInsAt );
                MoveArray( pNewLi                           , d_paLineInfo         ,               yInsAt );
                }
@@ -2261,7 +2261,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
 void FBUF::SetLineInfoCount( const LINE linesNeeded ) {
    if( !d_paLineInfo || d_naLineInfoElements < linesNeeded ) { 0 && DBG( "XPf2NL LineInfo[] %s: (%d,%d) -> %d", Name(), LineCount(), d_naLineInfoElements, linesNeeded );
       const auto linesToAlloc( linesNeeded + LineHeadSpace );
-      PLineInfo pNewLi;
+      LineInfo *pNewLi;
       AllocArrayNZ( pNewLi, linesToAlloc, "Expanding d_paLineInfo" );
 
       if( d_paLineInfo ) {
@@ -2418,7 +2418,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
             //
             //------------------------------------------------------------------------------------
 
-            PLineInfo pNewLi;
+            LineInfo *pNewLi;
             AllocArrayNZ( pNewLi, d_naLineInfoElements, "revised d_paLineInfo" );
             MoveArray(    pNewLi, d_paLineInfo, curLineNum );
             FreeUp( d_paLineInfo, pNewLi );

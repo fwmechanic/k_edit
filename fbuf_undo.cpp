@@ -158,7 +158,7 @@ class EdOpSaveLineContent : public EditRec {
 
 public:
 
-   EdOpSaveLineContent( PFBUF pFBuf, LINE lineNum, PLineInfo pLineInfo );
+   EdOpSaveLineContent( PFBUF pFBuf, LINE lineNum, LineInfo *pLineInfo );
    ~EdOpSaveLineContent();
 
    void VUndo() override;
@@ -167,7 +167,7 @@ public:
    bool VPrevWasSaveOnSameLine( LINE lineNum ) override;
    };
 
-EdOpSaveLineContent::EdOpSaveLineContent( PFBUF pFBuf, LINE lineNum, PLineInfo pLineInfo )
+EdOpSaveLineContent::EdOpSaveLineContent( PFBUF pFBuf, LINE lineNum, LineInfo *pLineInfo )
    : EditRec     (      pFBuf         )
    , d_fileLength( pFBuf->LineCount() )
    , d_lineNum   ( lineNum            )
@@ -271,7 +271,7 @@ class EdOpLineRangeDelete : public EditRec {
    const LINE      d_fileLength; // length of file beforehand
    const LINE      d_firstLine;  // number of first line that was operated on
    const LINE      d_linesDeleted;  // number of lines deleted
-         PLineInfo d_paLi;
+         LineInfo *d_paLi;
    IF_UNDO_REDO_MARKS( NamedPointHead  d_MarkListHd; )
 
 public:

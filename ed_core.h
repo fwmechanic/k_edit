@@ -491,7 +491,7 @@ public:
    PCChar GetLineRdOnly()                        const { return d_pLineData; }
    COL    GetLineLen()                           const { return d_iLineLen;  }
    bool   fCanFree_pLineData( const FBUF &fbuf ) const;
-   };  STD_TYPEDEFS( LineInfo )
+   };
 
 //-----------------------------------------------------------------------------
 
@@ -1162,7 +1162,7 @@ private:
    void           FreeOrigFileImage();
 
    LINE           d_naLineInfoElements = 0;
-   PLineInfo      d_paLineInfo = nullptr;       // array of LineInfo, has d_naLineInfoElements elements alloc'd, d_LineCount used
+   LineInfo      *d_paLineInfo = nullptr;       // array of LineInfo, has d_naLineInfoElements elements alloc'd, d_LineCount used
    LINE           d_LineCount = 0;
 
 public:
