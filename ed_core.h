@@ -1022,7 +1022,7 @@ enum cppc
 #if       FBUF_TREE
    extern void FBufIdxInit();
    extern PRbTree  g_FBufIdx;
-   STIL   PFBUF IdxNodeToFBUF( PRbNode pNd ) { return reinterpret_cast<PFBUF>( rb_val(pNd) ); }  // type-safe conversion function
+   STIL   PFBUF IdxNodeToFBUF( RbNode *pNd ) { return reinterpret_cast<PFBUF>( rb_val(pNd) ); }  // type-safe conversion function
 #else
    #include "krbtree.h"
    extern int rb_strcmpi( PCVoid p1, PCVoid p2 );
@@ -1114,14 +1114,14 @@ public:
    //***********  membership in list of all FBUFs
  #if              FBUF_TREE
 private:
-   PRbNode          d_pRbNode;
+   RbNode *         d_pRbNode;
  #else
    DLinkEntry<FBUF> dlinkAllFBufs;  // must be public
  #endif
 public:
    PFBUF          Next() {
                      #if FBUF_TREE
-                         PRbNode pNxtNd( rb_next( d_pRbNode ) );
+                         RbNode *pNxtNd( rb_next( d_pRbNode ) );
                          return (pNxtNd == rb_nil(g_FBufIdx)) ? nullptr : PFBUF(rb_val( pNxtNd ));
                      #else
                          return dlinkAllFBufs.Next();

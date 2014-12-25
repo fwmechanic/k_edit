@@ -301,7 +301,7 @@ STATIC_FXN int l_FBUF_function_curview( lua_State *L ) {
 
 #if FBUF_TREE
 STATIC_FXN int l_FBUF_function_first( lua_State *L ) {
-           PRbNode pNd( rb_first( g_FBufIdx ) );
+           RbNode *pNd( rb_first( g_FBufIdx ) );
            return (pNd != rb_nil(g_FBufIdx)) ? l_construct_FBUF( L, static_cast<PFBUF>(rb_val( pNd )) ) : 0;
            }
 #else

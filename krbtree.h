@@ -34,21 +34,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "my_types.h"
 
 struct RbCtrl;  STD_TYPEDEFS(RbCtrl)
-struct RbNode;  STD_TYPEDEFS(RbNode)
+struct RbNode;
 struct RbNode
    {
    char    red;
    char    internal;
    char    left;
    char    roothead;  // bit 1 is root, bit 2 is head
-   PRbNode flink;
-   PRbNode blink;
-   PRbNode parent;
+   RbNode *flink;
+   RbNode *blink;
+   RbNode *parent;
    union
       {
       // if node is "internal", this points to LEFT external node
-      PRbNode         leftExt;
-      PRbCtrl         pCtrl;   // iff ishead
+      RbNode         *leftExt;
+      RbCtrl         *pCtrl;   // iff ishead
 
       // if node is "external", this points to a key (the node DOES NOT own, and thus NEVER FREES, the key)
       PCVoid          pv;   // ptr to arbitrary key value (app must provide cmpfxn)
@@ -61,7 +61,7 @@ struct RbNode
    union
       {
       // if node is "internal", this points to RIGHT external node
-      PRbNode         rightExt;
+      RbNode         *rightExt;
 
       // if node is "external", this points to the node's VALUE
       PVoid           v; // the node DOES NOT own, and thus NEVER FREES, the value
@@ -73,8 +73,8 @@ struct RbNode
 
 typedef RbNode RbTree;  STD_TYPEDEFS( RbTree )
 
-static inline void SetPRBNValid(   PRbNode p) {        p->chkTag =  chkTagRbNode; }
-static inline int  IsPRBNValid (  PCRbNode p) { return p->chkTag == chkTagRbNode; }
+static inline void SetPRBNValid(   RbNode *p )    {        p->chkTag =  chkTagRbNode; }
+static inline int  IsPRBNValid ( const RbNode *p) { return p->chkTag == chkTagRbNode; }
 
 
 //
@@ -140,7 +140,7 @@ struct RbCtrl
 
 // TREE HEAD (valueless-node) constructor (rb_insert_XXX are value-node constructors)
 //
-extern PRbTree rb_alloc_tree( PRbCtrl pCtrl );   // Allocates and inits a new rb-tree (head structure)
+extern PRbTree rb_alloc_tree( RbCtrl *pCtrl );   // Allocates and inits a new rb-tree (head structure)
 
 // TREE destructors (these NEVER deallocate keys, which are assumed to lie within values)
 //
@@ -157,18 +157,18 @@ extern void rb_dealloc_subtreev( // just like rb_dealloc_treev, but doesn't deal
 
 // value-node destructor
 //
-extern void *rb_delete_node( PRbTree tree, PRbNode node ); // unlinks & frees node (but not the key), returns value of node freed
+extern void *rb_delete_node( PRbTree tree, RbNode *node ); // unlinks & frees node (but not the key), returns value of node freed
 
 // Creates a node with key and val and inserts it into tree BEFORE (sort-order-wise)
 // node.  Useful in cases where you want to check first for a key collision,
 // THEN insert.  In this case, do:
 //
-//    PRbNode nd = rb_find_gte_xxx( &eq, hd, key );
+//    RbNode *nd = rb_find_gte_xxx( &eq, hd, key );
 //    if( !eq ) rb_insert_before( hd, nd, key, val );
 //
 // DOES NOT CHECK TO ENSURE THAT YOU ARE MAINTAINING CORRECT SORT ORDER.
 //
-extern PRbNode rb_insert_before( PRbTree tree, PRbNode node, PCVoid key, PVoid val );
+extern RbNode *rb_insert_before( PRbTree tree, RbNode *node, PCVoid key, PVoid val );
 
 // to create a new type of tree-key, create 3 new functions:
 //   rb_find_gte_XXX
@@ -177,9 +177,9 @@ extern PRbNode rb_insert_before( PRbTree tree, PRbNode node, PCVoid key, PVoid v
 //
 
 #define RB_FUNCS_SCALAR_EXT(name,keytype)                                  \
-extern PRbNode rb_find_gte_##name(int *equal, PRbTree tree, keytype key);  \
-extern PRbNode rb_find_##name(PRbTree tree, keytype key);                  \
-extern PRbNode rb_insert_##name(PRbTree tree, keytype key, PVoid val);
+extern RbNode *rb_find_gte_##name(int *equal, PRbTree tree, keytype key);  \
+extern RbNode *rb_find_##name(PRbTree tree, keytype key);                  \
+extern RbNode *rb_insert_##name(PRbTree tree, keytype key, PVoid val);
 
 RB_FUNCS_SCALAR_EXT(u32,const uint32_t*)
 RB_FUNCS_SCALAR_EXT(u16,const uint16_t*)
@@ -189,35 +189,35 @@ RB_FUNCS_SCALAR_EXT(u16,const uint16_t*)
 //   rb_insert_mem uses memcmp() as a comparison function (key is array of uint8_t);
 //   rb_insert_gen uses user-supplied fxn() as a comparison function;
 //
-extern PRbNode rb_insert_str( PRbTree tree, const char *key, PVoid val);
-extern PRbNode rb_insert_mem( PRbTree tree, PCVoid key, size_t keylen, PVoid val );
-extern PRbNode rb_insert_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn, PVoid val );
+extern RbNode *rb_insert_str( PRbTree tree, const char *key, PVoid val);
+extern RbNode *rb_insert_mem( PRbTree tree, PCVoid key, size_t keylen, PVoid val );
+extern RbNode *rb_insert_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn, PVoid val );
 
 // Returns the external node in tree whose key-value == key.
 // Returns nullptr if there is no such node in the tree
 //
-extern PRbNode rb_find_str( PRbTree tree, const char *key);
-extern PRbNode rb_find_mem( PRbTree tree, PCVoid key, size_t keylen);
-extern PRbNode rb_find_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn);
+extern RbNode *rb_find_str( PRbTree tree, const char *key);
+extern RbNode *rb_find_mem( PRbTree tree, PCVoid key, size_t keylen);
+extern RbNode *rb_find_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn);
 
 // Returns the external node in tree whose key-value == key OR
 // whose key-value is the smallest value greater than key.
 // Sets *equal to 0 unless an identical key was found.
 //
-extern PRbNode rb_find_gte_str( int *equal, PRbTree tree, const char *key           );
-extern PRbNode rb_find_gte_mem( int *equal, PRbTree tree, PCVoid key, size_t keylen );
-extern PRbNode rb_find_gte_gen( int *equal, PRbTree tree, PCVoid key, rb_cmpfxn fxn );
+extern RbNode *rb_find_gte_str( int *equal, PRbTree tree, const char *key           );
+extern RbNode *rb_find_gte_mem( int *equal, PRbTree tree, PCVoid key, size_t keylen );
+extern RbNode *rb_find_gte_gen( int *equal, PRbTree tree, PCVoid key, rb_cmpfxn fxn );
 
 // iterators and accessors
 //
-extern PRbCtrl rb_ctrl(    PCRbTree t ); // returns (pointer to) RbCtrl struct of tree
-extern PRbNode rb_first(   PCRbTree t ); // returns (pointer to) lowest        sorting PRbNode in tree
-extern PRbNode rb_last(    PCRbTree t ); // returns (pointer to) greatest      sorting PRbNode in tree
-extern PRbNode rb_next(    PCRbNode n ); // returns (pointer to) next greatest sorting PRbNode in tree
-extern PRbNode rb_prev(    PCRbNode n ); // returns (pointer to) next lowest   sorting PRbNode in tree
-extern int     rb_isempty( PCRbNode n ); // returns C bool val
-extern PVoid   rb_val(     PCRbNode n ); // returns (pointer to) value
-extern PCVoid  rb_key(     PCRbNode n ); // returns (pointer to) key
+extern RbCtrl *rb_ctrl(    PCRbTree t ); // returns (pointer to) RbCtrl struct of tree
+extern RbNode *rb_first(   PCRbTree t ); // returns (pointer to) lowest        sorting RbNode *in tree
+extern RbNode *rb_last(    PCRbTree t ); // returns (pointer to) greatest      sorting RbNode *in tree
+extern RbNode *rb_next(    const RbNode *n ); // returns (pointer to) next greatest sorting RbNode *in tree
+extern RbNode *rb_prev(    const RbNode *n ); // returns (pointer to) next lowest   sorting RbNode *in tree
+extern int     rb_isempty( const RbNode *n ); // returns C bool val
+extern PVoid   rb_val(     const RbNode *n ); // returns (pointer to) value
+extern PCVoid  rb_key(     const RbNode *n ); // returns (pointer to) key
 
 // integrity checking API (also gathers metrics)
 //
@@ -228,15 +228,15 @@ typedef struct
    int plMin; // min # of nodes in path from n to the root
    } TRbInfo, *PRbInfo;
 extern const char * rb_tree_corrupt( PRbTree tree, PRbInfo pInfo );
-extern int rb_walk_tree_ok( PRbNode t, int (*fDataValid)( PVoid ) ); // check every node in the tree
+extern int rb_walk_tree_ok( RbNode *t, int (*fDataValid)( PVoid ) ); // check every node in the tree
 
-extern void rb_ctrl_reset_counters( PRbCtrl pCtrl );
-extern void rb_logstats(            PRbCtrl pCtrl ); // write counter contents using log function
+extern void rb_ctrl_reset_counters( RbCtrl *pCtrl );
+extern void rb_logstats(            RbCtrl *pCtrl ); // write counter contents using log function
 
 // rb_traverse & rb_reverse are loop control structures that allow you to
 // iterate thru an rb_tree in sorted (or reverse-sorted) order.
 //
-#define rb_nil(t)   PRbNode(t)
+#define rb_nil(t)   static_cast<RbNode *>(t)
 #define rb_traverse( ptr, tree)  for( ptr=rb_first(tree); ptr != rb_nil(tree); ptr=rb_next(ptr) )
 #define rb_reverse(  ptr, tree)  for( ptr=rb_last( tree); ptr != rb_nil(tree); ptr=rb_prev(ptr) )
 

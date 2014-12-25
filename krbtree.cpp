@@ -35,36 +35,36 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 // private methods:
 //
-static inline PRbNode getlext(   PCRbNode n )              { return n->key.leftExt       ; }
-static inline PRbNode getrext(   PCRbNode n )              { return n->val.rightExt      ; }
-static inline void    setlext(   PRbNode  n , PRbNode v )  {        n->key.leftExt  = v  ; }
-static inline void    setrext(   PRbNode  n , PRbNode v )  {        n->val.rightExt = v  ; }
+static inline RbNode *getlext(   const RbNode *n )              { return n->key.leftExt       ; }
+static inline RbNode *getrext(   const RbNode *n )              { return n->val.rightExt      ; }
+static inline void    setlext(   RbNode * n , RbNode *v )  {        n->key.leftExt  = v  ; }
+static inline void    setrext(   RbNode * n , RbNode *v )  {        n->val.rightExt = v  ; }
 
-static inline int     isred(     PCRbNode n )              { return n->red               ; }
-static inline int     isblack(   PCRbNode n )              { return !isred(n)            ; }
-static inline void    setred(    PRbNode  n )              {        n->red = 1           ; }
-static inline void    setblack(  PRbNode  n )              {        n->red = 0           ; }
+static inline int     isred(     const RbNode *n )              { return n->red               ; }
+static inline int     isblack(   const RbNode *n )              { return !isred(n)            ; }
+static inline void    setred(    RbNode * n )              {        n->red = 1           ; }
+static inline void    setblack(  RbNode * n )              {        n->red = 0           ; }
 
-static inline int     isleft(    PCRbNode n )              { return n->left              ; }
-static inline int     isright(   PCRbNode n )              { return !isleft(n)           ; }
-static inline void    setleft(   PRbNode  n )              {        n->left = 1          ; }
-static inline void    setright(  PRbNode  n )              {        n->left = 0          ; }
+static inline int     isleft(    const RbNode *n )              { return n->left              ; }
+static inline int     isright(   const RbNode *n )              { return !isleft(n)           ; }
+static inline void    setleft(   RbNode * n )              {        n->left = 1          ; }
+static inline void    setright(  RbNode * n )              {        n->left = 0          ; }
 
-static inline int     ishead(    PCRbNode n )              { return n->roothead &  2     ; }
-static inline int     isroot(    PCRbNode n )              { return n->roothead &  1     ; }
-static inline void    sethead(   PRbNode  n )              {        n->roothead |= 2     ; }
-static inline void    setroot(   PRbNode  n )              {        n->roothead |= 1     ; }
-static inline void    setnormal( PRbNode  n )              {        n->roothead  = 0     ; }
+static inline int     ishead(    const RbNode *n )              { return n->roothead &  2     ; }
+static inline int     isroot(    const RbNode *n )              { return n->roothead &  1     ; }
+static inline void    sethead(   RbNode * n )              {        n->roothead |= 2     ; }
+static inline void    setroot(   RbNode * n )              {        n->roothead |= 1     ; }
+static inline void    setnormal( RbNode * n )              {        n->roothead  = 0     ; }
 
-static inline int     isint(     PCRbNode n )              { return n->internal          ; }
-static inline int     isext(     PCRbNode n )              { return !isint(n)            ; }
-static inline void    setint(    PRbNode  n )              {        n->internal = 1      ; }
-static inline void    setext(    PRbNode  n )              {        n->internal = 0      ; }
+static inline int     isint(     const RbNode *n )              { return n->internal          ; }
+static inline int     isext(     const RbNode *n )              { return !isint(n)            ; }
+static inline void    setint(    RbNode * n )              {        n->internal = 1      ; }
+static inline void    setext(    RbNode * n )              {        n->internal = 0      ; }
 
-static inline PRbCtrl getctrl(   PCRbNode hd )             { return hd->key.pCtrl      ; }
-static inline void    setctrl(   PRbTree  hd, PRbCtrl pc ) {        hd->key.pCtrl = pc ; }
+static inline RbCtrl *getctrl(   const RbNode *hd )             { return hd->key.pCtrl      ; }
+static inline void    setctrl(   PRbTree  hd, RbCtrl *pc ) {        hd->key.pCtrl = pc ; }
 
-static inline PRbNode sibling(   PRbNode  n )              { return isleft(n) ? n->parent->blink
+static inline RbNode *sibling(   RbNode * n )              { return isleft(n) ? n->parent->blink
                                                                               : n->parent->flink;
                                                            }
 
@@ -72,7 +72,7 @@ static inline PRbNode sibling(   PRbNode  n )              { return isleft(n) ? 
 //
 // checker for a particular variant of RbNode: the HEAD node:
 //
-static inline int  IsPRBHDValid ( PCRbNode p) { return IsPRBNValid(p) && ishead(p); }
+static inline int  IsPRBHDValid ( const RbNode *p) { return IsPRBNValid(p) && ishead(p); }
 
 #define  RTN_UNLESS_PRBHD_0OK(rv,PRBHD) if (!PRBHD) return rv; RTN_UNLESS(rv,IsPRBHDValid(PRBHD))
 #define  RTN_UNLESS_PRBHD_OK(rv,PRBHD)                         RTN_UNLESS(rv,IsPRBHDValid(PRBHD))
@@ -149,8 +149,8 @@ int main( int argc, char *argv[] )
    PRbTree u16tree;
    PRbTree stree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
    PRbTree itree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
-   PRbCtrl rbc     = rb_ctrl( itree );
-   PRbNode ptr;
+   RbCtrl *rbc     = rb_ctrl( itree );
+   RbNode *ptr;
    PNode   pprev;
 
    DBGf( " alloc=%p, free=%p\nmalloc=%p, free=%p\n", rbc->nd_alloc, rbc->nd_dealloc, (void *)malloc, (void *)free );
@@ -204,7 +204,7 @@ int main( int argc, char *argv[] )
       {
       int      equal;
       uint16_t key = rand16();
-      PRbNode pNd = rb_find_gte_u16( &equal, u16tree, &key );
+      RbNode *pNd = rb_find_gte_u16( &equal, u16tree, &key );
       if( equal )
          free( rb_delete_node( u16tree, pNd ) );
       }
@@ -229,7 +229,7 @@ int main( int argc, char *argv[] )
 
    for( ix=0;ix<0x10000*4;ix++ )
       {
-      PRbNode pNd;
+      RbNode *pNd;
       int     equal;
       PNode   pNew = (PNode)malloc( sizeof(*pNew) );
       pNew->key = pNew->bkupKey = rand16();
@@ -257,7 +257,7 @@ int main( int argc, char *argv[] )
       {
       int      equal;
       uint16_t key = rand16();
-      PRbNode pNd = rb_find_gte_u16( &equal, u16tree, &key );
+      RbNode *pNd = rb_find_gte_u16( &equal, u16tree, &key );
       if( equal )
          free( rb_delete_node( u16tree, pNd ) );
       }
@@ -313,20 +313,20 @@ int main( int argc, char *argv[] )
 #include <climits>
 #include <cstdarg>
 
-static inline PRbNode rb_first__(   PCRbNode n ) { return n->flink; }
-static inline PRbNode rb_last__(    PCRbNode n ) { return n->blink; }
-static inline PRbNode rb_next__(    PCRbNode n ) { return n->flink; }
-static inline PRbNode rb_prev__(    PCRbNode n ) { return n->blink; }
-static inline int     rb_isempty__( PCRbNode n ) { return n->flink == n; }
+static inline RbNode *rb_first__(   const RbNode *n ) { return n->flink; }
+static inline RbNode *rb_last__(    const RbNode *n ) { return n->blink; }
+static inline RbNode *rb_next__(    const RbNode *n ) { return n->flink; }
+static inline RbNode *rb_prev__(    const RbNode *n ) { return n->blink; }
+static inline int     rb_isempty__( const RbNode *n ) { return n->flink == n; }
 
 
 // extern (checked) versions
 //
-PRbNode rb_first(   PCRbTree t ) { RTN_UNLESS_PRBHD_OK((PRbNode)rb_nil(t),t); return rb_first__(t);   }
-PRbNode rb_last(    PCRbTree t ) { RTN_UNLESS_PRBHD_OK((PRbNode)rb_nil(t),t); return rb_last__(t);    }
-PRbNode rb_next(    PCRbNode n ) { RTN_UNLESS_PRBN_OK(nullptr,n);             return rb_next__(n);    }
-PRbNode rb_prev(    PCRbNode n ) { RTN_UNLESS_PRBN_OK(nullptr,n);             return rb_prev__(n);    }
-int     rb_isempty( PCRbNode n ) { RTN_UNLESS_PRBN_OK(1,n);                   return rb_isempty__(n); }
+RbNode *rb_first(   PCRbTree t ) { RTN_UNLESS_PRBHD_OK(static_cast<RbNode *>(rb_nil(t)),t); return rb_first__(t);   }
+RbNode *rb_last(    PCRbTree t ) { RTN_UNLESS_PRBHD_OK(static_cast<RbNode *>(rb_nil(t)),t); return rb_last__(t);    }
+RbNode *rb_next(    const RbNode *n ) { RTN_UNLESS_PRBN_OK(nullptr,n);             return rb_next__(n);    }
+RbNode *rb_prev(    const RbNode *n ) { RTN_UNLESS_PRBN_OK(nullptr,n);             return rb_prev__(n);    }
+int     rb_isempty( const RbNode *n ) { RTN_UNLESS_PRBN_OK(1,n);                   return rb_isempty__(n); }
 
 #define rb_first_(n) rb_first(n)
 
@@ -355,7 +355,7 @@ int HeadOk( PRbTree tree )
 #define  INCR_STAT(stattagname)                           \
 static inline void incr_##stattagname( PRbTree tree )     \
    {                                                      \
-   PRbCtrl pc = tree->key.pCtrl;                          \
+   RbCtrl *pc = tree->key.pCtrl;                          \
    if( pc->fOverflow ) return;                            \
    if( ++pc->stattagname == INT_MAX ) pc->fOverflow = 1;  \
    }
@@ -365,13 +365,13 @@ INCR_STAT(inserts)
 INCR_STAT(deletes)
 
 
-PRbCtrl rb_ctrl( PCRbTree tree )
+RbCtrl *rb_ctrl( PCRbTree tree )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    return getctrl(tree);
    }
 
-void rb_ctrl_reset_counters( PRbCtrl pCtrl )
+void rb_ctrl_reset_counters( RbCtrl *pCtrl )
    {
    pCtrl->fOverflow = 0;
    pCtrl->searches  = 0;
@@ -379,7 +379,7 @@ void rb_ctrl_reset_counters( PRbCtrl pCtrl )
    pCtrl->deletes   = 0;
    }
 
-void rb_logstats( PRbCtrl pCtrl )
+void rb_logstats( RbCtrl *pCtrl )
    {
    pCtrl->log( "rb_logstats: %ssrch=%i ins=%i del=%i\n"
       , pCtrl->fOverflow ? "OVF! " : ""
@@ -389,25 +389,25 @@ void rb_logstats( PRbCtrl pCtrl )
       );
    }
 
-static void insert(PRbNode item, PRbNode list) // Inserts to the end of a list
+static void insert(RbNode *item, RbNode *list) // Inserts to the end of a list
    {
-   PRbNode last_node = list->blink;
+   RbNode *last_node = list->blink;
    list->blink = item;
    last_node->flink = item;
    item->blink = last_node;
    item->flink = list;
    }
 
-static void inline unlink_node(PRbNode node)
+static void inline unlink_node(RbNode *node)
    {
    node->flink->blink = node->blink;
    node->blink->flink = node->flink;
    }
 
-static void single_rotate(PRbNode y, int l)
+static void single_rotate(RbNode *y, int l)
    {
    int rl, ir;
-   PRbNode x, yp;
+   RbNode *x; RbNode *yp;
 
    ir = isroot(y);
    yp = y->parent;
@@ -459,7 +459,7 @@ static void single_rotate(PRbNode y, int l)
    }
 
 
-static void recolor( PRbNode nd )
+static void recolor( RbNode *nd )
    {
    for(;;)
       {
@@ -469,7 +469,7 @@ static void recolor( PRbNode nd )
          return;
          }
 
-      PRbNode p = nd->parent;
+      RbNode *p = nd->parent;
 
       if( isblack(p) ) return;
 
@@ -479,8 +479,8 @@ static void recolor( PRbNode nd )
          return;
          }
 
-      PRbNode gp = p->parent;
-      PRbNode sib = sibling(p);
+      RbNode *gp = p->parent;
+      RbNode *sib = sibling(p);
       if( isred(sib) )
          {
          setblack(p);
@@ -511,9 +511,9 @@ static void recolor( PRbNode nd )
 
 // mk_new_ext and mk_new_int are ONLY CALLED BY rb_insert_before
 
-static PRbNode mk_new_ext( PRbTree tree, PCVoid key, PVoid val )
+static RbNode *mk_new_ext( PRbTree tree, PCVoid key, PVoid val )
    {
-   PRbNode newnode = PRbNode( getctrl(tree)->nd_alloc(sizeof(*newnode)) );
+   RbNode *newnode = static_cast<RbNode *>( getctrl(tree)->nd_alloc(sizeof(*newnode)) );
    assert( newnode );
    SetPRBNValid(newnode);
    newnode->val.v  = val;
@@ -525,9 +525,9 @@ static PRbNode mk_new_ext( PRbTree tree, PCVoid key, PVoid val )
    return newnode;
    }
 
-static void mk_new_int(PRbTree tree, PRbNode l, PRbNode r, PRbNode p, int il)
+static void mk_new_int(PRbTree tree, RbNode *l, RbNode *r, RbNode *p, int il)
    {
-   PRbNode newnode = PRbNode( getctrl(tree)->nd_alloc(sizeof(*newnode)) );
+   RbNode *newnode = static_cast<RbNode *>( getctrl(tree)->nd_alloc(sizeof(*newnode)) );
    SetPRBNValid(newnode);
    setint(newnode);
    setred(newnode);
@@ -560,7 +560,7 @@ static void mk_new_int(PRbTree tree, PRbNode l, PRbNode r, PRbNode p, int il)
    }
 
 
-static PRbNode lprev(PRbNode n)
+static RbNode *lprev(RbNode *n)
    {
    RTN_UNLESS_PRBN_OK( nullptr, n );
    if( ishead(n) ) return n;
@@ -573,7 +573,7 @@ static PRbNode lprev(PRbNode n)
    return n->parent;
    }
 
-static PRbNode rprev(PRbNode n)
+static RbNode *rprev(RbNode *n)
    {
    RTN_UNLESS_PRBN_OK( nullptr, n );
    if( ishead(n) ) return n;
@@ -590,12 +590,12 @@ static PRbNode rprev(PRbNode n)
 // exposing init_rbtreehead in the public interface of this module, while it
 // WILL optimize memory allocation by allowing you to embed a RbNode inside
 // another data structure (vs.  having to malloc a standalone RbNode and
-// assign it to a PRbNode within your application structure), breaks
+// assign it to a RbNode *within your application structure), breaks
 // encapsulation of the definition of RbNode.
 //
 // This is the reason init_rbtreehead is currently static.
 //
-static PRbNode init_rbtreehead( PRbTree tree, PRbCtrl pCtrl )
+static RbNode *init_rbtreehead( PRbTree tree, RbCtrl *pCtrl )
    {
    RTN_UNLESS( nullptr, pCtrl );
    RTN_UNLESS( nullptr, tree );
@@ -612,14 +612,14 @@ static PRbNode init_rbtreehead( PRbTree tree, PRbCtrl pCtrl )
    }
 
 
-PRbNode rb_alloc_tree( PRbCtrl pCtrl )
+RbNode *rb_alloc_tree( RbCtrl *pCtrl )
    {
    return init_rbtreehead( PRbTree( pCtrl->nd_alloc(sizeof(RbNode)) ), pCtrl );
    }
 
-PRbNode rb_insert_before( PRbTree tree, PRbNode n, PCVoid key, PVoid val )
+RbNode *rb_insert_before( PRbTree tree, RbNode *n, PCVoid key, PVoid val )
    {
-   PRbNode prev, newleft;
+   RbNode *prev; RbNode *newleft;
 
    RTN_UNLESS_PRBN_OK(nullptr,n);
    RTN_UNLESS_PRBHD_OK(nullptr,tree);
@@ -629,7 +629,7 @@ PRbNode rb_insert_before( PRbTree tree, PRbNode n, PCVoid key, PVoid val )
       {
       if( n->parent == n ) // Tree is empty
          {
-         PRbNode newnode = mk_new_ext(tree, key, val);
+         RbNode *newnode = mk_new_ext(tree, key, val);
          insert(newnode, n);
          n->parent = newnode;
          newnode->parent = n;
@@ -638,7 +638,7 @@ PRbNode rb_insert_before( PRbTree tree, PRbNode n, PCVoid key, PVoid val )
          }
       else
          {
-         PRbNode newright = mk_new_ext(tree, key, val);
+         RbNode *newright = mk_new_ext(tree, key, val);
          insert(newright, n);
          newleft = newright->blink;
          setnormal(newleft);
@@ -660,7 +660,7 @@ PRbNode rb_insert_before( PRbTree tree, PRbNode n, PCVoid key, PVoid val )
       }
    }
 
-void *rb_delete_node(PRbTree tree, PRbNode n)
+void *rb_delete_node(PRbTree tree, RbNode *n)
    {
    RTN_UNLESS_PRBN_OK(nullptr,n);
    RTN_UNLESS_PRBHD_OK(nullptr,tree);
@@ -669,14 +669,14 @@ void *rb_delete_node(PRbTree tree, PRbNode n)
    assert( !ishead(n) );
    void *rv = static_cast<void *>(n->val.v); // const-breaking here since the presumed purpose is to pass back a void * for freeing...
    unlink_node(n); // Delete it from the list
-   PRbNode p = n->parent;  // The only node
+   RbNode *p = n->parent;  // The only node
    if( isroot(n) )
       {
       p->parent = p;
       getctrl(tree)->nd_dealloc(n);
       return rv;
       }
-   PRbNode s = sibling(n);  // The only node after deletion
+   RbNode *s = sibling(n);  // The only node after deletion
    if( isroot(p) )
       {
       s->parent = p->parent;
@@ -686,7 +686,7 @@ void *rb_delete_node(PRbTree tree, PRbNode n)
       getctrl(tree)->nd_dealloc(n);
       return rv;
       }
-   PRbNode gp = p->parent;  // Set parent to sibling
+   RbNode *gp = p->parent;  // Set parent to sibling
    s->parent = gp;
    if( isleft(p) )
       {
@@ -750,7 +750,7 @@ void *rb_delete_node(PRbTree tree, PRbNode n)
       }
 
    { // NOT a loop, JUST a new scope!
-   PRbNode x, z;
+   RbNode *x; RbNode *z;
    char il;
 
    assert( isint(s) );
@@ -801,7 +801,7 @@ void *rb_delete_node(PRbTree tree, PRbNode n)
 // returns NZ if all nodes OK
 // returns 0  if any node NOT OK
 //
-int rb_walk_tree_ok( PRbNode t, int (*fDataValid)( PCVoid ) )
+int rb_walk_tree_ok( RbNode *t, int (*fDataValid)( PCVoid ) )
    {
    if( !IsPRBNValid(t) )
       return 0;  // <-------  THIS is the reason for rb_walk_tree!
@@ -830,7 +830,7 @@ int rb_walk_tree_ok( PRbNode t, int (*fDataValid)( PCVoid ) )
 
 
 // not used 03-Sep-2002 klg
-// void rb_print_tree( PRbNode t, int level, void (*dispfxn)( void *pVal, void *glb_param ), void *glb_param )
+// void rb_print_tree( RbNode *t, int level, void (*dispfxn)( void *pVal, void *glb_param ), void *glb_param )
 //    {
 //    RTN_UNLESS_PRBN_OK(t);
 //    if( ishead(t) && t->parent == t )
@@ -889,7 +889,7 @@ void rb_dealloc_subtree(PRbTree tree)
    // DOES NOT FREE 'tree', only it's children
    }
 
-PRbNode rb_dealloc_tree(PRbTree tree)
+RbNode *rb_dealloc_tree(PRbTree tree)
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    rb_dealloc_subtree( tree );
@@ -897,7 +897,7 @@ PRbNode rb_dealloc_tree(PRbTree tree)
    return nullptr;
    }
 
-PRbNode rb_dealloc_treev( PRbTree tree, void *pExtra, void (*val_dealloc)( void *pData, void *pExtra ) )
+RbNode *rb_dealloc_treev( PRbTree tree, void *pExtra, void (*val_dealloc)( void *pData, void *pExtra ) )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    rb_dealloc_subtreev( tree, pExtra, val_dealloc );
@@ -905,14 +905,14 @@ PRbNode rb_dealloc_treev( PRbTree tree, void *pExtra, void (*val_dealloc)( void 
    return nullptr;
    }
 
-PVoid rb_val(PCRbNode node)
+PVoid rb_val(const RbNode *node)
    {
    RTN_UNLESS_PRBN_OK( nullptr, node );
    assert( isext(node) );
    return node->val.v;
    }
 
-PCVoid rb_key(PCRbNode node)
+PCVoid rb_key(const RbNode *node)
    {
    RTN_UNLESS_PRBN_OK( nullptr, node );
    assert( isext(node) );
@@ -920,7 +920,7 @@ PCVoid rb_key(PCRbNode node)
    }
 
 // 03-Sep-2002 klg this is seldom (never?) used...
-// static PRbNode rb_insert_a(PRbNode nd, void *key, void *val)
+// static RbNode *rb_insert_a(RbNode *nd, void *key, void *val)
 //    {
 //    RTN_UNLESS_PRBN_OK(nd);
 //    return rb_insert_before(nd->flink, key, val);
@@ -944,13 +944,13 @@ PCVoid rb_key(PCRbNode node)
 // - note that like keys for other APIs, keytype is A POINTER to the key value
 //
 #define RB_AUXFUNCS(name,keytype)                                                                \
-PRbNode rb_find_##name(PRbTree tree, keytype key)                                                \
-   { int equal; PRbNode rv=rb_find_gte_##name(&equal, tree, key); return equal ? rv : nullptr; } \
-PRbNode rb_insert_##name(PRbTree tree, keytype key, PVoid val)                          \
+RbNode *rb_find_##name(PRbTree tree, keytype key)                                                \
+   { int equal; RbNode *rv=rb_find_gte_##name(&equal, tree, key); return equal ? rv : nullptr; } \
+RbNode *rb_insert_##name(PRbTree tree, keytype key, PVoid val)                          \
    { int equal; return rb_insert_before( tree, rb_find_gte_##name(&equal, tree, key), key, val); }
 
 #define RB_FUNCS_SCALAR(name,keytype)                                                 \
-PRbNode rb_find_gte_##name(int *equal, PRbTree tree, keytype key)                     \
+RbNode *rb_find_gte_##name(int *equal, PRbTree tree, keytype key)                     \
    {                                                                                  \
    RTN_UNLESS_PRBHD_OK( nullptr, tree );                                              \
    incr_searches( tree );                                                             \
@@ -975,7 +975,7 @@ PRbNode rb_find_gte_##name(int *equal, PRbTree tree, keytype key)               
 RB_FUNCS_SCALAR(u32,const uint32_t*)
 RB_FUNCS_SCALAR(u16,const uint16_t*)
 
-PRbNode rb_find_gte_mem(int *equal, PRbTree tree, PCVoid key, size_t keylen)
+RbNode *rb_find_gte_mem(int *equal, PRbTree tree, PCVoid key, size_t keylen)
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    incr_searches( tree );
@@ -998,7 +998,7 @@ PRbNode rb_find_gte_mem(int *equal, PRbTree tree, PCVoid key, size_t keylen)
    }
    }
 
-PRbNode rb_find_gte_str( int *equal, PRbTree tree, const char *key )
+RbNode *rb_find_gte_str( int *equal, PRbTree tree, const char *key )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    incr_searches( tree );
@@ -1021,7 +1021,7 @@ PRbNode rb_find_gte_str( int *equal, PRbTree tree, const char *key )
    }
    }
 
-PRbNode rb_find_gte_gen( int *equal, PRbTree tree, PCVoid key, rb_cmpfxn fxn )
+RbNode *rb_find_gte_gen( int *equal, PRbTree tree, PCVoid key, rb_cmpfxn fxn )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    incr_searches( tree );
@@ -1052,17 +1052,17 @@ RB_AUXFUNCS(str,const char*)
 
 // these are specially coded since they take extra parameters: keylen, fxn
 
-PRbNode rb_find_mem(PRbTree tree, PCVoid key, size_t keylen)
+RbNode *rb_find_mem(PRbTree tree, PCVoid key, size_t keylen)
    {
    int equal;
-   PRbNode rv = rb_find_gte_mem(&equal, tree, key, keylen);
+   RbNode *rv = rb_find_gte_mem(&equal, tree, key, keylen);
    return equal ? rv : nullptr;
    }
 
-PRbNode rb_find_gen(PRbTree tree, PCVoid key, rb_cmpfxn fxn)
+RbNode *rb_find_gen(PRbTree tree, PCVoid key, rb_cmpfxn fxn)
    {
    int equal;
-   PRbNode rv = rb_find_gte_gen(&equal, tree, key, fxn);
+   RbNode *rv = rb_find_gte_gen(&equal, tree, key, fxn);
    return equal ? rv : nullptr;
    }
 
@@ -1070,13 +1070,13 @@ PRbNode rb_find_gen(PRbTree tree, PCVoid key, rb_cmpfxn fxn)
 
 // these are specially coded since they take extra parameters: keylen/fxn
 
-PRbNode rb_insert_mem( PRbTree tree, PCVoid key, size_t keylen, PVoid val )
+RbNode *rb_insert_mem( PRbTree tree, PCVoid key, size_t keylen, PVoid val )
    {
    int equal;
    return rb_insert_before( tree, rb_find_gte_mem(&equal, tree, key, keylen), key, val);
    }
 
-PRbNode rb_insert_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn, PVoid val )
+RbNode *rb_insert_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn, PVoid val )
    {
    int equal;
    return rb_insert_before( tree, rb_find_gte_gen(&equal, tree, key, fxn), key, val);
@@ -1085,7 +1085,7 @@ PRbNode rb_insert_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn, PVoid val )
 //*************************************************************************************************
 
 // not used -> warning -> promoted to ERROR, so commented out
-// static int rb_nblack(PRbNode n) // returns # of black nodes in path from n to the root
+// static int rb_nblack(RbNode *n) // returns # of black nodes in path from n to the root
 //    {
 //    int nb;
 //    RTN_UNLESS_PRBN_OK(n);
@@ -1100,7 +1100,7 @@ PRbNode rb_insert_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn, PVoid val )
 //    }
 
 
-static int rb_plength(PRbNode n) // returns the # of nodes in path from n to the root
+static int rb_plength(RbNode *n) // returns the # of nodes in path from n to the root
    {
    int pl = 0;
    RTN_UNLESS_PRBN_OK(pl,n);
@@ -1122,7 +1122,7 @@ const char * rb_tree_corrupt( PRbTree tree, PRbInfo pInfo )
 
    size_t fwdCt = 0;
    size_t rvsCt = 0;
-   PRbNode ptr;
+   RbNode *ptr;
    if( rbn_corrupt(tree) )   return "RB_HEAD_CORRUPT";
    rb_traverse(ptr, tree)
       {

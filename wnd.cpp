@@ -603,7 +603,7 @@ void Wins_WriteStateFile( FILE *ofh ) {
 
    { // call NotSavedToStateFile() on all FBUFs (this is our (Statefile write code) private data in FBUF, so OK to modify)
 #if FBUF_TREE
-   PRbNode pNd;
+   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead,dlinkAllFBufs,pFBuf)

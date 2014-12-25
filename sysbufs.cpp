@@ -79,7 +79,7 @@ STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFB
       }
    else {
 #if FBUF_TREE
-      PRbNode pNd;
+      RbNode *pNd;
       rb_traverse( pNd, g_FBufIdx )
 #else
       DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
@@ -259,7 +259,7 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
 
    {
 #if FBUF_TREE
-   PRbNode pNd;
+   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
@@ -281,7 +281,7 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
 
    {
 #if FBUF_TREE
-   PRbNode pNd;
+   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)

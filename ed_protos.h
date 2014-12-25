@@ -337,7 +337,7 @@ extern  void   CmdIdxAddMacro( PCChar name, PCChar macroDef );
 extern  int    CmdIdxRmvCmdsByFunction( funcCmd pFxn );
 extern  PCMD   CmdFromName( PCChar name );
 
-typedef PRbNode PCmdIdxNd;
+typedef RbNode *PCmdIdxNd;
 
 extern  PCmdIdxNd CmdIdxFirst()                ;
 extern  PCmdIdxNd CmdIdxLast()                 ;

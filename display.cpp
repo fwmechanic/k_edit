@@ -210,7 +210,7 @@ static_assert( ELEMENTS( s_color2Lua ) == sizeof( ViewColors ), "ELEMENTS( s_col
 
 STATIC_VAR PRbTree s_FES_idx;
 
-STATIC_FXN inline FileExtensionSetting *IdxNodeToFES( PRbNode pNd ) { return static_cast<PFileExtensionSetting>( rb_val(pNd) ); }  // type-safe conversion function
+STATIC_FXN inline FileExtensionSetting *IdxNodeToFES( RbNode *pNd ) { return static_cast<PFileExtensionSetting>( rb_val(pNd) ); }  // type-safe conversion function
 
 struct FileExtensionSetting {
    Path::str_t d_ext;  // rbtree key

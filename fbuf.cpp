@@ -473,7 +473,7 @@ bool FbufKnown( PFBUF pThis ) {
    // another FBUF is possibly allocated into the same memory block!
    //
 #if FBUF_TREE
-   PRbNode pNd;
+   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead,d_link,pFBuf)
@@ -769,7 +769,7 @@ int FBUF::SyncNoWrite() {
 bool ARG::sync() {
    auto filesRefreshed( 0 );
 #if FBUF_TREE
-   PRbNode pNd;
+   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
@@ -790,7 +790,7 @@ bool ARG::sync() {
 void WriteAllDirtyFBufs() {
    auto saveCount( 0 );
 #if FBUF_TREE
-   PRbNode pNd;
+   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)

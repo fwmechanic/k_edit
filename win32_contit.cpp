@@ -80,7 +80,7 @@ bool EditorFilesStatus::Changed() {
    auto dirtyFBufs(0);
    auto openFBufs (0);
 #if FBUF_TREE
-   PRbNode pNd;
+   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)

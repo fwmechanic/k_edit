@@ -492,7 +492,7 @@ STATIC_VAR PRbTree s_CmdIdxBuiltins;
 
 GLOBAL_VAR PRbTree s_CmdIdxAddins;
 
-STIL PCMD IdxNodeToPCMD( PRbNode pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
+STIL PCMD IdxNodeToPCMD( RbNode *pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
 
 int rb_strcmpi( PCVoid p1, PCVoid p2 ) {
    return Stricmp( static_cast<PCChar>(p1), static_cast<PCChar>(p2) );
