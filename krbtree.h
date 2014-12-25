@@ -33,7 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "my_types.h"
 
-struct RbCtrl;  STD_TYPEDEFS(RbCtrl)
+struct RbCtrl;
 struct RbNode;
 struct RbNode
    {
