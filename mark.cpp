@@ -24,7 +24,7 @@ STATIC_FXN void NamedPointListDestroy( NamedPointHead &hd ) {
       DLINK_REMOVE_FIRST( hd, pEl, dlink );
       delete pEl;
       }
-   Assert( hd.IsEmpty() );
+   Assert( hd.empty() );
    }
 
 void FBUF::DestroyMarks() { NamedPointListDestroy( d_MarkHead ); }

@@ -58,8 +58,8 @@ struct DLinkHead {
 
 public: // the intended "public interface"
 
-   void Clear()          { dl_first = dl_last = nullptr; count = 0; }
-   bool IsEmpty()  const { return dl_first == nullptr; }
+   void clear()          { dl_first = dl_last = nullptr; count = 0; }
+   bool empty()    const { return dl_first == nullptr; }
    CP   FirstK()   const { return CP(dl_first); } // probably never needed; DO NOT rename First()
    P    First()    const { return    dl_first ; }
    CP   LastK()    const { return CP(dl_last) ; } // probably never needed; DO NOT rename Last()
@@ -80,7 +80,7 @@ struct DLinkEntry
 public: // the intended "public interface"
 
    DLinkEntry() : dl_next( nullptr ), dl_prev( nullptr ) {}
-   void Clear() { dl_next = dl_prev = nullptr; }
+   void clear() { dl_next = dl_prev = nullptr; }
    CP Next() const { return CP(dl_next); }
    P  Next()       { return    dl_next ; }
    CP Prev() const { return CP(dl_prev); }
@@ -189,7 +189,7 @@ do { auto &Hd_( Hd ); auto pEl_( pEl );                         \
       Hd_.dl_last = pEl_->field.dl_prev;                        \
       }                                                         \
    DLINK_COUNT( --Hd_.count; )                                  \
-   pEl->field.Clear();                                          \
+   pEl->field.clear();                                          \
    } while( 0 )
 
 // pEl is UNINITIALIZED on entry, is an effective return value!
@@ -205,7 +205,7 @@ do { auto &Hd_( Hd );                                 \
          Hd_.dl_last = nullptr;                       \
          }                                            \
       DLINK_COUNT( --Hd_.count; )                     \
-      pEl->field.Clear();                             \
+      pEl->field.clear();                             \
       }                                               \
    } while( 0 )
 
@@ -222,7 +222,7 @@ do { auto &destHd_(destHd); auto &srcHd_(srcHd);      \
       destHd_.dl_last = srcHd_.Last();                \
       }                                               \
    DLINK_COUNT( destHd_.count += srcHd_.count; )      \
-   srcHd_.Clear();                                    \
+   srcHd_.clear();                                    \
    } while( 0 )
 
 // Move srcHd's list to destHd; srcHd is left empty
@@ -231,5 +231,5 @@ do { auto &destHd_(destHd); auto &srcHd_(srcHd);      \
    destHd_.dl_first = srcHd_.First();                 \
    destHd_.dl_last  = srcHd_.Last();                  \
    DLINK_COUNT( destHd_.count = srcHd_.count; )       \
-   srcHd_.Clear();                                    \
+   srcHd_.clear();                                    \
    } while( 0 )

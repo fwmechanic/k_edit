@@ -212,7 +212,7 @@ namespace Interpreter {
       int    d_flags       ;
 
    public:
-      void   Clear();
+      void   clear();
       bool   ClearIsBreak();
       void   Ctor( PCChar pszMacroString, int macroFlags );
 
@@ -290,7 +290,7 @@ void Interpreter::MacroRuntimeStkEntry::Ctor( PCChar pszMacroString, int macroFl
    Advance();
    }
 
-void Interpreter::MacroRuntimeStkEntry::Clear() {
+void Interpreter::MacroRuntimeStkEntry::clear() {
    0 && DBG( "Clear[%d]=%s|", s_ixPastTOS-1, d_pStartOfText );
    Free0( d_pStartOfText );
    d_pCurTxt = nullptr;
@@ -299,7 +299,7 @@ void Interpreter::MacroRuntimeStkEntry::Clear() {
 
 bool Interpreter::MacroRuntimeStkEntry::ClearIsBreak() {
    const auto rv( Breaks() );
-   Clear();
+   clear();
    return rv;
    }
 

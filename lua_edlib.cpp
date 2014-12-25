@@ -258,7 +258,7 @@ LUAFUNC_(enqueue_compile_jobs) {
       lua_rawgeti(L, 1, ix);  // push t[ix]
       PCChar pCmd = luaL_checkstring(L, -1);
       0 && DBG( "%s", pCmd );
-      sl.AddStr( pCmd );
+      sl.push_front( pCmd );
       }
 
    CompilePty_CmdsAsyncExec( sl, true );

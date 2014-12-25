@@ -434,7 +434,7 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
    const auto  pWin( g_CurWin() );
          auto &vh( g_CurViewHd() );
    DD && DBG( "%s Win[%d]", __func__, iw );
-   for( auto try_(0); !vh.IsEmpty(); ++try_ ) {
+   for( auto try_(0); !vh.empty(); ++try_ ) {
       const auto fb( vh.First()->FBuf() );     DD && DBG( "%s try %d=%s", __func__, try_, fb->Name() );
       if( fChangeFile( fb->Name() ) ) {  // fb->PutFocusOn() also works
          DD && DBG( "%s try %d successful!", __func__, try_ );
@@ -640,7 +640,7 @@ void Wins_WriteStateFile( FILE *ofh ) {
       } hds[ MAX_WINDOWS ];
    auto hdsMax( 0 );
    for( auto pWin : g__.aWindow ) {
-      if( !pWin->ViewHd.IsEmpty() ) {
+      if( !pWin->ViewHd.empty() ) {
          hds[hdsMax++].Init( pWin->ViewHd.First() );
          }
       }

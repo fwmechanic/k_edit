@@ -455,7 +455,7 @@ class LineInfo { // LineInfo is a standalone class since it is used by both FBUF
 
 public:
 
-   void Clear() {
+   void clear() {
       d_pLineData = nullptr;
       d_iLineLen  = 0;
       }
@@ -464,14 +464,14 @@ public:
       : d_pLineData( rhs.d_pLineData )
       , d_iLineLen ( rhs.d_iLineLen  )
       {
-      rhs.Clear();
+      rhs.clear();
       }
 
    LineInfo& operator=(LineInfo&& rhs) {  // move assignment op   so we can std::swap() these
       if( this != &rhs ) {
          d_pLineData = rhs.d_pLineData ;
          d_iLineLen  = rhs.d_iLineLen  ;
-         rhs.Clear();
+         rhs.clear();
          }
       return *this;
       }
@@ -1405,7 +1405,7 @@ private:
    void           InitLineInfoRange( LINE yMin, LINE numToInit ) {
                      auto pLi( d_paLineInfo + yMin );
                      for( const auto pLiPastEnd( pLi + numToInit ) ; pLi < pLiPastEnd ; ++pLi )
-                        pLi->Clear();
+                        pLi->clear();
                      }
 
    void           SetLineInfoCount( LINE linesNeeded );

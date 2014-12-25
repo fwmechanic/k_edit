@@ -43,7 +43,7 @@ STATIC_FXN void getLineInfoStr( PPChar ppBuf, size_t *pBufbytes, const LineInfo 
 #if UNDO_REDO_MARKS
 
 STATIC_FXN void copyUndoMarks( PFBUF pFBuf, NamedPointHead &SavedMarkList, int LineAdjustValue ) {
-   if( SavedMarkList.IsEmpty() )
+   if( SavedMarkList.empty() )
       return;
 
    // PMarkBuf newMarks = PMarkBuf( Alloc0d( SavedMarkList->bufBytes ) );

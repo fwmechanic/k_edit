@@ -81,7 +81,7 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
    0 && DBG( "Regex::Match returned %d", rc );
 
    if( pcs ) {
-      pcs->Clear();
+      pcs->clear();
 
       // if PCRE returns 0, it says there were more captures than we gave him space for (MAX_CAPTURES)
       // in that case PCRE has filled in all it can (MAX_CAPTURES), so we use a count of MAX_CAPTURES.
@@ -99,7 +99,7 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
          // subpattern are set to -1.
          //
          if( d_capture[ix].Len() == -1 ) { // empty capture?
-            // Clear() already cleared this entry
+            // clear() already cleared this entry
             }
          else {
             pcs->Set( ix, pBuf + d_capture[ix].oFirst, d_capture[ix].Len() );
@@ -349,7 +349,7 @@ GenericList::~GenericList() {
 void GenericList::Cat( int num ) {
    PGenericListEl rv;
    AllocArrayNZ( rv );
-   rv->dlink.Clear();
+   rv->dlink.clear();
    rv->d_typeof = GenericListEl::IS_INT;
    rv->value.num = num;
    DLINK_INSERT_LAST(d_head, rv, dlink);
@@ -366,7 +366,7 @@ void GenericList::Cat( PCChar src, size_t len ) {
          - sizeof(rv->value) // space within control struct that is used to store string value
          )
       );
-   rv->dlink.Clear();
+   rv->dlink.clear();
    rv->d_typeof = GenericListEl::IS_STRING;
    memcpy( rv->value.str, src, len );
    rv->value.str[len] = '\0';

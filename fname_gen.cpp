@@ -394,7 +394,7 @@ bool ARG::cfx() {
 //------------------------------------------------------------------------------
 
 bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
-   if( d_output.IsEmpty() )
+   if( d_output.empty() )
       return false;
 
    auto pEl( d_output.First() );

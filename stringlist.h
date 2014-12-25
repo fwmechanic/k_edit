@@ -25,10 +25,10 @@ struct StringList {
    StringListHead d_head; // _public_ so DLINKC_FIRST_TO_LASTA can be used to efficiently walk the list
    StringList() {}
    StringList( PCChar str ) { InsStringListEl( d_head, str ); }
-   void Clear() { DeleteStringList( d_head ); }
-   ~StringList() { Clear(); }
-   void AddStr( boost::string_ref src ) { InsStringListEl( d_head, src ); }
+   void clear() { DeleteStringList( d_head ); }
+   ~StringList() { clear(); }
+   void push_front( boost::string_ref src ) { InsStringListEl( d_head, src ); }
    unsigned Count() const { return d_head.Count(); }
    StringListHead &Head() { return d_head; }
-   bool IsEmpty() const { return d_head.IsEmpty(); }
+   bool empty() const { return d_head.empty(); }
    };

@@ -32,7 +32,7 @@ class CapturedStrings {
    int    Len( int ix ) const { return (ix < d_maxCount) ?        d_pCs[ix].length()   : 0 ; }
    int    Count()       const { return       d_maxCount; }
 
-   void Clear() {
+   void clear() {
       for( auto ix(0); ix < d_maxCount; ++ix )
          d_pCs[ix].clear();
       }

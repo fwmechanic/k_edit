@@ -9,7 +9,7 @@ StringListEl *NewStringListEl( boost::string_ref src ) {
    const auto sbytes( src.length() + 1 );
    StringListEl *rv;
    AllocBytesNZ( rv, sizeof( *rv ) + sbytes, __func__ );
-   rv->dlink.Clear();
+   rv->dlink.clear();
    memcpy( rv->string, src.data(), sbytes-1 );
    rv->string[sbytes-1] = '\0';
    return rv;

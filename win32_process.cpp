@@ -727,7 +727,7 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
       AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
       d_processInfo.dwProcessId = INVALID_dwProcessId;
       DispNeedsRedrawStatLn();
-      if( d_jobQHead.IsEmpty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
+      if( d_jobQHead.empty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
          PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_hProcessExitCode = 0;
@@ -932,7 +932,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
       d_processInfo.dwProcessId = INVALID_dwProcessId;
       DispNeedsRedrawStatLn(); // ???
-      if( d_pSL->IsEmpty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
+      if( d_pSL->empty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
          PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_hProcessExitCode = 0;

@@ -1984,8 +1984,8 @@ GLOBAL_VAR bool g_fLangHilites = true;
 
 void View::HiliteAddins_Init() {
    if( g_fLangHilites ) {
-      DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.IsEmpty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
-      if( d_addins.IsEmpty() && d_pFBuf->HasLines() ) {
+      DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
+      if( d_addins.empty() && d_pFBuf->HasLines() ) {
          const auto pFES( GetFileExtensionSettings() );
          const auto commDelim( pFES->d_eolCommentDelim );
          const auto hasEolComment( 0 != commDelim[0] );
@@ -2005,7 +2005,7 @@ void View::HiliteAddins_Init() {
                                            { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }
          if( USE_HiliteAddin_CompileLine ) { InsertAddinLast( new HiliteAddin_CompileLine     ( this ) ); }
          if( USE_HiliteAddin_CursorLine  ) { InsertAddinLast( new HiliteAddin_CursorLine      ( this ) ); }
-         DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.IsEmpty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
+         DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
          }
       }
    }
@@ -3261,7 +3261,7 @@ PView FBUF::PutFocusOnView() { enum{ DD=0 };
 
 void FBUF::UnlinkView( PView pv ) {
    DLINK_REMOVE( d_dhdViewsOfFBUF, pv, dlinkViewsOfFBUF );
-   if( d_dhdViewsOfFBUF.IsEmpty() )
+   if( d_dhdViewsOfFBUF.empty() )
       private_RemovedFBuf();
    }
 
@@ -3275,7 +3275,7 @@ void DestroyViewList( ViewHead *pViewHd ) {
    while( auto cur=pViewHd->First() ) {
       KillView( cur );
       }
-   Assert( pViewHd->IsEmpty() );
+   Assert( pViewHd->empty() );
    }
 
 void KillTheCurrentView() {
