@@ -893,7 +893,7 @@ private:
    int  KillAllJobsInBkgndProcessQueue();
    int  DeleteAllEnqueuedJobs_locks();
 
-   }; STD_TYPEDEFS( InternalShellJobExecutor )
+   };
 
 InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput )
    : d_pfLogBuf         ( pfb )
