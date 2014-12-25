@@ -10,10 +10,16 @@
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 
 int LDS( PCChar tag, lua_State *L ) {
-   const auto stkEls( lua_gettop(L) );
-   DBG( "+luaStack, %d els @ '%s'", stkEls, tag );
-   for( auto ix(1); ix <= stkEls; ++ix ) {
-      DBG( " luaStack[%d] is %s", ix, lua_typename( L, ix ) );
+   const auto top( lua_gettop(L) );
+   DBG( "+luaStack, %d els @ '%s'", top, tag );
+   for( auto ix(1); ix <= top; ++ix ) {
+      const auto type( lua_type( L, ix ) );
+      switch( type ) {
+         case LUA_TSTRING:  DBG( " [%d]=\"%s\"", ix, lua_tostring( L, ix ) ); break;
+         case LUA_TBOOLEAN: DBG( " [%d]=%s"    , ix, lua_toboolean( L, ix ) ? "true":"false" ); break;
+         case LUA_TNUMBER:  DBG( " [%d]=%f"    , ix, lua_tonumber( L, ix ) ); break;
+         default:           DBG( " [%d]={%s}"  , ix, lua_typename( L, type ) ); break;
+         }
       }
    0 && DBG( "-luaStack Dump @ '%s'", tag );
    return 1;
@@ -283,13 +289,32 @@ STATIC_FXN int traceback (lua_State *L) {
 
 // stolen from lua-5.1/src/lua.c
 STATIC_FXN int docall (lua_State *L, int narg, int clear) {
-  auto base( lua_gettop(L) - narg );  /* function index */
+  const auto base( lua_gettop(L) - narg );  /* function index */
   lua_pushcfunction(L, traceback);  /* push traceback function */
   lua_insert(L, base);  /* put it under chunk and args */
 //signal(SIGINT, laction);
   const auto status( lua_pcall(L, narg, (clear ? 0 : LUA_MULTRET), base) );
 //signal(SIGINT, SIG_DFL);
   lua_remove(L, base);  /* remove traceback function */
+  /* force a complete garbage collection in case of errors */
+  if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
+  return status;
+}
+
+// clone of docall, except nres param to lua_pcall is passed directly
+STATIC_FXN int docall_known_nres (lua_State *L, int narg, int nres) { enum { DB=0 };
+  const auto top( lua_gettop(L) );  /* function index */
+  const auto base( top - narg );  /* function index */
+                                                                  DB && DBG( "lua_pcall(%d/%d,%d,%d)", narg, top, nres, base );
+                                                                  DB && LDS( "+ docall_known_nres:pre-ins-traceback-fxn", L );
+  lua_pushcfunction(L, traceback);  /* push traceback function */
+  lua_insert(L, base);  /* put it under chunk and args */
+//signal(SIGINT, laction);
+                                                                  DB && LDS( "+ docall_known_nres:lua_pcall", L );
+  const auto status( lua_pcall(L, narg, nres, base) );            DB && LDS( "- docall_known_nres:lua_pcall", L );
+
+//signal(SIGINT, SIG_DFL);
+  lua_remove(L, base);  /* remove traceback function */           DB && LDS( "+ docall_known_nres:post-rmv-traceback-fxn", L );
   /* force a complete garbage collection in case of errors */
   if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
   return status;
@@ -770,16 +795,18 @@ struct StrDest {
 
 // straight from PIL2e (call_va)
 
-STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, va_list vl=0 ) {
+STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, va_list vl=0 ) { enum { DB=0 };
    if( !L ) return false;
-
-   if( lh_getglobal_failed( L, szFuncnm ) || !lua_isfunction( L, -1 ) )
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup lcc( L ); // clear the stack on function return
+                                                                          DB && DBG( "%s->%s() [%d] ========================", __func__, szFuncnm, lua_gettop(L) );
+   if( lh_getglobal_failed( L, szFuncnm ) || !lua_isfunction( L, -1 ) ) {
       return Msg( "%s: Lua symbol '%s' is NOT A FUNCTION", __func__, szFuncnm );
+      }
 
    // push arguments
    auto pszSigStart( szSig );
-   int narg;
-   for( narg=0 ; *szSig ; ++narg, ++szSig ) {
+   for( ; *szSig && *szSig != '>' ; ++szSig ) {
       switch( *szSig ) {
        default:   return Msg( "%s: invalid param-type[%" PR_PTRDIFFT "d] (%c)", szFuncnm, (szSig - pszSigStart), szSig[0] );
        case 'F':  l_construct_FBUF( L, va_arg(vl, PFBUF )                 );  break;
@@ -789,53 +816,51 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
        case 'b':  lua_pushboolean(  L, va_arg(vl, int   ) != 0            );  break; // NB: boolean is an int-sized thing!
        case 's':  lua_pushstring(   L, va_arg(vl, PCChar)                 );  break;
        case 'S':  lua_pushstring(   L, va_arg(vl, std::string *)->c_str() );  break;
-       case '>':  goto CALL_LUA_FUNCTION;
        }
       luaL_checkstack( L, 1, "too many arguments" );
       }
 
-CALL_LUA_FUNCTION:
-   auto nres( Strlen( ++szSig ) );  // number of expected results
-
-   {
-   LuaCallCleanup lcc( L );
-   if( docall( L, narg, 0 ) != 0 )  // do the call
+   const auto narg( szSig - pszSigStart );  // number of args pushed
+   if( *szSig=='>' ) { ++szSig; }
+   const auto nres_( Strlen( szSig ) );      // number of results expected
+// if( docall( L, narg, 0 ) != 0 )  // do the call
+   if( docall_known_nres( L, narg, nres_ ) != 0 )  // do the call
       l_handle_pcall_error( L );
-
+                                                                          DB && DBG( "%s->%s() [%d/%d]", __func__, szFuncnm, nres_, lua_gettop(L) );
+                                                                          DB && LDS( "post-docall_known_nres", L );
    pszSigStart = szSig;
-   for( nres = -nres ; *szSig ; ++nres, ++szSig ) {
+   for( auto nres = -nres_ ; *szSig ; ++nres, ++szSig ) { // if a fxn rtns 3 results, first is pushed first @-3, second @-2, third @-1
       switch( *szSig ) {
        case 'd':  if( !lua_isnumber( L, nres ) )  goto WRONG_RESULT_TYPE;
-                  *va_arg(vl, double *) =      lua_tonumber( L, nres );
-                  break;
+                 {const auto lval( lua_tonumber( L, nres ) );             DB && DBG( "%s->%s() d[%d]=%f", __func__, szFuncnm, nres, lval );
+                  *va_arg(vl, double *) = lval;
+                 }break;
 
        case 'i':  if( !lua_isnumber( L, nres ) )  goto WRONG_RESULT_TYPE;
-                  *va_arg(vl, int *)    = (int)lua_tointeger( L, nres );
-                  break;
+                 {const auto lval( lua_tointeger( L, nres ) );            DB && DBG( "%s->%s() d[%d]=%" PR_SIZET "d", __func__, szFuncnm, nres, lval );
+                  *va_arg(vl, int *)    = lval;
+                 }break;
 
-       case 'b':  *va_arg(vl, int *)    =      lua_toboolean( L, nres );  // NB: boolean is an int-sized thing!
-                  break;
+       case 'b': {const auto lval( lua_toboolean( L, nres ) );            DB && DBG( "%s->%s() b[%d]=%d", __func__, szFuncnm, nres, lval );
+                  *va_arg(vl, int *)    = lval; // NB: boolean is an int-sized thing!
+                 }break;
 
        case 'h':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
-                  {
-                  size_t srcBytes;
-                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );
+                 {size_t srcBytes;
+                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );         DB && DBG( "%s->%s() h[%d]=%" PR_SIZET "u bytes", __func__, szFuncnm, nres, srcBytes );
                   ++srcBytes;
                   PChar pDest;
                   AllocBytesNZ( pDest, srcBytes ); // can copy binary data, not just string
                   auto psd( va_arg(vl, PStrDest) );
                   psd->BindBuf( pDest, srcBytes );
                   psd->CopyTo( pSrc, srcBytes );
-                  }
-                  break;
+                 }break;
 
        case 'S':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
-                  {
-                  size_t srcBytes;
-                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );
+                 {size_t srcBytes;
+                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );         DB && DBG( "%s->%s() S[%d]=%" PR_SIZET "u bytes", __func__, szFuncnm, nres, srcBytes );
                   va_arg(vl, std::string *)->assign( pSrc, srcBytes );
-                  }
-                  break;
+                 }break;
 
        default:   return Msg( "%s: unsupported return type specifier '%c'", __func__, *szSig );
        }
@@ -845,8 +870,7 @@ CALL_LUA_FUNCTION:
 
 WRONG_RESULT_TYPE:
 
-   return Msg( "%s: wrong result-type[%d] (expected '%c')", __func__, nres, szSig[0] );
-   }
+   return Msg( "%s: wrong result-type[%d] (expected '%c')", __func__, nres_, szSig[0] );
    }
 
 STATIC_FXN bool callLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, ... ) {

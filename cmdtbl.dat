@@ -9,6 +9,7 @@
 
 # column 1 contains
 # [space] always enabled
+# #       disabled
 # w       enabled for Win32 only
 
 # name of function in editor (seen by user)
@@ -31,7 +32,7 @@
   cancel       cancel                    BOXARG + STREAMARG + NOARG + LINEARG + NULLARG + TEXTARG + BOXSTR , Cancels current selection, argument, or operation
 # cc           cc                        NOARG        , Interactive color selection
   cdelete      cdelete        MODIFIES+CURSORFUNC     , Deletes prev character, excluding line breaks. If cursor is in column 1, Cdelete move cursor to end of previous line
-# cfx          cfx                       BOXSTR + TEXTARG
+# cfx          cfx                       BOXSTR + TEXTARG, tester for StrSubstituterGenerator and CFX_to_SSG
 w cliptext     cliptext                  KEEPMETA+NOARG+NULLARG , Like lasttext, except Windows Clipboard data is inserted on dialog line
 w compile      compile                   BOXSTR + NOARG + TEXTARG + NULLARG
   copy         copy                      BOXARG + MARKARG + NUMARG + NULLEOL + STREAMARG + NOARG + LINEARG + TEXTARG , Copies cursor line to clipboard
@@ -163,7 +164,7 @@ w towinclip    towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+
   vrepeat      vrepeat        MODIFIES + BOXARG , Vertically repeat (1xArg=insert, 2xArg=ovrwrt) top line of BOXARG selection in other lines of box
 w waitcompiledone waitcompiledone        NOARG + NUMARG + TEXTARG + LINEARG
 # waitkey15    waitkey15                 NOARG , test func
-# wct          wct                       NOARG + TEXTARG + BOXSTR
+# wct          wct                       NOARG + TEXTARG + BOXSTR, tester for DirListGenerator and WildcardFilenameGenerator
   window       window                    NOARG + NULLARG
   wrstatefile  wrstatefile               NOARG , write the editor state (history) file
   xquote       xquote         MODIFIES + NOARG , interactively enter a charter at the cursor position, in hex
