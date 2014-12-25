@@ -21,7 +21,7 @@ void InsStringListEl( StringListHead &slhd, boost::string_ref src ) { 0 && DBG("
    }
 
 void DeleteStringList( StringListHead &slhd ) {
-   while( auto pEl = slhd.First() ) {
+   while( auto pEl = slhd.front() ) {
       DLINK_REMOVE_FIRST( slhd, pEl, dlink );
       FreeStringListEl( pEl );
       }

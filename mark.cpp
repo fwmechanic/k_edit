@@ -20,7 +20,7 @@ struct NamedPoint {
 
 
 STATIC_FXN void NamedPointListDestroy( NamedPointHead &hd ) {
-   while( auto pEl=hd.First() ) {
+   while( auto pEl=hd.front() ) {
       DLINK_REMOVE_FIRST( hd, pEl, dlink );
       delete pEl;
       }

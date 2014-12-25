@@ -302,7 +302,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
       }
 
    DLINK_JOIN( cvh, tmpVHd, dlinkViewsOfWindow );
-   cvh.First()->PutFocusOn();
+   cvh.front()->PutFocusOn();
 
    if( s_pFForgottenFiles ) {
        s_pFForgottenFiles->ClearUndo();
@@ -396,7 +396,7 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    for( auto &win : g__.aWindow )
       DestroyViewList( &win->ViewHd );
                                                          DV && DBG("%s RemoveFBufOnly();", __func__ );
-   while( auto pFb = g_FBufHead.First() )
+   while( auto pFb = g_FBufHead.front() )
       pFb->RemoveFBufOnly();
 
    // finally, garbage-collect the bits and pieces:

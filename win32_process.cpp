@@ -804,8 +804,8 @@ int Win32_pty::EnqueueJobsAndRun( const StringList &sl ) {
 
 int Win32_pty::DeleteAllEnqueuedJobs_locks() {
    AutoMutex LockTheJobQueue( d_jobQueueMtx );
-   const auto rmCnt( d_jobQHead.Count() );
-   while( auto pEl = d_jobQHead.First() ) {
+   const auto rmCnt( d_jobQHead.length() );
+   while( auto pEl = d_jobQHead.front() ) {
       DLINK_REMOVE_FIRST( d_jobQHead, pEl, d_dlinkJobsOfPty );
       Delete0( pEl );
       }
@@ -884,7 +884,7 @@ public:
    void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const
       {
       *pNumRequested  = d_numJobsRequested;
-      *pNumNotStarted = d_pSL->Count();
+      *pNumNotStarted = d_pSL->length();
       }
 
 private:
@@ -898,7 +898,7 @@ private:
 InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput )
    : d_pfLogBuf         ( pfb )
    , d_pSL              ( sl )
-   , d_numJobsRequested ( sl->Count() )
+   , d_numJobsRequested ( sl->length() )
    , d_hThread          ( nullptr )
    , d_hProcessExitCode ( 0 )
    {
@@ -988,8 +988,8 @@ NEXT_OUTBUF:
 int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
    AutoMutex LockTheJobQueue( d_jobQueueMtx );
    auto &d_jobQHead = d_pSL->d_head;
-   const auto rmCnt( d_jobQHead.Count() );
-   while( auto pEl = d_jobQHead.First() ) {
+   const auto rmCnt( d_jobQHead.length() );
+   while( auto pEl = d_jobQHead.front() ) {
       DLINK_REMOVE_FIRST( d_jobQHead, pEl, dlink );
       Delete0( pEl );
       }

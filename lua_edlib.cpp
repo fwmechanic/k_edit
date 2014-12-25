@@ -305,7 +305,7 @@ STATIC_FXN int l_FBUF_function_first( lua_State *L ) {
            return (pNd != rb_nil(g_FBufIdx)) ? l_construct_FBUF( L, static_cast<PFBUF>(rb_val( pNd )) ) : 0;
            }
 #else
-STATIC_FXN int l_FBUF_function_first( lua_State *L )     { return l_construct_FBUF( L, g_FBufHead.First() ); }
+STATIC_FXN int l_FBUF_function_first( lua_State *L )     { return l_construct_FBUF( L, g_FBufHead.front() ); }
 #endif
 
 STATIC_FXN int l_FBUF_function_getlog( lua_State *L )    { return l_construct_FBUF( L, s_pFbufLuaLog      ); }
@@ -513,7 +513,7 @@ STATIC_FXN int l_Win_function_getn( lua_State *L ) { return l_construct_Win( L, 
 STATIC_FXN int l_Win_function_by_filename( lua_State *L ) { // Beware!  There MAY BE more than one window onto a given file
    auto pFnm = S_(1);
    for( auto ix(0) ; ix < g_iWindowCount(); ++ix )
-      if( g_Win( ix )->ViewHd.First()->FBuf()->NameMatch( pFnm ) )
+      if( g_Win( ix )->ViewHd.front()->FBuf()->NameMatch( pFnm ) )
          return l_construct_Win( L, ix );
 
    R_nil();
@@ -538,7 +538,7 @@ LUAFUNC_(SplitCurWnd) {
    R_nil();
    }
 
-Win_(CurFBUF)    { return l_construct_FBUF( L, thisWin()->ViewHd.First()->FBuf() ); }
+Win_(CurFBUF)    { return l_construct_FBUF( L, thisWin()->ViewHd.front()->FBuf() ); }
 Win_(Height)     { R_int( thisWin()->d_Size.lin ); }
 Win_(MakeCurrent){ SetWindowSetValidView_( thisWin() ); R_nil(); }
 
@@ -572,7 +572,7 @@ int l_construct_View( lua_State *L, PView pView ) {
    return 1;
    }
 
-Win_(CurView)      { return l_construct_View( L, thisWin()->ViewHd.First() ); }  // Note that View ctor is a Win _method_
+Win_(CurView)      { return l_construct_View( L, thisWin()->ViewHd.front() ); }  // Note that View ctor is a Win _method_
 FBUF_(PutFocusOn)  { return l_construct_View( L, thisPF()->PutFocusOn() ); }     // Note that View ctor is a FBUF _method_
 
 int l_View_function_cur( lua_State *L ) { return l_construct_View( L, g_CurView() ); }

@@ -60,11 +60,11 @@ public: // the intended "public interface"
 
    void clear()          { dl_first = dl_last = nullptr; count = 0; }
    bool empty()    const { return dl_first == nullptr; }
-   CP   FirstK()   const { return CP(dl_first); } // probably never needed; DO NOT rename First()
-   P    First()    const { return    dl_first ; }
-   CP   LastK()    const { return CP(dl_last) ; } // probably never needed; DO NOT rename Last()
-   P    Last ()    const { return    dl_last  ; }
-   DLINK_COUNT( unsigned Count() const { return count; } )
+   CP   frontK()   const { return CP(dl_first); } // probably never needed; DO NOT rename front()
+   P    front()    const { return    dl_first ; }
+   CP   backK()    const { return CP(dl_last) ; } // probably never needed; DO NOT rename back()
+   P    back ()    const { return    dl_last  ; }
+   DLINK_COUNT( unsigned length() const { return count; } )
    };
 
 
@@ -101,12 +101,12 @@ public: // the intended "public interface"
 // DLINKC_.. means "Const thisvar" (user code is NOT altering the list)
 // DLINK..A means "auto thisvar" (thisvar is declared auto inside the for loop defined by the macro)
 
-#define DLINKC_FIRST_TO_LAST( Hd,field,thisvar)        for(     (thisvar)=(Hd).First() ;                                                                 (thisvar)  ; (thisvar)=DLINK_NEXT((thisvar),field) )
-#define DLINKC_FIRST_TO_LASTA(Hd,field,thisvar)        for( auto thisvar =(Hd).First() ;                                                                  thisvar   ;  thisvar =DLINK_NEXT((thisvar),field) )
-#define DLINK_FIRST_TO_LAST(  Hd,field,thisvar,nxtvar) for(     (thisvar)=(Hd).First() ; ((nxtvar)=((thisvar) ? DLINK_NEXT((thisvar),field ) : nullptr), (thisvar)) ; (thisvar)=(nxtvar) )
+#define DLINKC_FIRST_TO_LAST( Hd,field,thisvar)        for(     (thisvar)=(Hd).front() ;                                                                 (thisvar)  ; (thisvar)=DLINK_NEXT((thisvar),field) )
+#define DLINKC_FIRST_TO_LASTA(Hd,field,thisvar)        for( auto thisvar =(Hd).front() ;                                                                  thisvar   ;  thisvar =DLINK_NEXT((thisvar),field) )
+#define DLINK_FIRST_TO_LAST(  Hd,field,thisvar,nxtvar) for(     (thisvar)=(Hd).front() ; ((nxtvar)=((thisvar) ? DLINK_NEXT((thisvar),field ) : nullptr), (thisvar)) ; (thisvar)=(nxtvar) )
 
-#define DLINKC_LAST_TO_FIRST( Hd,field,thisvar)        for( auto thisvar =(Hd).Last()  ;                                                                  thisvar   ;  thisvar =DLINK_PREV((thisvar),field) )
-#define DLINK_LAST_TO_FIRST(  Hd,field,thisvar,nxtvar) for(     (thisvar)=(Hd).Last()  ; ((nxtvar)=((thisvar) ? DLINK_PREV((thisvar),field ) : nullptr), (thisvar)) ; (thisvar)=(nxtvar) )
+#define DLINKC_LAST_TO_FIRST( Hd,field,thisvar)        for( auto thisvar =(Hd).back()  ;                                                                  thisvar   ;  thisvar =DLINK_PREV((thisvar),field) )
+#define DLINK_LAST_TO_FIRST(  Hd,field,thisvar,nxtvar) for(     (thisvar)=(Hd).back()  ; ((nxtvar)=((thisvar) ? DLINK_PREV((thisvar),field ) : nullptr), (thisvar)) ; (thisvar)=(nxtvar) )
 
 // coding convention: when reading a field, the corresponding method is
 // used; when writing, assignment is (unavoidably[1]) direct to the field
@@ -115,11 +115,11 @@ public: // the intended "public interface"
 // pNew is new element
 #define DLINK_INSERT_FIRST(Hd, pNew, field)       \
 do { auto &Hd_( Hd ); auto pNew_( pNew );         \
-   if( (pNew_->field.dl_next = Hd_.First()) ) {   \
-      Hd_.First()->field.dl_prev = pNew_;         \
+   if( (pNew_->field.dl_next = Hd_.front()) ) {   \
+      Hd_.front()->field.dl_prev = pNew_;         \
       }                                           \
    else {                                         \
-      DLL_ASSERT(Hd_.Last() == nullptr);          \
+      DLL_ASSERT(Hd_.back() == nullptr);          \
       Hd_.dl_last = pNew_;                        \
       }                                           \
    Hd_.dl_first = pNew_;                          \
@@ -130,11 +130,11 @@ do { auto &Hd_( Hd ); auto pNew_( pNew );         \
 // pNew is new element
 #define DLINK_INSERT_LAST(Hd, pNew, field)        \
 do { auto &Hd_( Hd ); auto pNew_( pNew );         \
-   if( (pNew_->field.dl_prev = Hd_.Last()) ) {    \
-      Hd_.Last()->field.dl_next = pNew_;          \
+   if( (pNew_->field.dl_prev = Hd_.back()) ) {    \
+      Hd_.back()->field.dl_next = pNew_;          \
       }                                           \
    else {                                         \
-      DLL_ASSERT(Hd_.First() == nullptr);         \
+      DLL_ASSERT(Hd_.front() == nullptr);         \
       Hd_.dl_first = pNew_;                       \
       }                                           \
    Hd_.dl_last = pNew_;                           \
@@ -195,11 +195,11 @@ do { auto &Hd_( Hd ); auto pEl_( pEl );                         \
 // pEl is UNINITIALIZED on entry, is an effective return value!
 #define DLINK_REMOVE_FIRST(Hd, pEl, field)            \
 do { auto &Hd_( Hd );                                 \
-   pEl = Hd_.First();                                 \
+   pEl = Hd_.front();                                 \
    if( pEl ) {                                        \
       Hd_.dl_first = pEl->field.dl_next;              \
-      if( Hd_.First() ) {                             \
-         Hd_.First()->field.dl_prev = nullptr;        \
+      if( Hd_.front() ) {                             \
+         Hd_.front()->field.dl_prev = nullptr;        \
          }                                            \
       else {                                          \
          Hd_.dl_last = nullptr;                       \
@@ -212,14 +212,14 @@ do { auto &Hd_( Hd );                                 \
 // Move srcHd's list onto the end of destHd's list
 #define DLINK_JOIN(destHd, srcHd, field)              \
 do { auto &destHd_(destHd); auto &srcHd_(srcHd);      \
-   if( !destHd_.First() ) { /* destHd empty */        \
-      destHd_.dl_first = srcHd_.First();              \
-      destHd_.dl_last  = srcHd_.Last();               \
+   if( !destHd_.front() ) { /* destHd empty */        \
+      destHd_.dl_first = srcHd_.front();              \
+      destHd_.dl_last  = srcHd_.back();               \
       }                                               \
    else { /* cat srcHd onto destHd */                 \
-      destHd_.Last()->field.dl_next = srcHd_.First(); \
-      srcHd_.First()->field.dl_prev = destHd_.Last(); \
-      destHd_.dl_last = srcHd_.Last();                \
+      destHd_.back()->field.dl_next = srcHd_.front(); \
+      srcHd_.front()->field.dl_prev = destHd_.back(); \
+      destHd_.dl_last = srcHd_.back();                \
       }                                               \
    DLINK_COUNT( destHd_.count += srcHd_.count; )      \
    srcHd_.clear();                                    \
@@ -228,8 +228,8 @@ do { auto &destHd_(destHd); auto &srcHd_(srcHd);      \
 // Move srcHd's list to destHd; srcHd is left empty
 #define DLINK_MOVE_HD(destHd, srcHd)                  \
 do { auto &destHd_(destHd); auto &srcHd_(srcHd);      \
-   destHd_.dl_first = srcHd_.First();                 \
-   destHd_.dl_last  = srcHd_.Last();                  \
+   destHd_.dl_first = srcHd_.front();                 \
+   destHd_.dl_last  = srcHd_.back();                  \
    DLINK_COUNT( destHd_.count = srcHd_.count; )       \
    srcHd_.clear();                                    \
    } while( 0 )

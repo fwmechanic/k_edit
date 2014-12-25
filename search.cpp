@@ -2812,7 +2812,7 @@ FAIL: // fnmbuf gets filename of CURRENT buffer!  But generation is 0
    }
 
 PView FindClosestGrepBufForCurfile( PView pv, PCChar srchFilename ) {
-   if( !pv ) pv = g_CurViewHd().First();
+   if( !pv ) pv = g_CurViewHd().front();
    pv = DLINK_NEXT( pv, dlinkViewsOfWindow );
    while( pv ) {
       pathbuf srchFnm; int dummy;

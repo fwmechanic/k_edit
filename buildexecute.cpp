@@ -1690,10 +1690,10 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
             }
          #if 1
          if( pCmd->d_func == &ARG::arg   ) { pcv->ScrollOrigin_Y_Abs( yStart ); continue; } else
-         if( pCmd->d_func == &ARG::up    ) { pcv->ScrollOrigin_Y_Rel(   +1   ); continue; } else
-         if( pCmd->d_func == &ARG::down  ) { pcv->ScrollOrigin_Y_Rel(   -1   ); continue; } else
-         if( pCmd->d_func == &ARG::left  ) { pcv->ScrollOrigin_X_Rel(   +1   ); continue; } else
-         if( pCmd->d_func == &ARG::right ) { pcv->ScrollOrigin_X_Rel(   -1   ); continue; } else
+         if( pCmd->d_func == &ARG::up    ) { pcv->ScrollOrigin_Y_Rel(   -1   ); continue; } else
+         if( pCmd->d_func == &ARG::down  ) { pcv->ScrollOrigin_Y_Rel(   +1   ); continue; } else
+         if( pCmd->d_func == &ARG::left  ) { pcv->ScrollOrigin_X_Rel(   -1   ); continue; } else
+         if( pCmd->d_func == &ARG::right ) { pcv->ScrollOrigin_X_Rel(   +1   ); continue; } else
          #endif
             {
             fdbk[0] = chMacroPromptResponse = tolower( pCmd->IsFnGraphic() && isprint( pCmd->d_argData.chAscii() ) ? pCmd->d_argData.chAscii() : chDfltInteractiveResponse );

@@ -340,7 +340,7 @@ struct GenericList {
    };
 
 GenericList::~GenericList() {
-   while( auto pEl = d_head.First() ) {
+   while( auto pEl = d_head.front() ) {
       DLINK_REMOVE_FIRST( d_head, pEl, dlink );
       Free0( pEl );
       }

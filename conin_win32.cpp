@@ -400,7 +400,7 @@ private:
       }
 
    MsgType *Q_Rx() {
-      auto pMsg( d_QHead.First() );
+      auto pMsg( d_QHead.front() );
       DLINK_REMOVE_FIRST( d_QHead, pMsg, MQ_dlink );
       Assert( pMsg );
       return pMsg;

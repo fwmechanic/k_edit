@@ -252,7 +252,7 @@ void StrSubstituterGenerator::AddMultiExpandableSeg( PCChar pValue, int chValDel
    }
 
 StrSubstituterGenerator::~StrSubstituterGenerator() {
-   while( auto pEl=d_SubStrSubstituter.First() ) { // zap list
+   while( auto pEl=d_SubStrSubstituter.front() ) { // zap list
       DLINK_REMOVE_FIRST( d_SubStrSubstituter, pEl, dlink );
       delete pEl;
       }
@@ -397,7 +397,7 @@ bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
    if( d_output.empty() )
       return false;
 
-   auto pEl( d_output.First() );
+   auto pEl( d_output.front() );
    DLINK_REMOVE_FIRST( d_output, pEl, dlink );
    dest = pEl->string;
    FreeStringListEl( pEl );
@@ -416,7 +416,7 @@ DirListGenerator::DirListGenerator( PCChar dirName ) {
       }
 
    Path::str_t pbuf;
-   while( auto pNxt=d_input.First() ) {
+   while( auto pNxt=d_input.front() ) {
       DLINK_REMOVE_FIRST( d_input, pNxt, dlink );
       pbuf = Path::str_t( pNxt->string ) + (PATH_SEP_STR "*");
       FreeStringListEl( pNxt );

@@ -1694,7 +1694,7 @@ ViewHiLites::~ViewHiLites() {
    PrimeRedraw();
    delete [] d_SpeedTable;  d_SpeedTable = nullptr;  // cannot use Delete0 due to []
 
-   while( auto pEl=d_HiLiteList.First() ) { // zap d_HiLiteList list
+   while( auto pEl=d_HiLiteList.front() ) { // zap d_HiLiteList list
       DLINK_REMOVE_FIRST( d_HiLiteList, pEl, dlink );
       delete pEl;
       }
@@ -2051,7 +2051,7 @@ View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
 
 
 void View::HiliteAddins_Delete() {
-   while( auto pEl=d_addins.First() ) { // zap list
+   while( auto pEl=d_addins.front() ) { // zap list
       DLINK_REMOVE_FIRST( d_addins, pEl, dlinkAddins );
       delete pEl;
       }
@@ -2099,7 +2099,7 @@ void View::ViewEvent_LineInsDel( LINE yLine, LINE lineDelta ) {
       0 && DBG( "%s checking: %d %+d", __func__, yLine, lineDelta );
       const auto fOriginMoved( AddLineDelta( d_current.Origin.lin, yLine, lineDelta ) );
       const auto fCursorMoved( AddLineDelta( d_current.Cursor.lin, yLine, lineDelta ) );
-      if( (fOriginMoved || fCursorMoved) && this == Win()->ViewHd.First() ) {
+      if( (fOriginMoved || fCursorMoved) && this == Win()->ViewHd.front() ) {
          0 && DBG( "%s %s %s moved!", __func__, fOriginMoved?"Origin":"", fCursorMoved?"Cursor":"" );
          // MoveCursor( Cursor().lin, Cursor().col );
          }
@@ -3272,7 +3272,7 @@ STATIC_FXN void KillView( PView pv ) { // destroy an arbitrary View
    }
 
 void DestroyViewList( ViewHead *pViewHd ) {
-   while( auto cur=pViewHd->First() ) {
+   while( auto cur=pViewHd->front() ) {
       KillView( cur );
       }
    Assert( pViewHd->empty() );
@@ -3286,7 +3286,7 @@ void KillTheCurrentView() {
    }
 
 bool FBUF::UnlinkAllViews() {
-   while( auto pEl=d_dhdViewsOfFBUF.First() ) {
+   while( auto pEl=d_dhdViewsOfFBUF.front() ) {
       DLINK_REMOVE_FIRST( d_dhdViewsOfFBUF     , pEl, dlinkViewsOfFBUF   );
       DLINK_REMOVE      ( pEl->wr_Win()->ViewHd, pEl, dlinkViewsOfWindow );
       delete pEl;

@@ -28,7 +28,7 @@ struct StringList {
    void clear() { DeleteStringList( d_head ); }
    ~StringList() { clear(); }
    void push_front( boost::string_ref src ) { InsStringListEl( d_head, src ); }
-   unsigned Count() const { return d_head.Count(); }
+   unsigned length() const { return d_head.length(); }
    StringListHead &Head() { return d_head; }
    bool empty() const { return d_head.empty(); }
    };

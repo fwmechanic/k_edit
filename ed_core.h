@@ -958,8 +958,8 @@ public:
    bool      operator< ( const Win &rhs ) const { return d_UpLeft < rhs.d_UpLeft; }
 
    void      Write( FILE *fout ) const;
-   PCView    CurView()   const { return ViewHd.First(); }
-   PView     CurViewWr() const { return ViewHd.First(); }
+   PCView    CurView()   const { return ViewHd.front(); }
+   PView     CurViewWr() const { return ViewHd.front(); }
    void      DispNeedsRedrawAllLines() const;
 
    void      Event_Win_Reposition( const Point &newUlc );
@@ -1640,15 +1640,15 @@ STIL PWin         g_WinWr( int ix ){ return  g__.aWindow[ ix ]        ; }
 STIL PCWin        g_CurWin()       { return  g_Win( g__.ixCurrentWin ); }
 STIL PWin         g_CurWinWr()     { return  g_WinWr( g__.ixCurrentWin ); }
 STIL ViewHead    &g_CurViewHd()    { return *(&g_CurWinWr()->ViewHd)  ; } // directly dependent on s_CurWindowIdx
-STIL PView        g_CurView()      { return  g_CurViewHd().First()  ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
+STIL PView        g_CurView()      { return  g_CurViewHd().front()  ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
 
 // *** I'm not totally sure I like these, but it beats repeating g_CurWin() and g_CurView() multiple times in the code
 
 #define PCW        const auto pcw( g_CurWin()          )
 #define PCWr       const auto pcw( g_CurWinWr()        )
 #define PCV        const auto pcv( g_CurView()         )
-#define PCWV  PCW; const auto pcv( pcw->ViewHd.First() )
-#define PCWrV PCWr;const auto pcv( pcw->ViewHd.First() )
+#define PCWV  PCW; const auto pcv( pcw->ViewHd.front() )
+#define PCWrV PCWr;const auto pcv( pcw->ViewHd.front() )
 
 STIL const Point &g_Cursor()       { return  g_CurView()->Cursor(); } // NOT CACHED since can change independent of s_CurWindowIdx changing
 STIL LINE         g_CursorLine()   { return  g_Cursor().lin       ; } // NOT CACHED since can change independent of s_CurWindowIdx changing

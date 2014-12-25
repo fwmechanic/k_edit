@@ -25,7 +25,7 @@ STIL bool CanCreateWin()  { return g_iWindowCount() < MAX_WINDOWS; }
 #define  AssertWidx( widx )   Assert( widx >= 0 && widx < g_iWindowCount() );
 
 bool Win::GetCursorForDisplay( Point *pt ) const {
-   const auto pcv( ViewHd.First() );
+   const auto pcv( ViewHd.front() );
    pt->lin = d_UpLeft.lin + (pcv->Cursor().lin - pcv->Origin().lin) + MinDispLine();
    pt->col = d_UpLeft.col + (pcv->Cursor().col - pcv->Origin().col);
    return true;
@@ -47,7 +47,7 @@ void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
       if( pimpl->SizePct() != newSizePct ) { 0 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  pimpl->SizePct().lin, pimpl->SizePct().col, newSizePct.lin, newSizePct.col );
           pimpl->SizePct_set( newSizePct );
          }
-      auto pv( ViewHd.First() );
+      auto pv( ViewHd.front() );
       pv->EnsureWinContainsCursor();
       DLINKC_FIRST_TO_LAST( ViewHd, dlinkViewsOfWindow, pv ) {
          pv->Event_Win_Resized( newSize );
@@ -435,7 +435,7 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
          auto &vh( g_CurViewHd() );
    DD && DBG( "%s Win[%d]", __func__, iw );
    for( auto try_(0); !vh.empty(); ++try_ ) {
-      const auto fb( vh.First()->FBuf() );     DD && DBG( "%s try %d=%s", __func__, try_, fb->Name() );
+      const auto fb( vh.front()->FBuf() );     DD && DBG( "%s try %d=%s", __func__, try_, fb->Name() );
       if( fChangeFile( fb->Name() ) ) {  // fb->PutFocusOn() also works
          DD && DBG( "%s try %d successful!", __func__, try_ );
          Assert( g_CurView() != nullptr );
@@ -641,7 +641,7 @@ void Wins_WriteStateFile( FILE *ofh ) {
    auto hdsMax( 0 );
    for( auto pWin : g__.aWindow ) {
       if( !pWin->ViewHd.empty() ) {
-         hds[hdsMax++].Init( pWin->ViewHd.First() );
+         hds[hdsMax++].Init( pWin->ViewHd.front() );
          }
       }
 
