@@ -115,11 +115,11 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
 
 
 
-void RegexDestroy( PRegex pRe ) {
+void RegexDestroy( Regex *pRe ) {
    delete pRe;
    }
 
-PRegex RegexCompile( PCChar pszSearchStr, bool fCase ) {
+Regex *RegexCompile( PCChar pszSearchStr, bool fCase ) {
    PCRE_API_INIT();
 
    0 && DBG( "RegexCompile! %s", pszSearchStr );

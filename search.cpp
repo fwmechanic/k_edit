@@ -315,7 +315,7 @@ struct SearchSpecifier {
    int    d_rawStrLen;
 #if USE_PCRE
    bool   d_fRegexCase;   // state when last (re-)init'd
-   PRegex d_re;
+   Regex *d_re;
    bool   d_reCompileErr;
 #endif
    bool   d_fCanUseFastSearch;
@@ -331,7 +331,7 @@ struct SearchSpecifier {
    bool   IsRegex() const;
    bool   HasError() const;
 #if USE_PCRE
-   PCRegex GetRegex() const { return d_re; }
+   const Regex *GetRegex() const { return d_re; }
 #endif
    bool   CanUseFastSearch() const { return d_fCanUseFastSearch && g_fFastsearch; }
    bool   CaseUpdt(); // in case case switch has changed since Regex was compiled
@@ -578,7 +578,7 @@ class  FileSearcherRegex : public FileSearcher {
  #elif USE_PCRE
 
 STATIC_VAR bool     s_fSearchNReplaceUsingRegExp;
-STATIC_VAR PRegex   s_pSandR_CompiledSearchPattern;
+STATIC_VAR Regex *  s_pSandR_CompiledSearchPattern;
 
  #endif
 
@@ -1247,7 +1247,7 @@ bool ARG::mfgrep() {
 
 
 #if USE_PCRE
-STIL bool CheckRegExpReplacementString( PRegex, PCChar ) { return false; }
+STIL bool CheckRegExpReplacementString( Regex *, PCChar ) { return false; }
 #endif
 
 STATIC_FXN void MFReplaceProcessFile( PCChar filename, ReplaceCharWalker *pMrcw ) {

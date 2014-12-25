@@ -82,7 +82,7 @@ class Regex {
    int MaxPossCaptures() const { return d_maxPossCaptures; }
 
    PCChar Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, CapturedStrings *pcs );
-   };  STD_TYPEDEFS( Regex )
+   };
 
 //******************************************************************************
 
@@ -92,8 +92,8 @@ extern void register_atexit_search();
 
 // For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use RegexCompile + Regex::Match
 
-extern   PRegex RegexCompile( PCChar pszSearchStr, bool fCase );
-extern   void   RegexDestroy( PRegex pRe );
+extern   Regex *RegexCompile( PCChar pszSearchStr, bool fCase );
+extern   void   RegexDestroy( Regex *pRe );
 
 #else
 
