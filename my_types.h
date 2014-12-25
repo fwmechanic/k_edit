@@ -129,9 +129,7 @@ template<typename T> class TD;
 #define BEYOND_END(ary) ( (ary) + ELEMENTS(ary) )
 #define PAST_END(ary)   BEYOND_END(ary)
 
-//
-// STD_TYPEDEFS - define standard typedefs given a typename
-//
+// 20141225 DEPRECATED!!! USE NO MORE!!!  STD_TYPEDEFS - define standard typedefs given a typename
 #define STD_TYPEDEFS( name )          \
 typedef       name *         P##name; \
 typedef const P##name       CP##name; \
@@ -140,6 +138,7 @@ typedef    P##name *        PP##name; \
 typedef name const * const CPC##name; \
 typedef   PC##name *       PPC##name;
 
+// 20141225 DEPRECATED!!! USE NO MORE!!!  STD_TYPEDEF2
 #define STD_TYPEDEF2( basename, name )    \
 typedef       basename *         P##name; \
 typedef const P##name           CP##name; \
