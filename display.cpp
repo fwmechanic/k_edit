@@ -294,7 +294,7 @@ int View::ColorIdx2Attr( int colorIdx ) const {
    if( colorIdx < COLOR::VIEW_COLOR_COUNT )  return d_pFES
                                                   ?  d_pFES->d_colors[ colorIdx ]
                                                   : *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
-   if( colorIdx < COLOR::COLOR_COUNT )       return *g_colorVars[ colorIdx   - COLOR::VIEW_COLOR_COUNT ];
+   if( colorIdx < COLOR::COLOR_COUNT )       return *g_colorVars[ colorIdx    - COLOR::VIEW_COLOR_COUNT ];
                                              return *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
    }
 
@@ -2715,18 +2715,18 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
 
    if( pfh->FnmIsDiskWritable() && pfh->EolMode()!=platform_eol ) {
       if( g_fForcePlatformEol )                                           cl.Cat( COLOR::ERRM, "!" );
-                                                                          cl.Cat( COLOR::INF, pfh->EolName() );
+                                                                          cl.Cat( COLOR::INF , pfh->EolName() );
       }
    if( pfh->IsNoEdit() )                                                  cl.Cat( COLOR::ERRM, " !edit!" );
 #if defined(_WIN32)
    if( pfh->IsDiskRO() )                                                  cl.Cat( COLOR::ERRM, " DiskRO" );
 #endif
 
-   cl.Cat( COLOR::SEL, FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine(), pfh->LineCount() ) );
-   cl.Cat( COLOR::INF, FmtStr<27>( "[%s]", LastExtTagLoaded() ) );
-// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ui%de%d ", pfh->TabWidth(), pfh->IndentIncrement(), pfh->TabConv() ) );
-   cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "   , pfh->TabWidth(),                         pfh->TabConv() ) );
-   cl.Cat( COLOR::SEL, FmtStr<20>( "case:%s ", g_fCase ? "sen" : "ign" ) );
+   cl.Cat( COLOR::SEL , FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ) );
+   cl.Cat( COLOR::INF , FmtStr<27>( "[%s]"         , LastExtTagLoaded() ) );
+// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ui%de%d "   , pfh->TabWidth(), pfh->IndentIncrement(), pfh->TabConv() ) );
+   cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->TabConv() ) );
+   cl.Cat( COLOR::SEL , FmtStr<20>( "case:%s "     , g_fCase ? "sen" : "ign" ) );
 
    if( g_pFbufClipboard ) {
       if( g_pFbufClipboard->LineCount() ) {
@@ -2820,9 +2820,9 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
       }
    else {
       auto pfnm( pfh->Name() );
-      if( commonLen   ) { out.Cat( COLOR::HG , pfnm, commonLen   ); pfnm += commonLen  ; }
+      if( commonLen   ) { out.Cat( COLOR::HG  , pfnm, commonLen   ); pfnm += commonLen  ; }
       if( uniqPathLen ) { out.Cat( COLOR::ERRM, pfnm, uniqPathLen ); pfnm += uniqPathLen; }
-      if( uniqLen     ) { out.Cat( COLOR::FG , pfnm, uniqLen     ); pfnm += uniqLen    ; }
+      if( uniqLen     ) { out.Cat( COLOR::FG  , pfnm, uniqLen     ); pfnm += uniqLen    ; }
       }
 
    out.Cat( cl );                       0 && DBG( "%s+", __func__ );
