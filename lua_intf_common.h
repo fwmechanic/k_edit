@@ -46,7 +46,6 @@ extern int  l_View_function_cur( lua_State *L );
 //#########  utility externs
 
 extern int   LDS( PCChar tag, lua_State *L );
-extern PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, int stackLevel );
 
 //#########  common inlines
 
