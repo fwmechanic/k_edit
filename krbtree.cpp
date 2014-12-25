@@ -62,7 +62,7 @@ static inline void    setint(    RbNode * n )              {        n->internal 
 static inline void    setext(    RbNode * n )              {        n->internal = 0      ; }
 
 static inline RbCtrl *getctrl(   const RbNode *hd )             { return hd->key.pCtrl      ; }
-static inline void    setctrl(   PRbTree  hd, RbCtrl *pc ) {        hd->key.pCtrl = pc ; }
+static inline void    setctrl(   RbTree * hd, RbCtrl *pc ) {        hd->key.pCtrl = pc ; }
 
 static inline RbNode *sibling(   RbNode * n )              { return isleft(n) ? n->parent->blink
                                                                               : n->parent->flink;
@@ -146,9 +146,9 @@ int main( int argc, char *argv[] )
    TRbInfo rbi;
    size_t  ix;
 
-   PRbTree u16tree;
-   PRbTree stree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
-   PRbTree itree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
+   RbTree *u16tree;
+   RbTree *stree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
+   RbTree *itree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
    RbCtrl *rbc     = rb_ctrl( itree );
    RbNode *ptr;
    PNode   pprev;
@@ -322,8 +322,8 @@ static inline int     rb_isempty__( const RbNode *n ) { return n->flink == n; }
 
 // extern (checked) versions
 //
-RbNode *rb_first(   PCRbTree t ) { RTN_UNLESS_PRBHD_OK(static_cast<RbNode *>(rb_nil(t)),t); return rb_first__(t);   }
-RbNode *rb_last(    PCRbTree t ) { RTN_UNLESS_PRBHD_OK(static_cast<RbNode *>(rb_nil(t)),t); return rb_last__(t);    }
+RbNode *rb_first(   const RbTree *t ) { RTN_UNLESS_PRBHD_OK(static_cast<RbNode *>(rb_nil(t)),t); return rb_first__(t);   }
+RbNode *rb_last(    const RbTree *t ) { RTN_UNLESS_PRBHD_OK(static_cast<RbNode *>(rb_nil(t)),t); return rb_last__(t);    }
 RbNode *rb_next(    const RbNode *n ) { RTN_UNLESS_PRBN_OK(nullptr,n);             return rb_next__(n);    }
 RbNode *rb_prev(    const RbNode *n ) { RTN_UNLESS_PRBN_OK(nullptr,n);             return rb_prev__(n);    }
 int     rb_isempty( const RbNode *n ) { RTN_UNLESS_PRBN_OK(1,n);                   return rb_isempty__(n); }
@@ -335,7 +335,7 @@ int     rb_isempty( const RbNode *n ) { RTN_UNLESS_PRBN_OK(1,n);                
 /* modified for THINK C 6.0 for Macintosh by Chris Bartley */
 
 #ifdef CHK_RBTREE
-int HeadOk( PRbTree tree )
+int HeadOk( RbTree *tree )
    {
 // return  tree->chkTag == chkTagRbNode
 //     &&  ishead(tree)
@@ -353,7 +353,7 @@ int HeadOk( PRbTree tree )
 
 
 #define  INCR_STAT(stattagname)                           \
-static inline void incr_##stattagname( PRbTree tree )     \
+static inline void incr_##stattagname( RbTree *tree )     \
    {                                                      \
    RbCtrl *pc = tree->key.pCtrl;                          \
    if( pc->fOverflow ) return;                            \
@@ -365,7 +365,7 @@ INCR_STAT(inserts)
 INCR_STAT(deletes)
 
 
-RbCtrl *rb_ctrl( PCRbTree tree )
+RbCtrl *rb_ctrl( const RbTree *tree )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    return getctrl(tree);
@@ -511,7 +511,7 @@ static void recolor( RbNode *nd )
 
 // mk_new_ext and mk_new_int are ONLY CALLED BY rb_insert_before
 
-static RbNode *mk_new_ext( PRbTree tree, PCVoid key, PVoid val )
+static RbNode *mk_new_ext( RbTree *tree, PCVoid key, PVoid val )
    {
    RbNode *newnode = static_cast<RbNode *>( getctrl(tree)->nd_alloc(sizeof(*newnode)) );
    assert( newnode );
@@ -525,7 +525,7 @@ static RbNode *mk_new_ext( PRbTree tree, PCVoid key, PVoid val )
    return newnode;
    }
 
-static void mk_new_int(PRbTree tree, RbNode *l, RbNode *r, RbNode *p, int il)
+static void mk_new_int(RbTree *tree, RbNode *l, RbNode *r, RbNode *p, int il)
    {
    RbNode *newnode = static_cast<RbNode *>( getctrl(tree)->nd_alloc(sizeof(*newnode)) );
    SetPRBNValid(newnode);
@@ -595,7 +595,7 @@ static RbNode *rprev(RbNode *n)
 //
 // This is the reason init_rbtreehead is currently static.
 //
-static RbNode *init_rbtreehead( PRbTree tree, RbCtrl *pCtrl )
+static RbNode *init_rbtreehead( RbTree *tree, RbCtrl *pCtrl )
    {
    RTN_UNLESS( nullptr, pCtrl );
    RTN_UNLESS( nullptr, tree );
@@ -614,10 +614,10 @@ static RbNode *init_rbtreehead( PRbTree tree, RbCtrl *pCtrl )
 
 RbNode *rb_alloc_tree( RbCtrl *pCtrl )
    {
-   return init_rbtreehead( PRbTree( pCtrl->nd_alloc(sizeof(RbNode)) ), pCtrl );
+   return init_rbtreehead( static_cast<RbTree *>( pCtrl->nd_alloc(sizeof(RbNode)) ), pCtrl );
    }
 
-RbNode *rb_insert_before( PRbTree tree, RbNode *n, PCVoid key, PVoid val )
+RbNode *rb_insert_before( RbTree *tree, RbNode *n, PCVoid key, PVoid val )
    {
    RbNode *prev; RbNode *newleft;
 
@@ -660,7 +660,7 @@ RbNode *rb_insert_before( PRbTree tree, RbNode *n, PCVoid key, PVoid val )
       }
    }
 
-void *rb_delete_node(PRbTree tree, RbNode *n)
+void *rb_delete_node(RbTree *tree, RbNode *n)
    {
    RTN_UNLESS_PRBN_OK(nullptr,n);
    RTN_UNLESS_PRBHD_OK(nullptr,tree);
@@ -867,7 +867,7 @@ int rb_walk_tree_ok( RbNode *t, int (*fDataValid)( PCVoid ) )
 //    }
 
 
-void rb_dealloc_subtreev(PRbTree tree, void *pExtra, void (*val_dealloc)( void *pData, void *pExtra ) )
+void rb_dealloc_subtreev(RbTree *tree, void *pExtra, void (*val_dealloc)( void *pData, void *pExtra ) )
    { // FREES VALUES AS WELL AS NODES
    RTNV_UNLESS_PRBN_OK(tree);
    assert( ishead(tree) );
@@ -878,7 +878,7 @@ void rb_dealloc_subtreev(PRbTree tree, void *pExtra, void (*val_dealloc)( void *
    // DOES NOT FREE 'tree', only it's children
    }
 
-void rb_dealloc_subtree(PRbTree tree)
+void rb_dealloc_subtree(RbTree *tree)
    {
    RTNV_UNLESS_PRBN_OK(tree);
    assert( ishead(tree) );
@@ -889,7 +889,7 @@ void rb_dealloc_subtree(PRbTree tree)
    // DOES NOT FREE 'tree', only it's children
    }
 
-RbNode *rb_dealloc_tree(PRbTree tree)
+RbNode *rb_dealloc_tree(RbTree *tree)
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    rb_dealloc_subtree( tree );
@@ -897,7 +897,7 @@ RbNode *rb_dealloc_tree(PRbTree tree)
    return nullptr;
    }
 
-RbNode *rb_dealloc_treev( PRbTree tree, void *pExtra, void (*val_dealloc)( void *pData, void *pExtra ) )
+RbNode *rb_dealloc_treev( RbTree *tree, void *pExtra, void (*val_dealloc)( void *pData, void *pExtra ) )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    rb_dealloc_subtreev( tree, pExtra, val_dealloc );
@@ -944,13 +944,13 @@ PCVoid rb_key(const RbNode *node)
 // - note that like keys for other APIs, keytype is A POINTER to the key value
 //
 #define RB_AUXFUNCS(name,keytype)                                                                \
-RbNode *rb_find_##name(PRbTree tree, keytype key)                                                \
+RbNode *rb_find_##name(RbTree *tree, keytype key)                                                \
    { int equal; RbNode *rv=rb_find_gte_##name(&equal, tree, key); return equal ? rv : nullptr; } \
-RbNode *rb_insert_##name(PRbTree tree, keytype key, PVoid val)                          \
+RbNode *rb_insert_##name(RbTree *tree, keytype key, PVoid val)                          \
    { int equal; return rb_insert_before( tree, rb_find_gte_##name(&equal, tree, key), key, val); }
 
 #define RB_FUNCS_SCALAR(name,keytype)                                                 \
-RbNode *rb_find_gte_##name(int *equal, PRbTree tree, keytype key)                     \
+RbNode *rb_find_gte_##name(int *equal, RbTree *tree, keytype key)                     \
    {                                                                                  \
    RTN_UNLESS_PRBHD_OK( nullptr, tree );                                              \
    incr_searches( tree );                                                             \
@@ -975,7 +975,7 @@ RbNode *rb_find_gte_##name(int *equal, PRbTree tree, keytype key)               
 RB_FUNCS_SCALAR(u32,const uint32_t*)
 RB_FUNCS_SCALAR(u16,const uint16_t*)
 
-RbNode *rb_find_gte_mem(int *equal, PRbTree tree, PCVoid key, size_t keylen)
+RbNode *rb_find_gte_mem(int *equal, RbTree *tree, PCVoid key, size_t keylen)
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    incr_searches( tree );
@@ -998,7 +998,7 @@ RbNode *rb_find_gte_mem(int *equal, PRbTree tree, PCVoid key, size_t keylen)
    }
    }
 
-RbNode *rb_find_gte_str( int *equal, PRbTree tree, const char *key )
+RbNode *rb_find_gte_str( int *equal, RbTree *tree, const char *key )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    incr_searches( tree );
@@ -1021,7 +1021,7 @@ RbNode *rb_find_gte_str( int *equal, PRbTree tree, const char *key )
    }
    }
 
-RbNode *rb_find_gte_gen( int *equal, PRbTree tree, PCVoid key, rb_cmpfxn fxn )
+RbNode *rb_find_gte_gen( int *equal, RbTree *tree, PCVoid key, rb_cmpfxn fxn )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    incr_searches( tree );
@@ -1052,14 +1052,14 @@ RB_AUXFUNCS(str,const char*)
 
 // these are specially coded since they take extra parameters: keylen, fxn
 
-RbNode *rb_find_mem(PRbTree tree, PCVoid key, size_t keylen)
+RbNode *rb_find_mem(RbTree *tree, PCVoid key, size_t keylen)
    {
    int equal;
    RbNode *rv = rb_find_gte_mem(&equal, tree, key, keylen);
    return equal ? rv : nullptr;
    }
 
-RbNode *rb_find_gen(PRbTree tree, PCVoid key, rb_cmpfxn fxn)
+RbNode *rb_find_gen(RbTree *tree, PCVoid key, rb_cmpfxn fxn)
    {
    int equal;
    RbNode *rv = rb_find_gte_gen(&equal, tree, key, fxn);
@@ -1070,13 +1070,13 @@ RbNode *rb_find_gen(PRbTree tree, PCVoid key, rb_cmpfxn fxn)
 
 // these are specially coded since they take extra parameters: keylen/fxn
 
-RbNode *rb_insert_mem( PRbTree tree, PCVoid key, size_t keylen, PVoid val )
+RbNode *rb_insert_mem( RbTree *tree, PCVoid key, size_t keylen, PVoid val )
    {
    int equal;
    return rb_insert_before( tree, rb_find_gte_mem(&equal, tree, key, keylen), key, val);
    }
 
-RbNode *rb_insert_gen( PRbTree tree, PCVoid key, rb_cmpfxn fxn, PVoid val )
+RbNode *rb_insert_gen( RbTree *tree, PCVoid key, rb_cmpfxn fxn, PVoid val )
    {
    int equal;
    return rb_insert_before( tree, rb_find_gte_gen(&equal, tree, key, fxn), key, val);
@@ -1115,7 +1115,7 @@ static int rb_plength(RbNode *n) // returns the # of nodes in path from n to the
 
 #define rbn_corrupt( pn )  (!IsPRBNValid(pn))
 
-const char * rb_tree_corrupt( PRbTree tree, PRbInfo pInfo )
+const char * rb_tree_corrupt( RbTree *tree, PRbInfo pInfo )
    {
    int plMax = 0;
    int plMin = 0;

@@ -1021,7 +1021,7 @@ enum cppc
 #define   FBUF_TREE   0
 #if       FBUF_TREE
    extern void FBufIdxInit();
-   extern PRbTree  g_FBufIdx;
+   extern RbTree * g_FBufIdx;
    STIL   PFBUF IdxNodeToFBUF( RbNode *pNd ) { return reinterpret_cast<PFBUF>( rb_val(pNd) ); }  // type-safe conversion function
 #else
    #include "krbtree.h"

@@ -7,7 +7,7 @@
 #include "my_fio.h"
 
 #if      FBUF_TREE
-GLOBAL_VAR PRbTree  g_FBufIdx;
+GLOBAL_VAR RbTree * g_FBufIdx;
 
    STATIC_VAR RbCtrl s_FBufIdxRbCtrl = { AllocNZ_, Free_, };
 

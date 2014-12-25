@@ -484,13 +484,13 @@ static_assert( ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT, "ELEMENTS( g_Key2CmdTbl )
 // is called (contains only statically allocated C++ CMDs, which cannot be
 // freed!!!)
 
-STATIC_VAR PRbTree s_CmdIdxBuiltins;
+STATIC_VAR RbTree *s_CmdIdxBuiltins;
 
 // s_CmdIdxAddins is a dynamic tree which is searched prior to s_CmdIdxBuiltins
 // during user-function-lookups: all CMDs indexed herein (for macros and Lua
 // functions) are heap-allocated, and can thus be created and destroyed at will:
 
-GLOBAL_VAR PRbTree s_CmdIdxAddins;
+GLOBAL_VAR RbTree *s_CmdIdxAddins;
 
 STIL PCMD IdxNodeToPCMD( RbNode *pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
 
