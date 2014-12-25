@@ -763,14 +763,14 @@ inline PCChar ARG::CmdName() const { return d_pCmd->Name(); }
 // forward decls:
 
 class                            EditRec;
-struct                           HiLiteRec;         STD_TYPEDEFS( HiLiteRec        )
-class                            View;              STD_TYPEDEFS( View             )
+struct                           HiLiteRec;         STD_TYPEDEFS( HiLiteRec )
+class                            View;              STD_TYPEDEFS( View      )
 typedef  DLinkHead<View>         ViewHead;
 class                            ViewHiLites;
 class                            FileTypeSettings;
-struct                           Win;               STD_TYPEDEFS( Win              )
-class                            HiliteAddin;       STD_TYPEDEFS( HiliteAddin      )
-typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;   STD_TYPEDEFS( HiliteAddinHead  )
+struct                           Win;               STD_TYPEDEFS( Win       )
+class                            HiliteAddin;
+typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;
 
 extern void DestroyViewList( ViewHead *pViewHd );
 
