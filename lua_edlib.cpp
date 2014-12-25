@@ -22,7 +22,7 @@ STATIC_FXN int lh_rtnStr( lua_State *L, PCChar src ) {
 
 // exported functions
 
-#define  FBUF_(   API_name)  LUAFUNC_(l_FBUF_method_ ## API_name)
+#define  FBUF_(API_name)  LUAFUNC_(l_FBUF_method_ ## API_name)
 
 LUAFUNC_(HideCursor)   { HideCursor()  ; RZ; }
 LUAFUNC_(UnhideCursor) { UnhideCursor(); RZ; }
