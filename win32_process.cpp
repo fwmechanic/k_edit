@@ -633,7 +633,7 @@ public:
    int  EnqueueJobsAndRun( const StringList &sl );
 
    int  KillAllJobsInBkgndProcessQueue();
-   };  STD_TYPEDEFS( Win32_pty )
+   };
 
 Win32_pty *Win32_pty::s_Win32_pty_ListHead;
 
@@ -758,7 +758,7 @@ STATIC_CONST auto cpct_exit_fmts  = "%s::CPCT ^^^^^^^^^^^^^^^^^^ THREAD EXITS  ^
 
 Win32::DWORD Win32_pty::ChildProcessCtrlThread( Win32::LPVOID pThreadParam ) {
    0 && DBG( cpct_start_fmts, "W32pty" );
-                                          static_cast<PWin32_pty>( pThreadParam )->ThreadFxnRunAllJobs();
+                                          static_cast<Win32_pty *>( pThreadParam )->ThreadFxnRunAllJobs();
    0 && DBG( cpct_exit_fmts , "W32pty" );
    return 0; // equivalent to ExitThread( 0 );
    }
@@ -835,7 +835,7 @@ int Win32_pty::KillAllJobsInBkgndProcessQueue() {
    return !IsThreadActive();
    }
 
-STATIC_VAR PWin32_pty s_pCompilePty;
+STATIC_VAR Win32_pty *s_pCompilePty;
 
 bool CompileJobQueueWaitExeDoneTimedout( int timeoutMS ) {
    return s_pCompilePty->WaitExeDoneTimedout( timeoutMS );
