@@ -762,7 +762,7 @@ inline PCChar ARG::CmdName() const { return d_pCmd->Name(); }
 
 // forward decls:
 
-class                            EditRec;           STD_TYPEDEFS( EditRec          )
+class                            EditRec;
 struct                           HiLiteRec;         STD_TYPEDEFS( HiLiteRec        )
 class                            View;              STD_TYPEDEFS( View             )
 typedef  DLinkHead<View>         ViewHead;          STD_TYPEDEFS( ViewHead         )
@@ -1194,18 +1194,18 @@ public:
 
 private:
    int            d_UndoCount;
-   PEditRec       d_pNewestEdit;  // most recent edit action
-   PEditRec       d_pCurrentEdit; // "current" editlist node
-   PEditRec       d_pOldestEdit;  // least recent edit action
+   EditRec       *d_pNewestEdit;  // most recent edit action
+   EditRec       *d_pCurrentEdit; // "current" editlist node
+   EditRec       *d_pOldestEdit;  // least recent edit action
    void           InitUndoInfo(); // CTOR for 4 above private vars via EdOpBoundary::EdOpBoundary( PFBUF pFBuf, int only ) and EditRec::EditRec( PFBUF pFBuf, int only_placeholder )
-   void           AddNewEditOpToListHead( PEditRec pEr );
+   void           AddNewEditOpToListHead( EditRec *pEr );
 
    //************ Undo/Redo intf used by ARG::eds()
 public:
    int            UndoCount()   const { return d_UndoCount   ; }
-   PEditRec       CurrentEdit() const { return d_pCurrentEdit; }
-   PEditRec       OldestEdit()  const { return d_pOldestEdit ; }
-   PEditRec       NewestEdit()  const { return d_pNewestEdit ; }
+   EditRec       *CurrentEdit() const { return d_pCurrentEdit; }
+   EditRec       *OldestEdit()  const { return d_pOldestEdit ; }
+   EditRec       *NewestEdit()  const { return d_pNewestEdit ; }
    int            GetUndoCounts( int *pBRTowardUndo, int *pARTowardUndo, int *pBRTowardRedo, int *pARTowardRedo ) const;
 
    //************ user-level undo/redo impl

@@ -137,7 +137,7 @@ EditRec::EditRec( PFBUF pFBuf, int only_placeholder )
 //       pFBuf->d_pNewestEdit
 //
 
-void DBGEditOp( PCEditRec er );
+void DBGEditOp( const EditRec *er );
 
 EditRec::EditRec( PFBUF pFBuf )
    : d_pFBuf(pFBuf)
@@ -478,17 +478,17 @@ void EdOpBoundary::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufByte
 // ShowEdits ("eds") show editops list of current buffer
 //
 
-void DumpEditOp( OutputWriter const &ow, PFBUF pmf, PCEditRec er ) {
+void DumpEditOp( OutputWriter const &ow, PFBUF pmf, const EditRec *er ) {
    linebuf buf; auto pBuf( buf ); auto bufBytes( sizeof buf );
    er->VShow( ow, &pBuf, &bufBytes, er == pmf->CurrentEdit() );
    ow.VWriteLn( buf );
    }
 
-void DumpEditOp( PFBUF ofile, PFBUF pmf, PEditRec er ) {
+void DumpEditOp( PFBUF ofile, PFBUF pmf, EditRec *er ) {
    DumpEditOp( FbufWriter( ofile ), pmf, er );
    }
 
-void DBGEditOp( PCEditRec er ) {
+void DBGEditOp( const EditRec *er ) {
    linebuf buf; auto pBuf( buf ); auto bufBytes( sizeof buf );
    DBGWriter ow;
    er->VShow( ow, &pBuf, &bufBytes, false );
@@ -547,7 +547,7 @@ bool ARG::rmeds() {
 bool FBUF::RmvOneEdOp_fNextIsBoundary( bool fFromListHead ) {
    // DBG_EDOP( _ASSERTE( _CrtCheckMemory() ); )
 
-   PEditRec pEr, pNextEr;
+   EditRec *pEr; EditRec *pNextEr;
    if( fFromListHead ) {
       pEr              = d_pNewestEdit;
       pNextEr          = pEr->d_pUndo;
@@ -570,7 +570,7 @@ bool FBUF::RmvOneEdOp_fNextIsBoundary( bool fFromListHead ) {
    return pNextEr->VIsBoundary();
    }
 
-void FBUF::AddNewEditOpToListHead( PEditRec pEr ) {
+void FBUF::AddNewEditOpToListHead( EditRec *pEr ) {
    //
    // Since the to-be-added EditOp will be inserted at (and become the new)
    // d_pCurrentEdit, all previous UNDONE EditOps in the range
@@ -673,7 +673,7 @@ void FBUF::PutUndoBoundary() {
 
 void FBUF::DiscardUndoInfo() {
    while( d_pOldestEdit ) {
-      PEditRec er( d_pOldestEdit );
+      EditRec *er( d_pOldestEdit );
       d_pOldestEdit = d_pOldestEdit->d_pRedo;
       Delete0( er );
       }
