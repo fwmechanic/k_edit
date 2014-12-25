@@ -62,7 +62,7 @@ typedef LINE *PLINE;
 
 class FBUF;  STD_TYPEDEFS( FBUF )
 
-typedef  DLinkHead<FBUF> FBufHead;  STD_TYPEDEFS( FBufHead )
+typedef  DLinkHead<FBUF> FBufHead;
 
 // Use OpenFileNotDir_... in lieu of fChangeFile if you don't want to affect
 // PFBUF-stack-order and cwd
@@ -97,7 +97,7 @@ typedef char linebuf[BUFBYTES];       // line buffer
 typedef char dbllinebuf[2*BUFBYTES];  // double line buffer
 typedef char pathbuf[_MAX_PATH+1];    // Pathname buffer
 
-typedef  FixedCharArray<BUFBYTES>     Linebuf;       STD_TYPEDEFS( Linebuf )
+typedef  FixedCharArray<BUFBYTES>     Linebuf;
 
 typedef  FmtStr<BUFBYTES>    SprintfBuf;
 typedef  FmtStr<2*BUFBYTES>  Sprintf2xBuf;
