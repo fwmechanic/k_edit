@@ -227,9 +227,9 @@ typedef uint64_t U64;
 
 typedef signed   int   SI ; STD_TYPEDEFS( SI  )
 typedef  int8_t  S8 ;       STD_TYPEDEFS( S8  )
-typedef  int16_t S16;       STD_TYPEDEFS( S16 )
-typedef  int32_t S32;       STD_TYPEDEFS( S32 )
-typedef  int64_t S64;       STD_TYPEDEFS( S64 )
+typedef  int16_t S16;
+typedef  int32_t S32;
+typedef  int64_t S64;
 
 typedef  size_t  uint_machineword_t; // 32-bit on i386, 64-bit on x64
 
