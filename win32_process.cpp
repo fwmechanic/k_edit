@@ -961,7 +961,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
 
 Win32::DWORD InternalShellJobExecutor::ChildProcessCtrlThread( Win32::LPVOID pThreadParam ) {
    0 && DBG( cpct_start_fmts, "ISJE" );
-                                        static_cast<PInternalShellJobExecutor>( pThreadParam )->ThreadFxnRunAllJobs();
+                                        static_cast<InternalShellJobExecutor *>( pThreadParam )->ThreadFxnRunAllJobs();
    0 && DBG( cpct_exit_fmts , "ISJE" );
    return 0; // equivalent to ExitThread( 0 );
    }

@@ -1032,8 +1032,7 @@ enum cppc
 
 enum bkupMode { bkup_USE_SWITCH, bkup_UNDEL, bkup_BAK, bkup_NONE };
 
-class InternalShellJobExecutor;  STD_TYPEDEFS( InternalShellJobExecutor )
-
+class InternalShellJobExecutor;
 
 typedef U32         filesize_t;
 typedef signed long FilesysTime;
@@ -1505,7 +1504,7 @@ public:
    //************ misc junk
 public:
    int            DbgCheck();
-   PInternalShellJobExecutor d_pInternalShellJobExecutor = nullptr;
+   InternalShellJobExecutor *d_pInternalShellJobExecutor = nullptr;
 
    }; // end of class FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
 
