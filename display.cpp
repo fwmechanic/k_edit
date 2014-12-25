@@ -210,7 +210,7 @@ static_assert( ELEMENTS( s_color2Lua ) == sizeof( ViewColors ), "ELEMENTS( s_col
 
 STATIC_VAR PRbTree s_FES_idx;
 
-STATIC_FXN inline PFileExtensionSetting IdxNodeToFES( PRbNode pNd ) { return static_cast<PFileExtensionSetting>( rb_val(pNd) ); }  // type-safe conversion function
+STATIC_FXN inline FileExtensionSetting *IdxNodeToFES( PRbNode pNd ) { return static_cast<PFileExtensionSetting>( rb_val(pNd) ); }  // type-safe conversion function
 
 struct FileExtensionSetting {
    Path::str_t d_ext;  // rbtree key
@@ -223,7 +223,7 @@ struct FileExtensionSetting {
    FileExtensionSetting( Path::str_t ext ) : d_ext( ext ) { Update(); }
    ~FileExtensionSetting() {}
 
-   }; STD_TYPEDEFS( FileExtensionSetting )
+   };
 
 void FileExtensionSetting::Update() {
    linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
@@ -257,7 +257,7 @@ void CloseFileExtensionSettings() {
    }
 
 
-STATIC_FXN PFileExtensionSetting InitFileExtensionSetting( const Path::str_t &ext ) {
+STATIC_FXN FileExtensionSetting *InitFileExtensionSetting( const Path::str_t &ext ) {
    int equal;
    auto pNd( rb_find_gte_gen( &equal, s_FES_idx, ext.c_str(), rb_strcmpi ) );
    if( equal ) return IdxNodeToFES( pNd );
@@ -281,7 +281,7 @@ GLOBAL_CONST PU8 g_colorVars[] = {
 
 static_assert( ELEMENTS(g_colorVars) == (COLOR::COLOR_COUNT - COLOR::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == COLOR::COLOR_COUNT" );
 
-PFileExtensionSetting View::GetFileExtensionSettings() {
+FileExtensionSetting *View::GetFileExtensionSettings() {
    if( !d_pFES ) {
       auto ext( FBOP::GetRsrcExt( d_pFBuf ) );
       ext.erase( 0, 1 ); // zap the leading '.'
