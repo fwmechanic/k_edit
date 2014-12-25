@@ -814,7 +814,7 @@ struct StrDest {
       memcpy( d_pBuf, src, actual );
       d_bytes = actual;
       }
-   };  STD_TYPEDEFS(StrDest)
+   };
 
 
 // straight from PIL2e (call_va)
@@ -874,7 +874,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
                   ++srcBytes;
                   PChar pDest;
                   AllocBytesNZ( pDest, srcBytes ); // can copy binary data, not just string
-                  auto psd( va_arg(vl, PStrDest) );
+                  auto psd( va_arg(vl, StrDest *) );
                   psd->BindBuf( pDest, srcBytes );
                   psd->CopyTo( pSrc, srcBytes );
                  }break;

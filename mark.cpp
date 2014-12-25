@@ -16,7 +16,7 @@ struct NamedPoint {
    PCChar       Name()                      const { return d_pszName; }
    const Point &Pt()                        const { return d_pt; }
    void         AddLineDelta( int delta )         {        d_pt.lin += delta; }
-   }; STD_TYPEDEFS( NamedPoint )
+   };
 
 
 STATIC_FXN void NamedPointListDestroy( NamedPointHead &hd ) {
@@ -29,7 +29,7 @@ STATIC_FXN void NamedPointListDestroy( NamedPointHead &hd ) {
 
 void FBUF::DestroyMarks() { NamedPointListDestroy( d_MarkHead ); }
 
-STATIC_FXN void NamedPointListInsert( NamedPointHead &hd, PNamedPoint pNew ) {
+STATIC_FXN void NamedPointListInsert( NamedPointHead &hd, NamedPoint *pNew ) {
    DLINKC_FIRST_TO_LASTA( hd, dlink, pNP ) {
       if( pNew->Pt() < pNP->Pt() ) {
          DLINK_INSERT_BEFORE( hd, pNP, pNew, dlink );
@@ -39,8 +39,7 @@ STATIC_FXN void NamedPointListInsert( NamedPointHead &hd, PNamedPoint pNew ) {
    DLINK_INSERT_LAST( hd, pNew, dlink );
    }
 
-
-STATIC_FXN PCNamedPoint NamedPointFind( const NamedPointHead &hd, PCChar pszName ) {
+STATIC_FXN const NamedPoint *NamedPointFind( const NamedPointHead &hd, PCChar pszName ) {
    DLINKC_FIRST_TO_LASTA( hd, dlink, pNP ) {
       if( pNP->NameMatch( pszName ) )
          return pNP;
@@ -65,7 +64,7 @@ struct MarkRmvr {
 
 STATIC_FXN int NamedPointListDeleteAllMatches( NamedPointHead &hd, PCChar pszName, const Point *pPt=nullptr ) {
    auto matchCount(0);
-   PNamedPoint pThis, pNext;
+   NamedPoint *pThis, *pNext;
    DLINK_FIRST_TO_LAST( hd, dlink, pThis, pNext ) {
       if( pThis->NameMatch( pszName ) && (!pPt || *pPt != pThis->Pt()) ) {
          ++matchCount;

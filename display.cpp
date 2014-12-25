@@ -1645,7 +1645,7 @@ typedef DLinkHead<HiLiteRec> HiLiteHead;
 
 struct HiLiteSpeedTable {
    PCHiLiteRec pHL = nullptr;  // references, does NOT own!
-   };  STD_TYPEDEFS( HiLiteSpeedTable )
+   };
 
 enum { HILITE_SPEEDTABLE_LINE_INCR = 16 * 1024 };
 STIL int SpeedTableIndex( LINE yLine ) {
@@ -1662,7 +1662,7 @@ class ViewHiLites {
    const FBUF       &d_FBuf;
    const int         d_SpdTblEls;
 
-   PHiLiteSpeedTable d_SpeedTable;
+   HiLiteSpeedTable *d_SpeedTable;
    HiLiteHead        d_HiLiteList;
 
    void        UpdtSpeedTbl( PHiLiteRec pThis );

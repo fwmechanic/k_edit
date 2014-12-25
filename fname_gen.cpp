@@ -202,7 +202,7 @@ class StrSubstituterGenerator {
             Free0( d_values    );
             }
          }
-      }; STD_TYPEDEFS( SubStrSubstituter )
+      };
 
    bool                         d_fCombinationsExhaused;
    Path::str_t                  d_pBaseString;
@@ -247,7 +247,7 @@ StrSubstituterGenerator::SubStrSubstituter::SubStrSubstituter( PCChar pValue, in
    }
 
 void StrSubstituterGenerator::AddMultiExpandableSeg( PCChar pValue, int chValDelim, int xReplStart, int replLen ) {
-   PSubStrSubstituter pNew( new SubStrSubstituter( pValue, chValDelim, xReplStart, replLen ) );
+   SubStrSubstituter *pNew( new SubStrSubstituter( pValue, chValDelim, xReplStart, replLen ) );
    DLINK_INSERT_LAST(d_SubStrSubstituter, pNew, dlink);
    }
 
