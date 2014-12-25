@@ -911,10 +911,6 @@ void FBOP::LuaSortLineRange( PFBUF fb, LINE y0, LINE y1, COL xLeft, COL xRight, 
 // there is no efficiency difference, since the Lua result has to be copied into
 // dest regardless.
 //
-STIL bool Lua_x2x( lua_State *L, PCChar functionName, PXbuf pxb ) {
-   return callLuaOk( L, functionName, "x>x", pxb, pxb );
-   }
-
 STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout ) {
    return callLuaOk( L, functionName, "S>S", &inout, &inout );
    }
@@ -928,9 +924,8 @@ STATIC_FXN PChar Lua_s2h( lua_State *L, PCChar functionName, PCChar src ) {
    }
 
 bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( Path::str_t &st ) { return Lua_S2S( L_edit, "StrExpandEnvVars"  , st  ); }
-bool  LuaCtxt_Edit::from_C_lookup_glock( PXbuf pxb ) { return Lua_x2x( L_edit, "Lua_from_C_lookup_glock" , pxb ); }
+bool  LuaCtxt_Edit::from_C_lookup_glock( std::string &st ) { return Lua_S2S( L_edit, "Lua_from_C_lookup_glock" , st ); }
 
-//
 // reliable reading of Lua global variables (including '.'-separated table expressions) from C
 //
 STIL bool getTblVal( lua_State *L, PCChar key, int ix ) { 0 && DBG( "%s indexing '%s'", __func__, key );

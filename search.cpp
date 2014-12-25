@@ -2512,10 +2512,10 @@ LINE CGrepper::WriteOutput
    , PCChar origSrchfnm  // if file searched THIS TIME is not file which line#s refer to
    )
    {
-   Xbuf xb( d_SrchFile->Name() );
-   0 && DBG( " ->%s|", xb.c_str() );
-   if( LuaCtxt_Edit::from_C_lookup_glock( &xb ) && !xb.is_clear() ) {
-      const auto gbnm( xb.c_str() );
+   std::string sbuf( d_SrchFile->Name() );
+   0 && DBG( " ->%s|", sbuf.c_str() );
+   if( LuaCtxt_Edit::from_C_lookup_glock( sbuf ) && !sbuf.empty() ) {
+      const auto gbnm( sbuf.c_str() );
       0 && DBG( "LuaCtxt_Edit::from_C_lookup_glock ->%s|", gbnm );
       const auto outfile( OpenFileNotDir_NoCreate( gbnm ) );
       pathbuf GrepFBufname;
@@ -2537,12 +2537,12 @@ LINE CGrepper::WriteOutput
          if( d_MatchingLines[iy] ) {
             char buf[20]; auto pB( buf ); auto cbB( sizeof buf );
             snprintf_full( &pB, &cbB, "%*d  ", lwidth, iy + 1 );
-            xb.assign( buf, pB - buf );
+            sbuf.assign( buf, pB - buf );
 
             PCChar ptr; size_t chars;
             d_SrchFile->PeekRawLineExists( iy, &ptr, &chars );
-            xb.cat( ptr, chars );
-            FBOP::InsLineSortedAscending( outfile, &xbIns, grepHdrLines, xb.c_str() );
+            sbuf.append( ptr, chars );
+            FBOP::InsLineSortedAscending( outfile, &xbIns, grepHdrLines, sbuf.c_str() );
             }
       outfile->PutFocusOn();
       Msg( "%d lines %s", numberedMatches, "added" );

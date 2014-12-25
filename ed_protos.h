@@ -453,7 +453,7 @@ namespace LuaCtxt_Edit {
    //
    extern bool  ExpandEnvVarsOk( Path::str_t &st );
 
-   extern bool  from_C_lookup_glock( PXbuf pxb );
+   extern bool  from_C_lookup_glock( std::string &st );
    extern void  LocnListInsertCursor();  // intf into Lua locn-list subsys
 
    extern bool  nextmsg_setbufnm     ( PCChar src );  // for mfgrep
