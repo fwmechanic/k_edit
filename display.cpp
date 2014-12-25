@@ -2619,7 +2619,7 @@ void DispRefreshWholeScreenNow_()            { DispNeedsRedrawTotal_(); DispDoPe
 
 // NOTE: xCol & yLine are WITHIN CONSOLE WINDOW !!!
 
-STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, PCLineColors alc, bool fUserSeesNow ) {
+STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fUserSeesNow ) {
    VideoFlusher vf( fUserSeesNow );
    IS_LINUX && DBG( "%s+", __func__ );
    auto lastColor(0);
@@ -3015,7 +3015,7 @@ STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, int, bool ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
-STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, PCLineColors, bool ) {
+STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, const LineColors *, bool ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
