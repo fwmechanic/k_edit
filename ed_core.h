@@ -251,7 +251,7 @@ struct Rect {
    COL  Width()  const { return flMax.col - flMin.col + 1; }
    COL  Height() const { return flMax.lin - flMin.lin + 1; }
    int  LineNotWithin( LINE yLine ) const; // IGNORES EFFECT OF COLUMNS!
-   };  STD_TYPEDEFS( Rect )
+   };
 
 
 class Xbuf {
