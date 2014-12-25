@@ -3922,7 +3922,7 @@ for _,dir in ipairs(dirs) do
 
 function ReadPseudoFileOk_FROM_C( fb )  -- return Lua true (not (rv==nil or rv==false)) if this code rewrites fb content
    print( "ReadPseudoFileOk_FROM_C("..fb:Name()..")" )
-   -- return false
+   -- return false  -- this is unnecessary (just like when returning from Lua to Lua)
    end
 
 printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )
