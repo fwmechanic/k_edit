@@ -26,7 +26,7 @@ extern bool   IsCompileJobQueueThreadActive();
 extern bool   CompileJobQueueWaitExeDoneTimedout( int timeoutMS );
 
 extern int    CompilePty_CmdsAsyncExec( const StringList &sl, bool fAppend );
-extern PFBUF  StartInternalShellJob( PStringList sl, bool fAppend );
+extern PFBUF  StartInternalShellJob( StringList *sl, bool fAppend );
 
 extern int    CompilePty_KillAllJobs();
 

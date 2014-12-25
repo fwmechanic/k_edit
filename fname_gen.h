@@ -35,7 +35,7 @@ class DirListGenerator : public PathStrGenerator {
    StringListHead  d_input ;
    StringListHead  d_output;
 
-   void AddName( PCChar name );
+   void AddName( boost::string_ref name );
 
 public:
 

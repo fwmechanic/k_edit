@@ -863,7 +863,7 @@ class InternalShellJobExecutor {
    NO_ASGN_OPR(InternalShellJobExecutor);
 
    PFBUF                       d_pfLogBuf;
-   PStringList                 d_pSL;
+   StringList                 *d_pSL;
    const size_t                d_numJobsRequested;
 
    Win32::PROCESS_INFORMATION  d_processInfo;
@@ -878,7 +878,7 @@ class InternalShellJobExecutor {
 
 public:
 
-   InternalShellJobExecutor( PFBUF pfb, PStringList sl, bool fViewsActivelyTailOutput );
+   InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput );
    ~InternalShellJobExecutor();
 
    void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const
@@ -895,7 +895,7 @@ private:
 
    }; STD_TYPEDEFS( InternalShellJobExecutor )
 
-InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, PStringList sl, bool fViewsActivelyTailOutput )
+InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput )
    : d_pfLogBuf         ( pfb )
    , d_pSL              ( sl )
    , d_numJobsRequested ( sl->Count() )
@@ -967,7 +967,7 @@ Win32::DWORD InternalShellJobExecutor::ChildProcessCtrlThread( Win32::LPVOID pTh
    }
 
 
-PFBUF StartInternalShellJob( PStringList sl, bool fAppend ) {
+PFBUF StartInternalShellJob( StringList *sl, bool fAppend ) {
    STATIC_VAR size_t s_nxt_shelljob_output_FBUF_num;
    if( !fAppend ) {
 NEXT_OUTBUF:

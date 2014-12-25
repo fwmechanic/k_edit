@@ -5,9 +5,9 @@
 #include "ed_main.h"
 #include "stringlist.h"
 
-STATIC_FXN PStringListEl NewStringListEl( boost::string_ref src ) { // pEos points past last valid char in str
+StringListEl *NewStringListEl( boost::string_ref src ) {
    const auto sbytes( src.length() + 1 );
-   PStringListEl rv;
+   StringListEl *rv;
    AllocBytesNZ( rv, sizeof( *rv ) + sbytes, __func__ );
    rv->dlink.Clear();
    memcpy( rv->string, src.data(), sbytes-1 );
@@ -15,14 +15,14 @@ STATIC_FXN PStringListEl NewStringListEl( boost::string_ref src ) { // pEos poin
    return rv;
    }
 
-void InsStringListEl( PStringListHead pSlhd, boost::string_ref src ) { 0 && DBG("%s: %" PR_BSR, __func__, BSR(src) );
+void InsStringListEl( StringListHead &slhd, boost::string_ref src ) { 0 && DBG("%s: %" PR_BSR, __func__, BSR(src) );
    auto pIns( NewStringListEl( src ) );
-   DLINK_INSERT_LAST( *pSlhd, pIns, dlink );
+   DLINK_INSERT_LAST( slhd, pIns, dlink );
    }
 
-void DeleteStringList( PStringListHead pSlhd ) {
-   while( auto pEl = pSlhd->First() ) {
-      DLINK_REMOVE_FIRST( *pSlhd, pEl, dlink );
+void DeleteStringList( StringListHead &slhd ) {
+   while( auto pEl = slhd.First() ) {
+      DLINK_REMOVE_FIRST( slhd, pEl, dlink );
       FreeStringListEl( pEl );
       }
    }
