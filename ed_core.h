@@ -771,11 +771,17 @@ inline PCChar ARG::CmdName() const { return d_pCmd->Name(); }
 
 class                            EditRec;
 struct                           HiLiteRec;
-class                            View;              STD_TYPEDEFS( View      )
+class                            View;
+   typedef View       *          PView;
+   typedef View const *          PCView;
+
 typedef  DLinkHead<View>         ViewHead;
 class                            ViewHiLites;
 class                            FileTypeSettings;
-struct                           Win;               STD_TYPEDEFS( Win       )
+struct                           Win;
+   typedef Win        *          PWin;
+   typedef Win const  *          PCWin;
+
 class                            HiliteAddin;
 typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;
 

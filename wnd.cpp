@@ -345,7 +345,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
    }
 
 STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
-   CPCWin pw1( g_Win(winDex1) ), pw2( g_Win(winDex2) );
+   PCWin pw1( g_Win(winDex1) ), pw2( g_Win(winDex2) );
 
    #define  MERGEABLE( aaa, bbb ) \
       ( \
