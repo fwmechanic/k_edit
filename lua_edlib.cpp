@@ -736,9 +736,9 @@ void l_SetEditorGlobalsInts( lua_State *L ) {
 void l_register_class( lua_State *L
    , PCChar     szObjName
    , PCChar     kszMetatable_magic_string
-   , PCluaL_Reg metamethods
-   , PCluaL_Reg functions
-   , PCluaL_Reg methods
+   , const luaL_Reg *metamethods
+   , const luaL_Reg *functions
+   , const luaL_Reg *methods
    ) {
    // void luaL_register (lua_State *L, const char *libname, const luaL_Reg *l);
    //

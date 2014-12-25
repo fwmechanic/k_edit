@@ -28,8 +28,6 @@ extern "C"
    #include <k_lib.h>
 }
 
-STD_TYPEDEFS( luaL_Reg )
-
 enum { DBG_LUA=0 };
 
 //#########  lua_edlib exports
