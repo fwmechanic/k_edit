@@ -15,19 +15,18 @@ struct StringListEl {
 
 typedef  DLinkHead<StringListEl> StringListHead;  STD_TYPEDEFS( StringListHead )
 
-extern PStringListEl NewStringListEl(                        PCChar str, PCChar pEos=nullptr );
-extern void          InsStringListEl( PStringListHead pSlhd, PCChar str, PCChar pEos=nullptr );
+extern void          InsStringListEl( PStringListHead pSlhd, boost::string_ref src );
 extern void          DeleteStringList( PStringListHead pSlhd );
 
 #define  FreeStringListEl( pSLE )  Free0( pSLE )
 
 struct StringList {
-   StringListHead d_head;
+   StringListHead d_head; // _public_ so DLINKC_FIRST_TO_LASTA can be used to efficiently walk the list
    StringList() {}
    StringList( PCChar str ) { InsStringListEl( &d_head, str ); }
    void Clear() { DeleteStringList( &d_head ); }
    ~StringList() { Clear(); }
-   void AddStr( PCChar str, PCChar pEos=nullptr ) { InsStringListEl( &d_head, str, pEos ); }
+   void AddStr( boost::string_ref src ) { InsStringListEl( &d_head, src ); }
    unsigned Count() const { return d_head.Count(); }
    StringListHead &Head() { return d_head; }
    bool IsEmpty() const { return d_head.IsEmpty(); }

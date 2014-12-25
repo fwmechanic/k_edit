@@ -5,20 +5,18 @@
 #include "ed_main.h"
 #include "stringlist.h"
 
-PStringListEl NewStringListEl( PCChar str, PCChar pEos ) { // pEos points past last valid char in str
-   if( !pEos ) pEos = Eos( str );                          // if str is a complete asciz, *pEos == 0
-   const auto sbytes( pEos - str + 1 );
+STATIC_FXN PStringListEl NewStringListEl( boost::string_ref src ) { // pEos points past last valid char in str
+   const auto sbytes( src.length() + 1 );
    PStringListEl rv;
    AllocBytesNZ( rv, sizeof( *rv ) + sbytes, __func__ );
    rv->dlink.Clear();
-   memcpy( rv->string, str, sbytes-1 );
+   memcpy( rv->string, src.data(), sbytes-1 );
    rv->string[sbytes-1] = '\0';
    return rv;
    }
 
-void InsStringListEl( PStringListHead pSlhd, PCChar str, PCChar pEos ) {
-   0 && DBG("%s: %s", __func__, str );
-   auto pIns( NewStringListEl( str, pEos ) );
+void InsStringListEl( PStringListHead pSlhd, boost::string_ref src ) { 0 && DBG("%s: %" PR_BSR, __func__, BSR(src) );
+   auto pIns( NewStringListEl( src ) );
    DLINK_INSERT_LAST( *pSlhd, pIns, dlink );
    }
 
