@@ -751,7 +751,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
    auto textargStackPos(-1);
 
    std::string pbTabxBase;
-   PDirMatches pDirContent(nullptr);
+   DirMatches *pDirContent(nullptr);
    std::string stTmp;
 
    while(1) { //******************************************************************

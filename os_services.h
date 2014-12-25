@@ -285,4 +285,4 @@ class DirMatches {
    ~DirMatches();
 
    const Path::str_t GetNext();
-   }; STD_TYPEDEFS(DirMatches)
+   };
