@@ -45,7 +45,7 @@ Regex::~Regex() {
    (*pcre_free)( d_pPcreExtra );
    }
 
-PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, PCapturedStrings pcs ) {
+PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, CapturedStrings *pcs ) {
    0 && DBG( "Regex::Match called!" );
    *matchChars = 0;
    if( validBufChars < 0 )

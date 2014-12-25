@@ -41,7 +41,7 @@ class CapturedStrings {
          d_pCs[ix].assign( src, srcLen );
       }
 
-   };  STD_TYPEDEFS( CapturedStrings )
+   };
 
 //******************************************************************************
 
@@ -81,7 +81,7 @@ class Regex {
 
    int MaxPossCaptures() const { return d_maxPossCaptures; }
 
-   PCChar Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, PCapturedStrings pcs );
+   PCChar Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, CapturedStrings *pcs );
    };  STD_TYPEDEFS( Regex )
 
 //******************************************************************************

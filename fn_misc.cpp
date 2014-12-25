@@ -278,7 +278,7 @@ FcLogTm::FcLogTm( const FcLogTm &from ) { // copy ctor
    }
 
 
-FcLogTm::FcLogTm( const PCCapturedStrings pc ) { DBG( "Count=%d", pc->Count() );
+FcLogTm::FcLogTm( const CapturedStrings *pc ) { DBG( "Count=%d", pc->Count() );
    for( auto ix(0) ; ix < pc->Count() ; ++ix )
       DBG( "%d: '%s'", ix, pc->Str(ix) );
 
@@ -322,7 +322,7 @@ class FcLogTmMatchHandler : public FileSearchMatchHandler {
 
    protected:
 
-   bool VMatchActionTaken(        PFBUF pFBuf, Point &cur, COL MatchCols, PCCapturedStrings pCaptures );
+   bool VMatchActionTaken(        PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures );
    bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ); // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
    };
 
@@ -330,7 +330,7 @@ bool FcLogTmMatchHandler::VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL
    return d_arg.Within( cur, MatchCols );
    }
 
-bool FcLogTmMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, PCCapturedStrings pCaptures ) {
+bool FcLogTmMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) {
    FcLogTm val( pCaptures );
 
    if( d_arg.d_cArg == 1 && !d_foundBaseline ) {
