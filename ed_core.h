@@ -766,7 +766,7 @@ class                            EditRec;
 struct                           HiLiteRec;         STD_TYPEDEFS( HiLiteRec        )
 class                            View;              STD_TYPEDEFS( View             )
 typedef  DLinkHead<View>         ViewHead;
-class                            ViewHiLites;       STD_TYPEDEFS( ViewHiLites      )
+class                            ViewHiLites;
 class                            FileTypeSettings;
 struct                           Win;               STD_TYPEDEFS( Win              )
 class                            HiliteAddin;       STD_TYPEDEFS( HiliteAddin      )
@@ -775,7 +775,7 @@ typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;   STD_TYPEDEFS( HiliteAddinHea
 extern void DestroyViewList( ViewHead *pViewHd );
 
 
-struct FileExtensionSetting;  STD_TYPEDEFS( FileExtensionSetting )
+struct FileExtensionSetting;
 
 class View { // View View View View View View View View View View View View View View View View View View View View View View View View
 public:
@@ -933,9 +933,9 @@ public:
    bool         next_balln( LINE yStart, bool fStopOnElse );
 
 private:
-   PFileExtensionSetting d_pFES = nullptr;
+   FileExtensionSetting *d_pFES = nullptr;
 public:
-   PFileExtensionSetting GetFileExtensionSettings();
+   FileExtensionSetting *GetFileExtensionSettings();
 
    int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
