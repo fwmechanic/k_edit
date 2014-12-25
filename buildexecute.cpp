@@ -169,8 +169,8 @@ bool ARG::cancel() {
    return true;
    }
 
-PCChar ARG::ArgTypeName() const {  0 && DBG( "%s: %X", __func__, (d_argType & ACTUAL_ARGS) );
-   switch( d_argType & ACTUAL_ARGS ) {
+PCChar ARG::ArgTypeName() const {  0 && DBG( "%s: %X", __func__, ActualArgType() );
+   switch( ActualArgType() ) {
       default        : return "unknown";
       case NOARG     : return "NOARG";
       case NULLARG   : return "NULLARG";

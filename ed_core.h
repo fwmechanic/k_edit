@@ -624,6 +624,7 @@ public:
 
    void   ConvertStreamargToLineargOrBoxarg();
    void   ConvertLineOrBoxArgToStreamArg();
+   U32    ActualArgType() const { return d_argType & ACTUAL_ARGS; }
 
 private:
 

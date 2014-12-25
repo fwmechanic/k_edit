@@ -289,21 +289,7 @@ STATIC_FXN int traceback (lua_State *L) {
   return 1;
 }
 
-// stolen from lua-5.1/src/lua.c
-STATIC_FXN int docall (lua_State *L, int narg, int clear) {
-  const auto base( lua_gettop(L) - narg );  /* function index */
-  lua_pushcfunction(L, traceback);  /* push traceback function */
-  lua_insert(L, base);  /* put it under chunk and args */
-//signal(SIGINT, laction);
-  const auto status( lua_pcall(L, narg, (clear ? 0 : LUA_MULTRET), base) );
-//signal(SIGINT, SIG_DFL);
-  lua_remove(L, base);  /* remove traceback function */
-  /* force a complete garbage collection in case of errors */
-  if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
-  return status;
-}
-
-// clone of docall, except nres param to lua_pcall is passed directly
+// stolen from lua-5.1/src/lua.c, except nres param to lua_pcall is passed directly
 STATIC_FXN int docall_known_nres (lua_State *L, int narg, int nres) { enum { DB=0 };
   const auto top( lua_gettop(L) );  /* function index */
   const auto base( top - narg );  /* function index */
@@ -435,7 +421,6 @@ void LuaCtxt_ALL::call_EventHandler( PCChar eventName ) {
    call_EventHandler( L_restore_save, eventName );
    }
 
-
 bool ARG::ExecLuaFxn() { enum { DB=0 };
    // Using ARG::CmdName(), we discover the name of the fxn being invoked.
    // We will call the Lua function of the same name.  If the Lua entity of
@@ -451,35 +436,24 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
 
    // table=GetEdFxn_FROM_C(cmdName)    -- 20110216 kgoodwin replaced old scheme which wrote all cmd tables into k.lua._G (!!!)
    // GetEdFxn_FROM_C is implemented in k.luaedit
-   static const auto s_edfx_lookup = "GetEdFxn_FROM_C";
+   STATIC_CONST auto s_edfx_lookup = "GetEdFxn_FROM_C";
    if( lh_getglobal_failed( L, s_edfx_lookup ) || !lua_isfunction( L, -1 ) ) {   DB && DBG( "%s: '%s' %d", __func__, s_edfx_lookup, lua_isfunction( L, -1 ) );
       return Msg( "Lua does not implement %s", s_edfx_lookup );
       }
    lua_pushstring( L, cmdName );
    {
-   const auto failed( docall( L, 1, 0 ) );
+   const auto failed( docall_known_nres( L, 1, 1 ) );
    if( failed ) {                                                                DB && DBG( "%s: docall GetEdFxn_FROM_C(%s) failed", __func__, cmdName );
       return Msg( "docall GetEdFxn_FROM_C(%s) failed", cmdName );
       }
    }
    const auto funcIsTable( lua_istable( L, -1 ) );                               DB && DBG( "%s: '%s' %d", __func__, "funcIsTable", funcIsTable );
-
-   // note that only a SUBSET of ARG type bits can be set here, leading to
-   // non-obvious Lua EdFxn mapping of attr to function-key (e.g.  CURSORFUNC &
-   // MACROFUNC both map to NOARG functions)
-   //
-   // This is documented where NOARG is defined, in column "Actually can be set
-   // in ARG::Abc?": there are 6 ARG types marked "true".  Also, ArgTypeName()
-   // can only return the names of these 6 ARG types.
-   //
-   // 20091119 kgoodwin
-   //
    auto argTypeNm( ArgTypeName() );                                              DB && DBG( "%s: '%s', ARG=%s, 0x%X", __func__, cmdName, argTypeNm, d_argType );
    if( funcIsTable ) { /* support Lua decomposition, e.g. edfxn.BOXARG */        DB && DBG( "%s: '%s' is table", __func__, cmdName );
       lua_getfield(L, -1, argTypeNm);
       if( !lua_isfunction( L, -1 ) ) { // edfxn.ANYARG is last chance/catchall
          lua_pop( L, 1 );
-         STATIC_CONST char kszAnyarg[] = "ANYARG";
+         STATIC_CONST auto kszAnyarg = "ANYARG";
          lua_getfield( L, -1, kszAnyarg );
          if( lua_isfunction( L, -1 ) )
             argTypeNm = kszAnyarg;
@@ -491,8 +465,18 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
       else               return Msg( "Lua CMD %s is not a function", cmdName );
       }
 
+   // note that only a SUBSET of ARG type bits can be set here, leading to
+   // non-obvious Lua EdFxn mapping of attr to function-key (e.g.  CURSORFUNC &
+   // MACROFUNC both map to NOARG functions)
+   //
+   // This is documented where NOARG is defined, in column "Actually can be set
+   // in ARG::Abc?": there are 6 ARG types marked "true".  Also, ArgTypeName()
+   // can only return the names of these 6 ARG types.
+   //
+   // 20091119 kgoodwin
+   //
+   const auto actualArg( ActualArgType() );
    lua_createtable(L, 0, 12);  // ref os_date; 12 = number of fields
-   const auto actualArg( d_argType & ACTUAL_ARGS );
    switch( actualArg ) {
       case STREAMARG : return BadArg();  // not yet supported
       default        : return BadArg();
@@ -544,7 +528,6 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
    auto rv( lua_toboolean( L, -1 ) );
    return rv;
    }
-
 
 //######################################################################################################################
 
@@ -629,7 +612,7 @@ STATIC_FXN bool loadLuaFileFailed( lua_State **pL, PCChar fnm ) {
       case 0:
            FDBG && LDS( "LoadLuaFileFailed post-load/pre-pcall", *pL );
            {
-           const auto failed( docall( *pL, 0, 0 ) );
+           const auto failed( docall_known_nres( *pL, 0, 0 ) );
            if( failed ) {
               FDBG && DBG( "%s L=%p docall() Failed",  __func__, *pL );
               //
@@ -804,7 +787,6 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
    const auto narg( szSig - pszSigStart );  // number of args pushed
    if( *szSig=='>' ) { ++szSig; }
    const auto nres_( Strlen( szSig ) );      // number of results expected
-// if( docall( L, narg, 0 ) != 0 )  // do the call
    if( docall_known_nres( L, narg, nres_ ) != 0 )  // do the call
       l_handle_pcall_error( L );
                                                                           DB && DBG( "%s->%s() [%d/%d]", __func__, szFuncnm, nres_, lua_gettop(L) );
