@@ -191,7 +191,9 @@ class LuaCallCleanup {
 
    public:
 
-   LuaCallCleanup( lua_State *L ) : d_L(L) {}
+   LuaCallCleanup( lua_State *L ) : d_L(L) {
+      const auto els( lua_gettop( d_L ) );   els && DBG( "%s @ entry stack contains %d", __func__, els );
+      }
    ~LuaCallCleanup() {
       lua_settop( d_L, 0 );  // Lua refman: "If index is 0, then all stack elements are removed."
       }
@@ -405,11 +407,9 @@ LREGI(EvtHandlerEnabled)
 LREGP(cleanup,void *)
 
 STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) {
-   if( !L )
+   if( !L || LREGI_get_EvtHandlerEnabled( L ) < 1 ) {
       return;
-
-   if( LREGI_get_EvtHandlerEnabled( L ) < 1 )
-      return;
+      }
 
    DBG_LUA_ALLOC && DBG( "%s: heapChange ...", __func__ );
 
@@ -422,7 +422,7 @@ STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) {
 
    lua_pushstring( L, eventName );  0 && DBG( "C calling CallEventHandlers(%s)", eventName );
 
-   const auto failed( docall( L, 1, 1 ) );
+   const auto failed( docall_known_nres( L, 1, 0 ) );
    if( failed ) {
       LREGI_set_EvtHandlerEnabled( L, 0 );         // don't want avalanche of errors
       l_handle_pcall_error( L );
@@ -436,39 +436,33 @@ void LuaCtxt_ALL::call_EventHandler( PCChar eventName ) {
    }
 
 
-bool ARG::ExecLuaFxn() {
-   // Using ARG::CmdName(), we can discover the name of the fxn being
-   // invoked.  We will call the Lua function of the same name.  If the Lua
-   // entity of that name is a table rather than a function, we will attempt to
-   // call table.d_argType() (e.g.  function.TEXTARG()).  If table.d_argType() is
-   // not found, we will attempt to call table.ANYARG() (e.g.
-   // function.ANYARG()).
+bool ARG::ExecLuaFxn() { enum { DB=0 };
+   // Using ARG::CmdName(), we discover the name of the fxn being invoked.
+   // We will call the Lua function of the same name.  If the Lua entity of
+   // that name is a table rather than a function, we will attempt to call
+   // table.d_argType() (e.g.  function.TEXTARG()).  If table.d_argType() is
+   // not found, we will attempt to call table.ANYARG() (e.g. function.ANYARG()).
    //
    // 20060309 klg
    //
-   const auto cmdName( CmdName() );
-   0 && DBG( "%s: '%s'", __func__, cmdName );
-
+   const auto cmdName( CmdName() );                                              DB && DBG( "%s: '%s'", __func__, cmdName );
    const auto L( L_edit );
    LuaCallCleanup lcc( L );
 
    // table=GetEdFxn_FROM_C(cmdName)    -- 20110216 kgoodwin replaced old scheme which wrote all cmd tables into k.lua._G (!!!)
    // GetEdFxn_FROM_C is implemented in k.luaedit
-   if( lh_getglobal_failed( L, "GetEdFxn_FROM_C" ) || !lua_isfunction( L, -1 ) ) {
-      0 && DBG( "%s: '%s' %d", __func__, "GetEdFxn_FROM_C", lua_isfunction( L, -1 ) );
-      return Msg( "Lua does not implement GetEdFxn_FROM_C" );
+   static const auto s_edfx_lookup = "GetEdFxn_FROM_C";
+   if( lh_getglobal_failed( L, s_edfx_lookup ) || !lua_isfunction( L, -1 ) ) {   DB && DBG( "%s: '%s' %d", __func__, s_edfx_lookup, lua_isfunction( L, -1 ) );
+      return Msg( "Lua does not implement %s", s_edfx_lookup );
       }
    lua_pushstring( L, cmdName );
    {
    const auto failed( docall( L, 1, 0 ) );
-   if( failed ) {
-      0 && DBG( "%s: docall GetEdFxn_FROM_C(%s) failed", __func__, cmdName );
-      return Msg( "docall GetEdFxn_FROM_C(%s) failed"          , cmdName );
+   if( failed ) {                                                                DB && DBG( "%s: docall GetEdFxn_FROM_C(%s) failed", __func__, cmdName );
+      return Msg( "docall GetEdFxn_FROM_C(%s) failed", cmdName );
       }
    }
-
-   const auto funcIsTable( lua_istable( L, -1 ) );
-   0 && DBG( "%s: '%s' %d", __func__, "funcIsTable", funcIsTable );
+   const auto funcIsTable( lua_istable( L, -1 ) );                               DB && DBG( "%s: '%s' %d", __func__, "funcIsTable", funcIsTable );
 
    // note that only a SUBSET of ARG type bits can be set here, leading to
    // non-obvious Lua EdFxn mapping of attr to function-key (e.g.  CURSORFUNC &
@@ -480,10 +474,8 @@ bool ARG::ExecLuaFxn() {
    //
    // 20091119 kgoodwin
    //
-   auto argTypeNm( ArgTypeName() );
-   0 && DBG( "%s: '%s', ARG=%s, 0x%X", __func__, cmdName, argTypeNm, d_argType );
-   if( funcIsTable ) { // support Lua decomposition edfxn.BOXARG
-      0 && DBG( "%s: '%s' is table", __func__, cmdName );
+   auto argTypeNm( ArgTypeName() );                                              DB && DBG( "%s: '%s', ARG=%s, 0x%X", __func__, cmdName, argTypeNm, d_argType );
+   if( funcIsTable ) { /* support Lua decomposition, e.g. edfxn.BOXARG */        DB && DBG( "%s: '%s' is table", __func__, cmdName );
       lua_getfield(L, -1, argTypeNm);
       if( !lua_isfunction( L, -1 ) ) { // edfxn.ANYARG is last chance/catchall
          lua_pop( L, 1 );
@@ -495,10 +487,8 @@ bool ARG::ExecLuaFxn() {
       }
 
    if( !lua_isfunction( L, -1 ) ) {
-      if( funcIsTable )
-         return Msg( "Lua CMD %s.%s is not a function", cmdName, argTypeNm );
-      else
-         return Msg( "Lua CMD %s is not a function", cmdName );
+      if( funcIsTable )  return Msg( "Lua CMD %s.%s is not a function", cmdName, argTypeNm );
+      else               return Msg( "Lua CMD %s is not a function", cmdName );
       }
 
    lua_createtable(L, 0, 12);  // ref os_date; 12 = number of fields
@@ -521,8 +511,7 @@ bool ARG::ExecLuaFxn() {
 
       case TEXTARG   : setfield( L, "text"   , d_textarg.pText ); //lint -fallthrough
       case NOARG     :                                            //lint -fallthrough
-      case NULLARG   : {
-                       const int xAll( 1+g_CursorCol () );
+      case NULLARG   :{const int xAll( 1+g_CursorCol () );
                        const int yAll( 1+g_CursorLine() );
                        setfield( L, "cursorX", xAll );
                        setfield( L, "minX"   , xAll );
@@ -530,11 +519,9 @@ bool ARG::ExecLuaFxn() {
                        setfield( L, "cursorY", yAll );
                        setfield( L, "minY"   , yAll );
                        setfield( L, "maxY"   , yAll );
-                       }
-                       break;
-      }
+                      }break;
+      }                                                                          DB && DBG( ".%s = %d", "type", actualArg );
 
-   0 && DBG( ".%s = %d", "type", actualArg );
    setfield( L, "argCount", d_cArg );
    setfield( L, "type"    , actualArg );
 
@@ -544,23 +531,17 @@ bool ARG::ExecLuaFxn() {
    l_View_function_cur( L );
    lua_setfield( L, -2, "view" );
 
-   lua_pushboolean( L, d_fMeta );          0 && DBG( ".%s = %s", "fMeta", d_fMeta?"true":"false" );
+   lua_pushboolean( L, d_fMeta );                                                DB && DBG( ".%s = %s", "fMeta", d_fMeta?"true":"false" );
    lua_setfield( L, -2, "fMeta" );
-
    {
-   const auto failed( docall( L, 1, 0 ) );
+   const auto failed( docall_known_nres( L, 1, 1 ) );
    if( failed ) {
       UnhideCursor();
       l_handle_pcall_error( L );
       return false;
       }
    }
-
-   auto rv(true); // default
-   if(      lua_isboolean( L, -1 ) )  rv = lua_toboolean( L, -1 ) != 0;
-   else if( lua_isnil    ( L, -1 ) )  rv = false;
-   // else DBG( "Lua edfxn '%s' did not return a boolean!", cmdName );
-
+   auto rv( lua_toboolean( L, -1 ) );
    return rv;
    }
 
