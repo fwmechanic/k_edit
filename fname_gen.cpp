@@ -75,7 +75,7 @@ STATIC_FXN char IsUserFnmDelimChar( char ch ) {
 
 //------------------------------------------------------------------------------
 
-STATIC_FXN bool IsolateFilename( PInt pMin, PInt pMax, PCChar pSrc, PCChar eos ) {
+STATIC_FXN bool IsolateFilename( int *pMin, int *pMax, PCChar pSrc, PCChar eos ) {
    // could add: lots and lots o special per-FileType code to extract
    //    filenames from various language-specific include statements
    if( !eos ) eos = Eos( pSrc );

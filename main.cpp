@@ -636,7 +636,7 @@ bool ARG::ext() {
    }
 
 
-bool LoadRsrcSectionFound( PCChar pszSectionName, PInt pAssignCountAccumulator ) {
+bool LoadRsrcSectionFound( PCChar pszSectionName, int *pAssignCountAccumulator ) {
    RsrcSectionWalker rsw( pszSectionName );
    FmtStr<90> tag( "LoadRsrcSection [%s]", rsw.srchTag() );
    AssignLogTag( tag.k_str() );

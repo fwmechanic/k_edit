@@ -64,7 +64,7 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
          , validBufChars
          , startingBufOffset
          , options
-         , PInt(d_capture)
+         , reinterpret_cast<int *>(d_capture)
          , sizeof(d_capture) / sizeof(int)
          )
       );

@@ -617,7 +617,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    }
 
 
-STATIC_FXN cppc IsCppConditional( boost::string_ref src, PInt pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
+STATIC_FXN cppc IsCppConditional( boost::string_ref src, int *pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
    *pxPound = -1;
    auto p1( src.find_first_not_of( " \t" ) );
    if( p1==boost::string_ref::npos || !('#' == src[p1] || '%' == src[p1] || '!' == src[p1]) ) return cppcNone;

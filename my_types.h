@@ -235,7 +235,6 @@ typedef  size_t  uint_machineword_t; // 32-bit on i386, 64-bit on x64
 
 STD_TYPEDEF2( char, Char )
 STD_TYPEDEF2( void, Void )
-STD_TYPEDEF2( int , Int  )
 
 namespace Path {
    typedef std::string str_t;

@@ -381,7 +381,7 @@ extern   void  EditorExit( int processExitCode, bool fWriteStateFile );
 //------------ rsrc file section processing
 
 extern  PChar  RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext );
-extern   bool  LoadRsrcSectionFound( PCChar pszSectionName, PInt pAssignCountAccumulator );
+extern   bool  LoadRsrcSectionFound( PCChar pszSectionName, int *pAssignCountAccumulator );
 extern boost::string_ref IsolateTagStr( boost::string_ref src );
 extern   bool  LoadFileExtRsrcIniSection( PCChar pszSectionName );
 extern PCChar  LastExtTagLoaded();
