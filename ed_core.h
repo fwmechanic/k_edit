@@ -650,7 +650,7 @@ public:
    #undef  CMDTBL_H_ARG_METHODS
    //--------------------------
 
-   };  STD_TYPEDEFS( ARG )
+   };  typedef ARG const * const CPCARG;
 
 extern std::string StreamArgToString( PFBUF pfb, Rect stream );
 
