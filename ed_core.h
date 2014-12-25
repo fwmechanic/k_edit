@@ -60,7 +60,11 @@ typedef LINE *PLINE;
 
 #include "dlink.h"
 
-class FBUF;  STD_TYPEDEFS( FBUF )
+class FBUF;
+typedef       FBUF * PFBUF;
+typedef FBUF const * PCFBUF;
+typedef      PFBUF * PPFBUF;
+
 
 typedef  DLinkHead<FBUF> FBufHead;
 
@@ -560,7 +564,10 @@ enum                      // Actually can be set in ARG::Abc?
 //  Argument defininition struct+union
 //
 
-struct CMD;      STD_TYPEDEFS( CMD )
+struct CMD;
+typedef       CMD *         PCMD;
+typedef CMD const *        PCCMD;
+typedef CMD const * const CPCCMD;
 
 struct ARG {
    U32  d_argType;
@@ -763,7 +770,7 @@ inline PCChar ARG::CmdName() const { return d_pCmd->Name(); }
 // forward decls:
 
 class                            EditRec;
-struct                           HiLiteRec;         STD_TYPEDEFS( HiLiteRec )
+struct                           HiLiteRec;
 class                            View;              STD_TYPEDEFS( View      )
 typedef  DLinkHead<View>         ViewHead;
 class                            ViewHiLites;
@@ -875,7 +882,7 @@ public:
                    , COL                 xIndent
                    , COL                 xMax
                    , LineColorsClipped  &alcc
-                   , PCHiLiteRec        &pFirstPossibleHiLite
+                   , const HiLiteRec  * &pFirstPossibleHiLite
                    , bool                isActiveWindow
                    , bool                isCursorLine
                    ) const;
@@ -883,7 +890,7 @@ public:
    void         GetLineForDisplay
                    ( PChar              pTextBuf
                    , LineColorsClipped &alcc
-                   , PCHiLiteRec       &pFirstPossibleHiLite
+                   , const HiLiteRec * &pFirstPossibleHiLite
                    , LINE               yLineOfFile
                    , bool               isActiveWindow
                    , COL                xWidth
@@ -970,7 +977,7 @@ public:
    bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
 
    bool      GetCursorForDisplay( Point *pt ) const;
-   void      GetLineForDisplay( int winNum, PChar DestLineBuf, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
+   void      GetLineForDisplay( int winNum, PChar DestLineBuf, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
 
 public: // std pimpl implemenations declare it as private, but we have "special needs"
    class impl;

@@ -1644,7 +1644,7 @@ struct HiLiteRec {
 typedef DLinkHead<HiLiteRec> HiLiteHead;
 
 struct HiLiteSpeedTable {
-   PCHiLiteRec pHL = nullptr;  // references, does NOT own!
+   const HiLiteRec *pHL = nullptr;  // references, does NOT own!
    };
 
 enum { HILITE_SPEEDTABLE_LINE_INCR = 16 * 1024 };
@@ -1665,8 +1665,8 @@ class ViewHiLites {
    HiLiteSpeedTable *d_SpeedTable;
    HiLiteHead        d_HiLiteList;
 
-   void        UpdtSpeedTbl( PHiLiteRec pThis );
-   PCHiLiteRec FindFirstEntryAffectingOrAfterLine( LINE yLine ) const;
+   void        UpdtSpeedTbl( HiLiteRec *pThis );
+   const HiLiteRec *FindFirstEntryAffectingOrAfterLine( LINE yLine ) const;
 
    ViewHiLites( PFBUF pFBuf );
 
@@ -1674,7 +1674,7 @@ class ViewHiLites {
 
    void vhInsHiLiteBox(   int newColorIdx, Rect newRgn );
    void PrimeRedraw() const;
-   int  InsertHiLitesOfLineSeg( LINE yLine, COL Indent, COL xMax, LineColorsClipped &alcc, PCHiLiteRec &pFirstPossibleHiLite ) const;
+   int  InsertHiLitesOfLineSeg( LINE yLine, COL Indent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const;
 
 public:
    ~ViewHiLites(); // the ONLY public member, and it's only needed because View::FreeHiLiteRects calls Delete0 (an STIL utility fxn)
@@ -1721,7 +1721,7 @@ int Rect::LineNotWithin( const LINE yLine ) const { // IGNORES COLUMN!
    return 0;
    }
 
-PCHiLiteRec ViewHiLites::FindFirstEntryAffectingOrAfterLine( LINE yLine ) const {
+const HiLiteRec *ViewHiLites::FindFirstEntryAffectingOrAfterLine( LINE yLine ) const {
    0 && DBG( "FFEAoAL+ %d", yLine );
    for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpdTblEls ; ++idx ) {
       if( d_SpeedTable[ idx ].pHL ) {
@@ -1775,7 +1775,7 @@ STATIC_FXN bool Rect1ContainsRect2( const Rect &r1, const Rect &r2 ) {
        ;
    }
 
-void ViewHiLites::UpdtSpeedTbl( PHiLiteRec pThis ) {
+void ViewHiLites::UpdtSpeedTbl( HiLiteRec *pThis ) {
    const auto idx( SpeedTableIndex( pThis->rect.flMax.lin ) );
    auto &stEntry( d_SpeedTable[ idx ].pHL );
    if( !stEntry ||  pThis->rect.flMax.lin < stEntry->rect.flMax.lin )
@@ -1842,7 +1842,7 @@ void View::InsHiLite1Line( int newColorIdx, LINE yLine, COL xLeft, COL xRight ) 
 
 //-----------------------------------------------------------------------------
 
-int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, LineColorsClipped &alcc, PCHiLiteRec &pFirstPossibleHiLite ) const
+int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const
    { 0 && DBG( "IHLoS+ %d", yLine );
    if( !pFirstPossibleHiLite )
         pFirstPossibleHiLite = FindFirstEntryAffectingOrAfterLine( yLine );
@@ -2369,7 +2369,7 @@ STATIC_FXN bool NeedRedrawScreen() {
    }
 
 
-STATIC_FXN void GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf, const COL scrnCols, LineColors &alc, PCHiLiteRec &pFirstPossibleHiLite ) {
+STATIC_FXN void GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf, const COL scrnCols, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite ) {
    IS_LINUX && DBG( "%s y=%d", FUNC, yDisplayLine );
    memset( PChar(DestLineBuf), H__, scrnCols ); //***** initial assumption: this line is a horizontal border ('Í')
    DestLineBuf[ scrnCols ] = 0;
@@ -2394,7 +2394,7 @@ STATIC_FXN void RedrawScreen() {
    const auto scrnCols( EditScreenCols() );
    const auto yTop(0), yBottom( EditScreenLines() );
    ShowDraws( DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom ); )
-   PCHiLiteRec pFirstPossibleHiLite(nullptr);
+   const HiLiteRec *pFirstPossibleHiLite(nullptr);
    for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) { ShowDraws( char ch = ' '; )
       if( s_paScreenLineNeedsRedraw->IsBitSet( yLine ) ) {
          ShowDraws( ch = '0' + (yLine % 10); )
@@ -3087,7 +3087,7 @@ void View::InsertHiLitesOfLineSeg
    , const COL                 xIndent
    , const COL                 xMax
    ,       LineColorsClipped  &alcc
-   ,       PCHiLiteRec        &pFirstPossibleHiLite
+   ,       const HiLiteRec *  &pFirstPossibleHiLite
    , const bool                isActiveWindow
    , const bool                isCursorLine
    ) const {
@@ -3150,7 +3150,7 @@ void View::InsertHiLitesOfLineSeg
 void View::GetLineForDisplay
    ( const PChar              pTextBuf
    ,       LineColorsClipped &alcc
-   ,       PCHiLiteRec       &pFirstPossibleHiLite
+   ,       const HiLiteRec * &pFirstPossibleHiLite
    , const LINE               yLineOfFile
    , const bool               isActiveWindow
    , const COL                xWidth
@@ -3188,7 +3188,7 @@ void Win::GetLineForDisplay
    ( const int    winNum
    , const PChar  destLineBuf
    , LineColors  &alc
-   , PCHiLiteRec &pFirstPossibleHiLite
+   , const HiLiteRec * &pFirstPossibleHiLite
    , const LINE   yLineOfDisplay
    ) const {
    const auto isActiveWindow( this == g_CurWin() );       // checkWins( FmtStr<30>( "<Line %d/win %d>", yLineOfDisplay, winNum ) );
