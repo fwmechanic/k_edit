@@ -20,34 +20,36 @@
 // 32  <both>   ??     ??      16  32    32         32?         32
 
 // Check GCC
-#if __GNUC__
-#if defined(_WIN32)
-#   define PR__i64 "I64"
+#if defined(__GNUC__)
+    #if defined(_WIN32)
+    #   define PR__i64 "I64"
+    #else
+    #   define PR__i64 "ll"
+    #endif
+    #if defined(__x86_64__) || defined(__ppc64__)
+        // #define ENVIRONMENT64
+        #if defined(_WIN32)
+        #   define PR_BSRSIZET "I"
+        #   define PR_SIZET "I"
+        #   define PR_PTRDIFFT "I"
+        #   define PR_TIMET "I64"
+        #else
+        #   define PR_BSRSIZET "l"
+        #   define PR_SIZET "z"
+        #   define PR_PTRDIFFT "t"
+        #   define PR_TIMET "l"
+        #endif
+
+    #else
+        // #   define ENVIRONMENT32
+# error
+        #   define PR_BSRSIZET ""
+        #   define PR_SIZET ""
+        #   define PR_PTRDIFFT ""
+        #   define PR_TIMET "l"
+    #endif
 #else
-#   define PR__i64 "ll"
-#endif
-#if defined(__x86_64__) || defined(__ppc64__)
-// #define ENVIRONMENT64
-#if defined(_WIN32)
-#   define PR_BSRSIZET "ll"
-#   define PR_SIZET "I"
-#   define PR_PTRDIFFT "I"
-#   define PR_TIMET "I64"
-#else
-#   define PR_BSRSIZET "l"
-#   define PR_SIZET "z"
-#   define PR_PTRDIFFT "t"
-#   define PR_TIMET "l"
-#endif
-#else
-// #   define ENVIRONMENT32
-#   define PR_BSRSIZET ""
-#   define PR_SIZET ""
-#   define PR_PTRDIFFT ""
-#   define PR_TIMET "l"
-#endif
-#else
-#error only GCC supported!
+    #error only GCC supported!
 #endif
 
 #include <string>

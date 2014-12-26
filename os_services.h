@@ -29,7 +29,7 @@
 #endif
 
 // sw breakpoint, invokes debugger
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #define  SW_BP     __asm__("int $3");
 #else
 #define  SW_BP     _asm { int 3 }

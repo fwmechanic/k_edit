@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 const char entrypoint[] =
-#ifdef __GNUC__
+#if defined(__GNUC__)
 
 #ifdef __x86_64
                            "Main" ;

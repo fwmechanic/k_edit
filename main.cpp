@@ -38,7 +38,7 @@ GLOBAL_VAR PFBUF g_pFBufCmdlineFiles       ;
 GLOBAL_VAR PFBUF s_pFbufLog                ;
 GLOBAL_VAR PFBUF g_pFBufConsole            ;
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 //=================================================================
 // replace dflt abort() RTL fxn with one that lets us access gdb
 EXTERNC void abort() {
@@ -907,7 +907,7 @@ class kGetopt : public Getopt {
 void kGetopt::VErrorOut( PCChar msg ) {
    printf(
 "\n%s  Copyright KLG 1998-%4.4s\n%s, built %s with "
-#ifdef __GNUC__
+#if defined(__GNUC__)
                   "GCC %d.%d.%d"
    #ifdef __MINGW32_MAJOR_VERSION
                                  ", MinGW runtime %d.%d"
@@ -931,7 +931,7 @@ void kGetopt::VErrorOut( PCChar msg ) {
       , kszDtTmOfBuild
       , ExecutableFormat()
       , kszDtTmOfBuild
-#ifdef __GNUC__
+#if defined(__GNUC__)
    #if !defined(__GNUC_PATCHLEVEL__)
    #define __GNUC_PATCHLEVEL__ 0
    #endif

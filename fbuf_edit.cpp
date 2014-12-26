@@ -1483,8 +1483,10 @@ boost::string_ref::size_type CaptiveIdxOfCol( COL tabWidth, boost::string_ref co
 STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
    const boost::string_ref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
-      const auto rv( CaptiveIdxOfCol( tw, bbb, ix ) );
-      printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, rv );
+      // printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
+      // above generates a warning: format '%u' expects argument of type 'unsigned int' while
+      // passing the identical format string to FmtStr does not elicit such a warning
+      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) ).k_str() );
       }
    printf( "\n" );
    }
@@ -1492,11 +1494,11 @@ STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
 STATIC_FXN void sweep_FreeIdxOfCol( COL tw, PCChar content ) {
    const boost::string_ref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
-      printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) );
+      // see above for why we're using FmtStr here... bizarre!
+      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) ).k_str() );
       }
    printf( "\n" );
    }
-
 
 STATIC_FXN void sweep_ColOfFreeIdx( COL tw, PCChar content, int maxCol ) {
    const boost::string_ref bbb( content );

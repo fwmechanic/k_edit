@@ -7,7 +7,7 @@
 #include "ed_main.h"
 #include "fname_gen.h"
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 
@@ -63,6 +63,6 @@ STIL void setglobal( lua_State *L, PCChar key, int    val ) { lua_pushinteger( L
  extern PXbuf get_xb( lua_State *L );
  #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif

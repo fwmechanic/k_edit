@@ -24,7 +24,7 @@
 #if defined(_WIN32) // Microsoft C Compiler for Win32?
    // use safeSprintf instead of sprintf, _snprintf or snprintf!
    // #define  snprintf   _snprintf
-   #define  vsnprintf  _vsnprintf
+   // #define  vsnprintf  _vsnprintf
 #endif
 
 

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
@@ -64,7 +64,7 @@
 //
 // More modern way to export functions from a DLL: give them the DLLX attribute
 //
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #define DLLX  EXTERNC __attribute__ ((dllexport,stdcall))
 #else
 #define DLLX  EXTERNC _declspec( dllexport )
@@ -147,6 +147,6 @@ STIL void DebugLog( PCChar string ) { Win32::OutputDebugString( string ); }
 extern bool IsFileReadonly( PCChar pFBufName );
 extern bool FileOrDirExists( PCChar lpFBufName );
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
