@@ -231,7 +231,7 @@ COL FBOP::MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom 
    for( auto iy(yTop) ; iy <= yBottom; ++iy ) {
       const auto rl( fb->PeekRawLine( iy ) );
       if( !IsStringBlank( rl ) ) {
-         NoMoreThan( &leadBlank, ColOfFreeIdx( tw, rl, PastAnyBlanksToEnd( rl ) ) );
+         NoMoreThan( &leadBlank, ColOfFreeIdx( tw, rl, ToNextNonBlankOrEnd( rl ) ) );
          }
       }
    return leadBlank == COL_MAX ? 0 : leadBlank;

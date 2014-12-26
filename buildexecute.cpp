@@ -494,7 +494,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
       const auto lastCol( ColOfFreeIdx( tw, rl, rl.length() ) );
       if( stream.flMin.col < lastCol ) {
          rl.remove_prefix( CaptiveIdxOfCol( tw, rl, stream.flMin.col ) );
-         const auto nonb( PastAnyBlanksToEnd( rl, 0 ) );
+         const auto nonb( ToNextNonBlankOrEnd( rl, 0 ) );
          rl.remove_prefix( nonb );
          append_rv( rl );
          }
@@ -503,7 +503,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
    for( ++yLine ; yLine < yMax ; ++yLine ) {
       auto rl( pfb->PeekRawLine( yLine ) );
       if( !IsStringBlank( rl ) ) {
-         const auto nonb( PastAnyBlanksToEnd( rl, 0 ) );
+         const auto nonb( ToNextNonBlankOrEnd( rl, 0 ) );
          rl.remove_prefix( nonb );
          append_rv( rl );
          }
@@ -512,7 +512,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
    auto rl( pfb->PeekRawLine( yLine ) );
    if( !IsStringBlank( rl ) ) {
       const auto maxIx( CaptiveIdxOfCol( tw, rl, xMax+1 ) );
-      const auto nonb( PastAnyBlanksToEnd( rl, 0 ) );        0 && DBG( "nonb=%" PR_BSRSIZET "u maxIx=%" PR_BSRSIZET "u", nonb, maxIx );
+      const auto nonb( ToNextNonBlankOrEnd( rl, 0 ) );        0 && DBG( "nonb=%" PR_BSRSIZET "u maxIx=%" PR_BSRSIZET "u", nonb, maxIx );
       if( nonb < maxIx ) {
          rl.remove_suffix( rl.length() - maxIx );
          rl.remove_prefix( nonb );

@@ -259,8 +259,8 @@ STATIC_FXN int consec_is_its( isfxn ifx, PCChar pSt, PCChar eos ) {
    return pS - pSt;
    }
 
-int isxdigit_( int ch ) { return isxdigit( ch ); }
-int isbdigit_( int ch ) { return ch == '0' || ch == '1'; }
+STATIC_FXN int isxdigit_( int ch ) { return isxdigit( ch ); }
+STATIC_FXN int isbdigit_( int ch ) { return ch == '0' || ch == '1'; }
 
 int consec_xdigits( PCChar pSt, PCChar eos ) { return consec_is_its( isxdigit_, pSt, eos ); }
 int consec_bdigits( PCChar pSt, PCChar eos ) { return consec_is_its( isbdigit_, pSt, eos ); }
@@ -314,15 +314,6 @@ PChar _strlwr( PChar buf ) {
 
 #endif
 
-bool IsStringBlank( boost::string_ref src ) {
-   for( auto ch : src ) {
-      if( !isBlank( ch ) ) {
-         return false;
-         }
-      }
-   return true;
-   }
-
 bool eqi( boost::string_ref s1, boost::string_ref s2 ) {
    if( s1.length() != s2.length() ) {
       return false;
@@ -335,10 +326,21 @@ bool eqi( boost::string_ref s1, boost::string_ref s2 ) {
    return true;
    }
 
-boost::string_ref::size_type PastAnyBlanksToEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+// the Blank family...
+
+bool IsStringBlank( boost::string_ref src ) {
+   for( auto ch : src ) {
+      if( !isBlank( ch ) ) {
+         return false;
+         }
+      }
+   return true;
+   }
+
+boost::string_ref::size_type ToNextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         if( ' ' != *it && '\t' != *it ) {
+         if( !isBlank( *it ) ) {
             return std::distance( src.cbegin(), it );
             }
          }
@@ -349,7 +351,7 @@ boost::string_ref::size_type PastAnyBlanksToEnd( boost::string_ref src, boost::s
 boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         if( !(' ' != *it && '\t' != *it) ) {
+         if( isBlank( *it ) ) {
             return std::distance( src.cbegin(), it );
             }
          }

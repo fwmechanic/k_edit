@@ -325,7 +325,7 @@ bool ARG::vrepeat() {
       PCChar fmt;
       CPCChar pNum( StrPastAnyBlanks( inbuf ) );
       if( StrSpnSignedInt( pNum ) ) {
-         width            -= pNum - inbuf;
+         width              -= pNum - inbuf;
          d_boxarg.flMin.col += pNum - inbuf;
          val = atoi( pNum );
          fmt = (pNum[0] == '0') ? "%0*d" : "%*d";
