@@ -241,19 +241,20 @@ boost::string_ref StrSpnSignedInt( boost::string_ref src ) {
    }
 
 bool StrSpnSignedInt( PCChar pszString ) {
-   if( *pszString == '-' || *pszString == '+' )
+   if( *pszString == '-' || *pszString == '+' ) {
       ++pszString;
-
+      }
    return *StrPastAny( pszString, "0123456789" ) == 0;
    }
 
 typedef int (*isfxn)(int);
 
-int consec_is_its( isfxn ifx, PCChar pSt, PCChar eos ) {
+STATIC_FXN int consec_is_its( isfxn ifx, PCChar pSt, PCChar eos ) {
    if( !eos ) eos = Eos( pSt );
-   auto pS(pSt);
+   auto pS( pSt );
    for( ; pS != eos ; ++pS ) {
-      if( !ifx( *pS ) ) break;
+      if( !ifx( *pS ) )
+         break;
       }
    return pS - pSt;
    }
@@ -261,26 +262,18 @@ int consec_is_its( isfxn ifx, PCChar pSt, PCChar eos ) {
 int isxdigit_( int ch ) { return isxdigit( ch ); }
 int isbdigit_( int ch ) { return ch == '0' || ch == '1'; }
 
-int consec_xdigits( PCChar pSt, PCChar eos ) {
-   return consec_is_its( isxdigit_, pSt, eos );
-   }
-
-int consec_bdigits( PCChar pSt, PCChar eos ) {
-   return consec_is_its( isbdigit_, pSt, eos );
-   }
+int consec_xdigits( PCChar pSt, PCChar eos ) { return consec_is_its( isxdigit_, pSt, eos ); }
+int consec_bdigits( PCChar pSt, PCChar eos ) { return consec_is_its( isbdigit_, pSt, eos ); }
 
 // from http://www.stereopsis.com/strcmp4humans.html
-
 STIL int parsedecnum( PCChar & pch ) {
    auto result( *pch - '0' );
    ++pch;
-
    while( isDecDigit(*pch) ) {
       result *= 10;
       result += *pch - '0';
       ++pch;
       }
-
    --pch;
    return result;
    }
@@ -289,7 +282,6 @@ int strcmp4humans( PCChar pA, PCChar pB ) {
    if (pA == pB     ) return  0;
    if (pA == nullptr) return -1;
    if (pB == nullptr) return  1;
-
    for ( ; *pA && *pB ; ++pA, ++pB ) {
       extern char toLower( int ch );
       const auto a0( isDecDigit(*pA) ? parsedecnum(pA) + 256 :  toLower(*pA) );  // will contain either a number or a letter
@@ -297,10 +289,8 @@ int strcmp4humans( PCChar pA, PCChar pB ) {
       if( a0 < b0 ) return -1;
       if( a0 > b0 ) return  1;
       }
-
    if (*pA) return  1;
    if (*pB) return -1;
-
    return 0;
    }
 
@@ -324,23 +314,12 @@ PChar _strlwr( PChar buf ) {
 
 #endif
 
-void string_tolower( Path::str_t &inout ) {
-   std::transform( inout.begin(), inout.end(), inout.begin(), ::tolower );
-   }
-
-boost::string_ref::size_type FirstNonBlankCh( boost::string_ref src ) {
-   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it )
-      if( !isBlank( *it ) )
-         return std::distance( src.cbegin(), it );
-
-   return boost::string_ref::npos;
-   }
-
 bool IsStringBlank( boost::string_ref src ) {
-   for( auto ch : src )
-      if( !isBlank( ch ) )
+   for( auto ch : src ) {
+      if( !isBlank( ch ) ) {
          return false;
-
+         }
+      }
    return true;
    }
 
@@ -376,10 +355,4 @@ boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::str
          }
       }
    return std::distance( src.cbegin(), src.end() );
-   }
-
-void rmv_trail_blanks( std::string &st ) {
-   while( !st.empty() && isBlank( st.back() ) ) {
-      st.pop_back();
-      }
    }

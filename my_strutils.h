@@ -27,12 +27,9 @@
    // #define  vsnprintf  _vsnprintf
 #endif
 
-
 // snprintf_full: use to write multiple formatted strings to a fixed-len buffer
 // without performing repeated strlen's.
 // returns NZ if buffer was partially (including _not_) written, else Z
-//
-
 extern int   snprintf_full( char **ppBuf, size_t *pBufBytesRemaining, PCChar fmt, ... ) ATTR_FORMAT(3, 4);
 
 //--------------------------------------------------------------------------------------------
@@ -44,7 +41,6 @@ const char chQuot2('"' );
 const char chBackTick('`');
 const char chLSQ( '[' );
 const char chRSQ( ']' );
-
 
 enum { MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
        TICK     = 0x27,
@@ -74,11 +70,11 @@ extern   int   StrTruncTrailBlanks( PChar pszString );
 extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
 
-STIL         bool   isBlank(    char ch ) { return ch == HTAB || ch == ' '; }
-STIL         bool   isDecDigit( char ch ) { return ch >= '0'  && ch <= '9'; }
-STIL         bool   StrContainsTabs( PCChar data, int dataBytes )  { return ToBOOL(memchr( data, HTAB, dataBytes  )); }
-STIL         bool   StrContainsTabs( PCChar data, PCChar eos )     { return ToBOOL(memchr( data, HTAB, eos - data )); }
-STIL         bool   StrContainsTabs( boost::string_ref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
+       STIL  bool   isBlank(    char ch ) { return ch == HTAB || ch == ' '; }
+       STIL  bool   isDecDigit( char ch ) { return ch >= '0'  && ch <= '9'; }
+       STIL  bool   StrContainsTabs( PCChar data, int dataBytes )  { return ToBOOL(memchr( data, HTAB, dataBytes  )); }
+       STIL  bool   StrContainsTabs( PCChar data, PCChar eos )     { return ToBOOL(memchr( data, HTAB, eos - data )); }
+       STIL  bool   StrContainsTabs( boost::string_ref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
 TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
@@ -91,9 +87,7 @@ extern int   consec_xdigits( PCChar pSt, PCChar eos=nullptr );
 extern int   consec_bdigits( PCChar pSt, PCChar eos=nullptr );
 
 //--------------------------------------------------------------------------------
-
 // to avoid signed/unsigned mismatch warnings:
-
 #if 0
 STIL   int Strlen( PCChar pS ) { return int( strlen(pS) ); }
 #else
@@ -101,9 +95,8 @@ extern int Strlen( PCChar pS );
 #endif
 //--------------------------------------------------------------------------------
 
-extern PChar GetenvStrdup( PCChar pStart, size_t len );
-
-STIL PChar GetenvStrdup( PCChar pStart, PCChar pPastEnd ) { return GetenvStrdup( pStart, pPastEnd - pStart ); }
+extern PChar GetenvStrdup( PCChar src, size_t len );
+STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, eos - src ); }
 
 //--------------------------------------------------------------------------------
 
@@ -111,19 +104,13 @@ extern int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src, int srcLen );
 
 #define    SafeStrcpy( d, s )  safeStrcpy( BSOB(d), s )
 
-STIL int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src, PCChar pAtSrcTerm ) {
-   return safeStrcpy( dest, sizeofDest, src, pAtSrcTerm - src );
+STIL int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src, PCChar eos ) {
+   return safeStrcpy( dest, sizeofDest, src, eos - src );
    }
 
 STIL int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src ) {
    return safeStrcpy( dest, sizeofDest, src, Strlen( src ) );
    }
-
-// if pWithinDest is within a buffer that can be sizeof()'d, this variant of safeStrcpy can be used in lieu of safeStrcat
-//
-// STIL int safeStrcpy( PChar destbuf, size_t sizeofDestbuf, PChar pWithinDest, PCChar src ) {
-//    return safeStrcpy( pWithinDest, sizeofDestbuf - (pWithinDest - destbuf), src, Strlen( src ) );
-//    }
 
 #define     SafeStrcat( d, s )  safeStrcat( BSOB(d), s )
 
@@ -155,8 +142,6 @@ TF_Ptr STIL Ptr  Eos( Ptr psz ) { return psz + Strlen( psz ); }
 STIL PCChar Strchr( PCChar psz, int ch ) { return       strchr( psz, ch ); }
 STIL PChar  Strchr( PChar  psz, int ch ) { return PChar(strchr( psz, ch )); }
 
-extern void string_tolower( std::string &inout );
-
 #if !defined(_WIN32)
 
 extern  PChar _strupr( PChar buf );
@@ -180,13 +165,11 @@ TF_Ptr STIL Ptr  StrPastAny(     Ptr ps, Ptr eos, PCChar pszToSearchFor ) { retu
 TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr pszToSearch ) { return StrPastAny(     pszToSearch, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, szSpcTab ); }
 
-TF_Ptr STIL Ptr  StrPastAnyBlanks(     Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
+TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
-extern boost::string_ref::size_type FirstNonBlankCh( boost::string_ref src );
-extern boost::string_ref::size_type PastAnyBlanksToEnd( boost::string_ref src, boost::string_ref::size_type start );
-extern boost::string_ref::size_type ToNextBlankOrEnd ( boost::string_ref src, boost::string_ref::size_type start );
-extern void rmv_trail_blanks( std::string &st );
+extern boost::string_ref::size_type PastAnyBlanksToEnd( boost::string_ref src, boost::string_ref::size_type start=0 );
+extern boost::string_ref::size_type ToNextBlankOrEnd ( boost::string_ref src, boost::string_ref::size_type start=0 );
 
 TF_Ptr STIL Ptr  StrToNextWordOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, g_szWordChars ); }
 
@@ -208,10 +191,10 @@ extern boost::string_ref::size_type StrLastWordCh(  boost::string_ref src );
 extern PCChar StrToPrevOrNull_(   PCChar pBuf, PCChar pInBuf, PCChar toMatch );
 extern PCChar StrPastPrevOrNull_( PCChar pBuf, PCChar pInBuf, PCChar toMatch );
 
-TF_Ptr STIL Ptr  StrToPrevOrNull(             Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return const_cast<Ptr>(StrToPrevOrNull_  ( pBuf, pInBuf, toMatch )); }
-TF_Ptr STIL Ptr  StrPastPrevOrNull(           Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return const_cast<Ptr>(StrPastPrevOrNull_( pBuf, pInBuf, toMatch )); }
+TF_Ptr STIL Ptr  StrToPrevOrNull(        Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return const_cast<Ptr>(StrToPrevOrNull_  ( pBuf, pInBuf, toMatch )); }
+TF_Ptr STIL Ptr  StrPastPrevOrNull(      Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return const_cast<Ptr>(StrPastPrevOrNull_( pBuf, pInBuf, toMatch )); }
 
-TF_Ptr STIL Ptr  StrPastPrevWordOrNull(       Ptr pBuf, Ptr pInBuf ) { return StrPastPrevOrNull( pBuf, pInBuf, g_szWordChars ); }
+TF_Ptr STIL Ptr  StrPastPrevWordOrNull(  Ptr pBuf, Ptr pInBuf ) { return StrPastPrevOrNull( pBuf, pInBuf, g_szWordChars ); }
 TF_Ptr STIL Ptr  StrToPrevBlankOrNull(   Ptr pBuf, Ptr pInBuf ) { return StrToPrevOrNull  ( pBuf, pInBuf, szSpcTab      ); }
 TF_Ptr STIL Ptr  StrPastPrevBlankOrNull( Ptr pBuf, Ptr pInBuf ) { return StrPastPrevOrNull( pBuf, pInBuf, szSpcTab      ); }
 
@@ -223,6 +206,14 @@ TF_Ptr STIL Ptr DquotStrToNextOrEos( Ptr  pszToSearch, PCChar pszToSearchFor ) {
 
 TF_Ptr STIL Ptr StrToNextMacroTermOrEos( Ptr pszToSearch ) { return DquotStrToNextOrEos( pszToSearch, szMacroTerminators ); }
 
+template<typename strlval> void string_tolower( strlval &inout ) { std::transform( inout.begin(), inout.end(), inout.begin(), ::tolower ); }
+
+template<typename strlval>
+void rmv_trail_blanks( strlval &inout ) {
+   while( !inout.empty() && isBlank( inout.back() ) ) {
+      inout.pop_back();
+      }
+   }
 
 //#######################################################################################
 
