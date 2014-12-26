@@ -1483,7 +1483,8 @@ boost::string_ref::size_type CaptiveIdxOfCol( COL tabWidth, boost::string_ref co
 STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
    const boost::string_ref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
-      printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
+      const auto rv( CaptiveIdxOfCol( tw, bbb, ix ) );
+      printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, rv );
       }
    printf( "\n" );
    }

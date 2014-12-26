@@ -515,7 +515,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
       const auto nonb( PastAnyBlanksToEnd( rl, 0 ) );
             // 20141223 KG I give up! Cannot get this to stop warning w/o causing printf in
             //   sweep_CaptiveIdxOfCol to warn (both are warning on reval of SAME FUNCTION!!!)
-            // 0 && DBG( "nonb=%" PR_BSRSIZET "u maxIx=%" PR_BSRSIZET "u", nonb, maxIx );
+            0 && DBG( "nonb=%" PR_BSRSIZET "u maxIx=%" PR_BSRSIZET "u", nonb, maxIx );
       if( nonb < maxIx ) {
          rl.remove_suffix( rl.length() - maxIx );
          rl.remove_prefix( nonb );
@@ -1170,9 +1170,7 @@ bool ARG::lasttext() {
                       cArg = d_cArg;
                       break;
 
-      case STREAMARG: TextArgBuffer() = g_CurFBuf()->GetLineSeg( d_streamarg.flMin.lin, d_streamarg.flMin.col
-                         , d_streamarg.flMin.lin == d_streamarg.flMax.lin ? d_streamarg.flMax.col-1 : COL_MAX
-                         );
+      case STREAMARG: TextArgBuffer() = StreamArgToString( g_CurFBuf(), d_streamarg );
                       cArg = d_cArg;
                       break;
 
