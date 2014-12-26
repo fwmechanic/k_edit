@@ -42,7 +42,6 @@
 
     #else
         // #   define ENVIRONMENT32
-# error
         #   define PR_BSRSIZET ""
         #   define PR_SIZET ""
         #   define PR_PTRDIFFT ""
