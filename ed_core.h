@@ -301,13 +301,13 @@ class Xbuf {
           }
 
 public:
-   PChar                  wbuf()      const { return d_buf;       }
-   PCChar                 c_str()     const { return d_buf;       }
-   size_t                 buf_bytes() const { return d_buf_bytes; }
-   void                   clear()           { poke( 0, '\0' );    }
-   bool                   is_clear()  const
-                                            { return !(         d_buf[0]); }
-   boost::string_ref      bsr() { return boost::string_ref( c_str(), length() ); }
+   PChar    wbuf()      const { return d_buf;       }
+   PCChar   c_str()     const { return d_buf;       }
+   size_t   buf_bytes() const { return d_buf_bytes; }
+   void     clear()           { poke( 0, '\0' );    }
+   bool     is_clear()  const { return !(         d_buf[0]); }
+
+   stref    bsr() { return stref( c_str(), length() ); }
 
    PChar wresize( size_t size ) {
       if( d_buf_bytes < size ) {
@@ -1077,8 +1077,8 @@ enum Eol_t { EolLF, EolCRLF };
 extern const Eol_t platform_eol;
 extern PCChar EolName( Eol_t );
 
-STIL boost::string_ref se2bsr( PCChar bos, PCChar eos ) { return boost::string_ref( bos, eos - bos ); }
-STIL boost::string_ref se2bsr( const std::string &str ) { return boost::string_ref( str ); }
+STIL stref se2bsr( PCChar bos, PCChar eos ) { return stref( bos, eos - bos ); }
+STIL stref se2bsr( const std::string &str ) { return stref( str ); }
 
 class FBUF { // FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
 
@@ -1466,15 +1466,15 @@ public:
 
    bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, size_t *pChars ) const; // returns RAW line content BY REFERENCE
    bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos  ) const; // returns RAW line content BY REFERENCE
-   boost::string_ref PeekRawLine( LINE lineNum ) const; // returns RAW line content BY REFERENCE
+   stref          PeekRawLine( LINE lineNum ) const; // returns RAW line content BY REFERENCE
 
    //************ PutLine
 public:
-   void           PutLine( LINE yLine, boost::string_ref srSrc, PXbuf pXb=nullptr ); // WITH UNDO
+   void           PutLine( LINE yLine, const stref &srSrc, PXbuf pXb=nullptr ); // WITH UNDO
    void           PutLine( LINE yLine, CPCChar pa[], int elems );
 
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
-   void           InsLine( LINE yLine, boost::string_ref srSrc, PXbuf pXb=nullptr )  // WITH UNDO
+   void           InsLine( LINE yLine, const stref &srSrc, PXbuf pXb=nullptr )  // WITH UNDO
                      {
                      InsBlankLinesBefore( yLine );
                      PutLine( yLine, srSrc, pXb );
@@ -1547,27 +1547,29 @@ STIL   PCChar  PtrOfColWithinStringRegion( COL tabWidth, PCChar pS, PCChar pEos,
 extern PChar   PtrOfColWithinStringRegionNoEos( COL tabWidth, PChar  pS, PChar  pEos, COL xCol );
 STIL   PCChar  PtrOfColWithinStringRegionNoEos( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfColWithinStringRegionNoEos( tabWidth, PChar(pS), PChar(pEos), xCol ); }
 
-extern boost::string_ref::size_type FreeIdxOfCol   ( COL tabWidth, boost::string_ref content, const COL colTgt );
-extern boost::string_ref::size_type CaptiveIdxOfCol( COL tabWidth, boost::string_ref content, const COL colTgt );
-extern COL     ColOfPtr                       ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
-extern COL     ColOfFreeIdx                   ( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset );
+extern sridx FreeIdxOfCol   ( COL tabWidth, const stref &content, const COL colTgt );
+extern sridx CaptiveIdxOfCol( COL tabWidth, const stref &content, const COL colTgt );
+extern COL     ColOfPtr     ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
+extern COL     ColOfFreeIdx ( COL tabWidth, const stref &content, sridx offset );
 
 struct rlc1 {
-   boost::string_ref            ln;
-   boost::string_ref::size_type ix0;
+   stref ln;
+   sridx ix0;
    rlc1( PFBUF pfb, LINE yy, COL x0 )
       : ln( pfb->PeekRawLine( yy ) )
       , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, x0 ) )
       {}
    bool beyond()                                  const { return ix0 >= ln.length(); }
-   bool beyond( boost::string_ref::size_type ix ) const { return ix  >= ln.length(); }
+   bool beyond( sridx ix ) const { return ix  >= ln.length(); }
    char ch0() const { return ln[ix0]; }
    };
 
+extern sridx2 CaptiveIdxOfCols( COL tabWidth, const stref &content, COL x0, COL x1 );
+
 struct rlc2 {
-   boost::string_ref            ln;
-   boost::string_ref::size_type ix0;
-   boost::string_ref::size_type ix1;
+   stref ln;
+   sridx ix0;
+   sridx ix1;
    rlc2( const std::string &st, COL x0, COL x1 ) // middle() ASSUMES x0 <= x1 !!!
       : ln( st )
       , ix0( CaptiveIdxOfCol( 1, ln, x0 ) )
@@ -1579,8 +1581,8 @@ struct rlc2 {
       , ix1( CaptiveIdxOfCol( pfb->TabWidth(), ln, x1 ) )
       {}
    bool beyond()                                  const { return ix0 >= ln.length(); }
-   bool beyond( boost::string_ref::size_type ix ) const { return ix  >= ln.length(); }
-   boost::string_ref middle() const { return ln.substr( ix0, ix1-ix0 ); }
+   bool beyond( sridx ix ) const { return ix  >= ln.length(); }
+   stref middle() const { return ln.substr( ix0, ix1-ix0 ); }
    };
 
 //************ tabWidth-dependent string fxns
@@ -1589,10 +1591,10 @@ extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
 extern COL     StrCols(        COL tabWidth, PCChar ptr, PCChar eos=nullptr );
 
-extern void        FormatExpandedSeg ( std::string &dest, boost::string_ref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
-extern std::string FormatExpandedSeg (                    boost::string_ref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
-extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, boost::string_ref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
-extern COL     PrettifyStrcpy( PChar pDestBuf, size_t sizeof_dest, boost::string_ref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
+extern void        FormatExpandedSeg ( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
+extern std::string FormatExpandedSeg (                    stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
+extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
+extern COL     PrettifyStrcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
 
 namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Prefer non-member non-friend functions to member functions."
 

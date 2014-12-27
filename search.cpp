@@ -967,7 +967,7 @@ STATIC_FXN bool SetNewSearchSpecifierOK( PCChar rawStr, PCChar eos, bool fRegex 
                ;
    }
 
-STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, boost::string_ref str ) { // deletes all duplicates of the inserted line
+STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all duplicates of the inserted line
    for( auto ln(0); ln < pFbuf->LineCount(); ++ln ) {
       const auto rl( pFbuf->PeekRawLine( ln ) );
       if( rl == str ) { // loop across all needles in [d_searchKey .. d_searchKey + d_searchKeyStrlen - 1]
@@ -981,11 +981,11 @@ STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, boost::string_ref str ) { // del
 
 GLOBAL_VAR PFBUF g_pFBufTextargStack;
 
-void AddToTextargStack( boost::string_ref str ) { // 0 && DBG( "%s: '%s'", __func__, str );
+void AddToTextargStack( stref str ) { // 0 && DBG( "%s: '%s'", __func__, str );
    AddLineToLogStack( g_pFBufTextargStack, str );
    }
 
-void AddToSearchLog( boost::string_ref str ) {  // *** CALLED BY LUA Libfunc
+void AddToSearchLog( stref str ) {  // *** CALLED BY LUA Libfunc
    AddLineToLogStack( g_pFBufSearchLog, str );
    }
 
@@ -2433,8 +2433,8 @@ char toLower( int ch ) {
 
 //--------------------------------------------------------------
 
-STATIC_FXN boost::string_ref::size_type strnstr( boost::string_ref haystack, boost::string_ref needle ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
-   if( needle.length() > haystack.length() ) return boost::string_ref::npos;
+STATIC_FXN sridx strnstr( stref haystack, stref needle ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
+   if( needle.length() > haystack.length() ) return stref::npos;
    const auto cend( haystack.cend() - needle.length() );
    for( auto hit( haystack.cbegin() ) ; hit != cend ; ++hit ) {
       if( *hit == needle[0] ) {
@@ -2447,7 +2447,7 @@ STATIC_FXN boost::string_ref::size_type strnstr( boost::string_ref haystack, boo
             } while( *pH == *pN );
          }
       }
-   return boost::string_ref::npos;
+   return stref::npos;
    }
 
 STATIC_FXN PCChar strnstri( PCChar haystack, int haystackLen, PCChar needle, int needleLen ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!

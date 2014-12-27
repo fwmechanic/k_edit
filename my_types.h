@@ -62,6 +62,14 @@
 #include <boost/version.hpp>
 #include <boost/utility/string_ref.hpp>
 
+typedef boost::string_ref stref;
+typedef stref::size_type  sridx; // a.k.a. boost::string_ref::size_type
+
+struct sridx2 {
+   sridx ix0;
+   sridx ix1;
+   };
+
 // we sometimes need to "printf" (DBG) boost::string_ref referents
 // unfortunately static_cast<int> of size_t seems unavoidable per
 // http://stackoverflow.com/questions/19145951/printf-variable-string-length-specifier

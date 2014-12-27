@@ -441,7 +441,7 @@ private:
    PCChar AddKey( PCChar key, PCChar eos=nullptr ) { return d_sb.AddString( key, eos ); }
    PCChar Strings()                                { return d_sb.Strings()            ; }
 
-   void   SetNewWuc( boost::string_ref src, LINE lin, COL col );
+   void   SetNewWuc( stref src, LINE lin, COL col );
 
    std::string  d_stCandidate;
    std::string  d_stSel;    // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
@@ -451,7 +451,7 @@ private:
    COL          d_xWuc;
    };
 
-void HiliteAddin_WordUnderCursor::SetNewWuc( boost::string_ref src, LINE lin, COL col ) {
+void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
    enum { DBG_HL_EVENT=0 };
    d_stSel.clear();
    if(   d_yWuc == lin
@@ -519,7 +519,7 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( boost::string_ref src, LINE lin, CO
 
 GLOBAL_VAR int g_iWucMinLen = 2;
 
-boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
+stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto yCursor( cursor->lin );
    const auto xCursor( cursor->col );
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
@@ -528,10 +528,10 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
       const auto xEos( ColOfFreeIdx( tw, rl, rl.length() ) );             // abc   abc
       if( xCursor < xEos ) {
          const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
-         if( ixC != boost::string_ref::npos && isWordChar( rl[ixC] ) ) {
+         if( ixC != stref::npos && isWordChar( rl[ixC] ) ) {
             const auto ixFirst    ( IdxFirstWordCh   ( rl, ixC ) );
             const auto ixPastLast ( FirstNonWordOrEnd( rl, ixC ) );           0 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
-            // if( ixFirst != boost::string_ref::npos && ixPastLast != boost::string_ref::npos )
+            // if( ixFirst != stref::npos && ixPastLast != stref::npos )
                {
                const auto xMin( ColOfFreeIdx( tw, rl, ixFirst  ) );
                const auto xMax( ColOfFreeIdx( tw, rl, ixPastLast-1 ) );      0 && DBG( "x[%d..%d]", xMin, xMax );
@@ -542,7 +542,7 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
 
                // return everything
                cursor->col = xMin;
-               return boost::string_ref( rl.data() + ixFirst, wordChars );
+               return stref( rl.data() + ixFirst, wordChars );
                }
             }
          }
@@ -586,20 +586,20 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
       if( keyStart ) {
          const auto tw( fb->TabWidth() );
          for( size_t ofs( 0 ) ; ofs < rl.length() ; ) {
-            auto ixBest( boost::string_ref::npos ); int mlen;
+            auto ixBest( stref::npos ); int mlen;
             auto haystack( rl ); haystack.remove_prefix( ofs );
             for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
-               const boost::string_ref needle( pNeedle );
+               const stref needle( pNeedle );
                auto ixFind( haystack.find( needle ) );
-               if( ixFind != boost::string_ref::npos ) {
+               if( ixFind != stref::npos ) {
                   ixFind += ofs;
-                  if( ixBest == boost::string_ref::npos || ixFind < ixBest ) {
+                  if( ixBest == stref::npos || ixFind < ixBest ) {
                      ixBest = ixFind; mlen = needle.length();
                      }
                   }
                pNeedle += needle.length() + 1;
                }
-            if( ixBest == boost::string_ref::npos ) break;
+            if( ixBest == stref::npos ) break;
             const auto xFound( ColOfFreeIdx( tw, rl, ixBest ) );
             if(   -1 == d_yWuc // is a selection pseudo-WUC?
                || // or a true WUC
@@ -617,12 +617,12 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    }
 
 
-STATIC_FXN cppc IsCppConditional( boost::string_ref src, int *pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
+STATIC_FXN cppc IsCppConditional( stref src, int *pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
    const auto o1( FirstNonBlankOrEnd( src, 0      ) );  if( o1 >= src.length() || !('#' == src[o1] || '%' == src[o1] || '!' == src[o1]) ) return cppcNone;
    const auto o2( FirstNonBlankOrEnd( src, o1 + 1 ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
    const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
    STATIC_CONST struct {
-      boost::string_ref nm;
+      stref nm;
       cppc              val;
       } cpp_conds[] = { // !!! must be sorted by increasing nm.length()
          { "if"      , cppcIf   },
@@ -886,7 +886,7 @@ class HiliteAddin_EolComment : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
 
    std::string       d_eolCommentDelim;
-   boost::string_ref d_eolCommentDelimWOTrailSpcs;
+   stref d_eolCommentDelimWOTrailSpcs;
 
 public:
    HiliteAddin_EolComment( PView pView )
@@ -905,7 +905,7 @@ public:
       for( auto it( d_eolCommentDelim.crbegin() ) ; it != d_eolCommentDelim.crend() && *it == ' ' ; ++it ) {
          ++trailSpcs;
          }
-      if( trailSpcs ) { d_eolCommentDelimWOTrailSpcs = boost::string_ref( d_eolCommentDelim.data(), d_eolCommentDelim.length() - trailSpcs ); }
+      if( trailSpcs ) { d_eolCommentDelimWOTrailSpcs = stref( d_eolCommentDelim.data(), d_eolCommentDelim.length() - trailSpcs ); }
       }
    ~HiliteAddin_EolComment() {}
    PCChar Name() const override { return "EolComment"; }
@@ -921,12 +921,12 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
 
       const auto eos( rl.data() + rl.length() );
       auto ixTgt = rl.find( d_eolCommentDelim );
-      if( ixTgt == boost::string_ref::npos && !d_eolCommentDelimWOTrailSpcs.empty() ) {
+      if( ixTgt == stref::npos && !d_eolCommentDelimWOTrailSpcs.empty() ) {
          if( 0 == memcmp( eos-d_eolCommentDelimWOTrailSpcs.length(), d_eolCommentDelimWOTrailSpcs.data(), d_eolCommentDelimWOTrailSpcs.length() ) ) {
             ixTgt = (eos-d_eolCommentDelimWOTrailSpcs.length()) - rl.data();
             }
          }
-      if( ixTgt != boost::string_ref::npos ) {
+      if( ixTgt != stref::npos ) {
          const auto tw( CFBuf()->TabWidth() );
          const auto xC  ( ColOfFreeIdx( tw, rl, ixTgt                        ) );
          const auto xPWS( ColOfFreeIdx( tw, rl, rl.find_last_not_of( " \t" ) ) );

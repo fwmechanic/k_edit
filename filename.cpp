@@ -6,9 +6,9 @@
 
 #include "ed_main.h"
 
-STATIC_FXN boost::string_ref::size_type DirnmLen( boost::string_ref pPath ) { // a.k.a. IdxOfFnm()
+STATIC_FXN sridx DirnmLen( stref pPath ) { // a.k.a. IdxOfFnm()
    const auto rv( pPath.find_last_of( PATH_SEP_SRCH_STR ":" ) );
-   if( boost::string_ref::npos == rv ) {
+   if( stref::npos == rv ) {
       return 0;
       }
    else {
@@ -16,55 +16,55 @@ STATIC_FXN boost::string_ref::size_type DirnmLen( boost::string_ref pPath ) { //
       }
    }
 
-boost::string_ref Path::RefDirnm( boost::string_ref src ) {
+stref Path::RefDirnm( stref src ) {
    return src.substr( 0, DirnmLen( src ) );
    }
 
-Path::str_t Path::CpyDirnm( boost::string_ref src ) {
+Path::str_t Path::CpyDirnm( stref src ) {
    const auto rv( Path::RefDirnm( src ) );
    return Path::str_t( rv.data(), rv.length() );
    }
 
-boost::string_ref Path::RefFnameExt( boost::string_ref src ) {
+stref Path::RefFnameExt( stref src ) {
    return src.substr( DirnmLen( src ) );
    }
 
-Path::str_t Path::CpyFnameExt( boost::string_ref src ) {
+Path::str_t Path::CpyFnameExt( stref src ) {
    const auto rv( Path::RefFnameExt( src ) );
    return Path::str_t( rv.data(), rv.length() );
    }
 
-boost::string_ref Path::RefFnm( boost::string_ref src ) { // a.k.a. IdxOfFnm()
+stref Path::RefFnm( stref src ) { // a.k.a. IdxOfFnm()
    auto fx( Path::RefFnameExt( src ) );
    const auto idxDot( fx.find_last_of( '.' ) );
-   if( idxDot == boost::string_ref::npos || idxDot == 0 ) {
+   if( idxDot == stref::npos || idxDot == 0 ) {
       return fx;
       }
    return fx.substr( 0, idxDot );
    }
 
-Path::str_t Path::CpyFnm( boost::string_ref src ) { // DOES NOT include the trailing "." !!!
+Path::str_t Path::CpyFnm( stref src ) { // DOES NOT include the trailing "." !!!
    const auto rv( Path::RefFnm( src ) );
    Path::str_t rv_( rv.data(), rv.length() );           // 0 && DBG( "%s: '%s'->'%s'", __func__, src, rv_.c_str() );
    return rv_;
    }
 
-boost::string_ref Path::RefExt( boost::string_ref src ) { // a.k.a. IdxOfFnm()
+stref Path::RefExt( stref src ) { // a.k.a. IdxOfFnm()
    auto fx( Path::RefFnameExt( src ) );
    const auto idxDot( fx.find_last_of( '.' ) );
-   if( idxDot == boost::string_ref::npos || idxDot == 0 ) {
-      return boost::string_ref( "", 0 );
+   if( idxDot == stref::npos || idxDot == 0 ) {
+      return stref( "", 0 );
       }
    return fx.substr( idxDot );
    }
 
-Path::str_t Path::CpyExt( boost::string_ref src ) { // if src contains an extension, prepends a leading "."
+Path::str_t Path::CpyExt( stref src ) { // if src contains an extension, prepends a leading "."
    const auto rv( Path::RefExt( src ) );
    Path::str_t rv_( rv.data(), rv.length() );           // 0 && DBG( "%s: '%s'->'%s'", __func__, src, rv_.c_str() );
    return rv_;
    }
 
-bool Path::IsDotOrDotDot( boost::string_ref str ) {
+bool Path::IsDotOrDotDot( stref str ) {
    return str ==                      "."
        || str ==                      ".."
        || str.ends_with( PATH_SEP_STR "."               )
@@ -74,7 +74,7 @@ bool Path::IsDotOrDotDot( boost::string_ref str ) {
        ;
    }
 
-bool Path::eq( boost::string_ref name1, boost::string_ref name2 ) {
+bool Path::eq( stref name1, stref name2 ) {
    if( name1.length() != name2.length() ) {
       return false;
       }
@@ -86,7 +86,7 @@ bool Path::eq( boost::string_ref name1, boost::string_ref name2 ) {
    return true;
    }
 
-Path::str_t::size_type Path::CommonPrefixLen( boost::string_ref s1, boost::string_ref s2 ) {
+Path::str_t::size_type Path::CommonPrefixLen( stref s1, stref s2 ) {
    typedef Path::str_t::size_type s_t;
    const s_t past_end_ix( Min( s1.length(), s2.length() ) );
    s_t oPathSep( 0 );
@@ -99,13 +99,13 @@ Path::str_t::size_type Path::CommonPrefixLen( boost::string_ref s1, boost::strin
 
 //----------------
 
-Path::str_t Path::Union( boost::string_ref s1, boost::string_ref s2 ) { enum { DB=0 };
+Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
    // dest = (Path::CpyDirnm( s1 ) || Path::CpyDirnm( s2 ))
    //      + (Path::CpyFnm  ( s1 ) || Path::CpyFnm  ( s2 ))
    //      + (Path::CpyExt  ( s1 ) || Path::CpyExt  ( s2 ))
    auto dir( Path::RefDirnm( s1 ) ); if( dir.empty() )  dir = Path::RefDirnm( s2 );  // DB && DBG( "RExt:dir '%s'", dir.c_str() );
    auto fnm( Path::RefFnm  ( s1 ) ); if( fnm.empty() )  fnm = Path::RefFnm  ( s2 );  // DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
-   boost::string_ref ext;
+   stref ext;
    if( !Path::IsDotOrDotDot( fnm ) ) {
       ext =  Path::RefExt  ( s1 )  ; if( ext.empty() )  ext = Path::RefExt  ( s2 );  // DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
       }

@@ -5,7 +5,7 @@
 #include "ed_main.h"
 #include "stringlist.h"
 
-StringListEl *NewStringListEl( boost::string_ref src ) {
+StringListEl *NewStringListEl( stref src ) {
    const auto sbytes( src.length() + 1 );
    StringListEl *rv;
    AllocBytesNZ( rv, sizeof( *rv ) + sbytes, __func__ );
@@ -15,7 +15,7 @@ StringListEl *NewStringListEl( boost::string_ref src ) {
    return rv;
    }
 
-void InsStringListEl( StringListHead &slhd, boost::string_ref src ) { 0 && DBG("%s: %" PR_BSR, __func__, BSR(src) );
+void InsStringListEl( StringListHead &slhd, stref src ) { 0 && DBG("%s: %" PR_BSR, __func__, BSR(src) );
    auto pIns( NewStringListEl( src ) );
    DLINK_INSERT_LAST( slhd, pIns, dlink );
    }

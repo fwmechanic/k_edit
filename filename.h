@@ -37,22 +37,22 @@ namespace Path {
    PCChar STIL  WildcardFnmChars()    { return "*?"; }
    PCChar STIL  EnvSepStr()           { return ";"; }
    extern bool  IsLegalFnm  ( PCChar name );
-   extern bool  IsDotOrDotDot( boost::string_ref str );
+   extern bool  IsDotOrDotDot( stref str );
 
    extern bool  SetCwdOk        ( PCChar dnm );
    extern str_t GetCwd    ();
    extern str_t GetCwd_ps (); // w/trailing pathsep to make it comparable with CpyDirnm() retval
 
-   extern boost::string_ref RefDirnm(    boost::string_ref src );
-   extern boost::string_ref RefFnm(      boost::string_ref src );
-   extern boost::string_ref RefExt(      boost::string_ref src );
-   extern boost::string_ref RefFnameExt( boost::string_ref src );
+   extern stref RefDirnm(    stref src );
+   extern stref RefFnm(      stref src );
+   extern stref RefExt(      stref src );
+   extern stref RefFnameExt( stref src );
 
-   extern str_t CpyDirnm   ( boost::string_ref src );
-   extern str_t CpyFnm     ( boost::string_ref src );
-   extern str_t CpyExt     ( boost::string_ref src );
-   extern str_t CpyFnameExt( boost::string_ref src );
-   extern str_t Union      ( boost::string_ref s1, boost::string_ref s2 );
+   extern str_t CpyDirnm   ( stref src );
+   extern str_t CpyFnm     ( stref src );
+   extern str_t CpyExt     ( stref src );
+   extern str_t CpyFnameExt( stref src );
+   extern str_t Union      ( stref s1, stref s2 );
    extern str_t Absolutize   ( PCChar pszFilename );
 #if defined(_WIN32)
    extern str_t CanonizeCase ( PCChar fnmBuf );
@@ -66,8 +66,8 @@ namespace Path {
       return          ( c1 ) ==          ( c2 );
 #endif
       }
-   extern bool eq( boost::string_ref name1, boost::string_ref name2 ); // with appropriate case-sensitivity
-   str_t::size_type CommonPrefixLen( boost::string_ref s1, boost::string_ref s2 );
+   extern bool eq( stref name1, stref name2 ); // with appropriate case-sensitivity
+   str_t::size_type CommonPrefixLen( stref s1, stref s2 );
 
    extern char  DelimChar( PCChar fnm );
    };

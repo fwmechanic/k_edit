@@ -72,7 +72,7 @@ extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
 extern bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars );
 
 extern   int   StrToInt_variable_base( PCChar pszNumericString, int numberBase );
-extern   boost::string_ref  StrSpnSignedInt( boost::string_ref src );
+extern   stref  StrSpnSignedInt( stref src );
 extern   bool  StrSpnSignedInt( PCChar pszString );
 extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
@@ -89,14 +89,14 @@ extern   void  StrUnDoubleBackslashes( PChar pszString );
        STIL  bool   isDecDigit( char ch ) { return ch >= '0'  && ch <= '9'; }
 
        STIL  bool   StrContainsTabs( PCChar data, int dataBytes )  { return ToBOOL(memchr( data, HTAB, dataBytes  )); }
-       STIL  bool   StrContainsTabs( boost::string_ref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
+       STIL  bool   StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
 // TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
 
-extern bool  eqi( boost::string_ref s1, boost::string_ref s2 );
+extern bool  eqi( stref s1, stref s2 );
 extern char  toLower(     int ch );
-extern bool  IsStringBlank( boost::string_ref src );
+extern bool  IsStringBlank( stref src );
 
 extern int   consec_xdigits( PCChar pSt, PCChar eos=nullptr );
 extern int   consec_bdigits( PCChar pSt, PCChar eos=nullptr );
@@ -191,12 +191,12 @@ STIL   PChar  StrPastWord(  PChar  pszToSearch ) { return PChar(StrPastWord( PCC
 extern PCChar StrPastWord(  PCChar pszToSearch, PCChar eos );
 STIL   PChar  StrPastWord(  PChar  pszToSearch, PChar  eos ) { return PChar(StrPastWord( PCChar(pszToSearch), PCChar(eos) )); }
 
-extern boost::string_ref::size_type FirstNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 );
-extern boost::string_ref::size_type FirstBlankOrEnd   ( boost::string_ref src, boost::string_ref::size_type start=0 );
+extern sridx FirstNonBlankOrEnd( stref src, sridx start=0 );
+extern sridx FirstBlankOrEnd   ( stref src, sridx start=0 );
 
-extern boost::string_ref::size_type FirstNonWordOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 );
-extern boost::string_ref::size_type IdxFirstWordCh( boost::string_ref src, boost::string_ref::size_type start );
-extern boost::string_ref::size_type StrLastWordCh(  boost::string_ref src );
+extern sridx FirstNonWordOrEnd( stref src, sridx start=0 );
+extern sridx IdxFirstWordCh( stref src, sridx start );
+extern sridx StrLastWordCh(  stref src );
 
 //-----------------
 
@@ -227,7 +227,7 @@ void rmv_trail_blanks( strlval &inout ) {
       }
    }
 
-static boost::string_ref::size_type FirstAlphaOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 ) {
+static sridx FirstAlphaOrEnd( stref src, sridx start=0 ) {
    return ToNextOrEnd( isalpha, src, start );
    }
 

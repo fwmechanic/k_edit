@@ -5,7 +5,7 @@
 #include "ed_main.h"
 
 
-boost::string_ref::size_type first_alpha( boost::string_ref src, boost::string_ref::size_type start ) {
+sridx first_alpha( stref src, sridx start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
          if( !isalpha( *it ) ) {

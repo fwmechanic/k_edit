@@ -477,7 +477,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
    if( stream.flMin.lin > yMax ) {
       return dest;
       }
-   auto append_dest = [&dest]( boost::string_ref src ) {
+   auto append_dest = [&dest]( stref src ) {
       src.remove_prefix( FirstNonBlankOrEnd( src, 0 ) );
       if( !src.empty() ) {
          if( !dest.empty() ) { dest += ' '; }

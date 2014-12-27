@@ -368,8 +368,8 @@ extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
 
 //------------ Pseudofile writers
 
-extern   void  AddToTextargStack( boost::string_ref str );
-extern   void  AddToSearchLog   ( boost::string_ref str );
+extern   void  AddToTextargStack( stref str );
+extern   void  AddToSearchLog   ( stref str );
 
 //------------ Editor startup and shutdown
 
@@ -382,7 +382,7 @@ extern   void  EditorExit( int processExitCode, bool fWriteStateFile );
 
 extern  PChar  RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext );
 extern   bool  LoadRsrcSectionFound( PCChar pszSectionName, int *pAssignCountAccumulator );
-extern boost::string_ref IsolateTagStr( boost::string_ref src );
+extern stref IsolateTagStr( stref src );
 extern   bool  LoadFileExtRsrcIniSection( PCChar pszSectionName );
 extern PCChar  LastExtTagLoaded();
 
@@ -406,7 +406,7 @@ extern  void   SetCwdChanged( PCChar newName );
 
 extern  bool   MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );
 
-extern  boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
+extern  stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
 
 
 //#####################  functionality implemented in  Lua  #####################

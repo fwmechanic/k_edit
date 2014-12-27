@@ -15,8 +15,8 @@ struct StringListEl {
 
 typedef  DLinkHead<StringListEl> StringListHead;
 
-extern StringListEl *NewStringListEl( boost::string_ref src );
-extern void          InsStringListEl( StringListHead &slhd, boost::string_ref src );
+extern StringListEl *NewStringListEl( stref src );
+extern void          InsStringListEl( StringListHead &slhd, stref src );
 extern void          DeleteStringList( StringListHead &slhd );
 
 #define  FreeStringListEl( pSLE )  Free0( pSLE )
@@ -27,7 +27,7 @@ struct StringList {
    StringList( PCChar str ) { InsStringListEl( d_head, str ); }
    void clear() { DeleteStringList( d_head ); }
    ~StringList() { clear(); }
-   void push_front( boost::string_ref src ) { InsStringListEl( d_head, src ); }
+   void push_front( stref src ) { InsStringListEl( d_head, src ); }
    unsigned length() const { return d_head.length(); }
    StringListHead &Head() { return d_head; }
    bool empty() const { return d_head.empty(); }

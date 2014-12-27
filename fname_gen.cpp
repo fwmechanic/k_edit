@@ -404,7 +404,7 @@ bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
    return true;
    }
 
-void DirListGenerator::AddName( boost::string_ref name ) {
+void DirListGenerator::AddName( stref name ) {
    InsStringListEl( d_input , name );
    InsStringListEl( d_output, name );
    }

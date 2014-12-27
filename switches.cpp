@@ -136,7 +136,7 @@ bool isWordChar( char ch ) {
    return s_isWordChar_[static_cast<unsigned>(ch)];
    }
 
-boost::string_ref::size_type FirstNonWordOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+sridx FirstNonWordOrEnd( stref src, sridx start ) {
    return ToNextOrEnd( notWordChar, src, start );
    }
 
@@ -152,15 +152,15 @@ PCChar StrPastWord( PCChar pszToSearch, PCChar eos ) {
    return pszToSearch;
    }
 
-boost::string_ref::size_type IdxFirstWordCh( boost::string_ref src, boost::string_ref::size_type start ) {
-   if( start >= src.length() ) return boost::string_ref::npos;
+sridx IdxFirstWordCh( stref src, sridx start ) {
+   if( start >= src.length() ) return stref::npos;
    for( auto it( src.crbegin() + (src.length() - start - 1) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
       if( !isWordChar(*it) )  { return src.length() - std::distance( src.crbegin(), it ); }
       }
    return 0;
    }
 
-boost::string_ref::size_type StrLastWordCh( boost::string_ref src ) {
+sridx StrLastWordCh( stref src ) {
    for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
       if( !isWordChar(*it) )  { return std::distance( src.cbegin(), it ) - 1; }
       }

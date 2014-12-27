@@ -517,27 +517,27 @@ STATIC_FXN bool OpenRsrcFileFailed() {
    }
 
 
-boost::string_ref IsolateTagStr( boost::string_ref src ) {
+stref IsolateTagStr( stref src ) {
    const auto ixLSQ( src.find_first_not_of( "\t " ) );
-   if( boost::string_ref::npos==ixLSQ || src[ixLSQ] != '[' )
-      return boost::string_ref("");
+   if( stref::npos==ixLSQ || src[ixLSQ] != '[' )
+      return stref("");
 
    src.remove_prefix( ixLSQ+1 );
    const auto ixRSQ( src.find( ']' ) );
-   if( boost::string_ref::npos==ixRSQ )
-      return boost::string_ref("");
+   if( stref::npos==ixRSQ )
+      return stref("");
 
    return src.substr( 0, ixRSQ );
    }
 
 STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) {
    0 && DBG( "FindRsrcTag: '%s'", pszSectionName );
-   boost::string_ref srKey( pszSectionName );
+   stref srKey( pszSectionName );
    for( auto yLine(startLine) ; yLine <= pFBuf->LastLine(); ++yLine ) {
       const auto rl( pFBuf->PeekRawLine( yLine ) );
-      const boost::string_ref tag( IsolateTagStr( rl ) );
+      const stref tag( IsolateTagStr( rl ) );
       if( !tag.empty() ) { 0 && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
-         for( boost::string_ref::size_type ix( 0 ); ix < tag.length() ; ) {
+         for( sridx ix( 0 ); ix < tag.length() ; ) {
             const auto ix0( FirstNonBlankOrEnd( tag, ix  ) );
             const auto ix1( FirstBlankOrEnd   ( tag, ix0 ) );
             const auto taglen( ix1 - ix0 );

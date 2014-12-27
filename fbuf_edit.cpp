@@ -85,7 +85,7 @@ STATIC_FXN COL TabAlignedCol( COL tabWidth, PCChar pS, COL xColTgt ) {
    return xColTgt;
    }
 
-STATIC_FXN bool spacesonly( boost::string_ref::const_iterator ptr, boost::string_ref::const_iterator eos ) {
+STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos ) {
    for( ; ptr != eos; ++ptr ) {
       if( *ptr != ' ' )
          return false;
@@ -112,7 +112,7 @@ STATIC_FXN bool spacesonly( boost::string_ref::const_iterator ptr, boost::string
 //    display line
 
 void FormatExpandedSeg
-   ( std::string &dest, boost::string_ref src
+   ( std::string &dest, stref src
    , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
@@ -168,7 +168,7 @@ void FormatExpandedSeg
    }
 
 std::string FormatExpandedSeg
-   ( boost::string_ref src
+   ( stref src
    , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    std::string rv;
@@ -180,7 +180,7 @@ std::string FormatExpandedSeg
 // return value is # of chars actually copied into pDestBuf
 COL PrettifyMemcpy
    ( const PChar pDestBuf, const size_t sizeof_dest
-   , boost::string_ref src
+   , stref src
    , COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs
    ) {
    // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
@@ -252,7 +252,7 @@ COL PrettifyMemcpy
 
 // a terminating NUL IS appended!!!  Use PrettifyMemcpy if you DON'T want one.
 // return value is # of chars actually copied into dest - 1; i.e. it does NOT count the terminating NUL
-COL PrettifyStrcpy( const PChar dest, size_t sizeof_dest, boost::string_ref src, COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs ) {
+COL PrettifyStrcpy( const PChar dest, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs ) {
    const auto chars( PrettifyMemcpy( dest, sizeof_dest-1, src, tabWidth, chTabExpand, xStart, chTrailSpcs ) );
    dest[chars] = '\0';
    return chars;
@@ -291,7 +291,7 @@ bool FBOP::IsBlank( PCFBUF fb ) {
 //      const Tabber &TabberParam;
 typedef const Tabber  TabberParam;  // 3 calls using this type take less code (-512 byte GCC incr)
 
-STATIC_FXN int spcs2tabs_outside_quotes( PChar pDest, size_t sizeofDest, boost::string_ref src, TabberParam tabr ) {
+STATIC_FXN int spcs2tabs_outside_quotes( PChar pDest, size_t sizeofDest, stref src, TabberParam tabr ) {
    auto quoteCh( '\0' );
    auto destCol( 0 );
    auto pC( pDest );
@@ -370,7 +370,7 @@ TO_ELSE:
    return pC - pDest;
    }
 
-STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, boost::string_ref src, TabberParam tabr ) {
+STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, stref src, TabberParam tabr ) {
    NOAUTO CPCChar pDestStart( pDest );
          auto     pszSrc( src.data() );
    const auto     srcChars( src.length() );
@@ -409,7 +409,7 @@ STATIC_FXN int spcs2tabs_all( PChar pDest, size_t sizeofDest, boost::string_ref 
    return pDest - pDestStart;
    }
 
-STATIC_FXN int spcs2tabs_leading( PChar pDest, size_t sizeofDest, boost::string_ref src, TabberParam tabr ) {
+STATIC_FXN int spcs2tabs_leading( PChar pDest, size_t sizeofDest, stref src, TabberParam tabr ) {
    NOAUTO CPCChar pDestStart( pDest );
          auto     pszSrc( src.data() );
    const auto     srcChars( src.length() );
@@ -582,7 +582,7 @@ void FBUF::FmtLastLine( PCChar format, ...  ) {
    va_end( val );
    }
 
-void FBUF::PutLine( LINE yLine, boost::string_ref srSrc, PXbuf pXb ) {
+void FBUF::PutLine( LINE yLine, const stref &srSrc, PXbuf pXb ) {
    // if( IsNoEdit() ) { DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() ); }
    BadParamIf( , IsNoEdit() );
    DirtyFBufAndDisplay();
@@ -668,7 +668,7 @@ COL ColOfPtr( COL tabWidth, const PCChar pString, const PCChar pWithinString, PC
    return xCol + (pWithinString - eos);  // 'pWithinString' actually points _at or beyond_ eos: assume all chars past EOL are spaces (non-tabs)
    }
 
-COL ColOfFreeIdx( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset ) {
+COL ColOfFreeIdx( COL tabWidth, const stref &content, sridx offset ) {
    const Tabber tabr( tabWidth );
    auto xCol( 0 );
    for( auto it( content.cbegin() ) ; it != content.cend() ; ++it ) {
@@ -1450,7 +1450,7 @@ PChar PtrOfCol_( COL tabWidth, const PChar pS, const PChar pEos, const COL colTg
 
 // pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
 // retval < pEos
-boost::string_ref::size_type FreeIdxOfCol( const COL tabWidth, boost::string_ref content, const COL colTgt ) {
+sridx FreeIdxOfCol( const COL tabWidth, const stref &content, const COL colTgt ) {
    if( colTgt <= 0 ) { return 0; }
 
 #if 1 // ==0 to test the "realtabs:yes" ... code below
@@ -1473,13 +1473,13 @@ boost::string_ref::size_type FreeIdxOfCol( const COL tabWidth, boost::string_ref
    return content.length() + (colTgt - col);
    }
 
-boost::string_ref::size_type CaptiveIdxOfCol( COL tabWidth, boost::string_ref content, const COL colTgt ) {
+sridx CaptiveIdxOfCol( COL tabWidth, const stref &content, const COL colTgt ) {
    const auto rv( FreeIdxOfCol( tabWidth, content, colTgt ) );
    return Min( rv, content.length() );
    }
 
 STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
-   const boost::string_ref bbb( content );
+   const stref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
       // printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
       // above generates a warning: format '%u' expects argument of type 'unsigned int' while
@@ -1490,7 +1490,7 @@ STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
    }
 
 STATIC_FXN void sweep_FreeIdxOfCol( COL tw, PCChar content ) {
-   const boost::string_ref bbb( content );
+   const stref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
       // see above for why we're using FmtStr here... bizarre!
       printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) ).k_str() );
@@ -1499,7 +1499,7 @@ STATIC_FXN void sweep_FreeIdxOfCol( COL tw, PCChar content ) {
    }
 
 STATIC_FXN void sweep_ColOfFreeIdx( COL tw, PCChar content, int maxCol ) {
-   const boost::string_ref bbb( content );
+   const stref bbb( content );
    for( int ix( 0 ) ; ix <= maxCol ; ++ix ) {
       printf( "%s( %s, %d ) -> %d\n", __func__, content, ix, ColOfFreeIdx( tw, bbb, ix ) );
       }
@@ -1587,14 +1587,14 @@ bool FBUF::PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos ) cons
    return rv;
    }
 
-boost::string_ref FBUF::PeekRawLine( LINE lineNum ) const {
+stref FBUF::PeekRawLine( LINE lineNum ) const {
    const auto exists( KnownLine( lineNum ) );
    auto len( 0 );
    if( exists && (len=LineLength(lineNum)) > 0 ) {
-      return boost::string_ref( d_paLineInfo[ lineNum ].GetLineRdOnly(), len );
+      return stref( d_paLineInfo[ lineNum ].GetLineRdOnly(), len );
       }
    else {
-      return boost::string_ref( "", 0 );
+      return stref( "", 0 );
       }
    }
 

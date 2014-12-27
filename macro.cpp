@@ -1067,7 +1067,7 @@ bool ARG::record() {
    }
 
 
-STATIC_FXN boost::string_ref ParseRawMacroText_ContinuesNextLine( boost::string_ref src, bool &continues ) {
+STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
    enum states { outsideQuote, inQuote, prevCharBlank, contCharSeen };
 
    states stateWhereBlankLastSeen( outsideQuote );

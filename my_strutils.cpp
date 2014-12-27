@@ -231,12 +231,12 @@ int snprintf_full( char **ppBuf, size_t *pBufBytesRemaining, PCChar fmt, ... ) {
     return *pBufBytesRemaining <= 1;
     }
 
-boost::string_ref StrSpnSignedInt( boost::string_ref src ) {
+stref StrSpnSignedInt( stref src ) {
    if( src.empty() ) return src;
    auto signofs( src[0] == '-' || src[0] == '+' ? 1 : 0 );
    auto declook( src.substr( signofs ) );
    const auto ixPast( declook.find_first_not_of( "0123456789" ) );
-   if( ixPast == boost::string_ref::npos ) { return ""; }
+   if( ixPast == stref::npos ) { return ""; }
    return src.substr( 0, signofs + ixPast );
    }
 
@@ -314,11 +314,11 @@ PChar _strlwr( PChar buf ) {
 
 #endif
 
-bool eqi( boost::string_ref s1, boost::string_ref s2 ) {
+bool eqi( stref s1, stref s2 ) {
    if( s1.length() != s2.length() ) {
       return false;
       }
-   for( boost::string_ref::size_type ix( 0 ); ix < s1.length() ; ++ix ) {
+   for( sridx ix( 0 ); ix < s1.length() ; ++ix ) {
       if( ::tolower( s1[ix] ) != ::tolower( s2[ix] ) ) {
          return false;
          }
@@ -328,7 +328,7 @@ bool eqi( boost::string_ref s1, boost::string_ref s2 ) {
 
 // the Blank family...
 
-bool IsStringBlank( boost::string_ref src ) {
+bool IsStringBlank( stref src ) {
    for( auto ch : src ) {
       if( !isBlank( ch ) ) {
          return false;
@@ -337,10 +337,10 @@ bool IsStringBlank( boost::string_ref src ) {
    return true; // note that empty strings are Blank strings!
    }
 
-boost::string_ref::size_type FirstNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+sridx FirstNonBlankOrEnd( stref src, sridx start ) {
    return ToNextOrEnd( notBlank, src, start );
    }
 
-boost::string_ref::size_type FirstBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+sridx FirstBlankOrEnd( stref src, sridx start ) {
    return ToNextOrEnd( isBlank , src, start );
    }
