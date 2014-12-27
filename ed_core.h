@@ -1557,9 +1557,9 @@ STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, const stref &content, COL x0, COL
                   rv.ix1 = CaptiveIdxOfCol( tabWidth, content, x1 );
                   return rv;
                   }
+extern COL     ColOfFreeIdx ( COL tabWidth, const stref &content, sridx offset );
 
 extern COL     ColOfPtr     ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
-extern COL     ColOfFreeIdx ( COL tabWidth, const stref &content, sridx offset );
 
 struct rlc1 {
    stref ln;
@@ -1577,11 +1577,6 @@ struct rlc2 {
    stref ln;
    sridx ix0;
    sridx ix1;
-   rlc2( const std::string &st, COL x0, COL x1 ) // middle() ASSUMES x0 <= x1 !!!
-      : ln( st )
-      , ix0( CaptiveIdxOfCol( 1, ln, x0 ) )
-      , ix1( CaptiveIdxOfCol( 1, ln, x1 ) )
-      {}
    rlc2( PFBUF pfb, LINE yy, COL x0, COL x1 )    // middle() ASSUMES x0 <= x1 !!!
       : ln( pfb->PeekRawLine( yy ) )
       , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, x0 ) )
