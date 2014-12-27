@@ -140,14 +140,6 @@ PCChar StrPastWord( PCChar pszToSearch, PCChar eos ) {
    return pszToSearch;
    }
 
-PCChar StrWordStart( PCChar bos, PCChar ps ) {
-   for(; isWordChar(*ps) ; --ps )
-      if( ps <= bos )
-         return bos;
-
-   return ps+1;
-   }
-
 boost::string_ref::size_type IdxLastWordCh( boost::string_ref src, boost::string_ref::size_type start ) {
    if( start >= src.length() ) return boost::string_ref::npos;
    for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
@@ -218,21 +210,21 @@ extern bool g_fM4backtickquote;
 STATIC_FXN bool swinVAR_BOOL( const SWI *pSwi, PCChar pszNewValue ) {
    0 && DBG( "VAR_BOOL nm=%s, val=%s'", pSwi->name, pszNewValue );
    if(   (Stricmp( "no", pszNewValue ) == 0)
-      || (Strcmp (  "0" , pszNewValue ) == 0)
+      || (Strcmp (  "0", pszNewValue ) == 0)
      ) {
       *pSwi->act.fval = false;
       return true;
       }
 
    if(   (Stricmp( "yes", pszNewValue ) == 0)
-      || (Strcmp (  "1"  , pszNewValue ) == 0)
+      || (Strcmp (  "1" , pszNewValue ) == 0)
      ) {
       *pSwi->act.fval = true;
       return true;
       }
 
    if(   (Stricmp( "invert", pszNewValue ) == 0)
-      || (Strcmp (  "-" , pszNewValue ) == 0)
+      || (Strcmp (  "-"    , pszNewValue ) == 0)
      ) {
       *pSwi->act.fval = !*pSwi->act.fval;
       return true;

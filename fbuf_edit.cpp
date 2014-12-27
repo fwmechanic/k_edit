@@ -118,7 +118,7 @@ void FormatExpandedSeg
    // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
    //
    dest.clear();
-   if( !chTabExpand || !StrContainsTabs( src.data(), src.length() ) ) {
+   if( !chTabExpand || !StrContainsTabs( src ) ) {
       if( xStart <= src.length() ) {
          src.remove_prefix( xStart );
          const auto CopyBytes( Min( src.length(), maxChars ) );
@@ -185,7 +185,7 @@ COL PrettifyMemcpy
    ) {
    // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
    //
-   if( !chTabExpand || !StrContainsTabs( src.data(), src.length() ) ) {
+   if( !chTabExpand || !StrContainsTabs( src ) ) {
       if( xStart > src.length() ) { return 0; }
       src.remove_prefix( xStart );
 

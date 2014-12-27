@@ -1,9 +1,20 @@
 //
-//  Copyright 1991 - 2013 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
+//  Copyright 1991 - 2014 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
 //
 
 #include "ed_main.h"
 
+
+boost::string_ref::size_type first_alpha( boost::string_ref src, boost::string_ref::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( !isalpha( *it ) ) {
+            return std::distance( src.cbegin(), it );
+            }
+         }
+      }
+   return std::distance( src.cbegin(), src.end() );
+   }
 
 STATIC_FXN char first_alpha( PCChar str ) {
    while( (*str != '\0') && (!isalpha(*str)) )

@@ -2455,7 +2455,7 @@ void DispNeedsRedrawAllLinesCurWin_() {
 // dialogtop:yes
 // dialogtop:no
 
-GLOBAL_VAR bool g_fDialogTop = true; // global/switchval
+GLOBAL_VAR bool g_fDialogTop = true;
 
 GLOBAL_VAR int  s_iHeight;  // global read, local write
 GLOBAL_VAR int  s_iWidth ;  // global read, local write

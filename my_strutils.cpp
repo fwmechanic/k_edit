@@ -247,7 +247,7 @@ bool StrSpnSignedInt( PCChar pszString ) {
    return *StrPastAny( pszString, "0123456789" ) == 0;
    }
 
-typedef int (*isfxn)(int);
+typedef bool (*isfxn)(char);
 
 STATIC_FXN int consec_is_its( isfxn ifx, PCChar pSt, PCChar eos ) {
    if( !eos ) eos = Eos( pSt );
@@ -259,8 +259,8 @@ STATIC_FXN int consec_is_its( isfxn ifx, PCChar pSt, PCChar eos ) {
    return pS - pSt;
    }
 
-STATIC_FXN int isxdigit_( int ch ) { return isxdigit( ch ); }
-STATIC_FXN int isbdigit_( int ch ) { return ch == '0' || ch == '1'; }
+STATIC_FXN bool isxdigit_( char ch ) { return isxdigit( ch ); }
+STATIC_FXN bool isbdigit_( char ch ) { return ch == '0' || ch == '1'; }
 
 int consec_xdigits( PCChar pSt, PCChar eos ) { return consec_is_its( isxdigit_, pSt, eos ); }
 int consec_bdigits( PCChar pSt, PCChar eos ) { return consec_is_its( isbdigit_, pSt, eos ); }
@@ -337,6 +337,18 @@ bool IsStringBlank( boost::string_ref src ) {
    return true;
    }
 
+#if 1
+
+boost::string_ref::size_type ToNextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+   return ToNextOrEnd( isBlank, src, start );
+   }
+
+boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+   return ToNextOrEnd( notBlank, src, start );
+   }
+
+#else
+
 boost::string_ref::size_type ToNextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
@@ -358,3 +370,5 @@ boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::str
       }
    return std::distance( src.cbegin(), src.end() );
    }
+
+#endif

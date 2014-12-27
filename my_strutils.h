@@ -47,6 +47,18 @@ enum { MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
        BACKTICK = 0x60,
    };
 
+template < typename cont_inst, typename Pred >
+typename cont_inst::size_type ToNextOrEnd( Pred pred, cont_inst src, typename cont_inst::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( !pred( *it ) ) {
+            return std::distance( src.cbegin(), it );
+            }
+         }
+      }
+   return std::distance( src.cbegin(), src.end() );
+   }
+
 //#######################################################################################
 
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
@@ -71,12 +83,13 @@ extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
 
        STIL  bool   isBlank(    char ch ) { return ch == HTAB || ch == ' '; }
+       STIL  bool   notBlank(   char ch ) { return !isBlank( ch ); }
        STIL  bool   isDecDigit( char ch ) { return ch >= '0'  && ch <= '9'; }
+
        STIL  bool   StrContainsTabs( PCChar data, int dataBytes )  { return ToBOOL(memchr( data, HTAB, dataBytes  )); }
-       STIL  bool   StrContainsTabs( PCChar data, PCChar eos )     { return ToBOOL(memchr( data, HTAB, eos - data )); }
        STIL  bool   StrContainsTabs( boost::string_ref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
-TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
+// TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
 
 extern bool  eqi( boost::string_ref s1, boost::string_ref s2 );
@@ -178,9 +191,6 @@ STIL   PChar  StrPastWord(  PChar  pszToSearch ) { return PChar(StrPastWord( PCC
 
 extern PCChar StrPastWord(  PCChar pszToSearch, PCChar eos );
 STIL   PChar  StrPastWord(  PChar  pszToSearch, PChar  eos ) { return PChar(StrPastWord( PCChar(pszToSearch), PCChar(eos) )); }
-
-extern PCChar StrWordStart( PCChar bos, PCChar ps );
-STIL   PChar  StrWordStart( PChar  bos, PChar  ps ) { return PChar(StrWordStart( PCChar(bos), PCChar(ps) )); }
 
 extern boost::string_ref::size_type IdxLastWordCh ( boost::string_ref src, boost::string_ref::size_type start );
 extern boost::string_ref::size_type IdxFirstWordCh( boost::string_ref src, boost::string_ref::size_type start );
