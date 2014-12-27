@@ -2118,21 +2118,13 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
            , FBsrc  && FBsrc ->Name() ? FBsrc ->Name() : "?"
            , FBdest && FBdest->Name() ? FBdest->Name() : "?"
            );
-
-   if( FBsrc == FBdest ) {
-      ConIO::DbgPopf( "%s: src and dest cannot be the same buffer", __func__ );
-      return;
-      }
-
-   BadParamIf( , (ySrcStart > ySrcEnd) );
-
+   if( FBsrc == FBdest )     { DBG( "%s: src and dest cannot be the same buffer", FUNC ); return; }
+   if( ySrcStart > ySrcEnd ) { DBG( "%s: ySrcStart > ySrcEnd", FUNC ); return; }
    FBdest->InsBlankLinesBefore( yDestStart, ySrcEnd - ySrcStart + 1 );
-
    if( FBsrc ) {
       Xbuf xb;
       for( ; ySrcStart <= ySrcEnd; ++ySrcStart, ++yDestStart ) {
-         const auto src( FBsrc->PeekRawLine( ySrcStart ) );
-         FBdest->PutLine( yDestStart, src, &xb );
+         FBdest->PutLine( yDestStart, FBsrc->PeekRawLine( ySrcStart ), &xb );
          }
       }
    }
@@ -2245,7 +2237,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
    const auto twd(         FBdest->TabWidth()     );
    std::string stSrc, stDst;  // BUGBUG one buffer would be nicer ...
    for( auto ySrc( ySrcTop ); ySrc <= ySrcBottom ; ++ySrc, ++yDst ) {
-     #if 0
+     #if 1
       // BIZARRO this is 3KB LARGER codegen than the below version (which is functionally identical)
       FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
       if( FBsrc ) {
