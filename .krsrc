@@ -3,7 +3,6 @@
    # === SWITCHES ===
    #
    # BOOLEAN
-      insmode:      YES # Powerup in INSERT MODE
       boxmode:      YES # we like boxes!
       editreadonly: NO  # prevent editing of read-only files (adjunct to Clearcase,PVCS)
       wordwrap:     NO  # NO is default
