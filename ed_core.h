@@ -1568,7 +1568,12 @@ struct rlc2 {
    boost::string_ref            ln;
    boost::string_ref::size_type ix0;
    boost::string_ref::size_type ix1;
-   rlc2( PFBUF pfb, LINE yy, COL x0, COL x1 )
+   rlc2( const std::string &st, COL x0, COL x1 ) // middle() ASSUMES x0 <= x1 !!!
+      : ln( st )
+      , ix0( CaptiveIdxOfCol( 1, ln, x0 ) )
+      , ix1( CaptiveIdxOfCol( 1, ln, x1 ) )
+      {}
+   rlc2( PFBUF pfb, LINE yy, COL x0, COL x1 )    // middle() ASSUMES x0 <= x1 !!!
       : ln( pfb->PeekRawLine( yy ) )
       , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, x0 ) )
       , ix1( CaptiveIdxOfCol( pfb->TabWidth(), ln, x1 ) )

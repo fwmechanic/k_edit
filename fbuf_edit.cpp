@@ -1450,11 +1450,11 @@ PChar PtrOfCol_( COL tabWidth, const PChar pS, const PChar pEos, const COL colTg
 
 // pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
 // retval < pEos
-boost::string_ref::size_type FreeIdxOfCol( COL tabWidth, boost::string_ref content, const COL colTgt ) {
+boost::string_ref::size_type FreeIdxOfCol( const COL tabWidth, boost::string_ref content, const COL colTgt ) {
    if( colTgt <= 0 ) { return 0; }
 
 #if 1 // ==0 to test the "realtabs:yes" ... code below
-   if( !( /* g_fRealtabs && */ StrContainsTabs( content )) ) { // this is the most common exit path
+   if( tabWidth <= 1 || !( /* g_fRealtabs && */ StrContainsTabs( content )) ) { // this is the most common exit path
       return colTgt;
       }
 #endif
@@ -2245,16 +2245,26 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
    const auto twd(         FBdest->TabWidth()     );
    std::string stSrc, stDst;  // BUGBUG one buffer would be nicer ...
    for( auto ySrc( ySrcTop ); ySrc <= ySrcBottom ; ++ySrc, ++yDst ) {
+     #if 0
+      // BIZARRO this is 3KB LARGER codegen than the below version (which is functionally identical)
+      FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
+      if( FBsrc ) {
+         FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
+         rlc2 srl( stSrc, xSrcLeft, xSrcRight );
+         stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, srl.ix0, srl.ix1 - srl.ix0 + 1 );
+         }
+     #else
+      // BIZARRO this is 3KB SMALLER codegen than the above version (which is functionally identical)
       if( !FBsrc ) {
          FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
          }
       else {
-         FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
-         const auto six0( CaptiveIdxOfCol( tws, stSrc, xSrcLeft  ) );
-         const auto six1( CaptiveIdxOfCol( tws, stSrc, xSrcRight ) );
          FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
-         stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, six0, six1 - six0 + 1 );
+         FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
+         rlc2 srl( stSrc, xSrcLeft, xSrcRight );
+         stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, srl.ix0, srl.ix1 - srl.ix0 + 1 );
          }
+     #endif
       FBdest->PutLine( yDst, stDst );
       }
    }
