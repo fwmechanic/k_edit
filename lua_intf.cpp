@@ -607,7 +607,7 @@ void LuaClose() {
    }
 
 STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void (*openlibs)(lua_State *L) ) {
-   if( *pL ) { DBG( "#######################  CLOSING current Lua session  ###################" );
+   if( *pL ) { 0 && DBG( "#######################  CLOSING current Lua session  ###################" );
       if( !cleanup ) { cleanup = (void (*)(lua_State *L))LREGP_get_cleanup( *pL ); }
       if(  cleanup ) { cleanup( *pL ); }
       lua_close( *pL );
@@ -620,7 +620,7 @@ STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void
    s_pFbufLuaLog->MakeEmpty();
    s_pFbufLuaLog->MoveCursorToBofAllViews();
 
-   DBG( "%s+ *(%p)=init'ing", __func__, pL );
+   0 && DBG( "%s+ *(%p)=init'ing", __func__, pL );
    { // NB: each Lua 5.1.2 lua_newstate consumes 2.5KB!  20070724 kgoodwin
     const auto luaHeapBytesAtStart( LuaHeapSize() );
     *pL = lua_newstate( l_alloc, nullptr );
@@ -652,7 +652,7 @@ STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void
 
    LREGP_set_cleanup( *pL, reinterpret_cast<void *>(cleanup) );
 
-   DBG( "%s- *(%p)=%p", __func__, pL, *pL );
+   0 && DBG( "%s- *(%p)=%p", __func__, pL, *pL );
    return true;
    }
 

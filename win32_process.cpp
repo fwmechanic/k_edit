@@ -1023,7 +1023,7 @@ int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
 
 
 STATIC_FXN Win32::DWORD K_STDCALL IdleThread( Win32::LPVOID ) {
-   DBG( "*** %s STARTING***", __func__ );
+   0 && DBG( "*** %s STARTING***", __func__ );
    while( true ) {
       SleepMs( 100 );  // was 50 @ 20130101
 
