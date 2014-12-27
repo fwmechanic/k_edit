@@ -702,15 +702,16 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
       if( InInsertMode() && fEmacsmode )  // eat linebreak
          pcf->DelStream( xCol, yLine, 0, yLine+1 );
 
-      goto DONE_MOVE_CURSOR;
+      pcv->MoveCursor( yLine, xCol );
+      return true;
       }
 
    if( InInsertMode() ) {
       FBOP::DelChar( pcf, --xCol, yLine );
-      goto DONE_MOVE_CURSOR;
+      pcv->MoveCursor( yLine, xCol );
+      return true;
       }
 
-   {
    Xbuf xb;
    pcf->getLineTabxPerRealtabs( &xb, yLine );
    const auto lbuf( xb.wbuf() );
@@ -725,25 +726,26 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
          *pxCol = ' ';
          pcf->PutLine( yLine, lbuf );
          }
-      goto DONE_MOVE_CURSOR;
+      pcv->MoveCursor( yLine, xCol );
+      return true;
       }
 
    if( (xCol + 1) > xMaxCol ) {
       xCol = xMaxCol;
-      goto DONE_MOVE_CURSOR;
+      pcv->MoveCursor( yLine, xCol );
+      return true;
       }
 
    if( ColOfPtr( tw, lbuf, StrPastAnyBlanks( lbuf ), eos ) > xCol ) {
       xCol = 0;
-      goto DONE_MOVE_CURSOR;
+      pcv->MoveCursor( yLine, xCol );
+      return true;
       }
 
    if( *pxCol != ' ' ) {
        *pxCol =  ' ';
        pcf->PutLine( yLine, lbuf );
        }
-   }
-DONE_MOVE_CURSOR:
    pcv->MoveCursor( yLine, xCol );
    return true;
    }
