@@ -336,10 +336,10 @@ int MaxIndentAccumulator::addSample( PCChar buf, bool fLastLine ) {
 void FBUF::CalcIndent( bool fWholeFileScan ) { 0 && DBG( "%s ********************************************", __func__ );
    MaxIndentAccumulator maxIn;
    d_IndentIncrement = 0;
-   std::string xb;
+   std::string str;
    for( auto yLine(0) ; yLine < LineCount() ; ++yLine ) {
-      getLineTabx( xb, yLine );
-      const auto goodIndentValue( maxIn.addSample( xb.c_str(), false ) );
+      getLineTabx( str, yLine );
+      const auto goodIndentValue( maxIn.addSample( str.c_str(), false ) );
       if( goodIndentValue && !fWholeFileScan ) {
          d_IndentIncrement = goodIndentValue;
          return;
@@ -347,7 +347,6 @@ void FBUF::CalcIndent( bool fWholeFileScan ) { 0 && DBG( "%s *******************
       }
    d_IndentIncrement = maxIn.addSample( "", true );
    }
-
 
 #ifdef fn_in
 
@@ -362,8 +361,7 @@ bool ARG::in() { // for debugging CalcIndent
 bool FileStat::Refresh( int fd ) {
    // const auto fbytes( fio::SeekEoF( fh ) );
    struct_stat stat_buf;
-   if( 0 != func_fstat( fd, &stat_buf ) )
-      {
+   if( 0 != func_fstat( fd, &stat_buf ) ) {
       d_ModifyTime = 0;
       d_Filesize   = 0;
       return false;
@@ -768,16 +766,16 @@ int FBUF::SyncNoWrite() {
 //
 bool ARG::sync() {
    auto filesRefreshed( 0 );
-#if FBUF_TREE
+  #if FBUF_TREE
    RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
-#else
+  #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
-#endif
+  #endif
       {
-#if FBUF_TREE
+     #if FBUF_TREE
       const auto pFBuf( IdxNodeToFBUF( pNd ) );
-#endif
+     #endif
       filesRefreshed += pFBuf->SyncNoWrite();
       }
 
@@ -789,16 +787,16 @@ bool ARG::sync() {
 
 void WriteAllDirtyFBufs() {
    auto saveCount( 0 );
-#if FBUF_TREE
+  #if FBUF_TREE
    RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
-#else
+  #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
-#endif
+  #endif
       {
-#if FBUF_TREE
+     #if FBUF_TREE
       const auto pFBuf( IdxNodeToFBUF( pNd ) );
-#endif
+     #endif
       saveCount += pFBuf->SyncWriteIfDirty_Wrote();
       }
 
@@ -914,9 +912,9 @@ Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
          rv = !fb->FnmIsDiskWritable() ? ".<>" : ".";
       }
 
-#if !FNM_CASE_SENSITIVE
+  #if !FNM_CASE_SENSITIVE
    string_tolower( rv );
-#endif
+  #endif
 
    0 && DBG( "%s '%s'", __func__, rv.c_str() );
    return rv;
@@ -930,14 +928,14 @@ STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, PCChar pszMacroString ) { 0
 void FBOP::AssignFromRsrc( PCFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
    // 1. assigns "curfile..." macros based on this FBUF
    // 2. loads rsrc file section for extension of this FBUF
-#if MACRO_BACKSLASH_ESCAPES
+  #if MACRO_BACKSLASH_ESCAPES
    dbllinebuf dblbuf;
    Pathbuf pbuf( fb->Name() );
    DoubleBackslashes( BSOB(dblbuf), pbuf );
    DefineStrMacro( "curfile", dblbuf );
-#else
+  #else
    DefineStrMacro( "curfile", fb->Name() );
-#endif
+  #endif
    DefineStrMacro( "curfilename", Path::CpyFnm  ( fb->Name() ).c_str() );
    DefineStrMacro( "curfilepath", Path::CpyDirnm( fb->Name() ).c_str() );
    const auto ext( FBOP::GetRsrcExt( fb ) );
@@ -1025,9 +1023,9 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
       Msg( "cwd unchanged" );
       }
    else {
-#if defined(_WIN32)
+     #if defined(_WIN32)
       SetCwdChanged( cwdAfter.c_str() );
-#endif
+     #endif
       Msg( "Changed directory to %s", cwdAfter.c_str() );
       if( fSave )  g_pFBufCwd->InsLine( 0, cwdBefore.c_str() );
       }
@@ -1187,7 +1185,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       return Msg( "%s failed! FnmIs!DiskWritable", __func__ );
       }
 
-#if defined(_WIN32)
+  #if defined(_WIN32)
    // scenario: WinNT filesystems are case-preserving but case-insensitive
    // user edits file in K, then later renames it, changing only case of name
    // user opens in K, retrieves old-cased nm from state file, edits and saves, writing to old-cased name :-(
@@ -1195,9 +1193,9 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    if( Strcmp( canonFnm.c_str(), Name() ) ) { // NB: CASE-SENSITIVE compare intended!
        ChangeName( canonFnm.c_str() );
        }
-#else
+  #else
    // Linux filesys is case-sensitive so this scenario cannot happen
-#endif
+  #endif
 
    //###########  disk file read !!!
 
@@ -1268,7 +1266,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
 
    ClrNoEdit();
 
-#if defined(_WIN32)
+  #if defined(_WIN32)
    if( IsFileReadonly( Name() ) ) {
       VR_( DBG( "FRd: is RO_FILE" ); )
       SetDiskRO();
@@ -1279,7 +1277,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       VR_( DBG( "FRd: is NOT RO_FILE" ); )
       SetDiskRW();
       }
-#endif
+  #endif
 
    SetLastFileStatFromDisk();
 
@@ -1330,7 +1328,6 @@ bool FBUF::ReadOtherDiskFileNoCreateFailed( PCChar pszName ) {
    return failed;
    }
 
-
 //----------------------------------------------------------------------------------
 
 GLOBAL_VAR int g_iBackupMode = bkup_UNDEL; // keep as int, GLOBAL_VAR because this is a SWITCH
@@ -1365,7 +1362,7 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
     case bkup_BAK:   { VERBOSE_WRITE && DBG( "FWr: bkup_BAK" );  // the extension of the previous version of the file is changed to .BAK
                      const auto BAK_FileNm( Path::Union( ".bak", fnmToBkup ) );
                      VERBOSE_WRITE && DBG( "FWr: bkup_BAK  %s -> %s", fnmToBkup, BAK_FileNm.c_str() );  // the extension of the previous version of the file is changed to .BAK
-#if defined(_WIN32)
+                    #if defined(_WIN32)
                      // In posix/Linux, rename() attempts to unlink any existing destination FAILS iff
                      //    this attempt fails, therefore we do not need to attempt our own preemptive unlink
                      // in Win32/MSVC RTL, rename() FAILS if the destination already exists
@@ -1375,7 +1372,7 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                            return Msg( "Can't delete %s - %s", Path::CpyFnameExt( BAK_FileNm.c_str() ).c_str(), strerror( errno ) );
                            }
                         }
-#endif
+                    #endif
                      if( !MoveFileOk( fnmToBkup, BAK_FileNm.c_str() ) ) {
                         const auto emsg( strerror( errno ) );
                         if( FileOrDirExists( fnmToBkup ) )
@@ -1411,7 +1408,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    // BUGBUG there are security-hazard file/directory race conditions to be found here!
    Path::str_t destFnm( destFileNm );
 
-#if 0
+  #if 0
    //
    // NOTES 20090721 kgoodwin editing NTFS ADS (Alt Data STREAMS) hits the rocks
    //                         here (at least).  The standard file write algorithm is
@@ -1438,9 +1435,9 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    //
    PChar pStream = strchr( destFnm+3, ':' );
    if( pStream )  *pStream = '\0';
-#endif
+  #endif
 
-#if defined(_WIN32)
+  #if defined(_WIN32)
    {
    FileAttribs dest( destFnm.c_str() );
    if( dest.Exists() && dest.IsReadonly() ) {
@@ -1454,7 +1451,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
          }
       }
    }
-#endif
+  #endif
 
    const auto tmpFnm( Path::Union( ".$k$", destFnm.c_str() ) );
    DisplayNoiseBlanker dblank;
@@ -1482,9 +1479,9 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    if( !NameMatch( destFnm.c_str() ) )
       ChangeName( destFnm.c_str() ); //
 
-#if defined(_WIN32)
+  #if defined(_WIN32)
    SetDiskRW(),
-#endif
+  #endif
    UnDirty(), SetLastFileStatFromDisk(); DispNeedsRedrawStatLn();
    return !Msg( "Saved  %s", Name() ); // xtra spc to match Msg( "Saving %s" ... above
    }
@@ -1845,7 +1842,6 @@ bool ARG::shex() {
                   return true;
     }
    }
-
 
 bool ARG::setfile() {
    MainThreadPerfCounter pc;
