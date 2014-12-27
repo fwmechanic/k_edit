@@ -1547,8 +1547,17 @@ STIL   PCChar  PtrOfColWithinStringRegion( COL tabWidth, PCChar pS, PCChar pEos,
 extern PChar   PtrOfColWithinStringRegionNoEos( COL tabWidth, PChar  pS, PChar  pEos, COL xCol );
 STIL   PCChar  PtrOfColWithinStringRegionNoEos( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfColWithinStringRegionNoEos( tabWidth, PChar(pS), PChar(pEos), xCol ); }
 
-extern sridx FreeIdxOfCol   ( COL tabWidth, const stref &content, const COL colTgt );
-extern sridx CaptiveIdxOfCol( COL tabWidth, const stref &content, const COL colTgt );
+extern sridx   FreeIdxOfCol    ( COL tabWidth, const stref &content, const COL colTgt );
+STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, const stref &content, const COL colTgt ) {
+                  return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length() );
+                  }
+STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, const stref &content, COL x0, COL x1 ) {
+                  sridx2 rv;
+                  rv.ix0 = CaptiveIdxOfCol( tabWidth, content, x0 );
+                  rv.ix1 = CaptiveIdxOfCol( tabWidth, content, x1 );
+                  return rv;
+                  }
+
 extern COL     ColOfPtr     ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
 extern COL     ColOfFreeIdx ( COL tabWidth, const stref &content, sridx offset );
 
@@ -1563,8 +1572,6 @@ struct rlc1 {
    bool beyond( sridx ix ) const { return ix  >= ln.length(); }
    char ch0() const { return ln[ix0]; }
    };
-
-extern sridx2 CaptiveIdxOfCols( COL tabWidth, const stref &content, COL x0, COL x1 );
 
 struct rlc2 {
    stref ln;

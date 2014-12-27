@@ -1473,11 +1473,6 @@ sridx FreeIdxOfCol( const COL tabWidth, const stref &content, const COL colTgt )
    return content.length() + (colTgt - col);
    }
 
-sridx CaptiveIdxOfCol( COL tabWidth, const stref &content, const COL colTgt ) {
-   const auto rv( FreeIdxOfCol( tabWidth, content, colTgt ) );
-   return Min( rv, content.length() );
-   }
-
 STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
    const stref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
@@ -2240,7 +2235,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
       FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
       if( FBsrc ) {
          FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
-         rlc2 srl( stSrc, xSrcLeft, xSrcRight );
+         const auto srl( CaptiveIdxOfCols( tws, stSrc, xSrcLeft, xSrcRight ) );
          stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, srl.ix0, srl.ix1 - srl.ix0 + 1 );
          }
       FBdest->PutLine( yDst, stDst );
