@@ -340,11 +340,11 @@ bool IsStringBlank( boost::string_ref src ) {
 #if 1
 
 boost::string_ref::size_type ToNextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
-   return ToNextOrEnd( isBlank, src, start );
+   return ToNextOrEnd( notBlank, src, start );
    }
 
 boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
-   return ToNextOrEnd( notBlank, src, start );
+   return ToNextOrEnd( isBlank , src, start );
    }
 
 #else

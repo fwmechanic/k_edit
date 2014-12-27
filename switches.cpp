@@ -128,6 +128,18 @@ bool swixWordchars( PCChar pS ) { 0&&DBG("%s+ %s", __func__, pS );
    return true;
    }
 
+bool isWordChar( char ch ) {
+   if( !s_isWordChar_['a'] ) {
+      swixWordchars( "" );
+      }
+// return s_isWordChar_[                      ch ];
+   return s_isWordChar_[static_cast<unsigned>(ch)];
+   }
+
+boost::string_ref::size_type ToNextNonWordOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+   return ToNextOrEnd( notWordChar, src, start );
+   }
+
 PCChar StrPastWord( PCChar pszToSearch ) {
    for(; *pszToSearch && isWordChar(*pszToSearch) ; ++pszToSearch )
       ;

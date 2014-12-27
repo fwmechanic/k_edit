@@ -529,14 +529,14 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
       if( xCursor < xEos ) {
          const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
          if( ixC != boost::string_ref::npos && isWordChar( rl[ixC] ) ) {
-            const auto ixFirst( IdxFirstWordCh( rl, ixC ) );
-            const auto ixLast ( IdxLastWordCh ( rl, ixC ) );        0 && DBG( "ix[%" PR_SIZET "u..%" PR_SIZET "u]", ixFirst, ixLast );
-            // if( ixFirst != boost::string_ref::npos && ixLast != boost::string_ref::npos )
+            const auto ixFirst    ( IdxFirstWordCh( rl, ixC ) );
+            const auto ixPastLast ( ToNextNonWordOrEnd( rl, ixC ) );         1 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
+            // if( ixFirst != boost::string_ref::npos && ixPastLast != boost::string_ref::npos )
                {
-               const auto xMin( ColOfFreeIdx( tw, rl, ixFirst ) );
-               const auto xMax( ColOfFreeIdx( tw, rl, ixLast  ) );      0 && DBG( "x[%d..%d]", xMin, xMax );
-               const auto wordCols ( xMax   - xMin    + 1 );
-               const auto wordChars( ixLast - ixFirst + 1 );
+               const auto xMin( ColOfFreeIdx( tw, rl, ixFirst  ) );
+               const auto xMax( ColOfFreeIdx( tw, rl, ixPastLast-1 ) );      0 && DBG( "x[%d..%d]", xMin, xMax );
+               const auto wordCols ( xMax - xMin + 1 );
+               const auto wordChars( ixPastLast - ixFirst );
                // this degree of paranoia only matters if the definition of a WORD includes a tab
                if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT "d", __func__, wordCols, wordChars ); }
 

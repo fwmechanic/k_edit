@@ -1674,17 +1674,6 @@ STIL void         g_UpdtCurFBuf()  { extern PFBUF s_curFBuf;        s_curFBuf = 
 
 inline bool FBufLocn::InCurFBuf() const { return g_CurFBuf() == d_pFBuf; }
 
-extern bool s_isWordChar_[256];     // not literally static (s_), but s/b treated as such!
-
-STIL bool isWordChar( unsigned char ix ) {
-   if( !s_isWordChar_['a'] ) {
-      extern bool swixWordchars( PCChar param );
-                  swixWordchars( "" );
-      }
-
-   return s_isWordChar_[ix];
-   }
-
 //---------------------------------------------------------------------------------------------------------------------
 //
 // utility interface to allow output to be directed to PFBUF, dbgview (Windows OutputDebugString()), or both
