@@ -824,15 +824,13 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
             stb.append( xCursor - stb.length(), ' ' );
             }
          const auto ch( pCmd->d_argData.chAscii() );
-         if( InInsertMode() ) { stb.insert( xCursor++, 1, ch ); }
-         else                 { stb[ xCursor++ ] = ch; }
+         stb.insert( xCursor++, 1, ch );
          }
       else if( func == fn_cdelete || func == fn_emacscdel ) {
          if( xCursor > 0 ) {
             --xCursor;
             if( xCursor < stb.length() ) {
-               if( InInsertMode() ) { stb.erase( xCursor, 1 ); }
-               else                 { stb[ xCursor ] = ' '; }
+               stb.erase( xCursor, 1 );
                }
             }
          }
@@ -843,9 +841,6 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          }
       else if( func == fn_insert || func == fn_sinsert ) {
          stb.insert( xCursor, 1, ' ' );
-         }
-      else if( func == fn_insertmode ) {
-         noargNoMeta.insertmode();
          }
       else if( func == fn_up ) { //======================================================
          if( textargStackPos < 0 ) {

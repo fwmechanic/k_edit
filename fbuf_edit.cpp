@@ -688,8 +688,6 @@ COL ColOfFreeIdx( COL tabWidth, const stref &content, sridx offset ) {
 // DeletePrevChar implements ARG::emacscdel _AND_ ARG::cdelete (below)
 //
 
-GLOBAL_VAR bool g_fInsertMode = true;
-
 STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
    const auto yLine( pcv->Cursor().lin );
    if( pcv->Cursor().col == 0 ) { // cursor @ beginning of line?
@@ -697,52 +695,15 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
          return false; // no prev char
 
       auto xCol( FBOP::LineCols( pcf, yLine-1 ) );
-      if( InInsertMode() && fEmacsmode ) // join current and prev lines
+      if( fEmacsmode ) // join current and prev lines
          pcf->DelStream( xCol, yLine-1, 0, yLine );
 
       pcv->MoveCursor( yLine-1, xCol );
       return true;
       }
 
-   if( InInsertMode() ) {
-      const auto xCol( pcv->Cursor().col - 1 );
-      FBOP::DelChar( pcf, xCol, yLine );
-      pcv->MoveCursor( yLine, xCol );
-      return true;
-      }
-
-   Xbuf xb;
-   pcf->getLineTabxPerRealtabs( &xb, yLine );
-   const auto lbuf( xb.wbuf() );
-   const auto eos( Eos(lbuf) );
-   const auto tw( pcf->TabWidth() );
-   const auto xMaxCol( StrCols( tw, lbuf ) );
-
-   const auto xCol( TabAlignedCol( tw, lbuf, eos, pcv->Cursor().col, -1 ) );
-   const auto pxCol( PtrOfColWithinStringRegionNoEos( tw, lbuf, eos, xCol ) );
-   if( fEmacsmode ) {
-      if( xCol < xMaxCol && *pxCol != ' ' ) {
-         *pxCol = ' ';
-         pcf->PutLine( yLine, lbuf );
-         }
-      pcv->MoveCursor( yLine, xCol );
-      return true;
-      }
-
-   if( (xCol + 1) > xMaxCol ) {
-      pcv->MoveCursor( yLine, xMaxCol );
-      return true;
-      }
-
-   if( ColOfPtr( tw, lbuf, StrPastAnyBlanks( lbuf ), eos ) > xCol ) {
-      pcv->MoveCursor( yLine, 0 );
-      return true;
-      }
-
-   if( *pxCol != ' ' ) {
-       *pxCol =  ' ';
-       pcf->PutLine( yLine, lbuf );
-       }
+   const auto xCol( pcv->Cursor().col - 1 );
+   FBOP::DelChar( pcf, xCol, yLine );
    pcv->MoveCursor( yLine, xCol );
    return true;
    }
@@ -1193,15 +1154,8 @@ bool ARG::insert() {
     }
    }
 
-
-bool ARG::insertmode() {
-   DispNeedsRedrawStatLn();
-   return (g_fInsertMode = !g_fInsertMode);
-   }
-
-
 bool ARG::emacsnewl() {
-   if( !InInsertMode() || ArgCount() != 0 )
+   if( ArgCount() != 0 )
       return newline();
 
    const auto pfb( g_CurFBuf() );
@@ -1386,7 +1340,7 @@ bool PutCharIntoCurfileAtCursor( int theChar, PXbuf pxb ) { PCFV;
             }
          }
       }
-   FBOP::PutChar( pcf, yLine, xCol, theChar, InInsertMode(), pxb );
+   FBOP::PutChar( pcf, yLine, xCol, theChar, true, pxb );
    noargNoMeta.right();
    return true;
    }

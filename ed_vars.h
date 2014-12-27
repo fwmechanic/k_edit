@@ -518,7 +518,6 @@ extern bool  g_fForcePlatformEol ;
 extern bool  g_fMsgflush         ;
 extern bool  g_fViewsActivelyTailOutput;
 
-STIL   bool  InInsertMode() { extern bool g_fInsertMode; return g_fInsertMode; }
 extern bool  g_fRealtabs         ;
 extern bool  g_fShowFbufDetails  ;
 extern bool  g_fSoftCr           ;

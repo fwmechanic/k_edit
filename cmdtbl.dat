@@ -82,7 +82,6 @@ w fromwinclip  fromwinclip               NOARG , Windows Clipboard ==> <clipboar
 # in           in                        NOARG
   initialize   initialize                NOARG + BOXSTR + NULLEOW + TEXTARG , Discards all current settings, then reads the statements from the main ([K]) section of .krsrc.
   insert       insert         MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , NOARG: Inserts a space character at cursor, independent of insert/overtype mode.  NULARG: breaks line at cursor.  SELARG: Inserts space chars into selected area
-  insertmode   insertmode                NOARG , Toggles between insert mode and overtype mode
 # justify      justify        MODIFIES + NOARG+BOXARG+LINEARG+TEXTARG+NULLARG , Justifies paragraph
 # kbfast       kbfast                    NOARG , Set keyboard repeat delay and rate at fastest universally supported speed
 # killall      killall                   NOARG , kill all pty child processes

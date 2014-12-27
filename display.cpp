@@ -2738,8 +2738,7 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
          cl.Cat( COLOR::INF, "clp()" );
       }
 
-   cl.Cat( COLOR::INF, FmtStr<40>( "%s%s%s"
-            , InInsertMode()           ? ""           : " OVRWRT"
+   cl.Cat( COLOR::INF, FmtStr<40>( "%s%s"
             , g_fMeta                  ? " META"      : ""
             , IsMacroRecordingActive() ? (IsCmdXeqInhibitedByRecord() ? " NOX-RECORDING" : " RECORDING") : ""
             )

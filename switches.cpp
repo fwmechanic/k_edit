@@ -205,7 +205,6 @@ extern int  g_swiWBCidx;
 
 extern int  g_iLuaGcStep;
 extern bool g_fDialogTop;
-extern bool g_fInsertMode;
 extern bool g_fLangHilites;
 extern bool g_fM4backtickquote;
 
@@ -329,7 +328,6 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "forceplateol"   , Var2TPfx( g_fForcePlatformEol     ), swinVAR_BOOL, swidBool       _AHELP(  kszHelpPlatEoL ) },
  { "hike"           , Var2TPfx( g_iHike                 ), swinVAR_INT , swidInt        _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) },
  { "hscroll"        , {         swixHscroll             }, swinFXN_BOOL, swidHscroll    _AHELP( "the number of columns that the editor scrolls the text left or right when the you move the cursor out of the window" ) },
- { "insmode"        , Var2TPfx( g_fInsertMode           ), swinVAR_BOOL, swidBool       _AHELP( "'graphic' inserts (yes) or overwrites (no) characters" ) },
  { "langhilites"    , Var2TPfx( g_fLangHilites          ), swinVAR_BOOL, swidBool       _AHELP( "enable (yes) partial language-aware hilighting" ) },
  { "luagcstep"      , Var2TPfx( g_iLuaGcStep            ), swinVAR_INT , swidInt        _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) },
  { "m4backtickquote", Var2TPfx( g_fM4backtickquote      ), swinVAR_BOOL, swidBool       _AHELP( "spanning backtick quoting right ends with ' (yes) or ` (no)" ) },
