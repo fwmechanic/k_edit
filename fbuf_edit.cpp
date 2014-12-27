@@ -1451,8 +1451,7 @@ PChar PtrOfCol_( COL tabWidth, const PChar pS, const PChar pEos, const COL colTg
 // pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
 // retval < pEos
 boost::string_ref::size_type FreeIdxOfCol( COL tabWidth, boost::string_ref content, const COL colTgt ) {
-   if( colTgt < 0 )   { return boost::string_ref::npos; }
-   if( colTgt == 0 )  { return 0; }
+   if( colTgt <= 0 ) { return 0; }
 
 #if 1 // ==0 to test the "realtabs:yes" ... code below
    if( !( /* g_fRealtabs && */ StrContainsTabs( content )) ) { // this is the most common exit path
@@ -1475,9 +1474,8 @@ boost::string_ref::size_type FreeIdxOfCol( COL tabWidth, boost::string_ref conte
    }
 
 boost::string_ref::size_type CaptiveIdxOfCol( COL tabWidth, boost::string_ref content, const COL colTgt ) {
-   auto rv( FreeIdxOfCol( tabWidth, content, colTgt ) );
-   if( rv >= content.length() ) return content.length();
-   return rv;
+   const auto rv( FreeIdxOfCol( tabWidth, content, colTgt ) );
+   return Min( rv, content.length() );
    }
 
 STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {

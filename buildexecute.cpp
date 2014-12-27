@@ -1041,7 +1041,6 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
       PCV;
       if( pCmd->d_func == fn_arg ) {
          // ARG::arg _IS NOT CALLED_: instead inline-execute here:
-         //
          ++g_iArgCount;
          ExtendSelectionHilite( pcv->Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
          continue; //================================================================
@@ -1049,7 +1048,6 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
 
       if( pCmd->isCursorFunc() || pCmd->d_func == fn_meta ) {
          // fn_meta and all CURSORFUNC's are called w/o ARG buildup and may alter the selection state
-         //
          g_fFuncRetVal = pCmd->BuildExecute();
          ExtendSelectionHilite( pcv->Cursor() );
          continue; //================================================================
@@ -1057,7 +1055,6 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
 
       // We HAVE a valid CMD that is not arg, meta, or a CURSORFUNC
       // We SHALL call pCmd->BuildExecute() and return from this function
-      //
       s_fSelectionActive = false; // this fn is consuming the selection
       if(   pCmd->IsFnGraphic()           // user typed a literal char?
          && pcv->Cursor() == s_SelAnchor  // no selection in effect?
@@ -1070,7 +1067,6 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
 
          // Feed this literal char (via pCmd) into GetTextargString,
          // execute returned CMD (unless canceled).
-         //
          TextArgBuffer().clear();
          bool fGotAnyInputFromKbd;
          pCmd = GetTextargString( TextArgBuffer(), FmtStr<20>( "Arg [%d]? ", ArgCount() ), 0, pCmd, 0, &fGotAnyInputFromKbd );
