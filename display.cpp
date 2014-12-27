@@ -618,36 +618,31 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
 
 
 STATIC_FXN cppc IsCppConditional( boost::string_ref src, int *pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
-   *pxPound = -1;
-   auto p1( FirstNonBlankOrEnd( src ) );
-   if( p1 >= src.length() || !('#' == src[p1] || '%' == src[p1] || '!' == src[p1]) ) return cppcNone;
-   *pxPound = p1;
-   src.remove_prefix( p1 + 1 );
-   auto p2( FirstNonBlankOrEnd( src ) );
-   if( p2 >= src.length() || !isWordChar( src[p2] ) ) return cppcNone;
-   src.remove_prefix( p2 );
-   const auto len( FirstNonWordOrEnd( src ) );
+   const auto o1( FirstNonBlankOrEnd( src, 0      ) );  if( o1 >= src.length() || !('#' == src[o1] || '%' == src[o1] || '!' == src[o1]) ) return cppcNone;
+   const auto o2( FirstNonBlankOrEnd( src, o1 + 1 ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
+   const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
    STATIC_CONST struct {
-      int     len;
-      PCChar  nm;
-      cppc    acppc;
-      } cpp_conds[] = {
-         { 2, "if"      , cppcIf   },
-         { 5, "ifdef"   , cppcIf   },
-         { 6, "ifndef"  , cppcIf   },
-         { 4, "elif"    , cppcElif },
-         { 5, "elsif"   , cppcElif },
-         { 6, "elseif"  , cppcElif },
-         { 4, "else"    , cppcElse },
-         { 5, "endif"   , cppcEnd  },
-         { 7, "foreach" , cppcIf   },
-         { 6, "endfor"  , cppcEnd  },
+      boost::string_ref nm;
+      cppc              val;
+      } cpp_conds[] = { // !!! must be sorted by increasing nm.length()
+         { "if"      , cppcIf   },
+         { "else"    , cppcElse },
+         { "elif"    , cppcElif },
+         { "elsif"   , cppcElif },
+         { "endif"   , cppcEnd  },
+         { "ifdef"   , cppcIf   },
+         { "ifndef"  , cppcIf   },
+         { "elseif"  , cppcElif },
+         { "endfor"  , cppcEnd  },
+         { "foreach" , cppcIf   },
       };
-
-   for( const auto &cc : cpp_conds )
-      if( (len == cc.len) && (0 == memcmp( src.data(), cc.nm, len )) )
-         return cc.acppc;
-
+   for( const auto &cc : cpp_conds ) {
+      if( word.length() < cc.nm.length() ) break;
+      if( word == cc.nm ) {
+         *pxPound = o1;
+         return cc.val;
+         }
+      }
    return cppcNone;
    }
 

@@ -7,7 +7,6 @@
 #include "conio.h"
 #include "ed_main.h"
 
-
 #define PC_BLACK   0
 #define PC_BLUE    1
 #define PC_GREEN   2
