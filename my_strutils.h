@@ -183,9 +183,6 @@ TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos(
 TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
-extern boost::string_ref::size_type FirstNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 );
-extern boost::string_ref::size_type FirstBlankOrEnd   ( boost::string_ref src, boost::string_ref::size_type start=0 );
-
 TF_Ptr STIL Ptr  StrToNextWordOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, g_szWordChars ); }
 
 extern PCChar StrPastWord(  PCChar pszToSearch );
@@ -193,6 +190,9 @@ STIL   PChar  StrPastWord(  PChar  pszToSearch ) { return PChar(StrPastWord( PCC
 
 extern PCChar StrPastWord(  PCChar pszToSearch, PCChar eos );
 STIL   PChar  StrPastWord(  PChar  pszToSearch, PChar  eos ) { return PChar(StrPastWord( PCChar(pszToSearch), PCChar(eos) )); }
+
+extern boost::string_ref::size_type FirstNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 );
+extern boost::string_ref::size_type FirstBlankOrEnd   ( boost::string_ref src, boost::string_ref::size_type start=0 );
 
 extern boost::string_ref::size_type FirstNonWordOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 );
 extern boost::string_ref::size_type IdxFirstWordCh( boost::string_ref src, boost::string_ref::size_type start );
@@ -225,6 +225,10 @@ void rmv_trail_blanks( strlval &inout ) {
    while( !inout.empty() && isBlank( inout.back() ) ) {
       inout.pop_back();
       }
+   }
+
+static boost::string_ref::size_type FirstAlphaOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 ) {
+   return ToNextOrEnd( isalpha, src, start );
    }
 
 //#######################################################################################

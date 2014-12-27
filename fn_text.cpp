@@ -42,8 +42,58 @@ STATIC_FXN PChar GetLineSeg_( PFBUF pfb, std::string &st, LINE yLine, COL xLeftI
    return const_cast<PChar>( st.c_str() );
    }
 
+STATIC_CONST char no_alpha[] = "Warning: no alphabetic chars found in argument!";
+
+#define USE_TEXTARG_NULLEOx_edit 0
+#if     USE_TEXTARG_NULLEOx_edit
+/*
+   20141227 turns out this is a _really_ unusual case: use specifies NULLEOW/L,
+   and the region so defined is EDITED.  I'm not sure if there are any other
+   examples of this.
+*/
+class TEXTARG_NULLEOx_edit {
+protected:
+         FBUF &d_fb;
+   const ARG  &d_arg;
+   std::string d_str;
+   bool        d_rv;
+   virtual bool VEdit() = 0;
+public:
+   TEXTARG_NULLEOx_edit( const ARG &arg_, FBUF &fb_ )
+      : d_fb( fb_ )
+      , d_arg( arg_ )
+      , d_str( d_arg.d_textarg.pText )
+      , d_rv( false )
+      {}
+
+   bool Edit() {
+      d_rv = VEdit();
+      if( d_rv ) {
+         const auto xLeft( d_arg.d_textarg.ulc.col );
+         d_fb.PutLineSeg( d_arg.d_textarg.ulc.lin, d_str.data(), xLeft, xLeft + d_str.length() - 1 );  // overlay converted string
+         }
+      return d_rv;
+      }
+   virtual ~TEXTARG_NULLEOx_edit() {}
+   };
+
+class TEXTARG_NULLEOx_edit_flipcase : public TEXTARG_NULLEOx_edit {
+   bool VEdit() override {
+      const auto a1( FirstAlphaOrEnd( d_str, 0 ) );
+      if( a1 == d_str.length() ) {
+         return d_arg.fnMsg( no_alpha );
+         } DBG( "a1= %" PR_SIZET "u", a1 );
+      const auto fx( islower( d_str[a1] ) ? ::toupper : ::tolower );
+      std::transform( d_str.cbegin(), d_str.cend(), d_str.begin(), fx );
+      return true;
+      }
+public:
+   TEXTARG_NULLEOx_edit_flipcase( const ARG &arg_, FBUF &fb_ ) : TEXTARG_NULLEOx_edit( arg_, fb_ ) {}
+   };
+
+#endif
+
 bool ARG::flipcase() {
-   STATIC_CONST char no_alpha[] = "Warning: no alphabetic chars found in argument!";
    std::string stbuf;
    PCF;
 
@@ -75,22 +125,19 @@ bool ARG::flipcase() {
          }
 
       case NOARG: {
-         const auto yTop ( d_noarg.cursor.lin );
-         const auto xLeft( d_noarg.cursor.col );
-         const auto inbuf( GetLineSeg_( pcf, stbuf, yTop, xLeft, xLeft ) );
-         if( !inbuf[0] )
-            return fnMsg( no_alpha );
-
-         const auto chReplace( FlipCase( inbuf[0] ) );
-         if( !chReplace )
-            return fnMsg( no_alpha );
-
+         const auto rl( pcf->PeekRawLine( d_noarg.cursor.lin ) );
+         const auto ix( CaptiveIdxOfCol( pcf->TabWidth(), rl, d_noarg.cursor.col ) );  if( ix == rl.length() ) { return false; }
+         const auto newCh( FlipCase( rl[ix] ) );   if( newCh == rl[ix] ) { return false; }
          Xbuf xb;
-         FBOP::ReplaceChar( pcf, yTop, xLeft, chReplace, &xb );
+         FBOP::ReplaceChar( pcf, d_noarg.cursor.lin, d_noarg.cursor.col, newCh, &xb );
          return true;
          }
 
       case TEXTARG: { // actually NULLEOW (never BOXSTR)
+        #if USE_TEXTARG_NULLEOx_edit
+         TEXTARG_NULLEOx_edit_flipcase editor( *this, *g_CurFBuf() );
+         return editor.Edit();
+        #else
          linebuf argBuf;
          SafeStrcpy( argBuf, d_textarg.pText );
          const auto zc( first_alpha( argBuf ) );
@@ -102,6 +149,7 @@ bool ARG::flipcase() {
          auto xLeft( d_textarg.ulc.col );
          pcf->PutLineSeg( d_textarg.ulc.lin, argBuf, xLeft, xLeft+Strlen(argBuf)-1 );  // overlay converted string
          return true;
+        #endif
          }
 
       default:
