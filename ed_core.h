@@ -1552,6 +1552,32 @@ extern boost::string_ref::size_type CaptiveIdxOfCol( COL tabWidth, boost::string
 extern COL     ColOfPtr                       ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
 extern COL     ColOfFreeIdx                   ( COL tabWidth, boost::string_ref content, boost::string_ref::size_type offset );
 
+struct rlc1 {
+   boost::string_ref            ln;
+   boost::string_ref::size_type ix0;
+   rlc1( PFBUF pfb, LINE yy, COL x0 )
+      : ln( pfb->PeekRawLine( yy ) )
+      , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, x0 ) )
+      {}
+   bool beyond()                                  const { return ix0 >= ln.length(); }
+   bool beyond( boost::string_ref::size_type ix ) const { return ix  >= ln.length(); }
+   char ch0() const { return ln[ix0]; }
+   };
+
+struct rlc2 {
+   boost::string_ref            ln;
+   boost::string_ref::size_type ix0;
+   boost::string_ref::size_type ix1;
+   rlc2( PFBUF pfb, LINE yy, COL x0, COL x1 )
+      : ln( pfb->PeekRawLine( yy ) )
+      , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, x0 ) )
+      , ix1( CaptiveIdxOfCol( pfb->TabWidth(), ln, x1 ) )
+      {}
+   bool beyond()                                  const { return ix0 >= ln.length(); }
+   bool beyond( boost::string_ref::size_type ix ) const { return ix  >= ln.length(); }
+   boost::string_ref middle() const { return ln.substr( ix0, ix1-ix0 ); }
+   };
+
 //************ tabWidth-dependent string fxns
 extern COL     TabAlignedCol(  COL tabWidth, PCChar pS, PCChar eos, COL xCol, COL xBias );
 extern COL     ColPrevTabstop( COL tabWidth, COL xCol );

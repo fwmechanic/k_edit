@@ -470,57 +470,41 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
    return true; //========================================================================================
    }
 
-// trims leading and trailing blanks, and ensures lines joined by only one blank
+// trims leading and trailing blanks of each contributing line, ensures lines' contrib sare joined by ONE blank
 std::string StreamArgToString( PFBUF pfb, Rect stream ) {
-   std::string rv;
+   std::string dest;
    const auto yMax( Min( pfb->LastLine(), stream.flMax.lin ) );
    if( stream.flMin.lin > yMax ) {
-      return rv;
+      return dest;
       }
-   auto append_rv = [&rv]( boost::string_ref src ) {
-      if( !IsStringBlank( src ) ) {
-         if( !rv.empty() ) { rv += " "; }
-         rv.append( src.data(), src.length() ); // <-- could be replaced by multi-blank-eater
-         rmv_trail_blanks( rv );
+   auto append_dest = [&dest]( boost::string_ref src ) {
+      src.remove_prefix( FirstNonBlankOrEnd( src, 0 ) );
+      if( !src.empty() ) {
+         if( !dest.empty() ) { dest += ' '; }
+         dest.append( src.data(), src.length() ); // <-- could be replaced by multi-blank-eater
+         rmv_trail_blanks( dest );
          }
       };
-
-   const auto xMax( yMax == stream.flMax.lin ? stream.flMax.col-1 : COL_MAX );
-   auto yLine( stream.flMin.lin );
-   const auto tw( pfb->TabWidth() );
-   {
-   auto rl( pfb->PeekRawLine( yLine ) );
-   if( !IsStringBlank( rl ) ) {
-      const auto lastCol( ColOfFreeIdx( tw, rl, rl.length() ) );
-      if( stream.flMin.col < lastCol ) {
-         rl.remove_prefix( CaptiveIdxOfCol( tw, rl, stream.flMin.col ) );
-         const auto nonb( FirstNonBlankOrEnd( rl, 0 ) );
-         rl.remove_prefix( nonb );
-         append_rv( rl );
-         }
+   if( stream.flMin.lin == yMax ) {
+      append_dest( rlc2( pfb, stream.flMin.lin, stream.flMin.col, stream.flMax.col ).middle() );
       }
-   }
-   for( ++yLine ; yLine < yMax ; ++yLine ) {
-      auto rl( pfb->PeekRawLine( yLine ) );
-      if( !IsStringBlank( rl ) ) {
-         const auto nonb( FirstNonBlankOrEnd( rl, 0 ) );
-         rl.remove_prefix( nonb );
-         append_rv( rl );
-         }
+   else {
+      auto yLine( stream.flMin.lin );
+      {
+      auto rl( rlc1( pfb, yLine, stream.flMin.col ) );
+      rl.ln.remove_prefix( rl.ix0 );
+      append_dest( rl.ln );
       }
-   {
-   auto rl( pfb->PeekRawLine( yLine ) );
-   if( !IsStringBlank( rl ) ) {
-      const auto maxIx( CaptiveIdxOfCol( tw, rl, xMax+1 ) );
-      const auto nonb( FirstNonBlankOrEnd( rl, 0 ) );        0 && DBG( "nonb=%" PR_BSRSIZET "u maxIx=%" PR_BSRSIZET "u", nonb, maxIx );
-      if( nonb < maxIx ) {
-         rl.remove_suffix( rl.length() - maxIx );
-         rl.remove_prefix( nonb );
-         append_rv( rl );
+      for( ++yLine ; yLine < yMax ; ++yLine ) {
+         append_dest( pfb->PeekRawLine( yLine ) );
          }
+      {
+      auto rl( rlc1( pfb, yLine, stream.flMax.col ) );
+      rl.ln.remove_suffix( rl.ln.length() - rl.ix0 );
+      append_dest( rl.ln );
       }
-   }
-   return rv;
+      }
+   return dest;
    }
 
 #ifdef fn_stream

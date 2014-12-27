@@ -334,7 +334,7 @@ bool IsStringBlank( boost::string_ref src ) {
          return false;
          }
       }
-   return true;
+   return true; // note that empty strings are Blank strings!
    }
 
 boost::string_ref::size_type FirstNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {

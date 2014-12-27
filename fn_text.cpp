@@ -92,17 +92,6 @@ public:
 
 #endif
 
-struct rlc1 {
-   boost::string_ref            ln;
-   boost::string_ref::size_type ix0;
-   rlc1( PFBUF pfb, LINE yy, COL xx )
-      : ln( pfb->PeekRawLine( yy ) )
-      , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, xx ) )
-      {}
-   bool beyond() const { return ix0 == ln.length(); }
-   char ch0()    const { return ln[ix0]; }
-   };
-
 bool ARG::flipcase() {
    std::string stbuf;
    PCF;
