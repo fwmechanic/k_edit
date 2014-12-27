@@ -2232,31 +2232,17 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
      ) { return; }
 
    AdjMarksForInsertion( FBsrc, FBdest, xSrcLeft, ySrcTop, xSrcRight, ySrcBottom, xDst, yDst );
-   const auto boxWidth( xSrcRight - xSrcLeft + 1 );
    const auto tws( FBsrc ? FBsrc ->TabWidth() : 0 );
    const auto twd(         FBdest->TabWidth()     );
+   const auto boxWidth( xSrcRight - xSrcLeft + 1 );
    std::string stSrc, stDst;  // BUGBUG one buffer would be nicer ...
    for( auto ySrc( ySrcTop ); ySrc <= ySrcBottom ; ++ySrc, ++yDst ) {
-     #if 1
-      // BIZARRO this is 3KB LARGER codegen than the below version (which is functionally identical)
       FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
       if( FBsrc ) {
          FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
          rlc2 srl( stSrc, xSrcLeft, xSrcRight );
          stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, srl.ix0, srl.ix1 - srl.ix0 + 1 );
          }
-     #else
-      // BIZARRO this is 3KB SMALLER codegen than the above version (which is functionally identical)
-      if( !FBsrc ) {
-         FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
-         }
-      else {
-         FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
-         FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
-         rlc2 srl( stSrc, xSrcLeft, xSrcRight );
-         stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, srl.ix0, srl.ix1 - srl.ix0 + 1 );
-         }
-     #endif
       FBdest->PutLine( yDst, stDst );
       }
    }
