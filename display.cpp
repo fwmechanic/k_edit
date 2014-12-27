@@ -529,8 +529,8 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
       if( xCursor < xEos ) {
          const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
          if( ixC != boost::string_ref::npos && isWordChar( rl[ixC] ) ) {
-            const auto ixFirst    ( IdxFirstWordCh( rl, ixC ) );
-            const auto ixPastLast ( NextNonWordOrEnd( rl, ixC ) );         1 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
+            const auto ixFirst    ( IdxFirstWordCh   ( rl, ixC ) );
+            const auto ixPastLast ( FirstNonWordOrEnd( rl, ixC ) );           0 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
             // if( ixFirst != boost::string_ref::npos && ixPastLast != boost::string_ref::npos )
                {
                const auto xMin( ColOfFreeIdx( tw, rl, ixFirst  ) );
@@ -619,14 +619,14 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
 
 STATIC_FXN cppc IsCppConditional( boost::string_ref src, int *pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
    *pxPound = -1;
-   auto p1( src.find_first_not_of( " \t" ) );
-   if( p1==boost::string_ref::npos || !('#' == src[p1] || '%' == src[p1] || '!' == src[p1]) ) return cppcNone;
+   auto p1( FirstNonBlankOrEnd( src ) );
+   if( p1 >= src.length() || !('#' == src[p1] || '%' == src[p1] || '!' == src[p1]) ) return cppcNone;
    *pxPound = p1;
    src.remove_prefix( p1 + 1 );
-   auto p2( src.find_first_not_of( " \t" ) );
-   if( p2==boost::string_ref::npos || !isWordChar( src[p2] ) ) return cppcNone;
+   auto p2( FirstNonBlankOrEnd( src ) );
+   if( p2 >= src.length() || !isWordChar( src[p2] ) ) return cppcNone;
    src.remove_prefix( p2 );
-   const auto len( StrLastWordCh( src ) + 1 );
+   const auto len( FirstNonWordOrEnd( src ) );
    STATIC_CONST struct {
       int     len;
       PCChar  nm;

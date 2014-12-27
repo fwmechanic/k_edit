@@ -51,7 +51,7 @@ bool ARG::right() { PCWrV;
 STATIC_FXN COL ColOfFirstNonBlankChar( PCFBUF fb, LINE yLine ) {
    const auto rl( fb->PeekRawLine( yLine ) );
    if( IsStringBlank( rl ) )           return -1;
-   const auto ix( NextNonBlankOrEnd( rl ) );
+   const auto ix( FirstNonBlankOrEnd( rl ) );
    return ColOfFreeIdx( fb->TabWidth(), rl, ix );
    }
 

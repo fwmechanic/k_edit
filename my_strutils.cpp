@@ -337,10 +337,10 @@ bool IsStringBlank( boost::string_ref src ) {
    return true;
    }
 
-boost::string_ref::size_type NextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+boost::string_ref::size_type FirstNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    return ToNextOrEnd( notBlank, src, start );
    }
 
-boost::string_ref::size_type NextBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+boost::string_ref::size_type FirstBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    return ToNextOrEnd( isBlank , src, start );
    }
