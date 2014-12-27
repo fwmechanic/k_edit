@@ -44,12 +44,11 @@ STATIC_FXN PChar GetLineSeg_( PFBUF pfb, std::string &st, LINE yLine, COL xLeftI
 
 STATIC_CONST char no_alpha[] = "Warning: no alphabetic chars found in argument!";
 
-#define USE_TEXTARG_NULLEOx_edit 0
+#define USE_TEXTARG_NULLEOx_edit 1
 #if     USE_TEXTARG_NULLEOx_edit
 /*
-   20141227 turns out this is a _really_ unusual case: use specifies NULLEOW/L,
-   and the region so defined is EDITED.  I'm not sure if there are any other
-   examples of this.
+   20141227 turns out this is a _really_ unusual case: user NULLEOW/L arg region
+   is _EDITED_.  I'm not sure if there are any other examples of this.
 */
 class TEXTARG_NULLEOx_edit {
 protected:
@@ -82,9 +81,9 @@ class TEXTARG_NULLEOx_edit_flipcase : public TEXTARG_NULLEOx_edit {
       const auto a1( FirstAlphaOrEnd( d_str, 0 ) );
       if( a1 == d_str.length() ) {
          return d_arg.fnMsg( no_alpha );
-         } DBG( "a1= %" PR_SIZET "u", a1 );
+         } 0 && DBG( "a1= %" PR_SIZET "u", a1 );
       const auto fx( islower( d_str[a1] ) ? ::toupper : ::tolower );
-      std::transform( d_str.cbegin(), d_str.cend(), d_str.begin(), fx );
+      std::transform( d_str.cbegin()+a1, d_str.cend(), d_str.begin()+a1, fx );
       return true;
       }
 public:
@@ -92,6 +91,17 @@ public:
    };
 
 #endif
+
+struct rlc1 {
+   boost::string_ref            ln;
+   boost::string_ref::size_type ix0;
+   rlc1( PFBUF pfb, LINE yy, COL xx )
+      : ln( pfb->PeekRawLine( yy ) )
+      , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, xx ) )
+      {}
+   bool beyond() const { return ix0 == ln.length(); }
+   char ch0()    const { return ln[ix0]; }
+   };
 
 bool ARG::flipcase() {
    std::string stbuf;
@@ -125,9 +135,14 @@ bool ARG::flipcase() {
          }
 
       case NOARG: {
+        #if 1
+         const auto rl( rlc1( pcf, d_noarg.cursor.lin, d_noarg.cursor.col ) ); if( rl.beyond() ) { return false; }
+         const auto newCh( FlipCase( rl.ch0() ) );   if( newCh == rl.ch0() ) { return false; }
+        #else
          const auto rl( pcf->PeekRawLine( d_noarg.cursor.lin ) );
          const auto ix( CaptiveIdxOfCol( pcf->TabWidth(), rl, d_noarg.cursor.col ) );  if( ix == rl.length() ) { return false; }
          const auto newCh( FlipCase( rl[ix] ) );   if( newCh == rl[ix] ) { return false; }
+        #endif
          Xbuf xb;
          FBOP::ReplaceChar( pcf, d_noarg.cursor.lin, d_noarg.cursor.col, newCh, &xb );
          return true;
