@@ -691,23 +691,22 @@ COL ColOfFreeIdx( COL tabWidth, const stref &content, sridx offset ) {
 GLOBAL_VAR bool g_fInsertMode = true;
 
 STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
-   auto yLine( pcv->Cursor().lin );
-   auto xCol ( pcv->Cursor().col );
-   if( xCol == 0 ) { // cursor @ beginning of line?
+   const auto yLine( pcv->Cursor().lin );
+   if( pcv->Cursor().col == 0 ) { // cursor @ beginning of line?
       if( yLine == 0 )
          return false; // no prev char
 
-      --yLine; // join current and prev lines
-      xCol = FBOP::LineCols( pcf, yLine );
-      if( InInsertMode() && fEmacsmode )  // eat linebreak
-         pcf->DelStream( xCol, yLine, 0, yLine+1 );
+      auto xCol( FBOP::LineCols( pcf, yLine-1 ) );
+      if( InInsertMode() && fEmacsmode ) // join current and prev lines
+         pcf->DelStream( xCol, yLine-1, 0, yLine );
 
-      pcv->MoveCursor( yLine, xCol );
+      pcv->MoveCursor( yLine-1, xCol );
       return true;
       }
 
    if( InInsertMode() ) {
-      FBOP::DelChar( pcf, --xCol, yLine );
+      const auto xCol( pcv->Cursor().col - 1 );
+      FBOP::DelChar( pcf, xCol, yLine );
       pcv->MoveCursor( yLine, xCol );
       return true;
       }
@@ -717,12 +716,12 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
    const auto lbuf( xb.wbuf() );
    const auto eos( Eos(lbuf) );
    const auto tw( pcf->TabWidth() );
-   xCol = TabAlignedCol( tw, lbuf, eos, xCol, -1 );
-
    const auto xMaxCol( StrCols( tw, lbuf ) );
-   const auto pxCol  ( PtrOfColWithinStringRegionNoEos( tw, lbuf, eos, xCol ) );
+
+   const auto xCol( TabAlignedCol( tw, lbuf, eos, pcv->Cursor().col, -1 ) );
+   const auto pxCol( PtrOfColWithinStringRegionNoEos( tw, lbuf, eos, xCol ) );
    if( fEmacsmode ) {
-      if( (xCol + 1) <= xMaxCol && *pxCol != ' ' ) {
+      if( xCol < xMaxCol && *pxCol != ' ' ) {
          *pxCol = ' ';
          pcf->PutLine( yLine, lbuf );
          }
@@ -731,14 +730,12 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
       }
 
    if( (xCol + 1) > xMaxCol ) {
-      xCol = xMaxCol;
-      pcv->MoveCursor( yLine, xCol );
+      pcv->MoveCursor( yLine, xMaxCol );
       return true;
       }
 
    if( ColOfPtr( tw, lbuf, StrPastAnyBlanks( lbuf ), eos ) > xCol ) {
-      xCol = 0;
-      pcv->MoveCursor( yLine, xCol );
+      pcv->MoveCursor( yLine, 0 );
       return true;
       }
 
