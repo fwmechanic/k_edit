@@ -538,8 +538,8 @@ STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE star
       const boost::string_ref tag( IsolateTagStr( rl ) );
       if( !tag.empty() ) { 0 && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
          for( boost::string_ref::size_type ix( 0 ); ix < tag.length() ; ) {
-            const auto ix0( ToNextNonBlankOrEnd( tag, ix  ) );
-            const auto ix1( ToNextBlankOrEnd   ( tag, ix0 ) );
+            const auto ix0( NextNonBlankOrEnd( tag, ix  ) );
+            const auto ix1( NextBlankOrEnd   ( tag, ix0 ) );
             const auto taglen( ix1 - ix0 );
             const auto atag( tag.substr( ix0, taglen ) );  0 && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
             if( eqi( atag, srKey ) ) {

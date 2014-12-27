@@ -136,7 +136,7 @@ bool isWordChar( char ch ) {
    return s_isWordChar_[static_cast<unsigned>(ch)];
    }
 
-boost::string_ref::size_type ToNextNonWordOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+boost::string_ref::size_type NextNonWordOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    return ToNextOrEnd( notWordChar, src, start );
    }
 

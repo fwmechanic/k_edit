@@ -337,38 +337,10 @@ bool IsStringBlank( boost::string_ref src ) {
    return true;
    }
 
-#if 1
-
-boost::string_ref::size_type ToNextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+boost::string_ref::size_type NextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    return ToNextOrEnd( notBlank, src, start );
    }
 
-boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
+boost::string_ref::size_type NextBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
    return ToNextOrEnd( isBlank , src, start );
    }
-
-#else
-
-boost::string_ref::size_type ToNextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
-   if( start < src.length() ) {
-      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         if( !isBlank( *it ) ) {
-            return std::distance( src.cbegin(), it );
-            }
-         }
-      }
-   return std::distance( src.cbegin(), src.end() );
-   }
-
-boost::string_ref::size_type ToNextBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start ) {
-   if( start < src.length() ) {
-      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         if( isBlank( *it ) ) {
-            return std::distance( src.cbegin(), it );
-            }
-         }
-      }
-   return std::distance( src.cbegin(), src.end() );
-   }
-
-#endif

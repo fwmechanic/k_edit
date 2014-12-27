@@ -183,8 +183,8 @@ TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos(
 TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
-extern boost::string_ref::size_type ToNextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 );
-extern boost::string_ref::size_type ToNextBlankOrEnd   ( boost::string_ref src, boost::string_ref::size_type start=0 );
+extern boost::string_ref::size_type NextNonBlankOrEnd( boost::string_ref src, boost::string_ref::size_type start=0 );
+extern boost::string_ref::size_type NextBlankOrEnd   ( boost::string_ref src, boost::string_ref::size_type start=0 );
 
 TF_Ptr STIL Ptr  StrToNextWordOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, g_szWordChars ); }
 
@@ -194,7 +194,7 @@ STIL   PChar  StrPastWord(  PChar  pszToSearch ) { return PChar(StrPastWord( PCC
 extern PCChar StrPastWord(  PCChar pszToSearch, PCChar eos );
 STIL   PChar  StrPastWord(  PChar  pszToSearch, PChar  eos ) { return PChar(StrPastWord( PCChar(pszToSearch), PCChar(eos) )); }
 
-extern boost::string_ref::size_type ToNextNonWordOrEnd( boost::string_ref src, boost::string_ref::size_type start );
+extern boost::string_ref::size_type NextNonWordOrEnd( boost::string_ref src, boost::string_ref::size_type start );
 extern boost::string_ref::size_type IdxLastWordCh ( boost::string_ref src, boost::string_ref::size_type start );
 extern boost::string_ref::size_type IdxFirstWordCh( boost::string_ref src, boost::string_ref::size_type start );
 extern boost::string_ref::size_type StrLastWordCh(  boost::string_ref src );

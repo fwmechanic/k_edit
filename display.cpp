@@ -530,7 +530,7 @@ boost::string_ref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
          const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
          if( ixC != boost::string_ref::npos && isWordChar( rl[ixC] ) ) {
             const auto ixFirst    ( IdxFirstWordCh( rl, ixC ) );
-            const auto ixPastLast ( ToNextNonWordOrEnd( rl, ixC ) );         1 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
+            const auto ixPastLast ( NextNonWordOrEnd( rl, ixC ) );         1 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
             // if( ixFirst != boost::string_ref::npos && ixPastLast != boost::string_ref::npos )
                {
                const auto xMin( ColOfFreeIdx( tw, rl, ixFirst  ) );
