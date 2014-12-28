@@ -1002,20 +1002,20 @@ bool ARG::linsert() { PCF;
                     // Inserts or deletes blanks at the beginning of a line to move the
                     // first nonblank character to the cursor.
                     // (same as NOARG aligncol?)
-                    Xbuf xb;
-                    const auto chars( pcf->getLineTabxPerRealtabs_DEPR( &xb, d_nullarg.cursor.lin ) );
-                    auto lbuf( xb.wbuf() );
-                    const auto pFirstNonBlank( StrPastAnyBlanks( lbuf ) );
-                    const auto tailLen( Strlen( pFirstNonBlank ) + 1 );
-                    const auto delta( Max( static_cast<ptrdiff_t>(0), pFirstNonBlank - lbuf) - d_nullarg.cursor.col );
-                    if( delta > 0 ) {
-                       lbuf = xb.wresize( chars + delta + 1 );
+                    const auto rl( pcf->PeekRawLine( d_nullarg.cursor.lin ) );
+                    const auto ixNonb( FirstNonBlankOrEnd( rl ) );
+                    const auto  xNonb( CaptiveIdxOfCol( pcf->TabWidth(), rl, ixNonb ) );
+                    std::string sbuf;
+                    if     ( xNonb > d_nullarg.cursor.col ) {
+                       GetLineWithSegRemoved( pcf, sbuf, d_nullarg.cursor.lin, d_nullarg.cursor.col, xNonb - d_nullarg.cursor.col, true );
                        }
-                    memmove( lbuf                       , pFirstNonBlank, tailLen              );
-                    memmove( lbuf + d_nullarg.cursor.col, lbuf          , Strlen( lbuf ) + 1   );
-                    memset(  lbuf                       , ' '           , d_nullarg.cursor.col );
-                    std::string stmp;
-                    pcf->PutLine( d_nullarg.cursor.lin, lbuf, stmp );
+                    else if( xNonb < d_nullarg.cursor.col ) {
+                       pcf->GetLineForInsert( sbuf, d_nullarg.cursor.lin, xNonb, d_nullarg.cursor.col - xNonb );
+                       }
+                    if( sbuf.length() ) {
+                       std::string stmp;
+                       pcf->PutLine( d_nullarg.cursor.lin, sbuf, stmp );
+                       }
                     } break;
 
     case NOARG:     pcf->InsBlankLinesBefore( d_noarg.cursor.lin );  // Inserts one blank line above the current line.
