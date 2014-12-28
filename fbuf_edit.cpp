@@ -519,7 +519,8 @@ int FBUF::PutLastMultiline( PCChar buf ) {
 
 void FBUF::xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val ) {
    std::string tmp;
-   auto pBuf( const_cast<PChar>( pxb->vFmtStr( format, val ) ) );
+   pxb->vFmtStr( format, val );
+   auto pBuf( pxb->wbuf() );
    for(;;) {
       const auto pNL( Strchr( pBuf, '\n' ) );
       if(  pNL ) *pNL = '\0';
@@ -532,7 +533,8 @@ void FBUF::xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val ) {
 void FBUF::Vsprintf( LINE lineNum, PCChar format, va_list val ) {
    std::string tmp;
    Xbuf xb;
-   auto pBuf( const_cast<PChar>( xb.vFmtStr( format, val ) ) );
+   xb.vFmtStr( format, val );
+   auto pBuf( xb.wbuf() );
    for(;;) {
       const auto pNL( Strchr( pBuf, '\n' ) );
       if(  pNL ) *pNL = '\0';
