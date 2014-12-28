@@ -346,9 +346,9 @@ STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
 //============================================================================
 
 STATIC_FXN void FBufRead_Environment( PFBUF pFBuf, int ) {
-   Xbuf xbIns;
+   std::string tmp;
    for( auto ix(0) ; g_envp[ ix ] ; ++ix )
-      FBOP::InsLineSortedAscending( pFBuf, &xbIns, 0, g_envp[ix] );
+      FBOP::InsLineSortedAscending( pFBuf, tmp, 0, g_envp[ix] );
    }
 
 STATIC_FXN int CDECL__ qsort_cmp_env( PCVoid pA, PCVoid pB ) {
@@ -431,8 +431,8 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
       else {
          StringOfAllKeyNamesFnIsAssignedTo( BSOB(lbuf), Cmd, "," );
          }
-      Xbuf xbIns;
-      FBOP::InsLineSortedDescending( uc->fbOut, &xbIns, 0, SprintfBuf( "%*u  %-*s  %s", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name(), lbuf ) );
+      std::string tmp;
+      FBOP::InsLineSortedDescending( uc->fbOut, tmp, 0, SprintfBuf( "%*u  %-*s  %s", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name(), lbuf ) );
       }
    }
 

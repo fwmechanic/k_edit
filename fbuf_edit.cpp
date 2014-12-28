@@ -590,6 +590,7 @@ STATIC_FXN void spcs2tabs_leading( std::back_insert_iterator<std::string > dit, 
 
 void FBUF::cat( PCChar pszNewLineData ) {
    auto pBuf( pszNewLineData );
+   std::string tmp;
    Xbuf xb;
    while( 1 ) {
       decltype(pBuf) pNL( strchr( pBuf, '\n' ) );
@@ -599,10 +600,10 @@ void FBUF::cat( PCChar pszNewLineData ) {
          }
       if( pBuf == pszNewLineData ) {
          getLineTabx( &xb, LastLine() );
-         PutLine( LastLine(), xb.cat( pBuf, pNL-pBuf ) );
+         PutLine( LastLine(), xb.cat( pBuf, pNL-pBuf ), tmp );
          }
       else {
-         PutLine( LineCount(), se2bsr( pBuf, pNL ) );
+         PutLine( LineCount(), se2bsr( pBuf, pNL ), tmp );
          }
       if( !pNL ) break;
       pBuf = pNL + 1;
@@ -628,6 +629,7 @@ int StrTruncTrailBlanks( PChar pszString ) {
 
 int FBUF::PutLastMultiline( PCChar buf ) {
    const auto pEos( buf + Strlen( buf ) );
+   std::string tmp;
    auto pX( buf );
    auto pSegStart( buf );
    auto lineCount( 0 );
@@ -644,7 +646,7 @@ int FBUF::PutLastMultiline( PCChar buf ) {
          case '\x0A': pSegEnd = pX;  pNxtSegStart = pX + 1 + (pX[1] == '\x0D' ? 1 : 0);  break;
          }
       if( pSegEnd ) {
-         PutLine( LineCount(), se2bsr( pSegStart, pSegEnd ) );
+         PutLine( LineCount(), se2bsr( pSegStart, pSegEnd ), tmp );
          ++lineCount;
          pX = pSegStart = pNxtSegStart;
          }
@@ -653,7 +655,7 @@ int FBUF::PutLastMultiline( PCChar buf ) {
       }
 
    if( pSegStart < pEos ) {
-      PutLine( LineCount(), se2bsr( pSegStart, pEos ) );
+      PutLine( LineCount(), se2bsr( pSegStart, pEos ), tmp );
       ++lineCount;
       }
 
@@ -662,23 +664,25 @@ int FBUF::PutLastMultiline( PCChar buf ) {
 
 
 void FBUF::xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val ) {
+   std::string tmp;
    auto pBuf( const_cast<PChar>( pxb->vFmtStr( format, val ) ) );
    for(;;) {
       const auto pNL( Strchr( pBuf, '\n' ) );
       if(  pNL ) *pNL = '\0';
-      InsLine( lineNum++, pBuf );
+      InsLine( lineNum++, pBuf, tmp );
       if( !pNL ) break;
       pBuf = pNL + 1;
       }
    }
 
 void FBUF::Vsprintf( LINE lineNum, PCChar format, va_list val ) {
+   std::string tmp;
    Xbuf xb;
    auto pBuf( const_cast<PChar>( xb.vFmtStr( format, val ) ) );
    for(;;) {
       const auto pNL( Strchr( pBuf, '\n' ) );
       if(  pNL ) *pNL = '\0';
-      InsLine( lineNum++, pBuf );
+      InsLine( lineNum++, pBuf, tmp );
       if( !pNL ) break;
       pBuf = pNL + 1;
       }
@@ -753,65 +757,12 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
    UndoReplaceLineContent( yLine, srSrc.data(), srSrc.length() );  // after all this buildup, JUST WRITE THE DAMNED THING:
    }
 
-void FBUF::PutLine( LINE yLine, const stref &srSrc, PXbuf pXb ) {
-   // if( IsNoEdit() ) { DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() ); }
-   BadParamIf( , IsNoEdit() );
-   DirtyFBufAndDisplay();
-
-   const auto minLineCount( yLine + 1 );
-   if( LineCount() < minLineCount ) { 0 && DBG("%s Linecount=%d", __func__, minLineCount );
-      FBOP::PrimeRedrawLineRangeAllWin( this, LastLine(), yLine ); // needed with addition of g_chTrailLineDisp; past-EOL lines need to be overwritten
-      SetLineInfoCount( minLineCount );
-      SetLineCount    ( minLineCount );
-      }
-   else {
-      FBOP::PrimeRedrawLineRangeAllWin( this, yLine, yLine );
-      }
-
-   linebuf tcbuf; // must be in scope for the remainder of the function!
-         auto numch( srSrc.length() );
-   const auto eos( srSrc.data() + srSrc.length() );
-
-   auto pSrc( srSrc.data() );
-   if( TABCONV_0_NO_CONV != d_Tabconv ) {
-      PChar pBuf; size_t bufsize;
-      const auto lineCols( ColOfFreeIdx( this->TabWidth(), srSrc, srSrc.length() ) );
-      if( srSrc.length() > sizeof tcbuf-1 || (lineCols > sizeof tcbuf-1-1) ) {
-         if( pXb ) {
-            bufsize = srSrc.length() + 1;
-            pBuf    = pXb->wresize( bufsize );
-            goto CONVERT;
-            }
-         // skip anything requiring an intermediate buffer
-         }
-      else {
-         bufsize = sizeof tcbuf;
-         pBuf    =        tcbuf;
-CONVERT:
-         const Tabber tabr( this->TabWidth() );
-         switch( d_Tabconv ) { // compress spaces into tabs per this->d_Tabconv:
-            default:
-            case TABCONV_0_NO_CONV:                   Assert( 0 ); break;
-            case TABCONV_1_LEADING_SPCS_TO_TABS:      numch = spcs2tabs_leading       ( pBuf, bufsize, srSrc, tabr ); break;
-            case TABCONV_2_SPCS_NOTIN_QUOTES_TO_TABS: numch = spcs2tabs_outside_quotes( pBuf, bufsize, srSrc, tabr ); break;
-            case TABCONV_3_ALL_SPC_TO_TABS:           numch = spcs2tabs_all           ( pBuf, bufsize, srSrc, tabr ); break;
-            }
-         pSrc = pBuf;
-         }
-      }
-   if( !TrailSpcsKept() )
-      numch = StrlenWOTrailBlanks( pSrc, pSrc+numch );
-
-   UndoReplaceLineContent( yLine, pSrc, numch );  // after all this buildup, JUST WRITE THE DAMNED THING:
-   }
-
-
 void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
-   Xbuf xb,xb2;
+   Xbuf xb; std::string tmp;
    for( auto ix(0); ix<elems; ++ix ) {
       xb.cat( pa[ix] );
       }
-   PutLine( yLine, xb.bsr(), &xb2 );
+   PutLine( yLine, xb.bsr(), tmp );
    }
 
 //
@@ -924,10 +875,10 @@ void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollaps
    AdjMarksForBoxDeletion( this, xLeft, yTop, xRight, yBottom );
 
    const auto boxWidth( xRight - xLeft + 1 );
-   Xbuf xb, xb2;
+   Xbuf xb; std::string stmp;
    for( auto yLine( yTop ); yLine <= yBottom; ++yLine ) {
       GetLineWithSegRemoved( this, &xb, yLine, xLeft, boxWidth, fCollapse );
-      PutLine( yLine, xb.bsr(), &xb2 );
+      PutLine( yLine, xb.bsr(), stmp );
       }
    }
 
@@ -946,7 +897,8 @@ void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
    DelLines( yStart, yEnd - 1 );
    std::string stLast = GetLineSeg( yStart, xEnd, COL_MAX );
    stFirst += stLast;
-   PutLine( yStart, stFirst.c_str() );
+   std::string stmp;
+   PutLine( yStart, stFirst, stmp );
 
    AdjMarksForInsertion( this, this, xEnd, yStart, COL_MAX, yStart, xStart, yStart );
    }
@@ -1176,7 +1128,8 @@ bool ARG::copy() {
                        }
                     else {
                        Clipboard_Prep( BOXARG );
-                       g_pFbufClipboard->PutLine( 0, d_textarg.pText );
+                       std::string stmp;
+                       g_pFbufClipboard->PutLine( 0, d_textarg.pText, stmp );
                        }
                     break;
     }
@@ -1206,7 +1159,8 @@ bool ARG::linsert() { PCF;
                     memmove( lbuf                       , pFirstNonBlank, tailLen              );
                     memmove( lbuf + d_nullarg.cursor.col, lbuf          , Strlen( lbuf ) + 1   );
                     memset(  lbuf                       , ' '           , d_nullarg.cursor.col );
-                    pcf->PutLine( d_nullarg.cursor.lin, lbuf );
+                    std::string stmp;
+                    pcf->PutLine( d_nullarg.cursor.lin, lbuf, stmp );
                     } break;
 
     case NOARG:     pcf->InsBlankLinesBefore( d_noarg.cursor.lin );  // Inserts one blank line above the current line.
@@ -1376,7 +1330,8 @@ bool ARG::paste() {
                     g_pFbufClipboard->MakeEmpty();
 
                     if( d_cArg < 2 ) {
-                       g_pFbufClipboard->PutLine( 0, d_textarg.pText );
+                       std::string stmp;
+                       g_pFbufClipboard->PutLine( 0, d_textarg.pText, stmp );
                        g_ClipboardType = BOXARG;
                        }
                     else {
@@ -1940,11 +1895,11 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
    //         if !fInsert AND existing chars       to right of xRightIncl
    //         then ins is space padded to fill gap and will NOT terminate string.
    //      else ins is NOT space padded, will terminate string, perhaps to left of xRightIncl
-
+   std::string stmp;
    DE && DBG( "%s+ L %d [%d..%d] <= '%s' )", __func__, lineNum, xLeftIncl, xRightIncl, ins );
    if( !fInsert && xLeftIncl == 0 && xRightIncl >= FBOP::LineCols( this, lineNum ) ) { // a two-parameter call?
       DE && DBG( "%s- PutLine(simple) )", __func__ );
-      PutLine( lineNum, ins ); // optimal/trivial line-replace case
+      PutLine( lineNum, ins, stmp ); // optimal/trivial line-replace case
       }
    else { // segment ins/overwrite case
 
@@ -1982,7 +1937,7 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
             memset( gap+inslen, ' ', holewidth - inslen );
          }
       DE && DBG( "%s- PutLine(merged) )", __func__ );
-      PutLine( lineNum, buf );
+      PutLine( lineNum, buf, stmp );
 #else
 
       dbllinebuf buf;
@@ -2038,7 +1993,7 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
             memcpy( gapStart, ins, segChars+1 ); // COPY EoL
             }
          }
-      PutLine( lineNum, buf );
+      PutLine( lineNum, buf, stmp );
 #endif
       }
    }
@@ -2291,12 +2246,13 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
 
    const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
    const auto twd( FBdest->TabWidth() );
+   std::string stmp;
    {
    const auto pDestSplit( PtrOfColWithinStringRegion( twd, xbFirst.wbuf(), xbFirst.wbuf()+xbFirst.length(), xDst ) ); // dest text PAST insertion point
    auto taillen( Strlen( pDestSplit ) );
    auto srcbuf( xbLast.wresize( xSrcEnd + taillen + 1 ) );  // worst case, ignores possible tab compression
    strcpy( PtrOfColWithinStringRegion( twd, srcbuf, Eos(srcbuf), xSrcEnd ), pDestSplit ); // dest text PAST insertion point -> srcbuf past xSrcEnd
-   FBdest->PutLine( yDstLast, srcbuf );
+   FBdest->PutLine( yDstLast, srcbuf, stmp );
    pDestSplit[0] = '\0'; // this belongs as else case for if( FBsrc ) below, but uses this scope's pDestSplit
    }
 
@@ -2309,7 +2265,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       const auto pDestSplit( PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst ) ); // dest text PAST insertion point
       memcpy( pDestSplit, pSrc, taillen + 1 );
       }
-   FBdest->PutLine( yDst, xbFirst.c_str() );
+   FBdest->PutLine( yDst, xbFirst.c_str(), stmp );
 
    AdjMarksForInsertion( FBdest, FBdest, xDst     , yDst     , COL_MAX, yDst     , xSrcEnd-1, yDstLast );
    AdjMarksForInsertion( FBsrc , FBdest,         0, ySrcEnd  , xSrcEnd, ySrcEnd  ,         0, yDstLast );

@@ -766,7 +766,8 @@ void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMa
           , Strlen( pMatch  + d_searchLen ) + 1
           );
    memcpy( pMatch, d_pszReplace, d_replaceLen );   // ... insert replacement string
-   pFBuf->PutLine( curPt->lin, lbuf );             // ... and commit
+   std::string stmp;
+   pFBuf->PutLine( curPt->lin, lbuf, stmp );             // ... and commit
    ++d_iReplacementsMade;
 
    // replacement done: position curPt->col for next search
@@ -975,7 +976,8 @@ STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all dup
          }
       }
 
-   pFbuf->InsLine( 0, str );
+   std::string tmp;
+   pFbuf->InsLine( 0, str, tmp );
    pFbuf->UnDirty();  // cosmetic
    }
 
@@ -1412,7 +1414,7 @@ bool ARG::mfreplace() { return GenericReplace( true , true  ); }
 bool ARG::qreplace()  { return GenericReplace( true , false ); }
 bool ARG::replace()   { return GenericReplace( false, false ); }
 
-void FBOP::InsLineSorted_( PFBUF fb, PXbuf xb, bool descending, LINE ySkipLeading, PCChar ptr, PCChar eos ) {
+void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, PCChar ptr, PCChar eos ) {
    if( !eos ) eos = Eos( ptr );
    const auto cmpSignMul( descending ? -1 : +1 );
 
@@ -1424,8 +1426,8 @@ void FBOP::InsLineSorted_( PFBUF fb, PXbuf xb, bool descending, LINE ySkipLeadin
    while( yMin <= yMax ) {
       //                ( (yMax + yMin) / 2 );           // old overflow-susceptible version
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
-      const auto xbChars( fb->getLineTabxPerRealtabs( xb, cmpLine ) );
-      CPCChar pXb( xb->c_str() );
+      const auto xbChars( fb->getLineTabxPerRealtabs( tmp, cmpLine ) );
+      CPCChar pXb( tmp.c_str() );
       auto cmp( stricmp_eos( ptr, eos, pXb, pXb+xbChars ) * cmpSignMul );
       if( 0 == cmp ) {
          cmp = strcmp_eos( ptr, eos, pXb, pXb+xbChars ) * cmpSignMul;
@@ -1436,18 +1438,18 @@ void FBOP::InsLineSorted_( PFBUF fb, PXbuf xb, bool descending, LINE ySkipLeadin
       if( cmp < 0 )  yMax = cmpLine - 1;
       }
 
-   fb->InsLine( yMin, se2bsr( ptr, eos ), xb );
+   fb->InsLine( yMin, se2bsr( ptr, eos ), tmp );
    }
 
 
-STATIC_FXN void InsFnm( PFBUF pFbuf, PXbuf pxb, PCChar fnm, const bool fSorted ) {
+STATIC_FXN void InsFnm( PFBUF pFbuf, std::string &tmp, PCChar fnm, const bool fSorted ) {
    auto pb( fnm );
    const auto ch( Path::DelimChar( fnm ) );
    char pbx[sizeof(pathbuf)+2];
    if( ch ) {
       pb = safeSprintf( BSOB(pbx), "%c%s%c", ch, fnm, ch );
       }
-   if( fSorted ) FBOP::InsLineSortedAscending( pFbuf, pxb, 0, pb ); else pFbuf->PutLastLine( pb );
+   if( fSorted ) FBOP::InsLineSortedAscending( pFbuf, tmp, 0, pb ); else pFbuf->PutLastLine( pb );
    }
 
 int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted ) { enum { ED=0 }; ED && DBG( "%s '%s'", __func__, pszWildcardString );
@@ -1474,26 +1476,26 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
 
       Path::str_t pbuf, fbuf;
       DirListGenerator dlg( dirBuf );
-      Xbuf xb;
+      std::string tmp;
       while( dlg.VGetNextName( pbuf ) ) {                          ED && DBG( "pbuf='%s'", pbuf.c_str() );
          WildcardFilenameGenerator wcg( FmtStr<_MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf.c_str(), wcBuf ), ONLY_FILES );
          fbuf.clear();
          while( wcg.VGetNextName( fbuf ) ) {
-            InsFnm( fb, &xb, fbuf.c_str(), fSorted );
+            InsFnm( fb, tmp, fbuf.c_str(), fSorted );
             ++rv;
             }
          }
       }
    else {
       CfxFilenameGenerator wcg( pszWildcardString, FILES_AND_DIRS );
-      Xbuf xb;
+      std::string tmp;
       Path::str_t fbuf;
       while( wcg.VGetNextName( fbuf ) ) {
          const auto chars( fbuf.length() );  ED && DBG( "wcg=%s", fbuf.c_str() );
          if( chars > 2 && strcmp( fbuf.c_str()+chars-2, PATH_SEP_STR "." ) == 0 )
             continue; // drop the meaningless "." entry:
 
-         InsFnm( fb, &xb, fbuf.c_str(), fSorted );
+         InsFnm( fb, tmp, fbuf.c_str(), fSorted );
          ++rv;
          }
       }
@@ -2525,11 +2527,11 @@ LINE CGrepper::WriteOutput
       for( auto iy(0); iy < d_InfLines; ++iy )
          if( d_MatchingLines[iy] )
             ++numberedMatches;
+      std::string tmp;
       {
       SprintfBuf LastMetaLine( "%s %d %s", outfile->Name(), numberedMatches, thisMetaLine );
-      outfile->InsLine( grepHdrLines, LastMetaLine.k_str() );
+      outfile->InsLine( grepHdrLines, LastMetaLine.k_str(), tmp );
       }
-      Xbuf xbIns;
       const auto lwidth( uint_log_10( d_InfLines ) );
       for( auto iy(0); iy < d_InfLines; ++iy )
          if( d_MatchingLines[iy] ) {
@@ -2540,7 +2542,7 @@ LINE CGrepper::WriteOutput
             PCChar ptr; size_t chars;
             d_SrchFile->PeekRawLineExists( iy, &ptr, &chars );
             sbuf.append( ptr, chars );
-            FBOP::InsLineSortedAscending( outfile, &xbIns, grepHdrLines, sbuf.c_str() );
+            FBOP::InsLineSortedAscending( outfile, tmp, grepHdrLines, sbuf.c_str() );
             }
       outfile->PutFocusOn();
       Msg( "%d lines %s", numberedMatches, "added" );
@@ -2833,19 +2835,19 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
      ) return false;
 
    0 && DBG( "%s: %s copy [1..%d]", __func__, src->Name(), srcHdrLines );
-   Xbuf xbd;
+   std::string tmp;
    // insert/copy all src metalines (except 0) to dest
    for( auto iy(1) ; iy < srcHdrLines ; ++iy ) {
       PCChar bos, eos;
       src ->PeekRawLineExists( iy, &bos, &eos );
-      dest->InsLine( destHdrLines++, se2bsr( bos, eos ), &xbd );
+      dest->InsLine( destHdrLines++, se2bsr( bos, eos ), tmp );
       }
    0 && DBG( "%s: %s merg [%d..%d]", __func__, src->Name(), srcHdrLines, src->LineCount()-1 );
    // merge (copy while sorting) all match lines
    for( auto iy(srcHdrLines) ; iy < src->LineCount() ; ++iy ) {
       PCChar bos, eos;
       src ->PeekRawLineExists( iy, &bos, &eos );
-      FBOP::InsLineSortedAscending( dest, &xbd, destHdrLines, bos, eos );
+      FBOP::InsLineSortedAscending( dest, tmp, destHdrLines, bos, eos );
       }
    return true;
    }

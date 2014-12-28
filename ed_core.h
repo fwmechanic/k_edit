@@ -1470,15 +1470,14 @@ public:
 
    //************ PutLine
 public:
-   void           PutLine( LINE yLine,       stref  srSrc, std::string &tmp ); // WITH UNDO
-   void           PutLine( LINE yLine, const stref &srSrc, PXbuf pXb=nullptr ); // WITH UNDO
+   void           PutLine( LINE yLine, stref srSrc, std::string &tmp ); // WITH UNDO
    void           PutLine( LINE yLine, CPCChar pa[], int elems );
 
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
-   void           InsLine( LINE yLine, const stref &srSrc, PXbuf pXb=nullptr )  // WITH UNDO
+   void           InsLine( LINE yLine, const stref &srSrc, std::string &tmp )  // WITH UNDO
                      {
                      InsBlankLinesBefore( yLine );
-                     PutLine( yLine, srSrc, pXb );
+                     PutLine( yLine, srSrc, tmp );
                      }
 
    void           PutLineSeg( LINE lineNum, PCChar psz, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
@@ -1634,9 +1633,9 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    //     generator functions, you should not move the cursor to any particular
    //     place until AFTER you've inserted all lines.
    //
-   extern void    InsLineSorted_(          PFBUF fb, PXbuf xb, bool descending, LINE ySkipLeading, PCChar ptr, PCChar eos );
-   STIL void      InsLineSortedAscending(  PFBUF fb, PXbuf xb, LINE ySkipLeading, PCChar ptr, PCChar eos=nullptr ) { InsLineSorted_( fb, xb, false, ySkipLeading, ptr, eos ); }
-   STIL void      InsLineSortedDescending( PFBUF fb, PXbuf xb, LINE ySkipLeading, PCChar ptr, PCChar eos=nullptr ) { InsLineSorted_( fb, xb, true , ySkipLeading, ptr, eos ); }
+   extern void    InsLineSorted_(          PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, PCChar ptr, PCChar eos );
+   STIL void      InsLineSortedAscending(  PFBUF fb, std::string &tmp, LINE ySkipLeading, PCChar ptr, PCChar eos=nullptr ) { InsLineSorted_( fb, tmp, false, ySkipLeading, ptr, eos ); }
+   STIL void      InsLineSortedDescending( PFBUF fb, std::string &tmp, LINE ySkipLeading, PCChar ptr, PCChar eos=nullptr ) { InsLineSorted_( fb, tmp, true , ySkipLeading, ptr, eos ); }
  #ifdef           fn_csort
    extern void    SortLineRange( PFBUF fb, LINE yMin, LINE yMax, bool fAscending, bool fCase, COL xMin, COL xMax, bool fRmvDups=false );
  #endif

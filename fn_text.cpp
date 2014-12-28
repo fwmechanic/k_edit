@@ -259,13 +259,14 @@ bool ARG::makebox() {
       }
 
    Xbuf  xb;
+   std::string stTmp;
    PChar buf;
    switch( d_argType ) {
       default: return BadArg();
       case NOARG: // replace char @ at cursor position w/"CE" of selected type
          buf = GetMinLine( &xb, d_noarg.cursor.lin, d_noarg.cursor.col, g_CurFBuf() );
          buf[d_noarg.cursor.col] = pchBox[CE];
-         g_CurFBuf()->PutLine( d_noarg.cursor.lin, buf );
+         g_CurFBuf()->PutLine( d_noarg.cursor.lin, buf, stTmp );
          g_CurView()->MoveCursor( d_noarg.cursor.lin, d_noarg.cursor.col + 1 );
          break;
 
@@ -277,15 +278,15 @@ bool ARG::makebox() {
          if( d_boxarg.flMin.col == d_boxarg.flMax.col ) { // VERTICAL LINE?
             buf = GetMinLine( &xb, yTemp, xTemp, g_CurFBuf() );
             buf[xTemp] = ((buf[xTemp] == pchBox[EW]) && fBox) ? pchBox[NN] : pchBox[NS];
-            g_CurFBuf()->PutLine( yTemp++, buf );
+            g_CurFBuf()->PutLine( yTemp++, buf, stTmp );
             while( yTemp < d_boxarg.flMax.lin ) {
                buf = GetMinLine( &xb, yTemp, xTemp, g_CurFBuf() );
                buf[xTemp] = ((buf[xTemp]==pchBox[EW]) && fBox) ? pchBox[CE] : pchBox[NS];
-               g_CurFBuf()->PutLine( yTemp++, buf );
+               g_CurFBuf()->PutLine( yTemp++, buf, stTmp );
                }
             buf = GetMinLine( &xb, yTemp, xTemp, g_CurFBuf() );
             buf[xTemp] = ((buf[xTemp] == pchBox[EW]) && fBox) ? pchBox[SS] : pchBox[NS];
-            g_CurFBuf()->PutLine( yTemp, buf );
+            g_CurFBuf()->PutLine( yTemp, buf, stTmp );
             }
          else if( d_boxarg.flMin.lin == d_boxarg.flMax.lin ) { // HORIZONTAL LINE?
             buf = GetMinLine( &xb, d_boxarg.flMin.lin, d_boxarg.flMax.col, g_CurFBuf() );
@@ -294,7 +295,7 @@ bool ARG::makebox() {
                buf[xTemp] = ((buf[xTemp] == pchBox[NS]) && fBox) ? pchBox[CE] : pchBox[EW]; ++xTemp;
                }
             buf[xTemp] = ((buf[xTemp] == pchBox[NS]) && fBox) ? pchBox[EE] : pchBox[EW];    ++xTemp;
-            g_CurFBuf()->PutLine( d_boxarg.flMin.lin, buf );
+            g_CurFBuf()->PutLine( d_boxarg.flMin.lin, buf, stTmp );
             }
          else { // BOX
             // TOP LINE
@@ -305,7 +306,7 @@ bool ARG::makebox() {
                buf[xTemp++] = pchBox[EW];
                }
             buf[xTemp++] = pchBox[NE];
-            g_CurFBuf()->PutLine( yTemp++, buf );
+            g_CurFBuf()->PutLine( yTemp++, buf, stTmp );
 
             // MIDDLE LINE(S)
             //
@@ -318,7 +319,7 @@ bool ARG::makebox() {
                      buf[xTemp] = pchBox[CE];
                   }
                buf[xTemp] = pchBox[NS];
-               g_CurFBuf()->PutLine( yTemp++, buf );
+               g_CurFBuf()->PutLine( yTemp++, buf, stTmp );
                }
 
             // BOTTOM LINE
@@ -330,7 +331,7 @@ bool ARG::makebox() {
                buf[xTemp++] = pchBox[EW];
                }
             buf[xTemp] = pchBox[SE];
-            g_CurFBuf()->PutLine( yTemp, buf );
+            g_CurFBuf()->PutLine( yTemp, buf, stTmp );
             }
          }
          break;
@@ -476,7 +477,8 @@ bool ARG::ascii2hex() {
        pB[-1] = '\0';
 
    g_pFbufClipboard->MakeEmpty();
-   g_pFbufClipboard->PutLine( 0, buf );
+   std::string tmp;
+   g_pFbufClipboard->PutLine( 0, buf, tmp );
    g_ClipboardType = BOXARG;
 
    Msg( "%s", buf );

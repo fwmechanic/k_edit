@@ -327,15 +327,16 @@ FBUF_(ClrNoEdit)                { thisPF()->ClrNoEdit()                         
 FBUF_(CopyLines)                { FBOP::CopyLines( thisPF(), I_(2)-1, PFBUF_(3), I_(4)-1, I_(5)-1 )  ; RZ; }
 FBUF_(DiscardTrailSpcs)         { thisPF()->DiscardTrailSpcs()                                       ; RZ; }
 FBUF_(InsBlankLinesBefore)      { thisPF()->InsBlankLinesBefore( I_(2)-1, Io_( 3, 1 ) )              ; RZ; }
-FBUF_(InsLine)                  { thisPF()->InsLine(      I_(2)-1, S_(3) )                           ; RZ; }
+FBUF_(InsLine)                  { std::string tmp; thisPF()->InsLine( I_(2)-1, S_(3), tmp )          ; RZ; }
 FBUF_(InsLineSortedAscending)   {
                                   #if USE_STATE_ELB
                                        auto pXb( get_xb( L ) );
                                   #else
                                        Xbuf xb; auto pXb(&xb);
                                   #endif
+                                  std::string tmp;
                                   const PCChar st = S_(2);
-                                  FBOP::InsLineSortedAscending(  thisPF(), pXb, Io_(3,1)-1, st ); RZ;
+                                  FBOP::InsLineSortedAscending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
                                   }
 FBUF_(InsLineSortedDescending)  {
                                   #if USE_STATE_ELB
@@ -343,8 +344,9 @@ FBUF_(InsLineSortedDescending)  {
                                   #else
                                        Xbuf xb; auto pXb(&xb);
                                   #endif
+                                  std::string tmp;
                                   const PCChar st = S_(2);
-                                  FBOP::InsLineSortedDescending( thisPF(), pXb, Io_(3,1)-1, st ); RZ;
+                                  FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
                                   }
 FBUF_(IsGrepBuf)                { int metaLines;  pathbuf searchedFnm;
                                   if( FBOP::IsGrepBuf( thisPF(), BSOB(searchedFnm), &metaLines ) ) {
@@ -355,7 +357,7 @@ FBUF_(IsGrepBuf)                { int metaLines;  pathbuf searchedFnm;
 FBUF_(KeepTrailSpcs)            { thisPF()->KeepTrailSpcs()                                    ; RZ; }
 FBUF_(MakeEmpty)                { thisPF()->MakeEmpty()                                        ; RZ; }
 FBUF_(PutLastLine)              { thisPF()->PutLastLine( S_(2) )                               ; RZ; }
-FBUF_(PutLine)                  { thisPF()->PutLine(      I_(2)-1, S_(3) )                     ; RZ; }
+FBUF_(PutLine)                  { std::string tmp; thisPF()->PutLine( I_(2)-1, S_(3), tmp )    ; RZ; }
 FBUF_(MoveCursorToBofAllViews)  { thisPF()->MoveCursorToBofAllViews()                          ; RZ; }
 FBUF_(SetAutoRead)              { thisPF()->SetAutoRead()                                      ; RZ; }
 FBUF_(SetBackupMode_Bak)        { thisPF()->SetBackupMode(bkup_BAK)                            ; RZ; }

@@ -1027,7 +1027,10 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
       SetCwdChanged( cwdAfter.c_str() );
      #endif
       Msg( "Changed directory to %s", cwdAfter.c_str() );
-      if( fSave )  g_pFBufCwd->InsLine( 0, cwdBefore.c_str() );
+      if( fSave ) {
+         std::string tmp;
+         g_pFBufCwd->InsLine( 0, cwdBefore.c_str(), tmp );
+         }
       }
    return true;
    }
@@ -1222,7 +1225,8 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
 
       VR_( DBG( "FRd: created newfile '%s'", Name() ); )
 
-      PutLine( 0, "" );
+      std::string tmp;
+      PutLine( 0, "", tmp );
       }
    else {
       if( ReadDiskFileFailed( hFile ) ) {

@@ -894,14 +894,15 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       SafeStrcpy( lbufNew, pCmd->Name() );
       }
 
+   std::string stmp;
    if( st.length() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
       st += " \\";
-      g_pFbufRecord->PutLine( lastLine  , st.c_str() );
-      g_pFbufRecord->PutLine( lastLine+1, lbufNew    );
+      g_pFbufRecord->PutLine( lastLine  , st.c_str(), stmp );
+      g_pFbufRecord->PutLine( lastLine+1, lbufNew   , stmp );
       }
    else {
       st += lbufNew;
-      g_pFbufRecord->PutLine( lastLine  , st.c_str() );
+      g_pFbufRecord->PutLine( lastLine  , st.c_str(), stmp );
       }
 
    MoveCursorToEofAllWindows( g_pFbufRecord );
@@ -913,6 +914,7 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
    STATIC_CONST char kszContinuation[] = "  \\";
 
    Xbuf xb;
+   std::string stmp;
    auto pMacroTextChunk( pCmd->MacroText() );
    while( 1 ) {
       const auto linechars( g_pFbufRecord->getLineTabxPerRealtabs( &xb, g_pFbufRecord->LastLine() ) );
@@ -932,7 +934,7 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
          fDone = true;
          }
 
-      g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.c_str() );
+      g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.c_str(), stmp );
 
       if( fDone )
          return;
@@ -1006,7 +1008,8 @@ bool ARG::record() {
          ClrInRecordDQuote();
          Xbuf xb;
          g_pFbufRecord->getLineTabxPerRealtabs( &xb, g_pFbufRecord->LastLine() );
-         g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.cat( "\"" ) );
+         std::string stmp;
+         g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.cat( "\"" ), stmp );
          }
 
       int   assignsDone;
