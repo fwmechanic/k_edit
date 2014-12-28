@@ -862,7 +862,7 @@ STIL void ClrInRecordDQuote() {        s_fInRecordDQuote = false ; }
 
 STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
    const auto lastLine( g_pFbufRecord->LastLine() );
-   std::string st( g_pFbufRecord->getLineRaw( lastLine ) );
+   std::string st; g_pFbufRecord->getLineRaw( st, lastLine );
    linebuf lbufNew;
    if( pCmd->IsFnGraphic() ) {
       auto pNew( lbufNew );

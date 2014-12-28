@@ -848,13 +848,13 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
             textargStackPos = 0;
             }
          if( textargStackPos < g_pFBufTextargStack->LastLine() ) {
-            stb = g_pFBufTextargStack->getLineRaw( ++textargStackPos );
+            g_pFBufTextargStack->getLineRaw( stb, ++textargStackPos );
             xCursor = stb.length();
             }
          }
       else if( func == fn_down ) {
          if( textargStackPos > 0 ) {
-            stb = g_pFBufTextargStack->getLineRaw( --textargStackPos );
+            g_pFBufTextargStack->getLineRaw( stb, --textargStackPos );
             xCursor = stb.length();
             }
          }                       //======================================================

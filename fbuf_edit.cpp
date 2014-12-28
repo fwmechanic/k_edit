@@ -1526,9 +1526,9 @@ stref FBUF::PeekRawLine( LINE lineNum ) const {
       }
    }
 
-std::string FBUF::getLineRaw( LINE yLine ) const {
+void FBUF::getLineRaw( std::string &dest, LINE yLine ) const {
    const auto rv( PeekRawLine( yLine ) );
-   return std::string( rv.data(), rv.length() );
+   dest.assign( rv.data(), rv.length() );
    }
 
 COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
@@ -1684,7 +1684,7 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
          pLSR->keydata[0] = '\0';
          }
 
-      pLSR->lbuf = fb->getLineRaw( yY );
+      fb->getLineRaw( pLSR->lbuf, yY );
       *ppLSR++ = pLSR;
       pLSR = PLineSortRec( PChar(pLSR) + sizeofLSR );
       }
