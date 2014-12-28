@@ -111,6 +111,64 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 // 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
 //    display line
 
+void FormatExpandedSeg( int, std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
+   // NB: we DO NOT clear dest!!!
+   const auto initial_dest_length( dest.length() );
+   auto dit( back_inserter(dest) );
+   if( !chTabExpand || !StrContainsTabs( src ) ) {
+      if( xStart <= src.length() ) {
+         src.remove_prefix( xStart );
+         const auto CopyBytes( Min( src.length(), maxChars ) );
+         auto sit( src.cbegin() );
+         for( auto ix( 0u ) ; ix < CopyBytes ; ++ix ) {
+            *dit++ = *sit++;
+            }
+         if( chTrailSpcs && CopyBytes==src.length() ) {
+            const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
+            for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) {
+               *drit == chTrailSpcs;
+               }
+            }
+         }
+      return;
+      }
+
+   // the only way to solve the problem of "what happens if xStart is in the
+   // middle of a tab-expansion?" is to walk the src string from its beginning,
+   // even though we aren't necessarily _copying_ from the beginning.
+
+   COL xCol( 0 );
+   auto WR_CHAR = [&]( char ch ) { if( xCol++ >= xStart ) { *dit++ = ch; } };
+   const Tabber tabr( tabWidth );
+   auto sit( src.cbegin() );
+   while( sit != src.cend() && dest.length() < maxChars ) {
+      const auto ch( *sit++ );
+      if( ch != HTAB ) {
+         WR_CHAR(ch);
+         }
+      else {
+         const auto tgt( tabr.ColOfNextTabStop( xCol ) );
+         auto chFill( chTabExpand );                       // chTabExpand == BIG_BULLET has special behavior:
+         while( xCol < tgt && dest.length() < maxChars ) { // col containing actual HTAB will disp as BIG_BULLET
+            WR_CHAR(chFill);                               // remaining fill-in chars will show as SMALL_BULLET
+            XLAT_chFill( chFill )
+            }
+         }
+      }
+
+   if( chTrailSpcs ) {
+      // sit points just after the last source-char copied/xlated;
+      //    sit == src.cend() (if the above loop terminated because 'sit == src.cend()')
+      // OR sit != src.cend() (if the above loop terminated due to 'dest.length() < maxChars' being false)
+      if( sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
+         const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
+         for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) { // xlat all trailing spaces present in dest
+            *drit == chTrailSpcs;
+            }
+         }
+      }
+   }
+
 void FormatExpandedSeg
    ( std::string &dest, stref src
    , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
@@ -118,6 +176,9 @@ void FormatExpandedSeg
    // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
    //
    dest.clear();
+#if 1
+   FormatExpandedSeg( 1, dest, src, xStart, maxChars, tabWidth, chTabExpand, chTrailSpcs );
+#else
    if( !chTabExpand || !StrContainsTabs( src ) ) {
       if( xStart <= src.length() ) {
          src.remove_prefix( xStart );
@@ -165,6 +226,7 @@ void FormatExpandedSeg
             }
          }
       }
+#endif
    }
 
 std::string FormatExpandedSeg
@@ -291,7 +353,7 @@ bool FBOP::IsBlank( PCFBUF fb ) {
 //      const Tabber &TabberParam;
 typedef const Tabber  TabberParam;  // 3 calls using this type take less code (-512 byte GCC incr)
 
-STATIC_FXN void spcs2tabs_outside_quotes( std::back_insert_iterator<std::string > dit, stref src, TabberParam tabr ) {
+STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, TabberParam tabr ) {
    auto quoteCh( '\0' );
    auto destCol( 0 );
    auto fNxtChEscaped( false );
@@ -363,7 +425,7 @@ TO_ELSE:
       }
    }
 
-STATIC_FXN void spcs2tabs_all( std::back_insert_iterator<std::string > dit, stref src, TabberParam tabr ) {
+STATIC_FXN void spcs2tabs_all( string_back_inserter dit, stref src, TabberParam tabr ) {
    auto xCol(0);
    auto sit( src.crbegin() );
    while( sit != src.crend() ) {
@@ -396,7 +458,7 @@ STATIC_FXN void spcs2tabs_all( std::back_insert_iterator<std::string > dit, stre
       }
    }
 
-STATIC_FXN void spcs2tabs_leading( std::back_insert_iterator<std::string > dit, stref src, TabberParam tabr ) {
+STATIC_FXN void spcs2tabs_leading( string_back_inserter dit, stref src, TabberParam tabr ) {
    auto xCol( 0 );
    auto ix(0);
    auto sit( src.crbegin() );

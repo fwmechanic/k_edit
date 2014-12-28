@@ -53,6 +53,8 @@
 
 #include <string>
 
+typedef std::back_insert_iterator<std::string > string_back_inserter;
+
 // driven by https://news.ycombinator.com/item?id=8704318
 // I'm motivated to experiment with boost::string_ref
 // to minimize gratuitious std::string mallocs/copies

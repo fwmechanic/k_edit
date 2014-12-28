@@ -1531,22 +1531,23 @@ inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCom
 
 
 //************ tabWidth-dependent col-of-ptr/ptr-of-col xlators
-// pEos points AFTER last valid (non-NUL) char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
-
-// if fKeepPtrWithinStringRegion then retval <= pEos  (NOTE THAT retval == pEos (and therefore can point at a non-deref'able locn)
+// DEPRECATED pEos points AFTER last valid (non-NUL) char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
+// DEPRECATED
+// DEPRECATED if fKeepPtrWithinStringRegion then retval <= pEos  (NOTE THAT retval == pEos (and therefore can point at a non-deref'able locn)
 extern PChar   PtrOfCol_                 ( COL tabWidth, PChar  pS, PChar  pEos, COL colTgt, bool fKeepPtrWithinStringRegion );
 STIL   PChar   PtrOfColAnyWhere          ( COL tabWidth, PChar  pS, PChar  pEos, COL xCol ) { return PtrOfCol_( tabWidth,       pS ,       pEos , xCol, false ); }
 STIL   PCChar  PtrOfColAnyWhere          ( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfCol_( tabWidth, PChar(pS), PChar(pEos), xCol, false ); }
 
-// PtrOfColWithinStringRegion: retval <= pEos  (NOTE THAT retval == pEos (and therefore can be non-deref'able)
-// should TRY to stop using PtrOfColWithinStringRegion in lieu of PtrOfColWithinStringRegionNoEos
+// DEPRECATED PtrOfColWithinStringRegion: retval <= pEos  (NOTE THAT retval == pEos (and therefore can be non-deref'able)
+// DEPRECATED should TRY to stop using PtrOfColWithinStringRegion in lieu of PtrOfColWithinStringRegionNoEos
 STIL   PChar   PtrOfColWithinStringRegion( COL tabWidth, PChar  pS, PChar  pEos, COL xCol ) { return PtrOfCol_( tabWidth,       pS ,       pEos , xCol, true  ); }
 STIL   PCChar  PtrOfColWithinStringRegion( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfCol_( tabWidth, PChar(pS), PChar(pEos), xCol, true  ); }
 
-// PtrOfColWithinStringRegionNoEos: retval < pEos  (therefore retval is ALWAYS deref'able)
+// DEPRECATED PtrOfColWithinStringRegionNoEos: retval < pEos  (therefore retval is ALWAYS deref'able)
 extern PChar   PtrOfColWithinStringRegionNoEos( COL tabWidth, PChar  pS, PChar  pEos, COL xCol );
 STIL   PCChar  PtrOfColWithinStringRegionNoEos( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfColWithinStringRegionNoEos( tabWidth, PChar(pS), PChar(pEos), xCol ); }
 
+// PREFERRED
 extern sridx   FreeIdxOfCol    ( COL tabWidth, const stref &content, const COL colTgt );
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, const stref &content, const COL colTgt ) {
                   return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length() );
@@ -1593,6 +1594,7 @@ extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
 extern COL     StrCols(        COL tabWidth, PCChar ptr, PCChar eos=nullptr );
 
+extern void        FormatExpandedSeg ( int, std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
 extern void        FormatExpandedSeg ( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
 extern std::string FormatExpandedSeg (                    stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
 extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
