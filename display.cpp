@@ -3172,21 +3172,19 @@ void View::GetLineForDisplay
    }
 
 void Win::GetLineForDisplay
-   ( const int    winNum
-   , std::string &dest
-   , LineColors  &alc
+   ( const int          winNum
+   , std::string       &dest
+   , LineColors        &alc
    , const HiLiteRec * &pFirstPossibleHiLite
-   , const LINE   yLineOfDisplay
+   , const LINE         yLineOfDisplay
    ) const {
-   const auto isActiveWindow( this == g_CurWin() );       // checkWins( FmtStr<30>( "<Line %d/win %d>", yLineOfDisplay, winNum ) );
    const auto oRightBorder( d_UpLeft.col + d_Size.col );  0 && DBG( "L%05d w%d [%03d..%03d]", yLineOfDisplay, winNum, this->d_UpLeft.col, oRightBorder - 1 );
-
    if( VisibleOnDisplayLine( yLineOfDisplay ) ) {
       {
       const auto pView( this->CurView() );
       const auto yLineOfFile( pView->Origin().lin - d_UpLeft.lin + yLineOfDisplay );
       LineColorsClipped alcc( *pView, alc, d_UpLeft.col, pView->Origin().col, d_Size.col );
-      pView->GetLineForDisplay( const_cast<PChar>(dest.data()) + d_UpLeft.col, alcc, pFirstPossibleHiLite, yLineOfFile, isActiveWindow, d_Size.col );
+      pView->GetLineForDisplay( const_cast<PChar>(dest.data()) + d_UpLeft.col, alcc, pFirstPossibleHiLite, yLineOfFile, this == g_CurWin(), d_Size.col );
       }
       if( d_UpLeft.col > 0 ) { // this window not on left edge? (i.e. window has visible left border?) plug in a line-draw char to make the border
          auto    &chLeftBorder( dest[ d_UpLeft.col - 1 ] );
@@ -3195,21 +3193,20 @@ void Win::GetLineForDisplay
                 ||chLeftBorder == HV_ ) { chLeftBorder = U8(LV_); } // 'Î' -> '¹'
          else if( chLeftBorder == RV_ ) { chLeftBorder = U8(_V_); } // 'Ì' -> 'º'
          }
-
       auto    &chRightBorder( dest[ oRightBorder ] );
-      if     ( chRightBorder == H__                                  // 'Í' -> 'Ì'
-             ||chRightBorder == HV_ ) { chRightBorder = U8(RV_); }   // 'Î' -> 'Ì'
-      else if( chRightBorder == LV_ ) { chRightBorder = U8(_V_); }   // '¹' -> 'º'
+      if     ( chRightBorder == H__                                 // 'Í' -> 'Ì'
+             ||chRightBorder == HV_ ) { chRightBorder = U8(RV_); }  // 'Î' -> 'Ì'
+      else if( chRightBorder == LV_ ) { chRightBorder = U8(_V_); }  // '¹' -> 'º'
       }
    else if( yLineOfDisplay == d_UpLeft.lin - 1 ) {  // window's top border line?
       auto    &chRightBorder( dest[ oRightBorder ] );
-      if     ( chRightBorder == H__ ) { chRightBorder = U8(HB_); }   // 'Í' -> 'Ë'
-      else if( chRightBorder == HT_ ) { chRightBorder = U8(HV_); }   // 'Ê' -> 'Î'
+      if     ( chRightBorder == H__ ) { chRightBorder = U8(HB_); }  // 'Í' -> 'Ë'
+      else if( chRightBorder == HT_ ) { chRightBorder = U8(HV_); }  // 'Ê' -> 'Î'
       }
    else if( yLineOfDisplay == d_UpLeft.lin + d_Size.lin ) { // window's bottom border line?
       auto    &chRightBorder( dest[ oRightBorder ] );
-      if     ( chRightBorder == H__ ) { chRightBorder = U8(HT_); }   // Í -> Ê
-      else if( chRightBorder == HB_ ) { chRightBorder = U8(HV_); }   // Ë -> Î
+      if     ( chRightBorder == H__ ) { chRightBorder = U8(HT_); }  // 'Í' -> 'Ê'
+      else if( chRightBorder == HB_ ) { chRightBorder = U8(HV_); }  // 'Ë' -> 'Î'
       }
    }
 
