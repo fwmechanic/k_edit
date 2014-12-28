@@ -692,52 +692,52 @@ bool ARG::emacscdel() { return DeletePrevChar( true  ); }
 //
 //------------------------------------------------------------------------------
 
-STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, PXbuf pXb, const LINE yLine, const COL xLeft, const COL boxWidth, bool fCollapse ) {
-   pf->getLineTabxPerRealtabs_DEPR( pXb, yLine );
-   const auto xEolNul( pXb->length() );
+STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE yLine, const COL xLeft, const COL boxWidth, bool fCollapse ) {
+   pf->getLineTabxPerRealtabs( dest, yLine );
+   const auto xEolNul( dest.length() );
    if( xEolNul <= xLeft )
       return;
 
-   const auto destbuf( pXb->wbuf() );
-   const auto eos( Eos(destbuf) );
+// const auto destbuf( dest.data() );
+// const auto eos( dest.data()+dest.length() );
    const auto tw( pf->TabWidth() );
-   const auto pxLeft( PtrOfColWithinStringRegion( tw, destbuf, eos, xLeft ) );
+   const auto ixLeft( CaptiveIdxOfCol( tw, dest, xLeft ) );
+// const auto pxLeft( PtrOfColWithinStringRegion( tw, destbuf, eos, xLeft ) );
 
    const auto xRight( xLeft + boxWidth );
    if( xRight >= xEolNul ) { // trailing segment of line is being deleted?
-      0 && DBG( "%s trim, %" PR_SIZET "u <= %d '%c'", __func__, xEolNul, xRight, *pxLeft );
-      *pxLeft = '\0'; // the first (leftmost) char in the selected box
+      0 && DBG( "%s trim, %" PR_SIZET "u <= %d '%c'", __func__, xEolNul, xRight, dest[ixLeft] );
+      dest.resize( ixLeft ); // the first (leftmost) char in the selected box
       return;
       }
 
    if( boxWidth == 0 )
-      return; // already copied line to destbuf
+      return;
 
-   const auto charsInGap( GreaterOf( static_cast<ptrdiff_t>(1), PtrOfColWithinStringRegion( tw, destbuf, eos, xRight ) - pxLeft ) );
+// const auto charsInGap( GreaterOf( static_cast<ptrdiff_t>(1), PtrOfColWithinStringRegion( tw, destbuf, eos, xRight ) - pxLeft ) );
+   const auto charsInGap( boxWidth );
    if( fCollapse ) { // Collapse
-      const auto pxEol(                                         PtrOfColWithinStringRegion( tw, destbuf, eos, xEolNul ) ); // *pxEol === '\0'
-      memmove( pxLeft, pxLeft+charsInGap, pxEol - pxLeft - charsInGap + 1 );
+//    const auto pxEol(                                         PtrOfColWithinStringRegion( tw, destbuf, eos, xEolNul ) ); // *pxEol === '\0'
+//    memmove( pxLeft, pxLeft+charsInGap, pxEol - pxLeft - charsInGap + 1 );
+      dest.erase( ixLeft, charsInGap );
       }
    else { // fill Gap w/blanks
-      memset(  pxLeft, ' ', charsInGap );
+      dest.replace( ixLeft, charsInGap, charsInGap, ' ' );
       }
    }
-
 
 void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollapse ) {
    if( xRight < xLeft )
       return;
 
    AdjMarksForBoxDeletion( this, xLeft, yTop, xRight, yBottom );
-
    const auto boxWidth( xRight - xLeft + 1 );
-   Xbuf xb; std::string stmp;
+   std::string src; std::string stmp;
    for( auto yLine( yTop ); yLine <= yBottom; ++yLine ) {
-      GetLineWithSegRemoved( this, &xb, yLine, xLeft, boxWidth, fCollapse );
-      PutLine( yLine, xb.bsr(), stmp );
+      GetLineWithSegRemoved( this, src, yLine, xLeft, boxWidth, fCollapse );
+      PutLine( yLine, src, stmp );
       }
    }
-
 
 //
 // NB: See "STREAM definition" in ARG::FillArgStruct to understand parameters!
