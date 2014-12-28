@@ -39,43 +39,57 @@ void AssignLogTag( PCChar tag ) {
        g_pFBufAssignLog->FmtLastLine( "===== %s ====================", tag );
    }
 
-bool AssignStrOk_( PCChar param, CPCChar __function__ ) { enum {DBGEN=0}; // make a local copy so param can be a PCChar
-   ALLOCA_STRDUP( pszStringToAssign, slen, param, Strlen(param) )
-   const auto pName( StrPastAnyBlanks( pszStringToAssign ) );
-   StrTruncTrailBlanks( pName );
-   auto pValue( StrToNextOrEos( pName, ":" ) );
-   if( 0 == *pValue )                       return Msg( "(from %s) missing ':' in %s", __function__, pName );
-   *pValue++ = '\0';
-   StrTruncTrailBlanks( pName );
-   pValue = StrPastAnyBlanks( pValue );
-   if( '=' == *pValue )               {auto rv(DefineMacro( pName, StrPastAnyBlanks( pValue+1 ) ));DBGEN&&DBG( "DefineMacro(%s)->%s",pName,rv?"true":"false" );return rv;}
-   if( !CmdFromName( pName ) )        {auto rv(SetSwitch  ( pName,                       pValue     ));DBGEN&&DBG( "SetSwitch(%s)->%s"  ,pName,rv?"true":"false" );return rv;}
-   if( SetKeyOk( pName, pValue ) )          return true;
-   if( 0 == *pValue )                       return Msg( "(from %s) Missing key assignment for '%s'", __function__, pName );
-   else                                     return Msg( "(from %s) '%s' is an unknown key", __function__, pValue );
+// ALLOCA_STRDUP( pszStringToAssign, slen, src.data(), src.length() )
+
+bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1}; // make a local copy so param can be a PCChar
+                                                                DB && DBG( "%s 0(%" PR_BSR ")", __function__, BSR(src) );
+   const auto ixNonb( FirstNonBlankOrEnd( src ) );
+   src.remove_prefix( ixNonb );                                 DB && DBG( "%s 1(%" PR_BSR ")", __function__, BSR(src) );
+   if( src.length() == 0 ) { return Msg( "(from %s) entirely blank", __function__ ); }
+   const auto ixColon( src.find( ':' ) );
+   if( stref::npos == ixColon ) return Msg( "(from %s) missing ':' in %" PR_BSR, __function__, BSR(src) );
+   auto name( src.substr( 0, ixColon ) );                       DB && DBG( "%s 2 %" PR_BSR "->%" PR_BSR, __function__, BSR(name), BSR(src) );
+   rmv_trail_blanks( name );                                    DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR, __function__, BSR(name), BSR(src) );
+   src.remove_prefix( FirstNonBlankOrEnd( src, ixColon+1 ) );   DB && DBG( "%s 4 %" PR_BSR "->%" PR_BSR, __function__, BSR(name), BSR(src) );
+   if( '=' == src[0] ) {
+      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        DB && DBG( "%s 5 %" PR_BSR "->%" PR_BSR, __function__, BSR(name), BSR(src) );
+      const auto rv( DefineMacro( name, src ) );  DB && DBG( "DefineMacro(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
+      return rv;
+      }
+   if( !CmdFromName( name ) ) {
+      auto rv( SetSwitch( name, src ) );          DB && DBG( "SetSwitch(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
+      return rv;
+      }
+   const auto BK_rv( BindKeyToCMD( name, src ) );
+   switch( BK_rv ) {
+      case SetKeyRV_OK    : DB && DBG( "key %" PR_BSR " ->CMD %" PR_BSR, BSR(src), BSR(name) );  return true;
+      case SetKeyRV_BADKEY: return Msg( "%" PR_BSR " is an unknown key", BSR(src) );
+      case SetKeyRV_BADCMD: return Msg( "%" PR_BSR " is an unknown CMD", BSR(name) );
+      }
+   return Msg( "should not get here" );
    }
 
-void CMD::RedefMacro( PCChar newDefn ) {
-   const auto len( Strlen( newDefn ) + 1 );
+void CMD::RedefMacro( stref newDefn ) {
+   const auto len( newDefn.length() + 1 );
    ReallocArray( d_argData.pszMacroDef, len, __func__ );
-   memcpy( d_argData.pszMacroDef, newDefn, len );
+   memcpy( d_argData.pszMacroDef, newDefn.data(), newDefn.length() );
+           d_argData.pszMacroDef[ newDefn.length() ] = '\0';
    }
 
-
-bool DefineMacro( PCChar pszMacroName, PCChar pszMacroCode ) { 0 && DBG( "%s '%s'='%s'", __func__, pszMacroName, pszMacroCode );
+bool DefineMacro( stref pszMacroName, stref pszMacroCode ) { 0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'", __func__, BSR(pszMacroName), BSR(pszMacroCode) );
    const auto pCmd( CmdFromName( pszMacroName ) );
    if( pCmd ) {
       if( !pCmd->IsRealMacro() )
-         return Msg( "'%s' is a non-macro function; cannot redefine as macro", pszMacroName );
+         return Msg( "'%" PR_BSR "' is a non-macro function; cannot redefine as macro", BSR(pszMacroName) );
 
       // replace old macro-code string with new one
       pCmd->RedefMacro( pszMacroCode );
-      if( g_pFBufAssignLog )  g_pFBufAssignLog->FmtLastLine( "REDEF %s='%s'", pszMacroName, pszMacroCode );
+      if( g_pFBufAssignLog )  g_pFBufAssignLog->FmtLastLine( "REDEF %" PR_BSR "='%" PR_BSR "'", BSR(pszMacroName), BSR(pszMacroCode) );
       return true;
       }
 
    CmdIdxAddMacro( pszMacroName, pszMacroCode );
-   if( g_pFBufAssignLog )  g_pFBufAssignLog->FmtLastLine( "NWDEF %s='%s'", pszMacroName, pszMacroCode );
+   if( g_pFBufAssignLog )  g_pFBufAssignLog->FmtLastLine( "NWDEF %" PR_BSR "='%" PR_BSR "'", BSR(pszMacroName), BSR(pszMacroCode) );
    return true;
    }
 

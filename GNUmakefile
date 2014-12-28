@@ -105,7 +105,7 @@ endif
 # d. >q  to exit gdb
 
 # to disable, _comment out_ next line!
-# DBG_BUILD := x
+DBG_BUILD := x
 
 ifdef DBG_BUILD
 STRIP      :=

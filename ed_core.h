@@ -760,7 +760,7 @@ struct CMD {             // function definition entry
 
    // mutators
 
-   void     RedefMacro( PCChar newDefn );
+   void     RedefMacro( stref newDefn );
    void     IncrCallCount() const { ++d_callCount; }
    };
 

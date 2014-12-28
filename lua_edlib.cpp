@@ -59,7 +59,7 @@ LUAFUNC_(AddToSearchLog)     { AddToSearchLog( S_(1) ); RZ; }
 LUAFUNC_(l_AssignStrOk)      { R_bool( AssignStrOk( S_(1) ) ); }
 LUAFUNC_(PushVariableMacro)  { R_bool( PushVariableMacro( S_(1) ) ); }
 LUAFUNC_(CmdIdxAddLuaFunc)   { CmdIdxAddLuaFunc( S_(1), fn_runLua(), I_(2)  _AHELP( S_(3) ) ); RZ; }
-LUAFUNC_(SetKeyOk)           { R_bool( SetKeyOk( S_(1), S_(2) ) ); }
+LUAFUNC_(BindKeyToCMD)       { R_bool( BindKeyToCMD( S_(1), S_(2) ) ); }
 LUAFUNC_(fExecute)           { R_bool( fExecute( S_(1) ) ); }
 LUAFUNC_(fChangeFile)        { R_bool( fChangeFile( S_(1), true ) ); }
 LUAFUNC_(DBG)                { DBG( "%s", S_(1) ); RZ; }
@@ -651,7 +651,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        { "AssignStrOk"                 , l_AssignStrOk               },
        { "PushVariableMacro"           , PushVariableMacro           },
        { "CmdIdxAddLuaFunc"            , CmdIdxAddLuaFunc            },
-       { "SetKeyOk"                    , SetKeyOk                    },
+       { "SetKeyOk"                    , BindKeyToCMD                },
        { "DBG"                         , DBG                         },
        { "Path_CommonPrefixLen"        , Path_CommonPrefixLen        },
        { "MarkDefineAtCurPos"          , MarkDefineAtCurPos          },

@@ -450,17 +450,15 @@ STATIC_FXN int MaxKeyNameLen_() {
 //        const int g_MaxKeyNameLen( MaxKeyNameLen_() ); // <-- Exuberant Ctags DOES NOT tag g_MaxKeyNameLen
    GLOBAL_CONST int g_MaxKeyNameLen = MaxKeyNameLen_();  // <-- Exuberant Ctags DOES     tag g_MaxKeyNameLen
 
-int edkcFromKeyname( PCChar pszKeyStr ) {
-   const auto len( Strlen( pszKeyStr ) );
-   if( len == 1 )
+int edkcFromKeyname( stref pszKeyStr ) {
+   if( pszKeyStr.length() == 1 )
       return pszKeyStr[0];
 
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
-      if( Stricmp( ky2Nm.name, pszKeyStr ) == 0 ) {
+      if( eqi( ky2Nm.name, pszKeyStr ) ) {
          return ky2Nm.EdKC_;
          }
       }
-
    return 0;
    }
 
@@ -493,17 +491,11 @@ void StrFromEdkc( PChar pKeyStringBuf, size_t pKeyStringBufBytes, int edKC ) {
    }
 
 
-bool SetKeyOk( PCChar pszCmdName, PCChar pszKeyName ) {
-   const auto edKC( edkcFromKeyname( pszKeyName ) );
-   if( edKC ) {
-      const auto pCmd( CmdFromName( pszCmdName ) );
-      if( pCmd ) {
-         g_Key2CmdTbl[ edKC ] = pCmd;
-         return true;
-         }
-      }
-
-   return false;
+int BindKeyToCMD( stref pszCmdName, stref pszKeyName ) {
+   const auto edKC( edkcFromKeyname( pszKeyName ) ); if( !edKC ) return SetKeyRV_BADKEY;
+   const auto pCmd( CmdFromName( pszCmdName ) );     if( !pCmd ) return SetKeyRV_BADCMD;
+   g_Key2CmdTbl[ edKC ] = pCmd;
+   return SetKeyRV_OK;
    }
 
 char CharAsciiFromKybd() {

@@ -117,6 +117,8 @@ STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, 
 
 extern int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src, int srcLen );
 
+#define    SafeStrefcpy( d, stref )  safeStrcpy( BSOB(d), stref.data(), stref.length() )
+
 #define    SafeStrcpy( d, s )  safeStrcpy( BSOB(d), s )
 
 STIL int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src, PCChar eos ) {
@@ -225,6 +227,14 @@ void rmv_trail_blanks( strlval &inout ) {
    while( !inout.empty() && isBlank( inout.back() ) ) {
       inout.pop_back();
       }
+   }
+
+STIL void rmv_trail_blanks( stref &inout ) {
+   auto trailSpcs( 0u );
+   for( auto it( inout.crbegin() ) ; it != inout.crend() && *it == ' ' ; ++it ) {
+      ++trailSpcs;
+      }
+   inout.remove_suffix( trailSpcs );
    }
 
 static sridx FirstAlphaOrEnd( stref src, sridx start=0 ) {

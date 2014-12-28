@@ -260,7 +260,7 @@ extern   void  Wins_WriteStateFile( FILE *ofh );
 
 //------------ Assign
 
-extern   bool  SetSwitch( PCChar pszSwitchName, PCChar pszNewValue );
+extern   bool  SetSwitch( stref pszSwitchName, stref pszNewValue );
 
 extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
 extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
@@ -275,14 +275,15 @@ STIL     void  FBufRead_Assign_Win32( PFBUF pFBuf ) {}
 
 extern   void  AssignLogTag( PCChar tag );
 #define        AssignStrOk( str )   AssignStrOk_( str, __FUNCTION__ )
-extern   bool  AssignStrOk_( PCChar pszStringToAssign, CPCChar __function__ );
-extern   bool  DefineMacro( PCChar pszMacroName, PCChar pszMacroCode );
+extern   bool  AssignStrOk_( stref src, CPCChar __function__ );
+extern   bool  DefineMacro( stref pszMacroName, stref pszMacroCode );
 extern   void  FreeAllMacroDefs();
-extern   bool  SetKeyOk( PCChar pszCmdName, PCChar pszKeyName );
+enum { SetKeyRV_OK, SetKeyRV_BADKEY, SetKeyRV_BADCMD };
+extern   int   BindKeyToCMD( stref pszCmdName, stref pszKeyName );
 extern   bool  AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
 
 extern   void  UnbindMacrosFromKeys();
-extern   int   edkcFromKeyname( PCChar pszKeyStr );
+extern   int   edkcFromKeyname( stref pszKeyStr );
 extern   int   KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word );
 
 extern   void  PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite );
@@ -333,9 +334,9 @@ extern  void   CmdIdxClose();
 
 extern  PCMD   CmdIdxFindByName( PCChar name );
 extern  void   CmdIdxAddLuaFunc( PCChar name, funcCmd pFxn, int argType  _AHELP( PCChar helpStr ) );
-extern  void   CmdIdxAddMacro( PCChar name, PCChar macroDef );
+extern  void   CmdIdxAddMacro( stref name, stref macroDef );
 extern  int    CmdIdxRmvCmdsByFunction( funcCmd pFxn );
-extern  PCMD   CmdFromName( PCChar name );
+extern  PCMD   CmdFromName( stref name );
 
 typedef RbNode *PCmdIdxNd;
 

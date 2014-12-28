@@ -34,6 +34,7 @@ STIL   PVoid AllocNZ   (           size_t bytes )   { return AllocNZ_  (     byt
 STIL   PVoid Alloc0d   (           size_t bytes )   { return Alloc0d_  (     bytes ); }
 STIL   PVoid ReallocNZ ( PVoid pv, size_t bytes )   { return ReallocNZ_( pv, bytes ); }
 
+extern PChar Strdup( stref src );
 extern PChar Strdup( PCChar st, int chars );
 extern PChar Strdup( PCChar st );
 extern PChar Strdup( PCChar st, PCChar eos );

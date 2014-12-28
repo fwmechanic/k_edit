@@ -252,7 +252,7 @@ STATIC_FXN bool swinVAR_INT( const SWI *pSwi, PCChar pszNewValue ) {
    const auto conv_base( 10 );
    const auto newVal( StrToInt_variable_base( pszNewValue, conv_base ) );
    if( newVal == -1 )
-      return ErrorDialogBeepf( "Numeric switch: bad value" );
+      return ErrorDialogBeepf( "Numeric switch: bad value %s", pszNewValue );
 
    *pSwi->act.ival = newVal;
    return true;
@@ -262,7 +262,7 @@ bool swinWBC_INT( const SWI *pSwi, PCChar pszNewValue ) {
    const auto conv_base( 10 );
    const auto newVal( StrToInt_variable_base( pszNewValue, conv_base ) );
    if( newVal == -1 )
-      return ErrorDialogBeepf( "Numeric switch: bad value" );
+      return ErrorDialogBeepf( "Numeric switch: bad value %s", pszNewValue );
 
    extern int              Max_wbc_idx();
    const auto max_wbc_idx( Max_wbc_idx() );
@@ -360,9 +360,9 @@ STATIC_CONST SWI s_SwiTable[] = {
  };
 
 
-STATIC_FXN const SWI *FindSwitch( PCChar pszSwiName ) {
+STATIC_FXN const SWI *FindSwitch( stref pszSwiName ) {
    for( const auto &Swi : s_SwiTable )
-      if( Swi.NameMatch( pszSwiName ) )
+      if( eqi( Swi.name, pszSwiName ) )
          return &Swi;
 
    return nullptr;
@@ -383,15 +383,10 @@ void FBufRead_Assign_Switches( PFBUF pFBuf ) {
       }
    }
 
-bool SetSwitch( PCChar pszSwitchName, PCChar pszNewValue ) { 0 && DBG( "SetSwitch '%s' ", pszSwitchName );
-   auto pSwi( FindSwitch( pszSwitchName ) );
-   if( !pSwi )
-      return Msg( "'%s' is not an editor switch", pszSwitchName );
-
-   if( g_pFBufAssignLog )  g_pFBufAssignLog->FmtLastLine( "ASGN  %s='%s'", pszSwitchName, pszNewValue );
-
-   if( !pszNewValue || !*pszNewValue )
-      return Msg( "'%s': empty switch value", pszSwitchName );
-
-   return pSwi->pfxDefn( pSwi, pszNewValue );
+bool SetSwitch( stref pszSwitchName, stref pszNewValue ) { 0 && DBG( "SetSwitch '%" PR_BSR "' ", BSR(pszSwitchName) );
+   auto pSwi( FindSwitch( pszSwitchName ) ); if( !pSwi ) return Msg( "'%" PR_BSR "' is not an editor switch", BSR(pszSwitchName) );
+   if( g_pFBufAssignLog ) g_pFBufAssignLog->FmtLastLine( "ASGN  %" PR_BSR "='%" PR_BSR "'", BSR(pszSwitchName), BSR(pszNewValue) );
+   if( pszNewValue.empty() ) return Msg( "%" PR_BSR ": empty switch value", BSR(pszSwitchName) );
+   linebuf tmp; SafeStrefcpy( tmp, pszNewValue ); // hack-o-rama
+   return pSwi->pfxDefn( pSwi, tmp );
    }

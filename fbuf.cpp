@@ -44,6 +44,13 @@ PChar Strdup( PCChar st, int chars ) {
    return rv;
    }
 
+PChar Strdup( stref src ) {
+   const auto rv( PChar( AllocNZ_( src.length()+1 ) ) );
+   memcpy( rv, src.data(), src.length() );
+   rv[src.length()] = '\0';
+   return rv;
+   }
+
 PChar Strdup( PCChar st             ) { return Strdup( st, Strlen( st ) ); }
 PChar Strdup( PCChar st, PCChar eos ) { return Strdup( st, eos-st       ); }
 

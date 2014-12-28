@@ -527,18 +527,18 @@ void CmdIdxClose() {
    rb_dealloc_tree(  s_CmdIdxBuiltins );
    }
 
-PCMD CmdFromName( PCChar name ) {
+PCMD CmdFromName( stref src ) { linebuf name; SafeStrefcpy( name, src ); // hack-o-rama
    auto pNd( rb_find_gen( s_CmdIdxAddins  , name, rb_strcmpi ) );
    if( !pNd )  pNd = rb_find_gen( s_CmdIdxBuiltins, name, rb_strcmpi );
    return pNd ? IdxNodeToPCMD( pNd ) : nullptr;
    }
 
-STATIC_FXN PCMD CmdFromNameBuiltinOnly( PCChar name ) {
+STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) { linebuf name; SafeStrefcpy( name, src ); // hack-o-rama
    auto pNd( rb_find_gen( s_CmdIdxBuiltins, name, rb_strcmpi ) );
    return pNd ? IdxNodeToPCMD( pNd ) : nullptr;
    }
 
-STATIC_FXN void cmdIdxAdd( PCChar name, funcCmd pFxn, int argType, PCChar macroDef  _AHELP( PCChar helpStr ) ) {
+STATIC_FXN void cmdIdxAdd( PCChar name, funcCmd pFxn, int argType, stref macroDef  _AHELP( PCChar helpStr ) ) {
    int equal;
    auto pNd( rb_find_gte_gen( &equal, s_CmdIdxAddins, name, rb_strcmpi ) );
    PCMD pCmd;
@@ -554,7 +554,7 @@ STATIC_FXN void cmdIdxAdd( PCChar name, funcCmd pFxn, int argType, PCChar macroD
 
    pCmd->d_func    = pFxn;
    pCmd->d_argType = argType;
-   if( macroDef )
+   if( !macroDef.empty() )
       pCmd->d_argData.pszMacroDef = Strdup( macroDef );
 
    AHELP( pCmd->d_HelpStr = Strdup( helpStr ? helpStr : "" ); )
@@ -566,10 +566,10 @@ STATIC_FXN void cmdIdxAdd( PCChar name, funcCmd pFxn, int argType, PCChar macroD
    }
 
 void CmdIdxAddLuaFunc( PCChar name, funcCmd pFxn, int argType  _AHELP( PCChar helpStr ) ) {
-   return cmdIdxAdd( name, pFxn, argType, nullptr  _AHELP( helpStr ) );
+   return cmdIdxAdd( name, pFxn, argType, ""  _AHELP( helpStr ) );
    }
 
-void CmdIdxAddMacro( PCChar name, PCChar macroDef ) {
+void CmdIdxAddMacro( stref src, stref macroDef ) { linebuf name; SafeStrefcpy( name, src ); // hack-o-rama
    return cmdIdxAdd( name, fn_runmacro(), (KEEPMETA + MACROFUNC), macroDef  _AHELP( nullptr ) );
    }
 
