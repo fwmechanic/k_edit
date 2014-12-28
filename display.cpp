@@ -2363,18 +2363,6 @@ STATIC_FXN bool NeedRedrawScreen() {
    return s_paScreenLineNeedsRedraw ? s_paScreenLineNeedsRedraw->IsAnyBitSet() : false;//TODO
    }
 
-
-STATIC_FXN void GetLineForDisplay( const LINE yDisplayLine, Linebuf &DestLineBuf, const COL scrnCols, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite ) {
-   IS_LINUX && DBG( "%s y=%d", FUNC, yDisplayLine );
-   memset( PChar(DestLineBuf), H__, scrnCols ); //***** initial assumption: this line is a horizontal border ('Í')
-   DestLineBuf[ scrnCols ] = 0;
-   alc.PutColor( 0, scrnCols, g_colorWndBorder );
-
-   for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
-      g_Win(ix)->GetLineForDisplay( ix, DestLineBuf, alc, pFirstPossibleHiLite, yDisplayLine );
-      }
-   }
-
 STATIC_FXN void RedrawScreen() {
 // #define  SHOW_DRAWS  defined(_WIN32)
 #define  SHOW_DRAWS  0
@@ -2387,17 +2375,22 @@ STATIC_FXN void RedrawScreen() {
 
    const auto yDispMin( MinDispLine() );
    const auto scrnCols( EditScreenCols() );
+   std::string buf;
    const auto yTop(0), yBottom( EditScreenLines() );
    ShowDraws( DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom ); )
    const HiLiteRec *pFirstPossibleHiLite(nullptr);
    for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) { ShowDraws( char ch = ' '; )
       if( s_paScreenLineNeedsRedraw->IsBitSet( yLine ) ) {
          ShowDraws( ch = '0' + (yLine % 10); )
-         Linebuf    lineBuf;
-         Assert( sizeof lineBuf > scrnCols );
          LineColors alc;
-         GetLineForDisplay( yLine, lineBuf, scrnCols, alc, pFirstPossibleHiLite );
-         VidWrStrColors( yDispMin+yLine, 0, lineBuf, scrnCols, &alc, false );
+         { IS_LINUX && DBG( "%s y=%d", FUNC, yLine );
+         buf.assign( scrnCols, H__ ); //***** initial assumption: this line is a horizontal border ('Í')
+         alc.PutColor( 0, scrnCols, g_colorWndBorder );
+         for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
+            g_Win(ix)->GetLineForDisplay( ix, buf, alc, pFirstPossibleHiLite, yLine );
+            }
+         }
+         VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, false );
          }
       ShowDraws( *pLbf++ = ch; )
       }
@@ -3161,7 +3154,7 @@ void View::GetLineForDisplay
       PrettifyMemcpy( dest, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->fTrailDisp() ? g_chTrailSpaceDisp : 0 );
       if( DrawVerticalCursorHilite() && isActiveWindow && (xWidth > PCT_WIDTH) && (g_CursorLine() == yLineOfFile) ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
-         FmtStr<8> pctst( " %u%% ", percent );
+         FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
          stref pct( pctst.k_str() );
          memcpy( dest + xWidth - pct.length(), pct.data(), pct.length() );
          }
@@ -3180,7 +3173,7 @@ void View::GetLineForDisplay
 
 void Win::GetLineForDisplay
    ( const int    winNum
-   , const PChar  destLineBuf
+   , std::string &dest
    , LineColors  &alc
    , const HiLiteRec * &pFirstPossibleHiLite
    , const LINE   yLineOfDisplay
@@ -3193,29 +3186,29 @@ void Win::GetLineForDisplay
          const auto pView( CurView() );
          const auto yLineOfFile( pView->Origin().lin - d_UpLeft.lin + yLineOfDisplay );
          LineColorsClipped alcc( *pView, alc, d_UpLeft.col, pView->Origin().col, d_Size.col );
-         pView->GetLineForDisplay( destLineBuf + d_UpLeft.col, alcc, pFirstPossibleHiLite, yLineOfFile, isActiveWindow, d_Size.col );
+         pView->GetLineForDisplay( const_cast<PChar>(dest.data()) + d_UpLeft.col, alcc, pFirstPossibleHiLite, yLineOfFile, isActiveWindow, d_Size.col );
          }
 
       if( d_UpLeft.col > 0 ) { // this window not on left edge? (i.e. window has visible left border?) plug in a line-draw char to make the border
-         auto    &chLeftBorder( destLineBuf[ d_UpLeft.col - 1 ] );
+         auto    &chLeftBorder( dest[ d_UpLeft.col - 1 ] );
          if     ( chLeftBorder == H__                               // 'Í' -> '¹'
                 ||chLeftBorder == HT_                               // 'Ê' -> '¹'
                 ||chLeftBorder == HV_ ) { chLeftBorder = U8(LV_); } // 'Î' -> '¹'
          else if( chLeftBorder == RV_ ) { chLeftBorder = U8(_V_); } // 'Ì' -> 'º'
          }
 
-      auto    &chRightBorder( destLineBuf[ oRightBorder ] );
+      auto    &chRightBorder( dest[ oRightBorder ] );
       if     ( chRightBorder == H__                                  // 'Í' -> 'Ì'
              ||chRightBorder == HV_ ) { chRightBorder = U8(RV_); }   // 'Î' -> 'Ì'
       else if( chRightBorder == LV_ ) { chRightBorder = U8(_V_); }   // '¹' -> 'º'
       }
    else if( yLineOfDisplay == d_UpLeft.lin - 1 ) {  // window's top border line?
-      auto    &chRightBorder( destLineBuf[ oRightBorder ] );
+      auto    &chRightBorder( dest[ oRightBorder ] );
       if     ( chRightBorder == H__ ) { chRightBorder = U8(HB_); }   // 'Í' -> 'Ë'
       else if( chRightBorder == HT_ ) { chRightBorder = U8(HV_); }   // 'Ê' -> 'Î'
       }
    else if( yLineOfDisplay == d_UpLeft.lin + d_Size.lin ) { // window's bottom border line?
-      auto    &chRightBorder( destLineBuf[ oRightBorder ] );
+      auto    &chRightBorder( dest[ oRightBorder ] );
       if     ( chRightBorder == H__ ) { chRightBorder = U8(HT_); }   // Í -> Ê
       else if( chRightBorder == HB_ ) { chRightBorder = U8(HV_); }   // Ë -> Î
       }

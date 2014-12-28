@@ -983,7 +983,7 @@ public:
    bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
 
    bool      GetCursorForDisplay( Point *pt ) const;
-   void      GetLineForDisplay( int winNum, PChar DestLineBuf, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
+   void      GetLineForDisplay( int winNum, std::string &dest, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
 
 public: // std pimpl implemenations declare it as private, but we have "special needs"
    class impl;
