@@ -686,7 +686,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) {
 
    const auto yStart( g_CursorLine() );
    Xbuf xb;
-   fb->getLineTabx( &xb, yStart );
+   fb->getLineTabx_DEPR( &xb, yStart );
    COL rv;
    {
    const auto lbuf0( xb.c_str() );
@@ -704,7 +704,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) {
            break;
       }
    }
-   fb->getLineTabx( &xb, yStart + 1 );
+   fb->getLineTabx_DEPR( &xb, yStart + 1 );
    {
    auto lbuf1( xb.c_str() );  auto pY( StrPastAnyBlanks( lbuf1 ) );
    if( lbuf1[0] && *pY )

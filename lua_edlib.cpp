@@ -420,7 +420,7 @@ FBUF_(GetLine) {
  #else
       Xbuf xb; auto pXb(&xb);
  #endif
-      pf->getLineTabx( pXb, lnum );
+      pf->getLineTabx_DEPR( pXb, lnum );
       R_lstr( pXb->c_str(), pXb->length() );
       }
    R_nil();

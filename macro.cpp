@@ -702,7 +702,7 @@ bool ARG::assign() {
 
     case NOARG:   {
                   Xbuf xb;
-                  g_CurFBuf()->getLineTabxPerRealtabs( &xb, d_noarg.cursor.lin );
+                  g_CurFBuf()->getLineTabxPerRealtabs_DEPR( &xb, d_noarg.cursor.lin );
                   return AssignStrOk( xb.c_str() );
                   }
 
@@ -917,7 +917,7 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
    std::string stmp;
    auto pMacroTextChunk( pCmd->MacroText() );
    while( 1 ) {
-      const auto linechars( g_pFbufRecord->getLineTabxPerRealtabs( &xb, g_pFbufRecord->LastLine() ) );
+      const auto linechars( g_pFbufRecord->getLineTabxPerRealtabs_DEPR( &xb, g_pFbufRecord->LastLine() ) );
       auto pC( pMacroTextChunk + Min( g_iRmargin - linechars + int(ELEMENTS(kszContinuation)), Strlen( pMacroTextChunk ) ) );
       for( ; pC > pMacroTextChunk; --pC )
          if( 0 == *pC || ' ' == *pC || HTAB == *pC )
@@ -1007,7 +1007,7 @@ bool ARG::record() {
       if( RecordingInDQuote() ) {
          ClrInRecordDQuote();
          Xbuf xb;
-         g_pFbufRecord->getLineTabxPerRealtabs( &xb, g_pFbufRecord->LastLine() );
+         g_pFbufRecord->getLineTabxPerRealtabs_DEPR( &xb, g_pFbufRecord->LastLine() );
          std::string stmp;
          g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.cat( "\"" ), stmp );
          }

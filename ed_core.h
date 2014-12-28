@@ -1446,14 +1446,14 @@ public:
 
    //************ GetLine
 private:
-   COL            getLine_(               PXbuf pXb, LINE yLine, int chExpandTabs=0 ) const;
+   COL            getLine_DEPR(           PXbuf pXb, LINE yLine, int chExpandTabs=0 ) const;
    COL            getLine_(       std::string &dest, LINE yLine, int chExpandTabs=0 ) const;
 public:
    void           getLineRaw( std::string &dest, LINE yLine ) const;
 
-   COL            getLineTabx(            PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, ' ' ); }
-   COL            getLineTabxPerRealtabs( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, g_fRealtabs ?0:' ' ); }
-   COL            getLineTabxPerTabDisp ( PXbuf pXb, LINE yLine ) const { return getLine_( pXb, yLine, fTabDisp()?0:' ' ); }
+   COL            getLineTabx_DEPR(            PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, ' ' ); }
+   COL            getLineTabxPerRealtabs_DEPR( PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, g_fRealtabs ?0:' ' ); }
+   COL            getLineTabxPerTabDisp_DEPR ( PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, fTabDisp()?0:' ' ); }
 
    COL            getLineTabx(            std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
    COL            getLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ?0:' ' ); }
@@ -1595,8 +1595,8 @@ extern COL     ColNextTabstop( COL tabWidth, COL xCol );
 extern COL     StrCols(        COL tabWidth, PCChar ptr, PCChar eos=nullptr );
 
 extern void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs );
-extern void        FormatExpandedSeg ( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
-extern std::string FormatExpandedSeg (                    stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 );
+extern void        FormatExpandedSeg ( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- PREFER
+extern std::string FormatExpandedSeg (                    stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- USE RARELY
 extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
 extern COL     PrettifyStrcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
 

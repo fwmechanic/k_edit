@@ -136,7 +136,7 @@ STATIC_FXN bool CopyNumberedLinesToNewFile( PFBUF srcfile, PFBUF destfile, ARG *
          auto npos(1);
          Xbuf xb;
          for( auto ix(0); ix < destfile->LineCount(); ++ix ) {
-            auto lineChars( destfile->getLineTabx( &xb, ix ) );
+            auto lineChars( destfile->getLineTabx_DEPR( &xb, ix ) );
             auto lbuf( xb.wbuf() );
             if( 2 == sscanf( lbuf, "%d%n", &srcfileLine, &npos ) ) {
                auto pTail( StrPastAnyBlanks( lbuf + npos ) );

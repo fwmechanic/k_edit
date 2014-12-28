@@ -453,7 +453,7 @@ void FBUF::cat( PCChar pszNewLineData ) {
          pNL = strchr( pBuf, '\n' );
          }
       if( pBuf == pszNewLineData ) {
-         getLineTabx( &xb, LastLine() );
+         getLineTabx_DEPR( &xb, LastLine() );
          PutLine( LastLine(), xb.cat( pBuf, pNL-pBuf ), tmp );
          }
       else {
@@ -691,7 +691,7 @@ bool ARG::emacscdel() { return DeletePrevChar( true  ); }
 //------------------------------------------------------------------------------
 
 STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, PXbuf pXb, const LINE yLine, const COL xLeft, const COL boxWidth, bool fCollapse ) {
-   pf->getLineTabxPerRealtabs( pXb, yLine );
+   pf->getLineTabxPerRealtabs_DEPR( pXb, yLine );
    const auto xEolNul( pXb->length() );
    if( xEolNul <= xLeft )
       return;
@@ -1001,7 +1001,7 @@ bool ARG::linsert() { PCF;
                     // first nonblank character to the cursor.
                     // (same as NOARG aligncol?)
                     Xbuf xb;
-                    const auto chars( pcf->getLineTabxPerRealtabs( &xb, d_nullarg.cursor.lin ) );
+                    const auto chars( pcf->getLineTabxPerRealtabs_DEPR( &xb, d_nullarg.cursor.lin ) );
                     auto lbuf( xb.wbuf() );
                     const auto pFirstNonBlank( StrPastAnyBlanks( lbuf ) );
                     const auto tailLen( Strlen( pFirstNonBlank ) + 1 );
@@ -1538,7 +1538,7 @@ COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
    }
 
 // returns strlen of returned line
-COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
+COL FBUF::getLine_DEPR( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
    const auto rv( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
    const auto size( 1+StrCols( tw, rv.data(), rv.data()+rv.length() ) );
@@ -1596,7 +1596,7 @@ x
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
 int FBUF::GetLineForInsert( PXbuf pXb, const LINE yLine, COL xIns, COL insertCols ) const {
-   auto       lineChars( getLineTabxPerRealtabs( pXb, yLine ) );
+   auto       lineChars( getLineTabxPerRealtabs_DEPR( pXb, yLine ) );
    auto       dest     ( pXb->wbuf() );
    const auto tw       ( TabWidth() );
    auto       lineCols ( StrCols( tw, dest ) );

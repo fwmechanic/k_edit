@@ -295,7 +295,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
       LuaCtxt_Edit::LocnListInsertCursor(); // do this IFF a match was found
 
    {
-   pFBuf->getLineTabxPerRealtabs( &d_xb, cur.lin );
+   pFBuf->getLineTabxPerRealtabs_DEPR( &d_xb, cur.lin );
    NOAUTO CPCChar frags[] = { pFBuf->Name(), FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ), d_xb.c_str() };
    d_pOutputFile->PutLastLine( frags, ELEMENTS(frags) );
    }
@@ -819,7 +819,7 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
    const auto pMatch( lbuf + (pxCur - ptr) );
 #else
    const auto lbuf( d_xbb.wresize( 1+FBOP::LineCols( pFBuf, curPt->lin ) + d_replaceLen - d_searchLen ) );
-   pFBuf->getLineTabxPerRealtabs( &d_xbb, curPt->lin );
+   pFBuf->getLineTabxPerRealtabs_DEPR( &d_xbb, curPt->lin );
    const auto pMatch( lbuf + curPt->col );
 #endif
 
@@ -1881,7 +1881,7 @@ void FileSearcher::VFindMatches_() {
       VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
-         const auto lnChars( d_pFBuf->getLineTabxPerTabDisp( &d_xb, curPt.lin ) );
+         const auto lnChars( d_pFBuf->getLineTabxPerTabDisp_DEPR( &d_xb, curPt.lin ) );
          VPrepLine_( d_xb.wbuf() );
          const auto bos( d_xb.c_str() );
          const auto eos( bos+lnChars );
@@ -1917,7 +1917,7 @@ void FileSearcher::VFindMatches_() {
    else { // search backwards (only msearch uses this; more complex)
       VS_( DBG( "-search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt > d_end && !ExecutionHaltRequested() ; --curPt.lin, curPt.col = COL_MAX ) {
-         const auto lnChars( d_pFBuf->getLineTabxPerTabDisp( &d_xb, curPt.lin ) );
+         const auto lnChars( d_pFBuf->getLineTabxPerTabDisp_DEPR( &d_xb, curPt.lin ) );
          VPrepLine_( d_xb.wbuf() );
          const auto bos( d_xb.c_str() );
          const auto eos( bos+lnChars );
@@ -2140,7 +2140,7 @@ CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos,
 
 char View::CharUnderCursor() {
    Xbuf xb;
-   const auto chars( g_CurFBuf()->getLineTabx( &xb, Cursor().lin ) );
+   const auto chars( g_CurFBuf()->getLineTabx_DEPR( &xb, Cursor().lin ) );
    return Cursor().col >= chars ? 0 : xb.c_str()[ Cursor().col ];
    }
 
@@ -2748,7 +2748,7 @@ bool ARG::fg() { // fgrep
 
    Xbuf xb;
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
-      const auto len( curfile->getLineTabx( &xb, line ) );
+      const auto len( curfile->getLineTabx_DEPR( &xb, line ) );
       if( 0 == len ) {
          memcpy( pB, xb.c_str(), len+1 );
                  pB  +=         len+1;
