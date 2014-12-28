@@ -3142,7 +3142,7 @@ void View::InsertHiLitesOfLineSeg
 // "repackaging".
 
 void View::GetLineForDisplay
-   ( const PChar              pTextBuf
+   ( const PChar              dest
    ,       LineColorsClipped &alcc
    ,       const HiLiteRec * &pFirstPossibleHiLite
    , const LINE               yLineOfFile
@@ -3150,20 +3150,20 @@ void View::GetLineForDisplay
    , const COL                xWidth
    ) const {
    enum { PCT_WIDTH=7 };
-   memset( pTextBuf, ' ', xWidth );  // dflt for line seg is spaces
+   memset( dest, ' ', xWidth );  // dflt for line seg is spaces
 
    if( yLineOfFile > d_pFBuf->LastLine() ) {
       alcc.PutColorRaw( Origin().col, xWidth, 0x07 );
-      pTextBuf[0] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
+      dest[0] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
       }
    else {
       alcc.PutColor( Origin().col, xWidth, COLOR::FG );
-      PrettifyMemcpy( pTextBuf, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->fTrailDisp() ? g_chTrailSpaceDisp : 0 );
+      PrettifyMemcpy( dest, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->fTrailDisp() ? g_chTrailSpaceDisp : 0 );
       if( DrawVerticalCursorHilite() && isActiveWindow && (xWidth > PCT_WIDTH) && (g_CursorLine() == yLineOfFile) ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
          FmtStr<8> pctst( " %u%% ", percent );
-         const auto pclen( Strlen(pctst.k_str()) );
-         memcpy( pTextBuf + xWidth - pclen, pctst.k_str(), pclen );
+         stref pct( pctst.k_str() );
+         memcpy( dest + xWidth - pct.length(), pct.data(), pct.length() );
          }
       }
 

@@ -1596,7 +1596,7 @@ extern COL     StrCols(        COL tabWidth, PCChar ptr, PCChar eos=nullptr );
 
 extern void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs );
 extern void        FormatExpandedSeg ( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- PREFER
-extern std::string FormatExpandedSeg (                    stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- USE RARELY
+extern std::string FormatExpandedSeg ( /* USE RARELY!! */ stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- USE RARELY
 extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
 extern COL     PrettifyStrcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
 
