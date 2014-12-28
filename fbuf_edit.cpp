@@ -111,7 +111,7 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 // 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
 //    display line
 
-void FormatExpandedSeg( int, std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
+void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
    // NB: we DO NOT clear dest!!!
    const auto initial_dest_length( dest.length() );
    auto dit( back_inserter(dest) );
@@ -169,73 +169,21 @@ void FormatExpandedSeg( int, std::string &dest, stref src, COL xStart, size_t ma
       }
    }
 
-void FormatExpandedSeg
+void FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently
    ( std::string &dest, stref src
    , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
-   // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
-   //
    dest.clear();
-#if 1
-   FormatExpandedSeg( 1, dest, src, xStart, maxChars, tabWidth, chTabExpand, chTrailSpcs );
-#else
-   if( !chTabExpand || !StrContainsTabs( src ) ) {
-      if( xStart <= src.length() ) {
-         src.remove_prefix( xStart );
-         const auto CopyBytes( Min( src.length(), maxChars ) );
-         dest.assign( src.data(), CopyBytes );
-         if( chTrailSpcs && CopyBytes==src.length() ) {
-            for( auto dit( dest.rbegin() ) ; dit != dest.rend() && *dit == ' ' ; ++dit ) {
-               *dit == chTrailSpcs;
-               }
-            }
-         }
-      return;
-      }
-
-   // the only way to solve the problem of "what happens if xStart is in the
-   // middle of a tab-expansion?" is to walk the src string from its beginning,
-   // even though we aren't necessarily _copying_ from the beginning.
-
-   COL xCol( 0 );
-   auto WR_CHAR = [&]( char ch ) { if( xCol++ >= xStart ) { dest.push_back( ch ); } };
-   const Tabber tabr( tabWidth );
-   auto it( src.cbegin() );
-   while( it != src.cend() && dest.length() < maxChars ) {
-      const auto ch( *it++ );
-      if( ch != HTAB ) {
-         WR_CHAR(ch);
-         }
-      else {
-         const auto tgt( tabr.ColOfNextTabStop( xCol ) );
-         auto chFill( chTabExpand );                       // chTabExpand == BIG_BULLET has special behavior:
-         while( xCol < tgt && dest.length() < maxChars ) { // col containing actual HTAB will disp as BIG_BULLET
-            WR_CHAR(chFill);                               // remaining fill-in chars will show as SMALL_BULLET
-            XLAT_chFill( chFill )
-            }
-         }
-      }
-
-   if( chTrailSpcs ) {
-      // it points just after the last source-char copied/xlated;
-      //    it == src.cend() (if the above loop terminated because 'it == src.cend()')
-      // OR it != src.cend() (if the above loop terminated due to 'dest.length() < maxChars' being false)
-      if( it == src.cend() || spacesonly( it, src.cend() ) ) { // _trailing_ spaces on the source side
-         for( auto dit( dest.rbegin() ) ; dit != dest.rend() && *dit == ' ' ; ++dit ) { // xlat all trailing spaces present in dest
-            *dit == chTrailSpcs;
-            }
-         }
-      }
-#endif
+   PrettifyAppend( dest, src, xStart, maxChars, tabWidth, chTabExpand, chTrailSpcs );
    }
 
-std::string FormatExpandedSeg
+std::string FormatExpandedSeg // less efficient version: uses virgin dest each call, thus hits the heap each time
    ( stref src
    , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
-   std::string rv;
-   FormatExpandedSeg( rv, src, xStart, maxChars, tabWidth, chTabExpand, chTrailSpcs );
-   return rv;
+   std::string dest;
+   PrettifyAppend( dest, src, xStart, maxChars, tabWidth, chTabExpand, chTrailSpcs );
+   return dest;
    }
 
 // a terminating NUL IS NOT added!!!  Call PrettifyStrcpy if you need a terminating NUL.
@@ -799,12 +747,11 @@ void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
       DelBox( xStart, yStart, xEnd-1, yStart );
       return;
       }
-   std::string stFirst = GetLineSeg( yStart, 0, xStart-1 );
+   std::string stFirst; GetLineSeg( stFirst, yStart, 0, xStart-1 );
    DelLines( yStart, yEnd - 1 );
-   std::string stLast = GetLineSeg( yStart, xEnd, COL_MAX );
+   std::string stLast;  GetLineSeg( stLast, yStart, xEnd, COL_MAX );
    stFirst += stLast;
-   std::string stmp;
-   PutLine( yStart, stFirst, stmp );
+   PutLine( yStart, stFirst, stLast );
 
    AdjMarksForInsertion( this, this, xEnd, yStart, COL_MAX, yStart, xStart, yStart );
    }
@@ -1608,12 +1555,12 @@ COL FBUF::getLine_( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
 //            so if the line ends in the middle of the gap, rv.length() < gapChars
 //    - if NO chars exist in gap
 //         then rv.empty() == true
-std::string FBUF::GetLineSeg( LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
+void FBUF::GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
+   dest.clear();
    if( yLine >= 0 && yLine <= LastLine() ) {
       const auto rl( PeekRawLine( yLine ) );
-      return FormatExpandedSeg( rl, xLeftIncl, xRightIncl - xLeftIncl + 1, TabWidth() );
+      FormatExpandedSeg( dest, rl, xLeftIncl, xRightIncl - xLeftIncl + 1, TabWidth() );
       }
-   return std::string( "" );
    }
 
 // open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;

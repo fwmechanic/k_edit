@@ -327,7 +327,7 @@ bool View::GetBOXSTR_Selection( std::string &st ) {
          0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
          const auto xMin( Min( s_SelAnchor.col, cursor.col ) );
          const auto xMax( Max( s_SelAnchor.col, cursor.col ) );
-         st = FBuf()->GetLineSeg( cursor.lin, xMin, xMax-1 );
+         FBuf()->GetLineSeg( st, cursor.lin, xMin, xMax-1 );
          return true;
          }
       }
@@ -335,7 +335,7 @@ bool View::GetBOXSTR_Selection( std::string &st ) {
    }
 
 bool ARG::BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax ) {
-   TextArgBuffer() = d_pFBuf->GetLineSeg( yOnly, xMin, xMax-1 );
+   d_pFBuf->GetLineSeg( TextArgBuffer(), yOnly, xMin, xMax-1 );
    d_argType         = TEXTARG;
    d_textarg.ulc.col = xMin;
    d_textarg.ulc.lin = yOnly;
@@ -405,7 +405,7 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
       }
    if( s_SelAnchor == Cursor && NumArg_value == 0 ) {
       if( d_pCmd->d_argType & (NULLEOL | NULLEOW) ) {
-         TextArgBuffer() = d_pFBuf->GetLineSeg( s_SelAnchor.lin, s_SelAnchor.col, COL_MAX );
+         d_pFBuf->GetLineSeg( TextArgBuffer(), s_SelAnchor.lin, s_SelAnchor.col, COL_MAX );
          if( d_pCmd->d_argType & NULLEOW ) { TermNulleow( TextArgBuffer() ); }
          d_argType       = TEXTARG;
          d_textarg.ulc   = Cursor;
@@ -869,7 +869,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       else if( func == fn_right ) {                                      0 && DBG( "right: %d, %" PR_SIZET "u", xCursor, stb.length() );
          if( g_CurFBuf() && stb.length() == xCursor ) {
             const auto xx( xColInFile + xCursor );
-            stTmp = g_CurFBuf()->GetLineSeg( g_CursorLine(), xx, xx );   0 && DBG( "%d='%" PR_BSR "'", xx, BSR(stTmp) );
+            g_CurFBuf()->GetLineSeg( stTmp, g_CursorLine(), xx, xx );    0 && DBG( "%d='%" PR_BSR "'", xx, BSR(stTmp) );
             if( !stTmp.empty() ) {
                stb.push_back( stTmp[0] );
                }
@@ -1138,7 +1138,7 @@ bool ARG::lasttext() {
       case NOARG:     cArg++;
                       break;
 
-      case LINEARG:   TextArgBuffer() = g_CurFBuf()->GetLineSeg( d_linearg.yMin, 0, COL_MAX );
+      case LINEARG:   g_CurFBuf()->GetLineSeg( TextArgBuffer(), d_linearg.yMin, 0, COL_MAX );
                       cArg = d_cArg;
                       break;
 
@@ -1146,7 +1146,7 @@ bool ARG::lasttext() {
                       cArg = d_cArg;
                       break;
 
-      case BOXARG:    TextArgBuffer() = g_CurFBuf()->GetLineSeg( d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col );
+      case BOXARG:    g_CurFBuf()->GetLineSeg( TextArgBuffer(), d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col );
                       cArg = d_cArg;
                       break;
       }
@@ -1547,7 +1547,7 @@ void ARG::ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const {
 COL ARG::GetLine( std::string &st, LINE yLine ) const { // setup x constraints and call GetLineSeg
    COL xLeftIncl, xRightIncl;
    ColsOfArgLine( yLine, &xLeftIncl, &xRightIncl );
-   st = d_pFBuf->GetLineSeg( yLine, xLeftIncl, xRightIncl );
+   d_pFBuf->GetLineSeg( st, yLine, xLeftIncl, xRightIncl );
    return st.length();
    }
 
