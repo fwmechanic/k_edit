@@ -447,6 +447,140 @@ STATIC_FXN int spcs2tabs_leading( PChar pDest, size_t sizeofDest, stref src, Tab
    return pDest - pDestStart;
    }
 
+STATIC_FXN void spcs2tabs_outside_quotes( std::back_insert_iterator<std::string > dit, stref src, TabberParam tabr ) {
+   auto quoteCh( '\0' );
+   auto destCol( 0 );
+   auto fNxtChEscaped( false );
+   auto fInQuotedRgn(  false );
+   auto sit( src.crbegin() );
+   while( sit != src.crend() ) {
+      if( !fInQuotedRgn ) {
+         if( !fNxtChEscaped ) {
+            auto x_Cx( 0 );
+            while( sit != src.crend() && (*sit == ' ' || *sit == HTAB) ) {
+               if( *sit == HTAB ) {
+                  x_Cx = 0;
+                  destCol = tabr.ColOfNextTabStop( destCol );
+                  *dit++ = HTAB;
+                  }
+               else {
+                  ++x_Cx;
+                  ++destCol;
+                  if( tabr.ColAtTabStop(destCol) ) {
+                     *dit++ = (x_Cx == 1) ? ' ' : HTAB;
+                     x_Cx = 0;
+                     }
+                  }
+               ++sit;
+               }
+
+            while( x_Cx-- ) {
+               *dit++ = ' ';
+               }
+            }
+
+         if( sit != src.crend() && !fNxtChEscaped ) {
+            if( fInQuotedRgn )
+               goto TO_ELSE;
+
+            switch( *sit ) {
+               case chQuot1:
+               case chQuot2:  fInQuotedRgn = true;
+                              quoteCh = *sit;
+                              break;
+
+               case chESC:    fNxtChEscaped = true; // ESCAPE char, not PathSepCh!
+                              break;
+
+               default:       break;
+               }
+            }
+         else {
+            fNxtChEscaped = false;
+            }
+         }
+      else {
+         if( sit != src.crend() && !fNxtChEscaped ) {
+TO_ELSE:
+            if( *sit == quoteCh )
+               fInQuotedRgn = false;
+            else if( *sit == chESC ) // ESCAPE char, not PathSepCh!
+               fNxtChEscaped = true;
+            }
+         else {
+            fNxtChEscaped = false;
+            }
+         }
+
+      if( sit != src.crend() ) {
+         *dit++ = *sit++;
+         ++destCol;
+         }
+      }
+   }
+
+STATIC_FXN void spcs2tabs_all( std::back_insert_iterator<std::string > dit, stref src, TabberParam tabr ) {
+   auto xCol(0);
+   auto sit( src.crbegin() );
+   while( sit != src.crend() ) {
+      auto ix(0);
+      while( sit != src.crend() && (*sit == ' ' || *sit == HTAB) ) {
+         if( *sit == HTAB ) {
+            ix = 0;
+            xCol = tabr.ColOfNextTabStop( xCol );
+            *dit++ = HTAB;
+            }
+         else {
+            ++ix;
+            ++xCol;
+            if( tabr.ColAtTabStop(xCol) ) {
+               *dit++ = (--ix == 0) ? ' ' : HTAB;
+               ix = 0;
+               }
+            }
+         ++sit;
+         }
+
+      while( ix-- ) {
+         *dit++ = ' ';
+         }
+
+      if( sit != src.crend() ) {
+         *dit++ = *sit++;
+         ++xCol;
+         }
+      }
+   }
+
+STATIC_FXN void spcs2tabs_leading( std::back_insert_iterator<std::string > dit, stref src, TabberParam tabr ) {
+   auto xCol( 0 );
+   auto ix(0);
+   auto sit( src.crbegin() );
+   for( ; sit != src.crend() && (*sit == ' ' || *sit == HTAB) ; ++sit ) {
+      if( *sit == HTAB ) {
+         ix = 0;
+         xCol = tabr.ColOfNextTabStop( xCol );
+         *dit++ = HTAB;
+         }
+      else {
+         ++ix;
+         ++xCol;
+         if( tabr.ColAtTabStop(xCol) ) {
+            *dit++ = (--ix == 0) ? ' ' : HTAB;
+            ix = 0;
+            }
+         }
+      }
+
+   while( ix-- ) {
+      *dit++ = ' ';
+      }
+
+   for( ; sit != src.crend() ; ++sit ) {
+      *dit++ = *sit;
+      }
+   }
+
 
 //*******************************  END TABS *******************************
 //*******************************  END TABS *******************************
@@ -580,6 +714,43 @@ void FBUF::FmtLastLine( PCChar format, ...  ) {
    va_list val;  va_start( val, format );
    vFmtLastLine( format, val );
    va_end( val );
+   }
+
+void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
+   // if( IsNoEdit() ) { DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() ); }
+   BadParamIf( , IsNoEdit() );
+   DirtyFBufAndDisplay();
+
+   const auto minLineCount( yLine + 1 );
+   if( LineCount() < minLineCount ) { 0 && DBG("%s Linecount=%d", __func__, minLineCount );
+      FBOP::PrimeRedrawLineRangeAllWin( this, LastLine(), yLine ); // needed with addition of g_chTrailLineDisp; past-EOL lines need to be overwritten
+      SetLineInfoCount( minLineCount );
+      SetLineCount    ( minLineCount );
+      }
+   else {
+      FBOP::PrimeRedrawLineRangeAllWin( this, yLine, yLine );
+      }
+
+   if( TABCONV_0_NO_CONV != d_Tabconv ) {
+      stbuf.clear();
+      const Tabber tabr( this->TabWidth() );
+      switch( d_Tabconv ) { // compress spaces into tabs per this->d_Tabconv:
+         default:
+         case TABCONV_0_NO_CONV:                   Assert( 0 ); break;
+         case TABCONV_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(stbuf), srSrc, tabr ); break;
+         case TABCONV_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(stbuf), srSrc, tabr ); break;
+         case TABCONV_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(stbuf), srSrc, tabr ); break;
+         }
+      srSrc = stbuf;
+      }
+   if( !TrailSpcsKept() ) {
+      auto trailSpcs = 0;
+      for( auto it( srSrc.crbegin() ) ; it != srSrc.crend() && *it == ' ' ; ++it ) {
+         ++trailSpcs;
+         }
+      srSrc.remove_suffix( trailSpcs );
+      }
+   UndoReplaceLineContent( yLine, srSrc.data(), srSrc.length() );  // after all this buildup, JUST WRITE THE DAMNED THING:
    }
 
 void FBUF::PutLine( LINE yLine, const stref &srSrc, PXbuf pXb ) {
@@ -1054,13 +1225,13 @@ bool ARG::linsert() { PCF;
    return true;  // Linsert always returns true.
    }
 
-void FBOP::PutChar( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, PXbuf pxb ) {
-   fb->GetLineForInsert( pxb, yLine, xCol, fInsert ? 1 : 0 );
-   PtrOfColWithinStringRegionNoEos( fb->TabWidth(), pxb->wbuf(), pxb->wbuf()+pxb->length(), xCol )[0] = theChar;
+void FBOP::PutChar( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 ) {
+   fb->GetLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );
+   tmp1[ CaptiveIdxOfCol( fb->TabWidth(), tmp1, xCol ) ] = theChar;
    if( fInsert ) {
       AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+1, yLine );
       }
-   fb->PutLine( yLine, pxb->c_str() );
+   fb->PutLine( yLine, tmp1, tmp2 );
    }
 
 
@@ -1100,7 +1271,6 @@ STATIC_FXN COL colPastPrevBlanks( PCChar ptr, int lineChars, COL startCol ) {
    }
 
 bool ARG::graphic() {
-   Xbuf xb;
    const char usrChar( d_pCmd->d_argData.chAscii() );
    if( d_argType == BOXARG ) {
       if( usrChar == ' ' ) { // insert spaces
@@ -1124,15 +1294,16 @@ bool ARG::graphic() {
          // selected text with matching delimiters (depending on the char hit)
          //
          const auto pf( g_CurFBuf() );
+         std::string tmp1, tmp2;
          for( auto curLine( d_boxarg.flMin.lin ); curLine <= d_boxarg.flMax.lin ; ++curLine ) {
-            const auto chars( pf->getLineTabx( &xb, curLine ) );
+            const auto chars( pf->getLineTabx( tmp1, curLine ) );
             const auto xRight(
                  (d_cArg > 1 || (usrChar == chQuot2 || usrChar == chQuot1 || usrChar == chBackTick))  // word-conforming bracketing of a BOXARG?
-                 ? colPastPrevBlanks( xb.wbuf(), chars, d_boxarg.flMax.col+1 )
+                 ? colPastPrevBlanks( tmp1.c_str(), tmp1.length(), d_boxarg.flMax.col+1 )
                  : d_boxarg.flMax.col
                );
-            FBOP::InsertChar( pf, curLine, xRight+1          , chClosing, &xb );
-            FBOP::InsertChar( pf, curLine, d_boxarg.flMin.col, usrChar  , &xb );
+            FBOP::InsertChar( pf, curLine, xRight+1          , chClosing, tmp1, tmp2 );
+            FBOP::InsertChar( pf, curLine, d_boxarg.flMin.col, usrChar  , tmp1, tmp2 );
             }
          return true;
          }
@@ -1142,7 +1313,8 @@ bool ARG::graphic() {
       }
 
    DelArgRegion();
-   return PutCharIntoCurfileAtCursor( usrChar, &xb );
+   std::string tmp1, tmp2;
+   return PutCharIntoCurfileAtCursor( usrChar, tmp1, tmp2 );
    }
 
 
@@ -1296,7 +1468,7 @@ bool ARG::paste() {
 
 GLOBAL_VAR ARG noargNoMeta; // s!b modified!
 
-bool PutCharIntoCurfileAtCursor( int theChar, PXbuf pxb ) { PCFV;
+bool PutCharIntoCurfileAtCursor( int theChar, std::string &tmp1, std::string &tmp2 ) { PCFV;
    if( pcf->CantModify() )
       return false;
 
@@ -1316,8 +1488,8 @@ bool PutCharIntoCurfileAtCursor( int theChar, PXbuf pxb ) { PCFV;
          }
 
       if( g_iRmargin + 5 <= xCol ) {
-         pcf->GetLineForInsert( pxb, yLine, xCol, 0 );
-         const auto lbuf( pxb->c_str() );
+         pcf->GetLineForInsert( tmp1, yLine, xCol, 0 );
+         const auto lbuf( tmp1.c_str() );
          for( auto ix( xCol - 1 ); ix > 1; --ix ) {
             if(   lbuf[ix-1] == ' '
                && lbuf[ix  ] == ' '
@@ -1340,7 +1512,7 @@ bool PutCharIntoCurfileAtCursor( int theChar, PXbuf pxb ) { PCFV;
             }
          }
       }
-   FBOP::PutChar( pcf, yLine, xCol, theChar, true, pxb );
+   FBOP::PutChar( pcf, yLine, xCol, theChar, true, tmp1, tmp2 );
    noargNoMeta.right();
    return true;
    }
@@ -2070,9 +2242,9 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
    if( ySrcStart > ySrcEnd ) { DBG( "%s: ySrcStart > ySrcEnd", FUNC ); return; }
    FBdest->InsBlankLinesBefore( yDestStart, ySrcEnd - ySrcStart + 1 );
    if( FBsrc ) {
-      Xbuf xb;
+      std::string tmp;
       for( ; ySrcStart <= ySrcEnd; ++ySrcStart, ++yDestStart ) {
-         FBdest->PutLine( yDestStart, FBsrc->PeekRawLine( ySrcStart ), &xb );
+         FBdest->PutLine( yDestStart, FBsrc->PeekRawLine( ySrcStart ), tmp );
          }
       }
    }
@@ -2191,7 +2363,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
          const auto srl( CaptiveIdxOfCols( tws, stSrc, xSrcLeft, xSrcRight ) );
          stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, srl.ix0, srl.ix1 - srl.ix0 + 1 );
          }
-      FBdest->PutLine( yDst, stDst );
+      FBdest->PutLine( yDst, stDst, stSrc );
       }
    }
 

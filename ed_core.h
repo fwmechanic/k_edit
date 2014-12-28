@@ -1470,6 +1470,7 @@ public:
 
    //************ PutLine
 public:
+   void           PutLine( LINE yLine,       stref  srSrc, std::string &tmp ); // WITH UNDO
    void           PutLine( LINE yLine, const stref &srSrc, PXbuf pXb=nullptr ); // WITH UNDO
    void           PutLine( LINE yLine, CPCChar pa[], int elems );
 
@@ -1645,9 +1646,9 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    bool           PopFirstLine( std::string &st, PFBUF pFbuf );
 
    //************ char-level ops
-   extern void    PutChar( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, PXbuf pxb );
-   STIL void      InsertChar ( PFBUF fb, LINE yLine, COL xCol, char theChar, PXbuf pxb ) { PutChar( fb, yLine, xCol, theChar, true , pxb ); }
-   STIL void      ReplaceChar( PFBUF fb, LINE yLine, COL xCol, char theChar, PXbuf pxb ) { PutChar( fb, yLine, xCol, theChar, false, pxb ); }
+   extern void    PutChar( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 );
+   STIL void      InsertChar ( PFBUF fb, LINE yLine, COL xCol, char theChar, std::string &tmp1, std::string &tmp2 ) { PutChar( fb, yLine, xCol, theChar, true , tmp1, tmp2 ); }
+   STIL void      ReplaceChar( PFBUF fb, LINE yLine, COL xCol, char theChar, std::string &tmp1, std::string &tmp2 ) { PutChar( fb, yLine, xCol, theChar, false, tmp1, tmp2 ); }
    STIL void      DelChar( PFBUF fb, COL xLeft, LINE yTop ) { fb->DelBox( xLeft, yTop, xLeft, yTop ); }
    STIL void      DelChar( PFBUF fb, Point pt )             { DelChar( fb, pt.col, pt.lin ); }
 

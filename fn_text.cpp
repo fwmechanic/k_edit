@@ -132,8 +132,8 @@ bool ARG::flipcase() {
          const auto ix( CaptiveIdxOfCol( pcf->TabWidth(), rl, d_noarg.cursor.col ) );  if( ix == rl.length() ) { return false; }
          const auto newCh( FlipCase( rl[ix] ) );   if( newCh == rl[ix] ) { return false; }
         #endif
-         Xbuf xb;
-         FBOP::ReplaceChar( pcf, d_noarg.cursor.lin, d_noarg.cursor.col, newCh, &xb );
+         std::string tmp1, tmp2;
+         FBOP::ReplaceChar( pcf, d_noarg.cursor.lin, d_noarg.cursor.col, newCh, tmp1, tmp2 );
          return true;
          }
 

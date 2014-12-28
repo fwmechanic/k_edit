@@ -752,10 +752,9 @@ void FreeAllMacroDefs() {
 // BUGBUG  doesn't seem to handle the "don't break line within macro string
 // literal" problem!  Is this actually needed?
 //
-STATIC_FXN bool PutStringIntoCurfileAtCursor( PXbuf pxb, PCChar pszString, PCChar eos=nullptr ) {
-   if( !eos ) eos = Eos( pszString );
-   while( pszString < eos )
-      if( !PutCharIntoCurfileAtCursor( *pszString++, pxb ) )
+STATIC_FXN bool PutStringIntoCurfileAtCursor( PCChar pszString, std::string &tmp1, std::string &tmp2 ) {
+   for( ; *pszString ; ++pszString )
+      if( !PutCharIntoCurfileAtCursor( *pszString, tmp1, tmp2 ) )
          return false;
 
    return true;
@@ -768,14 +767,14 @@ STATIC_FXN void PutMacroStringIntoCurfileAtCursor( PCChar pStr ) {
    const auto savefWordwrap( g_fWordwrap );
    g_fWordwrap = false; // we will wrap manually below to provide "  \" line continuation sequence
 
-   Xbuf xb;
+   std::string tmp1, tmp2;
    for( ; *pStr; ++pStr ) {
       if( ' ' == *pStr && g_CursorCol() >= g_iRmargin ) {
-         PutStringIntoCurfileAtCursor( &xb, "  \\" );
+         PutStringIntoCurfileAtCursor( "  \\", tmp1, tmp2 );
          g_CurView()->MoveCursor( g_CursorLine() + 1, FBOP::GetSoftcrIndent( g_CurFBuf() ) );
          }
       else {
-         PutCharIntoCurfileAtCursor( *pStr, &xb );
+         PutCharIntoCurfileAtCursor( *pStr, tmp1, tmp2 );
          }
       }
 
