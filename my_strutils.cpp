@@ -314,13 +314,12 @@ PChar _strlwr( PChar buf ) {
 
 #endif
 
-int cmpi( stref s1, stref s2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
+int cmpi( const stref &s1, const stref &s2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
    const auto cd( 'a'-'A' );
    const auto cmplen( Min( s1.length(), s2.length() ) );
    for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
       if( s1[ix] != s2[ix] && (s1[ix] ^ cd) != s2[ix] ) {
-         if( (s1[ix] | cd) < (s2[ix] | cd) )  return -1;  /* Compare the last (or first mismatching in case of not same) characters */
-         return 1;
+         return (s1[ix] | cd) < (s2[ix] | cd) ? -1 : +1;
          }
       }
    if( s1.length() == s2.length() ) return 0;

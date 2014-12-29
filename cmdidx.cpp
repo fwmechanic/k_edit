@@ -516,7 +516,7 @@ STATIC_FXN void CMD_PlacementFree_SameName( PCMD pCmd ) {
    }
 
 STATIC_FXN void DeleteCMD( void *pData, void *pExtra ) {
-   auto pCmd( static_cast<PCMD>(pData) );
+   auto pCmd( static_cast<PCMD>(pData) );  0 && pCmd->IsRealMacro() && DBG( "%s MACRO %s", __func__, pCmd->d_name );
    CMD_PlacementFree_SameName( pCmd );
    Free0( pCmd->d_name );
    Free0( pCmd );
@@ -527,20 +527,21 @@ void CmdIdxClose() {
    rb_dealloc_tree(  s_CmdIdxBuiltins );
    }
 
-PCMD CmdFromName( stref src ) { linebuf name; SafeStrefcpy( name, src ); // hack-o-rama
-   auto pNd( rb_find_gen( s_CmdIdxAddins  , name, rb_strcmpi ) );
-   if( !pNd )  pNd = rb_find_gen( s_CmdIdxBuiltins, name, rb_strcmpi );
+PCMD CmdFromName( stref src ) {
+   auto        pNd(  rb_find_sri( s_CmdIdxAddins  , src ) );
+   if( !pNd )  pNd = rb_find_sri( s_CmdIdxBuiltins, src );
+   // if( !pNd )  DBG( "%s '%" PR_BSR "'", __func__, BSR(src) );
    return pNd ? IdxNodeToPCMD( pNd ) : nullptr;
    }
 
-STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) { linebuf name; SafeStrefcpy( name, src ); // hack-o-rama
-   auto pNd( rb_find_gen( s_CmdIdxBuiltins, name, rb_strcmpi ) );
+STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
+   auto pNd( rb_find_sri( s_CmdIdxBuiltins, src ) );
    return pNd ? IdxNodeToPCMD( pNd ) : nullptr;
    }
 
-STATIC_FXN void cmdIdxAdd( PCChar name, funcCmd pFxn, int argType, stref macroDef  _AHELP( PCChar helpStr ) ) {
+STATIC_FXN void cmdIdxAdd( stref name, funcCmd pFxn, int argType, stref macroDef  _AHELP( PCChar helpStr ) ) {
    int equal;
-   auto pNd( rb_find_gte_gen( &equal, s_CmdIdxAddins, name, rb_strcmpi ) );
+   auto pNd( rb_find_gte_sri( &equal, s_CmdIdxAddins, name ) );
    PCMD pCmd;
    if( equal ) {
       pCmd = IdxNodeToPCMD( pNd );
@@ -554,8 +555,9 @@ STATIC_FXN void cmdIdxAdd( PCChar name, funcCmd pFxn, int argType, stref macroDe
 
    pCmd->d_func    = pFxn;
    pCmd->d_argType = argType;
-   if( !macroDef.empty() )
+   if( pCmd->IsRealMacro() ) {
       pCmd->d_argData.pszMacroDef = Strdup( macroDef );
+      }
 
    AHELP( pCmd->d_HelpStr = Strdup( helpStr ? helpStr : "" ); )
 
@@ -569,7 +571,7 @@ void CmdIdxAddLuaFunc( PCChar name, funcCmd pFxn, int argType  _AHELP( PCChar he
    return cmdIdxAdd( name, pFxn, argType, ""  _AHELP( helpStr ) );
    }
 
-void CmdIdxAddMacro( stref src, stref macroDef ) { linebuf name; SafeStrefcpy( name, src ); // hack-o-rama
+void CmdIdxAddMacro( stref name, stref macroDef ) { 0 && DBG( "%s: '%" PR_BSR "'<-'%" PR_BSR "'", __func__, BSR(name), BSR(macroDef) );
    return cmdIdxAdd( name, fn_runmacro(), (KEEPMETA + MACROFUNC), macroDef  _AHELP( nullptr ) );
    }
 
@@ -589,7 +591,7 @@ STATIC_FXN void DeleteCmd( PCMD pCmd ) {
 
 int CmdIdxRmvCmdsByFunction( funcCmd pFxn ) {
    auto rv(0);
-   PCChar pPrevKey(nullptr);
+   stref pPrevKey;
    for( auto pNd=rb_first( s_CmdIdxAddins ) ; pNd != rb_last( s_CmdIdxAddins ); pNd = rb_next( pNd ) ) {
       {
       const auto pCmd( IdxNodeToPCMD( pNd ) );
@@ -605,12 +607,12 @@ int CmdIdxRmvCmdsByFunction( funcCmd pFxn ) {
 
       // now (since cur node has been deleted), set pNd to prev node
       // locate prev node by searching for pPrevKey
-      if( !pPrevKey ) {
+      if( pPrevKey.empty() ) {
          pNd = rb_first( s_CmdIdxAddins );
          }
       else {
          int equal;
-         pNd = rb_find_gte_gen( &equal, s_CmdIdxAddins, pPrevKey, rb_strcmpi );
+         pNd = rb_find_gte_sri( &equal, s_CmdIdxAddins, pPrevKey );
          Assert( equal );
          }
       }

@@ -1437,11 +1437,28 @@ STATIC_FXN void sweep_ColOfFreeIdx( COL tw, PCChar content, int maxCol ) {
    }
 
 void test_CaptiveIdxOfCol() {
-   const auto tw( 3 );
-   sweep_CaptiveIdxOfCol( tw, ""    ); sweep_FreeIdxOfCol( tw, ""    ); sweep_ColOfFreeIdx( tw, ""   , 3    );
-   sweep_CaptiveIdxOfCol( tw, "ab"  ); sweep_FreeIdxOfCol( tw, "ab"  ); sweep_ColOfFreeIdx( tw, "ab" , 5    );
-   sweep_CaptiveIdxOfCol( tw, "\tb" ); sweep_FreeIdxOfCol( tw, "\tb" ); sweep_ColOfFreeIdx( tw, "\tb", tw*3 );
-   sweep_CaptiveIdxOfCol( tw, "b\t" ); sweep_FreeIdxOfCol( tw, "b\t" ); sweep_ColOfFreeIdx( tw, "b\t", tw*3 );
+   {
+   auto testcmp = []( PCChar s1, PCChar s2 ) {
+      const auto rv( cmpi( s1, s2 ) );
+      const auto sv( Stricmp( s1, s2 ) );
+      printf( "%s%c%s\n"  , s1, rv==0?'=':rv<0?'<':'>', s2 );
+      printf( "%s%c%s\n\n", s1, sv==0?'=':rv<0?'<':'>', s2 );
+      };
+   auto a0 = "alpha", a1 = "Test", a2 = "test", a3 = "testing";
+   testcmp(a0, a1);
+   testcmp(a1, a0);
+   testcmp(a0, a2);
+   testcmp(a1, a2);
+   testcmp(a1, a3);
+   }
+
+   if( 0 ) {
+      const auto tw( 3 );
+      sweep_CaptiveIdxOfCol( tw, ""    ); sweep_FreeIdxOfCol( tw, ""    ); sweep_ColOfFreeIdx( tw, ""   , 3    );
+      sweep_CaptiveIdxOfCol( tw, "ab"  ); sweep_FreeIdxOfCol( tw, "ab"  ); sweep_ColOfFreeIdx( tw, "ab" , 5    );
+      sweep_CaptiveIdxOfCol( tw, "\tb" ); sweep_FreeIdxOfCol( tw, "\tb" ); sweep_ColOfFreeIdx( tw, "\tb", tw*3 );
+      sweep_CaptiveIdxOfCol( tw, "b\t" ); sweep_FreeIdxOfCol( tw, "b\t" ); sweep_ColOfFreeIdx( tw, "b\t", tw*3 );
+      }
    }
 
 

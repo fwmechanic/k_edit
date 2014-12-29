@@ -48,12 +48,12 @@ bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=0}; // make a lo
    if( src.length() == 0 ) { return Msg( "(from %s) entirely blank", __function__ ); }
    const auto ixColon( src.find( ':' ) );
    if( stref::npos == ixColon ) return Msg( "(from %s) missing ':' in %" PR_BSR, __function__, BSR(src) );
-   auto name( src.substr( 0, ixColon ) );                       DB && DBG( "%s 2 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
-   rmv_trail_blanks( name );                                    DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+   auto name( src.substr( 0, ixColon ) );                       0 && DB && DBG( "%s 2 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+   rmv_trail_blanks( name );                                    0 && DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
    src.remove_prefix( FirstNonBlankOrEnd( src, ixColon+1 ) );   DB && DBG( "%s 4 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
-   rmv_trail_blanks( src );                                     DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+   rmv_trail_blanks( src );                                     DB && DBG( "%s 5 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
    if( '=' == src[0] ) {
-      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        DB && DBG( "%s 5 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        DB && DBG( "%s 6 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
       const auto rv( DefineMacro( name, src ) );  DB && DBG( "DefineMacro(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
       return rv;
       }

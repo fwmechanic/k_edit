@@ -259,7 +259,7 @@ void CloseFileExtensionSettings() {
 
 STATIC_FXN FileExtensionSetting *InitFileExtensionSetting( const Path::str_t &ext ) {
    int equal;
-   auto pNd( rb_find_gte_gen( &equal, s_FES_idx, ext.c_str(), rb_strcmpi ) );
+   auto pNd( rb_find_gte_sri( &equal, s_FES_idx, ext ) );
    if( equal ) return IdxNodeToFES( pNd );
    auto pNew( new FileExtensionSetting( ext ) );
    rb_insert_before( s_FES_idx, pNd, pNew->d_ext.c_str(), pNew );

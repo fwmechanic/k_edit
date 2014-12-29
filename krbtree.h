@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstddef>
 #include <cstdio>
 
-#include "my_types.h"
+#include "my_strutils.h"
 
 struct RbCtrl;
 struct RbNode;
@@ -199,12 +199,14 @@ extern RbNode *rb_insert_gen( RbTree *tree, PCVoid key, rb_cmpfxn fxn, PVoid val
 extern RbNode *rb_find_str( RbTree *tree, const char *key);
 extern RbNode *rb_find_mem( RbTree *tree, PCVoid key, size_t keylen);
 extern RbNode *rb_find_gen( RbTree *tree, PCVoid key, rb_cmpfxn fxn);
+extern RbNode *rb_find_sri( RbTree *tree, const boost::string_ref &key);
 
 // Returns the external node in tree whose key-value == key OR
 // whose key-value is the smallest value greater than key.
 // Sets *equal to 0 unless an identical key was found.
 //
 extern RbNode *rb_find_gte_str( int *equal, RbTree *tree, const char *key           );
+extern RbNode *rb_find_gte_sri( int *equal, RbTree *tree, const boost::string_ref &key );
 extern RbNode *rb_find_gte_mem( int *equal, RbTree *tree, PCVoid key, size_t keylen );
 extern RbNode *rb_find_gte_gen( int *equal, RbTree *tree, PCVoid key, rb_cmpfxn fxn );
 

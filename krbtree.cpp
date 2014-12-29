@@ -1021,6 +1021,29 @@ RbNode *rb_find_gte_str( int *equal, RbTree *tree, const char *key )
    }
    }
 
+RbNode *rb_find_gte_sri( int *equal, RbTree *tree, const boost::string_ref &key )
+   {
+   RTN_UNLESS_PRBHD_OK( nullptr, tree );
+   incr_searches( tree );
+   *equal = 0;
+   if( tree->parent == tree ) return tree;
+   {
+   int cmp = cmpi(key, static_cast<PCChar>(tree->blink->key.pv));
+   if( cmp == 0 ) { *equal = 1; return tree->blink; }
+   if( cmp  > 0 ) return tree;
+   tree = tree->parent;
+   while( 1 )
+      {
+      RTN_UNLESS_PRBN_OK( nullptr, tree );
+      if( isext(tree) ) return tree;
+      cmp = cmpi(key, static_cast<PCChar>(getlext(tree)->key.pv));
+      if( cmp == 0 ) { *equal = 1; return getlext(tree); }
+      if( cmp < 0 ) tree = tree->flink;
+      else          tree = tree->blink;
+      }
+   }
+   }
+
 RbNode *rb_find_gte_gen( int *equal, RbTree *tree, PCVoid key, rb_cmpfxn fxn )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
@@ -1063,6 +1086,13 @@ RbNode *rb_find_gen(RbTree *tree, PCVoid key, rb_cmpfxn fxn)
    {
    int equal;
    RbNode *rv = rb_find_gte_gen(&equal, tree, key, fxn);
+   return equal ? rv : nullptr;
+   }
+
+RbNode *rb_find_sri(RbTree *tree, const boost::string_ref &key )
+   {
+   int equal;
+   RbNode *rv = rb_find_gte_sri(&equal, tree, key);
    return equal ? rv : nullptr;
    }
 
