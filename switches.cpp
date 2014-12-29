@@ -377,6 +377,5 @@ bool SetSwitch( stref pszSwitchName, stref pszNewValue ) { 0 && DBG( "SetSwitch 
    auto pSwi( FindSwitch( pszSwitchName ) ); if( !pSwi ) return Msg( "'%" PR_BSR "' is not an editor switch", BSR(pszSwitchName) );
    if( g_pFBufAssignLog ) g_pFBufAssignLog->FmtLastLine( "ASGN  %" PR_BSR "='%" PR_BSR "'", BSR(pszSwitchName), BSR(pszNewValue) );
    if( pszNewValue.empty() ) return Msg( "%" PR_BSR ": empty switch value", BSR(pszSwitchName) );
-   linebuf tmp; SafeStrefcpy( tmp, pszNewValue ); // hack-o-rama
-   return pSwi->pfxDefn( pSwi, tmp );
+   return pSwi->pfxDefn( pSwi, pszNewValue );
    }
