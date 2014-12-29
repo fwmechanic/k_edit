@@ -29,8 +29,8 @@ void swidTabwidth( PChar dest, size_t sizeofDest, void *src ) {
    safeStrcpy( dest, sizeofDest, "status ln's \"e?\"" );
    }
 
-PCChar swixTabwidth( PCChar param ) {
-   const auto val( atoi( param ) );
+PCChar swixTabwidth( stref param ) {
+   const auto val( StrToInt_variable_base( param, 10 ) );
    const auto inRange( val >= 1 && val <= MAX_TAB_WIDTH );
    if( inRange ) {
       g_iTabWidth = val;
@@ -59,9 +59,9 @@ void swidTabconv( PChar dest, size_t sizeofDest, void *src ) {
    safeSprintf( dest, sizeofDest, "%d", g_CurFBuf()->TabConv() );
    }
 
-PCChar swixTabconv( PCChar param ) {
-   const auto setOk( g_CurFBuf()->SetTabconvOk( atoi( param ) ) );
-   return setOk ? nullptr : SwiErrBuf.Sprintf( "invalid tabconv value '%s'", param );
+PCChar swixTabconv( stref param ) {
+   const auto setOk( g_CurFBuf()->SetTabconvOk( StrToInt_variable_base( param, 10 ) ) );
+   return setOk ? nullptr : SwiErrBuf.Sprintf( "invalid tabconv value '%" PR_BSR "'", BSR(param) );
    }
 
 COL TabAlignedCol( COL tabWidth, PCChar pS, PCChar eos, COL xCol, COL xBias ) {

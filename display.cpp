@@ -2823,8 +2823,8 @@ void swid_ch( PChar dest, size_t sizeofDest, char ch ) {
    safeSprintf( dest, sizeofDest, "0x%02X (%c)", ch, ch );
    }
 
-STATIC_FXN bool swixChardisp( PCChar param, char &charVar ) {
-   charVar = char(strtoul( param, nullptr, 0 ));
+STATIC_FXN bool swixChardisp( stref param, char &charVar ) {
+   charVar = char(StrToInt_variable_base( param, 10 ));
    if( 0 == charVar )
       charVar = ' ';
 
@@ -2833,19 +2833,19 @@ STATIC_FXN bool swixChardisp( PCChar param, char &charVar ) {
    }
 
 GLOBAL_VAR char g_chTabDisp  = BIG_BULLET; // g_chTabDisp == BIG_BULLET has special (cool!) behavior
-bool swixTabdisp(   PCChar param ) { return swixChardisp( param, g_chTabDisp        ); }
+bool swixTabdisp(   stref param ) { return swixChardisp( param, g_chTabDisp        ); }
 void swidTabdisp( PChar dest, size_t sizeofDest, void *src ) {
    swid_ch( dest, sizeofDest, static_cast<int>(g_chTabDisp) );
    }
 
 GLOBAL_VAR char g_chTrailSpaceDisp = ' ';
-bool swixTraildisp( PCChar param ) { return swixChardisp( param, g_chTrailSpaceDisp ); }
+bool swixTraildisp( stref param ) { return swixChardisp( param, g_chTrailSpaceDisp ); }
 void swidTraildisp( PChar dest, size_t sizeofDest, void *src ) {
    swid_ch( dest, sizeofDest, static_cast<int>(g_chTrailSpaceDisp) );
    }
 
 GLOBAL_VAR char g_chTrailLineDisp = '~';
-bool swixTrailLinedisp( PCChar param ) { return swixChardisp( param, g_chTrailLineDisp ); }
+bool swixTrailLinedisp( stref param ) { return swixChardisp( param, g_chTrailLineDisp ); }
 void swidTrailLinedisp( PChar dest, size_t sizeofDest, void *src ) {
    swid_ch( dest, sizeofDest, static_cast<int>(g_chTrailLineDisp) );
    }
@@ -3060,12 +3060,12 @@ void swidCursorsize( PChar dest, size_t sizeofDest, void *src ) {
    swid_int( dest, sizeofDest, g_iCursorSize );
    }
 
-PCChar swixCursorsize( PCChar param ) {
-   const auto val( atoi( param ) );
-   switch( val ) {
-      case 0:   ConOut::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
-      case 1:   ConOut::SetCursorSize( ToBOOL(g_iCursorSize=val) ); return nullptr;
+PCChar swixCursorsize( stref param ) {
+   if( param.length() != 1 ) return "CursorSize: Value must be 0 or 1 (!len)";
+   switch( param[0] ) {
       default:  return "CursorSize: Value must be 0 or 1";
+      case '0': ConOut::SetCursorSize( ToBOOL(g_iCursorSize=false) ); return nullptr;
+      case '1': ConOut::SetCursorSize( ToBOOL(g_iCursorSize=true ) ); return nullptr;
       }
    }
 

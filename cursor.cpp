@@ -7,14 +7,14 @@
 void swidHscroll( PChar dest, size_t sizeofDest, void *src ) { swid_int( dest, sizeofDest, g_iHscroll ); }
 void swidVscroll( PChar dest, size_t sizeofDest, void *src ) { swid_int( dest, sizeofDest, g_iVscroll ); }
 
-bool swixHscroll( PCChar param ) {
-   g_iHscroll = atoi( param );
+bool swixHscroll( stref param ) {
+   g_iHscroll = StrToInt_variable_base( param, 10 );
    Constrain( 1, &g_iHscroll, EditScreenCols() - 1 );
    return true;
    }
 
-bool swixVscroll( PCChar param ) {
-   g_iVscroll = atoi( param );
+bool swixVscroll( stref param ) {
+   g_iVscroll = StrToInt_variable_base( param, 10 );
    Constrain( 1, &g_iVscroll, EditScreenLines() - 1 );
    return true;
    }

@@ -832,12 +832,12 @@ bool ARG::tell() {
    }
 
 
-int StrToInt_variable_base( PCChar pszParam, int numberBase ) {
+int StrToInt_variable_base( stref pszParam, int numberBase ) {
    if( (10 == numberBase || 16 == numberBase)
       && '0' == pszParam[0]
       && ('x' == pszParam[1] || 'X' == pszParam[1])
      ) {
-      pszParam += 2;
+      pszParam.remove_prefix( 2 );
       numberBase = 16;
       }
 
@@ -845,9 +845,9 @@ int StrToInt_variable_base( PCChar pszParam, int numberBase ) {
       return -1;
 
    auto accum(0);
-   auto pC( pszParam );
-   for( ; *pC ; ++pC ) {
-      char ch( *pC ); // cannot auto: *pC => const char, we need ch to be non-const
+   auto pC( pszParam.cbegin() );
+   for( ; pC != pszParam.cend() ; ++pC ) {
+      auto ch( *pC ); // cannot auto: *pC => const char, we need ch to be non-const
       if( isDecDigit( ch ) )            { ch -= '0'     ; }
       else if( ch >= 'a' && ch <= 'z' ) { ch -= 'a' - 10; }
       else if( ch >= 'A' && ch <= 'Z' ) { ch -= 'A' - 10; }
@@ -859,7 +859,7 @@ int StrToInt_variable_base( PCChar pszParam, int numberBase ) {
       accum = (accum * numberBase) + ch;
       }
 
-   const auto rv( (pC - pszParam) ? accum : -1 );
+   const auto rv( std::distance( pszParam.cbegin(), pC ) ? accum : -1 );
    return rv;
    }
 

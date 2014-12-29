@@ -1346,10 +1346,10 @@ void swidBackup( PChar dest, size_t sizeofDest, void *src ) {
    safeStrcpy( dest, sizeofDest, kszBackupMode( g_iBackupMode ) );
    }
 
-PCChar swixBackup( PCChar param ) {
-   if(      Stricmp( param, "bak"   ) == 0 )  { g_iBackupMode = bkup_BAK   ; } // backup:none
-   else if( Stricmp( param, "undel" ) == 0 )  { g_iBackupMode = bkup_UNDEL ; } // backup:bak
-   else if( Stricmp( param, "none"  ) == 0 )  { g_iBackupMode = bkup_NONE  ; } // backup:undel
+PCChar swixBackup( stref param ) {
+   if(      eqi( param, "bak"   ) )  { g_iBackupMode = bkup_BAK   ; } // backup:none
+   else if( eqi( param, "undel" ) )  { g_iBackupMode = bkup_UNDEL ; } // backup:bak
+   else if( eqi( param, "none"  ) )  { g_iBackupMode = bkup_NONE  ; } // backup:undel
    else {  return SwiErrBuf.Sprintf( "'%s' value must be one of 'undel', 'bak' or 'none'", kszBackup ); }
    return nullptr;
    }

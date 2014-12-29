@@ -71,7 +71,7 @@ extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2 );
 extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
 extern bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars );
 
-extern   int   StrToInt_variable_base( PCChar pszNumericString, int numberBase );
+extern   int    StrToInt_variable_base( stref pszParam, int numberBase );
 extern   stref  StrSpnSignedInt( stref src );
 extern   bool  StrSpnSignedInt( PCChar pszString );
 extern PCChar  Add_es( int count );
