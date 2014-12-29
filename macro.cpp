@@ -41,18 +41,19 @@ void AssignLogTag( PCChar tag ) {
 
 // ALLOCA_STRDUP( pszStringToAssign, slen, src.data(), src.length() )
 
-bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1}; // make a local copy so param can be a PCChar
+bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=0}; // make a local copy so param can be a PCChar
                                                                 DB && DBG( "%s 0(%" PR_BSR ")", __function__, BSR(src) );
    const auto ixNonb( FirstNonBlankOrEnd( src ) );
    src.remove_prefix( ixNonb );                                 DB && DBG( "%s 1(%" PR_BSR ")", __function__, BSR(src) );
    if( src.length() == 0 ) { return Msg( "(from %s) entirely blank", __function__ ); }
    const auto ixColon( src.find( ':' ) );
    if( stref::npos == ixColon ) return Msg( "(from %s) missing ':' in %" PR_BSR, __function__, BSR(src) );
-   auto name( src.substr( 0, ixColon ) );                       DB && DBG( "%s 2 %" PR_BSR "->%" PR_BSR, __function__, BSR(name), BSR(src) );
-   rmv_trail_blanks( name );                                    DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR, __function__, BSR(name), BSR(src) );
-   src.remove_prefix( FirstNonBlankOrEnd( src, ixColon+1 ) );   DB && DBG( "%s 4 %" PR_BSR "->%" PR_BSR, __function__, BSR(name), BSR(src) );
+   auto name( src.substr( 0, ixColon ) );                       DB && DBG( "%s 2 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+   rmv_trail_blanks( name );                                    DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+   src.remove_prefix( FirstNonBlankOrEnd( src, ixColon+1 ) );   DB && DBG( "%s 4 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+   rmv_trail_blanks( src );                                     DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
    if( '=' == src[0] ) {
-      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        DB && DBG( "%s 5 %" PR_BSR "->%" PR_BSR, __function__, BSR(name), BSR(src) );
+      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        DB && DBG( "%s 5 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
       const auto rv( DefineMacro( name, src ) );  DB && DBG( "DefineMacro(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
       return rv;
       }
@@ -70,10 +71,7 @@ bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1}; // make a lo
    }
 
 void CMD::RedefMacro( stref newDefn ) {
-   const auto len( newDefn.length() + 1 );
-   ReallocArray( d_argData.pszMacroDef, len, __func__ );
-   memcpy( d_argData.pszMacroDef, newDefn.data(), newDefn.length() );
-           d_argData.pszMacroDef[ newDefn.length() ] = '\0';
+   FreeUp( d_argData.pszMacroDef, Strdup( newDefn ) );
    }
 
 bool DefineMacro( stref pszMacroName, stref pszMacroCode ) { 0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'", __func__, BSR(pszMacroName), BSR(pszMacroCode) );

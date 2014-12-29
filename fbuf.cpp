@@ -37,22 +37,12 @@ PVoid Alloc0d_( size_t bytes )             { MEM_CBP(); return calloc( bytes, 1 
 PVoid ReallocNZ_( PVoid pv, size_t bytes ) { MEM_CBP(); return realloc( pv, bytes ); }
 void  Free_( void *pv )                    { MEM_CBP(); free( pv ); }
 
-PChar Strdup( PCChar st, int chars ) {
-   const auto rv( PChar( AllocNZ_( chars+1 ) ) );
-   memcpy( rv, st, chars );
-   rv[chars] = '\0';
-   return rv;
-   }
-
 PChar Strdup( stref src ) {
    const auto rv( PChar( AllocNZ_( src.length()+1 ) ) );
    memcpy( rv, src.data(), src.length() );
    rv[src.length()] = '\0';
    return rv;
    }
-
-PChar Strdup( PCChar st             ) { return Strdup( st, Strlen( st ) ); }
-PChar Strdup( PCChar st, PCChar eos ) { return Strdup( st, eos-st       ); }
 
 //
 //============================================================================================
