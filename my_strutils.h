@@ -94,7 +94,7 @@ extern   void  StrUnDoubleBackslashes( PChar pszString );
 // TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
 
-extern bool  eqi( stref s1, stref s2 );
+extern int   cmpi( stref s1, stref s2 );
 extern char  toLower(     int ch );
 extern bool  IsStringBlank( stref src );
 

@@ -106,7 +106,7 @@ void swidWordchars( PChar dest, size_t sizeofDest, void *src ) {
    }
 
 bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
-   if( eqi( "nonwhite", pS ) ) {
+   if( 0==cmpi( "nonwhite", pS ) ) {
       memset( s_isWordChar_, true, sizeof s_isWordChar_ );
       s_isWordChar_[0]    = false;
       s_isWordChar_[' ']  = false;
@@ -211,17 +211,17 @@ extern bool g_fM4backtickquote;
 // swin(e)s
 
 STATIC_FXN bool swinVAR_BOOL( const SWI *pSwi, stref newValue ) { 0 && DBG( "VAR_BOOL nm=%s, val=%" PR_BSR "'", pSwi->name, BSR(newValue) );
-   if(   eqi( "no", newValue ) || ("0" == newValue ) ) {
+   if(   0==cmpi( "no", newValue ) || ("0" == newValue ) ) {
       *pSwi->act.fval = false;
       return true;
       }
 
-   if(   eqi( "yes", newValue ) || ("1" == newValue) ) {
+   if(   0==cmpi( "yes", newValue ) || ("1" == newValue) ) {
       *pSwi->act.fval = true;
       return true;
       }
 
-   if(   eqi( "invert", newValue ) || ("-" == newValue) ) {
+   if(   0==cmpi( "invert", newValue ) || ("-" == newValue) ) {
       *pSwi->act.fval = !*pSwi->act.fval;
       return true;
       }
@@ -352,7 +352,7 @@ STATIC_CONST SWI s_SwiTable[] = {
 
 STATIC_FXN const SWI *FindSwitch( stref pszSwiName ) {
    for( const auto &Swi : s_SwiTable )
-      if( eqi( Swi.name, pszSwiName ) )
+      if( 0==cmpi( Swi.name, pszSwiName ) )
          return &Swi;
 
    return nullptr;

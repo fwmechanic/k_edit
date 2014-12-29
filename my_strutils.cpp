@@ -314,16 +314,17 @@ PChar _strlwr( PChar buf ) {
 
 #endif
 
-bool eqi( stref s1, stref s2 ) {
-   if( s1.length() != s2.length() ) {
-      return false;
-      }
-   for( sridx ix( 0 ); ix < s1.length() ; ++ix ) {
-      if( ::tolower( s1[ix] ) != ::tolower( s2[ix] ) ) {
-         return false;
+int cmpi( stref s1, stref s2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
+   const auto cd( 'a'-'A' );
+   const auto cmplen( Min( s1.length(), s2.length() ) );
+   for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
+      if( s1[ix] != s2[ix] && (s1[ix] ^ cd) != s2[ix] ) {
+         if( (s1[ix] | cd) < (s2[ix] | cd) )  return -1;  /* Compare the last (or first mismatching in case of not same) characters */
+         return 1;
          }
       }
-   return true;
+   if( s1.length() == s2.length() ) return 0;
+   return s1.length() < s2.length() ? -1 : +1;
    }
 
 // the Blank family...

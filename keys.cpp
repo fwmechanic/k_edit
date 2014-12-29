@@ -455,7 +455,7 @@ int edkcFromKeyname( stref pszKeyStr ) {
       return pszKeyStr[0];
 
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
-      if( eqi( ky2Nm.name, pszKeyStr ) ) {
+      if( 0==cmpi( ky2Nm.name, pszKeyStr ) ) {
          return ky2Nm.EdKC_;
          }
       }

@@ -542,7 +542,7 @@ STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE star
             const auto ix1( FirstBlankOrEnd   ( tag, ix0 ) );
             const auto taglen( ix1 - ix0 );
             const auto atag( tag.substr( ix0, taglen ) );  0 && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
-            if( eqi( atag, srKey ) ) {
+            if( 0==cmpi( atag, srKey ) ) {
                if( fHiLiteTag ) {
                   const auto pView( pFBuf->PutFocusOn() );
                   pView->SetMatchHiLite( Point(yLine,ix0), taglen, true );
