@@ -35,33 +35,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 // private methods:
 //
-static inline RbNode *getlext(   const RbNode *n )              { return n->key.leftExt       ; }
-static inline RbNode *getrext(   const RbNode *n )              { return n->val.rightExt      ; }
+static inline RbNode *getlext(   const RbNode *n )         { return n->key.leftExt       ; }
+static inline RbNode *getrext(   const RbNode *n )         { return n->val.rightExt      ; }
 static inline void    setlext(   RbNode * n , RbNode *v )  {        n->key.leftExt  = v  ; }
 static inline void    setrext(   RbNode * n , RbNode *v )  {        n->val.rightExt = v  ; }
 
-static inline int     isred(     const RbNode *n )              { return n->red               ; }
-static inline int     isblack(   const RbNode *n )              { return !isred(n)            ; }
+static inline int     isred(     const RbNode *n )         { return n->red               ; }
+static inline int     isblack(   const RbNode *n )         { return !isred(n)            ; }
 static inline void    setred(    RbNode * n )              {        n->red = 1           ; }
 static inline void    setblack(  RbNode * n )              {        n->red = 0           ; }
 
-static inline int     isleft(    const RbNode *n )              { return n->left              ; }
-static inline int     isright(   const RbNode *n )              { return !isleft(n)           ; }
+static inline int     isleft(    const RbNode *n )         { return n->left              ; }
+static inline int     isright(   const RbNode *n )         { return !isleft(n)           ; }
 static inline void    setleft(   RbNode * n )              {        n->left = 1          ; }
 static inline void    setright(  RbNode * n )              {        n->left = 0          ; }
 
-static inline int     ishead(    const RbNode *n )              { return n->roothead &  2     ; }
-static inline int     isroot(    const RbNode *n )              { return n->roothead &  1     ; }
+static inline int     ishead(    const RbNode *n )         { return n->roothead &  2     ; }
+static inline int     isroot(    const RbNode *n )         { return n->roothead &  1     ; }
 static inline void    sethead(   RbNode * n )              {        n->roothead |= 2     ; }
 static inline void    setroot(   RbNode * n )              {        n->roothead |= 1     ; }
 static inline void    setnormal( RbNode * n )              {        n->roothead  = 0     ; }
 
-static inline int     isint(     const RbNode *n )              { return n->internal          ; }
-static inline int     isext(     const RbNode *n )              { return !isint(n)            ; }
+static inline int     isint(     const RbNode *n )         { return n->internal          ; }
+static inline int     isext(     const RbNode *n )         { return !isint(n)            ; }
 static inline void    setint(    RbNode * n )              {        n->internal = 1      ; }
 static inline void    setext(    RbNode * n )              {        n->internal = 0      ; }
 
-static inline RbCtrl *getctrl(   const RbNode *hd )             { return hd->key.pCtrl      ; }
+static inline RbCtrl *getctrl(   const RbNode *hd )        { return hd->key.pCtrl      ; }
 static inline void    setctrl(   RbTree * hd, RbCtrl *pc ) {        hd->key.pCtrl = pc ; }
 
 static inline RbNode *sibling(   RbNode * n )              { return isleft(n) ? n->parent->blink
