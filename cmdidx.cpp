@@ -480,16 +480,13 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
 static_assert( ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT, "ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT" );
 
 
-// s_CmdIdxBuiltins is a const tree, never pruned or added to after CmdIdxInit()
-// is called (contains only statically allocated C++ CMDs, which cannot be
-// freed!!!)
-
+// s_CmdIdxBuiltins is, after CmdIdxInit() returns, never modified; it indexes
+// (points to) all members of (the static array) g_CmdTable[]
 STATIC_VAR RbTree *s_CmdIdxBuiltins;
 
 // s_CmdIdxAddins is a dynamic tree which is searched prior to s_CmdIdxBuiltins
 // during user-function-lookups: all CMDs indexed herein (for macros and Lua
 // functions) are heap-allocated, and can thus be created and destroyed at will:
-
 GLOBAL_VAR RbTree *s_CmdIdxAddins;
 
 STIL PCMD IdxNodeToPCMD( RbNode *pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
