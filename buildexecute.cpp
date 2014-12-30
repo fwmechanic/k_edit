@@ -781,7 +781,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
             if( pbTabxBase.empty() ) // no prev'ly used WC?
                pbTabxBase = stb;  // create based on curr content
 
-            pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase.c_str() ) ? nullptr : "*", FILES_AND_DIRS, false );
+            pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
             }
          Path::str_t nxt;
          do {
@@ -795,8 +795,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          else {
             Delete0( pDirContent );
             stb = pbTabxBase;
-            const auto buf( stb.c_str() ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
-            xCursor = FirstWildcardOrEos( buf ) - buf;
+            xCursor = ixFirstWildcardOrEos( stb ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
             fBellAndFreezeKbInput = true;
             }
          }

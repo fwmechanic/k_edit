@@ -603,7 +603,7 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
          }
 
       const auto fname( Path::CpyFnameExt( pszSrc ) );                                VERBOSE && DBG( "%s *** '%s' name='%s'", __func__, pszSrc, fname.c_str() );
-      if( HasWildcard( fname.c_str() ) ) {
+      if( HasWildcard( fname ) ) {
          goto OUTPUT_EQ_INPUT;
          }
 

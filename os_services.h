@@ -127,11 +127,11 @@ STIL   bool   SetFileAttrsOk( PCChar fnm, int attrs )    {
 //----------------------------------------------------------------
 // filename checkers
 
-STIL   PCChar FirstWildcardOrEos( PCChar psz )           { return StrToNextOrEos( psz, "?*" ); }
-STIL   bool   HasWildcard( PCChar psz )                  { return *FirstWildcardOrEos( psz ) != '\0'; }
+STIL   sridx  ixFirstWildcardOrEos( stref psz )          { return nposToEnd( psz, psz.find_first_of( "?*" ) ); }
+STIL   bool   HasWildcard( stref psz )                   { return !atEnd( psz, ixFirstWildcardOrEos( psz ) ); }
 
-STIL   PCChar FirstLogicalWildcardOrEos( PCChar psz )    { return StrToNextOrEos( psz, "?*|" ); }
-STIL   bool   FnmIsLogicalWildcard( PCChar psz )         { return *FirstLogicalWildcardOrEos( psz ) != '\0'; }
+STIL   sridx  ixFirstLogicalWildcardOrEos( stref psz )   { return nposToEnd( psz, psz.find_first_of( "?*|" ) ); }
+STIL   bool   FnmIsLogicalWildcard( stref psz )          { return !atEnd( psz, ixFirstLogicalWildcardOrEos( psz ) ); }
 
 //##############################################################################
 

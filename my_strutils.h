@@ -47,6 +47,15 @@ enum { MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
        BACKTICK = 0x60,
    };
 
+// many stref (and std::string) methods return "index or npos" (the latter
+// indicating a "not found" condition); I have chosen to signify a "not found"
+// condition with the index equivalent of the cend() iterator value:
+STIL sridx nposToEnd( const stref       &str, sridx from ) { return from == stref::npos ? str.length() : from; }
+STIL sridx nposToEnd( const std::string &str, sridx from ) { return from == stref::npos ? str.length() : from; }
+
+STIL bool atEnd( const stref       &str, sridx idx ) { return idx == str.length(); }
+STIL bool atEnd( const std::string &str, sridx idx ) { return idx == str.length(); }
+
 template < typename cont_inst, typename Pred >
 typename cont_inst::size_type ToNextOrEnd( Pred pred, cont_inst src, typename cont_inst::size_type start ) {
    if( start < src.length() ) {

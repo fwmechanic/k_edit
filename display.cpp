@@ -2390,6 +2390,7 @@ STATIC_FXN void RedrawScreen() {
             g_Win(ix)->GetLineForDisplay( ix, buf, alc, pFirstPossibleHiLite, yLine );
             }
          }
+         (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "u!=%u", buf.length(), scrnCols );
          VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, false );
          }
       ShowDraws( *pLbf++ = ch; )
