@@ -61,8 +61,8 @@ static inline int     isext(     const RbNode *n )         { return !isint(n)   
 static inline void    setint(    RbNode * n )              {        n->internal = 1      ; }
 static inline void    setext(    RbNode * n )              {        n->internal = 0      ; }
 
-static inline RbCtrl *getctrl(   const RbNode *hd )        { return hd->key.pCtrl      ; }
-static inline void    setctrl(   RbTree * hd, RbCtrl *pc ) {        hd->key.pCtrl = pc ; }
+static inline RbCtrl *getctrl(   const RbNode *hd )        { return hd->key.pCtrl        ; }
+static inline void    setctrl(   RbTree * hd, RbCtrl *pc ) {        hd->key.pCtrl = pc   ; }
 
 static inline RbNode *sibling(   RbNode * n )              { return isleft(n) ? n->parent->blink
                                                                               : n->parent->flink;
