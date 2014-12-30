@@ -491,10 +491,6 @@ GLOBAL_VAR RbTree *s_CmdIdxAddins;
 
 STIL PCMD IdxNodeToPCMD( RbNode *pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
 
-int rb_strcmpi( PCVoid p1, PCVoid p2 ) {
-   return Stricmp( static_cast<PCChar>(p1), static_cast<PCChar>(p2) );
-   }
-
 STATIC_VAR RbCtrl s_CmdIdxRbCtrl = { AllocNZ_, Free_, };
 
 void CmdIdxInit() {

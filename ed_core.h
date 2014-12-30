@@ -1037,11 +1037,8 @@ enum cppc
    extern RbTree * g_FBufIdx;
    STIL   PFBUF IdxNodeToFBUF( RbNode *pNd ) { return reinterpret_cast<PFBUF>( rb_val(pNd) ); }  // type-safe conversion function
 #else
-   #include "krbtree.h"
-   extern int rb_strcmpi( PCVoid p1, PCVoid p2 );
    extern FBufHead g_FBufHead;
 #endif
-
 
 enum bkupMode { bkup_USE_SWITCH, bkup_UNDEL, bkup_BAK, bkup_NONE };
 

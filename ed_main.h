@@ -74,6 +74,8 @@ extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list va
 #include "dlink.h"
 #include "stringlist.h"
 
+#include "krbtree.h"
+
 #include "ed_core.h"
 
 #include "ed_os_generic.h"

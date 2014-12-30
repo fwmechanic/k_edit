@@ -338,7 +338,6 @@ extern  int    CmdIdxRmvCmdsByFunction( funcCmd pFxn );
 extern  PCMD   CmdFromName( stref name );
 
 typedef RbNode *PCmdIdxNd;
-
 extern  PCmdIdxNd CmdIdxFirst()                ;
 extern  PCmdIdxNd CmdIdxLast()                 ;
 extern  PCmdIdxNd CmdIdxAddinFirst()           ;

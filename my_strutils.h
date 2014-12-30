@@ -169,6 +169,7 @@ extern  PChar _strlwr( PChar buf );
 STIL int Strnicmp( PCChar string1, PCChar string2, size_t count ) { return WL( _strnicmp, strncasecmp )( string1, string2, count ); }
 STIL int Stricmp ( PCChar string1, PCChar string2 )               { return WL( _strcmpi , strcasecmp  )( string1, string2 ); }
 STIL int Strcmp  ( PCChar string1, PCChar string2 )               { return      strcmp                 ( string1, string2 ); }
+STIL int rb_strcmpi( PCVoid p1, PCVoid p2 ) { return Stricmp( static_cast<PCChar>(p1), static_cast<PCChar>(p2) ); }
 
 extern size_t Strnspn  ( PCChar str1, PCChar eos1, PCChar needle );
 extern size_t Strncspn ( PCChar str1, PCChar eos1, PCChar needle );
