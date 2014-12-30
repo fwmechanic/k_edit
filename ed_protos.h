@@ -332,7 +332,6 @@ extern  void   CloseFileExtensionSettings();
 extern  void   CmdIdxInit();
 extern  void   CmdIdxClose();
 
-extern  PCMD   CmdIdxFindByName( PCChar name );
 extern  void   CmdIdxAddLuaFunc( PCChar name, funcCmd pFxn, int argType  _AHELP( PCChar helpStr ) );
 extern  void   CmdIdxAddMacro( stref name, stref macroDef );
 extern  int    CmdIdxRmvCmdsByFunction( funcCmd pFxn );
