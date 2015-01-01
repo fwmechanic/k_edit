@@ -1978,20 +1978,28 @@ do
 -- [[
    local function gofileline_dif( fbuf, cursorY )  -- arg.fbuf, arg.cursorY
       printf( "gofileline_dif(fbuf.nm='%s',line=%d)", fbuf:Name(), cursorY )
-      local iy = cursorY
       local ybase
-      for yy=iy,1,-1 do
+      local lines_above_base = 0
+      for yy=cursorY,1,-1 do
          local str = fbuf:GetLine( yy )
          printf( "gofileline_dif: line[%d]=%s", yy,str )
-         local n1,n2,n3,n4 = str:match"@@ ([-+]%d+),(%d+) ([-+]%d+),(%d+) @@"
-         if n4 and not ybase then
-            ybase = n3
-            printf( "gofileline_dif: ybase=%d", ybase )
-            end
-         local fnm = str:match"%+%+%+ b/(.+)"
-         if fnm then
-            printf( "gofileline_dif: fnm=%s", fnm )
-            return GotoFileYX_Msg_( fnm, ybase+(cursorY-yy)-2, 1, "dif", "dif", 0 )
+         if nil == ybase then
+            if str:match( "^[%+ ]" ) then
+               lines_above_base = 1+ lines_above_base
+               printf( "gofileline_dif: lines_above_base=%d", lines_above_base )
+            else
+               local n1,n2,n3,n4 = str:match( "^@@ ([-+]%d+),(%d+) ([-+]%d+),(%d+) @@" )
+               if n4 then
+                  ybase = n3 + lines_above_base - 1
+                  printf( "gofileline_dif: ybase=%d", ybase )
+                  end
+               end
+         else
+            local fnm = str:match( "%+%+%+ b/(.+)" )
+            if fnm then
+               printf( "gofileline_dif: fnm=%s", fnm )
+               return GotoFileYX_Msg_( fnm, ybase, 1, "dif", "dif", 0 )
+               end
             end
          end
       end
