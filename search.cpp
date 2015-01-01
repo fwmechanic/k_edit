@@ -21,23 +21,6 @@
 GLOBAL_VAR PFBUF g_pFBufSearchLog;
 GLOBAL_VAR PFBUF g_pFBufSearchRslts;
 
-struct DeleteObject { // "Effective STL" pg 38
-   template <typename T>
-   void operator()( const T *ptr ) const { delete ptr; }
-   };
-
-template <class P>
-struct Freer {
-   const P d_p;
-
-   public:
-
-   Freer(P p) : d_p(p) {}
-   ~Freer() { Free_( d_p ); }
-   P operator()() { return d_p; }
-   };
-
-
 FBufLocnNow::FBufLocnNow() : FBufLocn( g_CurFBuf(), g_Cursor() ) {}
 
 bool FBufLocn::Moved() const {
@@ -1968,7 +1951,7 @@ bool GenericSearch( ARG *pArg, const SearchScanMode &sm ) {
    Point                         curPt;
    if(      &smBackwd == &sm ) { curPt = Point( g_CurView()->Cursor(), 0, -1 ); }
    else if( &smFwd    == &sm ) { curPt = Point( g_CurView()->Cursor(), 0, +1 ); }
-   else {   /*suppress warning*/ curPt = Point(0,0);  Assert( !"invalid sm value" ); }
+   else /*suppress warning*/   { curPt = Point(0,0);  Assert( !"invalid sm value" ); }
 
    auto mh( new FindPrevNextMatchHandler( sm.d_fSearchForward, s_searchSpecifier->IsRegex(), s_searchSpecifier->SrchStr() ) );
 
@@ -1990,10 +1973,8 @@ bool GenericSearch( ARG *pArg, const SearchScanMode &sm ) {
    return rv;
    }
 
-
 bool ARG::msearch()   { return GenericSearch( this, smBackwd ); }
 bool ARG::psearch()   { return GenericSearch( this, smFwd    ); }
-
 
 //-------------------------- pbal
 
@@ -2076,11 +2057,14 @@ CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos,
    return CONTINUE_SEARCH;
    }
 
+char CharAtCol( COL tabWidth, const stref &content, const COL colTgt ) {
+   const auto ix( FreeIdxOfCol( tabWidth, content, colTgt ) );
+   return ix < content.length() ? content[ ix ] : 0;
+   }
 
 char View::CharUnderCursor() {
-   Xbuf xb;
-   const auto chars( g_CurFBuf()->getLineTabx_DEPR( &xb, Cursor().lin ) );
-   return Cursor().col >= chars ? 0 : xb.c_str()[ Cursor().col ];
+   const auto rl( g_CurFBuf()->PeekRawLine( Cursor().lin ) );
+   return CharAtCol( g_CurFBuf()->TabWidth(), rl, Cursor().col );
    }
 
 bool View::PBalFindMatching( bool fSetHilite, Point *pPt ) {

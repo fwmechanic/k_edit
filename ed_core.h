@@ -1546,6 +1546,8 @@ STIL   PCChar  PtrOfColWithinStringRegionNoEos( COL tabWidth, PCChar pS, PCChar 
 
 // PREFERRED
 extern sridx   FreeIdxOfCol    ( COL tabWidth, const stref &content, const COL colTgt );
+extern char    CharAtCol       ( COL tabWidth, const stref &content, const COL colTgt ); // returns 0 if col is not present in content
+
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, const stref &content, const COL colTgt ) {
                   return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length() );
                   }
