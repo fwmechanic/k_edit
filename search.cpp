@@ -1741,12 +1741,12 @@ void FileSearcherFast::VFindMatches_() {
       if( !IsStringBlank( rl ) ) {
 SEARCH_REMAINDER_OF_LINE_AGAIN:
          auto lix(0);
-         for( auto &needleSr : d_pNeedles ) {  // if( ExecutionHaltRequested() ) break;
+         for( const auto &needleSr : d_pNeedles ) {  // if( ExecutionHaltRequested() ) break;
             if( needleSr.length() <= rl.length() - curPt.col ) {
                const auto relIxMatch( d_pfxStrnstr( stref( rl.data() + curPt.col, rl.length() - curPt.col ), needleSr ) );
                if( relIxMatch != stref::npos ) {
                   const auto ixMatch( curPt.col + relIxMatch );
-                  0 && DBG( "%s L=%d NeedleLen[%d]=%" PR_BSR " ixM=%" PR_BSRSIZET "u", d_pFBuf->Name(), curPt.lin, lix, BSR(needleSr), ixMatch ); ++lix;
+                  0 && DBG( "%s L=%d Needle[%d]=%" PR_BSR " ixM=%" PR_BSRSIZET "u", d_pFBuf->Name(), curPt.lin, lix, BSR(needleSr), ixMatch ); ++lix;
                   // To prevent the highlight from being misaligned,
                   // FoundMatchContinueSearching needs to be given a tab-corrected
                   // colMatchStart value.  d_searchKey.length() is perfectly
@@ -2063,8 +2063,7 @@ char CharAtCol( COL tabWidth, const stref &content, const COL colTgt ) {
    }
 
 char View::CharUnderCursor() {
-   const auto rl( g_CurFBuf()->PeekRawLine( Cursor().lin ) );
-   return CharAtCol( g_CurFBuf()->TabWidth(), rl, Cursor().col );
+   return CharAtCol( g_CurFBuf()->TabWidth(), g_CurFBuf()->PeekRawLine( Cursor().lin ), Cursor().col );
    }
 
 bool View::PBalFindMatching( bool fSetHilite, Point *pPt ) {
@@ -2360,8 +2359,8 @@ char toLower( int ch ) {
 
 STATIC_FXN sridx strnstr( stref haystack, stref needle ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
    if( needle.length() > haystack.length() ) return stref::npos;
-   const auto cend( haystack.cend() - needle.length() );
-   for( auto hit( haystack.cbegin() ) ; hit != cend ; ++hit ) {
+   const auto hcend( haystack.cend() - needle.length() + 1 );
+   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
       if( *hit == needle[0] ) {
          auto pH( hit ); auto pN( needle.cbegin() );
          do {
@@ -2377,8 +2376,8 @@ STATIC_FXN sridx strnstr( stref haystack, stref needle ) { // if fCase==0, ASSUM
 
 STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
    if( needle.length() > haystack.length() ) return stref::npos;
-   const auto cend( haystack.cend() - needle.length() );
-   for( auto hit( haystack.cbegin() ) ; hit != cend ; ++hit ) {
+   const auto hcend( haystack.cend() - needle.length() + 1 );
+   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
       if( toLower( *hit ) == needle[0] ) {
          auto pH( hit ); auto pN( needle.cbegin() );
          do {
