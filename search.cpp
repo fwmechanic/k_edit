@@ -2703,10 +2703,8 @@ FAIL: // fnmbuf gets filename of CURRENT buffer!  But generation is 0
       STATIC_CONST char grep_fnm[] = "<grep.";
       PCChar ptr; size_t chars;
       if( !fb->PeekRawLineExists( iy, &ptr, &chars ) || !streq_LenOfFirstStr( grep_fnm, KSTRLEN(grep_fnm), ptr, chars ) )
-         { break; }
-      0 && DBG("[%d] %s' line=%*s'",iy, fb->Name(), pd2Int(chars), ptr );
-      }
-   0 && DBG( "%s: %s final=[%d] '%s'", __func__, fb->Name(), iy, fnmbuf );
+         { break; }                                        0 && DBG("[%d] %s' line=%*s'",iy, fb->Name(), pd2Int(chars), ptr );
+      }                                                    0 && DBG( "%s: %s final=[%d] '%s'", __func__, fb->Name(), iy, fnmbuf );
    *pGrepHdrLines = iy;
    return fnmbuf;
    }
@@ -2738,9 +2736,7 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
    std::string tmp;
    // insert/copy all src metalines (except 0) to dest
    for( auto iy(1) ; iy < srcHdrLines ; ++iy ) {
-      PCChar bos, eos;
-      src ->PeekRawLineExists( iy, &bos, &eos );
-      dest->InsLine( destHdrLines++, se2bsr( bos, eos ), tmp );
+      dest->InsLine( destHdrLines++, src->PeekRawLine( iy ), tmp );
       }
    0 && DBG( "%s: %s merg [%d..%d]", __func__, src->Name(), srcHdrLines, src->LineCount()-1 );
    // merge (copy while sorting) all match lines

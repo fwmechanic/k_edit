@@ -614,7 +614,7 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
          }
       srSrc.remove_suffix( trailSpcs );
       }
-   UndoReplaceLineContent( yLine, srSrc.data(), srSrc.length() );  // after all this buildup, JUST WRITE THE DAMNED THING:
+   UndoReplaceLineContent( yLine, srSrc );  // after all this buildup, JUST WRITE THE DAMNED THING:
    }
 
 void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {

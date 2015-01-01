@@ -1229,7 +1229,7 @@ public:
 
    //************ Undo/Redo FBUF edit API
 private:
-   void           UndoReplaceLineContent(  LINE lineNum  , PCChar pNewLineData, int newLineByteCount );
+   void           UndoReplaceLineContent(  LINE lineNum  , stref newContent );
    void           UndoSaveLineRange(       LINE firstLine, LINE lastLine );
    void           UndoInsertLineRangeHole( LINE firstLine, int lineCount );
 
@@ -1470,6 +1470,10 @@ public:
    void           PutLine( LINE yLine, stref srSrc, std::string &tmp ); // WITH UNDO
    void           PutLine( LINE yLine, CPCChar pa[], int elems );
 
+   int            PutLastMultiline( PCChar pszNewLineData );
+   void           PutLastLine( PCChar pszNewLineData )   { PutLastMultiline( pszNewLineData ); }
+   void           PutLastLine( CPCChar pa[], int elems ) { PutLine( LastLine()+1, pa, elems ); }
+
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
    void           InsLine( LINE yLine, const stref &srSrc, std::string &tmp )  // WITH UNDO
                      {
@@ -1480,7 +1484,6 @@ public:
    void           PutLineSeg( LINE lineNum, const stref &ins, std::string &tmp0, std::string &tmp1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
    void           cat( PCChar pszNewLineData );
 
-
    void           xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val );
    void           Vsprintf( LINE lineNum, PCChar format, va_list val );
    void          xFmtLine( PXbuf pxb, LINE lineNum, PCChar format, ...  ) ATTR_FORMAT(4, 5) ;
@@ -1490,11 +1493,7 @@ public:
    void         xvFmtLastLine( PXbuf pxb, PCChar format, va_list val );
    void          vFmtLastLine( PCChar format, va_list val );
 
-   int            PutLastMultiline( PCChar pszNewLineData );
-   void           PutLastLine( PCChar pszNewLineData ) { PutLastMultiline( pszNewLineData ); }
-   void           PutLastLine( CPCChar pa[], int elems ) { PutLine( LastLine()+1, pa, elems ); }
-
-   //************ LINE/BOX/STREAM delete
+   //************ delete LINE/BOX/STREAM
 public:
    void           DelLine            ( LINE firstLine                   ) { DeleteLines__( firstLine, firstLine, true  ); }
    void           DelLines           ( LINE firstLine, LINE lastLine    ) { DeleteLines__( firstLine, lastLine , true  ); }

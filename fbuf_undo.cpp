@@ -613,7 +613,7 @@ void FBUF::AddNewEditOpToListHead( EditRec *pEr ) {
    }
 
 
-void FBUF::UndoReplaceLineContent( LINE lineNum, PCChar pNewLineData, int newLineByteCount ) {
+void FBUF::UndoReplaceLineContent( LINE lineNum, stref newContent ) {
    0 && DBG( "%s+ L%d %s", __func__, lineNum, Name() );
    BadParamIf( , IsNoEdit() );
 
@@ -637,7 +637,7 @@ void FBUF::UndoReplaceLineContent( LINE lineNum, PCChar pNewLineData, int newLin
       new EdOpSaveLineContent( this, lineNum, pLineInfo );
       }
 
-   pLineInfo->PutContent( pNewLineData, newLineByteCount );
+   pLineInfo->PutContent( newContent.data(), newContent.length() );
    Set_yChangedMin( lineNum );
    0 && DBG( "%s- L%d %s", __func__, lineNum, Name() );
    }

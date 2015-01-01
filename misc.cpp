@@ -56,11 +56,11 @@ STATIC_FXN void CreateGrepBufFromLinerange( PFBUF fromfile, PFBUF outfile, LINE 
 STATIC_FXN void AppendLinerangeToGrepBuf( PFBUF fromfile, PFBUF grepBuf, LINE yTop, LINE yBottom ) {
    const auto lwidth( uint_log_10( fromfile->LineCount() ) );
    for( auto ix(yTop); ix <= yBottom; ++ix ) {
-      PCChar ptr;  size_t chars;  // ptr[chars] is NOT valid: ptr[chars] DOES NOT contain '\0'!  The trick "%.*s" is used!!!
-      if( fromfile->PeekRawLineExists( ix, &ptr, &chars ) )
-          grepBuf->FmtLastLine( "%*d  %.*s", lwidth, ix+1, pd2Int(chars), ptr );
+      const auto rl( fromfile->PeekRawLine( ix ) );
+      if( IsStringBlank( rl ) )
+         grepBuf->FmtLastLine( "%*d"             , lwidth, ix+1          );
       else
-          grepBuf->FmtLastLine( "%*d", lwidth, ix+1 );
+         grepBuf->FmtLastLine( "%*d  %" PR_BSR "", lwidth, ix+1, BSR(rl) );
       }
    FBOP::LuaSortLineRange( grepBuf, 2, grepBuf->LastLine(), 0, lwidth );
    }
@@ -166,12 +166,13 @@ STATIC_FXN bool CopyNumberedLinesToNewFile( PFBUF srcfile, PFBUF destfile, ARG *
       const auto leadBlanks( FBOP::MaxCommonLeadingBlanksInLinerange( srcfile, yTop, yBottom ) );
       const auto lwidth( uint_log_10( srcfile->LineCount() ) );
       for( auto ix(yTop); ix <= yBottom; ++ix ) {
-         PCChar ptr; size_t chars;
-         // ptr[chars] is NOT valid: ptr[chars] DOES NOT contain '\0'!  The trick "%.*s" is used!!!
-         if( !srcfile->PeekRawLineExists( ix, &ptr, &chars ) )
-             destfile->FmtLastLine( "%s %*d:", srcfile->Name(), lwidth, ix+1 );
-         else
-             destfile->FmtLastLine( "%s %*d: %.*s", srcfile->Name(), lwidth, ix+1, pd2Int(chars-leadBlanks), ptr+leadBlanks );
+         auto rl( srcfile->PeekRawLine( ix ) );
+         if( IsStringBlank( rl ) )
+            destfile->FmtLastLine( "%s %*d:"         , srcfile->Name(), lwidth, ix+1          );
+         else {
+            rl.remove_prefix( leadBlanks );
+            destfile->FmtLastLine( "%s %*d: %" PR_BSR, srcfile->Name(), lwidth, ix+1, BSR(rl) );
+            }
          }
       }
    else {
