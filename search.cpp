@@ -397,7 +397,7 @@ class FileSearcher {
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh, int capturesNeeded=1 );
 
    virtual void   VPrepLine_( PChar lbuf ) const {};
-   virtual PCChar VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
+   virtual PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
 
    public:
 
@@ -526,7 +526,7 @@ class  FileSearcherString : public FileSearcher {
    ~FileSearcherString() { Free0( d_searchKey ); }
 
    void   VPrepLine_( PChar lbuf ) const override;
-   PCChar VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const override;
+   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
 class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
@@ -546,7 +546,7 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
    virtual ~FileSearcherFast();
    void   VFindMatches_() override;
    void   VPrepLine_( PChar lbuf ) const override;
-   PCChar VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const override;
+   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
 
    int NeedleLen( int ix ) const { return (ix < d_needleCount) ? d_pNeedleLens[ix] : 0; }
    };
@@ -560,7 +560,7 @@ class  FileSearcherRegex : public FileSearcher {
    public:
 
    FileSearcherRegex( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   PCChar VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const override;
+   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
 #endif
@@ -1649,8 +1649,8 @@ void FileSearcherString::VPrepLine_( PChar lbuf ) const {
       _strlwr( lbuf );
    }
 
-PCChar FileSearcherString::VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const {
-   const auto rv( searchFindString( pBuf+startingBufOffset, bufChars-startingBufOffset, d_searchKey, d_searchKeyStrlen ) );
+PCChar FileSearcherString::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const {
+   const auto rv( searchFindString( src.data()+startingBufOffset, src.length()-startingBufOffset, d_searchKey, d_searchKeyStrlen ) );
    *pMatchChars = rv ? d_searchKeyStrlen : 0;
    return rv;
    }
@@ -1680,15 +1680,15 @@ STATIC_FXN PCChar ShowHaystackHas( HaystackHas has ) {
 
 #if USE_PCRE
 
-PCChar FileSearcherRegex::VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const
+PCChar FileSearcherRegex::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const
    {
    VS_(
                DBG( "++++++" );
-               DBG( "RegEx?[%d-],%s='%*.*s'", startingBufOffset, ShowHaystackHas(lineContent), bufChars - startingBufOffset, bufChars - startingBufOffset, pBuf + startingBufOffset );
+               DBG( "RegEx?[%d-],%s='%*.*s'", startingBufOffset, ShowHaystackHas(lineContent), src.length() - startingBufOffset, src.length() - startingBufOffset, src.data() + startingBufOffset );
       )
-   const auto rv( d_ss.d_re->Match( startingBufOffset, pBuf, bufChars, pMatchChars, lineContent, d_pCaptures ) );
+   const auto rv( d_ss.d_re->Match( startingBufOffset, src.data(), src.length(), pMatchChars, lineContent, d_pCaptures ) );
    VS_(
-      if( rv ) DBG( "RegEx:->MATCH=(%d L %d)='%*.*s'", rv - pBuf, *pMatchChars, *pMatchChars, *pMatchChars, rv );
+      if( rv ) DBG( "RegEx:->MATCH=(%d L %d)='%*.*s'", rv - src.data(), *pMatchChars, *pMatchChars, *pMatchChars, rv );
       else     DBG( "RegEx:->NO MATCH" );
                DBG( "------" );
       )
@@ -1850,7 +1850,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
 void   FileSearcherFast::VPrepLine_( PChar lbuf ) const { Assert( 0 != 0 ); }
-PCChar FileSearcherFast::VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const { Assert( 0 != 0 ); return nullptr; }
+PCChar FileSearcherFast::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const { Assert( 0 != 0 ); return nullptr; }
 
 //===============================================
 
@@ -1897,7 +1897,7 @@ void FileSearcher::VFindMatches_() {
               xCol = pcc.p2c( pC )
             ) {
             COL matchChars;
-            pC = VFindStr_( pC - bos, bos, lnChars, &matchChars, STR_HAS_BOL_AND_EOL );
+            pC = VFindStr_( pC - bos, stref( bos, lnChars ), &matchChars, STR_HAS_BOL_AND_EOL );
             if( nullptr == pC )
                break; // no matches on this line!
 
@@ -1937,7 +1937,7 @@ void FileSearcher::VFindMatches_() {
          #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == lnChars ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
 
          COL matchChars;
-         auto pGoodMatch( VFindStr_( 0, bos, maxCharsToSearch, &matchChars, SET_HaystackHas(0) ) );
+         auto pGoodMatch( VFindStr_( 0, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(0) ) );
          if( pGoodMatch ) { // line contains a match?
             auto goodMatchChars( matchChars );
             VS_( DBG( "-search: LMATCH y=%d (%d L %d)='%*.*s'", curPt.lin, pGoodMatch - bos, matchChars, goodMatchChars, goodMatchChars, pGoodMatch ); )
@@ -1949,7 +1949,7 @@ void FileSearcher::VFindMatches_() {
         #endif
             while( pGoodMatch < bos + maxCharsToSearch ) {
                const auto startIdx( pGoodMatch + 1 - bos );
-               const auto pNextMatch( VFindStr_( startIdx, bos, maxCharsToSearch, &matchChars, SET_HaystackHas(startIdx) ) );
+               const auto pNextMatch( VFindStr_( startIdx, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(startIdx) ) );
                if( !pNextMatch )
                   break;
 
