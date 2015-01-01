@@ -207,9 +207,8 @@ bool ARG::quik() {
 
 //  Get line, blank-padded on the right to xMin inclusive.
 //
-STATIC_FXN PChar GetMinLine( PXbuf pxb, LINE y, COL xMin, PFBUF pFBuf ) {
-   pFBuf->GetLineForInsert( pxb, y, xMin+1, 0 );
-   return pxb->wbuf();
+STATIC_FXN void GetMinLine( std::string &dest, LINE y, COL xMin, PFBUF pFBuf ) {
+   pFBuf->GetLineForInsert( dest, y, xMin+1, 0 );
    }
 
 //  Draw a box using the OEM (IBM PC) box drawing chars
@@ -261,13 +260,12 @@ bool ARG::makebox() {
       pchBox = achBox[pchBox - achMenuChar];
       }
 
-   Xbuf  xb;
+   std::string buf;
    std::string stTmp;
-   PChar buf;
    switch( d_argType ) {
       default: return BadArg();
       case NOARG: // replace char @ at cursor position w/"CE" of selected type
-         buf = GetMinLine( &xb, d_noarg.cursor.lin, d_noarg.cursor.col, g_CurFBuf() );
+         GetMinLine( buf, d_noarg.cursor.lin, d_noarg.cursor.col, g_CurFBuf() );
          buf[d_noarg.cursor.col] = pchBox[CE];
          g_CurFBuf()->PutLine( d_noarg.cursor.lin, buf, stTmp );
          g_CurView()->MoveCursor( d_noarg.cursor.lin, d_noarg.cursor.col + 1 );
@@ -279,20 +277,20 @@ bool ARG::makebox() {
                auto yTemp( d_boxarg.flMin.lin );
 
          if( d_boxarg.flMin.col == d_boxarg.flMax.col ) { // VERTICAL LINE?
-            buf = GetMinLine( &xb, yTemp, xTemp, g_CurFBuf() );
+            GetMinLine( buf, yTemp, xTemp, g_CurFBuf() );
             buf[xTemp] = ((buf[xTemp] == pchBox[EW]) && fBox) ? pchBox[NN] : pchBox[NS];
             g_CurFBuf()->PutLine( yTemp++, buf, stTmp );
             while( yTemp < d_boxarg.flMax.lin ) {
-               buf = GetMinLine( &xb, yTemp, xTemp, g_CurFBuf() );
+               GetMinLine( buf, yTemp, xTemp, g_CurFBuf() );
                buf[xTemp] = ((buf[xTemp]==pchBox[EW]) && fBox) ? pchBox[CE] : pchBox[NS];
                g_CurFBuf()->PutLine( yTemp++, buf, stTmp );
                }
-            buf = GetMinLine( &xb, yTemp, xTemp, g_CurFBuf() );
+            GetMinLine( buf, yTemp, xTemp, g_CurFBuf() );
             buf[xTemp] = ((buf[xTemp] == pchBox[EW]) && fBox) ? pchBox[SS] : pchBox[NS];
             g_CurFBuf()->PutLine( yTemp, buf, stTmp );
             }
          else if( d_boxarg.flMin.lin == d_boxarg.flMax.lin ) { // HORIZONTAL LINE?
-            buf = GetMinLine( &xb, d_boxarg.flMin.lin, d_boxarg.flMax.col, g_CurFBuf() );
+            GetMinLine( buf, d_boxarg.flMin.lin, d_boxarg.flMax.col, g_CurFBuf() );
             buf[xTemp] = ((buf[xTemp] == pchBox[NS]) && fBox) ? pchBox[WW] : pchBox[EW];    ++xTemp;
             while( xTemp < d_boxarg.flMax.col ) {
                buf[xTemp] = ((buf[xTemp] == pchBox[NS]) && fBox) ? pchBox[CE] : pchBox[EW]; ++xTemp;
@@ -303,7 +301,7 @@ bool ARG::makebox() {
          else { // BOX
             // TOP LINE
             //
-            buf = GetMinLine( &xb, yTemp, d_boxarg.flMax.col, g_CurFBuf() );
+            GetMinLine( buf, yTemp, d_boxarg.flMax.col, g_CurFBuf() );
             buf[xTemp++] = pchBox[NW];
             while( xTemp < d_boxarg.flMax.col ) {
                buf[xTemp++] = pchBox[EW];
@@ -315,7 +313,7 @@ bool ARG::makebox() {
             //
             while( yTemp < d_boxarg.flMax.lin ) {
                xTemp = d_boxarg.flMin.col;
-               buf = GetMinLine( &xb, yTemp, d_boxarg.flMax.col, g_CurFBuf() );
+               GetMinLine( buf, yTemp, d_boxarg.flMax.col, g_CurFBuf() );
                buf[xTemp] = pchBox[NS];
                for( ++xTemp ; xTemp < d_boxarg.flMax.col ; ++xTemp ) {
                   if( d_cArg > 1 )
@@ -328,7 +326,7 @@ bool ARG::makebox() {
             // BOTTOM LINE
             //
             xTemp = d_boxarg.flMin.col;
-            buf = GetMinLine( &xb, yTemp, d_boxarg.flMax.col, g_CurFBuf() );
+            GetMinLine( buf, yTemp, d_boxarg.flMax.col, g_CurFBuf() );
             buf[xTemp++] = pchBox[SW];
             while( xTemp < d_boxarg.flMax.col ) {
                buf[xTemp++] = pchBox[EW];
