@@ -77,7 +77,7 @@ STATIC_FXN COL TabAlignedCol( COL tabWidth, PCChar pS, COL xColTgt ) {
    COL xCol( 0 );
    while( const auto ch = *pS++ ) {
       const auto xPrev( xCol );
-      xCol = (ch == HTAB) ? tabr.ColOfNextTabStop( xCol ) : xCol+1 ;
+      xCol = (ch == HTAB) ? tabr.ColOfNextTabStop( xCol ) : xCol+1;
       if( xCol > xColTgt )
          return xPrev;
       }
@@ -271,19 +271,17 @@ COL PrettifyStrcpy( const PChar dest, size_t sizeof_dest, stref src, COL tabWidt
 COL ColPrevTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfPrevTabStop( xCol ); }
 COL ColNextTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfNextTabStop( xCol ); }
 
-COL StrCols( COL tabWidth, PCChar ptr, PCChar eos ) {
-   if( !eos ) { eos = Eos( ptr ); }
+COL StrCols( COL tabWidth, const stref &src ) {
    const Tabber tabr( tabWidth );
    auto col( 0 );
-   while( ptr < eos ) {
-      col = (*ptr++ == HTAB) ? tabr.ColOfNextTabStop( col ) : col + 1;
+   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
+      col = (*it == HTAB) ? tabr.ColOfNextTabStop( col ) : col + 1;
       }
    return col;
    }
 
 COL FBOP::LineCols( PCFBUF fb, LINE yLine ) {
-   PCChar bos,eos;
-   return fb->PeekRawLineExists( yLine, &bos, &eos ) ? StrCols( fb->TabWidth(), bos, eos ) : 0;
+   return StrCols( fb->TabWidth(), fb->PeekRawLine( yLine ) );
    }
 
 bool FBOP::IsLineBlank( PCFBUF fb, LINE yLine ) {
@@ -1560,7 +1558,7 @@ COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
 COL FBUF::getLine_DEPR( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
    const auto rv( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
-   const auto size( 1+StrCols( tw, rv.data(), rv.data()+rv.length() ) );
+   const auto size( 1+StrCols( tw, rv ) );
    const auto pDest( pXb->wresize( size ) );
    return PrettifyStrcpy( pDest, size, rv, tw, chExpandTabs );
    }
@@ -1782,7 +1780,7 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
       const auto inslen( Min( inslen_, holewidth ) );
       DE && DBG( "%s [%d L gap/inslen=%d/%d]", __func__, xLeftIncl, holewidth, inslen );
       const auto lchars( GetLineForInsert( &xb, lineNum, xLeftIncl, fInsert ? holewidth : 0 ) );
-      const auto lcols( StrCols( TabWidth(), xb.c_str(), xb.c_str()+lchars ) );
+      const auto lcols( StrCols( TabWidth(), stref( xb.c_str(), lchars ) ) );
       const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );
       DE && DBG( "%s GL4Ins: cch/col=%d/%d maxCol=%d", __func__, lchars, lcols, maxCol );
       Assert( lcols >= xLeftIncl );

@@ -1870,7 +1870,7 @@ public:
    COL    p2c ( PCChar pC   ) const { return ColOfPtr( d_tw, d_pStart, pC    , d_pEos ); }
    PCChar c2p_( COL    xCol ) const { return PtrOfColWithinStringRegion     ( d_tw, d_pStart, d_pEos, xCol   ); }
    PCChar c2p ( COL    xCol ) const { return PtrOfColWithinStringRegionNoEos( d_tw, d_pStart, d_pEos, xCol   ); }
-   COL    cols(             ) const { return StrCols( d_tw, d_pStart, d_pEos ); }
+   COL    cols(             ) const { return StrCols( d_tw, stref(d_pStart, d_pEos-d_pStart) ); }
    };
 
 void FileSearcher::VFindMatches_() {
