@@ -1102,10 +1102,10 @@ STATIC_FXN PCChar findDelim( PCChar tokStrt, PCChar delimset, PCChar macroName )
    }
 
 
-STATIC_FXN PChar DupTextMacroValue( PCChar macroName ) {
+STATIC_FXN std::string DupTextMacroValue( PCChar macroName ) {
    const auto pCmd( CmdFromName( macroName ) );
    if( !pCmd || !pCmd->IsRealMacro() )
-      return nullptr;
+      return std::string( "" );
 
    decltype(macroName) pastTokEnd;
    auto tokStrt( StrPastAnyBlanks( pCmd->MacroText() ) );
@@ -1114,33 +1114,29 @@ STATIC_FXN PChar DupTextMacroValue( PCChar macroName ) {
       case 0:    pastTokEnd = nullptr;                                  break;
       case '"':  pastTokEnd = findDelim( ++tokStrt, "\"", macroName );  break;
       case '\'': pastTokEnd = findDelim( ++tokStrt, "'" , macroName );  break;
-      default:   pastTokEnd = StrToNextBlankOrEos( tokStrt );      break;
+      default:   pastTokEnd = StrToNextBlankOrEos( tokStrt );           break;
       }
 
    if( nullptr == pastTokEnd )  // empty value or bad delim?
-      return nullptr;
+      return std::string( "" );
 
    const auto txtLen( pastTokEnd - tokStrt );
    if( 0 == txtLen )  // empty value?
-      return nullptr;
+      return std::string( "" );
 
-   return Strdup( tokStrt, txtLen );
+   return std::string( tokStrt, txtLen );
    }
 
 STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, size_t sizeofBuf=0 ) {
    {
-   auto mfspec_text( DupTextMacroValue( "mffile" ) );
-   if( mfspec_text ) {
-      if( !IsStringBlank( mfspec_text ) ) {
-         0 && DBG( "%s: FindFBufByName( %s )?", __func__, mfspec_text );
-         const auto pFBufMfspec( FindFBufByName( mfspec_text ) );
-         Free0( mfspec_text );
-         if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
-            if( nmBuf && sizeofBuf ) { safeSprintf( nmBuf, sizeofBuf, "%s (buffer,*mfptr)", pFBufMfspec->Name() ); }
-            return new FilelistCfxFilenameGenerator( pFBufMfspec );
-            }
+   const auto mfspec_text( DupTextMacroValue( "mffile" ) );
+   if( !IsStringBlank( mfspec_text ) ) {
+      1 && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mffile", BSR(mfspec_text) );
+      const auto pFBufMfspec( FindFBufByName( mfspec_text.c_str() ) );
+      if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
+         if( nmBuf && sizeofBuf ) { safeSprintf( nmBuf, sizeofBuf, "%s (buffer,*mfptr)", pFBufMfspec->Name() ); }
+         return new FilelistCfxFilenameGenerator( pFBufMfspec );
          }
-      Free0( mfspec_text );
       }
    }
    {
@@ -1152,31 +1148,26 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    }
 
    {
-   auto mfspec_text( DupTextMacroValue( "mfspec" ) );
-   if( mfspec_text ) {
-      if( !IsStringBlank( mfspec_text ) ) {
-         if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec (macro)" ); }
-         const auto rv( new CfxFilenameGenerator( mfspec_text, ONLY_FILES ) );
-         Free0( mfspec_text );
-         return rv;
-         }
-      Free0( mfspec_text );
+   const auto mfspec_text( DupTextMacroValue( "mfspec" ) );
+   if( !IsStringBlank( mfspec_text ) ) {
+      1 && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
+      if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec (macro)" ); }
+      const auto rv( new CfxFilenameGenerator( mfspec_text.c_str(), ONLY_FILES ) );
+      return rv;
       }
    }
    {
-   auto mfspec_text( DupTextMacroValue( "mfspec_" ) );
-   if( mfspec_text ) {
-      if( !IsStringBlank( mfspec_text ) ) {
-         if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec_ (macro)" ); }
-         const auto rv( new CfxFilenameGenerator( mfspec_text, ONLY_FILES ) );
-         Free0( mfspec_text );
-         return rv;
-         }
-      Free0( mfspec_text );
+   const auto mfspec_text( DupTextMacroValue( "mfspec_" ) );
+   if( !IsStringBlank( mfspec_text ) ) {
+      1 && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
+      if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec_ (macro)" ); }
+      const auto rv( new CfxFilenameGenerator( mfspec_text.c_str(), ONLY_FILES ) );
+      return rv;
       }
    }
 
    if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "no mfspec setting active" ); }
+   1 && DBG( "%s: returns NULL!", __func__ );
    return nullptr;
    }
 
