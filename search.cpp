@@ -1709,7 +1709,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
    // replace the user's chosen separator with the separator that
    // FileSearcherFast::FindMatches requires
    //
-   0 && DBG( "srchStrLen=%d: '%" PR_BSR "'", d_searchKey.length(), BSR(d_searchKey) );
+   0 && DBG( "srchStrLen=%" PR_BSRSIZET "u: '%" PR_BSR "'", d_searchKey.length(), BSR(d_searchKey) );
 
    {
    auto ix(0);
@@ -1724,7 +1724,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
           }
       }
    d_pNeedles.emplace_back( pStart, std::distance( pStart, it ) );
-   0 && DBG( "needleCount=%d", d_pNeedles.size() );
+   0 && DBG( "needleCount=%" PR_BSRSIZET "u", d_pNeedles.size() );
    }
 
    // for( int ix(0) ; ix < d_needleCount ; ++ix ) {
