@@ -202,8 +202,7 @@ class FindPrevNextMatchHandler : public FileSearchMatchHandler {
 
    const char   d_dirCh;
    const bool   d_fIsRegex;
-   const PCChar d_SrchStr;
-   const size_t d_SrchStrLen;
+   const std::string d_SrchStr;
    const std::string d_SrchDispStr;
 
    void DrawDialog( PCChar hdr, PCChar trlr );
@@ -214,10 +213,8 @@ class FindPrevNextMatchHandler : public FileSearchMatchHandler {
 
    public:
 
-   FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, PCChar srchStr );
-   ~FindPrevNextMatchHandler() {
-      Free_( PVoid(d_SrchStr) );
-      }
+   FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, stref srchStr );
+   ~FindPrevNextMatchHandler() {}
 
    void VShowResultsNoMacs() override;
    };
@@ -235,12 +232,11 @@ void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
                              VidWrStrColor( DialogLine(), chars, trlr                 , Strlen(trlr)           , g_colorInfo , true  );
    }
 
-FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, PCChar srchStr )
+FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, stref srchStr )
    : FileSearchMatchHandler( true )
    , d_dirCh(fSearchForward ? '+' : '-')
    , d_fIsRegex(fIsRegex)
-   , d_SrchStr( Strdup( srchStr ) )
-   , d_SrchStrLen( Strlen(d_SrchStr) )
+   , d_SrchStr( srchStr.data(), srchStr.length() )
    , d_SrchDispStr( FormatExpandedSeg( srchStr, 0, COL_MAX, 1, g_chTabDisp, g_chTrailSpaceDisp ) )
    {
    if( !Interpreter::Interpreting() ) {
@@ -311,8 +307,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
 GLOBAL_VAR bool g_fFastsearch = true;
 
 struct SearchSpecifier {
-   PChar  d_rawStr;
-   int    d_rawStrLen;
+   std::string  d_rawStr;
 #if USE_PCRE
    bool   d_fRegexCase;   // state when last (re-)init'd
    Regex *d_re;
@@ -320,11 +315,11 @@ struct SearchSpecifier {
 #endif
    bool   d_fCanUseFastSearch;
 
-   void   Build( PCChar rawStr, int rawStrLen, bool fRegex );
+   void   Build( stref rawSrc, bool fRegex );
 
    public:
 
-   SearchSpecifier( PCChar rawStr, int rawStrLen, bool fRegex=false );
+   SearchSpecifier( stref rawSrc, bool fRegex=false );
    SearchSpecifier( int, PCChar tail );
    ~SearchSpecifier();
 
@@ -336,8 +331,7 @@ struct SearchSpecifier {
    bool   CanUseFastSearch() const { return d_fCanUseFastSearch && g_fFastsearch; }
    bool   CaseUpdt(); // in case case switch has changed since Regex was compiled
    void   Dbgf( PCChar tag ) const;
-   PCChar SrchStr()    const { return d_rawStr ? d_rawStr : ""; }
-   int    SrchStrLen() const { return d_rawStrLen; }
+   stref  SrchStr()    const { return d_rawStr; }
    };
 
 STATIC_VAR SearchSpecifier *s_searchSpecifier;
@@ -417,7 +411,7 @@ class FileSearcher {
    void SetBounds( Point StartPt, Point EndPt );
    void SetBounds( const ARG &arg );
    void Dbgf() const;
-   PCChar SrchStr() const { return d_ss.SrchStr(); }
+   stref SrchStr() const { return d_ss.SrchStr(); }
    bool IsRegex() const { return
 #if USE_PCRE
       d_ss.IsRegex();
@@ -490,7 +484,7 @@ GLOBAL_CONST char kszCompileHdr[] = "+^-^+";
 void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digression!
 #if 1
    LuaCtxt_Edit::nextmsg_setbufnm( szSearchRslts );
-   LuaCtxt_Edit::nextmsg_newsection_ok( SprintfBuf( "mfgrep::%s %s", FSearcher.IsRegex() ? "regex" : "str", FSearcher.SrchStr()) );
+   LuaCtxt_Edit::nextmsg_newsection_ok( SprintfBuf( "mfgrep::%s %" PR_BSR, FSearcher.IsRegex() ? "regex" : "str", BSR( FSearcher.SrchStr() ) ) );
 #else
 
    if( d_pOutputFile->LineCount() > 0 )
@@ -509,13 +503,12 @@ void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digre
 STATIC_FXN FileSearcher *NewFileSearcher( FileSearcher::StringSearchVariant type, const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
 // pointer to one of the two following functions
-typedef PCChar (* pFxn_strstr) ( PCChar haystack, int haystackLen, PCChar needle, int needleLen );
-STATIC_FXN  PCChar    strnstr      ( PCChar haystack, int haystackLen, PCChar needle, int needleLen );
-STATIC_FXN  PCChar    strnstri     ( PCChar haystack, int haystackLen, PCChar needle, int needleLen );
+typedef     sridx (* pFxn_strstr   ) ( stref haystack, stref needle );
+STATIC_FXN  sridx         strnstr    ( stref haystack, stref needle );
+STATIC_FXN  sridx         strnstri   ( stref haystack, stref needle );
 
 class  FileSearcherString : public FileSearcher {
-   const COL d_searchKeyStrlen;
-   PChar     d_searchKey;
+   std::string d_searchKey;
 
    NO_COPYCTOR(FileSearcherString);
    NO_ASGN_OPR(FileSearcherString);
@@ -523,19 +516,17 @@ class  FileSearcherString : public FileSearcher {
    public:
 
    FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   ~FileSearcherString() { Free0( d_searchKey ); }
+   ~FileSearcherString() {}
 
    void   VPrepLine_( PChar lbuf ) const override;
    PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
 class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
-   COL         d_searchKeyStrlen;
-   PChar       d_searchKey;
+   std::string d_searchKey;
    pFxn_strstr d_pfxStrnstr;
 
-   int        *d_pNeedleLens;
-   int         d_needleCount;
+   std::vector<stref> d_pNeedles;
 
    NO_COPYCTOR(FileSearcherFast);
    NO_ASGN_OPR(FileSearcherFast);
@@ -543,12 +534,10 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
    public:
 
    FileSearcherFast( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   virtual ~FileSearcherFast();
+   virtual ~FileSearcherFast() {}
    void   VFindMatches_() override;
    void   VPrepLine_( PChar lbuf ) const override;
    PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
-
-   int NeedleLen( int ix ) const { return (ix < d_needleCount) ? d_pNeedleLens[ix] : 0; }
    };
 
 #if USE_PCRE
@@ -944,7 +933,7 @@ bool SearchSpecifier::IsRegex()  const { return false; }
 
 STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
    VS_( if( s_searchSpecifier ) { s_searchSpecifier->Dbgf( "befor" ); } )
-   auto ssNew( new SearchSpecifier( src.data(), src.length(), fRegex ) );
+   auto ssNew( new SearchSpecifier( src, fRegex ) );
 #if USE_PCRE
    const auto err( ssNew->HasError() );
    if( err ) {
@@ -1545,7 +1534,7 @@ bool SearchSpecifier::CaseUpdt() {
 
       // recompile
       Delete0( d_re );
-      d_re = RegexCompile( d_rawStr, d_fRegexCase );
+      d_re = RegexCompile( d_rawStr.c_str(), d_fRegexCase );
       if( !d_re )
          d_reCompileErr = true;
       }
@@ -1553,40 +1542,31 @@ bool SearchSpecifier::CaseUpdt() {
    return g_fCase;
    }
 
-void SearchSpecifier::Build( PCChar rawStr, int rawStrLen, bool fRegex ) {  // Assert( fRegex && rawStr ); // if fRegex true then rawStr cannot be 0
+void SearchSpecifier::Build( stref rawSrc, bool fRegex ) {  // Assert( fRegex && rawStr ); // if fRegex true then rawStr cannot be 0
 #if USE_PCRE
    d_re = nullptr;
    d_fRegexCase = g_fCase;
    d_reCompileErr = false;
 #endif
-   if( !rawStr ) {
-      d_rawStrLen = 0;
-      d_rawStr    = nullptr;
-      }
-   else {
-      d_rawStrLen = rawStrLen;
-      d_rawStr = Strdup( rawStr, d_rawStrLen );
+   d_rawStr.assign( rawSrc.data(), rawSrc.length() );
 #if USE_PCRE
-      if( fRegex ) {
-         d_fCanUseFastSearch = false;
-         d_re = RegexCompile( d_rawStr, d_fRegexCase );
-         d_reCompileErr = (d_re == nullptr);
-         }
-      else
+   if( fRegex ) {
+      d_fCanUseFastSearch = false;
+      d_re = RegexCompile( d_rawStr.c_str(), d_fRegexCase );
+      d_reCompileErr = (d_re == nullptr);
+      }
+   else
 #endif
-         {
-         d_fCanUseFastSearch = !strchr( d_rawStr, ' ' ) && !strchr( d_rawStr, HTAB ) ;
-         }
+      {
+      d_fCanUseFastSearch = std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
       }
    }
 
-
-SearchSpecifier::SearchSpecifier( PCChar rawStr, int rawStrLen, bool fRegex ) {
-   Build( rawStr, rawStrLen, fRegex );
+SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) {
+   Build( rawSrc, fRegex );
    }
 
 SearchSpecifier::~SearchSpecifier() {
-   Free0( d_rawStr );
 #if USE_PCRE
    RegexDestroy( d_re );
 #endif
@@ -1594,7 +1574,7 @@ SearchSpecifier::~SearchSpecifier() {
 
 void SearchSpecifier::Dbgf( PCChar tag ) const {
   #if 1
-   DBG( "SearchSpecifier %s: cs=%d, rex=%d, rerr=%d, raw=%s'"
+   DBG( "SearchSpecifier %s: cs=%d, rex=%d, rerr=%d, raw=%" PR_BSR "'"
       , tag
 #if USE_PCRE
       , d_fRegexCase
@@ -1605,7 +1585,7 @@ void SearchSpecifier::Dbgf( PCChar tag ) const {
       , false
       , false
 #endif
-      , d_rawStr
+      , BSR(d_rawStr)
       );
   #endif
    }
@@ -1637,11 +1617,10 @@ void FileSearcher::Dbgf() const {
 
 FileSearcherString::FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh )
    : FileSearcher( sm, ss, mh )
-   , d_searchKeyStrlen( Strlen(ss.d_rawStr) )
-   , d_searchKey( Strdup( ss.d_rawStr, d_searchKeyStrlen ) )
+   , d_searchKey( ss.d_rawStr )
    {
    if( !g_fCase )
-      _strlwr( d_searchKey );
+      string_tolower( d_searchKey );
    }
 
 void FileSearcherString::VPrepLine_( PChar lbuf ) const {
@@ -1650,8 +1629,8 @@ void FileSearcherString::VPrepLine_( PChar lbuf ) const {
    }
 
 PCChar FileSearcherString::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const {
-   const auto rv( searchFindString( src.data()+startingBufOffset, src.length()-startingBufOffset, d_searchKey, d_searchKeyStrlen ) );
-   *pMatchChars = rv ? d_searchKeyStrlen : 0;
+   const auto rv( searchFindString( src.data()+startingBufOffset, src.length()-startingBufOffset, d_searchKey.data(), d_searchKey.length() ) );
+   *pMatchChars = rv ? d_searchKey.length() : 0;
    return rv;
    }
 
@@ -1701,47 +1680,41 @@ PCChar FileSearcherRegex::VFindStr_( COL startingBufOffset, stref src, COL *pMat
 
 FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh )
    : FileSearcher( sm, ss, mh )
-   , d_pNeedleLens( nullptr )
-   , d_needleCount( 1 ) // last needle is \0 terminated, so count it now
    {
-   d_searchKeyStrlen = ss.d_rawStrLen;
-   auto pS( ss.d_rawStr );
-
+   stref pS( ss.d_rawStr );
+   // BUGBUG deprecate for now 20150101 KG
    const char AltSepChar
       (
-         (      '!' == pS[0]
+         (      pS.length() >= 2
+          &&    pS[0]=='!'
           &&
-             (  ',' == pS[1]
-             || '|' == pS[1]
-             || '.' == pS[1]
+             (  pS[1]==','
+             || pS[1]=='|'
+             || pS[1]=='.'
              )
          ) ? pS[1] : 0
       );
 
    auto fNdAppendTrailingAltSepChar( 0 );
    if( AltSepChar ) {
-      pS                += 2;
-      d_searchKeyStrlen -= 2;
+      pS.remove_prefix( 2 );
 
-      // IF ALTERNATION BEING USED, LAST CHAR MUST AltSepChar!
+      // IF ALTERNATION
+      //    arg "!,AltSepChar,fNdAppendTrailingAltSepChar" grep
+      //    arg arg "(AltSepChar|fNdAppendTrailingAltSepChar)" grep
+      // BEING USED, LAST CHAR MUST AltSepChar!
       // Append if necessary
-
-      if( pS[ d_searchKeyStrlen-1 ] != AltSepChar ) {
-         ++d_searchKeyStrlen;
+      if( pS.back() != AltSepChar ) {
          fNdAppendTrailingAltSepChar = 1;
          }
       }
 
-   AllocArrayNZ( d_searchKey, d_searchKeyStrlen + 1 + fNdAppendTrailingAltSepChar );
-   memcpy( d_searchKey, pS, d_searchKeyStrlen );
-   pS = d_searchKey + d_searchKeyStrlen;
+   d_searchKey.assign( pS.data(), pS.length() );
    if( fNdAppendTrailingAltSepChar )
-      *pS++ = AltSepChar; // arg "!,AltSepChar,fNdAppendTrailingAltSepChar" grep
-                          // arg arg "(AltSepChar|fNdAppendTrailingAltSepChar)" grep
-   *pS = '\0';
+      d_searchKey += AltSepChar;
 
    if( !g_fCase ) {
-      _strlwr( d_searchKey );
+      string_tolower( d_searchKey );
       d_pfxStrnstr = strnstri;
       }
    else {
@@ -1752,44 +1725,27 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
    // replace the user's chosen separator with the separator that
    // FileSearcherFast::FindMatches requires
    //
-   0 && DBG( "srchStrLen=%d: '%s'", d_searchKeyStrlen, d_searchKey );
+   0 && DBG( "srchStrLen=%d: '%" PR_BSR "'", d_searchKey.length(), BSR(d_searchKey) );
 
-   if( AltSepChar ) { 0 && DBG( "%s ALTN!", __func__ );
-      for( PCChar pCC(d_searchKey) ; *pCC != 0 ; ++pCC )
-         if( AltSepChar == *pCC )
-             ++d_needleCount;
-
-      d_pNeedleLens = new int [d_needleCount];
-
-      auto ix(0);
-      auto pStart(d_searchKey);
-      PChar pC; // want pC beyond for loop
-      for( pC=d_searchKey ; *pC != 0 ; ++pC ) {
-         if( AltSepChar == *pC ) {
-             *pC = 0;
-             0 && DBG( " '%s'", pC+1 );
-             d_pNeedleLens[ ix++ ] = pC - pStart;
-             pStart = pC + 1;
-             }
-         }
-      d_pNeedleLens[ ix ] = pC - pStart;
-
-      0 && DBG( "needleCount=%d", d_needleCount );
+   {
+   auto ix(0);
+   stref rk( d_searchKey );
+   auto it( rk.cbegin() ); // want it beyond for loop
+   auto pStart(it);
+   for( ; it != rk.cend() ; ++it ) {
+      if( AltSepChar == *it ) {
+          0 && DBG( " '%s'", it+1 );
+          d_pNeedles.emplace_back( pStart, std::distance( pStart, it ) );
+          pStart = it + 1;
+          }
       }
-   else {
-      0 && DBG( "needleCount=%d", d_needleCount );
-      d_pNeedleLens = new int [d_needleCount];
-      d_pNeedleLens[0] = Strlen( d_searchKey );
-      }
+   d_pNeedles.emplace_back( pStart, std::distance( pStart, it ) );
+   0 && DBG( "needleCount=%d", d_pNeedles.size() );
+   }
 
    // for( int ix(0) ; ix < d_needleCount ; ++ix ) {
    //    DBG( "NeedleLen[%d]=%d", ix, d_pNeedleLens[ ix ] );
    //    }
-   }
-
-FileSearcherFast::~FileSearcherFast() {
-   Free_( d_searchKey );
-   delete [] d_pNeedleLens;
    }
 
 //
@@ -1815,31 +1771,31 @@ void FileSearcherFast::VFindMatches_() {
    const auto tw( d_pFBuf->TabWidth() );
    for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
       PCChar pLine; size_t chars;
-      if( d_pFBuf->PeekRawLineExists( curPt.lin, &pLine, &chars ) ) { // loop across all needles in [d_searchKey .. d_searchKey + d_searchKeyStrlen - 1]
+      if( d_pFBuf->PeekRawLineExists( curPt.lin, &pLine, &chars ) ) {
+         const stref rl( pLine, chars );
 SEARCH_REMAINDER_OF_LINE_AGAIN:
          auto lix(0);
-         for( auto needle(d_searchKey) ; needle < d_searchKey + d_searchKeyStrlen ; ++lix ) {
-            const auto needleLen( NeedleLen( lix ) );
-            0 && DBG( "NeedleLen[%d]=%d", lix, needleLen );
-            if( needleLen <= chars - curPt.col ) {
-               const auto pMatchStart( d_pfxStrnstr( pLine + curPt.col, chars - curPt.col, needle, needleLen ) );
-               if( pMatchStart ) {
+         for( auto &needleSr : d_pNeedles ) {
+            0 && DBG( "NeedleLen[%d]=%d", lix, needleSr.length() );
+            if( needleSr.length() <= chars - curPt.col ) {
+               const auto pMatchStart( d_pfxStrnstr( stref( pLine + curPt.col, chars - curPt.col ), needleSr ) );
+               if( pMatchStart != stref::npos ) {
                   // To prevent the highlight from being misaligned,
                   // FoundMatchContinueSearching needs to be given a tab-corrected
-                  // colMatchStart value.  d_searchKeyStrlen is perfectly
+                  // colMatchStart value.  d_searchKey.length() is perfectly
                   // adequate/correct because we won't be using FileSearcherFast if
                   // _the key_ contains spaces or tabs
                   //
-                  const auto colMatchStart( ColOfPtr( tw, pLine, pMatchStart, pLine+chars ) );
+
+                  const auto colMatchStart( ColOfFreeIdx ( tw, rl, pMatchStart ) );
                   Point matchPt( curPt.lin, colMatchStart );
-                  if( !d_mh.FoundMatchContinueSearching( d_pFBuf, matchPt, d_searchKeyStrlen, nullptr ) )
+                  if( !d_mh.FoundMatchContinueSearching( d_pFBuf, matchPt, d_searchKey.length(), nullptr ) )
                      return;
 
-                  curPt.col = (pMatchStart - pLine) + d_searchKeyStrlen;
+                  curPt.col = pMatchStart + d_searchKey.length();
                   goto SEARCH_REMAINDER_OF_LINE_AGAIN;
                   }
                }
-            needle += needleLen + 1;
             }
          }
       }
@@ -2451,8 +2407,25 @@ STATIC_FXN sridx strnstr( stref haystack, stref needle ) { // if fCase==0, ASSUM
    return stref::npos;
    }
 
+STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
+   if( needle.length() > haystack.length() ) return stref::npos;
+   const auto cend( haystack.cend() - needle.length() );
+   for( auto hit( haystack.cbegin() ) ; hit != cend ; ++hit ) {
+      if( toLower( *hit ) == needle[0] ) {
+         auto pH( hit ); auto pN( needle.cbegin() );
+         do {
+            ++pH; ++pN;
+            if( pN == needle.cend() ) {
+                return std::distance( haystack.cbegin(), hit );
+                }
+            } while( toLower( *pH ) == *pN );
+         }
+      }
+   return stref::npos;
+   }
+
 STATIC_FXN PCChar strnstri( PCChar haystack, int haystackLen, PCChar needle, int needleLen ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
-   const auto pEnd( haystack + haystackLen - needleLen + 1 ); // stop looking at
+   auto pEnd( haystack + haystackLen - needleLen + 1 ); // stop looking at
    while( haystack < pEnd ) {
       if( toLower( haystack[0] ) == needle[0] ) {
          auto pH( haystack );
