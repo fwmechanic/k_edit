@@ -1661,7 +1661,6 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    //************ indent
    extern COL     GetSoftcrIndent( PFBUF fb );
    extern COL     GetSoftcrIndentLua( PFBUF fb, LINE yLine );
-   extern COL     SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, PXbuf pxb );
    } // namespace FBOP   namespace FBOP   namespace FBOP   namespace FBOP   namespace FBOP   namespace FBOP   namespace FBOP
 
 

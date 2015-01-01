@@ -105,11 +105,17 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 
 // intent (20141221) is that FormatExpandedSeg replace PrettifyStrcpy and PrettifyMemcpy
 // what's preventing this from happening?
-// 1) dest receives a terminating NUL
+// 1) dest receives a terminating NUL merely by dint of being a std::string
 // 2) Xbuf offers a writable-string (PChar) interface to the underlying allocated buffer
 //    (while std::string does NOT)
 // 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
 //    display line
+
+/*
+   I'm working toward addressing these difficulties
+
+
+*/
 
 void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
    // NB: we DO NOT clear dest!!!
