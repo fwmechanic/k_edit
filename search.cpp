@@ -1758,12 +1758,12 @@ void FileSearcherFast::VFindMatches_() {
       if( !IsStringBlank( rl ) ) {
 SEARCH_REMAINDER_OF_LINE_AGAIN:
          auto lix(0);
-         for( auto &needleSr : d_pNeedles ) {  if( ExecutionHaltRequested() ) break;
+         for( auto &needleSr : d_pNeedles ) {  // if( ExecutionHaltRequested() ) break;
             if( needleSr.length() <= rl.length() - curPt.col ) {
                const auto relIxMatch( d_pfxStrnstr( stref( rl.data() + curPt.col, rl.length() - curPt.col ), needleSr ) );
                if( relIxMatch != stref::npos ) {
                   const auto ixMatch( curPt.col + relIxMatch );
-                  1 && DBG( "%s L=%d NeedleLen[%d]=%" PR_BSR " ixM=%" PR_BSRSIZET "u", d_pFBuf->Name(), curPt.lin, lix, BSR(needleSr), ixMatch ); ++lix;
+                  0 && DBG( "%s L=%d NeedleLen[%d]=%" PR_BSR " ixM=%" PR_BSRSIZET "u", d_pFBuf->Name(), curPt.lin, lix, BSR(needleSr), ixMatch ); ++lix;
                   // To prevent the highlight from being misaligned,
                   // FoundMatchContinueSearching needs to be given a tab-corrected
                   // colMatchStart value.  d_searchKey.length() is perfectly
