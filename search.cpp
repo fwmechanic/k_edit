@@ -315,12 +315,9 @@ struct SearchSpecifier {
 #endif
    bool   d_fCanUseFastSearch;
 
-   void   Build( stref rawSrc, bool fRegex );
-
    public:
 
    SearchSpecifier( stref rawSrc, bool fRegex=false );
-   SearchSpecifier( int, PCChar tail );
    ~SearchSpecifier();
 
    bool   IsRegex() const;
@@ -1533,7 +1530,7 @@ bool SearchSpecifier::CaseUpdt() {
    return g_fCase;
    }
 
-void SearchSpecifier::Build( stref rawSrc, bool fRegex ) {  // Assert( fRegex && rawStr ); // if fRegex true then rawStr cannot be 0
+SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) {  // Assert( fRegex && rawStr ); // if fRegex true then rawStr cannot be 0
 #if USE_PCRE
    d_re = nullptr;
    d_fRegexCase = g_fCase;
@@ -1551,10 +1548,6 @@ void SearchSpecifier::Build( stref rawSrc, bool fRegex ) {  // Assert( fRegex &&
       {
       d_fCanUseFastSearch = std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
       }
-   }
-
-SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) {
-   Build( rawSrc, fRegex );
    }
 
 SearchSpecifier::~SearchSpecifier() {
@@ -1761,29 +1754,29 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
 void FileSearcherFast::VFindMatches_() {
    const auto tw( d_pFBuf->TabWidth() );
    for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
-      PCChar pLine; size_t chars;
-      if( d_pFBuf->PeekRawLineExists( curPt.lin, &pLine, &chars ) ) {
-         const stref rl( pLine, chars );
+      const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
+      if( !IsStringBlank( rl ) ) {
 SEARCH_REMAINDER_OF_LINE_AGAIN:
          auto lix(0);
-         for( auto &needleSr : d_pNeedles ) {
-            0 && DBG( "NeedleLen[%d]=%d", lix, needleSr.length() );
-            if( needleSr.length() <= chars - curPt.col ) {
-               const auto pMatchStart( d_pfxStrnstr( stref( pLine + curPt.col, chars - curPt.col ), needleSr ) );
-               if( pMatchStart != stref::npos ) {
+         for( auto &needleSr : d_pNeedles ) {  if( ExecutionHaltRequested() ) break;
+            if( needleSr.length() <= rl.length() - curPt.col ) {
+               const auto relIxMatch( d_pfxStrnstr( stref( rl.data() + curPt.col, rl.length() - curPt.col ), needleSr ) );
+               if( relIxMatch != stref::npos ) {
+                  const auto ixMatch( curPt.col + relIxMatch );
+                  1 && DBG( "%s L=%d NeedleLen[%d]=%" PR_BSR " ixM=%" PR_BSRSIZET "u", d_pFBuf->Name(), curPt.lin, lix, BSR(needleSr), ixMatch ); ++lix;
                   // To prevent the highlight from being misaligned,
                   // FoundMatchContinueSearching needs to be given a tab-corrected
                   // colMatchStart value.  d_searchKey.length() is perfectly
                   // adequate/correct because we won't be using FileSearcherFast if
                   // _the key_ contains spaces or tabs
                   //
-
-                  const auto colMatchStart( ColOfFreeIdx ( tw, rl, pMatchStart ) );
+                  {
+                  const auto colMatchStart( ColOfFreeIdx ( tw, rl, ixMatch ) );
                   Point matchPt( curPt.lin, colMatchStart );
                   if( !d_mh.FoundMatchContinueSearching( d_pFBuf, matchPt, d_searchKey.length(), nullptr ) )
                      return;
-
-                  curPt.col = pMatchStart + d_searchKey.length();
+                  }
+                  curPt.col = ixMatch + d_searchKey.length();
                   goto SEARCH_REMAINDER_OF_LINE_AGAIN;
                   }
                }
