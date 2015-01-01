@@ -77,7 +77,7 @@ STATIC_FXN COL TabAlignedCol( COL tabWidth, PCChar pS, COL xColTgt ) {
    COL xCol( 0 );
    while( const auto ch = *pS++ ) {
       const auto xPrev( xCol );
-      xCol = (ch == HTAB) ? tabr.ColOfNextTabStop( xCol ) : xCol+1 ;
+      xCol = (ch == HTAB) ? tabr.ColOfNextTabStop( xCol ) : xCol+1;
       if( xCol > xColTgt )
          return xPrev;
       }
@@ -105,11 +105,17 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 
 // intent (20141221) is that FormatExpandedSeg replace PrettifyStrcpy and PrettifyMemcpy
 // what's preventing this from happening?
-// 1) dest receives a terminating NUL
+// 1) dest receives a terminating NUL merely by dint of being a std::string
 // 2) Xbuf offers a writable-string (PChar) interface to the underlying allocated buffer
 //    (while std::string does NOT)
 // 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
 //    display line
+
+/*
+   I'm working toward addressing these difficulties
+
+
+*/
 
 void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
    // NB: we DO NOT clear dest!!!
@@ -271,19 +277,17 @@ COL PrettifyStrcpy( const PChar dest, size_t sizeof_dest, stref src, COL tabWidt
 COL ColPrevTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfPrevTabStop( xCol ); }
 COL ColNextTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfNextTabStop( xCol ); }
 
-COL StrCols( COL tabWidth, PCChar ptr, PCChar eos ) {
-   if( !eos ) { eos = Eos( ptr ); }
+COL StrCols( COL tabWidth, const stref &src ) {
    const Tabber tabr( tabWidth );
    auto col( 0 );
-   while( ptr < eos ) {
-      col = (*ptr++ == HTAB) ? tabr.ColOfNextTabStop( col ) : col + 1;
+   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
+      col = (*it == HTAB) ? tabr.ColOfNextTabStop( col ) : col + 1;
       }
    return col;
    }
 
 COL FBOP::LineCols( PCFBUF fb, LINE yLine ) {
-   PCChar bos,eos;
-   return fb->PeekRawLineExists( yLine, &bos, &eos ) ? StrCols( fb->TabWidth(), bos, eos ) : 0;
+   return StrCols( fb->TabWidth(), fb->PeekRawLine( yLine ) );
    }
 
 bool FBOP::IsLineBlank( PCFBUF fb, LINE yLine ) {
@@ -1560,7 +1564,7 @@ COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
 COL FBUF::getLine_DEPR( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
    const auto rv( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
-   const auto size( 1+StrCols( tw, rv.data(), rv.data()+rv.length() ) );
+   const auto size( 1+StrCols( tw, rv ) );
    const auto pDest( pXb->wresize( size ) );
    return PrettifyStrcpy( pDest, size, rv, tw, chExpandTabs );
    }
@@ -1756,8 +1760,8 @@ void LineInfo::PutContent( PCChar pNewLine, int newLineBytes ) { // assume previ
    d_iLineLen = newLineBytes;
    }
 
-void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
-   enum { DE=0 };
+void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
+   enum { DE=0 };                                       DE && DBG( "%s+ L %d [%d..%d] <= '%" PR_BSR "' )", __func__, lineNum, xLeftIncl, xRightIncl, BSR(ins) );
    // insert ins into gap = [xLeftIncl, xRightIncl]
    // rules:
    //    - portion of ins placed into line is NEVER longer than gap
@@ -1767,8 +1771,6 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
    //         if !fInsert AND existing chars       to right of xRightIncl
    //         then ins is space padded to fill gap and will NOT terminate string.
    //      else ins is NOT space padded, will terminate string, perhaps to left of xRightIncl
-   std::string stmp;
-   DE && DBG( "%s+ L %d [%d..%d] <= '%s' )", __func__, lineNum, xLeftIncl, xRightIncl, ins );
    if( !fInsert && xLeftIncl == 0 && xRightIncl >= FBOP::LineCols( this, lineNum ) ) { // a two-parameter call?
       DE && DBG( "%s- PutLine(simple) )", __func__ );
       PutLine( lineNum, ins, stmp ); // optimal/trivial line-replace case
@@ -1776,40 +1778,19 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
    else { // segment ins/overwrite case
 
 #if 1
-      Xbuf xb;
-      const auto holewidth( xRightIncl - xLeftIncl + 1 );
-      const auto inslen_( Strlen( ins ) );
-      const auto inslen( Min( inslen_, holewidth ) );
-      DE && DBG( "%s [%d L gap/inslen=%d/%d]", __func__, xLeftIncl, holewidth, inslen );
-      const auto lchars( GetLineForInsert( &xb, lineNum, xLeftIncl, fInsert ? holewidth : 0 ) );
-      const auto lcols( StrCols( TabWidth(), xb.c_str(), xb.c_str()+lchars ) );
-      const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );
-      DE && DBG( "%s GL4Ins: cch/col=%d/%d maxCol=%d", __func__, lchars, lcols, maxCol );
+      sridx holewidth( xRightIncl - xLeftIncl + 1 );
+      const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "u/%" PR_BSRSIZET "u]", __func__, xLeftIncl, holewidth, inslen );
+      GetLineForInsert( dest, lineNum, xLeftIncl, fInsert ? holewidth : 0 );
+      const auto lcols( StrCols( TabWidth(), dest ) );
+      const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "u/%d maxCol=%" PR_BSRSIZET "u", __func__, dest.length(), lcols, maxCol );
       Assert( lcols >= xLeftIncl );
 
-      // xb contains:
-      // !fInsert: at least xLeftIncl           chars
-      //  fInsert: at least xLeftIncl+holewidth chars
-      //
-      // in any case, we need to copy (ins L inslen) into buf+xLeftIncl
-
-      const auto buf( xb.wresize( maxCol + 1 ) );
-      const auto gap( buf+xLeftIncl );
-      memcpy( gap, ins, inslen );
-
-      // now, either
-      // a. space-pad the remainder of the seg-zone (IF there are any original-line chars on the trailing side of the seg-zone), or
-      // b. terminate the seg-zone immediately after (ins L inslen)
-
-      if( lcols <= xRightIncl ) {
-         gap[inslen] = '\0';
-         }
-      else {
-         if( holewidth > inslen )
-            memset( gap+inslen, ' ', holewidth - inslen );
+      dest.replace( xLeftIncl, inslen, ins.data(), inslen );
+      if( holewidth > inslen ) {
+         dest.replace( xLeftIncl + inslen, holewidth - inslen, holewidth - inslen, ' ' );
          }
       DE && DBG( "%s- PutLine(merged) )", __func__ );
-      PutLine( lineNum, buf, stmp );
+      PutLine( lineNum, dest, stmp );
 #else
 
       dbllinebuf buf;
@@ -1869,7 +1850,6 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
 #endif
       }
    }
-
 
 void LineInfo::FreeContent( const FBUF &fbuf ) {
    if( fCanFree_pLineData( fbuf ) ) {

@@ -271,7 +271,7 @@ class FileSearcher;
 
 class MFGrepMatchHandler : public FileSearchMatchHandler {
    PFBUF d_pOutputFile;
-   Xbuf  d_xb;
+   std::string  d_sb;
 
    protected:
 
@@ -295,8 +295,8 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
       LuaCtxt_Edit::LocnListInsertCursor(); // do this IFF a match was found
 
    {
-   pFBuf->getLineTabxPerRealtabs_DEPR( &d_xb, cur.lin );
-   NOAUTO CPCChar frags[] = { pFBuf->Name(), FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ), d_xb.c_str() };
+   pFBuf->getLineTabxPerRealtabs( d_sb, cur.lin );
+   NOAUTO CPCChar frags[] = { pFBuf->Name(), FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).k_str(), d_sb.c_str() };
    d_pOutputFile->PutLastLine( frags, ELEMENTS(frags) );
    }
 
@@ -397,7 +397,7 @@ class FileSearcher {
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh, int capturesNeeded=1 );
 
    virtual void   VPrepLine_( PChar lbuf ) const {};
-   virtual PCChar VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
+   virtual PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
 
    public:
 
@@ -526,7 +526,7 @@ class  FileSearcherString : public FileSearcher {
    ~FileSearcherString() { Free0( d_searchKey ); }
 
    void   VPrepLine_( PChar lbuf ) const override;
-   PCChar VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const override;
+   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
 class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
@@ -546,7 +546,7 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
    virtual ~FileSearcherFast();
    void   VFindMatches_() override;
    void   VPrepLine_( PChar lbuf ) const override;
-   PCChar VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const override;
+   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
 
    int NeedleLen( int ix ) const { return (ix < d_needleCount) ? d_pNeedleLens[ix] : 0; }
    };
@@ -560,7 +560,7 @@ class  FileSearcherRegex : public FileSearcher {
    public:
 
    FileSearcherRegex( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   PCChar VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const override;
+   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
 #endif
@@ -1414,8 +1414,7 @@ bool ARG::mfreplace() { return GenericReplace( true , true  ); }
 bool ARG::qreplace()  { return GenericReplace( true , false ); }
 bool ARG::replace()   { return GenericReplace( false, false ); }
 
-void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, PCChar ptr, PCChar eos ) {
-   if( !eos ) eos = Eos( ptr );
+void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, const stref &src ) {
    const auto cmpSignMul( descending ? -1 : +1 );
 
    // find insertion point using binary search
@@ -1428,17 +1427,17 @@ void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySk
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
       const auto xbChars( fb->getLineTabxPerRealtabs( tmp, cmpLine ) );
       CPCChar pXb( tmp.c_str() );
-      auto cmp( stricmp_eos( ptr, eos, pXb, pXb+xbChars ) * cmpSignMul );
-      if( 0 == cmp ) {
-         cmp = strcmp_eos( ptr, eos, pXb, pXb+xbChars ) * cmpSignMul;
-         if( 0 == cmp )
+      auto rslt( cmpi( src, tmp ) * cmpSignMul );
+      if( 0 == rslt ) {
+         rslt = cmp( src, tmp ) * cmpSignMul;
+         if( 0 == rslt )
             return; // drop DUPLICATES!
          }
-      if( cmp > 0 )  yMin = cmpLine + 1;
-      if( cmp < 0 )  yMax = cmpLine - 1;
+      if( rslt > 0 )  yMin = cmpLine + 1;
+      if( rslt < 0 )  yMax = cmpLine - 1;
       }
 
-   fb->InsLine( yMin, se2bsr( ptr, eos ), tmp );
+   fb->InsLine( yMin, src, tmp );
    }
 
 
@@ -1650,8 +1649,8 @@ void FileSearcherString::VPrepLine_( PChar lbuf ) const {
       _strlwr( lbuf );
    }
 
-PCChar FileSearcherString::VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const {
-   const auto rv( searchFindString( pBuf+startingBufOffset, bufChars-startingBufOffset, d_searchKey, d_searchKeyStrlen ) );
+PCChar FileSearcherString::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const {
+   const auto rv( searchFindString( src.data()+startingBufOffset, src.length()-startingBufOffset, d_searchKey, d_searchKeyStrlen ) );
    *pMatchChars = rv ? d_searchKeyStrlen : 0;
    return rv;
    }
@@ -1681,15 +1680,15 @@ STATIC_FXN PCChar ShowHaystackHas( HaystackHas has ) {
 
 #if USE_PCRE
 
-PCChar FileSearcherRegex::VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const
+PCChar FileSearcherRegex::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const
    {
    VS_(
                DBG( "++++++" );
-               DBG( "RegEx?[%d-],%s='%*.*s'", startingBufOffset, ShowHaystackHas(lineContent), bufChars - startingBufOffset, bufChars - startingBufOffset, pBuf + startingBufOffset );
+               DBG( "RegEx?[%d-],%s='%*.*s'", startingBufOffset, ShowHaystackHas(lineContent), src.length() - startingBufOffset, src.length() - startingBufOffset, src.data() + startingBufOffset );
       )
-   const auto rv( d_ss.d_re->Match( startingBufOffset, pBuf, bufChars, pMatchChars, lineContent, d_pCaptures ) );
+   const auto rv( d_ss.d_re->Match( startingBufOffset, src.data(), src.length(), pMatchChars, lineContent, d_pCaptures ) );
    VS_(
-      if( rv ) DBG( "RegEx:->MATCH=(%d L %d)='%*.*s'", rv - pBuf, *pMatchChars, *pMatchChars, *pMatchChars, rv );
+      if( rv ) DBG( "RegEx:->MATCH=(%d L %d)='%*.*s'", rv - src.data(), *pMatchChars, *pMatchChars, *pMatchChars, rv );
       else     DBG( "RegEx:->NO MATCH" );
                DBG( "------" );
       )
@@ -1851,7 +1850,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
 void   FileSearcherFast::VPrepLine_( PChar lbuf ) const { Assert( 0 != 0 ); }
-PCChar FileSearcherFast::VFindStr_( COL startingBufOffset, PCChar pBuf, COL bufChars, COL *pMatchChars, HaystackHas lineContent ) const { Assert( 0 != 0 ); return nullptr; }
+PCChar FileSearcherFast::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const { Assert( 0 != 0 ); return nullptr; }
 
 //===============================================
 
@@ -1871,7 +1870,7 @@ public:
    COL    p2c ( PCChar pC   ) const { return ColOfPtr( d_tw, d_pStart, pC    , d_pEos ); }
    PCChar c2p_( COL    xCol ) const { return PtrOfColWithinStringRegion     ( d_tw, d_pStart, d_pEos, xCol   ); }
    PCChar c2p ( COL    xCol ) const { return PtrOfColWithinStringRegionNoEos( d_tw, d_pStart, d_pEos, xCol   ); }
-   COL    cols(             ) const { return StrCols( d_tw, d_pStart, d_pEos ); }
+   COL    cols(             ) const { return StrCols( d_tw, stref(d_pStart, d_pEos-d_pStart) ); }
    };
 
 void FileSearcher::VFindMatches_() {
@@ -1898,7 +1897,7 @@ void FileSearcher::VFindMatches_() {
               xCol = pcc.p2c( pC )
             ) {
             COL matchChars;
-            pC = VFindStr_( pC - bos, bos, lnChars, &matchChars, STR_HAS_BOL_AND_EOL );
+            pC = VFindStr_( pC - bos, stref( bos, lnChars ), &matchChars, STR_HAS_BOL_AND_EOL );
             if( nullptr == pC )
                break; // no matches on this line!
 
@@ -1938,7 +1937,7 @@ void FileSearcher::VFindMatches_() {
          #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == lnChars ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
 
          COL matchChars;
-         auto pGoodMatch( VFindStr_( 0, bos, maxCharsToSearch, &matchChars, SET_HaystackHas(0) ) );
+         auto pGoodMatch( VFindStr_( 0, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(0) ) );
          if( pGoodMatch ) { // line contains a match?
             auto goodMatchChars( matchChars );
             VS_( DBG( "-search: LMATCH y=%d (%d L %d)='%*.*s'", curPt.lin, pGoodMatch - bos, matchChars, goodMatchChars, goodMatchChars, pGoodMatch ); )
@@ -1950,7 +1949,7 @@ void FileSearcher::VFindMatches_() {
         #endif
             while( pGoodMatch < bos + maxCharsToSearch ) {
                const auto startIdx( pGoodMatch + 1 - bos );
-               const auto pNextMatch( VFindStr_( startIdx, bos, maxCharsToSearch, &matchChars, SET_HaystackHas(startIdx) ) );
+               const auto pNextMatch( VFindStr_( startIdx, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(startIdx) ) );
                if( !pNextMatch )
                   break;
 
@@ -2539,10 +2538,9 @@ LINE CGrepper::WriteOutput
             snprintf_full( &pB, &cbB, "%*d  ", lwidth, iy + 1 );
             sbuf.assign( buf, pB - buf );
 
-            PCChar ptr; size_t chars;
-            d_SrchFile->PeekRawLineExists( iy, &ptr, &chars );
-            sbuf.append( ptr, chars );
-            FBOP::InsLineSortedAscending( outfile, tmp, grepHdrLines, sbuf.c_str() );
+            const auto rl( d_SrchFile->PeekRawLine( iy ) );
+            sbuf.append( rl.data(), rl.length() );
+            FBOP::InsLineSortedAscending( outfile, tmp, grepHdrLines, sbuf );
             }
       outfile->PutFocusOn();
       Msg( "%d lines %s", numberedMatches, "added" );
@@ -2845,9 +2843,7 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
    0 && DBG( "%s: %s merg [%d..%d]", __func__, src->Name(), srcHdrLines, src->LineCount()-1 );
    // merge (copy while sorting) all match lines
    for( auto iy(srcHdrLines) ; iy < src->LineCount() ; ++iy ) {
-      PCChar bos, eos;
-      src ->PeekRawLineExists( iy, &bos, &eos );
-      FBOP::InsLineSortedAscending( dest, tmp, destHdrLines, bos, eos );
+      FBOP::InsLineSortedAscending( dest, tmp, destHdrLines, src->PeekRawLine( iy ) );
       }
    return true;
    }

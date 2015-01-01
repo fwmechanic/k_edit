@@ -103,6 +103,7 @@ extern   void  StrUnDoubleBackslashes( PChar pszString );
 // TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
 
+extern int   cmp ( const stref &s1, const stref &s2 );
 extern int   cmpi( const stref &s1, const stref &s2 );
 extern char  toLower(     int ch );
 extern bool  IsStringBlank( stref src );
@@ -195,6 +196,10 @@ TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos(
 TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
+extern sridx     FirstNonBlankOrEnd( stref src, sridx start=0 );
+extern sridx     FirstBlankOrEnd   ( stref src, sridx start=0 );
+
+
 TF_Ptr STIL Ptr  StrToNextWordOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, g_szWordChars ); }
 
 extern PCChar StrPastWord(  PCChar pszToSearch );
@@ -203,10 +208,8 @@ STIL   PChar  StrPastWord(  PChar  pszToSearch ) { return PChar(StrPastWord( PCC
 extern PCChar StrPastWord(  PCChar pszToSearch, PCChar eos );
 STIL   PChar  StrPastWord(  PChar  pszToSearch, PChar  eos ) { return PChar(StrPastWord( PCChar(pszToSearch), PCChar(eos) )); }
 
-extern sridx FirstNonBlankOrEnd( stref src, sridx start=0 );
-extern sridx FirstBlankOrEnd   ( stref src, sridx start=0 );
+extern sridx  FirstNonWordOrEnd( stref src, sridx start=0 );
 
-extern sridx FirstNonWordOrEnd( stref src, sridx start=0 );
 extern sridx IdxFirstWordCh( stref src, sridx start );
 extern sridx StrLastWordCh(  stref src );
 

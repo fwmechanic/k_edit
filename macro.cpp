@@ -713,9 +713,9 @@ bool ARG::assign() {
     default:      return BadArg();
 
     case NOARG:   {
-                  Xbuf xb;
-                  g_CurFBuf()->getLineTabxPerRealtabs_DEPR( &xb, d_noarg.cursor.lin );
-                  return AssignStrOk( xb.c_str() );
+                  std::string st;
+                  g_CurFBuf()->getLineTabxPerRealtabs( st, d_noarg.cursor.lin );
+                  return AssignStrOk( st );
                   }
 
     case TEXTARG: {
@@ -1018,10 +1018,10 @@ bool ARG::record() {
 
       if( RecordingInDQuote() ) {
          ClrInRecordDQuote();
-         Xbuf xb;
-         g_pFbufRecord->getLineTabxPerRealtabs_DEPR( &xb, g_pFbufRecord->LastLine() );
-         std::string stmp;
-         g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.cat( "\"" ), stmp );
+         std::string src, stmp;
+         g_pFbufRecord->getLineTabxPerRealtabs( src, g_pFbufRecord->LastLine() );
+         src.append( "\"" );
+         g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), src, stmp );
          }
 
       int   assignsDone;

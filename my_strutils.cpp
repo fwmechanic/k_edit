@@ -314,6 +314,17 @@ PChar _strlwr( PChar buf ) {
 
 #endif
 
+int cmp( const stref &s1, const stref &s2 ) {
+   const auto cmplen( Min( s1.length(), s2.length() ) );
+   for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
+      if( s1[ix] != s2[ix] ) {
+         return s1[ix] < s2[ix] ? -1 : +1;
+         }
+      }
+   if( s1.length() == s2.length() ) return 0;
+   return s1.length() < s2.length() ? -1 : +1;
+   }
+
 int cmpi( const stref &s1, const stref &s2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
    const auto cd( 'a'-'A' );
    const auto cmplen( Min( s1.length(), s2.length() ) );

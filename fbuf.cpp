@@ -614,7 +614,7 @@ STIL int NextIndent( int curIndent, int indentIncr ) {
 
 STIL int PrevIndent( int curIndent, int indentIncr )  { return ((curIndent-indentIncr) / indentIncr) * indentIncr; }
 
-COL FBOP::SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, PXbuf pxb ) {
+STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, PXbuf pxb ) {
    auto indent( fb->IndentIncrement() );
    if( indent == 0 ) {
       indent = fb->TabWidth();
@@ -674,7 +674,6 @@ COL FBOP::SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, PXbuf pxb ) {
    return -1;
    }
 
-
 int FBOP::GetSoftcrIndent( PFBUF fb ) {
    if( !g_fSoftCr )  return 0;
 
@@ -693,7 +692,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) {
    switch( fb->FileType() ) {
       default: break;
       case ftype1_C: {
-           const auto rv_C( FBOP::SoftcrForCFiles( fb, rv, yStart, &xb ) );
+           const auto rv_C( SoftcrForCFiles( fb, rv, yStart, &xb ) );
            if( rv_C >= 0 ) {  0 && DBG( "SoftCR C: %d", rv_C );
               return rv_C;
               }

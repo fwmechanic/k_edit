@@ -347,7 +347,8 @@ bool FcLogTmMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchC
 
    linebuf lb;
    rslt.ToStr( BSOB(lb) );
-   pFBuf->PutLineSeg( cur.lin, lb, cur.col, cur.col + MatchCols );
+   std::string t0,t1;
+   pFBuf->PutLineSeg( cur.lin, lb, t0,t1, cur.col, cur.col + MatchCols );
    InsHiLite1Line( pFBuf, cur, MatchCols );
 
    // DispNeedsRedrawAllLinesAllWindows();
