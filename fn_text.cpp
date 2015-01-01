@@ -69,7 +69,8 @@ public:
       d_rv = VEdit();
       if( d_rv ) {
          const auto xLeft( d_arg.d_textarg.ulc.col );
-         d_fb.PutLineSeg( d_arg.d_textarg.ulc.lin, d_str.data(), xLeft, xLeft + d_str.length() - 1 );  // overlay converted string
+         std::string t0,t1;
+         d_fb.PutLineSeg( d_arg.d_textarg.ulc.lin, d_str.data(), t0,t1, xLeft, xLeft + d_str.length() - 1 );  // overlay converted string
          }
       return d_rv;
       }
@@ -115,10 +116,11 @@ bool ARG::flipcase() {
             return fnMsg( no_alpha );
 
          auto pfx_casexlat( ToBOOL( islower(zc) ) ? _strupr : _strlwr );
+         std::string t0,t1;
          for( ; yMin <= yMax; ++yMin ) {
             const auto inbuf( GetLineSeg_( pcf, stbuf, yMin, xMin, xMax ) );
             pfx_casexlat(inbuf);
-            pcf->PutLineSeg( yMin, inbuf, xMin, xMax );
+            pcf->PutLineSeg( yMin, inbuf, t0,t1, xMin, xMax );
             }
          return true;
          }
@@ -151,7 +153,8 @@ bool ARG::flipcase() {
          islower(zc) ? _strupr(argBuf) : _strlwr(argBuf);
 
          auto xLeft( d_textarg.ulc.col );
-         pcf->PutLineSeg( d_textarg.ulc.lin, argBuf, xLeft, xLeft+Strlen(argBuf)-1 );  // overlay converted string
+         std::string t0,t1;
+         pcf->PutLineSeg( d_textarg.ulc.lin, argBuf, t0,t1, xLeft, xLeft+Strlen(argBuf)-1 );  // overlay converted string
          return true;
         #endif
          }
@@ -377,8 +380,9 @@ bool ARG::vrepeat() {
    const auto fInsertArg( d_cArg < 2 );
 
    if( !d_fMeta ) {
+      std::string t0,t1;
       for( ; lx <= d_boxarg.flMax.lin; ++lx )                       // each line in boxarg
-         g_CurFBuf()->PutLineSeg( lx, inbuf, d_boxarg.flMin.col, d_boxarg.flMax.col, fInsertArg );
+         g_CurFBuf()->PutLineSeg( lx, inbuf, t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col, fInsertArg );
       }
    else {
       --lx;
@@ -406,8 +410,9 @@ bool ARG::vrepeat() {
       NoLessThan( &width, minWidth );
 
       auto fInsert( false );
+      std::string t0,t1;
       for( ; lx <= d_boxarg.flMax.lin; ++lx ) {                     // each line in boxarg
-         g_CurFBuf()->PutLineSeg( lx, FmtStr<16>( fmt, width, val++ ), d_boxarg.flMin.col, d_boxarg.flMax.col, fInsert );
+         g_CurFBuf()->PutLineSeg( lx, FmtStr<16>( fmt, width, val++ ).k_str(), t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col, fInsert );
          fInsert = fInsertArg;
          }
       }
@@ -417,8 +422,9 @@ bool ARG::vrepeat() {
 
 bool ARG::numlines () {
    const auto lwidth( uint_log_10( g_CurFBuf()->LineCount() ) );
+   std::string t0,t1;
    for( auto line(0); line < g_CurFBuf()->LineCount(); ++line ) {
-      g_CurFBuf()->PutLineSeg( line, FmtStr<33>( "%*u ", lwidth, line+1 ), 0, 0, true ); // insert @ BoL
+      g_CurFBuf()->PutLineSeg( line, FmtStr<33>( "%*u ", lwidth, line+1 ).k_str(), t0,t1, 0, 0, true ); // insert @ BoL
       }
    return true;
    }

@@ -1477,7 +1477,7 @@ public:
                      PutLine( yLine, srSrc, tmp );
                      }
 
-   void           PutLineSeg( LINE lineNum, PCChar psz, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
+   void           PutLineSeg( LINE lineNum, const stref &ins, std::string &tmp0, std::string &tmp1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
    void           cat( PCChar pszNewLineData );
 
 

@@ -451,7 +451,7 @@ FBUF_(GetLineSeg) {
    R_nil();
    }
 
-FBUF_(PutLineSeg) { thisPF()->PutLineSeg( I_(2)-1, S_(3), I_(4)-1, I_(5)-1, LuaBool(6) ); RZ; }
+FBUF_(PutLineSeg) { std::string t0,t1; thisPF()->PutLineSeg( I_(2)-1, Sr_(L,3), t0,t1, I_(4)-1, I_(5)-1, LuaBool(6) ); RZ; }
 
 FBUF_(ExpandWildcardSorted  ) { FBOP::ExpandWildcardSorted  ( thisPF(), S_(2) ); RZ; }
 FBUF_(ExpandWildcardUnsorted) { FBOP::ExpandWildcardUnsorted( thisPF(), S_(2) ); RZ; }

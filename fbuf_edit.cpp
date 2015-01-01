@@ -1754,8 +1754,8 @@ void LineInfo::PutContent( PCChar pNewLine, int newLineBytes ) { // assume previ
    d_iLineLen = newLineBytes;
    }
 
-void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
-   enum { DE=0 };
+void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
+   enum { DE=0 };                                       DE && DBG( "%s+ L %d [%d..%d] <= '%" PR_BSR "' )", __func__, lineNum, xLeftIncl, xRightIncl, BSR(ins) );
    // insert ins into gap = [xLeftIncl, xRightIncl]
    // rules:
    //    - portion of ins placed into line is NEVER longer than gap
@@ -1765,8 +1765,6 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
    //         if !fInsert AND existing chars       to right of xRightIncl
    //         then ins is space padded to fill gap and will NOT terminate string.
    //      else ins is NOT space padded, will terminate string, perhaps to left of xRightIncl
-   std::string stmp;
-   DE && DBG( "%s+ L %d [%d..%d] <= '%s' )", __func__, lineNum, xLeftIncl, xRightIncl, ins );
    if( !fInsert && xLeftIncl == 0 && xRightIncl >= FBOP::LineCols( this, lineNum ) ) { // a two-parameter call?
       DE && DBG( "%s- PutLine(simple) )", __func__ );
       PutLine( lineNum, ins, stmp ); // optimal/trivial line-replace case
@@ -1774,40 +1772,19 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
    else { // segment ins/overwrite case
 
 #if 1
-      Xbuf xb;
-      const auto holewidth( xRightIncl - xLeftIncl + 1 );
-      const auto inslen_( Strlen( ins ) );
-      const auto inslen( Min( inslen_, holewidth ) );
-      DE && DBG( "%s [%d L gap/inslen=%d/%d]", __func__, xLeftIncl, holewidth, inslen );
-      const auto lchars( GetLineForInsert( &xb, lineNum, xLeftIncl, fInsert ? holewidth : 0 ) );
-      const auto lcols( StrCols( TabWidth(), stref( xb.c_str(), lchars ) ) );
-      const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );
-      DE && DBG( "%s GL4Ins: cch/col=%d/%d maxCol=%d", __func__, lchars, lcols, maxCol );
+      sridx holewidth( xRightIncl - xLeftIncl + 1 );
+      const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%d/%d]", __func__, xLeftIncl, holewidth, inslen );
+      GetLineForInsert( dest, lineNum, xLeftIncl, fInsert ? holewidth : 0 );
+      const auto lcols( StrCols( TabWidth(), dest ) );
+      const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%d/%d maxCol=%d", __func__, dest.length(), lcols, maxCol );
       Assert( lcols >= xLeftIncl );
 
-      // xb contains:
-      // !fInsert: at least xLeftIncl           chars
-      //  fInsert: at least xLeftIncl+holewidth chars
-      //
-      // in any case, we need to copy (ins L inslen) into buf+xLeftIncl
-
-      const auto buf( xb.wresize( maxCol + 1 ) );
-      const auto gap( buf+xLeftIncl );
-      memcpy( gap, ins, inslen );
-
-      // now, either
-      // a. space-pad the remainder of the seg-zone (IF there are any original-line chars on the trailing side of the seg-zone), or
-      // b. terminate the seg-zone immediately after (ins L inslen)
-
-      if( lcols <= xRightIncl ) {
-         gap[inslen] = '\0';
-         }
-      else {
-         if( holewidth > inslen )
-            memset( gap+inslen, ' ', holewidth - inslen );
+      dest.replace( xLeftIncl, inslen, ins.data(), inslen );
+      if( holewidth > inslen ) {
+         dest.replace( xLeftIncl + inslen, holewidth - inslen, holewidth - inslen, ' ' );
          }
       DE && DBG( "%s- PutLine(merged) )", __func__ );
-      PutLine( lineNum, buf, stmp );
+      PutLine( lineNum, dest, stmp );
 #else
 
       dbllinebuf buf;
@@ -1867,7 +1844,6 @@ void FBUF::PutLineSeg( const LINE lineNum, const PCChar ins, const COL xLeftIncl
 #endif
       }
    }
-
 
 void LineInfo::FreeContent( const FBUF &fbuf ) {
    if( fCanFree_pLineData( fbuf ) ) {
