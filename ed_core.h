@@ -1632,9 +1632,9 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    //     generator functions, you should not move the cursor to any particular
    //     place until AFTER you've inserted all lines.
    //
-   extern void    InsLineSorted_(          PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, PCChar ptr, PCChar eos );
-   STIL void      InsLineSortedAscending(  PFBUF fb, std::string &tmp, LINE ySkipLeading, PCChar ptr, PCChar eos=nullptr ) { InsLineSorted_( fb, tmp, false, ySkipLeading, ptr, eos ); }
-   STIL void      InsLineSortedDescending( PFBUF fb, std::string &tmp, LINE ySkipLeading, PCChar ptr, PCChar eos=nullptr ) { InsLineSorted_( fb, tmp, true , ySkipLeading, ptr, eos ); }
+   extern void    InsLineSorted_(          PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, const stref &src );
+   STIL void      InsLineSortedAscending(  PFBUF fb, std::string &tmp, LINE ySkipLeading, const stref &src ) { InsLineSorted_( fb, tmp, false, ySkipLeading, src ); }
+   STIL void      InsLineSortedDescending( PFBUF fb, std::string &tmp, LINE ySkipLeading, const stref &src ) { InsLineSorted_( fb, tmp, true , ySkipLeading, src ); }
  #ifdef           fn_csort
    extern void    SortLineRange( PFBUF fb, LINE yMin, LINE yMax, bool fAscending, bool fCase, COL xMin, COL xMax, bool fRmvDups=false );
  #endif

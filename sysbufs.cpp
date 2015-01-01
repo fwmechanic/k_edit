@@ -432,7 +432,7 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
          StringOfAllKeyNamesFnIsAssignedTo( BSOB(lbuf), Cmd, "," );
          }
       std::string tmp;
-      FBOP::InsLineSortedDescending( uc->fbOut, tmp, 0, SprintfBuf( "%*u  %-*s  %s", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name(), lbuf ) );
+      FBOP::InsLineSortedDescending( uc->fbOut, tmp, 0, SprintfBuf( "%*u  %-*s  %s", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name(), lbuf ).k_str() );
       }
    }
 

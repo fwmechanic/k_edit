@@ -330,21 +330,19 @@ FBUF_(InsBlankLinesBefore)      { thisPF()->InsBlankLinesBefore( I_(2)-1, Io_( 3
 FBUF_(InsLine)                  { std::string tmp; thisPF()->InsLine( I_(2)-1, S_(3), tmp )          ; RZ; }
 FBUF_(InsLineSortedAscending)   {
                                   #if USE_STATE_ELB
-                                       auto pXb( get_xb( L ) );
+                                       // auto pXb( get_xb( L ) );
                                   #else
-                                       Xbuf xb; auto pXb(&xb);
+                                       std::string tmp;
                                   #endif
-                                  std::string tmp;
                                   const PCChar st = S_(2);
                                   FBOP::InsLineSortedAscending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
                                   }
 FBUF_(InsLineSortedDescending)  {
                                   #if USE_STATE_ELB
-                                       auto pXb( get_xb( L ) );
+                                       // auto pXb( get_xb( L ) );
                                   #else
-                                       Xbuf xb; auto pXb(&xb);
+                                       std::string tmp;
                                   #endif
-                                  std::string tmp;
                                   const PCChar st = S_(2);
                                   FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
                                   }
@@ -418,10 +416,10 @@ FBUF_(GetLine) {
  #if USE_STATE_ELB
       auto pXb( get_xb( L ) );
  #else
-      Xbuf xb; auto pXb(&xb);
+      std::string tmp;
  #endif
-      pf->getLineTabx_DEPR( pXb, lnum );
-      R_lstr( pXb->c_str(), pXb->length() );
+      pf->getLineTabx( tmp, lnum );
+      R_lstr( tmp.c_str(), tmp.length() );
       }
    R_nil();
    }

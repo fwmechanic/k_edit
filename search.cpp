@@ -1414,8 +1414,7 @@ bool ARG::mfreplace() { return GenericReplace( true , true  ); }
 bool ARG::qreplace()  { return GenericReplace( true , false ); }
 bool ARG::replace()   { return GenericReplace( false, false ); }
 
-void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, PCChar ptr, PCChar eos ) {
-   if( !eos ) eos = Eos( ptr );
+void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, const stref &src ) {
    const auto cmpSignMul( descending ? -1 : +1 );
 
    // find insertion point using binary search
@@ -1428,17 +1427,17 @@ void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySk
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
       const auto xbChars( fb->getLineTabxPerRealtabs( tmp, cmpLine ) );
       CPCChar pXb( tmp.c_str() );
-      auto cmp( stricmp_eos( ptr, eos, pXb, pXb+xbChars ) * cmpSignMul );
-      if( 0 == cmp ) {
-         cmp = strcmp_eos( ptr, eos, pXb, pXb+xbChars ) * cmpSignMul;
-         if( 0 == cmp )
+      auto rslt( cmpi( src, tmp ) * cmpSignMul );
+      if( 0 == rslt ) {
+         rslt = cmp( src, tmp ) * cmpSignMul;
+         if( 0 == rslt )
             return; // drop DUPLICATES!
          }
-      if( cmp > 0 )  yMin = cmpLine + 1;
-      if( cmp < 0 )  yMax = cmpLine - 1;
+      if( rslt > 0 )  yMin = cmpLine + 1;
+      if( rslt < 0 )  yMax = cmpLine - 1;
       }
 
-   fb->InsLine( yMin, se2bsr( ptr, eos ), tmp );
+   fb->InsLine( yMin, src, tmp );
    }
 
 
@@ -2539,10 +2538,9 @@ LINE CGrepper::WriteOutput
             snprintf_full( &pB, &cbB, "%*d  ", lwidth, iy + 1 );
             sbuf.assign( buf, pB - buf );
 
-            PCChar ptr; size_t chars;
-            d_SrchFile->PeekRawLineExists( iy, &ptr, &chars );
-            sbuf.append( ptr, chars );
-            FBOP::InsLineSortedAscending( outfile, tmp, grepHdrLines, sbuf.c_str() );
+            const auto rl( d_SrchFile->PeekRawLine( iy ) );
+            sbuf.append( rl.data(), rl.length() );
+            FBOP::InsLineSortedAscending( outfile, tmp, grepHdrLines, sbuf );
             }
       outfile->PutFocusOn();
       Msg( "%d lines %s", numberedMatches, "added" );
@@ -2845,9 +2843,7 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
    0 && DBG( "%s: %s merg [%d..%d]", __func__, src->Name(), srcHdrLines, src->LineCount()-1 );
    // merge (copy while sorting) all match lines
    for( auto iy(srcHdrLines) ; iy < src->LineCount() ; ++iy ) {
-      PCChar bos, eos;
-      src ->PeekRawLineExists( iy, &bos, &eos );
-      FBOP::InsLineSortedAscending( dest, tmp, destHdrLines, bos, eos );
+      FBOP::InsLineSortedAscending( dest, tmp, destHdrLines, src->PeekRawLine( iy ) );
       }
    return true;
    }
