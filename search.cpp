@@ -2408,44 +2408,6 @@ STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // if fCase==0, ASSU
    return stref::npos;
    }
 
-STATIC_FXN PCChar strnstri( PCChar haystack, int haystackLen, PCChar needle, int needleLen ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
-   auto pEnd( haystack + haystackLen - needleLen + 1 ); // stop looking at
-   while( haystack < pEnd ) {
-      if( toLower( haystack[0] ) == needle[0] ) {
-         auto pH( haystack );
-         auto pN( needle   );
-         do {
-            ++pH;
-            ++pN;
-            if( 0 == *pN )
-                return haystack;
-
-            } while( toLower( *pH ) == *pN );
-         }
-      ++haystack;
-      }
-   return nullptr;
-   }
-
-STATIC_FXN PCChar strnstr( PCChar haystack, int haystackLen, PCChar needle, int needleLen ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
-   auto pEnd( haystack + haystackLen - needleLen + 1 ); // stop looking at
-   while( haystack < pEnd ) {
-      if( haystack[0] == needle[0] ) {
-         auto pH( haystack );
-         auto pN( needle   );
-         do {
-            ++pH;
-            ++pN;
-            if( 0 == *pN ) {
-                return haystack;
-                }
-            } while( *pH == *pN );
-         }
-      ++haystack;
-      }
-   return nullptr;
-   }
-
 
 void CGrepper::FindAllMatches( PCChar pSrchStr, bool fUseRegEx ) {
    if( !SetNewSearchSpecifierOK( pSrchStr, fUseRegEx ) )
