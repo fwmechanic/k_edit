@@ -296,7 +296,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
 
    {
    pFBuf->getLineTabxPerRealtabs_DEPR( &d_xb, cur.lin );
-   NOAUTO CPCChar frags[] = { pFBuf->Name(), FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ), d_xb.c_str() };
+   NOAUTO CPCChar frags[] = { pFBuf->Name(), FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).k_str(), d_xb.c_str() };
    d_pOutputFile->PutLastLine( frags, ELEMENTS(frags) );
    }
 
