@@ -619,7 +619,7 @@ enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH
 
 class CharWalker {
 public:
-   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, int *pColLastPossibleLastMatchChar ) = 0;
+   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) = 0;
    virtual ~CharWalker() {};
    };
 
@@ -644,7 +644,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
            auto colLastPossibleLastMatchChar( ColOfPtr( tw, bos, eos-1, eos ) );
 
    #define CHECK_NEXT  {  \
-           const auto rv( pWalker->VCheckNext( pFBuf, bos, eos, &curPt, &colLastPossibleLastMatchChar ) );  \
+           const auto rv( pWalker->VCheckNext( pFBuf, bos, eos, &curPt, colLastPossibleLastMatchChar )  );  \
            if( STOP_SEARCH == rv ) return true;                                                             \
            if( REREAD_LINE_CONTINUE_SEARCH == rv ) { pFBuf->PeekRawLineExists( curPt.lin, &bos, &eos ); }   \
            }
@@ -708,7 +708,7 @@ class ReplaceCharWalker : public CharWalker {
       , d_iReplacementFileCandidates ( 0 )
       {}
 
-   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, int *pColLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
 
    private:
 
@@ -717,13 +717,13 @@ class ReplaceCharWalker : public CharWalker {
       , PChar  lbuf                            // start of line buffer containing match, no detabbing done
       , PChar  pMatch                          // ptr (within lbuf) of first char in current match
       , Point *curPt
-      , int   *pColLastPossibleLastMatchChar
+      , COL   &colLastPossibleLastMatchChar
       );
    };
 
 
-// replace @ pMatch (in lbuf), adjust curPt->col and *pColLastPossibleLastMatchChar
-void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMatch, Point *curPt, int *pColLastPossibleLastMatchChar ) {
+// replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
+void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMatch, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET "u LoSB=%d", curPt->col, curPt->lin, d_stReplace.length(), Strlen( lbuf ) );
 
    memmove( pMatch  + d_stReplace.length()                 // blow open a hole ...
@@ -741,22 +741,22 @@ void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMa
       curPt->col += d_stReplace.length() - 1;
       }
 
-   // did *pColLastPossibleLastMatchChar grow or shrink?
-   *pColLastPossibleLastMatchChar += d_stReplace.length() - d_stSearch.length();
-   NoLessThan( pColLastPossibleLastMatchChar, 0 );
+   // did colLastPossibleLastMatchChar grow or shrink?
+   colLastPossibleLastMatchChar += d_stReplace.length() - d_stSearch.length();
+   NoLessThan( &colLastPossibleLastMatchChar, 0 );
 
-   0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, *pColLastPossibleLastMatchChar );
-   0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, *pColLastPossibleLastMatchChar, lbuf+curPt->col );
+   0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
+   0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, lbuf+curPt->col );
    }
 
 
-CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, int *pColLastPossibleLastMatchChar ) {
+CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    CPCChar pxCur( PtrOfColWithinStringRegionNoEos( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
 
    0 && DBG( "%s ( %d, %d L %" PR_SIZET "u ) for '%s' in '%-.*s'", __func__
                    , curPt->lin, curPt->col, d_stSearch.length()
                                       , d_stSearch.data()
-                                              , *pColLastPossibleLastMatchChar
+                                              , colLastPossibleLastMatchChar
                                                   , pxCur
            );
 
@@ -764,12 +764,12 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
       return CONTINUE_SEARCH;
 
    const auto idxOfLastCharInMatch( curPt->col + d_stSearch.length() - 1 );
-   if( idxOfLastCharInMatch > *pColLastPossibleLastMatchChar ) {
+   if( idxOfLastCharInMatch > colLastPossibleLastMatchChar ) {
       // match that lies partially OUTSIDE a BOXARG: skip
       0 && DBG( " '%-.*s' matches '%-.*s', but only '%-.*s' in bounds"
            , static_cast<int>(d_stSearch.length()), pxCur
            , BSR(d_stSearch)
-           , static_cast<int>(*pColLastPossibleLastMatchChar - idxOfLastCharInMatch), pxCur
+           , static_cast<int>(colLastPossibleLastMatchChar - idxOfLastCharInMatch), pxCur
            );
       return CONTINUE_SEARCH;
       }
@@ -792,7 +792,7 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
          , lbuf
          , pMatch
          , curPt
-         , pColLastPossibleLastMatchChar
+         , colLastPossibleLastMatchChar
          );
       return REREAD_LINE_CONTINUE_SEARCH;
       }
@@ -828,7 +828,7 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
                    , lbuf                            //  fall thru!
                    , pMatch                          //  fall thru!
                    , curPt                           //  fall thru!
-                   , pColLastPossibleLastMatchChar   //  fall thru!
+                   , colLastPossibleLastMatchChar    //  fall thru!
                    );                             return REREAD_LINE_CONTINUE_SEARCH;
       case 'n':                                   return CONTINUE_SEARCH;
       }
@@ -1993,12 +1993,12 @@ struct CharWalkerPBal : public CharWalker {
       , d_fClosureFound( false )
       { /*DBG("");*/ Push( chStart ); }
 
-   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, int *pColLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
    };
 
 #undef XXX
 
-CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, int *pColLastPossibleLastMatchChar ) {
+CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    const auto pPt( PtrOfColWithinStringRegion( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
    const char ch( pPt[ 0 ] );
 
@@ -2154,10 +2154,10 @@ class PMWordCharWalker : public CharWalker {
    public:
 
    PMWordCharWalker( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
-   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, int *pColLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
    };
 
-CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, int *pColLastPossibleLastMatchChar ) {
+CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    CPCChar pPt( PtrOfColWithinStringRegion( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
    // if( pPt - ptr != curPt->col ) { DBG( "C2P x=%d -> %d", curPt->col, pPt - ptr ); }
    if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt->col is FIRST CHAR OF WORD
@@ -2184,7 +2184,7 @@ CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eo
          return STOP_SEARCH;
          }
 
-      if( curPt->col != *pColLastPossibleLastMatchChar )
+      if( curPt->col != colLastPossibleLastMatchChar )
          return CONTINUE_SEARCH;
 
       g_CurView()->MoveCursor( curPt->lin, curPt->col+1 );
