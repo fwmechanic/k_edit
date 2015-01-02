@@ -724,7 +724,7 @@ class ReplaceCharWalker : public CharWalker {
 
 // replace @ pMatch (in lbuf), adjust curPt->col and *pColLastPossibleLastMatchChar
 void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMatch, Point *curPt, int *pColLastPossibleLastMatchChar ) {
-   0 && DBG("DFPoR+ (%d,%d) LR=%d LoSB=%d", curPt->col, curPt->lin, d_stReplace.length(), Strlen( lbuf ) );
+   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET "u LoSB=%d", curPt->col, curPt->lin, d_stReplace.length(), Strlen( lbuf ) );
 
    memmove( pMatch  + d_stReplace.length()                 // blow open a hole ...
           , pMatch  + d_stSearch.length()
@@ -753,7 +753,7 @@ void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMa
 CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, int *pColLastPossibleLastMatchChar ) {
    CPCChar pxCur( PtrOfColWithinStringRegionNoEos( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
 
-   0 && DBG( "%s ( %d, %d L %d ) for '%s' in '%-.*s'", __func__
+   0 && DBG( "%s ( %d, %d L %" PR_SIZET "u ) for '%s' in '%-.*s'", __func__
                    , curPt->lin, curPt->col, d_stSearch.length()
                                       , d_stSearch.data()
                                               , *pColLastPossibleLastMatchChar
@@ -767,9 +767,9 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
    if( idxOfLastCharInMatch > *pColLastPossibleLastMatchChar ) {
       // match that lies partially OUTSIDE a BOXARG: skip
       0 && DBG( " '%-.*s' matches '%-.*s', but only '%-.*s' in bounds"
-           , d_stSearch.length(), pxCur
-           , d_stSearch.length(), d_stSearch.data()
-           , *pColLastPossibleLastMatchChar - idxOfLastCharInMatch, pxCur
+           , static_cast<int>(d_stSearch.length()), pxCur
+           , BSR(d_stSearch)
+           , static_cast<int>(*pColLastPossibleLastMatchChar - idxOfLastCharInMatch), pxCur
            );
       return CONTINUE_SEARCH;
       }
