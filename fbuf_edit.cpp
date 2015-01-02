@@ -1038,7 +1038,7 @@ bool ARG::linsert() { PCF;
    return true;  // Linsert always returns true.
    }
 
-void FBOP::PutChar( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 ) {
+void FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 ) {
    fb->GetLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );
    tmp1[ CaptiveIdxOfCol( fb->TabWidth(), tmp1, xCol ) ] = theChar;
    if( fInsert ) {
@@ -1282,7 +1282,7 @@ bool ARG::paste() {
 
 GLOBAL_VAR ARG noargNoMeta; // s!b modified!
 
-bool PutCharIntoCurfileAtCursor( int theChar, std::string &tmp1, std::string &tmp2 ) { PCFV;
+bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &tmp2 ) { PCFV;
    if( pcf->CantModify() )
       return false;
 
@@ -1326,7 +1326,7 @@ bool PutCharIntoCurfileAtCursor( int theChar, std::string &tmp1, std::string &tm
             }
          }
       }
-   FBOP::PutChar( pcf, yLine, xCol, theChar, true, tmp1, tmp2 );
+   FBOP::InsertChar( pcf, yLine, xCol, theChar, tmp1, tmp2 );
    noargNoMeta.right();
    return true;
    }

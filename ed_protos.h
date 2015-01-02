@@ -387,7 +387,7 @@ extern PCChar  LastExtTagLoaded();
 
 //------------ misc edit helpers
 
-extern   bool  PutCharIntoCurfileAtCursor( int theChar, std::string &tmp1, std::string &tmp2 );
+extern   bool  PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &tmp2 );
 
 extern   void  SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard=false );
 

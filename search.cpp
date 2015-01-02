@@ -681,13 +681,11 @@ GLOBAL_VAR std::string g_SnR_szSearch          ;
 GLOBAL_VAR std::string g_SnR_szReplacement     ;
 
 class ReplaceCharWalker : public CharWalker {
-   Xbuf              d_xbb;
-   CPCChar           d_pszSearch ;
-   int               d_searchLen ;
-   CPCChar           d_pszReplace;
-   const int         d_replaceLen;
-   bool              d_fDoReplaceQuery;
-   const pfx_strncmp d_strncmp_fxn;
+   Xbuf               d_xbb;
+   const std::string& d_stSearch;
+   const std::string& d_stReplace;
+   bool               d_fDoReplaceQuery;
+   const pfx_strncmp  d_strncmp_fxn;
 
    public:
 
@@ -700,10 +698,8 @@ class ReplaceCharWalker : public CharWalker {
         bool fDoReplaceQuery
       , bool fSearchCase
       )
-      : d_pszSearch         ( g_SnR_szSearch.c_str()      )
-      , d_searchLen         ( g_SnR_szSearch.length()       )
-      , d_pszReplace        ( g_SnR_szReplacement.c_str() )
-      , d_replaceLen        ( g_SnR_szReplacement.length()  )
+      : d_stSearch          ( g_SnR_szSearch )
+      , d_stReplace         ( g_SnR_szReplacement )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_strncmp_fxn       ( fSearchCase ? strncmp : Strnicmp )
       , d_iReplacementsPoss ( 0 )
@@ -728,26 +724,25 @@ class ReplaceCharWalker : public CharWalker {
 
 // replace @ pMatch (in lbuf), adjust curPt->col and *pColLastPossibleLastMatchChar
 void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMatch, Point *curPt, int *pColLastPossibleLastMatchChar ) {
-   0 && DBG("DFPoR+ (%d,%d) LR=%d LoSB=%d", curPt->col, curPt->lin, d_replaceLen, Strlen( lbuf ) );
+   0 && DBG("DFPoR+ (%d,%d) LR=%d LoSB=%d", curPt->col, curPt->lin, d_stReplace.length(), Strlen( lbuf ) );
 
-   memmove( pMatch  + d_replaceLen                 // blow open a hole ...
-          , pMatch  + d_searchLen
-          , Strlen( pMatch  + d_searchLen ) + 1
+   memmove( pMatch  + d_stReplace.length()                 // blow open a hole ...
+          , pMatch  + d_stSearch.length()
+          , Strlen( pMatch  + d_stSearch.length() ) + 1
           );
-   memcpy( pMatch, d_pszReplace, d_replaceLen );   // ... insert replacement string
+   memcpy( pMatch, d_stReplace.data(), d_stReplace.length() );   // ... insert replacement string
    std::string stmp;
    pFBuf->PutLine( curPt->lin, lbuf, stmp );             // ... and commit
    ++d_iReplacementsMade;
 
    // replacement done: position curPt->col for next search
    //
-   if( d_searchLen != 0 || d_replaceLen != 0 ) {
-      curPt->col += d_replaceLen - 1;
+   if( d_stSearch.length() != 0 || d_stReplace.length() != 0 ) {
+      curPt->col += d_stReplace.length() - 1;
       }
 
-   // now we have to figger out if *pColLastPossibleLastMatchChar grew/shrank
-   //
-   *pColLastPossibleLastMatchChar += d_replaceLen - d_searchLen;
+   // did *pColLastPossibleLastMatchChar grow or shrink?
+   *pColLastPossibleLastMatchChar += d_stReplace.length() - d_stSearch.length();
    NoLessThan( pColLastPossibleLastMatchChar, 0 );
 
    0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, *pColLastPossibleLastMatchChar );
@@ -759,35 +754,34 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
    CPCChar pxCur( PtrOfColWithinStringRegionNoEos( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
 
    0 && DBG( "%s ( %d, %d L %d ) for '%s' in '%-.*s'", __func__
-                          , curPt->lin, curPt->col, d_searchLen
-                                             , d_pszSearch
-                                                     , *pColLastPossibleLastMatchChar
-                                                         , pxCur
+                   , curPt->lin, curPt->col, d_stSearch.length()
+                                      , d_stSearch.data()
+                                              , *pColLastPossibleLastMatchChar
+                                                  , pxCur
            );
 
-   if( 0 != d_strncmp_fxn( d_pszSearch, pxCur, d_searchLen ) )
+   if( 0 != d_strncmp_fxn( d_stSearch.data(), pxCur, d_stSearch.length() ) )
       return CONTINUE_SEARCH;
 
-   const auto idxOfLastCharInMatch( curPt->col + d_searchLen - 1 );
+   const auto idxOfLastCharInMatch( curPt->col + d_stSearch.length() - 1 );
    if( idxOfLastCharInMatch > *pColLastPossibleLastMatchChar ) {
       // match that lies partially OUTSIDE a BOXARG: skip
       0 && DBG( " '%-.*s' matches '%-.*s', but only '%-.*s' in bounds"
-           , d_searchLen, pxCur
-           , d_searchLen, d_pszSearch
+           , d_stSearch.length(), pxCur
+           , d_stSearch.length(), d_stSearch.data()
            , *pColLastPossibleLastMatchChar - idxOfLastCharInMatch, pxCur
            );
       return CONTINUE_SEARCH;
       }
 
-   ++d_iReplacementsPoss;  //##### it's A REPLACABLE MATCH
-
+   ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
 
 #if 0
-   const auto lbuf( d_xbb.resize( 1+(eos - ptr) + d_replaceLen - d_searchLen ) );
+   const auto lbuf( d_xbb.resize( 1+(eos - ptr) + d_stReplace.length() - d_stSearch.length() ) );
    pFBuf->getLineRaw( &d_xbb, curPt->lin );
    const auto pMatch( lbuf + (pxCur - ptr) );
 #else
-   const auto lbuf( d_xbb.wresize( 1+FBOP::LineCols( pFBuf, curPt->lin ) + d_replaceLen - d_searchLen ) );
+   const auto lbuf( d_xbb.wresize( 1+FBOP::LineCols( pFBuf, curPt->lin ) + d_stReplace.length() - d_stSearch.length() ) );
    pFBuf->getLineTabxPerRealtabs_DEPR( &d_xbb, curPt->lin );
    const auto pMatch( lbuf + curPt->col );
 #endif
@@ -810,12 +804,12 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
    DispDoPendingRefreshesIfNotInMacro();
 
  #if 1
-   curPt->ScrollTo( d_searchLen );
+   curPt->ScrollTo( d_stSearch.length() );
  #else
-   pView->MoveAndCenterCursor( *curPt, d_searchLen );
+   pView->MoveAndCenterCursor( *curPt, d_stSearch.length() );
  #endif
 
-   pView->SetMatchHiLite( *curPt, d_searchLen, true );
+   pView->SetMatchHiLite( *curPt, d_stSearch.length(), true );
    DispDoPendingRefreshesIfNotInMacro();
 
    HiLiteFreer hf;
