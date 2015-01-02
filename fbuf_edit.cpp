@@ -1778,15 +1778,26 @@ void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, 
    else { // segment ins/overwrite case
 
 #if 1
-      sridx holewidth( xRightIncl - xLeftIncl + 1 );
+      const sridx holewidth( xRightIncl - xLeftIncl + 1 );
       const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "u/%" PR_BSRSIZET "u]", __func__, xLeftIncl, holewidth, inslen );
       GetLineForInsert( dest, lineNum, xLeftIncl, fInsert ? holewidth : 0 );
       const auto lcols( StrCols( TabWidth(), dest ) );
       const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "u/%d maxCol=%" PR_BSRSIZET "u", __func__, dest.length(), lcols, maxCol );
       Assert( lcols >= xLeftIncl );
 
+      // dest contains:
+      //    !fInsert: at least xLeftIncl           chars
+      //     fInsert: at least xLeftIncl+holewidth chars
+      //
+      // in any case, we need to copy (ins L inslen) into buf+xLeftIncl
       dest.replace( xLeftIncl, inslen, ins.data(), inslen );
-      if( holewidth > inslen ) {
+      // now, either
+      // a. terminate the seg-zone immediately after (ins L inslen)
+      // b. space-pad the remainder of the seg-zone (IF there are any original-line chars on the trailing side of the seg-zone), or
+      if( lcols < xRightIncl ) {
+         dest.resize( xLeftIncl + inslen );
+         }
+      else if( holewidth > inslen ) {
          dest.replace( xLeftIncl + inslen, holewidth - inslen, holewidth - inslen, ' ' );
          }
       DE && DBG( "%s- PutLine(merged) )", __func__ );
