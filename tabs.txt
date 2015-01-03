@@ -9,6 +9,17 @@ to close this gap.  Further, as a stretch goal, I'd really like to reduce the
 number of tab-handling switches while delivering an intuitive conceptual model
 that meets the spectrum of user needs.
 
+NOTE: this issue has festered primarily because I personally militantly eschew
+all possible uses of HTABs in favor of spaces.  Only since I started owning build
+aspects of projects which (by my choice) use GNU Make, have I been unable to
+entirely avoid (editing) text files containing tabs.  And now (late 2014) my "day
+job" comes close to being a "full-time Linux system operator", which takes me
+into a realm where a sizeable percentage of actors (at least: people providing,
+at great distance, the FOSS which I am using) hold a position which is in polar
+opposition to mine ("tabs are wonderful and should be used whenever possible!");
+not only that, but HTABs are often (as in GNU make makefiles) used as
+_syntax-elements_(!!!).  Thus I must confront this festering issue ASAP.
+
 NOTE: Below I excerpt the PWB 2.0 manual, which is part of the MASM 6.x
 documentation which is readily available on the internet in .DOC and .PDF format.
 In order to use terminology consistent with the K source code (and avoid charges
@@ -217,3 +228,44 @@ be used whenver possible due to their zero-copy (and no-heap-alloc) nature.
  * FBUF::PeekRawLine() returns the entire line.
 
  * FBUF::PeekRawLineSeg() returns a stref to the substring of the line enclosed by a pair of columns (x-ordinates).
+
+Perhaps the entire dilemma around tab-handling can be captured by considering
+what FBUF::PeekRawLineSeg() returns (rls) (as of 20150103_111809) when
+xMinIncl==column of a tabspring char; answer: rls[0] == HTAB.
+
+Now, this is (by some interpretations) obviously incorrect since there is not an
+HTAB at that column location.  Nor is their a space.  There is actually NOTHING
+in the source string at the column!  So an argument could be made that this HTAB
+character should be removed from rls, that rls[0] should reference the character
+in the source string AFTER the HTAB.
+
+But the user might object.  Because (for example, when executing the new
+"rawline" function) what the user selects (BOXARG, STREAMARG) is the _displayed_
+representation of the source string, not the source string itself: they may have
+included the tabspring in their selection, intending to encompass leading
+blank(s).  And, depending on the tabdisp setting, they might not have the
+slightest inkling that what they were selecting was not spaces, but tabsprings!
+When the subsequently invoked function acts as if no leading blanks were present
+in the arg provided, well, that's cause for user consternation (which is
+obviously NOT our goal!).
+
+So, you might say: "hey, just set 'tabalign:yes'!" That way, the user CANNOT
+move the cursor into a tabspring region, so they cannot select a tabspring
+(without also selecting the parent HTAB).  Not quite: what if a multiline BOXARG
+selection is formed over a line-range whose top & bottom lines contain spaces,
+and whose middle lines contain tabs(prings), in the horizontal selection boundary
+zone (sides of the BOXARG selection).  There are ways the user could move the
+cursor to avoid it passing thru any tabspring regions (which would cause the
+cursor to be evicted from the tabspring region to the left to the HTAB which
+created the tabspring region), leading to the selection box edges (on some lines)
+passing thru a tabspring region.  What to do?
+
+How about: when selecting, transiently force tabdisp:BIG_BULLET and
+traildisp:SMALL_BULLET?  That's a good idea (removes the user's blinders), except
+(as it stands today) that may not work on Linux (where this problem is most
+likely to occur; see note near top) because I've not yet figured out (indeed,
+haven't even _pondered_) how to obtain the effect of using Code Page 437 on a
+Linux host (is it possible without adding support for some form of Unicode?  If
+not, then what?) in order to be able to _display_ BIG_BULLET and SMALL_BULLET.
+
+Down the rathole we go...
