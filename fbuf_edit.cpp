@@ -1556,7 +1556,7 @@ stref FBUF::PeekRawLineSeg( LINE lineNum, COL xMinIncl, COL xMaxIncl ) const {
    if( ixMinIncl >= rl.length() ) return stref( "" );
    const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) );
    rl.remove_suffix( rl.length() - ixMaxIncl - 1 );
-   rl.remove_prefix( ixMinIncl );
+   rl.remove_prefix( ixMinIncl );                                    0 && DBG( "[%d,%d]=%" PR_SIZET "u=%" PR_BSR "'", xMinIncl, xMaxIncl, rl.length(), BSR(rl) );
    return rl;
    }
 
