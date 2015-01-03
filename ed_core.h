@@ -1548,7 +1548,8 @@ extern COL     ColOfPtr                       ( COL tabWidth, PCChar pS, PCChar 
 extern sridx   FreeIdxOfCol    ( COL tabWidth, const stref &content, const COL colTgt );
 extern char    CharAtCol       ( COL tabWidth, const stref &content, const COL colTgt ); // returns 0 if col is not present in content
 
-//             CaptiveIdxOfCol returns index that IS in range, but may index to the LAST character which may not be the char at the column
+//             CaptiveIdxOfCol content[CaptiveIdxOfCol(colTgt)] is always valid; colTgt values which
+//                             map beyond the last char of content elicit the index of the last char
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, const stref &content, const COL colTgt ) {
                   return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length()-1 );
                   }
