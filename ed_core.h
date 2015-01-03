@@ -1114,8 +1114,7 @@ public:
                      return UserNameDelimChar() ? len + 2 : len;
                      }
 
-   bool           NameMatch( PCChar name ) const { return Path::eq( d_filename, name ); }
-                                                      //  _strcmp
+   bool           NameMatch( stref name ) const { return Path::eq( d_filename, name ); }
 
    STATIC_FXN bool FnmIsPseudo( PCChar name )   { return  name[0] == '<'; }
    bool            FnmIsPseudo()          const { return  FnmIsPseudo( Name() ); }

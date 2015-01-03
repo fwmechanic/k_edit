@@ -236,7 +236,7 @@ extern   bool  fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( PCChar pbuf );
 
 extern   void  KillTheCurrentView();
 extern   bool  FbufKnown( PFBUF pFBuf );
-extern  PFBUF  FindFBufByName( PCChar pName );
+extern  PFBUF  FindFBufByName( stref name );
 
 //------------ Window APIs
 

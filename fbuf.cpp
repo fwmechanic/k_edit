@@ -548,14 +548,13 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
    return pCurView;
    }
 
-PFBUF FindFBufByName( PCChar pFullName ) {
-   Assert( pFullName );
+PFBUF FindFBufByName( stref name ) {
 #if FBUF_TREE
    const auto pNd( rb_find_gen( g_FBufIdx, pFullName, rb_strcmpi ) );
    return pNd ? IdxNodeToFBUF( pNd ) : nullptr;
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf) {
-      if( pFBuf->NameMatch( pFullName ) )
+      if( pFBuf->NameMatch( name ) )
          return pFBuf;
       }
    return nullptr;
@@ -1544,7 +1543,7 @@ bool FBUF::SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation ) {
 
    const auto filenameBuf( CompletelyExpandFName_wEnvVars( pszNewName ) );
    {
-   auto pDupFBuf( FindFBufByName( filenameBuf.c_str() ) );
+   auto pDupFBuf( FindFBufByName( filenameBuf ) );
    if( pDupFBuf && pDupFBuf == this )
       return Msg( "current filename and new filename are same; nothing done" );
 
