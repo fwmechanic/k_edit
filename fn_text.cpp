@@ -126,14 +126,8 @@ bool ARG::flipcase() {
          }
 
       case NOARG: {
-        #if 1
-         const auto rl( rlc1( pcf, d_noarg.cursor.lin, d_noarg.cursor.col ) ); if( rl.beyond() ) { return false; }
-         const auto newCh( FlipCase( rl.ch0() ) );   if( newCh == rl.ch0() ) { return false; }
-        #else
-         const auto rl( pcf->PeekRawLine( d_noarg.cursor.lin ) );
-         const auto ix( CaptiveIdxOfCol( pcf->TabWidth(), rl, d_noarg.cursor.col ) );  if( ix == rl.length() ) { return false; }
-         const auto newCh( FlipCase( rl[ix] ) );   if( newCh == rl[ix] ) { return false; }
-        #endif
+         const auto rls( pcf->PeekRawLineSeg( d_noarg.cursor.lin, d_noarg.cursor.col, d_noarg.cursor.col ) ); if( rls.empty() ) { return false; }
+         const auto newCh( FlipCase( rls[0] ) ); if( newCh == rls[0] ) { return false; }
          std::string tmp1, tmp2;
          FBOP::ReplaceChar( pcf, d_noarg.cursor.lin, d_noarg.cursor.col, newCh, tmp1, tmp2 );
          return true;
