@@ -2,29 +2,29 @@
 
 # Introduction
 
-K is based on Microsoft's M.  M (and its child, PWB) offered a number of
-switches to control tab-handling, all of which are present (though some with
+K is based on Microsoft's M editor.  M (and its descendant, PWB) offer a number of
+switches to control tab-handling, almost all of which are present (though some with
 different names) in K.  However K's internal implementation of tab-handling is
-imperfect, and that's at least partially because the implementation ramifications
+imperfect, at least partially because the implementation ramifications
 of these switches has not been clearly documented.  The goal of this document is
 to close this gap.  Further, as a stretch goal, I'd really like to reduce the
 number of tab-handling switches while delivering an intuitive conceptual model
 that meets the spectrum of user needs.
 
-NOTE: this issue has festered primarily because I personally militantly eschew
-all possible uses of HTABs in favor of spaces.  Only since I started owning build
-aspects of projects which (by my choice) use GNU Make, have I been unable to
-entirely avoid (editing) text files containing tabs.  And now (late 2014) my "day
-job" comes close to being a "full-time Linux system operator", which takes me
-into a realm where a sizeable percentage of actors (at least: people providing,
-at great distance, the FOSS which I am using) hold a position which is in polar
-opposition to mine ("tabs are wonderful and should be used whenever possible!");
-not only that, but HTABs are often (as in GNU make makefiles) used as
+NOTE: this issue has festered for decades primarily because I personally
+militantly eschew all possible uses of HTABs in favor of spaces.  Only since I
+started owning build aspects of projects which (by my choice) use GNU Make, have I
+been unable to entirely avoid (editing) text files containing tabs.  And now (late
+2014) my "day job" brings me close to being a "full-time Linux system operator", which
+takes me into a realm where a sizeable percentage of actors (at least: people
+providing, at great distance, the FOSS which I am using) hold a position which is
+in polar opposition to mine ("tabs are wonderful and should be used whenever
+possible!"); not only that, but HTABs are often (as in GNU make makefiles) used as
 _syntax-elements_(!!!).  Thus I must confront this festering issue ASAP.
 
 NOTE: Below I excerpt the PWB 2.0 manual, which is part of the MASM 6.x
 documentation which is readily available on the internet in .DOC and .PDF format.
-In order to use terminology consistent with the K source code I have changed
+In order to use terminology consistent with the K source code I have edited
 references to "white space" to "blanks".
 
 # Terminology
@@ -40,28 +40,28 @@ references to "white space" to "blanks".
    [Wikipedia](https://en.wikipedia.org/wiki/Tab_key#Tab_characters) covers
    this ground well:
 
-      "...fixed tab stops, de facto standardized at every multiple of 8
+      ...fixed tab stops, de facto standardized at every multiple of 8
       characters horizontally...  Tab characters simply became a form of data
-      compression."
+      compression.
 
  * **tabstop**: the set of horizontal/columnar positions which are evenly divisible
-   by the `tabwidth` value (traditionally=8), + 1.  The first **tabstop** is (at)
-   column 9.
+   by the `tabwidth` value (traditionally=8), + 1.  The first traditional
+   **tabstop** is (at) column 9, the next at 17, etc.
 
- * **tabspring** character: a term of my own invention to describe the "virtual"
+ * **tabspring** character: a term of my own invention which describes the "virtual"
    (not present in source content) characters occupying display column(s) (if
    any) between (to the immediate right of) a HTAB and the next **tabstop** of a
    displayed/printed representation of the source content.  **tabspring** characters
    are not present in the HTAB-containing content, but are added to a depiction
    of that content, as a consequence of the presence of HTAB characters.
 
-   In the vast majority of text display applications (text viewers (e.g.  less,
-   more) and editors (e.g. nano, notepad), both HTAB and **tabspring** characters
-   are depicted as space (ASCII 8) characters, however because space characters
-   are also used to depict both actual space characters as well as columns past
-   the right end of a line's content (as well as HTAB and **tabspring** characters),
-   such depiction cause great loss of information, and that loss can sometimes
-   cause problems.
+   The vast majority of text display applications (text viewers (e.g.  less,
+   more) and editors (e.g.  nano, notepad) use space (ASCII 8) characters to
+   depict both HTAB and **tabspring** characters.  However because space
+   characters are also used to depict both actual space characters as well as
+   columns past the right end of a line's content (as well as HTAB and
+   **tabspring** characters), such depiction causes great loss of information,
+   and that loss can sometimes cause problems.
 
    Therefore M/PWB/K offer a user-alterable switch (`tabdisp`) that specifies the
    ASCII code of the character used to depict HTAB and **tabspring** characters.  K
@@ -78,19 +78,22 @@ references to "white space" to "blanks".
 
    iff `tabdisp:249` (which K source code calls BIG_BULLET character), HTAB is
    displayed as BIG_BULLET and **tabspring** chars are displayed as SMALL_BULLET
-   (decimal value 250).  This makes the presence and display effect of HTAB
-   characters very clear.
+   (decimal value 250).  This makes the presence and display effect of HTAB (and
+   derivative **tabspring**) characters very clear.
 
    Further, M/PWB/K offer another switch, `traildisp`, which is used to depict
-   spaces which follow the last non-space character on a line.  `traildisp:249` is
+   spaces which follow the last non-space character on a line.  `traildisp:SMALL_BULLET` is
    a common setting.
 
    Aside: when viewing files containing all-HTAB indenting, and/or many trailing
-   spaces, the `tabdisp/traildisp:249` setting can be annoying.  Therefore K
-   contains some code which disables these switches under many conditions (EX:
-   when viewing non-dirty files; as soon as a buffer is modified,
-   `tabdisp/traildisp:249` is set so the user is confronted by HTABs and trailin
-   spaces in their full glory).
+   spaces, the `tabdisp:BIG_BULLET`+`traildisp:SMALL_BULLET` setting can be very
+   visually distracting.  Users are generally only concerned with these blank-related
+   distinctions when **editing** a file, not when only viewing it.  Therefore K
+   contains some code which automatically en/disables the visible settings of
+   these switches under many conditions (EX: when viewing non-dirty files; as soon
+   as a buffer is modified, `tabdisp:BIG_BULLET`+`traildisp:SMALL_BULLET` is
+   auto-set so the user is confronted by HTABs and trailin spaces in their full
+   glory).
 
 
 # M/PWB/K Tab-handling switches
@@ -102,7 +105,7 @@ NB: In the interest of better user comprehension I have renamed a large percenta
  * `tabalign`: controls whether cursor is allowed to be positioned into display-locations occupied by **tabspring** characters.
  * `realtabs`: a mode control switch which controls when other switches take effect.
 
- Note: PWB 2.0 added a "tabstops" switch (offering arbitrarily-located tabstops!!!) which will never be supported by K.
+ Note: PWB added a `tabstops` switch (offering variable/arbitrarily-positioned tabstops!!!) which will **never** be supported by K.
 
 ## `tabwidth`: (MS: filetab) switch
 
@@ -110,28 +113,44 @@ Default value: `tabwidth:8`
 
 From the PWB 2.0 manual:
 
-    "The Filetab switch determines the width of a tab field for displaying tab
+    The Filetab switch determines the width of a tab field for displaying tab
     (ASCII 9) characters in the file.  The width of a tab field determines how
     blanks are translated when the `realtabs` switch is set to no.  The Filetab
-    switch does not affect the cursor-movement functions `tab` and `backtab`."
+    switch does not affect the cursor-movement functions `tab` and `backtab`.
 
-## tabconv: (MS: `entab`) switch
+NOTE: K offers a function `ftab` which allows interactive changing
+of this setting (and other tab-related settings) with immediate
+observation of the effect of this change).  This most often useful
+in cases where a user has "interesting" editor settings which (a)
+allows variable tabwidth settings (just like K/M/PWB) yet does not
+provide means for ensuring that the resulting edited file contains
+consistently formatted (use of either HTABs or spaces) indenting
+(such as K/M/PWB's `tabconv`/`entab`), but instead encourages the
+user to indent with (manually/variably) using either HTABs or spaces
+depending on whether the user hit the tab or spacebar key on any
+given line's indentation.  The resulting mess is annoying to attempt
+to read, since the reader is left to guess which `tabwidth` setting
+is needed to achieve coherent viewing of the source-file's
+indentation.  `ftab` makes this guessing (by trial and error) fast
+and easy.
+
+## `tabconv`: (MS: `entab`) switch
 
 Default value: `tabconv:0`
 
 From the PWB 2.0 manual:
 
-    "The entab switch controls how PWB converts blanks on modified lines.
+    The entab switch controls how PWB converts blanks on modified lines.
     PWB converts blanks only on the lines that you modify.
 
-    "When the `realtabs` switch is set to yes, tab characters are converted.
+    When the `realtabs` switch is set to yes, tab characters are converted.
     When `realtabs` is set to no, tab characters are not converted.
 
-    "The entab switch can have the following values:
+    The entab switch can have the following values:
 
-    "0: Convert all blanks to space (ASCII 32) characters.
+    0: Convert all blanks to space (ASCII 32) characters.
 
-    "1: Convert blanks outside quoted strings to tabs.
+    1: Convert blanks outside quoted strings to tabs.
 
        A quoted string is any span of characters enclosed by a pair of single
        quotation marks or a pair of double quotation marks.  PWB does not
@@ -141,14 +160,14 @@ From the PWB 2.0 manual:
        numeric escape sequence to encode quotation marks in strings or character
        literals.
 
-    "2  Convert blanks to tabs.
+    2  Convert blanks to tabs.
 
-    "With settings 1 and 2, if the blanks being considered for conversion to a
+    With settings 1 and 2, if the blanks being considered for conversion to a
     tab character occupies an entire tab field or ends at the boundary of a tab field,
     it is converted to a tab (ASCII 9) character. The width of a tab field is specified
-    by the Filetab switch."
+    by the Filetab switch.
 
-K modifies this by inserting a new meaning for `tabconv` value 1: "convert leading
+K modifies this by inserting a new meaning for `tabconv` value 1: "convert _leading_
 blanks to tabs"; M/PWB entab values [1..2] become `tabconv` values [2..3] in K.
 
 ## `tabalign` switch
@@ -263,12 +282,12 @@ cursor to be evicted from the **tabspring** region to the left to the HTAB which
 created the **tabspring** region), leading to the selection box edges (on some lines)
 passing thru a **tabspring** region.  What to do?
 
-How about: when selecting, transiently force `tabdisp:BIG_BULLET` and
-`traildisp:SMALL_BULLET`?  That's a good idea (removes the user's blinders),
-except (as it stands today) that may not work on Linux (where this problem is most
-likely to occur; see note near top) because I've not yet figured out (indeed,
-haven't even _pondered_) how to obtain the effect of using Code Page 437 on a
-Linux host (is it possible without adding support for some form of Unicode?  If
-not, then what?) in order to be able to _display_ BIG_BULLET and SMALL_BULLET.
+How about: when (BOX/STREAM) _selecting_, transiently force `tabdisp:BIG_BULLET`+`traildisp:SMALL_BULLET`?
+That's a good idea (removes the user's blinders), except (as it stands today) it
+probably won't work on Linux (where this problem is most likely to occur; see note near
+top) because I've not yet figured out (indeed, haven't even _pondered_) how to obtain
+the effect of using Code Page 437 on a Linux host (is it possible without adding support
+for some form of Unicode?  If not, then what?) in order to be able to _display_
+BIG_BULLET and SMALL_BULLET.
 
 Down the rathole we go...
