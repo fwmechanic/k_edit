@@ -527,7 +527,7 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
       const auto tw( pFBuf->TabWidth() );                             // abc   abc
       if( xCursor < ColOfFreeIdx( tw, rl, rl.length() ) ) {
          const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
-         if( ixC != stref::npos && isWordChar( rl[ixC] ) ) {
+         if( isWordChar( rl[ixC] ) ) {
             const auto ixFirst    ( IdxFirstWordCh   ( rl, ixC ) );
             const auto ixPastLast ( FirstNonWordOrEnd( rl, ixC ) );           0 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
             // if( ixFirst != stref::npos && ixPastLast != stref::npos )

@@ -486,23 +486,15 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
          }
       };
    if( stream.flMin.lin == yMax ) {
-      append_dest( rlc2( pfb, stream.flMin.lin, stream.flMin.col, stream.flMax.col ).middle() );
+      append_dest( pfb->PeekRawLineSeg( stream.flMin.lin, stream.flMin.col, stream.flMax.col ) );
       }
    else {
       auto yLine( stream.flMin.lin );
-      {
-      auto rl( rlc1( pfb, yLine, stream.flMin.col ) );
-      rl.ln.remove_prefix( rl.ix0 );
-      append_dest( rl.ln );
-      }
+      append_dest( pfb->PeekRawLineSeg( yLine, stream.flMin.col, COL_MAX ) );
       for( ++yLine ; yLine < yMax ; ++yLine ) {
          append_dest( pfb->PeekRawLine( yLine ) );
          }
-      {
-      auto rl( rlc1( pfb, yLine, stream.flMax.col ) );
-      rl.ln.remove_suffix( rl.ln.length() - rl.ix0 );
-      append_dest( rl.ln );
-      }
+      append_dest( pfb->PeekRawLineSeg( yLine, 0, stream.flMax.col-1 ) );
       }
    return dest;
    }

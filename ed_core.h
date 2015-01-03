@@ -1550,7 +1550,7 @@ extern char    CharAtCol       ( COL tabWidth, const stref &content, const COL c
 
 //             CaptiveIdxOfCol returns index that IS in range, but may index to the LAST character which may not be the char at the column
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, const stref &content, const COL colTgt ) {
-                  return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length() );
+                  return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length()-1 );
                   }
 
 //             CaptiveIdxOfCols  two for the price of one?
