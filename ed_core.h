@@ -1534,23 +1534,27 @@ inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCom
 extern PChar   PtrOfCol_                 ( COL tabWidth, PChar  pS, PChar  pEos, COL colTgt, bool fKeepPtrWithinStringRegion );
 STIL   PChar   PtrOfColAnyWhere          ( COL tabWidth, PChar  pS, PChar  pEos, COL xCol ) { return PtrOfCol_( tabWidth,       pS ,       pEos , xCol, false ); }
 STIL   PCChar  PtrOfColAnyWhere          ( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfCol_( tabWidth, PChar(pS), PChar(pEos), xCol, false ); }
-
 // DEPRECATED PtrOfColWithinStringRegion: retval <= pEos  (NOTE THAT retval == pEos (and therefore can be non-deref'able)
 // DEPRECATED should TRY to stop using PtrOfColWithinStringRegion in lieu of PtrOfColWithinStringRegionNoEos
 STIL   PChar   PtrOfColWithinStringRegion( COL tabWidth, PChar  pS, PChar  pEos, COL xCol ) { return PtrOfCol_( tabWidth,       pS ,       pEos , xCol, true  ); }
 STIL   PCChar  PtrOfColWithinStringRegion( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfCol_( tabWidth, PChar(pS), PChar(pEos), xCol, true  ); }
-
 // DEPRECATED PtrOfColWithinStringRegionNoEos: retval < pEos  (therefore retval is ALWAYS deref'able)
 extern PChar   PtrOfColWithinStringRegionNoEos( COL tabWidth, PChar  pS, PChar  pEos, COL xCol );
 STIL   PCChar  PtrOfColWithinStringRegionNoEos( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfColWithinStringRegionNoEos( tabWidth, PChar(pS), PChar(pEos), xCol ); }
+extern COL     ColOfPtr                       ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
 
-// PREFERRED
+
+// PREFERRED   use stref and std::string with indices, not pointers
+//             FreeIdxOfCol returns index that MAY be out of range; used to see whether col maps to content, or is beyond it
 extern sridx   FreeIdxOfCol    ( COL tabWidth, const stref &content, const COL colTgt );
 extern char    CharAtCol       ( COL tabWidth, const stref &content, const COL colTgt ); // returns 0 if col is not present in content
 
+//             CaptiveIdxOfCol returns index that IS in range, but may index to the LAST character which may not be the char at the column
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, const stref &content, const COL colTgt ) {
                   return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length() );
                   }
+
+//             CaptiveIdxOfCols  two for the price of one?
 STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, const stref &content, COL x0, COL x1 ) {
                   sridx2 rv;
                   rv.ix0 = CaptiveIdxOfCol( tabWidth, content, x0 );
@@ -1559,7 +1563,6 @@ STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, const stref &content, COL x0, COL
                   }
 extern COL     ColOfFreeIdx ( COL tabWidth, const stref &content, sridx offset );
 
-extern COL     ColOfPtr     ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
 
 struct rlc1 {
    stref ln;
