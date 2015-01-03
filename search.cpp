@@ -932,8 +932,7 @@ STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
 
 STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all duplicates of the inserted line
    for( auto ln(0); ln < pFbuf->LineCount(); ++ln ) {
-      const auto rl( pFbuf->PeekRawLine( ln ) );
-      if( rl == str ) { // loop across all needles in [d_searchKey .. d_searchKey + d_searchKeyStrlen - 1]
+      if( pFbuf->PeekRawLine( ln ) == str ) { // loop across all needles in [d_searchKey .. d_searchKey + d_searchKeyStrlen - 1]
          pFbuf->DelLine( ln-- ); // delete ALL duplicate strings
          }
       }

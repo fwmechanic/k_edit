@@ -1549,6 +1549,18 @@ stref FBUF::PeekRawLine( LINE lineNum ) const {
       }
    }
 
+stref FBUF::PeekRawLineSeg( LINE lineNum, COL xMinIncl, COL xMaxIncl ) const {
+   auto rl( PeekRawLine( lineNum ) );
+   const auto tw( TabWidth() );
+   const auto ixMinIncl( FreeIdxOfCol( tw, rl, xMinIncl ) );
+   if( ixMinIncl >= rl.length() ) return stref( "" );
+   const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) );
+   rl.remove_suffix( rl.length() - ixMaxIncl );
+   rl.remove_prefix( ixMinIncl );
+   return rl;
+   }
+
+
 void FBUF::getLineRaw( std::string &dest, LINE yLine ) const {
    const auto rv( PeekRawLine( yLine ) );
    dest.assign( rv.data(), rv.length() );

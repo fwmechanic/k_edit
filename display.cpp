@@ -525,8 +525,7 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
    if( !rl.empty() ) { 0 && DBG( "newln=%" PR_BSR, BSR(rl) );
       const auto tw( pFBuf->TabWidth() );                             // abc   abc
-      const auto xEos( ColOfFreeIdx( tw, rl, rl.length() ) );             // abc   abc
-      if( xCursor < xEos ) {
+      if( xCursor < ColOfFreeIdx( tw, rl, rl.length() ) ) {
          const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
          if( ixC != stref::npos && isWordChar( rl[ixC] ) ) {
             const auto ixFirst    ( IdxFirstWordCh   ( rl, ixC ) );
@@ -922,7 +921,7 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
       const auto eos( rl.data() + rl.length() );
       auto ixTgt = rl.find( d_eolCommentDelim );
       if( ixTgt == stref::npos && !d_eolCommentDelimWOTrailSpcs.empty() ) {
-         if( 0 == memcmp( eos-d_eolCommentDelimWOTrailSpcs.length(), d_eolCommentDelimWOTrailSpcs.data(), d_eolCommentDelimWOTrailSpcs.length() ) ) {
+         if( rl.ends_with( d_eolCommentDelimWOTrailSpcs ) ) {
             ixTgt = (eos-d_eolCommentDelimWOTrailSpcs.length()) - rl.data();
             }
          }

@@ -445,8 +445,8 @@ FBUF_(GetLineSeg) {
  #else
       Xbuf xb; auto pXb(&xb);
  #endif
-      std::string stbuf; pf->GetLineSeg( stbuf, lnum, xLeftIncl, xRightIncl );
-      R_lstr( stbuf.c_str(), stbuf.length() );
+      const auto rl( pf->PeekRawLineSeg( lnum, xLeftIncl, xRightIncl ) );
+      R_lstr( rl.data(), rl.length() );
       }
    R_nil();
    }

@@ -1682,11 +1682,10 @@ bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hid
       }
 
    for( auto yLine( 0 ); yLine < maxLine; ++yLine ) {
-      const auto src( pFBuf->PeekRawLine( yLine ) );
       if( ExecutionHaltRequested() ) {
          return FileWrErr( hFile_Write, pszDestName, "User break writing '%s'" );
          }
-
+      const auto src( pFBuf->PeekRawLine( yLine ) );
       if(   (src.length() && BufdWr::WrFailed( hFile_Write, src.data(), src.length() ))
          ||                  BufdWr::WrFailed( hFile_Write, pszEolStr , eolStrlen    )
         ) {
