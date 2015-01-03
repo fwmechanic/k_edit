@@ -1,5 +1,5 @@
 //
-// Copyright 1991 - 2014 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
+// Copyright 1991 - 2015 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
 //
 
 #include "ed_main.h"
@@ -2110,8 +2110,9 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
 
    //*** merge & write last line of FBsrc stream  [srcbuf:destbuf]
 
-   Xbuf xbLast,xbFirst;
-   FBdest->GetLineForInsert( &xbFirst, yDst, xDst, 0 ); // rd dest line containing insertion point
+
+   Xbuf xbFirst; FBdest->GetLineForInsert( &xbFirst, yDst, xDst, 0 ); // rd dest line containing insertion point
+   Xbuf xbLast;
    if( FBsrc ) {
       FBsrc->GetLineForInsert( &xbLast, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
       }

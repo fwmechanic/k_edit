@@ -330,7 +330,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "rmargin"        , Var2TPfx( g_iRmargin              ), swinVAR_INT , swidInt        _AHELP( "see online help" ) },
  { "showfbufdetails", Var2TPfx( g_fShowFbufDetails      ), swinVAR_BOOL, swidBool       _AHELP( "show FBUF status details in <winN> sysbufs" ) },
  { "softcr"         , Var2TPfx( g_fSoftCr               ), swinVAR_BOOL, swidBool       _AHELP( "see online help" ) },
- { "tabalign"       , Var2TPfx( g_fTabAlign             ), swinVAR_BOOL, swidBool       _AHELP( "constrains the positioning of the cursor within tab fields: yes: cursor stays at beginning of the tab field; no: cursor can be moved to any column in the tab field" ) },
+ { "tabalign"       , Var2TPfx( g_fTabAlign             ), swinVAR_BOOL, swidBool       _AHELP( "within tab fields, cursor can be positioned (yes) only on tab char (no) in any column" ) },
  {  kszTabconv      , Fxn2TPfx( swixTabconv             ), swinFXN_STR , swidTabconv    _AHELP( "when lines are modified, convert spaces to tabs: 0=never, 1=only leading spaces, 2=only outside quotes, or 3=everywhere" ) },
  { "tabdisp"        , {         swixTabdisp             }, swinFXN_BOOL, swidTabdisp    _AHELP( "the numeric ASCII code of the character used to display tab characters; if 0, the space character is used" ) },
  { "tabwidth"       , Fxn2TPfx( swixTabwidth            ), swinFXN_STR , swidTabwidth   _AHELP( "the width of a 'tab-column'; set PER FILE" ) },
