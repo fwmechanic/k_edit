@@ -64,27 +64,6 @@ PCChar swixTabconv( stref param ) {
    return setOk ? nullptr : SwiErrBuf.Sprintf( "invalid tabconv value '%" PR_BSR "'", BSR(param) );
    }
 
-COL TabAlignedCol( COL tabWidth, PCChar pS, PCChar eos, COL xCol, COL xBias ) {
-   return ColOfPtr( tabWidth, pS, PtrOfColAnyWhere( tabWidth, pS, eos, xCol ) + xBias, eos );
-   }
-
-STATIC_FXN COL TabAlignedCol( COL tabWidth, PCChar pS, COL xColTgt ) {
-   Assert( !(xColTgt < 0) );
-   if( !g_fRealtabs || xColTgt < 0 )
-      return xColTgt;
-
-   const Tabber tabr( tabWidth );
-   COL xCol( 0 );
-   while( const auto ch = *pS++ ) {
-      const auto xPrev( xCol );
-      xCol = (ch == HTAB) ? tabr.ColOfNextTabStop( xCol ) : xCol+1;
-      if( xCol > xColTgt )
-         return xPrev;
-      }
-
-   return xColTgt;
-   }
-
 STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos ) {
    for( ; ptr != eos; ++ptr ) {
       if( *ptr != ' ' )

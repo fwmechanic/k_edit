@@ -19,10 +19,14 @@ bool swixVscroll( stref param ) {
    return true;
    }
 
+STATIC_FXN COL TabAlignedCol( COL tabWidth, stref rl, COL xCol, COL xBias ) {
+   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + xBias );
+   } // arg "realtabs:yes" assign arg "tabalign:yes" assign
+
 STATIC_FXN COL ConstrainCursorX( PFBUF pFBuf, LINE yPos, COL xPos, COL xBias ) {
    PCChar ptr,eos;
-   if( CursorCannotBeInTabFill() && pFBuf->PeekRawLineExists( yPos, &ptr, &eos ) ) {
-      return TabAlignedCol( pFBuf->TabWidth(), ptr, eos, xPos, xBias );
+   if( CursorCannotBeInTabFill() ) {
+      return TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos, xBias );
       }
    return xPos + xBias;
    }

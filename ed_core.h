@@ -1591,7 +1591,6 @@ struct rlc2 {
    };
 
 //************ tabWidth-dependent string fxns
-extern COL     TabAlignedCol(  COL tabWidth, PCChar pS, PCChar eos, COL xCol, COL xBias );
 extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
 extern COL     StrCols(        COL tabWidth, const stref &src );
