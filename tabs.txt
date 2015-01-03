@@ -1,0 +1,61 @@
+# Tab-handling in K
+
+K is based on M.  M (and its evolution, PWB), offered a number of switches to
+control tab-handling, all of which are present in K.  However the internal
+implementation of tab-handling is imperfect, and that's at least partially
+because the internal ramifications of these switches is not fully clear.  Also,
+I'd really like to reduce the number of tab-handling switches, while delivering
+an intuitive conceptual model that meets the spectrum of user needs.
+
+# Terminology
+
+ * tab (a.k.a. horizontal tab or HTAB): an ASCII (or Unicode) character having
+   decimal value 9.  Any character immediately following an HTAB will be (for
+   print/display purposes) horizontally positioned at the next tabstop.  Another
+   way of saying this is that any character immediately following an HTAB will
+   printed/displayed at the column of the next tabstop.  Therefore the occurrence
+   of a HTAB will, depending on its columnar position, cause the insertion of
+   [1..tabwidth) tabspring characters.
+
+   [Wikipedia](https://en.wikipedia.org/wiki/Tab_key#Tab_characters) covers
+   this ground well:
+
+   "...fixed tab stops, de facto standardized at every multiple of 8 characters
+    horizontally...  Tab characters simply became a form of data compression."
+
+ * tabstop: the set of horizontal/columnar positions which are evenly divisible
+   by the tabwidth value (traditionally=8)
+
+ * tabspring (a.k.a. TS): a term of my own invention to describe the characters
+   occupying a column(s) (if any) between (to the immediate right of) a HTAB and
+   the next tabstop.  Tabspring characters are not present in the HTAB-containing
+   content, but are added to a depiction of that content, as a consequence of
+   the presence of HTAB characters.  In the vast majority of text display
+   applications, HTAB and tabspring characters are translated to space (ASCII 8)
+   characters, however M/PWB/K offer a user-alterable switch (tabdisp) that
+   specifies the ascii code of the character used to display HTAB and tabspring
+   characters.  K uniquely (on Microsoft platforms) takes this another step: it
+   forces use of [Code Page 437](https://en.wikipedia.org/wiki/Code_page_437)
+
+      "...the character set of the original IBM PC (personal computer), or
+      MS-DOS." "...this character set was not conceived as a code page; it was
+      simply the graphical glyph repertoire available in the original IBM PC.
+      This character set remains the primary font in the core of any EGA and
+      VGA-compatible graphics card.  Text shown when a PC reboots, before any
+      other font can be loaded from a storage medium, typically is rendered with
+      this "Code Page".
+
+   iff tabdisp:249 (which K source code calls BIG_BULLET character), HTAB is
+   displayed as BIG_BULLET and tabspring chars are displayed as SMALL_BULLET
+   (decimal value 250).  This makes the presence and display effect of HTAB
+   characters very clear.
+
+
+# M/PWB/K Tab-handling switches
+
+NB: In the interest of better user comprehension I have renamed a large percentage of these in K.
+
+ * filetab (K:tabwidth): [1..8] distance between tabstops; tabwidth=8 is "traditional" (and default)
+ * entab   (K:tabconv):  enum [0..2/3] controlling how spaces in a modified line being written to an editor buffer are converted to tabs (or not).
+ * realtabs
+ * tabalign: cu
