@@ -1039,8 +1039,8 @@ bool ARG::linsert() { PCF;
    }
 
 void FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 ) {
-   fb->GetLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );
-   tmp1[ CaptiveIdxOfCol( fb->TabWidth(), tmp1, xCol ) ] = theChar;
+   fb->GetLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );        0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
+   tmp1[ CaptiveIdxOfCol( fb->TabWidth(), tmp1, xCol ) ] = theChar;   0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
    if( fInsert ) {
       AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+1, yLine );
       }
@@ -1614,7 +1614,7 @@ int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
       dest.append( xIns - lineCols, ' ' );
       }
    if( insertCols > 0 ) {
-      const auto ix( CaptiveIdxOfCol( tw, dest, xIns ) );
+      const auto ix( FreeIdxOfCol( tw, dest, xIns ) );
       DB && DBG( "%s: gLTPR |%" PR_BSR "| L %d/%d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
       dest.insert( ix, insertCols, ' ' );
       }
