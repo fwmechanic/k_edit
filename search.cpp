@@ -1100,11 +1100,11 @@ STATIC_FXN std::string DupTextMacroValue( PCChar macroName ) {
    return std::string( tokStrt, txtLen );
    }
 
-STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, size_t sizeofBuf=0 ) {
+STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, size_t sizeofBuf=0 ) { enum { DB=0 };
    {
    const auto mfspec_text( DupTextMacroValue( "mffile" ) );
    if( !IsStringBlank( mfspec_text ) ) {
-      1 && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mffile", BSR(mfspec_text) );
+      DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mffile", BSR(mfspec_text) );
       const auto pFBufMfspec( FindFBufByName( mfspec_text.c_str() ) );
       if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
          if( nmBuf && sizeofBuf ) { safeSprintf( nmBuf, sizeofBuf, "%s (buffer,*mfptr)", pFBufMfspec->Name() ); }
@@ -1123,7 +1123,7 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    {
    const auto mfspec_text( DupTextMacroValue( "mfspec" ) );
    if( !IsStringBlank( mfspec_text ) ) {
-      1 && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
+      DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
       if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec (macro)" ); }
       const auto rv( new CfxFilenameGenerator( mfspec_text.c_str(), ONLY_FILES ) );
       return rv;
@@ -1132,7 +1132,7 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    {
    const auto mfspec_text( DupTextMacroValue( "mfspec_" ) );
    if( !IsStringBlank( mfspec_text ) ) {
-      1 && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
+      DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
       if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec_ (macro)" ); }
       const auto rv( new CfxFilenameGenerator( mfspec_text.c_str(), ONLY_FILES ) );
       return rv;
@@ -1140,7 +1140,7 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    }
 
    if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "no mfspec setting active" ); }
-   1 && DBG( "%s: returns NULL!", __func__ );
+   DB && DBG( "%s: returns NULL!", __func__ );
    return nullptr;
    }
 
