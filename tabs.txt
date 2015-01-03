@@ -1,17 +1,18 @@
-# Tab-handling in K
+# Introduction
 
-K is based on Microsoft's M.  M (and its child, PWB), offered a number of
+K is based on Microsoft's M.  M (and its child, PWB) offered a number of
 switches to control tab-handling, all of which are present (though some with
 different names) in K.  However K's internal implementation of tab-handling is
-imperfect, and that's at least partially because the internal ramifications of
-these switches has not been fully spelled out.  Further, as a long-term goal,
-I'd really like to reduce the number of tab-handling switches while delivering
-an intuitive conceptual model that meets the spectrum of user needs.
+imperfect, and that's at least partially because the implementation ramifications
+of these switches has not been clearly documented.  The goal of this document is
+to close this gap.  Further, as a stretch goal, I'd really like to reduce the
+number of tab-handling switches while delivering an intuitive conceptual model
+that meets the spectrum of user needs.
 
-NOTE: Below I excerpt the PWB 2.0 manual, which is part of the MASM
-documentation which is readily available on the internet in .DOC and .PDF
-format.  In order to use terminology consistent with the K source code (and
-avoid charges of racism), I have changed references to "whitespace" to "blanks".
+NOTE: Below I excerpt the PWB 2.0 manual, which is part of the MASM 6.x
+documentation which is readily available on the internet in .DOC and .PDF format.
+In order to use terminology consistent with the K source code (and avoid charges
+of racism), I have changed references to "white space" to "blanks".
 
 # Terminology
 
@@ -34,19 +35,25 @@ avoid charges of racism), I have changed references to "whitespace" to "blanks".
    by the tabwidth value (traditionally=8), + 1.  The first tabstop is (at)
    column 9.
 
- * tabspring (a.k.a. TS): a term of my own invention to describe the characters
-   occupying a column(s) (if any) between (to the immediate right of) a HTAB and
-   the next tabstop.  Tabspring characters are not present in the HTAB-containing
-   content, but are added to a depiction of that content, as a consequence of
-   the presence of HTAB characters.  In the vast majority of text display
-   applications, HTAB and tabspring characters are translated to space (ASCII 8)
-   characters, however because space characters are also used to display both
-   actual space characters as well as columns past the right end of a line's
-   content (as well as HTAB and tabspring characters), M/PWB/K offer a
-   user-alterable switch (tabdisp) that specifies the ascii code of the character
-   used to display HTAB and tabspring characters.  K uniquely (on Microsoft
-   platforms) takes this another step: it forces use of [Code Page
-   437](https://en.wikipedia.org/wiki/Code_page_437)
+ * tabspring character: a term of my own invention to describe the "virtual"
+   (not present in source content) characters occupying display column(s) (if
+   any) between (to the immediate right of) a HTAB and the next tabstop of a
+   displayed/printed representation of the source content.  Tabspring characters
+   are not present in the HTAB-containing content, but are added to a depiction
+   of that content, as a consequence of the presence of HTAB characters.
+
+   In the vast majority of text display applications (text viewers (e.g.  less,
+   more) and editors (e.g. nano, notepad), both HTAB and tabspring characters
+   are depicted as space (ASCII 8) characters, however because space characters
+   are also used to depict both actual space characters as well as columns past
+   the right end of a line's content (as well as HTAB and tabspring characters),
+   such depiction cause great loss of information, and that loss can sometimes
+   cause problems.
+
+   Therefore M/PWB/K offer a user-alterable switch (tabdisp) that specifies the
+   ASCII code of the character used to depict HTAB and tabspring characters.  K
+   uniquely (on Microsoft platforms) takes this another step: it forces use of
+   [Code Page 437](https://en.wikipedia.org/wiki/Code_page_437)
 
       "...the character set of the original IBM PC (personal computer), or
       MS-DOS." "...this character set was not conceived as a code page; it was
@@ -61,11 +68,11 @@ avoid charges of racism), I have changed references to "whitespace" to "blanks".
    (decimal value 250).  This makes the presence and display effect of HTAB
    characters very clear.
 
-   Further, M/PWB/K offer another switch, traildisp, which is used to display
+   Further, M/PWB/K offer another switch, traildisp, which is used to depict
    spaces which follow the last non-space character on a line.  traildisp:249 is
    a common setting.
 
-   Aside: when viewing files containing all-HTAB indenting, or many trailing
+   Aside: when viewing files containing all-HTAB indenting, and/or many trailing
    spaces, the tabdisp/traildisp:249 setting can be annoying.  Therefore K
    contains some code which disables these switches under many conditions (EX:
    when viewing non-dirty files; as soon as a buffer is modified,
@@ -169,3 +176,44 @@ From the PWB 2.0 manual:
       Preserve tab characters when editing a line.
    no
       Translate tab characters when editing a line.
+
+# Tab-handling in K
+
+OK with that delightful mountain of minutiae absorbed, time to discuss how this all fits together.
+
+tabalign: no further discussion needed (and in fact, the K source-code ramifications of tabalign are miniscule).
+
+tabdisp, traildisp: these are only used when generating "display strings".  This
+mostly means: strings used in screen redraw, but this can include some unlikely
+things like strings being edited by the user on the dialog-line.  Like tabalign,
+the effects of these switches is well encapsulated.
+
+realtabs, tabconv, tabwidth: tabwidth is a parameter to tabconv and tabdisp,
+and, while frequently referenced in K source code, its involvement in the
+following policy discussion is implicit.
+
+## Reading buffer lines
+
+K buffers (FBUFs) contain copies of file content, arranges as lines of text.
+This (as read from filesystem) content is stored in the FBUF as read from the
+filesystem; it there are HTABs in this source file, these (and all other source
+file content) are present in FBUF (line) content.
+
+All low-level FBUF access to buffer content is done on a per-line basis.
+
+   Aside: these low-level FBUF line-reading methods all hide the actual content
+   of end-of-line (EoL) character sequences: a line consists of all characters
+   from the previous EoL to the next EoL.  Therefore all editing code is ignorant
+   of (and therefore generic with respect to) the actual EoL's found in the
+   source file.  Only code that (a) parses source file content (in order to
+   create the LineInfo array index) and (b) writes FBUF content to filesystem
+   files, pays any attention to EoLs.
+
+In the interest of efficiency (avoidance of unnecessary heap-allocations and
+related copying of line content), FBUF::PeekRawLine*() methods are offered which
+return stref's to the actual (const) FBUF line content of a given line and should
+be used whenver possible due to their zero-copy (and no-heap-alloc) nature.
+
+ * FBUF::PeekRawLine() returns the entire line.
+
+ * FBUF::PeekRawLineSeg() returns a stref to the substring of the line enclosed by a pair of columns (x-ordinates).

@@ -1560,6 +1560,18 @@ stref FBUF::PeekRawLineSeg( LINE lineNum, COL xMinIncl, COL xMaxIncl ) const {
    return rl;
    }
 
+#ifdef fn_rawline
+bool ARG::rawline() {
+   switch( d_argType ) {
+    default:      return BadArg(); // arg "rawline:alt+r" assign
+    case BOXARG: {const auto rls( g_CurFBuf()->PeekRawLineSeg( d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col ) );
+                  const auto disp( FormatExpandedSeg( rls, 0, COL_MAX, g_CurFBuf()->TabWidth(), BIG_BULLET, SMALL_BULLET ) );
+                  Msg( "PeekRawLineSeg '%" PR_BSR "'", BSR(disp) );
+                  return !rls.empty();
+                 }
+    }
+   }
+#endif
 
 void FBUF::getLineRaw( std::string &dest, LINE yLine ) const {
    const auto rv( PeekRawLine( yLine ) );
