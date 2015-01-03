@@ -1,3 +1,5 @@
+[TOC]
+
 # Introduction
 
 K is based on Microsoft's M.  M (and its child, PWB) offered a number of
