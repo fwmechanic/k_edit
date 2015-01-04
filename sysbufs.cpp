@@ -223,7 +223,7 @@ struct maxFileInfos {
 STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &max ) {
    pathbuf pb;
    if( g_fShowFbufDetails && (pFBuf->HasLines() || pFBuf->FnmIsPseudo()) ) {
-      char entabStr[] = { 'e', char( '0' + pFBuf->TabConv() ), 0 };
+      char entabStr[] = { 'e', char( '0' + pFBuf->Entab() ), 0 };
       pFout->FmtLastLine(
 #if defined(_WIN32)
          "%-*s %c%*d L %*u %d%s {%s%s%s%s%s%s}"
@@ -235,7 +235,7 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
                        , max.lineCntLog10, pFBuf->LineCount()
                            , max.imgSizeLog10, pFBuf->cbOrigFileImage()
                              , pFBuf->TabWidth()
-                             , pFBuf->TabConv()         ? entabStr  : "t "
+                             , pFBuf->Entab()         ? entabStr  : "t "
                              , pFBuf->HasGlobalPtr()    ? "G,"      : ""
                              , pFBuf->FnmIsPseudo()     ? "Pseu,"   : ""
       //                     , pFBuf->HasLines()        ? "Lines,"  : ""

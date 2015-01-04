@@ -2609,7 +2609,7 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
    }
 
 // STATIC_CONST char EntabDispChar[] = "nyY";
-// static_assert( KSTRLEN(EntabDispChar) == MAX_TABCONV_INVALID, "KSTRLEN(EntabDispChar) == MAX_TABCONV_INVALID" );
+// static_assert( KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID, "KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID" );
 
 void LineColors::Cat( const LineColors &rhs ) {  0 && DBG( "CAT[%3d]", cols() );
    auto iy(0);
@@ -2691,8 +2691,8 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
 
    cl.Cat( COLOR::SEL , FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ) );
    cl.Cat( COLOR::INF , FmtStr<27>( "[%s]"         , LastExtTagLoaded() ) );
-// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ui%de%d "   , pfh->TabWidth(), pfh->IndentIncrement(), pfh->TabConv() ) );
-   cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->TabConv() ) );
+// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ui%de%d "   , pfh->TabWidth(), pfh->IndentIncrement(), pfh->Entab() ) );
+   cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->Entab() ) );
    cl.Cat( COLOR::SEL , FmtStr<20>( "case:%s "     , g_fCase ? "sen" : "ign" ) );
 
    if( g_pFbufClipboard ) {

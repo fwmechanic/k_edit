@@ -40,7 +40,6 @@ struct SWI {                 // switch definition entry
    };
 
 GLOBAL_CONST char kszBackup    [] = "backup";
-GLOBAL_CONST char kszTabconv   [] = "tabconv";
 
 //--------------------------------------------------------------
 
@@ -179,7 +178,7 @@ GLOBAL_VAR Linebuf SwiErrBuf; // shared buffer used to format err msg strings re
 EXT_SWI_FX_STR(  Cursorsize    )
 EXT_SWI_FX_STR(  Backup        )
 EXT_SWI_FX_STR(  Tabwidth      )
-EXT_SWI_FX_STR(  Tabconv       )
+EXT_SWI_FX_STR(  Entab       )
 
 EXT_SWI_FX_BOOL( Hscroll       )
 EXT_SWI_FX_BOOL( Vscroll       )
@@ -313,6 +312,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "dvlogcmds"      , Var2TPfx( g_fDvlogcmds            ), swinVAR_BOOL, swidBool       _AHELP( "log non-cursor-movement cmds to DbgView using Windows' OutputDebugString()" ) },
 #endif
  { "editreadonly"   , Var2TPfx( g_fEditReadonly         ), swinVAR_BOOL, swidBool       _AHELP( "allow (yes) or prevent (no) editing of files which are not writable on disk" ) },
+ { "entab"          , Fxn2TPfx( swixEntab             ), swinFXN_STR , swidEntab    _AHELP( "when lines are modified, convert spaces to tabs: 0=never, 1=only leading spaces, 2=only outside quotes, or 3=everywhere" ) },
  { "errprompt"      , Var2TPfx( g_fErrPrompt            ), swinVAR_BOOL, swidBool       _AHELP( "error message display pauses with \"Press any key...\" prompt" ) },
  { "fastsearch"     , Var2TPfx( g_fFastsearch           ), swinVAR_BOOL, swidBool       _AHELP( "use fast search algorithm (when key contains no spaces)" ) },
  { "forceplateol"   , Var2TPfx( g_fForcePlatformEol     ), swinVAR_BOOL, swidBool       _AHELP(  kszHelpPlatEoL ) },
@@ -331,7 +331,6 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "showfbufdetails", Var2TPfx( g_fShowFbufDetails      ), swinVAR_BOOL, swidBool       _AHELP( "show FBUF status details in <winN> sysbufs" ) },
  { "softcr"         , Var2TPfx( g_fSoftCr               ), swinVAR_BOOL, swidBool       _AHELP( "see online help" ) },
  { "tabalign"       , Var2TPfx( g_fTabAlign             ), swinVAR_BOOL, swidBool       _AHELP( "within tab fields, cursor can be positioned (yes) only on tab char (no) in any column" ) },
- {  kszTabconv      , Fxn2TPfx( swixTabconv             ), swinFXN_STR , swidTabconv    _AHELP( "when lines are modified, convert spaces to tabs: 0=never, 1=only leading spaces, 2=only outside quotes, or 3=everywhere" ) },
  { "tabdisp"        , {         swixTabdisp             }, swinFXN_BOOL, swidTabdisp    _AHELP( "the numeric ASCII code of the character used to display tab characters; if 0, the space character is used" ) },
  { "tabwidth"       , Fxn2TPfx( swixTabwidth            ), swinFXN_STR , swidTabwidth   _AHELP( "the width of a 'tab-column'; set PER FILE" ) },
  { "traildisp"      , {         swixTraildisp           }, swinFXN_BOOL, swidTraildisp  _AHELP( "the numeric ASCII code of the character used to display trailing spaces on a line; if 0, the space character is used" ) },

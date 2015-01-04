@@ -45,23 +45,23 @@ void FBUF::SetTabWidthOk( COL NewTabWidth ) {
       d_TabWidth = NewTabWidth;
    }
 
-bool FBUF::SetTabconvOk( int newTabconv ) {
-   const auto inRange( newTabconv >= TABCONV_0_NO_CONV && newTabconv < MAX_TABCONV_INVALID );
+bool FBUF::SetEntabOk( int newEntab ) {
+   const auto inRange( newEntab >= ENTAB_0_NO_CONV && newEntab < MAX_ENTAB_INVALID );
    if( inRange ) {
-      d_Tabconv = eSpc2TabConvs(newTabconv);
-      Msg( "tabconv set to %d", d_Tabconv );
+      d_Entab = eEntabModes(newEntab);
+      Msg( "entab set to %d", d_Entab );
       }
 
    return inRange;
    }
 
-void swidTabconv( PChar dest, size_t sizeofDest, void *src ) {
-   safeSprintf( dest, sizeofDest, "%d", g_CurFBuf()->TabConv() );
+void swidEntab( PChar dest, size_t sizeofDest, void *src ) {
+   safeSprintf( dest, sizeofDest, "%d", g_CurFBuf()->Entab() );
    }
 
-PCChar swixTabconv( stref param ) {
-   const auto setOk( g_CurFBuf()->SetTabconvOk( StrToInt_variable_base( param, 10 ) ) );
-   return setOk ? nullptr : SwiErrBuf.Sprintf( "invalid tabconv value '%" PR_BSR "'", BSR(param) );
+PCChar swixEntab( stref param ) {
+   const auto setOk( g_CurFBuf()->SetEntabOk( StrToInt_variable_base( param, 10 ) ) );
+   return setOk ? nullptr : SwiErrBuf.Sprintf( "invalid entab value '%" PR_BSR "'", BSR(param) );
    }
 
 STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos ) {
@@ -574,15 +574,15 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
       FBOP::PrimeRedrawLineRangeAllWin( this, yLine, yLine );
       }
 
-   if( TABCONV_0_NO_CONV != d_Tabconv ) {
+   if( ENTAB_0_NO_CONV != d_Entab ) {
       stbuf.clear();
       const Tabber tabr( this->TabWidth() );
-      switch( d_Tabconv ) { // compress spaces into tabs per this->d_Tabconv:
+      switch( d_Entab ) { // compress spaces into tabs per this->d_Entab:
          default:
-         case TABCONV_0_NO_CONV:                   Assert( 0 ); break;
-         case TABCONV_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(stbuf), srSrc, tabr ); break;
-         case TABCONV_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(stbuf), srSrc, tabr ); break;
-         case TABCONV_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(stbuf), srSrc, tabr ); break;
+         case ENTAB_0_NO_CONV:                   Assert( 0 ); break;
+         case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(stbuf), srSrc, tabr ); break;
+         case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(stbuf), srSrc, tabr ); break;
+         case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(stbuf), srSrc, tabr ); break;
          }
       srSrc = stbuf;
       }
@@ -1131,7 +1131,7 @@ bool ARG::emacsnewl() {
    // EOL and thus the content of said line is unchanged (this causes
    // tab-replacement changes).  Investigation shows that maybe
    // CopyStream should not be used, or that GetLineForInsert needs to be
-   // modified to use the tabconv settings from the dest?"
+   // modified to use the entab settings from the dest?"
    //
    // 20090228 kgoodwin My fix: avoid CopyStream if cursor at/past EoL:
    //    CopyStream always touches (rewrites) the current line in this case,
@@ -2430,15 +2430,15 @@ IS_EOL:
       if( numLFs == 0 && numCRs > 0 ) { d_EolMode = EolCRLF; }
 #endif
 
-      d_Tabconv = TABCONV_0_NO_CONV;
+      d_Entab = ENTAB_0_NO_CONV;
 
-      enum { PERCENT_LEAD_BLANK_TO_CAUSE_TABCONV_MODE = 50 };
+      enum { PERCENT_LEAD_BLANK_TO_CAUSE_ENTAB_MODE = 50 };
       if(  tabStats.leadBlankLines > 0
         && (    (tabStats.lead_Tab_Lines > (MAX_LINES / 100))  // mk sure no ovflw
-           || (((tabStats.lead_Tab_Lines * 100) / tabStats.leadBlankLines) > PERCENT_LEAD_BLANK_TO_CAUSE_TABCONV_MODE )
+           || (((tabStats.lead_Tab_Lines * 100) / tabStats.leadBlankLines) > PERCENT_LEAD_BLANK_TO_CAUSE_ENTAB_MODE )
            )
         ) {
-         d_Tabconv = TABCONV_1_LEADING_SPCS_TO_TABS;
+         d_Entab = ENTAB_1_LEADING_SPCS_TO_TABS;
          }
 
       // maybe add a LineInfo shrinker algorithm here?

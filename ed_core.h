@@ -1018,7 +1018,7 @@ extern bool g_fRealtabs;  // some inline code below references
 extern char g_chTabDisp;  // some inline code below references
 
 typedef bool (*ForFBufCallbackDone)( const FBUF &fbuf, void *pContext );
-enum eSpc2TabConvs { TABCONV_0_NO_CONV, TABCONV_1_LEADING_SPCS_TO_TABS, TABCONV_2_SPCS_NOTIN_QUOTES_TO_TABS, TABCONV_3_ALL_SPC_TO_TABS, MAX_TABCONV_INVALID };
+enum eEntabModes { ENTAB_0_NO_CONV, ENTAB_1_LEADING_SPCS_TO_TABS, ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS, ENTAB_3_ALL_SPC_TO_TABS, MAX_ENTAB_INVALID };
 
 
 enum cppc
@@ -1292,7 +1292,7 @@ private:
    S8             d_TabWidth;
    bool           d_fTabDisp = true;
    bool           d_fTrailDisp = true;
-   eSpc2TabConvs  d_Tabconv = TABCONV_0_NO_CONV;
+   eEntabModes  d_Entab = ENTAB_0_NO_CONV;
 
    eFileType      d_FileType = ftype_UNKNOWN;   // enum FileType
 
@@ -1358,8 +1358,8 @@ public:
 #endif
    bool           CantModify() const;
 
-   eSpc2TabConvs  TabConv() const { return d_Tabconv; }
-   bool           SetTabconvOk( int newTabconv ); // NOT CONST!!!
+   eEntabModes    Entab() const { return d_Entab; }
+   bool           SetEntabOk( int newEntab ); // NOT CONST!!!
 
    bool           fTabDisp() const { return d_fTabDisp; }
    void           SetTabDisp( bool newVal ) { d_fTabDisp = newVal; }

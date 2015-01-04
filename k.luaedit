@@ -2716,7 +2716,7 @@ do -- gmake gnumake
    local spaces_8 = (" "):rep( 8 )
    local newPrefix = spaces_8 -- or "\t"
    local function preTabLineRange( fbuf, first, last )
-         fbuf:SetTabconvOk( 1 )  -- so succeeding PutLine ops will convert leading spaces to tabs
+         fbuf:SetEntabOk( 1 )  -- so succeeding PutLine ops will convert leading spaces to tabs
          local tabwidth = fbuf:TabWidth()
          for lnum = first, last do
             local line = fbuf:GetLine( lnum ) -- DBG( line )
