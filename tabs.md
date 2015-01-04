@@ -60,8 +60,8 @@ references to "white space" to "blanks".
    consists of one HTAB character followed by [0..(tabwidth-1)] **tabspring**
    characters.
 
-   The vast majority of text display applications (text viewers (e.g.  less,
-   more) and editors (e.g.  nano, notepad) use space (ASCII 8) characters to
+   The vast majority of text display applications (text viewers (e.g. `less`,
+   `more`) and editors (e.g.  `nano`, `notepad`)) use space (ASCII 8) characters to
    depict both HTAB and **tabspring** characters.  However because space
    characters are also used to depict both actual space characters as well as
    columns past the right end of a line's content (as well as HTAB and
@@ -74,16 +74,16 @@ references to "white space" to "blanks".
    [Code Page 437](https://en.wikipedia.org/wiki/Code_page_437)
 
       ...the character set of the original IBM PC (personal computer), or
-      MS-DOS." "...this character set was not conceived as a code page; it was
+      MS-DOS.  ...this character set was not conceived as a code page; it was
       simply the graphical glyph repertoire available in the original IBM PC.
       This character set remains the primary font in the core of any EGA and
       VGA-compatible graphics card.  Text shown when a PC reboots, before any
       other font can be loaded from a storage medium, typically is rendered with
-      this "Code Page".
+      this Code Page.
 
    iff `tabdisp:249` (which K source code calls BIG_BULLET character), HTAB is
    displayed as BIG_BULLET and **tabspring** chars are displayed as SMALL_BULLET
-   (decimal value 250).  This makes the presence and display effect of HTAB (and
+   (decimal value 250).  This makes the presence and visible effect of HTAB (and
    derivative **tabspring**) characters very clear.
 
    Further, M/PWB/K offer another switch, `traildisp`, which is used to depict
@@ -91,14 +91,14 @@ references to "white space" to "blanks".
    a common setting.
 
    Aside: when viewing files containing all-HTAB indenting, and/or many trailing
-   spaces, the `tabdisp:BIG_BULLET`+`traildisp:SMALL_BULLET` setting can be very
-   visually distracting.  Users are generally only concerned with these blank-related
-   distinctions when **editing** a file, not when only viewing it.  Therefore K
-   contains some code which automatically en/disables the visible settings of
-   these switches under many conditions (EX: when viewing non-dirty files; as soon
-   as a buffer is modified, `tabdisp:BIG_BULLET`+`traildisp:SMALL_BULLET` is
-   auto-set so the user is confronted by HTABs and trailin spaces in their full
-   glory).
+   spaces, the `tabdisp:BIG_BULLET`+`traildisp:SMALL_BULLET` setting combination
+   can be very visually distracting.  Since users are generally only concerned
+   with these blank-related distinctions when **editing** a file, and not when
+   viewing it, K contains some code which automatically en/disables the visible
+   settings of these switches under many conditions (EX: when viewing non-dirty
+   files; as soon as a buffer is modified,
+   `tabdisp:BIG_BULLET`+`traildisp:SMALL_BULLET` is auto-set so the user is
+   confronted by HTABs and trailin spaces in their full glory).
 
 
 From the PWB 2.0 manual:
@@ -158,8 +158,8 @@ From the PWB 2.0 manual:
 
     The Filetab switch determines the width of a tab field for displaying tab
     (ASCII 9) characters in the file.  The width of a tab field determines how
-    blanks are translated when the `realtabs` switch is set to no.  The Filetab
-    switch does not affect the cursor-movement functions `tab` and `backtab`.
+    blanks are translated when the realtabs switch is set to no.  The Filetab
+    switch does not affect the cursor-movement functions tab and backtab.
 
 NOTE: K offers a function `ftab` which allows interactive changing
 of this setting (and other tab-related settings) with immediate
@@ -203,7 +203,7 @@ From the PWB 2.0 manual:
        numeric escape sequence to encode quotation marks in strings or character
        literals.
 
-    2  Convert blanks to tabs.
+    2: Convert blanks to tabs.
 
     With settings 1 and 2, if the blanks being considered for conversion to a
     tab character occupies an entire tab field or ends at the boundary of a tab field,
