@@ -528,21 +528,17 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
       if( xCursor < ColOfFreeIdx( tw, rl, rl.length() ) ) {
          const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
          if( isWordChar( rl[ixC] ) ) {
-            const auto ixFirst    ( IdxFirstWordCh   ( rl, ixC ) );
-            const auto ixPastLast ( FirstNonWordOrEnd( rl, ixC ) );           0 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
-            // if( ixFirst != stref::npos && ixPastLast != stref::npos )
-               {
-               const auto xMin( ColOfFreeIdx( tw, rl, ixFirst  ) );
-               const auto xMax( ColOfFreeIdx( tw, rl, ixPastLast-1 ) );      0 && DBG( "x[%d..%d]", xMin, xMax );
-               const auto wordCols ( xMax - xMin + 1 );
-               const auto wordChars( ixPastLast - ixFirst );
-               // this degree of paranoia only matters if the definition of a WORD includes a tab
-               if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT "d", __func__, wordCols, wordChars ); }
-
-               // return everything
-               cursor->col = xMin;
-               return stref( rl.data() + ixFirst, wordChars );
-               }
+            const auto ixFirst   ( IdxFirstWordCh   ( rl, ixC   ) );
+            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC   ) );  0 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
+            const auto xMin( ColOfFreeIdx( tw, rl, ixFirst      ) );
+            const auto xMax( ColOfFreeIdx( tw, rl, ixPastLast-1 ) );  0 && DBG( "x[%d..%d]", xMin, xMax );
+            const auto wordCols ( xMax - xMin + 1 );
+            const auto wordChars( ixPastLast - ixFirst );
+            // this degree of paranoia only matters if the definition of a WORD includes a tab
+            if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT "d", __func__, wordCols, wordChars ); }
+            // return everything
+            cursor->col = xMin;
+            return stref( rl.data() + ixFirst, wordChars );
             }
          }
       }
@@ -774,11 +770,10 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
       auto &line( d_PerViewableLine[ iy ].line );
       line.level_ix = level_idx;
       switch( line.acppc ) {
-         case cppcIf  : {
-                        const auto containing_level_idx( level_idx );
+         case cppcIf  :{const auto containing_level_idx( level_idx );
                         auto &level = d_PerViewableLine[ (line.level_ix = level_idx = ++level_alloc_idx) ].level;
                         level.containing_level_idx = containing_level_idx; level.yMin = iy; level.yMax = iy; level.xBox = 0;
-                        } break;
+                       } break;
          case cppcEnd : level_idx = close_level( level_idx, iy );  break;
          default      : break;
          }
@@ -918,11 +913,10 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          children do this and are thus preferred if/when the language of the file
          is known */
 
-      const auto eos( rl.data() + rl.length() );
-      auto ixTgt = rl.find( d_eolCommentDelim );
+      auto ixTgt( rl.find( d_eolCommentDelim ) );
       if( ixTgt == stref::npos && !d_eolCommentDelimWOTrailSpcs.empty() ) {
          if( rl.ends_with( d_eolCommentDelimWOTrailSpcs ) ) {
-            ixTgt = (eos-d_eolCommentDelimWOTrailSpcs.length()) - rl.data();
+            ixTgt = rl.length() - d_eolCommentDelimWOTrailSpcs.length();
             }
          }
       if( ixTgt != stref::npos ) {
@@ -1034,7 +1028,7 @@ bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
    if( yLine < d_hl_rgn_array[d_ixCache].rgn.flMin.lin ) return false;
    const auto pFile( CFBuf() );
    const auto rl( pFile->PeekRawLine( yLine ) );
-   if( !rl.empty() ) {
+   if( !IsStringBlank( rl ) ) {
       const auto tw( pFile->TabWidth() );
       const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
       for( auto ix=d_ixCache ; ix < d_num_hl_rgns_found && 0==d_hl_rgn_array[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {

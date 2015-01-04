@@ -440,11 +440,6 @@ FBUF_(GetLineSeg) {
    if( isValidLineNum( pf, lnum ) ) {
       const auto xLeftIncl ( I_(3) - 1 );
       const auto xRightIncl( I_(4) - 1 );
- #if USE_STATE_ELB
-      auto pXb( get_xb( L ) );
- #else
-      Xbuf xb; auto pXb(&xb);
- #endif
       const auto rl( pf->PeekRawLineSeg( lnum, xLeftIncl, xRightIncl ) );
       R_lstr( rl.data(), rl.length() );
       }

@@ -2685,18 +2685,17 @@ FAIL: // fnmbuf gets filename of CURRENT buffer!  But generation is 0
       }
    {
    STATIC_CONST char grep_prefix[] = "*GREP* ";
-   PCChar ptr; size_t chars;
-   if( !fb->PeekRawLineExists( 0, &ptr, &chars ) || !streq_LenOfFirstStr( grep_prefix, KSTRLEN(grep_prefix), ptr, chars ) )
-      { goto FAIL; }
-   safeStrcpy( fnmbuf, sizeof_fnmbuf, ptr+KSTRLEN(grep_prefix), chars-KSTRLEN(grep_prefix) );
-   if( 0 == fnmbuf[0] ) goto FAIL;
+   auto rl( fb->PeekRawLine( 0 ) );
+   if( !rl.starts_with( grep_prefix ) )       { goto FAIL; }
+   rl.remove_prefix( KSTRLEN(grep_prefix) );
+   if( IsStringBlank( rl ) )                  { goto FAIL; }
+   safeStrcpy( fnmbuf, sizeof_fnmbuf, rl.data(), rl.length() );
    }
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {
       STATIC_CONST char grep_fnm[] = "<grep.";
-      PCChar ptr; size_t chars;
-      if( !fb->PeekRawLineExists( iy, &ptr, &chars ) || !streq_LenOfFirstStr( grep_fnm, KSTRLEN(grep_fnm), ptr, chars ) )
-         { break; }                                        0 && DBG("[%d] %s' line=%*s'",iy, fb->Name(), pd2Int(chars), ptr );
+      auto rl( fb->PeekRawLine( iy ) );                    0 && DBG("[%d] %s' line=%" PR_BSR "'",iy, fb->Name(), BSR(rl) );
+      if( !rl.starts_with( grep_fnm ) )       { break; }
       }                                                    0 && DBG( "%s: %s final=[%d] '%s'", __func__, fb->Name(), iy, fnmbuf );
    *pGrepHdrLines = iy;
    return fnmbuf;
@@ -2707,9 +2706,7 @@ PView FindClosestGrepBufForCurfile( PView pv, PCChar srchFilename ) {
    pv = DLINK_NEXT( pv, dlinkViewsOfWindow );
    while( pv ) {
       pathbuf srchFnm; int dummy;
-      if(    FBOP::IsGrepBuf( pv->FBuf(), BSOB(srchFnm), &dummy )
-          && 0 == strcmp( srchFnm, srchFilename )
-        )
+      if( FBOP::IsGrepBuf( pv->FBuf(), BSOB(srchFnm), &dummy ) && Path::eq( srchFnm, srchFilename ) )
          return pv;
       pv = DLINK_NEXT( pv, dlinkViewsOfWindow );
       }
@@ -2722,7 +2719,7 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
    int     srcHdrLines, destHdrLines ;
    if(    !FBOP::IsGrepBuf( src , BSOB(srcSrchFnm ), & srcHdrLines )
        || !FBOP::IsGrepBuf( dest, BSOB(destSrchFnm), &destHdrLines )
-       ||  0 != strcmp( srcSrchFnm, destSrchFnm )
+       || !Path::eq( srcSrchFnm, destSrchFnm )
      ) return false;
 
    0 && DBG( "%s: %s copy [1..%d]", __func__, src->Name(), srcHdrLines );

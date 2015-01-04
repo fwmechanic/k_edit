@@ -128,7 +128,7 @@ STATIC_FXN bool CopyNumberedLinesToNewFile( PFBUF srcfile, PFBUF destfile, ARG *
       else if( 0 != strcmp( destGrepFBufname, srcfile->Name() ) ) {
          fUseMFGrepFmt = true;
 
-         // CONVERT EXISTING DESTFILE CONTENT TO fUseMFGrepFmt FORMAT
+         // CONVERT EXISTING destfile CONTENT TO fUseMFGrepFmt FORMAT
          //
          const auto lwidth( uint_log_10( srcfile->LineCount() ) );
          destfile->DelLines( 0, 1 );

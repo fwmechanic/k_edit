@@ -52,8 +52,7 @@ EXTERNC void abort() {
 STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 0 && DBG( "%s(%s)", FUNC, filename );
    g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
    if( 0 ) {
-      const auto st( g_pFBufCmdlineFiles->PeekRawLine( 0 ) );
-      DBG( "%s readback(%" PR_BSR  ")", FUNC, BSR( st ) );
+      DBG( "%s readback(%" PR_BSR  ")", FUNC, BSR( g_pFBufCmdlineFiles->PeekRawLine( 0 ) ) );
       }
    }
 
@@ -534,8 +533,7 @@ STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE star
    0 && DBG( "FindRsrcTag: '%s'", pszSectionName );
    stref srKey( pszSectionName );
    for( auto yLine(startLine) ; yLine <= pFBuf->LastLine(); ++yLine ) {
-      const auto rl( pFBuf->PeekRawLine( yLine ) );
-      const stref tag( IsolateTagStr( rl ) );
+      const stref tag( IsolateTagStr( pFBuf->PeekRawLine( yLine ) ) );
       if( !tag.empty() ) { 0 && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
          for( sridx ix( 0 ); ix < tag.length() ; ) {
             const auto ix0( FirstNonBlankOrEnd( tag, ix  ) );

@@ -211,9 +211,9 @@ COL PrettifyMemcpy
       ++pD; ++xCol;
       };
 
-   auto it( src.cbegin() );
-   while( it != src.cend() && PD_EFF <= pDestRightmostWritable ) {
-      const auto ch( *it++ );
+   auto sit( src.cbegin() );
+   while( sit != src.cend() && PD_EFF <= pDestRightmostWritable ) {
+      const auto ch( *sit++ );
       if( ch != HTAB ) {
          WR_CHAR(ch);
          }
@@ -230,10 +230,10 @@ COL PrettifyMemcpy
    const auto copyBytes(PD_EFF - pDestBuf);
    if( copyBytes > 0 ) {
       if( chTrailSpcs ) {
-         // it points just after the last source-char copied/xlated;
-         //    it == src.cend() (if the above loop terminated because it == src.cend())
-         // OR it  < src.cend() (if the above loop terminated due to PD_EFF <= pDestRightmostWritable being false)
-         if( it == src.cend() || spacesonly( it, src.cend() ) ) { // _trailing_ spaces on the source side
+         // sit points just after the last source-char copied/xlated;
+         //    sit == src.cend() (if the above loop terminated because sit == src.cend())
+         // OR sit  < src.cend() (if the above loop terminated due to PD_EFF <= pDestRightmostWritable being false)
+         if( sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
             for( --pD ; PD_EFF >= pDestBuf && *PD_EFF == ' ' ; --pD ) { // xlat all trailing spaces present in dest
                *PD_EFF = chTrailSpcs;
                }
@@ -1558,8 +1558,7 @@ void FBUF::getLineRaw( std::string &dest, LINE yLine ) const {
    }
 
 COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
-   const auto rl( PeekRawLine( yLine ) );
-   FormatExpandedSeg( dest, rl, 0, COL_MAX, TabWidth(), ' ', chExpandTabs );
+   FormatExpandedSeg( dest, PeekRawLine( yLine ), 0, COL_MAX, TabWidth(), ' ', chExpandTabs );
    return dest.length();
    }
 
@@ -1584,8 +1583,7 @@ COL FBUF::getLine_DEPR( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
 void FBUF::GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
    dest.clear();
    if( yLine >= 0 && yLine <= LastLine() ) {
-      const auto rl( PeekRawLine( yLine ) );
-      FormatExpandedSeg( dest, rl, xLeftIncl, xRightIncl - xLeftIncl + 1, TabWidth() );
+      FormatExpandedSeg( dest, PeekRawLine( yLine ), xLeftIncl, xRightIncl - xLeftIncl + 1, TabWidth() );
       }
    }
 
