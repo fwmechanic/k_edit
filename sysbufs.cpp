@@ -235,7 +235,7 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
                        , max.lineCntLog10, pFBuf->LineCount()
                            , max.imgSizeLog10, pFBuf->cbOrigFileImage()
                              , pFBuf->TabWidth()
-                             , pFBuf->Entab()         ? entabStr  : "t "
+                             , pFBuf->Entab()           ? entabStr  : "t "
                              , pFBuf->HasGlobalPtr()    ? "G,"      : ""
                              , pFBuf->FnmIsPseudo()     ? "Pseu,"   : ""
       //                     , pFBuf->HasLines()        ? "Lines,"  : ""

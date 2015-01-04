@@ -372,7 +372,7 @@ FBUF_(ToglNoEdit)               { thisPF()->ToglNoEdit()                        
 FBUF_(UnDirty)                  { thisPF()->UnDirty()                                          ; RZ; }
 FBUF_(WriteToDisk)              { thisPF()->WriteToDisk( So0_(2) )                             ; RZ; }
 FBUF_(cat)                      { thisPF()->cat( S_(2) )                                       ; RZ; }
-FBUF_(SetEntabOk)             { R_bool(      thisPF()->SetEntabOk( I_(2) )       ); }
+FBUF_(SetEntabOk)               { R_bool(      thisPF()->SetEntabOk( I_(2) )         ); }
 FBUF_(RefreshFailedShowError)   { R_bool( 0 != thisPF()->RefreshFailedShowError()    ); }
 FBUF_(IsAutoRead)               { R_bool( 0 != thisPF()->IsAutoRead()                ); }
 FBUF_(RefreshFailed)            { R_bool( 0 != thisPF()->RefreshFailed()             ); }

@@ -1292,7 +1292,7 @@ private:
    S8             d_TabWidth;
    bool           d_fTabDisp = true;
    bool           d_fTrailDisp = true;
-   eEntabModes  d_Entab = ENTAB_0_NO_CONV;
+   eEntabModes    d_Entab = ENTAB_0_NO_CONV;
 
    eFileType      d_FileType = ftype_UNKNOWN;   // enum FileType
 
