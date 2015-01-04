@@ -2099,7 +2099,6 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
 
    //*** merge & write last line of FBsrc stream  [srcbuf:destbuf]
 
-
    Xbuf xbFirst; FBdest->GetLineForInsert( &xbFirst, yDst, xDst, 0 ); // rd dest line containing insertion point
    Xbuf xbLast;
    if( FBsrc ) {
