@@ -29,13 +29,13 @@ references to "white space" to "blanks".
 
 # Terminology
 
- * **tab** (a.k.a. horizontal tab or HTAB) character: an ASCII (or Unicode)
-   character having decimal value 9.  Any character immediately following an
-   HTAB will be (for print/display purposes) horizontally positioned at the next
-   **tabstop**.  IOW any character immediately following an HTAB will
-   printed/displayed at the column of the next **tabstop**.  Therefore the occurrence
-   of a HTAB will, depending on its columnar position, necessitate the insertion
-   of [0..(`tabwidth`-1)] **tabspring** characters.
+ * **tab** (a.k.a. horizontal tab or HTAB) character: an ASCII 9 character.
+   Any character immediately following an HTAB will (for print/display
+   purposes) be horizontally positioned at the next **tabstop**.  IOW any
+   character immediately following an HTAB will printed/displayed at the
+   column of the next **tabstop**.  Therefore the occurrence of a HTAB will,
+   depending on its columnar position, necessitate the insertion of
+   [0..(`tabwidth`-1)] **tabspring** characters.
 
    [Wikipedia](https://en.wikipedia.org/wiki/Tab_key#Tab_characters) covers
    this ground well:
@@ -60,13 +60,13 @@ references to "white space" to "blanks".
    consists of one HTAB character followed by [0..(tabwidth-1)] **tabspring**
    characters.
 
-   The vast majority of text display applications (text viewers (e.g. `less`,
-   `more`) and editors (e.g.  `nano`, `notepad`)) use space (ASCII 8) characters to
-   depict both HTAB and **tabspring** characters.  However because space
-   characters are also used to depict both actual space characters as well as
-   columns past the right end of a line's content (as well as HTAB and
-   **tabspring** characters), such depiction causes great loss of information,
-   and that loss can sometimes cause problems.
+   The vast majority of text display applications (text viewers (`less`, `more`)
+   and editors (`nano`, `notepad`)) use space (ASCII 32) characters to depict both
+   HTAB and **tabspring** characters.  However because space characters are also
+   used to depict both actual space characters as well as columns past the right
+   end of a line's content (as well as HTAB and **tabspring** characters), such
+   depiction causes great loss of information, and that loss can sometimes cause
+   problems.
 
    Therefore M/PWB/K offer a user-alterable switch (`tabdisp`) that specifies the
    ASCII code of the character used to depict HTAB and **tabspring** characters.  K
@@ -141,14 +141,14 @@ From the PWB 2.0 manual:
 
 # M/PWB/K Tab-handling switches
 
-NB: In the interest of better user comprehension I have renamed a large percentage of these in K.
+NB: In the interest of better user comprehension I have renamed one of these in K.
 
  * `filetab` (K:`tabwidth`): [1..8] distance between **tabstops**; `tabwidth:8` is "traditional" (and default)
- * `entab`   (K:`tabconv`):  enum [0..2/3] controlling how spaces in a modified line being written to an editor buffer are converted to tabs (or not).
+ * `entab`:  enum [0..2/3] controlling how spaces in a modified line being written to an editor buffer are converted to tabs (or not).
  * `tabalign`: controls whether cursor is allowed to be positioned into display-locations occupied by **tabspring** characters.
  * `realtabs`: a mode control switch which controls when other switches take effect.
 
- Note: PWB added a `tabstops` switch (offering variable/arbitrarily-positioned tabstops!!!) which will **never** be supported by K.
+ Note: PWB added a `tabstops` switch (allowing arbitrarily/irregularly-positioned tabstops!!!) which will **never** be supported by K.
 
 ## `tabwidth`: (MS: filetab) switch
 
@@ -168,8 +168,8 @@ in cases where a user has "interesting" editor settings which (a)
 allows variable tabwidth settings (just like K/M/PWB) yet does not
 provide means for ensuring that the resulting edited file contains
 consistently formatted (use of either HTABs or spaces) indenting
-(such as K/M/PWB's `tabconv`/`entab`), but instead encourages the
-user to indent with (manually/variably) using either HTABs or spaces
+(such as K/M/PWB's `entab`), but instead encourages the
+user to indent (manually/variably) using either HTABs or spaces
 depending on whether the user hit the tab or spacebar key on any
 given line's indentation.  The resulting mess is annoying to attempt
 to read, since the reader is left to guess which `tabwidth` setting
@@ -177,9 +177,9 @@ is needed to achieve coherent viewing of the source-file's
 indentation.  `ftab` makes this guessing (by trial and error) fast
 and easy.
 
-## `tabconv`: (MS: `entab`) switch
+## `entab` switch
 
-Default value: `tabconv:0`
+Default value: `entab:0`
 
 From the PWB 2.0 manual:
 
@@ -210,8 +210,8 @@ From the PWB 2.0 manual:
     it is converted to a tab (ASCII 9) character. The width of a tab field is specified
     by the filetab switch.
 
-K modifies this by inserting a new meaning for `tabconv` value 1: "convert _leading_
-blanks to tabs"; M/PWB entab values [1..2] become `tabconv` values [2..3] in K.
+K modifies this by inserting a new meaning for `entab` value 1: "convert _leading_
+blanks to tabs"; M/PWB entab values [1..2] become values [2..3] in K.
 
 ## `tabalign` switch
 
@@ -263,9 +263,9 @@ mostly means: strings used in screen redraw, but this can include some unlikely
 things like strings being edited by the user on the dialog-line.  Like `tabalign`,
 the effects of these switches is well encapsulated.
 
-`realtabs`, `tabconv`, `tabwidth`: `tabwidth` is a parameter to `tabconv` and `tabdisp`,
+`realtabs`, `entab`, `tabwidth`: `tabwidth` is a parameter to `entab` and `tabdisp`,
 and, while frequently referenced in K source code, its involvement in the
-following policy discussion is implicit. `realtabs`, `tabconv` ...
+following policy discussion is implicit. `realtabs`, `entab` ...
 
 ## Reading buffer lines
 

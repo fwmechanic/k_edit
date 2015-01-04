@@ -63,21 +63,20 @@
   #colornoise  : 0a
    colorsta    : 2f
 
-   testsetfile:=setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
-                setfile setfile setfile setfile setfile setfile setfile setfile setfile setfile  \
+   graphic:tab  ; easy access to tab-insertion
+
+   ts0:=arg "trailspace:no"  assign
+   ts1:=arg "trailspace:yes" assign
+   ta0:=cancel arg "tabalign:no"  assign
+   ta1:=cancel arg "tabalign:yes" assign
+   r0:= cancel arg "realtabs:no"  assign
+   r1:= cancel arg "realtabs:yes" assign
+   e0:= cancel arg "entab:0" assign
+   e1:= cancel arg "entab:3" assign # treating entab as a boolean; we don't care about the difference of entab:1
+   r0e0:= cancel r0 e0
+   r0e1:= cancel r0 e1
+   r1e0:= cancel r1 e0
+   r1e1:= cancel r1 e1
 
    # TAB <--> SPACE conversion parameters (pertains TO MODIFIED LINES ONLY!)
       realtabs:no       #tabs expanded into spaces

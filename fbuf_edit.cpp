@@ -45,23 +45,37 @@ void FBUF::SetTabWidthOk( COL NewTabWidth ) {
       d_TabWidth = NewTabWidth;
    }
 
+STATIC_CONST PCChar s_entabNames[] = {
+   "never"    ,
+   "lead"     ,
+   "exoquote" ,
+   "all"      ,
+   };
+
 bool FBUF::SetEntabOk( int newEntab ) {
    const auto inRange( newEntab >= ENTAB_0_NO_CONV && newEntab < MAX_ENTAB_INVALID );
    if( inRange ) {
       d_Entab = eEntabModes(newEntab);
-      Msg( "entab set to %d", d_Entab );
+      Msg( "entab set to %s (%d)", s_entabNames[ d_Entab ], d_Entab );
       }
-
    return inRange;
    }
 
 void swidEntab( PChar dest, size_t sizeofDest, void *src ) {
-   safeSprintf( dest, sizeofDest, "%d", g_CurFBuf()->Entab() );
+   safeSprintf( dest, sizeofDest, "%s (%d)", s_entabNames[ g_CurFBuf()->Entab() ], g_CurFBuf()->Entab() );
    }
 
-PCChar swixEntab( stref param ) {
-   const auto setOk( g_CurFBuf()->SetEntabOk( StrToInt_variable_base( param, 10 ) ) );
-   return setOk ? nullptr : SwiErrBuf.Sprintf( "invalid entab value '%" PR_BSR "'", BSR(param) );
+PCChar swixEntab( stref param ) { enum { DB=0 }; DB && DBG( "%s+ %" PR_BSR "'", __func__, BSR(param) );
+   COL  newval;
+   for( newval=0 ; newval < ELEMENTS(s_entabNames) ; ++newval ) {
+      if( 0==cmpi( param, s_entabNames[newval] ) ) {
+         break;
+         }
+      }                                                            DB && DBG( "%s: %d", __func__, newval );
+   if( !(newval < ELEMENTS(s_entabNames)) ) { newval = StrToInt_variable_base( param, 10 ); }
+                                                                   DB && DBG( "%s: %d", __func__, newval );
+   const auto setOk( g_CurFBuf()->SetEntabOk( newval ) );
+   return setOk ? nullptr : SwiErrBuf.Sprintf( "entab value '%" PR_BSR "' must be one of 'none', 'lead', 'exoquote' or 'all'", BSR(param) );
    }
 
 STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos ) {
@@ -289,12 +303,12 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
    auto destCol( 0 );
    auto fNxtChEscaped( false );
    auto fInQuotedRgn(  false );
-   auto sit( src.crbegin() );
-   while( sit != src.crend() ) {
+   auto sit( src.cbegin() );
+   while( sit != src.cend() ) {
       if( !fInQuotedRgn ) {
          if( !fNxtChEscaped ) {
             auto x_Cx( 0 );
-            while( sit != src.crend() && (*sit == ' ' || *sit == HTAB) ) {
+            while( sit != src.cend() && (*sit == ' ' || *sit == HTAB) ) {
                if( *sit == HTAB ) {
                   x_Cx = 0;
                   destCol = tabr.ColOfNextTabStop( destCol );
@@ -316,7 +330,7 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
                }
             }
 
-         if( sit != src.crend() && !fNxtChEscaped ) {
+         if( sit != src.cend() && !fNxtChEscaped ) {
             if( fInQuotedRgn )
                goto TO_ELSE;
 
@@ -337,7 +351,7 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
             }
          }
       else {
-         if( sit != src.crend() && !fNxtChEscaped ) {
+         if( sit != src.cend() && !fNxtChEscaped ) {
 TO_ELSE:
             if( *sit == quoteCh )
                fInQuotedRgn = false;
@@ -349,7 +363,7 @@ TO_ELSE:
             }
          }
 
-      if( sit != src.crend() ) {
+      if( sit != src.cend() ) {
          *dit++ = *sit++;
          ++destCol;
          }
@@ -358,10 +372,10 @@ TO_ELSE:
 
 STATIC_FXN void spcs2tabs_all( string_back_inserter dit, stref src, TabberParam tabr ) {
    auto xCol(0);
-   auto sit( src.crbegin() );
-   while( sit != src.crend() ) {
+   auto sit( src.cbegin() );
+   while( sit != src.cend() ) {
       auto ix(0);
-      while( sit != src.crend() && (*sit == ' ' || *sit == HTAB) ) {
+      while( sit != src.cend() && (*sit == ' ' || *sit == HTAB) ) {
          if( *sit == HTAB ) {
             ix = 0;
             xCol = tabr.ColOfNextTabStop( xCol );
@@ -382,7 +396,7 @@ STATIC_FXN void spcs2tabs_all( string_back_inserter dit, stref src, TabberParam 
          *dit++ = ' ';
          }
 
-      if( sit != src.crend() ) {
+      if( sit != src.cend() ) {
          *dit++ = *sit++;
          ++xCol;
          }
@@ -392,8 +406,8 @@ STATIC_FXN void spcs2tabs_all( string_back_inserter dit, stref src, TabberParam 
 STATIC_FXN void spcs2tabs_leading( string_back_inserter dit, stref src, TabberParam tabr ) {
    auto xCol( 0 );
    auto ix(0);
-   auto sit( src.crbegin() );
-   for( ; sit != src.crend() && (*sit == ' ' || *sit == HTAB) ; ++sit ) {
+   auto sit( src.cbegin() );
+   for( ; sit != src.cend() && (*sit == ' ' || *sit == HTAB) ; ++sit ) {
       if( *sit == HTAB ) {
          ix = 0;
          xCol = tabr.ColOfNextTabStop( xCol );
@@ -413,7 +427,7 @@ STATIC_FXN void spcs2tabs_leading( string_back_inserter dit, stref src, TabberPa
       *dit++ = ' ';
       }
 
-   for( ; sit != src.crend() ; ++sit ) {
+   for( ; sit != src.cend() ; ++sit ) {
       *dit++ = *sit;
       }
    }
@@ -574,12 +588,12 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
       FBOP::PrimeRedrawLineRangeAllWin( this, yLine, yLine );
       }
 
-   if( ENTAB_0_NO_CONV != d_Entab ) {
+   if( ENTAB_0_NO_CONV != Entab() ) {
       stbuf.clear();
       const Tabber tabr( this->TabWidth() );
-      switch( d_Entab ) { // compress spaces into tabs per this->d_Entab:
+      switch( Entab() ) { // compress spaces into tabs per this->Entab()
          default:
-         case ENTAB_0_NO_CONV:                   Assert( 0 ); break;
+         case ENTAB_0_NO_CONV:                   Assert( 0 );            break;
          case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(stbuf), srSrc, tabr ); break;
          case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(stbuf), srSrc, tabr ); break;
          case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(stbuf), srSrc, tabr ); break;
