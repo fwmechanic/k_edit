@@ -713,12 +713,7 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
    // pass 1: fill in line.{ xMax, cppc?, xPound? }
    auto maxUnIfdEnds(0);
    {
-   // SOLO_ELSE_HACK: 20090905 kgoodwin hack to get isolated (if/endif-less) #else's handled correctly
-   #define  SOLO_ELSE_HACK  1
-
-   #if SOLO_ELSE_HACK
    auto not_elses(0), elses(0);
-   #endif
    auto upDowns(0);
    auto fb( CFBuf() );
    const auto tw( fb->TabWidth() );
@@ -733,30 +728,20 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
          switch( line.acppc ) {
             default:       break;
             case cppcIf  : --upDowns;
-   #if SOLO_ELSE_HACK
                            ++not_elses;
-   #endif
                            break;
             case cppcEnd : ++upDowns; maxUnIfdEnds = Max( maxUnIfdEnds, upDowns );
-   #if SOLO_ELSE_HACK
                            ++not_elses;
-   #endif
                            break;
-   #if SOLO_ELSE_HACK
             case cppcElif:
             case cppcElse: ++elses;
                            break;
-   #endif
             }
          }
       }
-   #if SOLO_ELSE_HACK
    if( 0 == not_elses && elses > 0 ) {
       maxUnIfdEnds = 1;
       }
-   #endif
-
-   #undef   SOLO_ELSE_HACK
    }
 
    // pass 2:
@@ -795,7 +780,7 @@ bool HiliteAddin_CPPcond_Hilite::VHilitLine( LINE yLine, COL xIndent, LineColors
       const auto &line( d_PerViewableLine[ lineInWindow ].line );
 
       // highlight any CPPcond that occurs on this line
-      if( cppcNone != line.acppc ) { // ..\scripts\dups.pl  crash! unless SOLO_ELSE_HACK
+      if( cppcNone != line.acppc ) {
          alcc.PutColor( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, COLOR::CPH );
          }
 
