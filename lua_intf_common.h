@@ -28,6 +28,13 @@ extern "C"
    #include <k_lib.h>
 }
 
+static inline stref Sr_( lua_State *L, int n ) {
+   size_t length;
+   const auto data( luaL_checklstring( L, (n), &length ) );
+   if( !data ) return stref();
+   else        return stref( data, length );
+   }
+
 enum { DBG_LUA=0 };
 
 //#########  lua_edlib exports

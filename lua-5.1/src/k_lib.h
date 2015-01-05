@@ -2,8 +2,7 @@
 // Kevin's macros to make writing Lua functions in C easy
 //
 
-#ifndef  LUA_K_LIB_H_
-#define  LUA_K_LIB_H_
+#pragma once
 
 // accessing parameters
 
@@ -22,13 +21,6 @@
 extern unsigned GetUint_Hack( lua_State *L, int n );
 
 #define  S_(n)              luaL_checkstring( L, (n) )
-static inline stref Sr_( lua_State *L, int n ) {
-   size_t length;
-   const auto data( luaL_checklstring( L, (n), &length ) );
-   if( !data ) return stref();
-   else        return stref( data, length );
-   }
-
 #define  I_(n)              luaL_checkint(    L, (n) )
 #define  U_(n)              GetUint_Hack(     L, (n) )
 #define  N_(n)              luaL_checknumber( L, (n) )
@@ -69,5 +61,3 @@ static inline stref Sr_( lua_State *L, int n ) {
 LUALIB_API int luaopen_klib (lua_State *L);
 LUALIB_API int luaopen_rex_pcre (lua_State *L);
 LUALIB_API int luaopen_lpeg (lua_State *L);
-
-#endif
