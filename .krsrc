@@ -65,19 +65,21 @@
 
    graphic:tab  ; easy access to tab-insertion
 
-   ts0:=arg "trailspace:no"  assign
-   ts1:=arg "trailspace:yes" assign
+   ts0:=cancel arg "trailspace:no"  assign
+   ts1:=cancel arg "trailspace:yes" assign
    ta0:=cancel arg "tabalign:no"  assign
    ta1:=cancel arg "tabalign:yes" assign
-   rt0:= cancel arg "realtabs:no"  assign
-   rt1:= cancel arg "realtabs:yes" assign
-   et0:= cancel arg "entab:0" assign
-   et1:= cancel arg "entab:1" assign
-   et3:= cancel arg "entab:3" assign
-   r0e0:= cancel rt0 et0
-   r0e1:= cancel rt0 et1
-   r1e0:= cancel rt1 et0
-   r1e1:= cancel rt1 et1
+   rt0:=cancel arg "realtabs:no"  assign
+   rt1:=cancel arg "realtabs:yes" assign
+   et0:=cancel arg "entab:0" assign
+   et1:=cancel arg "entab:1" assign
+   et3:=cancel arg "entab:3" assign
+   r0e0:=cancel rt0 et0
+   r0e1:=cancel rt0 et1
+   r1e0:=cancel rt1 et0
+   r1e1:=cancel rt1 et1
+
+   bdm4:=cancel rt0 arg "blankdispmask:4" assign
 
    # TAB <--> SPACE conversion parameters (pertains TO MODIFIED LINES ONLY!)
       realtabs:no       #tabs expanded into spaces

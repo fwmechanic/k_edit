@@ -2691,8 +2691,9 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
 
    cl.Cat( COLOR::SEL , FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ) );
    cl.Cat( COLOR::INF , FmtStr<27>( "[%s]"         , LastExtTagLoaded() ) );
-// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ui%de%d "   , pfh->TabWidth(), pfh->IndentIncrement(), pfh->Entab() ) );
-   cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->Entab() ) );
+// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->Entab() ) );
+// cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ) );
+   cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u "    , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ) );
    cl.Cat( COLOR::SEL , FmtStr<20>( "case:%s "     , g_fCase ? "sen" : "ign" ) );
 
    if( g_pFbufClipboard ) {

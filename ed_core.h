@@ -1019,7 +1019,7 @@ extern char g_chTabDisp;  // some inline code below references
 
 typedef bool (*ForFBufCallbackDone)( const FBUF &fbuf, void *pContext );
 enum eEntabModes { ENTAB_0_NO_CONV, ENTAB_1_LEADING_SPCS_TO_TABS, ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS, ENTAB_3_ALL_SPC_TO_TABS, MAX_ENTAB_INVALID };
-enum eBlankDispSrcs { BlankDispSrc_DIRTY=BIT(0), BlankDispSrc_SEL=BIT(1), BlankDispSrc_USER_ALWAYS=BIT(2), MAX_BlankDispSrc_INVALID=BIT(3) };
+enum eBlankDispSrcs { BlankDispSrc_DIRTY=BIT(0), BlankDispSrc_SEL=BIT(1), BlankDispSrc_ALL_ALWAYS=BIT(2), BlankDispSrc_USER_ALWAYS=BIT(3), MAX_BlankDispSrc_INVALID=BIT(4) };
 
 enum cppc
    { cppcNone=0
@@ -1295,7 +1295,7 @@ private:
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
 
    eFileType      d_FileType = ftype_UNKNOWN;   // enum FileType
-   int            d_BlankAnnoDispSrcAsserted = 0;
+   int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
 
 public:
    eFileType      FileType()             const { return  d_FileType; }

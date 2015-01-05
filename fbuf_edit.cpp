@@ -1572,7 +1572,7 @@ void FBUF::getLineRaw( std::string &dest, LINE yLine ) const {
    }
 
 COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
-   FormatExpandedSeg( dest, PeekRawLine( yLine ), 0, COL_MAX, TabWidth(), ' ', chExpandTabs );
+   FormatExpandedSeg( dest, PeekRawLine( yLine ), 0, COL_MAX, TabWidth(), chExpandTabs, ' ' );
    return dest.length();
    }
 
