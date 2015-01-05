@@ -46,8 +46,8 @@ void FBUF::SetTabWidthOk( COL NewTabWidth ) {
    }
 
 STATIC_CONST PCChar s_entabNames[] = {
-   "never"    ,
-   "lead"     ,
+   "none"     ,
+   "leading"  ,
    "exoquote" ,
    "all"      ,
    };
@@ -75,7 +75,7 @@ PCChar swixEntab( stref param ) { enum { DB=0 }; DB && DBG( "%s+ %" PR_BSR "'", 
    if( !(newval < ELEMENTS(s_entabNames)) ) { newval = StrToInt_variable_base( param, 10 ); }
                                                                    DB && DBG( "%s: %d", __func__, newval );
    const auto setOk( g_CurFBuf()->SetEntabOk( newval ) );
-   return setOk ? nullptr : SwiErrBuf.Sprintf( "entab value '%" PR_BSR "' must be one of 'none', 'lead', 'exoquote' or 'all'", BSR(param) );
+   return setOk ? nullptr : SwiErrBuf.Sprintf( "entab value '%" PR_BSR "' must be one of 'none', 'leading', 'exoquote' or 'all'", BSR(param) );
    }
 
 STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos ) {

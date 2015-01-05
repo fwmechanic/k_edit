@@ -312,7 +312,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "dvlogcmds"      , Var2TPfx( g_fDvlogcmds            ), swinVAR_BOOL, swidBool       _AHELP( "log non-cursor-movement cmds to DbgView using Windows' OutputDebugString()" ) },
 #endif
  { "editreadonly"   , Var2TPfx( g_fEditReadonly         ), swinVAR_BOOL, swidBool       _AHELP( "allow (yes) or prevent (no) editing of files which are not writable on disk" ) },
- { "entab"          , Fxn2TPfx( swixEntab               ), swinFXN_STR , swidEntab      _AHELP( "when lines are modified, convert spaces to tabs: 0/never=never, 1/lead=only leading spaces, 2/exoquote=only outside quotes, or 3/all=everywhere" ) },
+ { "entab"          , Fxn2TPfx( swixEntab               ), swinFXN_STR , swidEntab      _AHELP( "when lines are modified, convert 0/none,1/leading,2/exoquote,3/all spaces to tabs" ) },
  { "errprompt"      , Var2TPfx( g_fErrPrompt            ), swinVAR_BOOL, swidBool       _AHELP( "error message display pauses with \"Press any key...\" prompt" ) },
  { "fastsearch"     , Var2TPfx( g_fFastsearch           ), swinVAR_BOOL, swidBool       _AHELP( "use fast search algorithm (when key contains no spaces)" ) },
  { "forceplateol"   , Var2TPfx( g_fForcePlatformEol     ), swinVAR_BOOL, swidBool       _AHELP(  kszHelpPlatEoL ) },
