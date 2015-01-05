@@ -35,6 +35,7 @@ STATIC_VAR Point s_SelEnd;
 GLOBAL_VAR int g_iArgCount; // write here, read everywhere
 
 void ClearArgAndSelection() { PCV;
+   pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
    pcv->FreeHiLiteRects();
    s_SelEnd.lin = -1;
 
@@ -50,6 +51,7 @@ void ClearArgAndSelection() { PCV;
 GLOBAL_VAR bool g_fBoxMode = true;  // global/switchval
 
 void ExtendSelectionHilite( const Point &pt ) { PCV;
+   pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, true );
    pcv->FreeHiLiteRects();  // ###############################################################
    if( g_fBoxMode ) {
       Rect hilite;
@@ -983,7 +985,7 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 GLOBAL_VAR bool s_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
 STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
-   // Called on first invocation (ie.  when g_iArgCount 0) of ARG::arg or
+   // Called on first invocation (ie.  when g_iArgCount==0) of ARG::arg or
    // ARG::Lastselect.  Subsequent invocations of ARG::arg are handled
    // inline...
    {

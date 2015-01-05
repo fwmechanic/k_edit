@@ -1107,19 +1107,38 @@ PChar FBUF::UserName( PChar dest, size_t destSize ) const {
 //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-void FBUF::SetDirty( bool fDirty ) {
-   d_fDirty = fDirty;
-   #define  AUTOHIDE_TABS_WHEN_UNDIRTY  1
-   #if      AUTOHIDE_TABS_WHEN_UNDIRTY
-   // hacky attempt to hide this if the user is just browsing code
-   const auto td_before( d_fTabDisp );
-   d_fTabDisp = fDirty;
-   d_fTrailDisp = fDirty;
-   if( ViewCount() && td_before != fDirty ) {
-      0 && DBG( "about to call DispNeedsRedrawCurWin();" );
+GLOBAL_VAR int g_iBlankAnnoDispSrcMask = BlankDispSrc_DIRTY | BlankDispSrc_SEL;
+
+void FBUF::BlankAnnoDispSrcEdge( int cause, bool fReveal ) {
+   /*
+      this function is called when one of the potential per-FBUF sources changes
+      state.  The event source is id's by cause, and its new state is fReveal.
+      all of the events/sources here are per-FBUF, but these are masked by
+      a global switch, g_iBlankAnnoDispSrcMask
+
+      source:      scope     example cause of state change
+      always?      global    user changes value of switch  <- not impl
+      always-FBUF  FBUF      user runs ARG::ftab, changes value of setting for this FBUF
+      dirty        FBUF      user edits or saves FBUF
+      selection    FBUF/View user makes arg selection
+
+   */
+   // always de/assert the source
+   if( fReveal ) { d_BlankAnnoDispSrcAsserted |=  cause; }
+   else          { d_BlankAnnoDispSrcAsserted &= ~cause; }
+
+   const auto wantReveal( 0 != (d_BlankAnnoDispSrcAsserted & (g_iBlankAnnoDispSrcMask | BlankDispSrc_USER_ALWAYS)) );
+   const auto revealedBefore( d_fTabDisp && d_fTrailDisp );
+   d_fTabDisp   = wantReveal;  // update even if not currently
+   d_fTrailDisp = wantReveal;  // being viewed
+   if( ViewCount() && revealedBefore != wantReveal ) { 0 && DBG( "about to call DispNeedsRedrawCurWin();" );
       DispNeedsRedrawCurWin();
       }
-   #endif
+   }
+
+void FBUF::SetDirty( bool fDirty ) {
+   d_fDirty = fDirty;
+   BlankAnnoDispSrcEdge( BlankDispSrc_DIRTY, d_fDirty );
    }
 
 struct DisplayNoiseBlanker {

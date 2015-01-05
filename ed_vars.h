@@ -533,6 +533,7 @@ extern bool  g_fUseMouse         ;
 extern int   g_iBackupMode       ;
 extern int   g_iCursorSize       ;
 extern int   g_iTabWidth         ;
+extern int   g_iBlankAnnoDispSrcMask;
 
 STIL   COL       ScreenCols()    { extern int s_iWidth ; return s_iWidth   ; }
 STIL   COL   EditScreenCols()    {                       return ScreenCols(); }

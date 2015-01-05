@@ -210,8 +210,8 @@ class TabWidthChanger : public KeyChanger
    void actionEsc  () { g_CurFBuf()->SetTabWidthOk( d_origTabWidth );
                         g_CurFBuf()->SetTabDisp( d_orig_fTabDisp );
                       }
-   void actionDown () { g_CurFBuf()->SetTabDisp( false ); g_CurFBuf()->SetTrailDisp( false ); }
-   void actionUp   () { g_CurFBuf()->SetTabDisp( true  ); g_CurFBuf()->SetTrailDisp( true  ); }
+   void actionDown () { g_CurFBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_USER_ALWAYS, false ); }
+   void actionUp   () { g_CurFBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_USER_ALWAYS, true  ); }
    void actionRight() { IncDecTabWidth( +1 ); }
    void actionLeft () { IncDecTabWidth( -1 ); }
    void actionC_Enter()

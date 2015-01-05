@@ -298,6 +298,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "askexit"        , Var2TPfx( g_fAskExit              ), swinVAR_BOOL, swidBool       _AHELP( "enable last-chance prompt before terminating the editor session" ) },
  {  kszBackup       , Fxn2TPfx( swixBackup              ), swinFXN_STR , swidBackup     _AHELP( "choices are 'undel', 'bak' or 'none'; see online help for details" ) },
  { "beep"           , Var2TPfx( g_fAllowBeep            ), swinVAR_BOOL, swidBool       _AHELP( "beeping allowed (yes) or not (no)" ) },
+ { "blankdispmask"  , Var2TPfx( g_iBlankAnnoDispSrcMask ), swinVAR_INT , swidInt        _AHELP( "bitmask: tabdisp, traildisp honored only when 1 (dirty) | 2 (arg-selecting)" ) },
  { "boxmode"        , Var2TPfx( g_fBoxMode              ), swinVAR_BOOL, swidBool       _AHELP( "selects BOXARGs (yes) or STREAMARGs (no)" ) },
  { "bpen"           , Var2TPfx( g_fBpEnabled            ), swinVAR_BOOL, swidBool       _AHELP( "enables conditional breakpoints" ) },
  { "case"           , Var2TPfx( g_fCase                 ), swinVAR_BOOL, swidBool       _AHELP( "searches are case sensitive (yes) or insensitive (no)" ) },
