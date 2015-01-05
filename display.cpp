@@ -2693,11 +2693,13 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
    cl.Cat( COLOR::INF , FmtStr<27>( "[%s]"         , LastExtTagLoaded() ) );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->Entab() ) );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ) );
-   cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u "    , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ) );
-   cl.Cat( COLOR::SEL , FmtStr<20>( "case:%s "     , g_fCase ? "sen" : "ign" ) );
+   cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ) );
+// cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "E!=e" : "E==e" ) );
+// cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "Q!=q" : "Q==q" ) );
+   cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "A!=a" : "A==a" ) );
 
-   if( g_pFbufClipboard ) {
-      if( g_pFbufClipboard->LineCount() ) {
+   if( 0 ) { // 20150105 KG: seems superfluous
+      if( g_pFbufClipboard && g_pFbufClipboard->LineCount() ) {
          PCChar st;
          switch( g_ClipboardType ) {
             case LINEARG:   st = "Lin"; break;
@@ -2705,10 +2707,12 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
             case BOXARG:    st = "Box"; break;
             default:        st = "???"; break;
             }
-         cl.Cat( COLOR::INF, FmtStr<20>( "clp(%s%d)", st, g_pFbufClipboard->LineCount() ) );
+         cl.Cat( COLOR::SEL, FmtStr<20>( "clp(%s%d)", st, g_pFbufClipboard->LineCount() ) );
          }
-      else
-         cl.Cat( COLOR::INF, "clp()" );
+      else {
+         cl.Cat( COLOR::SEL, "clp()" );
+         }
+      cl.Cat( COLOR::INF, " " );
       }
 
    cl.Cat( COLOR::INF, FmtStr<40>( "%s%s"
@@ -3131,7 +3135,7 @@ void View::GetLineForDisplay
       }
    else {
       alcc.PutColor( Origin().col, xWidth, COLOR::FG );
-      PrettifyMemcpy( dest, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->fTrailDisp() ? g_chTrailSpaceDisp : 0 );
+      PrettifyMemcpy( dest, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->TrailDispChar() );
       if( DrawVerticalCursorHilite() && isActiveWindow && (xWidth > PCT_WIDTH) && (g_CursorLine() == yLineOfFile) ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );

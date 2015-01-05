@@ -1128,9 +1128,8 @@ void FBUF::BlankAnnoDispSrcEdge( int cause, bool fReveal ) {
    else          { d_BlankAnnoDispSrcAsserted &= ~cause; }
 
    const auto wantReveal( 0 != (d_BlankAnnoDispSrcAsserted & (g_iBlankAnnoDispSrcMask | BlankDispSrc_USER_ALWAYS)) );
-   const auto revealedBefore( d_fTabDisp && d_fTrailDisp );
-   d_fTabDisp   = wantReveal;  // update even if not currently
-   d_fTrailDisp = wantReveal;  // being viewed
+   const auto revealedBefore( d_fRevealBlanks );
+   d_fRevealBlanks = wantReveal; // update even if not currently being viewed
    if( ViewCount() && revealedBefore != wantReveal ) { 0 && DBG( "about to call DispNeedsRedrawCurWin();" );
       DispNeedsRedrawCurWin();
       }

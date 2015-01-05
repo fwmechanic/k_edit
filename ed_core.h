@@ -1016,6 +1016,7 @@ extern void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf );
 
 extern bool g_fRealtabs;  // some inline code below references
 extern char g_chTabDisp;  // some inline code below references
+extern char g_chTrailSpaceDisp;  // some inline code below references
 
 typedef bool (*ForFBufCallbackDone)( const FBUF &fbuf, void *pContext );
 enum eEntabModes { ENTAB_0_NO_CONV, ENTAB_1_LEADING_SPCS_TO_TABS, ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS, ENTAB_3_ALL_SPC_TO_TABS, MAX_ENTAB_INVALID };
@@ -1290,12 +1291,11 @@ private:
    bool           d_fTabSettingsFrozen ; // file's tab settings should not be auto-changed
 
    S8             d_TabWidth;
-   bool           d_fTabDisp = true;
-   bool           d_fTrailDisp = true;
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
 
    eFileType      d_FileType = ftype_UNKNOWN;   // enum FileType
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
+   bool           d_fRevealBlanks = true;
 
 public:
    eFileType      FileType()             const { return  d_FileType; }
@@ -1311,7 +1311,9 @@ public:
    void           UnDirty()                           {  // public since used by many ARG:: methods
                                                          SetDirty( false );
                                                       }
+   bool           BlankAnnoDispSrcAsserted( int cause ) const { return ToBOOL( d_BlankAnnoDispSrcAsserted & cause ); }
    void           BlankAnnoDispSrcEdge( int cause, bool fReveal );
+   bool           RevealBlanks() const { return d_fRevealBlanks; }
 
 private:
    void           SetDirty( bool fDirty=true );
@@ -1364,13 +1366,8 @@ public:
    eEntabModes    Entab() const { return d_Entab; }
    bool           SetEntabOk( int newEntab ); // NOT CONST!!!
 
-   bool           fTabDisp() const { return d_fTabDisp; }
-   void           SetTabDisp( bool newVal ) { d_fTabDisp = newVal; }
-
-   int            TabDispChar() const { return fTabDisp() ? g_chTabDisp : ' '; }
-
-   bool           fTrailDisp() const { return d_fTrailDisp; }
-   void           SetTrailDisp( bool newVal ) { d_fTrailDisp = newVal; }
+   char           TabDispChar()   const { return RevealBlanks() ? g_chTabDisp        : ' '; }
+   char           TrailDispChar() const { return RevealBlanks() ? g_chTrailSpaceDisp : 0  ; }
 
    //************ tab-width-dependent line-content-related calcs
    int            TabWidth() const { return d_TabWidth; }
@@ -1452,11 +1449,11 @@ public:
 
    COL            getLineTabx_DEPR(            PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, ' ' ); }
    COL            getLineTabxPerRealtabs_DEPR( PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, g_fRealtabs ?0:' ' ); }
-   COL            getLineTabxPerTabDisp_DEPR ( PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, fTabDisp()?0:' ' ); }
+   COL            getLineTabxPerTabDisp_DEPR ( PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, RevealBlanks()?0:' ' ); }
 
    COL            getLineTabx(            std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
    COL            getLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ?0:' ' ); }
-   COL            getLineTabxPerTabDisp ( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, fTabDisp()?0:' ' ); }
+   COL            getLineTabxPerTabDisp ( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, RevealBlanks()?0:' ' ); }
 
    void           GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;  // <-- prefer
    int            GetLineForInsert     (  std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
