@@ -2353,7 +2353,7 @@ STATIC_FXN void RedrawScreen() {
 
    const auto yDispMin( MinDispLine() );
    const auto scrnCols( EditScreenCols() );
-   std::string buf;
+   STATIC_VAR std::string buf;
    const auto yTop(0), yBottom( EditScreenLines() );
    ShowDraws( DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom ); )
    const HiLiteRec *pFirstPossibleHiLite(nullptr);
