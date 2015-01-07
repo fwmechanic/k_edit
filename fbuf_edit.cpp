@@ -1609,26 +1609,19 @@ int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
    const auto tw       ( TabWidth() );
    auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
    auto       strCols  ( StrCols( tw, dest.c_str() ) );
-   const auto lineCols ( ColOfFreeIdx( tw, dest, dest.length() ) );
-   DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d)", __func__, BSR(dest), lineCols, strCols, xIns );
+   const auto lineCols ( ColOfFreeIdx( tw, dest, dest.length() ) );  DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d)", __func__, BSR(dest), lineCols, strCols, xIns );
    // Assert( lineCols == lineChars );
-
    if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
       dest.append( xIns - lineCols, ' ' );
       }
    if( insertCols > 0 ) {
-      const auto ix( FreeIdxOfCol( tw, dest, xIns ) );
-      DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
+      const auto ix( FreeIdxOfCol( tw, dest, xIns ) );               DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
       dest.insert( ix, insertCols, ' ' );
-      }
-   DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
+      }                                                              DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
    return dest.length();
    }
-/*
-x
-x
-*/
 
+#if 0
 // open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;
 //    original dest[xIns] is moved to dest[xIns+insertCols]
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
@@ -1673,6 +1666,7 @@ int FBUF::GetLineForInsert( PXbuf pXb, const LINE yLine, COL xIns, COL insertCol
    DB && DBG( "%s- %s| L %u (%d)", __func__, pXb->wbuf(), rv, xIns );
    return rv; // there ought to be a faster way!
    }
+#endif
 
 //--------------------------------------------------------------------------------------------------
 
@@ -2100,7 +2094,6 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
 // NB: See "STREAM definition" in ARG::FillArgStruct to understand parameters!
 // Nutshell: Last char of stream IS NOT INCLUDED in operation!
 //
-
 void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd ) {
    BadParamIf( , (FBdest == FBsrc) );
    BadParamIf( , (ySrcStart > ySrcEnd) );
@@ -2119,19 +2112,19 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
 
   #if 1
    std::string destbuf; FBdest->GetLineForInsert( destbuf, yDst, xDst, 0 ); // rd dest line containing insertion point
-   std::string srcbuf;
+   std::string srcbuf; auto tws( 1 );
    if( FBsrc ) {
+      tws = FBsrc->TabWidth();
       FBsrc->GetLineForInsert( srcbuf, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
       }
    else {
       if( xSrcEnd > 0 ) { srcbuf.assign( xSrcEnd, ' ' ); }
       }
    const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
-   const auto twd( FBdest->TabWidth() );
    std::string stmp;
-   const auto ixDst   ( FreeIdxOfCol( twd, destbuf, xDst    ) ); // where destbuf text PAST insertion point; where destbuf content is split
+   const auto ixDst   ( FreeIdxOfCol( FBdest->TabWidth(), destbuf, xDst    ) ); // where destbuf text PAST insertion point; where destbuf content is split
    {
-   const auto ixSrcEnd( FreeIdxOfCol( twd, srcbuf , xSrcEnd ) );
+   const auto ixSrcEnd( FreeIdxOfCol( tws, srcbuf , xSrcEnd ) );
    srcbuf.replace( ixSrcEnd, srcbuf.length() - ixSrcEnd, destbuf, ixDst, std::string::npos ); // destbuf text PAST insertion point -> srcbuf past xSrcEnd
    //*** merge & write last line of FBsrc stream  srcbuf[0..ixSrcEnd) : destbuf[ixDst..end]]
    FBdest->PutLine( yDstLast, srcbuf, stmp );
@@ -2140,7 +2133,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
    //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
    if( FBsrc ) {
       FBsrc->GetLineForInsert( srcbuf, ySrcStart, xSrcStart, 0 );
-      const auto ixSrcStart( CaptiveIdxOfCol( FBsrc->TabWidth(), srcbuf, xSrcStart ) );
+      const auto ixSrcStart( CaptiveIdxOfCol( tws, srcbuf, xSrcStart ) );
       const auto alen( srcbuf.length() - ixSrcStart + 1 );
       destbuf.replace( ixDst, alen, srcbuf, ixSrcStart, alen );
       }
@@ -2172,7 +2165,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
    if( FBsrc ) {
       FBsrc->GetLineForInsert( &xbLast, ySrcStart, xSrcStart, 0 );
       const auto pSrc( PtrOfColWithinStringRegion( FBsrc->TabWidth(), xbLast.wbuf(), xbLast.wbuf()+xbLast.length(), xSrcStart ) );
-            auto taillen( Strlen( pSrc ) );
+      const auto taillen( Strlen( pSrc ) );
       const auto dstbuf( xbFirst.wresize( xDst + taillen + 1 ) );
       const auto pDestSplit( PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst ) ); // dest text PAST insertion point
       memcpy( pDestSplit, pSrc, taillen + 1 );
