@@ -48,7 +48,7 @@ public:
 
 class DicedOnDelimString : public DiceableString {
 public:
-   DicedOnDelimString( PCChar str, PCChar pszDelims )
+   DicedOnDelimString( stref str, PCChar pszDelims )
       : DiceableString( str )
       {
       extern void ChopAscizzOnDelim( PChar cur, PCChar pszDelim );
@@ -64,15 +64,14 @@ class CfxFilenameGenerator : public PathStrGenerator {
 
    WildcardFilenameGenerator *d_pWcGen = nullptr;
    StrSubstituterGenerator   *d_pSSG = nullptr;
-   DicedOnDelimString
-                              d_splitLine;
+   DicedOnDelimString         d_splitLine;
    WildCardMatchMode          d_matchMode;
 
    PCChar d_pszEntrySuffix = nullptr;
 
    public:
 
-   CfxFilenameGenerator( PCChar macroText, WildCardMatchMode matchMode );
+   CfxFilenameGenerator( stref macroText, WildCardMatchMode matchMode );
    bool VGetNextName( Path::str_t &dest ) override;
    virtual ~CfxFilenameGenerator();
    };

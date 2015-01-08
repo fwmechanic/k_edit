@@ -37,10 +37,11 @@ PVoid Alloc0d_( size_t bytes )             { MEM_CBP(); return calloc( bytes, 1 
 PVoid ReallocNZ_( PVoid pv, size_t bytes ) { MEM_CBP(); return realloc( pv, bytes ); }
 void  Free_( void *pv )                    { MEM_CBP(); free( pv ); }
 
-PChar Strdup( stref src ) {
-   const auto rv( PChar( AllocNZ_( src.length()+1 ) ) );
+// turn stref into ASCIZ (i.e. having ONE '\0' appended), w/extra_nuls _additional_ '\0' chars appended if requested
+PChar Strdup( stref src, size_t extra_nuls ) {
+   const auto rv( PChar( AllocNZ_( src.length()+1+extra_nuls ) ) );
    memcpy( rv, src.data(), src.length() );
-   rv[src.length()] = '\0';
+   memset( rv+src.length(), 0, 1+extra_nuls );
    return rv;
    }
 

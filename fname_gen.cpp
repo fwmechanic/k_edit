@@ -75,7 +75,7 @@ STATIC_FXN char IsUserFnmDelimChar( char ch ) {
 
 //------------------------------------------------------------------------------
 
-STATIC_FXN bool IsolateFilename( int *pMin, int *pMax, stref rl ) {
+STATIC_FXN bool IsolateFilename( sridx *pMin, sridx *pMax, stref rl ) {
    // could add: lots and lots o special per-FileType code to extract
    //    filenames from various language-specific include statements
    sridx ixStart(0);
@@ -109,7 +109,7 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
    auto rl( PeekRawLine( yLine ) ); PCChar bos( rl.data() ); PCChar eos( rl.data()+rl.length() );
    const auto ixCol( CaptiveIdxOfCol( g_CurFBuf()->TabWidth(), rl, xCol ) );
    rl.remove_prefix( ixCol );
-   int oMin, oMax;
+   sridx oMin, oMax;
    if( !IsolateFilename( &oMin, &oMax, rl ) ) { return 0; }
    st.assign( rl.data()+oMin, oMax-oMin );
    return 1;
@@ -168,7 +168,7 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
 
       const auto glif_rv( d_pFBuf->GetLineIsolateFilename( d_sbuf, d_curLine++, 0 ) );
       if( glif_rv < 0 ) return false;  // no more lines
-      if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_sbuf.c_str(), ONLY_FILES );
+      if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_sbuf, ONLY_FILES );
       }
    }
 
@@ -475,12 +475,12 @@ bool ARG::wct() {
 
 enum { MFSPEC_D=0 };
 
-CfxFilenameGenerator::CfxFilenameGenerator( PCChar macroText, WildCardMatchMode matchMode )
+CfxFilenameGenerator::CfxFilenameGenerator( stref macroText, WildCardMatchMode matchMode )
    : d_splitLine( macroText, Path::EnvSepStr() )
    , d_matchMode( matchMode )
    {
    // d_splitLine.DBG();
-   MFSPEC_D && DBG( "%s::'%s' (INCOMPLETE)", __func__, macroText );
+   MFSPEC_D && DBG( "%s::'%" PR_BSR "' (INCOMPLETE)", __func__, BSR(macroText) );
    // d_splitLine.DBG();
    }
 

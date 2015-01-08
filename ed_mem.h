@@ -34,7 +34,7 @@ STIL   PVoid AllocNZ   (           size_t bytes )   { return AllocNZ_  (     byt
 STIL   PVoid Alloc0d   (           size_t bytes )   { return Alloc0d_  (     bytes ); }
 STIL   PVoid ReallocNZ ( PVoid pv, size_t bytes )   { return ReallocNZ_( pv, bytes ); }
 
-extern PChar Strdup( stref src );
+extern PChar Strdup( stref src, size_t extra_nuls=0 ); // turn stref into ASCIZ (i.e. having ONE '\0' appended), w/extra_nuls _additional_ '\0' chars appended if requested
 STIL   PChar Strdup( PCChar st, size_t chars ) { return Strdup( stref( st, chars ) ); }
 STIL   PChar Strdup( PCChar st, PCChar eos )   { return Strdup( st, eos-st       ); }
 

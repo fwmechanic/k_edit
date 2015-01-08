@@ -511,8 +511,8 @@ protected:
    PChar d_heapString;
 
 public:
-   DiceableString( PCChar src )
-      : d_heapString( Strdup( src, Strlen( src ) + 1 ) ) // tricky: this memcpy's n-1 chars from src (which _includes_ the NUL at the end of src) and pokes a (second) NUL into dest[n-1]
+   DiceableString( stref src )
+      : d_heapString( Strdup( src, 1 ) ) // tricky: d_heapString is created with 2 trailing NULs
       {}
    void DBG() const;
    virtual ~DiceableString() { Free0( d_heapString ); }

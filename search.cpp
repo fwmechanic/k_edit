@@ -1109,7 +1109,7 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    if( !IsStringBlank( mfspec_text ) ) {
       DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
       if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec (macro)" ); }
-      const auto rv( new CfxFilenameGenerator( mfspec_text.c_str(), ONLY_FILES ) );
+      const auto rv( new CfxFilenameGenerator( mfspec_text, ONLY_FILES ) );
       return rv;
       }
    }
@@ -1118,7 +1118,7 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    if( !IsStringBlank( mfspec_text ) ) {
       DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
       if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec_ (macro)" ); }
-      const auto rv( new CfxFilenameGenerator( mfspec_text.c_str(), ONLY_FILES ) );
+      const auto rv( new CfxFilenameGenerator( mfspec_text, ONLY_FILES ) );
       return rv;
       }
    }
