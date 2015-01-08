@@ -358,6 +358,7 @@ class FileSearcher {
 
    public:
 
+   std::string             d_sbuf;
    Xbuf                    d_xb; // cannot be std::string cuz d_xb.wbuf()
 
    FileSearchMatchHandler &d_mh;
@@ -370,7 +371,7 @@ class FileSearcher {
 
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh, int capturesNeeded=1 );
 
-   virtual void   VPrepLine_( PChar lbuf ) const {};
+   virtual void   VPrepLine_( std::string &lbuf ) const {};
    virtual PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
 
    public:
@@ -498,7 +499,7 @@ class  FileSearcherString : public FileSearcher {
    FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    ~FileSearcherString() {}
 
-   void   VPrepLine_( PChar lbuf ) const override;
+   void   VPrepLine_( std::string &lbuf ) const override;
    PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
@@ -516,7 +517,7 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
    FileSearcherFast( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    virtual ~FileSearcherFast() {}
    void   VFindMatches_() override;
-   void   VPrepLine_( PChar lbuf ) const override;
+   void   VPrepLine_( std::string &lbuf ) const override;
    PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
@@ -1557,9 +1558,9 @@ FileSearcherString::FileSearcherString( const SearchScanMode &sm, const SearchSp
       string_tolower( d_searchKey );
    }
 
-void FileSearcherString::VPrepLine_( PChar lbuf ) const {
+void FileSearcherString::VPrepLine_( std::string &lbuf ) const {
    if( !g_fCase )
-      _strlwr( lbuf );
+      string_tolower( lbuf );
    }
 
 PCChar FileSearcherString::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const {
@@ -1739,7 +1740,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ REPLACES FileSearcher::VFindMatches_, and
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
-void   FileSearcherFast::VPrepLine_( PChar lbuf ) const { Assert( 0 != 0 ); }
+void   FileSearcherFast::VPrepLine_( std::string &lbuf ) const { Assert( 0 != 0 ); }
 PCChar FileSearcherFast::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const { Assert( 0 != 0 ); return nullptr; }
 
 //===============================================
@@ -1770,13 +1771,13 @@ void FileSearcher::VFindMatches_() {
       VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
-         const auto lnChars( d_pFBuf->getLineTabxPerTabDisp_DEPR( &d_xb, curPt.lin ) );
-         VPrepLine_( d_xb.wbuf() );
-         const auto bos( d_xb.c_str() );
+         d_pFBuf->getLineTabxPerTabDisp( d_sbuf, curPt.lin );
+         VPrepLine_( d_sbuf );
+         const auto bos( d_sbuf.c_str() );
+         const auto lnChars( d_sbuf.length() );
          const auto eos( bos+lnChars );
          const PtrCol pcc( tw, bos, eos );
          const auto lnCols( pcc.cols() );
-
          PCChar pC( pcc.c2p( curPt.col ) );
          if( pcc.p2c( pC ) != curPt.col )  // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) pC is pointing at a char outside the replace region[1]
             ++pC;                          // move pC to point to first char in replace region  [1] but BUGBUG this fxn is not used by replace!
@@ -1806,9 +1807,10 @@ void FileSearcher::VFindMatches_() {
    else { // search backwards (only msearch uses this; more complex)
       VS_( DBG( "-search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt > d_end && !ExecutionHaltRequested() ; --curPt.lin, curPt.col = COL_MAX ) {
-         const auto lnChars( d_pFBuf->getLineTabxPerTabDisp_DEPR( &d_xb, curPt.lin ) );
-         VPrepLine_( d_xb.wbuf() );
-         const auto bos( d_xb.c_str() );
+         d_pFBuf->getLineTabxPerTabDisp( d_sbuf, curPt.lin );
+         VPrepLine_( d_sbuf );
+         const auto bos( d_sbuf.c_str() );
+         const auto lnChars( d_sbuf.length() );
          const auto eos( bos+lnChars );
          const PtrCol pcc( tw, bos, eos );
 

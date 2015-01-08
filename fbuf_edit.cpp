@@ -96,7 +96,7 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
    #define XLAT_chFill( chFill )
 #endif
 
-// intent (20141221) is that FormatExpandedSeg replace PrettifyStrcpy and PrettifyMemcpy
+// intent (20141221) is that FormatExpandedSeg replace PrettifyMemcpy
 // what's preventing this from happening?
 // 1) dest receives a terminating NUL merely by dint of being a std::string
 // 2) Xbuf offers a writable-string (PChar) interface to the underlying allocated buffer
@@ -185,7 +185,7 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
    return dest;
    }
 
-// a terminating NUL IS NOT added!!!  Call PrettifyStrcpy if you need a terminating NUL.
+// a terminating NUL IS NOT added!!!
 // return value is # of chars actually copied into pDestBuf
 COL PrettifyMemcpy
    ( const PChar pDestBuf, const size_t sizeof_dest
@@ -258,14 +258,6 @@ COL PrettifyMemcpy
    return 0;
    }
 #undef  PD_EFF
-
-// a terminating NUL IS appended!!!  Use PrettifyMemcpy if you DON'T want one.
-// return value is # of chars actually copied into dest - 1; i.e. it does NOT count the terminating NUL
-COL PrettifyStrcpy( const PChar dest, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs ) {
-   const auto chars( PrettifyMemcpy( dest, sizeof_dest-1, src, tabWidth, chTabExpand, xStart, chTrailSpcs ) );
-   dest[chars] = '\0';
-   return chars;
-   }
 
 COL ColPrevTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfPrevTabStop( xCol ); }
 COL ColNextTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfNextTabStop( xCol ); }
@@ -1578,16 +1570,6 @@ COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
    FormatExpandedSeg( dest, PeekRawLine( yLine ), 0, COL_MAX, TabWidth(), chExpandTabs, ' ' );
    return dest.length();
    }
-
-// returns strlen of returned line
-COL FBUF::getLine_DEPR( PXbuf pXb, LINE yLine, int chExpandTabs ) const {
-   const auto rv( PeekRawLine( yLine ) );
-   const auto tw( TabWidth() );
-   const auto size( 1+StrCols( tw, rv ) );
-   const auto pDest( pXb->wresize( size ) );
-   return PrettifyStrcpy( pDest, size, rv, tw, chExpandTabs );
-   }
-
 
 // gap: [xLeftIncl, xRightIncl]
 // rules:
