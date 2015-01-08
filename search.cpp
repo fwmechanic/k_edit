@@ -640,14 +640,19 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
               FlushKeyQueuePrimeScreenRedraw();                 \
               return false;                                     \
               }                                                 \
-           PCChar bos, eos;                                     \
-           pFBuf->PeekRawLineExists( curPt.lin, &bos, &eos );   \
+           const auto rl( pFBuf->PeekRawLine( curPt.lin ) );    \
+           PCChar bos( rl.data()             );                 \
+           PCChar eos( rl.data()+rl.length() );                 \
            auto colLastPossibleLastMatchChar( ColOfPtr( tw, bos, eos-1, eos ) );
 
    #define CHECK_NEXT  {  \
            const auto rv( pWalker->VCheckNext( pFBuf, bos, eos, &curPt, colLastPossibleLastMatchChar )  );  \
            if( STOP_SEARCH == rv ) return true;                                                             \
-           if( REREAD_LINE_CONTINUE_SEARCH == rv ) { pFBuf->PeekRawLineExists( curPt.lin, &bos, &eos ); }   \
+           if( REREAD_LINE_CONTINUE_SEARCH == rv ) {                                                        \
+              const auto rl2( pFBuf->PeekRawLine( curPt.lin ) );                                            \
+              bos = rl2.data();                                                                             \
+              eos = rl2.data()+rl2.length();                                                                \
+              }                                                                                             \
            }
 
    if( fMoveFwd ) { // -------------------- search FORWARD --------------------
@@ -675,6 +680,10 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          }
       }
    return false;
+
+   #undef SETUP_LINE_TEXT
+   #undef CHECK_NEXT
+
    }
 
 STATIC_VAR std::string g_SavedSearchString_Buf ;
