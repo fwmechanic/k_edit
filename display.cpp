@@ -1076,9 +1076,12 @@ public:
    PCChar Name() const override { return "C_Comment"; }
    };
 
+#define START_LINE()  const auto rl( pFile->PeekRawLine( pt.lin ) ); PCChar bos( rl.data() ), eos( rl.data()+rl.length() );
+
 HiliteAddin_C_Comment::scan_rv HiliteAddin_C_Comment::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; }
+
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
          switch( *pC ) { default: break;
             case chQuot1: pt.col = (pC - bos) + 1;  return in_1Qstr;
@@ -1099,10 +1102,11 @@ HiliteAddin_C_Comment::scan_rv HiliteAddin_C_Comment::find_end_code( PCFBUF pFil
          }
 NEXT_LINE: ;
       }
+   return atEOF;
    }
 
 HiliteAddin_C_Comment::scan_rv HiliteAddin_C_Comment::find_end_comment( PCFBUF pFile, Point &pt ) {
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; }
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
          switch( *pC ) { default: break;
             case '*':  if( pC+1<eos ) switch( *(pC+1) ) { default: break;
@@ -1116,6 +1120,7 @@ HiliteAddin_C_Comment::scan_rv HiliteAddin_C_Comment::find_end_comment( PCFBUF p
             }
          }
       }
+   return atEOF;
    }
 
 // although C/C++ requirements for single and double quoted literals are different,
@@ -1123,7 +1128,7 @@ HiliteAddin_C_Comment::scan_rv HiliteAddin_C_Comment::find_end_comment( PCFBUF p
 #define find_end_Qstr( class, nm, delim )                                      \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; } \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()    \
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                              \
          switch( *pC ) { default: break;                                       \
             case '\\' :  ++pC; /* skip escaped char */ break;                  \
@@ -1133,6 +1138,7 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
             }                                                                  \
          }                                                                     \
       }                                                                        \
+   return atEOF;                                                               \
    }
        find_end_Qstr( HiliteAddin_C_Comment, find_end_1Qstr, chQuot1 )
        find_end_Qstr( HiliteAddin_C_Comment, find_end_2Qstr, chQuot2 )
@@ -1196,7 +1202,7 @@ STATIC_FXN int Lua_long_level( PCChar pE, PCChar eos ) { // pE points PAST first
 
 HiliteAddin_Lua_Comment::scan_rv HiliteAddin_Lua_Comment::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; }
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
          switch( *pC ) { default: break;
             case chQuot1: pt.col = (pC - bos) + 1;  return in_1Qstr;
@@ -1237,10 +1243,11 @@ HiliteAddin_Lua_Comment::scan_rv HiliteAddin_Lua_Comment::find_end_code( PCFBUF 
          }
 NEXT_LINE: ;
       }
+   return atEOF;
    }
 
 HiliteAddin_Lua_Comment::scan_rv HiliteAddin_Lua_Comment::find_end_long( PCFBUF pFile, Point &pt ) {
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; }
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
          switch( *pC ) { default: break;
             case chRSQ:  if( pC+d_long_level+1 < eos ) { // long enuf to contain what we're looking for?
@@ -1261,6 +1268,7 @@ HiliteAddin_Lua_Comment::scan_rv HiliteAddin_Lua_Comment::find_end_long( PCFBUF 
             }
          }
       }
+   return atEOF;
    }
 
        find_end_Qstr( HiliteAddin_Lua_Comment, find_end_1Qstr, chQuot1 )
@@ -1327,7 +1335,7 @@ public:
 
 HiliteAddin_Python_Comment::scan_rv HiliteAddin_Python_Comment::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; }
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
          switch( *pC ) { default: break;
             case chQuot1: // fallthru
@@ -1352,12 +1360,13 @@ HiliteAddin_Python_Comment::scan_rv HiliteAddin_Python_Comment::find_end_code( P
          }
 NEXT_LINE: ;
       }
+   return atEOF;
    }
 
 #define find_end_Qstr1e( class, nm, delim )                                    \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; } \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()    \
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                              \
          switch( *pC ) { default: break;                                       \
             case '\\' :  ++pC; /* skip escaped char */ break;                  \
@@ -1367,13 +1376,14 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
             }                                                                  \
          }                                                                     \
       }                                                                        \
+   return atEOF;                                                               \
    }
 
 
 #define find_end_Qstr1r( class, nm, delim )                                    \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; } \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()    \
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                              \
          switch( *pC ) { default: break;                                       \
             case delim:  pt.col = (pC - bos) + 1;                              \
@@ -1382,6 +1392,7 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
             }                                                                  \
          }                                                                     \
       }                                                                        \
+   return atEOF;                                                               \
    }
 
 find_end_Qstr1e( HiliteAddin_Python_Comment, find_end_1Qstr , chQuot1 )
@@ -1394,7 +1405,7 @@ find_end_Qstr1r( HiliteAddin_Python_Comment, find_end_2Qrstr, chQuot2 )
 
 #define find_end_Qstr3e( class, nm, delim, backslash_escapes )                 \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
-   for( ; ; ++pt.lin, pt.col=0 ) { PCChar bos, eos; if( !pFile->PeekRawLineExists( pt.lin, &bos, &eos ) ) { return atEOF; } \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()    \
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                              \
          switch( *pC ) { default: break;                                       \
             case '\\' :  if( backslash_escapes ) ++pC; /* skip escaped char */ break; \
@@ -1408,6 +1419,7 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
             }                                                                  \
          }                                                                     \
       }                                                                        \
+   return atEOF;                                                               \
    }
 
        find_end_Qstr3e( HiliteAddin_Python_Comment, find_end_1Q3str , chQuot1, true  );
