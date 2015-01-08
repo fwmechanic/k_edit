@@ -1476,11 +1476,11 @@ bool HiliteAddin_Diff::VWorthKeeping() {
    auto pFile( CFBuf() );
    0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
 
-   PCChar ptr; size_t chars;
    auto lnum(0);
-#define  CHKL()       pFile->PeekRawLineExists( lnum, &ptr, &chars )
+   stref rl;
+#define  CHKL()       (rl=pFile->PeekRawLine( lnum ), lnum <= pFile->LastLine())
+#define  CMPL(kstr)   (rl.starts_with( kstr ))
 #define  NXTL()       (++lnum,CHKL())
-#define  CMPL(kstr)   ((chars >= KSTRLEN(kstr)) && (0==KSTRCMP( kstr, ptr )))
 
    // from http://git-scm.com/docs/git-diff   search for "new file mode"
    STATIC_CONST char diff_[] = "diff ";
