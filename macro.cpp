@@ -925,28 +925,28 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
 STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
    STATIC_CONST char kszContinuation[] = "  \\";
 
-   Xbuf xb;
+   std::string sbuf;
    std::string stmp;
    auto pMacroTextChunk( pCmd->MacroText() );
    while( 1 ) {
-      const auto linechars( g_pFbufRecord->getLineTabxPerRealtabs_DEPR( &xb, g_pFbufRecord->LastLine() ) );
-      auto pC( pMacroTextChunk + Min( g_iRmargin - linechars + int(ELEMENTS(kszContinuation)), Strlen( pMacroTextChunk ) ) );
+      const auto linechars( g_pFbufRecord->getLineTabxPerRealtabs( sbuf, g_pFbufRecord->LastLine() ) );
+      auto pC( pMacroTextChunk + Min( g_iRmargin - sbuf.length() + int(ELEMENTS(kszContinuation)), static_cast<sridx>(Strlen( pMacroTextChunk )) ) );
       for( ; pC > pMacroTextChunk; --pC )
          if( 0 == *pC || ' ' == *pC || HTAB == *pC )
             break;
 
       auto fDone( false );
       if( *pC != 0 && pC != pMacroTextChunk ) {
-         xb.cat( pMacroTextChunk, pC - pMacroTextChunk );
-         xb.cat( kszContinuation, KSTRLEN(kszContinuation) );
+         sbuf.append( pMacroTextChunk, pC - pMacroTextChunk );
+         sbuf.append( kszContinuation, KSTRLEN(kszContinuation) );
          pMacroTextChunk = pC + 1;
          }
       else {
-         xb.cat( pMacroTextChunk );
+         sbuf.append( pMacroTextChunk );
          fDone = true;
          }
 
-      g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), xb.c_str(), stmp );
+      g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), sbuf, stmp );
 
       if( fDone )
          return;

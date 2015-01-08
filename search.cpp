@@ -2639,12 +2639,12 @@ bool ARG::fg() { // fgrep
    *pB++ = '!'; // prepend alternation header (2 chars)
    *pB++ = '\0'; // placeholder for keySep
 
-   Xbuf xb;
+   std::string sbuf;
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
-      const auto len( curfile->getLineTabx_DEPR( &xb, line ) );
-      if( 0 == len ) {
-         memcpy( pB, xb.c_str(), len+1 );
-                 pB  +=         len+1;
+      const auto len( curfile->getLineTabx( sbuf, line ) );
+      if( sbuf.length() > 0 ) {
+         memcpy( pB, sbuf.c_str(), sbuf.length()+1 );
+                 pB  +=            sbuf.length()+1  ;
          }
       }
 
