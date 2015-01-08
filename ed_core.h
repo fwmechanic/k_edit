@@ -1457,7 +1457,7 @@ public:
 
    void           GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;  // <-- prefer
    int            GetLineForInsert     (  std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
-   int            GetLineForInsert     (  PXbuf         pXb, LINE yLine, COL xIns , COL insertCols ) const;
+// int            GetLineForInsert     (  PXbuf         pXb, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
 
    bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, size_t *pChars ) const; // returns RAW line content BY REFERENCE
@@ -1505,7 +1505,7 @@ private:
 
    //************ indent infrastructure
 private:
-   int            d_IndentIncrement = 0;
+   int            d_IndentIncrement = 3;
 public:
    void           CalcIndent( bool fWholeFileScan=false );
    int            IndentIncrement() const { return d_IndentIncrement; }

@@ -613,7 +613,7 @@ STIL int NextIndent( int curIndent, int indentIncr ) {
 
 STIL int PrevIndent( int curIndent, int indentIncr )  { return ((curIndent-indentIncr) / indentIncr) * indentIncr; }
 
-STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, PXbuf pxb ) {
+STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl, sridx ixNonb, COL xNonb ) { enum { DB=0 };
    auto indent( fb->IndentIncrement() );
    if( indent == 0 ) {
       indent = fb->TabWidth();
@@ -621,21 +621,16 @@ STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, PXbuf px
          indent = 4;
          }
       }
+                                              DB && DBG( "%s 1 %" PR_BSR "'", __func__, BSR(rl) );
+   rl.remove_prefix( ixNonb );                DB && DBG( "%s 2 %" PR_BSR "'", __func__, BSR(rl) );
+   rmv_trail_blanks( rl );                    DB && DBG( "%s 3 %" PR_BSR "'", __func__, BSR(rl) );
 
-   PCChar xFirst, xLast;
-   if( !SliceStrRtnFirstLastTokens( pxb, &xFirst, &xLast ) ) {  0 && DBG( "%s CurLine empty, -1", __func__ );
-      return -1;
+   if( rl.ends_with( "{" ) ) {
+      DB && DBG( "%s rl.ends_with( \"{\" )", __func__ );
+      return xNonb + indent;
       }
 
-   if( xFirst[0] == '}' || (xLast && xLast[0] == '}') ) { 0 && DBG( "%s CurLine 1=}, prevI", __func__ );
-      return PrevIndent( xCurIndent, indent );
-      }
-
-   if( xLast && xLast[0] == '{' ) { 0 && DBG( "%s CurLine 9={, nextI", __func__ );
-      return NextIndent( xCurIndent, indent );
-      }
-
-   STATIC_VAR CPCChar c_statement_names[] = {
+   STATIC_VAR stref c_statement_names[] = {
       "if"       ,
       "else"     ,
       "for"      ,
@@ -646,64 +641,52 @@ STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, PXbuf px
       "default"  ,
       "struct"   ,
       "class"    ,
-      nullptr    ,
       };
 
-   if( FindStringMatchingArrayOfString( c_statement_names, xFirst, true ) ) { 0 && DBG( "%s CurLine strmatch, nextI", __func__ );
-      return NextIndent( xCurIndent, indent );
+   for( const auto &sr : c_statement_names ) {
+      if( rl.starts_with( sr ) && (rl.length()==sr.length() || (rl.length()>sr.length() && !isalpha( rl[sr.length()]) ) ) ) {
+         DB && DBG( "%s c_statement_names[%" PR_BSR "]", __func__, BSR(sr) );
+         return xNonb + indent;
+         }
       }
 
-   // if( yStart > 0 ) { // prev line exists
-   //    getLineTabx( pLinedata, yStart - 1 );
-   //    if( !SliceStrRtnFirstLastTokens( pLinedata, xFirst, xLast ) ) {
-   //       0 && DBG( "%s PrevLine empty, -1", __func__ );
-   //       return -1;
-   //       }
-   //    if( xFirst[0] == '}' || (xLast && xLast[0] == '}') ) {
-   //       0 && DBG( "%s PrevLine 1=} || 9=}, prevI", __func__ );
-   //       return PrevIndent( xCurIndent, indent );
-   //       }
-   //    if( FindStringMatchingArrayOfString( c_statement_names, xFirst, true ) ) {
-   //       0 && DBG( "%s PrevLine strmatch, prevI", __func__ );
-   //       return PrevIndent( xCurIndent, indent );
-   //       }
-   //    }
-
-   0 && DBG( "%s eoFxn, -1", __func__ );
+   DB && DBG( "%s eoFxn, -1", __func__ );
    return -1;
    }
 
-int FBOP::GetSoftcrIndent( PFBUF fb ) {
-   if( !g_fSoftCr )  return 0;
-
-   const auto luaVal( GetSoftcrIndentLua( fb, g_CursorLine() ) );
-   if( luaVal >= 0 )  return luaVal;
-
+int FBOP::GetSoftcrIndent( PFBUF fb ) { // cursor has NOT been moved
+   if( !g_fSoftCr )   return 0;
    const auto yStart( g_CursorLine() );
-   Xbuf xb;
-   fb->getLineTabx_DEPR( &xb, yStart );
+   const auto luaVal( GetSoftcrIndentLua( fb, yStart ) );
+   if( luaVal >= 0 )  return luaVal;
+   const auto tw( fb->TabWidth() );
    COL rv;
    {
-   const auto lbuf0( xb.c_str() );
-         auto pX( StrPastAnyBlanks( lbuf0 ) );
-   pX = *pX ? pX : lbuf0;
-   rv = pX - lbuf0;  // Assert( rv >= 0 );
-   switch( fb->FileType() ) {
-      default: break;
-      case ftype1_C: {
-           const auto rv_C( SoftcrForCFiles( fb, rv, yStart, &xb ) );
-           if( rv_C >= 0 ) {  0 && DBG( "SoftCR C: %d", rv_C );
-              return rv_C;
+   const auto thisRl( fb->PeekRawLine( yStart ) );
+   const auto ixNonb( FirstNonBlankOrEnd( thisRl ) );
+   if( atEnd( thisRl, ixNonb ) ) {
+      rv = 0;
+      }
+   else {
+      rv = ColOfFreeIdx( tw, thisRl, ixNonb );
+      switch( fb->FileType() ) {
+         default: break;
+         case ftype1_C: {
+              const auto rv_C( SoftcrForCFiles( fb, rv, yStart, thisRl, ixNonb, rv ) );
+              if( rv_C >= 0 ) {  0 && DBG( "SoftCR C: %d", rv_C );
+                 return rv_C;
+                 }
               }
-           }
-           break;
+              break;
+         }
       }
    }
-   fb->getLineTabx_DEPR( &xb, yStart + 1 );
    {
-   auto lbuf1( xb.c_str() );  auto pY( StrPastAnyBlanks( lbuf1 ) );
-   if( lbuf1[0] && *pY )
-      rv = pY - lbuf1;
+   const auto nextRl( fb->PeekRawLine( yStart + 1 ) );
+   const auto ixNonb( FirstNonBlankOrEnd( nextRl ) );
+   if( !atEnd( nextRl, ixNonb ) ) {
+      rv = ColOfFreeIdx( tw, nextRl, ixNonb );
+      }
    }
    0 && DBG( "SoftCR dflt: %d", rv );  Assert( rv >= 0 );
    return rv;

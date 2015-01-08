@@ -136,26 +136,21 @@ STATIC_FXN bool CopyNumberedLinesToNewFile( PFBUF srcfile, PFBUF destfile, ARG *
          auto npos(1);
          Xbuf xb;
          for( auto ix(0); ix < destfile->LineCount(); ++ix ) {
-            auto lineChars( destfile->getLineTabx_DEPR( &xb, ix ) );
+            const auto lineChars( destfile->getLineTabx_DEPR( &xb, ix ) );
             auto lbuf( xb.wbuf() );
             if( 2 == sscanf( lbuf, "%d%n", &srcfileLine, &npos ) ) {
-               auto pTail( StrPastAnyBlanks( lbuf + npos ) );
-               if( *pTail ) { DBG( "tail=%s", pTail ); }
-
+               if( 0 ) {
+                  const auto pTail( StrPastAnyBlanks( lbuf + npos ) );
+                  if( *pTail ) { DBG( "tail=%s", pTail ); }
+                  }
                PChar bp[2];
                const auto fields( ChopStringFieldsOnDelim( lbuf, bp, ELEMENTS(bp), szSpcTab ) );
-               if( fields == 2 ) {
-               // s_pFbufLog->FmtLastLine( " !! '%s'", bp[1] );
-                  destfile->FmtLine( ix, "%s %*d: %s", destGrepFBufname, lwidth, srcfileLine, bp[1] );
-                  }
-               else
-                  destfile->FmtLine( ix, "%s %*d:"   , destGrepFBufname, lwidth, srcfileLine       );
+               if( fields == 2 ) { destfile->FmtLine( ix, "%s %*d: %s", destGrepFBufname, lwidth, srcfileLine, bp[1] ); }
+               else              { destfile->FmtLine( ix, "%s %*d:"   , destGrepFBufname, lwidth, srcfileLine        ); }
                }
             else {
-               if( lineChars )
-                  destfile->FmtLine( ix, "%s %*s: %s", destGrepFBufname, lwidth, "?", lbuf  );
-               else
-                  destfile->FmtLine( ix, "%s %*s:"   , destGrepFBufname, lwidth, "?"        );
+               if( lineChars )   { destfile->FmtLine( ix, "%s %*s: %s", destGrepFBufname, lwidth, "?", lbuf  ); }
+               else              { destfile->FmtLine( ix, "%s %*s:"   , destGrepFBufname, lwidth, "?"        ); }
                }
             }
          }

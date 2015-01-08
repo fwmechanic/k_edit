@@ -439,10 +439,10 @@ STATIC_FXN void spcs2tabs_leading( string_back_inserter dit, stref src, TabberPa
 
 //==========================================================================================
 
-void FBUF::cat( PCChar pszNewLineData ) {
+void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
    auto pBuf( pszNewLineData );
    std::string tmp;
-   Xbuf xb;
+   std::string lbuf;
    while( 1 ) {
       decltype(pBuf) pNL( strchr( pBuf, '\n' ) );
       if( pNL == pszNewLineData ) {  // leading \n?
@@ -450,8 +450,9 @@ void FBUF::cat( PCChar pszNewLineData ) {
          pNL = strchr( pBuf, '\n' );
          }
       if( pBuf == pszNewLineData ) {
-         getLineTabx_DEPR( &xb, LastLine() );
-         PutLine( LastLine(), xb.cat( pBuf, pNL-pBuf ), tmp );
+         getLineTabx( lbuf, LastLine() );
+         lbuf.append( pBuf, pNL-pBuf );
+         PutLine( LastLine(), lbuf, tmp );
          }
       else {
          PutLine( LineCount(), se2bsr( pBuf, pNL ), tmp );
@@ -607,7 +608,9 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
          }
       srSrc.remove_suffix( trailSpcs );
       }
-   UndoReplaceLineContent( yLine, srSrc );  // after all this buildup, JUST WRITE THE DAMNED THING:
+   if( srSrc != PeekRawLine( yLine ) ) { // new content != existing content?
+      UndoReplaceLineContent( yLine, srSrc );  // actually perform the write to this FBUF
+      }
    }
 
 void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
