@@ -973,7 +973,7 @@ class HiliteAddin_StreamParse : public HiliteAddin {
 
    unsigned d_FbufContentRev = 0;
 
-   enum { SCAN_ALL_LINES=1 };
+   enum { SCAN_ALL_LINES=1 }; // SCAN_ALL_LINES is set to 1 so that, when we scroll downward in a file, the hilite metadata will be there (BUGBUG need fixing)
 
 protected:
    void refresh();   // calls scan_pass() 2x, 1=counting: w/d_hl_rgn_array==nullptr, 2=collecting: d_hl_rgn_array!=nullptr
