@@ -1455,8 +1455,6 @@ public:
 // int            GetLineForInsert     (  PXbuf         pXb, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
 
-   bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, size_t *pChars ) const; // returns RAW line content BY REFERENCE
-   bool           PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos  ) const; // returns RAW line content BY REFERENCE
    stref          PeekRawLine( LINE lineNum ) const; // returns RAW line content BY REFERENCE
    stref          PeekRawLineSeg( LINE lineNum, COL xMinIncl, COL xMaxIncl=COL_MAX ) const; // returns RAW line content BY REFERENCE
 

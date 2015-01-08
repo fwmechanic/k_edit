@@ -105,10 +105,10 @@ STATIC_FXN bool IsolateFilename( int *pMin, int *pMax, PCChar pSrc, PCChar eos )
    }
 
 int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const {
-   PCChar bos, eos;
-   if( !PeekRawLineExists( yLine, &bos, &eos ) )
+   if( yLine > LastLine() )
       return -1;
 
+   auto rl( PeekRawLine( yLine ) ); PCChar bos( rl.data() ); PCChar eos( rl.data()+rl.length() );
    const auto pXmin( PtrOfColWithinStringRegionNoEos( g_CurFBuf()->TabWidth(), bos, eos, xCol ) );
    int oMin, oMax;
    if( !IsolateFilename( &oMin, &oMax, pXmin, eos ) ) return 0;

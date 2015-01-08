@@ -1504,28 +1504,6 @@ PChar PtrOfColWithinStringRegionNoEos( COL tabWidth, const PChar pS, const PChar
 
 //--------------------------------------------------------------------------------------------------
 
-bool FBUF::PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, size_t *pChars ) const {
-   const auto exists( KnownLine( lineNum ) );
-   if(   exists
-      && LineLength(lineNum) > 0
-      && (*ppLbuf = d_paLineInfo[ lineNum ].GetLineRdOnly())
-     ) {
-      *pChars = LineLength(lineNum);
-      }
-   else {
-      *ppLbuf = "";
-      *pChars = 0;
-      }
-   return exists;
-   }
-
-bool FBUF::PeekRawLineExists( LINE lineNum, PPCChar ppLbuf, PPCChar ppEos ) const {
-   size_t chars;
-   const auto rv( PeekRawLineExists( lineNum, ppLbuf, &chars ) );
-   *ppEos = *ppLbuf + chars;
-   return rv;
-   }
-
 stref FBUF::PeekRawLine( LINE lineNum ) const {
    const auto exists( KnownLine( lineNum ) );
    auto len( 0 );
