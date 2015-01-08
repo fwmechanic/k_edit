@@ -681,7 +681,8 @@ GLOBAL_VAR std::string g_SnR_szSearch          ;
 GLOBAL_VAR std::string g_SnR_szReplacement     ;
 
 class ReplaceCharWalker : public CharWalker {
-   Xbuf               d_xbb;
+   std::string        d_sbuf;
+   std::string        d_stmp;
    const std::string& d_stSearch;
    const std::string& d_stReplace;
    bool               d_fDoReplaceQuery;
@@ -713,26 +714,19 @@ class ReplaceCharWalker : public CharWalker {
    private:
 
    void DoFinalPartOfReplace(
-        PFBUF  pFBuf                           // buffer where replace is taking place
-      , PChar  lbuf                            // start of line buffer containing match, no detabbing done
-      , PChar  pMatch                          // ptr (within lbuf) of first char in current match
-      , Point *curPt
-      , COL   &colLastPossibleLastMatchChar
+        PFBUF        pFBuf                           // buffer where replace is taking place
+      , Point       *curPt                           // start of match
+      , COL         &colLastPossibleLastMatchChar
       );
    };
 
 
 // replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
-void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMatch, Point *curPt, COL &colLastPossibleLastMatchChar ) {
-   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET "u LoSB=%d", curPt->col, curPt->lin, d_stReplace.length(), Strlen( lbuf ) );
-
-   memmove( pMatch  + d_stReplace.length()                 // blow open a hole ...
-          , pMatch  + d_stSearch.length()
-          , Strlen( pMatch  + d_stSearch.length() ) + 1
-          );
-   memcpy( pMatch, d_stReplace.data(), d_stReplace.length() );   // ... insert replacement string
-   std::string stmp;
-   pFBuf->PutLine( curPt->lin, lbuf, stmp );             // ... and commit
+void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+   pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
+   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET "u LoSB=%d", curPt->col, curPt->lin, d_stReplace.length(), d_sbuf.length() );
+   d_sbuf.replace( curPt->col, d_stSearch.length(), d_stReplace );
+   pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
    ++d_iReplacementsMade;
 
    // replacement done: position curPt->col for next search
@@ -745,8 +739,8 @@ void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, PChar lbuf, PChar pMa
    colLastPossibleLastMatchChar += d_stReplace.length() - d_stSearch.length();
    NoLessThan( &colLastPossibleLastMatchChar, 0 );
 
-   0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
-   0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, lbuf+curPt->col );
+   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
+   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
    }
 
 
@@ -776,24 +770,8 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
 
    ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
 
-#if 0
-   const auto lbuf( d_xbb.resize( 1+(eos - ptr) + d_stReplace.length() - d_stSearch.length() ) );
-   pFBuf->getLineRaw( &d_xbb, curPt->lin );
-   const auto pMatch( lbuf + (pxCur - ptr) );
-#else
-   const auto lbuf( d_xbb.wresize( 1+FBOP::LineCols( pFBuf, curPt->lin ) + d_stReplace.length() - d_stSearch.length() ) );
-   pFBuf->getLineTabxPerRealtabs_DEPR( &d_xbb, curPt->lin );
-   const auto pMatch( lbuf + curPt->col );
-#endif
-
    if( !d_fDoReplaceQuery ) { // non-interactive-replace?
-      DoFinalPartOfReplace(
-           pFBuf
-         , lbuf
-         , pMatch
-         , curPt
-         , colLastPossibleLastMatchChar
-         );
+      DoFinalPartOfReplace( pFBuf , curPt , colLastPossibleLastMatchChar );
       return REREAD_LINE_CONTINUE_SEARCH;
       }
 
@@ -821,16 +799,12 @@ CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar e
    switch( ch ) {
       default:  Assert( 0 ); // chGetCmdPromptResponse has bug or params wrong
       case -1 :                                      //  fall thru!
-      case 'q': SetUserChoseEarlyCmdTerminate();  return STOP_SEARCH;
+      case 'q': SetUserChoseEarlyCmdTerminate();
+                return STOP_SEARCH;
       case 'a': d_fDoReplaceQuery = false;           //  fall thru!
-      case 'y': DoFinalPartOfReplace(                //  fall thru!
-                     pFBuf                           //  fall thru!
-                   , lbuf                            //  fall thru!
-                   , pMatch                          //  fall thru!
-                   , curPt                           //  fall thru!
-                   , colLastPossibleLastMatchChar    //  fall thru!
-                   );                             return REREAD_LINE_CONTINUE_SEARCH;
-      case 'n':                                   return CONTINUE_SEARCH;
+      case 'y': DoFinalPartOfReplace( pFBuf, curPt, colLastPossibleLastMatchChar );
+                return REREAD_LINE_CONTINUE_SEARCH;
+      case 'n': return CONTINUE_SEARCH;
       }
    }
 
