@@ -1526,8 +1526,6 @@ inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCom
 // DEPRECATED
 // DEPRECATED if fKeepPtrWithinStringRegion then retval <= pEos  (NOTE THAT retval == pEos (and therefore can point at a non-deref'able locn)
 extern PChar   PtrOfCol_                 ( COL tabWidth, PChar  pS, PChar  pEos, COL colTgt, bool fKeepPtrWithinStringRegion );
-STIL   PChar   PtrOfColAnyWhere          ( COL tabWidth, PChar  pS, PChar  pEos, COL xCol ) { return PtrOfCol_( tabWidth,       pS ,       pEos , xCol, false ); }
-STIL   PCChar  PtrOfColAnyWhere          ( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfCol_( tabWidth, PChar(pS), PChar(pEos), xCol, false ); }
 // DEPRECATED PtrOfColWithinStringRegion: retval <= pEos  (NOTE THAT retval == pEos (and therefore can be non-deref'able)
 // DEPRECATED should TRY to stop using PtrOfColWithinStringRegion in lieu of PtrOfColWithinStringRegionNoEos
 STIL   PChar   PtrOfColWithinStringRegion( COL tabWidth, PChar  pS, PChar  pEos, COL xCol ) { return PtrOfCol_( tabWidth,       pS ,       pEos , xCol, true  ); }

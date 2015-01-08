@@ -1606,53 +1606,6 @@ int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
    return dest.length();
    }
 
-#if 0
-// open a (space-filled) insertCols-wide hole, with dest[xIns] containing the first inserted space;
-//    original dest[xIns] is moved to dest[xIns+insertCols]
-// if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
-//
-int FBUF::GetLineForInsert( PXbuf pXb, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=1 };
-   auto       lineChars( getLineTabxPerRealtabs_DEPR( pXb, yLine ) );
-   auto       dest     ( pXb->wbuf() );
-   const auto tw       ( TabWidth() );
-   auto       lineCols ( StrCols( tw, dest ) );
-   DB && DBG( "%s: %s| L %" PR_SIZET "u/%d (%d)", __func__, dest, pXb->length(), lineCols, xIns );
-   // Assert( lineCols == lineChars );
-
-   if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
-      const auto deltaCols( xIns - lineCols );
-      dest = pXb->wresize( lineChars + deltaCols + 1 );
-      memset( dest+lineChars, ' ', deltaCols );
-      lineChars += deltaCols; // since appended chars are spaces ...
-      lineCols  += deltaCols; // ... cols and chars are equivalent
-      dest[ lineChars ] = '\0';  // note that: lineChars == xIns && dest[ xIns ] == 0
-      }
-
-   if( insertCols == 0 ) {
-      DB && DBG( "%s- %s| L %u (%d)", __func__, pXb->wbuf(), lineChars, xIns );
-      return lineChars;
-      }
-
-#if 1
-   dest = pXb->wresize( lineChars + insertCols + 1 );
-   auto pVX0( PtrOfColAnyWhere( tw, dest, Eos(dest), xIns ) );
-   memmove( pVX0 + insertCols, pVX0, Strlen(pVX0)+1 );
-   memset(  pVX0             , ' ' , insertCols );
-#else
-   const auto xIns_TA( TabAlignedCol( tw, dest, xIns ) );
-   insertCols += xIns - xIns_TA;
-   dest = pXb->wresize( lineChars + insertCols + 1 );
-   auto pVX0( PtrOfColAnyWhere          ( tw, dest, xIns_TA ) );
-   auto pVX1( PtrOfColWithinStringRegion( tw, dest, xIns_TA ) );
-   memmove( pVX0 + insertCols, pVX1, Strlen(pVX1)+1 );
-   memset( pVX1, ' ', insertCols + (pVX0 - pVX1) );
-#endif
-   const auto rv( Strlen(dest) ); // there ought to be a faster way!
-   DB && DBG( "%s- %s| L %u (%d)", __func__, pXb->wbuf(), rv, xIns );
-   return rv; // there ought to be a faster way!
-   }
-#endif
-
 //--------------------------------------------------------------------------------------------------
 
 #ifdef fn_csort
