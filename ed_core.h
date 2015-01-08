@@ -1447,7 +1447,6 @@ private:
 public:
    void           getLineRaw( std::string &dest, LINE yLine ) const;
 
-   COL            getLineTabxPerRealtabs_DEPR( PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, g_fRealtabs ?0:' ' ); }
    COL            getLineTabxPerTabDisp_DEPR ( PXbuf pXb, LINE yLine ) const { return getLine_DEPR( pXb, yLine, RevealBlanks()?0:' ' ); }
 
    COL            getLineTabx(            std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
