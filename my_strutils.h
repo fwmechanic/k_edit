@@ -68,6 +68,38 @@ typename cont_inst::size_type ToNextOrEnd( Pred pred, cont_inst src, typename co
    return std::distance( src.cbegin(), src.end() );
    }
 
+template < typename cont_inst, typename Pred >
+typename cont_inst::size_type ToNextOrEnd( stref key, cont_inst src, typename cont_inst::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         for( const auto kch : key ) {
+            if( kch == *it ) {
+               return std::distance( src.cbegin(), it );
+               }
+            }
+         }
+      }
+   return std::distance( src.cbegin(), src.end() );
+   }
+
+template < typename cont_inst, typename Pred >
+typename cont_inst::size_type ToNextNotOrEnd( stref key, cont_inst src, typename cont_inst::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         auto hits( 0 );
+         for( const auto kch : key ) {
+            if( kch == *it ) {
+               ++hits;
+               }
+            }
+         if( 0 == hits ) {
+            return std::distance( src.cbegin(), it );
+            }
+         }
+      }
+   return std::distance( src.cbegin(), src.end() );
+   }
+
 //#######################################################################################
 
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
