@@ -65,7 +65,21 @@ typename cont_inst::size_type ToNextOrEnd( Pred pred, cont_inst src, typename co
             }
          }
       }
-   return std::distance( src.cbegin(), src.end() );
+   return std::distance( src.cbegin(), src.cend() );
+   }
+
+// following (ToNext...OrEnd() with key param) exist largely because stupid boost::string_ref find (etc.) methods do not include a start param!
+
+template < typename cont_inst >
+typename cont_inst::size_type ToNextOrEnd( const char key, cont_inst src, typename cont_inst::size_type start ) {
+   if( start < src.length() ) {
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( key == *it ) {
+            return std::distance( src.cbegin(), it );
+            }
+         }
+      }
+   return std::distance( src.cbegin(), src.cend() );
    }
 
 template < typename cont_inst, typename Pred >
@@ -79,7 +93,7 @@ typename cont_inst::size_type ToNextOrEnd( stref key, cont_inst src, typename co
             }
          }
       }
-   return std::distance( src.cbegin(), src.end() );
+   return std::distance( src.cbegin(), src.cend() );
    }
 
 template < typename cont_inst, typename Pred >
@@ -97,7 +111,7 @@ typename cont_inst::size_type ToNextNotOrEnd( stref key, cont_inst src, typename
             }
          }
       }
-   return std::distance( src.cbegin(), src.end() );
+   return std::distance( src.cbegin(), src.cend() );
    }
 
 //#######################################################################################

@@ -75,31 +75,29 @@ STATIC_FXN char IsUserFnmDelimChar( char ch ) {
 
 //------------------------------------------------------------------------------
 
-STATIC_FXN bool IsolateFilename( int *pMin, int *pMax, PCChar pSrc, PCChar eos ) {
+STATIC_FXN bool IsolateFilename( int *pMin, int *pMax, stref rl ) {
    // could add: lots and lots o special per-FileType code to extract
    //    filenames from various language-specific include statements
-   if( !eos ) eos = Eos( pSrc );
-   if( eos <= pSrc ) return false;
-   const auto p0( pSrc );
-
-   PCChar pEnd;
-   if(   IsUserFnmDelimChar( pSrc[0] )
-         // Next match of pSrc[0] is assumed to be closing one; since WE
+   sridx ixStart(0);
+   sridx ixEnd;
+   if(   IsUserFnmDelimChar( rl[ixStart] )
+         // Next match of rl[0] is assumed to be closing one; since WE
          // (in <files>, etc.) _generate_ the delim, and in so doing
          // choose a delim which isn't found in the filename itself,
          // it's a reasonable assumption to make.
          //
-      && nullptr != (pEnd=strchr( pSrc + 1, pSrc[0] ))
-     )
-      ++pSrc; // pEnd is set correctly
-   else {
-      pSrc = StrPastAnyBlanks    ( pSrc, eos );
-      pEnd = StrToNextBlankOrEos( pSrc, eos );
+      && ((ixEnd=ToNextOrEnd( rl[0], rl, 1 )), atEnd( rl, ixEnd ))
+     ) {
+      ++ixStart; // ixEnd is set correctly
       }
-   if( pSrc >= pEnd ) return false;
+   else {
+      ixStart = FirstNonBlankOrEnd( rl, ixStart   );
+      ixEnd   = FirstBlankOrEnd   ( rl, ixStart+1 );
+      }
+   if( ixStart >= ixEnd ) return false;
 
-   *pMin = pSrc - p0;
-   *pMax = pEnd - p0;
+   *pMin = ixStart;
+   *pMax = ixEnd  ;
 
    return true;
    }
@@ -109,10 +107,11 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
       return -1;
 
    auto rl( PeekRawLine( yLine ) ); PCChar bos( rl.data() ); PCChar eos( rl.data()+rl.length() );
-   const auto pXmin( PtrOfColWithinStringRegionNoEos( g_CurFBuf()->TabWidth(), bos, eos, xCol ) );
+   const auto ixCol( CaptiveIdxOfCol( g_CurFBuf()->TabWidth(), rl, xCol ) );
+   rl.remove_prefix( ixCol );
    int oMin, oMax;
-   if( !IsolateFilename( &oMin, &oMax, pXmin, eos ) ) return 0;
-   st.assign( pXmin+oMin, oMax-oMin );
+   if( !IsolateFilename( &oMin, &oMax, rl ) ) { return 0; }
+   st.assign( rl.data()+oMin, oMax-oMin );
    return 1;
    }
 
