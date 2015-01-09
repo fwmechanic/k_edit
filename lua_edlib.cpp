@@ -76,11 +76,7 @@ LUAFUNC_(GetChildDirs) {
    lua_newtable(L);  // result
    DirListGenerator dlg;
 
-   #if USE_STATE_ELB
-      auto pXb( get_xb( L ) );
-   #else
-      Path::str_t xb;
-   #endif
+   Path::str_t xb;
    for( int tblIdx=1 ; dlg.VGetNextName( xb ) ; ++tblIdx ) {
       lua_pushstring( L, xb.c_str() );
       lua_rawseti( L, -2, tblIdx );
@@ -328,24 +324,14 @@ FBUF_(CopyLines)                { FBOP::CopyLines( thisPF(), I_(2)-1, PFBUF_(3),
 FBUF_(DiscardTrailSpcs)         { thisPF()->DiscardTrailSpcs()                                       ; RZ; }
 FBUF_(InsBlankLinesBefore)      { thisPF()->InsBlankLinesBefore( I_(2)-1, Io_( 3, 1 ) )              ; RZ; }
 FBUF_(InsLine)                  { std::string tmp; thisPF()->InsLine( I_(2)-1, S_(3), tmp )          ; RZ; }
-FBUF_(InsLineSortedAscending)   {
-                                  #if USE_STATE_ELB
-                                       // auto pXb( get_xb( L ) );
-                                  #else
-                                       std::string tmp;
-                                  #endif
+FBUF_(InsLineSortedAscending)   { std::string tmp;
                                   const PCChar st = S_(2);
                                   FBOP::InsLineSortedAscending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
-                                  }
-FBUF_(InsLineSortedDescending)  {
-                                  #if USE_STATE_ELB
-                                       // auto pXb( get_xb( L ) );
-                                  #else
-                                       std::string tmp;
-                                  #endif
+                                }
+FBUF_(InsLineSortedDescending)  { std::string tmp;
                                   const PCChar st = S_(2);
                                   FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
-                                  }
+                                }
 FBUF_(IsGrepBuf)                { int metaLines;  pathbuf searchedFnm;
                                   if( FBOP::IsGrepBuf( thisPF(), BSOB(searchedFnm), &metaLines ) ) {
                                      P_str(searchedFnm) ; P_int(metaLines) ; return 2;
@@ -413,11 +399,7 @@ FBUF_(GetLine) {
    const auto pf( thisPF() );
    const auto lnum( I_(2) - 1 );
    if( isValidLineNum( pf, lnum ) ) {
- #if USE_STATE_ELB
-      auto pXb( get_xb( L ) );
- #else
       std::string tmp;
- #endif
       pf->getLineTabx( tmp, lnum );
       R_lstr( tmp.c_str(), tmp.length() );
       }

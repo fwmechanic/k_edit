@@ -2255,7 +2255,7 @@ public:
 
    ~CGrepper() { Free_( d_MatchingLines ); }
 
-   void FindAllMatches( PCChar pSrchStr, bool fUseRegEx );
+   void FindAllMatches( stref srchStr, bool fUseRegEx );
    void LineMatches( LINE line ) { d_MatchingLines[ line ] = !d_fFindAllNegate; }
 
    // to write results
@@ -2369,8 +2369,8 @@ STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // if fCase==0, ASSU
    }
 
 
-void CGrepper::FindAllMatches( PCChar pSrchStr, bool fUseRegEx ) {
-   if( !SetNewSearchSpecifierOK( pSrchStr, fUseRegEx ) )
+void CGrepper::FindAllMatches( stref srchStr, bool fUseRegEx ) {
+   if( !SetNewSearchSpecifierOK( srchStr, fUseRegEx ) )
       return;
 
    CGrepperMatchHandler mh( *this );
@@ -2518,11 +2518,10 @@ bool ARG::grep() {
    if( !SearchSpecifierOK( this ) )
       return false;
 
-   Xbuf        srchTextBuf( g_SavedSearchString_Buf.c_str() );  // we mangle the search string below so make a copy
-         auto  pszSrchStr( srchTextBuf.wbuf() );
-   const auto  fNegate( strncmp( pszSrchStr, "!!", 2 ) == 0 );
+   stref       srchText( g_SavedSearchString_Buf );
+   const auto  fNegate( srchText.starts_with( "!!" ) );
    if( fNegate ) {
-      pszSrchStr += 2;
+      srchText.remove_prefix( 2 );
       }
 
    // read first line to get header size
@@ -2547,9 +2546,9 @@ bool ARG::grep() {
    // create aux header for THIS search
    //
    const auto fUseRegEx( d_cArg > 1 );
-   SprintfBuf auxHdrBuf( "%s'%s'%s, by Grep, case:%s"
+   SprintfBuf auxHdrBuf( "%s'%" PR_BSR "'%s, by Grep, case:%s"
       , fNegate   ? "*NOT* " : ""
-      , srchTextBuf.c_str()
+      , BSR(srchText)
       , fUseRegEx ? " (RE)"  : ""
       , g_fCase   ? "sen"    : "ign"
       );
@@ -2558,7 +2557,7 @@ bool ARG::grep() {
    //
    CGrepper gr( curfile, metaLines, fNegate );
 
-   gr.FindAllMatches( pszSrchStr, fUseRegEx );
+   gr.FindAllMatches( srchText, fUseRegEx );
 
    const auto Matches( gr.WriteOutput( auxHdrBuf, pSearchedFnm ) );
    return Matches > 0;

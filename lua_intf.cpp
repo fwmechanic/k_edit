@@ -85,12 +85,6 @@ void *get_LuaRegistryPtr( lua_State* L, PCChar varnm ) {
 
 //---------------------------
 
-#if USE_STATE_ELB
-LREGP(xb,PXbuf)
-PXbuf get_xb( lua_State *L ) { return LREGP_get_xb( L ); }
-#endif
-
-
 //######################################################################################################################
 //
 // Historical notes on Lua GARBAGE COLLECTION
@@ -754,9 +748,6 @@ bool LuaCtxt_State::InitOk( PCChar filename ) {
 STATIC_FXN void L_edit_post_load( lua_State *L ) { // Lua environment-loaded hook-outs
    LREGI_set_EvtHandlerEnabled( L, 1 );
    Reread_FileExtensionSettings();
- #if USE_STATE_ELB
-   LREGP_set_xb( L, new Xbuf );
- #endif
    }
 STATIC_FXN void L_edit_openlibs( lua_State *L ) {
    l_OpenStdLibs( L );
@@ -764,9 +755,6 @@ STATIC_FXN void L_edit_openlibs( lua_State *L ) {
    }
 STATIC_FXN void L_edit_cleanup( lua_State *L ) {
    DeleteAllLuaCmds();
- #if USE_STATE_ELB
-   delete LREGP_get_xb( L );
- #endif
    }
 STATIC_VAR PChar psrc_LuaCtxt_Edit;
 bool LuaCtxt_Edit::InitOk( PCChar filename ) {

@@ -606,11 +606,11 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
    }
 
 void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
-   Xbuf xb; std::string tmp;
+   std::string sbuf, tmp;
    for( auto ix(0); ix<elems; ++ix ) {
-      xb.cat( pa[ix] );
+      sbuf.append( pa[ix] );
       }
-   PutLine( yLine, xb.bsr(), tmp );
+   PutLine( yLine, sbuf, tmp );
    }
 
 //
