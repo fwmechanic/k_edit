@@ -362,7 +362,6 @@ extern   void  AdjustMarksForLineInsertion( LINE Line,int LineDelta,PFBUF pFBuf 
 //------------ Pseudofile readers (ONLY call from ReadPseudoFileOk system!)
 
 extern   bool  ReadPseudoFileOk( PFBUF pFBuf );
-extern   int   IsWFilesName( PCChar pszName );
 extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
 
 //------------ Pseudofile writers

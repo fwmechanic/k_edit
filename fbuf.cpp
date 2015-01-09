@@ -236,35 +236,6 @@ COL FBOP::MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom 
 
 //==========================================================================================
 
-int IsWFilesName( PCChar pszName ) { // pszName matches "<win4>"
-   STATIC_CONST char hdr[] = "<win";
-   const auto len( Strlen( pszName ) );
-   if(    len > (KSTRLEN( hdr ) + 1)
-       && 0 == memcmp( hdr, pszName, KSTRLEN( hdr ) )
-       && pszName[len-1] == '>'
-     ) {
-      auto pNum( pszName + KSTRLEN( hdr ) );
-      while( isDecDigit(*pNum) )
-         pNum++;
-
-      if( *pNum != '>' )
-         return -1;
-
-      Assert( pNum - (pszName + KSTRLEN( hdr )) == 1 );
-
-      const auto wnum( pszName[ KSTRLEN( hdr ) ] - '0' );
-      if( !(wnum < g_iWindowCount()) )
-         return -2;
-
-      return wnum;
-      }
-
-   return -1;
-   }
-
-
-//==========================================================================================
-
 class MaxIndentAccumulator {
    int d_sampleCount;
    int d_firstIndentAt[10];
@@ -839,11 +810,11 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
 
 Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    Path::str_t rv;
-   if( FnmIsLogicalWildcard( fb->Name() ) ) {
+   if( FnmIsLogicalWildcard( fb->Namestr() ) ) {
       rv = ".*";
       }
    else {
-      rv = Path::CpyExt( fb->Name() );
+      rv = Path::CpyExt( fb->Namestr() );
       if( rv.empty() )
          rv = !fb->FnmIsDiskWritable() ? ".<>" : ".";
       }
@@ -856,8 +827,8 @@ Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    return rv;
    }
 
-STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, PCChar pszMacroString ) { 0 && DBG( "%s '%s'='%s'", __func__, pszMacroName, pszMacroString );
-   const std::string str( "\"" + std::string(pszMacroString) + "\"" );
+STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 && DBG( "%s '%s'='%" PR_BSR "'", __func__, pszMacroName, BSR(pszMacroString) );
+   const std::string str( "\"" + std::string( pszMacroString.data(), pszMacroString.length() ) + "\"" );
    return DefineMacro( pszMacroName, str.c_str() );
    }
 
@@ -870,12 +841,12 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Nam
    DoubleBackslashes( BSOB(dblbuf), pbuf );
    DefineStrMacro( "curfile", dblbuf );
   #else
-   DefineStrMacro( "curfile", fb->Name() );
+   DefineStrMacro( "curfile", fb->Namestr() );
   #endif
-   DefineStrMacro( "curfilename", Path::CpyFnm  ( fb->Name() ).c_str() );
-   DefineStrMacro( "curfilepath", Path::CpyDirnm( fb->Name() ).c_str() );
+   DefineStrMacro( "curfilename", Path::RefFnm  ( fb->Namestr() ) );
+   DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
    const auto ext( FBOP::GetRsrcExt( fb ) );
-   DefineStrMacro( "curfileext", ext.c_str() );
+   DefineStrMacro( "curfileext", ext );
    if( !fb->IsRsrcLdBlocked() ) {
       LoadFileExtRsrcIniSection( ext.c_str() ); // call only after curfile, curfilepath, curfilename, curfileext assigned
       }
@@ -1810,7 +1781,7 @@ bool ARG::setfile() {
     case NOARG:   {
                   const auto nxtvw( DLINK_NEXT( g_CurView(), dlinkViewsOfWindow ) );
                   if( !nxtvw ) return fnMsg( "no alternate file" );
-                  fnm = nxtvw->FBuf()->Name();
+                  fnm = nxtvw->FBuf()->Namestr();
                   } break; //-------------------------------------------------------
 
     case NULLARG: if( d_cArg > 1 ) {

@@ -7,11 +7,13 @@ CODING CONVENTIONS *** existing code is uniformly formatted.  Get used to it.
   * 3 spaces per indent level
   * DO NOT slavishly WRAP source code LINES @ 80th column; I haven't used a
     no-more-than-80-column terminal ... _ever_ (and I've been using Linux via
-    xterms and putty off and on for > 10 years; since it's now essential that
+    xterms and Putty off and on for > 10 years; since it's now essential that
     my devenv include the ability to run a browser (Firefox), I can foresee NO
     situation in which I'll be _developing_ K under an 80-column constraint).
-    BTW monitors have a pro-more-columns-bias aspect ratio, so ...
-  * curly brace format:
+    BTW the market (Hollywood?) has driven monitor aspect ratio in a
+    pro-width-bias direction, something I don't see being reversed in the next
+    decade ...
+  * curly brace format: my preference (as expressed in K source code) has evolved to
     https://en.wikipedia.org/wiki/Indent_style#Ratliff_style which is same as
     https://en.wikipedia.org/wiki/Indent_style#Banner_style ?
     both modified by:
@@ -21,8 +23,8 @@ CODING CONVENTIONS *** existing code is uniformly formatted.  Get used to it.
       function (my,params);   // NO!
       but: "return yes;"
       not  "return( no );"    // return is not a function call
-  * terminology: to avoid redundancy, do not use the term "whitespace" or "white"
-    (racist!); use "blank" instead.
+  * terminology: to avoid redundancy, do not use the term "whitespace" or "white";
+    use "blank" instead.
 
 Semantic Coding Guidelines
 
@@ -39,23 +41,26 @@ Weaknesses
 
   * As per #1 coding convention, I eschew tabs; Tabs are responsible for a large
     amount of cruft in the K code, and even so, are not superbly supported.  if
-    not for GNU Make, I would have long ago declared tab characters an
-    unsupported "feature" and removed from K all related code.
+    not for GNU Make (which uses tabs as a syntactic element), I would have long
+    ago declared tab characters an unsupported "feature" and removed from K all
+    related code.
 
 Key goals
 
-* when I use K, in direct contrast to the "fingers on home keys" mantra of vi
-  etc., my right hand is almost always over the numeric keypad; cursor keys,
-  arg (center key), cut, copy, paste are all "at hand".  Note that cut, copy,
-  paste are used in preference to manually typing alpha(num) strings appearing
-  on the screen (something I see vi users do on an every minute-basis, which
-  just seems wrong to me (I am an error-prone transcriber)).
-  A KEY GOAL is to preserve this capability on all platforms.
+  * http://fte.sourceforge.net/ seems to have a nicely structured architecture
+    supporting multiple/diverse screen+kybd I/O environments.  While my immediate
+    goals for K are far less diverse (ncurses should be totally sufficient?),
+    adopting FTE's framework in toto _MIGHT_ be a net win...
 
-* http://fte.sourceforge.net/ seems to have a nicely structured architecture
-  supporting multiple/diverse screen+kybd I/O environments.  While my immediate
-  goals for K are far less diverse (ncurses should be totally sufficient?),
-  adopting FTE's framework in toto _MIGHT_ be a net win...
+  * when I use K, in direct contrast to the "fingers on home keys" mantra of vi
+    etc., my right hand is almost always over the numeric keypad; cursor keys,
+    arg (center key), cut, copy, paste are all "at hand".  Note that cut, copy,
+    paste are used in preference to manually typing alpha(num) strings appearing
+    on the screen (something I see vi users do on an every minute-basis, which
+    just seems wrong to me (I am an error-prone transcriber)).  A KEY GOAL is to
+    preserve this capability on all platforms (yes I understand that
+    small-form-factor laptops (which some people prefer) are problematic in this
+    regard).
 
 
 Major Tasks

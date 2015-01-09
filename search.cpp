@@ -2390,7 +2390,7 @@ LINE CGrepper::WriteOutput
    , PCChar origSrchfnm  // if file searched THIS TIME is not file which line#s refer to
    )
    {
-   std::string sbuf( d_SrchFile->Name() );
+   std::string sbuf( d_SrchFile->Namestr() );
    0 && DBG( " ->%s|", sbuf.c_str() );
    if( LuaCtxt_Edit::from_C_lookup_glock( sbuf ) && !sbuf.empty() ) {
       const auto gbnm( sbuf.c_str() );
@@ -2400,7 +2400,7 @@ LINE CGrepper::WriteOutput
       int     grepHdrLines;
       if( !outfile )                                                          { Msg(    "nonexistent buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
       if( !(FBOP::IsGrepBuf( outfile, BSOB(GrepFBufname), &grepHdrLines ) ) ) { Msg(   "non-grep-buf buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
-      if( !(0 == strcmp( GrepFBufname, d_SrchFile->Name() )) )                { Msg( "wrong haystack buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
+      if( !(0 == cmp( GrepFBufname, d_SrchFile->Namestr() )) )                { Msg( "wrong haystack buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
       auto numberedMatches(0);
       for( auto iy(0); iy < d_InfLines; ++iy )
          if( d_MatchingLines[iy] )

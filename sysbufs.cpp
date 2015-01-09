@@ -46,22 +46,41 @@ STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, CPCChar *pC, CPCChar *pPast
    return false;
    }
 
+STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"
+   if( !(pszName.starts_with( "<win" ) && pszName.ends_with( ">" )) ) {
+      return -1;
+      }
+   const auto numst( pszName.substr( 4, pszName.length()-4-1 ) );
+   for( auto ch : numst ) {
+      if( !isDecDigit( ch ) ) {
+         return -1;
+         }
+      }
+   const auto wnum( StrToInt_variable_base( numst, 10 ) );
+   if( !(wnum < g_iWindowCount()) )
+      return -2;
+
+   return wnum;
+   }
+
+//==========================================================================================
+
 bool FBUF::IsFileInfoFile( int widx ) const {
-   if( widx >= 0 && IsWFilesName( Name() ) == widx )
+   if( widx >= 0 && IsWFilesName( Namestr() ) == widx )
       return true;
 
    return NameMatch( szFiles );
    }
 
 bool FBUF::IsInvisibleFile( int widx ) const {
-   if( widx >= 0 && IsWFilesName( Name() ) == widx )
+   if( widx >= 0 && IsWFilesName( Namestr() ) == widx )
       return true;
 
    return FileMatchesNameInList( this, s_InvisibleFilenames, PAST_END( s_InvisibleFilenames ) );
    }
 
 bool FBUF::IsInterestingFile( int widx ) const {
-   if( widx >= 0 && IsWFilesName( Name() ) == widx )
+   if( widx >= 0 && IsWFilesName( Namestr() ) == widx )
       return false;
 
    return !FileMatchesNameInList( this, s_UninterestingFilenames, PAST_END( s_UninterestingFilenames ) );
@@ -516,7 +535,7 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, 
          }
       }
 
-   const auto widx( IsWFilesName( pFBuf->Name() ) );
+   const auto widx( IsWFilesName( pFBuf->Namestr() ) );
 
    if( widx >= 0 ) {
       CallFbufReader( pFBuf, FBufRead_WInformation, widx );

@@ -2120,10 +2120,7 @@ void View::EnsureWinContainsCursor() {
 // used to display an FBUF.  View::PutFocusOn()'s responsibility is to
 // initialize these fields
 //
-void View::PutFocusOn() {
-   enum { DBG_OK=0 };
-   DBG_OK && DBG( "%s+ %s", __func__, this->FBuf()->Name() );
-
+void View::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, this->FBuf()->Name() );
    GetFileExtensionSettings();
 
    // BUGBUG This causes the View list to link to self; don't know why!?
@@ -2743,7 +2740,7 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
    const auto cwdbuf( Path::GetCwd_ps() );
    const auto cwdlen( cwdbuf.length() );
    const auto fnLen( pfh->Namestr().length() );
-   const auto cfpath( Path::RefDirnm( pfh->Name() ) );
+   const auto cfpath( Path::RefDirnm( pfh->Namestr() ) );
    const auto commonLen( Path::CommonPrefixLen( cwdbuf, cfpath ) ); // 0 && DBG( "%s|%s (%" PR_SIZET "u)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
    const auto divergentPath( commonLen < cwdlen );
    const auto uniqPathLen( divergentPath ? cfpath.length() - commonLen : 0 );
