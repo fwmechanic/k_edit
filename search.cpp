@@ -359,7 +359,6 @@ class FileSearcher {
    public:
 
    std::string             d_sbuf;
-   Xbuf                    d_xb; // cannot be std::string cuz d_xb.wbuf()
 
    FileSearchMatchHandler &d_mh;
 
@@ -369,7 +368,7 @@ class FileSearcher {
 
    CapturedStrings       *d_pCaptures;
 
-   FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh, int capturesNeeded=1 );
+   FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
    virtual void   VPrepLine_( std::string &lbuf ) const {};
    virtual PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
@@ -1536,12 +1535,12 @@ void SearchSpecifier::Dbgf( PCChar tag ) const {
 
 //===============================================
 
-FileSearcher::FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh, int capturesNeeded )
+FileSearcher::FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh )
    : d_sm   ( sm )
    , d_ss   ( ss )
    , d_mh   ( mh )
    , d_pFBuf( nullptr  )
-   , d_pCaptures( new CapturedStrings( capturesNeeded ) )
+   , d_pCaptures( new CapturedStrings() )
    {
    }
 
@@ -1587,7 +1586,7 @@ FileSearcherRegex::FileSearcherRegex( const SearchScanMode &sm, const SearchSpec
    {
    Assert( d_ss.IsRegex() );
    if( !d_ss.HasError() )
-      d_pCaptures = new CapturedStrings( d_ss.GetRegex()->MaxPossCaptures() );
+      d_pCaptures = new CapturedStrings();
    }
 
 #endif

@@ -687,7 +687,6 @@ private:
       };
 
    std::vector<PerViewableLineInfo> d_PerViewableLine ;
-   Xbuf d_xb;
 
    int close_level( int level_ix, int yLast );
    void refresh( LINE, LINE );

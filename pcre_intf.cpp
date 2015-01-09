@@ -104,8 +104,6 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
          else {
             pcs->Set( ix, pBuf + d_capture[ix].oFirst, d_capture[ix].Len() );
             }
-
-         0 && DBG( "[%d] = %s", ix, pcs->Str( ix ) );
          }
       }
 

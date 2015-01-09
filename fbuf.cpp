@@ -564,48 +564,6 @@ PFBUF FindFBufByName( stref name ) {
 
 // indent/softcr
 
-STATIC_FXN bool SliceStrRtnFirstLastTokens( PXbuf pxb, PPCChar pszFirstTok, PPCChar pszLastTok ) {
-   auto pC( StrPastAnyBlanks( pxb->c_str() ) );
-   if( *pC == 0 )
-      return false;
-
-   *pszFirstTok = pC; // save first result
-
-   // We want to detect '{', '}' which are not words, so skip first char,
-   // whatever it is, to ensure we don't obliterate a token that has no
-   // wordchars.
-   //
-   pC = StrPastWord( pC+1 );
-   if( *pC ) {
-      pxb->mid_term( pC-pxb->c_str() ); // place backtrack-stopper
-      pC = Eos( pC + 1 );
-
-      while( *(--pC) != 0 && *pC != ' ' )
-         continue;
-
-      if( *(++pC) == 0 )
-         pC = nullptr;
-      }
-   else {
-      pC = nullptr;
-      }
-
-   *pszLastTok = pC;
-
-   0 && DBG( "%s  first='%s'  last='%s'", __func__, *pszFirstTok, *pszLastTok );
-   return true;
-   }
-
-STATIC_FXN int FindStringMatchingArrayOfString( CPCChar papszStringsToCmp[], PCChar pszTarget, bool fCase ) {
-   const auto my_strcmp( fCase ? &strcmp : &Stricmp );
-   for( auto papszFirst( papszStringsToCmp ) ; *papszStringsToCmp ; ++papszStringsToCmp ) {
-      if( 0 == my_strcmp( *papszStringsToCmp, pszTarget ) ) { 0 && DBG( "'%s' matches '%s'", pszTarget, *papszStringsToCmp );
-         return papszStringsToCmp - papszFirst + 1;
-         }
-      }
-   return 0;
-   }
-
 STIL int NextIndent( int curIndent, int indentIncr ) {
    const auto rv( ((curIndent+indentIncr) / indentIncr) * indentIncr );
    0 && DBG( "%s %d, %d => %d", __func__, curIndent, indentIncr, rv );

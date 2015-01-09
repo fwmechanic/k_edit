@@ -1452,7 +1452,6 @@ public:
 
    void           GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;  // <-- prefer
    int            GetLineForInsert     (  std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
-// int            GetLineForInsert     (  PXbuf         pXb, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
 
    stref          PeekRawLine( LINE lineNum ) const; // returns RAW line content BY REFERENCE

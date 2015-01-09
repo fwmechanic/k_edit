@@ -14,33 +14,23 @@ class CapturedStrings {
 
    protected:
 
-   const int         d_maxCount;
-   PXbuf             d_pCs;
+   std::vector<std::string> d_Capture;
 
    public:
 
-   CapturedStrings( int cnt=1 )
-      : d_maxCount(cnt)
-      , d_pCs( new Xbuf [cnt] )
-      {}
-   ~CapturedStrings() { delete [] d_pCs; }
+    CapturedStrings() {}
+   ~CapturedStrings() {}
 
    // on the accessor side, we do not differentiate between an empty capture and
    // a nonexistent capture (both have Len()==0, and Str()=="")
-   //
-   PCChar Str( int ix ) const { return (ix < d_maxCount) ? PCChar(d_pCs[ix].c_str()) : ""; }
-   int    Len( int ix ) const { return (ix < d_maxCount) ?        d_pCs[ix].length()   : 0 ; }
-   int    Count()       const { return       d_maxCount; }
 
-   void clear() {
-      for( auto ix(0); ix < d_maxCount; ++ix )
-         d_pCs[ix].clear();
-      }
-   void Set( int ix, PCChar src, int srcLen ) {
-      if( ix < d_maxCount )
-         d_pCs[ix].assign( src, srcLen );
+   void clear() { d_Capture.clear(); }
+
+   void Set( int ix, PCChar src, size_t srcLen ) {
+      d_Capture.emplace_back( src, srcLen );
       }
 
+   const std::vector<std::string> &get() const { return d_Capture; }
    };
 
 //******************************************************************************
