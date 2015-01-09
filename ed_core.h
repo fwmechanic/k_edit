@@ -370,36 +370,6 @@ public:
       return rv;
       }
 
-   PCChar pad_right( char ch, int count ) {
-      const auto slen( length() );
-      if( slen < count ) {
-         const auto rv( wresize( count+1 ) );
-         const auto fillcount( count - slen );
-         memset( rv + slen, ch, fillcount );
-         rv[count] = '\0';
-         return rv;
-         }
-      return c_str();
-      }
-
-   //-----------------------------------------------------------------------
-   // mid_term() is used to insert temporary EoS nul '\0' chars into the middle of a string when ASCIZ substrings are being "sliced" from it
-   // de_mid_term() is used to restore the original char which mid_term() overwrote with '\0'
-   //
-   char mid_term( int xCol ) {
-      wresize( 1+xCol ); // this should NEVER cause an actual resize!
-      const auto buf( wbuf() );
-      const auto rv( buf[xCol] );
-      buf[xCol] = '\0';
-      return rv;
-      }
-
-   void de_mid_term( int xCol, char ch ) {
-      wresize( 1+xCol ); // this should NEVER cause an actual resize!
-      const auto buf( wbuf() );
-      buf[xCol] = ch;
-      }
-
    PCChar poke( int xCol, char ch, char fillch=' ' ) {
       const auto rv( wresize( 1+xCol ) );
       const auto len0( length() );
@@ -411,21 +381,6 @@ public:
          rv[xCol+1] = '\0';
          }
       return rv;
-      }
-
-   PCChar insert_hole( int xCol, int insertWidth=1 ) { // assumes that last char in d_buf is a '\0', and preserves it
-      const auto rv( wresize( 1+xCol+insertWidth-1 ) );
-      memmove( rv+xCol+insertWidth, rv+xCol, 1+Strlen(rv+xCol) );
-      return rv;
-      }
-
-   PCChar collapse_hole( int xCol, int collapseWidth=1 ) { // assumes that last char in b is a '\0', and preserves it
-      if( d_buf ) {
-         memmove( d_buf+xCol, d_buf+xCol+collapseWidth, 1+Strlen(d_buf+xCol+collapseWidth) );
-         // if( collapseWidth > 1 )  // memset is optimized out if false
-         //    memset( d_buf + sizeof(d_buf) - collapseWidth, 0, collapseWidth-1 );
-         }
-      return d_buf;
       }
 
    PCChar vFmtStr( PCChar format, va_list val ) {
