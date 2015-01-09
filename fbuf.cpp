@@ -153,6 +153,7 @@ PFBUF FBOP::FindOrAddFBuf( stref filename, PFBUF *ppGlobalPtr ) {
    if( pFBuf ) {
       if( ppGlobalPtr ) {
          Assert( !pFBuf->HasGlobalPtr() );
+         pFBuf->UnsetGlobalPtr();
          pFBuf->SetGlobalPtr( ppGlobalPtr );
          }
       return pFBuf;
@@ -246,13 +247,12 @@ public:
       memset( d_firstIndentAt, 0, sizeof(d_firstIndentAt) );
       }
 
-   int addSample( PCChar buf, bool fLastLine );
+   int addSample( sridx indent, bool fLastLine );
    };
 
 
-int MaxIndentAccumulator::addSample( PCChar buf, bool fLastLine ) {
+int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
    auto fSampled( false );
-   const int indent( StrPastAnyBlanks(buf) - buf );
    if( indent > 0 && indent < ELEMENTS(d_firstIndentAt) ) {
       ++d_firstIndentAt[indent];
       ++d_sampleCount;
@@ -261,7 +261,7 @@ int MaxIndentAccumulator::addSample( PCChar buf, bool fLastLine ) {
 
    // periodically check for a clear winner
    //
-   if( (fSampled && ((d_sampleCount % 1024) == 0)) || fLastLine ) {
+   if( fLastLine || (fSampled && ((d_sampleCount % 1024) == 0)) ) {
       0 && DBG( "%s @ %d 0=%d 1=%d 2=%d 3=%d 4=%d 5=%d 6=%d 7=%d 8=%d 9=%d"
          , __func__
          , d_sampleCount
@@ -304,16 +304,19 @@ int MaxIndentAccumulator::addSample( PCChar buf, bool fLastLine ) {
 void FBUF::CalcIndent( bool fWholeFileScan ) { 0 && DBG( "%s ********************************************", __func__ );
    MaxIndentAccumulator maxIn;
    d_IndentIncrement = 0;
-   std::string str;
+   const auto tw( TabWidth() );
    for( auto yLine(0) ; yLine < LineCount() ; ++yLine ) {
-      getLineTabx( str, yLine );
-      const auto goodIndentValue( maxIn.addSample( str.c_str(), false ) );
-      if( goodIndentValue && !fWholeFileScan ) {
-         d_IndentIncrement = goodIndentValue;
-         return;
+      const auto rl( PeekRawLine( yLine ) );
+      const auto ixNonb( FirstNonBlankOrEnd( rl ) );
+      if( !atEnd( rl, ixNonb ) ) {
+         const auto goodIndentValue( maxIn.addSample( ColOfFreeIdx( tw, rl, ixNonb ), false ) );
+         if( goodIndentValue && !fWholeFileScan ) {
+            d_IndentIncrement = goodIndentValue;
+            return;
+            }
          }
       }
-   d_IndentIncrement = maxIn.addSample( "", true );
+   d_IndentIncrement = maxIn.addSample( 0, true );
    }
 
 #ifdef fn_in

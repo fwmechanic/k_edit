@@ -79,7 +79,7 @@ w fromwinclip  fromwinclip               NOARG , Windows Clipboard ==> <clipboar
   graphic      graphic        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG  # this help will not show
   grep         grep                      NOARG+NULLEOW+TEXTARG+BOXSTR , Searches curfile for matches, copies these as numbered lines to <grep_n>, switches to <grep_n>
   home         home           CURSORFUNC , Moves cursor to window's Upper-Left corner.  META: Moves cursor to window's Lower-Right corner
-# in           in                        NOARG
+  in           in                        NOARG
   initialize   initialize                NOARG + BOXSTR + NULLEOW + TEXTARG , Discards all current settings, then reads the statements from the main ([K]) section of .krsrc.
   insert       insert         MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , NOARG: Inserts a space character at cursor, independent of insert/overtype mode.  NULARG: breaks line at cursor.  SELARG: Inserts space chars into selected area
 # justify      justify        MODIFIES + NOARG+BOXARG+LINEARG+TEXTARG+NULLARG , Justifies paragraph

@@ -1111,15 +1111,16 @@ private:
 public:
 
    void           UnsetGlobalPtr() {
-                  if( d_ppGlobalPtr ) { *d_ppGlobalPtr = nullptr; }  // un-cross-link any existing reference
-                  d_ppGlobalPtr = nullptr;                           // new reference: none
-                  }
+                     if( d_ppGlobalPtr ) {
+                       *d_ppGlobalPtr = nullptr;          // un-cross-link any existing reference
+                        d_ppGlobalPtr = nullptr;          // new reference: none
+                        }
+                     }
 
-   void           SetGlobalPtr( PPFBUF ppGlobalPtr ) {
-                  if( d_ppGlobalPtr ) { *d_ppGlobalPtr = nullptr; }  // un-cross-link any existing reference
-                  d_ppGlobalPtr = ppGlobalPtr;                       // new reference: add
-                  if( d_ppGlobalPtr ) { *d_ppGlobalPtr = this;    }  // cross-link
-                  }
+   void           SetGlobalPtr( PPFBUF ppGlobalPtr ) { // Assert( nullptr==d_ppGlobalPtr );
+                     d_ppGlobalPtr = ppGlobalPtr;                    // new reference: add
+                     if( d_ppGlobalPtr ) { *d_ppGlobalPtr = this; }  // cross-link
+                     }
 
    bool           HasGlobalPtr()                 const { return ToBOOL(d_ppGlobalPtr); }
    bool           IsSysPseudo()                  const { return HasGlobalPtr(); }
