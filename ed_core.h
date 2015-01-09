@@ -290,11 +290,6 @@ class Xbuf {
       , d_buf_bytes( 0 )
       { assign( str, len_ ); }
 
-   Xbuf( PCChar str1, PCChar str2 )
-      : d_buf      ( nullptr )
-      , d_buf_bytes( 0 )
-      { cpy2( str1, str2 ); }
-
    ~Xbuf() {
           if( &ds_empty==d_buf ) {} else
           { Free_( d_buf ); }
