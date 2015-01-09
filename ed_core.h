@@ -1087,14 +1087,42 @@ public:
                      #endif
                          }
 
-   //***********  handle global pointer for this
+   /* d_ppGlobalPtr: support global pointer for this
+
+      d_ppGlobalPtr allows direct (pointer) reference to a FBUF (that must
+      obviously, while so referenced, remain in existence).  It is assumed that
+      d_ppGlobalPtr points to a PFBUF having sufficient lifetime (i.e.  is static
+      or (rarely) heap-based), such that d_ppGlobalPtr is always dereferencible.
+
+      The alternative to d_ppGlobalPtr is to perform FBUF-name-based lookups of
+      said FBUF at each point of reference, which is code- and
+      runtime-inefficient.  Also this approach provides no guarantee that said
+      FBUF will exist continuously between such references, and does not handle
+      the case where the user decides to rename the FBUF (for example in order to
+      save its contents to disk).
+
+      The methods below provide a framework that fulfills the requirements
+      outlined above.
+
+   */
 private:
-   PPFBUF         d_ppGlobalPtr; // nullptr or addr-of a global ptr which points at this object
+   PPFBUF         d_ppGlobalPtr = nullptr; // nullptr or addr-of a global ptr which points at this object
    PPFBUF         GetGlobalPtr()   const { return d_ppGlobalPtr; }
 public:
-   void           SetGlobalPtr(   PPFBUF ppGlobalPtr ) { d_ppGlobalPtr = ppGlobalPtr;  if( d_ppGlobalPtr )  *d_ppGlobalPtr = this; }
-   void           UnsetGlobalPtr(                    ) { if( d_ppGlobalPtr ) *d_ppGlobalPtr = nullptr; d_ppGlobalPtr = nullptr; }
+
+   void           UnsetGlobalPtr() {
+                  if( d_ppGlobalPtr ) { *d_ppGlobalPtr = nullptr; }  // un-cross-link any existing reference
+                  d_ppGlobalPtr = nullptr;                           // new reference: none
+                  }
+
+   void           SetGlobalPtr( PPFBUF ppGlobalPtr ) {
+                  if( d_ppGlobalPtr ) { *d_ppGlobalPtr = nullptr; }  // un-cross-link any existing reference
+                  d_ppGlobalPtr = ppGlobalPtr;                       // new reference: add
+                  if( d_ppGlobalPtr ) { *d_ppGlobalPtr = this;    }  // cross-link
+                  }
+
    bool           HasGlobalPtr()                 const { return ToBOOL(d_ppGlobalPtr); }
+   bool           IsSysPseudo()                  const { return HasGlobalPtr(); }
 
    //***********  (list of) Views of this (FBUF)
 private:

@@ -1361,8 +1361,8 @@ local dynamic_fbufs = -- bugbug this s/b automated
 AddEdFxn{ name = "sb", help = "Menu: System Buffers", attr = NOARG, key = ""
    , NOARG = function ( arg )
       local choices = {}
-      for fbuf in AllFbufs() do  if fbuf:HasGlobalPtr() then choices[1+#choices] = fbuf:Name()  end  end
-      for _,name in ipairs(dynamic_fbufs) do                 choices[1+#choices] = name              end
+      for fbuf in AllFbufs() do  if fbuf:IsSysPseudo() then choices[1+#choices] = fbuf:Name()  end  end
+      for _,name in ipairs(dynamic_fbufs) do                choices[1+#choices] = name              end
       table.sort( choices )
       local _,fnm = Menu.new{ title="System Buffers", choices=choices }:PickOne()
       if fnm then  fChangeFile( fnm )  end

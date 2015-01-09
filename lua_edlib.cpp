@@ -371,9 +371,9 @@ FBUF_(IsDiskRO)                 { R_bool( 0 != thisPF()->IsDiskRO()             
 #else
 FBUF_(IsDiskRO)                 { R_bool( false ); }
 #endif
-FBUF_(HasGlobalPtr)             { R_bool( 0 != thisPF()->HasGlobalPtr()              ); }
 FBUF_(ToForgetOnExit)           { R_bool( 0 != thisPF()->ToForgetOnExit()            ); }
 FBUF_(IsPseudo)                 { R_bool( 0 != thisPF()->FnmIsPseudo()               ); }
+FBUF_(IsSysPseudo)              { R_bool( 0 != thisPF()->IsSysPseudo()               ); }
 FBUF_(IsRsrcLdBlocked)          { R_bool( 0 != thisPF()->IsRsrcLdBlocked()           ); }
 FBUF_(IsNoEdit)                 { R_bool( 0 != thisPF()->IsNoEdit()                  ); }
 #if defined(_WIN32)
@@ -819,7 +819,6 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       LUA_FUNC_I(GetLineRaw)
       LUA_FUNC_I(GetLineSeg)
       LUA_FUNC_I(PutLineSeg)
-      LUA_FUNC_I(HasGlobalPtr)
       LUA_FUNC_I(InsBlankLinesBefore)
       LUA_FUNC_I(InsLine)
       LUA_FUNC_I(InsLineSortedAscending)
@@ -830,6 +829,7 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       LUA_FUNC_I(IsGrepBuf)
       LUA_FUNC_I(IsNoEdit)
       LUA_FUNC_I(IsPseudo)
+      LUA_FUNC_I(IsSysPseudo)
       LUA_FUNC_I(IsRsrcLdBlocked)
       LUA_FUNC_I(KeepTrailSpcs)
       LUA_FUNC_I(LastLine)

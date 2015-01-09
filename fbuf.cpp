@@ -153,7 +153,6 @@ PFBUF FBOP::FindOrAddFBuf( PCChar filename, PFBUF *ppGlobalPtr ) {
    if( pFBuf ) {
       if( ppGlobalPtr ) {
          Assert( !pFBuf->HasGlobalPtr() );
-         pFBuf->UnsetGlobalPtr(); // Just in case Assert failed but we're still running
          pFBuf->SetGlobalPtr( ppGlobalPtr );
          }
       return pFBuf;
