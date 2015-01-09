@@ -95,7 +95,7 @@ const Path::str_t DirMatches::GetNext() {
       return Path::str_t("");
 
    d_buf.replace( d_ixDest, std::string::npos, d_dirent->d_name );
-   if( ToBOOL(d_sbuf.st_mode & S_IFDIR) && !Path::IsDotOrDotDot( d_buf.c_str() ) )
+   if( ToBOOL(d_sbuf.st_mode & S_IFDIR) && !Path::IsDotOrDotDot( d_buf ) )
       d_buf.append( PATH_SEP_STR );
 
    0 && DBG( "DirMatches::GetNext: '%s' (%X)", d_buf.c_str(), d_sbuf.st_mode );

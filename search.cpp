@@ -1362,7 +1362,6 @@ void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySk
       //                ( (yMax + yMin) / 2 );           // old overflow-susceptible version
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
       const auto xbChars( fb->getLineTabxPerRealtabs( tmp, cmpLine ) );
-      CPCChar pXb( tmp.c_str() );
       auto rslt( cmpi( src, tmp ) * cmpSignMul );
       if( 0 == rslt ) {
          rslt = cmp( src, tmp ) * cmpSignMul;

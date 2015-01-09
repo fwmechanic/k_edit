@@ -780,7 +780,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          Path::str_t nxt;
          do {
             nxt = pDirContent->GetNext();
-            } while( Path::IsDotOrDotDot( nxt.c_str() ) );
+            } while( Path::IsDotOrDotDot( nxt ) );
 
          if( !nxt.empty() ) {
             stb = nxt;
@@ -1333,7 +1333,7 @@ bool ARG::selcmd() { // selcmd:alt+0
          AddToTextargStack( cmdNameBuf );
          }
 
-      const PCCMD newCmd( CmdFromName( cmdNameBuf.c_str() ) );
+      const PCCMD newCmd( CmdFromName( cmdNameBuf ) );
       if( !newCmd ) {
          fnMsg( "'%s' is unknown cmd", cmdNameBuf.c_str() );
          continue;

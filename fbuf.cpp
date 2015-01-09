@@ -829,7 +829,7 @@ Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
 
 STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 && DBG( "%s '%s'='%" PR_BSR "'", __func__, pszMacroName, BSR(pszMacroString) );
    const std::string str( "\"" + std::string( pszMacroString.data(), pszMacroString.length() ) + "\"" );
-   return DefineMacro( pszMacroName, str.c_str() );
+   return DefineMacro( pszMacroName, str );
    }
 
 void FBOP::AssignFromRsrc( PCFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
@@ -879,8 +879,8 @@ PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heav
    if( fnamebuf.empty() )
       return nullptr;
 
+   auto pFBuf( FindFBufByName( fnamebuf ) );
    CPCChar pFnm( fnamebuf.c_str() );                             DP && DBG( "OFND xlat='%s'", pFnm );
-   auto pFBuf( FindFBufByName( pFnm ) );
    if( !pFBuf ) {
       if( !FBUF::FnmIsPseudo( pFnm ) ) {
          FileAttribs fa( pFnm );
@@ -936,7 +936,7 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
       Msg( "Changed directory to %s", cwdAfter.c_str() );
       if( fSave ) {
          std::string tmp;
-         g_pFBufCwd->InsLine( 0, cwdBefore.c_str(), tmp );
+         g_pFBufCwd->InsLine( 0, cwdBefore, tmp );
          }
       }
    return true;
@@ -961,7 +961,7 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "
       }
 
    CPCChar pFnm( fnamebuf.c_str() );
-   auto pFBuf( FindFBufByName( pFnm ) );     DP && DBG( "%s '%s' -->PFBUF %p", __func__, pFnm, pFBuf );
+   auto pFBuf( FindFBufByName( fnamebuf ) );     DP && DBG( "%s '%s' -->PFBUF %p", __func__, pFnm, pFBuf );
    if( !pFBuf ) {
       auto fCwdChanged( false );
       if( SetCwdOk( pFnm, fCwdSave, &fCwdChanged ) ) {
@@ -1118,7 +1118,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    // user edits file in K, then later renames it, changing only case of name
    // user opens in K, retrieves old-cased nm from state file, edits and saves, writing to old-cased name :-(
    const auto canonFnm( Path::CanonizeCase( Name() ) );
-   if( Strcmp( canonFnm.c_str(), Name() ) ) { // NB: CASE-SENSITIVE compare intended!
+   if( cmp( canonFnm, Namestr() ) ) { // NB: CASE-SENSITIVE compare intended here!
        ChangeName( canonFnm.c_str() );
        }
   #else
@@ -1298,7 +1298,7 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                      // In Win32/MSVC RTL, rename() FAILS if the destination already exists
                      if( !unlinkOk( BAK_FileNm.c_str() ) ) {
                         if( errno != ENOENT ) {
-                           return Msg( "Can't delete %s - %s", Path::CpyFnameExt( BAK_FileNm.c_str() ).c_str(), strerror( errno ) );
+                           return Msg( "Can't delete %" PR_BSR " - %s", BSR(Path::RefFnameExt( BAK_FileNm )), strerror( errno ) );
                            }
                         }
                     #endif
@@ -1405,7 +1405,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
       return false;
       }
 
-   if( !NameMatch( destFnm.c_str() ) )
+   if( !NameMatch( destFnm ) )
       ChangeName( destFnm.c_str() ); //
 
   #if defined(_WIN32)
@@ -1430,7 +1430,7 @@ bool FBUF::WriteToDisk( PCChar pszSavename ) {
          }
       }
 
-   const auto fFnmChanging( dest[0] && !NameMatch( dest.c_str() ) );
+   const auto fFnmChanging( dest[0] && !NameMatch( dest ) );
    Path::str_t pseudoFnm;
    PPFBUF gp( nullptr );  // if it has a gp, it is a pseudo file
    if( !fFnmChanging )             dest      = Name();

@@ -1571,7 +1571,7 @@ void FBUF::GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightI
 int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
    const auto tw       ( TabWidth() );
    auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
-   auto       strCols  ( StrCols( tw, dest.c_str() ) );
+   auto       strCols  ( StrCols( tw, dest ) );
    const auto lineCols ( ColOfFreeIdx( tw, dest, dest.length() ) );  DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d)", __func__, BSR(dest), lineCols, strCols, xIns );
    // Assert( lineCols == lineChars );
    if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
@@ -2055,38 +2055,38 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       }
    FBdest->PutLine( yDst, destbuf, stmp );
   #else
-   Xbuf xbFirst; FBdest->GetLineForInsert( &xbFirst, yDst, xDst, 0 ); // rd dest line containing insertion point
-   Xbuf xbLast;
-   if( FBsrc ) {
-      FBsrc->GetLineForInsert( &xbLast, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
-      }
-   else {
-      if( xSrcEnd > 0 ) { memset( xbLast.wresize( xSrcEnd ), ' ', xSrcEnd ); } // if is not strictly necessary, but silences a GCC warning "memset used with constant zero length parameter" (when this entire fxn is inlined!!!)
-      }
-
-   const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
-   const auto twd( FBdest->TabWidth() );
-   std::string stmp;
-   {
-   const auto pDestSplit( PtrOfColWithinStringRegion( twd, xbFirst.wbuf(), xbFirst.wbuf()+xbFirst.length(), xDst ) ); // dest text PAST insertion point
-   DBG( "pDestSplit[0]=%u", pDestSplit[0] );
-   auto taillen( Strlen( pDestSplit ) );
-   auto srcbuf( xbLast.wresize( xSrcEnd + taillen + 1 ) );  // worst case, ignores possible tab compression
-   strcpy( PtrOfColWithinStringRegion( twd, srcbuf, Eos(srcbuf), xSrcEnd ), pDestSplit ); // dest text PAST insertion point -> srcbuf past xSrcEnd
-   FBdest->PutLine( yDstLast, srcbuf, stmp );
-   pDestSplit[0] = '\0'; // this belongs as else case for if( FBsrc ) below, but uses this scope's pDestSplit
-   }
-
-   //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
-   if( FBsrc ) {
-      FBsrc->GetLineForInsert( &xbLast, ySrcStart, xSrcStart, 0 );
-      const auto pSrc( PtrOfColWithinStringRegion( FBsrc->TabWidth(), xbLast.wbuf(), xbLast.wbuf()+xbLast.length(), xSrcStart ) );
-      const auto taillen( Strlen( pSrc ) );
-      const auto dstbuf( xbFirst.wresize( xDst + taillen + 1 ) );
-      const auto pDestSplit( PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst ) ); // dest text PAST insertion point
-      memcpy( pDestSplit, pSrc, taillen + 1 );
-      }
-   FBdest->PutLine( yDst, xbFirst.c_str(), stmp );
+// Xbuf xbFirst; FBdest->GetLineForInsert( &xbFirst, yDst, xDst, 0 ); // rd dest line containing insertion point
+// Xbuf xbLast;
+// if( FBsrc ) {
+//    FBsrc->GetLineForInsert( &xbLast, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
+//    }
+// else {
+//    if( xSrcEnd > 0 ) { memset( xbLast.wresize( xSrcEnd ), ' ', xSrcEnd ); } // if is not strictly necessary, but silences a GCC warning "memset used with constant zero length parameter" (when this entire fxn is inlined!!!)
+//    }
+//
+// const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
+// const auto twd( FBdest->TabWidth() );
+// std::string stmp;
+// {
+// const auto pDestSplit( PtrOfColWithinStringRegion( twd, xbFirst.wbuf(), xbFirst.wbuf()+xbFirst.length(), xDst ) ); // dest text PAST insertion point
+// DBG( "pDestSplit[0]=%u", pDestSplit[0] );
+// auto taillen( Strlen( pDestSplit ) );
+// auto srcbuf( xbLast.wresize( xSrcEnd + taillen + 1 ) );  // worst case, ignores possible tab compression
+// strcpy( PtrOfColWithinStringRegion( twd, srcbuf, Eos(srcbuf), xSrcEnd ), pDestSplit ); // dest text PAST insertion point -> srcbuf past xSrcEnd
+// FBdest->PutLine( yDstLast, srcbuf, stmp );
+// pDestSplit[0] = '\0'; // this belongs as else case for if( FBsrc ) below, but uses this scope's pDestSplit
+// }
+//
+// //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
+// if( FBsrc ) {
+//    FBsrc->GetLineForInsert( &xbLast, ySrcStart, xSrcStart, 0 );
+//    const auto pSrc( PtrOfColWithinStringRegion( FBsrc->TabWidth(), xbLast.wbuf(), xbLast.wbuf()+xbLast.length(), xSrcStart ) );
+//    const auto taillen( Strlen( pSrc ) );
+//    const auto dstbuf( xbFirst.wresize( xDst + taillen + 1 ) );
+//    const auto pDestSplit( PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst ) ); // dest text PAST insertion point
+//    memcpy( pDestSplit, pSrc, taillen + 1 );
+//    }
+// FBdest->PutLine( yDst, xbFirst.c_str(), stmp );
 
   #endif
 

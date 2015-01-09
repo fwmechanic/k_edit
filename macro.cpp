@@ -909,12 +909,12 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
    std::string stmp;
    if( st.length() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
       st += " \\";
-      g_pFbufRecord->PutLine( lastLine  , st.c_str(), stmp );
-      g_pFbufRecord->PutLine( lastLine+1, lbufNew   , stmp );
+      g_pFbufRecord->PutLine( lastLine  , st     , stmp );
+      g_pFbufRecord->PutLine( lastLine+1, lbufNew, stmp );
       }
    else {
       st += lbufNew;
-      g_pFbufRecord->PutLine( lastLine  , st.c_str(), stmp );
+      g_pFbufRecord->PutLine( lastLine  , st     , stmp );
       }
 
    MoveCursorToEofAllWindows( g_pFbufRecord );
@@ -1191,7 +1191,7 @@ bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd,
       DBGEN && DBG( "%s L %d rslt=%d", __func__, d_yMacCur, rslt );
       switch( rslt ) {
          case HAVE_CONTENT       :  DBGEN && DBG( "assigning --- |%s|", d_dest.c_str() );
-                                    if( !AssignStrOk( d_dest.c_str() ) ) { DBGEN && DBG( "%s atom failed '%s'", __func__, d_dest.c_str() );
+                                    if( !AssignStrOk( d_dest ) ) {         DBGEN && DBG( "%s atom failed '%s'", __func__, d_dest.c_str() );
                                        if( pErrorPt ) {
                                           pErrorPt->Set( d_yMacCur, 0 );
                                           }

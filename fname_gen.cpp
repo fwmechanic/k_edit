@@ -411,7 +411,7 @@ void DirListGenerator::AddName( stref name ) {
 DirListGenerator::DirListGenerator( PCChar dirName ) {
    NewScope {
       Path::str_t pStartDir( dirName ? dirName : Path::GetCwd() );
-      AddName( pStartDir.c_str() );
+      AddName( pStartDir );
       }
 
    Path::str_t pbuf;
@@ -425,10 +425,10 @@ DirListGenerator::DirListGenerator( PCChar dirName ) {
       WildcardFilenameGenerator wcg( pbuf.c_str(), ONLY_DIRS );
 
       while( wcg.VGetNextName( pbuf ) ) {
-         if( !Path::IsDotOrDotDot( pbuf.c_str() ) )
-            AddName( pbuf.c_str() );
+         if( !Path::IsDotOrDotDot( pbuf ) )
+            AddName( pbuf );
 
-         0 && DBG( "   PBUF='%s' DBUF='%s'", pbuf.c_str(), Path::CpyFnm( pbuf.c_str() ).c_str() );
+         0 && DBG( "   PBUF='%s' DBUF='%" PR_BSR "'", pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
          }
       }
    }
