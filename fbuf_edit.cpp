@@ -789,7 +789,7 @@ PFBUF GetNextClipFBufToWrite( int clipboardArgType ) {
          }
       else {
          cinfo.contentType = clipboardArgType;
-         return FBOP::FindOrAddFBuf( FmtStr<12>( "<clip%d>", s_Clip.curIdx ), &cinfo.pFBuf );
+         return FBOP::FindOrAddFBuf( FmtStr<12>( "<clip%d>", s_Clip.curIdx ).c_str(), &cinfo.pFBuf );
          }
       }
    // _ALL_ aClipFBufs have been made readonly!  User has to pick one to overwrite, OR cancel the copy-to-clip op

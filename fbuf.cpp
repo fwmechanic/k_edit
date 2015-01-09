@@ -107,7 +107,7 @@ void IdleIntegrityCheck() {
 
 GLOBAL_VAR bool g_fTrailSpace;
 
-FBUF::FBUF( PCChar filename, PPFBUF ppGlobalPtr )
+FBUF::FBUF( stref filename, PPFBUF ppGlobalPtr )
    : d_fPreserveTrailSpc  ( g_fTrailSpace )
    , d_TabWidth           ( 1 )
    {
@@ -133,12 +133,12 @@ void FBUF::RemoveFBufOnly() {  // ONLY USE THIS AT SHUTDOWN TIME, or within priv
    }
 
 
-STIL PFBUF NewFbuf( PCChar filename, PPFBUF ppGlobalPtr ) { // this _IS_ the PFBUF constructor (separate for greppability)
+STIL PFBUF NewFbuf( stref filename, PPFBUF ppGlobalPtr ) { // this _IS_ the PFBUF constructor (separate for greppability)
    return new FBUF( filename, ppGlobalPtr );
    }
 
 
-PFBUF FBUF::AddFBuf( PCChar filename, PFBUF *ppGlobalPtr ) { 0 && DBG( "%s <- %s", __func__, filename );
+PFBUF FBUF::AddFBuf( stref filename, PFBUF *ppGlobalPtr ) { 0 && DBG( "%s <- %" PR_BSR "", __func__, BSR(filename) );
    const auto pFBuf( NewFbuf( filename, ppGlobalPtr ) );
 #if FBUF_TREE
    rb_insert_gen( g_FBufIdx, pFBuf->Name(), rb_strcmpi, pFBuf );
@@ -148,7 +148,7 @@ PFBUF FBUF::AddFBuf( PCChar filename, PFBUF *ppGlobalPtr ) { 0 && DBG( "%s <- %s
    return pFBuf;
    }
 
-PFBUF FBOP::FindOrAddFBuf( PCChar filename, PFBUF *ppGlobalPtr ) {
+PFBUF FBOP::FindOrAddFBuf( stref filename, PFBUF *ppGlobalPtr ) {
    const auto pFBuf( FindFBufByName( filename ) );
    if( pFBuf ) {
       if( ppGlobalPtr ) {
@@ -1416,8 +1416,8 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    }
 
 
-void FBUF::ChangeName( PCChar newName ) { // THE ONLY PLACE WHERE AN FBUF's NAME MAY BE SET!!!
-   d_filename = newName;
+void FBUF::ChangeName( stref newName ) { // DBG( "%s %" PR_BSR "'", __func__, BSR(newName) );
+   d_filename.assign( newName.data(), newName.length() ); // THE ONLY PLACE where FBUF::d_filename is changed!!!
    d_fFnmDiskWritable = ::Path::IsLegalFnm( Name() );
    }
 
@@ -1462,7 +1462,7 @@ bool FBUF::WriteToDisk( PCChar pszSavename ) {
    if( saveOk && gp ) { // a FBUF having a GlobalPtr (which by defn WAS a pseudofile) has been saved under a new name?
                         // must create a new FBUF having the old name, and point the GlobalPtr at it
       UnsetGlobalPtr(); // no GlobalPtr associated with 'this' anymore
-      FBOP::FindOrAddFBuf( pseudoFnm.c_str(), gp ); // associate GlobalPtr with a new FBUF created specifically to bear the old name
+      FBOP::FindOrAddFBuf( pseudoFnm, gp ); // associate GlobalPtr with a new FBUF created specifically to bear the old name
       }
    return saveOk;
    }

@@ -511,7 +511,7 @@ STATIC_FXN bool OpenRsrcFileFailed() {
 
    0 && DBG( "%s opens Rsrc file '%s'", FUNC, s_pszRsrcFilename.c_str() );
 
-   FBOP::FindOrAddFBuf( s_pszRsrcFilename.c_str(), &s_pFBufRsrc );
+   FBOP::FindOrAddFBuf( s_pszRsrcFilename, &s_pFBufRsrc );
    return s_pFBufRsrc->ReadDiskFileNoCreateFailed();
    }
 

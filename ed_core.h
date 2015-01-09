@@ -1032,8 +1032,8 @@ class FBUF { // FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
 
 public:
    //************ CONSTRUCTOR
-                  FBUF( PCChar filename, PPFBUF ppGlobalPtr ); // the ONLY CTOR
-   STATIC_FXN PFBUF AddFBuf( PCChar pBufferName, PFBUF *ppGlobalPtr=nullptr ); // and put at END of filelist
+                  FBUF( stref filename, PPFBUF ppGlobalPtr ); // the ONLY CTOR
+   STATIC_FXN PFBUF AddFBuf( stref pBufferName, PFBUF *ppGlobalPtr=nullptr ); // and put at END of filelist
 
    //************ DESTRUCTORS
                   ~FBUF();
@@ -1051,7 +1051,7 @@ public:
 private:
    Path::str_t    d_filename; // on heap
    bool           d_fFnmDiskWritable;
-   void           ChangeName( PCChar newName );  // THE ONLY PLACE WHERE AN FBUF's NAME MAY BE SET!!!
+   void           ChangeName( stref newName );  // THE ONLY PLACE WHERE AN FBUF's NAME MAY BE SET!!!
 
 public:
    bool           FnmIsDiskWritable() const { return d_fFnmDiskWritable; }
@@ -1106,7 +1106,7 @@ public:
 
    */
 private:
-   PPFBUF         d_ppGlobalPtr = nullptr; // nullptr or addr-of a global ptr which points at this object
+   PPFBUF         d_ppGlobalPtr; // init'd by the "only ctor"; nullptr or addr-of a global ptr which points at this object
    PPFBUF         GetGlobalPtr()   const { return d_ppGlobalPtr; }
 public:
 
@@ -1487,7 +1487,7 @@ public:
 
    }; // end of class FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
 
-STIL PFBUF AddFBuf( PCChar pBufferName, PFBUF *ppGlobalPtr=nullptr ) {
+STIL PFBUF AddFBuf( stref pBufferName, PFBUF *ppGlobalPtr=nullptr ) {
    return FBUF::AddFBuf( pBufferName, ppGlobalPtr );
    }
 
@@ -1570,7 +1570,7 @@ extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, CO
 
 namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Prefer non-member non-friend functions to member functions."
 
-   extern PFBUF   FindOrAddFBuf( PCChar filename, PFBUF *ppGlobalPtr=nullptr );
+   extern PFBUF   FindOrAddFBuf( stref filename, PFBUF *ppGlobalPtr=nullptr );
 
    extern void    PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax );
 
