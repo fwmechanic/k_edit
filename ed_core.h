@@ -1052,13 +1052,13 @@ private:
    Path::str_t    d_filename; // on heap
    bool           d_fFnmDiskWritable;
    void           ChangeName( stref newName );  // THE ONLY PLACE WHERE AN FBUF's NAME MAY BE SET!!!
+   char           UserNameDelimChar() const;
 
 public:
    bool           FnmIsDiskWritable() const { return d_fFnmDiskWritable; }
    PCChar         Name() const { return d_filename.c_str(); }
    const Path::str_t &Namestr() const { return d_filename; }
 
-   char           UserNameDelimChar() const;
    PChar          UserName( PChar dest, size_t destSize ) const;
    int            UserNameLen() const {
                      const auto len( d_filename.length() );

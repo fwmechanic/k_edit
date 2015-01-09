@@ -2730,12 +2730,12 @@ STATIC_FXN void DrawStatusLine() { IS_LINUX && DBG( "*************> UpdtStatLn" 
          );
 
    //-----------------------------------------------------------------------
-   // Display that part of pfh->Name() which is common with the cwd in a
-   // different color than the remainder of pfh->Name().  Display any part
-   // of the path of pfh->Name() that diverges from the cwd in an again
+   // Display that part of pfh->Namestr() which is common with the cwd in a
+   // different color than the remainder of pfh->Namestr().  Display any part
+   // of the path of pfh->Namestr() that diverges from the cwd in an again
    // different color.  Purpose: so user can tell at a glance whether
    // curfile is (or more importantly, is not) within cwd subtree, and if
-   // so, how deep within.
+   // not, how deep without.
    //
    const auto cwdbuf( Path::GetCwd_ps() );
    const auto cwdlen( cwdbuf.length() );

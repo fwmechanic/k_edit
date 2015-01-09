@@ -2399,7 +2399,7 @@ LINE CGrepper::WriteOutput
       int     grepHdrLines;
       if( !outfile )                                                          { Msg(    "nonexistent buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
       if( !(FBOP::IsGrepBuf( outfile, BSOB(GrepFBufname), &grepHdrLines ) ) ) { Msg(   "non-grep-buf buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
-      if( !(0 == cmp( GrepFBufname, d_SrchFile->Namestr() )) )                { Msg( "wrong haystack buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
+      if( !d_SrchFile->NameMatch( GrepFBufname ) )                            { Msg( "wrong haystack buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
       auto numberedMatches(0);
       for( auto iy(0); iy < d_InfLines; ++iy )
          if( d_MatchingLines[iy] )
