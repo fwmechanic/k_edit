@@ -639,19 +639,15 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
               FlushKeyQueuePrimeScreenRedraw();                 \
               return false;                                     \
               }                                                 \
-           const auto rl( pFBuf->PeekRawLine( curPt.lin ) );    \
-           PCChar bos( rl.data()             );                 \
-           PCChar eos( rl.data()+rl.length() );                 \
-           auto colLastPossibleLastMatchChar( ColOfPtr( tw, bos, eos-1, eos ) );
+           auto rl( pFBuf->PeekRawLine( curPt.lin ) );          \
+           auto colLastPossibleLastMatchChar( StrCols( tw, rl ) );
 
    #define CHECK_NEXT  {  \
-           const auto rv( walker.VCheckNext( pFBuf, bos, eos, &curPt, colLastPossibleLastMatchChar )  );  \
-           if( STOP_SEARCH == rv ) return true;                                                           \
-           if( REREAD_LINE_CONTINUE_SEARCH == rv ) {                                                      \
-              const auto rl2( pFBuf->PeekRawLine( curPt.lin ) );                                          \
-              bos = rl2.data();                                                                           \
-              eos = rl2.data()+rl2.length();                                                              \
-              }                                                                                           \
+           const auto rv( walker.VCheckNext( pFBuf, rl.data(), rl.data()+rl.length(), &curPt, colLastPossibleLastMatchChar )  );  \
+           if( STOP_SEARCH == rv ) return true;       \
+           if( REREAD_LINE_CONTINUE_SEARCH == rv ) {  \
+              rl = pFBuf->PeekRawLine( curPt.lin );   \
+              }                                       \
            }
 
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
@@ -661,7 +657,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          NoMoreThan( &colLastPossibleLastMatchChar, constrainingRect.flMax.col );
          for(
             ; curPt.col <= colLastPossibleLastMatchChar
-            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, bos, eos, curPt.col, +1 )
+            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl.data(), rl.data()+rl.length(), curPt.col, +1 )
             ) CHECK_NEXT
          ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
          }
@@ -673,7 +669,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          SETUP_LINE_TEXT;
          for( curPt.col = Min( colLastPossibleLastMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
             ; curPt.col >= constrainingRect.flMin.col
-            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, bos, eos, curPt.col, -1 )
+            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl.data(), rl.data()+rl.length(), curPt.col, -1 )
             ) CHECK_NEXT
          --curPt.lin;
          }
