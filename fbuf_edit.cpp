@@ -613,31 +613,6 @@ void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
    PutLine( yLine, sbuf, tmp );
    }
 
-//
-// find COL of pointer (pWithinLineBuf) within (or past the end of) a sz string
-// (pLineBuf).  If pString contains HTABs, returned value will never be the
-// column of a tab fill character (since this doesn't exist in pString).
-//
-COL ColOfPtr( COL tabWidth, const PCChar pString, const PCChar pWithinString, PCChar eos ) {
-   if( pWithinString < pString )
-      return -1;
-
-   if( !eos ) { eos = Eos( pString ); }
-   const Tabber tabr( tabWidth );
-   auto xCol( 0 );
-   auto pX( pString );
-   while( pX < eos ) {
-      if( pX >= pWithinString ) { // we have found or gone past pWithinString
-         return xCol;
-         }
-      switch( *pX++ ) {
-         default  : ++xCol;                                break;
-         case HTAB: xCol = tabr.ColOfNextTabStop( xCol );  break;
-         }
-      }
-   return xCol + (pWithinString - eos);  // 'pWithinString' actually points _at or beyond_ eos: assume all chars past EOL are spaces (non-tabs)
-   }
-
 COL ColOfFreeIdx( COL tabWidth, const stref &content, sridx offset ) {
    const Tabber tabr( tabWidth );
    auto xCol( 0 );
@@ -1318,62 +1293,6 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
    noargNoMeta.right();
    return true;
    }
-
-//
-// pszString could be PCChar, but then we'd run into
-// PChar-input-becomes-PCChar-output problems (which in other cases have been
-// resolved using templates)
-//
-
-
-// pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
-// if fKeepPtrWithinStringRegion then retval <= pEos
-PChar PtrOfCol_( COL tabWidth, const PChar pS, const PChar pEos, const COL colTgt, const bool fKeepPtrWithinStringRegion ) {
-   if( colTgt == 0 )
-      return pS;
-
-   if( colTgt < 0 )
-      return pS - 1;
-
-#if 1 // ==0 to test the "realtabs:yes" ... code below
-   const COL colEos( pEos - pS );
-   if( !( /* g_fRealtabs && */ StrContainsTabs( pS, colEos )) ) { // this is the most common exit path
-      return pS +
-         ((fKeepPtrWithinStringRegion && colTgt > colEos)
-         ? colEos
-         : colTgt
-         );
-      }
-#endif
-
-   // "realtabs:yes" AND there's an HTAB in the string
-   //
-   const Tabber tabr( tabWidth );
-   auto colPrevTabStop( 0 );
-   auto pPastPrevTab( pS );
-   while( 1 ) {
-      const auto pTab( StrNxtTabOrNull( pPastPrevTab, pEos ) );
-      if( !pTab ) { // no more tabs ?
-         if( colTgt <= (colPrevTabStop + (pEos - pPastPrevTab)) || !fKeepPtrWithinStringRegion )
-            return pPastPrevTab + (colTgt - colPrevTabStop);
-         else
-            return pEos;
-         }
-
-      // have a tab:
-      colPrevTabStop += pTab - pPastPrevTab;
-      if( colTgt < colPrevTabStop )
-         return pTab - (colPrevTabStop - colTgt);
-
-      const auto colNextTabStop( tabr.ColOfNextTabStop( colPrevTabStop ) );
-      if( colTgt >= colPrevTabStop && colTgt < colNextTabStop )
-         return pTab;
-
-      colPrevTabStop = colNextTabStop;
-      pPastPrevTab = pTab + 1;
-      }
-   }
-
 
 // pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
 // retval < pEos

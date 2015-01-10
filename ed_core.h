@@ -1497,18 +1497,6 @@ inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCom
 
 
 //************ tabWidth-dependent col-of-ptr/ptr-of-col xlators
-// DEPRECATED pEos points AFTER last valid (non-NUL) char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
-// DEPRECATED
-// DEPRECATED if fKeepPtrWithinStringRegion then retval <= pEos  (NOTE THAT retval == pEos (and therefore can point at a non-deref'able locn)
-extern PChar   PtrOfCol_                 ( COL tabWidth, PChar  pS, PChar  pEos, COL colTgt, bool fKeepPtrWithinStringRegion );
-// DEPRECATED PtrOfColWithinStringRegion: retval <= pEos  (NOTE THAT retval == pEos (and therefore can be non-deref'able)
-// DEPRECATED should TRY to stop using PtrOfColWithinStringRegion
-STIL   PChar   PtrOfColWithinStringRegion( COL tabWidth, PChar  pS, PChar  pEos, COL xCol ) { return PtrOfCol_( tabWidth,       pS ,       pEos , xCol, true  ); }
-STIL   PCChar  PtrOfColWithinStringRegion( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfCol_( tabWidth, PChar(pS), PChar(pEos), xCol, true  ); }
-extern COL     ColOfPtr                       ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
-
-
-// PREFERRED   use stref and std::string with indices, not pointers
 //             FreeIdxOfCol returns index that MAY be out of range; used to see whether col maps to content, or is beyond it
 extern sridx   FreeIdxOfCol    ( COL tabWidth, const stref &content, const COL colTgt );
 extern char    CharAtCol       ( COL tabWidth, const stref &content, const COL colTgt ); // returns 0 if col is not present in content
