@@ -300,9 +300,6 @@ public:
    PCChar   c_str()     const { return d_buf;       }
    size_t   buf_bytes() const { return d_buf_bytes; }
    void     clear()           { poke( 0, '\0' );    }
-   bool     is_clear()  const { return !(         d_buf[0]); }
-
-   stref    bsr() { return stref( c_str(), length() ); }
 
    PChar wresize( size_t size ) {
       if( d_buf_bytes < size ) {
@@ -313,11 +310,30 @@ public:
       return d_buf;
       }
 
-   PCChar kresize( size_t size ) { return wresize( size ); }
-
    size_t length() {
       const auto pnul( PChar( memchr( d_buf, 0, d_buf_bytes ) ) );
       return pnul ? pnul - d_buf : 0;
+      }
+
+   PCChar push_back( char ch ) {
+      const auto slen( length() );
+      const auto rv( wresize( slen+2 ) );
+      rv[slen] = ch;
+      rv[slen+1] = '\0';
+      return rv;
+      }
+
+   PCChar cat( PCChar str ) {
+      return cat( str, Strlen(str) );
+      }
+
+private:
+   PCChar cat( PCChar str, size_t len_ ) {
+      const auto len0( d_buf ? Strlen(d_buf) : 0 );
+      const auto rv( wresize( 1+len0+len_ ) );
+      memcpy( rv+len0, str, len_ );
+      rv[len0+len_] = '\0';
+      return rv;
       }
 
    PCChar assign( PCChar str ) {
@@ -335,36 +351,6 @@ public:
       return rv;
       }
 
-   PCChar cpy2( PCChar str1, PCChar str2 ) {
-      const auto len1_( Strlen(str1) );
-      const auto len2_( Strlen(str2) );
-      const auto rv( wresize( 1+len1_+len2_ ) );
-      memcpy( rv      , str1, len1_ );
-      memcpy( rv+len1_, str2, len2_ );
-      rv[len1_+len2_] = '\0';
-      return rv;
-      }
-
-   PCChar cat( PCChar str, size_t len_ ) {
-      const auto len0( d_buf ? Strlen(d_buf) : 0 );
-      const auto rv( wresize( 1+len0+len_ ) );
-      memcpy( rv+len0, str, len_ );
-      rv[len0+len_] = '\0';
-      return rv;
-      }
-
-   PCChar cat( PCChar str ) {
-      return cat( str, Strlen(str) );
-      }
-
-   PCChar push_back( char ch ) {
-      const auto slen( length() );
-      const auto rv( wresize( slen+2 ) );
-      rv[slen] = ch;
-      rv[slen+1] = '\0';
-      return rv;
-      }
-
    PCChar poke( int xCol, char ch, char fillch=' ' ) {
       const auto rv( wresize( 1+xCol ) );
       const auto len0( length() );
@@ -378,6 +364,7 @@ public:
       return rv;
       }
 
+public:
    PCChar vFmtStr( PCChar format, va_list val ) {
       va_list  val_copy;        // http://stackoverflow.com/questions/9937505/va-list-misbehavior-on-linux
       va_copy( val_copy, val ); // http://julipedia.meroh.net/2011/09/using-vacopy-to-safely-pass-ap.html

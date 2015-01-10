@@ -120,7 +120,7 @@ STATIC_FXN bool fgotline( Xbuf *xb, FILE *f ) {
          buf[len-1] = '\0';
          return rvbuf != nullptr;
          }
-      xb->kresize( xb->buf_bytes() + bump );
+      xb->wresize( xb->buf_bytes() + bump );
       // if( bump < 2048 )  bump <<= 1;
       }
    }
