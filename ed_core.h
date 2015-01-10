@@ -1495,6 +1495,15 @@ inline bool LineInfo::fCanFree_pLineData( const FBUF &fbuf ) const { return !fbu
 
 inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCompile < d_pFBuf->LineCount(); }
 
+//************ tabWidth-dependent string fxns
+extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
+extern COL     ColNextTabstop( COL tabWidth, COL xCol );
+extern COL     StrCols(        COL tabWidth, const stref &src );
+
+extern void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs );
+extern void        FormatExpandedSeg ( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- PREFER
+extern std::string FormatExpandedSeg ( /* USE RARELY!! */ stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- USE RARELY
+extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
 
 //************ tabWidth-dependent col-of-ptr/ptr-of-col xlators
 //             FreeIdxOfCol returns index that MAY be out of range; used to see whether col maps to content, or is beyond it
@@ -1515,7 +1524,6 @@ STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, const stref &content, COL x0, COL
                   return rv;
                   }
 extern COL     ColOfFreeIdx ( COL tabWidth, const stref &content, sridx offset );
-
 
 struct rlc1 {
    stref ln;
@@ -1543,15 +1551,20 @@ struct rlc2 {
    stref middle() const { return ln.substr( ix0, ix1-ix0 ); }
    };
 
-//************ tabWidth-dependent string fxns
-extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
-extern COL     ColNextTabstop( COL tabWidth, COL xCol );
-extern COL     StrCols(        COL tabWidth, const stref &src );
+class IdxCol {
+   const COL    d_tw;
+   const stref  d_sr;
 
-extern void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs );
-extern void        FormatExpandedSeg ( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- PREFER
-extern std::string FormatExpandedSeg ( /* USE RARELY!! */ stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- USE RARELY
-extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
+public:
+   IdxCol( const COL tw, stref sr )
+      : d_tw    ( tw )
+      , d_sr    ( sr )
+      {}
+
+   COL    i2c ( sridx  iC   ) const { return ColOfFreeIdx( d_tw, d_sr, iC ); }
+   sridx  c2i ( COL    xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
+   COL    cols(             ) const { return StrCols( d_tw, d_sr ); }
+   };
 
 namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Prefer non-member non-friend functions to member functions."
 
