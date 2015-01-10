@@ -632,7 +632,7 @@ STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, PCChar pRawBuf, PCChar eo
 
 // CharWalkRect is called by PBalFindMatching, PMword, and
 // GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
-STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fMoveFwd, CharWalker *pWalker ) {
+STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fWalkFwd, CharWalker &walker ) {
    const auto tw( pFBuf->TabWidth() );
    #define SETUP_LINE_TEXT                                      \
            if( ExecutionHaltRequested() ) {                     \
@@ -645,16 +645,16 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
            auto colLastPossibleLastMatchChar( ColOfPtr( tw, bos, eos-1, eos ) );
 
    #define CHECK_NEXT  {  \
-           const auto rv( pWalker->VCheckNext( pFBuf, bos, eos, &curPt, colLastPossibleLastMatchChar )  );  \
-           if( STOP_SEARCH == rv ) return true;                                                             \
-           if( REREAD_LINE_CONTINUE_SEARCH == rv ) {                                                        \
-              const auto rl2( pFBuf->PeekRawLine( curPt.lin ) );                                            \
-              bos = rl2.data();                                                                             \
-              eos = rl2.data()+rl2.length();                                                                \
-              }                                                                                             \
+           const auto rv( walker.VCheckNext( pFBuf, bos, eos, &curPt, colLastPossibleLastMatchChar )  );  \
+           if( STOP_SEARCH == rv ) return true;                                                           \
+           if( REREAD_LINE_CONTINUE_SEARCH == rv ) {                                                      \
+              const auto rl2( pFBuf->PeekRawLine( curPt.lin ) );                                          \
+              bos = rl2.data();                                                                           \
+              eos = rl2.data()+rl2.length();                                                              \
+              }                                                                                           \
            }
 
-   if( fMoveFwd ) { // -------------------- search FORWARD --------------------
+   if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       Point curPt( start.lin, start.col + 1 );
       for( auto yMax(constrainingRect.flMax.lin) ; curPt.lin <= yMax ; ) {
          SETUP_LINE_TEXT;
@@ -1199,7 +1199,7 @@ STATIC_FXN void MFReplaceProcessFile( PCChar filename, ReplaceCharWalker *pMrcw 
    const auto oldReplacementsMade( pMrcw->d_iReplacementsMade );
 
    Rect rgnSearch( pFBuf );
-   CharWalkRect( pFBuf, rgnSearch, Point( rgnSearch.flMin, 0, -1 ), true, pMrcw );
+   CharWalkRect( pFBuf, rgnSearch, Point( rgnSearch.flMin, 0, -1 ), true, *pMrcw );
 
    if( oldReplacementsMade == pMrcw->d_iReplacementsMade ) {
       GarbageCollectFBUF( pFBuf, fWeCanGarbageCollectFBUF );
@@ -1314,7 +1314,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
                           rgnSearch.flMin.lin = d_streamarg.flMin.lin;
                           rgnSearch.flMax.lin = d_streamarg.flMax.lin - 1;
 
-                          CharWalkRect( g_CurFBuf(), rgnSearch, Point( rgnSearch.flMin.lin, d_streamarg.flMin.col - 1 ), true, &mrcw );
+                          CharWalkRect( g_CurFBuf(), rgnSearch, Point( rgnSearch.flMin.lin, d_streamarg.flMin.col - 1 ), true, mrcw );
 
                           rgnSearch.flMax.col = d_streamarg.flMax.col;
                           rgnSearch.flMax.lin++;
@@ -1328,7 +1328,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
 
       0 && DBG( "%s: rgnSearch=LINEs(%d-%d) COLs(%d,%d)", __func__, rgnSearch.flMin.lin, rgnSearch.flMax.lin, rgnSearch.flMin.col, rgnSearch.flMax.col );
 
-      CharWalkRect( g_CurFBuf(), rgnSearch, Point( rgnSearch.flMin, 0, -1 ), true, &mrcw );
+      CharWalkRect( g_CurFBuf(), rgnSearch, Point( rgnSearch.flMin, 0, -1 ), true, mrcw );
 
       Msg( "%d of %d occurrences replaced%s"
          , mrcw.d_iReplacementsMade
@@ -2053,7 +2053,7 @@ bool View::PBalFindMatching( bool fSetHilite, Point *pPt ) {
 
    Rect rgnSearch( fSearchFwd );
    CharWalkerPBal chSrchr( fSearchFwd, fSetHilite, startCh );
-   CharWalkRect( d_pFBuf, rgnSearch, Cursor(), fSearchFwd, &chSrchr );
+   CharWalkRect( d_pFBuf, rgnSearch, Cursor(), fSearchFwd, chSrchr );
    if( chSrchr.d_fClosureFound ) {
       if( pPt )         *pPt = chSrchr.d_closingPt;
       if( fSetHilite )  SetMatchHiLite( chSrchr.d_closingPt, 1, true );
@@ -2180,7 +2180,7 @@ STATIC_FXN bool PMword( bool fSearchFwd, bool fMeta ) {
 
    Rect rgnSearch( fSearchFwd );
    PMWordCharWalker chSrchr( fMeta );
-   CharWalkRect( g_CurFBuf(), rgnSearch, g_CurView()->Cursor(), fSearchFwd, &chSrchr );
+   CharWalkRect( g_CurFBuf(), rgnSearch, g_CurView()->Cursor(), fSearchFwd, chSrchr );
 
    return cp.Moved();
    }
