@@ -624,10 +624,10 @@ public:
    };
 
 
-STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, PCChar pRawBuf, PCChar eos, COL xCol, int delta ) {
+STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, const stref &sr, COL xCol, int delta ) {
    return g_fRealtabs
-          ? ColOfPtr( tabWidth, pRawBuf, PtrOfColWithinStringRegion( tabWidth, pRawBuf, eos, xCol ) + delta , eos )
-          :                                                                                  xCol   + delta ;
+          ? ColOfFreeIdx( tabWidth, sr, FreeIdxOfCol( tabWidth, sr, xCol ) + delta )
+          :                                                         xCol   + delta ;
    }
 
 // CharWalkRect is called by PBalFindMatching, PMword, and
@@ -657,7 +657,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          NoMoreThan( &colLastPossibleLastMatchChar, constrainingRect.flMax.col );
          for(
             ; curPt.col <= colLastPossibleLastMatchChar
-            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl.data(), rl.data()+rl.length(), curPt.col, +1 )
+            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl, curPt.col, +1 )
             ) CHECK_NEXT
          ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
          }
@@ -669,7 +669,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          SETUP_LINE_TEXT;
          for( curPt.col = Min( colLastPossibleLastMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
             ; curPt.col >= constrainingRect.flMin.col
-            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl.data(), rl.data()+rl.length(), curPt.col, -1 )
+            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl, curPt.col, -1 )
             ) CHECK_NEXT
          --curPt.lin;
          }
