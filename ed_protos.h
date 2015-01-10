@@ -44,9 +44,6 @@ STIL int pd2Int( ptrdiff_t pd ) {
 extern   int   uint_log_10( int lmax );
 
 
-typedef int (CDECL__ * pfx_strcmp )( const char *, const char * );
-typedef int (CDECL__ * pfx_strncmp)( const char *, const char *, size_t );
-
 class BoolOneShot { // simple utility functor
    bool first;
 public:

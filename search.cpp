@@ -18,6 +18,109 @@
 #  define  VS_( x )
 #endif
 
+
+//****************************
+
+//
+// NEW FASTER GREP SEARCHER!!!
+//
+// 20-Jun-2003 klg this is MASSIVELY faster than the old implementation!!!
+//
+// The improvement is that we search the line data directly, NOT taking the
+// time to copy the line data into an automatic/stack buffer.
+//
+// The BEHAVIORAL DIFFERENCE is that whitespace in search strings will only
+// match whatever is literally there in the file (because internal way copies
+// line-string and expands tabs, etc., and we achieve a MASSIVE performance
+// benefit by scanning the original string DIRECTLY).  In 99.9% of cases, this
+// difference is totally irrelevant...
+//
+// MORE work was involved in getting the case-INsensitive search to within
+// 5-10% of the case sensitive search.
+//
+// Last remaining optimization that I can think of is to flatten the code
+// (remove subrtne calls) by making fewer bigger functions...
+//
+
+//--------------------------------------------------------------
+
+struct xlatLower {
+   U8 my_lower_[256];  // contains lowercase version of its index
+   xlatLower();
+   };
+
+xlatLower::xlatLower() {
+   for( int ix(0); ix < ELEMENTS(my_lower_); ++ix )
+      my_lower_[ix] = ix;
+
+   for( int ix('A'); ix <= 'Z'; ++ix )
+      my_lower_[ix] |= 'a' - 'A';
+   }
+
+char toLower( int ch ) {
+   STATIC_VAR xlatLower low;
+   return low.my_lower_[ U8(ch) ];
+   }
+
+//--------------------------------------------------------------
+
+// pointer to one of the two following functions
+typedef     sridx (* pFxn_strstr   ) ( stref haystack, stref needle );
+STATIC_FXN  sridx         strnstr    ( stref haystack, stref needle );
+STATIC_FXN  sridx         strnstri   ( stref haystack, stref needle );
+
+STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
+   if( needle.length() > haystack.length() ) return stref::npos;
+   const auto hcend( haystack.cend() - needle.length() + 1 );
+   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
+      if( *hit == needle[0] ) {
+         auto pH( hit ); auto pN( needle.cbegin() );
+         do {
+            ++pH; ++pN;
+            if( pN == needle.cend() ) {
+                return std::distance( haystack.cbegin(), hit );
+                }
+            } while( *pH == *pN );
+         }
+      }
+   return stref::npos;
+   }
+
+STATIC_FXN sridx strnstri_nl( stref haystack, stref needle ) { // ASSUMES needle has been LOWERCASED!!!
+   if( needle.length() > haystack.length() ) return stref::npos;
+   const auto hcend( haystack.cend() - needle.length() + 1 );
+   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
+      if( toLower( *hit ) == needle[0] ) {
+         auto pH( hit ); auto pN( needle.cbegin() );
+         do {
+            ++pH; ++pN;
+            if( pN == needle.cend() ) {
+                return std::distance( haystack.cbegin(), hit );
+                }
+            } while( toLower( *pH ) == *pN );
+         }
+      }
+   return stref::npos;
+   }
+
+STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // does not ASSUME needle has been LOWERCASED!!!
+   if( needle.length() > haystack.length() ) return stref::npos;
+   const auto hcend( haystack.cend() - needle.length() + 1 );
+   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
+      if( toLower( *hit ) == toLower( needle[0] ) ) {
+         auto pH( hit ); auto pN( needle.cbegin() );
+         do {
+            ++pH; ++pN;
+            if( pN == needle.cend() ) {
+                return std::distance( haystack.cbegin(), hit );
+                }
+            } while( toLower( *pH ) == toLower( *pN ) );
+         }
+      }
+   return stref::npos;
+   }
+
+
 GLOBAL_VAR PFBUF g_pFBufSearchLog;
 GLOBAL_VAR PFBUF g_pFBufSearchRslts;
 
@@ -482,11 +585,6 @@ void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digre
 
 STATIC_FXN FileSearcher *NewFileSearcher( FileSearcher::StringSearchVariant type, const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
-// pointer to one of the two following functions
-typedef     sridx (* pFxn_strstr   ) ( stref haystack, stref needle );
-STATIC_FXN  sridx         strnstr    ( stref haystack, stref needle );
-STATIC_FXN  sridx         strnstri   ( stref haystack, stref needle );
-
 class  FileSearcherString : public FileSearcher {
    std::string d_searchKey;
 
@@ -619,7 +717,7 @@ enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH
 
 class CharWalker {
 public:
-   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) = 0;
+   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, const stref &sr, Point *curPt, COL &colLastPossibleLastMatchChar ) = 0;
    virtual ~CharWalker() {};
    };
 
@@ -643,7 +741,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
            auto colLastPossibleLastMatchChar( StrCols( tw, rl ) );
 
    #define CHECK_NEXT  {  \
-           const auto rv( walker.VCheckNext( pFBuf, rl.data(), rl.data()+rl.length(), &curPt, colLastPossibleLastMatchChar )  );  \
+           const auto rv( walker.VCheckNext( pFBuf, rl, &curPt, colLastPossibleLastMatchChar )  );  \
            if( STOP_SEARCH == rv ) return true;       \
            if( REREAD_LINE_CONTINUE_SEARCH == rv ) {  \
               rl = pFBuf->PeekRawLine( curPt.lin );   \
@@ -685,6 +783,8 @@ STATIC_VAR std::string g_SavedSearchString_Buf ;
 GLOBAL_VAR std::string g_SnR_szSearch          ;
 GLOBAL_VAR std::string g_SnR_szReplacement     ;
 
+typedef int (CDECL__ * pfx_strncmp)( const char *, const char *, size_t );
+
 class ReplaceCharWalker : public CharWalker {
    std::string        d_sbuf;
    std::string        d_stmp;
@@ -692,6 +792,7 @@ class ReplaceCharWalker : public CharWalker {
    const std::string& d_stReplace;
    bool               d_fDoReplaceQuery;
    const pfx_strncmp  d_strncmp_fxn;
+   const pFxn_strstr  d_pfxStrnstr;
 
    public:
 
@@ -708,13 +809,14 @@ class ReplaceCharWalker : public CharWalker {
       , d_stReplace         ( g_SnR_szReplacement )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_strncmp_fxn       ( fSearchCase ? strncmp : Strnicmp )
+      , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
       , d_iReplacementsPoss ( 0 )
       , d_iReplacementsMade ( 0 )
       , d_iReplacementFiles ( 0 )
       , d_iReplacementFileCandidates ( 0 )
       {}
 
-   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, const stref &sr, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
 
    private:
 
@@ -749,26 +851,29 @@ void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &co
    }
 
 
-CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) {
-   CPCChar pxCur( PtrOfColWithinStringRegionNoEos( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
+CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, const stref &sr, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+   const auto pxCur( CaptiveIdxOfCol( pFBuf->TabWidth(), sr, curPt->col ) );
+// CPCChar pxCur( PtrOfColWithinStringRegionNoEos( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
+   const auto haystack( sr.substr( pxCur, d_stSearch.length() ) );
 
-   0 && DBG( "%s ( %d, %d L %" PR_SIZET "u ) for '%s' in '%-.*s'", __func__
+   0 && DBG( "%s ( %d, %d L %" PR_SIZET "u ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
                    , curPt->lin, curPt->col, d_stSearch.length()
-                                      , d_stSearch.data()
-                                              , colLastPossibleLastMatchChar
-                                                  , pxCur
+                                                  , BSR(d_stSearch )
+                                                                   , BSR(haystack)
            );
 
-   if( 0 != d_strncmp_fxn( d_stSearch.data(), pxCur, d_stSearch.length() ) )
+   const auto relIxMatch( d_pfxStrnstr( haystack, d_stSearch ) );
+   if( relIxMatch == stref::npos )
+// if( 0 != d_strncmp_fxn( d_stSearch.data(), pxCur, d_stSearch.length() ) )
       return CONTINUE_SEARCH;
 
    const auto idxOfLastCharInMatch( curPt->col + d_stSearch.length() - 1 );
    if( idxOfLastCharInMatch > colLastPossibleLastMatchChar ) {
       // match that lies partially OUTSIDE a BOXARG: skip
-      0 && DBG( " '%-.*s' matches '%-.*s', but only '%-.*s' in bounds"
-           , static_cast<int>(d_stSearch.length()), pxCur
+      0 && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds"
+           , BSR(haystack)
            , BSR(d_stSearch)
-           , static_cast<int>(colLastPossibleLastMatchChar - idxOfLastCharInMatch), pxCur
+           , static_cast<int>(colLastPossibleLastMatchChar - idxOfLastCharInMatch), sr.data()+pxCur
            );
       return CONTINUE_SEARCH;
       }
@@ -1653,7 +1758,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
 
    if( !g_fCase ) {
       string_tolower( d_searchKey );
-      d_pfxStrnstr = strnstri;
+      d_pfxStrnstr = strnstri_nl;
       }
    else {
       d_pfxStrnstr = strnstr;
@@ -1971,14 +2076,17 @@ struct CharWalkerPBal : public CharWalker {
       , d_fClosureFound( false )
       { /*DBG("");*/ Push( chStart ); }
 
-   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, const stref &sr, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
    };
 
 #undef XXX
 
-CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) {
-   const auto pPt( PtrOfColWithinStringRegion( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
-   const char ch( pPt[ 0 ] );
+CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, const stref &sr, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+   const auto pPt( FreeIdxOfCol( pFBuf->TabWidth(), sr, curPt->col ) );
+// const auto pPt( CaptiveIdxOfCol( pFBuf->TabWidth(), sr, curPt->col ) );
+// const auto pPt( PtrOfColWithinStringRegion( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
+   const char ch( sr[pPt] );
+// const char ch( pPt[ 0 ] );
 
    // if( !ch ) return CONTINUE_SEARCH;     test HACK
 
@@ -2132,18 +2240,19 @@ class PMWordCharWalker : public CharWalker {
    public:
 
    PMWordCharWalker( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
-   CheckNextRetval VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, const stref &sr, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
    };
 
-CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eos, Point *curPt, COL &colLastPossibleLastMatchChar ) {
-   CPCChar pPt( PtrOfColWithinStringRegion( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
+CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, const stref &sr, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+   const auto pPt( CaptiveIdxOfCol( pFBuf->TabWidth(), sr, curPt->col ) );
+// CPCChar pPt( PtrOfColWithinStringRegion( pFBuf->TabWidth(), ptr, eos, curPt->col ) );
    // if( pPt - ptr != curPt->col ) { DBG( "C2P x=%d -> %d", curPt->col, pPt - ptr ); }
    if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt->col is FIRST CHAR OF WORD
-      if( !isWordChar( pPt[0] ) )
+      if( !isWordChar( sr[pPt] ) )
          return CONTINUE_SEARCH;
 
       if(   curPt->col > 0
-         && isWordChar( pPt[-1] )
+         && isWordChar( sr[pPt-1] )
         )
          return CONTINUE_SEARCH;
 
@@ -2154,10 +2263,10 @@ CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, PCChar ptr, PCChar eo
       if( curPt->col <= 0 )
          return CONTINUE_SEARCH;
 
-      if( !isWordChar( pPt[-1] ) )
+      if( !isWordChar( sr[pPt-1] ) )
          return CONTINUE_SEARCH;
 
-      if( !isWordChar( pPt[0] ) ) {
+      if( !isWordChar( sr[pPt] ) ) {
          curPt->ScrollTo();
          return STOP_SEARCH;
          }
@@ -2281,86 +2390,6 @@ class CGrepperMatchHandler : public FileSearchMatchHandler {
 bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) {
    d_cg.LineMatches( cur.lin );
    return true;  // "action" taken!
-   }
-
-
-//****************************
-
-//
-// NEW FASTER GREP SEARCHER!!!
-//
-// 20-Jun-2003 klg this is MASSIVELY faster than the old implementation!!!
-//
-// The improvement is that we search the line data directly, NOT taking the
-// time to copy the line data into an automatic/stack buffer.
-//
-// The BEHAVIORAL DIFFERENCE is that whitespace in search strings will only
-// match whatever is literally there in the file (because internal way copies
-// line-string and expands tabs, etc., and we achieve a MASSIVE performance
-// benefit by scanning the original string DIRECTLY).  In 99.9% of cases, this
-// difference is totally irrelevant...
-//
-// MORE work was involved in getting the case-INsensitive search to within
-// 5-10% of the case sensitive search.
-//
-// Last remaining optimization that I can think of is to flatten the code
-// (remove subrtne calls) by making fewer bigger functions...
-//
-
-//--------------------------------------------------------------
-
-struct xlatLower {
-   U8 my_lower_[256];  // contains lowercase version of its index
-   xlatLower();
-   };
-
-xlatLower::xlatLower() {
-   for( int ix(0); ix < ELEMENTS(my_lower_); ++ix )
-      my_lower_[ix] = ix;
-
-   for( int ix('A'); ix <= 'Z'; ++ix )
-      my_lower_[ix] |= 'a' - 'A';
-   }
-
-char toLower( int ch ) {
-   STATIC_VAR xlatLower low;
-   return low.my_lower_[ U8(ch) ];
-   }
-
-//--------------------------------------------------------------
-
-STATIC_FXN sridx strnstr( stref haystack, stref needle ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
-   if( needle.length() > haystack.length() ) return stref::npos;
-   const auto hcend( haystack.cend() - needle.length() + 1 );
-   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
-      if( *hit == needle[0] ) {
-         auto pH( hit ); auto pN( needle.cbegin() );
-         do {
-            ++pH; ++pN;
-            if( pN == needle.cend() ) {
-                return std::distance( haystack.cbegin(), hit );
-                }
-            } while( *pH == *pN );
-         }
-      }
-   return stref::npos;
-   }
-
-STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // if fCase==0, ASSUMES needle has been LOWERCASED!!!
-   if( needle.length() > haystack.length() ) return stref::npos;
-   const auto hcend( haystack.cend() - needle.length() + 1 );
-   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
-      if( toLower( *hit ) == needle[0] ) {
-         auto pH( hit ); auto pN( needle.cbegin() );
-         do {
-            ++pH; ++pN;
-            if( pN == needle.cend() ) {
-                return std::distance( haystack.cbegin(), hit );
-                }
-            } while( toLower( *pH ) == *pN );
-         }
-      }
-   return stref::npos;
    }
 
 
