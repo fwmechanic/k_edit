@@ -103,7 +103,7 @@ STATIC_FXN sridx strnstri_nl( stref haystack, stref needle ) { // ASSUMES needle
    return stref::npos;
    }
 
-STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // does not ASSUME needle has been LOWERCASED!!!
+STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // DOES NOT ASSUME needle has been LOWERCASED!!!
    if( needle.length() > haystack.length() ) return stref::npos;
    const auto hcend( haystack.cend() - needle.length() + 1 );
    for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
@@ -783,15 +783,12 @@ STATIC_VAR std::string g_SavedSearchString_Buf ;
 GLOBAL_VAR std::string g_SnR_szSearch          ;
 GLOBAL_VAR std::string g_SnR_szReplacement     ;
 
-typedef int (CDECL__ * pfx_strncmp)( const char *, const char *, size_t );
-
 class ReplaceCharWalker : public CharWalker {
    std::string        d_sbuf;
    std::string        d_stmp;
    const std::string& d_stSearch;
    const std::string& d_stReplace;
    bool               d_fDoReplaceQuery;
-   const pfx_strncmp  d_strncmp_fxn;
    const pFxn_strstr  d_pfxStrnstr;
 
    public:
@@ -808,7 +805,6 @@ class ReplaceCharWalker : public CharWalker {
       : d_stSearch          ( g_SnR_szSearch )
       , d_stReplace         ( g_SnR_szReplacement )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
-      , d_strncmp_fxn       ( fSearchCase ? strncmp : Strnicmp )
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
       , d_iReplacementsPoss ( 0 )
       , d_iReplacementsMade ( 0 )
@@ -1861,8 +1857,7 @@ public:
       , d_sr    ( sr )
       {}
 
-   COL    i2c ( sridx  iC   ) const { return FreeIdxOfCol( d_tw, d_sr, iC ); }
-   PCChar c2p ( COL    xCol ) const { return PtrOfColWithinStringRegionNoEos( d_tw, d_sr.data(), (d_sr.data()+d_sr.length()), xCol   ); }
+   COL    i2c ( sridx  iC   ) const { return ColOfFreeIdx( d_tw, d_sr, iC ); }
    sridx  c2i ( COL    xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
    COL    cols(             ) const { return StrCols( d_tw, d_sr ); }
    };
@@ -1888,7 +1883,7 @@ void FileSearcher::VFindMatches_() {
             ; iC   = pcc.c2i( curPt.col ) + 1, xCol = pcc.i2c( iC )
             ) {
             COL matchChars;
-            iC = VFindStr_( iC                 , d_sbuf, &matchChars, STR_HAS_BOL_AND_EOL );
+            iC = VFindStr_( iC, d_sbuf, &matchChars, STR_HAS_BOL_AND_EOL );
             if( stref::npos == iC )
                break; // no matches on this line!
 
@@ -1906,25 +1901,17 @@ void FileSearcher::VFindMatches_() {
    else { // search backwards (only msearch uses this; more complex)
       VS_( DBG( "-search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt > d_end && !ExecutionHaltRequested() ; --curPt.lin, curPt.col = COL_MAX ) {
-         d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
+         d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );  VS_( DBG( "%s newline: x=%d,y=%d='%" PR_BSR "'", __func__, curPt.col, curPt.lin, BSR(d_sbuf) ); )
          VPrepLine_( d_sbuf );
-         const auto bos( d_sbuf.c_str() );
          const IdxCol pcc( tw, d_sbuf );
-#if 0
-         auto pLast( pcc.c2p( curPt.col ) );
-         if( *pLast != 0 ) // if curPt.col is in middle of line...
-            ++pLast;       // ... nd to incr to get correct maxCharsToSearch
-
-         const auto maxCharsToSearch( pLast - bos );
-#else
          auto iLast( pcc.c2i( curPt.col ) );
          if( iLast < d_sbuf.length() ) // if curPt.col is in middle of line...
             ++iLast;                   // ... nd to incr to get correct maxCharsToSearch
 
-         const auto maxCharsToSearch( iLast );
-#endif
+         const auto maxCharsToSearch( Min( iLast, d_sbuf.length() ) );
+         const stref haystack( d_sbuf.c_str(), maxCharsToSearch ); VS_( DBG( "%s HAYSTACK='%" PR_BSR "'", __func__, BSR(haystack) ); )
 
-         0 && DBG( "MaxCh2s=%" PR_PTRDIFFT "d", maxCharsToSearch );
+         VS_( DBG( "MaxCh2s=%" PR_PTRDIFFT "d", maxCharsToSearch ); )
 
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to
@@ -1933,24 +1920,24 @@ void FileSearcher::VFindMatches_() {
          #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
 
          COL matchChars;
-         auto iGoodMatch( VFindStr_( 0, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(0) ) );
-         if( stref::npos != iGoodMatch ) { // line contains a match?
+         auto iGoodMatch( VFindStr_( 0, haystack, &matchChars, SET_HaystackHas(0) ) );
+         if( stref::npos != iGoodMatch ) { // line contains _A_ match?
             auto goodMatchChars( matchChars );
-            VS_( DBG( "-search: LMATCH y=%d (%d L %d)='%*.*s'", curPt.lin, iGoodMatch, matchChars, goodMatchChars, goodMatchChars, iGoodMatch ); )
-
+            VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, matchChars, BSR(match) ); } )
             // the next loop is really nasty, so we add a deadman counter to break out of infinite loops (like 'arg "$" psearch')
-           #define DEADMAN_CHK 1
+           #define DEADMAN_CHK 0
             int deadman = maxCharsToSearch+1;
             while( iGoodMatch < maxCharsToSearch ) {
                const auto startIdx( iGoodMatch + 1 );
-               const auto iNextMatch( VFindStr_( startIdx, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(startIdx) ) );
+               VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "%s iAYSTACK=%" PR_SIZET "u '%" PR_BSR "'", __func__, startIdx, BSR(newHaystack) ); } )
+               const auto iNextMatch( VFindStr_( startIdx, haystack, &matchChars, SET_HaystackHas(startIdx) ) );
                if( stref::npos == iNextMatch )
                   break;
 
                iGoodMatch = iNextMatch;
                goodMatchChars = matchChars;
 
-               VS_( DBG( "-search: +MATCH y=%d (%d L %d)='%*.*s'", curPt.lin, iGoodMatch, goodMatchChars, goodMatchChars, goodMatchChars, iGoodMatch ); )
+               VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: +MATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
 
                if( DEADMAN_CHK && --deadman == 0 ) {
                   Msg( "internal error, %s inner loop hit deadman iteration limit", __func__ );
