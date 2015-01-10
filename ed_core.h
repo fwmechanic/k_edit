@@ -1502,12 +1502,9 @@ inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCom
 // DEPRECATED if fKeepPtrWithinStringRegion then retval <= pEos  (NOTE THAT retval == pEos (and therefore can point at a non-deref'able locn)
 extern PChar   PtrOfCol_                 ( COL tabWidth, PChar  pS, PChar  pEos, COL colTgt, bool fKeepPtrWithinStringRegion );
 // DEPRECATED PtrOfColWithinStringRegion: retval <= pEos  (NOTE THAT retval == pEos (and therefore can be non-deref'able)
-// DEPRECATED should TRY to stop using PtrOfColWithinStringRegion in lieu of PtrOfColWithinStringRegionNoEos
+// DEPRECATED should TRY to stop using PtrOfColWithinStringRegion
 STIL   PChar   PtrOfColWithinStringRegion( COL tabWidth, PChar  pS, PChar  pEos, COL xCol ) { return PtrOfCol_( tabWidth,       pS ,       pEos , xCol, true  ); }
 STIL   PCChar  PtrOfColWithinStringRegion( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfCol_( tabWidth, PChar(pS), PChar(pEos), xCol, true  ); }
-// DEPRECATED PtrOfColWithinStringRegionNoEos: retval < pEos  (therefore retval is ALWAYS deref'able)
-extern PChar   PtrOfColWithinStringRegionNoEos( COL tabWidth, PChar  pS, PChar  pEos, COL xCol );
-STIL   PCChar  PtrOfColWithinStringRegionNoEos( COL tabWidth, PCChar pS, PCChar pEos, COL xCol ) { return PtrOfColWithinStringRegionNoEos( tabWidth, PChar(pS), PChar(pEos), xCol ); }
 extern COL     ColOfPtr                       ( COL tabWidth, PCChar pS, PCChar pWithinString, PCChar pEos );
 
 

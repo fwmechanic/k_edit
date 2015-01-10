@@ -1453,55 +1453,6 @@ void test_CaptiveIdxOfCol() {
       }
    }
 
-
-// pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
-// retval < pEos
-PChar PtrOfColWithinStringRegionNoEos( COL tabWidth, const PChar pS, const PChar pEos, const COL colTgt ) {
-   if( colTgt == 0 )
-      return pS;
-
-   if( colTgt < 0 )
-      return pS - 1;
-
-#if 1 // ==0 to test the "realtabs:yes" ... code below
-   const COL colEos( pEos - pS );
-   if( !( /* g_fRealtabs && */ StrContainsTabs( pS, colEos )) ) { // this is the most common exit path
-      return pS +
-         ((colTgt >= colEos)
-         ? colEos-1
-         : colTgt
-         );
-      }
-#endif
-
-   // "realtabs:yes" AND there's an HTAB in the string
-   //
-   const Tabber tabr( tabWidth );
-   auto colPrevTabStop( 0 );
-   auto pPastPrevTab( pS );
-   while( 1 ) {
-      const auto pTab( StrNxtTabOrNull( pPastPrevTab, pEos ) );
-      if( !pTab ) { // no more tabs ?
-         if( colTgt < (colPrevTabStop + (pEos - pPastPrevTab)) )
-            return pPastPrevTab + (colTgt - colPrevTabStop);
-         else
-            return pEos-1; // point AT last char in string
-         }
-
-      // have a tab:
-      colPrevTabStop += pTab - pPastPrevTab;
-      if( colTgt < colPrevTabStop )
-         return pTab - (colPrevTabStop - colTgt);
-
-      const auto colNextTabStop( tabr.ColOfNextTabStop( colPrevTabStop ) );
-      if( colTgt >= colPrevTabStop && colTgt < colNextTabStop )
-         return pTab;
-
-      colPrevTabStop = colNextTabStop;
-      pPastPrevTab = pTab + 1;
-      }
-   }
-
 //--------------------------------------------------------------------------------------------------
 
 stref FBUF::PeekRawLine( LINE lineNum ) const {
