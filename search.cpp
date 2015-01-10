@@ -1911,34 +1911,27 @@ void FileSearcher::VFindMatches_() {
          const auto maxCharsToSearch( Min( iLast, d_sbuf.length() ) );
          const stref haystack( d_sbuf.c_str(), maxCharsToSearch ); VS_( DBG( "%s HAYSTACK='%" PR_BSR "'", __func__, BSR(haystack) ); )
 
-         VS_( DBG( "MaxCh2s=%" PR_PTRDIFFT "d", maxCharsToSearch ); )
-
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to
          // prev one)
-         //
          #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
 
          COL matchChars;
          auto iGoodMatch( VFindStr_( 0, haystack, &matchChars, SET_HaystackHas(0) ) );
          if( stref::npos != iGoodMatch ) { // line contains _A_ match?
-            auto goodMatchChars( matchChars );
-            VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, matchChars, BSR(match) ); } )
+            auto goodMatchChars( matchChars );          VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, matchChars, BSR(match) ); } )
             // the next loop is really nasty, so we add a deadman counter to break out of infinite loops (like 'arg "$" psearch')
            #define DEADMAN_CHK 0
             int deadman = maxCharsToSearch+1;
             while( iGoodMatch < maxCharsToSearch ) {
-               const auto startIdx( iGoodMatch + 1 );
-               VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "%s iAYSTACK=%" PR_SIZET "u '%" PR_BSR "'", __func__, startIdx, BSR(newHaystack) ); } )
+               const auto startIdx( iGoodMatch + 1 );   VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "%s iAYSTACK=%" PR_SIZET "u '%" PR_BSR "'", __func__, startIdx, BSR(newHaystack) ); } )
                const auto iNextMatch( VFindStr_( startIdx, haystack, &matchChars, SET_HaystackHas(startIdx) ) );
                if( stref::npos == iNextMatch )
                   break;
 
                iGoodMatch = iNextMatch;
                goodMatchChars = matchChars;
-
-               VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: +MATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
-
+                                                        VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: +MATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
                if( DEADMAN_CHK && --deadman == 0 ) {
                   Msg( "internal error, %s inner loop hit deadman iteration limit", __func__ );
                   return;
@@ -1948,7 +1941,7 @@ void FileSearcher::VFindMatches_() {
             curPt.col  =          pcc.i2c( iGoodMatch                            )              ;
             const auto matchCols( pcc.i2c( goodMatchChars + pcc.c2i( curPt.col ) ) - curPt.col );
 
-            VS_( DBG( "-search: !MATCH y=%d (%d L %d)=>COL(%d L %d)", curPt.lin, iGoodMatch, goodMatchChars, curPt.col, matchCols ); )
+                                                        VS_( DBG( "-search: !MATCH y=%d (%d L %d)=>COL(%d L %d)", curPt.lin, iGoodMatch, goodMatchChars, curPt.col, matchCols ); )
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_pCaptures ) )
                return;
             }
