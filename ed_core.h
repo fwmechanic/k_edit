@@ -1427,7 +1427,6 @@ public:
 
    COL            getLineTabx(            std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
    COL            getLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ?0:' ' ); }
-   COL            getLineTabxPerTabDisp ( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, RevealBlanks()?0:' ' ); }
 
    void           GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;  // <-- prefer
    int            GetLineForInsert     (  std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;

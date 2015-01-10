@@ -1851,22 +1851,20 @@ PCChar FileSearcherFast::VFindStr_( COL startingBufOffset, stref src, COL *pMatc
 //===============================================
 
 
-class PtrCol {
+class IdxCol {
    const COL    d_tw;
-   const PCChar d_pStart;
-   const PCChar d_pEos;
+   const stref  d_sr;
 
 public:
-   PtrCol( const COL tw, const PCChar pStart, const PCChar pEos )
-      : d_tw    (  tw      )
-      , d_pStart(  pStart  )
-      , d_pEos  (  pEos    )
+   IdxCol( const COL tw, stref sr )
+      : d_tw    ( tw )
+      , d_sr    ( sr )
       {}
 
-   COL    p2c ( PCChar pC   ) const { return ColOfPtr( d_tw, d_pStart, pC    , d_pEos ); }
-   PCChar c2p_( COL    xCol ) const { return PtrOfColWithinStringRegion     ( d_tw, d_pStart, d_pEos, xCol   ); }
-   PCChar c2p ( COL    xCol ) const { return PtrOfColWithinStringRegionNoEos( d_tw, d_pStart, d_pEos, xCol   ); }
-   COL    cols(             ) const { return StrCols( d_tw, stref(d_pStart, d_pEos-d_pStart) ); }
+   COL    p2c ( PCChar pC   ) const { return ColOfPtr( d_tw, d_sr.data(), pC    , (d_sr.data()+d_sr.length()) ); }
+   PCChar c2p ( COL    xCol ) const { return PtrOfColWithinStringRegionNoEos( d_tw, d_sr.data(), (d_sr.data()+d_sr.length()), xCol   ); }
+   sridx  c2i ( COL    xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
+   COL    cols(             ) const { return StrCols( d_tw, d_sr ); }
    };
 
 void FileSearcher::VFindMatches_() {
@@ -1876,24 +1874,22 @@ void FileSearcher::VFindMatches_() {
       VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
-         d_pFBuf->getLineTabxPerTabDisp( d_sbuf, curPt.lin );
+         d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
          VPrepLine_( d_sbuf );
          const auto bos( d_sbuf.c_str() );
-         const auto lnChars( d_sbuf.length() );
-         const auto eos( bos+lnChars );
-         const PtrCol pcc( tw, bos, eos );
+         const IdxCol pcc( tw, d_sbuf );
          const auto lnCols( pcc.cols() );
-         PCChar pC( pcc.c2p( curPt.col ) );
+         auto pC( pcc.c2p( curPt.col ) );
          if( pcc.p2c( pC ) != curPt.col )  // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) pC is pointing at a char outside the replace region[1]
             ++pC;                          // move pC to point to first char in replace region  [1] but BUGBUG this fxn is not used by replace!
 
          // find all matches on this line
-         for( auto xCol(curPt.col) ; xCol <= lnCols // <= so empty line can match Regex
-            ; pC   = pcc.c2p( curPt.col ) + 1,
-              xCol = pcc.p2c( pC )
+         for( auto xCol(curPt.col)
+            ; xCol <= lnCols // <= so empty line can match Regex
+            ; pC   = pcc.c2p( curPt.col ) + 1, xCol = pcc.p2c( pC )
             ) {
             COL matchChars;
-            pC = VFindStr_( pC - bos, stref( bos, lnChars ), &matchChars, STR_HAS_BOL_AND_EOL );
+            pC = VFindStr_( pC - bos, d_sbuf, &matchChars, STR_HAS_BOL_AND_EOL );
             if( nullptr == pC )
                break; // no matches on this line!
 
@@ -1902,7 +1898,7 @@ void FileSearcher::VFindMatches_() {
             curPt.col  =          pcc.p2c( pC )                           ;
             const auto matchCols( pcc.p2c( pC + matchChars ) - curPt.col );
 
-            if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_pCaptures ) )
+            if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_pCaptures ) ) // NB: curPt can be modified here!
                return;
 
             // NoLessThan( &matchCols, 1 );  // so += matchCols will always move fwd
@@ -1912,13 +1908,10 @@ void FileSearcher::VFindMatches_() {
    else { // search backwards (only msearch uses this; more complex)
       VS_( DBG( "-search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt > d_end && !ExecutionHaltRequested() ; --curPt.lin, curPt.col = COL_MAX ) {
-         d_pFBuf->getLineTabxPerTabDisp( d_sbuf, curPt.lin );
+         d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
          VPrepLine_( d_sbuf );
          const auto bos( d_sbuf.c_str() );
-         const auto lnChars( d_sbuf.length() );
-         const auto eos( bos+lnChars );
-         const PtrCol pcc( tw, bos, eos );
-
+         const IdxCol pcc( tw, d_sbuf );
          auto pLast( pcc.c2p( curPt.col ) );
          if( *pLast != 0 ) // if curPt.col is in middle of line...
             ++pLast;       // ... nd to incr to get correct maxCharsToSearch
@@ -1931,7 +1924,7 @@ void FileSearcher::VFindMatches_() {
          // case, it keeps finding the EOL under the cursor (doesn't move to
          // prev one)
          //
-         #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == lnChars ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
+         #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
 
          COL matchChars;
          auto pGoodMatch( VFindStr_( 0, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(0) ) );
