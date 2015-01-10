@@ -738,7 +738,8 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
               return false;                                     \
               }                                                 \
            auto rl( pFBuf->PeekRawLine( curPt.lin ) );          \
-           auto colLastPossibleLastMatchChar( StrCols( tw, rl ) );
+           auto colLastPossibleLastMatchChar( ColOfFreeIdx( tw, rl, rl.length()-1 ) ); \
+        /* auto colLastPossibleLastMatchChar( StrCols( tw, rl ) ); */ \
 
    #define CHECK_NEXT  {  \
            const auto rv( walker.VCheckNext( pFBuf, rl, &curPt, colLastPossibleLastMatchChar )  );  \
