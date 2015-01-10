@@ -473,8 +473,8 @@ class FileSearcher {
 
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
-   virtual void   VPrepLine_( std::string &lbuf ) const {};
-   virtual PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
+   virtual void  VPrepLine_( std::string &lbuf ) const {};
+   virtual sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
 
    public:
 
@@ -596,8 +596,8 @@ class  FileSearcherString : public FileSearcher {
    FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    ~FileSearcherString() {}
 
-   void   VPrepLine_( std::string &lbuf ) const override;
-   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
+   void  VPrepLine_( std::string &lbuf ) const override;
+   sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
 class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
@@ -615,7 +615,7 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
    virtual ~FileSearcherFast() {}
    void   VFindMatches_() override;
    void   VPrepLine_( std::string &lbuf ) const override;
-   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
+   sridx  VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
 #if USE_PCRE
@@ -627,7 +627,7 @@ class  FileSearcherRegex : public FileSearcher {
    public:
 
    FileSearcherRegex( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   PCChar VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
+   sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
    };
 
 #endif
@@ -1668,10 +1668,10 @@ void FileSearcherString::VPrepLine_( std::string &lbuf ) const {
       string_tolower( lbuf );
    }
 
-PCChar FileSearcherString::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const {
+sridx FileSearcherString::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const {
    const auto rv( searchFindString( src.data()+startingBufOffset, src.length()-startingBufOffset, d_searchKey.data(), d_searchKey.length() ) );
    *pMatchChars = rv ? d_searchKey.length() : 0;
-   return rv;
+   return rv ? rv - src.data() : stref::npos;
    }
 
 //===============================================
@@ -1699,7 +1699,7 @@ STATIC_FXN PCChar ShowHaystackHas( HaystackHas has ) {
 
 #if USE_PCRE
 
-PCChar FileSearcherRegex::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const
+sridx FileSearcherRegex::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const
    {
    VS_(
                DBG( "++++++" );
@@ -1711,7 +1711,7 @@ PCChar FileSearcherRegex::VFindStr_( COL startingBufOffset, stref src, COL *pMat
       else     DBG( "RegEx:->NO MATCH" );
                DBG( "------" );
       )
-   return rv;
+   return rv ? rv - src.data() : stref::npos;
    }
 
 #endif
@@ -1846,7 +1846,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
 void   FileSearcherFast::VPrepLine_( std::string &lbuf ) const { Assert( 0 != 0 ); }
-PCChar FileSearcherFast::VFindStr_( COL startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const { Assert( 0 != 0 ); return nullptr; }
+sridx  FileSearcherFast::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const { Assert( 0 != 0 ); return stref::npos; }
 
 //===============================================
 
@@ -1861,7 +1861,7 @@ public:
       , d_sr    ( sr )
       {}
 
-   COL    p2c ( PCChar pC   ) const { return ColOfPtr( d_tw, d_sr.data(), pC    , (d_sr.data()+d_sr.length()) ); }
+   COL    i2c ( sridx  iC   ) const { return FreeIdxOfCol( d_tw, d_sr, iC ); }
    PCChar c2p ( COL    xCol ) const { return PtrOfColWithinStringRegionNoEos( d_tw, d_sr.data(), (d_sr.data()+d_sr.length()), xCol   ); }
    sridx  c2i ( COL    xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
    COL    cols(             ) const { return StrCols( d_tw, d_sr ); }
@@ -1876,27 +1876,25 @@ void FileSearcher::VFindMatches_() {
          //***** Search A LINE:
          d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
          VPrepLine_( d_sbuf );
-         const auto bos( d_sbuf.c_str() );
          const IdxCol pcc( tw, d_sbuf );
          const auto lnCols( pcc.cols() );
-         auto pC( pcc.c2p( curPt.col ) );
-         if( pcc.p2c( pC ) != curPt.col )  // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) pC is pointing at a char outside the replace region[1]
-            ++pC;                          // move pC to point to first char in replace region  [1] but BUGBUG this fxn is not used by replace!
+         auto iC( pcc.c2i( curPt.col ) );
+         if( pcc.i2c( iC ) != curPt.col )  // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) pC is pointing at a char outside the replace region[1]
+            ++iC;                          // move pC to point to first char in replace region  [1] but BUGBUG this fxn is not used by replace!
 
          // find all matches on this line
          for( auto xCol(curPt.col)
             ; xCol <= lnCols // <= so empty line can match Regex
-            ; pC   = pcc.c2p( curPt.col ) + 1, xCol = pcc.p2c( pC )
+            ; iC   = pcc.c2i( curPt.col ) + 1, xCol = pcc.i2c( iC )
             ) {
             COL matchChars;
-            pC = VFindStr_( pC - bos, d_sbuf, &matchChars, STR_HAS_BOL_AND_EOL );
-            if( nullptr == pC )
+            iC = VFindStr_( iC                 , d_sbuf, &matchChars, STR_HAS_BOL_AND_EOL );
+            if( stref::npos == iC )
                break; // no matches on this line!
 
             //*****  HOUSTON, WE HAVE A MATCH  *****
-
-            curPt.col  =          pcc.p2c( pC )                           ;
-            const auto matchCols( pcc.p2c( pC + matchChars ) - curPt.col );
+            curPt.col  =          pcc.i2c( iC )                           ;
+            const auto matchCols( pcc.i2c( iC + matchChars ) - curPt.col );
 
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_pCaptures ) ) // NB: curPt can be modified here!
                return;
@@ -1912,11 +1910,19 @@ void FileSearcher::VFindMatches_() {
          VPrepLine_( d_sbuf );
          const auto bos( d_sbuf.c_str() );
          const IdxCol pcc( tw, d_sbuf );
+#if 0
          auto pLast( pcc.c2p( curPt.col ) );
          if( *pLast != 0 ) // if curPt.col is in middle of line...
             ++pLast;       // ... nd to incr to get correct maxCharsToSearch
 
          const auto maxCharsToSearch( pLast - bos );
+#else
+         auto iLast( pcc.c2i( curPt.col ) );
+         if( iLast < d_sbuf.length() ) // if curPt.col is in middle of line...
+            ++iLast;                   // ... nd to incr to get correct maxCharsToSearch
+
+         const auto maxCharsToSearch( iLast );
+#endif
 
          0 && DBG( "MaxCh2s=%" PR_PTRDIFFT "d", maxCharsToSearch );
 
@@ -1927,39 +1933,35 @@ void FileSearcher::VFindMatches_() {
          #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
 
          COL matchChars;
-         auto pGoodMatch( VFindStr_( 0, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(0) ) );
-         if( pGoodMatch ) { // line contains a match?
+         auto iGoodMatch( VFindStr_( 0, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(0) ) );
+         if( stref::npos != iGoodMatch ) { // line contains a match?
             auto goodMatchChars( matchChars );
-            VS_( DBG( "-search: LMATCH y=%d (%d L %d)='%*.*s'", curPt.lin, pGoodMatch - bos, matchChars, goodMatchChars, goodMatchChars, pGoodMatch ); )
+            VS_( DBG( "-search: LMATCH y=%d (%d L %d)='%*.*s'", curPt.lin, iGoodMatch, matchChars, goodMatchChars, goodMatchChars, iGoodMatch ); )
 
             // the next loop is really nasty, so we add a deadman counter to break out of infinite loops (like 'arg "$" psearch')
-        #define DEADMAN_CHK 0
-        #if DEADMAN_CHK
+           #define DEADMAN_CHK 1
             int deadman = maxCharsToSearch+1;
-        #endif
-            while( pGoodMatch < bos + maxCharsToSearch ) {
-               const auto startIdx( pGoodMatch + 1 - bos );
-               const auto pNextMatch( VFindStr_( startIdx, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(startIdx) ) );
-               if( !pNextMatch )
+            while( iGoodMatch < maxCharsToSearch ) {
+               const auto startIdx( iGoodMatch + 1 );
+               const auto iNextMatch( VFindStr_( startIdx, stref(bos, maxCharsToSearch), &matchChars, SET_HaystackHas(startIdx) ) );
+               if( stref::npos == iNextMatch )
                   break;
 
-               pGoodMatch = pNextMatch;
+               iGoodMatch = iNextMatch;
                goodMatchChars = matchChars;
 
-               VS_( DBG( "-search: +MATCH y=%d (%d L %d)='%*.*s'", curPt.lin, pGoodMatch - bos, goodMatchChars, goodMatchChars, goodMatchChars, pGoodMatch ); )
+               VS_( DBG( "-search: +MATCH y=%d (%d L %d)='%*.*s'", curPt.lin, iGoodMatch, goodMatchChars, goodMatchChars, goodMatchChars, iGoodMatch ); )
 
-        #if DEADMAN_CHK
-               if( --deadman == 0 ) {
+               if( DEADMAN_CHK && --deadman == 0 ) {
                   Msg( "internal error, %s inner loop hit deadman iteration limit", __func__ );
                   return;
                   }
-        #endif
                }
 
-            curPt.col  =          pcc.p2c( pGoodMatch                            )              ;
-            const auto matchCols( pcc.p2c( goodMatchChars + pcc.c2p( curPt.col ) ) - curPt.col );
+            curPt.col  =          pcc.i2c( iGoodMatch                            )              ;
+            const auto matchCols( pcc.i2c( goodMatchChars + pcc.c2i( curPt.col ) ) - curPt.col );
 
-            VS_( DBG( "-search: !MATCH y=%d (%d L %d)=>COL(%d L %d)", curPt.lin, pGoodMatch - bos, goodMatchChars, curPt.col, matchCols ); )
+            VS_( DBG( "-search: !MATCH y=%d (%d L %d)=>COL(%d L %d)", curPt.lin, iGoodMatch, goodMatchChars, curPt.col, matchCols ); )
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_pCaptures ) )
                return;
             }
