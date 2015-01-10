@@ -387,8 +387,8 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
 
    qsort( lines, envEntries, sizeof(*lines), qsort_cmp_env );
 
-   Xbuf xb;
    auto bytes(0);
+   std::string sbuf, stmp;
    for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
       ALLOCA_STRDUP( envstr, len, lines[ix], Strlen( lines[ix] ) );
       bytes += len + 1;
@@ -402,7 +402,9 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
          const auto curIndent( pFirstSeg ? 0 : indent );
          const auto slen( pd2Int( pSEMI - pSegStart ) );
          if( slen > 0 ) {
-            pFBuf->xFmtLastLine( &xb, "%*.*s%*.*s", curIndent, curIndent, "", slen, slen, pSegStart );
+            sbuf.assign( curIndent, ' ' );
+            sbuf.append( pSegStart, slen );
+            pFBuf->PutLine( 1+pFBuf->LastLine(), sbuf, stmp );
             }
 
          pPrevSEMI = pSEMI;
@@ -413,7 +415,9 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
       const auto curIndent( pFirstSeg ? 0 : indent );
       const auto slen( pd2Int( pEos - pSegStart ) );
       if( slen > 0 ) {
-         pFBuf->xFmtLastLine( &xb, "%*.*s%*.*s", curIndent, curIndent, "", slen, slen, pSegStart );
+         sbuf.assign( curIndent, ' ' );
+         sbuf.append( pSegStart, slen );
+         pFBuf->PutLine( 1+pFBuf->LastLine(), sbuf, stmp );
          }
       }
 
