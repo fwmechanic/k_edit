@@ -75,14 +75,14 @@ bool ARG::towinclip() {
       Msg( "%s->WinClip %d lines", srcNm ? srcNm : ArgTypeName(), (yMax - yMin)+1 );
 
       if( yMax == yMin ) {
-         pFBuf->GetLineSeg( stbuf, yMin, xLeft, xRight ); // read line into our buffer
+         pFBuf->DupLineSeg( stbuf, yMin, xLeft, xRight ); // read line into our buffer
          goto SINGLE_LINE; // HACK O'RAMA!
          }
 
       // determine # of chars on each line
       long size(0);
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
-         pFBuf->GetLineSeg( stbuf, lineNum, xLeft, xRight );
+         pFBuf->DupLineSeg( stbuf, lineNum, xLeft, xRight );
          size += stbuf.length() + 2; // + 2 for '\r\n'
          }
 
@@ -92,7 +92,7 @@ bool ARG::towinclip() {
       // copy source data into into *bufptr
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
          const PCChar bs( bufptr );
-         pFBuf->GetLineSeg( stbuf, lineNum, xLeft, xRight );
+         pFBuf->DupLineSeg( stbuf, lineNum, xLeft, xRight );
          const auto chars( stbuf.length() );
          memcpy( bufptr, stbuf.c_str(), chars );
          bufptr += chars;

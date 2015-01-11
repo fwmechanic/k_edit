@@ -404,7 +404,7 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
          if( slen > 0 ) {
             sbuf.assign( curIndent, ' ' );
             sbuf.append( pSegStart, slen );
-            pFBuf->PutLine( 1+pFBuf->LastLine(), sbuf, stmp );
+            pFBuf->PutLastLine( sbuf, stmp );
             }
 
          pPrevSEMI = pSEMI;
@@ -417,7 +417,7 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
       if( slen > 0 ) {
          sbuf.assign( curIndent, ' ' );
          sbuf.append( pSegStart, slen );
-         pFBuf->PutLine( 1+pFBuf->LastLine(), sbuf, stmp );
+         pFBuf->PutLastLine( sbuf, stmp );
          }
       }
 

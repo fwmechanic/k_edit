@@ -717,9 +717,9 @@ void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
       DelBox( xStart, yStart, xEnd-1, yStart );
       return;
       }
-   std::string stFirst; GetLineSeg( stFirst, yStart, 0, xStart-1 );
+   std::string stFirst; DupLineSeg( stFirst, yStart, 0, xStart-1 );
    DelLines( yStart, yEnd - 1 );
-   std::string stLast;  GetLineSeg( stLast, yStart, xEnd, COL_MAX );
+   std::string stLast;  DupLineSeg( stLast, yStart, xEnd, COL_MAX );
    stFirst += stLast;
    PutLine( yStart, stFirst, stLast );
 
@@ -1376,25 +1376,24 @@ void test_CaptiveIdxOfCol() {
 
 //--------------------------------------------------------------------------------------------------
 
-stref FBUF::PeekRawLine( LINE lineNum ) const {
-   const auto exists( KnownLine( lineNum ) );
+stref FBUF::PeekRawLine( LINE yLine ) const {
    auto len( 0 );
-   if( exists && (len=LineLength(lineNum)) > 0 ) {
-      return stref( d_paLineInfo[ lineNum ].GetLineRdOnly(), len );
+   if( KnownLine( yLine ) && (len = LineLength( yLine )) > 0 ) {
+      return stref( d_paLineInfo[ yLine ].GetLineRdOnly(), len );
       }
    else {
       return stref( "", 0 );
       }
    }
 
-stref FBUF::PeekRawLineSeg( LINE lineNum, COL xMinIncl, COL xMaxIncl ) const {
-   auto rl( PeekRawLine( lineNum ) );
+stref FBUF::PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
+   auto rl( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
    const auto ixMinIncl( FreeIdxOfCol( tw, rl, xMinIncl ) );
    if( ixMinIncl >= rl.length() ) return stref( "" );
-   const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) ); 0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", lineNum, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
+   const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) ); 0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
    rl.remove_suffix( (rl.length()-1) - ixMaxIncl );
-   rl.remove_prefix( ixMinIncl );                               0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", lineNum, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
+   rl.remove_prefix( ixMinIncl );                               0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
    return rl;
    }
 
@@ -1411,17 +1410,12 @@ bool ARG::rawline() {
    }
 #endif
 
-void FBUF::getLineRaw( std::string &dest, LINE yLine ) const {
-   const auto rv( PeekRawLine( yLine ) );
-   dest.assign( rv.data(), rv.length() );
-   }
-
 COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
    FormatExpandedSeg( dest, PeekRawLine( yLine ), 0, COL_MAX, TabWidth(), chExpandTabs, ' ' );
    return dest.length();
    }
 
-// gap: [xLeftIncl, xRightIncl]
+// gap: [xMinIncl..xMaxIncl]
 // rules:
 //    - if any chars exist in gap
 //         then rv will be filled with these chars:
@@ -1429,10 +1423,10 @@ COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
 //            so if the line ends in the middle of the gap, rv.length() < gapChars
 //    - if NO chars exist in gap
 //         then rv.empty() == true
-void FBUF::GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightIncl ) const {
+void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
    dest.clear();
    if( yLine >= 0 && yLine <= LastLine() ) {
-      FormatExpandedSeg( dest, PeekRawLine( yLine ), xLeftIncl, xRightIncl - xLeftIncl + 1, TabWidth() );
+      FormatExpandedSeg( dest, PeekRawLine( yLine ), xMinIncl, xMaxIncl - xMinIncl + 1, TabWidth() );
       }
    }
 
@@ -1508,7 +1502,7 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
          pLSR->keydata[0] = '\0';
          }
 
-      fb->getLineRaw( pLSR->lbuf, yY );
+      fb->DupRawLine( pLSR->lbuf, yY );
       *ppLSR++ = pLSR;
       pLSR = PLineSortRec( PChar(pLSR) + sizeofLSR );
       }
@@ -1561,8 +1555,8 @@ void LineInfo::PutContent( PCChar pNewLine, int newLineBytes ) { // assume previ
    d_iLineLen = newLineBytes;
    }
 
-void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
-   enum { DE=0 };                                       DE && DBG( "%s+ L %d [%d..%d] <= '%" PR_BSR "' )", __func__, lineNum, xLeftIncl, xRightIncl, BSR(ins) );
+void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
+   enum { DE=0 };                                       DE && DBG( "%s+ L %d [%d..%d] <= '%" PR_BSR "' )", __func__, yLine, xLeftIncl, xRightIncl, BSR(ins) );
    // insert ins into gap = [xLeftIncl, xRightIncl]
    // rules:
    //    - portion of ins placed into line is NEVER longer than gap
@@ -1572,16 +1566,16 @@ void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, 
    //         if !fInsert AND existing chars       to right of xRightIncl
    //         then ins is space padded to fill gap and will NOT terminate string.
    //      else ins is NOT space padded, will terminate string, perhaps to left of xRightIncl
-   if( !fInsert && xLeftIncl == 0 && xRightIncl >= FBOP::LineCols( this, lineNum ) ) { // a two-parameter call?
+   if( !fInsert && xLeftIncl == 0 && xRightIncl >= FBOP::LineCols( this, yLine ) ) { // a two-parameter call?
       DE && DBG( "%s- PutLine(simple) )", __func__ );
-      PutLine( lineNum, ins, stmp ); // optimal/trivial line-replace case
+      PutLine( yLine, ins, stmp ); // optimal/trivial line-replace case
       }
    else { // segment ins/overwrite case
 
 #if 1
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
       const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "u/%" PR_BSRSIZET "u]", __func__, xLeftIncl, holewidth, inslen );
-      GetLineForInsert( dest, lineNum, xLeftIncl, fInsert ? holewidth : 0 );
+      GetLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );
       const auto lcols( StrCols( TabWidth(), dest ) );
       const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "u/%d maxCol=%" PR_BSRSIZET "u", __func__, dest.length(), lcols, maxCol );
       Assert( lcols >= xLeftIncl );
@@ -1602,11 +1596,11 @@ void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, 
          dest.replace( xLeftIncl + inslen, holewidth - inslen, holewidth - inslen, ' ' );
          }
       DE && DBG( "%s- PutLine(merged) )", __func__ );
-      PutLine( lineNum, dest, stmp );
+      PutLine( yLine, dest, stmp );
 #else
 
 //    dbllinebuf buf;
-//    auto lineChars( getLineTabx( BSOB(buf), lineNum ) );
+//    auto lineChars( getLineTabx( BSOB(buf), yLine ) );
 //    if( !fInsert )
 //       NoMoreThan( &xRightIncl, lineChars - 1 ); // prevent gratuitous trailspace generation
 //
@@ -1615,7 +1609,7 @@ void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, 
 //
 //    auto gapStart( buf+xLeftIncl );
 //    if( fInsert && lineChars > xLeftIncl ) { // Inserting & gap falls inside existing string?
-//       0 && DBG( "%s L %d A", __func__, lineNum );
+//       0 && DBG( "%s L %d A", __func__, yLine );
 //       // if caller passed in a string longer than the gap is wide make the
 //       // gap as wide as the string being inserted (gapChars only matters when
 //       // the gap > length(ins))
@@ -1630,7 +1624,7 @@ void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, 
 //          memset( gapStart+segChars, ' ', gapChars-segChars );    // fill right part of gap
 //       }
 //    else {
-//       0 && DBG( "%s B Ln %d, gap=%d, seg=%d", __func__, lineNum, gapChars, segChars );
+//       0 && DBG( "%s B Ln %d, gap=%d, seg=%d", __func__, yLine, gapChars, segChars );
 //
 //       if( lineChars < xLeftIncl ) { // existing string doesn't reach to gap?
 //          memset( buf+lineChars, ' ', xLeftIncl-lineChars ); // fill in upto gap
@@ -1658,7 +1652,7 @@ void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, 
 //          memcpy( gapStart, ins, segChars+1 ); // COPY EoL
 //          }
 //       }
-//    PutLine( lineNum, buf, stmp );
+//    PutLine( yLine, buf, stmp );
 
 #endif
       }

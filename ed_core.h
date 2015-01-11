@@ -1408,28 +1408,53 @@ public:
 
    //************ GetLine
 private:
-   COL            getLine_(   std::string &dest, LINE yLine, int chExpandTabs=0 ) const;
+   COL            getLine_( std::string &dest, LINE yLine, int chExpandTabs=0 ) const;
 public:
-   void           getLineRaw( std::string &dest, LINE yLine ) const;
+               // !!!use PeekRawLine to access line content whenever possible!!!
+               // you can just use PeekRawLine() and stref methods + helper functions
+               // in my_strutils.h and the tabWidth-dependent col-of-ptr/ptr-of-col xlators
+               // to reference/parse line content w/o copying (MUCH more efficient to
+               // avoid a heap alloc).  SEE ALSO: PeekRawLineSeg()
+   stref          PeekRawLine( LINE yLine ) const; // returns RAW line content BY REFERENCE
 
-   COL            getLineTabx(            std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
+               // most of the time, you can just use PeekRawLine() and stref methods + helper functions
+               // in my_strutils.h and the tabWidth-dependent col-of-ptr/ptr-of-col xlators
+               // to reference/parse line content w/o copying (MUCH more efficient to
+               // avoid a heap alloc).  However there are times when an actual copy is needed, so...
+               // (NOTE that this the dup'd string is RAW, you still have to handle tabx yourself
+               // if necessary)
+   void           DupRawLine( std::string &dest, LINE yLine ) const {
+                     const auto rv( PeekRawLine( yLine ) );
+                     dest.assign( rv.data(), rv.length() );
+                     }
+
    COL            getLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ?0:' ' ); }
 
-   void           GetLineSeg( std::string &dest, LINE yLine, COL xLeftIncl, COL xRightIncl ) const;  // <-- prefer
+               // DupLineLua should only be used by Lua (I haven't yet figured out how to get the
+               // tab-handling niceties available here (C++ ed_core.h) into Lua, or whether it would be
+               // worth the hassle/headache.  In the meantime for Lua coding only, tabs are ALWAYS
+               // translated to spaces).
+   COL            DupLineLua( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
+
+   stref          PeekRawLineSeg(                LINE yLine, COL xMinIncl, COL xMaxIncl=COL_MAX ) const; // returns RAW line content BY REFERENCE
+   void           DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const;
+
    int            GetLineForInsert     (  std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
 
-   stref          PeekRawLine( LINE lineNum ) const; // returns RAW line content BY REFERENCE
-   stref          PeekRawLineSeg( LINE lineNum, COL xMinIncl, COL xMaxIncl=COL_MAX ) const; // returns RAW line content BY REFERENCE
 
    //************ PutLine
 public:
+               // meat-and-potatoes PutLine functions; note surfacing of tmp buffer for efficiency
    void           PutLine( LINE yLine, stref srSrc, std::string &tmp ); // WITH UNDO
-   void           PutLine( LINE yLine, CPCChar pa[], int elems );
+   void           PutLastLine(         stref srSrc, std::string &tmp ) { PutLine( 1+LastLine(), srSrc, tmp ); }
+   void           PutLineSeg( LINE yLine, const stref &ins, std::string &tmp0, std::string &tmp1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
 
+               // _oddball_ PutLine... functions; may soon be deprecated; use sparingly!
+   void           PutLine( LINE yLine, CPCChar pa[], int elems );
    int            PutLastMultiline( PCChar pszNewLineData );
    void           PutLastLine( PCChar pszNewLineData )   { PutLastMultiline( pszNewLineData ); }
-   void           PutLastLine( CPCChar pa[], int elems ) { PutLine( LastLine()+1, pa, elems ); }
+   void           PutLastLine( CPCChar pa[], int elems ) { PutLine( 1+LastLine(), pa, elems ); }
 
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
    void           InsLine( LINE yLine, const stref &srSrc, std::string &tmp )  // WITH UNDO
@@ -1438,17 +1463,21 @@ public:
                      PutLine( yLine, srSrc, tmp );
                      }
 
-   void           PutLineSeg( LINE lineNum, const stref &ins, std::string &tmp0, std::string &tmp1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
    void           cat( PCChar pszNewLineData );
 
+private:
    void           xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val );
    void           Vsprintf( LINE lineNum, PCChar format, va_list val );
-   void          xFmtLine( PXbuf pxb, LINE lineNum, PCChar format, ...  ) ATTR_FORMAT(4, 5) ;
+
+               // these 2 are UNREF'D?:
    void           FmtLine( LINE lineNum, PCChar format, ... ) ATTR_FORMAT(3, 4) ;
+   void          xFmtLine( PXbuf pxb, LINE lineNum, PCChar format, ...  ) ATTR_FORMAT(4, 5) ;
+
+   void          vFmtLastLine( PCChar format, va_list val );
+   void         xvFmtLastLine( PXbuf pxb, PCChar format, va_list val );
+public:
    void          xFmtLastLine( PXbuf pxb, PCChar format, ...  ) ATTR_FORMAT(3, 4) ;
    void           FmtLastLine( PCChar format, ... ) ATTR_FORMAT(2, 3) ;
-   void         xvFmtLastLine( PXbuf pxb, PCChar format, va_list val );
-   void          vFmtLastLine( PCChar format, va_list val );
 
    //************ delete LINE/BOX/STREAM
 public:

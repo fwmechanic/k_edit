@@ -166,7 +166,7 @@ bool FBOP::PopFirstLine( std::string &st, PFBUF pFbuf ) {
    if( !pFbuf || pFbuf->LineCount() == 0 )
       return false;
 
-   pFbuf->getLineRaw( st, 0 );
+   pFbuf->DupRawLine( st, 0 );
    pFbuf->DelLine( 0 );
    return true;
    }

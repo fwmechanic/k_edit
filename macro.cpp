@@ -711,20 +711,14 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
 bool ARG::assign() {
    switch( d_argType ) {
     default:      return BadArg();
-
-    case NOARG:   {
-                  std::string st;
-                  g_CurFBuf()->getLineTabxPerRealtabs( st, d_noarg.cursor.lin );
-                  return AssignStrOk( st );
-                  }
-
-    case TEXTARG: {
-                  const auto ok( AssignStrOk( d_textarg.pText ) );
-                  if( !ok )
-                     ErrorDialogBeepf( "assign failed" );
+    case NOARG:  {const auto ok( AssignStrOk( g_CurFBuf()->PeekRawLine( d_noarg.cursor.lin ) ) );
+                  if( !ok ) ErrorDialogBeepf( "assign failed" );
                   return ok;
-                  }
-
+                 }
+    case TEXTARG:{const auto ok( AssignStrOk( d_textarg.pText ) );
+                  if( !ok ) ErrorDialogBeepf( "assign failed" );
+                  return ok;
+                 }
     case LINEARG: {
                   int assignsDone;
                   Point errPt;
@@ -874,7 +868,7 @@ STIL void ClrInRecordDQuote() {        s_fInRecordDQuote = false ; }
 
 STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
    const auto lastLine( g_pFbufRecord->LastLine() );
-   std::string st; g_pFbufRecord->getLineRaw( st, lastLine );
+   std::string st; g_pFbufRecord->DupRawLine( st, lastLine );
    linebuf lbufNew;
    if( pCmd->IsFnGraphic() ) {
       auto pNew( lbufNew );
@@ -929,7 +923,7 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
    std::string stmp;
    auto pMacroTextChunk( pCmd->MacroText() );
    while( 1 ) {
-      const auto linechars( g_pFbufRecord->getLineTabxPerRealtabs( sbuf, g_pFbufRecord->LastLine() ) );
+      g_pFbufRecord->DupRawLine( sbuf, g_pFbufRecord->LastLine() );
       auto pC( pMacroTextChunk + Min( g_iRmargin - sbuf.length() + int(ELEMENTS(kszContinuation)), static_cast<sridx>(Strlen( pMacroTextChunk )) ) );
       for( ; pC > pMacroTextChunk; --pC )
          if( 0 == *pC || ' ' == *pC || HTAB == *pC )
@@ -1019,7 +1013,7 @@ bool ARG::record() {
       if( RecordingInDQuote() ) {
          ClrInRecordDQuote();
          std::string src, stmp;
-         g_pFbufRecord->getLineTabxPerRealtabs( src, g_pFbufRecord->LastLine() );
+         g_pFbufRecord->DupRawLine( src, g_pFbufRecord->LastLine() );
          src.append( "\"" );
          g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), src, stmp );
          }

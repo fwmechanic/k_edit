@@ -37,8 +37,8 @@ char FlipCase( char ch ) {
       }
    }
 
-STATIC_FXN PChar GetLineSeg_( PFBUF pfb, std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) {
-   pfb->GetLineSeg( st, yLine, xLeftIncl, xRightIncl );
+STATIC_FXN PChar DupLineSeg_( PFBUF pfb, std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) {
+   pfb->DupLineSeg( st, yLine, xLeftIncl, xRightIncl );
    return const_cast<PChar>( st.c_str() );
    }
 
@@ -108,7 +108,7 @@ bool ARG::flipcase() {
          // locate first alphabetic char in box
          char zc;
          do {
-            const auto inbuf( GetLineSeg_( pcf, stbuf, yMin, xMin, xMax ) );
+            const auto inbuf( DupLineSeg_( pcf, stbuf, yMin, xMin, xMax ) );
             zc = first_alpha( inbuf );
             } while( (zc == '\0') && (++yMin <= yMax) );
 
@@ -118,7 +118,7 @@ bool ARG::flipcase() {
          auto pfx_casexlat( ToBOOL( islower(zc) ) ? _strupr : _strlwr );
          std::string t0,t1;
          for( ; yMin <= yMax; ++yMin ) {
-            const auto inbuf( GetLineSeg_( pcf, stbuf, yMin, xMin, xMax ) );
+            const auto inbuf( DupLineSeg_( pcf, stbuf, yMin, xMin, xMax ) );
             pfx_casexlat(inbuf);
             pcf->PutLineSeg( yMin, inbuf, t0,t1, xMin, xMax );
             }
@@ -365,7 +365,7 @@ int uint_log_10( int num ) {
 
 bool ARG::vrepeat() {
    auto lx( d_boxarg.flMin.lin );
-   std::string st; g_CurFBuf()->GetLineSeg( st, lx++, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
+   std::string st; g_CurFBuf()->DupLineSeg( st, lx++, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
    CPCChar inbuf( st.c_str() );
    0 && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
 

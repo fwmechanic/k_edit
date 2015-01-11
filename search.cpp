@@ -354,6 +354,7 @@ class FileSearcher;
 class MFGrepMatchHandler : public FileSearchMatchHandler {
    PFBUF d_pOutputFile;
    std::string  d_sb;
+   std::string  d_stmp;
 
    protected:
 
@@ -377,9 +378,11 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
       LuaCtxt_Edit::LocnListInsertCursor(); // do this IFF a match was found
 
    {
-   pFBuf->getLineTabxPerRealtabs( d_sb, cur.lin );
-   NOAUTO CPCChar frags[] = { pFBuf->Name(), FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).k_str(), d_sb.c_str() };
-   d_pOutputFile->PutLastLine( frags, ELEMENTS(frags) );
+   const auto rl( pFBuf->PeekRawLine( cur.lin ) );
+   d_sb.assign( pFBuf->Namestr() );
+   d_sb.append( FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).k_str() );
+   d_sb.append( rl.data(), rl.length() );
+   d_pOutputFile->PutLastLine( d_sb, d_stmp );
    }
 
    MoveCursorToEofAllWindows( d_pOutputFile );
