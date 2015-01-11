@@ -1,5 +1,5 @@
 //
-// Copyright 2014 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
+// Copyright 2014-2015 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
 //
 
 #include "ed_main.h"

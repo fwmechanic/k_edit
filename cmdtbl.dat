@@ -1,4 +1,6 @@
 #
+# Copyright 2005 - 2015 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
+#
 # This file is read by cmdtbl.lua, which creates:
 #
 #   ctout.kc     initializers for CmdTbl (array of CMD)

@@ -416,7 +416,7 @@ FBUF_(GetLineRaw) {
    R_nil();
    }
 
-FBUF_(DupLineSeg) {
+FBUF_(GetLineSeg) {
    const auto pf( thisPF() );
    const auto lnum( I_(2) - 1 );
    if( isValidLineNum( pf, lnum ) ) {
@@ -817,7 +817,7 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       LUA_FUNC_I(ExpandWildcardUnsorted)
       LUA_FUNC_I(GetLine)
       LUA_FUNC_I(GetLineRaw)
-      LUA_FUNC_I(DupLineSeg)
+      LUA_FUNC_I(GetLineSeg)
       LUA_FUNC_I(PutLineSeg)
       LUA_FUNC_I(InsBlankLinesBefore)
       LUA_FUNC_I(InsLine)

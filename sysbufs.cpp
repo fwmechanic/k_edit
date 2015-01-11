@@ -1,5 +1,5 @@
 //
-// Copyright 1991 - 2014 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
+// Copyright 1991 - 2015 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
 //
 
 // functions called to write particular "system buffer" FBUFs ("pseudofiles"),

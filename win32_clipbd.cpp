@@ -1,5 +1,5 @@
 //
-// Copyright 1991 - 2014 by Kevin L. Goodwin; All rights reserved
+// Copyright 1991 - 2015 by Kevin L. Goodwin; All rights reserved
 //
 
 // Win32 Clipboard interface
