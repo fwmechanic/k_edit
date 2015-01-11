@@ -1040,13 +1040,7 @@ bool ARG::xquote() { // Xquote
 
 #endif
 
-STATIC_FXN COL colPastPrevBlanks( PCChar ptr, int lineChars, COL startCol ) {
-   NoGreaterThan( &startCol, lineChars ); // lineChars does ! include EOL
-   const decltype(ptr) pC( StrPastPrevBlankOrNull( ptr, ptr + startCol ) );
-   return pC ? pC - ptr : startCol;
-   }
-
-bool ARG::graphic() {
+bool ARG::graphic() { enum { DB=0 };
    const char usrChar( d_pCmd->d_argData.chAscii() );
    if( d_argType == BOXARG ) {
       if( usrChar == ' ' ) { // insert spaces
@@ -1066,19 +1060,26 @@ bool ARG::graphic() {
              const auto pMatch( strchr( chOpeningDelim, usrChar ) );
       if( pMatch ) {
          const char chClosing( (g_fM4backtickquote?chClosingDelim_m4:chClosingDelim)[ pMatch - chOpeningDelim ] );
+         const auto fConformRight( (d_cArg > 1 || (usrChar == chQuot2 || usrChar == chQuot1 || usrChar == chBackTick)) ); // word-conforming bracketing of a BOXARG?
          // if certain chars are hit when a BOX selection is current, surround the
          // selected text with matching delimiters (depending on the char hit)
          //
          const auto pf( g_CurFBuf() );
+         const auto tw( pf->TabWidth() );
          std::string tmp1, tmp2;
          for( auto curLine( d_boxarg.flMin.lin ); curLine <= d_boxarg.flMax.lin ; ++curLine ) {
-            const auto chars( pf->getLineTabx( tmp1, curLine ) );
-            const auto xRight(
-                 (d_cArg > 1 || (usrChar == chQuot2 || usrChar == chQuot1 || usrChar == chBackTick))  // word-conforming bracketing of a BOXARG?
-                 ? colPastPrevBlanks( tmp1.c_str(), tmp1.length(), d_boxarg.flMax.col+1 )
-                 : d_boxarg.flMax.col
-               );
-            FBOP::InsertChar( pf, curLine, xRight+1          , chClosing, tmp1, tmp2 );
+            auto xMax( d_boxarg.flMax.col+1 );
+            if( fConformRight ) {
+               const auto rl( pf->PeekRawLine( curLine ) );                       DB && DBG( "rl='%" PR_BSR "'", BSR(rl) );
+               const auto ixMin( FreeIdxOfCol( tw, rl, d_boxarg.flMin.col ) );
+               if( ixMin < rl.length() ) {
+                  const auto ixMax( FreeIdxOfCol( tw, rl, xMax ) );
+                  auto rlSeg( rl.substr( ixMin, ixMax-ixMin ) );                  DB && DBG( "rlSeg='%" PR_BSR "'", BSR(rlSeg) );
+                  rmv_trail_blanks( rlSeg );                                      DB && DBG( "rlSeg='%" PR_BSR "'", BSR(rlSeg) );
+                  xMax = ColOfFreeIdx( tw, rl, ixMin + rlSeg.length() );
+                  }
+               }
+            FBOP::InsertChar( pf, curLine, xMax              , chClosing, tmp1, tmp2 );
             FBOP::InsertChar( pf, curLine, d_boxarg.flMin.col, usrChar  , tmp1, tmp2 );
             }
          return true;
@@ -1603,60 +1604,61 @@ void FBUF::PutLineSeg( const LINE lineNum, const stref &ins, std::string &stmp, 
       PutLine( lineNum, dest, stmp );
 #else
 
-      dbllinebuf buf;
-      auto lineChars( getLineTabx( BSOB(buf), lineNum ) );
-      if( !fInsert )
-         NoMoreThan( &xRightIncl, lineChars - 1 ); // prevent gratuitous trailspace generation
+//    dbllinebuf buf;
+//    auto lineChars( getLineTabx( BSOB(buf), lineNum ) );
+//    if( !fInsert )
+//       NoMoreThan( &xRightIncl, lineChars - 1 ); // prevent gratuitous trailspace generation
+//
+//    auto gapChars( xRightIncl - xLeftIncl + 1); // as defined by caller
+//    auto segChars( Strlen( ins ));              // what he gave us to fill it in
+//
+//    auto gapStart( buf+xLeftIncl );
+//    if( fInsert && lineChars > xLeftIncl ) { // Inserting & gap falls inside existing string?
+//       0 && DBG( "%s L %d A", __func__, lineNum );
+//       // if caller passed in a string longer than the gap is wide make the
+//       // gap as wide as the string being inserted (gapChars only matters when
+//       // the gap > length(ins))
+//       //
+//       NoSmallerThan( &gapChars, segChars );
+//
+//       // NB: CODE BELOW COULD FORCE LONGER THAN LEGAL LINE, SO WE USE dbllinebuf buf
+//       memmove(gapStart+gapChars, gapStart, Strlen(gapStart)+1 ); // open gap, COPYING EoL
+//       // NB: CODE ABOVE COULD FORCE LONGER THAN LEGAL LINE, SO WE USE dbllinebuf buf
+//       memcpy( gapStart, ins, segChars );                         // ins new str seg w/no termination
+//       if( gapChars > segChars )
+//          memset( gapStart+segChars, ' ', gapChars-segChars );    // fill right part of gap
+//       }
+//    else {
+//       0 && DBG( "%s B Ln %d, gap=%d, seg=%d", __func__, lineNum, gapChars, segChars );
+//
+//       if( lineChars < xLeftIncl ) { // existing string doesn't reach to gap?
+//          memset( buf+lineChars, ' ', xLeftIncl-lineChars ); // fill in upto gap
+//          lineChars = xLeftIncl;
+//          memcpy( gapStart, ins, segChars+1 );
+//          }
+//       else if( lineChars > xRightIncl ) { // existing string exists to right of gap?
+//          if( segChars > gapChars ) { // overwrite gap, push right those existing chars to right of gap
+//             0 && DBG( "A" );
+//             memmove( gapStart+gapChars+(segChars-gapChars), gapStart+gapChars, Strlen(gapStart+gapChars)+1 ); // widen gap, COPYING EoL
+//             memcpy( gapStart, ins, segChars );
+//             }
+//          else if( segChars < gapChars ) { // overwrite gap with ins + space-fill
+//             0 && DBG( "B" );
+//             memcpy( gapStart         , ins, segChars );
+//             memset( gapStart+segChars, ' ', gapChars-segChars );
+//             }
+//          else {
+//             0 && DBG( "C" );
+//             memcpy( gapStart, ins, segChars );
+//             }
+//          }
+//       else { // existing line ends within gap; simply overwrite
+//          0 && DBG( "D" );
+//          memcpy( gapStart, ins, segChars+1 ); // COPY EoL
+//          }
+//       }
+//    PutLine( lineNum, buf, stmp );
 
-      auto gapChars( xRightIncl - xLeftIncl + 1); // as defined by caller
-      auto segChars( Strlen( ins ));              // what he gave us to fill it in
-
-      auto gapStart( buf+xLeftIncl );
-      if( fInsert && lineChars > xLeftIncl ) { // Inserting & gap falls inside existing string?
-         0 && DBG( "%s L %d A", __func__, lineNum );
-         // if caller passed in a string longer than the gap is wide make the
-         // gap as wide as the string being inserted (gapChars only matters when
-         // the gap > length(ins))
-         //
-         NoSmallerThan( &gapChars, segChars );
-
-         // NB: CODE BELOW COULD FORCE LONGER THAN LEGAL LINE, SO WE USE dbllinebuf buf
-         memmove(gapStart+gapChars, gapStart, Strlen(gapStart)+1 ); // open gap, COPYING EoL
-         // NB: CODE ABOVE COULD FORCE LONGER THAN LEGAL LINE, SO WE USE dbllinebuf buf
-         memcpy( gapStart, ins, segChars );                         // ins new str seg w/no termination
-         if( gapChars > segChars )
-            memset( gapStart+segChars, ' ', gapChars-segChars );    // fill right part of gap
-         }
-      else {
-         0 && DBG( "%s B Ln %d, gap=%d, seg=%d", __func__, lineNum, gapChars, segChars );
-
-         if( lineChars < xLeftIncl ) { // existing string doesn't reach to gap?
-            memset( buf+lineChars, ' ', xLeftIncl-lineChars ); // fill in upto gap
-            lineChars = xLeftIncl;
-            memcpy( gapStart, ins, segChars+1 );
-            }
-         else if( lineChars > xRightIncl ) { // existing string exists to right of gap?
-            if( segChars > gapChars ) { // overwrite gap, push right those existing chars to right of gap
-               0 && DBG( "A" );
-               memmove( gapStart+gapChars+(segChars-gapChars), gapStart+gapChars, Strlen(gapStart+gapChars)+1 ); // widen gap, COPYING EoL
-               memcpy( gapStart, ins, segChars );
-               }
-            else if( segChars < gapChars ) { // overwrite gap with ins + space-fill
-               0 && DBG( "B" );
-               memcpy( gapStart         , ins, segChars );
-               memset( gapStart+segChars, ' ', gapChars-segChars );
-               }
-            else {
-               0 && DBG( "C" );
-               memcpy( gapStart, ins, segChars );
-               }
-            }
-         else { // existing line ends within gap; simply overwrite
-            0 && DBG( "D" );
-            memcpy( gapStart, ins, segChars+1 ); // COPY EoL
-            }
-         }
-      PutLine( lineNum, buf, stmp );
 #endif
       }
    }
