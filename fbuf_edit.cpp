@@ -455,21 +455,6 @@ void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
       }
    }
 
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-STATIC_FXN int StrlenWOTrailBlanks( PCChar pszString, PCChar eos=nullptr ) {
-   if( !eos ) eos = Eos(pszString);
-   const decltype(pszString) pPrevNonBlank( StrPastPrevBlankOrNull( pszString, eos ) );
-   return pPrevNonBlank ? pPrevNonBlank - pszString + 1 : 0;
-   }
-
-int StrTruncTrailBlanks( PChar pszString ) {
-   const auto len( StrlenWOTrailBlanks( pszString ) );
-   pszString[ len ] = '\0';
-   return len;
-   }
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 int FBUF::PutLastMultiline( PCChar buf ) {
@@ -1544,15 +1529,15 @@ bool ARG::csort() {
 
 //--------------------------------------------------------------------------------------------------
 
-void LineInfo::PutContent( PCChar pNewLine, int newLineBytes ) { // assume previous content has been destroyed!
-   if( newLineBytes == 0 ) {
+void LineInfo::PutContent( stref src ) { // assume previous content has been destroyed!
+   if( src.length() == 0 ) {
       d_pLineData = nullptr;
       }
    else {
-      AllocBytesNZ( d_pLineData, newLineBytes, __func__ );
-      memcpy( d_pLineData, pNewLine, newLineBytes );
+      AllocBytesNZ( d_pLineData, src.length(), __func__ );
+      memcpy( d_pLineData, src.data(), src.length() );
       }
-   d_iLineLen = newLineBytes;
+   d_iLineLen = src.length();
    }
 
 void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {

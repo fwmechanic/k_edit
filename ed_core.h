@@ -426,7 +426,7 @@ public:
       return true;
       }
 
-   void   PutContent( PCChar pNewLine, int newLineBytes );
+   void   PutContent( stref src );
    void   FreeContent( const FBUF &fbuf );
 
    PCChar GetLineRdOnly()                        const { return d_pLineData; }
@@ -1491,7 +1491,7 @@ private:
 
    //************ indent infrastructure
 private:
-   int            d_IndentIncrement = 3;
+   int            d_IndentIncrement = 0;
 public:
    void           CalcIndent( bool fWholeFileScan=false );
    int            IndentIncrement() const { return d_IndentIncrement; }

@@ -637,7 +637,7 @@ void FBUF::UndoReplaceLineContent( LINE lineNum, stref newContent ) {
       new EdOpSaveLineContent( this, lineNum, pLineInfo );
       }
 
-   pLineInfo->PutContent( newContent.data(), newContent.length() );
+   pLineInfo->PutContent( newContent );
    Set_yChangedMin( lineNum );
    0 && DBG( "%s- L%d %s", __func__, lineNum, Name() );
    }

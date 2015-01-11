@@ -238,8 +238,8 @@ COL FBOP::MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom 
 //==========================================================================================
 
 class MaxIndentAccumulator {
-   int d_sampleCount;
-   int d_firstIndentAt[10];
+   int      d_sampleCount;
+   unsigned d_firstIndentAt[10];
 
 public:
 
@@ -261,11 +261,9 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
 
    // periodically check for a clear winner
    //
-   if( fLastLine || (fSampled && ((d_sampleCount % 1024) == 0)) ) {
-      0 && DBG( "%s @ %d 0=%d 1=%d 2=%d 3=%d 4=%d 5=%d 6=%d 7=%d 8=%d 9=%d"
-         , __func__
+   if( fLastLine || (1 && fSampled && ((d_sampleCount % 512) == 0)) ) {
+      1 && DBG( "indent=? @ %u 1=%u 2=%u 3=%u 4=%u 5=%u 6=%u 7=%u 8=%u 9=%u"
          , d_sampleCount
-         , d_firstIndentAt[ 0]
          , d_firstIndentAt[ 1]
          , d_firstIndentAt[ 2]
          , d_firstIndentAt[ 3]
@@ -276,26 +274,45 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
          , d_firstIndentAt[ 8]
          , d_firstIndentAt[ 9]
          );
+     #if 0
+      unsigned milliQ[ ELEMENTS(d_firstIndentAt) ];
+      for( auto ix(2) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) { // special range: [ix-1] && [ix+1] defined for all ix!
+         milliQ[ix] = ( (1000*d_firstIndentAt[ix]) / static_cast<double>( d_firstIndentAt[ix-1] + d_firstIndentAt[ix+1] + 1 ) );
+         }
+      1 && DBG( "indent=%% @ %u 2=%u 3=%u 4=%u 5=%u 6=%u 7=%u 8=%u"
+         , d_sampleCount
+         , milliQ[ 2]
+         , milliQ[ 3]
+         , milliQ[ 4]
+         , milliQ[ 5]
+         , milliQ[ 6]
+         , milliQ[ 7]
+         , milliQ[ 8]
+         );
+      struct {
+         unsigned ix;
+         unsigned val;
+         } best[] = { {0,0}, {0,0}, };
+      best[0].ix  = 2;
+      best[0].val = milliQ[2];
+      for( auto ix(3) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) {
+         if( milliQ[ ix ] <
 
+         }
+     #endif
       // if fLastLine, we have limited information, so relax criteria
-      const auto PrevIndentCountVsSample(        fLastLine ? 8 : 32 );
-      const auto PrevNextIndentCountVsThisCount( fLastLine ? 5 : 10 );
-
-      for( auto ix(1) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) { // special range: [ix-1] && [ix+1] defined for all ix!
-         const auto PrevIndentCount( d_firstIndentAt[ix-1] );
-         const auto NextIndentCount( d_firstIndentAt[ix+1] );
-         const auto ThisIndentCount( d_firstIndentAt[ix  ] );
-
-         if(   ((ThisIndentCount * 5) > d_sampleCount)  // must be at least 20%
-            && (ThisIndentCount > (PrevIndentCount * PrevNextIndentCountVsThisCount))
-            && (ThisIndentCount > (NextIndentCount * PrevNextIndentCountVsThisCount))
+      const auto PrevNextIndentCountVsThisCount( fLastLine ? 6 : 12 );
+      for( auto ix(2) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) { // special range: [ix-1] && [ix+1] defined for all ix!
+         const auto ThisIndentCount( d_firstIndentAt[ix] );
+         if(  ((ThisIndentCount * 5) > d_sampleCount)  // must be at least 20%
+            && (ThisIndentCount > (d_firstIndentAt[ix-1] * PrevNextIndentCountVsThisCount))
+            && (ThisIndentCount > (d_firstIndentAt[ix+1] * PrevNextIndentCountVsThisCount))
            ) {
-            0 && DBG( "%s = %d @ %d %s", __func__, ix, d_sampleCount, fLastLine ? "LAST" : "" );
+            1 && DBG( "indent=%d @ %d %s", ix, d_sampleCount, fLastLine ? "LAST" : "" );
             return ix; // clear winner
             }
          }
       }
-
    return fLastLine ? 1 : 0; // gaak!
    }
 
@@ -303,7 +320,6 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
 
 void FBUF::CalcIndent( bool fWholeFileScan ) { 0 && DBG( "%s ********************************************", __func__ );
    MaxIndentAccumulator maxIn;
-   d_IndentIncrement = 0;
    const auto tw( TabWidth() );
    for( auto yLine(0) ; yLine < LineCount() ; ++yLine ) {
       const auto rl( PeekRawLine( yLine ) );
@@ -1238,7 +1254,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          }
       }
 
-   // CalcIndent();
+   CalcIndent();
 
    //---------------------------------------------------------------------------------
 

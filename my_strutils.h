@@ -133,7 +133,6 @@ extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
 extern   char  FlipCase( char ch );
 extern PChar   xlatCh( PChar pStr, int fromCh, int toCh );
-extern   int   StrTruncTrailBlanks( PChar pszString );
 extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
 

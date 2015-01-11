@@ -191,7 +191,7 @@ void Win::Maximize() {
    d_Size.col = EditScreenCols();
    d_Size.lin = EditScreenLines();
    { Point tmp{ .lin=100, .col=100 }; pimpl->SizePct_set( tmp ); }
-   DBG( "%s", __func__ );
+   // DBG( "%s", __func__ );
    }
 
 Win::Win()
