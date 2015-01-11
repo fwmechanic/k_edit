@@ -41,7 +41,7 @@ void AssignLogTag( PCChar tag ) {
 
 // ALLOCA_STRDUP( pszStringToAssign, slen, src.data(), src.length() )
 
-bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=0}; // make a local copy so param can be a PCChar
+bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1};
                                                                 DB && DBG( "%s 0(%" PR_BSR ")", __function__, BSR(src) );
    const auto ixNonb( FirstNonBlankOrEnd( src ) );
    src.remove_prefix( ixNonb );                                 DB && DBG( "%s 1(%" PR_BSR ")", __function__, BSR(src) );
@@ -68,6 +68,28 @@ bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=0}; // make a lo
       case SetKeyRV_BADCMD: return Msg( "%" PR_BSR " is an unknown CMD", BSR(name) );
       }
    return Msg( "should not get here" );
+   }
+
+sridx ToAssignCommentDelimOrEndSkipQuoted( stref src, sridx start ) {
+   if( start < src.length() ) {
+      char quoteCh( '\0' );
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( RSRCFILE_COMMENT_DELIM == *it && (it == src.cbegin() || isBlank( *(it-1) )) ) {
+            return std::distance( src.cbegin(), it );
+            }
+         SKIP_QUOTED_STR( quoteCh, it, src, NO_MATCH )
+         }
+      }
+NO_MATCH:
+   return std::distance( src.cbegin(), src.cend() );
+   }
+
+bool TruncComment_AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1};
+   const auto ixCD( ToAssignCommentDelimOrEndSkipQuoted( src ) );
+   if( !atEnd( src, ixCD ) ) {
+      src.remove_suffix( src.length() - ixCD );
+      }
+   return AssignStrOk_( src, __function__ );
    }
 
 void CMD::RedefMacro( stref newDefn ) {
@@ -711,11 +733,11 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
 bool ARG::assign() {
    switch( d_argType ) {
     default:      return BadArg();
-    case NOARG:  {const auto ok( AssignStrOk( g_CurFBuf()->PeekRawLine( d_noarg.cursor.lin ) ) );
+    case NOARG:  {const auto ok( TruncComment_AssignStrOk( g_CurFBuf()->PeekRawLine( d_noarg.cursor.lin ) ) );
                   if( !ok ) ErrorDialogBeepf( "assign failed" );
                   return ok;
                  }
-    case TEXTARG:{const auto ok( AssignStrOk( d_textarg.pText ) );
+    case TEXTARG:{const auto ok( TruncComment_AssignStrOk( d_textarg.pText ) );
                   if( !ok ) ErrorDialogBeepf( "assign failed" );
                   return ok;
                  }
@@ -1094,7 +1116,6 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
    auto itEarlyTerm       ( src.cend() );
    auto itContinuationChar( src.cend() );
    for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
-      enum { RSRCFILE_COMMENT_DELIM = '#' };
       if( RSRCFILE_COMMENT_DELIM == *it && fChIsBlank && outsideQuote == stateWhereBlankLastSeen ) {
          itEarlyTerm = it; // term string early and force a break from innerLoop
          break;

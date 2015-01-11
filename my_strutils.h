@@ -114,6 +114,54 @@ typename cont_inst::size_type ToNextNotOrEnd( stref key, cont_inst src, typename
    return std::distance( src.cbegin(), src.cend() );
    }
 
+STIL char isQuoteCh   ( char inCh ) { return '"'==inCh || '\''==inCh ? inCh : '\0'; }
+STIL char isQuoteEscCh( char inCh ) { return '\\'==inCh; }
+
+#define SKIP_QUOTED_STR( quoteCh, it, src, EOS_LBL )           \
+   if( quoteCh=isQuoteCh( *it ) ) {                            \
+      for( ++it ; it != src.cend() ; ++it ) {                  \
+         if( *it == quoteCh ) {                                \
+            break;                                             \
+            }                                                  \
+         if( isQuoteEscCh( *it ) && ++it == src.cend() ) {     \
+            goto EOS_LBL; /* src ends amid quoted string? */   \
+            }                                                  \
+         }                                                     \
+      }
+
+template < typename cont_inst, typename Pred >
+typename cont_inst::size_type ToNextOrEndSkipQuoted( Pred pred, cont_inst src, typename cont_inst::size_type start ) {
+   if( start < src.length() ) {
+      char quoteCh( '\0' );
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( pred( *it ) ) {
+            return std::distance( src.cbegin(), it );
+            }
+         SKIP_QUOTED_STR( quoteCh, it, src, NO_MATCH )
+         }
+      }
+NO_MATCH:
+   return std::distance( src.cbegin(), src.cend() );
+   }
+
+template < typename cont_inst >
+typename cont_inst::size_type ToNextOrEndSkipQuoted( const char key, cont_inst src, typename cont_inst::size_type start ) {
+   if( start < src.length() ) {
+      char quoteCh( '\0' );
+      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
+         if( key == *it ) {
+            return std::distance( src.cbegin(), it );
+            }
+         SKIP_QUOTED_STR( quoteCh, it, src, NO_MATCH )
+         }
+      }
+NO_MATCH:
+   return std::distance( src.cbegin(), src.cend() );
+   }
+
+extern sridx ToAssignCommentDelimOrEndSkipQuoted( stref src, sridx start=0 ); // very special-purpose!
+
+
 //#######################################################################################
 
 extern int  strcmp4humans( PCChar s1, PCChar s2 );

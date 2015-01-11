@@ -271,8 +271,11 @@ STIL     void  FBufRead_Assign_Win32( PFBUF pFBuf ) {}
 #endif
 
 extern   void  AssignLogTag( PCChar tag );
+enum { RSRCFILE_COMMENT_DELIM = '#' };
 #define        AssignStrOk( str )   AssignStrOk_( str, __FUNCTION__ )
 extern   bool  AssignStrOk_( stref src, CPCChar __function__ );
+#define        TruncComment_AssignStrOk( str )  TruncComment_AssignStrOk_( str, __FUNCTION__ )
+extern   bool  TruncComment_AssignStrOk_( stref src, CPCChar __function__ );
 extern   bool  DefineMacro( stref pszMacroName, stref pszMacroCode );
 extern   void  FreeAllMacroDefs();
 enum { SetKeyRV_OK, SetKeyRV_BADKEY, SetKeyRV_BADCMD };

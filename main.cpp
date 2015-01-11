@@ -866,10 +866,8 @@ bool ARG::setenv() {
 
 //------------------------------------------------
 
-GLOBAL_CONST char kszTMPDIR[] = "$APPDATA:" PATH_SEP_STR "Kevins Editor";
-
 STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
-   PutEnvOk( "K_RUNNING?", "yes"               );
+   PutEnvOk( "K_RUNNING?", "yes" );
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
 
 #if defined(_WIN32)
@@ -884,14 +882,13 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    if( !IsDir( appdataVal ) ) { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
    #undef   HOME_ENVVAR_NM
 
-   s_stateFileDir = appdataVal;                     DD && DBG( "1: %s", s_stateFileDir.c_str() );
-   s_stateFileDir += PATH_SEP_STR HOME_SUBDIR_NM;   DD && DBG( "2: %s", s_stateFileDir.c_str() );
+   s_stateFileDir = appdataVal;                     0 && DD && DBG( "1: %s", s_stateFileDir.c_str() );
+   s_stateFileDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_stateFileDir.c_str() );
    if( !IsDir( s_stateFileDir.c_str() ) ) { mkdirOk( s_stateFileDir.c_str() ); }
    if( !IsDir( s_stateFileDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_stateFileDir.c_str() ); exit( 1 ); }
-   s_stateFileDir += PATH_SEP_CH;              DD && DBG( "s_stateFileDir = '%s'", s_stateFileDir.c_str() );
+   s_stateFileDir += PATH_SEP_CH;                        DD && DBG( "s_stateFileDir = '%s'", s_stateFileDir.c_str() );
    PutEnvOk( "K_STATEDIR", s_stateFileDir.c_str() );
    }
-
 
 class kGetopt : public Getopt {
    public:
