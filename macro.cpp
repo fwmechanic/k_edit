@@ -41,7 +41,7 @@ void AssignLogTag( PCChar tag ) {
 
 // ALLOCA_STRDUP( pszStringToAssign, slen, src.data(), src.length() )
 
-bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1};
+bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=0};
                                                                 DB && DBG( "%s 0(%" PR_BSR ")", __function__, BSR(src) );
    const auto ixNonb( FirstNonBlankOrEnd( src ) );
    src.remove_prefix( ixNonb );                                 DB && DBG( "%s 1(%" PR_BSR ")", __function__, BSR(src) );
@@ -70,7 +70,10 @@ bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1};
    return Msg( "should not get here" );
    }
 
-sridx ToAssignCommentDelimOrEndSkipQuoted( stref src, sridx start ) {
+// note that RSRCFILE_COMMENT_DELIM is allowed within a macro identifier (i.e.
+// 'my#foobar' is a valid macro identifier), which this code handles, making it
+// non-generic
+STATIC_FXN sridx ToAssignCommentDelimOrEndSkipQuoted( stref src, sridx start ) {
    if( start < src.length() ) {
       char quoteCh( '\0' );
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
@@ -85,7 +88,7 @@ NO_MATCH:
    }
 
 bool TruncComment_AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1};
-   const auto ixCD( ToAssignCommentDelimOrEndSkipQuoted( src ) );
+   const auto ixCD( ToAssignCommentDelimOrEndSkipQuoted( src, 0 ) );
    if( !atEnd( src, ixCD ) ) {
       src.remove_suffix( src.length() - ixCD );
       }

@@ -159,9 +159,6 @@ NO_MATCH:
    return std::distance( src.cbegin(), src.cend() );
    }
 
-extern sridx ToAssignCommentDelimOrEndSkipQuoted( stref src, sridx start=0 ); // very special-purpose!
-
-
 //#######################################################################################
 
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
