@@ -434,7 +434,6 @@ STATIC_FXN void spcs2tabs_leading( string_back_inserter dit, stref src, TabberPa
 void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
    auto pBuf( pszNewLineData );
    std::string tmp;
-   std::string lbuf;
    while( 1 ) {
       decltype(pBuf) pNL( strchr( pBuf, '\n' ) );
       if( pNL == pszNewLineData ) {  // leading \n?
@@ -442,7 +441,9 @@ void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
          pNL = strchr( pBuf, '\n' );
          }
       if( pBuf == pszNewLineData ) {
-         getLineTabx( lbuf, LastLine() );
+         const auto rl( PeekRawLine( LastLine() ) );
+         std::string lbuf;
+         lbuf.assign( rl.data(), rl.length() );
          lbuf.append( pBuf, pNL-pBuf );
          PutLine( LastLine(), lbuf, tmp );
          }

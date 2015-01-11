@@ -2561,22 +2561,21 @@ bool ARG::fg() { // fgrep
 
    auto keyLen(2); // for alternation header (2 chars)
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
-      const auto len( FBOP::LineCols( curfile, line ) );
-      if( len )
-         keyLen += len + 1;  // + 1 for keySep
+      const auto rl( curfile->PeekRawLine( line ) );
+      if( rl.length() > 0 )
+         keyLen += rl.length() + 1;  // + 1 for keySep
       }
 
    auto pszKey( PChar( alloca( keyLen ) ) );
    auto pB( pszKey );
-   *pB++ = '!'; // prepend alternation header (2 chars)
+   *pB++ = '!';  // prepend alternation header (2 chars)
    *pB++ = '\0'; // placeholder for keySep
 
-   std::string sbuf;
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
-      const auto len( curfile->getLineTabx( sbuf, line ) );
-      if( sbuf.length() > 0 ) {
-         memcpy( pB, sbuf.c_str(), sbuf.length()+1 );
-                 pB  +=            sbuf.length()+1  ;
+      const auto rl( curfile->PeekRawLine( line ) );
+      if( rl.length() > 0 ) {
+         memcpy( pB, rl.data(), rl.length()+1 );
+                 pB  +=         rl.length()+1  ;
          }
       }
 
