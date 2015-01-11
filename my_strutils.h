@@ -236,6 +236,8 @@ extern int safeStrcat( PChar dest, size_t sizeof_dest, int destLen, PCChar src, 
 STIL void safeStrcat( PChar dest, size_t sizeof_dest, int destLen, PCChar src )  { safeStrcat( dest, sizeof_dest, destLen       , src, Strlen( src ) ); }
 STIL void safeStrcat( PChar dest, size_t sizeof_dest             , PCChar src )  { safeStrcat( dest, sizeof_dest, Strlen( dest ), src ); }
 
+extern PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width );
+
 extern PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) ATTR_FORMAT(3,4);
 
 //--------------------------------------------------------------------------------

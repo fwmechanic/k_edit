@@ -286,8 +286,8 @@ extern   void  UnbindMacrosFromKeys();
 extern   int   edkcFromKeyname( stref pszKeyStr );
 extern   int   KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word );
 
-extern   void  PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite );
-extern   void  StrFromEdkc( PChar pKeyStringBuf, size_t pKeyStringBufBytes, int EdKC );
+extern   void  PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
+extern   void  StrFromEdkc( PChar dest, size_t sizeofDest, int edKC, sridx width=0 );
 extern   void  StrFromCmd( PChar pKeyStringBuf, size_t pKeyStringBufBytes, const CMD &CmdToFind );
 extern   void  EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd );
 extern   int   ShowAllUnassignedKeys( PFBUF pFBuf );

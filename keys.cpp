@@ -472,21 +472,33 @@ int KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word ) {
    }
 
 
-void StrFromEdkc( PChar pKeyStringBuf, size_t pKeyStringBufBytes, int edKC ) {
-   Assert( pKeyStringBufBytes > 2 );
+void StrFromEdkc( PChar dest, size_t sizeofDest, int edKC, sridx width ) {
+   Assert( sizeofDest > 2 );
+   dest[0] = '\0';
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
       if( ky2Nm.EdKC_ == edKC ) {
-         safeStrcpy( pKeyStringBuf, pKeyStringBufBytes, ky2Nm.name );
-         return;
+         safeStrcpy( dest, sizeofDest, ky2Nm.name );
+         break;
          }
       }
-
-   if( edKC < 0x100 && isprint( edKC ) ) {
-      *pKeyStringBuf++ = edKC;
-      *pKeyStringBuf = '\0';
+   if( !dest[0] ) {
+      if( edKC < 0x100 && isprint( edKC ) ) {
+         *dest++ = edKC;
+         *dest = '\0';
+         }
+      else {
+         safeSprintf( dest, sizeofDest, "edKC=0x%X", edKC );
+         }
       }
-   else {
-      safeSprintf( pKeyStringBuf, pKeyStringBufBytes, "edKC=0x%X", edKC );
+   if( width ) { // trail-pad with spaces to width
+      const auto tgtlen( Min( sizeofDest-1, width ) );
+      auto len( Strlen( dest ) );
+      if( len < tgtlen ) {
+         while( len < tgtlen ) {
+            dest[len++] = ' ';
+            }
+         dest[len] = '\0';
+         }
       }
    }
 
@@ -536,7 +548,17 @@ void StringOfAllKeyNamesFnIsAssignedTo( PChar dest, size_t sizeofDest, PCCMD pCm
       }
    }
 
-void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite ) {
+PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width ) {
+   const auto tgtlen( Min( sizeofDest-1, width ) );
+   auto len( 0 );
+   while( len < tgtlen ) {
+      dest[len++] = ' ';
+      }
+   dest[len] = '\0';
+   return const_cast<PCChar>(dest);
+   }
+
+void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll, std::string &tmp1, std::string &tmp2 ) {
    if( Cmd.IsFnUnassigned() || Cmd.IsFnGraphic() )
       return;
 
@@ -552,23 +574,29 @@ void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite ) {
       );
 
    auto fFoundAssignment(false);
+   coll.reserve( 4 );
    for( const auto &pCmd : g_Key2CmdTbl ) {
       if( pCmd == &Cmd ) {
-         char keyNm[50];
-         StrFromEdkc( BSOB(keyNm), &pCmd - g_Key2CmdTbl );
-         pFBufToWrite->PutLastLine( SprintfBuf( "%s%-*s # %s"
-               , cmdNm.k_str()
-               , g_MaxKeyNameLen
-               , keyNm
-               , !fFoundAssignment ? pText : "|"
-               )
-            );
+         coll.clear();
+         coll.emplace_back( cmdNm.k_str() );
+         char keyNm[50]; StrFromEdkc( BSOB(keyNm), &pCmd - g_Key2CmdTbl, g_MaxKeyNameLen );
+         coll.emplace_back( keyNm );
+         coll.emplace_back( " # " );
+         coll.emplace_back( !fFoundAssignment ? pText : "|" );
+         pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
          fFoundAssignment = true;
          }
       }
 
-   if( !fFoundAssignment )
-      pFBufToWrite->PutLastLine( SprintfBuf( "%s%-*s # %s", cmdNm.k_str(), g_MaxKeyNameLen, "", pText ) );
+   if( !fFoundAssignment ) {
+      coll.clear();
+      coll.emplace_back( cmdNm.k_str() );
+      char keyNm[50];
+      coll.emplace_back( safeStrfill( BSOB(keyNm), ' ', g_MaxKeyNameLen ) );
+      coll.emplace_back( " # " );
+      coll.emplace_back( pText );
+      pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
+      }
    }
 
 

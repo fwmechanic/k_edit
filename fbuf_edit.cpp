@@ -591,6 +591,14 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
       }
    }
 
+void FBUF::PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 ) {
+   stbuf0.clear();
+   for( const auto &sr : vsrSrc ) {
+      stbuf0.append( sr.data(), sr.length() );
+      }
+   PutLine( yLine, stbuf0, stbuf1 );
+   }
+
 void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
    std::string sbuf, tmp;
    for( auto ix(0); ix<elems; ++ix ) {

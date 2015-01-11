@@ -1449,6 +1449,8 @@ public:
    void           PutLine( LINE yLine, stref srSrc, std::string &tmp ); // WITH UNDO
    void           PutLastLine(         stref srSrc, std::string &tmp ) { PutLine( 1+LastLine(), srSrc, tmp ); }
    void           PutLineSeg( LINE yLine, const stref &ins, std::string &tmp0, std::string &tmp1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
+   void           PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 );
+   void           PutLastLine(         const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 ) { PutLine( 1+LastLine(), vsrSrc, stbuf0, stbuf1 ); }
 
                // _oddball_ PutLine... functions; may soon be deprecated; use sparingly!
    void           PutLine( LINE yLine, CPCChar pa[], int elems );

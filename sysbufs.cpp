@@ -182,10 +182,12 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
       else                           DBG( "%s ???", __func__ );
       }
 
+   std::vector<stref> coll_tmp;
+   std::string tmp1, tmp2;
    FBufRead_Assign_SubHd( pFBuf, "Lua functions", luaCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsLuaFxn() ) PAssignShowKeyAssignment( *pCmd, pFBuf );
+      if( pCmd->IsLuaFxn() ) PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
       }
 
    // We do most print loops twice: first time to determine the count for the
@@ -196,13 +198,13 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if(      pCmd->IsRealMacro() ) ;
       else if( pCmd->IsLuaFxn()    ) ;
-      else PAssignShowKeyAssignment( *pCmd, pFBuf );
+      else PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
       }
 
    FBufRead_Assign_SubHd( pFBuf, "Macros", macroCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsRealMacro() ) PAssignShowKeyAssignment( *pCmd, pFBuf );
+      if( pCmd->IsRealMacro() ) PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
       }
 
    FBufRead_Assign_SubHd( pFBuf, "Available Keys", ShowAllUnassignedKeys( nullptr ) );

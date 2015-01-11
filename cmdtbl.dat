@@ -23,7 +23,7 @@
   !a           assignlog                 NOARG
   arg          arg                       KEEPMETA                    , Begins an argument to a function or begins a selection
   ascii2hex    ascii2hex                 BOXSTR + TEXTARG            , selected text converted to hex -> <clipboard>
-  assign       assign                    BOXARG + MARKARG + NUMARG + NULLEOL + NOARG + LINEARG + BOXSTR + TEXTARG , Assigns a function to a keystroke, defines a macro, or sets a switch
+  assign       assign                    BOXARG + MARKARG + NUMARG + NULLEOL + NOARG + LINEARG + BOXSTR + TEXTARG , bind "funcnm:keynm", set switch "swinm:swival", define macro "funcnm:=macdef"
   backtab      backtab        CURSORFUNC
   balch        balch          CURSORFUNC , Moves cursor to matching brace or paren ( {[( <-> )]} )
   balln        balln          CURSORFUNC , Moves cursor to next/prev same-scope C-preprocessor conditional
