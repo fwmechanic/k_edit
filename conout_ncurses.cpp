@@ -65,11 +65,11 @@ bool ConOut::SetCursorVisibilityChanged( bool fVisible ) {
 void ConOut::SetCursorLocn( int yLine, int xCol ) {
    s_cursor_pos.lin = yLine;
    s_cursor_pos.col = xCol;
-   move( s_cursor_pos.lin, s_cursor_pos.col );  DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
+   move( s_cursor_pos.lin, s_cursor_pos.col );  0 && DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
    refresh();
    }
 int ConOut::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
-   DBG( "%s@%d,%d=%*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
+   0 && DBG( "%s@%d,%d=%*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
    if( sizeY==sizeY && xColWithinConsoleWindow >= sizeX ) { return 0; }
@@ -103,7 +103,7 @@ YX_t ConOut::GetMaxConsoleSize() {
    return rv;
    }
 void ConOut::BufferFlushToScreen() {
-   move( s_cursor_pos.lin, s_cursor_pos.col );  DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
+   move( s_cursor_pos.lin, s_cursor_pos.col );  0 && DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
    refresh();
    }
 bool ConOut::WriteToFileOk( FILE *ofh ) {
@@ -122,7 +122,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    keypad(stdscr, TRUE);
    noecho();
    const auto sizeNow( ConOut::GetMaxConsoleSize() );
-   DBG( "%s: size=y,x=%d,%d", __func__, sizeNow.lin, sizeNow.col );
+   0 && DBG( "%s: size=y,x=%d,%d", __func__, sizeNow.lin, sizeNow.col );
    Event_ScreenSizeChanged( Point( sizeNow.lin, sizeNow.col ) );
    // ConOut::BufferWriteString( " hello ", 7, 0, 0, 0x15, false );
    // ConOut::BufferWriteString( " world ", 7, 3, 0, 0x13, false );
