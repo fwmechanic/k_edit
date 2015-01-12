@@ -591,7 +591,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                   if( ixBest == stref::npos || ixFind < ixBest ) {
                      ixBest = ixFind; mlen = needle.length();
                      }
-                  }
+                  } // xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX
                pNeedle += needle.length() + 1;
                }
             if( ixBest == stref::npos ) break;
@@ -604,7 +604,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
               ) {
                alcc.PutColor( xFound, mlen, COLOR::WUC );
                }
-            ofs += ixBest + mlen;   // wucwucwucwucwuc
+            ofs = ixBest + mlen;   // xWUCXxWUCXxWUCXxWUCX
             }
          }
       }
