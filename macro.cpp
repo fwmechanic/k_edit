@@ -744,9 +744,7 @@ bool ARG::assign() {
                   if( !ok ) ErrorDialogBeepf( "assign failed" );
                   return ok;
                  }
-    case LINEARG: {
-                  int assignsDone;
-                  Point errPt;
+    case LINEARG:{int assignsDone; Point errPt;
                   if( AssignLineRangeHadError( "user assign LINEARG", g_CurFBuf(), d_linearg.yMin, d_linearg.yMax, &assignsDone, &errPt ) ) {
                      errPt.ScrollTo();
                      Msg( "%d assign%s done; had error", assignsDone, Add_s( assignsDone ) );
@@ -758,7 +756,7 @@ bool ARG::assign() {
 
     case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                      if( aw.GetLine() ) {
-                        if( !AssignStrOk( aw.c_str() ) ) {
+                        if( !TruncComment_AssignStrOk( aw.lineref() ) ) {
                            g_CurView()->MoveCursor( aw.Line(), aw.Col() );
                            return false;
                            }

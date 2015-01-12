@@ -637,6 +637,7 @@ public:
    bool   NextLine()                  { d_pt.col = 0; ++d_pt.lin; return Beyond(); }
    void   buf_erase( size_t pos )     {        d_st.erase( pos ); }
    PCChar c_str()               const { return d_st.c_str(); }
+   stref  lineref()             const { return d_st; }
    };
 
 

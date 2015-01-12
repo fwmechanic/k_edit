@@ -734,16 +734,16 @@ bool ARG::saveall() {
    return true;
    }
 
-STATIC_FXN bool RmvFileByName( PCChar filename ) {
+STATIC_FXN bool RmvFileByName( stref filename ) {
    const auto pfToRm( FindFBufByName( filename ) );
    if( !pfToRm )
-      return Msg( "no FBUF for '%s'", filename );
+      return Msg( "no FBUF for '%" PR_BSR "'", BSR(filename) );
 
-   if( pfToRm->IsDirty() && !ConIO::Confirm( "Forget DIRTY FBUF '%s'?", filename ) )
-      return Msg( "Dirty FBUF not forgotten '%s'", filename );
+   if( pfToRm->IsDirty() && !ConIO::Confirm( "Forget DIRTY FBUF '%" PR_BSR "'?", BSR(filename) ) )
+      return Msg( "Dirty FBUF not forgotten '%" PR_BSR "'", BSR(filename) );
 
    const auto fDidRmv( DeleteAllViewsOntoFbuf( pfToRm ) );
-   Msg( "%s FBUF '%s'", fDidRmv ? "Forgot" : "COULDN'T FORGET", filename );
+   Msg( "%s FBUF '%" PR_BSR "'", fDidRmv ? "Forgot" : "COULDN'T FORGET", BSR(filename) );
    return fDidRmv;
    }
 
@@ -793,7 +793,7 @@ bool ARG::refresh() {
                    auto rmvCount( 0 );
                    for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                       if( aw.GetLine() ) {
-                         rmvCount += RmvFileByName( aw.c_str() );
+                         rmvCount += RmvFileByName( aw.lineref() );
                          ++attemptCount;
                          }
                       }
