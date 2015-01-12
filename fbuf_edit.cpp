@@ -622,11 +622,6 @@ COL ColOfFreeIdx( COL tabWidth, const stref &content, sridx offset ) {
    return xCol + (offset - content.length());  // 'offset' indexes _past_ content: assume all chars past EOL are spaces (non-tabs)
    }
 
-//------------------------------------------------------------------------------
-//
-// DeletePrevChar implements ARG::emacscdel _AND_ ARG::cdelete (below)
-//
-
 STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
    const auto yLine( pcv->Cursor().lin );
    if( pcv->Cursor().col == 0 ) { // cursor @ beginning of line?
@@ -659,27 +654,19 @@ STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE y
    if( xEolNul <= xLeft )
       return;
 
-// const auto destbuf( dest.data() );
-// const auto eos( dest.data()+dest.length() );
    const auto tw( pf->TabWidth() );
    const auto ixLeft( CaptiveIdxOfCol( tw, dest, xLeft ) );
-// const auto pxLeft( PtrOfColWithinStringRegion( tw, destbuf, eos, xLeft ) );
-
    const auto xRight( xLeft + boxWidth );
    if( xRight >= xEolNul ) { // trailing segment of line is being deleted?
       0 && DBG( "%s trim, %" PR_SIZET "u <= %d '%c'", __func__, xEolNul, xRight, dest[ixLeft] );
       dest.resize( ixLeft ); // the first (leftmost) char in the selected box
       return;
       }
-
    if( boxWidth == 0 )
       return;
 
-// const auto charsInGap( GreaterOf( static_cast<ptrdiff_t>(1), PtrOfColWithinStringRegion( tw, destbuf, eos, xRight ) - pxLeft ) );
    const auto charsInGap( boxWidth );
    if( fCollapse ) { // Collapse
-//    const auto pxEol(                                         PtrOfColWithinStringRegion( tw, destbuf, eos, xEolNul ) ); // *pxEol === '\0'
-//    memmove( pxLeft, pxLeft+charsInGap, pxEol - pxLeft - charsInGap + 1 );
       dest.erase( ixLeft, charsInGap );
       }
    else { // fill Gap w/blanks
@@ -971,7 +958,7 @@ bool ARG::linsert() { PCF;
                        GetLineWithSegRemoved( pcf, sbuf, d_nullarg.cursor.lin, d_nullarg.cursor.col, xNonb - d_nullarg.cursor.col, true );
                        }
                     else if( xNonb < d_nullarg.cursor.col ) {
-                       pcf->GetLineForInsert( sbuf, d_nullarg.cursor.lin, xNonb, d_nullarg.cursor.col - xNonb );
+                       pcf->DupLineForInsert( sbuf, d_nullarg.cursor.lin, xNonb, d_nullarg.cursor.col - xNonb );
                        }
                     if( sbuf.length() ) {
                        std::string stmp;
@@ -996,7 +983,7 @@ bool ARG::linsert() { PCF;
    }
 
 void FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 ) {
-   fb->GetLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );        0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
+   fb->DupLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );        0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
    tmp1[ CaptiveIdxOfCol( fb->TabWidth(), tmp1, xCol ) ] = theChar;   0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
    if( fInsert ) {
       AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+1, yLine );
@@ -1109,7 +1096,7 @@ bool ARG::emacsnewl() {
    // "emacsnewl "touches" the current line even when the cursor is beyond
    // EOL and thus the content of said line is unchanged (this causes
    // tab-replacement changes).  Investigation shows that maybe
-   // CopyStream should not be used, or that GetLineForInsert needs to be
+   // CopyStream should not be used, or that DupLineForInsert needs to be
    // modified to use the entab settings from the dest?"
    //
    // 20090228 kgoodwin My fix: avoid CopyStream if cursor at/past EoL:
@@ -1260,7 +1247,7 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
          }
 
       if( g_iRmargin + 5 <= xCol ) {
-         pcf->GetLineForInsert( tmp1, yLine, xCol, 0 );
+         pcf->DupLineForInsert( tmp1, yLine, xCol, 0 );
          const auto lbuf( tmp1.c_str() );
          for( auto ix( xCol - 1 ); ix > 1; --ix ) {
             if(   lbuf[ix-1] == ' '
@@ -1427,7 +1414,7 @@ void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl
 //    original dest[xIns] is moved to dest[xIns+insertCols]
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
-int FBUF::GetLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
+int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
    const auto tw       ( TabWidth() );
    auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
    auto       strCols  ( StrCols( tw, dest ) );
@@ -1568,7 +1555,7 @@ void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, st
 #if 1
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
       const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "u/%" PR_BSRSIZET "u]", __func__, xLeftIncl, holewidth, inslen );
-      GetLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );
+      DupLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );
       const auto lcols( StrCols( TabWidth(), dest ) );
       const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "u/%d maxCol=%" PR_BSRSIZET "u", __func__, dest.length(), lcols, maxCol );
       Assert( lcols >= xLeftIncl );
@@ -1887,11 +1874,11 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
    //*** merge & write last line of FBsrc stream  [srcbuf:destbuf]
 
   #if 1
-   std::string destbuf; FBdest->GetLineForInsert( destbuf, yDst, xDst, 0 ); // rd dest line containing insertion point
+   std::string destbuf; FBdest->DupLineForInsert( destbuf, yDst, xDst, 0 ); // rd dest line containing insertion point
    std::string srcbuf; auto tws( 1 );
    if( FBsrc ) {
       tws = FBsrc->TabWidth();
-      FBsrc->GetLineForInsert( srcbuf, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
+      FBsrc->DupLineForInsert( srcbuf, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
       }
    else {
       if( xSrcEnd > 0 ) { srcbuf.assign( xSrcEnd, ' ' ); }
@@ -1908,17 +1895,17 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
    }
    //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
    if( FBsrc ) {
-      FBsrc->GetLineForInsert( srcbuf, ySrcStart, xSrcStart, 0 );
+      FBsrc->DupLineForInsert( srcbuf, ySrcStart, xSrcStart, 0 );
       const auto ixSrcStart( CaptiveIdxOfCol( tws, srcbuf, xSrcStart ) );
       const auto alen( srcbuf.length() - ixSrcStart + 1 );
       destbuf.replace( ixDst, alen, srcbuf, ixSrcStart, alen );
       }
    FBdest->PutLine( yDst, destbuf, stmp );
   #else
-// Xbuf xbFirst; FBdest->GetLineForInsert( &xbFirst, yDst, xDst, 0 ); // rd dest line containing insertion point
+// Xbuf xbFirst; FBdest->DupLineForInsert( &xbFirst, yDst, xDst, 0 ); // rd dest line containing insertion point
 // Xbuf xbLast;
 // if( FBsrc ) {
-//    FBsrc->GetLineForInsert( &xbLast, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
+//    FBsrc->DupLineForInsert( &xbLast, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
 //    }
 // else {
 //    if( xSrcEnd > 0 ) { memset( xbLast.wresize( xSrcEnd ), ' ', xSrcEnd ); } // if is not strictly necessary, but silences a GCC warning "memset used with constant zero length parameter" (when this entire fxn is inlined!!!)
@@ -1939,7 +1926,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
 //
 // //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
 // if( FBsrc ) {
-//    FBsrc->GetLineForInsert( &xbLast, ySrcStart, xSrcStart, 0 );
+//    FBsrc->DupLineForInsert( &xbLast, ySrcStart, xSrcStart, 0 );
 //    const auto pSrc( PtrOfColWithinStringRegion( FBsrc->TabWidth(), xbLast.wbuf(), xbLast.wbuf()+xbLast.length(), xSrcStart ) );
 //    const auto taillen( Strlen( pSrc ) );
 //    const auto dstbuf( xbFirst.wresize( xDst + taillen + 1 ) );
@@ -1996,9 +1983,9 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
    const auto boxWidth( xSrcRight - xSrcLeft + 1 );
    std::string stSrc, stDst;  // BUGBUG one buffer would be nicer ...
    for( auto ySrc( ySrcTop ); ySrc <= ySrcBottom ; ++ySrc, ++yDst ) {
-      FBdest->GetLineForInsert( stDst, yDst, xDst, boxWidth );
+      FBdest->DupLineForInsert( stDst, yDst, xDst, boxWidth );
       if( FBsrc ) {
-         FBsrc->GetLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
+         FBsrc->DupLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
          const auto srl( CaptiveIdxOfCols( tws, stSrc, xSrcLeft, xSrcRight ) );
          stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, srl.ix0, srl.ix1 - srl.ix0 + 1 );
          }

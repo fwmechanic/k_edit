@@ -202,7 +202,7 @@ bool ARG::quik() {
 //  Get line, blank-padded on the right to xMin inclusive.
 //
 STATIC_FXN void GetMinLine( std::string &dest, LINE y, COL xMin, PFBUF pFBuf ) {
-   pFBuf->GetLineForInsert( dest, y, xMin+1, 0 );
+   pFBuf->DupLineForInsert( dest, y, xMin+1, 0 );
    }
 
 //  Draw a box using the OEM (IBM PC) box drawing chars
