@@ -830,8 +830,9 @@ class ReplaceCharWalker : public CharWalker {
 // replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
 void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
+   const auto ixCol( CaptiveIdxOfCol( pFBuf->TabWidth(), d_sbuf, curPt->col ) );
    0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET "u LoSB=%" PR_SIZET "d", curPt->col, curPt->lin, d_stReplace.length(), d_sbuf.length() );
-   d_sbuf.replace( curPt->col, d_stSearch.length(), d_stReplace );
+   d_sbuf.replace( ixCol, d_stSearch.length(), d_stReplace );
    pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
    ++d_iReplacementsMade;
 
