@@ -25,7 +25,7 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
    // note that this handles the case where some trailing part does not exist
    // contrast with canonical() which requires that the passed name exists
    const auto src( absolute( boost::filesystem::path( pszFilename ) ) );
-
+                                               DBG( "%s src'%s' -> '%s'", __func__, pszFilename, src.c_str() );
    // Get canonical version of the existing part of src
    auto it( src.begin() );
    auto rv( *it++ );

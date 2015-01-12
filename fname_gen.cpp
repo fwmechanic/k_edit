@@ -608,7 +608,9 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
 
       auto path( Path::CpyDirnm( pszSrc ) );                                          VERBOSE && DBG( "%s *** '%s' path='%s'", __func__, pszSrc, path.c_str() );
       if( path.empty() ) {
+#if defined(_WIN32)
          path = ".";   // supply "." so CfxFilenameGenerator works
+#endif
          }
       else {
          if( path.length() > 3 && Path::IsPathSepCh( path.back() ) )
