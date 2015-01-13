@@ -91,7 +91,7 @@ const Path::str_t DirMatches::GetNext() {
    while( FoundNext() && !KeepMatch() )
       continue;
 
-   if( d_ixDest == std::string::npos ) // already hit no-more-matches condition?
+   if( d_ixDest == std::string::npos ) //         hit no-more-matches condition?
       return Path::str_t("");
 
    d_buf.replace( d_ixDest, std::string::npos, d_dirent->d_name );

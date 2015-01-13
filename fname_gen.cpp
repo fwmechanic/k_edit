@@ -600,34 +600,30 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
         ) {                                                                           VERBOSE && DBG( "%s *** '%s'", __func__, pszSrc );
          goto OUTPUT_EQ_INPUT;
          }
-
-      const auto fname( Path::CpyFnameExt( pszSrc ) );                                VERBOSE && DBG( "%s *** '%s' name='%s'", __func__, pszSrc, fname.c_str() );
+      const auto fname( Path::RefFnameExt( pszSrc ) );                                VERBOSE && DBG( "%s *** '%s' name='%" PR_BSR "'", __func__, pszSrc, BSR(fname) );
       if( HasWildcard( fname ) ) {
          goto OUTPUT_EQ_INPUT;
          }
-
-      auto path( Path::CpyDirnm( pszSrc ) );                                          VERBOSE && DBG( "%s *** '%s' path='%s'", __func__, pszSrc, path.c_str() );
+      auto path( Path::RefDirnm( pszSrc ) );                                          VERBOSE && DBG( "%s *** '%s' path='%" PR_BSR "'", __func__, pszSrc, BSR(path) );
       if( path.empty() ) {
 #if defined(_WIN32)
          path = ".";   // supply "." so CfxFilenameGenerator works
 #endif
          }
       else {
-         if( path.length() > 3 && Path::IsPathSepCh( path.back() ) )
-            path.pop_back();  // remove the trailing PathSepCh so CfxFilenameGenerator works
+         if( path.length() > WL( 3, 1 ) && Path::IsPathSepCh( path.back() ) )
+            path.remove_suffix( 1 );  // remove the trailing PathSepCh so CfxFilenameGenerator works
          }
-      CfxFilenameGenerator mfg( path.c_str(), ONLY_DIRS );
+      CfxFilenameGenerator mfg( path, ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
-         dest += fname;                                                               VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
+         dest.append( BSR2STR(fname) );                                               VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
          }
-      else {
-         const auto abs_pb( Path::Absolutize( pszSrc ) );
-         if( abs_pb.empty() ) {                                                       VERBOSE && DBG( "%s '%s' =;> '%s'"     , __func__, pszSrc, abs_pb.c_str() );
-            return;
-            }
-         dest = abs_pb;
+      const auto abs_pb( Path::Absolutize( pszSrc ) );
+      if( abs_pb.empty() ) {                                                          VERBOSE && DBG( "%s '%s' =;> '%s'"     , __func__, pszSrc, abs_pb.c_str() );
+         return;
          }
+      dest = abs_pb;
       }
    else { // normal expansion
 #if defined(_WIN32)

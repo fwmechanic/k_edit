@@ -77,6 +77,7 @@ struct sridx2 {
 // http://stackoverflow.com/questions/19145951/printf-variable-string-length-specifier
 // http://stackoverflow.com/questions/8081613/using-size-t-for-specifying-the-precision-of-a-string-in-cs-printf
 // this is dangerous; hopefully really long strings will not be encountered :-(
+#define BSR2STR(bsr) (bsr).data(),(bsr).length()
 #define BSR(bsr) static_cast<int>(bsr.length()),bsr.data()
 #define PR_BSR ".*s"
 

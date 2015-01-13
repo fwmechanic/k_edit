@@ -857,7 +857,7 @@ Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
       rv = ".*";
       }
    else {
-      rv = Path::CpyExt( fb->Namestr() );
+      rv.assign( BSR2STR( Path::RefExt( fb->Namestr() ) ) );
       if( rv.empty() )
          rv = !fb->FnmIsDiskWritable() ? ".<>" : ".";
       }

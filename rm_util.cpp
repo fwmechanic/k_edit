@@ -34,7 +34,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) {
       }
    }
 
-   auto dest( Path::CpyDirnm( pszFileName ) + szBakDirNm );
+   auto dest( std::string( BSR2STR(Path::RefDirnm( pszFileName )) ) + szBakDirNm );
    {
    FileAttribs fd( dest.c_str() );
    if( fd.Exists() && fd.IsDir() ) {
@@ -49,7 +49,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) {
       0 && DBG("SFMG  mkdir '%s'", dest.c_str() );
       }
    }
-   const auto filenameNoPath( Path::CpyFnameExt( pszFileName ) );  0 && DBG("SFMG  B '%s'", filenameNoPath.c_str() );
+   const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  0 && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
 
    char tbuf[32];
    {
@@ -59,7 +59,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) {
       }
    strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", localtime( &stat_buf.st_mtime ) );
    }
-   dest += (PATH_SEP_STR + filenameNoPath + "." + tbuf);
+   dest += (PATH_SEP_STR + std::string( BSR2STR( filenameNoPath ) ) + "." + tbuf);
 
    unlinkOk( dest.c_str() );
    if( !MoveFileOk( pszFileName, dest.c_str() ) ) { 0 && DBG( "SFMG! [2] mv '%s' -> '%s' failed", pszFileName, dest.c_str() );

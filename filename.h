@@ -48,10 +48,6 @@ namespace Path {
    extern stref RefExt(      stref src );
    extern stref RefFnameExt( stref src );
 
-   extern str_t CpyDirnm   ( stref src );
-   extern str_t CpyFnm     ( stref src );
-   extern str_t CpyExt     ( stref src );
-   extern str_t CpyFnameExt( stref src );
    extern str_t Union      ( stref s1, stref s2 );
    extern str_t Absolutize   ( PCChar pszFilename );
 #if defined(_WIN32)

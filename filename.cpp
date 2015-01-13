@@ -20,18 +20,8 @@ stref Path::RefDirnm( stref src ) {
    return src.substr( 0, DirnmLen( src ) );
    }
 
-Path::str_t Path::CpyDirnm( stref src ) {
-   const auto rv( Path::RefDirnm( src ) );
-   return Path::str_t( rv.data(), rv.length() );
-   }
-
 stref Path::RefFnameExt( stref src ) {
    return src.substr( DirnmLen( src ) );
-   }
-
-Path::str_t Path::CpyFnameExt( stref src ) {
-   const auto rv( Path::RefFnameExt( src ) );
-   return Path::str_t( rv.data(), rv.length() );
    }
 
 stref Path::RefFnm( stref src ) { // a.k.a. IdxOfFnm()
@@ -43,12 +33,6 @@ stref Path::RefFnm( stref src ) { // a.k.a. IdxOfFnm()
    return fx.substr( 0, idxDot );
    }
 
-Path::str_t Path::CpyFnm( stref src ) { // DOES NOT include the trailing "." !!!
-   const auto rv( Path::RefFnm( src ) );
-   Path::str_t rv_( rv.data(), rv.length() );           // 0 && DBG( "%s: '%s'->'%s'", __func__, src, rv_.c_str() );
-   return rv_;
-   }
-
 stref Path::RefExt( stref src ) { // a.k.a. IdxOfFnm()
    auto fx( Path::RefFnameExt( src ) );
    const auto idxDot( fx.find_last_of( '.' ) );
@@ -56,12 +40,6 @@ stref Path::RefExt( stref src ) { // a.k.a. IdxOfFnm()
       return stref( "", 0 );
       }
    return fx.substr( idxDot );
-   }
-
-Path::str_t Path::CpyExt( stref src ) { // if src contains an extension, prepends a leading "."
-   const auto rv( Path::RefExt( src ) );
-   Path::str_t rv_( rv.data(), rv.length() );           // 0 && DBG( "%s: '%s'->'%s'", __func__, src, rv_.c_str() );
-   return rv_;
    }
 
 bool Path::IsDotOrDotDot( stref str ) {

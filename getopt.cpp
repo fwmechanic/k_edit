@@ -19,7 +19,7 @@ Getopt::Getopt( int argc_, PPCChar argv_, PCChar optset_ )
    , d_pOptSet( optset_ )
    , d_argi( 1 )
    , d_pAddlOpt( nullptr )
-   , d_pgm( Path::CpyFnm( d_argv[0] ) )
+   , d_pgm( BSR2STR( Path::RefFnm( d_argv[0] ) ) )
    {
    if( 0 ) {
       printf( "d_pgm=%s\n", d_pgm.c_str() );
