@@ -45,13 +45,13 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
    }
 
 
-STIL bool KeepMatch_( const WildCardMatchMode want, const struct stat &sbuf ) {
+STIL bool KeepMatch_( const WildCardMatchMode want, const struct stat &sbuf, stref name ) {
    const auto fFileOk( ToBOOL(want & ONLY_FILES) );
    const auto fDirOk ( ToBOOL(want & ONLY_DIRS ) );
    const auto fIsDir ( ToBOOL(sbuf.st_mode & S_IFDIR) );
    const auto fIsFile( !fIsDir && (sbuf.st_mode & (S_IFREG | S_IFLNK)) );
 
-   if( fDirOk  && fIsDir  ) return true;
+   if( fDirOk  && fIsDir  ) return !Path::IsDotOrDotDot( name );
    if( fFileOk && fIsFile ) return true;
    return                          false;
    }
@@ -61,7 +61,7 @@ bool DirMatches::KeepMatch() {
       return false;
       }
 
-   const auto rv( KeepMatch_( d_wcMode, d_sbuf ) );
+   const auto rv( KeepMatch_( d_wcMode, d_sbuf, d_dirent->d_name ) );
 
    1 && DBG( "want %c%c, have %X '%s' rv=%d"
            , (d_wcMode & ONLY_DIRS ) ? 'D':'d'
@@ -95,7 +95,7 @@ const Path::str_t DirMatches::GetNext() {
       return Path::str_t("");
 
    d_buf.replace( d_ixDest, std::string::npos, d_dirent->d_name );
-   if( ToBOOL(d_sbuf.st_mode & S_IFDIR) && !Path::IsDotOrDotDot( d_buf ) )
+   if( ToBOOL(d_sbuf.st_mode & S_IFDIR) )
       d_buf.append( PATH_SEP_STR );
 
    0 && DBG( "DirMatches::GetNext: '%s' (%X)", d_buf.c_str(), d_sbuf.st_mode );

@@ -938,8 +938,9 @@ inline bool View::ActiveInWin() { return d_pWin->CurView() == this; }
 // FILE flags values
 //
 enum eFileType
-   { ftype_UNKNOWN
-   , ftype1_C
+   { ftype_UNCHECKED
+   , ftype_UNKNOWN
+   , ftype_LANG_C
    };
 
 
@@ -952,8 +953,8 @@ extern bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ); // a very friendly (with FBUF
 extern void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf );
 
 
-extern bool g_fRealtabs;  // some inline code below references
-extern char g_chTabDisp;  // some inline code below references
+extern bool g_fRealtabs;         // some inline code below references
+extern char g_chTabDisp;         // some inline code below references
 extern char g_chTrailSpaceDisp;  // some inline code below references
 
 typedef bool (*ForFBufCallbackDone)( const FBUF &fbuf, void *pContext );
@@ -1260,7 +1261,7 @@ private:
    S8             d_TabWidth;
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
 
-   eFileType      d_FileType = ftype_UNKNOWN;   // enum FileType
+   eFileType      d_FileType = ftype_UNCHECKED;   // enum FileType
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
 

@@ -523,8 +523,32 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
 
    FBOP::AssignFromRsrc( this );
 
-   if( d_TabWidth < 2 ) {
-      d_TabWidth = g_iTabWidth;
+   if( ftype_UNCHECKED==FileType() ) {
+      SetFileType( ftype_UNKNOWN ); // at least we checked
+      STATIC_CONST struct {
+         PCChar    ext;
+         eFileType type;
+         }
+      ext_2_type[] = {
+         { ".c"  , ftype_LANG_C },
+         { ".cpp", ftype_LANG_C },
+         { ".cxx", ftype_LANG_C },
+         { ".h"  , ftype_LANG_C },
+         { ".hpp", ftype_LANG_C },
+         };
+      const auto pb( Path::RefExt( Name() ) );
+      0 && DBG( "%s EXT=%" PR_BSR "'", __func__, BSR(pb) );
+      for( const auto &e2t : ext_2_type ) {
+         if( Path::eq( e2t.ext, pb ) ) {
+            0 && DBG( "%s TYPE=%s (%d)", __func__, e2t.ext, e2t.type );
+            SetFileType( e2t.type );
+            break;
+            }
+         }
+      CalcIndent();
+      if( d_TabWidth < 2 ) {
+         d_TabWidth = g_iTabWidth;
+         }
       }
 
    const auto pCurView( this->PutFocusOnView() );
@@ -619,7 +643,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) { // cursor has NOT been moved
       rv = ColOfFreeIdx( tw, thisRl, ixNonb );
       switch( fb->FileType() ) {
          default: break;
-         case ftype1_C: {
+         case ftype_LANG_C: {
               const auto rv_C( SoftcrForCFiles( fb, rv, yStart, thisRl, ixNonb, rv ) );
               if( rv_C >= 0 ) {  0 && DBG( "SoftCR C: %d", rv_C );
                  return rv_C;
@@ -1228,35 +1252,6 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
   #endif
 
    SetLastFileStatFromDisk();
-
-   //---------------------------------------------------------------------------------
-
-   STATIC_CONST
-   struct {
-      PCChar    ext;
-      eFileType type;
-      }
-   ext_2_type[] = {
-      { ".c"  , ftype1_C },
-      { ".cpp", ftype1_C },
-      { ".cxx", ftype1_C },
-      { ".h"  , ftype1_C },
-      { ".hpp", ftype1_C },
-      };
-
-   const auto pb( Path::CpyExt( Name() ) );
-   0 && DBG( "%s EXT=%s", __func__, pb.c_str() );
-   for( const auto &e2t : ext_2_type ) {
-      if( Stricmp( e2t.ext, pb.c_str() ) == 0 ) {
-         0 && DBG( "%s TYPE=%s (%d)", __func__, e2t.ext, e2t.type );
-         SetFileType( e2t.type );
-         break;
-         }
-      }
-
-   CalcIndent();
-
-   //---------------------------------------------------------------------------------
 
    VR_( DBG( "FRd- OK" ); )
    return true;
