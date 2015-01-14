@@ -2631,7 +2631,7 @@ void LineColors::Cat( const LineColors &rhs ) {  0 && DBG( "CAT[%3d]", cols() );
    }
 
 class ColoredLine {
-   int         d_curLen;
+   size_t      d_curLen;
    linebuf     d_charBuf;
    LineColors  d_alc;
 
@@ -2645,19 +2645,18 @@ public:
 
    int  textcols() const { return d_curLen; }
 
-   void Cat( int ColorIdx, PCChar src, int srcChars );
-   void Cat( int ColorIdx, PCChar src ) { Cat( ColorIdx, src, Strlen( src ) ); }
+   void Cat( int ColorIdx, stref src );
    void Cat( const ColoredLine &rhs );
 
    void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), &d_alc, true ); }
    };
 
-void ColoredLine::Cat( int ColorIdx, PCChar src, int srcChars ) {
+void ColoredLine::Cat( int ColorIdx, stref src ) {
    const auto attr( g_CurView()->ColorIdx2Attr( ColorIdx ) );
-   const auto cpyLen( SmallerOf( srcChars, (int(sizeof(d_charBuf))-1) - d_curLen) );
-   if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3d..%3d] %02X %s", d_curLen, d_curLen+cpyLen-1, attr, src );
+   const auto cpyLen( SmallerOf( src.length(), (int(sizeof(d_charBuf))-1) - d_curLen) );
+   if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3d..%3d] %02X %s", d_curLen, d_curLen+cpyLen-1, attr, src.data() );
       d_alc.PutColor( d_curLen, cpyLen, attr );
-      memcpy( d_charBuf + d_curLen, src, cpyLen );
+      memcpy( d_charBuf + d_curLen, src.data(), cpyLen );
       d_curLen += cpyLen;
       d_charBuf[ d_curLen ] = '\0';
       }
@@ -2684,7 +2683,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
               , pfh->IsDirty() ? "*" : ""
               , BRTowardUndo, ARTowardUndo
               , BRTowardRedo, ARTowardRedo
-              )
+              ).k_str()
             );
          }
       }
@@ -2701,14 +2700,14 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    if( pfh->IsDiskRO() )                                                  cl.Cat( COLOR::ERRM, " DiskRO" );
 #endif
 
-   cl.Cat( COLOR::SEL , FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ) );
-   cl.Cat( COLOR::INF , FmtStr<27>( "[%s]"         , LastExtTagLoaded() ) );
-// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->Entab() ) );
-// cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ) );
-   cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ) );
-// cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "E!=e" : "E==e" ) );
-// cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "Q!=q" : "Q==q" ) );
-   cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "A!=a" : "A==a" ) );
+   cl.Cat( COLOR::SEL , FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ).k_str() );
+   cl.Cat( COLOR::INF , FmtStr<27>( "[%s]"         , LastExtTagLoaded() ).k_str() );
+// cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->Entab() ).k_str() );
+// cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).k_str() );
+   cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).k_str() );
+// cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "E!=e" : "E==e" ).k_str() );
+// cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "Q!=q" : "Q==q" ).k_str() );
+   cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "A!=a" : "A==a" ).k_str() );
 
    if( 0 ) { // 20150105 KG: seems superfluous
       if( g_pFbufClipboard && g_pFbufClipboard->LineCount() ) {
@@ -2719,7 +2718,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
             case BOXARG:    st = "Box"; break;
             default:        st = "???"; break;
             }
-         cl.Cat( COLOR::SEL, FmtStr<20>( "clp(%s%d)", st, g_pFbufClipboard->LineCount() ) );
+         cl.Cat( COLOR::SEL, FmtStr<20>( "clp(%s%d)", st, g_pFbufClipboard->LineCount() ).k_str() );
          }
       else {
          cl.Cat( COLOR::SEL, "clp()" );
@@ -2730,7 +2729,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    cl.Cat( COLOR::INF, FmtStr<40>( "%s%s"
             , g_fMeta                  ? " META"      : ""
             , IsMacroRecordingActive() ? (IsCmdXeqInhibitedByRecord() ? " NOX-RECORDING" : " RECORDING") : ""
-            )
+            ).k_str()
          );
 
    //-----------------------------------------------------------------------
@@ -2797,15 +2796,15 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
          if( truncBy > fnLen )
             out.Cat( COLOR::FG, s_dot3 );
          else
-            out.Cat( COLOR::FG, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ) );
+            out.Cat( COLOR::FG, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).k_str() );
          }
       #endif
       }
    else {
       auto pfnm( pfh->Name() );
-      if( commonLen   ) { out.Cat( COLOR::HG  , pfnm, commonLen   ); pfnm += commonLen  ; }
-      if( uniqPathLen ) { out.Cat( COLOR::ERRM, pfnm, uniqPathLen ); pfnm += uniqPathLen; }
-      if( uniqLen     ) { out.Cat( COLOR::FG  , pfnm, uniqLen     ); pfnm += uniqLen    ; }
+      if( commonLen   ) { out.Cat( COLOR::HG  , stref(pfnm, commonLen  ) ); pfnm += commonLen  ; }
+      if( uniqPathLen ) { out.Cat( COLOR::ERRM, stref(pfnm, uniqPathLen) ); pfnm += uniqPathLen; }
+      if( uniqLen     ) { out.Cat( COLOR::FG  , stref(pfnm, uniqLen    ) ); pfnm += uniqLen    ; }
       }
 
    out.Cat( cl );                       0 && DBG( "%s+", __func__ );
@@ -3296,9 +3295,9 @@ void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset
    out.Cat( g_colorError , errMsg );
    out.Cat( g_colorStatus, ": " );
    if( errOffset > 1 )
-   out.Cat( g_colorStatus, pszSearchStr            , errOffset -1 );  // leading OK part of pattern
-   out.Cat( g_colorStatus, pszSearchStr+errOffset  , 1            );  // err char of pattern
+   out.Cat( g_colorStatus, stref( pszSearchStr            , errOffset -1 ) );  // leading OK part of pattern
+   out.Cat( g_colorStatus, stref( pszSearchStr+errOffset  , 1            ) );  // err char of pattern
    if( pszSearchStrLen > errOffset+1 )
-   out.Cat( g_colorStatus, pszSearchStr+errOffset+1               );  // post-err part of pattern
+   out.Cat( g_colorStatus, pszSearchStr+errOffset+1                        );  // post-err part of pattern
    out.VidWrLine( DialogLine() );
    }
