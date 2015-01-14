@@ -112,6 +112,7 @@ bool ConOut::WriteToFileOk( FILE *ofh ) {
 bool ConOut::SetConsolePalette( const unsigned palette[16] ) { return false; }
 bool ConIO::StartupOk( bool fForceNewConsole ) {
    initscr();
+   raw();
    if( has_colors() == FALSE ) {
       endwin();
       fprintf( stderr, "Your terminal does not support color\n" );
