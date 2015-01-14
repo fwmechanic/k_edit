@@ -53,6 +53,10 @@ enum { MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
 STIL sridx nposToEnd( const stref       &str, sridx from ) { return from == stref::npos ? str.length() : from; }
 STIL sridx nposToEnd( const std::string &str, sridx from ) { return from == stref::npos ? str.length() : from; }
 
+// INNER stringref index to OUTER stringref index
+STIL sridx isri2osri( const stref &osr, const stref &isr, sridx isri ) { return isri + (isr.data()-osr.data()); }
+
+
 STIL bool atEnd( const stref       &str, sridx idx ) { return idx == str.length(); }
 STIL bool atEnd( const std::string &str, sridx idx ) { return idx == str.length(); }
 

@@ -529,24 +529,27 @@ stref IsolateTagStr( stref src ) {
    return src.substr( 0, ixRSQ );
    }
 
-STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) {
-   0 && DBG( "FindRsrcTag: '%s'", pszSectionName );
+STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) { enum { DB=1 };
+   DB && DBG( "FindRsrcTag: '%s'", pszSectionName );
    stref srKey( pszSectionName );
    for( auto yLine(startLine) ; yLine <= pFBuf->LastLine(); ++yLine ) {
-      const stref tag( IsolateTagStr( pFBuf->PeekRawLine( yLine ) ) );
-      if( !tag.empty() ) { 0 && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
+      const auto rl( pFBuf->PeekRawLine( yLine ) );
+      const stref tag( IsolateTagStr( rl ) );
+      if( !tag.empty() ) { DB && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
          for( sridx ix( 0 ); ix < tag.length() ; ) {
             const auto ix0( FirstNonBlankOrEnd( tag, ix  ) );
             const auto ix1( FirstBlankOrEnd   ( tag, ix0 ) );
             const auto taglen( ix1 - ix0 );
-            const auto atag( tag.substr( ix0, taglen ) );  0 && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
+            const auto atag( tag.substr( ix0, taglen ) );  DB && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
             if( 0==cmpi( atag, srKey ) ) {
                if( fHiLiteTag ) {
                   const auto pView( pFBuf->PutFocusOn() );
-                  pView->SetMatchHiLite( Point(yLine,ix0), taglen, true );
+                  const auto iox0( isri2osri( rl, tag, ix0 ) );
+                  DB && DBG( "%s! tagging y=%d x=%" PR_SIZET "u L %" PR_SIZET "u", __func__, yLine, iox0, taglen );
+                  pView->SetMatchHiLite( Point(yLine,iox0), taglen, true );
                   }
                const auto rv( yLine + 1 );
-               0 && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
+               DB && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
                return rv;
                }
             ix = ix1;
