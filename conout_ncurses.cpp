@@ -111,6 +111,7 @@ bool ConOut::WriteToFileOk( FILE *ofh ) {
    }
 bool ConOut::SetConsolePalette( const unsigned palette[16] ) { return false; }
 bool ConIO::StartupOk( bool fForceNewConsole ) {
+   ESCDELAY = 10;
    initscr();
    raw();
    if( has_colors() == FALSE ) {
@@ -120,8 +121,10 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
       }
 
    start_color();
-   keypad(stdscr, TRUE);
    noecho();
+   nonl();
+   keypad(stdscr, TRUE);
+   meta(stdscr, 1);
    const auto sizeNow( ConOut::GetMaxConsoleSize() );
    0 && DBG( "%s: size=y,x=%d,%d", __func__, sizeNow.lin, sizeNow.col );
    Event_ScreenSizeChanged( Point( sizeNow.lin, sizeNow.col ) );
