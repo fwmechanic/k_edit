@@ -166,13 +166,6 @@ STATIC_VAR FILE *ofh_DBG;
 
 void DBG_init() {
    if( !ofh_DBG ) {
-      pathbuf buf;
-      snprintf( BSOB( buf ), "%sDBG_%s.%d", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), getpid() );
-      ofh_DBG = fopen( buf, "w" );
-      if( ofh_DBG == nullptr ) {
-         perror("DBG_init() fopen");
-         exit(EXIT_FAILURE);
-         }
       const auto tnow( time( nullptr ) );
       const auto lt( localtime( &tnow ) );
       if( lt == nullptr ) {
@@ -184,8 +177,15 @@ void DBG_init() {
          perror( "strftime returned 0" );
          exit(EXIT_FAILURE);
          }
-      fprintf( stderr , "opened %s @ %s\n", buf, tmstr );
-      fprintf( ofh_DBG, "opened %s @ %s\n", buf, tmstr );
+      pathbuf buf;
+      snprintf( BSOB( buf ), "%s%s-%s.log", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), tmstr );
+      ofh_DBG = fopen( buf, "w" );
+      if( ofh_DBG == nullptr ) {
+         perror("DBG_init() fopen");
+         exit(EXIT_FAILURE);
+         }
+      fprintf( stderr , "logging to %s\n", buf );
+      fprintf( ofh_DBG, "logging to %s\n", buf );
       }
    }
 
