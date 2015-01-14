@@ -302,6 +302,22 @@ int ConGetEscEvent() {
                     result = -1;
                 }
                 break;
+            case 'E':
+                if (!kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_center;
+                } else if (kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_c_center;
+                } else if (!kbCtr && kbAlt && !kbSft) {
+                    result = EdKC_a_center;
+                } else if (!kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_s_center;
+                } else if (kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_cs_center;
+                } else {
+                    // unsupported by 'K'
+                    result = -1;
+                }
+                break;
             case 'F':
                 if (!kbCtr && !kbAlt && !kbSft) {
                     result = EdKC_end;
