@@ -2654,7 +2654,7 @@ public:
 void ColoredLine::Cat( int ColorIdx, stref src ) {
    const auto attr( g_CurView()->ColorIdx2Attr( ColorIdx ) );
    const auto cpyLen( SmallerOf( src.length(), (int(sizeof(d_charBuf))-1) - d_curLen) );
-   if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3d..%3d] %02X %s", d_curLen, d_curLen+cpyLen-1, attr, src.data() );
+   if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3" PR_SIZET "u..%3" PR_SIZET "u] %02X %" PR_BSR "", d_curLen, d_curLen+cpyLen-1, attr, BSR(src) );
       d_alc.PutColor( d_curLen, cpyLen, attr );
       memcpy( d_charBuf + d_curLen, src.data(), cpyLen );
       d_curLen += cpyLen;
