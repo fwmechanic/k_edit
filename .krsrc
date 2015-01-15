@@ -161,6 +161,8 @@
    um:=cancel arg "usemouse:YES" show_asgn
    nm:=cancel arg "usemouse:NO"  show_asgn
 
+   tell_loop:= :>again tell =>again
+
    mg:=arg "mfspec" tell
    selcmd:alt+0
 
