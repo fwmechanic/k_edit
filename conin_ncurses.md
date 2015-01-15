@@ -36,52 +36,52 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_num7         | is 7, s/b num7 |
 | EdKC_num8         | is 8, s/b num8 |
 | EdKC_num9         | is 9, s/b num9 |
-| EdKC_numMinus     | no |
-| EdKC_numPlus      | no |
-| EdKC_numStar      | no |
-| EdKC_numSlash     | no |
-| EdKC_numEnter     | is enter, s/b numenter (same on Win32)  |
+| EdKC_numMinus     | no (?) |
+| EdKC_numPlus      | no (?) |
+| EdKC_numStar      | no (?) |
+| EdKC_numSlash     | no (?) |
+| EdKC_numEnter     | is enter, s/b numenter (same on Win32) (?) |
 | EdKC_space        | ascii ' ' |
 | EdKC_bksp         | y |
 | EdKC_tab          | y |
 | EdKC_esc          | y |
 | EdKC_enter        | y |
-| EdKC_a_0          | is alt+. |
-| EdKC_a_1          | is alt+/ |
-| EdKC_a_2          | is alt+home  |
-| EdKC_a_3          | is alt+end  |
-| EdKC_a_4          | is alt+left |
-| EdKC_a_5          | is alt+right |
-| EdKC_a_6          | is alt+up  |
-| EdKC_a_7          | is alt+down  |
-| EdKC_a_8          | is alt+pgup  |
-| EdKC_a_9          | is alt+pgdn  |
-| EdKC_a_a          | is alt+num4  |
-| EdKC_a_b          | is alt+num5   |
-| EdKC_a_c          | is alt+num6   |
-| EdKC_a_d          | is alt+num7   |
-| EdKC_a_e          | is alt+num8   |
-| EdKC_a_f          | is alt+num9   |
-| EdKC_a_g          | is alt+num-   |
-| EdKC_a_h          | is alt+num+   |
-| EdKC_a_i          | is alt+num*   |
-| EdKC_a_j          | is alt+num/   |
-| EdKC_a_k          | is alt+numenter   |
-| EdKC_a_l          | is alt+space   |
-| EdKC_a_m          | is alt+bkspc   |
-| EdKC_a_n          | is alt+num   |
-| EdKC_a_o          | is alt+esc   |
-| EdKC_a_p          | is alt+enter   |
-| EdKC_a_q          | is ctrl+0   |
-| EdKC_a_r          | is ctrl+1  |
-| EdKC_a_s          | is ctrl+2  |
-| EdKC_a_t          | is ctrl+3  |
-| EdKC_a_u          | is ctrl+4  |
-| EdKC_a_v          | is ctrl+5  |
-| EdKC_a_w          | is ctrl+6  |
-| EdKC_a_x          | is ctrl+7  |
-| EdKC_a_y          | is ctrl+8  |
-| EdKC_a_z          | is ctrl+9  |
+| EdKC_a_0          | is alt+. (?) |
+| EdKC_a_1          | is alt+/ (?) |
+| EdKC_a_2          | is alt+home (?) |
+| EdKC_a_3          | is alt+end (?) |
+| EdKC_a_4          | is alt+left (?) |
+| EdKC_a_5          | is alt+right (?) |
+| EdKC_a_6          | is alt+up (?) |
+| EdKC_a_7          | is alt+down (?) |
+| EdKC_a_8          | is alt+pgup (?) |
+| EdKC_a_9          | is alt+pgdn (?) |
+| EdKC_a_a          | is alt+num4 (?) |
+| EdKC_a_b          | is alt+num5 (?) |
+| EdKC_a_c          | is alt+num6 (?)  |
+| EdKC_a_d          | is alt+num7 (?)   |
+| EdKC_a_e          | is alt+num8 (?)   |
+| EdKC_a_f          | is alt+num9 (?)   |
+| EdKC_a_g          | is alt+num- (?)   |
+| EdKC_a_h          | is alt+num+ (?)   |
+| EdKC_a_i          | is alt+num* (?)   |
+| EdKC_a_j          | is alt+num/ (?)   |
+| EdKC_a_k          | is alt+numenter (?)   |
+| EdKC_a_l          | is alt+space (?)   |
+| EdKC_a_m          | is alt+bkspc (?)   |
+| EdKC_a_n          | is alt+num (?)   |
+| EdKC_a_o          | is alt+esc (?)   |
+| EdKC_a_p          | is alt+enter (?)  |
+| EdKC_a_q          | is ctrl+0 (?)   |
+| EdKC_a_r          | is ctrl+1 (?)  |
+| EdKC_a_s          | is ctrl+2 (?)  |
+| EdKC_a_t          | is ctrl+3 (?)  |
+| EdKC_a_u          | is ctrl+4 (?)  |
+| EdKC_a_v          | is ctrl+5 (?)  |
+| EdKC_a_w          | is ctrl+6 (?)  |
+| EdKC_a_x          | is ctrl+7 (?)  |
+| EdKC_a_y          | is ctrl+8 (?)  |
+| EdKC_a_z          | is ctrl+9 (?)  |
 | EdKC_a_f1         | hooked: Lubuntu start menu? |
 | EdKC_a_f2         | hooked: run dialog box |
 | EdKC_a_f3         | hooked: unknown; seems to freeze K |
