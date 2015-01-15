@@ -1,6 +1,15 @@
 
 Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corresponding key, and reading the dialog line to obtain the key name.
 
+## Legend for EdKC -> ncurses Table
+
+ * `y`: working as expected
+ * `hooked`: not seen by ncurses K because intercepted by WM, DE, or other
+ * `no response`: no visible respose (systemwide) to key being struck.
+ * `is X, s/b A`: when the key is struck, EdKC==X is received when ==A is expected
+ * `is X`: when the key is struck, EdKC==X is received (implicitly: when another is expected)
+ * `ascii 'X'`: when the key is struck, EdKC==EdKC_a (where a is an ASCII code) is received (implicitly: when another is expected);
+
 | EdKC              | ncurses |
 | ------------------|---------|
 | EdKC_f1           | y |
@@ -36,52 +45,52 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_num7         | is 7, s/b num7 |
 | EdKC_num8         | is 8, s/b num8 |
 | EdKC_num9         | is 9, s/b num9 |
-| EdKC_numMinus     | no (?) |
-| EdKC_numPlus      | no (?) |
-| EdKC_numStar      | no (?) |
-| EdKC_numSlash     | no (?) |
-| EdKC_numEnter     | is enter, s/b numenter (same on Win32) (?) |
+| EdKC_numMinus     | y |
+| EdKC_numPlus      | y |
+| EdKC_numStar      | y |
+| EdKC_numSlash     | y |
+| EdKC_numEnter     | y |
 | EdKC_space        | ascii ' ' |
 | EdKC_bksp         | y |
 | EdKC_tab          | y |
 | EdKC_esc          | y |
 | EdKC_enter        | y |
-| EdKC_a_0          | is alt+. (?) |
-| EdKC_a_1          | is alt+/ (?) |
-| EdKC_a_2          | is alt+home (?) |
-| EdKC_a_3          | is alt+end (?) |
-| EdKC_a_4          | is alt+left (?) |
-| EdKC_a_5          | is alt+right (?) |
-| EdKC_a_6          | is alt+up (?) |
-| EdKC_a_7          | is alt+down (?) |
-| EdKC_a_8          | is alt+pgup (?) |
-| EdKC_a_9          | is alt+pgdn (?) |
-| EdKC_a_a          | is alt+num4 (?) |
-| EdKC_a_b          | is alt+num5 (?) |
-| EdKC_a_c          | is alt+num6 (?)  |
-| EdKC_a_d          | is alt+num7 (?)   |
-| EdKC_a_e          | is alt+num8 (?)   |
-| EdKC_a_f          | is alt+num9 (?)   |
-| EdKC_a_g          | is alt+num- (?)   |
-| EdKC_a_h          | is alt+num+ (?)   |
-| EdKC_a_i          | is alt+num* (?)   |
-| EdKC_a_j          | is alt+num/ (?)   |
-| EdKC_a_k          | is alt+numenter (?)   |
-| EdKC_a_l          | is alt+space (?)   |
-| EdKC_a_m          | is alt+bkspc (?)   |
-| EdKC_a_n          | is alt+num (?)   |
-| EdKC_a_o          | is alt+esc (?)   |
-| EdKC_a_p          | is alt+enter (?)  |
-| EdKC_a_q          | is ctrl+0 (?)   |
-| EdKC_a_r          | is ctrl+1 (?)  |
-| EdKC_a_s          | is ctrl+2 (?)  |
-| EdKC_a_t          | is ctrl+3 (?)  |
-| EdKC_a_u          | is ctrl+4 (?)  |
-| EdKC_a_v          | is ctrl+5 (?)  |
-| EdKC_a_w          | is ctrl+6 (?)  |
-| EdKC_a_x          | is ctrl+7 (?)  |
-| EdKC_a_y          | is ctrl+8 (?)  |
-| EdKC_a_z          | is ctrl+9 (?)  |
+| EdKC_a_0          | y |
+| EdKC_a_1          | y |
+| EdKC_a_2          | y |
+| EdKC_a_3          | y |
+| EdKC_a_4          | y |
+| EdKC_a_5          | y |
+| EdKC_a_6          | y |
+| EdKC_a_7          | y |
+| EdKC_a_8          | y |
+| EdKC_a_9          | y |
+| EdKC_a_a          | y |
+| EdKC_a_b          | y |
+| EdKC_a_c          | y |
+| EdKC_a_d          | y |
+| EdKC_a_e          | y |
+| EdKC_a_f          | y |
+| EdKC_a_g          | y |
+| EdKC_a_h          | y |
+| EdKC_a_i          | y |
+| EdKC_a_j          | y |
+| EdKC_a_k          | y |
+| EdKC_a_l          | y |
+| EdKC_a_m          | y |
+| EdKC_a_n          | y |
+| EdKC_a_o          | y |
+| EdKC_a_p          | y |
+| EdKC_a_q          | y |
+| EdKC_a_r          | y |
+| EdKC_a_s          | y |
+| EdKC_a_t          | y |
+| EdKC_a_u          | y |
+| EdKC_a_v          | y |
+| EdKC_a_w          | y |
+| EdKC_a_x          | y |
+| EdKC_a_y          | y |
+| EdKC_a_z          | y |
 | EdKC_a_f1         | hooked: Lubuntu start menu? |
 | EdKC_a_f2         | hooked: run dialog box |
 | EdKC_a_f3         | hooked: unknown; seems to freeze K |
@@ -154,11 +163,11 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_f          | y |
 | EdKC_c_g          | y |
 | EdKC_c_h          | y |
-| EdKC_c_i          | tab |
-| EdKC_c_j          | enter |
+| EdKC_c_i          | is tab |
+| EdKC_c_j          | is enter |
 | EdKC_c_k          | y |
 | EdKC_c_l          | y |
-| EdKC_c_m          | enter |
+| EdKC_c_m          | is enter |
 | EdKC_c_n          | y |
 | EdKC_c_o          | y |
 | EdKC_c_p          | y |
@@ -184,7 +193,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_f10        | no response |
 | EdKC_c_f11        | no response |
 | EdKC_c_f12        | no response |
-| EdKC_c_BACKTICK   | ctrl+9 |
+| EdKC_c_BACKTICK   | is ctrl+9 |
 | EdKC_c_MINUS      | ascii '-' |
 | EdKC_c_EQUAL      | ascii '-' |
 | EdKC_c_LEFT_SQ    | is esc |
