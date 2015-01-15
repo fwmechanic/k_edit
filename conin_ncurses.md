@@ -1,4 +1,6 @@
 
+# EdKC -> ncurses Table
+
 Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corresponding key, and reading the dialog line to obtain the key name.
 
 ## Legend for EdKC -> ncurses Table
@@ -11,7 +13,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
  * `ascii 'X'`: when the key is struck, EdKC==EdKC_a (where a is an ASCII code) is received (implicitly: when another is expected);
 
 | EdKC              | ncurses |
-| ------------------|---------|
+|-------------------|---------|
 | EdKC_f1           | y |
 | EdKC_f2           | y |
 | EdKC_f3           | y |
@@ -375,3 +377,70 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_scroll       |  |
 | EdKC_a_scroll     |  |
 | EdKC_s_scroll     |  |
+
+
+# Top 60 editor functions used, mapped to EdKC
+
+20150115_0742 X rate=21/59=36%
+
+| count  | ARG::name        |?| EdKC             |
+|--------|------------------|-|------------------|
+| 774704 | down             |y| EdKC_down        |
+| 582550 | up               |y| EdKC_up          |
+| 366102 | graphic          |y| (many)           |
+| 352863 | right            |y| EdKC_right       |
+| 173013 | left             |y| EdKC_left        |
+| 108228 | pword            |X| EdKC_c_right     |
+| 106733 | arg              |y| EdKC_center      |
+|  70229 | mword            |X| EdKC_c_left      |
+|  59268 | mpage            |y| EdKC_pgup        |
+|  51719 | setfile          |y| EdKC_f2          |
+|  42663 | endline          |y| EdKC_end         |
+|  41748 | msearch          |y| EdKC_f4          |
+|  38256 | begline          |y| EdKC_home        |
+|  36816 | udelete          |y| EdKC_numMINUS    |
+|  31729 | ppage            |y| EdKC_pgdn        |
+|  29793 | psearch          |y| EdKC_f3          |
+|  24858 | paste            |y| EdKC_ins         |
+|  16908 | copy             |y| EdKC_numPLUS     |
+|  16852 | exit             |X| EdKC_a_f4        |
+|  14419 | emacscdel        |y| EdKC_bksp        |
+|  13473 | undo             |X| EdKC_a_bksp      |
+|  13343 | emacsnewl        |y| EdKC_numEnter    |
+|   8615 | cancel           |y| EdKC_esc         |
+|   6145 | ppara            |X| EdKC_c_down      |
+|   5982 | files            |X| EdKC_a_f2        |
+|   4727 | endfile          |X| EdKC_c_pgdn      |
+|   4610 | execute          |y| EdKC_c_x         |
+|   3914 | window           |y| EdKC_f6          |
+|   3108 | meta             |y| EdKC_f9          |
+|   2602 | begfile          |X| EdKC_c_pgup      |
+|   2556 | nextmsg          |y| EdKC_a_n         |
+|   2435 | redo             |X| EdKC_c_bksp      |
+|   2177 | mfgrep           |X| EdKC_s_f4        |
+|   2167 | vrepeat          |y| EdKC_a_v         |
+|   1778 | flipcase         |y| EdKC_a_c         |
+|   1354 | home             |X| EdKC_c_home      |
+|   1187 | replace          |y| EdKC_c_l         |
+|   1132 | assign           |X| EdKC_a_EQUAL     |
+|    883 | qreplace         |X| EdKC_c_BACKSLASH |
+|    858 | fromwinclip      |y| EdKC_c_v         |
+|    731 | grep             |X| EdKC_c_f3        |
+|    693 | towinclip        |y| EdKC_c_c         |
+|    668 | longline         |X| EdKC_a_BACKSLASH |
+|    527 | mpara            |X| EdKC_c_up        |
+|    519 | tags             |y| EdKC_a_u         |
+|    474 | selword          |X| EdKC_c_center    |
+|    425 | searchlog        |X| EdKC_a_f3        |
+|    406 | del_no_clip      |y| EdKC_del         |
+|    323 | justify          |y| EdKC_c_b         |
+|    309 | lua              |y| EdKC_a_l         |
+|    266 | lastselect       |y| EdKC_a_s         |
+|    251 | gotofileline     |y| EdKC_a_g         |
+|    246 | lasttext         |y| EdKC_a_d         |
+|    221 | mfreplace        |X| EdKC_f11         |
+|    159 | aligncol         |y| EdKC_a_a         |
+|    141 | backtravlocnlist |X| EdKC_a_left      |
+|    137 | traverselocnlist |X| EdKC_a_right     |
+|    105 | boxstream        |y| EdKC_a_b         |
+|    100 | tell             |y| EdKC_a_t         |
