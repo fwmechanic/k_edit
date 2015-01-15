@@ -46,7 +46,6 @@ static int key_sdown = -1;
 int ConGetEvent() {
     int ch = 0;
     const char *s;
-
     // fill terminal dependant values on first call
     if (key_sup < 0 || key_sdown < 0) {
         for (ch = KEY_MAX + 1;;ch++) {
@@ -159,7 +158,7 @@ int ConGetEvent() {
         case KEY_B2:
             return EdKC_center;
         case KEY_ENTER: // shift enter
-            return EdKC_enter;
+            return EdKC_numEnter;
         default:
             if (key_sdown != -1 && ch == key_sdown)
                 return EdKC_s_down;
@@ -344,6 +343,70 @@ int ConGetEscEvent() {
                     result = EdKC_s_home;
                 } else if (kbCtr && !kbAlt && kbSft) {
                     result = EdKC_cs_home;
+                } else {
+                    // unsupported by 'K'
+                    result = -1;
+                }
+                break;
+            case 'j':
+                if (!kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_numStar;
+                } else if (kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_c_numStar;
+                } else if (!kbCtr && kbAlt && !kbSft) {
+                    result = EdKC_a_numStar;
+                } else if (!kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_s_numStar;
+                } else if (kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_cs_numStar;
+                } else {
+                    // unsupported by 'K'
+                    result = -1;
+                }
+                break;
+            case 'k':
+                if (!kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_numPlus;
+                } else if (kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_c_numPlus;
+                } else if (!kbCtr && kbAlt && !kbSft) {
+                    result = EdKC_a_numPlus;
+                } else if (!kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_s_numPlus;
+                } else if (kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_cs_numPlus;
+                } else {
+                    // unsupported by 'K'
+                    result = -1;
+                }
+                break;
+            case 'm':
+                if (!kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_numMinus;
+                } else if (kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_c_numMinus;
+                } else if (!kbCtr && kbAlt && !kbSft) {
+                    result = EdKC_a_numMinus;
+                } else if (!kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_s_numMinus;
+                } else if (kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_cs_numMinus;
+                } else {
+                    // unsupported by 'K'
+                    result = -1;
+                }
+                break;
+            case 'o':
+                if (!kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_numSlash;
+                } else if (kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_c_numSlash;
+                } else if (!kbCtr && kbAlt && !kbSft) {
+                    result = EdKC_a_numSlash;
+                } else if (!kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_s_numSlash;
+                } else if (kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_cs_numSlash;
                 } else {
                     // unsupported by 'K'
                     result = -1;
