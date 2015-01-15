@@ -1,4 +1,6 @@
 
+Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corresponding key, and reading the dialog line to obtain the key name.
+
 | EdKC              | ncurses |
 | ------------------|---------|
 | EdKC_f1           | y |
@@ -39,7 +41,7 @@
 | EdKC_numStar      | no |
 | EdKC_numSlash     | no |
 | EdKC_numEnter     | is enter, s/b numenter (same on Win32)  |
-| EdKC_space        | just ASCII (EdKC 0x20)  |
+| EdKC_space        | ascii ' ' |
 | EdKC_bksp         | y |
 | EdKC_tab          | y |
 | EdKC_esc          | y |
