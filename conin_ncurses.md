@@ -240,15 +240,15 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_s_f12        |  |
 | EdKC_s_home       |  |
 | EdKC_s_end        |  |
-| EdKC_s_left       |  |
-| EdKC_s_right      |  |
-| EdKC_s_up         |  |
-| EdKC_s_down       |  |
-| EdKC_s_pgup       |  |
-| EdKC_s_pgdn       |  |
-| EdKC_s_ins        |  |
-| EdKC_s_del        |  |
-| EdKC_s_center     |  |
+| EdKC_s_left       | is '2' |
+| EdKC_s_right      | is '4' |
+| EdKC_s_up         | is '8' |
+| EdKC_s_down       | is '2' |
+| EdKC_s_pgup       | is '9' |
+| EdKC_s_pgdn       | is '3' |
+| EdKC_s_ins        | is '0' |
+| EdKC_s_del        | is '.' |
+| EdKC_s_center     | is '5' |
 | EdKC_s_num0       |  |
 | EdKC_s_num1       |  |
 | EdKC_s_num2       |  |
@@ -259,15 +259,15 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_s_num7       |  |
 | EdKC_s_num8       |  |
 | EdKC_s_num9       |  |
-| EdKC_s_numMinus   |  |
-| EdKC_s_numPlus    |  |
-| EdKC_s_numStar    |  |
-| EdKC_s_numSlash   |  |
-| EdKC_s_numEnter   |  |
+| EdKC_s_numMinus   | no response |
+| EdKC_s_numPlus    | no response |
+| EdKC_s_numStar    | no response |
+| EdKC_s_numSlash   | no response |
+| EdKC_s_numEnter   | is enter |
 | EdKC_s_space      |  |
-| EdKC_s_bksp       |  |
-| EdKC_s_tab        |  |
-| EdKC_s_esc        |  |
+| EdKC_s_bksp       | is bksp |
+| EdKC_s_tab        | no response |
+| EdKC_s_esc        | is esc |
 | EdKC_s_enter      |  |
 | EdKC_cs_bksp      |  |
 | EdKC_cs_tab       |  |
