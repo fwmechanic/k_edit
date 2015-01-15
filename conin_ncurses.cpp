@@ -187,7 +187,9 @@ int ConGetEscEvent() {
     ch = getch();
     if (ch == 033) {
         ch = getch();
-        if (ch == '[' || ch == 'O') kbAlt = true;
+        if (ch == '[' || ch == 'O') {
+            kbAlt = true;
+        }
     }
 
     if (ch == ERR) {
@@ -606,10 +608,18 @@ int ConGetEscEvent() {
             // seems to be unsupported by 'K'
             result = -1;
         } else {
-            if (ch > 0x60 && ch < 0x7b) { /* Alt-A == Alt-a*/
-                ch -= 0x20;
+            // alt+numbers
+            if (47 < ch && ch < 58) {
+                result = EdKC_a_0 + (ch - 48);
+            } else if ((ch > 64 && ch < 91) || (ch > 96 && ch < 123)) {
+                if (ch > 64 && ch < 91) {
+                    /* Alt-A == Alt-a*/
+                    ch += 32;
+                }
+                result = EdKC_a_a + (ch - 97);
+            } else {
+                result = ch;
             }
-            result = EdKC_a_a + (ch - 1);
         }
     }
 
