@@ -32,12 +32,11 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
    return rv;
 }
 
-EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest ) {
    const auto rv( ConIn::EdKC_Ascii_FromNextKey() );
-   pKeyStringBuffer[0] = rv.Ascii;
-   pKeyStringBuffer[1] = 0;
+   StrFromEdkc( dest, sizeofDest, rv.EdKcEnum );
    return rv;
-}
+   }
 
 // termninal specific valeus for shift + up / down
 static int key_sup = -1;
