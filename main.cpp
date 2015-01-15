@@ -529,7 +529,7 @@ stref IsolateTagStr( stref src ) {
    return src.substr( 0, ixRSQ );
    }
 
-STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) { enum { DB=1 };
+STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) { enum { DB=0 };
    DB && DBG( "FindRsrcTag: '%s'", pszSectionName );
    stref srKey( pszSectionName );
    for( auto yLine(startLine) ; yLine <= pFBuf->LastLine(); ++yLine ) {
