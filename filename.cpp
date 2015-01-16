@@ -121,6 +121,6 @@ Path::str_t Path::GetCwd_ps() {
    return rv;
    }
 
-bool Path::IsLegalFnm( PCChar name ) {
-   return StrToNextOrEos( name, Path::InvalidFnmChars() )[0] == '\0';
+bool Path::IsLegalFnm( stref name ) {
+   return name.find_first_of( Path::InvalidFnmChars() ) == stref::npos;
    }

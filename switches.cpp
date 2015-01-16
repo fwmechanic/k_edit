@@ -139,18 +139,6 @@ sridx FirstNonWordOrEnd( stref src, sridx start ) {
    return ToNextOrEnd( notWordChar, src, start );
    }
 
-PCChar StrPastWord( PCChar pszToSearch ) {
-   for(; *pszToSearch && isWordChar(*pszToSearch) ; ++pszToSearch )
-      ;
-   return pszToSearch;
-   }
-
-PCChar StrPastWord( PCChar pszToSearch, PCChar eos ) {
-   for(; pszToSearch < eos && isWordChar(*pszToSearch) ; ++pszToSearch )
-      ;
-   return pszToSearch;
-   }
-
 sridx IdxFirstWordCh( stref src, sridx start ) {
    if( start >= src.length() ) return stref::npos;
    for( auto it( src.crbegin() + (src.length() - start - 1) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
