@@ -20,20 +20,50 @@ bool ConIO::Confirm( PCChar pszPrompt, ... ){ return false; }
 
 int ConIO::DbgPopf( PCChar fmt, ... ){ return 0; }
 
-EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
-   EdKC_Ascii rv;
-   int res = -1;
-   while (res == -1) {
-      res = ConGetEvent();
-   }
-   rv.Ascii    = res;
-   rv.EdKcEnum = res;
+#define  EdKC_EVENT_ProgramGotFocus       (EdKC_COUNT+1)
+#define  EdKC_EVENT_ProgramLostFocus      (EdKC_COUNT+2)
+#define  EdKC_EVENT_ProgramExitRequested  (EdKC_COUNT+3)
 
-   return rv;
-}
+STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API for reading a key
+   while( true ) {
+      const auto fPassThreadBaton( !fFreezeOtherThreads );
+      if( fPassThreadBaton )  MainThreadGiveUpGlobalVariableLock();
+      0 && DBG( "%s %s", __func__, fPassThreadBaton ? "passing" : "holding" );
+
+      const auto ev( ConGetEvent() );
+
+      if( fPassThreadBaton )  MainThreadWaitForGlobalVariableLock();
+
+      if( ev != -1 ) {
+         if( ev >= 0 && ev < EdKC_COUNT ) {
+            if( ev == 0 ) { // (ev == 0) corresponds to keys we currently do not decode
+               }
+            else {
+               EdKC_Ascii rv;
+               rv.Ascii    = ev;
+               rv.EdKcEnum = ev;
+               return rv;  // normal exit path
+               }
+            }
+         else {
+            0 && DBG( "%s %u (vs. %u)", __func__, ev, EdKC_COUNT );
+            switch( ev ) {
+               case EdKC_EVENT_ProgramGotFocus:      RefreshCheckAllWindowsFBufs();  break;
+               case EdKC_EVENT_ProgramExitRequested: EditorExit( 0, true );          break;
+               }
+            }
+
+         CleanupAnyExecutionHaltRequest();
+         }
+      }
+   }
+
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
+   return GetEdKC_Ascii( false );
+   }
 
 EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest ) {
-   const auto rv( ConIn::EdKC_Ascii_FromNextKey() );
+   const auto rv( GetEdKC_Ascii( false ) );
    StrFromEdkc( dest, sizeofDest, rv.EdKcEnum );
    return rv;
    }

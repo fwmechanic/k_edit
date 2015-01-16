@@ -1,5 +1,5 @@
 //
-// Copyright 2014 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
+// Copyright 2014 - 2015 by Kevin L. Goodwin [fwmechanic@yahoo.com]; All rights reserved
 //
 
 #pragma once
@@ -15,3 +15,12 @@ STIL void DebugLog( PCChar string ) { /* Win32::OutputDebugString( string ); */ 
 
 extern bool IsFileReadonly( PCChar pFBufName );
 extern bool FileOrDirExists( PCChar lpFBufName );
+
+struct WhileHoldingGlobalVariableLock
+   {
+   WhileHoldingGlobalVariableLock()  ;
+   ~WhileHoldingGlobalVariableLock() ;
+   };
+
+extern void MainThreadGiveUpGlobalVariableLock()  ;
+extern void MainThreadWaitForGlobalVariableLock() ;

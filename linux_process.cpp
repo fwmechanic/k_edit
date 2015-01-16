@@ -976,7 +976,7 @@ STATIC_FXN int IdleThread() {
    while( true ) {
       std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was 50 @ 20130101
 
-      // WhileHoldingGlobalVariableLock gvlock;
+      WhileHoldingGlobalVariableLock gvlock;
 
       if( g_fSystemShutdownOrLogoffRequested && EditorFilesystemNoneDirty() ) // silently exit if no harm would be done
          EditorExit( 0, true );
@@ -994,9 +994,9 @@ STATIC_FXN int IdleThread() {
       //       updates.  Otherwise, there was ZERO noticable difference.
       //
 
-      // DispDoPendingRefreshes();
+      DispDoPendingRefreshes();
 
-      // LuaIdleGC();
+      LuaIdleGC();
       }
    return 0; // suppress warning
    }
@@ -1008,3 +1008,18 @@ void InitJobQueues() {
    std::thread idle( IdleThread ); idle.detach();
    // s_pCompilePty = new Win32_pty( szCompile );
    }
+
+const auto mainThreadId( std::this_thread::get_id() );
+
+STIL void ASSERT_MAIN_THREAD()     { Assert(mainThreadId == std::this_thread::get_id()); }
+STIL void ASSERT_NOT_MAIN_THREAD() { Assert(mainThreadId != std::this_thread::get_id()); }
+
+STATIC_VAR std::mutex s_GlobalVariableLock;
+STIL void GiveUpGlobalVariableLock()  { /* DBG( "rls baton" ); */ s_GlobalVariableLock.unlock(); }
+STIL void WaitForGlobalVariableLock() {                           s_GlobalVariableLock.lock(); /*  DBG( "got baton" ); */ }
+
+WhileHoldingGlobalVariableLock::WhileHoldingGlobalVariableLock()  { WaitForGlobalVariableLock(); }
+WhileHoldingGlobalVariableLock::~WhileHoldingGlobalVariableLock() { GiveUpGlobalVariableLock();  }
+
+void MainThreadGiveUpGlobalVariableLock()  { ASSERT_MAIN_THREAD();  /* MainThreadPerfCounter::PauseAll() ; */  GiveUpGlobalVariableLock() ; }
+void MainThreadWaitForGlobalVariableLock() { ASSERT_MAIN_THREAD();  WaitForGlobalVariableLock()       ;  /* MainThreadPerfCounter::ResumeAll()   ; */ }
