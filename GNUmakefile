@@ -73,7 +73,7 @@ RM= rm -f
 export RM
 EXE_EXT :=
 DLL_EXT := .so
-OS_LIBS := -lncurses
+OS_LIBS := -lncurses -lpthread
 PLAT_LINK_OPTS=
 LS_L := ls -l
 LS_L_TAIL :=
@@ -199,7 +199,8 @@ else
 PLAT_OBJS := \
  conout_ncurses.o \
  conin_ncurses.o \
- linux_api.o
+ linux_api.o \
+ linux_process.o
 
 BOOST_LIBS := -lboost_filesystem -lboost_system
 
