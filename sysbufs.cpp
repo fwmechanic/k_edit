@@ -399,7 +399,7 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
       CPCChar pEQ( strchr( envstr, '=' ) );
       const int  indent( pd2Int( pEQ - envstr + 1 ) );
       PCChar pPrevSEMI( pEQ );
-      while( PCChar pSEMI = strchr( pPrevSEMI+1, ';' ) ) {
+      while( PCChar pSEMI = strchr( pPrevSEMI+1, WL( ';',':' ) ) ) {
          const auto pSegStart( pFirstSeg ? pFirstSeg : pPrevSEMI+1 );
          const auto curIndent( pFirstSeg ? 0 : indent );
          const auto slen( pd2Int( pSEMI - pSegStart ) );
