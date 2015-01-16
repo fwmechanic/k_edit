@@ -2219,7 +2219,7 @@ int DispRawDialogStr( PCChar st ) {
 int VMsg( PCChar pszFormat, va_list val ) {
    if( !pszFormat ) pszFormat = "";
    Linebuf buffer;  buffer.Vsprintf( pszFormat, val );
-   0 && DBG( "*** '%s'"        , buffer.k_str() );  // <-- enable this for more UI visibility
+   WL(0,1) && DBG( "*** '%s'", buffer.k_str() );  // <-- enable this for more UI visibility
    return DispRawDialogStr( buffer.k_str() );
    }
 

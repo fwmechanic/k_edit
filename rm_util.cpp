@@ -22,14 +22,14 @@ extern int g_iMaxUndel;
 
 GLOBAL_CONST char szBakDirNm[] = ".kbackup";
 
-int SaveFileMultiGenerationBackup( PCChar pszFileName ) {
-   0 && DBG( "SFMG+ '%s'", pszFileName );
+int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
+   DB && DBG( "SFMG+ '%s'", pszFileName );
    {
    FileAttribs fa( pszFileName );
-   if( !fa.Exists() ) { 0 && DBG( "SFMG! [1] noFile" );
+   if( !fa.Exists() ) { DB && DBG( "SFMG! [1] noFile" );
       return SFMG_NO_EXISTING;
       }
-   if( fa.IsReadonly() ) { 0 && DBG( "SFMG! [2] ROfile" );
+   if( fa.IsReadonly() ) { DB && DBG( "SFMG! [2] ROfile" );
       return SFMG_CANT_MV_ORIG;
       }
    }
@@ -40,21 +40,21 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) {
    if( fd.Exists() && fd.IsDir() ) {
       }
    else {
-      if( !mkdirOk( dest.c_str() ) ) { 0 && DBG( "SFMG! [2] Cant Mkdir" );
+      if( !mkdirOk( dest.c_str() ) ) { DB && DBG( "SFMG! [2] Cant Mkdir" );
          return SFMG_CANT_MK_BAKDIR;
          }
 #if defined(_WIN32)
       SetFileAttrsOk( dest.c_str(), FILE_ATTRIBUTE_HIDDEN );
 #endif
-      0 && DBG("SFMG  mkdir '%s'", dest.c_str() );
+      DB && DBG("SFMG  mkdir '%s'", dest.c_str() );
       }
    }
-   const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  0 && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
+   const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  DB && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
 
    char tbuf[32];
    {
    struct_stat stat_buf;
-   if( func_stat( pszFileName, &stat_buf ) == -1 ) { 0 && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
+   if( func_stat( pszFileName, &stat_buf ) == -1 ) { DB && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
       return SFMG_CANT_MV_ORIG;
       }
    strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", localtime( &stat_buf.st_mtime ) );
@@ -62,10 +62,10 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) {
    dest += (PATH_SEP_STR + std::string( BSR2STR( filenameNoPath ) ) + "." + tbuf);
 
    unlinkOk( dest.c_str() );
-   if( !MoveFileOk( pszFileName, dest.c_str() ) ) { 0 && DBG( "SFMG! [2] mv '%s' -> '%s' failed", pszFileName, dest.c_str() );
+   if( !MoveFileOk( pszFileName, dest.c_str() ) ) { DB && DBG( "SFMG! [2] mv '%s' -> '%s' failed", pszFileName, dest.c_str() );
       return SFMG_CANT_MV_ORIG;
       }
 
-   0 && DBG( "SFMG- [0]" );
+   DB && DBG( "SFMG- [0]" );
    return SFMG_OK;
    }

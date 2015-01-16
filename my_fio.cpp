@@ -90,7 +90,7 @@ bool MoveFileOk( PCChar pszCurFileName, PCChar pszNewFilename ) {
 
 bool unlinkOk_( PCChar filename, PCChar caller ) {
    const auto err( WL( _unlink, unlink )( filename ) == -1 );
-   if( err ) { 0 && DBG( "!!! unlink (by %s) of '%s' failed, emsg='%s'", caller, filename, strerror( errno ) ); }
+   if( err ) { WL(0,1) && DBG( "!!! unlink (by %s) of '%s' failed, emsg='%s'", caller, filename, strerror( errno ) ); }
    else      { 0 && DBG( "unlink (by %s) of '%s' OK", caller, filename ); }
    return !err;
    }

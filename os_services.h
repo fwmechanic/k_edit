@@ -88,7 +88,7 @@ public:
       : d_stat_rv( func_stat( pszFileName, &d_stat ) )
       {}
    bool Exists()     const { return -1 != d_stat_rv && ToBOOL(d_stat.st_mode & (S_IFREG|S_IFDIR) ); } // ALWAYS prequalify the remaining accessors with Exists()!
-   bool IsReadonly() const { return  ToBOOL(d_stat.st_mode & (S_IFREG|S_IFDIR) ); }
+   bool IsReadonly() const { return false; /* only way to know is to try */ }
    bool IsDir()      const { return  ToBOOL(d_stat.st_mode & S_IFDIR); }
    bool IsFile()     const { return  ToBOOL(d_stat.st_mode & S_IFREG); }
    private:
