@@ -345,7 +345,7 @@ InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, b
    , d_pSL              ( sl )
    , d_numJobsRequested ( sl->length() )
    , d_hProcessExitCode ( 0 )
-   , d_hThread          ( InternalShellJobExecutor::ChildProcessCtrlThread( this ) )
+   , d_hThread          ( InternalShellJobExecutor::ChildProcessCtrlThread, this )
    {
    }
 
