@@ -180,18 +180,20 @@ void *get_LuaRegistryPtr( lua_State* L, PCChar varnm ) {
 //                 good.  I expected no problems, and there have been none so
 //                 far...
 //
-class LuaCallCleanup {
+class LuaCallCleanup_ {
    lua_State *d_L;
 
    public:
 
-   LuaCallCleanup( lua_State *L ) : d_L(L) {
-      const auto els( lua_gettop( d_L ) );   els && DBG( "%s @ entry stack contains %d", __func__, els );
+   LuaCallCleanup_( lua_State *L, const char *fxn ) : d_L(L) {
+      const auto els( lua_gettop( d_L ) ); if( els ) { DBG( "%s @ entry stack contains %d (%s)", __func__, els, fxn ); LDS( __func__, L ); }
       }
-   ~LuaCallCleanup() {
+   ~LuaCallCleanup_() {
       lua_settop( d_L, 0 );  // Lua refman: "If index is 0, then all stack elements are removed."
       }
    };
+
+#define LuaCallCleanup( L )  LuaCallCleanup_ lcc( L, __func__ )
 
 //---------------------------------------------------------------------------------
 
@@ -291,7 +293,7 @@ STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, in
 // returns nullptr if any errors
 STATIC_FXN PChar LuaTbl2S0( lua_State *L, PChar dest, size_t sizeof_dest, PCChar tableDescr ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
    if( !L ) return nullptr;
-   LuaCallCleanup lcc( L );
+   LuaCallCleanup( L );
    if( !gotTblVal( L, tableDescr ) )
       return nullptr;
 
@@ -462,7 +464,7 @@ STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) {
 
    const size_t s_LuaHeapBytesAtStart( LuaHeapSize() );
 
-   LuaCallCleanup lcc( L );
+   LuaCallCleanup( L );
 
    if( lh_getglobal_failed( L, "CallEventHandlers" ) || !lua_isfunction( L, -1 ) )
       return;
@@ -493,7 +495,7 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
    //
    const auto cmdName( CmdName() );                                              DB && DBG( "%s: '%s'", __func__, cmdName );
    const auto L( L_edit );
-   LuaCallCleanup lcc( L );
+   LuaCallCleanup( L );
 
    // table=GetEdFxn_FROM_C(cmdName)    -- 20110216 kgoodwin replaced old scheme which wrote all cmd tables into k.lua._G (!!!)
    // GetEdFxn_FROM_C is implemented in k.luaedit
@@ -634,7 +636,7 @@ STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void
    lua_atpanic( *pL, lua_atpanic_handler );
    lua_sethook( *pL, l_hook_handler, LUA_MASKLINE | LUA_MASKCOUNT, INT_MAX );
 
-   LuaCallCleanup lcc( *pL );
+   LuaCallCleanup( *pL );
 
    openlibs( *pL );
 
@@ -810,7 +812,7 @@ struct StrDest {
 STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, va_list vl=0 ) { enum { DB=0 };
    if( !L ) return false;
    lua_settop( L, 0 );      // clear the stack
-   LuaCallCleanup lcc( L ); // clear the stack on function return
+   LuaCallCleanup( L ); // clear the stack on function return
                                                                           DB && DBG( "%s->%s() [%d] ========================", __func__, szFuncnm, lua_gettop(L) );
    if( lh_getglobal_failed( L, szFuncnm ) || !lua_isfunction( L, -1 ) ) {
       return Msg( "%s: Lua symbol '%s' is NOT A FUNCTION", __func__, szFuncnm );
@@ -965,7 +967,7 @@ PChar LuaCtxt_Edit::Tbl2S( PChar dest, size_t sizeof_dest, PCChar tableDescr, PC
 // returns nullptr if any errors
 STATIC_FXN PChar LuaTbl2DupS0( lua_State *L, PCChar tableDescr ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
    if( !L ) return nullptr;
-   LuaCallCleanup lcc( L );
+   LuaCallCleanup( L );
    if( !gotTblVal( L, tableDescr ) )
       return nullptr;
 
@@ -989,7 +991,7 @@ PChar LuaCtxt_Edit::Tbl2DupS0( PCChar tableDescr, PCChar pszDflt ) { return LuaT
 // returns dfltVal if any errors
 STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) {
    if( !L ) return dfltVal;
-   LuaCallCleanup lcc( L );
+   LuaCallCleanup( L );
    auto rv(dfltVal);
    if( gotTblVal( L, tableDescr ) ) {
       if( !lua_isnumber( L, -1 ) ) {                                         DBG( "%s '%s' is not a number", __func__, tableDescr );
