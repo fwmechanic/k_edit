@@ -10,6 +10,87 @@
 #include <thread>
 #include <mutex>
 
+#include <signal.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+
+class pipe_t {
+   int  fd  = -1;
+   int  pid =  0;
+   bool stopped = false;
+public:
+   pipe_t() {}
+   bool    ForkChildOk( const char *command );
+   ssize_t Read( void *dest, ssize_t sizeofDest );
+   bool    CloseOk();
+   };
+
+/*
+ * returns read size value from pipe reading
+ */
+ssize_t pipe_t::Read( void *dest, ssize_t sizeofDest ) {
+   if( fd == -1 ) {
+      return -1;
+      }
+
+   const ssize_t rv( read( fd, dest, sizeofDest ) );
+   if( !rv ) {
+      close(fd);
+      fd = -1;
+      return -1;
+      }
+   else if( rv == -1 ) {
+      stopped = true;
+      }
+
+   return rv;
+   }
+
+bool pipe_t::CloseOk() {
+   if( fd == -1 ) {
+      return true;
+      }
+
+   close( fd );
+   fd = -1;
+   kill( pid, SIGHUP );
+   alarm(1);
+   int status = -1;
+   waitpid( pid, &status, 0 );
+   alarm(0);
+   return WEXITSTATUS(status) == 0;
+   }
+
+bool pipe_t::ForkChildOk( const char *command ) {
+   pid = 0;
+   int pipefds[2];
+   if( pipe( pipefds ) == -1 ) {
+      perror( "pipe" );
+      return false;
+      }
+
+   switch( (pid=fork()) ) {
+      case -1: perror( "fork" );  /* fail */
+               return false;
+
+      case 0: {signal( SIGPIPE, SIG_DFL );  /* child */  // FIXME: close other opened descriptor
+               close( pipefds[0] );
+               close( 0 );
+               const int nevdullfh( open("/dev/null", O_RDONLY) ); Assert( nevdullfh == 0 );
+               dup2(  pipefds[1], 1 );
+               dup2(  pipefds[1], 2 );
+               close( pipefds[1] );
+               exit( system( command ) );
+              }return false; // keep compiler happy
+
+      default: close(  pipefds[1] );  /* parent */
+               fcntl(  pipefds[0], F_SETFL, O_NONBLOCK );
+               fd = pipefds[0];
+               return true;
+      }
+   }
+
+
 #if 0
 
 //##############################################################################
@@ -823,70 +904,6 @@ bool ARG::compile() {
       }
    }
 
-
-//###########################################################################################################
-//###########################################################################################################
-//###########################################################################################################
-
-//
-//  Function: StartConsoleProcess (ex-do_editfile from WINDIFF.C in WINDIFF sample from VC++ 4.1)
-//
-//  Purpose: start (as a separate process) the program spec'd
-//
-//  12-Aug-1997 klg works!
-//
-
-STATIC_FXN int StartChildProcess( PCChar pFullCommandLine, int extra_dwCreationFlags ) {
-   Win32::STARTUPINFO          si = { sizeof si };
-   Win32::PROCESS_INFORMATION  pi;
-
-   // Launches the process and (optionally) waits for it to complete
-   if( Win32::CreateProcessA(
-         nullptr,                       // lpApplicationName        : PChar;
-         PChar(pFullCommandLine), // lpCommandLine            : PChar;
-         nullptr,                       // lpProcessAttributes      : PSecurityAttributes;
-         nullptr,                       // lpThreadAttributes       : PSecurityAttributes;
-         0,                       // bInheritHandles          : BOOL;
-         ( NORMAL_PRIORITY_CLASS  // dwCreationFlags          : DWORD;
-         | CREATE_DEFAULT_ERROR_MODE
-         | extra_dwCreationFlags
-         ),
-         nullptr,                       // lpEnvironment            : Pointer;
-         nullptr,                       // lpCurrentDirectory       : PChar;
-         &si,                     // const lpStartupInfo      : TStartupInfo;
-         &pi                      // var lpProcessInformation : TProcessInformation
-        )
-     ) {
-      DBG( "'%s' -> CreateProcess SUCCEEDED: P=%ld, T=%ld", pFullCommandLine, pi.dwProcessId, pi.dwThreadId );
-      CLOSEHANDLE( pi.hProcess );
-      CLOSEHANDLE( pi.hThread  );
-      return 0;
-      }
-   else {
-      linebuf oseb;
-      DBG( "'%s' -> CreateProcess FAILED: %s", pFullCommandLine, OsErrStr( BSOB(oseb) ) );
-      return 1;
-      }
-   }
-
-int  StartGuiProcess         ( PCChar pFullCmdLn )  { return       StartChildProcess( pFullCmdLn, DETACHED_PROCESS   ); }
-int  StartConProcess         ( PCChar pFullCmdLn )  { return       StartChildProcess( pFullCmdLn, CREATE_NEW_CONSOLE ); }
-void StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile )  {
-   // re 2nd param to ShellExecute: I'm using nullptr (NOT "open") per
-   //    http://blogs.msdn.com/oldnewthing/archive/2007/04/30/2332224.aspx
-   //    summary: nullptr gives the default action which is not always "open"
-   // re 3rd, 4th params to ShellExecute: I want, under programmatically detected circumstances, to
-   //    FORCE a URL to be opened in MSIE even though MSIE is not the dflt browser.
-   //    http://stackoverflow.com/questions/8180661/force-opening-a-webpage-with-internet-explorer
-   //    tells how; there is some 100% nonintuitive ShellExecute param swapping required...
-   if( pExeFile && 0 != *pExeFile ) {
-      Win32::ShellExecute( nullptr, nullptr, pExeFile, pFullCmdLn, nullptr, 1 );
-      }
-   else {
-      Win32::ShellExecute( nullptr, nullptr, pFullCmdLn, nullptr, nullptr, 1 );
-      }
-   }
-
 bool RunChildSpawnOrSystem( PCChar pCmdStr ) {
    const auto cmdStr( StrPastAnyBlanks( pCmdStr ) );
    if( *cmdStr == 0 )
@@ -945,7 +962,6 @@ bool ARG::shell() {
 #endif
 
 #endif
-
 
 STATIC_FXN bool EditorFilesystemNoneDirty() {
    auto dirtyFBufs(0);
