@@ -259,7 +259,7 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    ) {
    CommandLine->FmtStr( "-%s", pS ); // leading '-' is (at most) for PutLastLogLine _only_
    0 && DBG( "%s: CommandLine='%s'", __func__, CommandLine->c_str() );
-   const auto pXeq(      CommandLine->wbuf() + 1 );  // skip the '-' always (stupid Win32::CreateProcessA takes PChar cmdline param)
+   const auto pXeq(      CommandLine->wbuf () + 1 );  // skip the '-' always (stupid system takes PChar cmdline param)
    const auto pXeqConst( CommandLine->c_str() + 1 );  // skip the '-' always (for internal use)
    if( !(cmdFlags & NO_ECHO_CMDLN) ) {
       PutLastLogLine( pfLogBuf, CommandLine->c_str() + ((cmdFlags & IGNORE_ERROR) ? 0 : 1 ) );
@@ -270,54 +270,32 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
       //  -ls -l
       //  -ls -l && sleep 10
 
-   auto rv( CP_PIPED_RC_OK );
    if( !piper.ForkChildOk( pXeqConst ) ) {
       char erbuf[265];
       OsErrStr( BSOB(erbuf) );
-      ErrorDialogBeepf( "%s: CreateProcess '%s' FAILED: %s!!!", __func__, pXeqConst, erbuf );
-      rv = CP_PIPED_RC_ECREATEPROCESS;
+      ErrorDialogBeepf( "%s: piper.ForkChildOk '%s' FAILED: %s!!!", __func__, pXeqConst, erbuf );
+      return CP_PIPED_RC_ECREATEPROCESS;
       }
-   else {
-      TPipeReader pipeReader( piper );
-      while( 1 ) {
-         if( pipeReader.GetFilteredLine( xb ) ) {
-            PutLastLogLine( pfLogBuf, xb->c_str() );
-            } // as long as data isn't exhausted, don't even check for process death
-#if 0
-         else if( 0 == Win32::WaitForSingleObject( pPid, 0 ) ) { // NO WAIT, CHECK ONLY!
-            // process has terminated;
-            piper.pid = INVALID_dwProcessId; // BUGBUG RACE!
-            // now try to retrieve its exitcode
-            if( 0 == Win32::GetExitCodeProcess( pPid, pd_hProcessExitCode ) ) { // API failed?
-               PutLastLogLine( pfLogBuf, "GetExitCodeProcess failed" );
-               rv = CP_PIPED_RC_EGETEXITCODE;
-               }
-            else {
-               if( *pd_hProcessExitCode && (cmdFlags & IGNORE_ERROR) ) {
-                  PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%ld ignored", *pd_hProcessExitCode ) );
-                  }
-               }
-            break;
+   auto rv( CP_PIPED_RC_OK );
+   TPipeReader pipeReader( piper );
+   while( 1 ) {
+      if( pipeReader.GetFilteredLine( xb ) ) {
+         PutLastLogLine( pfLogBuf, xb->c_str() );
+         } // as long as data isn't exhausted, don't even check for process death
+      else if( piper.ChildDead() ) { // NO WAIT, CHECK ONLY!
+         // process has terminated;
+         if( 0 == piper.Status() ) { // API failed?
+            PutLastLogLine( pfLogBuf, "GetExitCodeProcess failed" );
+            rv = CP_PIPED_RC_EGETEXITCODE;
             }
-#else
-         else if( piper.ChildDead() ) { // NO WAIT, CHECK ONLY!
-            // process has terminated;
-            if( 0 == piper.Status() ) { // API failed?
-               PutLastLogLine( pfLogBuf, "GetExitCodeProcess failed" );
-               rv = CP_PIPED_RC_EGETEXITCODE;
+         else {
+            if( piper.Status() && (cmdFlags & IGNORE_ERROR) ) {
+               PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%d ignored", piper.Status() ).k_str() );
                }
-            else {
-               if( piper.Status() && (cmdFlags & IGNORE_ERROR) ) {
-                  PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%d ignored", piper.Status() ).k_str() );
-                  }
-               }
-            break;
             }
-#endif
+         return rv;
          }
-      } // kill pipeReader
-
-   return rv;
+      }
    }
 
 //#################################################################################################################################
