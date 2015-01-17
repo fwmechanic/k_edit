@@ -25,7 +25,6 @@ extern bool   IsCompileJobQueueThreadActive();
 extern bool   CompileJobQueueWaitExeDoneTimedout( int timeoutMS );
 
 extern int    CompilePty_CmdsAsyncExec( const StringList &sl, bool fAppend );
-extern PFBUF  StartInternalShellJob( StringList *sl, bool fAppend );
 
 extern int    CompilePty_KillAllJobs();
 
@@ -44,7 +43,6 @@ STIL size_t GetProcessMem() { return 8 * 1024 * 1024; }
 STIL bool   IsCompileJobQueueThreadActive() { return false; }
 STIL bool   CompileJobQueueWaitExeDoneTimedout( int timeoutMS ) { return true; }
 STIL int    CompilePty_CmdsAsyncExec( const StringList &sl, bool fAppend ) { return 0; }
-STIL PFBUF  StartInternalShellJob( StringList *sl, bool fAppend ) { return nullptr; }
 STIL int    CompilePty_KillAllJobs() { return 1; }
 STIL void   win_fully_on_desktop() {}
 STIL int    StartGuiProcess( PCChar pFullCommandLine ) { return 1; }
@@ -52,6 +50,7 @@ STIL int    StartConProcess( PCChar pFullCommandLine ) { return 1; }
 STIL void   StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile=nullptr ) {}
 #endif
 
+extern PFBUF  StartInternalShellJob( StringList *sl, bool fAppend );
 extern void   InitJobQueues();
 
 extern PCChar OsErrStr( PChar dest, size_t sizeofDest, int errorCode );
