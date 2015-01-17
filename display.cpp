@@ -451,8 +451,7 @@ private:
    COL          d_xWuc;
    };
 
-void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
-   enum { DBG_HL_EVENT=0 };
+void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { enum { DBG_HL_EVENT=0 };
    d_stSel.clear();
    if(   d_yWuc == lin
       && d_wucLen == src.length()
