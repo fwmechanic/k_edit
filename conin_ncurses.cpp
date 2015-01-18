@@ -76,6 +76,7 @@ static int key_sdown = -1;
 int ConGetEvent() {
     int ch = 0;
     const char *s;
+
     // fill terminal dependant values on first call
     if (key_sup < 0 || key_sdown < 0) {
         for (ch = KEY_MAX + 1;;ch++) {
@@ -102,6 +103,8 @@ int ConGetEvent() {
         return EdKC_tab;
     } else if (ch < 32) {
 	return EdKC_c_a + (ch - 1);
+    } else if (ch == 32) {
+        return EdKC_space;
     } else if (ch < 256) {
         return ch;
     } else { // > 255
@@ -189,6 +192,18 @@ int ConGetEvent() {
             return EdKC_center;
         case KEY_ENTER: // shift enter
             return EdKC_numEnter;
+        case 560: // ctr + right
+            return EdKC_c_right;
+        case 545: // ctr + left
+            return EdKC_c_left;
+        case 566: // ctr + up
+            return EdKC_c_up;
+        case 525: // ctr + down
+            return EdKC_c_down;
+        case 558: // alt + right
+            return EdKC_a_right;
+        case 543: // alt + left
+            return EdKC_a_left;
         default:
             if (key_sdown != -1 && ch == key_sdown)
                 return EdKC_s_down;
@@ -264,6 +279,9 @@ int ConGetEscEvent() {
                 if (ctAlSh & 0x4) kbCtr = true;
                 if (ctAlSh & 0x2) kbAlt = true;
                 if (ctAlSh & 0x1) kbSft = true;
+                if (modch == 51) kbAlt = true;
+                if (modch == 53) kbCtr = true;
+                if (modch == 50) kbSft = true;
             }
 
             switch (endch) {
@@ -375,6 +393,39 @@ int ConGetEscEvent() {
                     result = EdKC_s_home;
                 } else if (kbCtr && !kbAlt && kbSft) {
                     result = EdKC_cs_home;
+                } else {
+                    // unsupported by 'K'
+                    result = -1;
+                }
+                break;
+            case 'R':
+
+                if (!kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_f3;
+                } else if (kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_c_f3;
+                } else if (!kbCtr && kbAlt && !kbSft) {
+                    result = EdKC_a_f3;
+                } else if (!kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_s_f3;
+                } else if (kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_cs_f3;
+                } else {
+                    // unsupported by 'K'
+                    result = -1;
+                }
+                break;
+            case 'S':
+                if (!kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_f4;
+                } else if (kbCtr && !kbAlt && !kbSft) {
+                    result = EdKC_c_f4;
+                } else if (!kbCtr && kbAlt && !kbSft) {
+                    result = EdKC_a_f4;
+                } else if (!kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_s_f4;
+                } else if (kbCtr && !kbAlt && kbSft) {
+                    result = EdKC_cs_f4;
                 } else {
                     // unsupported by 'K'
                     result = -1;
@@ -629,6 +680,7 @@ int ConGetEscEvent() {
             }
         }
     } else {
+
         if (ch == '\r' || ch == '\n') {
             result = EdKC_a_enter;
         } else if (ch == '\t') {
@@ -647,6 +699,8 @@ int ConGetEscEvent() {
                     ch += 32;
                 }
                 result = EdKC_a_a + (ch - 97);
+            } else if (ch == 127) {
+                result = EdKC_a_bksp;
             } else {
                 result = ch;
             }
