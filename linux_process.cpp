@@ -14,58 +14,43 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
-enum { INVALID_dwProcessId = 0, INVALID_fd = -1 };
+enum { INVALID_dwProcessId = 0, INVALID_fd = -1, PIPE_RD=0, PIPE_WR=1 };
 
 class piped_forker {
-   int  fd  = -1;
-   int  pid =  INVALID_dwProcessId;
-   int  status = -1;
-   bool stopped = false;
+   int     fd  =  INVALID_fd;
+   int     pid =  INVALID_dwProcessId;
+   int     exit_status = -1;
 public:
    piped_forker() {}
    bool    ForkChildOk( const char *command );
-   bool    ChildDead() const { return true; /* BUGBUG how to check if piper.pid is still runnnig? */ }
-   int     Status() const { return status; }
+   int     ReapChild();
+   int     Status() const { return exit_status; }
    ssize_t Read( void *dest, ssize_t sizeofDest );
-   bool    CloseOk();
    };
 
-/*
- * returns read size value from pipe reading
- */
+int piped_forker::ReapChild() {
+   if( fd != INVALID_fd ) {
+      close( fd );
+      fd = INVALID_fd;
+      }
+   if( pid != INVALID_dwProcessId ) {
+      int status;
+      waitpid( pid, &status, 0 );
+      alarm(0);
+      exit_status = WEXITSTATUS( status );
+      }
+   return exit_status;
+   }
+
 ssize_t piped_forker::Read( void *dest, ssize_t sizeofDest ) {
    if( fd == INVALID_fd ) {
       return -1;
       }
-
-   const ssize_t rv( read( fd, dest, sizeofDest ) );
-   if( !rv ) {
-      close(fd);
-      fd = INVALID_fd;
-      return -1;
-      }
-   else if( rv == -1 ) {
-      stopped = true;
-      }
-
+   const auto rv( read( fd, dest, sizeofDest ) );  0 && DBG( "%s-[%d] %d", __func__, fd, rv );
    return rv;
    }
 
-bool piped_forker::CloseOk() {
-   if( fd == INVALID_fd ) {
-      return true;
-      }
-
-   close( fd );
-   fd = INVALID_fd;
-   kill( pid, SIGHUP );
-   alarm(1);
-   waitpid( pid, &status, 0 );
-   alarm(0);
-   return WEXITSTATUS(status) == 0;
-   }
-
-bool piped_forker::ForkChildOk( const char *command ) {
+bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'", __func__, getpid(), command );
    pid = INVALID_dwProcessId;
    int pipefds[2];
    if( pipe( pipefds ) == -1 ) {
@@ -78,18 +63,19 @@ bool piped_forker::ForkChildOk( const char *command ) {
                return false;
 
       case 0: {signal( SIGPIPE, SIG_DFL );  /* child */  // FIXME: close other opened descriptor
-               close( pipefds[0] );
+               close( pipefds[PIPE_RD] );
                close( 0 );
                const int nevdullfh( open("/dev/null", O_RDONLY) ); Assert( nevdullfh == 0 );
-               dup2(  pipefds[1], 1 );
-               dup2(  pipefds[1], 2 );
-               close( pipefds[1] );
+               dup2(  pipefds[PIPE_WR], 1 );
+               dup2(  pipefds[PIPE_WR], 2 );
+               close( pipefds[PIPE_WR] );
                exit( system( command ) );
               }return false; // keep compiler happy
 
-      default: close(  pipefds[1] );  /* parent */
-               fcntl(  pipefds[0], F_SETFL, O_NONBLOCK );
-               fd = pipefds[0];
+      default: close(  pipefds[PIPE_WR] );  /* parent */
+               // fcntl(  pipefds[PIPE_RD], F_SETFL, O_NONBLOCK );
+               fd = pipefds[PIPE_RD];
+               DBG( "%s-(from %d) fork parent; child=%d, fd=%d; '%s'", __func__, getpid(), pid, fd, command );
                return true;
       }
    }
@@ -179,7 +165,7 @@ STATIC_FXN void PutLastLogLine( PFBUF d_pfLogBuf, stref s0 ) {
 
 class TPipeReader {
    piped_forker &d_piper;
-   size_t        d_bytesInRawBuffer;
+   ssize_t       d_bytesInRawBuffer;
    PChar         d_pRawBuffer;
    char          d_rawBuffer[1024];
 
@@ -197,16 +183,10 @@ public:
 
 int TPipeReader::RdChar() {
    if( d_bytesInRawBuffer == 0 ) {
-      if( 0 == d_piper.Read( BSOB(d_rawBuffer) ) ) {
-         // all write handles to the pipe are closed
-         //
-         d_bytesInRawBuffer = 0;
+      d_bytesInRawBuffer = d_piper.Read( BSOB(d_rawBuffer) );
+      if( 0 == d_bytesInRawBuffer ) {
          return EMPTY;
          }
-
-      if( d_bytesInRawBuffer == 0 )
-         return EMPTY;
-
       d_pRawBuffer = d_rawBuffer;
       }
 
@@ -216,11 +196,11 @@ int TPipeReader::RdChar() {
    }
 
 
-int TPipeReader::GetFilteredLine( PXbuf xb ) {
+int TPipeReader::GetFilteredLine( PXbuf xb ) { enum { DB=0 };
    xb->clear();
    auto lastCh(0);
    while( 1 ) {
-      lastCh = RdChar();
+      lastCh = RdChar();               DB && DBG("   %d", lastCh );
       switch( lastCh ) {
          case 0x0D:  break;            // drop CR
          case 0x0A:  goto END_OF_LINE; // LF signifies EOL
@@ -279,19 +259,14 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    auto rv( CP_PIPED_RC_OK );
    TPipeReader pipeReader( piper );
    while( 1 ) {
-      if( pipeReader.GetFilteredLine( xb ) ) {
+      if( pipeReader.GetFilteredLine( xb ) > 0 ) {
          PutLastLogLine( pfLogBuf, xb->c_str() );
          } // as long as data isn't exhausted, don't even check for process death
-      else if( piper.ChildDead() ) { // NO WAIT, CHECK ONLY!
+      else {
          // process has terminated;
-         if( 0 == piper.Status() ) { // API failed?
-            PutLastLogLine( pfLogBuf, "GetExitCodeProcess failed" );
-            rv = CP_PIPED_RC_EGETEXITCODE;
-            }
-         else {
-            if( piper.Status() && (cmdFlags & IGNORE_ERROR) ) {
-               PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%d ignored", piper.Status() ).k_str() );
-               }
+         const auto status( piper.ReapChild() );
+         if( status && (cmdFlags & IGNORE_ERROR) ) {
+            PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%d ignored", status ).k_str() );
             }
          return rv;
          }
