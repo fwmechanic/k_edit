@@ -360,6 +360,14 @@ void InternalShellJobExecutor::ChildProcessCtrlThread( InternalShellJobExecutor 
    // equivalent to ExitThread( 0 );
    }
 
+bool StartInternalShellJob( StringList *sl, bool fAppend, PFBUF pFB ) {
+   if( pFB && !pFB->d_pInternalShellJobExecutor ) {
+      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, sl, true );
+      return true;
+      }
+   return false;
+   }
+
 PFBUF StartInternalShellJob( StringList *sl, bool fAppend ) {
    STATIC_VAR size_t s_nxt_shelljob_output_FBUF_num;
    if( !fAppend ) {
