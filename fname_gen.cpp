@@ -473,7 +473,7 @@ bool ARG::wct() {
 
 //------------------------------------------------------------------------------
 
-enum { MFSPEC_D=0 };
+enum { MFSPEC_D=1 };
 
 CfxFilenameGenerator::CfxFilenameGenerator( stref macroText, WildCardMatchMode matchMode )
    : d_splitLine( macroText, Path::EnvSepStr() )
@@ -646,7 +646,7 @@ void SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard ) {
    SearchEnvDirListForFile( st, tmp, fKeepNameWildcard );
    }
 
-Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
+Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=1 };
    if( FBUF::FnmIsPseudo( pszSrc ) ) {                               DB && DBG( "%s- (FnmIsPseudo) '%s'", __func__, pszSrc );
       return Path::str_t( pszSrc );
       }
