@@ -232,7 +232,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_numStar    |  |
 | EdKC_c_numSlash   |  |
 | EdKC_c_numEnter   |  |
-| EdKC_c_space      |  |
+| EdKC_c_space      | is space |
 | EdKC_c_bksp       | is bksp |
 | EdKC_c_tab        |  |
 | EdKC_c_esc        |  |
@@ -401,6 +401,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 |  36816 | udelete          |y| EdKC_numMINUS    |
 |  31729 | ppage            |y| EdKC_pgdn        |
 |  29793 | psearch          |y| EdKC_f3          |
+|  ????? | selword          |X| EdKC_c_center    |
 |  24858 | paste            |y| EdKC_ins         |
 |  16908 | copy             |y| EdKC_numPLUS     |
 |  16852 | exit             |X| EdKC_a_f4        |
