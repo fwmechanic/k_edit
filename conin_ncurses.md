@@ -52,7 +52,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_numStar      | y |
 | EdKC_numSlash     | y |
 | EdKC_numEnter     | y |
-| EdKC_space        | ascii ' ' |
+| EdKC_space        | ascii ' ' (?) |
 | EdKC_bksp         | y |
 | EdKC_tab          | y |
 | EdKC_esc          | y |
@@ -95,8 +95,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_z          | y |
 | EdKC_a_f1         | hooked: Lubuntu start menu? |
 | EdKC_a_f2         | hooked: run dialog box |
-| EdKC_a_f3         | hooked: unknown; seems to freeze K |
-| EdKC_a_f4         | hooked: unknown; seems to freeze K  |
+| EdKC_a_f3         | hooked: unknown; seems to freeze K (?) |
+| EdKC_a_f4         | hooked: unknown; seems to freeze K (?) - should work with edited openbox config |
 | EdKC_a_f5         | hooked: unknown; seems to freeze K  |
 | EdKC_a_f6         | hooked: unknown; seems to freeze K  |
 | EdKC_a_f7         | hooked: unknown; seems to freeze K  |
@@ -118,8 +118,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_SLASH      | is alt+, |
 | EdKC_a_home       | is home |
 | EdKC_a_end        | is end     |
-| EdKC_a_left       | no response    |
-| EdKC_a_right      | no response |
+| EdKC_a_left       | no response  (?)  |
+| EdKC_a_right      | no response (?) |
 | EdKC_a_up         | no response |
 | EdKC_a_down       | no response |
 | EdKC_a_pgup       | no response |
@@ -143,7 +143,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_numSlash   |  |
 | EdKC_a_numEnter   |  |
 | EdKC_a_space      |  |
-| EdKC_a_bksp       |  |
+| EdKC_a_bksp       | (?) |
 | EdKC_a_tab        |  |
 | EdKC_a_esc        |  |
 | EdKC_a_enter      |  |
@@ -185,8 +185,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_z          | y |
 | EdKC_c_f1         | no response |
 | EdKC_c_f2         | no response |
-| EdKC_c_f3         | no response |
-| EdKC_c_f4         | no response |
+| EdKC_c_f3         | no response (?) |
+| EdKC_c_f4         | no response (?) - should work with edited openbox config |
 | EdKC_c_f5         | no response |
 | EdKC_c_f6         | no response |
 | EdKC_c_f7         | hooked: blanked the entire screen |
@@ -208,10 +208,10 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_SLASH      | is ctrl+f5 |
 | EdKC_c_home       | is home |
 | EdKC_c_end        | is end  |
-| EdKC_c_left       | no response |
-| EdKC_c_right      | no response |
-| EdKC_c_up         | no response |
-| EdKC_c_down       | no response |
+| EdKC_c_left       | no response (?) |
+| EdKC_c_right      | no response (?) |
+| EdKC_c_up         | no response (?) |
+| EdKC_c_down       | no response (?) |
 | EdKC_c_pgup       | no response |
 | EdKC_c_pgdn       | no response |
 | EdKC_c_ins        | no response |
