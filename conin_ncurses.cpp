@@ -68,155 +68,104 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
    return rv;
    }
 
-// termninal specific valeus for shift + up / down
-static int key_sup = -1;
-static int key_sdown = -1;
-
 // return -1 indicates that event should be ignored (resize event as an example)
 int ConGetEvent() {
-    int ch = 0;
-    const char *s;
+   // termninal specific values for shift + up / down
+   static int key_sup = -1;
+   static int key_sdown = -1;
+   // fill terminal dependant values on first call
+   if (key_sup < 0 || key_sdown < 0) {
+       for (auto ch = KEY_MAX + 1 ; ; ch++ ) {
+           const char *s = keyname(ch);
+           if (s == NULL) break;
 
-    // fill terminal dependant values on first call
-    if (key_sup < 0 || key_sdown < 0) {
-        for (ch = KEY_MAX + 1;;ch++) {
-            s = keyname(ch);
-            if (s == NULL) break;
+           if (!strcmp(s, "kUP"))
+               key_sup = ch;
+           else if (!strcmp(s, "kDN"))
+               key_sdown = ch;
+           if (key_sup > 0 && key_sdown > 0) break;
+       }
+   }
 
-            if (!strcmp(s, "kUP"))
-                key_sup = ch;
-            else if (!strcmp(s, "kDN"))
-                key_sdown = ch;
-            if (key_sup > 0 && key_sdown > 0) break;
-        }
-    }
+   const auto ch( wgetch(stdscr) );
+   if (ch < 0)                      { return -1; }
+   if (ch <= 0xFF) {
+      if (ch == 27)                 { return ConGetEscEvent(); }
+      if (ch == '\r' || ch == '\n') { return EdKC_enter; }
+      if (ch == '\t')               { return EdKC_tab; }
+      if (ch <  32)                 { return EdKC_c_a + (ch - 1); }
+      return ch;
+      }
+   switch (ch) { // > 0xFF
+      case KEY_SLEFT     : return EdKC_s_left   ;
+      case KEY_SDC       : return EdKC_s_del    ;
+      case KEY_SIC       : return EdKC_s_ins    ;
+      case KEY_SHOME     : return EdKC_s_home   ;
+      case KEY_SEND      : return EdKC_s_end    ;
+      case KEY_SNEXT     : return EdKC_s_pgdn   ;
+      case KEY_SPREVIOUS : return EdKC_s_pgup   ;
+      case KEY_UP        : return EdKC_up       ;
+      case KEY_DOWN      : return EdKC_down     ;
+      case KEY_RIGHT     : return EdKC_right    ;
+      case KEY_LEFT      : return EdKC_left     ;
+      case KEY_DC        : return EdKC_del      ;
+      case KEY_IC        : return EdKC_ins      ;
+      case KEY_BACKSPACE : return EdKC_bksp     ;
+      case KEY_HOME      : return EdKC_home     ;
+      case KEY_END       : return EdKC_end      ;
+      case KEY_LL        : return EdKC_end      ; // used in old termcap/infos
+      case KEY_NPAGE     : return EdKC_pgdn     ;
+      case KEY_PPAGE     : return EdKC_pgup     ;
+      case KEY_F(1)      : return EdKC_f1       ;
+      case KEY_F(2)      : return EdKC_f2       ;
+      case KEY_F(3)      : return EdKC_f3       ;
+      case KEY_F(4)      : return EdKC_f4       ;
+      case KEY_F(5)      : return EdKC_f5       ;
+      case KEY_F(6)      : return EdKC_f6       ;
+      case KEY_F(7)      : return EdKC_f7       ;
+      case KEY_F(8)      : return EdKC_f8       ;
+      case KEY_F(9)      : return EdKC_f9       ;
+      case KEY_F(10)     : return EdKC_f10      ;
+      case KEY_F(11)     : return EdKC_f11      ;
+      case KEY_F(12)     : return EdKC_f12      ;
+      case KEY_B2        : return EdKC_center   ;
+      case KEY_ENTER     : return EdKC_numEnter ; // shift enter
+      case 560           : return EdKC_c_right  ; // ctr + right
+      case 545           : return EdKC_c_left   ; // ctr + left
+      case 566           : return EdKC_c_up     ; // ctr + up
+      case 525           : return EdKC_c_down   ; // ctr + down
+      case 558           : return EdKC_a_right  ; // alt + right
+      case 543           : return EdKC_a_left   ; // alt + left
 
-    ch = wgetch(stdscr);
+      case KEY_RESIZE:
+           /* ResizeWindow(COLS, LINES); */
+           return -1;
+      case KEY_MOUSE:
+           /*Event->What = evNone;
+           ConGetMouseEvent(Event);
+           break;
+               case KEY_SF:
+                       KEvent->Code = kfShift | kbDown;
+                       break;
+               case KEY_SR:
+                       KEvent->Code = kfShift | kbUp;
+                       break;
+               case KEY_SRIGHT:
+           KEvent->Code = kfShift | kbRight;
+           break;*/
+           return -1;
 
-    if (ch < 0) {
-	return -1;
-    } else if (ch == 27) {
-        return ConGetEscEvent();
-    } else if (ch == '\r' || ch == '\n') {
-        return EdKC_enter;
-    } else if (ch == '\t') {
-        return EdKC_tab;
-    } else if (ch <  32) {
-	return EdKC_c_a + (ch - 1);
-    } else if (ch < 256) {
-        return ch;
-    } else { // > 255
-        switch (ch) {
-        case KEY_RESIZE:
-            return -1;
-            //ResizeWindow(COLS, LINES);
-            break;
-        case KEY_MOUSE:
-            return -1;
-            /*Event->What = evNone;
-            ConGetMouseEvent(Event);
-            break;
-		case KEY_SF:
-			KEvent->Code = kfShift | kbDown;
-			break;
-		case KEY_SR:
-			KEvent->Code = kfShift | kbUp;
-			break;
-		case KEY_SRIGHT:
-            KEvent->Code = kfShift | kbRight;
-            break;*/
-        case KEY_SLEFT:
-            return EdKC_s_left;
-        case KEY_SDC:
-            return EdKC_s_del;
-        case KEY_SIC:
-            return EdKC_s_ins;
-        case KEY_SHOME:
-            return EdKC_s_home;            
-        case KEY_SEND:
-            return EdKC_s_end;  
-        case KEY_SNEXT:
-            return EdKC_s_pgdn;
-        case KEY_SPREVIOUS:
-            return EdKC_s_pgup;
-        case KEY_UP:
-            return EdKC_up;
-        case KEY_DOWN:
-            return EdKC_down;
-        case KEY_RIGHT:
-            return EdKC_right;
-        case KEY_LEFT:
-            return EdKC_left;
-        case KEY_DC:
-            return EdKC_del;
-        case KEY_IC:
-            return EdKC_ins;
-        case KEY_BACKSPACE:
-            return EdKC_bksp;
-        case KEY_HOME:
-            return EdKC_home;
-        case KEY_END:
-        case KEY_LL: // used in old termcap/infos
-            return EdKC_end;
-        case KEY_NPAGE:
-            return EdKC_pgdn;
-        case KEY_PPAGE:
-            return EdKC_pgup;
-        case KEY_F(1):
-            return EdKC_f1;
-        case KEY_F(2):
-            return EdKC_f2;
-        case KEY_F(3):
-            return EdKC_f3;
-        case KEY_F(4):
-            return EdKC_f4;
-        case KEY_F(5):
-            return EdKC_f5;
-        case KEY_F(6):
-            return EdKC_f6;
-        case KEY_F(7):
-            return EdKC_f7;
-        case KEY_F(8):
-            return EdKC_f8;
-        case KEY_F(9):
-            return EdKC_f9;
-        case KEY_F(10):
-            return EdKC_f10;
-        case KEY_F(11):
-            return EdKC_f11;
-        case KEY_F(12):
-            return EdKC_f12;
-        case KEY_B2:
-            return EdKC_center;
-        case KEY_ENTER: // shift enter
-            return EdKC_numEnter;
-        case 560: // ctr + right
-            return EdKC_c_right;
-        case 545: // ctr + left
-            return EdKC_c_left;
-        case 566: // ctr + up
-            return EdKC_c_up;
-        case 525: // ctr + down
-            return EdKC_c_down;
-        case 558: // alt + right
-            return EdKC_a_right;
-        case 543: // alt + left
-            return EdKC_a_left;
-        default:
-            if (key_sdown != -1 && ch == key_sdown)
-                return EdKC_s_down;
-            else if (key_sup != 0 && ch == key_sup)
-                return EdKC_s_up;
-            else {
-                return -1;
-                // fprintf(stderr, "Unknown 0x%x %d\n", ch, ch);
-            }
-            break;
-        }
-    }
-
-    return -1;
-}
+      default:
+           if (key_sdown != -1 && ch == key_sdown) { return EdKC_s_down; }
+           if (key_sup != 0 && ch == key_sup)      { return EdKC_s_up;   }
+           else {
+              // fprintf(stderr, "Unknown 0x%x %d\n", ch, ch);
+              return -1;
+              }
+           break;
+      }
+   return -1;
+   }
 
 int ConGetEscEvent() {
     int result = -1;
