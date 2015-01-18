@@ -52,7 +52,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_numStar      | y |
 | EdKC_numSlash     | y |
 | EdKC_numEnter     | y |
-| EdKC_space        | ascii ' ' |
+| EdKC_space        | ascii ' ' (?) |
 | EdKC_bksp         | y |
 | EdKC_tab          | y |
 | EdKC_esc          | y |
@@ -95,8 +95,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_z          | y |
 | EdKC_a_f1         | hooked: Lubuntu start menu? |
 | EdKC_a_f2         | hooked: run dialog box |
-| EdKC_a_f3         | hooked: unknown; seems to freeze K |
-| EdKC_a_f4         | hooked: unknown; seems to freeze K  |
+| EdKC_a_f3         | hooked: unknown; seems to freeze K (?) |
+| EdKC_a_f4         | hooked: unknown; seems to freeze K (?) - should work with edited openbox config |
 | EdKC_a_f5         | hooked: unknown; seems to freeze K  |
 | EdKC_a_f6         | hooked: unknown; seems to freeze K  |
 | EdKC_a_f7         | hooked: unknown; seems to freeze K  |
@@ -185,8 +185,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_z          | y |
 | EdKC_c_f1         | no response |
 | EdKC_c_f2         | no response |
-| EdKC_c_f3         | no response |
-| EdKC_c_f4         | no response |
+| EdKC_c_f3         | no response (?) |
+| EdKC_c_f4         | no response (?) - should work with edited openbox config |
 | EdKC_c_f5         | no response |
 | EdKC_c_f6         | no response |
 | EdKC_c_f7         | hooked: blanked the entire screen |
