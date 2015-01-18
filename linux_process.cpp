@@ -14,16 +14,16 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
-enum { INVALID_dwProcessId = 0, INVALID_fd = -1, PIPE_RD=0, PIPE_WR=1 };
+enum { INVALID_ProcessId = 0, INVALID_fd = -1, PIPE_RD=0, PIPE_WR=1 };
 
 class piped_forker {
    int     fd  =  INVALID_fd;
-   int     pid =  INVALID_dwProcessId;
+   int     pid =  INVALID_ProcessId;
    int     exit_status = -1;
+   int     ReapChild();
 public:
    piped_forker() {}
    bool    ForkChildOk( const char *command );
-   int     ReapChild();
    int     Status() const { return exit_status; }
    ssize_t Read( void *dest, ssize_t sizeofDest );
    };
@@ -33,7 +33,7 @@ int piped_forker::ReapChild() {
       close( fd );
       fd = INVALID_fd;
       }
-   if( pid != INVALID_dwProcessId ) {
+   if( pid != INVALID_ProcessId ) {
       int status;
       waitpid( pid, &status, 0 );
       alarm(0);
@@ -46,12 +46,13 @@ ssize_t piped_forker::Read( void *dest, ssize_t sizeofDest ) {
    if( fd == INVALID_fd ) {
       return -1;
       }
-   const auto rv( read( fd, dest, sizeofDest ) );  0 && DBG( "%s-[%d] %d", __func__, fd, rv );
+   const auto rv( read( fd, dest, sizeofDest ) );  0 && DBG( "%s-[%d] %ld", __func__, fd, rv );
+   if( rv==0 ) { ReapChild(); }
    return rv;
    }
 
 bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'", __func__, getpid(), command );
-   pid = INVALID_dwProcessId;
+   pid = INVALID_ProcessId;
    int pipefds[2];
    if( pipe( pipefds ) == -1 ) {
       perror( "pipe" );
@@ -69,6 +70,7 @@ bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'
                dup2(  pipefds[PIPE_WR], 1 );
                dup2(  pipefds[PIPE_WR], 2 );
                close( pipefds[PIPE_WR] );
+               setpgid(0, 0);  // http://stackoverflow.com/questions/15692275/how-to-kill-a-process-tree-programmatically-on-linux-using-c
                exit( system( command ) );
               }return false; // keep compiler happy
 
@@ -168,9 +170,7 @@ class TPipeReader {
    ssize_t       d_bytesInRawBuffer;
    PChar         d_pRawBuffer;
    char          d_rawBuffer[1024];
-
    int           RdChar();
-
    enum { EMPTY = -1 };
 
 public:
@@ -178,7 +178,7 @@ public:
    TPipeReader( piped_forker &piper ) : d_piper( piper ), d_bytesInRawBuffer( 0 ), d_pRawBuffer( d_rawBuffer ) {}
    ~TPipeReader() { }
 
-   int GetFilteredLine( PXbuf xb );
+   int GetFilteredLine( std::string &dest );
    };
 
 int TPipeReader::RdChar() {
@@ -189,15 +189,13 @@ int TPipeReader::RdChar() {
          }
       d_pRawBuffer = d_rawBuffer;
       }
-
    --d_bytesInRawBuffer;
    const char rv( *d_pRawBuffer++ );
    return rv;
    }
 
-
-int TPipeReader::GetFilteredLine( PXbuf xb ) { enum { DB=0 };
-   xb->clear();
+int TPipeReader::GetFilteredLine( std::string &dest ) { enum { DB=0 };
+   dest.clear();
    auto lastCh(0);
    while( 1 ) {
       lastCh = RdChar();               DB && DBG("   %d", lastCh );
@@ -205,20 +203,12 @@ int TPipeReader::GetFilteredLine( PXbuf xb ) { enum { DB=0 };
          case 0x0D:  break;            // drop CR
          case 0x0A:  goto END_OF_LINE; // LF signifies EOL
          case EMPTY: goto END_OF_LINE; // no more data available (for now)
-
-         case HTAB:  { // expand to spaces            01234567
-                     STATIC_CONST char tabspaces[] = "        ";
-                     xb->cat( tabspaces+( xb->length() & (MAX_TAB_WIDTH-1)) );
-                     }break;
-
-         default:    xb->push_back( lastCh );
+         default:    dest.push_back( lastCh );
                      break;
          }
       }
-
 END_OF_LINE:
-
-   return !(lastCh == EMPTY && 0 == xb->length());
+   return !(lastCh == EMPTY && 0 == dest.length());
    }
 
 enum CP_PIPED_RC {
@@ -230,45 +220,36 @@ enum CP_PIPED_RC {
 
 STATIC_FXN CP_PIPED_RC CreateProcess_piped
    ( piped_forker &piper
-   , int  *pd_hProcessExitCode
-   , PFBUF pfLogBuf
-   , PChar pS
-   , int cmdFlags
-   , PXbuf CommandLine
-   , PXbuf xb
+   , int          *pd_hProcessExitCode
+   , PFBUF         pfLogBuf
+   , PChar         pS
+   , int           cmdFlags
+   , std::string  &sb
    ) {
-   CommandLine->FmtStr( "-%s", pS ); // leading '-' is (at most) for PutLastLogLine _only_
-   0 && DBG( "%s: CommandLine='%s'", __func__, CommandLine->c_str() );
-   const auto pXeq(      CommandLine->wbuf () + 1 );  // skip the '-' always (stupid system takes PChar cmdline param)
-   const auto pXeqConst( CommandLine->c_str() + 1 );  // skip the '-' always (for internal use)
    if( !(cmdFlags & NO_ECHO_CMDLN) ) {
-      PutLastLogLine( pfLogBuf, CommandLine->c_str() + ((cmdFlags & IGNORE_ERROR) ? 0 : 1 ) );
+      PutLastLogLine( pfLogBuf, pS );
       }
 
-      //  ^c:\klg\bin\unxutils\ls.exe
-      //  -ls -l && sleep 2 && echo hello world
-      //  -ls -l
-      //  -ls -l && sleep 10
+   //  -ls -l && echo sleep 2 && sleep 2 && echo hello world
+   //  -ls -l
+   //  -ls -l && echo sleep 10 && sleep 10
 
-   if( !piper.ForkChildOk( pXeqConst ) ) {
-      char erbuf[265];
-      OsErrStr( BSOB(erbuf) );
-      ErrorDialogBeepf( "%s: piper.ForkChildOk '%s' FAILED: %s!!!", __func__, pXeqConst, erbuf );
+   if( !piper.ForkChildOk( pS ) ) {
+      char erbuf[265]; OsErrStr( BSOB(erbuf) );
+      ErrorDialogBeepf( "%s: piper.ForkChildOk '%s' FAILED: %s!!!", __func__, pS, erbuf );
       return CP_PIPED_RC_ECREATEPROCESS;
       }
-   auto rv( CP_PIPED_RC_OK );
    TPipeReader pipeReader( piper );
    while( 1 ) {
-      if( pipeReader.GetFilteredLine( xb ) > 0 ) {
-         PutLastLogLine( pfLogBuf, xb->c_str() );
-         } // as long as data isn't exhausted, don't even check for process death
-      else {
-         // process has terminated;
-         const auto status( piper.ReapChild() );
+      if( pipeReader.GetFilteredLine( sb ) > 0 ) {
+         PutLastLogLine( pfLogBuf, sb );
+         }
+      else { // process has been reaped
+         const auto status( piper.Status() );
          if( status && (cmdFlags & IGNORE_ERROR) ) {
             PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%d ignored", status ).k_str() );
             }
-         return rv;
+         return CP_PIPED_RC_OK;
          }
       }
    }
@@ -281,28 +262,23 @@ class InternalShellJobExecutor {
    NO_COPYCTOR(InternalShellJobExecutor);
    NO_ASGN_OPR(InternalShellJobExecutor);
 
+   STATIC_FXN void ChildProcessCtrlThread( InternalShellJobExecutor *pIsjx );
+
    PFBUF                       d_pfLogBuf;
    StringList                 *d_pSL;
    const size_t                d_numJobsRequested;
-
    int                         d_Pid;
-   int                         d_hProcessExitCode;
-
+   int                         d_ChildProcessExitCode;
    std::mutex                  d_jobQueueMtx;
-
    // Win32::ManualClrEvent       d_AllJobsDone;  BUGBUG
-
    std::thread                 d_hThread;  // should be LAST!!!
-
-   STATIC_FXN void ChildProcessCtrlThread( InternalShellJobExecutor *pIsjx );
 
 public:
 
    InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput );
    ~InternalShellJobExecutor();
 
-   void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const
-      {
+   void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const {
       *pNumRequested  = d_numJobsRequested;
       *pNumNotStarted = d_pSL->length();
       }
@@ -312,14 +288,14 @@ private:
    void ThreadFxnRunAllJobs();
    int  KillAllJobsInBkgndProcessQueue();
    int  DeleteAllEnqueuedJobs_locks();
-
    };
 
 InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput )
    : d_pfLogBuf         ( pfb )
    , d_pSL              ( sl )
    , d_numJobsRequested ( sl->length() )
-   , d_hProcessExitCode ( 0 )
+   , d_Pid              ( INVALID_ProcessId )
+   , d_ChildProcessExitCode ( 0 )
    , d_hThread          ( InternalShellJobExecutor::ChildProcessCtrlThread, this )
    {
    }
@@ -338,18 +314,18 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
    auto failedJobsIgnored(0);
    auto unstartedJobCnt(0);
    PerfCounter pc;
-   Xbuf x1, x2;
+   std::string x2;
    // Win32::AutoSignalEvent amce( d_AllJobsDone );
    while( true ) { //**************** outerthreadloop ****************
       StringListEl *pEl;
       {
       // AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
-      d_Pid = INVALID_dwProcessId;
+      d_Pid = INVALID_ProcessId;
       DispNeedsRedrawStatLn(); // ???
       if( d_pSL->empty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
-         PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
-         d_hProcessExitCode = 0;
+         PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_ChildProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
+         d_ChildProcessExitCode = 0;
          // d_hThread = nullptr;
          return; // ##################### LockTheJobQueue ######################
          }
@@ -361,9 +337,9 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       if( *pS ) { prep_cmdline( pS, cmdFlags, __func__ ); }
 
       piped_forker piper;
-      const auto cp_rc( CreateProcess_piped( piper, &d_hProcessExitCode, d_pfLogBuf, pS, cmdFlags, &x1, &x2 ) );
+      const auto cp_rc( CreateProcess_piped( piper, &d_ChildProcessExitCode, d_pfLogBuf, pS, cmdFlags, x2 ) );
       if( CP_PIPED_RC_OK == cp_rc ) {
-         if( d_hProcessExitCode ) {
+         if( d_ChildProcessExitCode ) {
             if( cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;  }
             else                          {  unstartedJobCnt = DeleteAllEnqueuedJobs_locks();  }
             }
@@ -384,7 +360,6 @@ void InternalShellJobExecutor::ChildProcessCtrlThread( InternalShellJobExecutor 
    // equivalent to ExitThread( 0 );
    }
 
-
 PFBUF StartInternalShellJob( StringList *sl, bool fAppend ) {
    STATIC_VAR size_t s_nxt_shelljob_output_FBUF_num;
    if( !fAppend ) {
@@ -402,7 +377,6 @@ NEXT_OUTBUF:
    return pFB;
    }
 
-
 int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
    // AutoMutex LockTheJobQueue( d_jobQueueMtx );
    auto &d_jobQHead = d_pSL->d_head;
@@ -414,39 +388,28 @@ int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
    return rmCnt;
    }
 
-
 int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
 
-   if(   INVALID_dwProcessId != d_Pid
+   if(   INVALID_ProcessId != d_Pid
       && ConIO::Confirm( "Kill background %s process (PID=%d)?", d_pfLogBuf->Name(), d_Pid )
-      && INVALID_dwProcessId != d_Pid
+      && INVALID_ProcessId != d_Pid
       ) {
-      PCChar msg = "WTF!?";
-#if 0
-      switch( Win32::TerminateApp( d_Pid, 2000 ) ) {
-         default                      : msg = "WTF!?"                    ;  break;
-         case TA_FAILED               : msg = "TA_FAILED"                ;  break;
-         case TA_SUCCESS_CTRL_BREAK   : msg = "TA_SUCCESS_CTRL_BREAK"    ;  break;
-         case TA_SUCCESS_WM_CLOSE     : msg = "TA_SUCCESS_WM_CLOSE"      ;  break;
-         case TA_SUCCESS_TERM_PROCESS : msg = "TA_SUCCESS_TERM_PROCESS"  ;  break;
-         }
-#endif
-
-      d_Pid = INVALID_dwProcessId;
-      Msg( "Win32::TerminateApp returned %s", msg );
+      kill( -d_Pid, SIGTERM );
+      sleep( 2 );
+      kill( -d_Pid, SIGKILL );
+      Msg( "killed pid=%d", d_Pid );
+      d_Pid = INVALID_ProcessId;
       return 1;
       }
    return 1; // !IsThreadActive();
    }
 
-
 bool ARG::compile() {
    switch( d_argType ) {
       default:      return BadArg();
 
-      case NOARG:   {
-                    const auto fCompiling( IsCompileJobQueueThreadActive() );
+      case NOARG:  {const auto fCompiling( IsCompileJobQueueThreadActive() );
                     Msg( "%scompile in progress", fCompiling ? "" : "no " );
                     return fCompiling;
                     }
@@ -454,8 +417,7 @@ bool ARG::compile() {
       case NULLARG: CompilePty_KillAllJobs();
                     return false;
 
-      case TEXTARG: {
-                    g_CurFBuf()->SyncWriteIfDirty_Wrote();
+      case TEXTARG:{g_CurFBuf()->SyncWriteIfDirty_Wrote();
                     DispDoPendingRefreshesIfNotInMacro();
                     const auto cmdCnt( CompilePty_CmdsAsyncExec( StringList( d_textarg.pText ), true ) );
                     Msg( "Queued %d commands", cmdCnt );
