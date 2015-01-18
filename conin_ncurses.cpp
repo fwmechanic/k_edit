@@ -70,22 +70,19 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
 
 // return -1 indicates that event should be ignored (resize event as an example)
 int ConGetEvent() {
-   // termninal specific values for shift + up / down
+   // terminal specific values for shift + up / down
    static int key_sup = -1;
    static int key_sdown = -1;
    // fill terminal dependant values on first call
    if (key_sup < 0 || key_sdown < 0) {
-       for (auto ch = KEY_MAX + 1 ; ; ch++ ) {
-           const char *s = keyname(ch);
-           if (s == NULL) break;
-
-           if (!strcmp(s, "kUP"))
-               key_sup = ch;
-           else if (!strcmp(s, "kDN"))
-               key_sdown = ch;
-           if (key_sup > 0 && key_sdown > 0) break;
-       }
-   }
+      for (auto ch = KEY_MAX + 1 ; ; ch++ ) {
+         auto kn( keyname(ch) );
+         if (!kn) break;
+         if (     !strcmp(kn, "kUP")) { key_sup   = ch; }
+         else if (!strcmp(kn, "kDN")) { key_sdown = ch; }
+         if (key_sup > 0 && key_sdown > 0) break;
+         }
+      }
 
    const auto ch( wgetch(stdscr) );
    if (ch < 0)                      { return -1; }
@@ -151,18 +148,14 @@ int ConGetEvent() {
                        KEvent->Code = kfShift | kbUp;
                        break;
                case KEY_SRIGHT:
-           KEvent->Code = kfShift | kbRight;
-           break;*/
+           KEvent->Code = kfShift | kbRight; */
            return -1;
 
       default:
            if (key_sdown != -1 && ch == key_sdown) { return EdKC_s_down; }
            if (key_sup != 0 && ch == key_sup)      { return EdKC_s_up;   }
-           else {
-              // fprintf(stderr, "Unknown 0x%x %d\n", ch, ch);
-              return -1;
-              }
-           break;
+           // fprintf(stderr, "Unknown 0x%x %d\n", ch, ch);
+           return -1;
       }
    return -1;
    }
