@@ -101,10 +101,8 @@ int ConGetEvent() {
         return EdKC_enter;
     } else if (ch == '\t') {
         return EdKC_tab;
-    } else if (ch < 32) {
+    } else if (ch <  32) {
 	return EdKC_c_a + (ch - 1);
-    } else if (ch == 32) {
-        return EdKC_space;
     } else if (ch < 256) {
         return ch;
     } else { // > 255

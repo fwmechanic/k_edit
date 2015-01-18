@@ -148,7 +148,6 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
    , IDX_EQ( EdKC_numStar      )  pCMD_graphic
    , IDX_EQ( EdKC_numSlash     )  pCMD_graphic
    , IDX_EQ( EdKC_numEnter     )  pCMD_emacsnewl
-   , IDX_EQ( EdKC_space        )  pCMD_graphic
    , IDX_EQ( EdKC_bksp         )  pCMD_emacscdel
    , IDX_EQ( EdKC_tab          )  pCMD_tab
    , IDX_EQ( EdKC_esc          )  pCMD_cancel

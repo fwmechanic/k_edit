@@ -105,7 +105,6 @@ STATIC_CONST TKyCd2KyNameTbl KyCd2KyNameTbl[] = {
       { EdKC_numStar         , "num*"           },
       { EdKC_numSlash        , "num/"           },
       { EdKC_numEnter        , "num+enter"      },
-      { EdKC_space           , "space"          },
       { EdKC_bksp            , "bksp"           },
       { EdKC_tab             , "tab"            },
       { EdKC_esc             , "esc"            },

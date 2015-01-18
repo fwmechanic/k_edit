@@ -895,7 +895,7 @@ STATIC_CONST XlatForKey normalXlatTbl[ 0xE0 ] = {
    { 0,             0,                0,                0,               0,                 }, // 0x1D  VK_NONCONVERT           IME nonconvert
    { 0,             0,                0,                0,               0,                 }, // 0x1E  VK_ACCEPT               IME accept
    { 0,             0,                0,                0,               0,                 }, // 0x1F  VK_MODECHANGE           IME mode change request
-   { EdKC_space,    EdKC_a_space,     EdKC_c_space,     0,               EdKC_cs_space,     }, // 0x20  VK_SPACE                SPACEBAR
+   { 0,             EdKC_a_space,     EdKC_c_space,     0,               EdKC_cs_space,     }, // 0x20  VK_SPACE                SPACEBAR
    { EdKC_pgup,     EdKC_a_pgup,      EdKC_c_pgup,      EdKC_s_pgup,     EdKC_cs_pgup,      }, // 0x21  VK_PRIOR                PAGE UP key
    { EdKC_pgdn,     EdKC_a_pgdn,      EdKC_c_pgdn,      EdKC_s_pgdn,     EdKC_cs_pgdn,      }, // 0x22  VK_NEXT                 PAGE DOWN key
    { EdKC_end,      EdKC_a_end,       EdKC_c_end,       EdKC_s_end,      EdKC_cs_end,       }, // 0x23  VK_END                  END key

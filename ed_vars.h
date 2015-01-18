@@ -35,7 +35,7 @@ extern std::string  g_SnR_szReplacement ;
 
 typedef U16 EdKC;
 
-enum { EdKC_Count = 256+273+90
+enum { EdKC_Count = 256+272+90
 #if SEL_KEYMAP
                               +(26*2)
 #endif
@@ -142,7 +142,6 @@ enum EdKeyCodes
    , EdKC_numStar
    , EdKC_numSlash
    , EdKC_numEnter
-   , EdKC_space
    , EdKC_bksp
    , EdKC_tab
    , EdKC_esc
