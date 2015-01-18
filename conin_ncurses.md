@@ -118,8 +118,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_SLASH      | is alt+, |
 | EdKC_a_home       | is home |
 | EdKC_a_end        | is end     |
-| EdKC_a_left       | no response    |
-| EdKC_a_right      | no response |
+| EdKC_a_left       | y |
+| EdKC_a_right      | y |
 | EdKC_a_up         | no response |
 | EdKC_a_down       | no response |
 | EdKC_a_pgup       | no response |
@@ -143,7 +143,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_numSlash   |  |
 | EdKC_a_numEnter   |  |
 | EdKC_a_space      |  |
-| EdKC_a_bksp       |  |
+| EdKC_a_bksp       | y |
 | EdKC_a_tab        |  |
 | EdKC_a_esc        |  |
 | EdKC_a_enter      |  |
@@ -208,10 +208,10 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_SLASH      | is ctrl+f5 |
 | EdKC_c_home       | is home |
 | EdKC_c_end        | is end  |
-| EdKC_c_left       | no response |
-| EdKC_c_right      | no response |
-| EdKC_c_up         | no response |
-| EdKC_c_down       | no response |
+| EdKC_c_left       | y |
+| EdKC_c_right      | y |
+| EdKC_c_up         | y |
+| EdKC_c_down       | y |
 | EdKC_c_pgup       | no response |
 | EdKC_c_pgdn       | no response |
 | EdKC_c_ins        | no response |
@@ -233,24 +233,24 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_numSlash   |  |
 | EdKC_c_numEnter   |  |
 | EdKC_c_space      |  |
-| EdKC_c_bksp       |  |
+| EdKC_c_bksp       | is bksp |
 | EdKC_c_tab        |  |
 | EdKC_c_esc        |  |
 | EdKC_c_enter      |  |
-| EdKC_s_f1         |  |
-| EdKC_s_f2         |  |
-| EdKC_s_f3         |  |
-| EdKC_s_f4         |  |
-| EdKC_s_f5         |  |
-| EdKC_s_f6         |  |
-| EdKC_s_f7         |  |
-| EdKC_s_f8         |  |
-| EdKC_s_f9         |  |
-| EdKC_s_f10        |  |
-| EdKC_s_f11        |  |
-| EdKC_s_f12        |  |
-| EdKC_s_home       |  |
-| EdKC_s_end        |  |
+| EdKC_s_f1         | NR |
+| EdKC_s_f2         | NR |
+| EdKC_s_f3         | y |
+| EdKC_s_f4         | y |
+| EdKC_s_f5         | NR |
+| EdKC_s_f6         | NR |
+| EdKC_s_f7         | NR |
+| EdKC_s_f8         | NR |
+| EdKC_s_f9         | NR |
+| EdKC_s_f10        | NR |
+| EdKC_s_f11        | NR |
+| EdKC_s_f12        | NR |
+| EdKC_s_home       | is '7' |
+| EdKC_s_end        | is '1' |
 | EdKC_s_left       | is '2' |
 | EdKC_s_right      | is '4' |
 | EdKC_s_up         | is '8' |
@@ -390,9 +390,9 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | 366102 | graphic          |y| (many)           |
 | 352863 | right            |y| EdKC_right       |
 | 173013 | left             |y| EdKC_left        |
-| 108228 | pword            |X| EdKC_c_right     |
+| 108228 | pword            |y| EdKC_c_right     |
 | 106733 | arg              |y| EdKC_center      |
-|  70229 | mword            |X| EdKC_c_left      |
+|  70229 | mword            |y| EdKC_c_left      |
 |  59268 | mpage            |y| EdKC_pgup        |
 |  51719 | setfile          |y| EdKC_f2          |
 |  42663 | endline          |y| EdKC_end         |
@@ -405,10 +405,10 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 |  16908 | copy             |y| EdKC_numPLUS     |
 |  16852 | exit             |X| EdKC_a_f4        |
 |  14419 | emacscdel        |y| EdKC_bksp        |
-|  13473 | undo             |X| EdKC_a_bksp      |
+|  13473 | undo             |y| EdKC_a_bksp      |
 |  13343 | emacsnewl        |y| EdKC_numEnter    |
 |   8615 | cancel           |y| EdKC_esc         |
-|   6145 | ppara            |X| EdKC_c_down      |
+|   6145 | ppara            |y| EdKC_c_down      |
 |   5982 | files            |X| EdKC_a_f2        |
 |   4727 | endfile          |X| EdKC_c_pgdn      |
 |   4610 | execute          |y| EdKC_c_x         |
@@ -417,7 +417,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 |   2602 | begfile          |X| EdKC_c_pgup      |
 |   2556 | nextmsg          |y| EdKC_a_n         |
 |   2435 | redo             |X| EdKC_c_bksp      |
-|   2177 | mfgrep           |X| EdKC_s_f4        |
+|   2177 | mfgrep           |y| EdKC_s_f4        |
 |   2167 | vrepeat          |y| EdKC_a_v         |
 |   1778 | flipcase         |y| EdKC_a_c         |
 |   1354 | home             |X| EdKC_c_home      |
@@ -428,7 +428,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 |    731 | grep             |X| EdKC_c_f3        |
 |    693 | towinclip        |y| EdKC_c_c         |
 |    668 | longline         |X| EdKC_a_BACKSLASH |
-|    527 | mpara            |X| EdKC_c_up        |
+|    527 | mpara            |y| EdKC_c_up        |
 |    519 | tags             |y| EdKC_a_u         |
 |    474 | selword          |X| EdKC_c_center    |
 |    425 | searchlog        |X| EdKC_a_f3        |
@@ -440,7 +440,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 |    246 | lasttext         |y| EdKC_a_d         |
 |    221 | mfreplace        |X| EdKC_f11         |
 |    159 | aligncol         |y| EdKC_a_a         |
-|    141 | backtravlocnlist |X| EdKC_a_left      |
-|    137 | traverselocnlist |X| EdKC_a_right     |
+|    141 | backtravlocnlist |y| EdKC_a_left      |
+|    137 | traverselocnlist |y| EdKC_a_right     |
 |    105 | boxstream        |y| EdKC_a_b         |
 |    100 | tell             |y| EdKC_a_t         |
