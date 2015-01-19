@@ -77,7 +77,7 @@ bool DirMatches::KeepMatch() {
 
    const auto rv( KeepMatch_( d_wcMode, d_sbuf, name ) );
 
-   1 && DBG( "want %c%c, have %X '%s' rv=%d"
+   0 && DBG( "want %c%c, have %X '%s' rv=%d"
            , (d_wcMode & ONLY_DIRS ) ? 'D':'d'
            , (d_wcMode & ONLY_FILES) ? 'F':'f'
            , d_sbuf.st_mode

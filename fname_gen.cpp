@@ -473,7 +473,7 @@ bool ARG::wct() {
 
 //------------------------------------------------------------------------------
 
-enum { MFSPEC_D=1 };
+enum { MFSPEC_D=0 };
 
 CfxFilenameGenerator::CfxFilenameGenerator( stref macroText, WildCardMatchMode matchMode )
    : d_splitLine( macroText, Path::EnvSepStr() )
