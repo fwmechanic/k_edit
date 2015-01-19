@@ -594,6 +594,7 @@ NEXT_SSG_COMBINATION:
 //
 
 STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc, bool fKeepNameWildcard ) { enum { VERBOSE=1 };
+#if defined(_WIN32)
    if( fKeepNameWildcard ) {
       if(  ToBOOL( strchr( pszSrc, Path::chEnvSep ) )  // presence of Path::chEnvSep overrides fKeepNameWildcard (since what
         || FBUF::FnmIsPseudo( pszSrc )                 // follows only makes sense if pszSrc is a single filename)
@@ -638,6 +639,7 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
       }
 
 OUTPUT_EQ_INPUT:
+#endif
    dest = pszSrc;                                                                     VERBOSE && DBG( "%s '%s' => NO MATCH!", __func__, pszSrc );
    }
 

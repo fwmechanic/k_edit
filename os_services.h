@@ -261,16 +261,16 @@ enum WildCardMatchMode { ONLY_FILES=1, ONLY_DIRS=2, FILES_AND_DIRS=ONLY_FILES | 
 class DirMatches {
    const WildCardMatchMode d_wcMode;
    Path::str_t             d_buf;
-   size_t                  d_ixDest;
 
 #if defined(_WIN32)
+   size_t                  d_ixDest;
    Win32::HANDLE           d_hFindFile;
    bool                    d_fTriedFirst = false;
    Win32::WIN32_FIND_DATA  d_Win32_FindData;
 #else
-   DIR                    *d_dirp   = nullptr;
-   struct dirent          *d_dirent = nullptr;
-   struct stat             d_sbuf;
+   std::vector<std::string>::const_iterator d_globsIt;
+   std::vector<std::string>                 d_globs;
+   struct stat                              d_sbuf;
 #endif
 
    bool FoundNext();

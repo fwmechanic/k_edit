@@ -44,6 +44,19 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
    return destgs;
    }
 
+#include <glob.h>
+
+std::vector<std::string> glob( const std::string& pat ) { // http://stackoverflow.com/questions/8401777/simple-glob-in-c-on-unix-system
+   using namespace std;
+   glob_t glob_result;
+   glob( pat.c_str(), GLOB_TILDE, nullptr, &glob_result );
+   vector<string> ret;
+   for( auto i=0u ; i < glob_result.gl_pathc ; ++i ) {
+      ret.push_back( string( glob_result.gl_pathv[i] ) );
+      }
+   globfree( &glob_result );
+   return ret;
+   }
 
 STIL bool KeepMatch_( const WildCardMatchMode want, const struct stat &sbuf, stref name ) {
    const auto fFileOk( ToBOOL(want & ONLY_FILES) );
@@ -57,44 +70,38 @@ STIL bool KeepMatch_( const WildCardMatchMode want, const struct stat &sbuf, str
    }
 
 bool DirMatches::KeepMatch() {
-   if( stat( d_dirent->d_name, &d_sbuf ) != 0 ) {
+   const auto name( (*d_globsIt).c_str() );
+   if( stat( name, &d_sbuf ) != 0 ) {
       return false;
       }
 
-   const auto rv( KeepMatch_( d_wcMode, d_sbuf, d_dirent->d_name ) );
+   const auto rv( KeepMatch_( d_wcMode, d_sbuf, name ) );
 
    1 && DBG( "want %c%c, have %X '%s' rv=%d"
            , (d_wcMode & ONLY_DIRS ) ? 'D':'d'
            , (d_wcMode & ONLY_FILES) ? 'F':'f'
            , d_sbuf.st_mode
-           , d_dirent->d_name
+           , name
            , rv
            );
 
    return rv;
    }
 
-bool DirMatches::FoundNext() {
-   d_dirent = readdir( d_dirp );
-   if( !d_dirent ) {
-      d_ixDest = std::string::npos; // flag no more matches
-      return false; // failed!
+const Path::str_t DirMatches::GetNext() {
+   if( d_globsIt == d_globs.cend() ) // already hit no-more-matches condition?
+      return Path::str_t("");
+
+   for( ; d_globsIt != d_globs.cend() ; ++d_globsIt ) {
+      if( KeepMatch() ) {
+         break;
+         }
       }
 
-   return true;
-   }
-
-const Path::str_t DirMatches::GetNext() {
-   if( d_ixDest == std::string::npos ) // already hit no-more-matches condition?
+   if( d_globsIt == d_globs.cend() ) //         hit no-more-matches condition?
       return Path::str_t("");
 
-   while( FoundNext() && !KeepMatch() )
-      continue;
-
-   if( d_ixDest == std::string::npos ) //         hit no-more-matches condition?
-      return Path::str_t("");
-
-   d_buf.replace( d_ixDest, std::string::npos, d_dirent->d_name );
+   d_buf = *d_globsIt++;
    if( ToBOOL(d_sbuf.st_mode & S_IFDIR) )
       d_buf.append( PATH_SEP_STR );
 
@@ -102,11 +109,7 @@ const Path::str_t DirMatches::GetNext() {
    return d_buf;
    }
 
-DirMatches::~DirMatches() {
-   if( d_dirp ) {
-      closedir( d_dirp );
-      }
-   }
+DirMatches::~DirMatches() {}
 
 DirMatches::DirMatches( PCChar pszPrefix, PCChar pszSuffix, WildCardMatchMode wcMode, bool fAbsolutize )
    : d_wcMode( wcMode )
@@ -115,25 +118,9 @@ DirMatches::DirMatches( PCChar pszPrefix, PCChar pszSuffix, WildCardMatchMode wc
    if( fAbsolutize ) {
       d_buf = Path::Absolutize( d_buf.c_str() );
       }
-
-   d_dirp = opendir( d_buf.c_str() );
-   if( !d_dirp ) {
-      d_ixDest = std::string::npos; // already hit no-more-matches condition?
-      }
-   else {
-      d_dirent = readdir( d_dirp );
-      if( !d_dirent ) {
-         d_ixDest = std::string::npos; // already hit no-more-matches condition?
-         }
-      else {
-         // hackaround
-         const auto pDest( Path::StrToPrevPathSepOrNull( d_buf.c_str(), PCChar(nullptr) ) );
-         if( pDest )
-            d_ixDest = (pDest - d_buf.c_str()) + 1; // point past pathsep
-         else
-            d_ixDest = 0;
-         }
-      }
+   d_globs = glob( d_buf ); int ix=0;
+   // for( const auto &st : d_globs ) { DBG( "glob[%d] %s", ix++, st.c_str() ); }
+   d_globsIt = d_globs.cbegin();
    }
 
 bool FileOrDirExists( PCChar pszFileName ) {

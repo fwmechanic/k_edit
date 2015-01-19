@@ -254,6 +254,23 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
       }
    }
 
+int qx( std::string &dest, std::string &system_param ) {
+   dest.clear();
+   piped_forker piper;
+   if( !piper.ForkChildOk( system_param.c_str() ) ) {
+      return -1;
+      }
+
+   while( true ) {
+      char buffer[1024];
+      const auto bc( piper.Read( BSOB(buffer) ) );
+      if( bc == 0 ) {
+         return piper.Status();
+         }
+      dest.append( buffer, bc );
+      }
+   }
+
 //#################################################################################################################################
 //#################################################################################################################################
 //#################################################################################################################################
