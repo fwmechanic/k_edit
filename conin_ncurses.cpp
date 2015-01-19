@@ -134,9 +134,7 @@ int ConGetEvent() {
       case 558           : return EdKC_a_right  ; // alt + right
       case 543           : return EdKC_a_left   ; // alt + left
 
-      case KEY_RESIZE:
-           /* ResizeWindow(COLS, LINES); */
-           return -1;
+      case KEY_RESIZE:     ConOut::Resize();  return -1;
       case KEY_MOUSE:
            /*Event->What = evNone;
            ConGetMouseEvent(Event);

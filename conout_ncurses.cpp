@@ -93,6 +93,11 @@ int ConOut::BufferWriteString( const char *pszStringToDisp, int StringLen, int y
       }
    return slen;
    }
+void ConOut::BufferFlushToScreen() {
+   move( s_cursor_pos.lin, s_cursor_pos.col );  0 && DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
+   refresh();
+   }
+
 bool ConOut::SetScreenSizeOk( YX_t &newSize ) { return false; }
 void ConOut::GetScreenSize( YX_t *rv ) {
    getmaxyx( stdscr, rv->lin, rv->col );
@@ -102,10 +107,11 @@ YX_t ConOut::GetMaxConsoleSize() {
    ConOut::GetScreenSize( &rv );
    return rv;
    }
-void ConOut::BufferFlushToScreen() {
-   move( s_cursor_pos.lin, s_cursor_pos.col );  0 && DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
-   refresh();
+void ConOut::Resize() {
+   const auto sizeNow( ConOut::GetMaxConsoleSize() );                  0 && DBG( "%s: size=y,x=%d,%d", __func__, sizeNow.lin, sizeNow.col );
+   Event_ScreenSizeChanged( Point( sizeNow.lin, sizeNow.col ) );
    }
+
 bool ConOut::WriteToFileOk( FILE *ofh ) {
    return false;
    }
@@ -116,20 +122,16 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    raw();
    if( has_colors() == FALSE ) {
       endwin();
-      fprintf( stderr, "Your terminal does not support color\n" );
+      DBG( "Your terminal does not support color\n" );
       return false;
       }
 
-   start_color();
+   start_color();  DBG( "can_change_color() = %d\nCOLORS = %d\nCOLOR_PAIRS = %d", can_change_color(), COLORS, COLOR_PAIRS );
    noecho();
    nonl();
    keypad(stdscr, TRUE);
    meta(stdscr, 1);
-   const auto sizeNow( ConOut::GetMaxConsoleSize() );
-   0 && DBG( "%s: size=y,x=%d,%d", __func__, sizeNow.lin, sizeNow.col );
-   Event_ScreenSizeChanged( Point( sizeNow.lin, sizeNow.col ) );
-   // ConOut::BufferWriteString( " hello ", 7, 0, 0, 0x15, false );
-   // ConOut::BufferWriteString( " world ", 7, 3, 0, 0x13, false );
+   ConOut::Resize();
    return true;
    }
 void ConIO::Shutdown() {

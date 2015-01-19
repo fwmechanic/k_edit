@@ -35,6 +35,7 @@ namespace ConOut {
 
    void  GetScreenSize( YX_t *rv);
    bool  SetScreenSizeOk( YX_t &newSize );
+   void  Resize();
 
    bool  GetCursorState( YX_t *pt, bool *pfVisible );
    void  SetCursorLocn( int yLine, int xCol );
