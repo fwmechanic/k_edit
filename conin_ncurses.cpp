@@ -153,6 +153,7 @@ int ConGetEvent() {
            if (key_sdown != -1 && ch == key_sdown) { return EdKC_s_down; }
            if (key_sup != 0 && ch == key_sup)      { return EdKC_s_up;   }
            // fprintf(stderr, "Unknown 0x%x %d\n", ch, ch);
+           DBG( "%s Unknown event 0x%X %d\n", __func__, ch, ch );
            return -1;
       }
    return -1;
