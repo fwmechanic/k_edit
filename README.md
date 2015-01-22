@@ -23,7 +23,7 @@ the names of all of the files of interest to you, and have the multi-file-aware 
 
 # Licensing
 
-K itself is released under the [GPLv3 license](http://opensource.org/licenses/GPL-3.0).  
+K itself is released under the [GPLv3 license](http://opensource.org/licenses/GPL-3.0).  See file COPYING.
 
 The K source code distro contains, and K uses, the following source code from external sources:
 
