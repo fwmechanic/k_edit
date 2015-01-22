@@ -148,6 +148,12 @@ int ConGetEvent() {
       case 525           : return EdKC_c_down   ; // ctr + down
       case 558           : return EdKC_a_right  ; // alt + right
       case 543           : return EdKC_a_left   ; // alt + left
+      case 564           : return EdKC_a_up     ; // alt + up
+      case 523           : return EdKC_a_down   ; // alt + down
+      case 553           : return EdKC_a_pgup   ; // alt + pgup
+      case 548           : return EdKC_a_pgdn   ; // alt + pgdown
+      case 538           : return EdKC_a_ins    ; // alt + ins
+      case 517           : return EdKC_a_del    ; // alt + del
 
       case KEY_RESIZE:     ConOut::Resize();  return -1;
       case KEY_MOUSE:
@@ -205,8 +211,7 @@ int ConGetEscEvent() {
         int modch = '\0';
 
         if (ch1 == ERR) { // translate to Alt-[ or Alt-O
-            // TODO check
-            result = EdKC_a_a + (ch - 1);
+            result = EdKC_a_LEFT_SQ;
         } else {
             if (ch1 >= '1' && ch1 <= '8') { // [n...
                 endch = getch();
@@ -653,6 +658,26 @@ int ConGetEscEvent() {
                     ch += 32;
                 }
                 result = EdKC_a_a + (ch - 97);
+            } else if (ch == 39) {
+                result = EdKC_a_TICK;
+            } else if (ch == 44) {
+                result = EdKC_a_COMMA;
+            } else if (ch == 45) {
+                result = EdKC_a_MINUS;
+            } else if (ch == 46) {
+                result = EdKC_a_DOT;
+            } else if (ch == 47) {
+                result = EdKC_a_SLASH;
+            } else if (ch == 59) {
+                result = EdKC_a_SEMICOLON;
+            } else if (ch == 91) {
+                result = EdKC_a_LEFT_SQ;
+            } else if (ch == 92) {
+                result = EdKC_a_BACKSLASH;
+            } else if (ch == 93) {
+                result = EdKC_a_RIGHT_SQ;
+            } else if (ch == 96) {
+                result = EdKC_a_BACKTICK;
             } else if (ch == 127) {
                 result = EdKC_a_bksp;
             } else {

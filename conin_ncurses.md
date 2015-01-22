@@ -105,28 +105,28 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_f10        | hooked: unknown; seems to freeze K  |
 | EdKC_a_f11        | hooked: unknown; seems to freeze K  |
 | EdKC_a_f12        | hooked: unknown; seems to freeze K  |
-| EdKC_a_BACKTICK   | is ctrl+f |
-| EdKC_a_MINUS      | is alt+; |
+| EdKC_a_BACKTICK   | is ctrl+f (?) |
+| EdKC_a_MINUS      | is alt+; (?) |
 | EdKC_a_EQUAL      | is alt+num0 |
-| EdKC_a_LEFT_SQ    | is ctrl+a |
-| EdKC_a_RIGHT_SQ   | is ctrl+c |
-| EdKC_a_BACKSLASH  | is ctrl+b |
-| EdKC_a_SEMICOLON  | is alt+del |
-| EdKC_a_TICK       | is alt+` (backtick) |
-| EdKC_a_COMMA      | is alt+\ |
-| EdKC_a_DOT        | is alt+' (tick) |
-| EdKC_a_SLASH      | is alt+, |
-| EdKC_a_home       | is home |
-| EdKC_a_end        | is end     |
+| EdKC_a_LEFT_SQ    | is ctrl+a (?) |
+| EdKC_a_RIGHT_SQ   | is ctrl+c (?) |
+| EdKC_a_BACKSLASH  | is ctrl+b (?) |
+| EdKC_a_SEMICOLON  | is alt+del (?) |
+| EdKC_a_TICK       | is alt+` (backtick) (?) |
+| EdKC_a_COMMA      | is alt+\ (?) |
+| EdKC_a_DOT        | is alt+' (tick) (?) |
+| EdKC_a_SLASH      | is alt+, (?) |
+| EdKC_a_home       | is home (IMPOSSIBLE) |
+| EdKC_a_end        | is end (IMPOSSIBLE) |
 | EdKC_a_left       | y |
 | EdKC_a_right      | y |
-| EdKC_a_up         | no response |
-| EdKC_a_down       | no response |
-| EdKC_a_pgup       | no response |
-| EdKC_a_pgdn       | no response |
-| EdKC_a_ins        | no response |
-| EdKC_a_del        | no response |
-| EdKC_a_center     | is center  |
+| EdKC_a_up         | no response (?) |
+| EdKC_a_down       | no response (?) |
+| EdKC_a_pgup       | no response (?) |
+| EdKC_a_pgdn       | no response (?) |
+| EdKC_a_ins        | no response (?) |
+| EdKC_a_del        | no response (?) |
+| EdKC_a_center     | is center (IMPOSSIBLE) |
 | EdKC_a_num0       |  |
 | EdKC_a_num1       |  |
 | EdKC_a_num2       |  |
