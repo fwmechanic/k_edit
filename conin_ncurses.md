@@ -52,7 +52,6 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_numStar      | y |
 | EdKC_numSlash     | y |
 | EdKC_numEnter     | y |
-| EdKC_space        | ascii ' ' (?) |
 | EdKC_bksp         | y |
 | EdKC_tab          | y |
 | EdKC_esc          | y |
@@ -105,27 +104,27 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_f10        | hooked: unknown; seems to freeze K  |
 | EdKC_a_f11        | hooked: unknown; seems to freeze K  |
 | EdKC_a_f12        | hooked: unknown; seems to freeze K  |
-| EdKC_a_BACKTICK   | is ctrl+f (?) |
-| EdKC_a_MINUS      | is alt+; (?) |
-| EdKC_a_EQUAL      | is alt+num0 (?) |
-| EdKC_a_LEFT_SQ    | is ctrl+a (?) |
-| EdKC_a_RIGHT_SQ   | is ctrl+c (?) |
-| EdKC_a_BACKSLASH  | is ctrl+b (?) |
-| EdKC_a_SEMICOLON  | is alt+del (?) |
-| EdKC_a_TICK       | is alt+` (backtick) (?) |
-| EdKC_a_COMMA      | is alt+\ (?) |
-| EdKC_a_DOT        | is alt+' (tick) (?) |
-| EdKC_a_SLASH      | is alt+, (?) |
+| EdKC_a_BACKTICK   | y |
+| EdKC_a_MINUS      | y |
+| EdKC_a_EQUAL      | y |
+| EdKC_a_LEFT_SQ    | y |
+| EdKC_a_RIGHT_SQ   | y |
+| EdKC_a_BACKSLASH  | y |
+| EdKC_a_SEMICOLON  | y |
+| EdKC_a_TICK       | y |
+| EdKC_a_COMMA      | y |
+| EdKC_a_DOT        | y |
+| EdKC_a_SLASH      | y |
 | EdKC_a_home       | is home (IMPOSSIBLE) |
 | EdKC_a_end        | is end (IMPOSSIBLE) |
 | EdKC_a_left       | y |
 | EdKC_a_right      | y |
-| EdKC_a_up         | no response (?) |
-| EdKC_a_down       | no response (?) |
-| EdKC_a_pgup       | no response (?) |
-| EdKC_a_pgdn       | no response (?) |
-| EdKC_a_ins        | no response (?) |
-| EdKC_a_del        | no response (?) |
+| EdKC_a_up         | y |
+| EdKC_a_down       | y |
+| EdKC_a_pgup       | y |
+| EdKC_a_pgdn       | y |
+| EdKC_a_ins        | y |
+| EdKC_a_del        | y |
 | EdKC_a_center     | is center (IMPOSSIBLE) |
 | EdKC_a_num0       |  |
 | EdKC_a_num1       |  |
@@ -151,10 +150,10 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_1          | is ascii '1' (IMPOSSIBLE)|
 | EdKC_c_2          | is ctrl+9 (IMPOSSIBLE)|
 | EdKC_c_3          | is esc (IMPOSSIBLE)|
-| EdKC_c_4          | is ctrl+f2 (?) |
-| EdKC_c_5          | is ctrl+f3 (?) |
-| EdKC_c_6          | is ctrl+f4 (?) |
-| EdKC_c_7          | is ctrl+f5 (?) |
+| EdKC_c_4          | y |
+| EdKC_c_5          | y |
+| EdKC_c_6          | y |
+| EdKC_c_7          | y |
 | EdKC_c_8          | is bkspc (IMPOSSIBLE) |
 | EdKC_c_9          | is ascii '9'(IMPOSSIBLE) |
 | EdKC_c_a          | y |
@@ -185,8 +184,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_z          | y |
 | EdKC_c_f1         | no response |
 | EdKC_c_f2         | no response |
-| EdKC_c_f3         | no response (?) |
-| EdKC_c_f4         | no response (?) - should work with edited openbox config |
+| EdKC_c_f3         | y |
+| EdKC_c_f4         | y |
 | EdKC_c_f5         | no response |
 | EdKC_c_f6         | no response |
 | EdKC_c_f7         | hooked: blanked the entire screen |
@@ -215,7 +214,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_pgup       | no response (IMPOSSIBLE)|
 | EdKC_c_pgdn       | no response (IMPOSSIBLE)|
 | EdKC_c_ins        | no response (IMPOSSIBLE)|
-| EdKC_c_del        | no response (?) |
+| EdKC_c_del        | y |
 | EdKC_c_center     | is center (IMPOSSIBLE)|
 | EdKC_c_num0       | is '0' (IMPOSSIBLE)|
 | EdKC_c_num1       | is '1' (IMPOSSIBLE)|
