@@ -21,9 +21,18 @@ from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.t
 the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
 "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
+# Licensing
+
+K itself is released under the [GPLv3 license](http://opensource.org/licenses/GPL-3.0).  
+
+The K source code distro contains, and K uses, the following source code from external sources:
+
+ * [Lua 5.1](http://www.lua.org/versions.html#5.1) from 2005, licensed under the [MIT License](http://opensource.org/licenses/mit-license.html)
+ * [James S. Plank's Red-Black Tree library](http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html) from 2000, licensed under [LGPL](http://opensource.org/licenses/LGPL-2.1)
+
 # Limitations
 
- * K is a Win32 Console app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors)).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+ * K is a Win32 Console or Linux ncurses app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors)).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
  * K has no "virtual memory" mechanism (as M did); edited files are loaded in
 toto into RAM; K WILL CRASH if you attempt to open a file that is larger than
 the biggest malloc'able block available to the K process.  I get hit by this
