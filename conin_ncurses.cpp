@@ -105,7 +105,8 @@ int ConGetEvent() {
       if (ch == 27)                 { return ConGetEscEvent(); }
       if (ch == '\r' || ch == '\n') { return EdKC_enter; }
       if (ch == '\t')               { return EdKC_tab; }
-      if (ch <  32)                 { return EdKC_c_a + (ch - 1); }
+      if (ch > 27 && ch < 32)       { return EdKC_c_4 + (ch - 28); }
+      if (ch < 27)                  { return EdKC_c_a + (ch - 1); }
       return ch;
       }
    switch (ch) { // > 0xFF
@@ -154,6 +155,7 @@ int ConGetEvent() {
       case 548           : return EdKC_a_pgdn   ; // alt + pgdown
       case 538           : return EdKC_a_ins    ; // alt + ins
       case 517           : return EdKC_a_del    ; // alt + del
+      case 519           : return EdKC_c_del    ; // ctr + del
 
       case KEY_RESIZE:     ConOut::Resize();  return -1;
       case KEY_MOUSE:
@@ -670,6 +672,8 @@ int ConGetEscEvent() {
                 result = EdKC_a_SLASH;
             } else if (ch == 59) {
                 result = EdKC_a_SEMICOLON;
+            } else if (ch == 61) {
+                result = EdKC_a_EQUAL;
             } else if (ch == 91) {
                 result = EdKC_a_LEFT_SQ;
             } else if (ch == 92) {

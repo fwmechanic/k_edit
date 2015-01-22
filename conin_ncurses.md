@@ -107,7 +107,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_f12        | hooked: unknown; seems to freeze K  |
 | EdKC_a_BACKTICK   | is ctrl+f (?) |
 | EdKC_a_MINUS      | is alt+; (?) |
-| EdKC_a_EQUAL      | is alt+num0 |
+| EdKC_a_EQUAL      | is alt+num0 (?) |
 | EdKC_a_LEFT_SQ    | is ctrl+a (?) |
 | EdKC_a_RIGHT_SQ   | is ctrl+c (?) |
 | EdKC_a_BACKSLASH  | is ctrl+b (?) |
@@ -147,16 +147,16 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_tab        |  |
 | EdKC_a_esc        |  |
 | EdKC_a_enter      |  |
-| EdKC_c_0          | is ascii '0' |
-| EdKC_c_1          | is ascii '1' |
-| EdKC_c_2          | is ctrl+9 |
-| EdKC_c_3          | is esc |
-| EdKC_c_4          | is ctrl+f2 |
-| EdKC_c_5          | is ctrl+f3 |
-| EdKC_c_6          | is ctrl+f4 |
-| EdKC_c_7          | is ctrl+f5 |
-| EdKC_c_8          | is bkspc |
-| EdKC_c_9          | is ascii '9' |
+| EdKC_c_0          | is ascii '0' (IMPOSSIBLE)|
+| EdKC_c_1          | is ascii '1' (IMPOSSIBLE)|
+| EdKC_c_2          | is ctrl+9 (IMPOSSIBLE)|
+| EdKC_c_3          | is esc (IMPOSSIBLE)|
+| EdKC_c_4          | is ctrl+f2 (?) |
+| EdKC_c_5          | is ctrl+f3 (?) |
+| EdKC_c_6          | is ctrl+f4 (?) |
+| EdKC_c_7          | is ctrl+f5 (?) |
+| EdKC_c_8          | is bkspc (IMPOSSIBLE) |
+| EdKC_c_9          | is ascii '9'(IMPOSSIBLE) |
 | EdKC_c_a          | y |
 | EdKC_c_b          | y |
 | EdKC_c_c          | y |
@@ -165,11 +165,11 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_f          | y |
 | EdKC_c_g          | y |
 | EdKC_c_h          | y |
-| EdKC_c_i          | is tab |
-| EdKC_c_j          | is enter |
+| EdKC_c_i          | is tab (IMPOSSIBLE)|
+| EdKC_c_j          | is enter (IMPOSSIBLE)|
 | EdKC_c_k          | y |
 | EdKC_c_l          | y |
-| EdKC_c_m          | is enter |
+| EdKC_c_m          | is enter (IMPOSSIBLE)|
 | EdKC_c_n          | y |
 | EdKC_c_o          | y |
 | EdKC_c_p          | y |
@@ -195,38 +195,38 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_f10        | no response |
 | EdKC_c_f11        | no response |
 | EdKC_c_f12        | no response |
-| EdKC_c_BACKTICK   | is ctrl+9 |
-| EdKC_c_MINUS      | ascii '-' |
-| EdKC_c_EQUAL      | ascii '-' |
-| EdKC_c_LEFT_SQ    | is esc |
-| EdKC_c_RIGHT_SQ   | is ctrl+f3 |
-| EdKC_c_BACKSLASH  | is ctrl+f2 |
-| EdKC_c_SEMICOLON  | ascii ';' |
-| EdKC_c_TICK       | ascii ''' |
-| EdKC_c_COMMA      | ascii ',' |
-| EdKC_c_DOT        | ascii '.' |
-| EdKC_c_SLASH      | is ctrl+f5 |
-| EdKC_c_home       | is home |
-| EdKC_c_end        | is end  |
+| EdKC_c_BACKTICK   | is ctrl+9 (IMPOSSIBLE)|
+| EdKC_c_MINUS      | ascii '-' (IMPOSSIBLE)|
+| EdKC_c_EQUAL      | ascii '-' (IMPOSSIBLE)|
+| EdKC_c_LEFT_SQ    | is esc (IMPOSSIBLE)|
+| EdKC_c_RIGHT_SQ   | is ctrl+f3 (IMPOSSIBLE)|
+| EdKC_c_BACKSLASH  | is ctrl+f2 (IMPOSSIBLE)|
+| EdKC_c_SEMICOLON  | ascii ';' (IMPOSSIBLE)|
+| EdKC_c_TICK       | ascii '''(IMPOSSIBLE) |
+| EdKC_c_COMMA      | ascii ','(IMPOSSIBLE) |
+| EdKC_c_DOT        | ascii '.' (IMPOSSIBLE)|
+| EdKC_c_SLASH      | is ctrl+f5 (IMPOSSIBLE)|
+| EdKC_c_home       | is home(IMPOSSIBLE) |
+| EdKC_c_end        | is end (IMPOSSIBLE) |
 | EdKC_c_left       | y |
 | EdKC_c_right      | y |
 | EdKC_c_up         | y |
 | EdKC_c_down       | y |
-| EdKC_c_pgup       | no response |
-| EdKC_c_pgdn       | no response |
-| EdKC_c_ins        | no response |
-| EdKC_c_del        | no response |
-| EdKC_c_center     | is center |
-| EdKC_c_num0       | is '0' |
-| EdKC_c_num1       | is '1' |
-| EdKC_c_num2       | is '2' |
-| EdKC_c_num3       | is '3' |
-| EdKC_c_num4       | is '4' |
-| EdKC_c_num5       | is '5' |
-| EdKC_c_num6       | is '6' |
-| EdKC_c_num7       | is '7' |
-| EdKC_c_num8       | is '8' |
-| EdKC_c_num9       | is '9' |
+| EdKC_c_pgup       | no response (IMPOSSIBLE)|
+| EdKC_c_pgdn       | no response (IMPOSSIBLE)|
+| EdKC_c_ins        | no response (IMPOSSIBLE)|
+| EdKC_c_del        | no response (?) |
+| EdKC_c_center     | is center (IMPOSSIBLE)|
+| EdKC_c_num0       | is '0' (IMPOSSIBLE)|
+| EdKC_c_num1       | is '1' (IMPOSSIBLE)|
+| EdKC_c_num2       | is '2' (IMPOSSIBLE)|
+| EdKC_c_num3       | is '3' (IMPOSSIBLE)|
+| EdKC_c_num4       | is '4' (IMPOSSIBLE)|
+| EdKC_c_num5       | is '5' (IMPOSSIBLE)|
+| EdKC_c_num6       | is '6' (IMPOSSIBLE)|
+| EdKC_c_num7       | is '7' (IMPOSSIBLE)|
+| EdKC_c_num8       | is '8' (IMPOSSIBLE)|
+| EdKC_c_num9       | is '9' (IMPOSSIBLE)|
 | EdKC_c_numMinus   |  |
 | EdKC_c_numPlus    |  |
 | EdKC_c_numStar    |  |
