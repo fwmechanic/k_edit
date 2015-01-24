@@ -110,7 +110,7 @@ function Msgf(...)  Msg( fmt(...) )  end
 
 require "util"
 require "tu"
-require "Menu"
+require "menu"
 
 
 -- NB!  "ONLY nil and false are considered "false"!  THE NUMBER 0 AND THE EMPTY STRING are _TRUE_
