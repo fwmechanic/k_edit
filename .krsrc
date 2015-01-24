@@ -36,6 +36,8 @@
    #  dialogtop:1
       dt:= arg "dialogtop:invert" assign cancel
 
+      files:ctrl+q
+      exit:ctrl+4
       longline:alt+\
       savescreen:ctrl+k
       #ws:=arg "wordchars:nonwhite" assign
