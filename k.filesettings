@@ -72,7 +72,7 @@ local lua_settings   = { colors = DeepCopy(stdColors), eolCommentDelim = "--", r
       lua_settings.colors.dimmed = cc( Blue, hiPink )
 
 local python_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125, lang="Python" }
-local perl_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125 }
+local perl_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125, lang="Perl" }
 
 ext_map = {  -- ref'd from C
    c            = clang_settings                       ,
