@@ -23,11 +23,9 @@
 #include "ed_main.h"
 
 // get keyboard event
-int ConGetEvent();
+STATIC_FXN int ConGetEvent();
 // get extended event (more komplex keystrokes)
-int ConGetEscEvent();
-
-void ConIn::WaitForKey(){}
+STATIC_FXN int ConGetEscEvent();
 
 bool ConIn::FlushKeyQueueAnythingFlushed(){ return flushinp(); }
 
@@ -73,6 +71,10 @@ STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API
       }
    }
 
+void ConIn::WaitForKey() {
+   GetEdKC_Ascii( true );
+   }
+
 EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
    return GetEdKC_Ascii( false );
    }
@@ -84,7 +86,7 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
    }
 
 // return -1 indicates that event should be ignored (resize event as an example)
-int ConGetEvent() {
+STATIC_FXN int ConGetEvent() {
    // terminal specific values for shift + up / down
    static int key_sup = -1;
    static int key_sdown = -1;
@@ -182,7 +184,7 @@ int ConGetEvent() {
    return -1;
    }
 
-int ConGetEscEvent() {
+STATIC_FXN int ConGetEscEvent() {
     int result = -1;
     int ch;
     bool kbAlt = false;
