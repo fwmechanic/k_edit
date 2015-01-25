@@ -51,7 +51,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_numPlus      | y |
 | EdKC_numStar      | y |
 | EdKC_numSlash     | y |
-| EdKC_numEnter     | y |
+| EdKC_numEnter     | is EdKC_enter (desired) |
 | EdKC_bksp         | y |
 | EdKC_tab          | y |
 | EdKC_esc          | y |
@@ -406,7 +406,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 |  16852 | exit             |X| EdKC_a_f4        |
 |  14419 | emacscdel        |y| EdKC_bksp        |
 |  13473 | undo             |y| EdKC_a_bksp      |
-|  13343 | emacsnewl        |y| EdKC_numEnter    |
+|  13343 | emacsnewl        |y| EdKC_enter       |
 |   8615 | cancel           |y| EdKC_esc         |
 |   6145 | ppara            |y| EdKC_c_down      |
 |   5982 | files            |X| EdKC_a_f2        |
