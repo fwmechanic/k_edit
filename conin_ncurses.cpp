@@ -144,7 +144,7 @@ STATIC_FXN int ConGetEvent() {
       case KEY_F(11)     : return EdKC_f11      ;
       case KEY_F(12)     : return EdKC_f12      ;
       case KEY_B2        : return EdKC_center   ;
-      case KEY_ENTER     : return EdKC_numEnter ; // shift enter
+      case KEY_ENTER     : return EdKC_enter    ; // mimic Win32 behavior
       case 560           : return EdKC_c_right  ; // ctr + right
       case 545           : return EdKC_c_left   ; // ctr + left
       case 566           : return EdKC_c_up     ; // ctr + up
