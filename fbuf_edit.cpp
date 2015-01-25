@@ -2245,10 +2245,11 @@ IS_EOL:
          } // while( pCurImageBuf < pPastImageBufEnd )
 
       // switch away from the default EOL iff file is pure non-default
+      0 && DBG( "numCRs=%u, numLFs%u", numCRs, numLFs );
 #if defined(_WIN32)
-      if( numCRs == 0 && numLFs > 0 ) { d_EolMode = EolLF  ; }
+      if( numLFs > 0 && numCRs == 0      ) { d_EolMode = EolLF  ; }
 #else
-      if( numLFs == 0 && numCRs > 0 ) { d_EolMode = EolCRLF; }
+      if( numLFs > 0 && numCRs == numLFs ) { d_EolMode = EolCRLF; }
 #endif
 
       d_Entab = ENTAB_0_NO_CONV;
