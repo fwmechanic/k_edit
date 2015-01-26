@@ -247,8 +247,8 @@ CFLAGS   = $(C_OPTS_COMMON) $(C_OPTS_DBG)
 CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtti $(C_OPTS_LUA_REF) $(KEEPASM) $(C_OPTS_DBG)
 #####################################################################################################################
 
-LIBLUA := liblua.a
-LIBS   := -static-libgcc -static-libstdc++ -lgcc $(BOOST_LIBS) $(OS_LIBS) $(LUA_DIR)/$(LIBLUA) $(PCRE_LIB) #  -lmcheck (seems not to exist in MinGW)
+LIBLUA := $(LUA_DIR)/liblua.a
+LIBS   := -static-libgcc -static-libstdc++ -lgcc $(BOOST_LIBS) $(OS_LIBS) $(LIBLUA) $(PCRE_LIB) #  -lmcheck (seems not to exist in MinGW)
 
 CPP_OPTS:=
 
@@ -326,8 +326,8 @@ $(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat bld_cmdtbl.lua
 cleanliblua:
 	cd $(LUA_DIR) && $(MAKE) clean
 
-$(LUA_DIR)/$(LIBLUA):
-	cd $(LUA_DIR) && $(MAKE) $(LIBLUA)
+$(LIBLUA):
+	cd $(LUA_DIR) && $(MAKE) liblua.a
 
 # !!! in Lua-5.1/src/Makefile, PLAT=mingw, `make lua` builds lua.exe aka $(LUA_T)
 BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) clean&&$(MAKE) test&&$(MV) $(LUA_T) ../..&&$(MAKE) clean
@@ -371,7 +371,7 @@ $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
 	@objdump -p $@ > $@.exp
 	@$(LS_L) $@ $(LS_L_TAIL)
 
-$(ED_DLL)$(DLL_EXT): $(OBJS) $(LUA_DIR)/$(LIBLUA)
+$(ED_DLL)$(DLL_EXT): $(OBJS) $(LIBLUA)
 	@$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
 	@echo linking $@&& $(CXX) -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)kx.map
 	@objdump -p $@ > $@.exp
@@ -381,7 +381,7 @@ else
 
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT)
 
-$(TGT)$(EXE_EXT): $(OBJS) $(WINDRES)
+$(TGT)$(EXE_EXT): $(OBJS) $(LIBLUA) $(WINDRES)
 	@$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
 	@echo linking $@&& $(CXX) $^ $(LINK_MAP) -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs
 	@echo objdumping $@&& objdump -p $@ > $@.exp
