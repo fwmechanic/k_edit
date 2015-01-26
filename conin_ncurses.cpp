@@ -184,345 +184,340 @@ STATIC_FXN int ConGetEvent() {
    return -1;
    }
 
+struct kpto_er {
+   kpto_er() {
+      keypad(stdscr, 0);
+      timeout(10);
+      }
+   ~kpto_er() {
+      timeout(-1);
+      keypad(stdscr, 1);
+      }
+   };
+
 STATIC_FXN int ConGetEscEvent() {
-    int result = -1;
-    int ch;
-    bool kbAlt = false;
+   int result = -1;
+   bool kbAlt = false;
+   kpto_er kpto_cleaner;
+   int ch = getch();
+   if( ch == 27 ) { // ESC?
+      ch = getch();
+      if( ch == '[' || ch == 'O' ) {
+         kbAlt = true;
+         }
+      }
 
-    keypad(stdscr, 0);
+   if( ch == ERR ) {
+      result = kbAlt ? EdKC_a_esc : EdKC_esc;
+      }
+   else if (ch == '[' || ch == 'O') {
+      int ch1 = getch();
+      int endch = '\0';
+      int modch = '\0';
 
-    timeout(10);
-
-    ch = getch();
-    if (ch == 033) {
-        ch = getch();
-        if (ch == '[' || ch == 'O') {
-            kbAlt = true;
-        }
-    }
-
-    if (ch == ERR) {
-        if (kbAlt) {
-             result = EdKC_a_esc;
-        } else {
-             result = EdKC_esc;
-        }
-    } else if (ch == '[' || ch == 'O') {
-        int ch1 = getch();
-        int endch = '\0';
-        int modch = '\0';
-
-        if (ch1 == ERR) { // translate to Alt-[ or Alt-O
-            result = EdKC_a_LEFT_SQ;
-        } else {
-            if (ch1 >= '1' && ch1 <= '8') { // [n...
-                endch = getch();
-                if (endch == ERR) { // //[n, not valid
-                    // TODO, should this be ALT-7 ?
-                    endch = '\0';
-                    ch1 = '\0';
-                }
-            } else { // [A
-                endch = ch1;
-                ch1 = '\0';
-            }
-
-            if (endch == ';') { // [n;mX
-                modch = getch();
-                endch = getch();
-            } else if (ch1 != '\0' && endch != '~' && endch != '$') { // [mA
-                modch = ch1;
-                ch1 = '\0';
-            }
-
-            auto mod( 0 );  enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
-            if (modch != '\0') {
-                const int ctAlSh( ch1 - '1' );
-                if( (ctAlSh & 0x4) || modch == 53) { mod |= mod_ctrl;  }
-                if( (ctAlSh & 0x2) || modch == 51) { kbAlt = true;     }
-                if( (ctAlSh & 0x1) || modch == 50) { mod |= mod_shift; }
-            }
-            if( kbAlt ) mod |= mod_alt;
-            enum { mod_cas= 0          ,
-                   mod_caS= mod_shift  ,
-                   mod_cAs= mod_alt    ,
-                   mod_Cas= mod_ctrl   ,
-                   mod_CaS= mod_ctrl | mod_shift,
-                 };
-            switch (endch) {
-               default: result = -1; break;
-               case 'A':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_up;     break;
-                   case mod_Cas:   result = EdKC_c_up;   break;
-                   case mod_cAs:   result = EdKC_a_up;   break;
-                   case mod_caS:   result = EdKC_s_up;   break;
-                   case mod_CaS:   result = EdKC_cs_up;  break;
-                   default:        result = -1;          break;
-                   }
-                   break;
-               case 'B':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_down;     break;
-                   case mod_Cas:   result = EdKC_c_down;   break;
-                   case mod_cAs:   result = EdKC_a_down;   break;
-                   case mod_caS:   result = EdKC_s_down;   break;
-                   case mod_CaS:   result = EdKC_cs_down;  break;
-                   default:        result = -1;            break;
-                   }
-                   break;
-               case 'C':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_right;    break;
-                   case mod_Cas:   result = EdKC_c_right;  break;
-                   case mod_cAs:   result = EdKC_a_right;  break;
-                   case mod_caS:   result = EdKC_s_right;  break;
-                   case mod_CaS:   result = EdKC_cs_right; break;
-                   default:        result = -1;            break;
-                   }
-                   break;
-               case 'D':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_left;      break;
-                   case mod_Cas:   result = EdKC_c_left;    break;
-                   case mod_cAs:   result = EdKC_a_left;    break;
-                   case mod_caS:   result = EdKC_s_left;    break;
-                   case mod_CaS:   result = EdKC_cs_left;   break;
-                   default:        result = -1;             break;
-                   }
-                   break;
-               case 'E':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_center;    break;
-                   case mod_Cas:   result = EdKC_c_center;  break; // IMPOSSIBLE
-                   case mod_cAs:   result = EdKC_a_center;  break; // IMPOSSIBLE
-                   case mod_caS:   result = EdKC_s_center;  break;
-                   case mod_CaS:   result = EdKC_cs_center; break;
-                   default:        result = -1;             break;
-                   }
-                   break;
-               case 'F':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_end;       break;
-                   case mod_Cas:   result = EdKC_c_end;     break; // IMPOSSIBLE
-                   case mod_cAs:   result = EdKC_a_end;     break;
-                   case mod_caS:   result = EdKC_s_end;     break;
-                   case mod_CaS:   result = EdKC_cs_end;    break;
-                   default:        result = -1;             break;
-                   }
-                   break;
-               case 'H':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_home;      break;
-                   case mod_Cas:   result = EdKC_c_home;    break; // IMPOSSIBLE
-                   case mod_cAs:   result = EdKC_a_home;    break;
-                   case mod_caS:   result = EdKC_s_home;    break;
-                   case mod_CaS:   result = EdKC_cs_home;   break;
-                   default:        result = -1;             break;
-                   }
-                   break;
-               case 'R':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_f3;        break;
-                   case mod_Cas:   result = EdKC_c_f3;      break;
-                   case mod_cAs:   result = EdKC_a_f3;      break;
-                   case mod_caS:   result = EdKC_s_f3;      break;
-                   case mod_CaS:   result = EdKC_cs_f3;     break;
-                   default:        result = -1;             break;
-                   }
-                   break;
-               case 'S':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_f4;        break;
-                   case mod_Cas:   result = EdKC_c_f4;      break;
-                   case mod_cAs:   result = EdKC_a_f4;      break;
-                   case mod_caS:   result = EdKC_s_f4;      break;
-                   case mod_CaS:   result = EdKC_cs_f4;     break;
-                   default:        result = -1;             break;
-                   }
-                   break;
-               case 'j':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_numStar;    break;
-                   case mod_Cas:   result = EdKC_c_numStar;  break;
-                   case mod_cAs:   result = EdKC_a_numStar;  break;
-                   case mod_caS:   result = EdKC_s_numStar;  break;
-                   case mod_CaS:   result = EdKC_cs_numStar; break;
-                   default:        result = -1;              break;
-                   }
-                   break;
-               case 'k':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_numPlus;    break;
-                   case mod_Cas:   result = EdKC_c_numPlus;  break;
-                   case mod_cAs:   result = EdKC_a_numPlus;  break;
-                   case mod_caS:   result = EdKC_s_numPlus;  break;
-                   case mod_CaS:   result = EdKC_cs_numPlus; break;
-                   default:        result = -1;              break;
-                   }
-                   break;
-               case 'm':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_numMinus;    break;
-                   case mod_Cas:   result = EdKC_c_numMinus;  break;
-                   case mod_cAs:   result = EdKC_a_numMinus;  break;
-                   case mod_caS:   result = EdKC_s_numMinus;  break;
-                   case mod_CaS:   result = EdKC_cs_numMinus; break;
-                   default:        result = -1;               break;
-                   }
-                   break;
-               case 'o':
-                   switch( mod ) {
-                   case mod_cas:   result = EdKC_numSlash;    break;
-                   case mod_Cas:   result = EdKC_c_numSlash;  break;
-                   case mod_cAs:   result = EdKC_a_numSlash;  break;
-                   case mod_caS:   result = EdKC_s_numSlash;  break;
-                   case mod_CaS:   result = EdKC_cs_numSlash; break;
-                   default:        result = -1;               break;
-                   }
-                   break;
-               case 'a':
-                   if (!(mod & mod_ctrl))       { result = EdKC_s_up;
-                   } else if ((mod & mod_ctrl)) { result = EdKC_cs_up;
-                   } else                       { result = -1;
-                   }
-                   break;
-               case 'b':
-                   if (!(mod & mod_ctrl))       { result = EdKC_s_down;
-                   } else if ((mod & mod_ctrl)) { result = EdKC_cs_down;
-                   } else                       { result = -1;
-                   }
-                   break;
-               case 'c':
-                   if (!(mod & mod_ctrl))       { result = EdKC_s_right;
-                   } else if ((mod & mod_ctrl)) { result = EdKC_cs_right;
-                   } else                       { result = -1;
-                   }
-                   break;
-               case 'd':
-                   if (!(mod & mod_ctrl))       { result = EdKC_s_left;
-                   } else if ((mod & mod_ctrl)) { result = EdKC_cs_left;
-                   } else                       { result = -1;
-                   }
-                   break;
-               case '$': mod |= mod_shift;  /* FALL THRU!!! */
-               case '~':
-                   switch (ch1 - '0') {
-                   default: result = -1; break;
-                   case 1:
-                       switch( mod ) {
-                       case mod_cas:   result = EdKC_home;    break;
-                       case mod_Cas:   result = EdKC_c_home;  break; // IMPOSSIBLE
-                       case mod_cAs:   result = EdKC_a_home;  break;
-                       case mod_caS:   result = EdKC_s_home;  break;
-                       case mod_CaS:   result = EdKC_cs_home; break;
-                       default:        result = -1;           break;
-                       }
-                       break;
-                   case 2:
-                       switch( mod ) {
-                       case mod_cas:   result = EdKC_ins;     break;
-                       case mod_Cas:   result = EdKC_c_ins;   break; // IMPOSSIBLE
-                       case mod_cAs:   result = EdKC_a_ins;   break;
-                       case mod_caS:   result = EdKC_s_ins;   break;
-                       case mod_CaS:   result = EdKC_cs_ins;  break;
-                       default:        result = -1;           break;
-                       }
-                       break;
-                   case 3:
-                       switch( mod ) {
-                       case mod_cas:   result = EdKC_del;     break;
-                       case mod_Cas:   result = EdKC_c_del;   break;
-                       case mod_cAs:   result = EdKC_a_del;   break;
-                       case mod_caS:   result = EdKC_s_del;   break;
-                       case mod_CaS:   result = -1;           break;
-                       default:        result = -1;           break;
-                       }
-                       break;
-                   case 4:
-                       switch( mod ) {
-                       case mod_cas:   result = EdKC_end;     break;
-                       case mod_Cas:   result = EdKC_c_end;   break; // IMPOSSIBLE
-                       case mod_cAs:   result = EdKC_a_end;   break;
-                       case mod_caS:   result = EdKC_s_end;   break;
-                       case mod_CaS:   result = EdKC_cs_end;  break;
-                       default:        result = -1;           break;
-                       }
-                       break;
-                   case 5:
-                       switch( mod ) {
-                       case mod_cas:   result = EdKC_pgup;    break;
-                       case mod_Cas:   result = EdKC_c_pgup;  break; // IMPOSSIBLE
-                       case mod_cAs:   result = EdKC_a_pgup;  break;
-                       case mod_caS:   result = EdKC_s_pgup;  break;
-                       case mod_CaS:   result = EdKC_cs_pgup; break;
-                       default:        result = -1;           break;
-                       }
-                       break;
-                   case 6:
-                       switch( mod ) {
-                       case mod_cas:   result = EdKC_pgdn;    break;
-                       case mod_Cas:   result = EdKC_c_pgdn;  break; // IMPOSSIBLE
-                       case mod_cAs:   result = EdKC_a_pgdn;  break;
-                       case mod_caS:   result = EdKC_s_pgdn;  break;
-                       case mod_CaS:   result = EdKC_cs_pgdn; break;
-                       default:        result = -1;           break;
-                       }
-                       break;
-                   case 7:
-                       switch( mod ) {
-                       case mod_cas:   result = EdKC_home;    break;
-                       case mod_Cas:   result = EdKC_c_home;  break;
-                       case mod_cAs:   result = EdKC_a_home;  break; // IMPOSSIBLE
-                       case mod_caS:   result = EdKC_s_home;  break;
-                       case mod_CaS:   result = EdKC_cs_home; break;
-                       default:        result = -1;           break;
-                       }
-                       break;
-                   case 8:
-                       switch( mod ) {
-                       case mod_cas:   result = EdKC_end;     break;
-                       case mod_Cas:   result = EdKC_c_end;   break;
-                       case mod_cAs:   result = EdKC_a_end;   break; // IMPOSSIBLE
-                       case mod_caS:   result = EdKC_s_end;   break;
-                       case mod_CaS:   result = EdKC_cs_end;  break;
-                       default:        result = -1;           break;
-                       }
-                       break;
-                   }
-                   break;
+      if (ch1 == ERR) { // translate to Alt-[ or Alt-O
+         result = EdKC_a_LEFT_SQ;
+         }
+      else {
+         if( ch1 >= '1' && ch1 <= '8' ) { // [n...
+            endch = getch();
+            if( endch == ERR) { // //[n, not valid
+               // TODO, should this be ALT-7 ?
+               endch = '\0';
+               ch1 = '\0';
                }
-        }
-    } else {
-        if (ch == '\r' || ch == '\n') {  result = EdKC_a_enter;
-        } else if (ch == '\t') {         result = EdKC_a_tab;
-        } else if (ch < 32) {            result = -1;  // alt + ctr + key;  unsupported by 'K'
-        } else { // alt+numbers
-            if( ch >= '0' && ch <= '9' ) { result = EdKC_a_0 + (ch - '0');
-            } else if( (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
-                if( ch >= 'A' && ch <= 'Z' ) {
-                    ch += 'a' - 'A';  // Alt-A == Alt-a
-                }
-                result = EdKC_a_a + (ch - 'a');
-            } else if (ch == '\'') { result = EdKC_a_TICK;
-            } else if (ch == ',' ) { result = EdKC_a_COMMA;
-            } else if (ch == '-' ) { result = EdKC_a_MINUS;
-            } else if (ch == '.' ) { result = EdKC_a_DOT;
-            } else if (ch == '/' ) { result = EdKC_a_SLASH;
-            } else if (ch == ';' ) { result = EdKC_a_SEMICOLON;
-            } else if (ch == '=' ) { result = EdKC_a_EQUAL;
-            } else if (ch == '[' ) { result = EdKC_a_LEFT_SQ;
-            } else if (ch == '\\') { result = EdKC_a_BACKSLASH;
-            } else if (ch == ']' ) { result = EdKC_a_RIGHT_SQ;
-            } else if (ch == '`' ) { result = EdKC_a_BACKTICK;
-            } else if (ch == 127 ) { result = EdKC_a_bksp;
-            } else                 { result = ch;
             }
-        }
-    }
+         else { // [A
+            endch = ch1;
+            ch1 = '\0';
+            }
 
-    timeout(-1);
-    keypad(stdscr, 1);
+         if( endch == ';' ) { // [n;mX
+            modch = getch();
+            endch = getch();
+            }
+         else if (ch1 != '\0' && endch != '~' && endch != '$') { // [mA
+            modch = ch1;
+            ch1 = '\0';
+            }
 
-    return result;
-}
+         auto mod( 0 );  enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
+         if( modch != '\0' ) {
+            const int ctAlSh( ch1 - '1' );
+            if( (ctAlSh & 0x4) || modch == 53) { mod |= mod_ctrl;  }
+            if( (ctAlSh & 0x2) || modch == 51) { kbAlt = true;     }
+            if( (ctAlSh & 0x1) || modch == 50) { mod |= mod_shift; }
+            }
+         if( kbAlt ) mod |= mod_alt;
+         enum { mod_cas= 0          ,
+                mod_caS= mod_shift  ,
+                mod_cAs= mod_alt    ,
+                mod_Cas= mod_ctrl   ,
+                mod_CaS= mod_ctrl | mod_shift,
+              };
+         switch (endch) {
+            default: return -1; break;
+            case 'A':
+                switch( mod ) {
+                case mod_cas:   return EdKC_up;
+                case mod_Cas:   return EdKC_c_up;
+                case mod_cAs:   return EdKC_a_up;
+                case mod_caS:   return EdKC_s_up;
+                case mod_CaS:   return EdKC_cs_up;
+                default:        return -1;
+                }
+                break;
+            case 'B':
+                switch( mod ) {
+                case mod_cas:   return EdKC_down;
+                case mod_Cas:   return EdKC_c_down;
+                case mod_cAs:   return EdKC_a_down;
+                case mod_caS:   return EdKC_s_down;
+                case mod_CaS:   return EdKC_cs_down;
+                default:        return -1;
+                }
+                break;
+            case 'C':
+                switch( mod ) {
+                case mod_cas:   return EdKC_right;
+                case mod_Cas:   return EdKC_c_right;
+                case mod_cAs:   return EdKC_a_right;
+                case mod_caS:   return EdKC_s_right;
+                case mod_CaS:   return EdKC_cs_right;
+                default:        return -1;
+                }
+                break;
+            case 'D':
+                switch( mod ) {
+                case mod_cas:   return EdKC_left;
+                case mod_Cas:   return EdKC_c_left;
+                case mod_cAs:   return EdKC_a_left;
+                case mod_caS:   return EdKC_s_left;
+                case mod_CaS:   return EdKC_cs_left;
+                default:        return -1;
+                }
+                break;
+            case 'E':
+                switch( mod ) {
+                case mod_cas:   return EdKC_center;
+                case mod_Cas:   return EdKC_c_center;  // IMPOSSIBLE
+                case mod_cAs:   return EdKC_a_center;  // IMPOSSIBLE
+                case mod_caS:   return EdKC_s_center;
+                case mod_CaS:   return EdKC_cs_center;
+                default:        return -1;
+                }
+                break;
+            case 'F':
+                switch( mod ) {
+                case mod_cas:   return EdKC_end;
+                case mod_Cas:   return EdKC_c_end;     // IMPOSSIBLE
+                case mod_cAs:   return EdKC_a_end;
+                case mod_caS:   return EdKC_s_end;
+                case mod_CaS:   return EdKC_cs_end;
+                default:        return -1;
+                }
+                break;
+            case 'H':
+                switch( mod ) {
+                case mod_cas:   return EdKC_home;
+                case mod_Cas:   return EdKC_c_home;    // IMPOSSIBLE
+                case mod_cAs:   return EdKC_a_home;
+                case mod_caS:   return EdKC_s_home;
+                case mod_CaS:   return EdKC_cs_home;
+                default:        return -1;
+                }
+                break;
+            case 'R':
+                switch( mod ) {
+                case mod_cas:   return EdKC_f3;
+                case mod_Cas:   return EdKC_c_f3;
+                case mod_cAs:   return EdKC_a_f3;
+                case mod_caS:   return EdKC_s_f3;
+                case mod_CaS:   return EdKC_cs_f3;
+                default:        return -1;
+                }
+                break;
+            case 'S':
+                switch( mod ) {
+                case mod_cas:   return EdKC_f4;
+                case mod_Cas:   return EdKC_c_f4;
+                case mod_cAs:   return EdKC_a_f4;
+                case mod_caS:   return EdKC_s_f4;
+                case mod_CaS:   return EdKC_cs_f4;
+                default:        return -1;
+                }
+                break;
+            case 'j':
+                switch( mod ) {
+                case mod_cas:   return EdKC_numStar;
+                case mod_Cas:   return EdKC_c_numStar;
+                case mod_cAs:   return EdKC_a_numStar;
+                case mod_caS:   return EdKC_s_numStar;
+                case mod_CaS:   return EdKC_cs_numStar;
+                default:        return -1;
+                }
+                break;
+            case 'k':
+                switch( mod ) {
+                case mod_cas:   return EdKC_numPlus;
+                case mod_Cas:   return EdKC_c_numPlus;
+                case mod_cAs:   return EdKC_a_numPlus;
+                case mod_caS:   return EdKC_s_numPlus;
+                case mod_CaS:   return EdKC_cs_numPlus;
+                default:        return -1;
+                }
+                break;
+            case 'm':
+                switch( mod ) {
+                case mod_cas:   return EdKC_numMinus;
+                case mod_Cas:   return EdKC_c_numMinus;
+                case mod_cAs:   return EdKC_a_numMinus;
+                case mod_caS:   return EdKC_s_numMinus;
+                case mod_CaS:   return EdKC_cs_numMinus;
+                default:        return -1;
+                }
+                break;
+            case 'o':
+                switch( mod ) {
+                case mod_cas:   return EdKC_numSlash;
+                case mod_Cas:   return EdKC_c_numSlash;
+                case mod_cAs:   return EdKC_a_numSlash;
+                case mod_caS:   return EdKC_s_numSlash;
+                case mod_CaS:   return EdKC_cs_numSlash;
+                default:        return -1;
+                }
+                break;
+            case 'a':
+                if (!(mod & mod_ctrl))     { return EdKC_s_up;  }
+                else if ((mod & mod_ctrl)) { return EdKC_cs_up; }
+                else                       { return -1;         }
+                break;
+            case 'b':
+                if (!(mod & mod_ctrl))     { return EdKC_s_down;  }
+                else if ((mod & mod_ctrl)) { return EdKC_cs_down; }
+                else                       { return -1;           }
+                break;
+            case 'c':
+                if (!(mod & mod_ctrl))     { return EdKC_s_right;  }
+                else if ((mod & mod_ctrl)) { return EdKC_cs_right; }
+                else                       { return -1;            }
+                break;
+            case 'd':
+                if (!(mod & mod_ctrl))     { return EdKC_s_left;  }
+                else if ((mod & mod_ctrl)) { return EdKC_cs_left; }
+                else                       { return -1;           }
+                break;
+            case '$': mod |= mod_shift;  /* FALL THRU!!! */
+            case '~':
+                switch (ch1 - '0') {
+                default: return -1; break;
+                case 1:
+                    switch( mod ) {
+                    case mod_cas:   return EdKC_home;
+                    case mod_Cas:   return EdKC_c_home;   // IMPOSSIBLE
+                    case mod_cAs:   return EdKC_a_home;
+                    case mod_caS:   return EdKC_s_home;
+                    case mod_CaS:   return EdKC_cs_home;
+                    default:        return -1;
+                    }
+                    break;
+                case 2:
+                    switch( mod ) {
+                    case mod_cas:   return EdKC_ins;
+                    case mod_Cas:   return EdKC_c_ins;    // IMPOSSIBLE
+                    case mod_cAs:   return EdKC_a_ins;
+                    case mod_caS:   return EdKC_s_ins;
+                    case mod_CaS:   return EdKC_cs_ins;
+                    default:        return -1;
+                    }
+                    break;
+                case 3:
+                    switch( mod ) {
+                    case mod_cas:   return EdKC_del;
+                    case mod_Cas:   return EdKC_c_del;
+                    case mod_cAs:   return EdKC_a_del;
+                    case mod_caS:   return EdKC_s_del;
+                    case mod_CaS:   return -1;
+                    default:        return -1;
+                    }
+                    break;
+                case 4:
+                    switch( mod ) {
+                    case mod_cas:   return EdKC_end;
+                    case mod_Cas:   return EdKC_c_end;    // IMPOSSIBLE
+                    case mod_cAs:   return EdKC_a_end;
+                    case mod_caS:   return EdKC_s_end;
+                    case mod_CaS:   return EdKC_cs_end;
+                    default:        return -1;
+                    }
+                    break;
+                case 5:
+                    switch( mod ) {
+                    case mod_cas:   return EdKC_pgup;
+                    case mod_Cas:   return EdKC_c_pgup;   // IMPOSSIBLE
+                    case mod_cAs:   return EdKC_a_pgup;
+                    case mod_caS:   return EdKC_s_pgup;
+                    case mod_CaS:   return EdKC_cs_pgup;
+                    default:        return -1;
+                    }
+                    break;
+                case 6:
+                    switch( mod ) {
+                    case mod_cas:   return EdKC_pgdn;
+                    case mod_Cas:   return EdKC_c_pgdn;   // IMPOSSIBLE
+                    case mod_cAs:   return EdKC_a_pgdn;
+                    case mod_caS:   return EdKC_s_pgdn;
+                    case mod_CaS:   return EdKC_cs_pgdn;
+                    default:        return -1;
+                    }
+                    break;
+                case 7:
+                    switch( mod ) {
+                    case mod_cas:   return EdKC_home;
+                    case mod_Cas:   return EdKC_c_home;
+                    case mod_cAs:   return EdKC_a_home;   // IMPOSSIBLE
+                    case mod_caS:   return EdKC_s_home;
+                    case mod_CaS:   return EdKC_cs_home;
+                    default:        return -1;
+                    }
+                    break;
+                case 8:
+                    switch( mod ) {
+                    case mod_cas:   return EdKC_end;
+                    case mod_Cas:   return EdKC_c_end;
+                    case mod_cAs:   return EdKC_a_end;    // IMPOSSIBLE
+                    case mod_caS:   return EdKC_s_end;
+                    case mod_CaS:   return EdKC_cs_end;
+                    default:        return -1;
+                    }
+                    break;
+                }
+                break;
+            }
+      }
+   } else { // alt+...
+      if (ch == '\r' || ch == '\n') { return EdKC_a_enter; }
+      else if( ch == '\t' )         { return EdKC_a_tab;   }
+      else if( ch < ' '   )         { return -1;           } // alt + ctr + key;  unsupported by 'K'
+      else {
+         if     ( ch >= '0' && ch <= '9' ) { return EdKC_a_0 + (ch - '0'); }
+         else if( ch >= 'a' && ch <= 'z' ) { return EdKC_a_a + (ch - 'a'); }
+         else if( ch >= 'A' && ch <= 'Z' ) { return EdKC_a_a + (ch - 'A'); } // Alt-A == Alt-a
+         else if( ch == '\'' )             { return EdKC_a_TICK;           }
+         else if( ch == ','  )             { return EdKC_a_COMMA;          }
+         else if( ch == '-'  )             { return EdKC_a_MINUS;          }
+         else if( ch == '.'  )             { return EdKC_a_DOT;            }
+         else if( ch == '/'  )             { return EdKC_a_SLASH;          }
+         else if( ch == ';'  )             { return EdKC_a_SEMICOLON;      }
+         else if( ch == '='  )             { return EdKC_a_EQUAL;          }
+         else if( ch == '['  )             { return EdKC_a_LEFT_SQ;        }
+         else if( ch == '\\' )             { return EdKC_a_BACKSLASH;      }
+         else if( ch == ']'  )             { return EdKC_a_RIGHT_SQ;       }
+         else if( ch == '`'  )             { return EdKC_a_BACKTICK;       }
+         else if( ch == 127  )             { return EdKC_a_bksp;           }
+         else                              { return ch;                    }
+         }
+      }
+
+   return result;
+   }
