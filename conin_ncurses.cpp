@@ -208,8 +208,6 @@ STATIC_FXN int ConGetEscEvent() {
              result = EdKC_esc;
         }
     } else if (ch == '[' || ch == 'O') {
-        bool kbCtr = false;
-        bool kbSft = false;
         int ch1 = getch();
         int endch = '\0';
         int modch = '\0';
@@ -237,457 +235,288 @@ STATIC_FXN int ConGetEscEvent() {
                 ch1 = '\0';
             }
 
+            auto mod( 0 );  enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
             if (modch != '\0') {
-                int ctAlSh = ch1 - '1';
-                if (ctAlSh & 0x4) kbCtr = true;
-                if (ctAlSh & 0x2) kbAlt = true;
-                if (ctAlSh & 0x1) kbSft = true;
-                if (modch == 51) kbAlt = true;
-                if (modch == 53) kbCtr = true;
-                if (modch == 50) kbSft = true;
+                const int ctAlSh( ch1 - '1' );
+                if( (ctAlSh & 0x4) || modch == 53) { mod |= mod_ctrl;  }
+                if( (ctAlSh & 0x2) || modch == 51) { kbAlt = true;     }
+                if( (ctAlSh & 0x1) || modch == 50) { mod |= mod_shift; }
             }
-
+            if( kbAlt ) mod |= mod_alt;
+            enum { mod_cas= 0          ,
+                   mod_caS= mod_shift  ,
+                   mod_cAs= mod_alt    ,
+                   mod_Cas= mod_ctrl   ,
+                   mod_CaS= mod_ctrl | mod_shift,
+                 };
             switch (endch) {
-
-            case 'A':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_up;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_up;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_up;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_up;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_up;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'B':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_down;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_down;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_down;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_down;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_down;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'C':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_right;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_right;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_right;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_right;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_right;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'D':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_left;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_left;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_left;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_left;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_left;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'E':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_center;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_center;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_center;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_center;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_center;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'F':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_end;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_end;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_end;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_end;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_end;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'H':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_home;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_home;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_home;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_home;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_home;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'R':
-
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_f3;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_f3;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_f3;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_f3;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_f3;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'S':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_f4;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_f4;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_f4;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_f4;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_f4;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'j':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_numStar;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_numStar;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_numStar;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_numStar;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_numStar;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'k':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_numPlus;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_numPlus;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_numPlus;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_numPlus;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_numPlus;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'm':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_numMinus;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_numMinus;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_numMinus;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_numMinus;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_numMinus;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'o':
-                if (!kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_numSlash;
-                } else if (kbCtr && !kbAlt && !kbSft) {
-                    result = EdKC_c_numSlash;
-                } else if (!kbCtr && kbAlt && !kbSft) {
-                    result = EdKC_a_numSlash;
-                } else if (!kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_s_numSlash;
-                } else if (kbCtr && !kbAlt && kbSft) {
-                    result = EdKC_cs_numSlash;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-
-            case 'a':
-                if (!kbCtr) {
-                    result = EdKC_s_up;
-                } else if (kbCtr) {
-                    result = EdKC_cs_up;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'b':
-                if (!kbCtr) {
-                    result = EdKC_s_down;
-                } else if (kbCtr) {
-                    result = EdKC_cs_down;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'c':
-                if (!kbCtr) {
-                    result = EdKC_s_right;
-                } else if (kbCtr) {
-                    result = EdKC_cs_right;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case 'd':
-                if (!kbCtr) {
-                    result = EdKC_s_left;
-                } else if (kbCtr) {
-                    result = EdKC_cs_left;
-                } else {
-                    // unsupported by 'K'
-                    result = -1;
-                }
-                break;
-            case '$':
-                kbSft = true;
-            case '~':
-                switch (ch1 - '0') {
-                case 1:
-                    if (!kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_home;
-                    } else if (kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_c_home;
-                    } else if (!kbCtr && kbAlt && !kbSft) {
-                        result = EdKC_a_home;
-                    } else if (!kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_s_home;
-                    } else if (kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_cs_home;
-                    } else {
-                        // unsupported by 'K'
-                        result = -1;
-                    }
-                    break;
-                case 2:
-                    if (!kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_ins;
-                    } else if (kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_c_ins;
-                    } else if (!kbCtr && kbAlt && !kbSft) {
-                        result = EdKC_a_ins;
-                    } else if (!kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_s_ins;
-                    } else if (kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_cs_ins;
-                    } else {
-                        // unsupported by 'K'
-                        result = -1;
-                    }
-                    break;
-                case 3:
-                    if (!kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_del;
-                    } else if (kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_c_del;
-                    } else if (!kbCtr && kbAlt && !kbSft) {
-                        result = EdKC_a_del;
-                    } else if (!kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_s_del;
-                    } else if (kbCtr && !kbAlt && kbSft) {
-                        // unsupported by 'K'
-                        result = -1;
-                    } else {
-                        // unsupported by 'K'
-                        result = -1;
-                    }
-                    break;
-                case 4:
-                    if (!kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_end;
-                    } else if (kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_c_end;
-                    } else if (!kbCtr && kbAlt && !kbSft) {
-                        result = EdKC_a_end;
-                    } else if (!kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_s_end;
-                    } else if (kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_cs_end;
-                    } else {
-                        // unsupported by 'K'
-                        result = -1;
-                    }
-                    break;
-                case 5:
-                    if (!kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_pgup;
-                    } else if (kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_c_pgup;
-                    } else if (!kbCtr && kbAlt && !kbSft) {
-                        result = EdKC_a_pgup;
-                    } else if (!kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_s_pgup;
-                    } else if (kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_cs_pgup;
-                    } else {
-                        // unsupported by 'K'
-                        result = -1;
-                    }
-                    break;
-                case 6:
-                    if (!kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_pgdn;
-                    } else if (kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_c_pgdn;
-                    } else if (!kbCtr && kbAlt && !kbSft) {
-                        result = EdKC_a_pgdn;
-                    } else if (!kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_s_pgdn;
-                    } else if (kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_cs_pgdn;
-                    } else {
-                        // unsupported by 'K'
-                        result = -1;
-                    }
-                    break;
-                case 7:
-                    if (!kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_home;
-                    } else if (kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_c_home;
-                    } else if (!kbCtr && kbAlt && !kbSft) {
-                        result = EdKC_a_home;
-                    } else if (!kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_s_home;
-                    } else if (kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_cs_home;
-                    } else {
-                        // unsupported by 'K'
-                        result = -1;
-                    }
-                    break;
-                case 8:
-                    if (!kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_end;
-                    } else if (kbCtr && !kbAlt && !kbSft) {
-                        result = EdKC_c_end;
-                    } else if (!kbCtr && kbAlt && !kbSft) {
-                        result = EdKC_a_end;
-                    } else if (!kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_s_end;
-                    } else if (kbCtr && !kbAlt && kbSft) {
-                        result = EdKC_cs_end;
-                    } else {
-                        // unsupported by 'K'
-                        result = -1;
-                    }
-                    break;
-                default:
-                    result = -1;
-                    break;
-                }
-                break;
-            default:
-                result = -1;
-                break;
-            }
+               default: result = -1; break;
+               case 'A':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_up;     break;
+                   case mod_Cas:   result = EdKC_c_up;   break;
+                   case mod_cAs:   result = EdKC_a_up;   break;
+                   case mod_caS:   result = EdKC_s_up;   break;
+                   case mod_CaS:   result = EdKC_cs_up;  break;
+                   default:        result = -1;          break;
+                   }
+                   break;
+               case 'B':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_down;     break;
+                   case mod_Cas:   result = EdKC_c_down;   break;
+                   case mod_cAs:   result = EdKC_a_down;   break;
+                   case mod_caS:   result = EdKC_s_down;   break;
+                   case mod_CaS:   result = EdKC_cs_down;  break;
+                   default:        result = -1;            break;
+                   }
+                   break;
+               case 'C':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_right;    break;
+                   case mod_Cas:   result = EdKC_c_right;  break;
+                   case mod_cAs:   result = EdKC_a_right;  break;
+                   case mod_caS:   result = EdKC_s_right;  break;
+                   case mod_CaS:   result = EdKC_cs_right; break;
+                   default:        result = -1;            break;
+                   }
+                   break;
+               case 'D':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_left;      break;
+                   case mod_Cas:   result = EdKC_c_left;    break;
+                   case mod_cAs:   result = EdKC_a_left;    break;
+                   case mod_caS:   result = EdKC_s_left;    break;
+                   case mod_CaS:   result = EdKC_cs_left;   break;
+                   default:        result = -1;             break;
+                   }
+                   break;
+               case 'E':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_center;    break;
+                   case mod_Cas:   result = EdKC_c_center;  break; // IMPOSSIBLE
+                   case mod_cAs:   result = EdKC_a_center;  break; // IMPOSSIBLE
+                   case mod_caS:   result = EdKC_s_center;  break;
+                   case mod_CaS:   result = EdKC_cs_center; break;
+                   default:        result = -1;             break;
+                   }
+                   break;
+               case 'F':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_end;       break;
+                   case mod_Cas:   result = EdKC_c_end;     break; // IMPOSSIBLE
+                   case mod_cAs:   result = EdKC_a_end;     break;
+                   case mod_caS:   result = EdKC_s_end;     break;
+                   case mod_CaS:   result = EdKC_cs_end;    break;
+                   default:        result = -1;             break;
+                   }
+                   break;
+               case 'H':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_home;      break;
+                   case mod_Cas:   result = EdKC_c_home;    break; // IMPOSSIBLE
+                   case mod_cAs:   result = EdKC_a_home;    break;
+                   case mod_caS:   result = EdKC_s_home;    break;
+                   case mod_CaS:   result = EdKC_cs_home;   break;
+                   default:        result = -1;             break;
+                   }
+                   break;
+               case 'R':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_f3;        break;
+                   case mod_Cas:   result = EdKC_c_f3;      break;
+                   case mod_cAs:   result = EdKC_a_f3;      break;
+                   case mod_caS:   result = EdKC_s_f3;      break;
+                   case mod_CaS:   result = EdKC_cs_f3;     break;
+                   default:        result = -1;             break;
+                   }
+                   break;
+               case 'S':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_f4;        break;
+                   case mod_Cas:   result = EdKC_c_f4;      break;
+                   case mod_cAs:   result = EdKC_a_f4;      break;
+                   case mod_caS:   result = EdKC_s_f4;      break;
+                   case mod_CaS:   result = EdKC_cs_f4;     break;
+                   default:        result = -1;             break;
+                   }
+                   break;
+               case 'j':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_numStar;    break;
+                   case mod_Cas:   result = EdKC_c_numStar;  break;
+                   case mod_cAs:   result = EdKC_a_numStar;  break;
+                   case mod_caS:   result = EdKC_s_numStar;  break;
+                   case mod_CaS:   result = EdKC_cs_numStar; break;
+                   default:        result = -1;              break;
+                   }
+                   break;
+               case 'k':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_numPlus;    break;
+                   case mod_Cas:   result = EdKC_c_numPlus;  break;
+                   case mod_cAs:   result = EdKC_a_numPlus;  break;
+                   case mod_caS:   result = EdKC_s_numPlus;  break;
+                   case mod_CaS:   result = EdKC_cs_numPlus; break;
+                   default:        result = -1;              break;
+                   }
+                   break;
+               case 'm':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_numMinus;    break;
+                   case mod_Cas:   result = EdKC_c_numMinus;  break;
+                   case mod_cAs:   result = EdKC_a_numMinus;  break;
+                   case mod_caS:   result = EdKC_s_numMinus;  break;
+                   case mod_CaS:   result = EdKC_cs_numMinus; break;
+                   default:        result = -1;               break;
+                   }
+                   break;
+               case 'o':
+                   switch( mod ) {
+                   case mod_cas:   result = EdKC_numSlash;    break;
+                   case mod_Cas:   result = EdKC_c_numSlash;  break;
+                   case mod_cAs:   result = EdKC_a_numSlash;  break;
+                   case mod_caS:   result = EdKC_s_numSlash;  break;
+                   case mod_CaS:   result = EdKC_cs_numSlash; break;
+                   default:        result = -1;               break;
+                   }
+                   break;
+               case 'a':
+                   if (!(mod & mod_ctrl))       { result = EdKC_s_up;
+                   } else if ((mod & mod_ctrl)) { result = EdKC_cs_up;
+                   } else                       { result = -1;
+                   }
+                   break;
+               case 'b':
+                   if (!(mod & mod_ctrl))       { result = EdKC_s_down;
+                   } else if ((mod & mod_ctrl)) { result = EdKC_cs_down;
+                   } else                       { result = -1;
+                   }
+                   break;
+               case 'c':
+                   if (!(mod & mod_ctrl))       { result = EdKC_s_right;
+                   } else if ((mod & mod_ctrl)) { result = EdKC_cs_right;
+                   } else                       { result = -1;
+                   }
+                   break;
+               case 'd':
+                   if (!(mod & mod_ctrl))       { result = EdKC_s_left;
+                   } else if ((mod & mod_ctrl)) { result = EdKC_cs_left;
+                   } else                       { result = -1;
+                   }
+                   break;
+               case '$': mod |= mod_shift;  /* FALL THRU!!! */
+               case '~':
+                   switch (ch1 - '0') {
+                   default: result = -1; break;
+                   case 1:
+                       switch( mod ) {
+                       case mod_cas:   result = EdKC_home;    break;
+                       case mod_Cas:   result = EdKC_c_home;  break; // IMPOSSIBLE
+                       case mod_cAs:   result = EdKC_a_home;  break;
+                       case mod_caS:   result = EdKC_s_home;  break;
+                       case mod_CaS:   result = EdKC_cs_home; break;
+                       default:        result = -1;           break;
+                       }
+                       break;
+                   case 2:
+                       switch( mod ) {
+                       case mod_cas:   result = EdKC_ins;     break;
+                       case mod_Cas:   result = EdKC_c_ins;   break; // IMPOSSIBLE
+                       case mod_cAs:   result = EdKC_a_ins;   break;
+                       case mod_caS:   result = EdKC_s_ins;   break;
+                       case mod_CaS:   result = EdKC_cs_ins;  break;
+                       default:        result = -1;           break;
+                       }
+                       break;
+                   case 3:
+                       switch( mod ) {
+                       case mod_cas:   result = EdKC_del;     break;
+                       case mod_Cas:   result = EdKC_c_del;   break;
+                       case mod_cAs:   result = EdKC_a_del;   break;
+                       case mod_caS:   result = EdKC_s_del;   break;
+                       case mod_CaS:   result = -1;           break;
+                       default:        result = -1;           break;
+                       }
+                       break;
+                   case 4:
+                       switch( mod ) {
+                       case mod_cas:   result = EdKC_end;     break;
+                       case mod_Cas:   result = EdKC_c_end;   break; // IMPOSSIBLE
+                       case mod_cAs:   result = EdKC_a_end;   break;
+                       case mod_caS:   result = EdKC_s_end;   break;
+                       case mod_CaS:   result = EdKC_cs_end;  break;
+                       default:        result = -1;           break;
+                       }
+                       break;
+                   case 5:
+                       switch( mod ) {
+                       case mod_cas:   result = EdKC_pgup;    break;
+                       case mod_Cas:   result = EdKC_c_pgup;  break; // IMPOSSIBLE
+                       case mod_cAs:   result = EdKC_a_pgup;  break;
+                       case mod_caS:   result = EdKC_s_pgup;  break;
+                       case mod_CaS:   result = EdKC_cs_pgup; break;
+                       default:        result = -1;           break;
+                       }
+                       break;
+                   case 6:
+                       switch( mod ) {
+                       case mod_cas:   result = EdKC_pgdn;    break;
+                       case mod_Cas:   result = EdKC_c_pgdn;  break; // IMPOSSIBLE
+                       case mod_cAs:   result = EdKC_a_pgdn;  break;
+                       case mod_caS:   result = EdKC_s_pgdn;  break;
+                       case mod_CaS:   result = EdKC_cs_pgdn; break;
+                       default:        result = -1;           break;
+                       }
+                       break;
+                   case 7:
+                       switch( mod ) {
+                       case mod_cas:   result = EdKC_home;    break;
+                       case mod_Cas:   result = EdKC_c_home;  break;
+                       case mod_cAs:   result = EdKC_a_home;  break; // IMPOSSIBLE
+                       case mod_caS:   result = EdKC_s_home;  break;
+                       case mod_CaS:   result = EdKC_cs_home; break;
+                       default:        result = -1;           break;
+                       }
+                       break;
+                   case 8:
+                       switch( mod ) {
+                       case mod_cas:   result = EdKC_end;     break;
+                       case mod_Cas:   result = EdKC_c_end;   break;
+                       case mod_cAs:   result = EdKC_a_end;   break; // IMPOSSIBLE
+                       case mod_caS:   result = EdKC_s_end;   break;
+                       case mod_CaS:   result = EdKC_cs_end;  break;
+                       default:        result = -1;           break;
+                       }
+                       break;
+                   }
+                   break;
+               }
         }
     } else {
-
-        if (ch == '\r' || ch == '\n') {
-            result = EdKC_a_enter;
-        } else if (ch == '\t') {
-            result = EdKC_a_tab;
-        } else if (ch < 32) {
-            // alt + ctr + key
-            // seems to be unsupported by 'K'
-            result = -1;
-        } else {
-            // alt+numbers
-            if (47 < ch && ch < 58) {
-                result = EdKC_a_0 + (ch - 48);
-            } else if ((ch > 64 && ch < 91) || (ch > 96 && ch < 123)) {
-                if (ch > 64 && ch < 91) {
-                    /* Alt-A == Alt-a*/
-                    ch += 32;
+        if (ch == '\r' || ch == '\n') {  result = EdKC_a_enter;
+        } else if (ch == '\t') {         result = EdKC_a_tab;
+        } else if (ch < 32) {            result = -1;  // alt + ctr + key;  unsupported by 'K'
+        } else { // alt+numbers
+            if( ch >= '0' && ch <= '9' ) { result = EdKC_a_0 + (ch - '0');
+            } else if( (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
+                if( ch >= 'A' && ch <= 'Z' ) {
+                    ch += 'a' - 'A';  // Alt-A == Alt-a
                 }
-                result = EdKC_a_a + (ch - 97);
-            } else if (ch == 39) {
-                result = EdKC_a_TICK;
-            } else if (ch == 44) {
-                result = EdKC_a_COMMA;
-            } else if (ch == 45) {
-                result = EdKC_a_MINUS;
-            } else if (ch == 46) {
-                result = EdKC_a_DOT;
-            } else if (ch == 47) {
-                result = EdKC_a_SLASH;
-            } else if (ch == 59) {
-                result = EdKC_a_SEMICOLON;
-            } else if (ch == 61) {
-                result = EdKC_a_EQUAL;
-            } else if (ch == 91) {
-                result = EdKC_a_LEFT_SQ;
-            } else if (ch == 92) {
-                result = EdKC_a_BACKSLASH;
-            } else if (ch == 93) {
-                result = EdKC_a_RIGHT_SQ;
-            } else if (ch == 96) {
-                result = EdKC_a_BACKTICK;
-            } else if (ch == 127) {
-                result = EdKC_a_bksp;
-            } else {
-                result = ch;
+                result = EdKC_a_a + (ch - 'a');
+            } else if (ch == '\'') { result = EdKC_a_TICK;
+            } else if (ch == ',' ) { result = EdKC_a_COMMA;
+            } else if (ch == '-' ) { result = EdKC_a_MINUS;
+            } else if (ch == '.' ) { result = EdKC_a_DOT;
+            } else if (ch == '/' ) { result = EdKC_a_SLASH;
+            } else if (ch == ';' ) { result = EdKC_a_SEMICOLON;
+            } else if (ch == '=' ) { result = EdKC_a_EQUAL;
+            } else if (ch == '[' ) { result = EdKC_a_LEFT_SQ;
+            } else if (ch == '\\') { result = EdKC_a_BACKSLASH;
+            } else if (ch == ']' ) { result = EdKC_a_RIGHT_SQ;
+            } else if (ch == '`' ) { result = EdKC_a_BACKTICK;
+            } else if (ch == 127 ) { result = EdKC_a_bksp;
+            } else                 { result = ch;
             }
         }
     }

@@ -141,7 +141,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
       return false;
       }
 
-   start_color();  DBG( "can_change_color() = %d\nCOLORS = %d\nCOLOR_PAIRS = %d", can_change_color(), COLORS, COLOR_PAIRS );
+   start_color();  DBG( "curses_version()=\"%s\"\ncan_change_color() = %d\nCOLORS = %d\nCOLOR_PAIRS = %d", curses_version(), can_change_color(), COLORS, COLOR_PAIRS );
    noecho();
    nonl();
    keypad(stdscr, TRUE);
