@@ -55,10 +55,10 @@ include LUA_OBJS.mik
 # LIB_O=  lauxlib.o lbaselib.o ldblib.o liolib.o lmathlib.o loslib.o ltablib.o \
 #         lstrlib.o loadlib.o linit.o
 
-LUA_T=	lua
+LUA_T=	lua$(EXE_EXT)
 LUA_O=	lua.o
 
-LUAC_T=	luac
+LUAC_T=	luac$(EXE_EXT)
 LUAC_O=	luac.o print.o
 
 ALL_O= $(CORE_O) $(LIB_O) $(LUA_O) $(LUAC_O)

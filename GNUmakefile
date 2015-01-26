@@ -66,10 +66,12 @@ export SHELL # inherited by child (recursive) makes such as that which builds $(
 CMDTBL_ARG=win32
 # dflt $(RM) for MinGW is rm -f
 RM= del /F /Q
+RM= rm -f
 export RM
 MV = move
 export MV
 EXE_EXT := .exe
+export EXE_EXT
 DLL_EXT := .dll
 OS_LIBS := -lpsapi
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
