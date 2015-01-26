@@ -38,6 +38,7 @@
 
       files:ctrl+q
       exit:ctrl+4
+      qreplace:ctrl+5  # this key happens (20150126) to (erroneously) map to ctrl+] in ncurses
       longline:alt+\
       savescreen:ctrl+k
       #ws:=arg "wordchars:nonwhite" assign
