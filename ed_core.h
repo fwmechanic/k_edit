@@ -704,6 +704,7 @@ struct CMD {             // function definition entry
    bool     NameMatch( PCChar str ) const { return Stricmp( str, d_name ) == 0; }
 
    PCChar   MacroText()             const { return PCChar( d_argData.pszMacroDef ); }
+   stref    MacroStref()            const { return PCChar( d_argData.pszMacroDef ); }
 
    bool     BuildExecute()          const;
 
