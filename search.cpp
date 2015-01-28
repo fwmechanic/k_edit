@@ -749,6 +749,8 @@ STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, const stref &sr, COL xCol
 // CharWalkRect is called by PBalFindMatching, PMword, and
 // GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
 STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fWalkFwd, CharWalker &walker ) {
+   0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
+
    const auto tw( pFBuf->TabWidth() );
    #define SETUP_LINE_TEXT                                      \
            if( ExecutionHaltRequested() ) {                     \
@@ -1405,43 +1407,36 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
          }
       }
    else {
-      Rect rgnSearch( true );
-
       switch( d_argType ) {
-       default:        break;
-       case NOARG:     break;
-       case NULLARG:   break;
+       default:
+       case NOARG:   { Rect rn( true ); CharWalkRect( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), true, mrcw ); } break;
+       case NULLARG: { Rect rn( true ); CharWalkRect( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), true, mrcw ); } break;
 
-       case LINEARG:   rgnSearch.flMin.col = 0;
-                       rgnSearch.flMax.col = COL_MAX;
-                       rgnSearch.flMin.lin = d_linearg.yMin;
-                       rgnSearch.flMax.lin = d_linearg.yMax;
-                       break;
+       case LINEARG: { Rect rn;
+                       rn.flMin.lin = d_linearg.yMin;  rn.flMin.col = 0;
+                       rn.flMax.lin = d_linearg.yMax;  rn.flMax.col = COL_MAX;
+                       CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), true, mrcw );
+                     } break;
 
        case STREAMARG: if( d_streamarg.flMin.lin == d_streamarg.flMax.lin ) {
-                          rgnSearch = d_streamarg;
+                          CharWalkRect( g_CurFBuf(), d_streamarg, Point( d_streamarg.flMin, 0, -1 ), true, mrcw );
                           }
-                       else {
-                          rgnSearch.flMin.col = 0;
-                          rgnSearch.flMax.col = COL_MAX;
-                          rgnSearch.flMin.lin = d_streamarg.flMin.lin;
-                          rgnSearch.flMax.lin = d_streamarg.flMax.lin - 1;
+                       else { Rect rn;
+                          rn.flMin.lin = d_streamarg.flMin.lin;      rn.flMin.col = 0;
+                          rn.flMax.lin = d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
+                          CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin.lin, d_streamarg.flMin.col - 1 ), true, mrcw );
 
-                          CharWalkRect( g_CurFBuf(), rgnSearch, Point( rgnSearch.flMin.lin, d_streamarg.flMin.col - 1 ), true, mrcw );
-
-                          rgnSearch.flMax.col = d_streamarg.flMax.col;
-                          rgnSearch.flMax.lin++;
-                          rgnSearch.flMin.lin = rgnSearch.flMax.lin;
+                          rn.flMax.col = d_streamarg.flMax.col;
+                          rn.flMax.lin++;
+                          rn.flMin.lin = rn.flMax.lin;
+                          CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), true, mrcw );
                           }
                        break;
 
-       case BOXARG:    rgnSearch = d_boxarg;
+       case BOXARG:    CharWalkRect( g_CurFBuf(), d_boxarg, Point( d_boxarg.flMin, 0, -1 ), true, mrcw );
                        break;
        }
 
-      0 && DBG( "%s: rgnSearch=LINEs(%d-%d) COLs(%d,%d)", __func__, rgnSearch.flMin.lin, rgnSearch.flMax.lin, rgnSearch.flMin.col, rgnSearch.flMax.col );
-
-      CharWalkRect( g_CurFBuf(), rgnSearch, Point( rgnSearch.flMin, 0, -1 ), true, mrcw );
 
       Msg( "%d of %d occurrences replaced%s"
          , mrcw.d_iReplacementsMade
