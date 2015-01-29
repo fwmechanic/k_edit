@@ -128,8 +128,7 @@ class LineColorsClipped {
    void PutColor( int col, int len, int color ) { PutColorRaw( col, len, d_view.ColorIdx2Attr( color ) ); }
    };
 
-
-#if 1
+#if VARIABLE_WINBORDER
 
 STATIC_CONST struct
    { // H -> both horiz edges, V -> both vertical edges, T -> top edge, B -> bottom edge, L -> left edge, R -> right edge
@@ -162,7 +161,7 @@ int Max_wbc_idx() { return ELEMENTS(wbc)-1; }
 
 enum WinBorderChars
    { // H -> both horiz edges, V -> both vertical edges, T -> top edge, B -> bottom edge, L -> left edge, R -> right edge
-#define    LINEDRAW_WIN  0
+#define    LINEDRAW_WIN  8
 #if    (0==LINEDRAW_WIN)
                          HV_=U8('≈'), LV_=U8('¥'), RV_=U8('√'), _V_=U8('≥'), H__=U8('ƒ'), HT_=U8('¡'), HB_=U8('¬'),  // "⁄ƒø¿Ÿ≥√¥¬¡≈",
 #elif  (1==LINEDRAW_WIN)
@@ -179,6 +178,8 @@ enum WinBorderChars
                          HV_=U8('≤'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "≤≤≤≤≤≤≤≤≤≤≤"
 #elif  (7==LINEDRAW_WIN)
                          HV_=U8('€'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "€€€€€€€€€€€"
+#elif  (8==LINEDRAW_WIN)
+                         HV_=U8(' '), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "           "
 #endif
 #undef     LINEDRAW_WIN
    };

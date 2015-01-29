@@ -251,6 +251,7 @@ STATIC_FXN bool swinVAR_INT( const SWI *pSwi, stref newValue ) {
    return true;
    }
 
+#if VARIABLE_WINBORDER
 bool swinWBC_INT( const SWI *pSwi, stref newValue ) {
    const auto newVal( StrToInt_variable_base( newValue, 10 ) );
    if( newVal == -1 )
@@ -265,7 +266,7 @@ bool swinWBC_INT( const SWI *pSwi, stref newValue ) {
    DispNeedsRedrawTotal();
    return true;
    }
-
+#endif
 
 STATIC_FXN bool swinFXN_BOOL( const SWI *pSwi, stref newValue ) {
    if( pSwi->act.pFunc( newValue ) )
@@ -346,7 +347,9 @@ STATIC_CONST SWI s_SwiTable[] = {
  #endif
  { "viewonly"       , Var2TPfx( g_fViewOnly             ), swinVAR_BOOL, swidBool       _AHELP( "files subsequently opened will be editable (no) or no-edit (yes)" ) },
  { "vscroll"        , {         swixVscroll             }, swinFXN_BOOL, swidVscroll    _AHELP( "the number of lines scrolled when the mlines and plines functions move the cursor out of the window" ) },
+#if VARIABLE_WINBORDER
  { "wbcidx"         , Var2TPfx( g_swiWBCidx             ), swinWBC_INT , swidInt        _AHELP( "select window border charset (0..7)" ) },
+#endif
  { "wordchars"      , {         swixWordchars           }, swinFXN_BOOL, swidWordchars  _AHELP( "the set of valid word-component characters; [_a-zA-Z0-9] are always members" ) },
  { "wordwrap"       , Var2TPfx( g_fWordwrap             ), swinVAR_BOOL, swidBool       _AHELP( "the editor performs automatic word-wrapping as you type past rmargin" ) },
  { "wucminlen"      , Var2TPfx( g_iWucMinLen            ), swinVAR_INT , swidInt        _AHELP( "minimum length of a word for it to qualify for 'word under the cursor' status" ) },

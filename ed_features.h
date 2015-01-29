@@ -88,3 +88,9 @@
 #endif
 
 //-----------------------------------------------------------------------------
+
+#if defined(_WIN32)
+#define  VARIABLE_WINBORDER  1
+#else
+#define  VARIABLE_WINBORDER  0
+#endif
