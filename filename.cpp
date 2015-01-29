@@ -59,6 +59,13 @@ stref Path::RefExt( stref src ) { // a.k.a. IdxOfFnm()
    return fx.substr( idxDot );
    }
 
+bool Path::IsDot( stref str ) { // truly useless!
+   return str ==                      "."
+       || str.ends_with( PATH_SEP_STR "."               )
+       || str.ends_with( PATH_SEP_STR "."  PATH_SEP_STR )
+       ;
+   }
+
 bool Path::IsDotOrDotDot( stref str ) {
    return str ==                      "."
        || str ==                      ".."

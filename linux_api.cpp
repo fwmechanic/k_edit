@@ -64,7 +64,7 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DEBUG_FXN = 0 };
 std::vector<std::string> glob( const std::string& pat ) { // http://stackoverflow.com/questions/8401777/simple-glob-in-c-on-unix-system
    using namespace std;
    glob_t glob_result;
-   glob( pat.c_str(), GLOB_TILDE, nullptr, &glob_result );
+   glob( pat.c_str(), GLOB_TILDE_CHECK | GLOB_MARK | GLOB_PERIOD, nullptr, &glob_result );
    vector<string> ret;
    for( auto i=0u ; i < glob_result.gl_pathc ; ++i ) {
       ret.push_back( string( glob_result.gl_pathv[i] ) );
@@ -79,7 +79,7 @@ STIL bool KeepMatch_( const WildCardMatchMode want, const struct stat &sbuf, str
    const auto fIsDir ( ToBOOL(sbuf.st_mode & S_IFDIR) );
    const auto fIsFile( !fIsDir && (sbuf.st_mode & (S_IFREG | S_IFLNK)) );
 
-   if( fDirOk  && fIsDir  ) return !Path::IsDotOrDotDot( name );
+   if( fDirOk  && fIsDir  ) return !Path::IsDot( name );
    if( fFileOk && fIsFile ) return true;
    return                          false;
    }
@@ -87,6 +87,7 @@ STIL bool KeepMatch_( const WildCardMatchMode want, const struct stat &sbuf, str
 bool DirMatches::KeepMatch() {
    const auto name( (*d_globsIt).c_str() );
    if( stat( name, &d_sbuf ) != 0 ) {
+      0 && DBG( "stat FAILED: '%s'", name );
       return false;
       }
 
@@ -117,8 +118,8 @@ const Path::str_t DirMatches::GetNext() {
       return Path::str_t("");
 
    d_buf = *d_globsIt++;
-   if( ToBOOL(d_sbuf.st_mode & S_IFDIR) )
-      d_buf.append( PATH_SEP_STR );
+   // if( ToBOOL(d_sbuf.st_mode & S_IFDIR) ) // GLOB_MARK does this for us
+   //    d_buf.append( PATH_SEP_STR );
 
    0 && DBG( "DirMatches::GetNext: '%s' (%X)", d_buf.c_str(), d_sbuf.st_mode );
    return d_buf;

@@ -1534,7 +1534,7 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       Path::str_t fbuf;
       while( wcg.VGetNextName( fbuf ) ) {
          const auto chars( fbuf.length() );  ED && DBG( "wcg=%s", fbuf.c_str() );
-         if( chars > 2 && strcmp( fbuf.c_str()+chars-2, PATH_SEP_STR "." ) == 0 )
+         if( Path::IsDot( fbuf ) )
             continue; // drop the meaningless "." entry:
 
          InsFnm( fb, tmp, fbuf.c_str(), fSorted );

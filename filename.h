@@ -52,6 +52,7 @@ namespace Path {
    PCChar STIL  WildcardFnmChars()    { return "*?"; }
    PCChar STIL  EnvSepStr()           { return ";"; }
    extern bool  IsLegalFnm   ( stref name );
+   extern bool  IsDot        ( stref str );
    extern bool  IsDotOrDotDot( stref str );
 
    extern bool  SetCwdOk        ( PCChar dnm );
