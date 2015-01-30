@@ -1989,8 +1989,8 @@ void View::HiliteAddins_Init() {
          const auto commDelim( pFES->d_eolCommentDelim );
          const auto hasEolComment( 0 != commDelim[0] );
                auto rl0( d_pFBuf->PeekRawLine( 0 ) );
-         rmv_trail_blanks( rl0 ); sridx ix;
-         const auto shebang( rl0.starts_with( "#!/" ) && ((ix=rl0.find_last_of( "/" )) > 2) && ix != stref::npos ? rl0.substr( ix+1 ) : "" ); 0 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
+         rmv_trail_blanks( rl0 ); sridx ix, iy;
+         const auto shebang( rl0.starts_with( "#!" ) && ((ix=rl0.find_last_of( "/" )) > 2) && ix != stref::npos && (iy=FirstBlankOrEnd( rl0, ix )) ? rl0.substr( ix+1, iy - ix+1 ) : "" ); 0 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
          const auto srNm( d_pFBuf->Namesr() );
          const auto srFnm( Path::RefFnm( srNm ) );
          const auto isMakefile(   Path::endsWith( srFnm, "makefile" )
@@ -2008,8 +2008,7 @@ void View::HiliteAddins_Init() {
          if( isClang                  )    { InsertAddinLast( new HiliteAddin_CPPcond_Hilite  ( this ) );
                                              InsertAddinLast( new HiliteAddin_C_Comment       ( this ) ); }
          else if( LANG_EQ( "Lua" )    )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
-         else if(  isMakefile
-                || shebang=="bash"
+         else if(  isMakefile || shebang=="sh"||shebang=="bash"||shebang=="perl"||shebang=="python"
                 || LANG_EQ( "Python" )
                 || LANG_EQ( "Perl" )  )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
