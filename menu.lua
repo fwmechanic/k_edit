@@ -50,7 +50,7 @@ if isLinux then
    ulc, urc = " ", " "
    llc, lrc = " ", " "
    vert = " "
-   chevr, chevl = "  ", "  "
+   chevr, chevl = "> ", " <"
    end
 
 local MAX_DISP_COLS = 1024
