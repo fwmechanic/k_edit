@@ -27,6 +27,8 @@ local function FgBg( fg, bg ) return _bin.bitor( _bin.shiftl(bg,4), fg ) end
 
 local Blk=0 Blu=1 Grn=2 Cyn=3 Red=4 Pnk=5 Brn=6 LGry=7 DGry=8 LBlu=9 LGrn=0xA LCyn=0xB LRd=0xC LPnk=0xD Yel=0xE Wht=0xF
 
+local isLinux = _dir.dirsep_os() == "/"
+
 -- Default menu colors:
 
 local mbg = Pnk
@@ -37,8 +39,20 @@ local mbg = Pnk
 -- local color_popup = { frame=FgBg(Wht,mbg), header=FgBg(Blk,LGry), normal=FgBg(Wht,mbg), selected=FgBg(Blk,Yel) } -- long-time favorite
    local color_popup = { frame=FgBg(Wht,Grn), header=FgBg(Wht,Red ), normal=FgBg(Wht,Grn), selected=FgBg(Wht,LBlu) } -- for a change, Christmas!
 
-
 local chHbar = "Í"
+local ulc, urc = "É", "»"
+local llc, lrc = "È", "¼"
+local vert = "º"
+local chevr, chevl = "¯ ", " ®"
+
+if isLinux then
+   chHbar = " "
+   ulc, urc = " ", " "
+   llc, lrc = " ", " "
+   vert = " "
+   chevr, chevl = "  ", "  "
+   end
+
 local MAX_DISP_COLS = 1024
 local bar  = chHbar:rep( MAX_DISP_COLS )
 local spcs =  (" "):rep( MAX_DISP_COLS )
@@ -53,7 +67,7 @@ local function vid_wrYX(str,yLine,xCol,color) -- the key that unlocks pandora's 
 
 local function prepTitle( str, len, fillch )
    str = str or ""
-   local pre,post = "É", "»"
+   local pre,post = ulc, urc
    if #str < len then
       pre  = pre .. fillch:rep( int((len - #str)/2) )
       post = fillch:rep( int((len - #str)/2) + int((len - #str)%2) ) .. post
@@ -153,9 +167,9 @@ function MenuProto_:frame()
       vid_wrYX( ac.title   , ac.minY , ac.minX+#ac.titPre           , color_popup.header )
       vid_wrYX( ac.titPost , ac.minY , ac.minX+#ac.titPre+#ac.title , color )
       end
-   local hfrm = "º" .. spcs:sub(1,ac.maxlen) .. "º"
+   local hfrm = vert .. spcs:sub(1,ac.maxlen) .. vert
    for curY = ac.minY + 1, ac.minY + ac.numVisibleChoices do  vid_wrYX( hfrm, curY, ac.minX, color )  end
-   vid_wrYX(    "È" .. bar:sub(1,ac.maxlen)  .. "¼", ac.minY + ac.numVisibleChoices + 1, ac.minX, color )
+   vid_wrYX(    llc .. bar:sub(1,ac.maxlen)  .. lrc, ac.minY + ac.numVisibleChoices + 1, ac.minX, color )
    end
 
 
@@ -164,7 +178,7 @@ function MenuProto_:update( curChoice )
    local curY = ac.minY + 1
    for ix = ac.minVisibleChoice, ac.minVisibleChoice + ac.numVisibleChoices - 1 do
       local color, ls, rs = color_popup.normal, "  ", "  "
-      if ix == curChoice then color = color_popup.selected  ls,rs = "¯ ", " ®" end
+      if ix == curChoice then color = color_popup.selected  ls,rs = chevr, chevl end
       vid_wrYX( ls..self.paddedChoices[ ix ]..rs, curY, ac.minX+1, color )
       curY = curY + 1
       end
