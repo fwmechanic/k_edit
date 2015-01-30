@@ -66,14 +66,15 @@ bool Path::IsDot( stref str ) { // truly useless!
        ;
    }
 
-bool Path::IsDotOrDotDot( stref str ) {
-   return str ==                      "."
-       || str ==                      ".."
-       || str.ends_with( PATH_SEP_STR "."               )
-       || str.ends_with( PATH_SEP_STR "."  PATH_SEP_STR )
+bool Path::IsDotDot( stref str ) {
+   return str ==                      ".."
        || str.ends_with( PATH_SEP_STR ".."              )
        || str.ends_with( PATH_SEP_STR ".." PATH_SEP_STR )
        ;
+   }
+
+bool Path::IsDotOrDotDot( stref str ) {
+   return IsDot( str ) || IsDotDot( str );
    }
 
 bool Path::eq( stref name1, stref name2 ) {
@@ -82,6 +83,19 @@ bool Path::eq( stref name1, stref name2 ) {
       }
    for( str_t::size_type ix( 0 ); ix < name1.length() ; ++ix ) {
       if( !PathChEq( name1[ix], name2[ix] ) ) {
+         return false;
+         }
+      }
+   return true;
+   }
+
+bool Path::endsWith( stref haystack, stref needle ) {
+   if( haystack.length() < needle.length() ) {
+      return false;
+      }
+   auto hit( haystack.crbegin() );
+   for( auto nit(  needle.crbegin() ) ; nit != needle.crend() ; ++nit, ++hit ) {
+      if( !PathChEq( *nit, *hit ) ) {
          return false;
          }
       }

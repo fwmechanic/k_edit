@@ -53,6 +53,7 @@ namespace Path {
    PCChar STIL  EnvSepStr()           { return ";"; }
    extern bool  IsLegalFnm   ( stref name );
    extern bool  IsDot        ( stref str );
+   extern bool  IsDotDot     ( stref str );
    extern bool  IsDotOrDotDot( stref str );
 
    extern bool  SetCwdOk        ( PCChar dnm );
@@ -79,6 +80,7 @@ namespace Path {
 #endif
       }
    extern bool eq( stref name1, stref name2 ); // with appropriate case-sensitivity
+   extern bool endsWith( stref haystack, stref needle ); // true if haystack ends with needle, using PathChEq
    str_t::size_type CommonPrefixLen( stref s1, stref s2 );
 
    extern char  DelimChar( PCChar fnm );

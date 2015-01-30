@@ -1063,6 +1063,7 @@ public:
    bool           FnmIsDiskWritable() const { return d_fFnmDiskWritable; }
    PCChar         Name() const { return d_filename.c_str(); }
    const Path::str_t &Namestr() const { return d_filename; }
+   stref              Namesr() const { return stref( d_filename.data(), d_filename.length() ); }
 
    PChar          UserName( PChar dest, size_t destSize ) const;
    int            UserNameLen() const {
