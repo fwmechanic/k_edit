@@ -633,7 +633,7 @@ struct CppCondEntry_t {
 
 
 STATIC_FXN cppc IsCppConditional( stref src, int *pxMin ) { // *pxMin indexes into src[] which is RAW line text
-   const auto o1( FirstNonBlankOrEnd( src, 0      ) );  if( o1 >= src.length() || !('#' == src[o1] || '%' == src[o1] || '!' == src[o1]) ) return cppcNone;
+   const auto o1( FirstNonBlankOrEnd( src, 0      ) );  if( o1 >= src.length() || !('#' == src[o1]) ) return cppcNone;
    const auto o2( FirstNonBlankOrEnd( src, o1 + 1 ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
    const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
    STATIC_CONST CppCondEntry_t cpp_conds[] = {
