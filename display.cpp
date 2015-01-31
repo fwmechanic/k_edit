@@ -626,15 +626,17 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    return false;
    }
 
+struct CppCondEntry_t {
+   stref  nm;
+   cppc   val;
+   };
 
-STATIC_FXN cppc IsCppConditional( stref src, int *pxPound ) { // *pLine indexes into ps data (tabs still there, not expanded)
+
+STATIC_FXN cppc IsCppConditional( stref src, int *pxMin ) { // *pxMin indexes into src[] which is RAW line text
    const auto o1( FirstNonBlankOrEnd( src, 0      ) );  if( o1 >= src.length() || !('#' == src[o1] || '%' == src[o1] || '!' == src[o1]) ) return cppcNone;
    const auto o2( FirstNonBlankOrEnd( src, o1 + 1 ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
    const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
-   STATIC_CONST struct {
-      stref nm;
-      cppc              val;
-      } cpp_conds[] = { // !!! must be sorted by increasing nm.length()
+   STATIC_CONST CppCondEntry_t cpp_conds[] = {
          { "if"      , cppcIf   },
          { "else"    , cppcElse },
          { "elif"    , cppcElif },
@@ -647,9 +649,31 @@ STATIC_FXN cppc IsCppConditional( stref src, int *pxPound ) { // *pLine indexes 
          { "foreach" , cppcIf   },
       };
    for( const auto &cc : cpp_conds ) {
-      if( word.length() < cc.nm.length() ) break;
       if( word == cc.nm ) {
-         *pxPound = o1;
+         *pxMin = o1;
+         return cc.val;
+         }
+      }
+   return cppcNone;
+   }
+
+STATIC_FXN cppc IsGnuMakeConditional( stref src, int *pxMin ) { // *pxMin indexes into src[] which is RAW line text
+   if( !src.empty() && src[0] == HTAB ) { return cppcNone; }
+   const auto o2( FirstNonBlankOrEnd( src, 0      ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
+   const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
+   STATIC_CONST CppCondEntry_t cpp_conds[] = {
+         { "ifeq"    , cppcIf   },
+         { "ifneq"   , cppcIf   },
+         { "ifdef"   , cppcIf   },
+         { "ifndef"  , cppcIf   },
+         { "else"    , cppcElif },
+         { "endif"   , cppcEnd  },
+         { "define"  , cppcIf   },
+         { "enddef"  , cppcEnd  },
+      };
+   for( const auto &cc : cpp_conds ) {
+      if( word == cc.nm ) {
+         *pxMin = o2;
          return cc.val;
          }
       }
@@ -662,7 +686,7 @@ cppc FBOP::IsCppConditional( PCFBUF fb, LINE yLine ) {
    return ::IsCppConditional( rl, &xPound );
    }
 
-class HiliteAddin_CPPcond_Hilite : public HiliteAddin {
+class HiliteAddin_cond_CPP : public HiliteAddin {
    void VFbufLinesChanged( LINE yMin, LINE yMax ) override { refresh( yMin, yMax ); }
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
    void VWinResized() override {
@@ -670,17 +694,19 @@ class HiliteAddin_CPPcond_Hilite : public HiliteAddin {
       d_need_refresh = true;
       }
 
+   virtual cppc IsCppConditional( stref src, int *pxPound ) { return ::IsCppConditional( src, pxPound ); }
+
 public:
 
-   HiliteAddin_CPPcond_Hilite( PView pView )
+   HiliteAddin_cond_CPP( PView pView )
       : HiliteAddin( pView )
       {
       d_PerViewableLine.resize( ViewLines() );
       d_need_refresh = true;
       }
 
-   ~HiliteAddin_CPPcond_Hilite() {}
-   PCChar Name() const override { return "CPPcond"; }
+   ~HiliteAddin_cond_CPP() {}
+   PCChar Name() const override { return "cond_CPP"; }
 
 private:
 
@@ -708,7 +734,7 @@ private:
    };
 
 
-int HiliteAddin_CPPcond_Hilite::close_level( int level_ix, int yLast ) {
+int HiliteAddin_cond_CPP::close_level( int level_ix, int yLast ) {
    auto &level( d_PerViewableLine[ level_ix ].level );
    level.yMax = yLast;
    for( auto ixLine(level.yMin) ; ixLine <= level.yMax ; ++ixLine ) {
@@ -723,7 +749,7 @@ int HiliteAddin_CPPcond_Hilite::close_level( int level_ix, int yLast ) {
    return level.containing_level_idx;
    }
 
-void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
+void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
    // pass 1: fill in line.{ xMax, cppc?, xPound? }
    auto maxUnIfdEnds(0);
    {
@@ -784,7 +810,7 @@ void HiliteAddin_CPPcond_Hilite::refresh( LINE, LINE ) {
    d_need_refresh = false;
    }
 
-bool HiliteAddin_CPPcond_Hilite::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
+bool HiliteAddin_cond_CPP::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    try {
       if( d_need_refresh )  // BUGBUG fix this!!!!!!!!!!
          refresh( 0, 0 );
@@ -839,6 +865,20 @@ bool HiliteAddin_CPPcond_Hilite::VHilitLine( LINE yLine, COL xIndent, LineColors
    #endif
 
 #endif
+
+
+class HiliteAddin_cond_gmake : public HiliteAddin_cond_CPP {
+   cppc IsCppConditional( stref src, int *pxPound ) override { return ::IsGnuMakeConditional( src, pxPound ); }
+
+public:
+
+   HiliteAddin_cond_gmake( PView pView )
+      : HiliteAddin_cond_CPP( pView )
+      {
+      }
+   ~HiliteAddin_cond_gmake() {}
+   PCChar Name() const override { return "cond_make"; }
+   };
 
 
 void View::Set_LineCompile( LINE yLine ) {
@@ -2005,12 +2045,13 @@ void View::HiliteAddins_Init() {
             "wins".  Thus HiliteAddin_CursorLine is added last, because I want it
             to be present in basically all cases */
                                            { InsertAddinLast( new HiliteAddin_Pbal            ( this ) ); }
-         if( isClang                  )    { InsertAddinLast( new HiliteAddin_CPPcond_Hilite  ( this ) );
+         if( isClang                  )    { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
                                              InsertAddinLast( new HiliteAddin_C_Comment       ( this ) ); }
-         else if( LANG_EQ( "Lua" )    )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
-         else if(  isMakefile || shebang=="sh"||shebang=="bash"||shebang=="perl"||shebang=="python"
-                || LANG_EQ( "Python" )
-                || LANG_EQ( "Perl" )  )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+         if( isMakefile               )    { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) ); }
+         if( LANG_EQ( "Lua" )         )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
+         if(  isMakefile || shebang=="sh"||shebang=="bash"||shebang=="perl"||shebang=="python"
+           || LANG_EQ( "Python" )
+           || LANG_EQ( "Perl" )  )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }
