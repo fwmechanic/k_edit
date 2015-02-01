@@ -227,7 +227,7 @@ endif
 
 USE_PCRE := 1
 export USE_PCRE
-ifneq (0,$(USE_PCRE))
+ifneq "0" "$(USE_PCRE)"
 PCRE_OBJ := pcre_intf.o
 PCRE_LIB := -lpcre
 else
@@ -343,12 +343,10 @@ zap: cleanliblua
 	$(RM) $(ZAP_ARGS) $(CLEAN_ARGS)
 
 ifdef ComSpec
-
 WINDRES=$(TGT)_res.o
 
 $(WINDRES): $(TGT).rc  # http://sourceware.org/binutils/docs/binutils/windres.html
 	windres $< $@
-
 else
 WINDRES=
 endif

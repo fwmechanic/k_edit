@@ -631,12 +631,11 @@ struct CppCondEntry_t {
    cppc   val;
    };
 
-
 STATIC_FXN cppc IsCppConditional( stref src, int *pxMin ) { // *pxMin indexes into src[] which is RAW line text
    const auto o1( FirstNonBlankOrEnd( src, 0      ) );  if( o1 >= src.length() || !('#' == src[o1]) ) return cppcNone;
    const auto o2( FirstNonBlankOrEnd( src, o1 + 1 ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
    const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
-   STATIC_CONST CppCondEntry_t cpp_conds[] = {
+   STATIC_CONST CppCondEntry_t cond_keywds[] = {
          { "if"      , cppcIf   },
          { "else"    , cppcElse },
          { "elif"    , cppcElif },
@@ -648,7 +647,7 @@ STATIC_FXN cppc IsCppConditional( stref src, int *pxMin ) { // *pxMin indexes in
          { "endfor"  , cppcEnd  },
          { "foreach" , cppcIf   },
       };
-   for( const auto &cc : cpp_conds ) {
+   for( const auto &cc : cond_keywds ) {
       if( word == cc.nm ) {
          *pxMin = o1;
          return cc.val;
@@ -661,17 +660,17 @@ STATIC_FXN cppc IsGnuMakeConditional( stref src, int *pxMin ) { // *pxMin indexe
    if( !src.empty() && src[0] == HTAB ) { return cppcNone; }
    const auto o2( FirstNonBlankOrEnd( src, 0      ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
    const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
-   STATIC_CONST CppCondEntry_t cpp_conds[] = {
+   STATIC_CONST CppCondEntry_t cond_keywds[] = {
          { "ifeq"    , cppcIf   },
          { "ifneq"   , cppcIf   },
          { "ifdef"   , cppcIf   },
          { "ifndef"  , cppcIf   },
-         { "else"    , cppcElif },
+         { "else"    , cppcElif }, // gmake else has elseif behavior
          { "endif"   , cppcEnd  },
          { "define"  , cppcIf   },
          { "enddef"  , cppcEnd  },
       };
-   for( const auto &cc : cpp_conds ) {
+   for( const auto &cc : cond_keywds ) {
       if( word == cc.nm ) {
          *pxMin = o2;
          return cc.val;
