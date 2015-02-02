@@ -534,16 +534,47 @@ void CmdIdxClose() {
    rb_dealloc_tree(  s_CmdIdxBuiltins );
    }
 
-PCMD CmdFromName( stref src ) {
-   auto        pNd(  rb_find_sri( s_CmdIdxAddins  , src ) );
-   if( !pNd )  pNd = rb_find_sri( s_CmdIdxBuiltins, src );
-   // if( !pNd )  DBG( "%s '%" PR_BSR "'", __func__, BSR(src) );
-   return pNd ? IdxNodeToPCMD( pNd ) : nullptr;
-   }
-
 STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
+  #if 1
+   DBG( "%" PR_BSR "?", BSR(src) );
+   // binary search
+   //
+   auto yMin( 0 );
+   auto yMax( ELEMENTS( g_CmdTable ) - 1 );
+
+   while( yMin <= yMax ) {
+      //                ( (yMax + yMin) / 2 );           // old overflow-susceptible version
+      const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
+      const auto &cand( g_CmdTable[ cmpLine ] );
+      const auto rslt( cmpi( src, cand.Name() ) );
+      if( rslt == 0 ) { 0 && DBG( "%s=[%d]: %" PR_BSR "|", __func__, cmpLine, BSR(src) );
+         return const_cast<PCMD>( &cand ); }
+      if( rslt <  0 ) { /* handle unsigned underflow/wraparound */ if( cmpLine==0 ) break;
+                        yMax = cmpLine - 1; }
+      if( rslt >  0 ) { yMin = cmpLine + 1; }
+      0 && DBG( "%s=[%d,%d]: %" PR_BSR "|", __func__, yMin, yMax, BSR(src) );
+      }
+   0 && DBG( "%s:[-1]: %" PR_BSR "|", __func__, BSR(src) );
+   return nullptr;
+  #elif 1
+   for( auto &cand : g_CmdTable ) {
+      const auto rslt( cmpi( src, cand.Name() ) );
+      // DBG( "%+d: %" PR_BSR ",%s|", rslt, BSR(src), cand.Name() );
+      if( rslt == 0 ) { return const_cast<PCMD>( &cand ); }
+      if( rslt <  0 ) { break; }
+      }
+   return nullptr;
+  #else
    auto pNd( rb_find_sri( s_CmdIdxBuiltins, src ) );
    return pNd ? IdxNodeToPCMD( pNd ) : nullptr;
+  #endif
+   }
+
+PCMD CmdFromName( stref src ) {
+   auto pNd( rb_find_sri( s_CmdIdxAddins, src ) );
+   if( pNd ) { return IdxNodeToPCMD( pNd ); }
+   // if( !pNd )  DBG( "%s '%" PR_BSR "'", __func__, BSR(src) );
+   return CmdFromNameBuiltinOnly( src );
    }
 
 STATIC_FXN void cmdIdxAdd( stref name, funcCmd pFxn, int argType, stref macroDef  _AHELP( PCChar helpStr ) ) {
@@ -631,9 +662,11 @@ int CmdIdxRmvCmdsByFunction( funcCmd pFxn ) {
 
 PCmdIdxNd CmdIdxFirst()                 { return rb_first( s_CmdIdxBuiltins ); }
 PCmdIdxNd CmdIdxLast()                  { return rb_last(  s_CmdIdxBuiltins ); }
+PCmdIdxNd CmdIdxNext( PCmdIdxNd pNd )   { return rb_next(  pNd      ); }
+
 PCmdIdxNd CmdIdxAddinFirst()            { return rb_first( s_CmdIdxAddins ); }
 PCmdIdxNd CmdIdxAddinLast()             { return rb_last(  s_CmdIdxAddins ); }
-PCmdIdxNd CmdIdxNext( PCmdIdxNd pNd )   { return rb_next(  pNd      ); }
+PCmdIdxNd CmdIdxAddinNext( PCmdIdxNd pNd ) { return rb_next(  pNd      ); }
 PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd ) { return IdxNodeToPCMD( pNd ); }
 
 void WalkAllCMDs( void *pCtxt, CmdVisit visit ) { 0 && DBG( "%s+", __func__ );
