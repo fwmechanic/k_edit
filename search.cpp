@@ -72,7 +72,7 @@ xlatLower::xlatLower() {
       my_lower_[ix] |= 'a' - 'A';
    }
 
-char toLower( int ch ) {
+char toLower( char ch ) {
    STATIC_VAR xlatLower low;
    return low.my_lower_[ U8(ch) ];
    }

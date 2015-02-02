@@ -1739,4 +1739,4 @@ struct DBGFbufWriter : public OutputWriter {
 //
 //---------------------------------------------------------------------------------------------------------------------
 
-extern char toLower( int ch );
+extern char toLower( char ch );

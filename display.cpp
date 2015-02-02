@@ -423,17 +423,12 @@ bool HiliteAddin_Pbal::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
    return false;
    }
 
-#define WUC_LIST   3
-  #if WUC_LIST < 3
-    #error
-  #endif
-
 /* 20110516 kgoodwin
-   allow a envp-stype sequence of WUC needles so that calc'd derivatives of the
+   allow a envp-style sequence of WUC needles so that calc'd derivatives of the
    actual WUC can be highlighted.  In particular, the MWDT elfdump disasm shows
-   0xhexaddress in the intruction operands, but the address of each instruction
-   is shown as hexaddress (and I want the latter to be highlighted when the
-   former is WUC. */
+   0xhexaddress in intruction operands, but each instruction's address is shown
+   as hexaddress (and I want the latter to be highlighted when the former is
+   WUC).  */
 
 class HiliteAddin_WordUnderCursor : public HiliteAddin {
    void VCursorMoved( bool fUpdtWUC ) override;
@@ -637,18 +632,14 @@ STATIC_FXN cppc IsCppConditional( stref src, int *pxMin ) { // *pxMin indexes in
    const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
    STATIC_CONST CppCondEntry_t cond_keywds[] = {
          { "if"      , cppcIf   },
-         { "else"    , cppcElse },
-         { "elif"    , cppcElif },
-         { "elsif"   , cppcElif },
-         { "endif"   , cppcEnd  },
          { "ifdef"   , cppcIf   },
          { "ifndef"  , cppcIf   },
-         { "elseif"  , cppcElif },
-         { "endfor"  , cppcEnd  },
-         { "foreach" , cppcIf   },
+         { "else"    , cppcElse },
+         { "elif"    , cppcElif },
+         { "endif"   , cppcEnd  },
       };
    for( const auto &cc : cond_keywds ) {
-      if( word == cc.nm ) {
+      if( eq( word, cc.nm ) ) {
          *pxMin = o1;
          return cc.val;
          }
@@ -667,11 +658,11 @@ STATIC_FXN cppc IsGnuMakeConditional( stref src, int *pxMin ) { // *pxMin indexe
          { "ifndef"  , cppcIf   },
          { "else"    , cppcElif }, // gmake else has elseif behavior
          { "endif"   , cppcEnd  },
-         { "define"  , cppcIf   },
-         { "enddef"  , cppcEnd  },
+         { "define"  , cppcIf   }, // not truly cond, but syntactically ...
+         { "enddef"  , cppcEnd  }, // ... same and worth hiliting
       };
    for( const auto &cc : cond_keywds ) {
-      if( word == cc.nm ) {
+      if( eq( word, cc.nm ) ) {
          *pxMin = o2;
          return cc.val;
          }

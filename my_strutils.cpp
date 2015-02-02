@@ -298,7 +298,6 @@ int strcmp4humans( PCChar pA, PCChar pB ) {
    if (pA == nullptr) return -1;
    if (pB == nullptr) return  1;
    for ( ; *pA && *pB ; ++pA, ++pB ) {
-      extern char toLower( int ch );
       const auto a0( isDecDigit(*pA) ? parsedecnum(pA) + 256 :  toLower(*pA) );  // will contain either a number or a letter
       const auto b0( isDecDigit(*pB) ? parsedecnum(pB) + 256 :  toLower(*pB) );  // will contain either a number or a letter
       if( a0 < b0 ) return -1;
@@ -328,40 +327,6 @@ PChar _strlwr( PChar buf ) {
    }
 
 #endif
-
-int cmp( const stref &s1, const stref &s2 ) {
-   const auto cmplen( Min( s1.length(), s2.length() ) );
-   for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
-      if( s1[ix] != s2[ix] ) {
-         return s1[ix] < s2[ix] ? -1 : +1;
-         }
-      }
-   if( s1.length() == s2.length() ) return 0;
-   return s1.length() < s2.length() ? -1 : +1;
-   }
-
-int cmpi( const stref &s1, const stref &s2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
-   const auto cd( 'a'-'A' );
-   const auto cmplen( Min( s1.length(), s2.length() ) );
-   for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
-      if( s1[ix] != s2[ix] && (s1[ix] ^ cd) != s2[ix] ) {
-         return (s1[ix] | cd) < (s2[ix] | cd) ? -1 : +1;
-         }
-      }
-   if( s1.length() == s2.length() ) return 0;
-   return s1.length() < s2.length() ? -1 : +1;
-   }
-
-// the Blank family...
-
-bool IsStringBlank( stref src ) {
-   for( auto ch : src ) {
-      if( !isBlank( ch ) ) {
-         return false;
-         }
-      }
-   return true; // note that empty strings are Blank strings!
-   }
 
 sridx FirstNonBlankOrEnd( stref src, sridx start ) {
    return ToNextOrEnd( notBlank, src, start );
