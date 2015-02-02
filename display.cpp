@@ -659,7 +659,7 @@ STATIC_FXN cppc IsGnuMakeConditional( stref src, int *pxMin ) { // *pxMin indexe
          { "else"    , cppcElif }, // gmake else has elseif behavior
          { "endif"   , cppcEnd  },
          { "define"  , cppcIf   }, // not truly cond, but syntactically ...
-         { "enddef"  , cppcEnd  }, // ... same and worth hiliting
+         { "endef"   , cppcEnd  }, // ... same and worth hiliting
       };
    for( const auto &cc : cond_keywds ) {
       if( eq( word, cc.nm ) ) {
