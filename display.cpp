@@ -2812,51 +2812,14 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    ColoredLine out;
    const auto maxFnLen( EditScreenCols() - cl.textcols() );
    if( fnLen > maxFnLen ) {
-      #if 0
-         {
-         /*
-            this _seemed_ like a cool idea (at least to play with), but the
-            required shlwapi.h is not part of the Platform SDK that I installed.
-            Furthermore, http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=203814&SiteID=1
-
-            "Those path functions reside in the Shell Lightweight API, which require
-            SHLWAPI.DLL.  That DLL (despite being a critical component used by several
-            Windows DLLs, and its absence will lead to an unbootable OS) is a part of IE
-            (several IE components use it as well).  It's sort of like Microsoft's
-            utils/misc.cpp file.
-
-            "IMO, the Shell lightweight API is one of the worst designed libraries to come
-            out of the Windows team.  Firstly, the name "Lightweight" is a misnomer (it's
-            450Kb in size, but its dependencies may take up to 100MB of disk space!).  The
-            DLL is just a repository for junk functions that "didn't quite fit anywhere
-            else".  Granted, you have some partially useful functions like SHDeleteKey or
-            PathStripPath.  But then you're forced to have completely useless functions like
-            IUnknown_AtomicRelease and UrlFixUpW, which comes with their own set of
-            dependencies (OLE).  Since it is used by both IE and the shell (the
-            "webby-explorer"), Microsoft don't even know whether to put it in the IE SDK or
-            the core SDK (btw that's why you're seeing it in your help).  And when you use
-            one Shlwapi function, your application will stop working unless the user has
-            chosen to install IE."
-
-            Thanks, but no thanks!
-         */
-         pathbuf pb;
-         PathCompactPathEx( pb, pfh->Name(), maxFnLen+1, 0 );
-         out.Cat( COLOR::FG, pb );
-         }
-      #else
-         {
-         // TODO copy pfh->Name() into pathbuf, adjust commonLen, uniqLen
-         // accordingly, fall into else case
-         //
-         STATIC_CONST char s_dot3[] = "...";
-         const auto truncBy( fnLen - (maxFnLen - KSTRLEN(s_dot3)) );
-         if( truncBy > fnLen )
-            out.Cat( COLOR::FG, s_dot3 );
-         else
-            out.Cat( COLOR::FG, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).k_str() );
-         }
-      #endif
+      // _WIN32: _DO NOT_ try to use PathCompactPathEx here http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=203814&SiteID=1
+      // TODO copy pfh->Name() into pathbuf, adjust commonLen, uniqLen accordingly, fall into else case
+      STATIC_CONST char s_dot3[] = "...";
+      const auto truncBy( fnLen - (maxFnLen - KSTRLEN(s_dot3)) );
+      if( truncBy > fnLen )
+         out.Cat( COLOR::FG, s_dot3 );
+      else
+         out.Cat( COLOR::FG, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).k_str() );
       }
    else {
       auto pfnm( pfh->Name() );
@@ -2870,7 +2833,6 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    }
 
 //--------------------------------------------------------------------------------------
-
 
 void swid_ch( PChar dest, size_t sizeofDest, char ch ) {
    safeSprintf( dest, sizeofDest, "0x%02X (%c)", ch, ch );
