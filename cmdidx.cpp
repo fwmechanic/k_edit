@@ -642,10 +642,7 @@ PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd ) { return IdxNodeToPCMD( pNd ); }
 void FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 ) {
    FBufRead_Assign_SubHd( pFBuf, "Intrinsic Functions", ELEMENTS( g_CmdTable ) );
    for( auto &cand : g_CmdTable ) {
-      const auto pCmd( &cand );
-      if(      pCmd->IsRealMacro() ) ;
-      else if( pCmd->IsLuaFxn()    ) ;
-      else PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
+      PAssignShowKeyAssignment( cand, pFBuf, coll_tmp, tmp1, tmp2 );
       }
    }
 
