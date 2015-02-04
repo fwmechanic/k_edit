@@ -184,10 +184,7 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
 
    FBufRead_Assign_Switches( pFBuf );
 
-   auto intrinsicCmds(0);
-   for( auto pNd( CmdIdxFirst() ) ; pNd != CmdIdxLast() ; pNd = CmdIdxNext( pNd ) )
-      ++intrinsicCmds;
-
+   // We do most print loops twice: first time to determine the count for the header
    auto macroCmds(0);
    auto luaCmds  (0);
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
@@ -205,16 +202,7 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
       if( pCmd->IsLuaFxn() ) PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
       }
 
-   // We do most print loops twice: first time to determine the count for the
-   // header
-   //
-   FBufRead_Assign_SubHd( pFBuf, "Intrinsic Functions", intrinsicCmds );
-   for( auto pNd( CmdIdxFirst() ) ; pNd != CmdIdxLast() ; pNd = CmdIdxNext( pNd ) ) {
-      const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if(      pCmd->IsRealMacro() ) ;
-      else if( pCmd->IsLuaFxn()    ) ;
-      else PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
-      }
+   FBufRead_Assign_intrinsicCmds( pFBuf, coll_tmp, tmp1, tmp2 );
 
    FBufRead_Assign_SubHd( pFBuf, "Macros", macroCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {

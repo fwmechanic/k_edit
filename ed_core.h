@@ -700,7 +700,7 @@ struct CMD {             // function definition entry
    bool     IsRealMacro()           const { return d_func == fn_runmacro(); }
    bool     IsLuaFxn()              const { return d_func == fn_runLua()  ; }
 
-   PCChar   Name()                  const { return PCChar( d_name ); }
+   PCChar   Name()                  const { return d_name; }
    bool     NameMatch( PCChar str ) const { return Stricmp( str, d_name ) == 0; }
 
    PCChar   MacroText()             const { return PCChar( d_argData.pszMacroDef ); }
@@ -1739,4 +1739,4 @@ struct DBGFbufWriter : public OutputWriter {
 //
 //---------------------------------------------------------------------------------------------------------------------
 
-extern char toLower( int ch );
+extern char toLower( char ch );

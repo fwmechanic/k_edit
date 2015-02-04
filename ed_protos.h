@@ -353,8 +353,6 @@ extern  int    CmdIdxRmvCmdsByFunction( funcCmd pFxn );
 extern  PCMD   CmdFromName( stref name );
 
 typedef RbNode *PCmdIdxNd;
-extern  PCmdIdxNd CmdIdxFirst()                ;
-extern  PCmdIdxNd CmdIdxLast()                 ;
 extern  PCmdIdxNd CmdIdxAddinFirst()           ;
 extern  PCmdIdxNd CmdIdxAddinLast()            ;
 extern  PCmdIdxNd CmdIdxNext(   PCmdIdxNd pNd );
@@ -378,6 +376,7 @@ extern   void  AdjustMarksForLineInsertion( LINE Line,int LineDelta,PFBUF pFBuf 
 
 extern   bool  ReadPseudoFileOk( PFBUF pFBuf );
 extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
+extern   void  FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
 
 //------------ Pseudofile writers
 

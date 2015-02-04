@@ -494,11 +494,7 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
 static_assert( ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT, "ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT" );
 
 
-// s_CmdIdxBuiltins is, after CmdIdxInit() returns, never modified; it indexes
-// (points to) all members of (the static array) g_CmdTable[]
-STATIC_VAR RbTree *s_CmdIdxBuiltins;
-
-// s_CmdIdxAddins is a dynamic tree which is searched prior to s_CmdIdxBuiltins
+// s_CmdIdxAddins is a dynamic tree which is searched prior to g_CmdTable
 // during user-function-lookups: all CMDs indexed herein (for macros and Lua
 // functions) are heap-allocated, and can thus be created and destroyed at will:
 GLOBAL_VAR RbTree *s_CmdIdxAddins;
@@ -506,14 +502,6 @@ GLOBAL_VAR RbTree *s_CmdIdxAddins;
 STIL PCMD IdxNodeToPCMD( RbNode *pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
 
 STATIC_VAR RbCtrl s_CmdIdxRbCtrl = { AllocNZ_, Free_, };
-
-void CmdIdxInit() {
-   s_CmdIdxAddins   = rb_alloc_tree( &s_CmdIdxRbCtrl );
-   s_CmdIdxBuiltins = rb_alloc_tree( &s_CmdIdxRbCtrl );
-   for( auto &cmd : g_CmdTable ) {
-      rb_insert_gen( s_CmdIdxBuiltins, cmd.Name(), rb_strcmpi, &cmd );
-      }
-   }
 
 STATIC_FXN void CMD_PlacementFree_SameName( PCMD pCmd ) {
    if( pCmd->IsRealMacro() )
@@ -529,21 +517,37 @@ STATIC_FXN void DeleteCMD( void *pData, void *pExtra ) {
    Free0( pCmd );
    }
 
-void CmdIdxClose() {
-   rb_dealloc_treev( s_CmdIdxAddins, nullptr, DeleteCMD );
-   rb_dealloc_tree(  s_CmdIdxBuiltins );
+void CmdIdxInit() {  s_CmdIdxAddins = rb_alloc_tree( &s_CmdIdxRbCtrl ); }
+void CmdIdxClose() { rb_dealloc_treev( s_CmdIdxAddins, nullptr, DeleteCMD ); }
+
+STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
+   DBG( "%" PR_BSR "?", BSR(src) );
+   // binary search
+   //
+   auto yMin( 0 );
+   auto yMax( ELEMENTS( g_CmdTable ) - 1 );
+
+   while( yMin <= yMax ) {
+      //                ( (yMax + yMin) / 2 );           // old overflow-susceptible version
+      const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
+      const auto &cand( g_CmdTable[ cmpLine ] );
+      const auto rslt( cmpi( src, cand.Name() ) );
+      if( rslt == 0 ) { 0 && DBG( "%s=[%d]: %" PR_BSR "|", __func__, cmpLine, BSR(src) );
+         return const_cast<PCMD>( &cand ); }
+      if( rslt <  0 ) { /* handle unsigned underflow/wraparound */ if( cmpLine==0 ) break;
+                        yMax = cmpLine - 1; }
+      if( rslt >  0 ) { yMin = cmpLine + 1; }
+      0 && DBG( "%s=[%d,%d]: %" PR_BSR "|", __func__, yMin, yMax, BSR(src) );
+      }
+   0 && DBG( "%s:[-1]: %" PR_BSR "|", __func__, BSR(src) );
+   return nullptr;
    }
 
 PCMD CmdFromName( stref src ) {
-   auto        pNd(  rb_find_sri( s_CmdIdxAddins  , src ) );
-   if( !pNd )  pNd = rb_find_sri( s_CmdIdxBuiltins, src );
+   auto pNd( rb_find_sri( s_CmdIdxAddins, src ) );
+   if( pNd ) { return IdxNodeToPCMD( pNd ); }
    // if( !pNd )  DBG( "%s '%" PR_BSR "'", __func__, BSR(src) );
-   return pNd ? IdxNodeToPCMD( pNd ) : nullptr;
-   }
-
-STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
-   auto pNd( rb_find_sri( s_CmdIdxBuiltins, src ) );
-   return pNd ? IdxNodeToPCMD( pNd ) : nullptr;
+   return CmdFromNameBuiltinOnly( src );
    }
 
 STATIC_FXN void cmdIdxAdd( stref name, funcCmd pFxn, int argType, stref macroDef  _AHELP( PCChar helpStr ) ) {
@@ -629,18 +633,29 @@ int CmdIdxRmvCmdsByFunction( funcCmd pFxn ) {
 
 // iterator APIs
 
-PCmdIdxNd CmdIdxFirst()                 { return rb_first( s_CmdIdxBuiltins ); }
-PCmdIdxNd CmdIdxLast()                  { return rb_last(  s_CmdIdxBuiltins ); }
+PCmdIdxNd CmdIdxNext( PCmdIdxNd pNd )   { return rb_next(  pNd      ); }
 PCmdIdxNd CmdIdxAddinFirst()            { return rb_first( s_CmdIdxAddins ); }
 PCmdIdxNd CmdIdxAddinLast()             { return rb_last(  s_CmdIdxAddins ); }
-PCmdIdxNd CmdIdxNext( PCmdIdxNd pNd )   { return rb_next(  pNd      ); }
+PCmdIdxNd CmdIdxAddinNext( PCmdIdxNd pNd ) { return rb_next(  pNd      ); }
 PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd ) { return IdxNodeToPCMD( pNd ); }
 
+void FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 ) {
+   FBufRead_Assign_SubHd( pFBuf, "Intrinsic Functions", ELEMENTS( g_CmdTable ) );
+   for( auto &cand : g_CmdTable ) {
+      const auto pCmd( &cand );
+      if(      pCmd->IsRealMacro() ) ;
+      else if( pCmd->IsLuaFxn()    ) ;
+      else PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
+      }
+   }
+
 void WalkAllCMDs( void *pCtxt, CmdVisit visit ) { 0 && DBG( "%s+", __func__ );
-   for( auto pNd=CmdIdxFirst() ; pNd != CmdIdxLast() ; pNd = CmdIdxNext( pNd ) )
+   for( auto &cand : g_CmdTable ) {
+      visit( &cand, pCtxt );
+      }
+   for( auto pNd=CmdIdxAddinFirst() ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
       visit( CmdIdxToPCMD( pNd ), pCtxt );
-   for( auto pNd=CmdIdxAddinFirst() ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) )
-      visit( CmdIdxToPCMD( pNd ), pCtxt );
+      }
    }
 
 #include "my_fio.h"

@@ -212,10 +212,84 @@ extern   void  StrUnDoubleBackslashes( PChar pszString );
 // TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
 TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
 
-extern int   cmp ( const stref &s1, const stref &s2 );
-extern int   cmpi( const stref &s1, const stref &s2 );
-extern char  toLower(     int ch );
-extern bool  IsStringBlank( stref src );
+extern char  toLower( char ch );
+
+STIL bool eq( stref s1, stref s2 ) {
+   if( s1.length() != s2.length() ) {
+      return false;
+      }
+   for( sridx ix( 0 ); ix < s1.length() ; ++ix ) {
+      if( s1[ix] != s2[ix] ) {
+         return false;
+         }
+      }
+   return true;
+   }
+
+
+STIL int cmp( char c1, char c2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
+   if( c1 == c2 ) { return 0; }
+   return c1 < c2 ? -1 : +1;
+   }
+
+STIL int cmpi( char c1, char c2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
+   const auto cd( 'a'-'A' );
+   if( c1 == c2 || (c1 ^ cd) == c2 ) { return 0; }
+   return (c1 | cd) < (c2 | cd) ? -1 : +1;
+   }
+
+STIL bool eqi( stref s1, stref s2 ) {
+   if( s1.length() != s2.length() ) {
+      return false;
+      }
+   const auto cd( 'a'-'A' );
+   for( sridx ix( 0 ); ix < s1.length() ; ++ix ) {
+      if( 0==cmpi( s1[ix], s2[ix] ) ) {
+         return false;
+         }
+      }
+   return true;
+   }
+
+STIL int cmp( const stref &s1, const stref &s2 ) {
+   const auto cmplen( Min( s1.length(), s2.length() ) );
+   for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
+      const auto rv( cmp( s1[ix], s2[ix] ) );
+      if( rv != 0 ) {
+         return rv;
+         }
+      }
+   if( s1.length() == s2.length() ) return 0;
+   return s1.length() < s2.length() ? -1 : +1;
+   }
+
+STIL int cmpi( const stref &s1, const stref &s2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
+   const auto cd( 'a'-'A' );
+   const auto cmplen( Min( s1.length(), s2.length() ) );
+   for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
+      const auto rv( cmpi( s1[ix], s2[ix] ) );
+      if( rv != 0 ) {
+         return rv;
+         }
+      }
+   if( s1.length() == s2.length() ) return 0;
+   return s1.length() < s2.length() ? -1 : +1;
+   }
+
+// the Blank family...
+
+STIL bool IsStringBlank( stref src ) {
+   for( auto ch : src ) {
+      if( !isBlank( ch ) ) {
+         return false;
+         }
+      }
+   return true; // note that empty strings are Blank strings!
+   }
+
+
+
+
 
 extern int   consec_xdigits( PCChar pSt, PCChar eos=nullptr );
 extern int   consec_bdigits( PCChar pSt, PCChar eos=nullptr );
