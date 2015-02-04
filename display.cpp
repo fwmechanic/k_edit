@@ -2032,7 +2032,8 @@ void View::HiliteAddins_Init() {
          const auto shebang( rl0.starts_with( "#!" ) && ((ix=rl0.find_last_of( "/" )) > 2) && ix != stref::npos && (iy=FirstBlankOrEnd( rl0, ix )) ? rl0.substr( ix+1, iy - ix+1 ) : "" ); 0 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
          const auto srNm( d_pFBuf->Namesr() );
          const auto srFnm( Path::RefFnm( srNm ) );
-         const auto isMakefile(   Path::endsWith( srFnm, "makefile" )
+         const auto isMakefile(   shebang=="make"
+                               || Path::endsWith( srFnm, "makefile" )
                                #if !defined(_WIN32)
                                || Path::endsWith( srFnm, "Makefile" )
                                #endif
@@ -2050,7 +2051,7 @@ void View::HiliteAddins_Init() {
          if( LANG_EQ( "Lua" )         )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
          if(  isMakefile || shebang=="sh"||shebang=="bash"||shebang=="perl"||shebang=="python"
            || LANG_EQ( "Python" )
-           || LANG_EQ( "Perl" )  )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+           || LANG_EQ( "Perl" )       )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }
