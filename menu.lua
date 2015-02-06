@@ -182,7 +182,7 @@ function MenuProto_:update( curChoice )
       vid_wrYX( ls..self.paddedChoices[ ix ]..rs, curY, ac.minX+1, color )
       curY = curY + 1
       end
-   DispRefreshWholeScreenNow()
+   -- DispRefreshWholeScreenNow()
    end
 
 
