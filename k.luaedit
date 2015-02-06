@@ -1364,7 +1364,7 @@ end
 local dynamic_fbufs = -- bugbug this s/b automated
    {
    "<ascii>"         ,
-   "<CMD/SWI/Keys>"  ,
+   "<CMD-SWI-Keys>"  ,
    "<env>"           ,
    "<env_>"          ,
    "<files>"         ,

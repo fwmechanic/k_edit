@@ -2115,6 +2115,43 @@ void View::Write( FILE *fout ) const {
        );
    }
 
+struct direct_vid_seg {
+   Point       d_origin;
+   int         d_colorIndex;
+   std::string d_str;
+   direct_vid_seg( Point origin, int colorIndex, stref sr )
+     : d_origin( origin )
+     , d_colorIndex( colorIndex )
+     , d_str( BSR2STR(sr) )
+     {}
+   };
+
+static std::vector<direct_vid_seg> s_direct_vid_segs;
+
+void  DirectVidClear() { s_direct_vid_segs.clear(); }
+
+COL   DirectVidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol ) {
+   const Point tgt( yLine, xCol );
+   auto it( s_direct_vid_segs.begin() );
+   for( ; it != s_direct_vid_segs.end() ; ++it ) {
+      if( tgt == it->d_origin && it->d_str.length() == StringLen ) {
+         it->d_colorIndex = colorIndex;
+         if( !eq( it->d_str, stref( pszStringToDisp, StringLen ) ) ) {
+            it->d_str.assign( pszStringToDisp, StringLen ); // overwrite same-color/-length with new string
+                           0 && DBG( "%s [%u]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
+            }
+         return StringLen;
+         }
+      else if( tgt <= it->d_origin ) {
+         break;
+         }
+      }
+   const stref sr( pszStringToDisp, StringLen );
+   const auto new_it( s_direct_vid_segs.emplace( it, tgt, colorIndex, sr ) );
+                           0 && DBG( "%s @[%u]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
+   return StringLen;
+   }
+
 
 STATIC_FXN bool AddLineDelta( LINE &yLineVar, LINE yLine, LINE lineDelta ) {
    const auto fAffected( yLine <= yLineVar );
@@ -2428,6 +2465,7 @@ STATIC_FXN void RedrawScreen() {
    const auto yTop(0), yBottom( EditScreenLines() );
    ShowDraws( DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom ); )
    const HiLiteRec *pFirstPossibleHiLite(nullptr);
+   auto dvsit( s_direct_vid_segs.begin() );
    for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) { ShowDraws( char ch = ' '; )
       if( s_paScreenLineNeedsRedraw->IsBitSet( yLine ) ) {
          ShowDraws( ch = '0' + (yLine % 10); )
@@ -2439,6 +2477,12 @@ STATIC_FXN void RedrawScreen() {
             g_Win(ix)->GetLineForDisplay( ix, buf, alc, pFirstPossibleHiLite, yLine );
             }
          }
+         for( ; dvsit != s_direct_vid_segs.end() && dvsit->d_origin.lin < yLine ; ++dvsit ) {
+            }
+         for( ; dvsit != s_direct_vid_segs.end() && yLine == dvsit->d_origin.lin ; ++dvsit ) {
+            buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        );
+            alc.PutColor( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorIndex );
+            }
          (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "u!=%u", buf.length(), scrnCols );
          VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, false );
          }

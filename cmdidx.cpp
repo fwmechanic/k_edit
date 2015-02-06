@@ -521,7 +521,7 @@ void CmdIdxInit() {  s_CmdIdxAddins = rb_alloc_tree( &s_CmdIdxRbCtrl ); }
 void CmdIdxClose() { rb_dealloc_treev( s_CmdIdxAddins, nullptr, DeleteCMD ); }
 
 STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
-   DBG( "%" PR_BSR "?", BSR(src) );
+   0 && DBG( "%" PR_BSR "?", BSR(src) );
    // binary search
    //
    size_t yMin( 0 );

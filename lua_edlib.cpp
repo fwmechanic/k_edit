@@ -64,8 +64,9 @@ LUAFUNC_(StateFilename) { pathbuf pb; R_str( StateFilename( BSOB(pb), S_(1) ) );
 LUAFUNC_(Bell) { ConOut::Bell(); RZ; }
 LUAFUNC_(ScreenLines) { R_int( ScreenLines() ); }
 LUAFUNC_(ScreenCols ) { R_int( ScreenCols () ); }
-LUAFUNC_(VidWrStrColorFlush) { 0 && DBG("%s: %d, %d", __func__, I_(1), I_(2) );
-   VidWrStrColorFlush( I_(1), I_(2), S_(3), I_(4), I_(5), LuaBool(6) );
+LUAFUNC_(DirectVidClear) { DirectVidClear(); RZ; }
+LUAFUNC_(DirectVidWrStrColorFlush) { 0 && DBG("%s: %d, %d", __func__, I_(1), I_(2) );
+   DirectVidWrStrColorFlush( I_(1), I_(2), S_(3), I_(4), I_(5), LuaBool(6) );
    RZ;
    }
 LUAFUNC_(Path_CommonPrefixLen) { R_int( Path::CommonPrefixLen( S_(1), S_(2) ) ); }
@@ -669,7 +670,8 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        { "HideCursor"                  , HideCursor                  },
        { "UnhideCursor"                , UnhideCursor                },
        { "DispRefreshWholeScreenNow"   , DispRefreshWholeScreenNow   },
-       { "VidWrStrColorFlush"          , VidWrStrColorFlush          },
+       { "DirectVidClear"              , DirectVidClear              },
+       { "DirectVidWrStrColorFlush"    , DirectVidWrStrColorFlush    },
        { "fExecute"                    , fExecute                    },
        { "fChangeFile"                 , fChangeFile                 },
        { "IsFile"                      , IsFile                      },

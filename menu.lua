@@ -58,10 +58,10 @@ local bar  = chHbar:rep( MAX_DISP_COLS )
 local spcs =  (" "):rep( MAX_DISP_COLS )
 
 local function vid_save()    HideCursor() end
-local function vid_restore() UnhideCursor()  DispRefreshWholeScreenNow() end
+local function vid_restore() UnhideCursor()  DirectVidClear()  DispRefreshWholeScreenNow() end
 local function vid_wrYX(str,yLine,xCol,color) -- the key that unlocks pandora's box 09-Jan-2002 klg
    -- DBG( "X,Y=(".. xCol .. "," .. yLine .. ")="..str.."|" )
-   return VidWrStrColorFlush( yLine, xCol, str, #str, color, false )
+   return DirectVidWrStrColorFlush( yLine, xCol, str, #str, color, false )
    end
 
 
@@ -182,6 +182,7 @@ function MenuProto_:update( curChoice )
       vid_wrYX( ls..self.paddedChoices[ ix ]..rs, curY, ac.minX+1, color )
       curY = curY + 1
       end
+   DispRefreshWholeScreenNow()
    end
 
 

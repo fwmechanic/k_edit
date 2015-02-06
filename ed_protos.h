@@ -232,7 +232,9 @@ extern void  Event_ScreenSizeChanged( const Point &newSize );
 //    it will be switched to, newSize will be updated, "OK" status will be returned
 extern bool  VideoSwitchModeToXYOk( Point &newSize );
 
-extern COL   VidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol );
+extern COL   VidWrStrColorFlush(       LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol );
+extern COL   DirectVidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol );
+extern void  DirectVidClear();
 
 class VideoFlusher {
    bool d_fWantToFlush;
