@@ -2138,7 +2138,7 @@ COL   DirectVidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, si
          it->d_colorIndex = colorIndex;
          if( !eq( it->d_str, stref( pszStringToDisp, StringLen ) ) ) {
             it->d_str.assign( pszStringToDisp, StringLen ); // overwrite same-color/-length with new string
-                           0 && DBG( "%s [%u]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
+                           0 && DBG( "%s [%" PR_PTRDIFFT "u]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
             }
          return StringLen;
          }
@@ -2148,7 +2148,7 @@ COL   DirectVidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, si
       }
    const stref sr( pszStringToDisp, StringLen );
    const auto new_it( s_direct_vid_segs.emplace( it, tgt, colorIndex, sr ) );
-                           0 && DBG( "%s @[%u]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
+                           0 && DBG( "%s @[%" PR_PTRDIFFT "u]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
    return StringLen;
    }
 
