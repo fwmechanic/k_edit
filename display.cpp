@@ -19,6 +19,14 @@
 
 #include "ed_main.h"
 
+#if defined(_WIN32)
+#define  IS_LINUX  0
+#define  FULL_DB   0
+#else
+#define  IS_LINUX  1
+#define  FULL_DB   0
+#endif
+
 #if DBGHILITE
 extern void DbgHilite_( char ch, PCChar func );
 #define  DbgHilite( c )  DbgHilite_( c, __func__ )
@@ -2128,29 +2136,6 @@ struct direct_vid_seg {
 
 static std::vector<direct_vid_seg> s_direct_vid_segs;
 
-void  DirectVidClear() { s_direct_vid_segs.clear(); }
-
-void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) {
-   const Point tgt( yLine, xCol );
-   auto it( s_direct_vid_segs.begin() );
-   for( ; it != s_direct_vid_segs.end() ; ++it ) {
-      if( tgt == it->d_origin && it->d_str.length() == sr.length() ) {
-         it->d_colorIndex = colorIndex;
-         if( !eq( it->d_str, sr ) ) {
-            it->d_str.assign( BSR2STR(sr) ); // overwrite same-color/-length with new string
-                           0 && DBG( "%s [%" PR_PTRDIFFT "u]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
-            }
-         return;
-         }
-      else if( tgt <= it->d_origin ) {
-         break;
-         }
-      }
-   const auto new_it( s_direct_vid_segs.emplace( it, tgt, colorIndex, sr ) );
-                           0 && DBG( "%s @[%" PR_PTRDIFFT "u]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
-   }
-
-
 STATIC_FXN bool AddLineDelta( LINE &yLineVar, LINE yLine, LINE lineDelta ) {
    const auto fAffected( yLine <= yLineVar );
    if( fAffected ) {
@@ -2421,15 +2406,9 @@ void DispNeedsRedrawStatLn_()   { s_fStatLnRedraw = true; }
 typedef BitVector<uint_machineword_t> srd_linevect;
 STATIC_VAR srd_linevect   *s_paScreenLineNeedsRedraw;
 
-#if defined(_WIN32)
-#define  IS_LINUX  0
-#define  FULL_DB   0
-#else
-#define  IS_LINUX  1
-#define  FULL_DB   0
-#endif
-
-
+STATIC_FXN bool NeedRedrawScreen() {
+   return s_paScreenLineNeedsRedraw ? s_paScreenLineNeedsRedraw->IsAnyBitSet() : false;//TODO
+   }
 
 void DispNeedsRedrawAllLinesAllWindows_() { FULL_DB && DBG( "%s", FUNC );
    s_paScreenLineNeedsRedraw->SetAllBits();
@@ -2441,10 +2420,6 @@ void Win::DispNeedsRedrawAllLines() const { FULL_DB && DBG( "%s All=0..%d", FUNC
       Assert( yLine < EditScreenLines() );
       s_paScreenLineNeedsRedraw->SetBit( yLine );
       }
-   }
-
-STATIC_FXN bool NeedRedrawScreen() {
-   return s_paScreenLineNeedsRedraw ? s_paScreenLineNeedsRedraw->IsAnyBitSet() : false;//TODO
    }
 
 STATIC_FXN void RedrawScreen() {
@@ -2875,6 +2850,43 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    out.VidWrLine( StatusLine() );       FULL_DB && DBG( "%s-", __func__ );
    }
 
+//--------------------------------------------------------------------------------------
+void DirectVidClear() {
+   s_direct_vid_segs.clear();
+   DispNeedsRedrawAllLinesAllWindows();
+   RedrawScreen();
+   }
+
+void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) {
+   const Point tgt( yLine, xCol );
+   auto it( s_direct_vid_segs.begin() );
+   for( ; it != s_direct_vid_segs.end() ; ++it ) {
+      if( tgt == it->d_origin && it->d_str.length() == sr.length() ) {
+         auto fChanged( false );
+         if( it->d_colorIndex != colorIndex ) {
+            it->d_colorIndex = colorIndex;
+            fChanged = true;
+            }
+         if( !eq( it->d_str, sr ) ) {
+            it->d_str.assign( BSR2STR(sr) ); // overwrite same-length string with new
+                           0 && DBG( "%s [%" PR_PTRDIFFT "u]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
+            fChanged = true;
+            }
+         if( fChanged ) { // mark line dirty
+            s_paScreenLineNeedsRedraw->SetBit( it->d_origin.lin );
+            RedrawScreen();
+            }
+         return;
+         }
+      else if( tgt <= it->d_origin ) {
+         break;
+         }
+      }
+   const auto new_it( s_direct_vid_segs.emplace( it, tgt, colorIndex, sr ) );
+                           0 && DBG( "%s @[%" PR_PTRDIFFT "u]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
+   s_paScreenLineNeedsRedraw->SetBit( new_it->d_origin.lin );
+   RedrawScreen();
+   }
 //--------------------------------------------------------------------------------------
 
 void swid_ch( PChar dest, size_t sizeofDest, char ch ) {
