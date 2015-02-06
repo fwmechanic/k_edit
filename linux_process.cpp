@@ -121,17 +121,7 @@ PAST_OPTS: ;
 
 TF_Ptr STIL Ptr analyze_cmdline( Ptr pCmdln, int *flags ) { return const_cast<Ptr>(analyze_cmdline_( pCmdln, flags )); }
 
-STATIC_FXN void prep_cmdline_( PChar pc ) {
-   // CMD shell cannot handle '/' dirsep in argv[0], so xlat to '\'
-   const auto chDelim( Path::DelimChar( pc ) );
-   const auto pEoArgv0( chDelim ? strchr(pc+1,chDelim) : StrToNextBlankOrEos( pc ) );
-   for( ; pc < pEoArgv0 ; ++pc ) {
-      if( Path::chDirSepPosix == *pc ) *pc = Path::chDirSepMS;
-      }
-   }
-
 STATIC_FXN void prep_cmdline( PChar pc, int cmdFlags, PCChar func__ ) {
-   prep_cmdline_( pc );
    0 && DBG( "%s: %s%s%s: %s"
       , func__
       , (cmdFlags & NO_ECHO_CMDLN) ? "@" : ""
