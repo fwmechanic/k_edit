@@ -61,7 +61,7 @@ local function vid_save()    HideCursor() end
 local function vid_restore() UnhideCursor()  DirectVidClear()  DispRefreshWholeScreenNow() end
 local function vid_wrYX(str,yLine,xCol,color) -- the key that unlocks pandora's box 09-Jan-2002 klg
    -- DBG( "X,Y=(".. xCol .. "," .. yLine .. ")="..str.."|" )
-   return DirectVidWrStrColorFlush( yLine, xCol, str, #str, color, false )
+   DirectVidWrStrColorFlush( yLine, xCol, str, color )
    end
 
 

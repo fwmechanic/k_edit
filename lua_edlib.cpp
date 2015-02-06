@@ -66,7 +66,7 @@ LUAFUNC_(ScreenLines) { R_int( ScreenLines() ); }
 LUAFUNC_(ScreenCols ) { R_int( ScreenCols () ); }
 LUAFUNC_(DirectVidClear) { DirectVidClear(); RZ; }
 LUAFUNC_(DirectVidWrStrColorFlush) { 0 && DBG("%s: %d, %d", __func__, I_(1), I_(2) );
-   DirectVidWrStrColorFlush( I_(1), I_(2), S_(3), I_(4), I_(5), LuaBool(6) );
+   DirectVidWrStrColorFlush( I_(1), I_(2), S_(3), I_(4) );
    RZ;
    }
 LUAFUNC_(Path_CommonPrefixLen) { R_int( Path::CommonPrefixLen( S_(1), S_(2) ) ); }

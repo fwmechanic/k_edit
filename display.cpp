@@ -2130,26 +2130,24 @@ static std::vector<direct_vid_seg> s_direct_vid_segs;
 
 void  DirectVidClear() { s_direct_vid_segs.clear(); }
 
-COL   DirectVidWrStrColorFlush( LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol ) {
+void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) {
    const Point tgt( yLine, xCol );
    auto it( s_direct_vid_segs.begin() );
    for( ; it != s_direct_vid_segs.end() ; ++it ) {
-      if( tgt == it->d_origin && it->d_str.length() == StringLen ) {
+      if( tgt == it->d_origin && it->d_str.length() == sr.length() ) {
          it->d_colorIndex = colorIndex;
-         if( !eq( it->d_str, stref( pszStringToDisp, StringLen ) ) ) {
-            it->d_str.assign( pszStringToDisp, StringLen ); // overwrite same-color/-length with new string
+         if( !eq( it->d_str, sr ) ) {
+            it->d_str.assign( BSR2STR(sr) ); // overwrite same-color/-length with new string
                            0 && DBG( "%s [%" PR_PTRDIFFT "u]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
             }
-         return StringLen;
+         return;
          }
       else if( tgt <= it->d_origin ) {
          break;
          }
       }
-   const stref sr( pszStringToDisp, StringLen );
    const auto new_it( s_direct_vid_segs.emplace( it, tgt, colorIndex, sr ) );
                            0 && DBG( "%s @[%" PR_PTRDIFFT "u]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
-   return StringLen;
    }
 
 
