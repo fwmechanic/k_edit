@@ -117,7 +117,7 @@ public:
 extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests );
 
     enum ConfirmResponse { crYES, crNO, crCANCEL };
-extern   ConfirmResponse Confirm_wCancel( PCChar pszPrompt, ... ) ATTR_FORMAT(1, 2);
+extern   ConfirmResponse Confirm_wCancel( PCChar pszPrompt );
 extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... ) ATTR_FORMAT(4, 5);
 
 // Display

@@ -434,7 +434,7 @@ bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff 
                                       && !SilentUpdateMode()
                                       #endif
                                    // && DBG( "confirming" )
-                                      && !ConIO::Confirm( "%s has been changed DiskFile %s than buffer:  Refresh? ", Name(), why )
+                                      && !ConIO::Confirm( Sprintf2xBuf( "%s has been changed DiskFile %s than buffer:  Refresh? ", Name(), why ) )
                                     )
                                      {
                                      0 && DBG( "not confirmed" );
@@ -778,7 +778,7 @@ STATIC_FXN bool RmvFileByName( stref filename ) {
    if( !pfToRm )
       return Msg( "no FBUF for '%" PR_BSR "'", BSR(filename) );
 
-   if( pfToRm->IsDirty() && !ConIO::Confirm( "Forget DIRTY FBUF '%" PR_BSR "'?", BSR(filename) ) )
+   if( pfToRm->IsDirty() && !ConIO::Confirm( Sprintf2xBuf( "Forget DIRTY FBUF '%" PR_BSR "'?", BSR(filename) ) ) )
       return Msg( "Dirty FBUF not forgotten '%" PR_BSR "'", BSR(filename) );
 
    const auto fDidRmv( DeleteAllViewsOntoFbuf( pfToRm ) );
@@ -1196,7 +1196,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          }
 
       if(    !fAllowDiskFileCreate
-         || (!fCreateSilently && !ConIO::Confirm( "%s does not exist. Create? ", Name() ))
+         || (!fCreateSilently && !ConIO::Confirm( Sprintf2xBuf( "%s does not exist. Create? ", Name() ) ))
         ) {
          // SW_BP;
          DBG( "FRd! user denied create" );
@@ -1399,7 +1399,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    {
    FileAttribs dest( destFnm.c_str() );
    if( dest.Exists() && dest.IsReadonly() ) {
-      if(   ConIO::Confirm( "File '%s' is readonly; overwrite anyway?", destFnm.c_str() )
+      if(   ConIO::Confirm( Sprintf2xBuf( "File '%s' is readonly; overwrite anyway?", destFnm.c_str() ) )
          && dest.MakeWritableFailed( destFnm.c_str() )
         )
          return Msg( "Could not make '%s' writable!", destFnm.c_str() );
@@ -1506,7 +1506,7 @@ bool FBUF::SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation ) {
    if( pDupFBuf && pDupFBuf == this )
       return Msg( "current filename and new filename are same; nothing done" );
 
-   if( fNeedUserConfirmation && !ConIO::Confirm( "Do you want to save this file as %s ?", filenameBuf.c_str() ) ) {
+   if( fNeedUserConfirmation && !ConIO::Confirm( Sprintf2xBuf( "Do you want to save this file as %s ?", filenameBuf.c_str() ) ) ) {
       FlushKeyQueuePrimeScreenRedraw();
       return false;
       }

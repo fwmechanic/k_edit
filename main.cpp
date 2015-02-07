@@ -490,10 +490,10 @@ bool ARG::exit() {
                   const auto filesRemaining( NumberOfCmdlineFilesRemaining() );
                   fToNextFile =
                      (   filesRemaining
-                      && !ConIO::Confirm( "You have %d more file%s to edit.  Are you sure you want to exit? "
+                      && !ConIO::Confirm( Sprintf2xBuf( "You have %d more file%s to edit.  Are you sure you want to exit? "
                                  , filesRemaining
                                  , Add_s( filesRemaining )
-                                 )
+                                 ))
                      );
                   }
                   break;
@@ -642,7 +642,7 @@ bool ARG::ext() {
                     return true;
                     }
 
-                 if( ConIO::Confirm( "Stop here (%d of %d)? ", ix, count ) )
+                 if( ConIO::Confirm( FmtStr<50>( "Stop here (%d of %d)? ", ix, count ) ) )
                     return true;
                  }
               }

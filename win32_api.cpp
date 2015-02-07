@@ -152,16 +152,14 @@ void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum ) {
 // 20050910 klg wrote
 //
 
-STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt, va_list val ) {
-   linebuf b;
-   vsnprintf( BSOB(b), pszPrompt, val );
-   DBG( "Confirm_: %s", b );
+STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt ) {
+   DBG( "Confirm_: %s", pszPrompt );
 
    MainThreadPerfCounter::PauseAll();
 
    const auto mboxrv = Win32::MessageBox(
         nullptr,                       // handle of owner window
-        b,                             // address of text in message box
+        pszPrompt,                     // address of text in message box
         "Kevin's _awesome_ editor!",   // address of title of message box
         MBox_uType | MB_ICONWARNING |  // styles of message box
         MB_TASKMODAL | MB_SETFOREGROUND
@@ -177,22 +175,10 @@ STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt, va_list v
       }
    }
 
-bool ConIO::Confirm( PCChar pszPrompt, ... ) {
-   va_list val;
-   va_start( val, pszPrompt );
-   const ConfirmResponse rv( Confirm_( MB_YESNO, pszPrompt, val ) );
-   va_end( val );
-   return rv == crYES;
-   }
+enum e_confirm_opts { CONFIRM_YESNO=MB_YESNO, CONFIRM_YESNOCANCEL=MB_YESNOCANCEL };
 
-ConfirmResponse Confirm_wCancel( PCChar pszPrompt, ... ) {
-   va_list val;
-   va_start( val, pszPrompt );
-   const ConfirmResponse rv( Confirm_( MB_YESNOCANCEL, pszPrompt, val ) );
-   va_end( val );
-   return rv;
-   }
-
+bool ConIO::Confirm( PCChar pszPrompt ) { return Confirm_( MB_YESNO, pszPrompt ) == crYES; }
+ConfirmResponse Confirm_wCancel( PCChar pszPrompt ) { return Confirm_( MB_YESNOCANCEL, pszPrompt ); }
 
 #ifdef fn_dvlog
 

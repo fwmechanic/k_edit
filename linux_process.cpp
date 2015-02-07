@@ -420,7 +420,7 @@ int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
 
    if(   INVALID_ProcessId != d_Pid
-      && ConIO::Confirm( "Kill background %s process (PID=%d)?", d_pfLogBuf->Name(), d_Pid )
+      && ConIO::Confirm( Sprintf2xBuf( "Kill background %s process (PID=%d)?", d_pfLogBuf->Name(), d_Pid ) )
       && INVALID_ProcessId != d_Pid
       ) {
       kill( -d_Pid, SIGTERM );

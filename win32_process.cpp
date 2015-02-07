@@ -831,7 +831,7 @@ int Win32_pty::DeleteAllEnqueuedJobs_locks() {
 int Win32_pty::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
 
-   if( IsThreadActive() && ConIO::Confirm( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), d_processInfo.dwProcessId ) ) {
+   if( IsThreadActive() && ConIO::Confirm( Sprintf2xBuf( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), d_processInfo.dwProcessId ) ) ) {
       PCChar msg;
       switch( Win32::TerminateApp( d_processInfo.dwProcessId, 2000 ) ) {
          default                      : msg = "WTF!?"                    ;  break;
@@ -1014,7 +1014,7 @@ int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
 
    if(   INVALID_dwProcessId != d_processInfo.dwProcessId
-      && ConIO::Confirm( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), d_processInfo.dwProcessId )
+      && ConIO::Confirm( FmtStr<55>( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), d_processInfo.dwProcessId ) )
       && INVALID_dwProcessId != d_processInfo.dwProcessId
       ) {
       PCChar msg;

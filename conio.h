@@ -40,7 +40,7 @@ namespace ConIO {
    void  Shutdown();
 
    int   DbgPopf( const char *fmt, ... ) ATTR_FORMAT(1, 2);
-   bool  Confirm( const char *pszPrompt, ... ) ATTR_FORMAT(1, 2);
+   bool  Confirm( const char *pszPrompt );
    }
 
 namespace ConOut {
