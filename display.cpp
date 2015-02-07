@@ -2453,7 +2453,7 @@ STATIC_FXN void RedrawScreen() {
          for( ; dvsit != s_direct_vid_segs.end() && dvsit->d_origin.lin < yLine ; ++dvsit ) {
             }
          for( ; dvsit != s_direct_vid_segs.end() && yLine == dvsit->d_origin.lin ; ++dvsit ) {
-            buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        );
+            buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
             alc.PutColor( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorIndex );
             }
          (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "u!=%u", buf.length(), scrnCols );
@@ -2854,7 +2854,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 void DirectVidClear() {
    s_direct_vid_segs.clear();
    DispNeedsRedrawAllLinesAllWindows();
-   RedrawScreen();
+   UpdtDisplay();
    }
 
 void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) {
@@ -2874,7 +2874,7 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
             }
          if( fChanged ) { // mark line dirty
             s_paScreenLineNeedsRedraw->SetBit( it->d_origin.lin );
-            RedrawScreen();
+            UpdtDisplay();
             }
          return;
          }
@@ -2885,7 +2885,7 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
    const auto new_it( s_direct_vid_segs.emplace( it, tgt, colorIndex, sr ) );
                            0 && DBG( "%s @[%" PR_PTRDIFFT "u]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
    s_paScreenLineNeedsRedraw->SetBit( new_it->d_origin.lin );
-   RedrawScreen();
+   UpdtDisplay();
    }
 //--------------------------------------------------------------------------------------
 
