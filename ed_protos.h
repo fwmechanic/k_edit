@@ -116,8 +116,6 @@ public:
 
 extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests );
 
-    enum ConfirmResponse { crYES, crNO, crCANCEL };
-extern   ConfirmResponse Confirm_wCancel( PCChar pszPrompt );
 extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... ) ATTR_FORMAT(4, 5);
 
 // Display
@@ -430,6 +428,8 @@ extern  stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
 //
 // Lua functions callable from C++:
 //
+
+extern bool Lua_ConfirmYes( PCChar prompt );
 
 extern size_t LuaHeapSize();
 

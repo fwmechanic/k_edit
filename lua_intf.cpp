@@ -923,6 +923,11 @@ bool LuaCtxt_Edit::nextmsg_newsection_ok( PCChar src )  { return callLuaOk( L_ed
 bool LuaCtxt_Edit::ReadPseudoFileOk     ( PFBUF src, int *pRvBool )  { *pRvBool = false;
                                                           return callLuaOk( L_edit, "ReadPseudoFileOk_FROM_C"  , "F>b", src, pRvBool ); }
 
+bool Lua_ConfirmYes( PCChar prompt ) {
+   bool rv;
+   return callLuaOk( L_edit, "MenuConfirm", "s>b", prompt, &rv ) ? rv : false;
+   }
+
 COL FBOP::GetSoftcrIndentLua( PFBUF fb, LINE yLine ) {
    COL rv;
    return callLuaOk( L_edit, "Softcr_col_from_C", "Fi>i", fb, yLine, &rv ) ? rv-1 : -1;

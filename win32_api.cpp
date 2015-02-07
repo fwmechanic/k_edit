@@ -145,27 +145,14 @@ void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum ) {
 
 #endif//DEBUG_LOGGING
 
-
-//
-// Confirm with "Cancel" button
-//
-// 20050910 klg wrote
-//
-
-STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt ) {
-   DBG( "Confirm_: %s", pszPrompt );
-
-   MainThreadPerfCounter::PauseAll();
-
+ConfirmResponse Win32::Confirm_MsgBox( int MBox_uType, PCChar prompt ) {
    const auto mboxrv = Win32::MessageBox(
         nullptr,                       // handle of owner window
-        pszPrompt,                     // address of text in message box
+        prompt,                        // address of text in message box
         "Kevin's _awesome_ editor!",   // address of title of message box
         MBox_uType | MB_ICONWARNING |  // styles of message box
         MB_TASKMODAL | MB_SETFOREGROUND
       );
-
-   MainThreadPerfCounter::ResumeAll();
 
    switch( mboxrv ) {
       case IDYES:    return crYES;
@@ -174,11 +161,6 @@ STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt ) {
       case IDCANCEL: return crCANCEL;
       }
    }
-
-enum e_confirm_opts { CONFIRM_YESNO=MB_YESNO, CONFIRM_YESNOCANCEL=MB_YESNOCANCEL };
-
-bool ConIO::Confirm( PCChar pszPrompt ) { return Confirm_( MB_YESNO, pszPrompt ) == crYES; }
-ConfirmResponse Confirm_wCancel( PCChar pszPrompt ) { return Confirm_( MB_YESNOCANCEL, pszPrompt ); }
 
 #ifdef fn_dvlog
 

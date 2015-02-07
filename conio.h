@@ -35,12 +35,14 @@ struct EdKC_Ascii {
             char  Ascii;       // exists because NUMLOCK-masked EdKC values != correct number key ascii values
    };
 
+   enum ConfirmResponse { crYES, crNO, crCANCEL };
 namespace ConIO {
    bool  StartupOk( bool fForceNewConsole );
    void  Shutdown();
 
    int   DbgPopf( const char *fmt, ... ) ATTR_FORMAT(1, 2);
    bool  Confirm( const char *pszPrompt );
+   ConfirmResponse Confirm_wCancel( PCChar pszPrompt );
    }
 
 namespace ConOut {

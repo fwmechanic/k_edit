@@ -29,8 +29,6 @@ STATIC_FXN int ConGetEscEvent();
 
 bool ConIn::FlushKeyQueueAnythingFlushed(){ return flushinp(); }
 
-bool ConIO::Confirm( PCChar pszPrompt, ... ){ return false; }
-
 int ConIO::DbgPopf( PCChar fmt, ... ){ return 0; }
 
 #define  EdKC_EVENT_ProgramGotFocus       (EdKC_COUNT+1)

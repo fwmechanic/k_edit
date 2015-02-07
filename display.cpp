@@ -3376,3 +3376,31 @@ void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset
    out.Cat( g_colorStatus, pszSearchStr+errOffset+1                        );  // post-err part of pattern
    out.VidWrLine( DialogLine() );
    }
+
+//
+// Confirm with "Cancel" button
+//
+// 20050910 klg wrote
+// 20150207 klg portable Lua version
+//
+
+STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt ) {
+   DBG( "Confirm_: %s", pszPrompt );
+
+   MainThreadPerfCounter::PauseAll();
+
+   const auto mboxrv(
+#if 1
+      Lua_ConfirmYes( pszPrompt ) ? crYES : crNO
+#else
+      Win32::Confirm_MsgBox( pszPrompt )
+#endif
+      );
+
+   MainThreadPerfCounter::ResumeAll();
+
+   return mboxrv;
+   }
+
+bool            ConIO::Confirm        ( PCChar pszPrompt ) { return Confirm_( MB_YESNO, pszPrompt ) == crYES; }
+ConfirmResponse ConIO::Confirm_wCancel( PCChar pszPrompt ) { return Confirm_( MB_YESNOCANCEL, pszPrompt ); }

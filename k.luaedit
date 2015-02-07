@@ -1383,6 +1383,10 @@ AddEdFxn{ name = "sb", help = "Menu: System Buffers", attr = NOARG, key = ""
       end
    }
 
+function MenuConfirm( prompt ) -- ******  CAREFUL! called from C++ !!!
+   local _,rv = Menu.new{ title=prompt, choices = { "Yes", "No" } }:PickOne()
+   return rv and rv=="Yes"
+   end
 
 function ary_to_fbuf( fnm, ary )
    local fbDest = FBUF.new_empty_may_create( fnm )

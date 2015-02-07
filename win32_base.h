@@ -85,8 +85,7 @@
 #define DLLX  EXTERNC _declspec( dllexport )
 #endif
 
-namespace Win32 // Win32::
-   {
+namespace Win32 { // Win32::
    #include <windows.h>
    #include <winnls.h>
 
@@ -102,16 +101,18 @@ namespace Win32 // Win32::
    STIL int    MAKELANGID__LANG_NEUTRAL_SUBLANG_DEFAULT() { return MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ); }
    }
 
+namespace Win32 { // Win32::
+   ConfirmResponse Confirm_MsgBox( int MBox_uType, PCChar prompt );
+   }
+
 // Conditional-compile switch to en/disable PSAPI usage (NT doesn't
 // intrinsically support PSAPI, and you never know when someone MIGHT need to
 // run on NT!)
 //
 #define  USE_WINDOWS_PSAPI  1
 #if      USE_WINDOWS_PSAPI
-namespace Win32 // Win32::
-   {
-   namespace PSAPI // Win32::PSAPI
-      {
+namespace Win32 { // Win32::
+   namespace PSAPI { // Win32::PSAPI
       #include <psapi.h>
       }
    }
