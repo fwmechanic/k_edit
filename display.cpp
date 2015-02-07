@@ -3402,5 +3402,5 @@ STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt ) {
    return mboxrv;
    }
 
-bool            ConIO::Confirm        ( PCChar pszPrompt ) { return Confirm_( MB_YESNO, pszPrompt ) == crYES; }
-ConfirmResponse ConIO::Confirm_wCancel( PCChar pszPrompt ) { return Confirm_( MB_YESNOCANCEL, pszPrompt ); }
+bool            ConIO::Confirm        ( PCChar pszPrompt ) { return Confirm_( WL( MB_YESNO      , 0 ), pszPrompt ) == crYES; }
+ConfirmResponse ConIO::Confirm_wCancel( PCChar pszPrompt ) { return Confirm_( WL( MB_YESNOCANCEL, 0 ), pszPrompt ); }

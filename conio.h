@@ -42,7 +42,7 @@ namespace ConIO {
 
    int   DbgPopf( const char *fmt, ... ) ATTR_FORMAT(1, 2);
    bool  Confirm( const char *pszPrompt );
-   ConfirmResponse Confirm_wCancel( PCChar pszPrompt );
+   ConfirmResponse Confirm_wCancel( const char *pszPrompt );
    }
 
 namespace ConOut {
