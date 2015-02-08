@@ -85,9 +85,11 @@ LUAFUNC_(Msg)         {
    Msg( "%s", p1 );
    RZ;
    }
-LUAFUNC_(GetCwd)      {
-   R_str( Path::GetCwd_ps().c_str() );
-   }
+LUAFUNC_(GetCwd)        { R_str( Path::GetCwd_ps().c_str() ); }
+LUAFUNC_(Path_Dirnm   ) { const auto rv( Path::RefDirnm(    S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+LUAFUNC_(Path_Fnm     ) { const auto rv( Path::RefFnm(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+LUAFUNC_(Path_Ext     ) { const auto rv( Path::RefExt(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+LUAFUNC_(Path_FnameExt) { const auto rv( Path::RefFnameExt( S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
 LUAFUNC_(GetChildDirs) {
    lua_newtable(L);  // result
    DirListGenerator dlg;
@@ -657,6 +659,10 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        { "Msg"                         , Msg                         },
        { "OsErrStr"                    , OsErrStr                    },
        { "OsVer"                       , OsVer                       },
+       { "Path_Dirnm"                  , Path_Dirnm                  },
+       { "Path_Fnm"                    , Path_Fnm                    },
+       { "Path_Ext"                    , Path_Ext                    },
+       { "Path_FnameExt"               , Path_FnameExt               },
        { "RsrcFilename"                , RsrcFilename                },
        { "StateFilename"               , StateFilename               },
        { "StartConProcess"             , StartConProcess             },

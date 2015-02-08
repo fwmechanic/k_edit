@@ -250,7 +250,8 @@ function ExtOf    ( str )  return str:match( "%.([^%.]*)$" )     end
 -- 2) generating directory strings which will become EnvVar values
 
 function PrettyPath( path )
-   if path:match( "^%a:\\$" ) then return path end
+   if path:match( "^%a:\\$" )
+   or path:match( "^"..dirsep_class.."$" ) then return path end
    return path:gsub( dirsep_class.."$", "" )
    end
 
@@ -405,7 +406,7 @@ do
       return function()  -- iterator function
          if dir == 0 then  dir = GetCwd()
          elseif dir  then
-            dir = PathOf( dir:sub( 1, -2 ) )
+            dir = Path_Dirnm( dir:sub( 1, #dir-1 ) )
             if not IsDir(dir) then  dir = nil  end
             end
       -- if dir  then  print( dir:Name() )  end
@@ -522,7 +523,7 @@ AddEdFxn{ name = "dirs", help = "open <dirs> buffer", key="alt+f", attr = NOARG
 
       for dir, _ in pairs( dirs ) do  out:InsLineSortedAscending( dir )  end
 
-      out:ScrollAllCursorsToBof()
+   -- out:ScrollAllCursorsToBof()
       out:PutFocusOn()
       return true
       end
@@ -1384,7 +1385,7 @@ AddEdFxn{ name = "sb", help = "Menu: System Buffers", attr = NOARG, key = ""
    }
 
 function MenuConfirm( prompt ) -- ******  CAREFUL! called from C++ !!!
-   local _,rv = Menu.new{ title=prompt, choices = { "Yes", "No" } }:PickOne()
+   local _,rv = Menu.new{ title=prompt, choices = { "Yes", "No" }, opt={center_choices=true} }:PickOne()
    return rv and rv=="Yes"
    end
 

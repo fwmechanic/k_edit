@@ -56,6 +56,10 @@ if isLinux then
 local MAX_DISP_COLS = 1024
 local bar  = chHbar:rep( MAX_DISP_COLS )
 local spcs =  (" "):rep( MAX_DISP_COLS )
+local function pad( st, wid )
+   if #st > wid then return st:substr( 1, wid ) end
+   return st .. (" "):rep( wid - #st )
+   end
 
 local function vid_save()    HideCursor() end
 local function vid_restore() UnhideCursor()  DirectVidClear()  DispRefreshWholeScreenNow() end
@@ -84,6 +88,7 @@ function new(obj)
    end
 
 function MenuProto_:prepAboutChoices()
+   self.opt = self.opt or {}
    self.color = self.color or FgBg( Wht, Brn )
    self.aboutChoices = {}
    local ac = self.aboutChoices
@@ -118,8 +123,11 @@ function MenuProto_:prepAboutChoices()
 
    -- Create self.paddedChoices array containing all choices padded to aboutChoices.maxlen
    self.paddedChoices = {}
+   local wid = ac.maxlen-self.extra
    for ix, val in ipairs( choices_ ) do
-      self.paddedChoices[ix] = val .. spcs:sub( 1, ac.maxlen-self.extra - #val )
+      self.paddedChoices[ix] = self.opt.center_choices
+         and pad( (" "):rep( (wid - #val)/2 ) .. val, wid )
+         or  pad( val, wid )
       end
 
    -- self.keyTbl = {}
