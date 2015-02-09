@@ -129,18 +129,20 @@ STATIC_FXN int ConGetEvent() {
       case KEY_LL        : return EdKC_end      ; // used in old termcap/infos
       case KEY_NPAGE     : return EdKC_pgdn     ;
       case KEY_PPAGE     : return EdKC_pgup     ;
-      case KEY_F(1)      : return EdKC_f1       ;
-      case KEY_F(2)      : return EdKC_f2       ;
-      case KEY_F(3)      : return EdKC_f3       ;
-      case KEY_F(4)      : return EdKC_f4       ;
-      case KEY_F(5)      : return EdKC_f5       ;
-      case KEY_F(6)      : return EdKC_f6       ;
-      case KEY_F(7)      : return EdKC_f7       ;
-      case KEY_F(8)      : return EdKC_f8       ;
-      case KEY_F(9)      : return EdKC_f9       ;
-      case KEY_F(10)     : return EdKC_f10      ;
-      case KEY_F(11)     : return EdKC_f11      ;
-      case KEY_F(12)     : return EdKC_f12      ;
+
+      case KEY_F(1)  : return EdKC_f1  ;    case 289 : return EdKC_c_f1  ;  case 313 : return EdKC_a_f1  ;
+      case KEY_F(2)  : return EdKC_f2  ;    case 290 : return EdKC_c_f2  ;  case 314 : return EdKC_a_f2  ;
+      case KEY_F(3)  : return EdKC_f3  ; /* case 291 : return EdKC_c_f3  ;  case 315 : return EdKC_a_f3  ; decoded elsewhere */
+      case KEY_F(4)  : return EdKC_f4  ; /* case 292 : return EdKC_c_f4  ;  case 316 : return EdKC_a_f4  ; decoded elsewhere */
+      case KEY_F(5)  : return EdKC_f5  ;    case 293 : return EdKC_c_f5  ;  case 317 : return EdKC_a_f5  ;
+      case KEY_F(6)  : return EdKC_f6  ;    case 294 : return EdKC_c_f6  ;  case 318 : return EdKC_a_f6  ;
+      case KEY_F(7)  : return EdKC_f7  ;    case 295 : return EdKC_c_f7  ;  case 319 : return EdKC_a_f7  ;
+      case KEY_F(8)  : return EdKC_f8  ;    case 296 : return EdKC_c_f8  ;  case 320 : return EdKC_a_f8  ;
+      case KEY_F(9)  : return EdKC_f9  ;    case 297 : return EdKC_c_f9  ;  case 321 : return EdKC_a_f9  ;
+      case KEY_F(10) : return EdKC_f10 ;    case 298 : return EdKC_c_f10 ;  case 322 : return EdKC_a_f10 ;
+      case KEY_F(11) : return EdKC_f11 ;    case 299 : return EdKC_c_f11 ;  case 323 : return EdKC_a_f11 ;
+      case KEY_F(12) : return EdKC_f12 ;    case 300 : return EdKC_c_f12 ;  case 324 : return EdKC_a_f12 ;
+
       case KEY_B2        : return EdKC_center   ;
       case KEY_ENTER     : return EdKC_enter    ; // mimic Win32 behavior
       case 560           : return EdKC_c_right  ; // ctr + right

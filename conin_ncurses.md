@@ -94,16 +94,16 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_z          | y |
 | EdKC_a_f1         | hooked: Lubuntu start menu? |
 | EdKC_a_f2         | hooked: run dialog box |
-| EdKC_a_f3         | hooked: unknown; seems to freeze K (?) |
-| EdKC_a_f4         | hooked: unknown; seems to freeze K (?) - should work with edited openbox config |
-| EdKC_a_f5         | hooked: unknown; seems to freeze K  |
-| EdKC_a_f6         | hooked: unknown; seems to freeze K  |
-| EdKC_a_f7         | hooked: unknown; seems to freeze K  |
-| EdKC_a_f8         | hooked: unknown; seems to freeze K  |
-| EdKC_a_f9         | hooked: unknown; seems to freeze K  |
-| EdKC_a_f10        | hooked: unknown; seems to freeze K  |
-| EdKC_a_f11        | hooked: unknown; seems to freeze K  |
-| EdKC_a_f12        | hooked: unknown; seems to freeze K  |
+| EdKC_a_f3         | y |
+| EdKC_a_f4         | hooked: CLOSES TERMINAL and all processes in session! |
+| EdKC_a_f5         | y |
+| EdKC_a_f6         | y |
+| EdKC_a_f7         | y |
+| EdKC_a_f8         | y |
+| EdKC_a_f9         | y |
+| EdKC_a_f10        | y |
+| EdKC_a_f11        | y |
+| EdKC_a_f12        | y |
 | EdKC_a_BACKTICK   | y |
 | EdKC_a_MINUS      | y |
 | EdKC_a_EQUAL      | y |
@@ -186,14 +186,14 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_f2         | no response |
 | EdKC_c_f3         | y |
 | EdKC_c_f4         | y |
-| EdKC_c_f5         | no response |
-| EdKC_c_f6         | no response |
+| EdKC_c_f5         | y |
+| EdKC_c_f6         | y |
 | EdKC_c_f7         | hooked: blanked the entire screen |
-| EdKC_c_f8         | no response |
-| EdKC_c_f9         | no response |
+| EdKC_c_f8         | y |
+| EdKC_c_f9         | y |
 | EdKC_c_f10        | no response |
 | EdKC_c_f11        | no response |
-| EdKC_c_f12        | no response |
+| EdKC_c_f12        | y |
 | EdKC_c_BACKTICK   | is ctrl+9 (IMPOSSIBLE)|
 | EdKC_c_MINUS      | ascii '-' (IMPOSSIBLE)|
 | EdKC_c_EQUAL      | ascii '-' (IMPOSSIBLE)|
