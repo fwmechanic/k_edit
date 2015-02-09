@@ -363,6 +363,7 @@ STATIC_CONST TKyCd2KyNameTbl KyCd2KyNameTbl[] = {
       { EdKC_cs_right        , "ctrl+shift+right"    },
       { EdKC_cs_down         , "ctrl+shift+down"     },
       { EdKC_cs_ins          , "ctrl+shift+ins"      },
+      { EdKC_cs_del          , "ctrl+shift+del"      },
       { EdKC_cs_0            , "ctrl+shift+0"        },
       { EdKC_cs_1            , "ctrl+shift+1"        },
       { EdKC_cs_2            , "ctrl+shift+2"        },

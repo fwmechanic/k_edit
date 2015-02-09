@@ -83,6 +83,18 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
    return rv;
    }
 
+#define CR( is, rv )  case is: return rv;
+
+#define CAS5( kynm ) \
+   switch( mod ) { \
+      case mod_cas: return EdKC_##kynm;    \
+      case mod_Cas: return EdKC_c_##kynm;  \
+      case mod_cAs: return EdKC_a_##kynm;  \
+      case mod_caS: return EdKC_s_##kynm;  \
+      case mod_CaS: return EdKC_cs_##kynm; \
+      default:      return -1;            \
+      }
+
 // return -1 indicates that event should be ignored (resize event as an example)
 STATIC_FXN int ConGetEvent() {
    // terminal specific values for shift + up / down
@@ -109,7 +121,6 @@ STATIC_FXN int ConGetEvent() {
       if (ch < 27)                  { return EdKC_c_a + (ch - 1); }
       return ch;
       }
-   #define CR( is, rv )  case is: return rv;
    switch (ch) { // > 0xFF
       CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT , EdKC_s_right) CR(558, EdKC_a_right) CR(560, EdKC_c_right)
       CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT  , EdKC_s_left ) CR(543, EdKC_a_left ) CR(545, EdKC_c_left )
@@ -236,155 +247,22 @@ STATIC_FXN int ConGetEscEvent() {
                 mod_CaS= mod_ctrl | mod_shift,
               };
          switch (endch) {
-            default:            DBG( "%s unhandled event *cas=%X 0x%X %d\n", __func__, mod, endch, endch ); return -1;
-            case 'A':
-                switch( mod ) {
-                case mod_cas:   return EdKC_up;
-                case mod_Cas:   return EdKC_c_up;
-                case mod_cAs:   return EdKC_a_up;
-                case mod_caS:   return EdKC_s_up;
-                case mod_CaS:   return EdKC_cs_up;
-                default:        return -1;
-                }
-                break;
-            case 'B':
-                switch( mod ) {
-                case mod_cas:   return EdKC_down;
-                case mod_Cas:   return EdKC_c_down;
-                case mod_cAs:   return EdKC_a_down;
-                case mod_caS:   return EdKC_s_down;
-                case mod_CaS:   return EdKC_cs_down;
-                default:        return -1;
-                }
-                break;
-            case 'C':
-                switch( mod ) {
-                case mod_cas:   return EdKC_right;
-                case mod_Cas:   return EdKC_c_right;
-                case mod_cAs:   return EdKC_a_right;
-                case mod_caS:   return EdKC_s_right;
-                case mod_CaS:   return EdKC_cs_right;
-                default:        return -1;
-                }
-                break;
-            case 'D':
-                switch( mod ) {
-                case mod_cas:   return EdKC_left;
-                case mod_Cas:   return EdKC_c_left;
-                case mod_cAs:   return EdKC_a_left;
-                case mod_caS:   return EdKC_s_left;
-                case mod_CaS:   return EdKC_cs_left;
-                default:        return -1;
-                }
-                break;
-            case 'E':
-                switch( mod ) {
-                case mod_cas:   return EdKC_center;
-                case mod_Cas:   return EdKC_c_center;  // IMPOSSIBLE
-                case mod_cAs:   return EdKC_a_center;  // IMPOSSIBLE
-                case mod_caS:   return EdKC_s_center;
-                case mod_CaS:   return EdKC_cs_center;
-                default:        return -1;
-                }
-                break;
-            case 'F':
-                switch( mod ) {
-                case mod_cas:   return EdKC_end;
-                case mod_Cas:   return EdKC_c_end;     // IMPOSSIBLE
-                case mod_cAs:   return EdKC_a_end;
-                case mod_caS:   return EdKC_s_end;
-                case mod_CaS:   return EdKC_cs_end;
-                default:        return -1;
-                }
-                break;
-            case 'H':
-                switch( mod ) {
-                case mod_cas:   return EdKC_home;
-                case mod_Cas:   return EdKC_c_home;    // IMPOSSIBLE
-                case mod_cAs:   return EdKC_a_home;
-                case mod_caS:   return EdKC_s_home;
-                case mod_CaS:   return EdKC_cs_home;
-                default:        return -1;
-                }
-                break;
-            case 'P':
-                switch( mod ) {
-                case mod_cas:   return EdKC_f1;
-                case mod_Cas:   return EdKC_c_f1;
-                case mod_cAs:   return EdKC_a_f1;
-                case mod_caS:   return EdKC_s_f1;
-                default:        return -1;
-                }
-                break;
-            case 'Q':
-                switch( mod ) {
-                case mod_cas:   return EdKC_f2;
-                case mod_Cas:   return EdKC_c_f2;
-                case mod_cAs:   return EdKC_a_f2;
-                case mod_caS:   return EdKC_s_f2;
-                default:        return -1;
-                }
-                break;
-            case 'R':
-                switch( mod ) {
-                case mod_cas:   return EdKC_f3;    /* decoded elsewhere */
-                case mod_Cas:   return EdKC_c_f3;
-                case mod_cAs:   return EdKC_a_f3;
-                case mod_caS:   return EdKC_s_f3;
-                case mod_CaS:   return EdKC_cs_f3;
-                default:        return -1;
-                }
-                break;
-            case 'S':
-                switch( mod ) {
-                case mod_cas:   return EdKC_f4;    /* decoded elsewhere */
-                case mod_Cas:   return EdKC_c_f4;
-                case mod_cAs:   return EdKC_a_f4;
-                case mod_caS:   return EdKC_s_f4;
-                case mod_CaS:   return EdKC_cs_f4;
-                default:        return -1;
-                }
-                break;
-            case 'j':
-                switch( mod ) {
-                case mod_cas:   return EdKC_numStar;
-                case mod_Cas:   return EdKC_c_numStar;
-                case mod_cAs:   return EdKC_a_numStar;
-                case mod_caS:   return EdKC_s_numStar;
-                case mod_CaS:   return EdKC_cs_numStar;
-                default:        return -1;
-                }
-                break;
-            case 'k':
-                switch( mod ) {
-                case mod_cas:   return EdKC_numPlus;
-                case mod_Cas:   return EdKC_c_numPlus;
-                case mod_cAs:   return EdKC_a_numPlus;
-                case mod_caS:   return EdKC_s_numPlus;
-                case mod_CaS:   return EdKC_cs_numPlus;
-                default:        return -1;
-                }
-                break;
-            case 'm':
-                switch( mod ) {
-                case mod_cas:   return EdKC_numMinus;
-                case mod_Cas:   return EdKC_c_numMinus;
-                case mod_cAs:   return EdKC_a_numMinus;
-                case mod_caS:   return EdKC_s_numMinus;
-                case mod_CaS:   return EdKC_cs_numMinus;
-                default:        return -1;
-                }
-                break;
-            case 'o':
-                switch( mod ) {
-                case mod_cas:   return EdKC_numSlash;
-                case mod_Cas:   return EdKC_c_numSlash;
-                case mod_cAs:   return EdKC_a_numSlash;
-                case mod_caS:   return EdKC_s_numSlash;
-                case mod_CaS:   return EdKC_cs_numSlash;
-                default:        return -1;
-                }
-                break;
+            default:  DBG( "%s unhandled event *cas=%X 0x%X %d\n", __func__, mod, endch, endch ); return -1;
+            case 'A': CAS5( up       ); break;
+            case 'B': CAS5( down     ); break;
+            case 'C': CAS5( right    ); break;
+            case 'D': CAS5( left     ); break;
+            case 'E': CAS5( center   ); break;
+            case 'F': CAS5( end      ); break;
+            case 'H': CAS5( home     ); break;
+            case 'P': CAS5( f1       ); break;
+            case 'Q': CAS5( f2       ); break;
+            case 'R': CAS5( f3       ); break;
+            case 'S': CAS5( f4       ); break;
+            case 'j': CAS5( numStar  ); break;
+            case 'k': CAS5( numPlus  ); break;
+            case 'm': CAS5( numMinus ); break;
+            case 'o': CAS5( numSlash ); break;
             case 'a':
                 if (!(mod & mod_ctrl))     { return EdKC_s_up;  }
                 else if ((mod & mod_ctrl)) { return EdKC_cs_up; }
@@ -408,88 +286,16 @@ STATIC_FXN int ConGetEscEvent() {
             case '$': mod |= mod_shift;  /* FALL THRU!!! */
             case '~':
                 switch (ch1 - '0') {
-                default: DBG( "%s unhandled event ~cas=%X 0x%X %d\n", __func__, mod, ch1 - '0', ch1 - '0' ); return -1;
-                case 1:
-                    switch( mod ) {
-                    case mod_cas:   return EdKC_home;
-                    case mod_Cas:   return EdKC_c_home;   // IMPOSSIBLE
-                    case mod_cAs:   return EdKC_a_home;
-                    case mod_caS:   return EdKC_s_home;
-                    case mod_CaS:   return EdKC_cs_home;
-                    default:        return -1;
-                    }
-                    break;
-                case 2:
-                    switch( mod ) {
-                    case mod_cas:   return EdKC_ins;
-                    case mod_Cas:   return EdKC_c_ins;    // IMPOSSIBLE
-                    case mod_cAs:   return EdKC_a_ins;
-                    case mod_caS:   return EdKC_s_ins;
-                    case mod_CaS:   return EdKC_cs_ins;
-                    default:        return -1;
-                    }
-                    break;
-                case 3:
-                    switch( mod ) {
-                    case mod_cas:   return EdKC_del;
-                    case mod_Cas:   return EdKC_c_del;
-                    case mod_cAs:   return EdKC_a_del;
-                    case mod_caS:   return EdKC_s_del;
-                    case mod_CaS:   return -1;
-                    default:        return -1;
-                    }
-                    break;
-                case 4:
-                    switch( mod ) {
-                    case mod_cas:   return EdKC_end;
-                    case mod_Cas:   return EdKC_c_end;    // IMPOSSIBLE
-                    case mod_cAs:   return EdKC_a_end;
-                    case mod_caS:   return EdKC_s_end;
-                    case mod_CaS:   return EdKC_cs_end;
-                    default:        return -1;
-                    }
-                    break;
-                case 5:
-                    switch( mod ) {
-                    case mod_cas:   return EdKC_pgup;
-                    case mod_Cas:   return EdKC_c_pgup;   // IMPOSSIBLE
-                    case mod_cAs:   return EdKC_a_pgup;
-                    case mod_caS:   return EdKC_s_pgup;
-                    case mod_CaS:   return EdKC_cs_pgup;
-                    default:        return -1;
-                    }
-                    break;
-                case 6:
-                    switch( mod ) {
-                    case mod_cas:   return EdKC_pgdn;
-                    case mod_Cas:   return EdKC_c_pgdn;   // IMPOSSIBLE
-                    case mod_cAs:   return EdKC_a_pgdn;
-                    case mod_caS:   return EdKC_s_pgdn;
-                    case mod_CaS:   return EdKC_cs_pgdn;
-                    default:        return -1;
-                    }
-                    break;
-                case 7:
-                    switch( mod ) {
-                    case mod_cas:   return EdKC_home;
-                    case mod_Cas:   return EdKC_c_home;
-                    case mod_cAs:   return EdKC_a_home;   // IMPOSSIBLE
-                    case mod_caS:   return EdKC_s_home;
-                    case mod_CaS:   return EdKC_cs_home;
-                    default:        return -1;
-                    }
-                    break;
-                case 8:
-                    switch( mod ) {
-                    case mod_cas:   return EdKC_end;
-                    case mod_Cas:   return EdKC_c_end;
-                    case mod_cAs:   return EdKC_a_end;    // IMPOSSIBLE
-                    case mod_caS:   return EdKC_s_end;
-                    case mod_CaS:   return EdKC_cs_end;
-                    default:        return -1;
-                    }
-                    break;
-                }
+                   default: DBG( "%s unhandled event ~cas=%X 0x%X %d\n", __func__, mod, ch1 - '0', ch1 - '0' ); return -1;
+                   case 1: CAS5( home ); break;
+                   case 7: CAS5( home ); break;
+                   case 4: CAS5( end  ); break;
+                   case 8: CAS5( end  ); break;
+                   case 2: CAS5( ins  ); break;
+                   case 3: CAS5( del  ); break;
+                   case 5: CAS5( pgup ); break;
+                   case 6: CAS5( pgdn ); break;
+                   }
                 break;
             }
       }

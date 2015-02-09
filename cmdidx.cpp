@@ -406,6 +406,7 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
    , IDX_EQ( EdKC_cs_right     )  pCMD_unassigned
    , IDX_EQ( EdKC_cs_down      )  pCMD_unassigned
    , IDX_EQ( EdKC_cs_ins       )  pCMD_unassigned
+   , IDX_EQ( EdKC_cs_del       )  pCMD_unassigned
    , IDX_EQ( EdKC_cs_0         )  pCMD_unassigned
    , IDX_EQ( EdKC_cs_1         )  pCMD_unassigned
    , IDX_EQ( EdKC_cs_2         )  pCMD_unassigned

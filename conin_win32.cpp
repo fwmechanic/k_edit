@@ -922,7 +922,7 @@ STATIC_CONST XlatForKey normalXlatTbl[ 0xE0 ] = {
    { 0,             0,                0,                0,               0,                 }, // 0x2B  VK_EXECUTE              EXECUTE key
    { 0,             0,                0,                0,               0,                 }, // 0x2C  VK_SNAPSHOT             PRINT SCREEN key
    { EdKC_ins,      EdKC_a_ins,       EdKC_c_ins,       EdKC_s_ins,      EdKC_cs_ins,       }, // 0x2D  VK_INSERT               INS key
-   { EdKC_del,      EdKC_a_del,       EdKC_c_del,       EdKC_s_del,      0,                 }, // 0x2E  VK_DELETE               DEL key
+   { EdKC_del,      EdKC_a_del,       EdKC_c_del,       EdKC_s_del,      EdKC_cs_del,       }, // 0x2E  VK_DELETE               DEL key
    { 0,             0,                0,                0,               0,                 }, // 0x2F  VK_HELP                 HELP key
    { 0,             EdKC_a_0,         EdKC_c_0,         0,               EdKC_cs_0,         }, // 0x30  VK_0                    0 key
    { 0,             EdKC_a_1,         EdKC_c_1,         0,               EdKC_cs_1,         }, // 0x31  VK_1                    1 key
