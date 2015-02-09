@@ -293,6 +293,7 @@
    selword:=pword ->eof mword arg pword => :>eof mword pword arg pword
    selword:ctrl+center
    selword:ctrl+space
+   selword:alt+ins
 
    #selindent: selects a column in the whitespace of the indent of the block in which the cursor currently resides
    selindent:= mib -> cola arg pib left  # mib+pib ordered so cursor left at TOP of ib (so pastes afterwards work logically)
