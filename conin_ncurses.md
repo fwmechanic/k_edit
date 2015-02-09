@@ -196,16 +196,16 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_f12        | y |
 | EdKC_c_BACKTICK   | is ctrl+9 (IMPOSSIBLE)|
 | EdKC_c_MINUS      | ascii '-' (IMPOSSIBLE)|
-| EdKC_c_EQUAL      | ascii '-' (IMPOSSIBLE)|
+| EdKC_c_EQUAL      | ascii '=' (IMPOSSIBLE)|
 | EdKC_c_LEFT_SQ    | is esc (IMPOSSIBLE)|
-| EdKC_c_RIGHT_SQ   | is ctrl+f3 (IMPOSSIBLE)|
-| EdKC_c_BACKSLASH  | is ctrl+f2 (IMPOSSIBLE)|
+| EdKC_c_RIGHT_SQ   | is ctrl+5 (IMPOSSIBLE)|
+| EdKC_c_BACKSLASH  | is ctrl+4 (IMPOSSIBLE)|
 | EdKC_c_SEMICOLON  | ascii ';' (IMPOSSIBLE)|
-| EdKC_c_TICK       | ascii '''(IMPOSSIBLE) |
-| EdKC_c_COMMA      | ascii ','(IMPOSSIBLE) |
+| EdKC_c_TICK       | ascii ''' (IMPOSSIBLE)|
+| EdKC_c_COMMA      | ascii ',' (IMPOSSIBLE)|
 | EdKC_c_DOT        | ascii '.' (IMPOSSIBLE)|
-| EdKC_c_SLASH      | is ctrl+f5 (IMPOSSIBLE)|
-| EdKC_c_home       | is home(IMPOSSIBLE) |
+| EdKC_c_SLASH      | is ctrl+7 (IMPOSSIBLE)|
+| EdKC_c_home       | is home (IMPOSSIBLE) |
 | EdKC_c_end        | is end (IMPOSSIBLE) |
 | EdKC_c_left       | y |
 | EdKC_c_right      | y |
