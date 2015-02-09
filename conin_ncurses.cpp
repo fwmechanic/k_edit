@@ -121,11 +121,11 @@ STATIC_FXN int ConGetEvent() {
       if (ch < 27)                  { return EdKC_c_a + (ch - 1); }
       return ch;
       }
-   switch (ch) { // > 0xFF
-      CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT , EdKC_s_right) CR(558, EdKC_a_right) CR(560, EdKC_c_right) CR(559, EdKC_c_right)
-      CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT  , EdKC_s_left ) CR(543, EdKC_a_left ) CR(545, EdKC_c_left ) CR(544, EdKC_c_left )
-      CR(KEY_DC   , EdKC_del  ) CR(KEY_SDC    , EdKC_s_del  ) CR(517, EdKC_a_del  ) CR(519, EdKC_c_del  )
-      CR(KEY_IC   , EdKC_ins  ) CR(KEY_SIC    , EdKC_s_ins  )                       CR(538, EdKC_a_ins )
+   switch (ch) { // > 0xFF                                        ubu 14.10             ubu 14.04             ubu 14.10             ubu 14.04
+      CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT , EdKC_s_right) CR(558, EdKC_a_right) CR(557, EdKC_a_right) CR(560, EdKC_c_right) CR(559, EdKC_c_right)
+      CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT  , EdKC_s_left ) CR(543, EdKC_a_left ) CR(542, EdKC_a_left ) CR(545, EdKC_c_left ) CR(544, EdKC_c_left )
+      CR(KEY_DC   , EdKC_del  ) CR(KEY_SDC    , EdKC_s_del  ) CR(517, EdKC_a_del  ) CR(516, EdKC_a_del  ) CR(519, EdKC_c_del  ) CR(518, EdKC_c_del  )
+      CR(KEY_IC   , EdKC_ins  ) CR(KEY_SIC    , EdKC_s_ins  ) CR(538, EdKC_a_ins  ) CR(537, EdKC_a_ins  )
       CR(KEY_HOME , EdKC_home ) CR(KEY_SHOME  , EdKC_s_home )
       CR(KEY_END  , EdKC_end  ) CR(KEY_SEND   , EdKC_s_end  )
       CR(KEY_LL   , EdKC_end  ) // used in old termcap/infos
