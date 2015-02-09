@@ -211,8 +211,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_right      | y |
 | EdKC_c_up         | y |
 | EdKC_c_down       | y |
-| EdKC_c_pgup       | no response (IMPOSSIBLE)|
-| EdKC_c_pgdn       | no response (IMPOSSIBLE)|
+| EdKC_c_pgup       | y |
+| EdKC_c_pgdn       | y |
 | EdKC_c_ins        | no response (IMPOSSIBLE)|
 | EdKC_c_del        | y |
 | EdKC_c_center     | is center (IMPOSSIBLE)|

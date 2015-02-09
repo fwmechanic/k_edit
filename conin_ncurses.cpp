@@ -122,8 +122,8 @@ STATIC_FXN int ConGetEvent() {
       case KEY_UP    : return EdKC_up    ;                                           case 566 : return EdKC_c_up    ; case 564 : return EdKC_a_up    ;
       case KEY_DOWN  : return EdKC_down  ;                                           case 525 : return EdKC_c_down  ; case 523 : return EdKC_a_down  ;
 
-      case 553       : return EdKC_a_pgup;
-      case 548       : return EdKC_a_pgdn;
+      case 553       : return EdKC_a_pgup; case 555       : return EdKC_c_pgup;
+      case 548       : return EdKC_a_pgdn; case 550       : return EdKC_c_pgdn;
       case 538       : return EdKC_a_ins ;
 
       case KEY_BACKSPACE : return EdKC_bksp  ;
@@ -157,6 +157,7 @@ STATIC_FXN int ConGetEvent() {
                        break;
                case KEY_SRIGHT:
            KEvent->Code = kfShift | kbRight; */
+           DBG( "%s KEY_MOUSE event 0x%X %d\n", __func__, ch, ch );
            return -1;
 
       default:
@@ -166,7 +167,6 @@ STATIC_FXN int ConGetEvent() {
            DBG( "%s Unknown event 0x%X %d\n", __func__, ch, ch );
            return -1;
       }
-   return -1;
    }
 
 struct kpto_er {
@@ -241,7 +241,7 @@ STATIC_FXN int ConGetEscEvent() {
                 mod_CaS= mod_ctrl | mod_shift,
               };
          switch (endch) {
-            default: return -1; break;
+            default:            DBG( "%s unhandled event *cas=%X 0x%X %d\n", __func__, mod, ch, ch ); return -1;
             case 'A':
                 switch( mod ) {
                 case mod_cas:   return EdKC_up;
@@ -395,7 +395,7 @@ STATIC_FXN int ConGetEscEvent() {
             case '$': mod |= mod_shift;  /* FALL THRU!!! */
             case '~':
                 switch (ch1 - '0') {
-                default: return -1; break;
+                default: DBG( "%s unhandled event ~cas=%X 0x%X %d\n", __func__, mod, ch1 - '0', ch1 - '0' ); return -1;
                 case 1:
                     switch( mod ) {
                     case mod_cas:   return EdKC_home;
@@ -483,7 +483,7 @@ STATIC_FXN int ConGetEscEvent() {
    } else { // alt+...
       if (ch == '\r' || ch == '\n') { return EdKC_a_enter; }
       else if( ch == '\t' )         { return EdKC_a_tab;   }
-      else if( ch < ' '   )         { return -1;           } // alt + ctr + key;  unsupported by 'K'
+      else if( ch < ' '   )         { DBG( "%s unhandled event alt+ 0x%X %d\n", __func__, ch, ch ); return -1; } // alt + ctr + key;  unsupported by 'K'
       else {
          if     ( ch >= '0' && ch <= '9' ) { return EdKC_a_0 + (ch - '0'); }
          else if( ch >= 'a' && ch <= 'z' ) { return EdKC_a_a + (ch - 'a'); }
