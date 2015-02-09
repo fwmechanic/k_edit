@@ -110,25 +110,23 @@ STATIC_FXN int ConGetEvent() {
       return ch;
       }
    switch (ch) { // > 0xFF
-      case KEY_SLEFT     : return EdKC_s_left   ;
-      case KEY_SDC       : return EdKC_s_del    ;
-      case KEY_SIC       : return EdKC_s_ins    ;
-      case KEY_SHOME     : return EdKC_s_home   ;
-      case KEY_SEND      : return EdKC_s_end    ;
-      case KEY_SNEXT     : return EdKC_s_pgdn   ;
-      case KEY_SPREVIOUS : return EdKC_s_pgup   ;
-      case KEY_UP        : return EdKC_up       ;
-      case KEY_DOWN      : return EdKC_down     ;
-      case KEY_RIGHT     : return EdKC_right    ;
-      case KEY_LEFT      : return EdKC_left     ;
-      case KEY_DC        : return EdKC_del      ;
-      case KEY_IC        : return EdKC_ins      ;
-      case KEY_BACKSPACE : return EdKC_bksp     ;
-      case KEY_HOME      : return EdKC_home     ;
-      case KEY_END       : return EdKC_end      ;
-      case KEY_LL        : return EdKC_end      ; // used in old termcap/infos
-      case KEY_NPAGE     : return EdKC_pgdn     ;
-      case KEY_PPAGE     : return EdKC_pgup     ;
+      case KEY_RIGHT : return EdKC_right ; case KEY_SRIGHT    : return EdKC_s_right; case 558 : return EdKC_a_right ; case 560 : return EdKC_c_right ;
+      case KEY_LEFT  : return EdKC_left  ; case KEY_SLEFT     : return EdKC_s_left ; case 543 : return EdKC_a_left  ; case 545 : return EdKC_c_left  ;
+      case KEY_DC    : return EdKC_del   ; case KEY_SDC       : return EdKC_s_del  ; case 517 : return EdKC_a_del   ; case 519 : return EdKC_c_del   ;
+      case KEY_IC    : return EdKC_ins   ; case KEY_SIC       : return EdKC_s_ins  ;
+      case KEY_HOME  : return EdKC_home  ; case KEY_SHOME     : return EdKC_s_home ;
+      case KEY_END   : return EdKC_end   ; case KEY_SEND      : return EdKC_s_end  ;
+      case KEY_LL    : return EdKC_end   ; // used in old termcap/infos
+      case KEY_NPAGE : return EdKC_pgdn  ; case KEY_SNEXT     : return EdKC_s_pgdn ;
+      case KEY_PPAGE : return EdKC_pgup  ; case KEY_SPREVIOUS : return EdKC_s_pgup ;
+      case KEY_UP    : return EdKC_up    ;                                           case 566 : return EdKC_c_up    ; case 564 : return EdKC_a_up    ;
+      case KEY_DOWN  : return EdKC_down  ;                                           case 525 : return EdKC_c_down  ; case 523 : return EdKC_a_down  ;
+
+      case 553       : return EdKC_a_pgup;
+      case 548       : return EdKC_a_pgdn;
+      case 538       : return EdKC_a_ins ;
+
+      case KEY_BACKSPACE : return EdKC_bksp  ;
 
       case KEY_F(1)  : return EdKC_f1  ;    case 289 : return EdKC_c_f1  ;  case 313 : return EdKC_a_f1  ;
       case KEY_F(2)  : return EdKC_f2  ;    case 290 : return EdKC_c_f2  ;  case 314 : return EdKC_a_f2  ;
@@ -145,19 +143,6 @@ STATIC_FXN int ConGetEvent() {
 
       case KEY_B2        : return EdKC_center   ;
       case KEY_ENTER     : return EdKC_enter    ; // mimic Win32 behavior
-      case 560           : return EdKC_c_right  ; // ctr + right
-      case 545           : return EdKC_c_left   ; // ctr + left
-      case 566           : return EdKC_c_up     ; // ctr + up
-      case 525           : return EdKC_c_down   ; // ctr + down
-      case 558           : return EdKC_a_right  ; // alt + right
-      case 543           : return EdKC_a_left   ; // alt + left
-      case 564           : return EdKC_a_up     ; // alt + up
-      case 523           : return EdKC_a_down   ; // alt + down
-      case 553           : return EdKC_a_pgup   ; // alt + pgup
-      case 548           : return EdKC_a_pgdn   ; // alt + pgdown
-      case 538           : return EdKC_a_ins    ; // alt + ins
-      case 517           : return EdKC_a_del    ; // alt + del
-      case 519           : return EdKC_c_del    ; // ctr + del
 
       case KEY_RESIZE:     ConOut::Resize();  return -1;
       case KEY_MOUSE:
@@ -329,7 +314,7 @@ STATIC_FXN int ConGetEscEvent() {
                 break;
             case 'R':
                 switch( mod ) {
-                case mod_cas:   return EdKC_f3;
+                case mod_cas:   return EdKC_f3;    /* decoded elsewhere */
                 case mod_Cas:   return EdKC_c_f3;
                 case mod_cAs:   return EdKC_a_f3;
                 case mod_caS:   return EdKC_s_f3;
@@ -339,7 +324,7 @@ STATIC_FXN int ConGetEscEvent() {
                 break;
             case 'S':
                 switch( mod ) {
-                case mod_cas:   return EdKC_f4;
+                case mod_cas:   return EdKC_f4;    /* decoded elsewhere */
                 case mod_Cas:   return EdKC_c_f4;
                 case mod_cAs:   return EdKC_a_f4;
                 case mod_caS:   return EdKC_s_f4;
