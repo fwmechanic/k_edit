@@ -136,16 +136,16 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_num7       |  |
 | EdKC_a_num8       |  |
 | EdKC_a_num9       |  |
-| EdKC_a_numMinus   |  |
-| EdKC_a_numPlus    |  |
-| EdKC_a_numStar    |  |
-| EdKC_a_numSlash   |  |
-| EdKC_a_numEnter   |  |
-| EdKC_a_space      |  |
+| EdKC_a_numMinus   | is num+ |
+| EdKC_a_numPlus    | is num- |
+| EdKC_a_numStar    | is num* |
+| EdKC_a_numSlash   | is num/ |
+| EdKC_a_numEnter   | is enter |
+| EdKC_a_space      | hooked by DM/WM |
 | EdKC_a_bksp       | y |
-| EdKC_a_tab        |  |
-| EdKC_a_esc        |  |
-| EdKC_a_enter      |  |
+| EdKC_a_tab        | hooked by DM/WM |
+| EdKC_a_esc        | hooked by DM/WM |
+| EdKC_a_enter      | y  |
 | EdKC_c_0          | is ascii '0' (IMPOSSIBLE)|
 | EdKC_c_1          | is ascii '1' (IMPOSSIBLE)|
 | EdKC_c_2          | is ctrl+9 (IMPOSSIBLE)|
@@ -183,7 +183,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_y          | y |
 | EdKC_c_z          | y |
 | EdKC_c_f1         | no response |
-| EdKC_c_f2         | no response |
+| EdKC_c_f2         | y |
 | EdKC_c_f3         | y |
 | EdKC_c_f4         | y |
 | EdKC_c_f5         | y |
@@ -233,21 +233,21 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_numEnter   |  |
 | EdKC_c_space      | is space |
 | EdKC_c_bksp       | is bksp |
-| EdKC_c_tab        |  |
+| EdKC_c_tab        | is tab |
 | EdKC_c_esc        |  |
-| EdKC_c_enter      |  |
-| EdKC_s_f1         | NR |
-| EdKC_s_f2         | NR |
+| EdKC_c_enter      | is enter |
+| EdKC_s_f1         | y |
+| EdKC_s_f2         | y |
 | EdKC_s_f3         | y |
 | EdKC_s_f4         | y |
-| EdKC_s_f5         | NR |
-| EdKC_s_f6         | NR |
-| EdKC_s_f7         | NR |
-| EdKC_s_f8         | NR |
-| EdKC_s_f9         | NR |
-| EdKC_s_f10        | NR |
-| EdKC_s_f11        | NR |
-| EdKC_s_f12        | NR |
+| EdKC_s_f5         | y |
+| EdKC_s_f6         | y |
+| EdKC_s_f7         | y |
+| EdKC_s_f8         | y |
+| EdKC_s_f9         | y |
+| EdKC_s_f10        | y |
+| EdKC_s_f11        | y |
+| EdKC_s_f12        | y |
 | EdKC_s_home       | is '7' |
 | EdKC_s_end        | is '1' |
 | EdKC_s_left       | is '2' |
