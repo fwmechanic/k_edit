@@ -263,26 +263,10 @@ STATIC_FXN int ConGetEscEvent() {
             case 'k': CAS5( numPlus  ); break;
             case 'm': CAS5( numMinus ); break;
             case 'o': CAS5( numSlash ); break;
-            case 'a':
-                if (!(mod & mod_ctrl))     { return EdKC_s_up;  }
-                else if ((mod & mod_ctrl)) { return EdKC_cs_up; }
-                else                       { return -1;         }
-                break;
-            case 'b':
-                if (!(mod & mod_ctrl))     { return EdKC_s_down;  }
-                else if ((mod & mod_ctrl)) { return EdKC_cs_down; }
-                else                       { return -1;           }
-                break;
-            case 'c':
-                if (!(mod & mod_ctrl))     { return EdKC_s_right;  }
-                else if ((mod & mod_ctrl)) { return EdKC_cs_right; }
-                else                       { return -1;            }
-                break;
-            case 'd':
-                if (!(mod & mod_ctrl))     { return EdKC_s_left;  }
-                else if ((mod & mod_ctrl)) { return EdKC_cs_left; }
-                else                       { return -1;           }
-                break;
+            case 'a': return (mod & mod_ctrl) ? EdKC_cs_up    : EdKC_s_up;
+            case 'b': return (mod & mod_ctrl) ? EdKC_cs_down  : EdKC_s_down;
+            case 'c': return (mod & mod_ctrl) ? EdKC_cs_right : EdKC_s_right;
+            case 'd': return (mod & mod_ctrl) ? EdKC_cs_left  : EdKC_s_left;
             case '$': mod |= mod_shift;  /* FALL THRU!!! */
             case '~':
                 switch (ch1 - '0') {
