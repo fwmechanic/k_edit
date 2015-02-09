@@ -109,40 +109,35 @@ STATIC_FXN int ConGetEvent() {
       if (ch < 27)                  { return EdKC_c_a + (ch - 1); }
       return ch;
       }
+   #define CR( is, rv )  case is: return rv;
    switch (ch) { // > 0xFF
-      case KEY_RIGHT : return EdKC_right ; case KEY_SRIGHT    : return EdKC_s_right; case 558 : return EdKC_a_right ; case 560 : return EdKC_c_right ;
-      case KEY_LEFT  : return EdKC_left  ; case KEY_SLEFT     : return EdKC_s_left ; case 543 : return EdKC_a_left  ; case 545 : return EdKC_c_left  ;
-      case KEY_DC    : return EdKC_del   ; case KEY_SDC       : return EdKC_s_del  ; case 517 : return EdKC_a_del   ; case 519 : return EdKC_c_del   ;
-      case KEY_IC    : return EdKC_ins   ; case KEY_SIC       : return EdKC_s_ins  ;
-      case KEY_HOME  : return EdKC_home  ; case KEY_SHOME     : return EdKC_s_home ;
-      case KEY_END   : return EdKC_end   ; case KEY_SEND      : return EdKC_s_end  ;
-      case KEY_LL    : return EdKC_end   ; // used in old termcap/infos
-      case KEY_NPAGE : return EdKC_pgdn  ; case KEY_SNEXT     : return EdKC_s_pgdn ;
-      case KEY_PPAGE : return EdKC_pgup  ; case KEY_SPREVIOUS : return EdKC_s_pgup ;
-      case KEY_UP    : return EdKC_up    ;                                           case 564 : return EdKC_a_up    ; case 566 : return EdKC_c_up    ;
-      case KEY_DOWN  : return EdKC_down  ;                                           case 523 : return EdKC_a_down  ; case 525 : return EdKC_c_down  ;
+      CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT , EdKC_s_right) CR(558, EdKC_a_right) CR(560, EdKC_c_right)
+      CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT  , EdKC_s_left ) CR(543, EdKC_a_left ) CR(545, EdKC_c_left )
+      CR(KEY_DC   , EdKC_del  ) CR(KEY_SDC    , EdKC_s_del  ) CR(517, EdKC_a_del  ) CR(519, EdKC_c_del  )
+      CR(KEY_IC   , EdKC_ins  ) CR(KEY_SIC    , EdKC_s_ins  )                       CR(538, EdKC_a_ins )
+      CR(KEY_HOME , EdKC_home ) CR(KEY_SHOME  , EdKC_s_home )
+      CR(KEY_END  , EdKC_end  ) CR(KEY_SEND   , EdKC_s_end  )
+      CR(KEY_LL   , EdKC_end  ) // used in old termcap/infos
+      CR(KEY_NPAGE, EdKC_pgdn ) CR(KEY_SNEXT    , EdKC_s_pgdn) CR(553, EdKC_a_pgup) CR(555, EdKC_c_pgup)
+      CR(KEY_PPAGE, EdKC_pgup ) CR(KEY_SPREVIOUS, EdKC_s_pgup) CR(548, EdKC_a_pgdn) CR(550, EdKC_c_pgdn)
+      CR(KEY_UP   , EdKC_up   )                                CR(564, EdKC_a_up  ) CR(566, EdKC_c_up  )
+      CR(KEY_DOWN , EdKC_down )                                CR(523, EdKC_a_down) CR(525, EdKC_c_down)
+      CR(KEY_BACKSPACE, EdKC_bksp)
+      CR(KEY_F(1) , EdKC_f1 )                     CR(289, EdKC_c_f1 ) CR(313, EdKC_a_f1 )
+      CR(KEY_F(2) , EdKC_f2 )                     CR(290, EdKC_c_f2 ) CR(314, EdKC_a_f2 )
+      CR(KEY_F(3) , EdKC_f3 )                  /* CR(291, EdKC_c_f3 ) CR(315, EdKC_a_f3 ) decoded elsewhere */
+      CR(KEY_F(4) , EdKC_f4 )                  /* CR(292, EdKC_c_f4 ) CR(316, EdKC_a_f4 ) decoded elsewhere */
+      CR(KEY_F(5) , EdKC_f5 ) CR(281, EdKC_s_f5 ) CR(293, EdKC_c_f5 ) CR(317, EdKC_a_f5 )
+      CR(KEY_F(6) , EdKC_f6 ) CR(282, EdKC_s_f6 ) CR(294, EdKC_c_f6 ) CR(318, EdKC_a_f6 )
+      CR(KEY_F(7) , EdKC_f7 ) CR(283, EdKC_s_f7 ) CR(295, EdKC_c_f7 ) CR(319, EdKC_a_f7 )
+      CR(KEY_F(8) , EdKC_f8 ) CR(284, EdKC_s_f8 ) CR(296, EdKC_c_f8 ) CR(320, EdKC_a_f8 )
+      CR(KEY_F(9) , EdKC_f9 ) CR(285, EdKC_s_f9 ) CR(297, EdKC_c_f9 ) CR(321, EdKC_a_f9 )
+      CR(KEY_F(10), EdKC_f10) CR(286, EdKC_s_f10) CR(298, EdKC_c_f10) CR(322, EdKC_a_f10)
+      CR(KEY_F(11), EdKC_f11) CR(287, EdKC_s_f11) CR(299, EdKC_c_f11) CR(323, EdKC_a_f11)
+      CR(KEY_F(12), EdKC_f12) CR(288, EdKC_s_f12) CR(300, EdKC_c_f12) CR(324, EdKC_a_f12)
 
-      case 553 : return EdKC_a_pgup; case 555 : return EdKC_c_pgup;
-      case 548 : return EdKC_a_pgdn; case 550 : return EdKC_c_pgdn;
-      case 538 : return EdKC_a_ins ;
-
-      case KEY_BACKSPACE : return EdKC_bksp  ;
-
-      case KEY_F(1)  : return EdKC_f1  ;                                  case 289 : return EdKC_c_f1  ;  case 313 : return EdKC_a_f1  ;
-      case KEY_F(2)  : return EdKC_f2  ;                                  case 290 : return EdKC_c_f2  ;  case 314 : return EdKC_a_f2  ;
-      case KEY_F(3)  : return EdKC_f3  ;                               /* case 291 : return EdKC_c_f3  ;  case 315 : return EdKC_a_f3  ; decoded elsewhere */
-      case KEY_F(4)  : return EdKC_f4  ;                               /* case 292 : return EdKC_c_f4  ;  case 316 : return EdKC_a_f4  ; decoded elsewhere */
-      case KEY_F(5)  : return EdKC_f5  ; case 281 : return EdKC_s_f5  ;   case 293 : return EdKC_c_f5  ;  case 317 : return EdKC_a_f5  ;
-      case KEY_F(6)  : return EdKC_f6  ; case 282 : return EdKC_s_f6  ;   case 294 : return EdKC_c_f6  ;  case 318 : return EdKC_a_f6  ;
-      case KEY_F(7)  : return EdKC_f7  ; case 283 : return EdKC_s_f7  ;   case 295 : return EdKC_c_f7  ;  case 319 : return EdKC_a_f7  ;
-      case KEY_F(8)  : return EdKC_f8  ; case 284 : return EdKC_s_f8  ;   case 296 : return EdKC_c_f8  ;  case 320 : return EdKC_a_f8  ;
-      case KEY_F(9)  : return EdKC_f9  ; case 285 : return EdKC_s_f9  ;   case 297 : return EdKC_c_f9  ;  case 321 : return EdKC_a_f9  ;
-      case KEY_F(10) : return EdKC_f10 ; case 286 : return EdKC_s_f10 ;   case 298 : return EdKC_c_f10 ;  case 322 : return EdKC_a_f10 ;
-      case KEY_F(11) : return EdKC_f11 ; case 287 : return EdKC_s_f11 ;   case 299 : return EdKC_c_f11 ;  case 323 : return EdKC_a_f11 ;
-      case KEY_F(12) : return EdKC_f12 ; case 288 : return EdKC_s_f12 ;   case 300 : return EdKC_c_f12 ;  case 324 : return EdKC_a_f12 ;
-
-      case KEY_B2    : return EdKC_center ;
-      case KEY_ENTER : return EdKC_enter  ; // mimic Win32 behavior
+      CR(KEY_B2   , EdKC_center)
+      CR(KEY_ENTER, EdKC_enter ) // mimic Win32 behavior
 
       case KEY_RESIZE:     ConOut::Resize();  return -1;
       case KEY_MOUSE:
