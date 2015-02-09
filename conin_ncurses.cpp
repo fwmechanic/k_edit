@@ -120,7 +120,7 @@ STATIC_FXN int ConGetEvent() {
       if (ch > 27 && ch < 32)       { return EdKC_c_4 + (ch - 28); }
       if (ch < 27)                  { return EdKC_c_a + (ch - 1); }
       return ch;
-      }
+      }                          // KEY_F0 264   281-264
    switch (ch) { // > 0xFF                                        ubu 14.10             ubu 14.04             ubu 14.10             ubu 14.04
       CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT , EdKC_s_right) CR(558, EdKC_a_right) CR(557, EdKC_a_right) CR(560, EdKC_c_right) CR(559, EdKC_c_right)
       CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT  , EdKC_s_left ) CR(543, EdKC_a_left ) CR(542, EdKC_a_left ) CR(545, EdKC_c_left ) CR(544, EdKC_c_left )
@@ -134,18 +134,18 @@ STATIC_FXN int ConGetEvent() {
       CR(KEY_UP   , EdKC_up   )                                CR(564, EdKC_a_up  ) CR(566, EdKC_c_up  )  CR(565, EdKC_c_up  )
       CR(KEY_DOWN , EdKC_down )                                CR(523, EdKC_a_down) CR(525, EdKC_c_down)  CR(524, EdKC_c_down)
       CR(KEY_BACKSPACE, EdKC_bksp)
-      CR(KEY_F(1) , EdKC_f1 )                     CR(289, EdKC_c_f1 ) CR(313, EdKC_a_f1 )
-      CR(KEY_F(2) , EdKC_f2 )                     CR(290, EdKC_c_f2 ) CR(314, EdKC_a_f2 )
-      CR(KEY_F(3) , EdKC_f3 )                  /* CR(291, EdKC_c_f3 ) CR(315, EdKC_a_f3 ) decoded elsewhere */
-      CR(KEY_F(4) , EdKC_f4 )                  /* CR(292, EdKC_c_f4 ) CR(316, EdKC_a_f4 ) decoded elsewhere */
-      CR(KEY_F(5) , EdKC_f5 ) CR(281, EdKC_s_f5 ) CR(293, EdKC_c_f5 ) CR(317, EdKC_a_f5 )
-      CR(KEY_F(6) , EdKC_f6 ) CR(282, EdKC_s_f6 ) CR(294, EdKC_c_f6 ) CR(318, EdKC_a_f6 )
-      CR(KEY_F(7) , EdKC_f7 ) CR(283, EdKC_s_f7 ) CR(295, EdKC_c_f7 ) CR(319, EdKC_a_f7 )
-      CR(KEY_F(8) , EdKC_f8 ) CR(284, EdKC_s_f8 ) CR(296, EdKC_c_f8 ) CR(320, EdKC_a_f8 )
-      CR(KEY_F(9) , EdKC_f9 ) CR(285, EdKC_s_f9 ) CR(297, EdKC_c_f9 ) CR(321, EdKC_a_f9 )
-      CR(KEY_F(10), EdKC_f10) CR(286, EdKC_s_f10) CR(298, EdKC_c_f10) CR(322, EdKC_a_f10)
-      CR(KEY_F(11), EdKC_f11) CR(287, EdKC_s_f11) CR(299, EdKC_c_f11) CR(323, EdKC_a_f11)
-      CR(KEY_F(12), EdKC_f12) CR(288, EdKC_s_f12) CR(300, EdKC_c_f12) CR(324, EdKC_a_f12)
+      CR(KEY_F(1) , EdKC_f1 ) CR(KEY_F(13), EdKC_s_f1 )   CR(KEY_F(25), EdKC_c_f1 ) CR(KEY_F(49), EdKC_a_f1 )
+      CR(KEY_F(2) , EdKC_f2 ) CR(KEY_F(14), EdKC_s_f2 )   CR(KEY_F(26), EdKC_c_f2 ) CR(KEY_F(50), EdKC_a_f2 )
+      CR(KEY_F(3) , EdKC_f3 ) CR(KEY_F(15), EdKC_s_f3 ) /*CR(KEY_F(27), EdKC_c_f3 ) CR(KEY_F(51), EdKC_a_f3 ) decoded elsewhere */
+      CR(KEY_F(4) , EdKC_f4 ) CR(KEY_F(16), EdKC_s_f4 ) /*CR(KEY_F(28), EdKC_c_f4 ) CR(KEY_F(52), EdKC_a_f4 ) decoded elsewhere */
+      CR(KEY_F(5) , EdKC_f5 ) CR(KEY_F(17), EdKC_s_f5 )   CR(KEY_F(29), EdKC_c_f5 ) CR(KEY_F(53), EdKC_a_f5 )
+      CR(KEY_F(6) , EdKC_f6 ) CR(KEY_F(18), EdKC_s_f6 )   CR(KEY_F(30), EdKC_c_f6 ) CR(KEY_F(54), EdKC_a_f6 )
+      CR(KEY_F(7) , EdKC_f7 ) CR(KEY_F(19), EdKC_s_f7 )   CR(KEY_F(31), EdKC_c_f7 ) CR(KEY_F(55), EdKC_a_f7 )
+      CR(KEY_F(8) , EdKC_f8 ) CR(KEY_F(20), EdKC_s_f8 )   CR(KEY_F(32), EdKC_c_f8 ) CR(KEY_F(56), EdKC_a_f8 )
+      CR(KEY_F(9) , EdKC_f9 ) CR(KEY_F(21), EdKC_s_f9 )   CR(KEY_F(33), EdKC_c_f9 ) CR(KEY_F(57), EdKC_a_f9 )
+      CR(KEY_F(10), EdKC_f10) CR(KEY_F(22), EdKC_s_f10)   CR(KEY_F(34), EdKC_c_f10) CR(KEY_F(58), EdKC_a_f10)
+      CR(KEY_F(11), EdKC_f11) CR(KEY_F(23), EdKC_s_f11)   CR(KEY_F(35), EdKC_c_f11) CR(KEY_F(59), EdKC_a_f11)
+      CR(KEY_F(12), EdKC_f12) CR(KEY_F(24), EdKC_s_f12)   CR(KEY_F(36), EdKC_c_f12) CR(KEY_F(60), EdKC_a_f12)
 
       CR(KEY_B2   , EdKC_center)
       CR(KEY_ENTER, EdKC_enter ) // mimic Win32 behavior
