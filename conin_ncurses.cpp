@@ -122,8 +122,8 @@ STATIC_FXN int ConGetEvent() {
       return ch;
       }
    switch (ch) { // > 0xFF
-      CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT , EdKC_s_right) CR(558, EdKC_a_right) CR(560, EdKC_c_right)
-      CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT  , EdKC_s_left ) CR(543, EdKC_a_left ) CR(545, EdKC_c_left )
+      CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT , EdKC_s_right) CR(558, EdKC_a_right) CR(560, EdKC_c_right) CR(559, EdKC_c_right)
+      CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT  , EdKC_s_left ) CR(543, EdKC_a_left ) CR(545, EdKC_c_left ) CR(544, EdKC_c_left )
       CR(KEY_DC   , EdKC_del  ) CR(KEY_SDC    , EdKC_s_del  ) CR(517, EdKC_a_del  ) CR(519, EdKC_c_del  )
       CR(KEY_IC   , EdKC_ins  ) CR(KEY_SIC    , EdKC_s_ins  )                       CR(538, EdKC_a_ins )
       CR(KEY_HOME , EdKC_home ) CR(KEY_SHOME  , EdKC_s_home )
@@ -131,8 +131,8 @@ STATIC_FXN int ConGetEvent() {
       CR(KEY_LL   , EdKC_end  ) // used in old termcap/infos
       CR(KEY_NPAGE, EdKC_pgdn ) CR(KEY_SNEXT    , EdKC_s_pgdn) CR(553, EdKC_a_pgup) CR(555, EdKC_c_pgup)
       CR(KEY_PPAGE, EdKC_pgup ) CR(KEY_SPREVIOUS, EdKC_s_pgup) CR(548, EdKC_a_pgdn) CR(550, EdKC_c_pgdn)
-      CR(KEY_UP   , EdKC_up   )                                CR(564, EdKC_a_up  ) CR(566, EdKC_c_up  )
-      CR(KEY_DOWN , EdKC_down )                                CR(523, EdKC_a_down) CR(525, EdKC_c_down)
+      CR(KEY_UP   , EdKC_up   )                                CR(564, EdKC_a_up  ) CR(566, EdKC_c_up  )  CR(565, EdKC_c_up  )
+      CR(KEY_DOWN , EdKC_down )                                CR(523, EdKC_a_down) CR(525, EdKC_c_down)  CR(524, EdKC_c_down)
       CR(KEY_BACKSPACE, EdKC_bksp)
       CR(KEY_F(1) , EdKC_f1 )                     CR(289, EdKC_c_f1 ) CR(313, EdKC_a_f1 )
       CR(KEY_F(2) , EdKC_f2 )                     CR(290, EdKC_c_f2 ) CR(314, EdKC_a_f2 )
