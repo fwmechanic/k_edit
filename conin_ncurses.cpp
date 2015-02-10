@@ -117,7 +117,7 @@ STATIC_FXN int ConGetEvent() {
       if (ch == 27)                 { return ConGetEscEvent(); }
       if (ch == '\r' || ch == '\n') { return EdKC_enter; }
       if (ch == '\t')               { return EdKC_tab; }
-      if (ch > 27 && ch < 32)       { return EdKC_c_4 + (ch - 28); }
+      if (ch >= 28 && ch <= 31)     { return EdKC_c_4 + (ch - 28); }
       if (ch < 27)                  { return EdKC_c_a + (ch - 1); }
       return ch;
       }                          // KEY_F0 264   281-264
@@ -129,8 +129,8 @@ STATIC_FXN int ConGetEvent() {
       CR(KEY_HOME , EdKC_home ) CR(KEY_SHOME  , EdKC_s_home )
       CR(KEY_END  , EdKC_end  ) CR(KEY_SEND   , EdKC_s_end  )
       CR(KEY_LL   , EdKC_end  ) // used in old termcap/infos
-      CR(KEY_NPAGE, EdKC_pgdn ) CR(KEY_SNEXT    , EdKC_s_pgdn) CR(553, EdKC_a_pgup) CR(555, EdKC_c_pgup)
-      CR(KEY_PPAGE, EdKC_pgup ) CR(KEY_SPREVIOUS, EdKC_s_pgup) CR(548, EdKC_a_pgdn) CR(550, EdKC_c_pgdn)
+      CR(KEY_NPAGE, EdKC_pgdn ) CR(KEY_SNEXT    , EdKC_s_pgdn) CR(553, EdKC_a_pgup) CR(552, EdKC_a_pgup)  CR(555, EdKC_c_pgup)  CR(554, EdKC_c_pgup)
+      CR(KEY_PPAGE, EdKC_pgup ) CR(KEY_SPREVIOUS, EdKC_s_pgup) CR(548, EdKC_a_pgdn) CR(547, EdKC_a_pgdn)  CR(550, EdKC_c_pgdn)  CR(549, EdKC_c_pgdn)
       CR(KEY_UP   , EdKC_up   )                                CR(564, EdKC_a_up  ) CR(566, EdKC_c_up  )  CR(565, EdKC_c_up  )
       CR(KEY_DOWN , EdKC_down )                                CR(523, EdKC_a_down) CR(525, EdKC_c_down)  CR(524, EdKC_c_down)
       CR(KEY_BACKSPACE, EdKC_bksp)
