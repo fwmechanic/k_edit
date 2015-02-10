@@ -112,13 +112,13 @@ STATIC_FXN int ConGetEvent() {
       }
 
    const auto ch( wgetch(stdscr) );
-   if (ch < 0)                      { return -1; }
-   if (ch <= 0xFF) {
-      if (ch == 27)                 { return ConGetEscEvent(); }
-      if (ch == '\r' || ch == '\n') { return EdKC_enter; }
-      if (ch == '\t')               { return EdKC_tab; }
-      if (ch >= 28 && ch <= 31)     { return EdKC_c_4 + (ch - 28); }
-      if (ch < 27)                  { return EdKC_c_a + (ch - 1); }
+   if( ch < 0 )                      { return -1; }
+   if( ch <= 0xFF ) {
+      if( ch == 27 )                 { return ConGetEscEvent(); }
+      if( ch == '\r' || ch == '\n' ) { return EdKC_enter; }
+      if( ch == '\t' )               { return EdKC_tab; }
+      if( ch >= 28 && ch <= 31 )     { return EdKC_c_4 + (ch - 28); }
+      if( ch < 27 )                  { return EdKC_c_a + (ch -  1); }
       return ch;
       }                          // KEY_F0 264   281-264
    switch (ch) { // > 0xFF                                        ubu 14.10             ubu 14.04             ubu 14.10             ubu 14.04
@@ -167,8 +167,8 @@ STATIC_FXN int ConGetEvent() {
            return -1;
 
       default:
-           if (key_sdown != -1 && ch == key_sdown) { return EdKC_s_down; }
-           if (key_sup != 0 && ch == key_sup)      { return EdKC_s_up;   }
+           if( -1 != key_sdown && ch == key_sdown) { return EdKC_s_down; }
+           if( -1 != key_sup   && ch == key_sup  ) { return EdKC_s_up;   }
            // fprintf(stderr, "Unknown 0x%x %d\n", ch, ch);
            Msg( "%s Unknown event 0x%X %d\n", __func__, ch, ch );
            return -1;
@@ -284,9 +284,9 @@ STATIC_FXN int ConGetEscEvent() {
             }
       }
    } else { // alt+...
-      if (ch == '\r' || ch == '\n') { return EdKC_a_enter; }
-      else if( ch == '\t' )         { return EdKC_a_tab;   }
-      else if( ch < ' '   )         { Msg( "%s unhandled event alt+ 0x%X %d\n", __func__, ch, ch ); return -1; } // alt + ctr + key;  unsupported by 'K'
+      if (ch == '\r' || ch == '\n')        { return EdKC_a_enter; }
+      else if( ch == '\t' )                { return EdKC_a_tab;   }
+      else if( ch < ' '   )                { Msg( "%s unhandled event alt+ 0x%X %d\n", __func__, ch, ch ); return -1; } // alt + ctr + key;  unsupported by 'K'
       else {
          if     ( ch >= '0' && ch <= '9' ) { return EdKC_a_0 + (ch - '0'); }
          else if( ch >= 'a' && ch <= 'z' ) { return EdKC_a_a + (ch - 'a'); }
