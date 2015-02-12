@@ -30,4 +30,4 @@ export CXX=g++-4.8
 
 which $CC && which $CXX && return 0
 
-install_build_tools_ubuntu.sh
+./install_build_tools_ubuntu.sh

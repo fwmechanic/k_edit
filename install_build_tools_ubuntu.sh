@@ -33,3 +33,4 @@ libboost-filesystem-dev \
 libboost-system-dev     \
 libncurses5-dev         \
 libpcre3-dev            \
+make
