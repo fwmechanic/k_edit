@@ -55,7 +55,7 @@ bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, bool fCr
    const auto fh( open(
         pszFileName
       , (fWrAccess ? O_RDWR : O_RDONLY) | (fCreateIfNoExist ? O_CREAT : 0)
-      , 0777 // permissions relevant iff O_CREAT specified (and subject to umask anyway)
+      , 0666 // permissions relevant iff O_CREAT specified (and subject to umask anyway)
       )
     );
 #endif
