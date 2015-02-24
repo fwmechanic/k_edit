@@ -1006,6 +1006,7 @@ typedef signed long FilesysTime;
 struct FileStat {
    FilesysTime    d_ModifyTime = 0;
    filesize_t     d_Filesize   = 0;
+   int            d_mode       = 0;
    bool Refresh( int fd );
    bool none() const { return d_ModifyTime == 0 && d_Filesize == 0; }
    };
@@ -1259,7 +1260,9 @@ private:
    bool           d_fAutoRead = false  ; // re-read every time file is fSetfile'd (gen'ly only useful for pseudofiles)
 
    Eol_t          d_EolMode = platform_eol;
+#if defined(_WIN32)
    bool           d_fDiskRdOnly = false ; // file on disk is read only
+#endif
 
    bool           d_fInhibitRsrcLoad = false ;
                                          // DO NOT call LoadFileExtRsrcIniSection in FBOP::AssignFromRsrc().

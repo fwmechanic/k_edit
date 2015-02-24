@@ -366,11 +366,13 @@ bool FileStat::Refresh( int fd ) {
    if( 0 != func_fstat( fd, &stat_buf ) ) {
       d_ModifyTime = 0;
       d_Filesize   = 0;
+      d_mode       = 0;
       return false;
       }
    else {
       d_ModifyTime = stat_buf.st_mtime;
       d_Filesize   = stat_buf.st_size;
+      d_mode       = stat_buf.st_mode;
       return true;
       }
    }
@@ -381,7 +383,7 @@ FileStat GetFileStat( PCChar pszFilename ) { enum { DB=0 };
    // http://blogs.msdn.com/b/oldnewthing/archive/2011/12/26/10251026.aspx
    // this DOES read return a changing file size for a file being actively written, HOWEVER
    int fh;  // this does not affect st_mtime value returned by stat, though it does cause st_size to change
-   if( !fio::OpenFileFailed( &fh, pszFilename, false, false ) ) {
+   if( !fio::OpenFileFailed( &fh, pszFilename, false ) ) {
       const auto fbytes( fio::SeekEoF( fh ) );
       rv.Refresh( fh );
       fio::Close( fh );
@@ -1190,7 +1192,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    DisplayNoiseBlanker dblank;
 
    int hFile;
-   if( fio::OpenFileFailed( &hFile, Name(), false, false ) ) {
+   if( fio::OpenFileFailed( &hFile, Name(), false ) ) {
       if( errno != ENOENT ) {
          return Msg( "Cannot open %s - %s", Name(), strerror( errno ) );
          }
@@ -1203,7 +1205,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          return false;
          }
 
-      if( fio::OpenFileFailed( &hFile, Name(), false, true ) )
+      if( fio::OpenFileFailed( &hFile, Name(), false, DFLT_TEXTFILE_CREATE_MODE ) )
          return Msg( "Cannot create %s - %s", Name(), strerror( errno ) );
 
       VR_( DBG( "FRd: created newfile '%s'", Name() ); )
@@ -1276,7 +1278,7 @@ bool FBUF::ReadOtherDiskFileNoCreateFailed( PCChar pszName ) {
    rdNoiseOpen();
 
    int hFile;
-   if( fio::OpenFileFailed( &hFile, pszName, false, false ) ) {
+   if( fio::OpenFileFailed( &hFile, pszName, false ) ) {
       ErrorDialogBeepf( "%s does not exist", pszName );
       return true;
       }
@@ -1611,8 +1613,9 @@ GLOBAL_VAR bool g_fForcePlatformEol = false;
 bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hidden/private FBUF method
    wrNoiseOpen();
    int hFile_Write;
-   if(   fio::OpenFileFailed( &hFile_Write, pszDestName, true, false )
-      && fio::OpenFileFailed( &hFile_Write, pszDestName, true, true  )
+   const auto create_mode( pFBuf->GetLastFileStat().d_mode );
+   if(   fio::OpenFileFailed( &hFile_Write, pszDestName, true )
+      && fio::OpenFileFailed( &hFile_Write, pszDestName, true, create_mode ? create_mode : DFLT_TEXTFILE_CREATE_MODE )
      ) {
       return Msg( "Cannot open or create %s - %s", pszDestName, strerror( errno ) );
       }

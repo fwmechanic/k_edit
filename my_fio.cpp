@@ -29,40 +29,41 @@
 #include "my_log.h"
 #include <sys/stat.h>
 
-bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, bool fCreateIfNoExist ) {
+bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int create_mode ) {
+   create_mode &= 0777;  // we may receive stat st_mode field content with bits extraneous to us set
 #if defined(_WIN32)
    enum { OPEN_SH =
-#if 0
+  #if 0
           // can't open file if any process is holding a write-capable handle.
           // EX: a program is writing a file when it crashes into JIT debugger:
           // while that program is being debugged, _sopen( file, _SH_DENYWR )
           // will fail.
           _SH_DENYWR
-#else
+  #else
           // no restrictions means, well, no restrictions.  Above can't-open case can't happen.
           _SH_DENYNO
-#endif
+  #endif
       };
 
    const auto fh( _sopen(
         pszFileName
-      , _O_BINARY | (fWrAccess ? _O_RDWR : _O_RDONLY) | (fCreateIfNoExist ? _O_CREAT : 0)
+      , _O_BINARY | (fWrAccess ? _O_RDWR : _O_RDONLY) | (create_mode ? O_CREAT : 0)
       , OPEN_SH
-      , 0777 // permissions relevant iff _O_CREAT specified (and subject to umask anyway)
+      , create_mode // permissions relevant iff _O_CREAT specified (and subject to umask anyway)
       )
     );
 #else
    const auto fh( open(
         pszFileName
-      , (fWrAccess ? O_RDWR : O_RDONLY) | (fCreateIfNoExist ? O_CREAT : 0)
-      , 0666 // permissions relevant iff O_CREAT specified (and subject to umask anyway)
+      , (fWrAccess ? O_RDWR : O_RDONLY) | (create_mode ? O_CREAT : 0)
+      , create_mode // permissions relevant iff O_CREAT specified (and subject to umask anyway)
       )
     );
 #endif
    if( fh == -1 )
       return true;
 
-   0 && DBG( "%s [%d] %c%c '%s'", __func__, fh, fWrAccess?'W':'w', fCreateIfNoExist?'C':'c', pszFileName );
+   1 && DBG( "%s [%d] %c mode=%03o '%s'", __func__, fh, fWrAccess?'W':'w', create_mode, pszFileName );
    struct_stat stat;
    if( func_fstat( fh, &stat ) == 0 && 0 == (stat.st_mode & WL( _S_IFREG, S_IFREG ) ) ) {
       WL( _close, close )( fh );
