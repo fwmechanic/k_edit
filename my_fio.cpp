@@ -30,25 +30,12 @@
 #include <sys/stat.h>
 
 bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int create_mode ) {
-   create_mode &= 0777;  // we may receive stat st_mode field content with bits extraneous to us set
+   create_mode &= 0777;  // mask bits extraneous to our use (e.g. from stat st_mode)
 #if defined(_WIN32)
-   enum { OPEN_SH =
-  #if 0
-          // can't open file if any process is holding a write-capable handle.
-          // EX: a program is writing a file when it crashes into JIT debugger:
-          // while that program is being debugged, _sopen( file, _SH_DENYWR )
-          // will fail.
-          _SH_DENYWR
-  #else
-          // no restrictions means, well, no restrictions.  Above can't-open case can't happen.
-          _SH_DENYNO
-  #endif
-      };
-
    const auto fh( _sopen(
         pszFileName
       , _O_BINARY | (fWrAccess ? _O_RDWR : _O_RDONLY) | (create_mode ? O_CREAT : 0)
-      , OPEN_SH
+      , _SH_DENYNO
       , create_mode // permissions relevant iff _O_CREAT specified (and subject to umask anyway)
       )
     );
