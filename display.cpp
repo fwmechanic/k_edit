@@ -2028,7 +2028,7 @@ void View::HiliteAddins_Init() {
          const auto hasEolComment( 0 != commDelim[0] );
                auto rl0( d_pFBuf->PeekRawLine( 0 ) );
          rmv_trail_blanks( rl0 ); sridx ix, iy;
-         const auto shebang( rl0.starts_with( "#!" ) && ((ix=rl0.find_last_of( "/" )) > 2) && ix != stref::npos && (iy=FirstBlankOrEnd( rl0, ix )) ? rl0.substr( ix+1, iy - ix+1 ) : "" ); 0 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
+         const auto shebang( rl0.starts_with( "#!" ) && ((ix=rl0.find_last_of( "/" )) > 2) && ix != stref::npos && (iy=FirstBlankOrEnd( rl0, ix )) ? rl0.substr( ix+1, iy - ix+1 ) : "" ); 1 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
          const auto srNm( d_pFBuf->Namesr() );
          const auto srFnm( Path::RefFnm( srNm ) );
          const auto isMakefile(   shebang=="make"
@@ -2038,7 +2038,7 @@ void View::HiliteAddins_Init() {
                                #endif
                                || Path::eq( ".mak", Path::RefExt( srNm ) )
                               );
-         #define LANG_EQ( lang ) ( pFES->d_lang && 0==strcmp( pFES->d_lang, lang ) )
+         #define LANG_EQ( lang ) ( eqi( shebang, lang ) || pFES->d_lang && 0==Stricmp( pFES->d_lang, lang ) )
          const auto isClang( LANG_EQ( "C" ) );  // from k.filesettings
          /* Note that last-inserted InsertAddinLast has "last say" and therefore
             "wins".  Thus HiliteAddin_CursorLine is added last, because I want it
@@ -2048,7 +2048,7 @@ void View::HiliteAddins_Init() {
                                              InsertAddinLast( new HiliteAddin_C_Comment       ( this ) ); }
          if( isMakefile               )    { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) ); }
          if( LANG_EQ( "Lua" )         )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
-         if(  isMakefile || shebang=="sh"||shebang=="bash"||shebang=="perl"||shebang=="python"
+         if(  isMakefile || shebang=="sh"||shebang=="bash"
            || LANG_EQ( "Python" )
            || LANG_EQ( "Perl" )       )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
