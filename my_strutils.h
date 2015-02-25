@@ -227,7 +227,7 @@ STIL bool eq( stref s1, stref s2 ) {
    }
 
 
-STIL int cmp( char c1, char c2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
+STIL int cmp( char c1, char c2 ) {
    if( c1 == c2 ) { return 0; }
    return c1 < c2 ? -1 : +1;
    }
@@ -242,9 +242,8 @@ STIL bool eqi( stref s1, stref s2 ) {
    if( s1.length() != s2.length() ) {
       return false;
       }
-   const auto cd( 'a'-'A' );
    for( sridx ix( 0 ); ix < s1.length() ; ++ix ) {
-      if( 0==cmpi( s1[ix], s2[ix] ) ) {
+      if( 0!=cmpi( s1[ix], s2[ix] ) ) {
          return false;
          }
       }
@@ -263,8 +262,7 @@ STIL int cmp( const stref &s1, const stref &s2 ) {
    return s1.length() < s2.length() ? -1 : +1;
    }
 
-STIL int cmpi( const stref &s1, const stref &s2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
-   const auto cd( 'a'-'A' );
+STIL int cmpi( const stref &s1, const stref &s2 ) {
    const auto cmplen( Min( s1.length(), s2.length() ) );
    for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
       const auto rv( cmpi( s1[ix], s2[ix] ) );

@@ -2038,7 +2038,7 @@ void View::HiliteAddins_Init() {
                                #endif
                                || Path::eq( ".mak", Path::RefExt( srNm ) )
                               );
-         #define LANG_EQ( lang ) ( eqi( shebang, lang ) || pFES->d_lang && 0==Stricmp( pFES->d_lang, lang ) )
+         #define LANG_EQ( lang ) ( eqi( shebang, lang ) || (pFES->d_lang && 0==Stricmp( pFES->d_lang, lang )) )
          const auto isClang( LANG_EQ( "C" ) );  // from k.filesettings
          /* Note that last-inserted InsertAddinLast has "last say" and therefore
             "wins".  Thus HiliteAddin_CursorLine is added last, because I want it
@@ -2050,7 +2050,8 @@ void View::HiliteAddins_Init() {
          if( LANG_EQ( "Lua" )         )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
          if(  isMakefile || shebang=="sh"||shebang=="bash"
            || LANG_EQ( "Python" )
-           || LANG_EQ( "Perl" )       )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+           || LANG_EQ( "Perl" )       )    { DBG( "ADDING HiliteAddin_Python_Comment" );
+                                             InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }
