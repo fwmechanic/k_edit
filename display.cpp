@@ -2019,6 +2019,18 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
 
 GLOBAL_VAR bool g_fLangHilites = true;
 
+STATIC_FXN stref shebang_binary_name( PFBUF pfb ) { // should be simple, right?
+   auto rl0( pfb->PeekRawLine( 0 ) );
+   if( !rl0.starts_with( "#!" ) ) { return ""; }
+   const auto i1( FirstBlankOrEnd( rl0, 2 ) );    // assume: no spaces in path of binary
+   rl0.remove_suffix( rl0.length() - i1 );        // strip command tail
+   const auto ls( rl0.find_last_of( "/" ) );      // assume: unix dirsep, regardless of platform
+   const auto i0( ls != stref::npos ? ls+1 : 2 ); // could be bare binary name (i.e. filetype)
+   if( i0 >= i1 ) { return ""; }                  // nothing at all?
+   const auto shebang( rl0.substr( i0, i1 - i0 ) ); 1 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
+   return shebang;
+   }
+
 void View::HiliteAddins_Init() {
    if( g_fLangHilites ) {
       DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
@@ -2026,9 +2038,7 @@ void View::HiliteAddins_Init() {
          const auto pFES( GetFileExtensionSettings() );
          const auto commDelim( pFES->d_eolCommentDelim );
          const auto hasEolComment( 0 != commDelim[0] );
-               auto rl0( d_pFBuf->PeekRawLine( 0 ) );
-         rmv_trail_blanks( rl0 ); sridx ix, iy;
-         const auto shebang( rl0.starts_with( "#!" ) && ((ix=rl0.find_last_of( "/" )) > 2) && ix != stref::npos && (iy=FirstBlankOrEnd( rl0, ix )) ? rl0.substr( ix+1, iy - ix+1 ) : "" ); 1 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
+         const auto shebang( shebang_binary_name( d_pFBuf ) );
          const auto srNm( d_pFBuf->Namesr() );
          const auto srFnm( Path::RefFnm( srNm ) );
          const auto isMakefile(   shebang=="make"
