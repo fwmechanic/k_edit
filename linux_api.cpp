@@ -34,14 +34,37 @@ Path::str_t Path::GetCwd() { // quick and dirty AND relies on GLIBC getcwd( null
 
 PCChar OsVerStr() { return "Linux"; }
 
-Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
+Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 1 };
    // first approximation based on
    // http://stackoverflow.com/questions/1746136/how-do-i-normalize-a-pathname-using-boostfilesystem
    // note that this handles the case where some trailing part does not exist
    // contrast with canonical() which requires that the passed name exists
                                                DB && DBG( "%s +in '%s'", __func__, pszFilename );
-   boost::filesystem::path src;
-   try { src = absolute( boost::filesystem::path( pszFilename ) ); }
+   try {
+      const auto src( absolute( boost::filesystem::path( pszFilename ) ) );
+                                                  DB && DBG( "%s -src'%s' -> '%s'", __func__, pszFilename, src.c_str() );
+      // Get canonical version of the existing part of src
+      auto it( src.begin() );
+      auto rv( *it++ );
+      for( ; it != src.end() ; ++it ) {
+         auto tmp( rv / *it );                    DB && DBG( "%s +inc'%s'", __func__, tmp.c_str() );
+         if( !exists( tmp ) ) { break; }
+         rv = tmp;
+         }
+                                                  DB && DBG( "%s +can'%s'", __func__, rv.c_str() );
+      rv = canonical(rv);
+                                                  DB && DBG( "%s -can'%s'", __func__, rv.c_str() );
+      for( ; it != src.end(); ++it ) {  // now blindly append nonexistent components, handling "." and ".."
+         if      (*it == "..") { rv = rv.parent_path(); } // "cancels" trailing rv component
+         else if (*it == "." ) {}                         // nop
+         else                  { rv /= *it; }             // else cat
+         }
+
+      Path::str_t destgs( rv.generic_string() );  DB && DBG( "%s gs '%s' -> '%s'", __func__, pszFilename, destgs.c_str() );
+//    Path::str_t dests ( rv.string()         );  DB && DBG( "%s s  '%s' -> '%s'", __func__, pszFilename, dests .c_str() );
+      return destgs;
+      }
+
    catch( const boost::filesystem::filesystem_error & /*exc*/ ) {
       // terminate called after throwing an instance of 'boost::filesystem::filesystem_error'
       // what():  boost::filesystem::status: Permission denied: "/export/depot/@triggersrcs"
@@ -49,27 +72,6 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
       Msg( "%s caught boost::filesystem::filesystem_error on %s", __func__, pszFilename );
       return "";
       };
-                                               DB && DBG( "%s -src'%s' -> '%s'", __func__, pszFilename, src.c_str() );
-   // Get canonical version of the existing part of src
-   auto it( src.begin() );
-   auto rv( *it++ );
-   for( ; it != src.end() ; ++it ) {
-      auto tmp( rv / *it );                    DB && DBG( "%s +inc'%s'", __func__, tmp.c_str() );
-      if( !exists( tmp ) ) { break; }
-      rv = tmp;
-      }
-                                               DB && DBG( "%s +can'%s'", __func__, rv.c_str() );
-   rv = canonical(rv);
-                                               DB && DBG( "%s -can'%s'", __func__, rv.c_str() );
-   for( ; it != src.end(); ++it ) {  // now blindly append nonexistent components, handling "." and ".."
-      if      (*it == "..") { rv = rv.parent_path(); } // "cancels" trailing rv component
-      else if (*it == "." ) {}                         // nop
-      else                  { rv /= *it; }             // else cat
-      }
-
-   Path::str_t destgs( rv.generic_string() );  DB && DBG( "%s gs '%s' -> '%s'", __func__, pszFilename, destgs.c_str() );
-// Path::str_t dests ( rv.string()         );  DB && DBG( "%s s  '%s' -> '%s'", __func__, pszFilename, dests .c_str() );
-   return destgs;
    }
 
 #include <glob.h>
