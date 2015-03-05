@@ -40,7 +40,15 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
    // note that this handles the case where some trailing part does not exist
    // contrast with canonical() which requires that the passed name exists
                                                DB && DBG( "%s +in '%s'", __func__, pszFilename );
-   const auto src( absolute( boost::filesystem::path( pszFilename ) ) );
+   boost::filesystem::path src;
+   try { src = absolute( boost::filesystem::path( pszFilename ) ); }
+   catch( const boost::filesystem::filesystem_error & /*exc*/ ) {
+      // terminate called after throwing an instance of 'boost::filesystem::filesystem_error'
+      // what():  boost::filesystem::status: Permission denied: "/export/depot/@triggersrcs"
+      // occurs (Linux) when permissions prevent access to path components
+      Msg( "%s caught boost::filesystem::filesystem_error on %s", __func__, pszFilename );
+      return "";
+      };
                                                DB && DBG( "%s -src'%s' -> '%s'", __func__, pszFilename, src.c_str() );
    // Get canonical version of the existing part of src
    auto it( src.begin() );
