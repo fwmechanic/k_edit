@@ -339,14 +339,14 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_cs_f2        |  |
 | EdKC_cs_f3        |  |
 | EdKC_cs_f4        |  |
-| EdKC_cs_f5        |  |
-| EdKC_cs_f6        |  |
-| EdKC_cs_f7        |  |
-| EdKC_cs_f8        |  |
-| EdKC_cs_f9        |  |
-| EdKC_cs_f10       |  |
-| EdKC_cs_f11       |  |
-| EdKC_cs_f12       |  |
+| EdKC_cs_f5        | y |
+| EdKC_cs_f6        | y |
+| EdKC_cs_f7        | y |
+| EdKC_cs_f8        | y |
+| EdKC_cs_f9        | y |
+| EdKC_cs_f10       | y |
+| EdKC_cs_f11       | y |
+| EdKC_cs_f12       | y |
 | EdKC_cs_scroll    |  |
 | EdKC_cs_SEMICOLON |  |
 | EdKC_cs_EQUAL     |  |
