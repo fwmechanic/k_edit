@@ -128,11 +128,10 @@ STATIC_FXN int ConGetEvent() {
       CR(KEY_IC   , EdKC_ins  ) CR(KEY_SIC    , EdKC_s_ins  ) CR(538, EdKC_a_ins  ) CR(537, EdKC_a_ins  )
       CR(KEY_HOME , EdKC_home ) CR(KEY_SHOME  , EdKC_s_home )
       CR(KEY_END  , EdKC_end  ) CR(KEY_SEND   , EdKC_s_end  )
-      CR(KEY_LL   , EdKC_end  ) // used in old termcap/infos
       CR(KEY_NPAGE, EdKC_pgdn ) CR(KEY_SNEXT    , EdKC_s_pgdn) CR(553, EdKC_a_pgup) CR(552, EdKC_a_pgup)  CR(555, EdKC_c_pgup)  CR(554, EdKC_c_pgup)
       CR(KEY_PPAGE, EdKC_pgup ) CR(KEY_SPREVIOUS, EdKC_s_pgup) CR(548, EdKC_a_pgdn) CR(547, EdKC_a_pgdn)  CR(550, EdKC_c_pgdn)  CR(549, EdKC_c_pgdn)
-      CR(KEY_UP   , EdKC_up   )                                CR(564, EdKC_a_up  ) CR(566, EdKC_c_up  )  CR(565, EdKC_c_up  )
-      CR(KEY_DOWN , EdKC_down )                                CR(523, EdKC_a_down) CR(525, EdKC_c_down)  CR(524, EdKC_c_down)
+      CR(KEY_UP   , EdKC_up   )                                CR(564, EdKC_a_up  ) CR(563, EdKC_a_up  )  CR(566, EdKC_c_up  )  CR(565, EdKC_c_up  )
+      CR(KEY_DOWN , EdKC_down )                                CR(523, EdKC_a_down) CR(522, EdKC_a_down)  CR(525, EdKC_c_down)  CR(524, EdKC_c_down)
       CR(KEY_BACKSPACE, EdKC_bksp)
       CR(KEY_F(1) , EdKC_f1 ) CR(KEY_F(13), EdKC_s_f1 )   CR(KEY_F(25), EdKC_c_f1 ) CR(KEY_F(49), EdKC_a_f1 )
       CR(KEY_F(2) , EdKC_f2 ) CR(KEY_F(14), EdKC_s_f2 )   CR(KEY_F(26), EdKC_c_f2 ) CR(KEY_F(50), EdKC_a_f2 )
@@ -147,6 +146,8 @@ STATIC_FXN int ConGetEvent() {
       CR(KEY_F(11), EdKC_f11) CR(KEY_F(23), EdKC_s_f11)   CR(KEY_F(35), EdKC_c_f11) CR(KEY_F(59), EdKC_a_f11)
       CR(KEY_F(12), EdKC_f12) CR(KEY_F(24), EdKC_s_f12)   CR(KEY_F(36), EdKC_c_f12) CR(KEY_F(60), EdKC_a_f12)
 
+      // used in old termcap/infos
+      CR(KEY_LL   , EdKC_end   )
       CR(KEY_B2   , EdKC_center)
       CR(KEY_ENTER, EdKC_enter ) // mimic Win32 behavior
 
