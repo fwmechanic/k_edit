@@ -24,11 +24,55 @@
 
 static int key_sup, key_sdown;
 
+//
+// from http://invisible-island.net/xterm/terminfo.html
+//
+// Some names are extensions allowed by ncurses, e.g.,
+//       kDN, kDN5, kDN6, kLFT5, kLFT6, kRIT5, kRIT6, kUP, kUP5, kUP6
+//
+// The numbers correspond to the modifier parameters documented in Xterm
+// Control Sequences:
+//
+//       2       Shift
+//       3       Alt
+//       4       Shift + Alt
+//       5       Control
+//       6       Shift + Control
+//       7       Alt + Control
+//       8       Shift + Alt + Control
+//
+static int keyname_to_code( const char *name ) {
+   const auto s( tigetstr( name ) );
+   if( s && (long)(s) != -1 ) {
+      const auto code( key_defined(s) );
+      DBG( "0%04o=tigetstr(%s)=%s", code, name, s );
+      if( code > 0 ) {
+         return code;
+         }
+      }
+   DBG( "0%04o=tigetstr(%s)=%s", 0, name, "" );
+   return 0;
+   }
+
 void conin_ncurses_init() {
    noecho();
    nonl();
    keypad(stdscr, TRUE);
    meta(stdscr, 1);
+
+   keyname_to_code( "kLFT5" );
+   keyname_to_code( "kEND5" );
+   keyname_to_code( "kHOM5" );
+   keyname_to_code( "kHOM3" );
+   keyname_to_code( "kUP5"  );
+   keyname_to_code( "kDN5"  );
+
+   keyname_to_code("kf1" ); // F1
+   keyname_to_code("kf13"); // shift F1
+   keyname_to_code("kf25"); // control F1
+   keyname_to_code("kf37"); // control+shift F1
+   keyname_to_code("kf49"); // alt F1
+   keyname_to_code("kf61"); // shift-alt F1
 
    // fill terminal dependant values on first call
    static bool f_kynm_scan_done;

@@ -134,6 +134,7 @@ bool ConOut::SetConsolePalette( const unsigned palette[16] ) { return false; }
 
 extern void conin_ncurses_init();
 bool ConIO::StartupOk( bool fForceNewConsole ) {
+   use_extended_names(TRUE);
    ESCDELAY = 10;
    initscr();
    raw();
