@@ -22,8 +22,6 @@
 #include "conio.h"
 #include "ed_main.h"
 
-static int key_sup, key_sdown;
-
 //
 // from http://invisible-island.net/xterm/terminfo.html
 //
@@ -41,24 +39,29 @@ static int key_sup, key_sdown;
 //       7       Alt + Control
 //       8       Shift + Alt + Control
 //
-static U16 to_EdKC[600];
+STATIC_VAR U16 s_to_EdKC[600];
 
-static void keyname_to_code( const char *name, U16 edkc ) {
+STATIC_FXN void keyname_to_code( const char *name, U16 edkc ) {
+   linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), edkc );
    const auto s( tigetstr( name ) );
-   if( s && (long)(s) != -1 ) {
-      const auto code( key_defined(s) );
-      DBG( "0%04o=%d=tigetstr(%s)=%s", code, code, name, s );
-      if( code > 0 ) {
-         if( code < ELEMENTS( to_EdKC ) ) {
-            to_EdKC[ code ] = edkc;
+   if( !s && (long)(s) == -1 ) {
+      DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, name, "", edkcnmbuf );
+      return;
+      }
+   const auto code( key_defined(s) );
+   DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", code, code, name, s, edkcnmbuf );
+   if( code > 0 ) {
+      if( code < ELEMENTS( s_to_EdKC ) ) {
+         if( s_to_EdKC[ code ] ) {
+            StrFromEdkc( BSOB(edkcnmbuf), s_to_EdKC[ code ] );
+            DBG( "0%04o=%d EdKC=%s overridden!", code, code, edkcnmbuf );
             }
-         else {
-            Msg( "INTERNAL ERROR: code=%d out of range of to_EdKC[]!", code );
-            }
-         return;
+         s_to_EdKC[ code ] = edkc;
+         }
+      else {
+         Msg( "INTERNAL ERROR: code=%d out of range of s_to_EdKC[]!", code );
          }
       }
-   DBG( "0%04o=%d=tigetstr(%s)=%s", 0, 0, name, "" );
    }
 
 void conin_ncurses_init() {
@@ -67,49 +70,22 @@ void conin_ncurses_init() {
    keypad(stdscr, TRUE);
    meta(stdscr, 1);
 
-   static const struct { const char *kynm; U16 edkc; } s_kn2kc[] = {
-      { "kDC"    , EdKC_del     },
-      { "kDC3"   , EdKC_a_del   },
-      { "kDC5"   , EdKC_c_del   },
-      { "kDC6"   , EdKC_cs_del  },
-      { "kDN"    , EdKC_down    },
-      { "kDN3"   , EdKC_a_down  },
-      { "kDN5"   , EdKC_c_down  },
-      { "kDN6"   , EdKC_cs_down },
-      { "kEND"   , EdKC_end     },
-      { "kEND3"  , EdKC_a_end   },
-      { "kEND5"  , EdKC_c_end   },
-      { "kEND6"  , EdKC_cs_end  },
-      { "kHOM"   , EdKC_home    },
-      { "kHOM3"  , EdKC_a_home  },
-      { "kHOM5"  , EdKC_c_home  },
-      { "kHOM6"  , EdKC_cs_home },
-      { "kIC"    , EdKC_ins     },  // maybe?
-      { "kIC3"   , EdKC_a_ins   },  // maybe?
-      { "kIC5"   , EdKC_c_ins   },  // maybe?
-      { "kIC6"   , EdKC_cs_ins  },  // maybe?
-      { "kLFT"   , EdKC_left    },
-      { "kLFT3"  , EdKC_a_left  },
-      { "kLFT5"  , EdKC_c_left  },
-      { "kLFT6"  , EdKC_cs_left },
-      { "kNXT"   , EdKC_pgdn    },
-      { "kNXT3"  , EdKC_a_pgdn  },
-      { "kNXT5"  , EdKC_c_pgdn  },
-      { "kNXT6"  , EdKC_cs_pgdn },
-      { "kPRV"   , EdKC_pgup    },
-      { "kPRV3"  , EdKC_a_pgup  },
-      { "kPRV5"  , EdKC_c_pgup  },
-      { "kPRV6"  , EdKC_cs_pgup },
-      { "kRIT"   , EdKC_right    },
-      { "kRIT3"  , EdKC_a_right  },
-      { "kRIT5"  , EdKC_c_right  },
-      { "kRIT6"  , EdKC_cs_right },
-      { "kUP"    , EdKC_up    },
-      { "kUP3"   , EdKC_a_up  },
-      { "kUP5"   , EdKC_c_up  },
-      { "kUP6"   , EdKC_cs_up },
-//      { "kind"               },
-//      { "kri"                },
+   STATIC_VAR const struct { const char *kynm; U16 edkc; } s_kn2kc[] = {
+      { "kDC"  , EdKC_del    }, { "kDC3"  , EdKC_a_del   }, { "kDC5" , EdKC_c_del }, { "kDC6" , EdKC_cs_del },
+      // 0=shifted:
+      { "kDN"  , EdKC_s_down }, { "kDN3"  , EdKC_a_down  }, { "kDN5"  , EdKC_c_down  }, { "kDN6"  , EdKC_cs_down  },
+      { "kEND" , EdKC_end    }, { "kEND3" , EdKC_a_end   }, { "kEND5" , EdKC_c_end   }, { "kEND6" , EdKC_cs_end   },
+      { "kHOM" , EdKC_home   }, { "kHOM3" , EdKC_a_home  }, { "kHOM5" , EdKC_c_home  }, { "kHOM6" , EdKC_cs_home  },
+      // maybe?
+      { "kIC"  , EdKC_ins    }, { "kIC3"  , EdKC_a_ins   }, { "kIC5"  , EdKC_c_ins   }, { "kIC6"  , EdKC_cs_ins   },
+      { "kLFT" , EdKC_left   }, { "kLFT3" , EdKC_a_left  }, { "kLFT5" , EdKC_c_left  }, { "kLFT6" , EdKC_cs_left  },
+      { "kNXT" , EdKC_pgdn   }, { "kNXT3" , EdKC_a_pgdn  }, { "kNXT5" , EdKC_c_pgdn  }, { "kNXT6" , EdKC_cs_pgdn  },
+      { "kPRV" , EdKC_pgup   }, { "kPRV3" , EdKC_a_pgup  }, { "kPRV5" , EdKC_c_pgup  }, { "kPRV6" , EdKC_cs_pgup  },
+      { "kRIT" , EdKC_right  }, { "kRIT3" , EdKC_a_right }, { "kRIT5" , EdKC_c_right }, { "kRIT6" , EdKC_cs_right },
+      // 0=shifted:
+      { "kUP"  , EdKC_s_up   }, { "kUP3"  , EdKC_a_up    }, { "kUP5"  , EdKC_c_up    }, { "kUP6"  , EdKC_cs_up    },
+   // { "kind"                   },
+   // { "kri"                    },
       { "kf1" , EdKC_f1  }, { "kf13", EdKC_s_f1  }, { "kf25", EdKC_c_f1  }, { "kf37" , EdKC_cs_f1  }, { "kf49", EdKC_a_f1  },
       { "kf2" , EdKC_f2  }, { "kf14", EdKC_s_f2  }, { "kf26", EdKC_c_f2  }, { "kf38" , EdKC_cs_f2  }, { "kf50", EdKC_a_f2  },
       { "kf3" , EdKC_f3  }, { "kf15", EdKC_s_f3  }, { "kf27", EdKC_c_f3  }, { "kf39" , EdKC_cs_f3  }, { "kf51", EdKC_a_f3  }, // decoded elsewhere
@@ -125,22 +101,6 @@ void conin_ncurses_init() {
    };
    for( auto ix( 0u ) ; ix < ELEMENTS(s_kn2kc) ; ++ix ) {
       keyname_to_code( s_kn2kc[ix].kynm, s_kn2kc[ix].edkc );
-      }
-
-   // fill terminal dependant values on first call
-   static bool f_kynm_scan_done;
-   if( !f_kynm_scan_done ) {
-      DBG( "keynamescan+" );
-      f_kynm_scan_done = true;
-      for( auto ch( KEY_MAX+1 ) ; ; ch++ ) {
-         const auto kn( keyname(ch) );
-         if (!kn) break;
-         DBG( "keyname(%03o)=%s", ch, kn );
-         if (     !strcmp(kn, "kUP")) { key_sup   = ch; }
-         else if (!strcmp(kn, "kDN")) { key_sdown = ch; }
-         if( key_sup && key_sdown ) break;
-         }
-      DBG( "keynamescan-" );
       }
    }
 
@@ -230,9 +190,9 @@ STATIC_FXN int ConGetEvent() {
       if( ch < 27 )                  { return EdKC_c_a + (ch -  1); }
       return ch;
       }                          // KEY_F0 264   281-264
-   if( to_EdKC[ ch ] ) {
-      const auto rv( to_EdKC[ ch ] );
-      DBG( "to_EdKC[ %d ]", ch );
+   if( s_to_EdKC[ ch ] ) {
+      const auto rv( s_to_EdKC[ ch ] );
+      DBG( "s_to_EdKC[ %d ]", ch );
       return rv;
       }
    switch (ch) { // > 0xFF      //                                   ubu 14.10             ubu 14.04             ubu 14.10             ubu 14.04
@@ -266,25 +226,16 @@ STATIC_FXN int ConGetEvent() {
       CR(KEY_B2   , EdKC_center)
       CR(KEY_ENTER, EdKC_enter ) // mimic Win32 behavior
 
-      case KEY_RESIZE:     ConOut::Resize();  return -1;
-      case KEY_MOUSE:
-           /*Event->What = evNone;
-           ConGetMouseEvent(Event);
-           break;
-               case KEY_SF:
-                       KEvent->Code = kfShift | kbDown;
-                       break;
-               case KEY_SR:
-                       KEvent->Code = kfShift | kbUp;
-                       break;
-               case KEY_SRIGHT:
-           KEvent->Code = kfShift | kbRight; */
+      case KEY_RESIZE:   ConOut::Resize();  return -1;
+      case KEY_MOUSE:  /*Event->What = evNone;
+                         ConGetMouseEvent(Event);  break;
+      case KEY_SF:       KEvent->Code = kfShift | kbDown;  break;
+      case KEY_SR:       KEvent->Code = kfShift | kbUp;    break;
+      case KEY_SRIGHT:   KEvent->Code = kfShift | kbRight; */
            Msg( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
            return -1;
 
       default:
-           if( key_sdown && ch == key_sdown) { return EdKC_s_down; }
-           if( key_sup   && ch == key_sup  ) { return EdKC_s_up;   }
            // fprintf(stderr, "Unknown 0%o %d\n", ch, ch);
            Msg( "%s Unknown event 0%o %d\n", __func__, ch, ch );
            return -1;

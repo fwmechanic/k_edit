@@ -34,12 +34,12 @@ Path::str_t Path::GetCwd() { // quick and dirty AND relies on GLIBC getcwd( null
 
 PCChar OsVerStr() { return "Linux"; }
 
-Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 1 };
+Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
    // first approximation based on
    // http://stackoverflow.com/questions/1746136/how-do-i-normalize-a-pathname-using-boostfilesystem
    // note that this handles the case where some trailing part does not exist
    // contrast with canonical() which requires that the passed name exists
-                                               DB && DBG( "%s +in '%s'", __func__, pszFilename );
+                                                  DB && DBG( "%s +in '%s'", __func__, pszFilename );
    try {
       const auto src( absolute( boost::filesystem::path( pszFilename ) ) );
                                                   DB && DBG( "%s -src'%s' -> '%s'", __func__, pszFilename, src.c_str() );
