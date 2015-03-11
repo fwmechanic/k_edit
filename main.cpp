@@ -929,7 +929,7 @@ class kGetopt : public Getopt {
 
 void kGetopt::VErrorOut( PCChar msg ) {
    printf(
-"\n%s  Copyright KLG 1998-%4.4s\n%s, built %s with "
+"\n%s  Copyright KLG 2015-%4.4s\n%s, built %s with "
 #if defined(__GNUC__)
                   "GCC %d.%d.%d"
    #ifdef __MINGW32_MAJOR_VERSION
