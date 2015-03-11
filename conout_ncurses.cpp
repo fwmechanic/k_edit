@@ -131,6 +131,8 @@ bool ConOut::WriteToFileOk( FILE *ofh ) {
    return false;
    }
 bool ConOut::SetConsolePalette( const unsigned palette[16] ) { return false; }
+
+extern void conin_ncurses_init();
 bool ConIO::StartupOk( bool fForceNewConsole ) {
    ESCDELAY = 10;
    initscr();
@@ -142,10 +144,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
       }
 
    start_color();  DBG( "curses_version()=\"%s\"\ncan_change_color() = %d\nKEY_MIN=%d, KEY_MAX=%d\nCOLORS = %d\nCOLOR_PAIRS = %d", curses_version(), can_change_color(), KEY_MIN, KEY_MAX, COLORS, COLOR_PAIRS );
-   noecho();
-   nonl();
-   keypad(stdscr, TRUE);
-   meta(stdscr, 1);
+   conin_ncurses_init();
    ConOut::Resize();
    return true;
    }

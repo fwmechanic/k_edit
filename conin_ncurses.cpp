@@ -22,6 +22,31 @@
 #include "conio.h"
 #include "ed_main.h"
 
+static int key_sup, key_sdown;
+
+void conin_ncurses_init() {
+   noecho();
+   nonl();
+   keypad(stdscr, TRUE);
+   meta(stdscr, 1);
+
+   // fill terminal dependant values on first call
+   static bool f_kynm_scan_done;
+   if( !f_kynm_scan_done ) {
+      DBG( "keynamescan+" );
+      f_kynm_scan_done = true;
+      for( auto ch( KEY_MAX+1 ) ; ; ch++ ) {
+         const auto kn( keyname(ch) );
+         if (!kn) break;
+         DBG( "keyname(%03o)=%s", ch, kn );
+         if (     !strcmp(kn, "kUP")) { key_sup   = ch; }
+         else if (!strcmp(kn, "kDN")) { key_sdown = ch; }
+         if( key_sup && key_sdown ) break;
+         }
+      DBG( "keynamescan-" );
+      }
+   }
+
 // get keyboard event
 STATIC_FXN int ConGetEvent();
 // get extended event (more komplex keystrokes)
@@ -98,19 +123,6 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
 // return -1 indicates that event should be ignored (resize event as an example)
 STATIC_FXN int ConGetEvent() {
    // terminal specific values for shift + up / down
-   static int key_sup = -1;
-   static int key_sdown = -1;
-   // fill terminal dependant values on first call
-   if (key_sup < 0 || key_sdown < 0) {
-      for (auto ch = KEY_MAX + 1 ; ; ch++ ) {
-         auto kn( keyname(ch) );
-         if (!kn) break;
-         if (     !strcmp(kn, "kUP")) { key_sup   = ch; }
-         else if (!strcmp(kn, "kDN")) { key_sdown = ch; }
-         if (key_sup > 0 && key_sdown > 0) break;
-         }
-      }
-
    const auto ch( wgetch(stdscr) );
    if( ch < 0 )                      { return -1; }
    if( ch <= 0xFF ) {
@@ -168,8 +180,8 @@ STATIC_FXN int ConGetEvent() {
            return -1;
 
       default:
-           if( -1 != key_sdown && ch == key_sdown) { return EdKC_s_down; }
-           if( -1 != key_sup   && ch == key_sup  ) { return EdKC_s_up;   }
+           if( key_sdown && ch == key_sdown) { return EdKC_s_down; }
+           if( key_sup   && ch == key_sup  ) { return EdKC_s_up;   }
            // fprintf(stderr, "Unknown 0x%x %d\n", ch, ch);
            Msg( "%s Unknown event 0x%X %d\n", __func__, ch, ch );
            return -1;
