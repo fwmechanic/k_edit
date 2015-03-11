@@ -43,12 +43,13 @@ STATIC_VAR U16 s_to_EdKC[600];
 
 STATIC_FXN void keyname_to_code( const char *name, U16 edkc ) {
    linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), edkc );
-   const auto s( tigetstr( name ) );
+                                      DBG( "tigetstr %s+", name );
+   const auto s( tigetstr( name ) );  DBG( "tigetstr %s-", name );
    if( !s && (long)(s) == -1 ) {
       DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, name, "", edkcnmbuf );
       return;
-      }
-   const auto code( key_defined(s) );
+      }                               DBG( "key_defined %s+", s );
+   const auto code( key_defined(s) ); DBG( "key_defined %s-", s );
    DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", code, code, name, s, edkcnmbuf );
    if( code > 0 ) {
       if( code < ELEMENTS( s_to_EdKC ) ) {
@@ -74,6 +75,7 @@ void conin_ncurses_init() {
       { "kDC"  , EdKC_del    }, { "kDC3"  , EdKC_a_del   }, { "kDC5" , EdKC_c_del }, { "kDC6" , EdKC_cs_del },
       // 0=shifted:
       { "kDN"  , EdKC_s_down }, { "kDN3"  , EdKC_a_down  }, { "kDN5"  , EdKC_c_down  }, { "kDN6"  , EdKC_cs_down  },
+                      { "kEND3" , EdKC_s_end   },
       { "kEND" , EdKC_end    }, { "kEND3" , EdKC_a_end   }, { "kEND5" , EdKC_c_end   }, { "kEND6" , EdKC_cs_end   },
       { "kHOM" , EdKC_home   }, { "kHOM3" , EdKC_a_home  }, { "kHOM5" , EdKC_c_home  }, { "kHOM6" , EdKC_cs_home  },
       // maybe?
