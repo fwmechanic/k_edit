@@ -176,14 +176,14 @@ STATIC_FXN int ConGetEvent() {
                        break;
                case KEY_SRIGHT:
            KEvent->Code = kfShift | kbRight; */
-           Msg( "%s KEY_MOUSE event 0x%X %d\n", __func__, ch, ch );
+           Msg( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
            return -1;
 
       default:
            if( key_sdown && ch == key_sdown) { return EdKC_s_down; }
            if( key_sup   && ch == key_sup  ) { return EdKC_s_up;   }
-           // fprintf(stderr, "Unknown 0x%x %d\n", ch, ch);
-           Msg( "%s Unknown event 0x%X %d\n", __func__, ch, ch );
+           // fprintf(stderr, "Unknown 0%o %d\n", ch, ch);
+           Msg( "%s Unknown event 0%o %d\n", __func__, ch, ch );
            return -1;
       }
    }
@@ -260,7 +260,7 @@ STATIC_FXN int ConGetEscEvent() {
                 mod_CaS= mod_ctrl | mod_shift,
               };
          switch (endch) {
-            default:  Msg( "%s unhandled event *cas=%X 0x%X %d\n", __func__, mod, endch, endch ); return -1;
+            default:  Msg( "%s unhandled event *cas=%X 0%o %d\n", __func__, mod, endch, endch ); return -1;
             case 'A': CAS5( up       ); break;
             case 'B': CAS5( down     ); break;
             case 'C': CAS5( right    ); break;
@@ -283,7 +283,7 @@ STATIC_FXN int ConGetEscEvent() {
             case '$': mod |= mod_shift;  /* FALL THRU!!! */
             case '~':
                 switch (ch1 - '0') {
-                   default: Msg( "%s unhandled event ~cas=%X 0x%X %d\n", __func__, mod, ch1 - '0', ch1 - '0' ); return -1;
+                   default: Msg( "%s unhandled event ~cas=%X 0%o %d\n", __func__, mod, ch1 - '0', ch1 - '0' ); return -1;
                    case 1: CAS5( home ); break;
                    case 7: CAS5( home ); break;
                    case 4: CAS5( end  ); break;
@@ -299,7 +299,7 @@ STATIC_FXN int ConGetEscEvent() {
    } else { // alt+...
       if (ch == '\r' || ch == '\n')        { return EdKC_a_enter; }
       else if( ch == '\t' )                { return EdKC_a_tab;   }
-      else if( ch < ' '   )                { Msg( "%s unhandled event alt+ 0x%X %d\n", __func__, ch, ch ); return -1; } // alt + ctr + key;  unsupported by 'K'
+      else if( ch < ' '   )                { Msg( "%s unhandled event alt+ 0%o %d\n", __func__, ch, ch ); return -1; } // alt + ctr + key;  unsupported by 'K'
       else {
          if     ( ch >= '0' && ch <= '9' ) { return EdKC_a_0 + (ch - '0'); }
          else if( ch >= 'a' && ch <= 'z' ) { return EdKC_a_a + (ch - 'a'); }
