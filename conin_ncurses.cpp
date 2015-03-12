@@ -41,15 +41,15 @@
 //
 STATIC_VAR U16 s_to_EdKC[600];
 
-STATIC_FXN void keyname_to_code( const char *name, U16 edkc ) {
+STATIC_FXN void keyname_to_code( const char *name, U16 edkc ) { enum { DB=0 };
    linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), edkc );
-                                      DBG( "tigetstr %s+", name );
-   const auto s( tigetstr( name ) );  DBG( "tigetstr %s-", name );
-   if( !s && (long)(s) == -1 ) {
+                                      DB && DBG( "tigetstr+ %s", name );
+   const auto s( tigetstr( name ) );  DB && DBG( "tigetstr- %s", name );
+   if( !s || (long)(s) == -1 ) {
       DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, name, "", edkcnmbuf );
       return;
-      }                               DBG( "key_defined %s+", s );
-   const auto code( key_defined(s) ); DBG( "key_defined %s-", s );
+      }                               DB && DBG( "key_defined+ %s", s );
+   const auto code( key_defined(s) ); DB && DBG( "key_defined- %s", s );
    DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", code, code, name, s, edkcnmbuf );
    if( code > 0 ) {
       if( code < ELEMENTS( s_to_EdKC ) ) {
@@ -72,20 +72,19 @@ void conin_ncurses_init() {
    meta(stdscr, 1);
 
    STATIC_VAR const struct { const char *kynm; U16 edkc; } s_kn2kc[] = {
-      { "kDC"  , EdKC_del    }, { "kDC3"  , EdKC_a_del   }, { "kDC5" , EdKC_c_del }, { "kDC6" , EdKC_cs_del },
-      // 0=shifted:
-      { "kDN"  , EdKC_s_down }, { "kDN3"  , EdKC_a_down  }, { "kDN5"  , EdKC_c_down  }, { "kDN6"  , EdKC_cs_down  },
-                      { "kEND3" , EdKC_s_end   },
-      { "kEND" , EdKC_end    }, { "kEND3" , EdKC_a_end   }, { "kEND5" , EdKC_c_end   }, { "kEND6" , EdKC_cs_end   },
-      { "kHOM" , EdKC_home   }, { "kHOM3" , EdKC_a_home  }, { "kHOM5" , EdKC_c_home  }, { "kHOM6" , EdKC_cs_home  },
+      { "kDC"  , EdKC_del    }, { "kDC3" , EdKC_a_del   }, { "kDC5" , EdKC_c_del   }, { "kDC6" , EdKC_cs_del  },
+      /* 0=shifted */           { "kDN"  , EdKC_s_down  }, { "kDN3" , EdKC_a_down  }, { "kDN5" , EdKC_c_down  }, { "kDN6" , EdKC_cs_down  },
+
+      { "kEND" , EdKC_end    }, { "kEND2", EdKC_s_end   }, { "kEND3", EdKC_a_end   }, { "kEND5", EdKC_c_end   }, { "kEND6", EdKC_cs_end   },
+      { "kHOM" , EdKC_home   }, { "kHOM2", EdKC_s_home  }, { "kHOM3", EdKC_a_home  }, { "kHOM5", EdKC_c_home  }, { "kHOM6", EdKC_cs_home  },
       // maybe?
-      { "kIC"  , EdKC_ins    }, { "kIC3"  , EdKC_a_ins   }, { "kIC5"  , EdKC_c_ins   }, { "kIC6"  , EdKC_cs_ins   },
-      { "kLFT" , EdKC_left   }, { "kLFT3" , EdKC_a_left  }, { "kLFT5" , EdKC_c_left  }, { "kLFT6" , EdKC_cs_left  },
-      { "kNXT" , EdKC_pgdn   }, { "kNXT3" , EdKC_a_pgdn  }, { "kNXT5" , EdKC_c_pgdn  }, { "kNXT6" , EdKC_cs_pgdn  },
-      { "kPRV" , EdKC_pgup   }, { "kPRV3" , EdKC_a_pgup  }, { "kPRV5" , EdKC_c_pgup  }, { "kPRV6" , EdKC_cs_pgup  },
-      { "kRIT" , EdKC_right  }, { "kRIT3" , EdKC_a_right }, { "kRIT5" , EdKC_c_right }, { "kRIT6" , EdKC_cs_right },
-      // 0=shifted:
-      { "kUP"  , EdKC_s_up   }, { "kUP3"  , EdKC_a_up    }, { "kUP5"  , EdKC_c_up    }, { "kUP6"  , EdKC_cs_up    },
+      { "kIC"  , EdKC_ins    }, { "kIC2" , EdKC_s_ins   }, { "kIC3" , EdKC_a_ins   }, { "kIC5" , EdKC_c_ins   }, { "kIC6" , EdKC_cs_ins   },
+      { "kLFT" , EdKC_left   }, { "kLFT2", EdKC_s_left  }, { "kLFT3", EdKC_a_left  }, { "kLFT5", EdKC_c_left  }, { "kLFT6", EdKC_cs_left  },
+      { "kNXT" , EdKC_pgdn   }, { "kNXT2", EdKC_s_pgdn  }, { "kNXT3", EdKC_a_pgdn  }, { "kNXT5", EdKC_c_pgdn  }, { "kNXT6", EdKC_cs_pgdn  },
+      { "kPRV" , EdKC_pgup   }, { "kPRV2", EdKC_s_pgup  }, { "kPRV3", EdKC_a_pgup  }, { "kPRV5", EdKC_c_pgup  }, { "kPRV6", EdKC_cs_pgup  },
+      { "kRIT" , EdKC_right  }, { "kRIT2", EdKC_s_right }, { "kRIT3", EdKC_a_right }, { "kRIT5", EdKC_c_right }, { "kRIT6", EdKC_cs_right },
+      /* 0=shifted */           { "kUP"  , EdKC_s_up    }, { "kUP3" , EdKC_a_up    }, { "kUP5" , EdKC_c_up    }, { "kUP6" , EdKC_cs_up    },
+
    // { "kind"                   },
    // { "kri"                    },
       { "kf1" , EdKC_f1  }, { "kf13", EdKC_s_f1  }, { "kf25", EdKC_c_f1  }, { "kf37" , EdKC_cs_f1  }, { "kf49", EdKC_a_f1  },
@@ -186,7 +185,7 @@ STATIC_FXN int ConGetEvent() {
    if( ch < 0 )                      { return -1; }
    if( s_to_EdKC[ ch ] ) {
       const auto rv( s_to_EdKC[ ch ] );
-      DBG( "s_to_EdKC[ %d ]", ch );
+      linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), rv ); DBG( "s_to_EdKC[ %d ] => %s", ch, edkcnmbuf );
       return rv;
       }
    if( ch <= 0xFF ) {
@@ -197,18 +196,18 @@ STATIC_FXN int ConGetEvent() {
       if( ch < 27 )                  { return EdKC_c_a + (ch -  1); }
       return ch;
       }
-   switch (ch) {                                                // these columns replaced by keyname_to_code() which also avoids multiple mappings below
-                 // > 0xFF      // this column DOESN'T WORK     //     ubu 14.10             ubu 14.04             ubu 14.10             ubu 14.04
-      CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT   , EdKC_s_right) // CR(558, EdKC_a_right) CR(557, EdKC_a_right) CR(560, EdKC_c_right) CR(559, EdKC_c_right)
-      CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT    , EdKC_s_left ) // CR(543, EdKC_a_left ) CR(542, EdKC_a_left ) CR(545, EdKC_c_left ) CR(544, EdKC_c_left )
-      CR(KEY_DC   , EdKC_del  ) CR(KEY_SDC      , EdKC_s_del  ) // CR(517, EdKC_a_del  ) CR(516, EdKC_a_del  ) CR(519, EdKC_c_del  ) CR(518, EdKC_c_del  )
-      CR(KEY_IC   , EdKC_ins  ) CR(KEY_SIC      , EdKC_s_ins  ) // CR(538, EdKC_a_ins  ) CR(537, EdKC_a_ins  )
-      CR(KEY_HOME , EdKC_home ) CR(KEY_SHOME    , EdKC_s_home ) //
-      CR(KEY_END  , EdKC_end  ) CR(KEY_SEND     , EdKC_s_end  ) //
-      CR(KEY_NPAGE, EdKC_pgdn ) CR(KEY_SNEXT    , EdKC_s_pgdn ) // CR(553, EdKC_a_pgup)  CR(552, EdKC_a_pgup)  CR(555, EdKC_c_pgup)  CR(554, EdKC_c_pgup)
-      CR(KEY_PPAGE, EdKC_pgup ) CR(KEY_SPREVIOUS, EdKC_s_pgup ) // CR(548, EdKC_a_pgdn)  CR(547, EdKC_a_pgdn)  CR(550, EdKC_c_pgdn)  CR(549, EdKC_c_pgdn)
-      CR(KEY_UP   , EdKC_up   )                                 // CR(564, EdKC_a_up  )  CR(563, EdKC_a_up  )  CR(566, EdKC_c_up  )  CR(565, EdKC_c_up  )
-      CR(KEY_DOWN , EdKC_down )                                 // CR(523, EdKC_a_down)  CR(522, EdKC_a_down)  CR(525, EdKC_c_down)  CR(524, EdKC_c_down)
+   switch (ch) {
+                 // > 0xFF      // this column DOESN'T WORK: these keys map to ascii number chars
+      CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT   , EdKC_s_right)
+      CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT    , EdKC_s_left )
+      CR(KEY_DC   , EdKC_del  ) CR(KEY_SDC      , EdKC_s_del  )
+      CR(KEY_IC   , EdKC_ins  ) CR(KEY_SIC      , EdKC_s_ins  )
+      CR(KEY_HOME , EdKC_home ) CR(KEY_SHOME    , EdKC_s_home )
+      CR(KEY_END  , EdKC_end  ) CR(KEY_SEND     , EdKC_s_end  )
+      CR(KEY_NPAGE, EdKC_pgdn ) CR(KEY_SNEXT    , EdKC_s_pgdn )
+      CR(KEY_PPAGE, EdKC_pgup ) CR(KEY_SPREVIOUS, EdKC_s_pgup )
+      CR(KEY_UP   , EdKC_up   )
+      CR(KEY_DOWN , EdKC_down )
       CR(KEY_BACKSPACE, EdKC_bksp)
 
       // replaced (possibly unnecessarily) by keyname_to_code()
