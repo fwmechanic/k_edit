@@ -404,8 +404,8 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
                                                          DV && DBG("%s FreeAllMacroDefs();", __func__ );
    FreeAllMacroDefs();                                   DV && DBG("%s CmdIdxClose();", __func__ );
    CmdIdxClose();
-                                                         DV && DBG("%s CloseFileExtensionSettings();", __func__ );
-   CloseFileExtensionSettings();
+                                                         DV && DBG("%s CloseFTypeSettings();", __func__ );
+   CloseFTypeSettings();
                                                          DV && DBG("%s DestroyViewList(%d);", __func__, g_iWindowCount() );
    for( auto &win : g__.aWindow )
       DestroyViewList( &win->ViewHd );
@@ -1049,7 +1049,8 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
    AssignLogTag( "InitEnvRelatedSettings" );
    InitEnvRelatedSettings();
    CmdIdxInit();
-   InitFileExtensionSettings();
+   InitFTypeSettings();
+
 #if FBUF_TREE
    FBufIdxInit();
 #endif

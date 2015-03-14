@@ -742,7 +742,7 @@ typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;
 extern void DestroyViewList( ViewHead *pViewHd );
 
 
-struct FileExtensionSetting;
+struct FTypeSetting;
 
 class View { // View View View View View View View View View View View View View View View View View View View View View View View View
 public:
@@ -900,9 +900,9 @@ public:
    bool         next_balln( LINE yStart, bool fStopOnElse );
 
 private:
-   FileExtensionSetting *d_pFES = nullptr;
+   FTypeSetting *d_pFTS = nullptr;
 public:
-   FileExtensionSetting *GetFileExtensionSettings();
+   FTypeSetting *GetFTypeSettings();
 
    int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
@@ -948,17 +948,7 @@ public: // std pimpl implemenations declare it as private, but we have "special 
 
 inline bool View::ActiveInWin() { return d_pWin->CurView() == this; }
 
-
 //---------------------------------------------------------------------------------------------------------------------
-//
-// FILE flags values
-//
-enum eFileType
-   { ftype_UNCHECKED
-   , ftype_UNKNOWN
-   , ftype_LANG_C
-   };
-
 
 struct   NamedPoint;
 typedef  DLinkHead<NamedPoint>  NamedPointHead;
@@ -1281,18 +1271,15 @@ private:
    S8             d_TabWidth;
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
 
-   eFileType      d_FileType = ftype_UNCHECKED;   // enum FileType
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
 
    std::string    d_ftype;
 
 public:
-   const stref    FType()                const { return  d_ftype; }
+   const std::string &FType()            const { return  d_ftype; }
+   bool           FTypeEq( stref ft )    const { return  eq( d_ftype, ft ); }
    void           SetFType( stref ft )         {         d_ftype.assign( BSR2STR(ft) ); }
-
-   eFileType      FileType()             const { return  d_FileType; }
-   void           SetFileType( eFileType eft )        {  d_FileType = eft; }
 
  #ifdef           fn_su
    bool           SilentUpdateMode()     const { return  d_fSilentUpdateMode; }

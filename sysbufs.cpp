@@ -303,7 +303,6 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
 
    //*** content-fill pass:
 
-   {
 #if FBUF_TREE
    RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
@@ -319,9 +318,6 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
 
       ShowAFilesInfo( pFout, pFBuf, max );
       }
-   }
-
-   pFout->SetFileType( ftype_UNKNOWN );
    }
 
 void FBufRead_WInformation( PFBUF pFout, int widx ) { // fxn that fills "<winN>"
@@ -345,8 +341,6 @@ void FBufRead_WInformation( PFBUF pFout, int widx ) { // fxn that fills "<winN>"
 
       ShowAFilesInfo( pFout, pFBuf, max );
       }
-
-   pFout->SetFileType( ftype_UNKNOWN );
    }
 
 STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {

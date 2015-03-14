@@ -633,14 +633,18 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.~dat] # qq --filter output file
    rm:= "rm " mword arg arg execute setfile
 
-[k-.lua]
+[k-.lua k-.luastate k-.luaedit k-.filesettings]
    ftype:lua
+
+[k-!lua]
    delims: {[(
    mfspec_:="*.lua"
    rmargin:80
 
 [k-.pl k-.pm]
    ftype:perl
+
+[k-!perl]
    # wordchars:@$%
    delims: {[(
    mfspec_:="*.pl;*.pm"
@@ -661,6 +665,9 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    delims: {[(`
 
 [k-.mak k-.mik]
+   ftype:make
+
+[k-!make]
    ftype:make
    delims: {[(
    #graphic:tab # using GNU make, we need ability to insert literal tabs
@@ -683,15 +690,21 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [k-.pas k-.dpr]
    ftype:pascal
+
+[k-!pascal]
    mfspec_:="*.pas;*.dpr"
    rmargin:100
 
 [k-.mod k-.def]
    ftype:modula2
+
+[k-!modula2]
    mfspec_:="*.def;*.mod"
 
-[k-.asm k-.inc]
+[k-.asm k-.s k-.inc]
    ftype:asm
+
+[k-!asm]
    mfspec_:="*.inc;*.asm;*.map"
    call:=savecur arg "call" searchall restcur
    rmargin:100
@@ -705,7 +718,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.py k-.cs]
    wucminlen:1
 
-[k-.c k-.cpp k-.cc k-.cxx k-32.kc k-.h k-.hpp k-.hxx k-32.kh]
+[k-.c k-.cpp k-.cc k-.cs k-.m k-.cxx k-32.kc k-.h k-.hpp k-.hxx k-32.kh]
    ftype:clang
 
 [k-!clang]
@@ -776,6 +789,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [k-.awk k-.twk k-.twl k-.kxt k-.kxl]
    ftype:awk
+
+[k-!awk]
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
    mfspec_:="%TAGZ%\<*.twk;*.twl;*.awk;*.kxt;*.kxl>"
    rmargin:100

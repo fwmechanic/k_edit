@@ -232,69 +232,70 @@ typedef U8 ViewColors[ COLOR::VIEW_COLOR_COUNT ];
 
 static_assert( ELEMENTS( s_color2Lua ) == sizeof( ViewColors ), "ELEMENTS( s_color2Lua ) != ELEMENTS( ViewColors )" );
 
-STATIC_VAR RbTree *s_FES_idx;
+//--------------------------------------------------------------------------------------------------------------------------
+STATIC_VAR RbTree *s_FTS_idx;
 
-STATIC_FXN inline FileExtensionSetting *IdxNodeToFES( RbNode *pNd ) { return static_cast<FileExtensionSetting *>( rb_val(pNd) ); }  // type-safe conversion function
+STATIC_FXN inline FTypeSetting *IdxNodeToFTS( RbNode *pNd ) { return static_cast<FTypeSetting *>( rb_val(pNd) ); }  // type-safe conversion function
 
-struct FileExtensionSetting {
-   Path::str_t d_ext;  // rbtree key
+struct FTypeSetting {
+   Path::str_t d_key;  // rbtree key
    ViewColors  d_colors;
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
    PChar       d_lang;
 
    void  Update();
 
-   FileExtensionSetting( Path::str_t ext ) : d_ext( ext ) { Update(); }
-   ~FileExtensionSetting() {}
+   FTypeSetting( Path::str_t ext ) : d_key( ext ) { Update(); }
+   ~FTypeSetting() {}
 
    };
 
-void FileExtensionSetting::Update() {
+void FTypeSetting::Update() { enum { DB=1 };
    linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
-   snprintf_full( &pbuf, &kybufBytes, "filesettings.ext_map.%s.", d_ext.c_str() );
+   snprintf_full( &pbuf, &kybufBytes, "filesettings.ftype_map.%s.", d_key.c_str() );
    safeStrcpy( pbuf, kybufBytes, "eolCommentDelim" );
-   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );
+   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
    safeStrcpy( pbuf, kybufBytes, "lang" );
-   d_lang = LuaCtxt_Edit::Tbl2DupS0( kybuf );
+   d_lang = LuaCtxt_Edit::Tbl2DupS0( kybuf );                           DB && DBG( "%s: %s = %s", __func__, kybuf, d_lang );
 
    snprintf_full( &pbuf, &kybufBytes, "colors." );
    for( const auto &c2L : s_color2Lua ) {
       safeStrcpy( pbuf, kybufBytes, c2L.pLuaName );
-      d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf, c2L.dflt );
+      d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf, c2L.dflt );   DB && DBG( "%s: %s = 0x%02X", __func__, kybuf, d_colors[ c2L.ofs ] );
       }
 
    d_colors[ COLOR::CXY ] = GenAltHiliteColor( d_colors[ COLOR::FG ] );
    }
 
-void InitFileExtensionSettings() {
-   STATIC_VAR RbCtrl s_FES_idx_RbCtrl = { AllocNZ_, Free_, };
-   s_FES_idx = rb_alloc_tree( &s_FES_idx_RbCtrl );
+void InitFTypeSettings() {
+   STATIC_VAR RbCtrl s_FTS_idx_RbCtrl = { AllocNZ_, Free_, };
+   s_FTS_idx = rb_alloc_tree( &s_FTS_idx_RbCtrl );
    }
 
-STATIC_FXN void DeleteFES( void *pData, void *pExtra ) {
-   auto pFES( static_cast<FileExtensionSetting *>(pData) );
-   Free0( pFES );
+STATIC_FXN void DeleteFTS( void *pData, void *pExtra ) {
+   auto pFTS( static_cast<FTypeSetting *>(pData) );
+   Free0( pFTS );
    }
 
-void CloseFileExtensionSettings() {
-   rb_dealloc_treev( s_FES_idx, nullptr, DeleteFES );
+void CloseFTypeSettings() {
+   rb_dealloc_treev( s_FTS_idx, nullptr, DeleteFTS );
    }
 
-
-STATIC_FXN FileExtensionSetting *InitFileExtensionSetting( const Path::str_t &ext ) {
+STATIC_FXN FTypeSetting *InitFTypeSetting( const Path::str_t &ftype ) {
    int equal;
-   auto pNd( rb_find_gte_sri( &equal, s_FES_idx, ext ) );
-   if( equal ) return IdxNodeToFES( pNd );
-   auto pNew( new FileExtensionSetting( ext ) );
-   rb_insert_before( s_FES_idx, pNd, pNew->d_ext.c_str(), pNew );
+   auto pNd( rb_find_gte_sri( &equal, s_FTS_idx, ftype ) );
+   if( equal ) return IdxNodeToFTS( pNd );
+   auto pNew( new FTypeSetting( ftype ) );
+   rb_insert_before( s_FTS_idx, pNd, pNew->d_key.c_str(), pNew );
    return pNew;
    }
 
-void Reread_FileExtensionSettings() { // bugbug need to hook this up to something
-   for( auto pNd(rb_first( s_FES_idx )) ; pNd != rb_last( s_FES_idx ) ; pNd = rb_next( pNd ) ) {
-      IdxNodeToFES( pNd )->Update();
+void Reread_FTypeSettings() { // bugbug need to hook this up to something
+   for( auto pNd(rb_first( s_FTS_idx )) ; pNd != rb_last( s_FTS_idx ) ; pNd = rb_next( pNd ) ) {
+      IdxNodeToFTS( pNd )->Update();
       }
    }
+
 
 GLOBAL_CONST unsigned char *g_colorVars[] = {
    &g_colorInfo      ,
@@ -305,18 +306,16 @@ GLOBAL_CONST unsigned char *g_colorVars[] = {
 
 static_assert( ELEMENTS(g_colorVars) == (COLOR::COLOR_COUNT - COLOR::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == COLOR::COLOR_COUNT" );
 
-FileExtensionSetting *View::GetFileExtensionSettings() {
-   if( !d_pFES ) {
-      auto ext( FBOP::GetRsrcExt( d_pFBuf ) );
-      ext.erase( 0, 1 ); // zap the leading '.'
-      d_pFES = ::InitFileExtensionSetting( ext );
+FTypeSetting *View::GetFTypeSettings() {
+   if( !d_pFTS ) {
+      d_pFTS = ::InitFTypeSetting( d_pFBuf->FType() );
       }
-   return d_pFES;
+   return d_pFTS;
    }
 
 int View::ColorIdx2Attr( int colorIdx ) const {
-   if( colorIdx < COLOR::VIEW_COLOR_COUNT )  return d_pFES
-                                                  ?  d_pFES->d_colors[ colorIdx ]
+   if( colorIdx < COLOR::VIEW_COLOR_COUNT )  return  d_pFTS
+                                                  ?  d_pFTS->d_colors[ colorIdx ]
                                                   : *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
    if( colorIdx < COLOR::COLOR_COUNT )       return *g_colorVars[ colorIdx    - COLOR::VIEW_COLOR_COUNT ];
                                              return *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
@@ -910,7 +909,7 @@ bool HiliteAddin_CompileLine::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
 
 //=============================================================================
 
-// HiliteAddin_EolComment & HiliteAddin_C_Comment REQUIRE existence of d_view.GetFileExtensionSettings()->d_eolCommentDelim
+// HiliteAddin_EolComment & HiliteAddin_C_Comment REQUIRE existence of d_view.GetFTypeSettings()->d_eolCommentDelim
 // HiliteAddin_EolComment & HiliteAddin_C_Comment are mutually exclusive; see HiliteAddins_Init()
 
 class HiliteAddin_EolComment : public HiliteAddin {
@@ -922,7 +921,7 @@ class HiliteAddin_EolComment : public HiliteAddin {
 public:
    HiliteAddin_EolComment( PView pView )
    : HiliteAddin( pView )
-   , d_eolCommentDelim( d_view.GetFileExtensionSettings()->d_eolCommentDelim )
+   , d_eolCommentDelim( d_view.GetFTypeSettings()->d_eolCommentDelim )
       { /* 20140630
         all the following annoying hackiness is to allow detection of EOL
         comments occurring at EOL, in the case where the d_eolCommentDelim has
@@ -2019,37 +2018,16 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
 
 GLOBAL_VAR bool g_fLangHilites = true;
 
-STATIC_FXN stref shebang_binary_name( PFBUF pfb ) { // should be simple, right?
-   auto rl0( pfb->PeekRawLine( 0 ) );
-   if( !rl0.starts_with( "#!" ) ) { return ""; }
-   const auto i1( FirstBlankOrEnd( rl0, 2 ) );    // assume: no spaces in path of binary
-   rl0.remove_suffix( rl0.length() - i1 );        // strip command tail
-   const auto ls( rl0.find_last_of( "/" ) );      // assume: unix dirsep, regardless of platform
-   const auto i0( ls != stref::npos ? ls+1 : 2 ); // could be bare binary name (i.e. filetype)
-   if( i0 >= i1 ) { return ""; }                  // nothing at all?
-   const auto shebang( rl0.substr( i0, i1 - i0 ) ); 1 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
-   return shebang;
-   }
-
 void View::HiliteAddins_Init() {
    if( g_fLangHilites ) {
       DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
       if( d_addins.empty() && d_pFBuf->HasLines() ) {
-         const auto pFES( GetFileExtensionSettings() );
-         const auto commDelim( pFES->d_eolCommentDelim );
+         const auto pFTS( GetFTypeSettings() );
+         const auto commDelim( pFTS->d_eolCommentDelim );
          const auto hasEolComment( 0 != commDelim[0] );
-         const auto shebang( shebang_binary_name( d_pFBuf ) );
-         const auto srNm( d_pFBuf->Namesr() );
-         const auto srFnm( Path::RefFnm( srNm ) );
-         const auto isMakefile(   shebang=="make"
-                               || Path::endsWith( srFnm, "makefile" )
-                               #if !defined(_WIN32)
-                               || Path::endsWith( srFnm, "Makefile" )
-                               #endif
-                               || Path::eq( ".mak", Path::RefExt( srNm ) )
-                              );
-         #define LANG_EQ( lang ) ( eqi( shebang, lang ) || (pFES->d_lang && 0==Stricmp( pFES->d_lang, lang )) )
-         const auto isClang( LANG_EQ( "C" ) );  // from k.filesettings
+         #define LANG_EQ( lang ) ( d_pFBuf->FTypeEq( lang ) )
+         const auto isClang   ( LANG_EQ( "clang" ) );  // from k.filesettings
+         const auto isMakefile( LANG_EQ( "make" ) );
          /* Note that last-inserted InsertAddinLast has "last say" and therefore
             "wins".  Thus HiliteAddin_CursorLine is added last, because I want it
             to be present in basically all cases */
@@ -2057,10 +2035,9 @@ void View::HiliteAddins_Init() {
          if( isClang                  )    { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
                                              InsertAddinLast( new HiliteAddin_C_Comment       ( this ) ); }
          if( isMakefile               )    { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) ); }
-         if( LANG_EQ( "Lua" )         )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
-         if(  isMakefile || shebang=="sh"||shebang=="bash"
-           || LANG_EQ( "Python" )
-           || LANG_EQ( "Perl" )       )    { DBG( "ADDING HiliteAddin_Python_Comment" );
+         if( LANG_EQ( "lua" )         )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
+         if( isMakefile || LANG_EQ("sh")||LANG_EQ("bash")||LANG_EQ("python")|| LANG_EQ("perl")
+                                      )    { DBG( "ADDING HiliteAddin_Python_Comment" );
                                              InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
@@ -2211,7 +2188,7 @@ void View::EnsureWinContainsCursor() {
 // initialize these fields
 //
 void View::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, this->FBuf()->Name() );
-   GetFileExtensionSettings();
+   GetFTypeSettings();
 
    // BUGBUG This causes the View list to link to self; don't know why!?
    // ViewHead &cvwHd = g_CurViewHd();
@@ -2220,7 +2197,7 @@ void View::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, 
    EnsureWinContainsCursor();  // window resize may have occurred
    ForceCursorMovedCondition();
 
-   GetFileExtensionSettings();
+   GetFTypeSettings();
    HiliteAddins_Init();
 
    d_tmFocusedOn = time( nullptr );

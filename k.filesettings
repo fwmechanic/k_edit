@@ -2,10 +2,8 @@
 
 20070823 kgoodwin wrote
 
-20080618 kgoodwin NB!  K.DLL (editor core) directly accesses the contents of
-                  this file's global ext_map (see display.cpp), even though the
-                  core Lua code reads it using the table returned by
-                  fxn_extmapping on each GetFocus event...
+20080618 kgoodwin NB!  K (editor core) directly accesses the contents of
+                  this file's global ftype_map (see display.cpp)
 
 --]]
 
@@ -74,44 +72,17 @@ local lua_settings   = { colors = DeepCopy(stdColors), eolCommentDelim = "--", r
 local python_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125, lang="Python" }
 local perl_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125, lang="Perl" }
 
-ext_map = {  -- ref'd from C
-   c            = clang_settings                       ,
-   cc           = clang_settings                       ,
-   cs           = clang_settings                       , -- C# is mostly like C++
-   m            = clang_settings                       , -- Objective C is a superset of C
-   cpp          = clang_settings                       ,
-   cxx          = clang_settings                       ,
-   h            = clang_settings                       ,
-   hpp          = clang_settings                       ,
-   bat          = bat_settings                         ,
+ftype_map = {  -- ref'd from C
+   clang        = clang_settings                       ,
+   msbatch      = bat_settings                         ,
    lua          = lua_settings                         ,
-   luastate     = lua_settings                         ,
-   luaedit      = lua_settings                         ,
-   pl           = perl_settings                        ,
-   pm           = perl_settings                        ,
-   py           = python_settings                      ,
-   mak          = perl_settings                        ,
+   perl         = perl_settings                        ,
+   python       = python_settings                      ,
+   make         = perl_settings                        ,
    kdb          = text_settings                        ,
-   txt          = text_settings                        ,
-   filesettings = { colors = stdColors, rmargin = 80 } ,
+   text         = text_settings                        ,
    [""]         = { colors = stdColors }               ,
    ["<>"]       = { colors = stdColors }               ,
    ["*"]        = { colors = stdColors }               ,
    -- ["*"]     = colors{ colors = stdColors }         ,
    }
-
-fxn_extmapping = function( curfn )     -- print( "### GetFocus-match: '" .. curfn .. "'" )
-   --print( 'ext_map["<>"] = '..(ext_map["<>"] and "defined" or "not defined?") )
-   local rv
-   local nmext = NameExtOf( curfn )
-   local ext   = ExtOf    ( curfn )
-   if     curfn:match("^<")              then  -- print( "### GetFocus-match on PSEUDO -> '" .. curfn .. "'" )
-      rv = ext_map["<>"]
-   elseif nmext and   ext_map[nmext]     then  -- print( "### GetFocus-match on name -> '" .. nmext .. "'" )
-      rv = ext_map[nmext]
-   elseif ext_map   and   ext_map[ext  ] then  -- print( "### GetFocus-match on ext  -> '" .. ext   .. "'" )
-      rv = ext_map[ext  ]
-   else                                        -- print( "### NO GetFocus-match on   -> '" .. curfn .. "'" )
-      end
-   return rv
-   end

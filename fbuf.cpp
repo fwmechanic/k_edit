@@ -535,38 +535,17 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
       Assert( g_CurView() && g_CurView()->FBuf() == this );
       return g_CurView();
       }
-   }
    DB && DBG( "%s is %s will be %s", __func__, g_CurFBuf()?g_CurFBuf()->Name():"", this->Name() );
 
    FBOP::AssignFromRsrc( this );
 
-   if( ftype_UNCHECKED==FileType() ) {
-      SetFileType( ftype_UNKNOWN ); // at least we checked
-      STATIC_CONST struct {
-         PCChar    ext;
-         eFileType type;
-         }
-      ext_2_type[] = {
-         { ".c"  , ftype_LANG_C },
-         { ".cpp", ftype_LANG_C },
-         { ".cxx", ftype_LANG_C },
-         { ".h"  , ftype_LANG_C },
-         { ".hpp", ftype_LANG_C },
-         };
-      const auto pb( Path::RefExt( Name() ) );
-      0 && DBG( "%s EXT=%" PR_BSR "'", __func__, BSR(pb) );
-      for( const auto &e2t : ext_2_type ) {
-         if( Path::eq( e2t.ext, pb ) ) {
-            0 && DBG( "%s TYPE=%s (%d)", __func__, e2t.ext, e2t.type );
-            SetFileType( e2t.type );
-            break;
-            }
-         }
+   if( fContentChanged ) {
       CalcIndent();
       if( d_TabWidth < 2 ) {
          d_TabWidth = g_iTabWidth;
          }
       }
+   }
 
    const auto pCurView( this->PutFocusOnView() );
 
@@ -658,15 +637,11 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) { // cursor has NOT been moved
       }
    else {
       rv = ColOfFreeIdx( tw, thisRl, ixNonb );
-      switch( fb->FileType() ) {
-         default: break;
-         case ftype_LANG_C: {
-              const auto rv_C( SoftcrForCFiles( fb, rv, yStart, thisRl, ixNonb, rv ) );
-              if( rv_C >= 0 ) {  0 && DBG( "SoftCR C: %d", rv_C );
-                 return rv_C;
-                 }
-              }
-              break;
+      if( fb->FTypeEq( "clang" ) ) {
+         const auto rv_C( SoftcrForCFiles( fb, rv, yStart, thisRl, ixNonb, rv ) );
+         if( rv_C >= 0 ) {  0 && DBG( "SoftCR C: %d", rv_C );
+            return rv_C;
+            }
          }
       }
    }
@@ -881,6 +856,18 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    return shebang;
    }
 
+STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
+   const auto srNm( pfb->Namesr() );
+   const auto srFnm( Path::RefFnm( srNm ) );
+   const auto isMakefile(   Path::endsWith( srFnm, "makefile" )
+                         #if !defined(_WIN32)
+                         || Path::endsWith( srFnm, "Makefile" )
+                         #endif
+                         || Path::eq( ".mak", Path::RefExt( srNm ) )
+                        );
+   return isMakefile ? "make" : nullptr;
+   }
+
 STATIC_VAR bool s_cur_Ftype_assigned; // hacky!
 STATIC_VAR char s_cur_Ftype[21];
 
@@ -946,7 +933,8 @@ void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name
          s_cur_Ftype_assigned = false;
          // call LoadFileExtRsrcIniSection( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
          // DefineStrMacro( "curfileftype",  );
-         const stref ftype( (LoadFileExtRsrcIniSection( ext.c_str() ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "#unknown" );
+         PCChar ft;
+         const stref ftype( (LoadFileExtRsrcIniSection( ext.c_str() ) && s_cur_Ftype_assigned) ? s_cur_Ftype : (ft=fnm_to_ftype( fb )) ? ft : "#unknown" );
          s_cur_Ftype_assigned = false;
          fb->SetFType( ftype );
          RsrcLdSectionFtype( ftype );

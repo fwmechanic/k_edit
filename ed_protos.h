@@ -336,11 +336,11 @@ extern   bool  fExecuteSafe( PCChar str );
 extern   bool  PushVariableMacro( PCChar strToExecute );
 extern   void  CleanupAnyExecutionHaltRequest(); // must NOT be declared _within_ Main, where it would get a DLLX attribute
 
-//------------ FileExtensionSettings
+//------------ FTypeSettings
 
-extern  void   InitFileExtensionSettings();
-extern  void   Reread_FileExtensionSettings();
-extern  void   CloseFileExtensionSettings();
+extern  void   InitFTypeSettings();
+extern  void   Reread_FTypeSettings();
+extern  void   CloseFTypeSettings();
 
 //------------ CmdIdx
 

@@ -764,7 +764,7 @@ bool LuaCtxt_State::InitOk( PCChar filename ) {
 
 STATIC_FXN void L_edit_post_load( lua_State *L ) { // Lua environment-loaded hook-outs
    LREGI_set_EvtHandlerEnabled( L, 1 );
-   Reread_FileExtensionSettings();
+   Reread_FTypeSettings();
    }
 STATIC_FXN void L_edit_openlibs( lua_State *L ) {
    l_OpenStdLibs( L );

@@ -1041,7 +1041,7 @@ do --- counting files switched to, fxn "mvf" to choose among them
          local curfn = fb:Name()
          SetCurFName( curfn )
          -- DBG( "### ---------------> '" .. curfn .. "'" )
-         focusSettings = filesettings and filesettings.fxn_extmapping and filesettings.fxn_extmapping( curfn )
+         -- focusSettings = filesettings and filesettings.fxn_extmapping and filesettings.fxn_extmapping( curfn )
          tu.t_accum( s_hitCount, curfn, 1 )
          end
       }
