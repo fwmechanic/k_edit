@@ -2025,9 +2025,9 @@ void View::HiliteAddins_Init() {
          const auto pFTS( GetFTypeSettings() );
          const auto commDelim( pFTS->d_eolCommentDelim );
          const auto hasEolComment( 0 != commDelim[0] );
-         #define LANG_EQ( lang ) ( d_pFBuf->FTypeEq( lang ) )
-         const auto isClang   ( LANG_EQ( "clang" ) );  // from k.filesettings
-         const auto isMakefile( LANG_EQ( "make" ) );
+         #define LEQ( lang ) ( d_pFBuf->FTypeEq( lang ) )
+         const auto isClang   ( LEQ( "clang" ) );  // from k.filesettings
+         const auto isMakefile( LEQ( "make" ) );
          /* Note that last-inserted InsertAddinLast has "last say" and therefore
             "wins".  Thus HiliteAddin_CursorLine is added last, because I want it
             to be present in basically all cases */
@@ -2035,10 +2035,11 @@ void View::HiliteAddins_Init() {
          if( isClang                  )    { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
                                              InsertAddinLast( new HiliteAddin_C_Comment       ( this ) ); }
          if( isMakefile               )    { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) ); }
-         if( LANG_EQ( "lua" )         )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
-         if( isMakefile || LANG_EQ("sh")||LANG_EQ("bash")||LANG_EQ("python")|| LANG_EQ("perl")
-                                      )    { DBG( "ADDING HiliteAddin_Python_Comment" );
-                                             InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+         if( LEQ( "lua" )             )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
+         if( isMakefile ||LEQ("sh")
+            ||LEQ("bash")||LEQ("python")
+            ||LEQ("perl")
+           )                               { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }

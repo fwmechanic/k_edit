@@ -875,9 +875,13 @@ void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
    safeStrcpy( dest, sizeofDest, s_cur_Ftype );
    }
 
+STATIC_FXN void Set_s_cur_Ftype( stref ftype ) {
+   safeStrcpy( BSOB(s_cur_Ftype), BSR2STR(ftype) );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
+   }
+
 PCChar swixFtype( stref param ) {
-   safeStrcpy( BSOB(s_cur_Ftype), BSR2STR(param) );
-   s_cur_Ftype_assigned = true;                  0 && DBG( "%s %s", __func__, s_cur_Ftype );
+   Set_s_cur_Ftype( param );
+   s_cur_Ftype_assigned = true;
    return nullptr;
    }
 
@@ -937,6 +941,7 @@ void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name
          const stref ftype( (LoadFileExtRsrcIniSection( ext.c_str() ) && s_cur_Ftype_assigned) ? s_cur_Ftype : (ft=fnm_to_ftype( fb )) ? ft : "#unknown" );
          s_cur_Ftype_assigned = false;
          fb->SetFType( ftype );
+         Set_s_cur_Ftype( ftype );
          RsrcLdSectionFtype( ftype );
          }
       }
