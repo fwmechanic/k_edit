@@ -927,7 +927,8 @@ STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
    }
 
 STATIC_VAR bool s_cur_Ftype_assigned; // hacky!
-STATIC_VAR char s_cur_Ftype[21];
+enum { SIZEOF_MAX_FTYPE=51 };
+STATIC_VAR char s_cur_Ftype[SIZEOF_MAX_FTYPE];
 
 void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
    safeStrcpy( dest, sizeofDest, s_cur_Ftype );
@@ -941,6 +942,12 @@ PCChar swixFtype( stref param ) {
    Set_s_cur_Ftype( param );
    s_cur_Ftype_assigned = true;
    return nullptr;
+   }
+
+STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
+   const auto section( FmtStr<1+SIZEOF_MAX_FTYPE>( "!%" PR_BSR, BSR(ftype) ).k_str() );
+   const auto rv( RsrcLdFileSection( section ) );    0 && DBG( "%s %c %s", __func__, rv?'y':'n', section );
+   return rv;
    }
 
 STATIC_FXN Path::str_t GetRsrcExt( PCFBUF fb ) {

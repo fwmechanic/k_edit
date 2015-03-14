@@ -394,7 +394,6 @@ extern   void  EditorExit( int processExitCode, bool fWriteStateFile );
 
 extern  PChar  RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext );
 extern stref   IsolateTagStr( stref src );
-extern   bool  RsrcLdSectionFtype( stref ftype );
 extern   bool  RsrcLdFileSection( stref pszSectionName );
 extern PCChar  LastRsrcLdFileSectionNm();
 

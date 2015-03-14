@@ -737,14 +737,6 @@ PCChar LastRsrcLdFileSectionNm() {
    return s_sLastRsrcLdFileSectionNm.c_str();
    }
 
-bool RsrcLdSectionFtype( stref ftype ) {
-   char section[22];
-   safeStrcpy( BSOB(section), "!" );
-   safeStrcat( BSOB(section), 1, BSR2STR(ftype) );
-   const auto rv( RsrcLdFileSection( section ) );   DBG( "%s %c %s", __func__, rv?'y':'n', section );
-   return rv;
-   }
-
 //
 //  Initialize
 //
