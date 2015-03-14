@@ -843,6 +843,64 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    return rv;
    }
 
+bool is_content_diff( PCFBUF pFile ) {
+   0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
+
+   auto lnum(0);
+   stref rl;
+#define  CHKL()       (rl=pFile->PeekRawLine( lnum ), lnum <= pFile->LastLine())
+#define  CMPL(kstr)   (rl.starts_with( kstr ))
+#define  NXTL()       (++lnum,CHKL())
+
+   // from http://git-scm.com/docs/git-diff   search for "new file mode"
+   STATIC_CONST char diff_[] = "diff ";
+   STATIC_CONST char min_ [] = "--- ";
+   STATIC_CONST char pls_ [] = "+++ ";
+   //
+   //     skip these:
+   //
+   STATIC_CONST char om__[] = "old mode "          ; // old mode <mode>
+   STATIC_CONST char nm__[] = "new mode "          ; // new mode <mode>
+   STATIC_CONST char dfm_[] = "deleted file mode " ; // deleted file mode <mode>
+   STATIC_CONST char nfm_[] = "new file mode "     ; // new file mode <mode>
+   STATIC_CONST char cpfr[] = "copy from"          ; // copy from <path>
+   STATIC_CONST char cpto[] = "copy to"            ; // copy to <path>
+   STATIC_CONST char mvfm[] = "rename from"        ; // rename from <path>
+   STATIC_CONST char mvto[] = "rename to"          ; // rename to <path>
+   STATIC_CONST char simi[] = "similarity index"   ; // similarity index <number>
+   STATIC_CONST char disi[] = "dissimilarity index"; // dissimilarity index <number>
+   STATIC_CONST char idx_[] = "index "             ; // index <hash>..<hash> <mode>
+   STATIC_CONST char IdxQ[] = "Index: "            ; // Index: des_v2_1_fe_v2_4_star_v7_1_ps_v2_0/python/CommonFunctionsDES.py  (svn)
+   STATIC_CONST char dopt[] = "DIFFOPTS="          ; // this is VERY particular to a bat file I wrote this is first line prefixing std svn diff output 20140313
+   STATIC_CONST char eql_[] = "==================================================================="; // (svn)
+
+   auto ok( CHKL() && CMPL( diff_ ) || CMPL( IdxQ ) || (CMPL( dopt ) && NXTL() && CMPL( IdxQ )) );
+   if( ok ) {
+      while( NXTL() &&
+         // skip these
+         CMPL( om__ ) ||
+         CMPL( nm__ ) ||
+         CMPL( dfm_ ) ||
+         CMPL( nfm_ ) ||
+         CMPL( cpfr ) ||
+         CMPL( cpto ) ||
+         CMPL( mvfm ) ||
+         CMPL( mvto ) ||
+         CMPL( simi ) ||
+         CMPL( disi ) ||
+         CMPL( idx_ ) ||
+         CMPL( eql_ )
+        ) {}
+      ok = CHKL() && CMPL( min_ ) && NXTL() && CMPL( pls_ );
+      }
+   0 && DBG( "%s %s ? %s", __PRETTY_FUNCTION__, pFile->Name(), ok?"yes":"no" );
+   return ok;
+
+#undef  CHKL
+#undef  NXTL
+#undef  CMPL
+   }
+
 
 STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    auto rl0( pfb->PeekRawLine( 0 ) );
@@ -885,7 +943,7 @@ PCChar swixFtype( stref param ) {
    return nullptr;
    }
 
-Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
+STATIC_FXN Path::str_t GetRsrcExt( PCFBUF fb ) {
    Path::str_t rv;
    if( FnmIsLogicalWildcard( fb->Namestr() ) ) {
       rv = ".*";
@@ -922,19 +980,25 @@ void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name
   #endif
    DefineStrMacro( "curfilename", Path::RefFnm  ( fb->Namestr() ) );
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
-   const auto ext( FBOP::GetRsrcExt( fb ) );
+   const auto ext( GetRsrcExt( fb ) );
    DefineStrMacro( "curfileext", ext );
+   // call RsrcLdFileSection( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
    if( fb->IsRsrcLdBlocked() ) {
-      DefineStrMacro( "curfileftype", "#blocked" );
       }
    else {
-      auto ftype( shebang_binary_name( fb ) );
+      // following are assigned to stref ftype; must stay in same scope
+      static const char diff[] = "diff";
+      static const char unknown[] = "unknown";
+      stref ftype( shebang_binary_name( fb ) );
       if( ftype.empty() ) {
-         s_cur_Ftype_assigned = false;
-         // call RsrcLdFileSection( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
-         // DefineStrMacro( "curfileftype",  );
-         PCChar ft;
-         ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : (ft=fnm_to_ftype( fb )) ? ft : "unknown";
+         if( is_content_diff( fb ) ) {
+            ftype = diff;
+            }
+         else {
+            s_cur_Ftype_assigned = false;
+            PCChar ft;
+            ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : (ft=fnm_to_ftype( fb )) ? ft : unknown;
+            }
          }
       Set_s_cur_Ftype( ftype );
       fb->SetFType( ftype );

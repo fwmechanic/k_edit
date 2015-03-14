@@ -621,9 +621,13 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.bat] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    wordchars:$_
 
+[k-!filename-list]  # wildcard expansion
+
 [k-.*]  # wildcard expansion
+   ftype:filename-list
 
 [k-.]  # USED IF FILE HAS NO EXTENSION
+   ftype:filename-list
    delims: {[(
    mfspec_:="*."
    rmargin:80
@@ -720,6 +724,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [k-.c k-.cpp k-.cc k-.cs k-.m k-.cxx k-32.kc k-.h k-.hpp k-.hxx k-32.kh]
    ftype:clang
+
+[k-!diff]
 
 [k-!clang]
    # backup:bak

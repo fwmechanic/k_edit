@@ -1514,7 +1514,6 @@ void HiliteAddin_Python_Comment::scan_pass( LINE yMaxScan ) {
 
 class HiliteAddin_Diff : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
-   bool VWorthKeeping() override;
 
 public:
    STATIC_FXN bool Applies( PFBUF pFile );
@@ -1522,65 +1521,6 @@ public:
    ~HiliteAddin_Diff() {}
    PCChar Name() const override { return "Diff"; }
    };
-
-bool HiliteAddin_Diff::VWorthKeeping() {
-   auto pFile( CFBuf() );
-   0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
-
-   auto lnum(0);
-   stref rl;
-#define  CHKL()       (rl=pFile->PeekRawLine( lnum ), lnum <= pFile->LastLine())
-#define  CMPL(kstr)   (rl.starts_with( kstr ))
-#define  NXTL()       (++lnum,CHKL())
-
-   // from http://git-scm.com/docs/git-diff   search for "new file mode"
-   STATIC_CONST char diff_[] = "diff ";
-   STATIC_CONST char min_ [] = "--- ";
-   STATIC_CONST char pls_ [] = "+++ ";
-   //
-   //     skip these:
-   //
-   STATIC_CONST char om__[] = "old mode "          ; // old mode <mode>
-   STATIC_CONST char nm__[] = "new mode "          ; // new mode <mode>
-   STATIC_CONST char dfm_[] = "deleted file mode " ; // deleted file mode <mode>
-   STATIC_CONST char nfm_[] = "new file mode "     ; // new file mode <mode>
-   STATIC_CONST char cpfr[] = "copy from"          ; // copy from <path>
-   STATIC_CONST char cpto[] = "copy to"            ; // copy to <path>
-   STATIC_CONST char mvfm[] = "rename from"        ; // rename from <path>
-   STATIC_CONST char mvto[] = "rename to"          ; // rename to <path>
-   STATIC_CONST char simi[] = "similarity index"   ; // similarity index <number>
-   STATIC_CONST char disi[] = "dissimilarity index"; // dissimilarity index <number>
-   STATIC_CONST char idx_[] = "index "             ; // index <hash>..<hash> <mode>
-   STATIC_CONST char IdxQ[] = "Index: "            ; // Index: des_v2_1_fe_v2_4_star_v7_1_ps_v2_0/python/CommonFunctionsDES.py  (svn)
-   STATIC_CONST char dopt[] = "DIFFOPTS="          ; // this is VERY particular to a bat file I wrote this is first line prefixing std svn diff output 20140313
-   STATIC_CONST char eql_[] = "==================================================================="; // (svn)
-
-   auto ok( CHKL() && CMPL( diff_ ) || CMPL( IdxQ ) || (CMPL( dopt ) && NXTL() && CMPL( IdxQ )) );
-   if( ok ) {
-      while( NXTL() &&
-         // skip these
-         CMPL( om__ ) ||
-         CMPL( nm__ ) ||
-         CMPL( dfm_ ) ||
-         CMPL( nfm_ ) ||
-         CMPL( cpfr ) ||
-         CMPL( cpto ) ||
-         CMPL( mvfm ) ||
-         CMPL( mvto ) ||
-         CMPL( simi ) ||
-         CMPL( disi ) ||
-         CMPL( idx_ ) ||
-         CMPL( eql_ )
-        ) {}
-      ok = CHKL() && CMPL( min_ ) && NXTL() && CMPL( pls_ );
-      }
-   0 && DBG( "%s %s ? %s", __PRETTY_FUNCTION__, pFile->Name(), ok?"yes":"no" );
-   return ok;
-
-#undef  CHKL
-#undef  NXTL
-#undef  CMPL
-   }
 
 bool HiliteAddin_Diff::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    const auto rl( CFBuf()->PeekRawLine( yLine ) );
@@ -2040,8 +1980,8 @@ void View::HiliteAddins_Init() {
             ||LEQ("bash")||LEQ("python")
             ||LEQ("perl")
            )                               { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+         if( LEQ("diff") )                 { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
-                                           { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }
          if( USE_HiliteAddin_CompileLine ) { InsertAddinLast( new HiliteAddin_CompileLine     ( this ) ); }
          if( USE_HiliteAddin_CursorLine  ) { InsertAddinLast( new HiliteAddin_CursorLine      ( this ) ); }

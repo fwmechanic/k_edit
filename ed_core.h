@@ -1619,8 +1619,6 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    extern void    CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd );
 
    extern void    AssignFromRsrc( PFBUF fb );
-   extern Path::str_t GetRsrcExt( PCFBUF fb );
-
 
    //************ Insert Lines in sorted order
    //
