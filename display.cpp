@@ -1962,25 +1962,21 @@ void View::HiliteAddins_Init() {
    if( g_fLangHilites ) {
       DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
       if( d_addins.empty() && d_pFBuf->HasLines() ) {
-         const auto pFTS( GetFTypeSettings() );
-         const auto commDelim( pFTS->d_eolCommentDelim );
-         const auto hasEolComment( 0 != commDelim[0] );
-         #define LEQ( lang ) ( d_pFBuf->FTypeEq( lang ) )
-         const auto isClang   ( LEQ( "clang" ) );  // from k.filesettings
-         const auto isMakefile( LEQ( "make" ) );
-         /* Note that last-inserted InsertAddinLast has "last say" and therefore
-            "wins".  Thus HiliteAddin_CursorLine is added last, because I want it
-            to be present in basically all cases */
+         const auto hasEolComment( GetFTypeSettings()->d_eolCommentDelim[0] );
+         #define L( lang ) const auto lang( d_pFBuf->FTypeEq( #lang ) );
+         L(clang) L(make) L(lua) L(sh) L(bash) L(perl) L(python) L(diff)
+
+         /* the last-inserted InsertAddinLast has "last say" and therefore "wins".
+            Thus because I want HiliteAddin_CursorLine, to be visible in all cases,
+            it's added last */
                                            { InsertAddinLast( new HiliteAddin_Pbal            ( this ) ); }
-         if( isClang                  )    { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
+         if( clang                    )    { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
                                              InsertAddinLast( new HiliteAddin_C_Comment       ( this ) ); }
-         if( isMakefile               )    { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) ); }
-         if( LEQ( "lua" )             )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
-         if( isMakefile ||LEQ("sh")
-            ||LEQ("bash")||LEQ("python")
-            ||LEQ("perl")
-           )                               { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
-         if( LEQ("diff") )                 { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
+         if( make                     )    { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) ); }
+         if( lua                      )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
+         if(  make||sh||perl
+            ||bash||python            )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+         if( diff )                        { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
          else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
                                            { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }
          if( USE_HiliteAddin_CompileLine ) { InsertAddinLast( new HiliteAddin_CompileLine     ( this ) ); }
