@@ -843,7 +843,7 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    return rv;
    }
 
-bool is_content_diff( PCFBUF pFile ) {
+STATIC_FXN stref is_content_diff( PCFBUF pFile ) {
    0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
 
    auto lnum(0);
@@ -894,13 +894,12 @@ bool is_content_diff( PCFBUF pFile ) {
       ok = CHKL() && CMPL( min_ ) && NXTL() && CMPL( pls_ );
       }
    0 && DBG( "%s %s ? %s", __PRETTY_FUNCTION__, pFile->Name(), ok?"yes":"no" );
-   return ok;
+   return ok ? "diff" : "";
 
 #undef  CHKL
 #undef  NXTL
 #undef  CMPL
    }
-
 
 STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    auto rl0( pfb->PeekRawLine( 0 ) );
@@ -914,6 +913,20 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    return shebang;
    }
 
+typedef stref (*content_deducer_t)( PCFBUF pfb );
+STATIC_CONST content_deducer_t content_deducers[] = {
+   shebang_binary_name  ,
+   is_content_diff      ,
+   };
+
+STATIC_FXN stref content_to_ftype( PCFBUF pfb ) {
+   for( const auto fxn : content_deducers ) {
+      const auto rv( fxn( pfb ) );
+      if( !rv.empty() ) { return rv; }
+      }
+   return "";
+   }
+
 STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
    const auto srNm( pfb->Namesr() );
    const auto srFnm( Path::RefFnm( srNm ) );
@@ -922,7 +935,7 @@ STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
                          || Path::endsWith( srFnm, "Makefile" )
                          #endif
                          || Path::eq( ".mak", Path::RefExt( srNm ) )
-                        );
+                        );  0 && DBG( "%s %" PR_BSR "'", __func__, BSR(srFnm) );
    return isMakefile ? "make" : nullptr;
    }
 
@@ -950,6 +963,8 @@ STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
    return rv;
    }
 
+#define  EXT_NO_EXT  "."
+
 STATIC_FXN Path::str_t GetRsrcExt( PCFBUF fb ) {
    Path::str_t rv;
    if( FnmIsLogicalWildcard( fb->Namestr() ) ) {
@@ -958,7 +973,7 @@ STATIC_FXN Path::str_t GetRsrcExt( PCFBUF fb ) {
    else {
       rv.assign( BSR2STR( Path::RefExt( fb->Namestr() ) ) );
       if( rv.empty() )
-         rv = !fb->FnmIsDiskWritable() ? ".<>" : ".";
+         rv = !fb->FnmIsDiskWritable() ? ".<>" : EXT_NO_EXT;
       }
 
   #if !FNM_CASE_SENSITIVE
@@ -971,7 +986,8 @@ STATIC_FXN Path::str_t GetRsrcExt( PCFBUF fb ) {
 
 STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 && DBG( "%s '%s'='%" PR_BSR "'", __func__, pszMacroName, BSR(pszMacroString) );
    const std::string str( "\"" + std::string( pszMacroString.data(), pszMacroString.length() ) + "\"" );
-   return DefineMacro( pszMacroName, str );
+   const auto rv( DefineMacro( pszMacroName, str ) );  0 && DBG( "%s '%s'='%" PR_BSR "'-> %c", __func__, pszMacroName, BSR(pszMacroString), rv?'y':'n' );
+   return rv;
    }
 
 void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
@@ -993,18 +1009,13 @@ void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name
    if( fb->IsRsrcLdBlocked() ) {
       }
    else {
-      // following are assigned to stref ftype; must stay in same scope
-      static const char diff[] = "diff";
-      static const char unknown[] = "unknown";
-      stref ftype( shebang_binary_name( fb ) );
+      auto ftype( content_to_ftype( fb ) );  0 && DBG( "%s ?%" PR_BSR "'", __func__, BSR(ftype) );
       if( ftype.empty() ) {
-         if( is_content_diff( fb ) ) {
-            ftype = diff;
+         if( eq( ext, EXT_NO_EXT ) && !(ftype=fnm_to_ftype( fb )).empty() ) {
             }
          else {
             s_cur_Ftype_assigned = false;
-            PCChar ft;
-            ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : (ft=fnm_to_ftype( fb )) ? ft : unknown;
+            ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "unknown";
             }
          }
       Set_s_cur_Ftype( ftype );
