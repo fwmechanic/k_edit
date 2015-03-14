@@ -2137,13 +2137,10 @@ void View::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, 
 
    EnsureWinContainsCursor();  // window resize may have occurred
    ForceCursorMovedCondition();
-
-   GetFTypeSettings();
    HiliteAddins_Init();
 
    d_tmFocusedOn = time( nullptr );
    }
-
 
 void View::HiliteAddin_Event_WinResized() {
    DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
@@ -2157,7 +2154,7 @@ void View::HiliteAddin_Event_If_CursorMoved() {
       DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
          pDispAddin->VCursorMoved( d_fUpdtWUC_pending );
          }
-      d_fCursorMoved  =  d_fUpdtWUC_pending = false;
+      d_fCursorMoved = d_fUpdtWUC_pending = false;
       }
    }
 

@@ -992,7 +992,7 @@ STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 
 
 void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
    // 1. assigns "curfile..." macros based on this FBUF
-   // 2. loads rsrc file section for extension of this FBUF
+   // 2. loads rsrc file section for [extension and] ftype of this FBUF
   #if MACRO_BACKSLASH_ESCAPES
    dbllinebuf dblbuf;
    Pathbuf pbuf( fb->Name() );
