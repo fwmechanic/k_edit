@@ -928,22 +928,17 @@ void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name
       DefineStrMacro( "curfileftype", "#blocked" );
       }
    else {
-      const auto sbn( shebang_binary_name( fb ) );
-      if( !sbn.empty() ) {
-         fb->SetFType( sbn );
-         RsrcLdSectionFtype( sbn );
-         }
-      else {
+      auto ftype( shebang_binary_name( fb ) );
+      if( ftype.empty() ) {
          s_cur_Ftype_assigned = false;
-         // call LoadFileExtRsrcIniSection( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
+         // call RsrcLdFileSection( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
          // DefineStrMacro( "curfileftype",  );
          PCChar ft;
-         const stref ftype( (LoadFileExtRsrcIniSection( ext.c_str() ) && s_cur_Ftype_assigned) ? s_cur_Ftype : (ft=fnm_to_ftype( fb )) ? ft : "#unknown" );
-         s_cur_Ftype_assigned = false;
-         fb->SetFType( ftype );
-         Set_s_cur_Ftype( ftype );
-         RsrcLdSectionFtype( ftype );
+         ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : (ft=fnm_to_ftype( fb )) ? ft : "unknown";
          }
+      Set_s_cur_Ftype( ftype );
+      fb->SetFType( ftype );
+      RsrcLdSectionFtype( ftype );
       }
    }
 

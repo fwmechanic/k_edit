@@ -1255,7 +1255,7 @@ private:
 #endif
 
    bool           d_fInhibitRsrcLoad = false ;
-                                         // DO NOT call LoadFileExtRsrcIniSection in FBOP::AssignFromRsrc().
+                                         // DO NOT call RsrcLdFileSection in FBOP::AssignFromRsrc().
                                          // Why?  Some pseudofiles exist to show the user the current state
                                          // of internals that can be perturbed by loading a rsrc-file
                                          // section.  This flag prevents that, so such pseudofiles give a

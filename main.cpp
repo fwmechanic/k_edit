@@ -582,15 +582,15 @@ class RsrcSectionWalker {
    public:
 
    PCChar srchTag() const { return d_tagbuf; }
-   RsrcSectionWalker( PCChar pszSectionName );
+   RsrcSectionWalker( stref pszSectionName );
    bool NextSectionInstance( FBufLocn *fl, bool fHiLiteTag=false );
    PCChar SectionName() const { return d_tagbuf; }
    };
 
-RsrcSectionWalker::RsrcSectionWalker( PCChar pszSectionName ) : d_lnum(0) {
+RsrcSectionWalker::RsrcSectionWalker( stref pszSectionName ) : d_lnum(0) {
    d_tagbuf.Strcpy( ThisProcessInfo::ExeName() );
-   if( pszSectionName && *pszSectionName )
-      d_tagbuf.SprintfCat( "-%s", pszSectionName );
+   if( !pszSectionName.empty() )
+      d_tagbuf.SprintfCat( "-%" PR_BSR, BSR(pszSectionName) );
 
    _strlwr( d_tagbuf );
    }
@@ -615,8 +615,8 @@ bool ARG::ext() {
       default:
            return BadArg();
 
-      case NOARG: { // if noarg, go to extension-section of .krsrc assoc w/curfile
-           Linebuf lastTag( LastExtTagLoaded() );
+      case NOARG: { // if noarg, go to extension- or ftype- section of .krsrc assoc w/curfile
+           const auto lastTag( LastRsrcLdFileSectionNm() );
 
            // pass 1: find out how many matching tags there are
            auto count(0);
@@ -652,7 +652,7 @@ bool ARG::ext() {
    }
 
 
-bool LoadRsrcSectionFound( PCChar pszSectionName, int *pAssignCountAccumulator ) {
+STATIC_FXN bool RsrcLdSectionFound( stref pszSectionName, int *pAssignCountAccumulator ) {
    RsrcSectionWalker rsw( pszSectionName );
    FmtStr<90> tag( "LoadRsrcSection [%s]", rsw.srchTag() );
    AssignLogTag( tag.k_str() );
@@ -671,7 +671,7 @@ bool LoadRsrcSectionFound( PCChar pszSectionName, int *pAssignCountAccumulator )
    if( pAssignCountAccumulator )
       *pAssignCountAccumulator += totalAssignsDone;
 
-   0 && DBG( "%s %+d for [%s]", FUNC, fFound ? totalAssignsDone : -1, pszSectionName );
+   0 && DBG( "%s %+d for [%" PR_BSR "]", FUNC, fFound ? totalAssignsDone : -1, BSR(pszSectionName) );
 
    return fFound;
    }
@@ -705,10 +705,10 @@ STATIC_FXN int ReinitializeMacros( bool fEraseExistingMacros ) {
 
    auto assignDone(0);
    if( s_fLoadRsrcFile ) {
-      LoadRsrcSectionFound( nullptr       , &assignDone ); // [editorname]
-      LoadRsrcSectionFound( GetOsName()   , &assignDone ); // [editorname-osname]
-      LoadRsrcSectionFound( OsVerStr()    , &assignDone ); // [editorname-osver]
-      LoadRsrcSectionFound( GetVideoName(), &assignDone ); // [editorname-vidname]
+      RsrcLdSectionFound( ""            , &assignDone ); // [editorname]
+      RsrcLdSectionFound( GetOsName()   , &assignDone ); // [editorname-osname]
+      RsrcLdSectionFound( OsVerStr()    , &assignDone ); // [editorname-osver]
+      RsrcLdSectionFound( GetVideoName(), &assignDone ); // [editorname-vidname]
       }
 
    if( g_CurFBuf() )
@@ -721,37 +721,27 @@ STATIC_FXN int ReinitializeMacros( bool fEraseExistingMacros ) {
 
 //-------------------------------------------------------------------------------------------------------
 
-STATIC_VAR Path::str_t s_szLastFileExtSectionLoaded;
+STATIC_VAR Path::str_t s_sLastRsrcLdFileSectionNm;
 
-STATIC_FXN bool LdFileExtRsrcSectionFound( PCChar pszSectionName ) {
+bool RsrcLdFileSection( stref pszSectionName ) {
    auto fDummy(0);
-   const auto fSectionExists( LoadRsrcSectionFound( pszSectionName, &fDummy ) );
+   const auto fSectionExists( RsrcLdSectionFound( pszSectionName, &fDummy ) );
 
    if( fSectionExists )
-      s_szLastFileExtSectionLoaded = pszSectionName;
+      s_sLastRsrcLdFileSectionNm.assign( BSR2STR(pszSectionName) );
 
    return fSectionExists;
    }
 
-PCChar LastExtTagLoaded() {
-   return s_szLastFileExtSectionLoaded.c_str();
-   }
-
-bool LoadFileExtRsrcIniSection( PCChar pszSectionName ) { 0 && DBG( "%s [%s]", FUNC, pszSectionName );
-   if( !LdFileExtRsrcSectionFound( pszSectionName ) ) {
-      LdFileExtRsrcSectionFound( ".." );  // no match in .krsrc: load dflt
-      return false;
-      }
-
-   0 && DBG( "---- added [%s]", pszSectionName );
-   return true;
+PCChar LastRsrcLdFileSectionNm() {
+   return s_sLastRsrcLdFileSectionNm.c_str();
    }
 
 bool RsrcLdSectionFtype( stref ftype ) {
    char section[22];
    safeStrcpy( BSOB(section), "!" );
    safeStrcat( BSOB(section), 1, BSR2STR(ftype) );
-   const auto rv( LdFileExtRsrcSectionFound( section ) );   DBG( "%s %c %s", __func__, rv?'y':'n', section );
+   const auto rv( RsrcLdFileSection( section ) );   DBG( "%s %c %s", __func__, rv?'y':'n', section );
    return rv;
    }
 
@@ -803,7 +793,7 @@ bool ARG::initialize() {
    switch( d_argType ) {
     default:      return BadArg();
 
-    case TEXTARG: LoadRsrcSectionFound( d_textarg.pText, &assignsDone );
+    case TEXTARG: RsrcLdSectionFound( d_textarg.pText, &assignsDone );
                   break;
 
     case NOARG:   s_pFBufRsrc->ReadDiskFileNoCreateFailed(); // force reread

@@ -2766,7 +2766,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 #endif
 
    cl.Cat( COLOR::SEL , FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ).k_str() );
-   cl.Cat( COLOR::INF , FmtStr<60>( "[%s/%" PR_BSR "]" , LastExtTagLoaded(), BSR( pfh->FType() ) ).k_str() );
+   cl.Cat( COLOR::INF , FmtStr<60>( "[%s/%" PR_BSR "]" , LastRsrcLdFileSectionNm(), BSR( pfh->FType() ) ).k_str() );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(),                         pfh->Entab() ).k_str() );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).k_str() );
    cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).k_str() );

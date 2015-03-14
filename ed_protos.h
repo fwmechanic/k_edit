@@ -393,11 +393,10 @@ extern   void  EditorExit( int processExitCode, bool fWriteStateFile );
 //------------ rsrc file section processing
 
 extern  PChar  RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext );
-extern   bool  LoadRsrcSectionFound( PCChar pszSectionName, int *pAssignCountAccumulator );
-extern stref IsolateTagStr( stref src );
-extern   bool  LoadFileExtRsrcIniSection( PCChar pszSectionName );
+extern stref   IsolateTagStr( stref src );
 extern   bool  RsrcLdSectionFtype( stref ftype );
-extern PCChar  LastExtTagLoaded();
+extern   bool  RsrcLdFileSection( stref pszSectionName );
+extern PCChar  LastRsrcLdFileSectionNm();
 
 //------------ misc edit helpers
 

@@ -614,7 +614,7 @@ ux_2:=""ux_1""
 ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 
-[k-..] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
+[k-!unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    delims: {[(
    mfspec_:="*.*"
 
