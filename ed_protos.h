@@ -396,6 +396,7 @@ extern  PChar  RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext );
 extern   bool  LoadRsrcSectionFound( PCChar pszSectionName, int *pAssignCountAccumulator );
 extern stref IsolateTagStr( stref src );
 extern   bool  LoadFileExtRsrcIniSection( PCChar pszSectionName );
+extern   bool  RsrcLdSectionFtype( stref ftype );
 extern PCChar  LastExtTagLoaded();
 
 //------------ misc edit helpers

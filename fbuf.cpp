@@ -868,6 +868,20 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    return rv;
    }
 
+
+STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
+   auto rl0( pfb->PeekRawLine( 0 ) );
+   if( !rl0.starts_with( "#!" ) ) { return ""; }
+   const auto i1( FirstBlankOrEnd( rl0, 2 ) );    // assume: no spaces in path of binary
+   rl0.remove_suffix( rl0.length() - i1 );        // strip command tail
+   const auto ls( rl0.find_last_of( "/" ) );      // assume: unix dirsep, regardless of platform
+   const auto i0( ls != stref::npos ? ls+1 : 2 ); // could be bare binary name (i.e. filetype)
+   if( i0 >= i1 ) { return ""; }                  // nothing at all?
+   const auto shebang( rl0.substr( i0, i1 - i0 ) ); 1 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
+   return shebang;
+   }
+
+STATIC_VAR bool s_cur_Ftype_assigned; // hacky!
 STATIC_VAR char s_cur_Ftype[21];
 
 void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
@@ -876,6 +890,7 @@ void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
 
 PCChar swixFtype( stref param ) {
    safeStrcpy( BSOB(s_cur_Ftype), BSR2STR(param) );
+   s_cur_Ftype_assigned = true;                  0 && DBG( "%s %s", __func__, s_cur_Ftype );
    return nullptr;
    }
 
@@ -903,7 +918,7 @@ STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 
    return DefineMacro( pszMacroName, str );
    }
 
-void FBOP::AssignFromRsrc( PCFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
+void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
    // 1. assigns "curfile..." macros based on this FBUF
    // 2. loads rsrc file section for extension of this FBUF
   #if MACRO_BACKSLASH_ESCAPES
@@ -918,8 +933,24 @@ void FBOP::AssignFromRsrc( PCFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Nam
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
    const auto ext( FBOP::GetRsrcExt( fb ) );
    DefineStrMacro( "curfileext", ext );
-   if( !fb->IsRsrcLdBlocked() ) {
-      LoadFileExtRsrcIniSection( ext.c_str() ); // call only after curfile, curfilepath, curfilename, curfileext assigned
+   if( fb->IsRsrcLdBlocked() ) {
+      DefineStrMacro( "curfileftype", "#blocked" );
+      }
+   else {
+      const auto sbn( shebang_binary_name( fb ) );
+      if( !sbn.empty() ) {
+         fb->SetFType( sbn );
+         RsrcLdSectionFtype( sbn );
+         }
+      else {
+         s_cur_Ftype_assigned = false;
+         // call LoadFileExtRsrcIniSection( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
+         // DefineStrMacro( "curfileftype",  );
+         const stref ftype( (LoadFileExtRsrcIniSection( ext.c_str() ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "#unknown" );
+         s_cur_Ftype_assigned = false;
+         fb->SetFType( ftype );
+         RsrcLdSectionFtype( ftype );
+         }
       }
    }
 

@@ -1285,7 +1285,12 @@ private:
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
 
+   std::string    d_ftype;
+
 public:
+   const stref    FType()                const { return  d_ftype; }
+   void           SetFType( stref ft )         {         d_ftype.assign( BSR2STR(ft) ); }
+
    eFileType      FileType()             const { return  d_FileType; }
    void           SetFileType( eFileType eft )        {  d_FileType = eft; }
 
@@ -1626,7 +1631,7 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    extern void    CopyBox(    PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft, LINE ySrcTop, COL xSrcRight, LINE ySrcBottom );
    extern void    CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd );
 
-   extern void    AssignFromRsrc( PCFBUF fb );
+   extern void    AssignFromRsrc( PFBUF fb );
    extern Path::str_t GetRsrcExt( PCFBUF fb );
 
 
