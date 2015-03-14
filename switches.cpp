@@ -182,7 +182,7 @@ EXT_SWI_FX_STR(  Cursorsize    )
 EXT_SWI_FX_STR(  Backup        )
 EXT_SWI_FX_STR(  Tabwidth      )
 EXT_SWI_FX_STR(  Entab         )
-
+EXT_SWI_FX_STR(  Ftype         )
 EXT_SWI_FX_BOOL( Hscroll       )
 EXT_SWI_FX_BOOL( Vscroll       )
 EXT_SWI_FX_BOOL( Tabdisp       )
@@ -291,7 +291,6 @@ void swidInt(       PChar dest, size_t sizeofDest, void *src )  { swid_int(    d
 void swidColorvarx( PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", *static_cast<U8 *>(src) ); }
 // void swidColorx(    PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", g_CurView()->ColorIdx2Attr( int(src) ) ); }
 
-
 #if    defined(_WIN32)
 #define kszHelpPlatEoL "always save modified files to disk w/CRLF (\"DOS\") line endings"
 #else
@@ -321,6 +320,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "errprompt"      , Var2TPfx( g_fErrPrompt            ), swinVAR_BOOL, swidBool       _AHELP( "error message display pauses with \"Press any key...\" prompt" ) },
  { "fastsearch"     , Var2TPfx( g_fFastsearch           ), swinVAR_BOOL, swidBool       _AHELP( "use fast search algorithm (when key contains no spaces)" ) },
  { "forceplateol"   , Var2TPfx( g_fForcePlatformEol     ), swinVAR_BOOL, swidBool       _AHELP(  kszHelpPlatEoL ) },
+ { "ftype"          , Fxn2TPfx( swixFtype               ), swinFXN_STR , swidFtype      _AHELP( "set ftype" ) },
  { "hike"           , Var2TPfx( g_iHike                 ), swinVAR_INT , swidInt        _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) },
  { "hscroll"        , {         swixHscroll             }, swinFXN_BOOL, swidHscroll    _AHELP( "the number of columns that the editor scrolls the text left or right when the you move the cursor out of the window" ) },
  { "langhilites"    , Var2TPfx( g_fLangHilites          ), swinVAR_BOOL, swidBool       _AHELP( "enable (yes) partial language-aware hilighting" ) },

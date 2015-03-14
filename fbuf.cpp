@@ -868,6 +868,17 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    return rv;
    }
 
+STATIC_VAR char s_cur_Ftype[21];
+
+void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
+   safeStrcpy( dest, sizeofDest, s_cur_Ftype );
+   }
+
+PCChar swixFtype( stref param ) {
+   safeStrcpy( BSOB(s_cur_Ftype), BSR2STR(param) );
+   return nullptr;
+   }
+
 Path::str_t FBOP::GetRsrcExt( PCFBUF fb ) {
    Path::str_t rv;
    if( FnmIsLogicalWildcard( fb->Namestr() ) ) {
