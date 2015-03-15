@@ -947,7 +947,7 @@ void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
    }
 
 STATIC_FXN void Set_s_cur_Ftype( stref ftype ) {
-   scpy( BSOB(s_cur_Ftype), ftype );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
+   bcpy( s_cur_Ftype, ftype );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
    }
 
 PCChar swixFtype( stref param ) {
@@ -959,7 +959,7 @@ PCChar swixFtype( stref param ) {
 STATIC_CONST char s_sftype_prefix[] = "ftype:";
 STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
    char section[6+SIZEOF_MAX_FTYPE];
-   scat( BSOB(section), ftype, scpy( BSOB(section), s_sftype_prefix ) );              0 && DBG( "%s %s", __func__, section );
+   bcat( bcpy( section, s_sftype_prefix ), section, ftype );              0 && DBG( "%s %s", __func__, section );
    const auto rv( RsrcLdFileSection( section ) );   0 && DBG( "%s %c %s", __func__, rv?'y':'n', section );
    return rv;
    }

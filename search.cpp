@@ -1506,12 +1506,12 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       pathbuf wcBuf, dirBuf;
       const auto pStart( Path::StrToPrevPathSepOrNull( pszWildcardString, pVbar ) );
       if( pStart ) {
-         scpy( BSOB(wcBuf) , PP2SR( pStart+1         , pVbar  ) );
-         scpy( BSOB(dirBuf), PP2SR( pszWildcardString, pStart ) );
+         bcpy( wcBuf , PP2SR( pStart+1         , pVbar  ) );
+         bcpy( dirBuf, PP2SR( pszWildcardString, pStart ) );
          }
       else {
-         scpy( BSOB(wcBuf) , PP2SR( pszWildcardString, pVbar ) );
-         scpy( BSOB(dirBuf), ".\\" );
+         bcpy( wcBuf , PP2SR( pszWildcardString, pVbar ) );
+         bcpy( dirBuf, ".\\" );
          }
       ED && DBG( "wcBuf='%s'" , wcBuf  );
       ED && DBG( "dirBuf='%s'", dirBuf );
@@ -2692,7 +2692,7 @@ bool ARG::gmg() { // arg "gmg" edhelp  # for docmentation
       0 && DBG( "%s: dest=cur (%s)", __func__, dest->Name() );
       }
    else {
-      scpy( BSOB(srchFilename), g_CurFBuf()->Name() );
+      bcpy( srchFilename, g_CurFBuf()->Name() );
       }
    0 && DBG( "%s: will look for all greps of (%s)", __func__, srchFilename );
 

@@ -84,12 +84,12 @@ size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    return rv;
    }
 
-size_t scpy( PChar dest, size_t sizeofDest, stref src ) {
+size_t scpy( PChar dest, size_t sizeof_dest, stref src ) {
    auto truncd( 0 );
    auto srcLen( src.length() );
-   if( srcLen >= sizeofDest ) {
-       truncd = srcLen - (sizeofDest - 1);
-       srcLen = sizeofDest - 1;
+   if( srcLen >= sizeof_dest ) {
+       truncd = srcLen - (sizeof_dest - 1);
+       srcLen = sizeof_dest - 1;
        }
 
    memcpy( dest, src.data(), srcLen );

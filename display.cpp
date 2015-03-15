@@ -505,9 +505,7 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
             }
          else {
             if( (d_wucLen > 1) && (d_wucLen < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
-               bcpy( scratch, vnr_pfx );
-               bcat( scratch, wuc );
-               bcat( scratch, vnr_sfx );
+               bcat( bcat( bcpy( scratch, vnr_pfx ), scratch, wuc ), scratch, vnr_sfx );
                PCChar key( AddKey( scratch ) );                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }

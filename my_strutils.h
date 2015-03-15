@@ -306,15 +306,14 @@ STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, 
 
 //--------------------------------------------------------------------------------
 
-extern size_t scpy( PChar dest, size_t sizeofDest, stref src );
-
-#define    bcpy( d, s )  scpy( BSOB(d), s )
-#define    bcat( d, s )  scat( BSOB(d), s )
-
+extern size_t scpy( PChar dest, size_t sizeof_dest, stref src );
 extern size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
 
-extern PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width );
+#define    bcpy( d, s )  scpy( BSOB(d), s )
+#define    bcat( l, d, s )  scat( BSOB(d), s, (l) )
 
+
+extern PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width );
 extern PChar  safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) ATTR_FORMAT(3,4);
 
 //--------------------------------------------------------------------------------
