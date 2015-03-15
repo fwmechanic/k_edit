@@ -913,13 +913,12 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    return shebang;
    }
 
-typedef stref (*content_deducer_t)( PCFBUF pfb );
-STATIC_CONST content_deducer_t content_deducers[] = {
-   shebang_binary_name  ,
-   is_content_diff      ,
-   };
-
 STATIC_FXN stref content_to_ftype( PCFBUF pfb ) {
+   typedef stref (*content_deducer_t)( PCFBUF pfb );
+   STATIC_CONST content_deducer_t content_deducers[] = {
+      shebang_binary_name  ,
+      is_content_diff      ,
+      };
    for( const auto fxn : content_deducers ) {
       const auto rv( fxn( pfb ) );
       if( !rv.empty() ) { return rv; }

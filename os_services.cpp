@@ -50,7 +50,7 @@ OsEnv::OsEnv() {
    d_exe_path.assign( BSR2STR( Path::RefDirnm( pb ) ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
    d_exe_name.assign( BSR2STR( Path::RefFnm  ( pb ) ) ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
 #else
-   static const char s_link_nm[] = "/proc/self/exe";
+   STATIC_CONST char s_link_nm[] = "/proc/self/exe";
    if( 0 ) {
       // this is pointless since there is a race condition: between (this)
       // lstat and the readlink call, the link content could be changed

@@ -46,7 +46,7 @@ static void set_pcattr( int attr ) {
    static unsigned char nxt_color_pr_num;
    static std::array<unsigned char, 256> attr_to_color_pr_num;
    if( 0 == attr_to_color_pr_num[attr] ) {
-      static const int pc_to_ncurses_color[] = {
+      STATIC_CONST int pc_to_ncurses_color[] = {
           [PC_BLACK ] = COLOR_BLACK  ,
           [PC_BLUE  ] = COLOR_BLUE   ,
           [PC_GREEN ] = COLOR_GREEN  ,
