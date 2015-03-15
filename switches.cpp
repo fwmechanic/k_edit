@@ -98,7 +98,7 @@ void swidDelims( PChar dest, size_t sizeofDest, void *src ) {
    }
 
 bool swixDelims( stref param ) {
-   safeStrcpy( BSOB(g_delims      ), param );
+   scpy( BSOB(g_delims      ), param );
    xlatStr(    BSOB(g_delims      ), g_delims, delimNorm   );
    xlatStr(    BSOB(g_delimMirrors), g_delims, delimMirror );
    return true;
@@ -125,7 +125,7 @@ bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
       s_isWordChar_[0]    = false;
       s_isWordChar_[' ']  = false;
       s_isWordChar_[unsigned(HTAB)] = false;
-      SafeStrcpy( g_szWordChars, "nonwhite" );
+      bcpy( g_szWordChars, "nonwhite" );
       }
    else {
       memset( s_isWordChar_, 0, sizeof s_isWordChar_ );
@@ -285,7 +285,7 @@ STATIC_FXN bool swinFXN_STR( const SWI *pSwi, stref newValue ) {
 
 //----------- SWIX's  extern decls put here so there's no doubt that these shouldn't be called except via s_SwiTable
 
-void swidBool(      PChar dest, size_t sizeofDest, void *src )  { safeStrcpy(  dest, sizeofDest, (*static_cast<bool *>(src)) ? "yes" : "no" ); }
+void swidBool(      PChar dest, size_t sizeofDest, void *src )  { scpy(  dest, sizeofDest, (*static_cast<bool *>(src)) ? "yes" : "no" ); }
 void swid_int(      PChar dest, size_t sizeofDest, int   val )  { safeSprintf( dest, sizeofDest, "%d", val ); }
 void swidInt(       PChar dest, size_t sizeofDest, void *src )  { swid_int(    dest, sizeofDest, (*static_cast<int *>(src)) ); }
 void swidColorvarx( PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", *static_cast<U8 *>(src) ); }

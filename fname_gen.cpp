@@ -351,7 +351,7 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
       const auto fLeadingEnvRef( pRefStart == inbuf );
 
       pathbuf pbuf;
-      safeStrcpy( BSOB(pbuf), PP2SR( pName, pTerm ) );
+      scpy( BSOB(pbuf), PP2SR( pName, pTerm ) );
       PCChar pValue( getenv( pbuf ) );
       0 && DBG( "getenv( %s ) = %p (%s)", pbuf, pValue, pValue ? pValue : "" );
       if( !pValue && strchr( pbuf, '|' ) ) { // undefined and "name" contains '|'?
@@ -462,8 +462,8 @@ bool ARG::wct() {
 
    switch( d_argType ) {
       default:       return BadArg();
-      case NOARG:    SafeStrcpy( searchSpec, "*" )  ;            break;
-      case TEXTARG:  SafeStrcpy( searchSpec, d_textarg.pText );  break;
+      case NOARG:    bcpy( searchSpec, "*" )  ;            break;
+      case TEXTARG:  bcpy( searchSpec, d_textarg.pText );  break;
       }
 
    DirListGenerator dirs;

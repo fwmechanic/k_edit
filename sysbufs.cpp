@@ -448,7 +448,7 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
       if(   Cmd == pCMD_graphic
          || Cmd == pCMD_unassigned
         ) {
-         SafeStrcpy( lbuf, "(many)" );
+         bcpy( lbuf, "(many)" );
          }
       else {
          StringOfAllKeyNamesFnIsAssignedTo( BSOB(lbuf), Cmd, "," );

@@ -301,7 +301,7 @@ STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, in
    dest[0] = '\0';
    const auto pSrc( lua_tostring( L, -1 ) );
    if( pSrc )
-      safeStrcpy( dest, sizeof_dest, pSrc );
+      scpy( dest, sizeof_dest, pSrc );
    return dest;
    }
 
@@ -320,7 +320,7 @@ STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar 
    auto rv( LuaTbl2S0( L, dest, sizeof_dest, tableDescr ) );
    if( !rv ) {
       if( pszDflt )
-         safeStrcpy( dest, sizeof_dest, pszDflt );
+         scpy( dest, sizeof_dest, pszDflt );
       else
          dest[0] = '\0';
       }

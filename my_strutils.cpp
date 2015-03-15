@@ -62,7 +62,7 @@ PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) {
    return dest;
    }
 
-size_t safeStrcat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
+size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( 0==destLen && sizeof_dest > 0 && dest[0] ) { destLen = Strlen( dest ); }
    auto truncd( 0 );
    auto srcLen( src.length() );
@@ -84,7 +84,7 @@ size_t safeStrcat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    return rv;
    }
 
-size_t safeStrcpy( PChar dest, size_t sizeofDest, stref src ) {
+size_t scpy( PChar dest, size_t sizeofDest, stref src ) {
    auto truncd( 0 );
    auto srcLen( src.length() );
    if( srcLen >= sizeofDest ) {

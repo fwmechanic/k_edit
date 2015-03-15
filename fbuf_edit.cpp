@@ -41,7 +41,7 @@ public:
 
 
 void swidTabwidth( PChar dest, size_t sizeofDest, void *src ) {
-   safeStrcpy( dest, sizeofDest, "status ln's \"e?\"" );
+   scpy( dest, sizeofDest, "status ln's \"e?\"" );
    }
 
 PCChar swixTabwidth( stref param ) {
@@ -1175,7 +1175,7 @@ bool ARG::paste() {
                        if( *pSrcFnm == '!' ) {
                           NOAUTO CPCChar pszCmd( pSrcFnm + 1 );
                           const auto tmpx( CompletelyExpandFName_wEnvVars( "$TMP:" PATH_SEP_STR "paste.$k$" ) );
-                          SafeStrcpy( tmpfilenamebuf, tmpx.c_str() );
+                          bcpy( tmpfilenamebuf, tmpx.c_str() );
                           0 && DBG( "tmp '%s'", tmpfilenamebuf );
                           pSrcFnm = tmpfilenamebuf;
                           cmdstrbuf.Sprintf( "%s >\"%s\" 2>&1", pszCmd, tmpfilenamebuf );
@@ -1490,7 +1490,7 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
       pLSR->yLine = yY;
       const auto chars( fb->getLineTabx( pLSR->lbuf, yY ) );
       if( chars > yMin ) {
-         safeStrcpy( pLSR->keydata, keyBytes, pLSR->lbuf + xMin );
+         scpy( pLSR->keydata, keyBytes, pLSR->lbuf + xMin );
          if( !fCase )  _strlwr( pLSR->keydata );
          }
       else {

@@ -253,14 +253,14 @@ struct FTypeSetting {
 void FTypeSetting::Update() { enum { DB=1 };
    linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
    snprintf_full( &pbuf, &kybufBytes, "filesettings.ftype_map.%s.", d_key.c_str() );
-   safeStrcpy( pbuf, kybufBytes, "eolCommentDelim" );
+   scpy( pbuf, kybufBytes, "eolCommentDelim" );
    LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
-   safeStrcpy( pbuf, kybufBytes, "lang" );
+   scpy( pbuf, kybufBytes, "lang" );
    d_lang = LuaCtxt_Edit::Tbl2DupS0( kybuf );                           DB && DBG( "%s: %s = %s", __func__, kybuf, d_lang );
 
    snprintf_full( &pbuf, &kybufBytes, "colors." );
    for( const auto &c2L : s_color2Lua ) {
-      safeStrcpy( pbuf, kybufBytes, c2L.pLuaName );
+      scpy( pbuf, kybufBytes, c2L.pLuaName );
       d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf, c2L.dflt );   DB && DBG( "%s: %s = 0x%02X", __func__, kybuf, d_colors[ c2L.ofs ] );
       }
 
@@ -505,9 +505,9 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
             }
          else {
             if( (d_wucLen > 1) && (d_wucLen < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
-               SafeStrcpy( scratch, vnr_pfx );
-               SafeStrcat( scratch, wuc );
-               SafeStrcat( scratch, vnr_sfx );
+               bcpy( scratch, vnr_pfx );
+               bcat( scratch, wuc );
+               bcat( scratch, vnr_sfx );
                PCChar key( AddKey( scratch ) );                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }
@@ -2254,7 +2254,7 @@ bool ARG::message() {
       default:        return BadArg();
       case NOARG:                         MsgClr();
                       return true;
-      case TEXTARG:                       SafeStrcpy( mbuf, d_textarg.pText );
+      case TEXTARG:                       bcpy( mbuf, d_textarg.pText );
                                           if( d_fMeta ) DispNeedsRedrawTotal();  // brute-force redraw EVERYTHING
                                           Msg( "%s", mbuf );
                       return true;

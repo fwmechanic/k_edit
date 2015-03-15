@@ -935,7 +935,7 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
          st += " ";
          }
 
-      SafeStrcpy( lbufNew, pCmd->Name() );
+      bcpy( lbufNew, pCmd->Name() );
       }
 
    std::string stmp;

@@ -943,11 +943,11 @@ enum { SIZEOF_MAX_FTYPE=51 };
 STATIC_VAR char s_cur_Ftype[SIZEOF_MAX_FTYPE];
 
 void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
-   safeStrcpy( dest, sizeofDest, s_cur_Ftype );
+   scpy( dest, sizeofDest, s_cur_Ftype );
    }
 
 STATIC_FXN void Set_s_cur_Ftype( stref ftype ) {
-   safeStrcpy( BSOB(s_cur_Ftype), ftype );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
+   scpy( BSOB(s_cur_Ftype), ftype );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
    }
 
 PCChar swixFtype( stref param ) {
@@ -959,8 +959,7 @@ PCChar swixFtype( stref param ) {
 STATIC_CONST char s_sftype_prefix[] = "ftype:";
 STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
    char section[6+SIZEOF_MAX_FTYPE];
-   safeStrcpy( BSOB(section), s_sftype_prefix );    0 && DBG( "%s %s", __func__, section );
-   safeStrcat( BSOB(section), ftype );              0 && DBG( "%s %s", __func__, section );
+   scat( BSOB(section), ftype, scpy( BSOB(section), s_sftype_prefix ) );              0 && DBG( "%s %s", __func__, section );
    const auto rv( RsrcLdFileSection( section ) );   0 && DBG( "%s %c %s", __func__, rv?'y':'n', section );
    return rv;
    }
@@ -1190,7 +1189,7 @@ PChar FBUF::UserName( PChar dest, size_t destSize ) const {
    if( delimCh )
       safeSprintf( dest, destSize, "%c%s%c", delimCh, Name(), delimCh );
    else
-      safeStrcpy(  dest, destSize, Name() );
+      scpy(  dest, destSize, Name() );
    return dest;
    }
 
@@ -1424,7 +1423,7 @@ STATIC_FXN PCChar kszBackupMode( int backupMode ) {
    }
 
 void swidBackup( PChar dest, size_t sizeofDest, void *src ) {
-   safeStrcpy( dest, sizeofDest, kszBackupMode( g_iBackupMode ) );
+   scpy( dest, sizeofDest, kszBackupMode( g_iBackupMode ) );
    }
 
 PCChar swixBackup( stref param ) {

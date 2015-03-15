@@ -52,9 +52,9 @@ bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
          return false;
          }
       const auto ps3( Path::StrToNextPathSepOrEos( ps2 ) ); // "\\...\...\..."
-      const auto len( safeStrcpy( pDestBuf, sizeofDest, pSrcFullname, ps3 - pSrcFullname ) );
+      const auto len( scpy( pDestBuf, sizeofDest, pSrcFullname, ps3 - pSrcFullname ) );
       if( !*ps3 )
-         safeStrcat( pDestBuf, sizeofDest, len, PATH_SEP_STR, Strlen( PATH_SEP_STR ) );
+         scat( pDestBuf, sizeofDest, len, PATH_SEP_STR, Strlen( PATH_SEP_STR ) );
 
       DBG( "%s '%s' -> '%s'", __func__, pSrcFullname, pDestBuf );
       return true;

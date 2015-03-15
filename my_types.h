@@ -310,8 +310,8 @@ bool WithinRangeInclusive( T nLower, T toCheck, T nUpper )
 #define  ALLOCA_STRCAT( NmOf_pDest, NmOf_strlenVar, str1, str2 )          \
       const int NmOf_strlenVar( Strlen(str1) + Strlen(str2) );            \
       PChar NmOf_pDest = PChar( alloca( NmOf_strlenVar + 1 ) );           \
-      safeStrcpy( NmOf_pDest, NmOf_strlenVar+1, str1 );                   \
-      safeStrcat( NmOf_pDest, NmOf_strlenVar+1, str2 );
+      scpy( NmOf_pDest, NmOf_strlenVar+1, str1 );                   \
+      scat( NmOf_pDest, NmOf_strlenVar+1, str2 );
 
 
 #if !defined(__GNUC__)

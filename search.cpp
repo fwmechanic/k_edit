@@ -1213,7 +1213,7 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    {
    const auto pFBufMfspec( FindFBufByName( "<mfspec>" ) );
    if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
-      if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "<mfspec> (buffer)" ); }
+      if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "<mfspec> (buffer)" ); }
       return new FilelistCfxFilenameGenerator( pFBufMfspec );
       }
    }
@@ -1222,7 +1222,7 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    const auto mfspec_text( DupTextMacroValue( "mfspec" ) );
    if( !IsStringBlank( mfspec_text ) ) {
       DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
-      if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec (macro)" ); }
+      if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "mfspec (macro)" ); }
       const auto rv( new CfxFilenameGenerator( mfspec_text, ONLY_FILES ) );
       return rv;
       }
@@ -1231,13 +1231,13 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
    const auto mfspec_text( DupTextMacroValue( "mfspec_" ) );
    if( !IsStringBlank( mfspec_text ) ) {
       DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
-      if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "mfspec_ (macro)" ); }
+      if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "mfspec_ (macro)" ); }
       const auto rv( new CfxFilenameGenerator( mfspec_text, ONLY_FILES ) );
       return rv;
       }
    }
 
-   if( nmBuf && sizeofBuf ) { safeStrcpy( nmBuf, sizeofBuf, "no mfspec setting active" ); }
+   if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "no mfspec setting active" ); }
    DB && DBG( "%s: returns NULL!", __func__ );
    return nullptr;
    }
@@ -1506,12 +1506,12 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       pathbuf wcBuf, dirBuf;
       const auto pStart( Path::StrToPrevPathSepOrNull( pszWildcardString, pVbar ) );
       if( pStart ) {
-         safeStrcpy( BSOB(wcBuf) , PP2SR( pStart+1         , pVbar  ) );
-         safeStrcpy( BSOB(dirBuf), PP2SR( pszWildcardString, pStart ) );
+         scpy( BSOB(wcBuf) , PP2SR( pStart+1         , pVbar  ) );
+         scpy( BSOB(dirBuf), PP2SR( pszWildcardString, pStart ) );
          }
       else {
-         safeStrcpy( BSOB(wcBuf) , PP2SR( pszWildcardString, pVbar ) );
-         safeStrcpy( BSOB(dirBuf), ".\\" );
+         scpy( BSOB(wcBuf) , PP2SR( pszWildcardString, pVbar ) );
+         scpy( BSOB(dirBuf), ".\\" );
          }
       ED && DBG( "wcBuf='%s'" , wcBuf  );
       ED && DBG( "dirBuf='%s'", dirBuf );
@@ -2556,7 +2556,7 @@ bool ARG::fg() { // fgrep
             return Msg( "no next file!" );
 
          srchfile = nextview->FBuf();
-         SafeStrcpy( origSrchFnm, srchfile->Name() );
+         bcpy( origSrchFnm, srchfile->Name() );
          }
 
       if( !srchfile )
@@ -2624,7 +2624,7 @@ bool ARG::fg() { // fgrep
 PChar FBOP::IsGrepBuf( PCFBUF fb, PChar fnmbuf, const size_t sizeof_fnmbuf, int *pGrepHdrLines ) {
    if( fb->LineCount() == 0 ) {
 FAIL: // fnmbuf gets filename of CURRENT buffer!  But generation is 0
-      safeStrcpy( fnmbuf, sizeof_fnmbuf, fb->Name() );
+      scpy( fnmbuf, sizeof_fnmbuf, fb->Name() );
       *pGrepHdrLines = 0;
       return nullptr;
       }
@@ -2634,7 +2634,7 @@ FAIL: // fnmbuf gets filename of CURRENT buffer!  But generation is 0
    if( !rl.starts_with( grep_prefix ) )       { goto FAIL; }
    rl.remove_prefix( KSTRLEN(grep_prefix) );
    if( IsStringBlank( rl ) )                  { goto FAIL; }
-   safeStrcpy( fnmbuf, sizeof_fnmbuf, rl );
+   scpy( fnmbuf, sizeof_fnmbuf, rl );
    }
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {
@@ -2692,7 +2692,7 @@ bool ARG::gmg() { // arg "gmg" edhelp  # for docmentation
       0 && DBG( "%s: dest=cur (%s)", __func__, dest->Name() );
       }
    else {
-      safeStrcpy( BSOB(srchFilename), g_CurFBuf()->Name() );
+      scpy( BSOB(srchFilename), g_CurFBuf()->Name() );
       }
    0 && DBG( "%s: will look for all greps of (%s)", __func__, srchFilename );
 

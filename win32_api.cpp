@@ -58,10 +58,10 @@ bool IsWin7OrLater() {
 STATIC_FXN PChar GetCPName( PChar buf, size_t sizeofBuf, Win32::UINT cp ) {
    Win32::CPINFOEX cpix;
    if( Win32::GetCPInfoEx( cp, 0, &cpix ) ) {
-      safeStrcpy( buf, sizeofBuf, cpix.CodePageName );
+      scpy( buf, sizeofBuf, cpix.CodePageName );
       }
    else {
-      safeStrcpy( buf, sizeofBuf, "?" );
+      scpy( buf, sizeofBuf, "?" );
       }
    return buf;
    }

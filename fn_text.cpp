@@ -153,7 +153,7 @@ bool ARG::flipcase() {
          return editor.Edit();
         #else
          linebuf argBuf;
-         SafeStrcpy( argBuf, d_textarg.pText );
+         bcpy( argBuf, d_textarg.pText );
          const auto zc( first_alpha( argBuf ) );
          if( !zc )
             return fnMsg( no_alpha );

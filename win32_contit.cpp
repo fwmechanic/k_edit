@@ -279,7 +279,7 @@ bool MemStatus::Changed() {
    safeSprintf( BSOB(dbnew), "%s.ProcessMem=%" PR_SIZET "u%ci", ExecutableFormat(), showSize, (g_fShowMemUseInK ? 'K' : 'M') );
 
    if( 0!=strcmp( d_buf, dbnew ) ) {
-      SafeStrcpy( d_buf, dbnew );
+      bcpy( d_buf, dbnew );
       return true;
       }
    return false;

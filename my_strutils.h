@@ -306,12 +306,12 @@ STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, 
 
 //--------------------------------------------------------------------------------
 
-extern size_t safeStrcpy( PChar dest, size_t sizeofDest, stref src );
+extern size_t scpy( PChar dest, size_t sizeofDest, stref src );
 
-#define    SafeStrcpy( d, s )  safeStrcpy( BSOB(d), s )
-#define    SafeStrcat( d, s )  safeStrcat( BSOB(d), s )
+#define    bcpy( d, s )  scpy( BSOB(d), s )
+#define    bcat( d, s )  scat( BSOB(d), s )
 
-extern size_t safeStrcat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
+extern size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
 
 extern PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width );
 
@@ -467,10 +467,10 @@ class FixedCharArray {
    PCChar   k_str()                  const { return b; }
    PChar    c_str()                        { return b; }
 
-   int   Strcpy(  PCChar src             ) { return safeStrcpy( b, sizeof( b ), src ); }
-   int   Strcpy(  PCChar src, int srcLen ) { return safeStrcpy( b, sizeof( b ), src, srcLen ); }
-   void  Strcat(  PCChar src             ) {        safeStrcat( b, sizeof( b ), src ); }
-   void  Strncat( PCChar src, int srcLen ) {        safeStrcat( b, sizeof( b ), Len(), src, srcLen ); }
+   int   Strcpy(  PCChar src             ) { return scpy( b, sizeof( b ), src ); }
+   int   Strcpy(  PCChar src, int srcLen ) { return scpy( b, sizeof( b ), src, srcLen ); }
+   void  Strcat(  PCChar src             ) {        scat( b, sizeof( b ), src ); }
+   void  Strncat( PCChar src, int srcLen ) {        scat( b, sizeof( b ), Len(), src, srcLen ); }
    int   xMaxNulCh()    const { return Size() - 1; } // lb[ lb.xMaxNulCh()  ] = 0; is only allowed deref
    int   xMaxNonNulCh() const { return Size() - 2; } // lb[ lb.xMaxNonNulCh() ] = any; is allowed
 

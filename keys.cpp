@@ -492,7 +492,7 @@ void StrFromEdkc( PChar dest, size_t sizeofDest, int edKC, sridx width ) {
    dest[0] = '\0';
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
       if( ky2Nm.EdKC_ == edKC ) {
-         safeStrcpy( dest, sizeofDest, ky2Nm.name );
+         scpy( dest, sizeofDest, ky2Nm.name );
          break;
          }
       }
