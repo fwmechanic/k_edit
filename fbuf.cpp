@@ -1019,12 +1019,14 @@ void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name
             }
          else {
             s_cur_Ftype_assigned = false;
-            ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "unknown";
+            ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "";
             }
          }
       Set_s_cur_Ftype( ftype );
       fb->SetFType( ftype );
-      RsrcLdSectionFtype( ftype );
+      if( !ftype.empty() ) {
+         RsrcLdSectionFtype( ftype );
+         }
       }
    }
 
