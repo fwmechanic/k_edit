@@ -263,11 +263,26 @@ STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
 // reliable reading of Lua global variables (including '.'-separated table expressions) from C
 //
 STIL bool getTblVal( lua_State *L, PCChar key, int ix ) { 0 && DBG( "%s indexing '%s'", __func__, key );
-   lua_getfield( L, ix==0?LUA_GLOBALSINDEX:-1, key );
+//                                                             [-o, +p, x]
+//      o: how many elements the function pops from the stack
+//      p: how many elements the function pushes onto the stack
+//      x: tells whether the function may throw errors:
+//         '-' means the function never throws any error;
+//         'm' means the function may throw an error only due to not enough memory;
+//         'e' means the function may throw other kinds of errors;
+//         'v' means the function may throw an error on purpose
+//
+
+  #if 1
+   lua_getfield( L, ix==0?LUA_GLOBALSINDEX:-1, key );  // this CRASHES (Lua panics)  [-0, +1, e]   if field key is not defined
+  #else
+   lua_pushstring (L, key);                            //                            [-0, +1, m]
+   lua_rawget (L, ix==0?LUA_GLOBALSINDEX:-1);          // does not crash             [-1, +1, -]
+  #endif
    return true;
    }
 
-STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) {
+STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
    ALLOCA_STRDUP( rvNm, rvlen, pcRvalNm, Strlen( pcRvalNm ) );
    PCChar name[ 20 ];
    auto depth(0);
@@ -275,24 +290,24 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) {
    for( PChar pc(rvNm); pc < rvNm + rvlen; ++pc )
       if( *pc == '.' ) {
          *pc = '\0';
-         if( !(depth < ELEMENTS(name)) ) { 0 && DBG( "%s MAX DEPTH (%" PR_SIZET "u) exceeded: %s", __func__, ELEMENTS(name), pcRvalNm );
+         if( !(depth < ELEMENTS(name)) ) { DB && DBG( "%s MAX DEPTH (%" PR_SIZET "u) exceeded: %s", __func__, ELEMENTS(name), pcRvalNm );
             return false;
             }
          name[depth++] = pc+1;
          }
 
-   0 && DBG( "%s depth = %d", __func__, depth );
+   DB && DBG( "%s depth = %d", __func__, depth );
 
    auto ix(0);
-   for( ; ix < depth-1; ++ix ) { 0 && DBG(  "%s ix = %d", __func__, ix );
+   for( ; ix < depth-1; ++ix ) { DB && DBG(  "%s ix = %d", __func__, ix );
       if( !getTblVal( L, name[ix], ix ) )
          return false;
-      if( !lua_istable( L, -1 ) ) { 0 && DBG( "%s field '%s' is not a table in '%s'", __func__, name[ix], pcRvalNm );
+      if( !lua_istable( L, -1 ) ) { DB && DBG( "%s field '%s' is not a table in '%s'", __func__, name[ix], pcRvalNm );
          return false;
          }
       }
 
-   0 && DBG( "%s ix(out) = %d", __func__, ix );
+   DB && DBG( "%s ix(out) = %d", __func__, ix );
    return getTblVal( L, name[ix], ix ); // *** caller is responsible for converting TOS to appropriate C value ***
    }
 
