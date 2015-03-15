@@ -963,17 +963,22 @@ STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
    return rv;
    }
 
-#define  EXT_NO_EXT  "."
+#define  EXT_NO_EXT    "."
+#define  EXT_WILDCARD  ".*"
+#define  EXT_PSEUDO    ".<>"
 
 STATIC_FXN Path::str_t GetRsrcExt( PCFBUF fb ) {
    Path::str_t rv;
    if( FnmIsLogicalWildcard( fb->Namestr() ) ) {
-      rv = ".*";
+      rv = EXT_WILDCARD;
+      }
+   else if( fb->FnmIsPseudo() || !fb->FnmIsDiskWritable() ) {
+      rv = EXT_PSEUDO;
       }
    else {
       rv.assign( BSR2STR( Path::RefExt( fb->Namestr() ) ) );
       if( rv.empty() )
-         rv = !fb->FnmIsDiskWritable() ? ".<>" : EXT_NO_EXT;
+         rv = EXT_NO_EXT;
       }
 
   #if !FNM_CASE_SENSITIVE

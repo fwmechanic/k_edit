@@ -621,18 +621,21 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.bat] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    wordchars:$_
 
-[k-!filename-list]  # wildcard expansion
+[k-!wildcard]  # wildcard expansion
 
 [k-.*]  # wildcard expansion
-   ftype:filename-list
+   ftype:wildcard
+
+[k-!pseudo]  # wildcard expansion
+
+[k-.<>]  # PSEUDOFILE
+   ftype:pseudo
 
 [k-.]  # USED IF FILE HAS NO EXTENSION
    ftype:filename-list
    delims: {[(
    mfspec_:="*."
    rmargin:80
-
-[k-.<>]  # PSEUDOFILE
 
 [k-.~dat] # qq --filter output file
    rm:= "rm " mword arg arg execute setfile
