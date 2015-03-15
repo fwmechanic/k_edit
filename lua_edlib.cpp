@@ -434,6 +434,8 @@ FBUF_(GetLineRaw) {
    R_nil();
    }
 
+FBUF_(FTypeEq) { R_bool( thisPF()->FTypeEq( S_(2) ) ); }
+
 FBUF_(GetLineSeg) {
    const auto pf( thisPF() );
    const auto lnum( I_(2) - 1 );
@@ -838,6 +840,7 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       LUA_FUNC_I(WriteToDisk)
       LUA_FUNC_I(ExpandWildcardSorted  )
       LUA_FUNC_I(ExpandWildcardUnsorted)
+      LUA_FUNC_I(FTypeEq)
       LUA_FUNC_I(GetLine)
       LUA_FUNC_I(GetLineRaw)
       LUA_FUNC_I(GetLineSeg)

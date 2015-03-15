@@ -1277,7 +1277,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
 
    d_EolMode = platform_eol;
                                                                0 && DBG( "%s+ %s'", FUNC, Name() );
-   if( FnmIsLogicalWildcard( Name() ) ) {                      0 && DBG( "%s+ %s' FnmIsLogicalWildcard", FUNC, Name() );
+   if( FnmIsLogicalWildcard( Namestr() ) ) {                   0 && DBG( "%s+ %s' FnmIsLogicalWildcard", FUNC, Name() );
       FBufRead_Wildcard( this );
       return true;
       }

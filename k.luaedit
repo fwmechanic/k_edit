@@ -2165,9 +2165,10 @@ do
       end
 
    AddEdFxn{ name = "gotofileline", key = "alt+g", attr = NOARG+BOXSTR+BOXARG+TEXTARG, help = "jumps to the file location described on the current line"
-      , NOARG   = function( arg ) return nil ~= (gofileline( arg.fbuf:GetLine( 1 ), arg.fbuf:GetLine( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
-                                              or gofileline_dif( arg.fbuf, arg.cursorY ))
-                     end
+      , NOARG   = function( arg )
+                  if arg.fbuf:FTypeEq( "diff" ) then return nil ~= gofileline_dif( arg.fbuf, arg.cursorY ) end
+                  return nil ~= gofileline( arg.fbuf:GetLine( 1 ), arg.fbuf:GetLine( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
+                  end
       , TEXTARG = function( arg ) return nil ~=  gofileline( ""                   , arg.text                       , arg.fbuf:Name() ~= nextmsgFBufName() ) end
       }
 end
