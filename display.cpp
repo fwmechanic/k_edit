@@ -241,7 +241,6 @@ struct FTypeSetting {
    Path::str_t d_key;  // rbtree key
    ViewColors  d_colors;
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
-   PChar       d_lang;
 
    void  Update();
 
@@ -253,11 +252,9 @@ struct FTypeSetting {
 void FTypeSetting::Update() { enum { DB=1 };
    linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
    snprintf_full( &pbuf, &kybufBytes, "filesettings.ftype_map.%s.", d_key.c_str() );
+   d_eolCommentDelim[0] = '\0';
    scpy( pbuf, kybufBytes, "eolCommentDelim" );
    LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
-   scpy( pbuf, kybufBytes, "lang" );
-   d_lang = LuaCtxt_Edit::Tbl2DupS0( kybuf );                           DB && DBG( "%s: %s = %s", __func__, kybuf, d_lang );
-
    snprintf_full( &pbuf, &kybufBytes, "colors." );
    for( const auto &c2L : s_color2Lua ) {
       scpy( pbuf, kybufBytes, c2L.pLuaName );

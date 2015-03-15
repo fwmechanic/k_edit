@@ -57,6 +57,7 @@ LUAFUNC_(StartConProcess)    {    R_int( StartConProcess( S_(1) ) ); }
 LUAFUNC_(StartGuiProcess)    {    R_int( StartGuiProcess( S_(1) ) ); }
 LUAFUNC_(OsErrStr)           { linebuf lb; OsErrStr( BSOB(lb) ); R_str( lb ); }
 LUAFUNC_(OsVer)              { R_str( OsVerStr() ); }
+LUAFUNC_(rmargin)            { R_int( g_iRmargin ); }
 
 LUAFUNC_(RsrcFilename)  { pathbuf pb; R_str( RsrcFilename ( BSOB(pb), S_(1) ) ); }
 LUAFUNC_(StateFilename) { pathbuf pb; R_str( StateFilename( BSOB(pb), S_(1) ) ); }
@@ -685,7 +686,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        { "IsFile"                      , IsFile                      },
        { "IsDir"                       , IsDir                       },
        { "SleepMs"                     , SleepMs                     },
-
+       { "rmargin"                     , rmargin                     },
        { "valueof"                     , valueof                     },  // my Lua language extension
 
        { "split_ch"                    , split_ch                    }, //    Lua language extension (from PIL)

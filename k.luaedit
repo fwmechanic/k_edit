@@ -75,9 +75,6 @@ local not_dirsep_class = new_non_dirsep_class("")
 Min = math.min
 Max = math.max
 
-filesettings  = nil
-focusSettings = nil
-
 local logf = FBUF.log()
 
 --[[ 20070807 kgoodwin BUGBUG
@@ -1041,7 +1038,6 @@ do --- counting files switched to, fxn "mvf" to choose among them
          local curfn = fb:Name()
          SetCurFName( curfn )
          -- DBG( "### ---------------> '" .. curfn .. "'" )
-         -- focusSettings = filesettings and filesettings.fxn_extmapping and filesettings.fxn_extmapping( curfn )
          tu.t_accum( s_hitCount, curfn, 1 )
          end
       }
@@ -2698,9 +2694,7 @@ do -- see justify.cpp for missing functionality
       end
 
    local function getRmargin()
-      local rv = focusSettings and focusSettings.rmargin
-      if rv then  Msgf( "using focusSettings.rmargin = %d", rv ) end
-      return rv
+      return rmargin()
       end
 
    AddEdFxn{ name = "justify", help = "justify paragraph", attr = MODIFIES+NOARG+BOXARG+LINEARG, key = "alt+j"
@@ -3955,7 +3949,10 @@ function ReadPseudoFileOk_FROM_C( fb )  -- return Lua true (not (rv==nil or rv==
 
 printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )
 
+--########################################################################################################################################
+-- DO NOT DELETE NEXT LINE!  filesettings IS READ BY C++ CODE!!!
 filesettings = load_env( RsrcFilename( "filesettings" ), { print = print, NameExtOf = NameExtOf, ExtOf = ExtOf, DeepCopy=DeepCopy } )
+--########################################################################################################################################
 
 print( "runchild is a "..type(runchild) )
 

@@ -63,14 +63,14 @@ local function colors( tbl, meta )
    return tbl
    end
 
-local text_settings  = { colors = stdColors, eolCommentDelim = "", rmargin = 80 }
-local bat_settings   = { colors = stdColors, eolCommentDelim = "rem ", rmargin = 80 }
-local clang_settings = { colors = stdColors, eolCommentDelim = "//", rmargin = 80, lang="C" }
-local lua_settings   = { colors = DeepCopy(stdColors), eolCommentDelim = "--", rmargin = 125, lang="Lua" }
+local text_settings  = { colors = stdColors, eolCommentDelim = "" }
+local bat_settings   = { colors = stdColors, eolCommentDelim = "rem " }
+local clang_settings = { colors = stdColors, eolCommentDelim = "//" }
+local lua_settings   = { colors = DeepCopy(stdColors), eolCommentDelim = "--" }
       lua_settings.colors.dimmed = cc( Blue, hiPink )
 
-local python_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125, lang="Python" }
-local perl_settings  = { colors = stdColors, eolCommentDelim = "#" , rmargin = 125, lang="Perl" }
+local python_settings  = { colors = stdColors, eolCommentDelim = "#" }
+local perl_settings  = { colors = stdColors, eolCommentDelim = "#" }
 
 ftype_map = {  -- ref'd from C
    clang        = clang_settings                       ,
