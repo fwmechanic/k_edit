@@ -351,7 +351,7 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
       const auto fLeadingEnvRef( pRefStart == inbuf );
 
       pathbuf pbuf;
-      safeStrcpy( BSOB(pbuf), pName, pTerm );
+      safeStrcpy( BSOB(pbuf), PP2SR( pName, pTerm ) );
       PCChar pValue( getenv( pbuf ) );
       0 && DBG( "getenv( %s ) = %p (%s)", pbuf, pValue, pValue ? pValue : "" );
       if( !pValue && strchr( pbuf, '|' ) ) { // undefined and "name" contains '|'?

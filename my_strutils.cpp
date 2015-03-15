@@ -62,8 +62,10 @@ PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) {
    return dest;
    }
 
-int safeStrcat( PChar dest, size_t sizeof_dest, int destLen, PCChar src, int srcLen ) {
+size_t safeStrcat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
+   if( 0==destLen && sizeof_dest > 0 && dest[0] ) { destLen = Strlen( dest ); }
    auto truncd( 0 );
+   auto srcLen( src.length() );
    if( destLen + srcLen + 1 > sizeof_dest ) {
       truncd = srcLen - (sizeof_dest - destLen - 1);
       srcLen = sizeof_dest - destLen - 1;
@@ -71,29 +73,30 @@ int safeStrcat( PChar dest, size_t sizeof_dest, int destLen, PCChar src, int src
 
    auto rv( srcLen );
    if( srcLen > 0 ) {
-      memcpy( dest + destLen, src, srcLen );
+      memcpy( dest + destLen, src.data(), srcLen );
       dest[ destLen + srcLen ] = '\0';
       rv = destLen + srcLen;
       }
 
    if( truncd )
-       StrTruncd_( __func__, truncd, src, dest );
+       StrTruncd_( __func__, truncd, src.data(), dest );
 
    return rv;
    }
 
-int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src, int srcLen ) {
+size_t safeStrcpy( PChar dest, size_t sizeofDest, stref src ) {
    auto truncd( 0 );
+   auto srcLen( src.length() );
    if( srcLen >= sizeofDest ) {
        truncd = srcLen - (sizeofDest - 1);
        srcLen = sizeofDest - 1;
        }
 
-   memcpy( dest, src, srcLen );
+   memcpy( dest, src.data(), srcLen );
    dest[ srcLen ] = '\0';
 
    if( truncd )
-       StrTruncd_( __func__, truncd, src, dest );
+       StrTruncd_( __func__, truncd, src.data(), dest );
 
    return srcLen;
    }

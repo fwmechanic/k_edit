@@ -98,6 +98,8 @@ struct sridx2 {
 #define BSR(bsr) static_cast<int>(bsr.length()),bsr.data()
 #define PR_BSR ".*s"
 
+#define PP2SR( p0, p1 )  stref( p0, (p1)-(p0) )
+
 #include "attr_format.h"
 
 #if !defined(__GNUC__)

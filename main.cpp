@@ -676,19 +676,19 @@ STATIC_FXN bool RsrcLdSectionFound( stref pszSectionName, int *pAssignCountAccum
    return fFound;
    }
 
-STIL PCChar GetVideoName() {
+STIL PCChar GetDisplayName() {
    return
 #if   defined(_WIN32)
-          "win32console"
+          "display.win32console"
 #elif defined(X_WINDOWS)
-          "x"
+          "display.x"
 #else
-          "curses"
+          "display.curses"
 #endif
           ;
    }
 
-STIL PCChar GetOsName() { return WL( "win32", "linux" ); }
+STIL PCChar GetOsName() { return WL( "os.win32", "os.linux" ); }
 
 STATIC_VAR bool s_fLoadRsrcFile = true;
 
@@ -705,14 +705,15 @@ STATIC_FXN int ReinitializeMacros( bool fEraseExistingMacros ) {
 
    auto assignDone(0);
    if( s_fLoadRsrcFile ) {
-      RsrcLdSectionFound( ""            , &assignDone ); // [editorname]
-      RsrcLdSectionFound( GetOsName()   , &assignDone ); // [editorname-osname]
-      RsrcLdSectionFound( OsVerStr()    , &assignDone ); // [editorname-osver]
-      RsrcLdSectionFound( GetVideoName(), &assignDone ); // [editorname-vidname]
+      RsrcLdSectionFound( ""              , &assignDone ); // [editorname]
+      RsrcLdSectionFound( GetOsName()     , &assignDone ); // [editorname-osname]
+      RsrcLdSectionFound( OsVerStr()      , &assignDone ); // [editorname-osver]
+      RsrcLdSectionFound( GetDisplayName(), &assignDone ); // [editorname-vidname]
       }
 
-   if( g_CurFBuf() )
+   if( g_CurFBuf() ) {
       FBOP::AssignFromRsrc( g_CurFBuf() );
+      }
 
    DispNeedsRedrawAllLinesAllWindows();
 

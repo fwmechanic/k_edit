@@ -396,6 +396,7 @@ extern  PChar  RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext );
 extern stref   IsolateTagStr( stref src );
 extern   bool  RsrcLdFileSection( stref pszSectionName );
 extern PCChar  LastRsrcLdFileSectionNm();
+extern stref   LastRsrcLdFileSectionNmTruncd();
 
 //------------ misc edit helpers
 

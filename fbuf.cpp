@@ -947,7 +947,7 @@ void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
    }
 
 STATIC_FXN void Set_s_cur_Ftype( stref ftype ) {
-   safeStrcpy( BSOB(s_cur_Ftype), BSR2STR(ftype) );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
+   safeStrcpy( BSOB(s_cur_Ftype), ftype );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
    }
 
 PCChar swixFtype( stref param ) {
@@ -956,9 +956,18 @@ PCChar swixFtype( stref param ) {
    return nullptr;
    }
 
+STATIC_CONST char s_sftype_prefix[] = "ftype:";
 STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
-   const auto section( FmtStr<1+SIZEOF_MAX_FTYPE>( "!%" PR_BSR, BSR(ftype) ).k_str() );
-   const auto rv( RsrcLdFileSection( section ) );    0 && DBG( "%s %c %s", __func__, rv?'y':'n', section );
+   char section[6+SIZEOF_MAX_FTYPE];
+   safeStrcpy( BSOB(section), s_sftype_prefix );    0 && DBG( "%s %s", __func__, section );
+   safeStrcat( BSOB(section), ftype );              0 && DBG( "%s %s", __func__, section );
+   const auto rv( RsrcLdFileSection( section ) );   0 && DBG( "%s %c %s", __func__, rv?'y':'n', section );
+   return rv;
+   }
+
+stref LastRsrcLdFileSectionNmTruncd() {
+   stref rv( LastRsrcLdFileSectionNm() );
+   if( rv.starts_with( s_sftype_prefix ) ) { rv.remove_prefix( KSTRLEN( s_sftype_prefix ) ); }
    return rv;
    }
 
@@ -966,8 +975,8 @@ STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
 #define  EXT_WILDCARD  ".*"
 #define  EXT_PSEUDO    ".<>"
 
-STATIC_FXN Path::str_t GetRsrcExt( PCFBUF fb ) {
-   Path::str_t rv;
+STATIC_FXN stref GetRsrcExt( PCFBUF fb ) { // all rv's shall have leading '.'
+   stref rv;
    if( FnmIsLogicalWildcard( fb->Namestr() ) ) {
       rv = EXT_WILDCARD;
       }
@@ -975,16 +984,11 @@ STATIC_FXN Path::str_t GetRsrcExt( PCFBUF fb ) {
       rv = EXT_PSEUDO;
       }
    else {
-      rv.assign( BSR2STR( Path::RefExt( fb->Namestr() ) ) );
+      rv = Path::RefExt( fb->Namestr() );
       if( rv.empty() )
          rv = EXT_NO_EXT;
       }
-
-  #if !FNM_CASE_SENSITIVE
-   string_tolower( rv );
-  #endif
-
-   0 && DBG( "%s '%s'", __func__, rv.c_str() );
+   0 && DBG( "%s '%" PR_BSR "'", __func__, BSR(rv) );
    return rv;
    }
 

@@ -1506,11 +1506,11 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       pathbuf wcBuf, dirBuf;
       const auto pStart( Path::StrToPrevPathSepOrNull( pszWildcardString, pVbar ) );
       if( pStart ) {
-         safeStrcpy( BSOB(wcBuf) , pStart+1         , pVbar  );
-         safeStrcpy( BSOB(dirBuf), pszWildcardString, pStart );
+         safeStrcpy( BSOB(wcBuf) , PP2SR( pStart+1         , pVbar  ) );
+         safeStrcpy( BSOB(dirBuf), PP2SR( pszWildcardString, pStart ) );
          }
       else {
-         safeStrcpy( BSOB(wcBuf) , pszWildcardString, pVbar  );
+         safeStrcpy( BSOB(wcBuf) , PP2SR( pszWildcardString, pVbar ) );
          safeStrcpy( BSOB(dirBuf), ".\\" );
          }
       ED && DBG( "wcBuf='%s'" , wcBuf  );
@@ -2634,7 +2634,7 @@ FAIL: // fnmbuf gets filename of CURRENT buffer!  But generation is 0
    if( !rl.starts_with( grep_prefix ) )       { goto FAIL; }
    rl.remove_prefix( KSTRLEN(grep_prefix) );
    if( IsStringBlank( rl ) )                  { goto FAIL; }
-   safeStrcpy( fnmbuf, sizeof_fnmbuf, rl.data(), rl.length() );
+   safeStrcpy( fnmbuf, sizeof_fnmbuf, rl );
    }
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {

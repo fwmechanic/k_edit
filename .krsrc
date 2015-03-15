@@ -614,7 +614,7 @@ ux_2:=""ux_1""
 ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 
-[k-!unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
+[k-ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    delims: {[(
    mfspec_:="*.*"
 
@@ -622,12 +622,12 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:msbatch
    wordchars:$_
 
-[k-!wildcard]  # wildcard expansion
+[k-ftype:wildcard]  # wildcard expansion
 
 [k-.*]  # wildcard expansion
    ftype:wildcard
 
-[k-!pseudo]  # wildcard expansion
+[k-ftype:pseudo]  # wildcard expansion
 
 [k-.<>]  # PSEUDOFILE
    ftype:pseudo
@@ -643,7 +643,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.lua k-.luastate k-.luaedit k-.filesettings]
    ftype:lua
 
-[k-!lua]
+[k-ftype:lua]
+   wordchars:
    delims: {[(
    mfspec_:="*.lua"
    rmargin:80
@@ -651,8 +652,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.pl k-.pm]
    ftype:perl
 
-[k-!perl]
-   # wordchars:@$%
+[k-ftype:perl]
+   wordchars:@$%
    delims: {[(
    mfspec_:="*.pl;*.pm"
    rmargin:80
@@ -674,8 +675,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.mak k-.mik]
    ftype:make
 
-[k-!make]
-   ftype:make
+[k-ftype:make]
+   wordchars:
    delims: {[(
    #graphic:tab # using GNU make, we need ability to insert literal tabs
    tabwidth:8
@@ -698,20 +699,20 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.pas k-.dpr]
    ftype:pascal
 
-[k-!pascal]
+[k-ftype:pascal]
    mfspec_:="*.pas;*.dpr"
    rmargin:100
 
 [k-.mod k-.def]
    ftype:modula2
 
-[k-!modula2]
+[k-ftype:modula2]
    mfspec_:="*.def;*.mod"
 
 [k-.asm k-.s k-.inc]
    ftype:asm
 
-[k-!asm]
+[k-ftype:asm]
    mfspec_:="*.inc;*.asm;*.map"
    call:=savecur arg "call" searchall restcur
    rmargin:100
@@ -728,9 +729,9 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.c k-.cpp k-.cc k-.cs k-.m k-.cxx k-32.kc k-.h k-.hpp k-.hxx k-32.kh]
    ftype:clang
 
-[k-!diff]
+[k-ftype:diff]
 
-[k-!clang]
+[k-ftype:clang]
    # backup:bak
    swapovl:=psearch pword mword arg pword pword swapchar pword right
    swapovl:ctrl+e
@@ -799,7 +800,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.awk k-.twk k-.twl k-.kxt k-.kxl]
    ftype:awk
 
-[k-!awk]
+[k-ftype:awk]
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
    mfspec_:="%TAGZ%\<*.twk;*.twl;*.awk;*.kxt;*.kxl>"
    rmargin:100

@@ -98,9 +98,9 @@ void swidDelims( PChar dest, size_t sizeofDest, void *src ) {
    }
 
 bool swixDelims( stref param ) {
-   SafeStrefcpy( g_delims, param );
-   xlatStr( BSOB(g_delims      ), g_delims, delimNorm   );
-   xlatStr( BSOB(g_delimMirrors), g_delims, delimMirror );
+   safeStrcpy( BSOB(g_delims      ), param );
+   xlatStr(    BSOB(g_delims      ), g_delims, delimNorm   );
+   xlatStr(    BSOB(g_delimMirrors), g_delims, delimMirror );
    return true;
    }
 

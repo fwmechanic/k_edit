@@ -306,30 +306,16 @@ STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, 
 
 //--------------------------------------------------------------------------------
 
-extern int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src, int srcLen );
-
-#define    SafeStrefcpy( d, stref )  safeStrcpy( BSOB(d), stref.data(), stref.length() )
+extern size_t safeStrcpy( PChar dest, size_t sizeofDest, stref src );
 
 #define    SafeStrcpy( d, s )  safeStrcpy( BSOB(d), s )
+#define    SafeStrcat( d, s )  safeStrcat( BSOB(d), s )
 
-STIL int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src, PCChar eos ) {
-   return safeStrcpy( dest, sizeofDest, src, eos - src );
-   }
-
-STIL int safeStrcpy( PChar dest, size_t sizeofDest, PCChar src ) {
-   return safeStrcpy( dest, sizeofDest, src, Strlen( src ) );
-   }
-
-#define     SafeStrcat( d, s )  safeStrcat( BSOB(d), s )
-
-extern int safeStrcat( PChar dest, size_t sizeof_dest, int destLen, PCChar src, int srcLen );
-
-STIL void safeStrcat( PChar dest, size_t sizeof_dest, int destLen, PCChar src )  { safeStrcat( dest, sizeof_dest, destLen       , src, Strlen( src ) ); }
-STIL void safeStrcat( PChar dest, size_t sizeof_dest             , PCChar src )  { safeStrcat( dest, sizeof_dest, Strlen( dest ), src ); }
+extern size_t safeStrcat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
 
 extern PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width );
 
-extern PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) ATTR_FORMAT(3,4);
+extern PChar  safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) ATTR_FORMAT(3,4);
 
 //--------------------------------------------------------------------------------
 //
