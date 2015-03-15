@@ -936,7 +936,7 @@ STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
                          #endif
                          || Path::eq( ".mak", Path::RefExt( srNm ) )
                         );  0 && DBG( "%s %" PR_BSR "'", __func__, BSR(srFnm) );
-   return isMakefile ? "make" : nullptr;
+   return isMakefile ? "make" : "";
    }
 
 STATIC_VAR bool s_cur_Ftype_assigned; // hacky!
