@@ -856,7 +856,7 @@ bool ARG::tell() {
       }
 
    if( d_fMeta )
-      PutMacroStringIntoCurfileAtCursor( outbuf );
+      PutMacroStringIntoCurfileAtCursor( outbuf.k_str() );
    else
       Msg( "%s", outbuf.k_str() );
 

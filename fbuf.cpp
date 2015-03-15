@@ -958,7 +958,7 @@ PCChar swixFtype( stref param ) {
 
 STATIC_CONST char s_sftype_prefix[] = "ftype:";
 STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
-   char section[6+SIZEOF_MAX_FTYPE];
+   char section[ KSTRLEN(s_sftype_prefix) + SIZEOF_MAX_FTYPE ];
    bcat( bcpy( section, s_sftype_prefix ), section, ftype );              0 && DBG( "%s %s", __func__, section );
    const auto rv( RsrcLdFileSection( section ) );   0 && DBG( "%s %c %s", __func__, rv?'y':'n', section );
    return rv;

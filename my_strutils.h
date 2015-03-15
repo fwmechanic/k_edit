@@ -285,13 +285,6 @@ STIL bool IsStringBlank( stref src ) {
    return true; // note that empty strings are Blank strings!
    }
 
-
-
-
-
-extern int   consec_xdigits( PCChar pSt, PCChar eos=nullptr );
-extern int   consec_bdigits( PCChar pSt, PCChar eos=nullptr );
-
 //--------------------------------------------------------------------------------
 // to avoid signed/unsigned mismatch warnings:
 #if 0
@@ -309,7 +302,7 @@ STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, 
 extern size_t scpy( PChar dest, size_t sizeof_dest, stref src );
 extern size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
 
-#define    bcpy( d, s )  scpy( BSOB(d), s )
+#define    bcpy( d, s )     scpy( BSOB(d), s )
 #define    bcat( l, d, s )  scat( BSOB(d), s, (l) )
 
 
@@ -343,6 +336,9 @@ extern  PChar _strupr( PChar buf );
 extern  PChar _strlwr( PChar buf );
 
 #endif
+
+extern int   consec_xdigits( PCChar pSt, PCChar eos=nullptr );
+extern int   consec_bdigits( PCChar pSt, PCChar eos=nullptr );
 
 STIL int Strnicmp( PCChar string1, PCChar string2, size_t count ) { return WL( _strnicmp, strncasecmp )( string1, string2, count ); }
 STIL int Stricmp ( PCChar string1, PCChar string2 )               { return WL( _strcmpi , strcasecmp  )( string1, string2 ); }
@@ -444,93 +440,35 @@ STIL void insert_hole( PChar b, size_t sizeof_b, int xCol, int insertWidth=1 )
 
 template <int elements>
 class FixedCharArray {
-   char b[ elements ];
+   char d_buf[ elements ];
 
-   public:
+public:
 
-   FixedCharArray() {}
-   FixedCharArray( PCChar src ) { Strcpy( src );  }
-   FixedCharArray( const FixedCharArray &rhs )              { Strcpy( rhs.b ); } // COPY CTOR
-   FixedCharArray & operator= ( const FixedCharArray &rhs ) { Strcpy( rhs.b ); return *this; } // ASGN_OPR
-   operator PChar()        { return b; }
-   operator PCChar() const { return b; }
+   FixedCharArray() { d_buf[0] = '\0'; }
+   FixedCharArray( stref src ) { bcpy( d_buf, src ); }
 
-   char &operator[](int subscript)         { return b[ subscript ]; }
-   char  operator[](int subscript)   const { return b[ subscript ]; }
+   PCChar k_str() const { return d_buf; }
+   PChar  c_str()       { return d_buf; }
 
-   PChar    Eos()                          { return ::Eos(b); }
-   int      Len()                    const { return Strlen( b ); }
-   int      Size()                   const { return sizeof(b); }
-   int      FreeChars()              const { return Size() - (Len() + 1); }
-
-   PCChar   k_str()                  const { return b; }
-   PChar    c_str()                        { return b; }
-
-   int   Strcpy(  PCChar src             ) { return scpy( b, sizeof( b ), src ); }
-   int   Strcpy(  PCChar src, int srcLen ) { return scpy( b, sizeof( b ), src, srcLen ); }
-   void  Strcat(  PCChar src             ) {        scat( b, sizeof( b ), src ); }
-   void  Strncat( PCChar src, int srcLen ) {        scat( b, sizeof( b ), Len(), src, srcLen ); }
-   int   xMaxNulCh()    const { return Size() - 1; } // lb[ lb.xMaxNulCh()  ] = 0; is only allowed deref
-   int   xMaxNonNulCh() const { return Size() - 2; } // lb[ lb.xMaxNonNulCh() ] = any; is allowed
-
-   void Vsprintf( PCChar format, va_list val ) {
-      use_vsnprintf( b, sizeof(b), format, val );
+   void Vsprintf( PCChar format, va_list val ) { // yes, part of the PUBLIC interface!
+      use_vsnprintf( BSOB(d_buf), format, val );
       }
 
-   PCChar Sprintf( PCChar format, ... ) ATTR_FORMAT(2,3)
-      {
-      va_list args;
-      va_start(args, format);
+   PCChar Sprintf( PCChar format, ... ) ATTR_FORMAT(2,3) {
+      va_list args; va_start(args, format);
       Vsprintf( format, args );
       va_end(args);
-      return b;
+      return d_buf;
       }
 
-   PChar PSprintf( PCChar pinb, PCChar format, ... ) ATTR_FORMAT(3,4)
-      {
-      const auto len( pinb - b );
-      if( len < sizeof( b ) - 1 ) {
-         va_list args;
-         va_start(args, format);
-         use_vsnprintf( b+len, sizeof( b )-len, format, args );
+   PChar SprintfCat( PCChar format, ... ) ATTR_FORMAT(2,3) {
+      const auto len( Strlen( d_buf ) );
+      if( len < sizeof( d_buf ) - 1 ) {
+         va_list args; va_start(args, format);
+         use_vsnprintf( d_buf+len, sizeof( d_buf )-len, format, args );
          va_end(args);
          }
-      return b;
-      }
-
-   PChar SprintfCat( PCChar format, ... ) ATTR_FORMAT(2,3)
-      {
-      const auto len( Len() );
-      if( len < sizeof( b ) - 1 ) {
-         va_list args;
-         va_start(args, format);
-         use_vsnprintf( b+len, sizeof( b )-len, format, args );
-         va_end(args);
-         }
-      return b;
-      }
-
-   //====================================================================================
-   //
-   // C++ macros for editing text in linebuf's.  ASSUMES an operating mode where ALL
-   // trailing (rightmost) chars after the first '\0' are also forced to value '\0'.
-   //
-   // insert_hole   - prior to inserting chars
-   // collapse_hole - delete chars, slide trailing chars left to fill in
-   // clear_right   - chars at and to right of xCol are '\0'd
-   //
-   void insert_hole( int xCol, int insertWidth=1 ) { // assumes that last char in b is a '\0', and preserves it
-      ::insert_hole( b, sizeof(b), xCol, insertWidth );
-      }
-
-   void collapse_hole( int xCol, int collapseWidth=1 ) { // assumes that last char in b is a '\0', and preserves it
-      memmove( b+xCol, b+xCol+collapseWidth, sizeof(b) - (xCol+collapseWidth) );
-      if( collapseWidth > 1 )  // memset is optimized out if false
-         memset( b + sizeof(b) - collapseWidth, 0, collapseWidth-1 );
-      }
-
-   void clear_right( int xCol ) { // zeroes all chars indices >= xCol (at and right of xCol)
-      memset( b + xCol, 0, sizeof(b) - xCol );
+      return d_buf;
       }
 
 private:

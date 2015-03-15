@@ -685,10 +685,10 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
          if( KeyStringBuf[0] ) {
             ++count;
             if( pFBuf ) {
-               sprintf( lbuf + (col_width * tblCol), "%-*s ", col_width-1, KeyStringBuf );
+               sprintf( lbuf.c_str() + (col_width * tblCol), "%-*s ", col_width-1, KeyStringBuf );
                if( tblCol++ == (g_CurWin()->d_Size.col / col_width) - 1 ) {
                   tblCol = 0;
-                  pFBuf->PutLastLine( lbuf );
+                  pFBuf->PutLastLine( lbuf.k_str() );
                   }
                }
             }
@@ -696,7 +696,7 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
       }
 
    if( pFBuf && tblCol > 0 ) {
-      pFBuf->PutLastLine( lbuf );
+      pFBuf->PutLastLine( lbuf.k_str() );
       }
 
    return count;

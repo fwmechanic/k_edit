@@ -117,7 +117,7 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
                , hilite.flMax.lin + 1
                , hilite.flMax.col + 1
                );
-         DispRawDialogStr( buf );
+         DispRawDialogStr( buf.k_str() );
          }
       pcv->InsHiLiteBox( COLOR::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
       }

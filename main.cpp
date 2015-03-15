@@ -577,22 +577,21 @@ STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE star
 
 class RsrcSectionWalker {
    LINE    d_lnum;
-   Linebuf d_tagbuf;
+   linebuf d_tagbuf;
 
    public:
 
-   PCChar srchTag() const { return d_tagbuf; }
    RsrcSectionWalker( stref pszSectionName );
    bool NextSectionInstance( FBufLocn *fl, bool fHiLiteTag=false );
    PCChar SectionName() const { return d_tagbuf; }
    };
 
 RsrcSectionWalker::RsrcSectionWalker( stref pszSectionName ) : d_lnum(0) {
-   d_tagbuf.Strcpy( ThisProcessInfo::ExeName() );
-   if( !pszSectionName.empty() )
-      d_tagbuf.SprintfCat( "-%" PR_BSR, BSR(pszSectionName) );
-
-   _strlwr( d_tagbuf );
+   const auto len( bcpy( d_tagbuf, ThisProcessInfo::ExeName() ) );
+   if( !pszSectionName.empty() ) {
+      bcat( bcat( len, d_tagbuf, "-" ), d_tagbuf, pszSectionName );
+      }
+   _strlwr( d_tagbuf ); // mostly to normalize errmsgs, logs, etc.
    }
 
 bool RsrcSectionWalker::NextSectionInstance( FBufLocn *fl, bool fHiLiteTag ) {
@@ -654,7 +653,7 @@ bool ARG::ext() {
 
 STATIC_FXN bool RsrcLdSectionFound( stref pszSectionName, int *pAssignCountAccumulator ) {
    RsrcSectionWalker rsw( pszSectionName );
-   FmtStr<90> tag( "LoadRsrcSection [%s]", rsw.srchTag() );
+   FmtStr<90> tag( "LoadRsrcSection [%s]", rsw.SectionName() );
    AssignLogTag( tag.k_str() );
 
    auto fFound(false);

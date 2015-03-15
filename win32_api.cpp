@@ -110,13 +110,13 @@ int ConIO::DbgPopf( PCChar fmt, ... ) {
    buf.Vsprintf( fmt, val );
    va_end( val );
 
-   DebugLog( buf );
+   DebugLog( buf.k_str() );
 
    MainThreadPerfCounter::PauseAll();
 
    const auto retq( Win32::MessageBox(
       nullptr,                           // handle of owner window
-      buf,                               // address of text in message box
+      buf.c_str(),                       // address of text in message box
       "Kevin's _awesome_ editor DEBUG",  // address of title of message box
       MB_TASKMODAL | MB_SETFOREGROUND
       ) );
