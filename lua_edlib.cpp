@@ -86,6 +86,34 @@ LUAFUNC_(Msg)         {
    Msg( "%s", p1 );
    RZ;
    }
+
+STATIC_FXN void push_mac_def( lua_State *L, PCChar macroName ) {
+   std::string val( std::string(macroName) + ":=" + DupTextMacroValue( macroName ) );
+   lua_pushlstring( L, val.data(), val.length() );
+   }
+
+LUAFUNC_(GetDynMacros) {
+   lua_newtable(L);  // result
+   auto tblIdx( 0u );
+   push_mac_def( L, "curfile"     );                      lua_rawseti( L, -2, ++tblIdx );
+   push_mac_def( L, "curfileext"  );                      lua_rawseti( L, -2, ++tblIdx );
+   push_mac_def( L, "curfilename" );                      lua_rawseti( L, -2, ++tblIdx );
+   push_mac_def( L, "curfilepath" );                      lua_rawseti( L, -2, ++tblIdx );
+   lua_pushstring( L, "------------------------------" ); lua_rawseti( L, -2, ++tblIdx );
+   push_mac_def( L, "mffile"  );                          lua_rawseti( L, -2, ++tblIdx );
+   push_mac_def( L, "mfspec"  );                          lua_rawseti( L, -2, ++tblIdx );
+   push_mac_def( L, "mfspec_" );                          lua_rawseti( L, -2, ++tblIdx );
+   std::string val( "<mfspec>" );
+   const auto fb( FindFBufByName( val.c_str() ) );
+   if( fb ) {
+       if( FBOP::IsBlank( fb ) ) { val += " exists but empty";                        }
+       else                      { val += FmtStr<31>( " %d lines", fb->LineCount() ); }
+       }
+   else                          { val += " does not exist";                          }
+   lua_pushlstring( L, val.data(), val.length() );        lua_rawseti( L, -2, ++tblIdx );
+   return 1;  // return the table
+   }
+
 LUAFUNC_(GetCwd)        { R_str( Path::GetCwd_ps().c_str() ); }
 LUAFUNC_(Path_Dirnm   ) { const auto rv( Path::RefDirnm(    S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
 LUAFUNC_(Path_Fnm     ) { const auto rv( Path::RefFnm(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
@@ -653,6 +681,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        { "MarkDefineAtCurPos"          , MarkDefineAtCurPos          },
        { "MarkGoto"                    , MarkGoto                    },
        { "GetChildDirs"                , GetChildDirs                },
+       { "GetDynMacros"                , GetDynMacros                },
        { "GetCwd"                      , GetCwd                      },
        { "Getenv"                      , Getenv                      },
        { "GetenvOrNil"                 , GetenvOrNil                 },

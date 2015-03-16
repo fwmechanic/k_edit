@@ -127,6 +127,7 @@
    anno  := arg "EMBSHELL> svn annotate $%" runchild
    shenv := arg "EMBSHELL> set" runchild
    #csort:alt+8
+   xm := arg mfspec_ cancel
 
    quik:ctrl+a
 
@@ -633,9 +634,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:pseudo
 
 [k-.]  # USED IF FILE HAS NO EXTENSION
-   delims: {[(
-   mfspec_:="*."
-   rmargin:80
 
 [k-.~dat] # qq --filter output file
    rm:= "rm " mword arg arg execute setfile
@@ -778,8 +776,9 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-.txt]
    nofor:=cancel replace "’" nl "'" nl    replace "“" nl """ nl  replace "”" nl """ nl
 
-   rmargin:60
+   rmargin:80
    mfspec_:="*.txt"
+   mfspec_:="*" curfileext
    join:= begline endline arg delete
    join:num*
    nxtspceol:=arg arg "\s$" psearch
@@ -793,6 +792,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    delims: {[(
    mfspec_:="*.kdb"
    rmargin:80
+   mfspec_:= curfilepath "*" curfileext
 
 [k-.!!!]
    mfspec_:="*.!!!"

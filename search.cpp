@@ -1173,7 +1173,7 @@ STATIC_FXN PCChar findDelim( PCChar tokStrt, PCChar delimset, PCChar macroName )
    }
 
 
-STATIC_FXN std::string DupTextMacroValue( PCChar macroName ) {
+std::string DupTextMacroValue( PCChar macroName ) {
    const auto pCmd( CmdFromName( macroName ) );
    if( !pCmd || !pCmd->IsRealMacro() )
       return std::string( "" );

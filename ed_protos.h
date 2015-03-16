@@ -334,6 +334,7 @@ namespace Interpreter {
 extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );
 extern   bool  fExecuteSafe( PCChar str );
 extern   bool  PushVariableMacro( PCChar strToExecute );
+extern   std::string DupTextMacroValue( PCChar macroName );
 extern   void  CleanupAnyExecutionHaltRequest(); // must NOT be declared _within_ Main, where it would get a DLLX attribute
 
 //------------ FTypeSettings

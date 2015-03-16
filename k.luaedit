@@ -2866,6 +2866,15 @@ do
 end
 
 
+   -- 20150315 help debugging mfspec, etc. macros and others
+   AddEdFxn{ name = "cur", help = "inert menu displaying dynamic macro definitions", attr = NOARG
+      , NOARG   = function( arg )
+                  local _,fx = Menu.new( { title="dynamic macro definitions", choices=GetDynMacros() } ):PickOne()
+                  return false
+                  end
+      }
+
+
 function a_map(   fx,ary )   local rv = {} for ky,val in ipairs(ary) do rv[ ky ] = fx(val)   end return rv end
 
    function EnqueueCompileJobs( ary )
