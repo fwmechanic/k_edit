@@ -1958,22 +1958,25 @@ void View::HiliteAddins_Init() {
       DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
       if( d_addins.empty() && d_pFBuf->HasLines() ) {
          const auto hasEolComment( GetFTypeSettings()->d_eolCommentDelim[0] );
-         #define L( lang ) const auto lang( d_pFBuf->FTypeEq( #lang ) );
-         L(clang) L(make) L(lua) L(sh) L(bash) L(perl) L(python) L(diff)
-
-         /* the last-inserted InsertAddinLast has "last say" and therefore "wins".
-            Thus because I want HiliteAddin_CursorLine, to be visible in all cases,
-            it's added last */
-                                           { InsertAddinLast( new HiliteAddin_Pbal            ( this ) ); }
-         if( clang                    )    { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
+         #define L(lang) d_pFBuf->FTypeEq(#lang)
+         /* the last-inserted InsertAddinLast has "last say" and therefore "wins".  Thus because I want
+            HiliteAddin_CursorLine, to be visible in all cases, it's added last */
+                /* ALWAYS */               { InsertAddinLast( new HiliteAddin_Pbal            ( this ) ); }
+         if     ( L(clang)               ) { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
                                              InsertAddinLast( new HiliteAddin_C_Comment       ( this ) ); }
-         if( make                     )    { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) ); }
-         if( lua                      )    { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
-         if(  make||sh||perl
-            ||bash||python            )    { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
-         if( diff )                        { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
-         else if( hasEolComment       )    { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
-                                           { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }
+         else if( L(make)                ) { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) );
+                                             InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+
+         else if( L(lua)                 ) { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
+
+         else if(   L(perl) || L(bash)
+                 || L(python) || L(sh)
+                )                          { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+
+         else if( L(diff) )                { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
+         else if( hasEolComment          ) { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
+
+                /* ALWAYS */               { InsertAddinLast( new HiliteAddin_WordUnderCursor ( this ) ); }
          if( USE_HiliteAddin_CompileLine ) { InsertAddinLast( new HiliteAddin_CompileLine     ( this ) ); }
          if( USE_HiliteAddin_CursorLine  ) { InsertAddinLast( new HiliteAddin_CursorLine      ( this ) ); }
          DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
