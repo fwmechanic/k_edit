@@ -35,7 +35,7 @@ local darkColors =
    hilight         = cc(   Cyan   , hiWhite  ),
    selection       = cc(   Green  , hiWhite  ),
    wordUnderCursor = cc( hiWhite  ,   Cyan   ),
-   dimmed          = cc(   Blue   , hiGreen  ),
+   dimmed          = cc(   Black  , hiGreen  ),
    litStr          = cc(   Blue   , hiRed    ),
    }
 
@@ -71,6 +71,7 @@ local lua_settings   = { colors = DeepCopy(stdColors), eolCommentDelim = "--" }
 
 local python_settings  = { colors = stdColors, eolCommentDelim = "#" }
 local perl_settings  = { colors = stdColors, eolCommentDelim = "#" }
+local ushell_settings= { colors = darkColors, eolCommentDelim = "#" }
 
 ftype_map = {  -- ref'd from C
    clang        = clang_settings                       ,
@@ -81,6 +82,8 @@ ftype_map = {  -- ref'd from C
    make         = perl_settings                        ,
    kdb          = text_settings                        ,
    text         = text_settings                        ,
+   sh           = ushell_settings                      ,
+   bash         = ushell_settings                      ,
    [""]         = { colors = stdColors }               ,
    ["<>"]       = { colors = stdColors }               ,
    ["*"]        = { colors = stdColors }               ,

@@ -929,13 +929,20 @@ STATIC_FXN stref content_to_ftype( PCFBUF pfb ) {
 STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
    const auto srNm( pfb->Namesr() );
    const auto srFnm( Path::RefFnm( srNm ) );
-   const auto isMakefile(   Path::endsWith( srFnm, "makefile" )
-                         #if !defined(_WIN32)
-                         || Path::endsWith( srFnm, "Makefile" )
-                         #endif
-                         || Path::eq( ".mak", Path::RefExt( srNm ) )
-                        );  0 && DBG( "%s %" PR_BSR "'", __func__, BSR(srFnm) );
-   return isMakefile ? "make" : "";
+   if(   Path::endsWith( srFnm, "makefile" )
+        #if !defined(_WIN32)
+        || Path::endsWith( srFnm, "Makefile" )
+        #endif
+        || Path::eq( ".mak", Path::RefExt( srNm ) )
+     ) {                                            0 && DBG( "%s %" PR_BSR "' is %s", __func__, BSR(srFnm), "make" );
+      return "make";
+      }
+  #if !defined(_WIN32)
+   if( srFnm.starts_with( ".bash" ) ) {             0 && DBG( "%s %" PR_BSR "' is %s", __func__, BSR(srFnm), "bash" );
+      return "bash";
+      }
+  #endif
+   return "";
    }
 
 STATIC_VAR bool s_cur_Ftype_assigned; // hacky!
