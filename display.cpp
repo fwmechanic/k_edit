@@ -1105,7 +1105,7 @@ void HiliteAddin_StreamParse::VFbufLinesChanged( LINE yMin, LINE yMax ) {
 
 //=============================================================================
 
-class HiliteAddin_C_Comment : public HiliteAddin_StreamParse {
+class HiliteAddin_clang : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
 
    enum scan_rv { atEOF, in_code, in_1Qstr, in_2Qstr, in_comment };
@@ -1117,14 +1117,14 @@ class HiliteAddin_C_Comment : public HiliteAddin_StreamParse {
    Point d_start_C; // where last /* comment started
 
 public:
-   HiliteAddin_C_Comment( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
-   ~HiliteAddin_C_Comment() {}
+   HiliteAddin_clang( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
+   ~HiliteAddin_clang() {}
    PCChar Name() const override { return "C_Comment"; }
    };
 
 #define START_LINE()  const auto rl( pFile->PeekRawLine( pt.lin ) ); PCChar bos( rl.data() ), eos( rl.data()+rl.length() );
 
-HiliteAddin_C_Comment::scan_rv HiliteAddin_C_Comment::find_end_code( PCFBUF pFile, Point &pt ) {
+HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
 
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
@@ -1151,7 +1151,7 @@ NEXT_LINE: ;
    return atEOF;
    }
 
-HiliteAddin_C_Comment::scan_rv HiliteAddin_C_Comment::find_end_comment( PCFBUF pFile, Point &pt ) {
+HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_comment( PCFBUF pFile, Point &pt ) {
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
          switch( *pC ) { default: break;
@@ -1186,24 +1186,24 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
       }                                                                        \
    return atEOF;                                                               \
    }
-       find_end_Qstr( HiliteAddin_C_Comment, find_end_1Qstr, chQuot1 )
-       find_end_Qstr( HiliteAddin_C_Comment, find_end_2Qstr, chQuot2 )
+       find_end_Qstr( HiliteAddin_clang, find_end_1Qstr, chQuot1 )
+       find_end_Qstr( HiliteAddin_clang, find_end_2Qstr, chQuot2 )
 
-void HiliteAddin_C_Comment::scan_pass( LINE yMaxScan ) {
+void HiliteAddin_clang::scan_pass( LINE yMaxScan ) {
    auto fb( CFBuf() );
    Point pt( 0, 0 );  // start @ top of file
-   typedef scan_rv (HiliteAddin_C_Comment::*pfx_findnext)( PCFBUF pFile, Point &pt );
-   pfx_findnext findnext = &HiliteAddin_C_Comment::find_end_code;
+   typedef scan_rv (HiliteAddin_clang::*pfx_findnext)( PCFBUF pFile, Point &pt );
+   pfx_findnext findnext = &HiliteAddin_clang::find_end_code;
    scan_rv prevret = in_code;
    while( pt.lin <= yMaxScan ) {
       const auto ret( CALL_METHOD( *this, findnext )( fb, pt ) );
       0 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
       if( prevret == ret ) {    DBG("internal error seql==rv" )                ; return; }
       switch( ret ) { default : DBG("internal error unknwn ret" )              ; return;
-         case in_code    : findnext = &HiliteAddin_C_Comment::find_end_code    ; break;
-         case in_1Qstr   : findnext = &HiliteAddin_C_Comment::find_end_1Qstr   ; break;
-         case in_2Qstr   : findnext = &HiliteAddin_C_Comment::find_end_2Qstr   ; break;
-         case in_comment : findnext = &HiliteAddin_C_Comment::find_end_comment ; break;
+         case in_code    : findnext = &HiliteAddin_clang::find_end_code    ; break;
+         case in_1Qstr   : findnext = &HiliteAddin_clang::find_end_1Qstr   ; break;
+         case in_2Qstr   : findnext = &HiliteAddin_clang::find_end_2Qstr   ; break;
+         case in_comment : findnext = &HiliteAddin_clang::find_end_comment ; break;
          case atEOF      : if( in_comment==prevret ) { 0 && DBG( "atEOF+in_comment @y=%d x=%d", pt.lin, pt.col );
                               add_comment( d_start_C.lin, d_start_C.col, pt.lin, 0 );
                               }
@@ -1215,7 +1215,7 @@ void HiliteAddin_C_Comment::scan_pass( LINE yMaxScan ) {
 
 //=============================================================================
 
-class HiliteAddin_Lua_Comment : public HiliteAddin_StreamParse {
+class HiliteAddin_lua : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
 
    enum scan_rv { atEOF, in_code, in_1Qstr, in_2Qstr, in_long };
@@ -1229,8 +1229,8 @@ class HiliteAddin_Lua_Comment : public HiliteAddin_StreamParse {
    bool     d_long_comment; // if false, is long string
 
 public:
-   HiliteAddin_Lua_Comment( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
-   ~HiliteAddin_Lua_Comment() {}
+   HiliteAddin_lua( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
+   ~HiliteAddin_lua() {}
    PCChar Name() const override { return "Lua_Comment"; }
    };
 
@@ -1246,7 +1246,7 @@ STATIC_FXN int Lua_long_level( PCChar pE, PCChar eos ) { // pE points PAST first
    return -1;
    }
 
-HiliteAddin_Lua_Comment::scan_rv HiliteAddin_Lua_Comment::find_end_code( PCFBUF pFile, Point &pt ) {
+HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
@@ -1292,7 +1292,7 @@ NEXT_LINE: ;
    return atEOF;
    }
 
-HiliteAddin_Lua_Comment::scan_rv HiliteAddin_Lua_Comment::find_end_long( PCFBUF pFile, Point &pt ) {
+HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_long( PCFBUF pFile, Point &pt ) {
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
          switch( *pC ) { default: break;
@@ -1317,26 +1317,26 @@ HiliteAddin_Lua_Comment::scan_rv HiliteAddin_Lua_Comment::find_end_long( PCFBUF 
    return atEOF;
    }
 
-       find_end_Qstr( HiliteAddin_Lua_Comment, find_end_1Qstr, chQuot1 )
-       find_end_Qstr( HiliteAddin_Lua_Comment, find_end_2Qstr, chQuot2 )
+       find_end_Qstr( HiliteAddin_lua, find_end_1Qstr, chQuot1 )
+       find_end_Qstr( HiliteAddin_lua, find_end_2Qstr, chQuot2 )
 
 #undef find_end_Qstr
 
-void HiliteAddin_Lua_Comment::scan_pass( LINE yMaxScan ) {
+void HiliteAddin_lua::scan_pass( LINE yMaxScan ) {
    auto fb( CFBuf() );
    Point pt( 0, 0 );  // start @ top of file
-   typedef scan_rv (HiliteAddin_Lua_Comment::*pfx_findnext)( PCFBUF pFile, Point &pt );
-   pfx_findnext findnext = &HiliteAddin_Lua_Comment::find_end_code;
+   typedef scan_rv (HiliteAddin_lua::*pfx_findnext)( PCFBUF pFile, Point &pt );
+   pfx_findnext findnext = &HiliteAddin_lua::find_end_code;
    scan_rv prevret = in_code;
    while( pt.lin <= yMaxScan ) {
       const auto ret( CALL_METHOD( *this, findnext )( fb, pt ) );
       0 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
       if( prevret == ret ) {    DBG("internal error seql==rv" )                ; return; }
       switch( ret ) { default : DBG("internal error unknwn ret" )              ; return;
-         case in_code    : findnext = &HiliteAddin_Lua_Comment::find_end_code  ; break;
-         case in_1Qstr   : findnext = &HiliteAddin_Lua_Comment::find_end_1Qstr ; break;
-         case in_2Qstr   : findnext = &HiliteAddin_Lua_Comment::find_end_2Qstr ; break;
-         case in_long    : findnext = &HiliteAddin_Lua_Comment::find_end_long  ; break;
+         case in_code    : findnext = &HiliteAddin_lua::find_end_code  ; break;
+         case in_1Qstr   : findnext = &HiliteAddin_lua::find_end_1Qstr ; break;
+         case in_2Qstr   : findnext = &HiliteAddin_lua::find_end_2Qstr ; break;
+         case in_long    : findnext = &HiliteAddin_lua::find_end_long  ; break;
          case atEOF      : if( in_long==prevret ) { 0 && DBG( "atEOF+in_long @y=%d x=%d", pt.lin, pt.col );
                               add_comment( d_start_C.lin, d_start_C.col, pt.lin, 0 );
                               }
@@ -1347,7 +1347,7 @@ void HiliteAddin_Lua_Comment::scan_pass( LINE yMaxScan ) {
    }
 //=============================================================================
 
-class HiliteAddin_Python_Comment : public HiliteAddin_StreamParse {
+class HiliteAddin_python : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
 
    enum scan_rv { atEOF, in_code,
@@ -1374,12 +1374,12 @@ class HiliteAddin_Python_Comment : public HiliteAddin_StreamParse {
    bool     d_in_3str;
 
 public:
-   HiliteAddin_Python_Comment( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
-   ~HiliteAddin_Python_Comment() {}
+   HiliteAddin_python( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
+   ~HiliteAddin_python() {}
    PCChar Name() const override { return "Python_Comment"; }
    };
 
-HiliteAddin_Python_Comment::scan_rv HiliteAddin_Python_Comment::find_end_code( PCFBUF pFile, Point &pt ) {
+HiliteAddin_python::scan_rv HiliteAddin_python::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
@@ -1441,10 +1441,10 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    return atEOF;                                                               \
    }
 
-find_end_Qstr1e( HiliteAddin_Python_Comment, find_end_1Qstr , chQuot1 )
-find_end_Qstr1e( HiliteAddin_Python_Comment, find_end_2Qstr , chQuot2 )
-find_end_Qstr1r( HiliteAddin_Python_Comment, find_end_1Qrstr, chQuot1 )
-find_end_Qstr1r( HiliteAddin_Python_Comment, find_end_2Qrstr, chQuot2 )
+find_end_Qstr1e( HiliteAddin_python, find_end_1Qstr , chQuot1 )
+find_end_Qstr1e( HiliteAddin_python, find_end_2Qstr , chQuot2 )
+find_end_Qstr1r( HiliteAddin_python, find_end_1Qrstr, chQuot1 )
+find_end_Qstr1r( HiliteAddin_python, find_end_2Qrstr, chQuot2 )
 
 #undef find_end_Qstr1e
 #undef find_end_Qstr1r
@@ -1468,17 +1468,17 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    return atEOF;                                                               \
    }
 
-       find_end_Qstr3e( HiliteAddin_Python_Comment, find_end_1Q3str , chQuot1, true  );
-       find_end_Qstr3e( HiliteAddin_Python_Comment, find_end_2Q3str , chQuot2, true  );
-       find_end_Qstr3e( HiliteAddin_Python_Comment, find_end_1Q3rstr, chQuot1, false );
-       find_end_Qstr3e( HiliteAddin_Python_Comment, find_end_2Q3rstr, chQuot2, false );
+       find_end_Qstr3e( HiliteAddin_python, find_end_1Q3str , chQuot1, true  );
+       find_end_Qstr3e( HiliteAddin_python, find_end_2Q3str , chQuot2, true  );
+       find_end_Qstr3e( HiliteAddin_python, find_end_1Q3rstr, chQuot1, false );
+       find_end_Qstr3e( HiliteAddin_python, find_end_2Q3rstr, chQuot2, false );
 #undef find_end_Qstr3e
 
-void HiliteAddin_Python_Comment::scan_pass( LINE yMaxScan ) {
+void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
    auto fb( CFBuf() );
    Point pt( 0, 0 );  // start @ top of file
-   typedef scan_rv (HiliteAddin_Python_Comment::*pfx_findnext)( PCFBUF pFile, Point &pt );
-   pfx_findnext findnext = &HiliteAddin_Python_Comment::find_end_code;
+   typedef scan_rv (HiliteAddin_python::*pfx_findnext)( PCFBUF pFile, Point &pt );
+   pfx_findnext findnext = &HiliteAddin_python::find_end_code;
    d_in_3str = false;
    scan_rv prevret = in_code;
    while( pt.lin <= yMaxScan ) {
@@ -1486,15 +1486,15 @@ void HiliteAddin_Python_Comment::scan_pass( LINE yMaxScan ) {
       0 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
       if( prevret == ret ) {    DBG("internal error seql==rv" )                     ; return; }
       switch( ret ) { default : DBG("internal error unknwn ret" )                   ; return;
-         case in_code    : findnext = &HiliteAddin_Python_Comment::find_end_code    ; break;
-         case in_1Qstr   : findnext = &HiliteAddin_Python_Comment::find_end_1Qstr   ; break;
-         case in_1Qrstr  : findnext = &HiliteAddin_Python_Comment::find_end_1Qrstr  ; break;
-         case in_1Q3str  : findnext = &HiliteAddin_Python_Comment::find_end_1Q3str  ; break;
-         case in_1Q3rstr : findnext = &HiliteAddin_Python_Comment::find_end_1Q3rstr ; break;
-         case in_2Qstr   : findnext = &HiliteAddin_Python_Comment::find_end_2Qstr   ; break;
-         case in_2Qrstr  : findnext = &HiliteAddin_Python_Comment::find_end_2Qrstr  ; break;
-         case in_2Q3str  : findnext = &HiliteAddin_Python_Comment::find_end_2Q3str  ; break;
-         case in_2Q3rstr : findnext = &HiliteAddin_Python_Comment::find_end_2Q3rstr ; break;
+         case in_code    : findnext = &HiliteAddin_python::find_end_code    ; break;
+         case in_1Qstr   : findnext = &HiliteAddin_python::find_end_1Qstr   ; break;
+         case in_1Qrstr  : findnext = &HiliteAddin_python::find_end_1Qrstr  ; break;
+         case in_1Q3str  : findnext = &HiliteAddin_python::find_end_1Q3str  ; break;
+         case in_1Q3rstr : findnext = &HiliteAddin_python::find_end_1Q3rstr ; break;
+         case in_2Qstr   : findnext = &HiliteAddin_python::find_end_2Qstr   ; break;
+         case in_2Qrstr  : findnext = &HiliteAddin_python::find_end_2Qrstr  ; break;
+         case in_2Q3str  : findnext = &HiliteAddin_python::find_end_2Q3str  ; break;
+         case in_2Q3rstr : findnext = &HiliteAddin_python::find_end_2Q3rstr ; break;
          case atEOF      : if( d_in_3str ) { 0 && DBG( "atEOF+d_in_3str @y=%d x=%d", pt.lin, pt.col );
                               add_litstr( d_start_C.lin, d_start_C.col, pt.lin, 0 );
                               }
@@ -1963,15 +1963,15 @@ void View::HiliteAddins_Init() {
             HiliteAddin_CursorLine, to be visible in all cases, it's added last */
                 /* ALWAYS */               { InsertAddinLast( new HiliteAddin_Pbal            ( this ) ); }
          if     ( L(clang)               ) { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
-                                             InsertAddinLast( new HiliteAddin_C_Comment       ( this ) ); }
+                                             InsertAddinLast( new HiliteAddin_clang       ( this ) ); }
          else if( L(make)                ) { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) );
-                                             InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+                                             InsertAddinLast( new HiliteAddin_python  ( this ) ); }
 
-         else if( L(lua)                 ) { InsertAddinLast( new HiliteAddin_Lua_Comment     ( this ) ); }
+         else if( L(lua)                 ) { InsertAddinLast( new HiliteAddin_lua     ( this ) ); }
 
          else if(   L(perl) || L(bash)
                  || L(python) || L(sh)
-                )                          { InsertAddinLast( new HiliteAddin_Python_Comment  ( this ) ); }
+                )                          { InsertAddinLast( new HiliteAddin_python  ( this ) ); }
 
          else if( L(diff) )                { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
          else if( hasEolComment          ) { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
