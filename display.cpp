@@ -1970,7 +1970,7 @@ void View::HiliteAddins_Init() {
          else if( L(lua)                 ) { InsertAddinLast( new HiliteAddin_lua     ( this ) ); }
 
          else if(   L(perl) || L(bash)
-                 || L(python) || L(sh)
+                 || L(python) || L(sh)    // NB: HiliteAddin_python is INADEQUATE FOR bash, which allows literals like: 'this "is a 'literal' string" needing "recursive 'parsing' of" string delims'
                 )                          { InsertAddinLast( new HiliteAddin_python  ( this ) ); }
 
          else if( L(diff) )                { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
