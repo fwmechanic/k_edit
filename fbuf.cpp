@@ -937,7 +937,7 @@ STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
      ) {                                            0 && DBG( "%s %" PR_BSR "' is %s", __func__, BSR(srFnm), "make" );
       return "make";
       }
-  #if !defined(_WIN32)
+  #if 1 || !defined(_WIN32)
    if( srFnm.starts_with( ".bash" ) ) {             0 && DBG( "%s %" PR_BSR "' is %s", __func__, BSR(srFnm), "bash" );
       return "bash";
       }

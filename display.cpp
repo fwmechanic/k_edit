@@ -1506,6 +1506,114 @@ void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
 
 
 //=============================================================================
+#if 1
+
+class HiliteAddin_bash : public HiliteAddin_StreamParse {
+   void scan_pass( LINE yMaxScan ) override;
+
+   enum scan_rv { atEOF, in_code,
+      in_1Qstr    , // https://docs.python.org/2/reference/lexical_analysis.html#string-literals
+      in_2Qstr    ,
+   };
+   // scan_pass() methods; all must have same proto as called via pfx
+   scan_rv find_end_code    ( PCFBUF pFile, Point &pt, bool flag );
+   scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt, bool flag );
+   scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt, bool flag );
+   Point    d_start_C; // where last /* comment started
+
+public:
+   HiliteAddin_bash( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
+   ~HiliteAddin_bash() {}
+   PCChar Name() const override { return "Python_Comment"; }
+   };
+
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, bool flag ) {
+   0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
+      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
+         switch( *pC ) { default: break;
+            case chQuot1: // fallthru
+            case chQuot2: {
+                          pt.col = (pC - bos) + 1;
+                          if( chQuot1==pC[0]  ) { return in_1Qstr; }
+                          else                  { return in_2Qstr; }
+                          }
+                          break;
+            case '#':     add_comment( pt.lin, pC-bos, pt.lin, eos-bos );
+                          goto NEXT_LINE;
+            }
+         }
+NEXT_LINE: ;
+      }
+   return atEOF;
+   }
+
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point &pt, bool flag ) {
+   const auto start( pt );
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
+      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
+         switch( *pC ) { default: break;
+            case '\\' :  ++pC; /* skip escaped char */ break;
+
+            case chQuot2: pt.col = (pC - bos) + 1;
+                          find_end_1Qstr( pFile, pt, false );
+                          break;
+
+            case chQuot1: pt.col = (pC - bos) + 1;
+                          if( flag ) {
+                             add_litstr( start.lin, start.col, pt.lin, pt.col-2 );
+                             }
+                          return in_code;
+            }
+         }
+      }
+   return atEOF;
+   }
+
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point &pt, bool flag ) {
+   const auto start( pt );
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
+      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
+         switch( *pC ) { default: break;
+            case '\\' :  ++pC; /* skip escaped char */ break;
+
+            case chQuot1: pt.col = (pC - bos) + 1;
+                          find_end_2Qstr( pFile, pt, false );
+                          break;
+
+            case chQuot2: pt.col = (pC - bos) + 1;
+                          if( flag ) {
+                             add_litstr( start.lin, start.col, pt.lin, pt.col-2 );
+                             }
+                          return in_code;
+            }
+         }
+      }
+   return atEOF;
+   }
+
+void HiliteAddin_bash::scan_pass( LINE yMaxScan ) {
+   auto fb( CFBuf() );
+   Point pt( 0, 0 );  // start @ top of file
+   typedef scan_rv (HiliteAddin_bash::*pfx_findnext)( PCFBUF pFile, Point &pt, bool flag );
+   pfx_findnext findnext = &HiliteAddin_bash::find_end_code;
+   scan_rv prevret = in_code;
+   while( pt.lin <= yMaxScan ) {
+      const auto ret( CALL_METHOD( *this, findnext )( fb, pt, true ) );
+      0 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
+      if( prevret == ret ) {    DBG("internal error seql==rv" )                     ; return; }
+      switch( ret ) { default : DBG("internal error unknwn ret" )                   ; return;
+         case in_code    : findnext = &HiliteAddin_bash::find_end_code    ; break;
+         case in_1Qstr   : findnext = &HiliteAddin_bash::find_end_1Qstr   ; break;
+         case in_2Qstr   : findnext = &HiliteAddin_bash::find_end_2Qstr   ; break;
+         case atEOF      : return;
+         }
+      prevret = ret;
+      }
+   }
+
+#endif
+//=============================================================================
 
 class HiliteAddin_Diff : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
@@ -1963,15 +2071,14 @@ void View::HiliteAddins_Init() {
             HiliteAddin_CursorLine, to be visible in all cases, it's added last */
                 /* ALWAYS */               { InsertAddinLast( new HiliteAddin_Pbal            ( this ) ); }
          if     ( L(clang)               ) { InsertAddinLast( new HiliteAddin_cond_CPP        ( this ) );
-                                             InsertAddinLast( new HiliteAddin_clang       ( this ) ); }
+                                             InsertAddinLast( new HiliteAddin_clang           ( this ) ); }
          else if( L(make)                ) { InsertAddinLast( new HiliteAddin_cond_gmake      ( this ) );
-                                             InsertAddinLast( new HiliteAddin_python  ( this ) ); }
+                                             InsertAddinLast( new HiliteAddin_python          ( this ) ); }
 
-         else if( L(lua)                 ) { InsertAddinLast( new HiliteAddin_lua     ( this ) ); }
+         else if( L(lua)                 ) { InsertAddinLast( new HiliteAddin_lua             ( this ) ); }
 
-         else if(   L(perl) || L(bash)
-                 || L(python) || L(sh)    // NB: HiliteAddin_python is INADEQUATE FOR bash, which allows literals like: 'this "is a 'literal' string" needing "recursive 'parsing' of" string delims'
-                )                          { InsertAddinLast( new HiliteAddin_python  ( this ) ); }
+         else if( L(perl) || L(python)   ) { InsertAddinLast( new HiliteAddin_python          ( this ) ); }
+         else if( L(bash) || L(sh) )       { InsertAddinLast( new HiliteAddin_bash            ( this ) ); }
 
          else if( L(diff) )                { InsertAddinLast( new HiliteAddin_Diff            ( this ) ); }
          else if( hasEolComment          ) { InsertAddinLast( new HiliteAddin_EolComment      ( this ) ); }
