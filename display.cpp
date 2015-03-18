@@ -1516,9 +1516,9 @@ class HiliteAddin_bash : public HiliteAddin_StreamParse {
       in_2Qstr    ,
    };
    // scan_pass() methods; all must have same proto as called via pfx
-   scan_rv find_end_code    ( PCFBUF pFile, Point &pt, const bool add_hl );
-   scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt, const bool add_hl );
-   scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt, const bool add_hl );
+   scan_rv find_end_code    ( PCFBUF pFile, Point &pt, int nest );
+   scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt, int nest );
+   scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt, int nest );
    Point    d_start_C; // where last /* comment started
 
 public:
@@ -1527,7 +1527,7 @@ public:
    PCChar Name() const override { return "Python_Comment"; }
    };
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, const bool add_hl ) {
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, int nest ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
@@ -1548,21 +1548,23 @@ NEXT_LINE: ;
    return atEOF;
    }
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point &pt, const bool add_hl ) {
-   const auto start( pt );
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point &pt, int nest ) { enum { DB=0 };
+   const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
-         switch( *pC ) { default: break;
-            case '\\' :  ++pC; /* skip escaped char */ break;
+      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                                  DB && DBG("%s[:%c] y/x=%d,%d", __func__, *pC, pt.lin, pt.col );
+         switch( *pC ) {
+            default:      break;
+            case '\\' :   ++pC; /* skip escaped char */ break;
 
             case chQuot2: pt.col = (pC - bos) + 1;
-                          find_end_2Qstr( pFile, pt, false );
+                          find_end_2Qstr( pFile, pt, nest+1 );                     DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
+                          pC=bos+pt.col;
                           break;
 
             case chQuot1: pt.col = (pC - bos) + 1;
-                          if( add_hl ) {
+                          if( 0==nest ) {
                              add_litstr( start.lin, start.col, pt.lin, pt.col-2 );
-                             }
+                             }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
                           return in_code;
             }
          }
@@ -1570,21 +1572,23 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point 
    return atEOF;
    }
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point &pt, const bool add_hl ) {
-   const auto start( pt );
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point &pt, int nest ) { enum { DB=0 };
+   const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
-         switch( *pC ) { default: break;
-            case '\\' :  ++pC; /* skip escaped char */ break;
+      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                                  DB && DBG("%s[:%c] y/x=%d,%d", __func__, *pC, pt.lin, pt.col );
+         switch( *pC ) {
+            default:      break;
+            case '\\' :   ++pC; /* skip escaped char */ break;
 
             case chQuot1: pt.col = (pC - bos) + 1;
-                          find_end_1Qstr( pFile, pt, false );
+                          find_end_1Qstr( pFile, pt, nest+1 );                     DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
+                          pC=bos+pt.col;
                           break;
 
             case chQuot2: pt.col = (pC - bos) + 1;
-                          if( add_hl ) {
+                          if( 0==nest ) {
                              add_litstr( start.lin, start.col, pt.lin, pt.col-2 );
-                             }
+                             }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
                           return in_code;
             }
          }
@@ -1595,11 +1599,11 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point 
 void HiliteAddin_bash::scan_pass( LINE yMaxScan ) {
    auto fb( CFBuf() );
    Point pt( 0, 0 );  // start @ top of file
-   typedef scan_rv (HiliteAddin_bash::*pfx_findnext)( PCFBUF pFile, Point &pt, const bool add_hl );
+   typedef scan_rv (HiliteAddin_bash::*pfx_findnext)( PCFBUF pFile, Point &pt, int nest );
    pfx_findnext findnext = &HiliteAddin_bash::find_end_code;
    scan_rv prevret = in_code;
    while( pt.lin <= yMaxScan ) {
-      const auto ret( CALL_METHOD( *this, findnext )( fb, pt, true ) );
+      const auto ret( CALL_METHOD( *this, findnext )( fb, pt, 0 ) );
       1 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
       if( prevret == ret ) {    DBG("internal error seql==rv" )                     ; return; }
       switch( ret ) { default : DBG("internal error unknwn ret" )                   ; return;
