@@ -249,7 +249,7 @@ struct FTypeSetting {
 
    };
 
-void FTypeSetting::Update() { enum { DB=1 };
+void FTypeSetting::Update() { enum { DB=0 };
    linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
    snprintf_full( &pbuf, &kybufBytes, "filesettings.ftype_map.%s.", d_key.c_str() );
    d_eolCommentDelim[0] = '\0';
@@ -1516,9 +1516,9 @@ class HiliteAddin_bash : public HiliteAddin_StreamParse {
       in_2Qstr    ,
    };
    // scan_pass() methods; all must have same proto as called via pfx
-   scan_rv find_end_code    ( PCFBUF pFile, Point &pt, bool flag );
-   scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt, bool flag );
-   scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt, bool flag );
+   scan_rv find_end_code    ( PCFBUF pFile, Point &pt, const bool add_hl );
+   scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt, const bool add_hl );
+   scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt, const bool add_hl );
    Point    d_start_C; // where last /* comment started
 
 public:
@@ -1527,7 +1527,7 @@ public:
    PCChar Name() const override { return "Python_Comment"; }
    };
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, bool flag ) {
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, const bool add_hl ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
@@ -1548,7 +1548,7 @@ NEXT_LINE: ;
    return atEOF;
    }
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point &pt, bool flag ) {
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point &pt, const bool add_hl ) {
    const auto start( pt );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
@@ -1556,11 +1556,11 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point 
             case '\\' :  ++pC; /* skip escaped char */ break;
 
             case chQuot2: pt.col = (pC - bos) + 1;
-                          find_end_1Qstr( pFile, pt, false );
+                          find_end_2Qstr( pFile, pt, false );
                           break;
 
             case chQuot1: pt.col = (pC - bos) + 1;
-                          if( flag ) {
+                          if( add_hl ) {
                              add_litstr( start.lin, start.col, pt.lin, pt.col-2 );
                              }
                           return in_code;
@@ -1570,7 +1570,7 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point 
    return atEOF;
    }
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point &pt, bool flag ) {
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point &pt, const bool add_hl ) {
    const auto start( pt );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
@@ -1578,11 +1578,11 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point 
             case '\\' :  ++pC; /* skip escaped char */ break;
 
             case chQuot1: pt.col = (pC - bos) + 1;
-                          find_end_2Qstr( pFile, pt, false );
+                          find_end_1Qstr( pFile, pt, false );
                           break;
 
             case chQuot2: pt.col = (pC - bos) + 1;
-                          if( flag ) {
+                          if( add_hl ) {
                              add_litstr( start.lin, start.col, pt.lin, pt.col-2 );
                              }
                           return in_code;
@@ -1595,12 +1595,12 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point 
 void HiliteAddin_bash::scan_pass( LINE yMaxScan ) {
    auto fb( CFBuf() );
    Point pt( 0, 0 );  // start @ top of file
-   typedef scan_rv (HiliteAddin_bash::*pfx_findnext)( PCFBUF pFile, Point &pt, bool flag );
+   typedef scan_rv (HiliteAddin_bash::*pfx_findnext)( PCFBUF pFile, Point &pt, const bool add_hl );
    pfx_findnext findnext = &HiliteAddin_bash::find_end_code;
    scan_rv prevret = in_code;
    while( pt.lin <= yMaxScan ) {
       const auto ret( CALL_METHOD( *this, findnext )( fb, pt, true ) );
-      0 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
+      1 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
       if( prevret == ret ) {    DBG("internal error seql==rv" )                     ; return; }
       switch( ret ) { default : DBG("internal error unknwn ret" )                   ; return;
          case in_code    : findnext = &HiliteAddin_bash::find_end_code    ; break;

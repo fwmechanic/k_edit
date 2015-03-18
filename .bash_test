@@ -1,0 +1,8 @@
+TEST1="this"  # comment
+TEST2='this'  # comment
+TEST3='this "is" not'  # comment
+
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+
+TEST="this is a 'test containing "more" "quotes" than' I know 'to "really" shake' a stick at"  # comment
