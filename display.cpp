@@ -1179,11 +1179,12 @@ HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_comment( PCFBUF pFile, Po
 #define find_end_Qstr( class, nm, delim )                                      \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()    \
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                              \
-         switch( *pC ) { default: break;                                       \
-            case '\\' :  ++pC; /* skip escaped char */ break;                  \
-            case delim:  pt.col = (pC - bos) + 1;                              \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
+      for( ; pt.col < rl.length() ; ++pt.col ) {                               \
+         switch( rl[pt.col] ) {                                                \
+            default:     break;                                                \
+            case '\\' :  ++pt.col; break; /* skip escaped char */              \
+            case delim:  ++pt.col;                                             \
                          add_litstr( start.lin, start.col, pt.lin, pt.col-2 ); \
                          return in_code;                                       \
             }                                                                  \
@@ -1203,8 +1204,8 @@ void HiliteAddin_clang::scan_pass( LINE yMaxScan ) {
    while( pt.lin <= yMaxScan ) {
       const auto ret( CALL_METHOD( *this, findnext )( fb, pt ) );
       0 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
-      if( prevret == ret ) {    DBG("internal error seql==rv" )                ; return; }
-      switch( ret ) { default : DBG("internal error unknwn ret" )              ; return;
+      if( prevret == ret ) {    DBG("internal error seql==rv" )            ; return; }
+      switch( ret ) { default : DBG("internal error unknwn ret" )          ; return;
          case in_code    : findnext = &HiliteAddin_clang::find_end_code    ; break;
          case in_1Qstr   : findnext = &HiliteAddin_clang::find_end_1Qstr   ; break;
          case in_2Qstr   : findnext = &HiliteAddin_clang::find_end_2Qstr   ; break;
@@ -1298,18 +1299,19 @@ NEXT_LINE: ;
    }
 
 HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_long( PCFBUF pFile, Point &pt ) {
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
-         switch( *pC ) { default: break;
-            case chRSQ:  if( pC+d_long_level+1 < eos ) { // long enuf to contain what we're looking for?
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+      for( ; pt.col < rl.length() ; ++pt.col ) {
+         switch( rl[pt.col] ) {
+            default:     break;
+            case chRSQ:  if( pt.col+d_long_level+1 < rl.length() ) { // long enuf to contain what we're looking for?
                             auto ix( 0 ); // look for d_long_level '=' chars followed by chRSQ
                             for( ; ix < d_long_level ; ++ix ) {
-                               if( '=' != pC[1+ix] ) {
+                               if( '=' != rl[1+ix+pt.col] ) {
                                   break;
                                   }
                                }
-                            if( ix == d_long_level && chRSQ == pC[1+ix] ) { // end of long comment/string
-                               pt.col = ((pC+d_long_level+1) - bos) + 1;
+                            if( ix == d_long_level && chRSQ == rl[1+ix+pt.col] ) { // end of long comment/string
+                               pt.col += d_long_level + 2;
                                if( d_long_comment ) { add_comment( d_start_C.lin, d_start_C.col, pt.lin, pt.col-1 ); }
                                else                 { add_litstr ( d_start_C.lin, d_start_C.col, pt.lin, pt.col-3 ); }
                                return in_code;
