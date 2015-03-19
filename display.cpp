@@ -1127,25 +1127,27 @@ public:
 
 
 HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_code( PCFBUF pFile, Point &pt ) {
+/* some */0 && DBG(/* tests */"FNNC @y=%d x=%d", pt.lin, pt.col );/* here */
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
 
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
-         switch( *pC ) { default: break;
-            case chQuot1: pt.col = (pC - bos) + 1;  return in_1Qstr;
-            case chQuot2: pt.col = (pC - bos) + 1;  return in_2Qstr;
-            case '/':  if( pC+1<eos ) switch( *(pC+1) ) { default: break;
-                          case '/': { // start of to-EOL comment?
-                             add_comment( pt.lin, pC-bos, pt.lin, eos-bos );
-                             goto NEXT_LINE;
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+      for( ; pt.col < rl.length() ; ++pt.col ) {
+         switch( rl[pt.col] ) {
+            default:      break;
+            case chQuot1: ++pt.col; return in_1Qstr;
+            case chQuot2: ++pt.col; return in_2Qstr;
+            case '/':     if( pt.col+1 < rl.length() ) switch( rl[pt.col+1] ) { default: break;
+                             case '/': { // start of to-EOL comment?
+                                add_comment( pt.lin, pt.col, pt.lin, rl.length() );
+                                goto NEXT_LINE;
+                                }
+                             case '*': { // start of C comment?
+                                d_start_C.Set( pt.lin, pt.col );
+                                pt.col += 2;
+                                return in_comment;
+                                }
                              }
-                          case '*': { // start of C comment?
-                             d_start_C.Set( pt.lin, pC-bos );
-                             pt.col = ((pC+1) - bos) + 1;
-                             return in_comment;
-                             }
-                          }
-                       break;
+                          break;
             }
          }
 NEXT_LINE: ;
@@ -1154,12 +1156,13 @@ NEXT_LINE: ;
    }
 
 HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_comment( PCFBUF pFile, Point &pt ) {
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
-         switch( *pC ) { default: break;
-            case '*':  if( pC+1<eos ) switch( *(pC+1) ) { default: break;
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+      for( ; pt.col < rl.length() ; ++pt.col ) {
+         switch( rl[pt.col] ) {
+            default:   break;
+            case '*':  if( pt.col+1 < rl.length() ) switch( rl[pt.col+1] ) { default: break;
                           case '/': { // end of C comment?
-                             pt.col = ((pC+1) - bos) + 1;
+                             pt.col += 2;
                              add_comment( d_start_C.lin, d_start_C.col, pt.lin, pt.col-1 );
                              return in_code;
                              }
@@ -1431,10 +1434,11 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
 #define find_end_Qstr1r( class, nm, delim )                                    \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()    \
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                              \
-         switch( *pC ) { default: break;                                       \
-            case delim:  pt.col = (pC - bos) + 1;                              \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
+      for( ; pt.col < rl.length() ; ++pt.col ) {                               \
+         switch( rl[pt.col] ) {                                                \
+            default:     break;                                                \
+            case delim:  ++pt.col;                                             \
                          add_litstr( start.lin, start.col, pt.lin, pt.col-2 ); \
                          return in_code;                                       \
             }                                                                  \
