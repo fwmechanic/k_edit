@@ -1893,10 +1893,13 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
       }
    else { /* search backwards (only msearch uses this; ++complex, ++++overhead) */   VS_( DBG( "-search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt > d_end && !ExecutionHaltRequested() ; --curPt.lin, curPt.col = COL_MAX ) {
-         d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );  VS_( DBG( "-search: newline: x=%d,y=%d='%" PR_BSR "'", curPt.col, curPt.lin, BSR(d_sbuf) ); )
+         if( curPt.col < 0 ) {
+            continue;
+            }
+         d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
          VPrepLine_( d_sbuf );
          const IdxCol pcc( tw, d_sbuf );
-         auto iC( pcc.c2i( curPt.col ) );
+         auto iC( pcc.c2i( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, d_sbuf.length(), BSR(d_sbuf) ); )
          if( iC < d_sbuf.length() ) // if curPt.col is in middle of line...
             ++iC;                   // ... nd to incr to get correct maxCharsToSearch
 
@@ -1910,7 +1913,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
 
          COL goodMatchChars;
          auto iGoodMatch( VFindStr_( 0, haystack, &goodMatchChars, SET_HaystackHas(0) ) );
-         if( stref::npos != iGoodMatch ) { /* line contains _A_ match? */  VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, matchChars, BSR(match) ); } )
+         if( stref::npos != iGoodMatch ) { /* line contains _A_ match? */  VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
             // find the rightmost match by repeatedly searching (left->right) until search fails, using the last good match
             while( iGoodMatch < maxCharsToSearch ) {
                const auto startIdx( iGoodMatch + 1 );   VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "-search: iAYSTACK=%" PR_SIZET "u '%" PR_BSR "'", startIdx, BSR(newHaystack) ); } )
