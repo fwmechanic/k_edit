@@ -1508,6 +1508,10 @@ void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
 //=============================================================================
 #if 1
 
+// bash string quoting resembles Perl's (" supports \escaping,' does not), however a major difference is that
+// quoting is NESTED:
+// "this 'is "a" quoted' string"
+//
 class HiliteAddin_bash : public HiliteAddin_StreamParse {
    enum { DBBASH=0 };
    void scan_pass( LINE yMaxScan ) override;
@@ -1518,9 +1522,8 @@ class HiliteAddin_bash : public HiliteAddin_StreamParse {
    };
    // scan_pass() methods; all must have same proto as called via pfx
    scan_rv find_end_code    ( PCFBUF pFile, Point &pt, int nest );
-   scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt, int nest );
-   scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt, int nest );
-   Point    d_start_C; // where last /* comment started
+   scan_rv find_end_chQuot1 ( PCFBUF pFile, Point &pt, int nest );
+   scan_rv find_end_chQuot2 ( PCFBUF pFile, Point &pt, int nest );
 
 public:
    HiliteAddin_bash( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
@@ -1549,53 +1552,35 @@ NEXT_LINE: ;
    return atEOF;
    }
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };
-   const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                                  DB && DBG("%s[:%c] y/x=%d,%d", __func__, *pC, pt.lin, pt.col );
-         switch( *pC ) {
-            default:      break;
-            case '\\' :   ++pC; /* skip escaped char */ break;
-
-            case chQuot2: pt.col = (pC - bos) + 1;
-                          find_end_2Qstr( pFile, pt, nest+1 );                     DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
-                          pC=bos+pt.col-1; // -1 to compensate for ++pC in 3d for clause
-                          break;
-
-            case chQuot1: pt.col = (pC - bos) + 1;
-                          if( 0==nest ) {
-                             add_litstr( start.lin, start.col, pt.lin, pt.col-2 );
-                             }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
-                          return in_code;
-            }
-         }
-      }
-   return atEOF;
+#define def_find_end_str_nest( class, pri, sec ) \
+class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };                                                     \
+   const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()                                                                           \
+      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                                  DB && DBG( "%s[:%c] y/x=%d,%d", __func__, *pC, pt.lin, pt.col );   \
+         switch( *pC ) {                                                                                                                              \
+            default:      break;                                                                                                                      \
+            case '\\' :   ++pC; /* skip escaped char */ break;                                                                                        \
+                                                                                                                                                      \
+            case sec:     pt.col = (pC - bos) + 1;                                                                                                    \
+                          find_end_ ## sec( pFile, pt, nest+1 );                   DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
+                          pC=bos+pt.col-1; /* -1 to compensate for ++pC in 3d for clause */                                                           \
+                          break;                                                                                                                      \
+                                                                                                                                                      \
+            case pri:     pt.col = (pC - bos) + 1;                                                                                                    \
+                          if( 0==nest ) {                                                                                                             \
+                             add_litstr( start.lin, start.col, pt.lin, pt.col-2 );                                                                    \
+                             }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
+                          return in_code;                                                                                                             \
+            }                                                                                                                                         \
+         }                                                                                                                                            \
+      }                                                                                                                                               \
+   return atEOF;                                                                                                                                      \
    }
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };
-   const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                                  DB && DBG("%s[:%c] y/x=%d,%d", __func__, *pC, pt.lin, pt.col );
-         switch( *pC ) {
-            default:      break;
-            case '\\' :   ++pC; /* skip escaped char */ break;
+def_find_end_str_nest( HiliteAddin_bash, chQuot2, chQuot1 )
+def_find_end_str_nest( HiliteAddin_bash, chQuot1, chQuot2 )
 
-            case chQuot1: pt.col = (pC - bos) + 1;
-                          find_end_1Qstr( pFile, pt, nest+1 );                     DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
-                          pC=bos+pt.col-1; // -1 to compensate for ++pC in 3d for clause
-                          break;
-
-            case chQuot2: pt.col = (pC - bos) + 1;
-                          if( 0==nest ) {
-                             add_litstr( start.lin, start.col, pt.lin, pt.col-2 );
-                             }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
-                          return in_code;
-            }
-         }
-      }
-   return atEOF;
-   }
+#undef def_find_end_str_nest
 
 void HiliteAddin_bash::scan_pass( LINE yMaxScan ) {
    auto fb( CFBuf() );
@@ -1605,12 +1590,12 @@ void HiliteAddin_bash::scan_pass( LINE yMaxScan ) {
    scan_rv prevret = in_code;
    while( pt.lin <= yMaxScan ) {
       const auto ret( CALL_METHOD( *this, findnext )( fb, pt, 0 ) );
-      1 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
-      if( prevret == ret ) {    DBG("internal error seql==rv" )                     ; return; }
-      switch( ret ) { default : DBG("internal error unknwn ret" )                   ; return;
+      DBBASH && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
+      if( prevret == ret ) {    DBG("internal error seql==rv" )           ; return; }
+      switch( ret ) { default : DBG("internal error unknwn ret" )         ; return;
          case in_code    : findnext = &HiliteAddin_bash::find_end_code    ; break;
-         case in_1Qstr   : findnext = &HiliteAddin_bash::find_end_1Qstr   ; break;
-         case in_2Qstr   : findnext = &HiliteAddin_bash::find_end_2Qstr   ; break;
+         case in_1Qstr   : findnext = &HiliteAddin_bash::find_end_chQuot1 ; break;
+         case in_2Qstr   : findnext = &HiliteAddin_bash::find_end_chQuot2 ; break;
          case atEOF      : return;
          }
       prevret = ret;
