@@ -1509,6 +1509,7 @@ void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
 #if 1
 
 class HiliteAddin_bash : public HiliteAddin_StreamParse {
+   enum { DBBASH=0 };
    void scan_pass( LINE yMaxScan ) override;
 
    enum scan_rv { atEOF, in_code,
@@ -1548,7 +1549,7 @@ NEXT_LINE: ;
    return atEOF;
    }
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point &pt, int nest ) { enum { DB=0 };
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };
    const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                                  DB && DBG("%s[:%c] y/x=%d,%d", __func__, *pC, pt.lin, pt.col );
@@ -1558,7 +1559,7 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point 
 
             case chQuot2: pt.col = (pC - bos) + 1;
                           find_end_2Qstr( pFile, pt, nest+1 );                     DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
-                          pC=bos+pt.col;
+                          pC=bos+pt.col-1; // -1 to compensate for ++pC in 3d for clause
                           break;
 
             case chQuot1: pt.col = (pC - bos) + 1;
@@ -1572,7 +1573,7 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_1Qstr( PCFBUF pFile, Point 
    return atEOF;
    }
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point &pt, int nest ) { enum { DB=0 };
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };
    const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
       for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                                  DB && DBG("%s[:%c] y/x=%d,%d", __func__, *pC, pt.lin, pt.col );
@@ -1582,7 +1583,7 @@ HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_2Qstr( PCFBUF pFile, Point 
 
             case chQuot1: pt.col = (pC - bos) + 1;
                           find_end_1Qstr( pFile, pt, nest+1 );                     DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );
-                          pC=bos+pt.col;
+                          pC=bos+pt.col-1; // -1 to compensate for ++pC in 3d for clause
                           break;
 
             case chQuot2: pt.col = (pC - bos) + 1;
