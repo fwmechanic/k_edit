@@ -1122,7 +1122,9 @@ public:
    PCChar Name() const override { return "C_Comment"; }
    };
 
-#define START_LINE()  const auto rl( pFile->PeekRawLine( pt.lin ) ); PCChar bos( rl.data() ), eos( rl.data()+rl.length() );
+#define START_LINE()    const auto rl( pFile->PeekRawLine( pt.lin ) ); PCChar bos( rl.data() ), eos( rl.data()+rl.length() );
+#define START_LINE_X()  const auto rl( pFile->PeekRawLine( pt.lin ) );
+
 
 HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
@@ -1531,19 +1533,15 @@ public:
    PCChar Name() const override { return "Python_Comment"; }
    };
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, int nest ) {
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
-         switch( *pC ) { default: break;
-            case chQuot1: // fallthru
-            case chQuot2: {
-                          pt.col = (pC - bos) + 1;
-                          if( chQuot1==pC[0]  ) { return in_1Qstr; }
-                          else                  { return in_2Qstr; }
-                          }
-                          break;
-            case '#':     add_comment( pt.lin, pC-bos, pt.lin, eos-bos );
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+      for( ; pt.col < rl.length() ; ++pt.col ) {                                   DB && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col );
+         switch( rl[pt.col] ) {
+            default:      break;
+            case chQuot1: ++pt.col; return in_1Qstr;
+            case chQuot2: ++pt.col; return in_2Qstr;
+            case '#':     add_comment( pt.lin, pt.col, pt.lin, rl.length() );
                           goto NEXT_LINE;
             }
          }
@@ -1555,18 +1553,18 @@ NEXT_LINE: ;
 #define def_find_end_str_nest( class, pri, sec ) \
 class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };                                                     \
    const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()                                                                           \
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                                  DB && DBG( "%s[:%c] y/x=%d,%d", __func__, *pC, pt.lin, pt.col );   \
-         switch( *pC ) {                                                                                                                              \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()                                                                         \
+      for( ; pt.col < rl.length() ; ++pt.col ) {                                   DB && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col ); \
+         switch( rl[pt.col] ) {                                                                                                                       \
             default:      break;                                                                                                                      \
-            case '\\' :   ++pC; /* skip escaped char */ break;                                                                                        \
+            case '\\' :   ++pt.col; /* skip escaped char */ break;                                                                                    \
                                                                                                                                                       \
-            case sec:     pt.col = (pC - bos) + 1;                                                                                                    \
+            case sec:     ++pt.col;                                                                                                                   \
                           find_end_ ## sec( pFile, pt, nest+1 );                   DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
-                          pC=bos+pt.col-1; /* -1 to compensate for ++pC in 3d for clause */                                                           \
+                          --pt.col; /* compensate for ++pt.col in 3d for clause */                                                                    \
                           break;                                                                                                                      \
                                                                                                                                                       \
-            case pri:     pt.col = (pC - bos) + 1;                                                                                                    \
+            case pri:     ++pt.col;                                                                                                                   \
                           if( 0==nest ) {                                                                                                             \
                              add_litstr( start.lin, start.col, pt.lin, pt.col-2 );                                                                    \
                              }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
