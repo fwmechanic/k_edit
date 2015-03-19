@@ -1,0 +1,2 @@
+git config --local user.email fwmechanic@gmail.com
+git config --local user.name  "Kevin Goodwin"
