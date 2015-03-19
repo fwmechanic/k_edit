@@ -1184,8 +1184,8 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
          switch( rl[pt.col] ) {                                                \
             default:     break;                                                \
             case '\\' :  ++pt.col; break; /* skip escaped char */              \
-            case delim:  ++pt.col;                                             \
-                         add_litstr( start.lin, start.col, pt.lin, pt.col-2 ); \
+            case delim:  add_litstr( start.lin, start.col, pt.lin, pt.col-1 ); \
+                         ++pt.col;                                             \
                          return in_code;                                       \
             }                                                                  \
          }                                                                     \
@@ -1388,26 +1388,28 @@ public:
 
 HiliteAddin_python::scan_rv HiliteAddin_python::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
-         switch( *pC ) { default: break;
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+      for( ; pt.col < rl.length() ; ++pt.col ) {
+         switch( rl[pt.col] ) {
+            default:      break;
             case chQuot1: // fallthru
             case chQuot2: {
-                          const auto nquotes( (pC+2<eos && pC[1]==pC[0] && pC[2]==pC[0]) ? 3 : 1 );
-                          pt.col = (pC - bos) + nquotes;
-                          const auto backslash_escapes( !(pC>bos && 'r'==tolower(pC[-1])) );
+                          const auto qch( rl[pt.col] );
+                          const auto raw( pt.col>0 && 'r'==tolower( rl[pt.col-1] ) );
+                          const auto nquotes( (pt.col+2 < rl.length() && rl[1+pt.col]==qch && rl[2+pt.col]==qch) ? 3 : 1 );
+                          pt.col += nquotes;
                           if( 1==nquotes ) {
-                             if( chQuot1==pC[0]  ) { return backslash_escapes ? in_1Qstr  : in_1Qrstr ; }
-                             else                  { return backslash_escapes ? in_2Qstr  : in_2Qrstr ; }
+                             if( chQuot1==qch ) { return raw ? in_1Qrstr  : in_1Qstr  ; }
+                             else               { return raw ? in_2Qrstr  : in_2Qstr  ; }
                              }
                           else {
                              d_start_C.Set( pt.lin, pt.col ); d_in_3str = true;
-                             if(  chQuot1==pC[0] ) { return backslash_escapes ? in_1Q3str : in_1Q3rstr; }
-                             else                  { return backslash_escapes ? in_2Q3str : in_2Q3rstr; }
+                             if( chQuot1==qch ) { return raw ? in_1Q3rstr : in_1Q3str ; }
+                             else               { return raw ? in_2Q3rstr : in_2Q3str ; }
                              }
                           }
                           break;
-            case '#':     add_comment( pt.lin, pC-bos, pt.lin, eos-bos );
+            case '#':     add_comment( pt.lin, pt.col, pt.lin, rl.length() );
                           goto NEXT_LINE;
             }
          }
@@ -1419,12 +1421,13 @@ NEXT_LINE: ;
 #define find_end_Qstr1e( class, nm, delim )                                    \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()    \
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                              \
-         switch( *pC ) { default: break;                                       \
-            case '\\' :  ++pC; /* skip escaped char */ break;                  \
-            case delim:  pt.col = (pC - bos) + 1;                              \
-                         add_litstr( start.lin, start.col, pt.lin, pt.col-2 ); \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
+      for( ; pt.col < rl.length() ; ++pt.col ) {                               \
+         switch( rl[pt.col] ) {                                                \
+            default:     break;                                                \
+            case '\\' :  ++pt.col; break; /* skip escaped char */              \
+            case delim:  add_litstr( start.lin, start.col, pt.lin, pt.col-1 ); \
+                         ++pt.col;                                             \
                          return in_code;                                       \
             }                                                                  \
          }                                                                     \
@@ -1440,8 +1443,8 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
       for( ; pt.col < rl.length() ; ++pt.col ) {                               \
          switch( rl[pt.col] ) {                                                \
             default:     break;                                                \
-            case delim:  ++pt.col;                                             \
-                         add_litstr( start.lin, start.col, pt.lin, pt.col-2 ); \
+            case delim:  add_litstr( start.lin, start.col, pt.lin, pt.col-1 ); \
+                         ++pt.col;                                             \
                          return in_code;                                       \
             }                                                                  \
          }                                                                     \
@@ -1570,10 +1573,10 @@ class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { en
                           --pt.col; /* compensate for ++pt.col in 3d for clause */                                                                    \
                           break;                                                                                                                      \
                                                                                                                                                       \
-            case pri:     ++pt.col;                                                                                                                   \
-                          if( 0==nest ) {                                                                                                             \
-                             add_litstr( start.lin, start.col, pt.lin, pt.col-2 );                                                                    \
+            case pri:     if( 0==nest ) {                                                                                                             \
+                             add_litstr( start.lin, start.col, pt.lin, pt.col-1 );                                                                    \
                              }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
+                          ++pt.col;                                                                                                                   \
                           return in_code;                                                                                                             \
             }                                                                                                                                         \
          }                                                                                                                                            \
