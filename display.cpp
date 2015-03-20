@@ -1124,7 +1124,7 @@ public:
 
 #define START_LINE()    const auto rl( pFile->PeekRawLine( pt.lin ) ); PCChar bos( rl.data() ), eos( rl.data()+rl.length() );
 #define START_LINE_X()  const auto rl( pFile->PeekRawLine( pt.lin ) );
-
+#define SEQ3( first )   (pt.col+2 < rl.length() && first==rl[1+pt.col] && first==rl[2+pt.col])
 
 HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_code( PCFBUF pFile, Point &pt ) {
 /* some */0 && DBG(/* tests */"FNNC @y=%d x=%d", pt.lin, pt.col );/* here */
@@ -1396,7 +1396,7 @@ HiliteAddin_python::scan_rv HiliteAddin_python::find_end_code( PCFBUF pFile, Poi
             case chQuot2: {
                           const auto qch( rl[pt.col] );
                           const auto raw( pt.col>0 && 'r'==tolower( rl[pt.col-1] ) );
-                          const auto nquotes( (pt.col+2 < rl.length() && rl[1+pt.col]==qch && rl[2+pt.col]==qch) ? 3 : 1 );
+                          const auto nquotes( SEQ3( qch ) ? 3 : 1 );
                           pt.col += nquotes;
                           if( 1==nquotes ) {
                              if( chQuot1==qch ) { return raw ? in_1Qrstr  : in_1Qstr  ; }
@@ -1468,8 +1468,8 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                           
             default:     break;                                                                   \
             case '\\' :  if( backslash_escapes ) { ++pt.col; } /* skip escaped char */            \
                          break;                                                                   \
-            case delim:  const auto qch( rl[pt.col] );                                            \
-                         if( pt.col+2 < rl.length() && qch==rl[1+pt.col] && qch==rl[2+pt.col] ) { \
+            case delim:  const auto first( rl[pt.col] );                                          \
+                         if( SEQ3( first ) ) {                                                    \
                             add_litstr( d_start_C.lin, d_start_C.col, pt.lin, pt.col-1 );         \
                             pt.col += 4;                                                          \
                             d_in_3str = false;                                                    \
