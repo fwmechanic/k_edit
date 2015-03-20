@@ -1252,6 +1252,17 @@ STATIC_FXN int Lua_long_level( PCChar pE, PCChar eos ) { // pE points PAST first
    return -1;
    }
 
+STATIC_FXN int Lua_long_level( stref rl, sridx ix ) { // ix indexes PAST first LSQ (which has already been detected, thus Lua_long_level is being called)
+   for( auto num_eqs( 0 ) ; ix < rl.length() ; ++ix ) {
+      switch( rl[ix] ) {
+         case '='  :      ++num_eqs; break;
+         case chLSQ: return num_eqs;
+         default   : return -1;
+         }
+      }
+   return -1;
+   }
+
 HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
@@ -1259,7 +1270,8 @@ HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt
          switch( *pC ) { default: break;
             case chQuot1: pt.col = (pC - bos) + 1;  return in_1Qstr;
             case chQuot2: pt.col = (pC - bos) + 1;  return in_2Qstr;
-            case chLSQ: { const auto long_level( Lua_long_level( pC+1, eos ) );
+        //  case chLSQ: { const auto long_level( Lua_long_level( pC+1, eos ) );
+            case chLSQ: { const auto long_level( Lua_long_level( rl, pC-eos+1 ) );
                           if( long_level >= 0 ) {
                              d_long_comment = false;
                              d_long_level = long_level; // may == 0
@@ -1279,6 +1291,7 @@ HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt
                              auto pE( pC+2 );
                              if( pE < eos && chLSQ==*pE++ ) {
                                 const auto long_level( Lua_long_level( pE, eos ) );
+            //                  const auto long_level( Lua_long_level( rl, pE-eos ) );
                                 if( long_level >= 0 ) {
                                    d_long_comment = true;
                                    d_long_level = long_level; // may == 0
