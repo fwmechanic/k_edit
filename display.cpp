@@ -1253,18 +1253,19 @@ STATIC_FXN int Lua_long_level( stref rl, sridx ix ) { // ix indexes PAST first L
 
 HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {
-         switch( *pC ) { default: break;
-            case chQuot1: pt.col = (pC - bos) + 1;  return in_1Qstr;
-            case chQuot2: pt.col = (pC - bos) + 1;  return in_2Qstr;
-            case chLSQ: { const auto long_level( Lua_long_level( rl, pC-bos+1 ) );
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+      for( ; pt.col < rl.length() ; ++pt.col ) {
+         switch( rl[pt.col] ) {
+            default:     break;
+            case chQuot1: ++pt.col;  return in_1Qstr;
+            case chQuot2: ++pt.col;  return in_2Qstr;
+            case chLSQ: { const auto long_level( Lua_long_level( rl, pt.col+1 ) );
                           if( long_level >= 0 ) {
                              d_long_comment = false;
                              d_long_level = long_level; // may == 0
-                             if( pC+1+d_long_level+2 < eos ) {
-                                d_start_C.Set( pt.lin, pC-bos );
-                                pt.col = ((pC+1+d_long_level+2) - bos) + 1;
+                             if( pt.col+1+d_long_level+2 < rl.length() ) {
+                                d_start_C.Set( pt.lin, pt.col );
+                                pt.col += (1+d_long_level+2) + 1;
                                 }
                              else { // Lua long string opening delim immed followed by \n discards this initial \n
                                 pt.lin++;
@@ -1274,19 +1275,19 @@ HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt
                              return in_long;
                              }
                         } break;
-            case '-':     if( pC+1<eos && '-'==pC[1] ) {
-                             auto pE( pC+2 );
-                             if( pE < eos && chLSQ==*pE++ ) {
-                                const auto long_level( Lua_long_level( rl, pE-bos ) );
+            case '-':     if( pt.col+1<rl.length() && '-'==rl[1+pt.col] ) {
+                             auto ie( pt.col+2 );
+                             if( ie < rl.length() && chLSQ==rl[ie++] ) {
+                                const auto long_level( Lua_long_level( rl, ie ) );
                                 if( long_level >= 0 ) {
                                    d_long_comment = true;
                                    d_long_level = long_level; // may == 0
-                                   d_start_C.Set( pt.lin, pC-bos );
-                                   pt.col = ((pC+1+d_long_level+2) - bos) + 1;
+                                   d_start_C.Set( pt.lin, pt.col );
+                                   pt.col += (1+d_long_level+2) + 1;
                                    return in_long;
                                    }
                                 }
-                             add_comment( pt.lin, pC-bos, pt.lin, eos-bos );
+                             add_comment( pt.lin, pt.col, pt.lin, rl.length() );
                              goto NEXT_LINE;
                              }
                        break;
