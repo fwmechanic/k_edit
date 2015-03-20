@@ -1460,23 +1460,26 @@ find_end_Qstr1r( HiliteAddin_python, find_end_2Qrstr, chQuot2 )
 #undef find_end_Qstr1e
 #undef find_end_Qstr1r
 
-#define find_end_Qstr3e( class, nm, delim, backslash_escapes )                 \
-class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE()    \
-      for( auto pC=bos+pt.col ; pC<eos ; ++pC ) {                              \
-         switch( *pC ) { default: break;                                       \
-            case '\\' :  if( backslash_escapes ) ++pC; /* skip escaped char */ break; \
-            case delim:  if( pC+2<eos && pC[0]==pC[1] && pC[0]==pC[2] ) {      \
-                            pt.col = ((pC+3) - bos) + 1;                       \
-                            add_litstr( d_start_C.lin, d_start_C.col, pt.lin, pC-bos-1 ); \
-                            d_in_3str = false;                                 \
-                            return in_code;                                    \
-                            }                                                  \
-                         break;                                                \
-            }                                                                  \
-         }                                                                     \
-      }                                                                        \
-   return atEOF;                                                               \
+#define find_end_Qstr3e( class, nm, delim, backslash_escapes )                                    \
+class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                                             \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()                     \
+      for( ; pt.col < rl.length() ; ++pt.col ) {                                                  \
+         switch( rl[pt.col] ) {                                                                   \
+            default:     break;                                                                   \
+            case '\\' :  if( backslash_escapes ) { ++pt.col; } /* skip escaped char */            \
+                         break;                                                                   \
+            case delim:  const auto qch( rl[pt.col] );                                            \
+                         if( pt.col+2 < rl.length() && qch==rl[1+pt.col] && qch==rl[2+pt.col] ) { \
+                            add_litstr( d_start_C.lin, d_start_C.col, pt.lin, pt.col-1 );         \
+                            pt.col += 4;                                                          \
+                            d_in_3str = false;                                                    \
+                            return in_code;                                                       \
+                            }                                                                     \
+                         break;                                                                   \
+            }                                                                                     \
+         }                                                                                        \
+      }                                                                                           \
+   return atEOF;                                                                                  \
    }
 
        find_end_Qstr3e( HiliteAddin_python, find_end_1Q3str , chQuot1, true  );
