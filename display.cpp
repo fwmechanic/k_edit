@@ -1122,7 +1122,7 @@ public:
    PCChar Name() const override { return "C_Comment"; }
    };
 
-#define START_LINE()    const auto rl( pFile->PeekRawLine( pt.lin ) ); PCChar bos( rl.data() ), eos( rl.data()+rl.length() );
+#define START_LINE()    const auto rl( pFile->PeekRawLine( pt.lin ) ); const auto bos( rl.data() ); const auto eos( rl.data()+rl.length() );
 #define START_LINE_X()  const auto rl( pFile->PeekRawLine( pt.lin ) );
 #define SEQ3( first )   (pt.col+2 < rl.length() && first==rl[1+pt.col] && first==rl[2+pt.col])
 
@@ -1240,18 +1240,6 @@ public:
    PCChar Name() const override { return "Lua_Comment"; }
    };
 
-STATIC_FXN int Lua_long_level( PCChar pE, PCChar eos ) { // pE points PAST first LSQ (which has already been detected, thus Lua_long_level is being called)
-   auto num_eqs( 0 );
-   while( pE < eos ) {
-      switch( *pE++ ) {
-         case '='  :      ++num_eqs; break;
-         case chLSQ: return num_eqs;
-         default   : return -1;
-         }
-      }
-   return -1;
-   }
-
 STATIC_FXN int Lua_long_level( stref rl, sridx ix ) { // ix indexes PAST first LSQ (which has already been detected, thus Lua_long_level is being called)
    for( auto num_eqs( 0 ) ; ix < rl.length() ; ++ix ) {
       switch( rl[ix] ) {
@@ -1270,8 +1258,7 @@ HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt
          switch( *pC ) { default: break;
             case chQuot1: pt.col = (pC - bos) + 1;  return in_1Qstr;
             case chQuot2: pt.col = (pC - bos) + 1;  return in_2Qstr;
-        //  case chLSQ: { const auto long_level( Lua_long_level( pC+1, eos ) );
-            case chLSQ: { const auto long_level( Lua_long_level( rl, pC-eos+1 ) );
+            case chLSQ: { const auto long_level( Lua_long_level( rl, pC-bos+1 ) );
                           if( long_level >= 0 ) {
                              d_long_comment = false;
                              d_long_level = long_level; // may == 0
@@ -1290,8 +1277,7 @@ HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt
             case '-':     if( pC+1<eos && '-'==pC[1] ) {
                              auto pE( pC+2 );
                              if( pE < eos && chLSQ==*pE++ ) {
-                                const auto long_level( Lua_long_level( pE, eos ) );
-            //                  const auto long_level( Lua_long_level( rl, pE-eos ) );
+                                const auto long_level( Lua_long_level( rl, pE-bos ) );
                                 if( long_level >= 0 ) {
                                    d_long_comment = true;
                                    d_long_level = long_level; // may == 0
