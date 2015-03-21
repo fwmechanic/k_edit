@@ -27,20 +27,18 @@ local hiPink   = INTENSE + 5
 local hiYellow = INTENSE + 6
 local hiWhite  = INTENSE + 7
 
-local darkColors =
-   {
-   text            = cc(   Black  ,   Yellow ),
+local darkColors = {
+   text            = cc(   Black  ,   White ),
    cursorShadow    = cc(   Green  , hiYellow ),
-   cppc            = cc(   Gray   , hiWhite  ),
+   cppc            = cc(   Red    , hiWhite  ),
    hilight         = cc(   Cyan   , hiWhite  ),
    selection       = cc(   Green  , hiWhite  ),
-   wordUnderCursor = cc( hiWhite  ,   Cyan   ),
-   dimmed          = cc(   Black  , hiGreen  ),
-   litStr          = cc(   Blue   , hiRed    ),
+   wordUnderCursor = cc(  Blue  ,   Yellow  ),
+   dimmed          = cc(   Black  ,   Green  ),
+   litStr          = cc(   Purple   ,   White    ),
    }
 
-local stdColors =
-   {
+local stdColors = {
    text            = cc(   Blue   , hiYellow ),
    cursorShadow    = cc(   Green  , hiYellow ),
    cppc            = cc(   Gray   , hiWhite  ),
@@ -65,9 +63,9 @@ local function colors( tbl, meta )
 
 local text_settings  = { colors = stdColors, eolCommentDelim = "" }
 local bat_settings   = { colors = stdColors, eolCommentDelim = "rem " }
-local clang_settings = { colors = stdColors, eolCommentDelim = "//" }
-local lua_settings   = { colors = DeepCopy(stdColors), eolCommentDelim = "--" }
-      lua_settings.colors.dimmed = cc( Blue, hiPink )
+local clang_settings = { colors = darkColors, eolCommentDelim = "//" }
+local lua_settings   = { colors = DeepCopy(darkColors) }
+    -- lua_settings.colors.dimmed = cc( Blue, hiPink )
 
 local python_settings  = { colors = stdColors, eolCommentDelim = "#" }
 local perl_settings  = { colors = stdColors, eolCommentDelim = "#" }
