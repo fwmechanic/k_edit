@@ -1004,7 +1004,7 @@ STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 
    return rv;
    }
 
-void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name() );
+void FBOP::AssignFromRsrc( PFBUF fb ) {  1 && DBG( "%s '%s'", __func__, fb->Name() );
    // 1. assigns "curfile..." macros based on this FBUF
    // 2. loads rsrc file section for [extension and] ftype of this FBUF
   #if MACRO_BACKSLASH_ESCAPES
@@ -1037,6 +1037,7 @@ void FBOP::AssignFromRsrc( PFBUF fb ) {  0 && DBG( "%s '%s'", __func__, fb->Name
       if( !ftype.empty() ) {
          RsrcLdSectionFtype( ftype );
          }
+      0 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), fb->Name() );
       }
    }
 

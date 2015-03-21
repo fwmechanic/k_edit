@@ -244,7 +244,10 @@ struct FTypeSetting {
 
    void  Update();
 
-   FTypeSetting( Path::str_t ext ) : d_key( ext ) { Update(); }
+   FTypeSetting( Path::str_t ext ) : d_key( ext ) {
+      0 && DBG( "%s CTOR: '%s' ----------------------------------------------", __func__, d_key.c_str() );
+      Update();
+      }
    ~FTypeSetting() {}
 
    };
@@ -2064,7 +2067,7 @@ GLOBAL_VAR bool g_fLangHilites = true;
 void View::HiliteAddins_Init() {
    if( g_fLangHilites ) {
       DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
-      if( d_addins.empty() && d_pFBuf->HasLines() ) {
+      if( d_addins.empty() && d_pFBuf->HasLines() ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, d_pFBuf->FType().c_str() );
          const auto hasEolComment( GetFTypeSettings()->d_eolCommentDelim[0] );
         #define L(lang) d_pFBuf->FTypeEq(#lang)
         #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
@@ -2230,8 +2233,6 @@ void View::EnsureWinContainsCursor() {
 // initialize these fields
 //
 void View::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, this->FBuf()->Name() );
-   GetFTypeSettings();
-
    // BUGBUG This causes the View list to link to self; don't know why!?
    // ViewHead &cvwHd = g_CurViewHd();
    // DLINK_INSERT_FIRST( cvwHd, this, dlink );
