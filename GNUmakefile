@@ -35,6 +35,7 @@
 # $*  The stem with which an implicit rule matches
 #
 
+.SUFFIXES:
 .PHONY: zap clean cleanliblua
 
 # APP_IN_DLL = 1

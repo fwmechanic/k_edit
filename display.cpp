@@ -264,7 +264,7 @@ void FTypeSetting::Update() { enum { DB=0 };
       d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf, c2L.dflt );   DB && DBG( "%s: %s = 0x%02X", __func__, kybuf, d_colors[ c2L.ofs ] );
       }
 
-   d_colors[ COLOR::CXY ] = GenAltHiliteColor( d_colors[ COLOR::FG ] );
+// d_colors[ COLOR::CXY ] = GenAltHiliteColor( d_colors[ COLOR::FG ] );
    }
 
 void InitFTypeSettings() {

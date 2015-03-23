@@ -18,24 +18,27 @@ local Purple   = 5
 local Yellow   = 6
 local White    = 7
 local            INTENSE = 8
-local Gray     = INTENSE + 0
-local hiBlue   = INTENSE + 1
-local hiGreen  = INTENSE + 2
-local hiCyan   = INTENSE + 3
-local hiRed    = INTENSE + 4
-local hiPink   = INTENSE + 5
-local hiYellow = INTENSE + 6
-local hiWhite  = INTENSE + 7
+local Gray     = INTENSE + Black
+local hiBlue   = INTENSE + Blue
+local hiGreen  = INTENSE + Green
+local hiCyan   = INTENSE + Cyan
+local hiRed    = INTENSE + Red
+local hiPink   = INTENSE + Purple
+local hiYellow = INTENSE + Yellow
+local hiWhite  = INTENSE + White
 
 local darkColors = {
+   text            = cc(   Black  ,   Green ),
    text            = cc(   Black  ,   White ),
    cursorShadow    = cc(   Green  , hiYellow ),
    cppc            = cc(   Red    , hiWhite  ),
    hilight         = cc(   Cyan   , hiWhite  ),
    selection       = cc(   Green  , hiWhite  ),
-   wordUnderCursor = cc(  Blue  ,   Yellow  ),
+   wordUnderCursor = cc(  Cyan  ,     White  ),
    dimmed          = cc(   Black  ,   Green  ),
-   litStr          = cc(   Purple   ,   White    ),
+   dimmed          = cc(   Black  ,   Yellow  ),
+   litStr          = cc(  Gray  ,    Black  ),
+   litStr          = cc(  Black  ,   Purple  ),
    }
 
 local stdColors = {
