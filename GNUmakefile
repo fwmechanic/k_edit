@@ -183,11 +183,11 @@ ifdef DBG_BUILD
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
 else
 
-ifdef ComSpec
+  ifdef ComSpec
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_) -Wl,--dynamicbase
-else
+  else
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
-endif
+  endif
 
 endif
 
@@ -401,14 +401,16 @@ endif
 # end patch
 #######################################################################################
 
-BLD_CXX = $(COMPILE.cpp) $(OUTPUT_OPTION) $<
+ifeq "" ""
 BLD_CXX = @echo COMPILE.cpp $<&&$(COMPILE.cpp) $(OUTPUT_OPTION) $<
+BLD_C   = @echo COMPILE.c $<&&$(COMPILE.c) $(OUTPUT_OPTION) $<
+else
+BLD_CXX = $(COMPILE.cpp) $(OUTPUT_OPTION) $<
+BLD_C   = $(COMPILE.c) $(OUTPUT_OPTION) $<
+endif
 
 %.o: %.cpp
 	$(BLD_CXX)
-
-BLD_C = @echo COMPILE.c $<&&$(COMPILE.c) $(OUTPUT_OPTION) $<
-BLD_C = $(COMPILE.c) $(OUTPUT_OPTION) $<
 
 %.o: %.c
 	$(BLD_C)
@@ -424,7 +426,7 @@ BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $
 ifneq "$(MAKECMDGOALS)" "zap"
 ifneq "$(MAKECMDGOALS)" "clean"
 
-  -include $(OBJS:.o=.d)
+  -include $(patsubst %.o,%.d,$(OBJS))
 
 endif
 endif
