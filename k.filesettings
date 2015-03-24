@@ -27,20 +27,6 @@ local hiPink   = INTENSE + Purple
 local hiYellow = INTENSE + Yellow
 local hiWhite  = INTENSE + White
 
-local darkColors = {
-   text            = cc(   Black  ,   Green ),
-   text            = cc(   Black  ,   White ),
-   cursorShadow    = cc(   Green  , hiYellow ),
-   cppc            = cc(   Red    , hiWhite  ),
-   hilight         = cc(   Cyan   , hiWhite  ),
-   selection       = cc(   Green  , hiWhite  ),
-   wordUnderCursor = cc(  Cyan  ,     White  ),
-   dimmed          = cc(   Black  ,   Green  ),
-   dimmed          = cc(   Black  ,   Yellow  ),
-   litStr          = cc(  Gray  ,    Black  ),
-   litStr          = cc(  Black  ,   Purple  ),
-   }
-
 local stdColors = {
    text            = cc(   Blue   , hiYellow ),
    cursorShadow    = cc(   Green  , hiYellow ),
@@ -54,6 +40,21 @@ local stdColors = {
    litStr          = cc(   Green  , hiCyan  ),
    litStr          = cc(   Black  , hiCyan  ),
    litStr          = cc(   Black  , hiRed  ),
+   }
+
+local darkColors = {
+   text            = cc(   Black  ,   Green ),
+   text            = cc(   Black  ,   White ),
+   cursorShadow    = cc(   Blue   , hiYellow ),
+   cppc            = cc(   Red    , hiWhite  ),
+   hilight         = cc(   Cyan   , hiWhite  ),
+   selection       = cc(   Green  , hiWhite  ),
+   wordUnderCursor = cc(  Cyan  ,     White  ),
+   wordUnderCursor = cc(  Cyan  ,     Black  ),
+   dimmed          = cc(   Black  ,   Green  ),
+   dimmed          = cc(   Black  ,   Yellow  ),
+   litStr          = cc(  Gray  ,    Black  ),
+   litStr          = cc(  Black  ,   Purple  ),
    }
 
 local Color = {}
@@ -71,7 +72,7 @@ local lua_settings   = { colors = DeepCopy(darkColors) }
     -- lua_settings.colors.dimmed = cc( Blue, hiPink )
 
 local python_settings  = { colors = stdColors, eolCommentDelim = "#" }
-local perl_settings  = { colors = stdColors, eolCommentDelim = "#" }
+local perl_settings  = { colors = darkColors, eolCommentDelim = "#" }
 local ushell_settings= { colors = darkColors, eolCommentDelim = "#" }
 
 ftype_map = {  -- ref'd from C
