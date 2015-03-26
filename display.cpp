@@ -282,18 +282,25 @@ void CloseFTypeSettings() {
    }
 
 STATIC_FXN FTypeSetting *InitFTypeSetting( const Path::str_t &ftype ) {
+   0 && DBG( "%s+ ---------------------------------------------- PROBING [%s]", __func__, ftype.c_str() );
    int equal;
    auto pNd( rb_find_gte_sri( &equal, s_FTS_idx, ftype ) );
-   if( equal ) return IdxNodeToFTS( pNd );
-   auto pNew( new FTypeSetting( ftype ) );
+   if( equal ) { 0 && DBG( "%s FOUND [%s]", __func__, ftype.c_str() );
+      return IdxNodeToFTS( pNd );
+      }
+   auto pNew( new FTypeSetting( ftype ) ); 0 && DBG( "%s CREATING [%s]", __func__, ftype.c_str() );
    rb_insert_before( s_FTS_idx, pNd, pNew->d_key.c_str(), pNew );
    return pNew;
    }
 
 void Reread_FTypeSettings() { // bugbug need to hook this up to something
+   0 && DBG( "%s+ ----------------------------------------------", __func__ );
    for( auto pNd(rb_first( s_FTS_idx )) ; pNd != rb_last( s_FTS_idx ) ; pNd = rb_next( pNd ) ) {
-      IdxNodeToFTS( pNd )->Update();
+      const auto pFTS( IdxNodeToFTS( pNd ) );
+      0 && DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
+      pFTS->Update();
       }
+   0 && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
 
@@ -307,7 +314,8 @@ GLOBAL_CONST unsigned char *g_colorVars[] = {
 static_assert( ELEMENTS(g_colorVars) == (COLOR::COLOR_COUNT - COLOR::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == COLOR::COLOR_COUNT" );
 
 FTypeSetting *View::GetFTypeSettings() {
-   if( !d_pFTS ) {
+   if( !d_pFTS ) {                 0 && DBG( "%s+ ---------------------------------------------- %s", __func__, d_pFBuf->Name() );
+      d_pFBuf->DetermineFType();
       d_pFTS = ::InitFTypeSetting( d_pFBuf->FType() );
       }
    return d_pFTS;
@@ -2065,32 +2073,33 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
 GLOBAL_VAR bool g_fLangHilites = true;
 
 void View::HiliteAddins_Init() {
-   if( g_fLangHilites ) {
-      DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
-      if( d_addins.empty() && d_pFBuf->HasLines() ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, d_pFBuf->FType().c_str() );
-         const auto hasEolComment( GetFTypeSettings()->d_eolCommentDelim[0] );
-        #define L(lang) d_pFBuf->FTypeEq(#lang)
-        #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
-         /* the last-inserted InsertAddinLast has "last say" and therefore "wins".  Thus because I want
-            HiliteAddin_CursorLine, to be visible in all cases, it's added last */
-                /* ALWAYS */               { IAL( HiliteAddin_Pbal            ); }
-         if     ( L(clang)               ) { IAL( HiliteAddin_cond_CPP        );
-                                             IAL( HiliteAddin_clang           ); }
-         else if( L(make)                ) { IAL( HiliteAddin_cond_gmake      );
-                                             IAL( HiliteAddin_python          ); }
-         else if( L(lua)                 ) { IAL( HiliteAddin_lua             ); }
-         else if( L(perl) || L(python)   ) { IAL( HiliteAddin_python          ); }
-         else if( L(bash) || L(sh)       ) { IAL( HiliteAddin_bash            ); }
-         else if( L(diff)                ) { IAL( HiliteAddin_Diff            ); }
-         else if( hasEolComment          ) { IAL( HiliteAddin_EolComment      ); }
+   const auto pFTS( GetFTypeSettings() );
+   DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
+   if( g_fLangHilites && d_addins.empty() &&
+       (d_pFBuf->HasLines() || d_pFBuf->FnmIsPseudo())
+     ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, d_pFBuf->FType().c_str() );
+      const auto hasEolComment( pFTS->d_eolCommentDelim[0] );
+     #define L(lang) d_pFBuf->FTypeEq(#lang)
+     #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
+      /* the last-inserted InsertAddinLast has "last say" and therefore "wins".  Thus because I want
+         HiliteAddin_CursorLine, to be visible in all cases, it's added last */
+             /* ALWAYS */               { IAL( HiliteAddin_Pbal            ); }
+      if     ( L(clang)               ) { IAL( HiliteAddin_cond_CPP        );
+                                          IAL( HiliteAddin_clang           ); }
+      else if( L(make)                ) { IAL( HiliteAddin_cond_gmake      );
+                                          IAL( HiliteAddin_python          ); }
+      else if( L(lua)                 ) { IAL( HiliteAddin_lua             ); }
+      else if( L(perl) || L(python)   ) { IAL( HiliteAddin_python          ); }
+      else if( L(bash) || L(sh)       ) { IAL( HiliteAddin_bash            ); }
+      else if( L(diff)                ) { IAL( HiliteAddin_Diff            ); }
+      else if( hasEolComment          ) { IAL( HiliteAddin_EolComment      ); }
 
-                /* ALWAYS */               { IAL( HiliteAddin_WordUnderCursor ); }
-         if( USE_HiliteAddin_CompileLine ) { IAL( HiliteAddin_CompileLine     ); }
-         if( USE_HiliteAddin_CursorLine  ) { IAL( HiliteAddin_CursorLine      ); }
-         DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
-        #undef IAL
-        #undef L
-         }
+             /* ALWAYS */               { IAL( HiliteAddin_WordUnderCursor ); }
+      if( USE_HiliteAddin_CompileLine ) { IAL( HiliteAddin_CompileLine     ); }
+      if( USE_HiliteAddin_CursorLine  ) { IAL( HiliteAddin_CursorLine      ); }
+      DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
+     #undef IAL
+     #undef L
       }
    }
 
@@ -2808,7 +2817,8 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR "%s]", BSR( pfh->FType() ), LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).k_str() );
-   cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).k_str() );
+// cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).k_str() );
+   cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR ":%s]", BSR(LastRsrcLdFileSectionNmTruncd()), g_CurView()->d_pFTS ? g_CurView()->d_pFTS->d_key.c_str() : "?" ).k_str() );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).k_str() );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).k_str() );
    cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).k_str() );

@@ -43,8 +43,9 @@ local stdColors = {
    }
 
 local darkColors = {
-   text            = cc(   Black  ,   Green ),
    text            = cc(   Black  ,   White ),
+   text            = cc(   Black  ,   Green ),
+   text            = cc(   Black  , hiGreen ),
    cursorShadow    = cc(   Blue   , hiYellow ),
    cppc            = cc(   Red    , hiWhite  ),
    hilight         = cc(   Cyan   , hiWhite  ),
@@ -65,15 +66,15 @@ local function colors( tbl, meta )
    return tbl
    end
 
-local text_settings  = { colors = stdColors, eolCommentDelim = "" }
+local text_settings  = { colors = stdColors }
 local bat_settings   = { colors = stdColors, eolCommentDelim = "rem " }
-local clang_settings = { colors = darkColors, eolCommentDelim = "//" }
+local clang_settings = { colors = darkColors }
 local lua_settings   = { colors = DeepCopy(darkColors) }
     -- lua_settings.colors.dimmed = cc( Blue, hiPink )
 
-local python_settings  = { colors = stdColors, eolCommentDelim = "#" }
-local perl_settings  = { colors = darkColors, eolCommentDelim = "#" }
-local ushell_settings= { colors = darkColors, eolCommentDelim = "#" }
+local python_settings  = { colors = stdColors }
+local perl_settings  = { colors = darkColors }
+local ushell_settings= { colors = darkColors }
 
 ftype_map = {  -- ref'd from C
    clang        = clang_settings                       ,
@@ -86,8 +87,8 @@ ftype_map = {  -- ref'd from C
    text         = text_settings                        ,
    sh           = ushell_settings                      ,
    bash         = ushell_settings                      ,
+   pseudo       = ushell_settings                      ,
+   unknown      = ushell_settings                      ,
+   wildcard     = ushell_settings                      ,
    [""]         = { colors = stdColors }               ,
-   ["<>"]       = { colors = stdColors }               ,
-   ["*"]        = { colors = stdColors }               ,
-   -- ["*"]     = colors{ colors = stdColors }         ,
    }

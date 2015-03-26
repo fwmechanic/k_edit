@@ -775,6 +775,7 @@ bool ARG::refresh() {
     default:       return BadArg();
 
     case NOARG:    { PCF;
+                   Reread_FTypeSettings();
                    if(  pcf->FnmIsDiskWritable() // no confirm if WC file
                      && pcf->IsDirty()           // only confirm if DIRTY file
                      && !ConIO::Confirm( "WARNING: current buffer has unsaved edits; are you SURE you want to reread this file? " )
@@ -1004,6 +1005,24 @@ STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 
    return rv;
    }
 
+void FBUF::DetermineFType() {
+// if( FTypeEmpty() ) {
+      auto ftype( content_to_ftype( this ) );  0 && DBG( "%s ?%" PR_BSR "'", __func__, BSR(ftype) );
+      if( ftype.empty() ) {
+         const auto ext( GetRsrcExt( this ) );
+         if( eq( ext, EXT_NO_EXT ) && !(ftype=fnm_to_ftype( this )).empty() ) {
+            }
+         else {
+            s_cur_Ftype_assigned = false;
+            ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "";
+            }
+         }
+      Set_s_cur_Ftype( ftype );
+      SetFType( ftype );
+      1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), Name() );
+//    }
+   }
+
 void FBOP::AssignFromRsrc( PFBUF fb ) {  1 && DBG( "%s '%s'", __func__, fb->Name() );
    // 1. assigns "curfile..." macros based on this FBUF
    // 2. loads rsrc file section for [extension and] ftype of this FBUF
@@ -1023,21 +1042,12 @@ void FBOP::AssignFromRsrc( PFBUF fb ) {  1 && DBG( "%s '%s'", __func__, fb->Name
    if( fb->IsRsrcLdBlocked() ) {
       }
    else {
-      auto ftype( content_to_ftype( fb ) );  0 && DBG( "%s ?%" PR_BSR "'", __func__, BSR(ftype) );
-      if( ftype.empty() ) {
-         if( eq( ext, EXT_NO_EXT ) && !(ftype=fnm_to_ftype( fb )).empty() ) {
-            }
-         else {
-            s_cur_Ftype_assigned = false;
-            ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "";
-            }
-         }
-      Set_s_cur_Ftype( ftype );
-      fb->SetFType( ftype );
+      fb->DetermineFType();
+      const auto ftype( fb->FType() );
       if( !ftype.empty() ) {
          RsrcLdSectionFtype( ftype );
          }
-      0 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), fb->Name() );
+      1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), fb->Name() );
       }
    }
 

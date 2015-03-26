@@ -899,7 +899,8 @@ public:
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
 
-private:
+//private:
+public:
    FTypeSetting *d_pFTS = nullptr;
 public:
    FTypeSetting *GetFTypeSettings();
@@ -1278,7 +1279,9 @@ private:
 
 public:
    const std::string &FType()            const { return  d_ftype; }
+   bool           FTypeEmpty()           const { return  d_ftype.empty(); }
    bool           FTypeEq( stref ft )    const { return  eq( d_ftype, ft ); }
+   void           DetermineFType();
    void           SetFType( stref ft )         {         d_ftype.assign( BSR2STR(ft) ); }
 
  #ifdef           fn_su
