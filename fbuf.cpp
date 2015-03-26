@@ -1019,7 +1019,7 @@ void FBUF::DetermineFType() {
          }
       Set_s_cur_Ftype( ftype );
       SetFType( ftype );
-      1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), Name() );
+      0 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), Name() );
 //    }
    }
 
