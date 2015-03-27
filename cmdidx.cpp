@@ -604,7 +604,7 @@ STATIC_FXN void DeleteCmd( PCMD pCmd ) {
 int CmdIdxRmvCmdsByFunction( funcCmd pFxn ) {
    auto rv(0);
    stref pPrevKey;
-   for( auto pNd=rb_first( s_CmdIdxAddins ) ; pNd != rb_last( s_CmdIdxAddins ); pNd = rb_next( pNd ) ) {
+   rb_traverse( pNd, s_CmdIdxAddins ) {
       {
       const auto pCmd( IdxNodeToPCMD( pNd ) );
       if( pCmd->d_func != pFxn ) {
@@ -634,11 +634,11 @@ int CmdIdxRmvCmdsByFunction( funcCmd pFxn ) {
 
 // iterator APIs
 
-PCmdIdxNd CmdIdxNext( PCmdIdxNd pNd )   { return rb_next(  pNd      ); }
-PCmdIdxNd CmdIdxAddinFirst()            { return rb_first( s_CmdIdxAddins ); }
-PCmdIdxNd CmdIdxAddinLast()             { return rb_last(  s_CmdIdxAddins ); }
+PCmdIdxNd CmdIdxNext( PCmdIdxNd pNd )      { return rb_next(  pNd      ); }
+PCmdIdxNd CmdIdxAddinFirst()               { return rb_first( s_CmdIdxAddins ); }
+PCmdIdxNd CmdIdxAddinNil()                 { return rb_nil( s_CmdIdxAddins ); }
 PCmdIdxNd CmdIdxAddinNext( PCmdIdxNd pNd ) { return rb_next(  pNd      ); }
-PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd ) { return IdxNodeToPCMD( pNd ); }
+PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd )    { return IdxNodeToPCMD( pNd ); }
 
 void FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 ) {
    FBufRead_Assign_SubHd( pFBuf, "Intrinsic Functions", ELEMENTS( g_CmdTable ) );
@@ -651,7 +651,7 @@ void WalkAllCMDs( void *pCtxt, CmdVisit visit ) { 0 && DBG( "%s+", __func__ );
    for( auto &cand : g_CmdTable ) {
       visit( &cand, pCtxt );
       }
-   for( auto pNd=CmdIdxAddinFirst() ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
+   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       visit( CmdIdxToPCMD( pNd ), pCtxt );
       }
    }

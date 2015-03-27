@@ -355,7 +355,7 @@ extern  PCMD   CmdFromName( stref name );
 
 typedef RbNode *PCmdIdxNd;
 extern  PCmdIdxNd CmdIdxAddinFirst()           ;
-extern  PCmdIdxNd CmdIdxAddinLast()            ;
+extern  PCmdIdxNd CmdIdxAddinNil()             ;
 extern  PCmdIdxNd CmdIdxNext(   PCmdIdxNd pNd );
 extern  PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd );
 

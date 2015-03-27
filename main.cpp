@@ -426,7 +426,6 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
    BoolOneShot NeedToQueryUser;
 
 #if FBUF_TREE
-   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead,dlinkAllFBufs,pFBuf)
@@ -439,7 +438,6 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
          if( NeedToQueryUser() ) {
             auto numDirtyFiles(0);
 #if FBUF_TREE
-            RbNode *pNd2;
             rb_traverse( pNd2, g_FBufIdx )
 #else
             DLINKC_FIRST_TO_LASTA(g_FBufHead,dlinkAllFBufs,pFBuf2)

@@ -90,5 +90,6 @@ ftype_map = {  -- ref'd from C
    pseudo       = ushell_settings                      ,
    unknown      = ushell_settings                      ,
    wildcard     = ushell_settings                      ,
+   diff         = text_settings                        ,
    [""]         = { colors = stdColors }               ,
    }

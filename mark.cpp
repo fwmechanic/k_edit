@@ -128,7 +128,6 @@ bool ARG::showmarks() {
 
    auto totalMarks(0);
 #if FBUF_TREE
-   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
@@ -167,7 +166,6 @@ struct FileHasMark {
 
 STATIC_FXN bool FindMarkAllFiles( PCChar pszMarkname, FBufLocn *pFL ) {
 #if FBUF_TREE
-   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
@@ -199,7 +197,6 @@ bool MarkGoto( PCChar pszMarkname ) {
 STATIC_FXN int MarkDelete( PCChar pszMarkname, bool fVerbose=true ) {
    int totalMarks = 0;
 #if FBUF_TREE
-   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)

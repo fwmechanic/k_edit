@@ -113,7 +113,6 @@ STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFB
       }
    else {
 #if FBUF_TREE
-      RbNode *pNd;
       rb_traverse( pNd, g_FBufIdx )
 #else
       DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
@@ -187,7 +186,7 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    // We do most print loops twice: first time to determine the count for the header
    auto macroCmds(0);
    auto luaCmds  (0);
-   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
+   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if(      pCmd->IsRealMacro() ) ++macroCmds;
       else if( pCmd->IsLuaFxn()    ) ++luaCmds  ;
@@ -197,7 +196,7 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    std::vector<stref> coll_tmp;
    std::string tmp1, tmp2;
    FBufRead_Assign_SubHd( pFBuf, "Lua functions", luaCmds );
-   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
+   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsLuaFxn() ) PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
       }
@@ -205,7 +204,7 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    FBufRead_Assign_intrinsicCmds( pFBuf, coll_tmp, tmp1, tmp2 );
 
    FBufRead_Assign_SubHd( pFBuf, "Macros", macroCmds );
-   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
+   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsRealMacro() ) PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
       }
@@ -283,7 +282,6 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
 
    {
 #if FBUF_TREE
-   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
@@ -304,7 +302,6 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
    //*** content-fill pass:
 
 #if FBUF_TREE
-   RbNode *pNd;
    rb_traverse( pNd, g_FBufIdx )
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
@@ -347,14 +344,14 @@ STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
    auto nmLen(0);
 
-   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) {
+   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsRealMacro() ) {
          Max( &nmLen, Strlen( pCmd->Name() ) );
          }
       }
 
-   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinLast() ; pNd = CmdIdxNext( pNd ) ) { // sorted traversal
+   for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) { // sorted traversal
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsRealMacro() )
          pFBuf->PutLastLine( SprintfBuf( "%-*s %s", nmLen, pCmd->Name(), pCmd->MacroText() ) );

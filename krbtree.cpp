@@ -1152,7 +1152,6 @@ const char * rb_tree_corrupt( RbTree *tree, PRbInfo pInfo )
 
    size_t fwdCt = 0;
    size_t rvsCt = 0;
-   RbNode *ptr;
    if( rbn_corrupt(tree) )   return "RB_HEAD_CORRUPT";
    rb_traverse(ptr, tree)
       {

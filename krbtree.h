@@ -239,8 +239,10 @@ extern void rb_logstats(            RbCtrl *pCtrl ); // write counter contents u
 // iterate thru an rb_tree in sorted (or reverse-sorted) order.
 //
 #define rb_nil(t)   static_cast<RbNode *>(t)
-#define rb_traverse( ptr, tree)  for( ptr=rb_first(tree); ptr != rb_nil(tree); ptr=rb_next(ptr) )
-#define rb_reverse(  ptr, tree)  for( ptr=rb_last( tree); ptr != rb_nil(tree); ptr=rb_prev(ptr) )
+// #define rb_traverse( ptr, tree )  for(      ptr= rb_first(tree)   ; ptr != rb_nil(tree) ; ptr=rb_next(ptr) )
+   #define rb_traverse( ptr, tree )  for( auto ptr( rb_first(tree) ) ; ptr != rb_nil(tree) ; ptr=rb_next(ptr) )
+// #define rb_reverse(  ptr, tree )  for(      ptr= rb_last(tree)    ; ptr != rb_nil(tree) ; ptr=rb_prev(ptr) )
+   #define rb_reverse(  ptr, tree )  for( auto ptr( rb_last(tree) )  ; ptr != rb_nil(tree) ; ptr=rb_prev(ptr) )
 
 /////////////////////////////////////////////////////////////////////////////
 //

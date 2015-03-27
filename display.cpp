@@ -238,6 +238,7 @@ STATIC_VAR RbTree *s_FTS_idx;
 STATIC_FXN inline FTypeSetting *IdxNodeToFTS( RbNode *pNd ) { return static_cast<FTypeSetting *>( rb_val(pNd) ); }  // type-safe conversion function
 
 struct FTypeSetting {
+   enum { DB=0 };
    Path::str_t d_key;  // rbtree key
    ViewColors  d_colors;
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
@@ -252,7 +253,17 @@ struct FTypeSetting {
 
    };
 
-void FTypeSetting::Update() { enum { DB=0 };
+
+STATIC_FXN int Show_FTypeSettings() {                                        FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
+   rb_traverse( pNd, s_FTS_idx ) {
+      const auto pFTS( IdxNodeToFTS( pNd ) );
+      FTypeSetting::DB && DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
+      }                                                                      FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
+   return 1;
+   }
+
+
+void FTypeSetting::Update() {
    linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
    snprintf_full( &pbuf, &kybufBytes, "filesettings.ftype_map.%s.", d_key.c_str() );
    d_eolCommentDelim[0] = '\0';
@@ -267,42 +278,38 @@ void FTypeSetting::Update() { enum { DB=0 };
 // d_colors[ COLOR::CXY ] = GenAltHiliteColor( d_colors[ COLOR::FG ] );
    }
 
-void InitFTypeSettings() {
+void InitFTypeSettings() {                                              FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
    STATIC_VAR RbCtrl s_FTS_idx_RbCtrl = { AllocNZ_, Free_, };
-   s_FTS_idx = rb_alloc_tree( &s_FTS_idx_RbCtrl );
+   s_FTS_idx = rb_alloc_tree( &s_FTS_idx_RbCtrl );                      FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
-STATIC_FXN void DeleteFTS( void *pData, void *pExtra ) {
+STATIC_FXN void DeleteFTS( void *pData, void *pExtra ) {                FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
    auto pFTS( static_cast<FTypeSetting *>(pData) );
-   Free0( pFTS );
+   Free0( pFTS );                                                       FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
 void CloseFTypeSettings() {
    rb_dealloc_treev( s_FTS_idx, nullptr, DeleteFTS );
    }
 
-STATIC_FXN FTypeSetting *InitFTypeSetting( const Path::str_t &ftype ) {
-   0 && DBG( "%s+ ---------------------------------------------- PROBING [%s]", __func__, ftype.c_str() );
+STATIC_FXN FTypeSetting *Get_FTypeSetting( const Path::str_t &ftype ) {
+                                                                        FTypeSetting::DB && DBG( "%s+ ---------------------------------------------- PROBING [%s]", __func__, ftype.c_str() );
    int equal;
    auto pNd( rb_find_gte_sri( &equal, s_FTS_idx, ftype ) );
-   if( equal ) { 0 && DBG( "%s FOUND [%s]", __func__, ftype.c_str() );
+   if( equal ) {                                                        FTypeSetting::DB && DBG( "%s FOUND [%s]", __func__, ftype.c_str() );
       return IdxNodeToFTS( pNd );
       }
-   auto pNew( new FTypeSetting( ftype ) ); 0 && DBG( "%s CREATING [%s]", __func__, ftype.c_str() );
+   auto pNew( new FTypeSetting( ftype ) );                              FTypeSetting::DB && DBG( "%s CREATING [%s]", __func__, ftype.c_str() );
    rb_insert_before( s_FTS_idx, pNd, pNew->d_key.c_str(), pNew );
    return pNew;
    }
 
-void Reread_FTypeSettings() { enum { DB=0 };
-   DB && DBG( "%s+ ----------------------------------------------", __func__ );
-   for( auto pNd(rb_first( s_FTS_idx )) ; pNd != rb_last( s_FTS_idx ) ; pNd = rb_next( pNd ) ) {
-      const auto pFTS( IdxNodeToFTS( pNd ) );
-      DB && DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
+void Reread_FTypeSettings() {                                           FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
+   rb_traverse( pNd, s_FTS_idx ) {
+      const auto pFTS( IdxNodeToFTS( pNd ) );                           FTypeSetting::DB && DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
       pFTS->Update();
-      }
-   DB && DBG( "%s- ----------------------------------------------", __func__ );
+      }                                                                 FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
-
 
 GLOBAL_CONST unsigned char *g_colorVars[] = {
    &g_colorInfo      ,
@@ -316,8 +323,8 @@ static_assert( ELEMENTS(g_colorVars) == (COLOR::COLOR_COUNT - COLOR::VIEW_COLOR_
 FTypeSetting *View::GetFTypeSettings() {
    if( !d_pFTS ) {                 0 && DBG( "%s+ ---------------------------------------------- %s", __func__, d_pFBuf->Name() );
       d_pFBuf->DetermineFType();
-      d_pFTS = ::InitFTypeSetting( d_pFBuf->FType() );
-      }
+      d_pFTS = ::Get_FTypeSetting( d_pFBuf->FType() );
+      } 0 && Show_FTypeSettings();
    return d_pFTS;
    }
 
