@@ -775,7 +775,6 @@ bool ARG::refresh() {
     default:       return BadArg();
 
     case NOARG:    { PCF;
-                   Reread_FTypeSettings();
                    if(  pcf->FnmIsDiskWritable() // no confirm if WC file
                      && pcf->IsDirty()           // only confirm if DIRTY file
                      && !ConIO::Confirm( "WARNING: current buffer has unsaved edits; are you SURE you want to reread this file? " )

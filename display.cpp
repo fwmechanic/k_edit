@@ -293,14 +293,14 @@ STATIC_FXN FTypeSetting *InitFTypeSetting( const Path::str_t &ftype ) {
    return pNew;
    }
 
-void Reread_FTypeSettings() { // bugbug need to hook this up to something
-   0 && DBG( "%s+ ----------------------------------------------", __func__ );
+void Reread_FTypeSettings() { enum { DB=0 };
+   DB && DBG( "%s+ ----------------------------------------------", __func__ );
    for( auto pNd(rb_first( s_FTS_idx )) ; pNd != rb_last( s_FTS_idx ) ; pNd = rb_next( pNd ) ) {
       const auto pFTS( IdxNodeToFTS( pNd ) );
-      0 && DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
+      DB && DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
       pFTS->Update();
       }
-   0 && DBG( "%s- ----------------------------------------------", __func__ );
+   DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
 
