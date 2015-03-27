@@ -292,8 +292,7 @@ void CloseFTypeSettings() {
    rb_dealloc_treev( s_FTS_idx, nullptr, DeleteFTS );
    }
 
-STATIC_FXN FTypeSetting *Get_FTypeSetting( const Path::str_t &ftype ) {
-                                                                        FTypeSetting::DB && DBG( "%s+ ---------------------------------------------- PROBING [%s]", __func__, ftype.c_str() );
+STATIC_FXN FTypeSetting *Get_FTypeSetting( const Path::str_t &ftype ) { FTypeSetting::DB && DBG( "%s+ ---------------------------------------------- PROBING [%s]", __func__, ftype.c_str() );
    int equal;
    auto pNd( rb_find_gte_sri( &equal, s_FTS_idx, ftype ) );
    if( equal ) {                                                        FTypeSetting::DB && DBG( "%s FOUND [%s]", __func__, ftype.c_str() );

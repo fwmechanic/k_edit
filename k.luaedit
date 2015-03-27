@@ -1991,7 +1991,8 @@ do
       end
 
 -- [[
-   local function gofileline_dif( fbuf, cursorY )  -- arg.fbuf, arg.cursorY
+   local function gofileline_dif( arg )
+      local fbuf, cursorY = arg.fbuf, arg.cursorY
       printf( "gofileline_dif(fbuf.nm='%s',line=%d)", fbuf:Name(), cursorY )
       local ybase
       local lines_above_base = 0
@@ -2013,7 +2014,7 @@ do
             local fnm = str:match( "%+%+%+ b/(.+)" )
             if fnm then
                printf( "gofileline_dif: fnm=%s", fnm )
-               return GotoFileYX_Msg_( fnm, ybase, 1, "dif", "dif", 0 )
+               return GotoFileYX_Msg_( fnm, ybase, arg.cursorX-1, "dif", "dif", 0 )
                end
             end
          end
@@ -2162,7 +2163,7 @@ do
 
    AddEdFxn{ name = "gotofileline", key = "alt+g", attr = NOARG+BOXSTR+BOXARG+TEXTARG, help = "jumps to the file location described on the current line"
       , NOARG   = function( arg )
-                  if arg.fbuf:FTypeEq( "diff" ) then return nil ~= gofileline_dif( arg.fbuf, arg.cursorY ) end
+                  if arg.fbuf:FTypeEq( "diff" ) then return nil ~= gofileline_dif( arg ) end
                   return nil ~= gofileline( arg.fbuf:GetLine( 1 ), arg.fbuf:GetLine( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
                   end
       , TEXTARG = function( arg ) return nil ~=  gofileline( ""                   , arg.text                       , arg.fbuf:Name() ~= nextmsgFBufName() ) end
