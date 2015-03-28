@@ -307,8 +307,10 @@ endif
 
 CMDTBL_OUTPUTS := cmdtbl.h
 
+THISDIR := .$(DIRSEP)
+
 # !!! in Lua-5.1/src/Makefile, PLAT=mingw, LUA_T=lua (not lua.exe)
-LUA_T=.$(DIRSEP)lua$(EXE_EXT)
+LUA_T=$(THISDIR)lua$(EXE_EXT)
 
 CLEAN_ARGS = $(OBJS) *.d *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLS_PKG_FILES)
 
@@ -442,3 +444,25 @@ PANDOC_OPTS := -f markdown_github-hard_line_breaks-raw_html+inline_notes+pipe_ta
 
 khelp.html: khelp.txt
 	./pdconv.lua > log&&./pandoc.bat khelp.md_ $(PANDOC_OPTS) -t html -s -o khelp.html&&khelp.html
+
+
+.PHONY: run_unittests run_krbtree_unittest run_dlink_unittest
+
+run_unittests: run_krbtree_unittest run_dlink_unittest
+
+run_dlink_unittest: dlink_unittest$(EXE_EXT)
+	$(THISDIR)dlink_unittest$(EXE_EXT)
+
+dlink_unittest$(EXE_EXT): dlink_unittest.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+run_krbtree_unittest: krbtree_unittest$(EXE_EXT)
+	$(THISDIR)krbtree_unittest$(EXE_EXT) < COPYING
+
+krbtree_unittest$(EXE_EXT): krbtree_unittest.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+krbtree_unittest.o: CPPFLAGS += -DUNIT_TEST_KRBTREE
+krbtree_unittest.o: CXXFLAGS += -Werror
+krbtree_unittest.o: krbtree.cpp
+	$(BLD_CXX)

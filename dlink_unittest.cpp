@@ -78,5 +78,6 @@ int main() {
    DLINK_INSERT_FIRST( Hd, new inta( 22 ), dlink );           { const int ref9[] = { 22,21,20 }; assert_inta( Hd, AEOB( ref9 ) ); }
    DLINK_JOIN(Hd, Hd2, dlink);                                { const int refA[] = { 22,21,20,-1,-2,12,1,2,0,3 }; assert_inta( Hd, AEOB( refA ) ); }
                                                               assert( Hd2.empty() );
+   printf( "PASS\n");
    return 0;
    }
