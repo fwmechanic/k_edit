@@ -18,7 +18,7 @@
 //
 
 #include <assert.h>
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include "dlink.h"
 
@@ -35,19 +35,19 @@ typedef DLinkHead<inta> head_t;
 
 void assert_inta( const head_t &hd, const int arr[], const size_t els, const char *nm ) {
    if( els != hd.length() ) {
-      fprintf( stderr, "%s: count miscmp: %d != %d\n", nm, els, hd.length() );
+      std::cerr << nm << ": count miscmp: " << els << " != " << hd.length() << "\n";
       exit(1);
       }
    auto ix = 0u;
    DLINKC_FIRST_TO_LASTA( hd, dlink, pEl ) {
       if( pEl->a != arr[ix] ) {
-         fprintf( stderr, "%s[%u]: miscmp: %d != %d\n", nm, ix, pEl->a, arr[ix] );
+         std::cerr << nm << "[" << ix << "]: miscmp: " << pEl->a << " != " << arr[ix] << "\n";
          exit(1);
          }
       ++ix;
       }
    if( els != ix ) {
-      fprintf( stderr, "%s: overrun: %d != %d\n", nm, els, ix );
+      std::cerr << nm << ": overrun: " << els << " != " << ix << "\n";
       exit(1);
       }
    }
