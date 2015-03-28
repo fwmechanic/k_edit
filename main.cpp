@@ -1079,10 +1079,8 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
        }
      }
 
-   {
-                                 DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
+   {                             DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
    MainThreadPerfCounter pc;
-
 
    if( !ConIO_InitOK( fForceNewConsole ) ) { exit( 1 ); }
                                  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ConIO_InitOK"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();

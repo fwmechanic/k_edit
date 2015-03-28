@@ -930,7 +930,6 @@ STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
         #if !defined(_WIN32)
         || Path::endsWith( srFnm, "Makefile" )
         #endif
-        || Path::eq( ".mak", Path::RefExt( srNm ) )
      ) {                                            0 && DBG( "%s %" PR_BSR "' is %s", __func__, BSR(srFnm), "make" );
       return "make";
       }
@@ -1002,7 +1001,7 @@ STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 
    }
 
 void FBUF::DetermineFType() {
-// if( FTypeEmpty() ) {
+   if( FTypeEmpty() ) {
       auto ftype( content_to_ftype( this ) );  0 && DBG( "%s ?%" PR_BSR "'", __func__, BSR(ftype) );
       if( ftype.empty() ) {
          const auto ext( GetRsrcExt( this ) );
@@ -1016,7 +1015,7 @@ void FBUF::DetermineFType() {
       Set_s_cur_Ftype( ftype );
       SetFType( ftype );
       0 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), Name() );
-//    }
+      }
    }
 
 void FBOP::AssignFromRsrc( PFBUF fb ) {  1 && DBG( "%s '%s'", __func__, fb->Name() );
