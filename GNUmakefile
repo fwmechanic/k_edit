@@ -443,7 +443,9 @@ kb_190351:
 PANDOC_OPTS := -f markdown_github-hard_line_breaks-raw_html+inline_notes+pipe_tables --section-divs
 
 khelp.html: khelp.txt
-	./pdconv.lua > log&&./pandoc.bat khelp.md_ $(PANDOC_OPTS) -t html -s -o khelp.html&&khelp.html
+	$(THISDIR)pdconv.lua > log
+	$(THISDIR)pandoc.bat khelp.md_ $(PANDOC_OPTS) -t html -s -o khelp.html
+	khelp.html
 
 
 .PHONY: run_unittests run_krbtree_unittest run_dlink_unittest
@@ -453,6 +455,7 @@ run_unittests: run_krbtree_unittest run_dlink_unittest
 run_dlink_unittest: dlink_unittest$(EXE_EXT)
 	$(THISDIR)dlink_unittest$(EXE_EXT)
 
+dlink_unittest$(EXE_EXT): CXXFLAGS += -Werror
 dlink_unittest$(EXE_EXT): dlink_unittest.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
