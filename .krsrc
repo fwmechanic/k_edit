@@ -15,7 +15,6 @@
       memusgink:yes
 
       # langhilites:no  # note that this will not affect any file loaded first at editor startup :-(
-      cachesrchmisses : no
 
    # TEXT
       #tagfile:!tags
@@ -27,8 +26,13 @@
       traildisp: 0xFA trailspace:yes
    #  trailspace:no
       rmargin:  76
+
       vscroll:   1
       hscroll:   1
+
+      hscroll:20
+      vscroll:10
+
       cursorsize:1
 
    #  luagcstep:10
@@ -66,7 +70,7 @@
   #colornoise  : 0a
    colorsta    : 2f
 
-   graphic:tab  ; easy access to tab-insertion
+   graphic:tab  # easy access to tab-insertion
 
    ts0:=cancel arg "trailspace:no"  assign
    ts1:=cancel arg "trailspace:yes" assign

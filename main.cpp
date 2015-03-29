@@ -152,12 +152,10 @@ STATIC_FXN void StrStartOfNext2Tokens( PChar pszStringToSplit, PPChar pchTokenSt
    }
 
 
-STATIC_VAR struct { // kludgy, but alternative is to pass params thru the depths ... not!
-   bool fDoIt;
-   int  droppedFiles;
-   } s_tmpFBufCleanup;
-
-STATIC_VAR PFBUF s_pFForgottenFiles;
+STATIC_VAR struct {
+   bool  fDoIt;
+   PFBUF logfb;
+   } s_ForgetAbsentFiles;  // in lieu of passing params thru the depths
 
 STATIC_FXN void InitNewView_File( PChar filename ) {
    const PChar filenameEnd( strchr( filename, '|' ) );
@@ -169,17 +167,16 @@ STATIC_FXN void InitNewView_File( PChar filename ) {
    else
       StrStartOfNext2Tokens( filename, &filename, &pNextTokenStart );
 
-   if( s_tmpFBufCleanup.fDoIt && !FileAttribs( filename ).Exists() ) {
+   if( s_ForgetAbsentFiles.fDoIt && !FileAttribs( filename ).Exists() ) {
       // garbage-discard mode: don't create Views for nonexistent files
-      if( !s_pFForgottenFiles ) {
-         FBOP::FindOrAddFBuf( "<forgotten-files>", &s_pFForgottenFiles );
-         s_pFForgottenFiles->PutFocusOn();
+      if( !s_ForgetAbsentFiles.logfb ) {
+         FBOP::FindOrAddFBuf( "<forgotten-files>", &s_ForgetAbsentFiles.logfb );
+         s_ForgetAbsentFiles.logfb->PutFocusOn();
          }
 
-      s_pFForgottenFiles->PutLastLine( filename );
+      s_ForgetAbsentFiles.logfb->PutLastLine( filename );
       DispDoPendingRefreshes();
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      ++s_tmpFBufCleanup.droppedFiles;
       0 && DBG( "%s dropping '%s'", FUNC, filename );
       }
    else {
@@ -318,9 +315,10 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
    DLINK_JOIN( cvh, tmpVHd, dlinkViewsOfWindow );
    cvh.front()->PutFocusOn();
 
-   if( s_pFForgottenFiles ) {
-       s_pFForgottenFiles->ClearUndo();
-       s_pFForgottenFiles->UnDirty();
+   if( s_ForgetAbsentFiles.logfb ) {
+       s_ForgetAbsentFiles.logfb->ClearUndo();
+       s_ForgetAbsentFiles.logfb->UnDirty();
+       Msg( "done forgetting %d files", s_ForgetAbsentFiles.logfb->LineCount() );
        }
    DBG_RECOV && DBG( "%s done", FUNC );
    }
@@ -1052,7 +1050,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
                  AssignLogTag( "editor startup" );
                  break;
 
-       case 'c': s_tmpFBufCleanup.fDoIt = true;
+       case 'c': s_ForgetAbsentFiles.fDoIt = true;
                  break;
 
        case 'd': s_fLoadRsrcFile = false; // don't read .krsrc or the status file.
@@ -1113,7 +1111,7 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 
    InitFromStateFile();          DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    ReinitializeMacros( false );  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-   MsgClr(); // hack this is the earliest that it will actually have the effect of clearing the dialog line on startup (which is REALLY necessary in dialogtop mode)
+   // MsgClr(); // hack this is the earliest that it will actually have the effect of clearing the dialog line on startup (which is REALLY necessary in dialogtop mode)
    InitJobQueues();              DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru InitJobQueues"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
                                  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d done"                   , __func__, pc.Capture(), memdelta() );
    }

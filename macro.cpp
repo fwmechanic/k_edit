@@ -160,7 +160,7 @@ bool ARG::RunMacro() { 0 && DBG( "%s '%s':='%s'", __func__, CmdName(), d_pCmd->d
    return Interpreter::PushMacroStringOk( d_pCmd->d_argData.pszMacroDef, 0 );
    }
 
-#if 0 // see PushVariableMacro( os.date(fmtst) ) in k.luaedit
+#if 0 // all of the following is replaced by PushVariableMacro( os.date(fmtst) ) in k.luaedit
 #ifdef fn_strftime
 
 bool ARG::strftime() {
