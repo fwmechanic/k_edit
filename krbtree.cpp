@@ -103,15 +103,15 @@ static inline int  IsPRBHDValid ( const RbNode *p) { return IsPRBNValid(p) && is
 //
 // Note: I'm nuking various output files when done as the unit-test .obj file bends the editor link.
 
+#define DBGf      printf
+
+enum { VB=0 };
+
 #if !defined(_WIN32)
 
 #define rand16()  rand()
 
 #else
-
-enum { VB=0 };
-
-#define DBGf      printf
 
 // idiotic MSVC rand impl only yields _15 bits_ of random value!!!
 uint16_t rand16() { return (rand() << 1) ^ rand(); }
