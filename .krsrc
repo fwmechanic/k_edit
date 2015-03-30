@@ -11,7 +11,6 @@
       case:         NO  # CASE INSENSITIVE searches & replaces
       errprompt:    YES # [allow]/prevent "press any key" sequence following error
       beep:no
-      usemouse:yes
       memusgink:yes
 
       # langhilites:no  # note that this will not affect any file loaded first at editor startup :-(
@@ -44,7 +43,6 @@
       exit:ctrl+4
       qreplace:ctrl+5  # this key happens (20150126) to (erroneously) map to ctrl+] in ncurses
       longline:alt+\
-      savescreen:ctrl+k
       #ws:=arg "wordchars:nonwhite" assign
       wc:=arg "wordchars:_" assign
       wu:=arg "wordchars:-._~:/?#[]@!$&'()*+,;=%" assign
@@ -338,8 +336,6 @@
    swapline:alt+z
    vrepeat:alt+v
    MakeBox:alt+Num/
-   towinclip:ctrl+num+
-   cliptext:shift+ins
    hike:25
 
 
@@ -573,7 +569,6 @@
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-   resize:alt+w
    ftab:ctrl+tab
    cd2file:=arg meta curfilepath setfile  # set cwd to dir of current file
    cd:=cd2file setfile meta tags
@@ -596,13 +591,28 @@
    pseudomenu:alt+,
 
 [k-W.5.1] # WinXP
+   savescreen:ctrl+k
+   cliptext:shift+ins
+   towinclip:ctrl+num+
+   resize:alt+w
    delims: {[(          # test code
+   usemouse:yes
 
 [k-W.6.1] # Win7
+   savescreen:ctrl+k
+   cliptext:shift+ins
+   towinclip:ctrl+num+
+   resize:alt+w
    delims: {[(          # test code
+   usemouse:yes
 
 [k-W.6.2] # Win8
+   savescreen:ctrl+k
+   cliptext:shift+ins
+   towinclip:ctrl+num+
+   resize:alt+w
    delims: {[(          # test code
+   usemouse:yes
 
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -714,6 +724,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [k-.asm k-.s k-.inc]
    ftype:asm
+
+[k-ftype:bash]
 
 [k-ftype:asm]
    mfspec_:="*.inc;*.asm;*.map"

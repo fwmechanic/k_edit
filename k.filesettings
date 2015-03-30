@@ -63,7 +63,7 @@ local darkColors = {
    com = bfg(   Black  ,   Green  ),
    com = bfg(   Black  ,   Yellow  ),
    str = bfg(  Gray  ,    Black  ),
-   str = bfg(  Black  ,   Purple  ),
+   str = bfg(  Black  ,   Red     ),
    }
 
 print "hello 5"
