@@ -704,7 +704,7 @@ bool FBUF::RefreshFailedShowError() {
 
 STATIC_FXN void InsHiLite1Line( PView pView, const Point &pt, int Cols ) {
    const auto hiliteWidth( Cols > 0 ? Cols : 1 );
-   pView->InsHiLite1Line( COLOR::HG , pt.lin, pt.col, pt.col + hiliteWidth - 1 );
+   pView->InsHiLite1Line( COLOR::HIL, pt.lin, pt.col, pt.col + hiliteWidth - 1 );
    }
 
 void View::SetStrHiLite( const Point &pt, COL Cols, int color ) {

@@ -108,7 +108,7 @@ terminating NUL.
   BUFBYTES number of bytes in a buffer, including space for the terminating NUL
 
 */
-const COL COL_MAX  = INT_MAX-1; // -1 is a HACK to avoid integer overflow in cases like alcc->PutColor( xMin, xMax-xMin+1, COLOR::DIM ); where xMin==0 and xMax==COL_MAX
+const COL COL_MAX  = INT_MAX-1; // -1 is a HACK to avoid integer overflow in cases like alcc->PutColor( xMin, xMax-xMin+1, COLOR::COM ); where xMin==0 and xMax==COL_MAX
 const COL LINELEN  = (512)+1  ;
 const COL BUFBYTES = LINELEN+1;
 
@@ -174,18 +174,18 @@ enum { // these are COLOR CODES!
 
 namespace COLOR { // see color2Lua
    enum { // these are ARRAY _INDICES_!
-      FG ,  // foreground (normal)
-      HG ,  // highlighted region
+      TXT,  // foreground (normal)
+      HIL,  // highlighted region
       SEL,  // selection
       WUC,  // word-under-cursor hilight
       CXY,  // cursor line (and column) hilight
-      CPH,  // cppc line hilight
-      DIM,  // comment hiliting, etc.
-      LIS,  // litStr
+      CPP,  // cppc line hilight
+      COM,  // comment hiliting, etc.
+      STR,  // litStr
       VIEW_COLOR_COUNT,
 
       INF=VIEW_COLOR_COUNT,  // information
-      STA,  // status line
+      STS,  // status line
       WND,  // window border
       ERRM,  // error message
       COLOR_COUNT // MUST BE LAST!

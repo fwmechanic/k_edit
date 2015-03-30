@@ -890,7 +890,7 @@ STATIC_FXN stref is_content_diff( PCFBUF pFile ) {
         ) {}
       ok = CHKL() && CMPL( min_ ) && NXTL() && CMPL( pls_ );
       }
-   0 && DBG( "%s %s ? %s", __PRETTY_FUNCTION__, pFile->Name(), ok?"yes":"no" );
+   0 && DBG( "%s %s (%d) ? %s", __PRETTY_FUNCTION__, pFile->Name(), pFile->LineCount(), ok?"yes":"no" );
    return ok ? "diff" : "";
 
 #undef  CHKL

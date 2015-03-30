@@ -1024,18 +1024,18 @@ STATIC_FXN PChar LuaTbl2DupS( lua_State *L, PCChar tableDescr, PCChar pszDflt ) 
 PChar LuaCtxt_Edit::Tbl2DupS0( PCChar tableDescr, PCChar pszDflt ) { return LuaTbl2DupS( L_edit, tableDescr, pszDflt ); }
 
 // returns dfltVal if any errors
-STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) {
+STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) { enum { DB=0 };
    if( !L ) return dfltVal;
    LuaCallCleanup( L );
    auto rv(dfltVal);
    if( gotTblVal( L, tableDescr ) ) {
-      if( !lua_isnumber( L, -1 ) ) {                                         DBG( "%s '%s' is not a number", __func__, tableDescr );
+      if( !lua_isnumber( L, -1 ) ) {                                         DB && DBG( "%s '%s' is not a number", __func__, tableDescr );
          }
       else {
          rv = lua_tointeger( L, -1 );
          }
       }
-                                                                             0 && DBG( "%s '%s' (%d) -> %d", __func__, tableDescr, dfltVal, rv );
+                                                                             DB && DBG( "%s '%s' (%d) -> %d", __func__, tableDescr, dfltVal, rv );
    return rv;
    }
 

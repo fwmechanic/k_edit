@@ -3756,11 +3756,17 @@ do
       if not IsFile( fnm ) then return end
       print( "loading "..fnm )
       local ok,fxn = pcall( loadfile, fnm )         -- print( "compiled something" )
-      if not ok then return  end
+      if not ok then
+         print( "pcall loadfile "..fnm.. " NOT OK" )
+         return
+         end
       env = env or {}
       env._G = env
       setfenv( fxn, env )
-      if not pcall( fxn ) then return end
+      if not pcall( fxn ) then
+         print( "pcall fxn "..fnm.. " NOT OK" )
+         return
+         end
       -- ObjectShow( env, "prod.lua for "..fnm )
       return env
       end
@@ -3962,6 +3968,7 @@ printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )
 --########################################################################################################################################
 -- DO NOT DELETE NEXT LINE!  filesettings IS READ BY C++ CODE!!!
 filesettings = load_env( RsrcFilename( "filesettings" ), { print = print, NameExtOf = NameExtOf, ExtOf = ExtOf, DeepCopy=DeepCopy } )
+print( "filesettings is a "..type(filesettings) )
 --########################################################################################################################################
 
 print( "runchild is a "..type(runchild) )

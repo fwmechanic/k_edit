@@ -128,7 +128,7 @@ class ColorChanger : public KeyChanger
    };
 
 bool ARG::cc() {
-   ColorChanger ccc( *g_CurView()->ColorIdx2Var( COLOR::FG ) );
+   ColorChanger ccc( *g_CurView()->ColorIdx2Var( COLOR::TXT ) );
    return ccc.Run();
    }
 

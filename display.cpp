@@ -217,14 +217,14 @@ STATIC_CONST struct {  // contents init'd from $KINIT:k.filesettings
    int      dflt;
    } s_color2Lua[] = {
 #define SINIT( nm, idx, dflt )  { #nm, idx, dflt }
-   SINIT( text            , COLOR::FG  , 0x1E ),
-   SINIT( hilight         , COLOR::HG  , 0x3F ),
-   SINIT( selection       , COLOR::SEL , 0x2F ),
-   SINIT( wordUnderCursor , COLOR::WUC , 0xF2 ),
-   SINIT( cursorShadow    , COLOR::CXY , 0x1E ),
-   SINIT( litStr          , COLOR::LIS , 0x16 ),
-   SINIT( cppc            , COLOR::CPH , 0x06 ),
-   SINIT( dimmed          , COLOR::DIM , 0x08 ),
+   SINIT( txt , COLOR::TXT , 0x1E ),
+   SINIT( hil , COLOR::HIL , 0x3F ),
+   SINIT( sel , COLOR::SEL , 0x2F ),
+   SINIT( wuc , COLOR::WUC , 0xF2 ),
+   SINIT( cxy , COLOR::CXY , 0x4F ),
+   SINIT( str , COLOR::STR , 0x16 ),
+   SINIT( cpp , COLOR::CPP , 0x06 ),
+   SINIT( com , COLOR::COM , 0x08 ),
 #undef SINIT
    };
 
@@ -275,7 +275,7 @@ void FTypeSetting::Update() {
       d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf, c2L.dflt );   DB && DBG( "%s: %s = 0x%02X", __func__, kybuf, d_colors[ c2L.ofs ] );
       }
 
-// d_colors[ COLOR::CXY ] = GenAltHiliteColor( d_colors[ COLOR::FG ] );
+// d_colors[ COLOR::CXY ] = GenAltHiliteColor( d_colors[ COLOR::TXT ] );
    }
 
 void InitFTypeSettings() {                                              FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
@@ -830,14 +830,14 @@ bool HiliteAddin_cond_CPP::VHilitLine( LINE yLine, COL xIndent, LineColorsClippe
 
       // highlight any CPPcond that occurs on this line
       if( cppcNone != line.acppc ) {
-         alcc.PutColor( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, COLOR::CPH );
+         alcc.PutColor( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, COLOR::CPP );
          }
 
       // continue any "surrounds" of other highlit CPPconds above/below
       for( auto level_idx(line.level_ix) ; level_idx > -1 ; level_idx = d_PerViewableLine[ level_idx ].level.containing_level_idx ) {
          auto &level( d_PerViewableLine[ level_idx ].level );
          const auto xBar( level.xBox );
-         alcc.PutColor( xBar, 1, COLOR::CPH );
+         alcc.PutColor( xBar, 1, COLOR::CPP );
          }
       }
    catch( const std::out_of_range& exc ) {
@@ -971,7 +971,7 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          const auto tw( CFBuf()->TabWidth() );
          const auto xC  ( ColOfFreeIdx( tw, rl, ixTgt                        ) );
          const auto xPWS( ColOfFreeIdx( tw, rl, rl.find_last_not_of( " \t" ) ) );
-         alcc.PutColor( xC, xPWS - xC + 1, COLOR::DIM );
+         alcc.PutColor( xC, xPWS - xC + 1, COLOR::COM );
          }
       }
 
@@ -1042,8 +1042,8 @@ protected:
    void refresh();   // calls scan_pass() 2x, 1=counting: w/d_hl_rgn_array==nullptr, 2=collecting: d_hl_rgn_array!=nullptr
    virtual void scan_pass( LINE yMaxScan ) = 0; // yes this is an ABSTRACT BASE CLASS!
 
-   void add_comment( LINE yulc, COL xulc, LINE ylrc, COL xlrc ) { add_hl_rgn( COLOR::DIM, yulc, xulc, ylrc, xlrc ); }
-   void add_litstr ( LINE yulc, COL xulc, LINE ylrc, COL xlrc ) { add_hl_rgn( COLOR::LIS, yulc, xulc, ylrc, xlrc ); }
+   void add_comment( LINE yulc, COL xulc, LINE ylrc, COL xlrc ) { add_hl_rgn( COLOR::COM, yulc, xulc, ylrc, xlrc ); }
+   void add_litstr ( LINE yulc, COL xulc, LINE ylrc, COL xlrc ) { add_hl_rgn( COLOR::STR, yulc, xulc, ylrc, xlrc ); }
 
    // "caching" speeds VHilitLine lookup
    LINE      d_yCache = 0;
@@ -2000,7 +2000,7 @@ public:
 bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    // handle cursor-line and cursor-column hiliting
    const auto cxy( ColorIdx2Attr( COLOR::CXY ) );
-   const auto fg ( ColorIdx2Attr( COLOR::FG  ) );
+   const auto fg ( ColorIdx2Attr( COLOR::TXT ) );
    const auto isActiveWindow_( isActiveWindow() );
    const auto isCursorLine( isActiveWindow_ && g_CursorLine() == yLine );
    if( isCursorLine ) {
@@ -2016,7 +2016,7 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          }
 
       if( !USE_HiliteAddin_CompileLine && Get_LineCompile() == yLine ) {
-         alcc.PutColor(    0            , COL_MAX, COLOR::STA );
+         alcc.PutColor(    0            , COL_MAX, COLOR::STS );
          }
       }
    return false;
@@ -2079,11 +2079,11 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
 GLOBAL_VAR bool g_fLangHilites = true;
 
 void View::HiliteAddins_Init() {
-   const auto pFTS( GetFTypeSettings() );
    DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
    if( g_fLangHilites && d_addins.empty() &&
        (d_pFBuf->HasLines() || d_pFBuf->FnmIsPseudo())
      ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, d_pFBuf->FType().c_str() );
+      const auto pFTS( GetFTypeSettings() );
       const auto hasEolComment( pFTS->d_eolCommentDelim[0] );
      #define L(lang) d_pFBuf->FTypeEq(#lang)
      #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
@@ -2791,7 +2791,7 @@ void ColoredLine::Cat( const ColoredLine &rhs ) {
 
 STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" );
    ColoredLine cl;
-   cl.Cat( COLOR::HG, (EditorLoadCount() > 1) ? FmtStr<15>( " +%u", EditorLoadCount()-1 ).k_str() : "" );
+   cl.Cat( COLOR::HIL, (EditorLoadCount() > 1) ? FmtStr<15>( " +%u", EditorLoadCount()-1 ).k_str() : "" );
    const auto pfh( g_CurFBuf() );
    if( 0 ) {
       int BRTowardUndo, ARTowardUndo, BRTowardRedo, ARTowardRedo;
@@ -2882,15 +2882,15 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
       STATIC_CONST char s_dot3[] = "...";
       const auto truncBy( fnLen - (maxFnLen - KSTRLEN(s_dot3)) );
       if( truncBy > fnLen )
-         out.Cat( COLOR::FG, s_dot3 );
+         out.Cat( COLOR::TXT, s_dot3 );
       else
-         out.Cat( COLOR::FG, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).k_str() );
+         out.Cat( COLOR::TXT, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).k_str() );
       }
    else {
       auto pfnm( pfh->Name() );
-      if( commonLen   ) { out.Cat( COLOR::HG  , stref(pfnm, commonLen  ) ); pfnm += commonLen  ; }
+      if( commonLen   ) { out.Cat( COLOR::HIL , stref(pfnm, commonLen  ) ); pfnm += commonLen  ; }
       if( uniqPathLen ) { out.Cat( COLOR::ERRM, stref(pfnm, uniqPathLen) ); pfnm += uniqPathLen; }
-      if( uniqLen     ) { out.Cat( COLOR::FG  , stref(pfnm, uniqLen    ) ); pfnm += uniqLen    ; }
+      if( uniqLen     ) { out.Cat( COLOR::TXT , stref(pfnm, uniqLen    ) ); pfnm += uniqLen    ; }
       }
 
    out.Cat( cl );                       0 && DBG( "%s+", __func__ );
@@ -3209,7 +3209,7 @@ void View::InsertHiLitesOfLineSeg
    #if !USE_HiliteAddin_CursorLine
    NewScope { // handle cursor-line and cursor-column hiliting
       const auto cxy( ColorIdx2Attr( COLOR::CXY ) );
-      const auto fg ( ColorIdx2Attr( COLOR::FG  ) );
+      const auto fg ( ColorIdx2Attr( COLOR::TXT ) );
       // const auto ViewCols( Win()->d_Size.col );
       if( isCursorLine ) {
          alcc.   PutColorRaw( 0            , COL_MAX, cxy );
@@ -3267,7 +3267,7 @@ void View::GetLineForDisplay
       dest[0] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
       }
    else {
-      alcc.PutColor( Origin().col, xWidth, COLOR::FG );
+      alcc.PutColor( Origin().col, xWidth, COLOR::TXT );
       PrettifyMemcpy( dest, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->TrailDispChar() );
       if( DrawVerticalCursorHilite() && isActiveWindow && (xWidth > PCT_WIDTH) && (g_CursorLine() == yLineOfFile) ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
