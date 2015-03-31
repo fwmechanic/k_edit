@@ -590,30 +590,17 @@
    pseudomenu:=arg "Pseudo" menu
    pseudomenu:alt+,
 
+
 [k-W.5.1] # WinXP
-   savescreen:ctrl+k
-   cliptext:shift+ins
-   towinclip:ctrl+num+
-   resize:alt+w
-   delims: {[(          # test code
-   usemouse:yes
-
 [k-W.6.1] # Win7
-   savescreen:ctrl+k
-   cliptext:shift+ins
-   towinclip:ctrl+num+
-   resize:alt+w
-   delims: {[(          # test code
-   usemouse:yes
-
 [k-W.6.2] # Win8
+[k-os.win32]
    savescreen:ctrl+k
    cliptext:shift+ins
    towinclip:ctrl+num+
    resize:alt+w
    delims: {[(          # test code
    usemouse:yes
-
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
