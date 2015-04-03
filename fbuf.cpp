@@ -871,6 +871,7 @@ STATIC_FXN stref is_content_diff( PCFBUF pFile ) {
    STATIC_CONST char dopt[] = "DIFFOPTS="          ; // this is VERY particular to a bat file I wrote this is first line prefixing std svn diff output 20140313
    STATIC_CONST char eql_[] = "==================================================================="; // (svn)
 
+#if 0
    auto ok( CHKL() && CMPL( diff_ ) || CMPL( IdxQ ) || (CMPL( dopt ) && NXTL() && CMPL( IdxQ )) );
    if( ok ) {
       while( NXTL() &&
@@ -890,6 +891,26 @@ STATIC_FXN stref is_content_diff( PCFBUF pFile ) {
         ) {}
       ok = CHKL() && CMPL( min_ ) && NXTL() && CMPL( pls_ );
       }
+#else
+   while( CHKL() &&
+      // skip these
+      CMPL( diff_ ) ||
+      CMPL( IdxQ ) ||
+      CMPL( om__ ) ||
+      CMPL( nm__ ) ||
+      CMPL( dfm_ ) ||
+      CMPL( nfm_ ) ||
+      CMPL( cpfr ) ||
+      CMPL( cpto ) ||
+      CMPL( mvfm ) ||
+      CMPL( mvto ) ||
+      CMPL( simi ) ||
+      CMPL( disi ) ||
+      CMPL( idx_ ) ||
+      CMPL( eql_ )
+     ) { NXTL(); }
+   const auto ok = CHKL() && CMPL( min_ ) && NXTL() && CMPL( pls_ );
+#endif
    0 && DBG( "%s %s (%d) ? %s", __PRETTY_FUNCTION__, pFile->Name(), pFile->LineCount(), ok?"yes":"no" );
    return ok ? "diff" : "";
 
