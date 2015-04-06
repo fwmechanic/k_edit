@@ -71,7 +71,7 @@ bool FBUF::SetEntabOk( int newEntab ) {
    const auto inRange( newEntab >= ENTAB_0_NO_CONV && newEntab < MAX_ENTAB_INVALID );
    if( inRange ) {
       d_Entab = eEntabModes(newEntab);
-      Msg( "entab set to %s (%d)", s_entabNames[ d_Entab ], d_Entab );
+      Msg( "%s entab set to %s (%d)", Name(), s_entabNames[ d_Entab ], d_Entab );
       }
    return inRange;
    }
@@ -80,7 +80,7 @@ void swidEntab( PChar dest, size_t sizeofDest, void *src ) {
    safeSprintf( dest, sizeofDest, "%s (%d)", s_entabNames[ g_CurFBuf()->Entab() ], g_CurFBuf()->Entab() );
    }
 
-PCChar swixEntab( stref param ) { enum { DB=0 }; DB && DBG( "%s+ %" PR_BSR "'", __func__, BSR(param) );
+PCChar swixEntab( stref param ) { enum { DB=1 }; DB && DBG( "%s+ %" PR_BSR "'", __func__, BSR(param) );
    COL  newval;
    for( newval=0 ; newval < ELEMENTS(s_entabNames) ; ++newval ) {
       if( 0==cmpi( param, s_entabNames[newval] ) ) {
@@ -88,7 +88,7 @@ PCChar swixEntab( stref param ) { enum { DB=0 }; DB && DBG( "%s+ %" PR_BSR "'", 
          }
       }                                                            DB && DBG( "%s: %d", __func__, newval );
    if( !(newval < ELEMENTS(s_entabNames)) ) { newval = StrToInt_variable_base( param, 10 ); }
-                                                                   DB && DBG( "%s: %d", __func__, newval );
+                                                                   DB && DBG( "%s: %d for %s", __func__, newval, g_CurFBuf()->Name() );
    const auto setOk( g_CurFBuf()->SetEntabOk( newval ) );
    return setOk ? nullptr : SwiErrBuf.Sprintf( "entab value '%" PR_BSR "' must be one of 'none', 'leading', 'exoquote' or 'all'", BSR(param) );
    }

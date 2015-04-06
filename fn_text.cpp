@@ -377,49 +377,49 @@ int uint_log_10( int num ) {
 #endif
    }
 
+typedef int rtl_errno_t;
+
+STATIC_FXN S32 strtol_er( rtl_errno_t &conv_errno, char const *nptr, char *&endptr, int base ) {
+   errno = 0;
+   const auto rv( strtol( nptr, &endptr, base ) );
+   conv_errno = errno;
+   errno = 0;
+   return rv;
+   }
+
 bool ARG::vrepeat() {
    auto lx( d_boxarg.flMin.lin );
    std::string st; g_CurFBuf()->DupLineSeg( st, lx++, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
    CPCChar inbuf( st.c_str() );
-   0 && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
+   1 && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
 
    const auto fInsertArg( d_cArg < 2 );
 
+   std::string t0,t1;
    if( !d_fMeta ) {
-      std::string t0,t1;
-      for( ; lx <= d_boxarg.flMax.lin; ++lx )                       // each line in boxarg
+      for( ; lx <= d_boxarg.flMax.lin; ++lx ) { // each line in boxarg
          g_CurFBuf()->PutLineSeg( lx, inbuf, t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col, fInsertArg );
+         }
       }
-   else {
-      --lx;
-      int width( d_boxarg.flMax.col - d_boxarg.flMin.col + 1 );
-      0 && DBG( "%s+ width=%d", __func__, width );
-
-      int    val;
-      PCChar fmt;
-      CPCChar pNum( StrPastAnyBlanks( inbuf ) );
-      if( StrSpnSignedInt( pNum ) ) {
-         width              -= pNum - inbuf;
-         d_boxarg.flMin.col += pNum - inbuf;
-         val = atoi( pNum );
-         fmt = (pNum[0] == '0') ? "%0*d" : "%*d";
+   else { // insert incrementing sequence of numbers, with initial value given in top line of BOXARG
+      PChar pe; rtl_errno_t conv_errno;
+      int val( strtol_er( conv_errno, st.c_str(), pe, 0 ) );
+      if( conv_errno /* || *pe != 0 */ ) {
+         return Msg( "%s could not convert first-line content '%s' to int", __func__, st.c_str() );
          }
-      else {
-         val = 1;
-         fmt = "%0*d";
-         }
-      //
-      // If largest number in series takes more digits than box is wide, insert
-      // extra chars in box on each line (except first)
-      //
-      const auto minWidth( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );
-      NoLessThan( &width, minWidth );
+      const auto ixMaxDigit( pe - st.c_str() );
+      const auto ixMinDigit( FirstDigitOrEnd( st ) ); if( atEnd( st, ixMinDigit ) ) { return Msg( "internal error, no first digit?" ); }
+      enum { MAX_INT_PRINT_CHARS = 9 };
+      const auto fLead0( '0' == st[ixMinDigit] );
+      const auto width( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  DBG( "width=%d", width );
+      if( width > MAX_INT_PRINT_CHARS ) { return Msg( "internal error, width %d > %d", width, MAX_INT_PRINT_CHARS ); }
+      FmtStr<7>fmts( "%%%s%dd", fLead0 ? "0":"", width ); const auto fmt( fmts.k_str() );   DBG( "fmt='%s'", fmt );
 
-      auto fInsert( false );
-      std::string t0,t1;
+      FmtStr<1+MAX_INT_PRINT_CHARS> st0( fmt, val ); auto ps0 = st0.k_str();  DBG( "st0='%s'", ps0 );
+      g_CurFBuf()->PutLineSeg( lx-1, ps0, t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col-1, false );
+      const auto xMax( d_boxarg.flMin.col+width-1 );
       for( ; lx <= d_boxarg.flMax.lin; ++lx ) {                     // each line in boxarg
-         g_CurFBuf()->PutLineSeg( lx, FmtStr<16>( fmt, width, val++ ).k_str(), t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col, fInsert );
-         fInsert = fInsertArg;
+         g_CurFBuf()->PutLineSeg( lx, FmtStr<1+MAX_INT_PRINT_CHARS>( fmt, ++val ).k_str(), t0,t1, d_boxarg.flMin.col, xMax, true );
          }
       }
 

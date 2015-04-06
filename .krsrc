@@ -676,10 +676,11 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:make
 
 [k-ftype:make]
-   wordchars: .
-   delims: {[(
    #graphic:tab # using GNU make, we need ability to insert literal tabs
    tabwidth:8
+   entab:leading  # ...  whitespace converted to tabs
+   wordchars: .
+   delims: {[(
    mfspec_:="*.mak;*.mik"
 
 [k-.cod]

@@ -409,6 +409,10 @@ static sridx FirstAlphaOrEnd( stref src, sridx start=0 ) {
    return ToNextOrEnd( isalpha, src, start );
    }
 
+static sridx FirstDigitOrEnd( stref src, sridx start=0 ) {
+   return ToNextOrEnd( isdigit, src, start );
+   }
+
 //#######################################################################################
 
 template <int elements> class FmtStr {
