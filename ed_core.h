@@ -1701,8 +1701,16 @@ STIL const Point &g_Cursor()       { return  g_CurView()->Cursor(); } // NOT CAC
 STIL LINE         g_CursorLine()   { return  g_Cursor().lin       ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
 STIL COL          g_CursorCol()    { return  g_Cursor().col       ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
 
-STIL PFBUF        g_CurFBuf()      { extern PFBUF s_curFBuf; return s_curFBuf; }
-STIL void         g_UpdtCurFBuf()  { extern PFBUF s_curFBuf;        s_curFBuf = g_CurView()->FBuf(); }
+#if 1
+// this extern decl _was_ inside each of g_CurFBuf() and g_UpdtCurFBuf()'s bodies,
+// however this led to an optimization-codegen-only Assert in PutFocusOn() !!!  20150405
+extern PFBUF s_curFBuf; // not literally static (s_), but s/b treated as such!
+STIL PFBUF        g_CurFBuf()                { return s_curFBuf; }
+STIL void         g_UpdtCurFBuf( PFBUF pfb ) {        s_curFBuf = pfb; }
+#else
+STIL PFBUF        g_CurFBuf()                { extern PFBUF s_curFBuf; return s_curFBuf; }
+STIL void         g_UpdtCurFBuf( PFBUF pfb ) { extern PFBUF s_curFBuf;        s_curFBuf = pfb; }
+#endif
 
 #define PCF        const auto pcf( g_CurFBuf() )
 #define PCFV  PCV; PCF

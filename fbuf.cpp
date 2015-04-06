@@ -536,6 +536,9 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
       }
    DB && DBG( "%s is %s will be %s", __func__, g_CurFBuf()?g_CurFBuf()->Name():"", this->Name() );
 
+   g_UpdtCurFBuf( this ); //##########################################################################
+   // Assert( this == g_CurFBuf() );
+
    FBOP::AssignFromRsrc( this );
 
    if( fContentChanged ) {

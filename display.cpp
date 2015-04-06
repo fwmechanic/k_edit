@@ -3353,8 +3353,6 @@ PView FBUF::PutFocusOnView() { enum{ DD=0 };
    DLINK_INSERT_FIRST( cvwHd, myView, dlinkViewsOfWindow );
    }
 
-   g_UpdtCurFBuf(); //##########################################################################
-   Assert( this == g_CurFBuf() );
    myView->PutFocusOn();
    return myView;
    }
@@ -3380,7 +3378,7 @@ void DestroyViewList( ViewHead *pViewHd ) {
 
 void KillTheCurrentView() {
    KillView( g_CurView() );
-   g_UpdtCurFBuf();
+   g_UpdtCurFBuf( g_CurView()->FBuf() );
    if( g_CurView() )
        g_CurView()->FBuf()->PutFocusOn();
    }
