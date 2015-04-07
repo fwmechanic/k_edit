@@ -1256,7 +1256,7 @@ private:
 #endif
 
    bool           d_fInhibitRsrcLoad = false ;
-                                         // DO NOT call RsrcLdFileSection in FBOP::AssignFromRsrc().
+                                         // DO NOT call RsrcLdFileSection in FBOP::CurFBuf_AssignMacros_RsrcLd().
                                          // Why?  Some pseudofiles exist to show the user the current state
                                          // of internals that can be perturbed by loading a rsrc-file
                                          // section.  This flag prevents that, so such pseudofiles give a
@@ -1621,7 +1621,7 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    extern void    CopyBox(    PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft, LINE ySrcTop, COL xSrcRight, LINE ySrcBottom );
    extern void    CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd );
 
-   extern void    AssignFromRsrc( PFBUF fb );
+   extern void    CurFBuf_AssignMacros_RsrcLd(); // implicitly takes g_CurFBuf() as param
 
    //************ Insert Lines in sorted order
    //

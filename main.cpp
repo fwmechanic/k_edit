@@ -707,7 +707,7 @@ STATIC_FXN int ReinitializeMacros( bool fEraseExistingMacros ) {
       }
 
    if( g_CurFBuf() ) {
-      FBOP::AssignFromRsrc( g_CurFBuf() );
+      FBOP::CurFBuf_AssignMacros_RsrcLd();
       }
 
    DispNeedsRedrawAllLinesAllWindows();

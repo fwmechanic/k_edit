@@ -539,7 +539,7 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
    g_UpdtCurFBuf( this ); //##########################################################################
    // Assert( this == g_CurFBuf() );
 
-   FBOP::AssignFromRsrc( this ); // note that some assignments map to g_CurFBuf() so g_UpdtCurFBuf( this ) above is an absolute prerequisite
+   FBOP::CurFBuf_AssignMacros_RsrcLd(); // note that some assignments map to g_CurFBuf() so g_UpdtCurFBuf( this ) above is an absolute prerequisite
 
    if( fContentChanged ) {
       CalcIndent();
@@ -1042,9 +1042,9 @@ void FBUF::DetermineFType() {
       }
    }
 
-void FBOP::AssignFromRsrc( PFBUF fb ) {  1 && DBG( "%s '%s'", __func__, fb->Name() );
-   // 1. assigns "curfile..." macros based on this FBUF
-   // 2. loads rsrc file section for [extension and] ftype of this FBUF
+void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && DBG( "%s '%s'", __func__, fb->Name() );
+   // 1. assigns "curfile..." macros based on g_CurFBuf()->Namestr()
+   // 2. loads rsrc file section for [extension and] ftype of g_CurFBuf()
   #if MACRO_BACKSLASH_ESCAPES
    dbllinebuf dblbuf;
    Pathbuf pbuf( fb->Name() );
@@ -1948,7 +1948,7 @@ STATIC_FXN bool RenameCurFileOk( PCChar pszNewName, bool fNeedUserConfirmation )
    const auto saveOk( g_CurFBuf()->SaveToDiskByName( pszNewName, fNeedUserConfirmation ) );
    if( saveOk ) {
       DispNeedsRedrawStatLn();
-      FBOP::AssignFromRsrc( g_CurFBuf() );
+      FBOP::CurFBuf_AssignMacros_RsrcLd();
       }
    return saveOk;
    }
