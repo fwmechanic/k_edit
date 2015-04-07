@@ -3202,8 +3202,9 @@ void View::InsertHiLitesOfLineSeg
       }
 
    DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
-      if( pDispAddin->VHilitLine( yLine, xIndent, alcc ) )
+      if( pDispAddin->VHilitLine( yLine, xIndent, alcc ) ) {
          return;
+         }
       }
 
    #if !USE_HiliteAddin_CursorLine
@@ -3359,8 +3360,9 @@ PView FBUF::PutFocusOnView() { enum{ DD=0 };
 
 void FBUF::UnlinkView( PView pv ) {
    DLINK_REMOVE( d_dhdViewsOfFBUF, pv, dlinkViewsOfFBUF );
-   if( d_dhdViewsOfFBUF.empty() )
+   if( d_dhdViewsOfFBUF.empty() ) {
       private_RemovedFBuf();
+      }
    }
 
 STATIC_FXN void KillView( PView pv ) { // destroy an arbitrary View
@@ -3379,8 +3381,9 @@ void DestroyViewList( ViewHead *pViewHd ) {
 void KillTheCurrentView() {
    KillView( g_CurView() );
    g_UpdtCurFBuf( g_CurView()->FBuf() );
-   if( g_CurView() )
+   if( g_CurView() ) {
        g_CurView()->FBuf()->PutFocusOn();
+       }
    }
 
 bool FBUF::UnlinkAllViews() {
