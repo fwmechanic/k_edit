@@ -136,15 +136,15 @@ void PRbInfoPrint( const char *name, PRbInfo pInfo ) {
    }
 
 int main( int argc, char *argv[] ) {
-   RbTree *stree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
-   RbTree *itree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
-   RbCtrl *rbc     = rb_ctrl( itree );
+   auto stree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
+   auto itree   = rb_alloc_tree(&s_CmdIdxRbCtrl);
+   auto rbc     = rb_ctrl( itree );
 
    DBGf( " alloc=%p, free=%p\nmalloc=%p, free=%p\n", rbc->nd_alloc, rbc->nd_dealloc, reinterpret_cast<void *>(malloc), reinterpret_cast<void *>(free) );
 
    for(;;) {
       char buf[300];
-      char *p = fgets( BSOB(buf), stdin );
+      auto p = fgets( BSOB(buf), stdin );
       if( !p ) {
          break;
          }
@@ -159,7 +159,7 @@ int main( int argc, char *argv[] ) {
    rb_logstats( rbc );
 
    // ------------------------------------------------------------------
-   RbTree *u16tree = rb_alloc_tree(&s_CmdIdxRbCtrl);
+   auto u16tree = rb_alloc_tree(&s_CmdIdxRbCtrl);
 
    for( size_t ix=0; ix<0x10000; ix++ ) {
       PNode pNew = static_cast<PNode>( malloc( sizeof(*pNew) ) );
@@ -175,14 +175,14 @@ int main( int argc, char *argv[] ) {
    PRbInfoPrint( "u16tree inorder at fullest", &rbi );
    rb_logstats( rbc );
 
-   PNode pprev = nullptr;
+   PNode prev = nullptr;
    rb_traverse(ptr, u16tree) {
-      PNode pNew = static_cast<PNode>( rb_val(ptr) );
-      assert( pNew->key == pNew->bkupKey );
-      if( pprev ) {
-         assert( pprev->key+1 == pNew->key );
+      auto cur = static_cast<PNode>( rb_val(ptr) );
+      assert( cur->key == cur->bkupKey );
+      if( prev ) {
+         assert( prev->key+1 == cur->key );
          }
-      pprev = pNew;
+      prev = cur;
       }
 
    for( size_t ix=0;ix<0x8000;ix++ ) {
@@ -198,14 +198,14 @@ int main( int argc, char *argv[] ) {
    PRbInfoPrint( "u16tree inorder after random deletion", &rbi );
    rb_logstats( rbc );
 
-   pprev = nullptr;
+   prev = nullptr;
    rb_traverse(ptr, u16tree) {
-      PNode pNew = static_cast<PNode>( rb_val(ptr) );
-      assert( pNew->key == pNew->bkupKey );
-      if( pprev ) {
-         assert( pprev->key < pNew->key );
+      auto cur = static_cast<PNode>( rb_val(ptr) );
+      assert( cur->key == cur->bkupKey );
+      if( prev ) {
+         assert( prev->key < cur->key );
          }
-      pprev = pNew;
+      prev = cur;
       }
    u16tree = rb_dealloc_treev( u16tree, nullptr, Free );
 
@@ -215,8 +215,7 @@ int main( int argc, char *argv[] ) {
    for( size_t ix=0;ix<0x10000*4;ix++ ) {
       PNode pNew = static_cast<PNode>( malloc( sizeof(*pNew) ) );
       pNew->key = pNew->bkupKey = rand16();
-      int     equal;
-      RbNode *pNd = rb_find_gte_u16( &equal, u16tree, &pNew->key );
+      int equal; RbNode *pNd = rb_find_gte_u16( &equal, u16tree, &pNew->key );
       if( equal ) {
          free( rb_delete_node( u16tree, pNd ) );
          }
@@ -229,9 +228,9 @@ int main( int argc, char *argv[] ) {
    rb_logstats( rbc );
 
    rb_traverse(ptr, u16tree) {
-      PNode pNew = static_cast<PNode>( rb_val(ptr) );
-      assert( pNew->key == pNew->bkupKey );
-      VB && DBGf( "%5u\n", pNew->key );
+      auto cur = static_cast<PNode>( rb_val(ptr) );
+      assert( cur->key == cur->bkupKey );
+      VB && DBGf( "%5u\n", cur->key );
       }
 
    for( size_t ix=0;ix<0x8000;ix++ ) {
@@ -249,9 +248,9 @@ int main( int argc, char *argv[] ) {
    rb_logstats( rbc );
 
    rb_traverse(ptr, u16tree) {
-      PNode pNew = static_cast<PNode>( rb_val(ptr) );
-      assert( pNew->key == pNew->bkupKey );
-      VB && DBGf( "%5u\n", pNew->key );
+      auto cur = static_cast<PNode>( rb_val(ptr) );
+      assert( cur->key == cur->bkupKey );
+      VB && DBGf( "%5u\n", cur->key );
       }
    u16tree = rb_dealloc_treev( u16tree, nullptr, Free );
 
