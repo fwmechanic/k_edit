@@ -1,9 +1,11 @@
 k
+dif
 lua
 k-*.log
 .svn/
 .kbackup/
 bkz/
+*_unittest
 *.k?
 *.args
 *.d
