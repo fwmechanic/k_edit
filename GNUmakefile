@@ -222,7 +222,7 @@ PLAT_OBJS := \
  linux_api.o \
  linux_process.o
 
-BOOST_LIBS := -lboost_filesystem -lboost_system
+BOOST_LIBS := -Wl,-Bstatic -lboost_filesystem -lboost_system -Wl,-Bdynamic
 
 endif
 
