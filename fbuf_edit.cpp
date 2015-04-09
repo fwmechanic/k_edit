@@ -178,16 +178,16 @@ STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL src_xMin, size
    }
 
 void FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently
-   ( std::string &dest, stref src
-   , COL src_xMin, size_t maxCharsToWrite, COL tabWidth, char chTabExpand, char chTrailSpcs
+   ( std::string &dest, size_t maxCharsToWrite
+   , stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    dest.clear();
    PrettifyAppend( dest, src, src_xMin, maxCharsToWrite, tabWidth, chTabExpand, chTrailSpcs );
    }
 
 std::string FormatExpandedSeg // less efficient version: uses virgin dest each call, thus hits the heap each time
-   ( stref src
-   , COL src_xMin, size_t maxCharsToWrite, COL tabWidth, char chTabExpand, char chTrailSpcs
+   ( size_t maxCharsToWrite
+   , stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    std::string dest;
    PrettifyAppend( dest, src, src_xMin, maxCharsToWrite, tabWidth, chTabExpand, chTrailSpcs );
@@ -1391,7 +1391,7 @@ bool ARG::rawline() {
    switch( d_argType ) {
     default:      return BadArg(); // arg "rawline:alt+r" assign
     case BOXARG: {const auto rls( g_CurFBuf()->PeekRawLineSeg( d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col ) );
-                  const auto disp( FormatExpandedSeg( rls, 0, COL_MAX, g_CurFBuf()->TabWidth(), BIG_BULLET, SMALL_BULLET ) );
+                  const auto disp( FormatExpandedSeg( COL_MAX, rls, 0, g_CurFBuf()->TabWidth(), BIG_BULLET, SMALL_BULLET ) );
                   Msg( "PeekRawLineSeg '%" PR_BSR "'", BSR(disp) );
                   return !rls.empty();
                  }
@@ -1400,7 +1400,7 @@ bool ARG::rawline() {
 #endif
 
 COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
-   FormatExpandedSeg( dest, PeekRawLine( yLine ), 0, COL_MAX, TabWidth(), chExpandTabs, ' ' );
+   FormatExpandedSeg( dest, COL_MAX, PeekRawLine( yLine ), 0, TabWidth(), chExpandTabs, ' ' );
    return dest.length();
    }
 
@@ -1415,7 +1415,7 @@ COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
 void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
    dest.clear();
    if( yLine >= 0 && yLine <= LastLine() ) {
-      FormatExpandedSeg( dest, PeekRawLine( yLine ), xMinIncl, xMaxIncl - xMinIncl + 1, TabWidth() );
+      FormatExpandedSeg( dest, xMaxIncl - xMinIncl + 1, PeekRawLine( yLine ), xMinIncl, TabWidth() );
       }
    }
 
