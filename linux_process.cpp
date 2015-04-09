@@ -60,7 +60,7 @@ ssize_t piped_forker::Read( void *dest, ssize_t sizeofDest ) {
       return -1;
       }
    const auto rv( read( fd, dest, sizeofDest ) );  0 && DBG( "%s-[%d] %ld", __func__, fd, rv );
-   if( rv==0 ) { ReapChild(); }
+   if( rv <= 0 ) { ReapChild(); }
    return rv;
    }
 
