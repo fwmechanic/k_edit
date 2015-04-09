@@ -119,14 +119,14 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 // 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
 //    display line
 
-STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
+STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL src_xMin, size_t maxCharsToWrite, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
    // NB: we DO NOT clear dest!!!
    const auto initial_dest_length( dest.length() );
    auto dit( back_inserter(dest) );
    if( !chTabExpand || !StrContainsTabs( src ) ) {
-      if( xStart <= src.length() ) {
-         src.remove_prefix( xStart );
-         const auto CopyBytes( Min( src.length(), maxChars ) );
+      if( src_xMin <= src.length() ) {
+         src.remove_prefix( src_xMin );
+         const auto CopyBytes( Min( src.length(), maxCharsToWrite ) );
          auto sit( src.cbegin() );
          for( auto ix( 0u ) ; ix < CopyBytes ; ++ix ) {
             *dit++ = *sit++;
@@ -141,15 +141,15 @@ STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t
       return;
       }
 
-   // the only way to solve the problem of "what happens if xStart is in the
+   // the only way to solve the problem of "what happens if src_xMin is in the
    // middle of a tab-expansion?" is to walk the src string from its beginning,
    // even though we aren't necessarily _copying_ from the beginning.
 
    COL xCol( 0 );
-   auto WR_CHAR = [&]( char ch ) { if( xCol++ >= xStart ) { *dit++ = ch; } };
+   auto WR_CHAR = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; } };
    const Tabber tabr( tabWidth );
    auto sit( src.cbegin() );
-   while( sit != src.cend() && dest.length() < maxChars ) {
+   while( sit != src.cend() && dest.length() < maxCharsToWrite ) {
       const auto ch( *sit++ );
       if( ch != HTAB ) {
          WR_CHAR(ch);
@@ -157,7 +157,7 @@ STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t
       else {
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
          auto chFill( chTabExpand );                       // chTabExpand == BIG_BULLET has special behavior:
-         while( xCol < tgt && dest.length() < maxChars ) { // col containing actual HTAB will disp as BIG_BULLET
+         while( xCol < tgt && dest.length() < maxCharsToWrite ) { // col containing actual HTAB will disp as BIG_BULLET
             WR_CHAR(chFill);                               // remaining fill-in chars will show as SMALL_BULLET
             XLAT_chFill( chFill )
             }
@@ -167,7 +167,7 @@ STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t
    if( chTrailSpcs ) {
       // sit points just after the last source-char copied/xlated;
       //    sit == src.cend() (if the above loop terminated because 'sit == src.cend()')
-      // OR sit != src.cend() (if the above loop terminated due to 'dest.length() < maxChars' being false)
+      // OR sit != src.cend() (if the above loop terminated due to 'dest.length() < maxCharsToWrite' being false)
       if( sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
          const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
          for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) { // xlat all trailing spaces present in dest
@@ -179,18 +179,18 @@ STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t
 
 void FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently
    ( std::string &dest, stref src
-   , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
+   , COL src_xMin, size_t maxCharsToWrite, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    dest.clear();
-   PrettifyAppend( dest, src, xStart, maxChars, tabWidth, chTabExpand, chTrailSpcs );
+   PrettifyAppend( dest, src, src_xMin, maxCharsToWrite, tabWidth, chTabExpand, chTrailSpcs );
    }
 
 std::string FormatExpandedSeg // less efficient version: uses virgin dest each call, thus hits the heap each time
    ( stref src
-   , COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs
+   , COL src_xMin, size_t maxCharsToWrite, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    std::string dest;
-   PrettifyAppend( dest, src, xStart, maxChars, tabWidth, chTabExpand, chTrailSpcs );
+   PrettifyAppend( dest, src, src_xMin, maxCharsToWrite, tabWidth, chTabExpand, chTrailSpcs );
    return dest;
    }
 
@@ -199,13 +199,13 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
 COL PrettifyMemcpy
    ( const PChar dest, const size_t sizeof_dest
    , stref src
-   , COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs
+   , COL tabWidth, char chTabExpand, COL src_xMin, char chTrailSpcs
    ) {
    // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
    //
    if( !chTabExpand || !StrContainsTabs( src ) ) {
-      if( xStart > src.length() ) { return 0; }
-      src.remove_prefix( xStart );
+      if( src_xMin > src.length() ) { return 0; }
+      src.remove_prefix( src_xMin );
 
       const auto CopyBytes( Min( src.length(), sizeof_dest ) );
       memcpy( dest, src.data(), CopyBytes );
@@ -220,14 +220,14 @@ COL PrettifyMemcpy
       return CopyBytes;
       }
 
-   // the only way to solve the problem of "what happens if xStart is in the
+   // the only way to solve the problem of "what happens if src_xMin is in the
    // middle of a tab-expansion?" is to walk the src string from its beginning,
    // even though we aren't necessarily _copying_ from the beginning.
 
    const Tabber tabr( tabWidth );
    const auto pDestRightmostWritable( dest + sizeof_dest - 1 );
          auto pD(dest);
-#define  PD_EFF   (pD - xStart)
+#define  PD_EFF   (pD - src_xMin)
    COL xCol( 0 );
    auto WR_CHAR = [&]( char ch ) {
       if( PD_EFF >= dest ) { *PD_EFF = ch; }
