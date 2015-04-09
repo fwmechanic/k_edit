@@ -119,13 +119,7 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 // 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
 //    display line
 
-/*
-   I'm working toward addressing these difficulties
-
-
-*/
-
-void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
+STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
    // NB: we DO NOT clear dest!!!
    const auto initial_dest_length( dest.length() );
    auto dit( back_inserter(dest) );
@@ -201,9 +195,9 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
    }
 
 // a terminating NUL IS NOT added!!!
-// return value is # of chars actually copied into pDestBuf
+// return value is # of chars actually written to dest
 COL PrettifyMemcpy
-   ( const PChar pDestBuf, const size_t sizeof_dest
+   ( const PChar dest, const size_t sizeof_dest
    , stref src
    , COL tabWidth, char chTabExpand, COL xStart, char chTrailSpcs
    ) {
@@ -214,10 +208,10 @@ COL PrettifyMemcpy
       src.remove_prefix( xStart );
 
       const auto CopyBytes( Min( src.length(), sizeof_dest ) );
-      memcpy( pDestBuf, src.data(), CopyBytes );
+      memcpy( dest, src.data(), CopyBytes );
 
       if( chTrailSpcs && CopyBytes==src.length() ) {
-         for( auto pC(pDestBuf + CopyBytes - 1) ; *pC == ' ' ; --pC ) {
+         for( auto pC(dest + CopyBytes - 1) ; *pC == ' ' ; --pC ) {
             *pC = chTrailSpcs;
             }
          }
@@ -231,12 +225,12 @@ COL PrettifyMemcpy
    // even though we aren't necessarily _copying_ from the beginning.
 
    const Tabber tabr( tabWidth );
-   const auto pDestRightmostWritable( pDestBuf + sizeof_dest - 1 );
-         auto pD(pDestBuf);
+   const auto pDestRightmostWritable( dest + sizeof_dest - 1 );
+         auto pD(dest);
 #define  PD_EFF   (pD - xStart)
    COL xCol( 0 );
    auto WR_CHAR = [&]( char ch ) {
-      if( PD_EFF >= pDestBuf ) { *PD_EFF = ch; }
+      if( PD_EFF >= dest ) { *PD_EFF = ch; }
       ++pD; ++xCol;
       };
 
@@ -256,14 +250,14 @@ COL PrettifyMemcpy
          }
       }
 
-   const auto copyBytes(PD_EFF - pDestBuf);
+   const auto copyBytes(PD_EFF - dest);
    if( copyBytes > 0 ) {
       if( chTrailSpcs ) {
          // sit points just after the last source-char copied/xlated;
          //    sit == src.cend() (if the above loop terminated because sit == src.cend())
          // OR sit  < src.cend() (if the above loop terminated due to PD_EFF <= pDestRightmostWritable being false)
          if( sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
-            for( --pD ; PD_EFF >= pDestBuf && *PD_EFF == ' ' ; --pD ) { // xlat all trailing spaces present in dest
+            for( --pD ; PD_EFF >= dest && *PD_EFF == ' ' ; --pD ) { // xlat all trailing spaces present in dest
                *PD_EFF = chTrailSpcs;
                }
             }
