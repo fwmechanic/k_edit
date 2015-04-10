@@ -1535,10 +1535,15 @@ extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
 extern COL     StrCols(        COL tabWidth, const stref &src );
 
-extern void PrettifyAppend( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand, char chTrailSpcs );
-extern void        FormatExpandedSeg ( std::string &dest, stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- PREFER
-extern std::string FormatExpandedSeg ( /* USE RARELY!! */ stref src, COL xStart, size_t maxChars, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0 ); // <-- USE RARELY
-extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL xStart=0, char chTrailSpcs=0 );
+extern void        FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently
+          ( std::string &dest, size_t maxCharsToWrite  // dest-related
+          , stref src, COL src_xMin, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0
+          );
+extern std::string FormatExpandedSeg // less efficient version: uses virgin dest each call, thus hits the heap each time (USE RARELY!!!)
+          ( size_t maxCharsToWrite                     // dest-related
+          , stref src, COL src_xMin, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0
+          );
+extern COL     PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL src_xMin=0, char chTrailSpcs=0 );
 
 //************ tabWidth-dependent col-of-ptr/ptr-of-col xlators
 //             FreeIdxOfCol returns index that MAY be out of range; used to see whether col maps to content, or is beyond it

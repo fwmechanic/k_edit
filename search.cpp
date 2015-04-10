@@ -338,7 +338,7 @@ FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fI
    , d_dirCh(fSearchForward ? '+' : '-')
    , d_fIsRegex(fIsRegex)
    , d_SrchStr( srchStr.data(), srchStr.length() )
-   , d_SrchDispStr( FormatExpandedSeg( srchStr, 0, COL_MAX, 1, g_chTabDisp, g_chTrailSpaceDisp ) )
+   , d_SrchDispStr( FormatExpandedSeg( COL_MAX, srchStr, 0, 1, g_chTabDisp, g_chTrailSpaceDisp ) )
    {
    if( !Interpreter::Interpreting() ) {
       DrawDialog( (('+'==d_dirCh)
