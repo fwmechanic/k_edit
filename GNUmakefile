@@ -191,8 +191,8 @@ LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
 
 endif
 
-LINK_MAP = -Wl,--cref -Wl,-Map=$(subst .,_,$@).map
 LINK_MAP :=-Wl,--cref -Wl,-Map=
+LINK_MAP = -Wl,--cref -Wl,-Map=$(patsubst .%,,$@).map
 LINK= gcc
 
 #define LINK_MAP
@@ -386,9 +386,13 @@ else
 
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT)
 
+LINK_EXE_RAW = $(CXX) $^ -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP) 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs
+LINK_EXE = @echo linking $@&& $(LINK_EXE_RAW)
+LINK_EXE = $(LINK_EXE_RAW)
+
 $(TGT)$(EXE_EXT): $(OBJS) $(LIBLUA) $(WINDRES)
 	$(BLD_TIME_OBJ)
-	@echo linking $@&& $(CXX) $^ -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs
+	$(LINK_EXE)
 	$(SHOW_BINARY)
 
 endif
