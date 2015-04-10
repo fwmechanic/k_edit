@@ -365,7 +365,7 @@ rls: $(RLS_FILES)
 
 # phrases used in linking recipes
 BLD_TIME_OBJ = @$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
-LS_BINARY = @$(LS_L) $@ $(LS_L_TAIL)
+LS_BINARY = $(LS_L) $@ $(LS_L_TAIL)
 OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp
 SHOW_BINARY = @$(OBJDUMP_BINARY) && $(LS_BINARY)
 
