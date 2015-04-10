@@ -363,30 +363,33 @@ rls: $(RLS_FILES)
 	7z a      $(TGT)_rls.7z  $(RLS_FILES)
 	7z a -sfx $(TGT)_rls.exe $(RLS_FILES)
 
+# phrases used in linking recipes
+BLD_TIME_OBJ = @$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
+LS_BINARY = @$(LS_L) $@ $(LS_L_TAIL)
+OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp
+SHOW_BINARY = @$(OBJDUMP_BINARY) && $(LS_BINARY)
+
 ifdef APP_IN_DLL
 
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT) $(ED_DLL)$(DLL_EXT)
 
 $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
 	$(LINK) $^ $(LINK_MAP) -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)k.map
-	@objdump -p $@ > $@.exp
-	@$(LS_L) $@ $(LS_L_TAIL)
+	$(SHOW_BINARY)
 
 $(ED_DLL)$(DLL_EXT): $(OBJS) $(LIBLUA)
-	@$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
+	$(BLD_TIME_OBJ)
 	@echo linking $@&& $(CXX) -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)kx.map
-	@objdump -p $@ > $@.exp
-	@$(LS_L) $@ $(LS_L_TAIL)
+	$(SHOW_BINARY)
 
 else
 
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT)
 
 $(TGT)$(EXE_EXT): $(OBJS) $(LIBLUA) $(WINDRES)
-	@$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
-	@echo linking $@&& $(CXX) $^ $(LINK_MAP) -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs
-	@echo objdumping $@&& objdump -p $@ > $@.exp
-	@$(LS_L) $@ $(LS_L_TAIL)
+	$(BLD_TIME_OBJ)
+	@echo linking $@&& $(CXX) $^ -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)k.map 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs
+	$(SHOW_BINARY)
 
 endif
 
