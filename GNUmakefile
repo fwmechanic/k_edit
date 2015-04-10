@@ -191,13 +191,8 @@ LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
 
 endif
 
-LINK_MAP :=-Wl,--cref -Wl,-Map=
 LINK_MAP = -Wl,--cref -Wl,-Map=$(subst .,_,$@).map
 LINK= gcc
-
-#define LINK_MAP
-#-Wl,-Map=$1
-#endef
 
 KEEPASM := -save-temps -fverbose-asm  # to get .S files
 KEEPASM :=
@@ -374,12 +369,12 @@ ifdef APP_IN_DLL
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT) $(ED_DLL)$(DLL_EXT)
 
 $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
-	$(LINK) $^ $(LINK_MAP) -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)k.map
+	$(LINK) $^ -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)
 	$(SHOW_BINARY)
 
 $(ED_DLL)$(DLL_EXT): $(OBJS) $(LIBLUA)
 	$(BLD_TIME_OBJ)
-	@echo linking $@&& $(CXX) -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)kx.map
+	@echo linking $@&& $(CXX) -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)
 	$(SHOW_BINARY)
 
 else
