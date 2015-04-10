@@ -192,7 +192,7 @@ LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
 endif
 
 LINK_MAP :=-Wl,--cref -Wl,-Map=
-LINK_MAP = -Wl,--cref -Wl,-Map=$(patsubst .%,,$@).map
+LINK_MAP = -Wl,--cref -Wl,-Map=$(subst .,_,$@).map
 LINK= gcc
 
 #define LINK_MAP
