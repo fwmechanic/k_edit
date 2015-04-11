@@ -245,8 +245,7 @@ struct FTypeSetting {
 
    void  Update();
 
-   FTypeSetting( Path::str_t ext ) : d_key( ext ) {
-      0 && DBG( "%s CTOR: '%s' ----------------------------------------------", __func__, d_key.c_str() );
+   FTypeSetting( Path::str_t ext ) : d_key( ext ) {                          0 && DBG( "%s CTOR: '%s' ----------------------------------------------", __func__, d_key.c_str() );
       Update();
       }
    ~FTypeSetting() {}

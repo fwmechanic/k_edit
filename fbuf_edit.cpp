@@ -1143,9 +1143,7 @@ bool ARG::paste() {
                     g_pFbufClipboard->MakeEmpty();
 
                     if( d_cArg < 2 ) {
-                       std::string stmp;
-                       g_pFbufClipboard->PutLine( 0, d_textarg.pText, stmp );
-                       g_ClipboardType = BOXARG;
+                       Clipboard_PutText( d_textarg.pText );
                        }
                     else {
 #if 0

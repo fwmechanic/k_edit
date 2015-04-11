@@ -140,6 +140,7 @@ LUAFUNC_(Putenv)      {
    else          PutEnvOk( param1 );
    RZ;
    }
+LUAFUNC_(Clipboard_PutText_) { Clipboard_PutText( S_(1) ); RZ; }
 LUAFUNC_(MarkDefineAtCurPos)       { MarkDefineAtCurPos( S_(1) ); RZ; }
 LUAFUNC_(MarkGoto)                 { R_bool( MarkGoto( S_(1) ) ); }
 LUAFUNC_(ModifyTimeOfDiskFile)     {
@@ -674,6 +675,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        { "AddToSearchLog"              , AddToSearchLog              },
        { "AssignStrOk"                 , l_AssignStrOk               },
        { "PushVariableMacro"           , PushVariableMacro           },
+       { "Clipboard_PutText"           , Clipboard_PutText_          },
        { "CmdIdxAddLuaFunc"            , CmdIdxAddLuaFunc            },
        { "SetKeyOk"                    , BindKeyToCMD                },
        { "DBG"                         , DBG                         },

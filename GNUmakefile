@@ -217,6 +217,15 @@ PLAT_OBJS := \
  linux_api.o \
  linux_process.o
 
+# http://stackoverflow.com/questions/14605362/linking-statically-only-boost-library-g
+#
+#   The only time g++ will make a decision (and take into account the
+#   -Bstatic and -Bdynamic) is if it finds both in the same directory.  It
+#   searches the directories in the given order, and when it finds a
+#   directory which has either the static or the dynamic version of the
+#   library, it stops.  And if only one version is present, it uses that one,
+#   regardless.
+#
 BOOST_LIBS := -Wl,-Bstatic -lboost_filesystem -lboost_system -Wl,-Bdynamic
 
 endif

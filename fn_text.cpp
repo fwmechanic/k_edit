@@ -469,6 +469,13 @@ bool ARG::erasebuf() {
    return true;
    }
 
+void Clipboard_PutText( stref sr ) {
+   g_pFbufClipboard->MakeEmpty();
+   std::string tmp;
+   g_pFbufClipboard->PutLine( 0, sr, tmp );
+   g_ClipboardType = BOXARG;
+   }
+
 #ifdef fn_ascii2hex
 
 //////////////////////////////////////////////////////////////////////////
@@ -488,11 +495,7 @@ bool ARG::ascii2hex() {
    if( pB > buf )
        pB[-1] = '\0';
 
-   g_pFbufClipboard->MakeEmpty();
-   std::string tmp;
-   g_pFbufClipboard->PutLine( 0, buf, tmp );
-   g_ClipboardType = BOXARG;
-
+   Clipboard_PutText( buf );
    Msg( "%s", buf );
 
    return true;

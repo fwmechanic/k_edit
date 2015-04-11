@@ -1688,12 +1688,19 @@ function sum_cols( ary, base )
    end
 
 function fmtNum( num, base, width, leading0s )
-   leading0s = ifx( leading0s, "0", "" )
-   local pfx = "%"..leading0s..width
-   if     base == 16 then return fmt( pfx.."X", num )
-   elseif base == 10 then return fmt( pfx.."d", num )
-   else                   error( "cannot fmtNum to "..base )
+   base = base or 10
+   width = width or 1
+   leading0s = leading0s or false
+   if num % 1 == 0 then
+      leading0s = ifx( leading0s, "0", "" )
+      local pfx = "%"..leading0s..width
+      if     base == 16 then return fmt( pfx.."X", num )
+      elseif base == 10 then return fmt( pfx.."d", num )
+      else                   error( "cannot fmtNum to "..base )
+         end
       end
+   local fmts = "%"..width.. ".3f"
+   return fmt( fmts, num )
    end
 
 --     0000cc
@@ -3742,13 +3749,13 @@ do
 
    function load_str_msg( str, env )
       local rv = load_str( str, env )
-      return rv and type(rv)=="number" and fmt("%f = 0x%X",rv,rv) or rv
+      return type(rv)=="number" and fmtNum( rv ) or rv
       end
 
    local function eval08X( lseg ) return fmt( "0x%08X", load_str( lseg ) ), 1 end
 
    AddEdFxn{ name = "eval", help = "evaluate Lua string", attr = TEXTARG+BOXSTR+BOXARG , key = "F12"
-      , TEXTARG = function(arg) Msg( assert( load_str_msg( arg.text ) ) ) end
+      , TEXTARG = function(arg) local rslt = assert( load_str_msg( arg.text ) )  Clipboard_PutText( rslt ) Msg( rslt .." -> clipboard" ) end
       , BOXARG =  function(arg) xform_boxarg( arg,  eval08X ) end
       }
 

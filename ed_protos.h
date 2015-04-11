@@ -421,6 +421,8 @@ extern  bool   MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=fa
 
 extern  stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
 
+extern  void Clipboard_PutText( stref sr );
+
 
 //#####################  functionality implemented in  Lua  #####################
 //#####################  functionality implemented in  Lua  #####################
