@@ -81,6 +81,7 @@ LS_L := dir
 LS_L_TAIL := | FIND "/"
 # MinGW _mostly_ works OK using / as dirsep, HOWEVER when specifying a path prefix to argv[0], cmd _requires_ DIRSEP==\ (fails if DIRSEP==/)
 DIRSEP := \\
+CPPFLAGS += -DWINVER=0x0501
 
 else
 PLAT = linux
@@ -93,6 +94,8 @@ RM= rm -f
 export RM
 EXE_EXT :=
 DLL_EXT := .so
+CPPFLAGS += -pthread
+# NB: once certain C++ _compiles_ see CPPFLAGS, should remove -lpthread
 OS_LIBS := -lncurses -lpthread
 PLAT_LINK_OPTS=
 LS_L := ls -l
@@ -247,7 +250,6 @@ CXX_D_FLAGS = -std=gnu++11 -DUSE_PCRE=$(USE_PCRE) $(APP_IN_DLL_CPP)
 # Set variables used in GNU Make builtin rules (run `make -p > rules` in a dir w/o any makefile to see these rules).
 # We use these default rules to compile .c and .cpp source files, plugging in our custom options via these variables:
 # CPPFLAGS is used when compiling both .c and .cpp, CFLAGS only for .c, CXXFLAGS only for .cpp
-CPPFLAGS = -DWINVER=0x0501
 CFLAGS   = $(C_OPTS_COMMON) $(C_OPTS_DBG)
 CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtti $(C_OPTS_LUA_REF) $(KEEPASM) $(C_OPTS_DBG)
 #####################################################################################################################
