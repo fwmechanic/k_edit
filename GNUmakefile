@@ -432,8 +432,8 @@ endif
 
 # GCC _alone_ FTW!  sed, intermed files NOT needed!  https://news.ycombinator.com/item?id=7700812
 # both of these work:
-BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $(basename $<).o
-BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $*.o
+BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) $(CPPFLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $(basename $<).o
+BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) $(CPPFLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $*.o
 
 %.d: %.cpp $(CMDTBL_OUTPUTS)
 	@echo generating $*.d&&$(BLD_CPP_to_D)
