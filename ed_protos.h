@@ -387,13 +387,14 @@ extern   void  AddToSearchLog   ( stref str );
 //------------ Editor startup and shutdown
 
 extern   void  WriteAllDirtyFBufs();
-extern  PChar  StateFilename( PChar dest, size_t sizeofDest, PCChar ext );
+extern Path::str_t StateFilename( PCChar ext );
+extern PCChar EditorStateDir();
 extern   void  WriteStateFile();
 extern   void  EditorExit( int processExitCode, bool fWriteStateFile );
 
 //------------ rsrc file section processing
 
-extern  PChar  RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext );
+extern  Path::str_t RsrcFilename( PCChar ext );
 extern stref   IsolateTagStr( stref src );
 extern   bool  RsrcLdFileSection( stref pszSectionName );
 extern PCChar  LastRsrcLdFileSectionNm();

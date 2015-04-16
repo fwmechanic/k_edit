@@ -191,7 +191,7 @@ STATIC_FXN void InitNewView_File( PChar filename ) {
 
 STATIC_FXN void saveProgVer ( FILE *fout ) { fprintf( fout, "%s\n" , ProgramVersion() ); }
 STATIC_FXN void saveTsNow ( FILE *fout ) {
-   linebuf lbuf;
+   char lbuf[40];
    auto now( time( nullptr ) );
    strftime( BSOB(lbuf), "%Y/%m/%d %H:%M:%S", localtime( &now ) );
    fprintf( fout, "state at %s\n" , lbuf );
@@ -323,21 +323,31 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
    DBG_RECOV && DBG( "%s done", FUNC );
    }
 
-PChar RsrcFilename( PChar dest, size_t sizeofDest, PCChar ext ) {
-   return safeSprintf( dest, sizeofDest, "%s%s.%s", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), ext );
+Path::str_t RsrcFilename( PCChar ext ) {
+   Path::str_t
+        rv( ThisProcessInfo::ExePath() );
+        rv += ThisProcessInfo::ExeName();
+        rv += ".";
+        rv += ext;
+   return rv;
    }
 
-STATIC_VAR Path::str_t s_stateFileDir;
+STATIC_VAR Path::str_t s_EditorStateDir;
 
-PChar StateFilename( PChar dest, size_t sizeofDest, PCChar ext ) {
-   return safeSprintf( dest, sizeofDest, "%s%s.%s", s_stateFileDir.c_str(), ThisProcessInfo::ExeName(), ext );
+PCChar EditorStateDir() { return s_EditorStateDir.c_str(); }
+
+Path::str_t StateFilename( PCChar ext ) {
+   auto rv( s_EditorStateDir );
+        rv += ThisProcessInfo::ExeName();
+        rv += ".";
+        rv += ext;
+   return rv;
    }
 
 STATIC_FXN FILE *fopen_tmpfile( PCChar pModeStr ) {
-   pathbuf pbuf;
-   StateFilename( BSOB(pbuf), "tmp" );
-   auto rv( fopen( pbuf, pModeStr ) );
-   DBG( "%s -%c-> '%s'", FUNC, rv ? '-' : 'X', pbuf );
+   auto fnm( StateFilename( "tmp" ) );
+   auto rv( fopen( fnm.c_str(), pModeStr ) );
+   DBG( "%s -%c-> '%s'", FUNC, rv ? '-' : 'X', fnm.c_str() );
    return rv;
    }
 
@@ -886,22 +896,22 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    if( !IsDir( appdataVal ) ) { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
    #undef   HOME_ENVVAR_NM
 
-   s_stateFileDir = appdataVal;                     0 && DD && DBG( "1: %s", s_stateFileDir.c_str() );
-   s_stateFileDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_stateFileDir.c_str() );
-   if( !IsDir( s_stateFileDir.c_str() ) ) { mkdirOk( s_stateFileDir.c_str() ); }
-   if( !IsDir( s_stateFileDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_stateFileDir.c_str() ); exit( 1 ); }
+   s_EditorStateDir = appdataVal;                     0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
+   s_EditorStateDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
+   if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
+   if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
   #if !defined(_WIN32)
    { char hnbuf[257]; hnbuf[0] = '\0'; // in case homedir is an NFS mount: add a level of indirection to achieve per-host editor state
    if( 0 == gethostname( BSOB( hnbuf ) ) && hnbuf[0] ) {
-      s_stateFileDir += PATH_SEP_STR;   0 && DD && DBG( "3: %s", s_stateFileDir.c_str() );
-      s_stateFileDir += hnbuf;          0 && DD && DBG( "3: %s", s_stateFileDir.c_str() );
-      if( !IsDir( s_stateFileDir.c_str() ) ) { mkdirOk( s_stateFileDir.c_str() ); }
-      if( !IsDir( s_stateFileDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_stateFileDir.c_str() ); exit( 1 ); }
+      s_EditorStateDir += PATH_SEP_STR;   0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
+      s_EditorStateDir += hnbuf;          0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
+      if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
+      if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
       }
    }
   #endif
-   s_stateFileDir += PATH_SEP_CH;                        DD && DBG( "s_stateFileDir = '%s'", s_stateFileDir.c_str() );
-   PutEnvOk( "K_STATEDIR", s_stateFileDir.c_str() );
+   s_EditorStateDir += PATH_SEP_CH;                        DD && DBG( "s_EditorStateDir = '%s'", s_EditorStateDir.c_str() );
+   PutEnvOk( "K_STATEDIR", s_EditorStateDir.c_str() );
    }
 
 class kGetopt : public Getopt {
@@ -1087,23 +1097,21 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
    s_pFbufLog->PutFocusOn();
 
    {
-   pathbuf pb;
-   RsrcFilename( BSOB(pb), "luaedit" );
-   if( IsFile( pb ) ) {
-      AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb ) );
+   auto pb( RsrcFilename( "luaedit" ) );
+   if( IsFile( pb.c_str() ) ) {
+      AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb.c_str() ) );
       MainThreadPerfCounter px;
-      LuaCtxt_Edit::InitOk( pb );
-                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb );
+      LuaCtxt_Edit::InitOk( pb.c_str() );
+                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
       }
    }
    {
-   pathbuf pb;
-   RsrcFilename( BSOB(pb), "luastate" );
-   if( IsFile( pb ) ) {
-      AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb ) );
+   auto pb( RsrcFilename( "luastate" ) );
+   if( IsFile( pb.c_str() ) ) {
+      AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb.c_str() ) );
       MainThreadPerfCounter px;
-      LuaCtxt_State::InitOk( pb );
-                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb );
+      LuaCtxt_State::InitOk( pb.c_str() );
+                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
       }
    }
 

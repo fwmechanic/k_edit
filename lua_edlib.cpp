@@ -59,8 +59,8 @@ LUAFUNC_(OsErrStr)           { linebuf lb; OsErrStr( BSOB(lb) ); R_str( lb ); }
 LUAFUNC_(OsVer)              { R_str( OsVerStr() ); }
 LUAFUNC_(rmargin)            { R_int( g_iRmargin ); }
 
-LUAFUNC_(RsrcFilename)  { pathbuf pb; R_str( RsrcFilename ( BSOB(pb), S_(1) ) ); }
-LUAFUNC_(StateFilename) { pathbuf pb; R_str( StateFilename( BSOB(pb), S_(1) ) ); }
+LUAFUNC_(RsrcFilename)  { R_str( RsrcFilename ( S_(1) ).c_str() ); }
+LUAFUNC_(StateFilename) { R_str( StateFilename( S_(1) ).c_str() ); }
 
 LUAFUNC_(Bell) { ConOut::Bell(); RZ; }
 LUAFUNC_(ScreenLines) { R_int( ScreenLines() ); }

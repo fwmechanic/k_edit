@@ -674,12 +674,11 @@ STATIC_FXN void sv_idx( PCCMD pCmd, void *pCtxt ) {
 void cmdusage_updt() {
    enum { SHOWDBG = 0 };
    SHOWDBG && DBG( "%s+", __func__ );
-   pathbuf origfnm;
-   StateFilename( BSOB(origfnm), "cmdusg" );
-   const auto ifh( fopen( origfnm, "rt" ) );
+   auto origfnm( StateFilename( "cmdusg" ) );
+   const auto ifh( fopen( origfnm.c_str(), "rt" ) );
    const auto fOrigFExists( ifh != nullptr );
    if( ifh ) {
-      SHOWDBG && DBG( "%s: opened ifh = '%s'", __func__, origfnm );
+      SHOWDBG && DBG( "%s: opened ifh = '%s'", __func__, origfnm.c_str() );
       auto entries(0);
       for(;;) {
          char buf[300];
@@ -701,21 +700,20 @@ void cmdusage_updt() {
             }
          }
       fclose( ifh );
-      SHOWDBG && DBG( "%s: closed ifh = '%s'; read %d entries", __func__, origfnm, entries );
+      SHOWDBG && DBG( "%s: closed ifh = '%s'; read %d entries", __func__, origfnm.c_str(), entries );
       }
 
-   pathbuf tmpfnm;
-   StateFilename( BSOB(tmpfnm), "cmdusg_" );
-   //DBG( "%s:%s", __func__, tmpfnm );
-   const auto ofh = fopen( tmpfnm, "wt" );
+   auto tmpfnm( StateFilename( "cmdusg_" ) );
+   //DBG( "%s:%s", __func__, tmpfnm.c_str() );
+   const auto ofh = fopen( tmpfnm.c_str(), "wt" );
    if( ofh ) {
-      SHOWDBG && DBG( "%s: opened ofh = '%s'", __func__, tmpfnm );
+      SHOWDBG && DBG( "%s: opened ofh = '%s'", __func__, tmpfnm.c_str() );
       WalkAllCMDs( ofh, sv_idx );
       fclose( ofh );
-      SHOWDBG && DBG( "%s: closed ofh = '%s'", __func__, tmpfnm );
-      const auto doRename( !fOrigFExists || unlinkOk( origfnm ) );
+      SHOWDBG && DBG( "%s: closed ofh = '%s'", __func__, tmpfnm.c_str() );
+      const auto doRename( !fOrigFExists || unlinkOk( origfnm.c_str() ) );
       if( doRename ) {
-         const auto renmOk( rename( tmpfnm, origfnm ) == 0 );
+         const auto renmOk( rename( tmpfnm.c_str(), origfnm.c_str() ) == 0 );
          SHOWDBG && DBG( "%s: did rename, %s", __func__, renmOk ? "ok" : "FAILED" );
          }
       }
