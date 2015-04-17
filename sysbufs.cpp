@@ -187,8 +187,8 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    // FBufRead_Assign_Win32( pFBuf );
 #endif
 
-   pFBuf->FmtLastLine( "#-------------------- %s", "Metadata" );
    pFBuf->PutLastLine( " " );
+   pFBuf->FmtLastLine( "#-------------------- %s", "Metadata" );
    pFBuf->FmtLastLine( "pgmdir   %s", ThisProcessInfo::ExePath() );
    pFBuf->FmtLastLine( "statedir %s", EditorStateDir() );
 
