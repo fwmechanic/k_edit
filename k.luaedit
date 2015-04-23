@@ -1365,6 +1365,7 @@ local dynamic_fbufs = -- bugbug this s/b automated
    "<env>"           ,
    "<env_>"          ,
    "<files>"         ,
+   "<most_recently_written_files>" ,
    "<macdefs>"       ,
    "<usage>"         ,
    }

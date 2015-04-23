@@ -466,6 +466,62 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
       }
    }
 
+STATIC_FXN int CDECL__ qsort_cmp_fbuf_wrtime( PCVoid pA, PCVoid pB ) {
+   const auto pFA( *PPFBUF(pA) ); const auto tA( pFA->TmLastWrToDisk() );
+   const auto pFB( *PPFBUF(pB) ); const auto tB( pFB->TmLastWrToDisk() );
+   const auto rv( tA==tB ? 0 : tA>tB ? -1 : 1 ); // descending sort: greatest first/top
+   0 && DBG( "%s %" PR_TIMET "d, %s %" PR_TIMET "d = %d", pFA->Name(), tA, pFB->Name(), tB, rv );
+   return rv;
+   }
+
+STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { 0 && DBG( "%s", FUNC );
+   auto count( 0u );
+   {
+#if FBUF_TREE
+   rb_traverse( pNd, g_FBufIdx )
+#else
+   DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
+#endif
+      {
+#if FBUF_TREE
+      PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
+#endif
+      if( pFBuf->TmLastWrToDisk() > 0 ) {
+         ++count;
+         }
+      }
+   }
+
+   PPFBUF        fbufs  ;
+   AllocArrayNZ( fbufs  , count, __func__ );
+   auto ix( 0u );
+   {
+#if FBUF_TREE
+   rb_traverse( pNd, g_FBufIdx )
+#else
+   DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
+#endif
+      {
+#if FBUF_TREE
+      PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
+#endif
+      if( pFBuf->TmLastWrToDisk() > 0 ) { DBG( "[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+         fbufs[ix++] = pFBuf;
+         }
+      }
+   }
+
+   qsort( fbufs, count, sizeof(*fbufs), qsort_cmp_fbuf_wrtime );
+
+   for( ix=0u ; ix < count ; ++ix ) {
+      PCFBUF pFBuf( fbufs[ix] );
+      dest->PutLastLine( pFBuf->Name() ); DBG( "s[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+      }
+   Free0( fbufs );
+
+   Msg( "%u files have been written to disk", count );
+   }
+
 STATIC_FXN void FBufRead_Usage( PFBUF pFBuf, int ) { 0 && DBG( "%s", FUNC );
    cmdusage_updt();
    UsageCtxt uc;
@@ -536,6 +592,7 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, 
          { szMyEnvFile , FBufRead_MyEnvironment },
          { szAsnFile   , FBufRead_Assign        },
          { szUsgFile   , FBufRead_Usage         },
+         { "<most_recently_written_files>" , FBufRead_WrToDisk      },
          { "<ascii>"   , FBufRead_AsciiTbl      },
       };
                                                      DB && DBG( "%s %s' looping", FUNC, pFBuf->Name() );

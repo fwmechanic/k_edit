@@ -1591,6 +1591,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    if( !FBUF_WriteToDiskOk( this, tmpFnm.c_str() ) ) {
       return false;
       }
+   d_tmLastWrToDisk = time( nullptr ); // note this is not == stat mtime, thus not comparable to same
 
    wrNoiseBak();
 

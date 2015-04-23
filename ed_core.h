@@ -1408,11 +1408,15 @@ private:
    //************ Diskfile WRITE
 private:
    int            d_backupMode = bkup_USE_SWITCH;
+   time_t         d_tmLastWrToDisk = 0; // http://en.wikipedia.org/wiki/Year_2038_problem
+
    bool           write_to_disk( PCChar DestFileNm );
 
 public:
 
    bool           WriteToDisk( PCChar pszSavename=nullptr );
+   void           Set_TmLastWrToDisk( time_t viewVal ) { if( viewVal > d_tmLastWrToDisk ) { d_tmLastWrToDisk = viewVal; } }
+   time_t         TmLastWrToDisk() const { return d_tmLastWrToDisk; }
    void           SetBackupMode( int backupMode ) { d_backupMode = backupMode; }
 
    bool           SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation );

@@ -161,7 +161,7 @@ STATIC_FXN void InitNewView_File( PChar filename ) {
    const PChar filenameEnd( strchr( filename, '|' ) );
    PChar pNextTokenStart;
    if( filenameEnd ) {
-      *filenameEnd = '\0';
+      *filenameEnd = '\0'; // filename becomes ASCIZ as filename APIs mostly require ASCIZ (OS ABI defines filename strings thus)
       pNextTokenStart = filenameEnd + 1;
       }
    else

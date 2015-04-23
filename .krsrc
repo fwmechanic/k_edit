@@ -95,6 +95,7 @@
    # forceplateol:yes # sledgehammer
 
    con:=cancel arg "<console>" setfile
+   wr:=cancel arg "<most_recently_written_files>" setfile
 
    # an autostart macro that changes fgcolor colors overrides the extension-specific
    # color setings for the first file in a way that looks like a BUG

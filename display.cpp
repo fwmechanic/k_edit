@@ -2131,12 +2131,15 @@ View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
    d_current.Origin.Set( 0, 0 );
 
    if( szViewOrdinates ) {
-      sscanf( szViewOrdinates, " %d %d %d %d "
+      time_t temptv;
+      sscanf( szViewOrdinates, " %d %d %d %d %" PR_TIMET "d"
          , &d_current.Origin.col
          , &d_current.Origin.lin
          , &d_current.Cursor.col
          , &d_current.Cursor.lin
+         , &temptv
          );
+      d_pFBuf->Set_TmLastWrToDisk( temptv );
       }
 
    d_prev = d_saved = d_current;
@@ -2163,10 +2166,11 @@ View::~View() {
 
 
 void View::Write( FILE *fout ) const {
-   fprintf( fout, " %s|%d %d %d %d\n"
+   fprintf( fout, " %s|%d %d %d %d %" PR_TIMET "d\n"
        , FBuf()->Name()
        , Origin().col, Origin().lin
        , Cursor().col, Cursor().lin
+       , FBuf()->TmLastWrToDisk()
        );
    }
 
