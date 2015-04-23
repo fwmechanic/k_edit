@@ -474,7 +474,7 @@ STATIC_FXN int CDECL__ qsort_cmp_fbuf_wrtime( PCVoid pA, PCVoid pB ) {
    return rv;
    }
 
-STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { 0 && DBG( "%s", FUNC );
+STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "%s", FUNC );
    auto count( 0u );
    {
 #if FBUF_TREE
@@ -505,7 +505,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { 0 && DBG( "%s", FUNC );
 #if FBUF_TREE
       PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      if( pFBuf->TmLastWrToDisk() > 0 ) { DBG( "[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+      if( pFBuf->TmLastWrToDisk() > 0 ) { DB && DBG( "[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
          fbufs[ix++] = pFBuf;
          }
       }
@@ -515,7 +515,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { 0 && DBG( "%s", FUNC );
 
    for( ix=0u ; ix < count ; ++ix ) {
       PCFBUF pFBuf( fbufs[ix] );
-      dest->PutLastLine( pFBuf->Name() ); DBG( "s[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+      dest->PutLastLine( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
       }
    Free0( fbufs );
 
