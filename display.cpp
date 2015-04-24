@@ -2131,7 +2131,7 @@ View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
    d_current.Origin.Set( 0, 0 );
 
    if( szViewOrdinates ) {
-      time_t temptv;
+      time_t temptv( 0 );
       sscanf( szViewOrdinates, " %d %d %d %d %" PR_TIMET "d"
          , &d_current.Origin.col
          , &d_current.Origin.lin
