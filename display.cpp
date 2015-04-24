@@ -2123,6 +2123,13 @@ View::View( const View &src, PWin pWin )
    }
 
 
+// pardon me while I go insane
+#if (defined(__x86_64__) || defined(__ppc64__)) && defined(_WIN32)
+    #define PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "ll"
+#else
+    #define PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH PR_TIMET
+#endif
+
 View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
    : d_pWin ( pWin_  )
    , d_pFBuf( pFBuf_ )
@@ -2132,7 +2139,7 @@ View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
 
    if( szViewOrdinates ) {
       time_t temptv( 0 );
-      sscanf( szViewOrdinates, " %d %d %d %d %" PR_TIMET "d"
+      sscanf( szViewOrdinates, " %d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d"
          , &d_current.Origin.col
          , &d_current.Origin.lin
          , &d_current.Cursor.col
@@ -2166,7 +2173,7 @@ View::~View() {
 
 
 void View::Write( FILE *fout ) const {
-   fprintf( fout, " %s|%d %d %d %d %" PR_TIMET "d\n"
+   fprintf( fout, " %s|%d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d\n"
        , FBuf()->Name()
        , Origin().col, Origin().lin
        , Cursor().col, Cursor().lin
