@@ -133,10 +133,10 @@ The following outline describes all possible argtypes.  Different `ARG::function
 
 The editor implements a large number of functions, all of which the user can invoke. Every key has one function bound to it (and the user is completely free to change these bindings), and functions can also be invoked within macros and via the `execute` function.  Following are some of the most commonly used functions:
 
- * `exit` `ctrl+4`, `alt+F4` exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
+ * `exit` (`ctrl+4`, `alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `undo` (`alt+backspace`) undo the most recent editing operation.  Repeatedly invoking `undo` will successively undo all editing operations.
  * `redo` (`ctrl+backspace`) redo the most recently `undo`ne editing operation.  Repeatedly invoking `redo` will successively redo all `undo`ne editing operations.
- * `arg` is assigned to `center` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this can serve to modify the behavior of `anyfunction` (EX: `setfile`)
+ * `arg` is assigned to `center` (numeric keypad 5 key with numlock off (the state I always use).  Used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this may (depending on the editor function implementation) serve to modify the behavior of `anyfunction` (see `setfile`)
  * `alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
     * switches with current values (and comments regarding effect).
     * functions with current key assignment (and comments regarding effect).
@@ -150,22 +150,22 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
     * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
  * `ctrl+q` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
- * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers.
+ * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers via <clipboard>.
  * `execute` (`ctrl+x`):
     * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
     * `arg arg` "CMD.exe shell command string" `execute` executes a CMD.exe shell (a.k.a. DOS) command string with stdout and stderr captured to an editor buffer.
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
-    * `ctags.exe` [Exuberant Ctags](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
+    * [Exuberant Ctags](http://ctags.sourceforge.net/) `ctags.exe` is invoked to rebuild the "tags database" at the close of each successful build of K.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
- * `psearch` (`F3`) and `msearch` (`F4`) (referred to as `xsearch` in the following text) are forward and backward text search functions respectively.
+ * `psearch` (`F3`) / `msearch` (`F4`) (referred to as `xsearch` in the following text) search forward / backward from the cursor position.
     * `alt+F3` opens a buffer containing previous search keys.
-    * `xsearch` (w/o arg) searches for the next occurrence of the current search key, in the particular direction.
-    * `arg xsearch` changes the current search key to the word in the buffer starting at the cursor and searches for the next occurrence of it, in the particular direction.
-    * `arg` "searchkey" `xsearch` changes the current search key to "searchkey" and searches for the next occurrence of it, in the particular direction.
+    * `xsearch` (w/o arg) searches for the next match of the current search key.
+    * `arg xsearch` changes the current search key to the word in the buffer starting at the cursor and searches for the next match.
+    * `arg` "searchkey" `xsearch` changes the current search key to "searchkey" and searches for the next match.
     * `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
     * `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
-    * Regular-expression search is supported.
+    * Regular-expression (PCRE) search is supported.
  * text-replace functions (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
      * noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
      * noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
@@ -187,6 +187,7 @@ K has a rudimentary TUI menu "system" (written largely in Lua), and a number of 
  * `cur` "inert menu displaying dynamic macro definitions"
 
 ### Win32-only functions
+
  * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `websearch` (`alt+6`): perform web search on string (opens in default browser)
@@ -202,12 +203,7 @@ MEP.EXE for OS/2 and Windows NT), which was first released, and which I first st
 > system editor (Better than VI!) [They ended up with "M", the "Microsoft
 > Editor" which was a derivative of the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html)].
 
-K development started (in spirit) in 1988 when I started writing extensions
-for the Microsoft "M" Editor which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next MSC releases (6.0, 6.0a, 7.x) MS soon
-bloated-up M into PWB (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf)
-then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I
-preferred the simpler yet tremendously powerful M, so starting in 1991 I
-wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
+K development started (in spirit) in 1988 when I started writing extensions for the Microsoft "M" Editor which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next MSC releases (6.0, 6.0a, 7.x) MS soon bloated-up M into PWB (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
 2014/11/23: I just discovered the ["Q" Text Editor](http://www.schulenberg.com/page2.htm) which is another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
 
