@@ -202,8 +202,8 @@ void DBG_init() {
          perror("DBG_init() fopen");
          exit(EXIT_FAILURE);
          }
-      fprintf( stderr , "logging to %s\n", buf );
       fprintf( ofh_DBG, "logging to %s\n", buf );
+   // fprintf( stderr , "logging to %s\n", buf );
       }
    }
 
