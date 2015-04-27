@@ -1,7 +1,7 @@
 K is my personal Win32 programmer's text editor, whose design is derived
 from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
-[TOC]
+[Github has no markdown TOC feature; what a drag]
 
 # Features
 
@@ -177,7 +177,7 @@ The editor implements a large number of functions, all of which the user can inv
 
 ### menu functions
 
-K has a rudimentary TUI menu "system" (written largely in Lua), and a number of editor functions which generate a list of chioces to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is `arg` "fxnm" `ctrl+x`
+K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a number of editor functions which generate a list of chioces to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is `arg` "fxnm" `ctrl+x`
 
  * `mom` menu of Lua-based commands
  * `sb` "system buffers"
@@ -196,8 +196,7 @@ K has a rudimentary TUI menu "system" (written largely in Lua), and a number of 
 
 # Historical Notes
 
-K is heavily based upon Microsoft's M editor (released as M.EXE for DOS, and
-MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
+K is heavily based upon Microsoft's M editor (released as M.EXE for DOS, and MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
 > system editor (Better than VI!) [They ended up with "M", the "Microsoft
