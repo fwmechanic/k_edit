@@ -182,12 +182,13 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
 #if defined(_WIN32)
    pFBuf->FmtLastLine( "#-------------------- %s", "Win32 Status" );
    FBufRead_Assign_Win32( pFBuf );
+   pFBuf->PutLastLine( " " );
 #else
    // pFBuf->FmtLastLine( "#-------------------- %s", "Linux Status" );
    // FBufRead_Assign_Win32( pFBuf );
+   // pFBuf->PutLastLine( " " );
 #endif
 
-   pFBuf->PutLastLine( " " );
    pFBuf->FmtLastLine( "#-------------------- %s", "Metadata" );
    pFBuf->FmtLastLine( "pgmdir   %s", ThisProcessInfo::ExePath() );
    pFBuf->FmtLastLine( "statedir %s", EditorStateDir() );
