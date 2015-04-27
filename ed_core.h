@@ -1415,8 +1415,9 @@ private:
 public:
 
    bool           WriteToDisk( PCChar pszSavename=nullptr );
-   void           Set_TmLastWrToDisk( time_t viewVal ) { if( viewVal > d_tmLastWrToDisk ) { d_tmLastWrToDisk = viewVal; } }
    time_t         TmLastWrToDisk() const { return d_tmLastWrToDisk; }
+   void           Set_TmLastWrToDisk( time_t viewVal ) { if( viewVal > d_tmLastWrToDisk ) { d_tmLastWrToDisk = viewVal; } }
+   void           Reset_TmLastWrToDisk() { d_tmLastWrToDisk = 0; }
    void           SetBackupMode( int backupMode ) { d_backupMode = backupMode; }
 
    bool           SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation );

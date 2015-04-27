@@ -475,6 +475,26 @@ STATIC_FXN int CDECL__ qsort_cmp_fbuf_wrtime( PCVoid pA, PCVoid pB ) {
    return rv;
    }
 
+bool ARG::wr0() {
+   auto count( 0u );
+#if FBUF_TREE
+   rb_traverse( pNd, g_FBufIdx )
+#else
+   DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
+#endif
+      {
+#if FBUF_TREE
+      PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
+#endif
+      if( pFBuf->TmLastWrToDisk() > 0 ) {
+         pFBuf->Reset_TmLastWrToDisk();
+         ++count;
+         }
+      }
+   Msg( "Reset_TmLastWrToDisk() on %u files", count );
+   return false;
+   }
+
 STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "%s", FUNC );
    auto count( 0u );
    {

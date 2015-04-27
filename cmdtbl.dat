@@ -184,6 +184,7 @@ w towinclip    towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+
 w waitcompiledone waitcompiledone        NOARG + NUMARG + TEXTARG + LINEARG
 # waitkey15    waitkey15                 NOARG , test func
 # wct          wct                       NOARG + TEXTARG + BOXSTR, tester for DirListGenerator and WildcardFilenameGenerator
+  wr0          wr0                       NOARG , call Reset_TmLastWrToDisk() on all FBUFs
   window       window                    NOARG + NULLARG
   wrstatefile  wrstatefile               NOARG , write the editor state (history) file
   xquote       xquote         MODIFIES + NOARG , interactively enter a charter at the cursor position, in hex
