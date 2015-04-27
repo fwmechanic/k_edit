@@ -83,7 +83,7 @@ Use: decompress the release file in an empty directory and run `k.exe`.  K was d
 
 ## Stability notes
 
-The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and this version is no longer available from the nuwen.net site.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Win32 platform is clearly x64 only. 
+The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Win32 platform is clearly x64 only.
 
 The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
 
@@ -107,7 +107,7 @@ K ignores the Windows Registry.  K persists information between sessions in stat
 
  * to edit the previously edited file, run `k`
  * to edit file `filename`, run `k filename`
- * run `k -h` to display cmdline invocation help. 
+ * run `k -h` to display full cmdline invocation help.
 
 ## Argtypes
 
@@ -133,7 +133,7 @@ The following outline describes all possible argtypes.  Different `ARG::function
 
 The editor implements a large number of functions, all of which the user can invoke. Every key has one function bound to it (and the user is completely free to change these bindings), and functions can also be invoked within macros and via the `execute` function.  Following are some of the most commonly used functions:
 
- * `exit` (`alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
+ * `exit` `ctrl+4`, `alt+F4` exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `undo` (`alt+backspace`) undo the most recent editing operation.  Repeatedly invoking `undo` will successively undo all editing operations.
  * `redo` (`ctrl+backspace`) redo the most recently `undo`ne editing operation.  Repeatedly invoking `redo` will successively redo all `undo`ne editing operations.
  * `arg` is assigned to `center` (numeric keypad 5 key with numlock off (the state I always use).  `arg` is used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this can serve to modify the behavior of `anyfunction` (EX: `setfile`)
@@ -149,9 +149,8 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
     * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
- * `alt+F2` opens file history buffer; its contents reflect a stack of filenames, current on top.  Use cursor movement functions and `arg setfile` to switch among them.
- * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
- * `+` (copy selection into <clipboard>), `-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers.
+ * `ctrl+q` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
+ * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers.
  * `execute` (`ctrl+x`):
     * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
     * `arg arg` "CMD.exe shell command string" `execute` executes a CMD.exe shell (a.k.a. DOS) command string with stdout and stderr captured to an editor buffer.
@@ -174,8 +173,22 @@ The editor implements a large number of functions, all of which the user can inv
      * `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple files.
      * Regular-expression replacement is not (yet) supported.
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
- * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
+
+### menu functions
+
+K has a rudimentary TUI menu "system" (written largely in Lua), and a number of editor functions which generate a list of chioces to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is `arg` "fxnm" `ctrl+x`
+
+ * `mom` menu of Lua-based commands
+ * `sb` "system buffers"
+ * `dp` "dirs of parent" all parent dirs
+ * `dc` "dirs child" all child dirs
+ * `gm` "grep-related commands"
+ * `cur` "inert menu displaying dynamic macro definitions"
+
+### Win32-only functions
+ * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
+ * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `websearch` (`alt+6`): perform web search on string (opens in default browser)
      * `arg` "search string" `websearch`: perform Google web search for "search string"
      * `arg arg` "search string" `websearch`: display menu of all available search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
