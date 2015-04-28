@@ -564,24 +564,13 @@ void FBUF::FmtLastLine( PCChar format, ...  ) {
 void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
    // if( IsNoEdit() ) { DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() ); }
    BadParamIf( , IsNoEdit() );
-   DirtyFBufAndDisplay();
-
-   const auto minLineCount( yLine + 1 );
-   if( LineCount() < minLineCount ) { 0 && DBG("%s Linecount=%d", __func__, minLineCount );
-      FBOP::PrimeRedrawLineRangeAllWin( this, LastLine(), yLine ); // needed with addition of g_chTrailLineDisp; past-EOL lines need to be overwritten
-      SetLineInfoCount( minLineCount );
-      SetLineCount    ( minLineCount );
-      }
-   else {
-      FBOP::PrimeRedrawLineRangeAllWin( this, yLine, yLine );
-      }
 
    if( ENTAB_0_NO_CONV != Entab() ) {
       stbuf.clear();
       const Tabber tabr( this->TabWidth() );
       switch( Entab() ) { // compress spaces into tabs per this->Entab()
          default:
-         case ENTAB_0_NO_CONV:                   Assert( 0 );            break;
+         case ENTAB_0_NO_CONV:                   Assert( 0 );                                                   break;
          case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(stbuf), srSrc, tabr ); break;
          case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(stbuf), srSrc, tabr ); break;
          case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(stbuf), srSrc, tabr ); break;
@@ -596,6 +585,16 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
       srSrc.remove_suffix( trailSpcs );
       }
    if( srSrc != PeekRawLine( yLine ) ) { // new content != existing content?
+      DirtyFBufAndDisplay();
+      const auto minLineCount( yLine + 1 );
+      if( LineCount() < minLineCount ) { 0 && DBG("%s Linecount=%d", __func__, minLineCount );
+         FBOP::PrimeRedrawLineRangeAllWin( this, LastLine(), yLine ); // needed with addition of g_chTrailLineDisp; past-EOL lines need to be overwritten
+         SetLineInfoCount( minLineCount );
+         SetLineCount    ( minLineCount );
+         }
+      else {
+         FBOP::PrimeRedrawLineRangeAllWin( this, yLine, yLine );
+         }
       UndoReplaceLineContent( yLine, srSrc );  // actually perform the write to this FBUF
       }
    }
