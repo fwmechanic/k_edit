@@ -432,6 +432,7 @@ extern  void Clipboard_PutText( stref sr );
 //
 // Lua functions callable from C++:
 //
+typedef int LUA_BOOL; // NB: Lua boolean is int-sized!  *******************************************************************
 
 extern bool Lua_ConfirmYes( PCChar prompt );
 
@@ -476,7 +477,7 @@ namespace LuaCtxt_Edit {
 
    extern bool  nextmsg_setbufnm     ( PCChar src );  // for mfgrep
    extern bool  nextmsg_newsection_ok( PCChar src );  // for mfgrep
-   extern bool  ReadPseudoFileOk     ( PFBUF src, int *pRvBool );
+   extern bool  ReadPseudoFileOk     ( PFBUF src, LUA_BOOL *pRvBool );
 
    //###                 ###
    //###   DATA ACCESS   ###

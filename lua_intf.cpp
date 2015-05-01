@@ -857,7 +857,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
        case 'V':  l_construct_View( L, va_arg(vl, PView )                 );  break;
        case 'd':  lua_pushnumber(   L, va_arg(vl, double)                 );  break;
        case 'i':  lua_pushinteger(  L, va_arg(vl, int   )                 );  break;
-       case 'b':  lua_pushboolean(  L, va_arg(vl, int   ) != 0            );  break; // NB: boolean is an int-sized thing!
+       case 'b':  lua_pushboolean(  L, va_arg(vl, LUA_BOOL) != 0          );  break; // NB: Lua boolean is int-sized!  *******************************************************************
        case 's':  lua_pushstring(   L, va_arg(vl, PCChar)                 );  break;
        case 'S':  lua_pushstring(   L, va_arg(vl, std::string *)->c_str() );  break;
        }
@@ -885,7 +885,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
                  }break;
 
        case 'b': {const auto lval( lua_toboolean( L, nres ) );            DB && DBG( "%s->%s() b[%d]=%d", __func__, szFuncnm, nres, lval );
-                  *va_arg(vl, int *)    = lval; // NB: boolean is an int-sized thing!
+                  *va_arg(vl, LUA_BOOL *) = lval; // NB: Lua boolean is int-sized!  *******************************************************************
                  }break;
 
        case 'h':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
@@ -925,21 +925,20 @@ STATIC_FXN bool callLuaOk( lua_State *L, const char *szFuncnm, const char *szSig
    }
 
 bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute ) {
-   int didit;
+   LUA_BOOL didit;
    return callLuaOk( L_edit, "ExecutedURL", "s>b", strToExecute, &didit ) && didit;
    }
 
 // intf into Lua locn-list subsys
 void LuaCtxt_Edit::LocnListInsertCursor()               {        callLuaOk( L_edit, "LocnListInsertCursor", ">" ); }
 
-
 bool LuaCtxt_Edit::nextmsg_setbufnm     ( PCChar src )  { return callLuaOk( L_edit, "nextmsg_setbufnm_FROM_C"  , "s>" , src ); }
 bool LuaCtxt_Edit::nextmsg_newsection_ok( PCChar src )  { return callLuaOk( L_edit, "nextmsg_newsection_FROM_C", "s>" , src ); }
-bool LuaCtxt_Edit::ReadPseudoFileOk     ( PFBUF src, int *pRvBool )  { *pRvBool = false;
+bool LuaCtxt_Edit::ReadPseudoFileOk     ( PFBUF src, LUA_BOOL *pRvBool )  { *pRvBool = false;
                                                           return callLuaOk( L_edit, "ReadPseudoFileOk_FROM_C"  , "F>b", src, pRvBool ); }
 
 bool Lua_ConfirmYes( PCChar prompt ) {
-   bool rv;
+   LUA_BOOL rv;
    return callLuaOk( L_edit, "MenuConfirm", "s>b", prompt, &rv ) ? rv : false;
    }
 
