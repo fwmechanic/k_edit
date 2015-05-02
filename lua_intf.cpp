@@ -837,7 +837,7 @@ struct StrDest {
    };
 
 
-// straight from PIL2e (call_va)
+// straight from PIL2e (call_va), a _REALLY DANGEROUS_ interface
 
 STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, va_list vl=0 ) { enum { DB=0 };
    if( !L ) return false;
@@ -859,7 +859,9 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
        case 'i':  lua_pushinteger(  L, va_arg(vl, int   )                 );  break;
        case 'b':  lua_pushboolean(  L, va_arg(vl, LUA_BOOL) != 0          );  break; // NB: Lua boolean is int-sized!  *******************************************************************
        case 's':  lua_pushstring(   L, va_arg(vl, PCChar)                 );  break;
-       case 'S':  lua_pushstring(   L, va_arg(vl, std::string *)->c_str() );  break;
+       case 'S': {const std::string &sr( *(va_arg(vl, std::string * )) );
+                  lua_pushlstring(  L, sr.data(), sr.length() );
+                 }break;
        }
       luaL_checkstack( L, 1, "too many arguments" );
       }
@@ -867,9 +869,9 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
    const auto narg( szSig - pszSigStart );  // number of args pushed
    if( *szSig=='>' ) { ++szSig; }
    const auto nres_( Strlen( szSig ) );      // number of results expected
-   if( docall_known_nres( L, narg, nres_ ) != 0 )  // do the call
+   if( docall_known_nres( L, narg, nres_ ) != 0 ) {  // do the call
       l_handle_pcall_error( L );
-                                                                          DB && DBG( "%s->%s() [%d/%d]", __func__, szFuncnm, nres_, lua_gettop(L) );
+      }                                                                   DB && DBG( "%s->%s() [%d/%d]", __func__, szFuncnm, nres_, lua_gettop(L) );
                                                                           DB && LDS( "post-docall_known_nres", L );
    pszSigStart = szSig;
    for( auto nres = -nres_ ; *szSig ; ++nres, ++szSig ) { // if a fxn rtns 3 results, first is pushed first @-3, second @-2, third @-1
@@ -1014,8 +1016,7 @@ STATIC_FXN PChar LuaTbl2DupS( lua_State *L, PCChar tableDescr, PCChar pszDflt ) 
       if( pszDflt ) {
          rv = Strdup( pszDflt );
          }
-      }
-                                                                             0 && DBG( "-%s '%s' -> '%s'", __func__ , tableDescr, rv );
+      }                                                                      0 && DBG( "-%s '%s' -> '%s'", __func__ , tableDescr, rv );
    return rv;
    }
 
