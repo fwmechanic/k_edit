@@ -239,8 +239,9 @@ enum { DBG_LUA_ALLOC=0 };
 STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
    static_cast<void>(ud); // mask 'not used' warning
 
-   if( nsize == osize )  // yes this happens ?!
+   if( nsize == osize ) { // yes this happens ?!
       return ptr;
+      }
 
    const auto delta( nsize - osize );
 
@@ -300,8 +301,9 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
 
    auto ix(0);
    for( ; ix < depth-1; ++ix ) { DB && DBG(  "%s ix = %d", __func__, ix );
-      if( !getTblVal( L, name[ix], ix ) )
+      if( !getTblVal( L, name[ix], ix ) ) {
          return false;
+         }
       if( !lua_istable( L, -1 ) ) { DB && DBG( "%s field '%s' is not a table in '%s'", __func__, name[ix], pcRvalNm );
          return false;
          }
@@ -315,18 +317,17 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
 STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, int stackLevel ) { // converts number to string!
    dest[0] = '\0';
    const auto pSrc( lua_tostring( L, -1 ) );
-   if( pSrc )
+   if( pSrc ) {
       scpy( dest, sizeof_dest, pSrc );
+      }
    return dest;
    }
 
 // returns nullptr if any errors
 STATIC_FXN PChar LuaTbl2S0( lua_State *L, PChar dest, size_t sizeof_dest, PCChar tableDescr ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
-   if( !L ) return nullptr;
+   if( !L ) { return nullptr; }
    LuaCallCleanup( L );
-   if( !gotTblVal( L, tableDescr ) )
-      return nullptr;
-
+   if( !gotTblVal( L, tableDescr ) ) { return nullptr; }
    return CopyLuaString( dest, sizeof_dest, L, -1 );
    }
 
@@ -465,9 +466,9 @@ STATIC_FXN void l_handle_pcall_error( lua_State *L, bool fCompileErr=false ) { /
    const auto yLine( strtoul( cs.Str(2), &endptr, 10 ) - 1 );
 
    auto pFBuf( OpenFileNotDir_NoCreate( cs.Str(1) ) );
-   if( !pFBuf )
+   if( !pFBuf ) {
       return;
-
+      }
    goto_file_line( pFBuf, yLine );
 
    PCChar emsg( cs.Str(3) );
@@ -496,9 +497,9 @@ STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) {
 
    LuaCallCleanup( L );
 
-   if( lh_getglobal_failed( L, "CallEventHandlers" ) || !lua_isfunction( L, -1 ) )
+   if( lh_getglobal_failed( L, "CallEventHandlers" ) || !lua_isfunction( L, -1 ) ) {
       return;
-
+      }
    lua_pushstring( L, eventName );  0 && DBG( "C calling CallEventHandlers(%s)", eventName );
 
    const auto failed( docall_known_nres( L, 1, 0 ) );
@@ -554,8 +555,8 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
       }
 
    if( !lua_isfunction( L, -1 ) ) {
-      if( funcIsTable )  return Msg( "Lua CMD %s.%s is not a function", cmdName, argTypeNm );
-      else               return Msg( "Lua CMD %s is not a function", cmdName );
+      if( funcIsTable ) { return Msg( "Lua CMD %s.%s is not a function", cmdName, argTypeNm ); }
+      else              { return Msg( "Lua CMD %s is not a function", cmdName );               }
       }
 
    // note that only a SUBSET of ARG type bits can be set here, leading to
@@ -640,9 +641,9 @@ STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void
       *pL = nullptr;
       }
 
-   if( !openlibs )
+   if( !openlibs ) {
       return true;
-
+      }
    s_pFbufLuaLog->MakeEmpty();
    s_pFbufLuaLog->MoveCursorToBofAllViews();
 
@@ -810,12 +811,12 @@ bool ARG::lua() {
 
    if( psrc_LuaCtxt_Edit ) {
       const auto pFBuf( OpenFileNotDir_NoCreate( psrc_LuaCtxt_Edit ) );
-      if( !pFBuf )
+      if( !pFBuf ) {
          return Msg( "'%s' not found?", psrc_LuaCtxt_Edit );
-
-      if( g_CurFBuf() == pFBuf )
+         }
+      if( g_CurFBuf() == pFBuf ) {
          return LuaCtxt_Edit::InitOk( pFBuf->Name() );
-
+         }
       pFBuf->PutFocusOn();
       return true;
       }
@@ -840,7 +841,7 @@ struct StrDest {
 // straight from PIL2e (call_va), a _REALLY DANGEROUS_ interface
 
 STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, va_list vl=0 ) { enum { DB=0 };
-   if( !L ) return false;
+   if( !L ) { return false; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
                                                                           DB && DBG( "%s->%s() [%d] ========================", __func__, szFuncnm, lua_gettop(L) );
@@ -982,9 +983,7 @@ STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout ) {
 STATIC_FXN PChar Lua_s2h( lua_State *L, PCChar functionName, PCChar src ) {
    StrDest sbDest( 0, 0 );
    const auto ok( callLuaOk( L, functionName, "s>h", src, &sbDest ) );
-   if( !ok )
-      return Strdup( src );      // if failed, copy input to output if necessary
-   return sbDest.d_pBuf;
+   return ok ? sbDest.d_pBuf : Strdup( src ); // on failure, copy input to output
    }
 
 bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( Path::str_t &st ) { return Lua_S2S( L_edit, "StrExpandEnvVars"  , st  ); }
@@ -993,8 +992,7 @@ bool  LuaCtxt_Edit::from_C_lookup_glock( std::string &st ) { return Lua_S2S( L_e
 // use THIS fxn to Strdup Lua strings: _NOT_ fail-safe!
 PChar DupLuaString( lua_State *L, int stackLevel ) { // converts number to string!
    const auto pSrc( lua_tostring( L, -1 ) );
-   if( !pSrc ) return nullptr;
-   return Strdup( pSrc );
+   return pSrc ? Strdup( pSrc ) : nullptr;
    }
 
 // returns empty string if any errors
@@ -1002,20 +1000,15 @@ PChar LuaCtxt_Edit::Tbl2S( PChar dest, size_t sizeof_dest, PCChar tableDescr, PC
 
 // returns nullptr if any errors
 STATIC_FXN PChar LuaTbl2DupS0( lua_State *L, PCChar tableDescr ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
-   if( !L ) return nullptr;
+   if( !L ) { return nullptr; }
    LuaCallCleanup( L );
-   if( !gotTblVal( L, tableDescr ) )
-      return nullptr;
-
-   return DupLuaString( L, -1 );
+   return gotTblVal( L, tableDescr ) ? DupLuaString( L, -1 ) : nullptr;
    }
 
 STATIC_FXN PChar LuaTbl2DupS( lua_State *L, PCChar tableDescr, PCChar pszDflt ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
    auto rv( LuaTbl2DupS0( L, tableDescr ) );
-   if( !rv ) {
-      if( pszDflt ) {
-         rv = Strdup( pszDflt );
-         }
+   if( !rv && pszDflt ) {
+      rv = Strdup( pszDflt );
       }                                                                      0 && DBG( "-%s '%s' -> '%s'", __func__ , tableDescr, rv );
    return rv;
    }
@@ -1025,7 +1018,7 @@ PChar LuaCtxt_Edit::Tbl2DupS0( PCChar tableDescr, PCChar pszDflt ) { return LuaT
 
 // returns dfltVal if any errors
 STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) { enum { DB=0 };
-   if( !L ) return dfltVal;
+   if( !L ) { return dfltVal; }
    LuaCallCleanup( L );
    auto rv(dfltVal);
    if( gotTblVal( L, tableDescr ) ) {
