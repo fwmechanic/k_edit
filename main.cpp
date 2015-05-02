@@ -119,7 +119,7 @@ PCChar ExecutableFormat() {
 
 
 STATIC_FXN bool fgotline( Xbuf *xb, FILE *f ) {
-   if( feof( f ) ) return nullptr;
+   if( feof( f ) ) return false;
    auto ofs( 0 ); enum { bump=16 };
    PChar rvbuf( nullptr );
    for(;;) {
