@@ -584,7 +584,9 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
          }
       srSrc.remove_suffix( trailSpcs );
       }
-   if( srSrc != PeekRawLine( yLine ) ) { // new content != existing content?
+   if(   yLine > LastLine()             // no existing content?
+      || srSrc != PeekRawLine( yLine )  // new content != existing content?
+     ) {
       DirtyFBufAndDisplay();
       const auto minLineCount( yLine + 1 );
       if( LineCount() < minLineCount ) { 0 && DBG("%s Linecount=%d", __func__, minLineCount );
