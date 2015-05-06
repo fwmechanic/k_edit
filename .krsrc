@@ -110,7 +110,6 @@
    nl:=newline
    nln:=newline <n
    # tab:tab
-   arg:tab
 
    comf:=arg "<compile>" setfile
 
@@ -602,6 +601,7 @@
    resize:alt+w
    delims: {[(          # test code
    usemouse:yes
+   arg:tab   # this breaks Linux/X paste which types literal chars into the editor
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
