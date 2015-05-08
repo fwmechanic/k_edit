@@ -22,6 +22,8 @@
 
 #include "ed_main.h"
 
+GLOBAL_CONST char szMasterRepo[] = "https://github.com/fwmechanic/k_edit.git";
+
 GLOBAL_CONST char szClipboard[] = "<clipboard>";
 GLOBAL_CONST char szConsole[] = "<console>";
 GLOBAL_CONST char szSearchLog[] = "<search-keys>";
@@ -176,7 +178,7 @@ void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
 
 STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
-   pFBuf->FmtLastLine( "%s, %s, compiled %s", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild );
+   pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, szMasterRepo );
    pFBuf->PutLastLine( " " );
 
 #if defined(_WIN32)
