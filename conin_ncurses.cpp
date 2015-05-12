@@ -181,7 +181,7 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
 // return -1 indicates that event should be ignored (resize event as an example)
 STATIC_FXN int ConGetEvent() {
    // terminal specific values for shift + up / down
-   const auto ch( wgetch(stdscr) );
+   const auto ch( getch() );
    if( ch < 0 )                      { return -1; }
    if( s_to_EdKC[ ch ] ) {
       const auto rv( s_to_EdKC[ ch ] );
