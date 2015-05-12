@@ -318,7 +318,7 @@ THISDIR := .$(DIRSEP)
 # !!! in Lua-5.1/src/Makefile, PLAT=mingw, LUA_T=lua (not lua.exe)
 LUA_T=$(THISDIR)lua$(EXE_EXT)
 
-CLEAN_ARGS = $(OBJS) *.d *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLS_PKG_FILES)
+CLEAN_ARGS = $(OBJS) *.d *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLS_PKG_FILES) *_unittest *_unittest.o
 
 ZAP_ARGS := $(EXE_TGTS) $(LUA_T)
 
