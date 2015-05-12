@@ -609,7 +609,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
       if( keyStart ) {
          const auto tw( fb->TabWidth() );
          for( size_t ofs( 0 ) ; ofs < rl.length() ; ) {
-            auto ixBest( stref::npos ); int mlen;
+            auto ixBest( stref::npos ); auto mlen( 0u );
             auto haystack( rl ); haystack.remove_prefix( ofs );
             for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
                const stref needle( pNeedle );
