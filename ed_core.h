@@ -79,6 +79,7 @@ class FBUF;
 typedef       FBUF * PFBUF;
 typedef FBUF const * PCFBUF;
 typedef      PFBUF * PPFBUF;
+typedef     PCFBUF const * CPPFBUF;
 
 
 typedef  DLinkHead<FBUF> FBufHead;
@@ -1752,5 +1753,3 @@ struct DBGFbufWriter : public OutputWriter {
    };
 //
 //---------------------------------------------------------------------------------------------------------------------
-
-extern char toLower( char ch );

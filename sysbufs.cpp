@@ -381,7 +381,7 @@ STATIC_FXN void FBufRead_Environment( PFBUF pFBuf, int ) {
    }
 
 STATIC_FXN int CDECL__ qsort_cmp_env( PCVoid pA, PCVoid pB ) {
-   return Stricmp( *PPCChar(pA), *PPCChar(pB) );
+   return Stricmp( *static_cast<CPPCChar>(pA), *static_cast<CPPCChar>(pB) );
    }
 
 STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
@@ -470,8 +470,8 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
    }
 
 STATIC_FXN int CDECL__ qsort_cmp_fbuf_wrtime( PCVoid pA, PCVoid pB ) {
-   const auto pFA( *PPFBUF(pA) ); const auto tA( pFA->TmLastWrToDisk() );
-   const auto pFB( *PPFBUF(pB) ); const auto tB( pFB->TmLastWrToDisk() );
+   const auto pFA( *static_cast<CPPFBUF>(pA) ); const auto tA( pFA->TmLastWrToDisk() );
+   const auto pFB( *static_cast<CPPFBUF>(pB) ); const auto tB( pFB->TmLastWrToDisk() );
    const auto rv( tA==tB ? 0 : tA>tB ? -1 : 1 ); // descending sort: greatest first/top
    0 && DBG( "%s %" PR_TIMET "d, %s %" PR_TIMET "d = %d", pFA->Name(), tA, pFB->Name(), tB, rv );
    return rv;

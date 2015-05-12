@@ -250,6 +250,7 @@ typedef const char *        PCChar;
 typedef      PChar *        PPChar;
 typedef char const * const CPCChar;
 typedef     PCChar *       PPCChar;
+typedef    CPCChar *      CPPCChar;
 
 typedef       void *         PVoid;
 typedef const void *        PCVoid;

@@ -313,7 +313,6 @@ LUAFUNC_(enqueue_compile_jobs) {
 STATIC_CONST char KevinsMetatable_FBUF[] = "KevinsMetatable.FBUF";
 struct lua_FBUF { PFBUF pFBuf; };
 
-int l_construct_View( lua_State *L, PView pView );
 STATIC_FXN int l_FBUF_function_getmetatable( lua_State *L ) {
    luaL_getmetatable( L, KevinsMetatable_FBUF );
    return 1;

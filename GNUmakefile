@@ -151,29 +151,38 @@ TRAPV := -ftrapv
 
 #  -Weffc++  -Wpedantic  -Wcast-qual
 CWARN := -Wall -Wextra -W \
+-Wcast-align \
 -Wdouble-promotion \
 -Wfloat-equal \
 -Wformat \
 -Wformat-security \
 -Wformat=2 \
+-Winit-self \
+-Wlogical-op \
+-Wmissing-include-dirs \
 -Wnarrowing \
--Wno-format-nonliteral \
--Wno-parentheses \
--Wpointer-arith \
--Wreturn-local-addr \
--Wshadow \
--Wundef \
 -Wno-enum-compare \
+-Wno-format-nonliteral \
 -Wno-missing-field-initializers \
+-Wno-parentheses \
 -Wno-sign-compare \
 -Wno-unknown-pragmas \
 -Wno-unused-function \
 -Wno-unused-parameter \
 -Wno-unused-value \
 -Wno-unused-variable \
+-Wpointer-arith \
+-Wredundant-decls \
+-Wreturn-local-addr \
+-Wshadow \
+-Wundef \
 
 
-CXXWARN := -Woverloaded-virtual -Wold-style-cast -Wzero-as-null-pointer-constant
+CXXWARN := \
+-Wctor-dtor-privacy \
+-Woverloaded-virtual \
+-Wold-style-cast \
+-Wzero-as-null-pointer-constant \
 
 C_OPTS_COMMON  := $(GCC_OPTZ) $(CWARN) -funsigned-char $(TRAPV) $(CC_OUTPUT)
 C_OPTS_LUA_REF := -I$(LUA_DIR)

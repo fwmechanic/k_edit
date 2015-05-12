@@ -121,7 +121,7 @@ uint16_t rand16() { return (rand() << 1) ^ rand(); }
 static void Free( void *pData, void *pExtra ) { free( pData ); }
 
 PVoid AllocNZ_( size_t bytes )             { return malloc( bytes ); }
-void  Free_( void *pv )                    { free( pv ); }
+void  Free_( PCVoid pv )                   { free( pv ); }
 
 static RbCtrl s_CmdIdxRbCtrl = { AllocNZ_, Free_, printf };
 

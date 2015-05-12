@@ -50,7 +50,7 @@ GLOBAL_VAR bool g_fMemBpEnabled;
 PVoid AllocNZ_( size_t bytes )             { MEM_CBP(); return malloc( bytes ); }
 PVoid Alloc0d_( size_t bytes )             { MEM_CBP(); return calloc( bytes, 1 ); }
 PVoid ReallocNZ_( PVoid pv, size_t bytes ) { MEM_CBP(); return realloc( pv, bytes ); }
-void  Free_( void *pv )                    { MEM_CBP(); free( pv ); }
+void  Free_( PVoid pv )                    { MEM_CBP(); free( pv ); }
 
 // turn stref into ASCIZ (i.e. having ONE '\0' appended), w/extra_nuls _additional_ '\0' chars appended if requested
 PChar Strdup( stref src, size_t extra_nuls ) {
