@@ -274,6 +274,7 @@
    env:=arg "<env>" setfile
  # env:Alt+E
    #tag:ctrl+m
+   mark:ctrl+g
    Refresh:Ctrl+R       #File Refresh analogous to Norton Commander's 'reread disk'
 
    # meta up = top of window# meta down = bottom of window
@@ -328,7 +329,6 @@
    oldgrep:=grep
    oldgrep:ctrl+F4
    fgrep:=fg
-   fgrep:alt+e
    lblankdel:alt+o
    topOfSearchlog:=arg "1" searchlog
    topOfSearchlog:alt+F3
@@ -338,6 +338,9 @@
    MakeBox:alt+Num/
    hike:25
 
+   # ctrl+bksp does not decode in ncurses ubuntu 14.04, so we remap
+   undo:ctrl+e
+   redo:ctrl+r
 
    # splitcompilewnd25pct := arg "<compile>" splitwnd25pct
 
@@ -603,6 +606,8 @@
    usemouse:yes
    arg:tab   # this breaks Linux/X paste which types literal chars into the editor
 
+[k-os.linux]
+
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 #ллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллллл
@@ -739,10 +744,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [k-ftype:diff]
 
 [k-ftype:clang]
-   # backup:bak
-   swapovl:=psearch pword mword arg pword pword swapchar pword right
-   swapovl:ctrl+e
-
    delims: {[(
    wucminlen:1
    mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"

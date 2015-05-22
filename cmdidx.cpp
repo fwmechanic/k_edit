@@ -279,7 +279,7 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
    , IDX_EQ( EdKC_c_j          )  pCMD_sinsert
    , IDX_EQ( EdKC_c_k          )  pCMD_unassigned
    , IDX_EQ( EdKC_c_l          )  pCMD_replace
-   , IDX_EQ( EdKC_c_m          )  pCMD_mark
+   , IDX_EQ( EdKC_c_m          )  pCMD_unassigned
    , IDX_EQ( EdKC_c_n          )  pCMD_linsert
    , IDX_EQ( EdKC_c_o          )  pCMD_unassigned
    , IDX_EQ( EdKC_c_p          )  pCMD_unassigned
