@@ -880,6 +880,10 @@ bool ARG::setenv() {
 
 //------------------------------------------------
 
+#if !defined(_WIN32)
+#  include <pwd.h>
+#endif
+
 STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    PutEnvOk( "K_RUNNING?", "yes" );
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
@@ -907,6 +911,13 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
       s_EditorStateDir += hnbuf;          0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
       if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
       if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
+      s_EditorStateDir += PATH_SEP_STR;   0 && DD && DBG( "4: %s", s_EditorStateDir.c_str() );
+      const auto pw( getpwuid( geteuid() ) );
+      if( pw ) {
+         s_EditorStateDir += pw->pw_name;
+         if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
+         if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
+         }
       }
    }
   #endif
