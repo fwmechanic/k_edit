@@ -232,6 +232,11 @@ namespace ThisProcessInfo {
    void   Init();
    PCChar ExePath();  // includes trailing '\'
    PCChar ExeName();
+#if !defined(_WIN32)
+   PCChar hostname();
+   PCChar euname(); // username of euid()
+   int    euid();
+#endif
    }
 
 // all this InterlockedExchange gyration because SetUserInterrupt() is called

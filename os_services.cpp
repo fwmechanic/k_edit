@@ -25,18 +25,29 @@ void ConOut::Bell() {
    if( g_fAllowBeep )  fputc( '\a', stdout );  // write RTL's stdout, which hasn't been touched since startup
    }
 
-
 class OsEnv {
    Path::str_t d_exe_path;  // "C:\dir1\dir2\" (includes trailing '\')
    Path::str_t d_exe_name;  // "k"
+   std::string d_euname;
+   std::string d_hostname;
+   int         d_euid;
 
    public: //===================================================================
 
    OsEnv();
 
-   PCChar ExePath() const { return d_exe_path.c_str(); }  // includes trailing '\'
-   PCChar ExeName() const { return d_exe_name.c_str(); }
+   PCChar ExePath()   const { return d_exe_path.c_str(); }  // includes trailing '\'
+   PCChar ExeName()   const { return d_exe_name.c_str(); }
+#if !defined(_WIN32)
+   int    euid()      const { return d_euid; }
+   PCChar euname()    const { return d_euname.c_str(); }
+   PCChar hostname()  const { return d_hostname.c_str(); }
+#endif
    };
+
+#if !defined(_WIN32)
+#  include <pwd.h>
+#endif
 
 OsEnv::OsEnv() {
 #if defined(_WIN32)
@@ -50,6 +61,14 @@ OsEnv::OsEnv() {
    d_exe_path.assign( BSR2STR( Path::RefDirnm( pb ) ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
    d_exe_name.assign( BSR2STR( Path::RefFnm  ( pb ) ) ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
 #else
+   const auto pw( getpwuid( d_euid=geteuid() ) );
+   if( pw ) { d_euname.assign( pw->pw_name ); }
+   { char hnbuf[257]; hnbuf[0] = '\0';
+   if( 0 == gethostname( BSOB( hnbuf ) ) && hnbuf[0] ) {
+      d_hostname.assign( hnbuf );
+      }
+   }
+
    STATIC_CONST char s_link_nm[] = "/proc/self/exe";
    if( 0 ) {
       // this is pointless since there is a race condition: between (this)
@@ -90,8 +109,13 @@ void ThisProcessInfo::Init() {
    DBG_init();
    }
 
-PCChar ThisProcessInfo::ExePath() { return g_Process->ExePath(); }  // includes trailing '\'
-PCChar ThisProcessInfo::ExeName() { return g_Process->ExeName(); }
+PCChar ThisProcessInfo::ExePath()  { return g_Process->ExePath(); }  // includes trailing '\'
+PCChar ThisProcessInfo::ExeName()  { return g_Process->ExeName(); }
+#if !defined(_WIN32)
+int    ThisProcessInfo::euid()     { return g_Process->euid(); }
+PCChar ThisProcessInfo::euname()   { return g_Process->euname(); }
+PCChar ThisProcessInfo::hostname() { return g_Process->hostname(); }
+#endif
 
 volatile InterlockedExchangeOperand s_fHaltExecution;
 

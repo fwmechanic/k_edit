@@ -880,10 +880,6 @@ bool ARG::setenv() {
 
 //------------------------------------------------
 
-#if !defined(_WIN32)
-#  include <pwd.h>
-#endif
-
 STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    PutEnvOk( "K_RUNNING?", "yes" );
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
@@ -910,16 +906,16 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
       };
    mkdir_stf();
   #if !defined(_WIN32)
-   // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host
-   { char hnbuf[257]; hnbuf[0] = '\0';
-   if( 0 == gethostname( BSOB( hnbuf ) ) && hnbuf[0] ) {
-      s_EditorStateDir += hnbuf;          0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
+   { // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host
+   const auto hostname( ThisProcessInfo::hostname() );
+   if( hostname[0] ) {
+      s_EditorStateDir += hostname;          0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
       mkdir_stf();
       // since I am often sudo'd, and since the root-associated edit-fileset often can't be accessed (and root-written state files
       // can't be rewritten) by non-root, track them separately by adding a username level of indirection
-      const auto pw( getpwuid( geteuid() ) );
-      if( pw ) {
-         s_EditorStateDir += pw->pw_name;
+      const auto euname( ThisProcessInfo::euname() );
+      if( euname[0] ) {
+         s_EditorStateDir += euname;
          mkdir_stf();
          }
       }
