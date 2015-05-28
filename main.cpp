@@ -898,10 +898,11 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    const PCChar appdataVal( getenv( HOME_ENVVAR_NM ) );
    if( !appdataVal )          { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
    if( !IsDir( appdataVal ) ) { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
-   #undef   HOME_ENVVAR_NM
-
    s_EditorStateDir = appdataVal;                     0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
    s_EditorStateDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
+#undef   HOME_ENVVAR_NM
+#undef   HOME_SUBDIR_NM
+
    auto mkdir_stf = [&]() {
       if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
       if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
