@@ -902,26 +902,28 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
 
    s_EditorStateDir = appdataVal;                     0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
    s_EditorStateDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
-   if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
-   if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
-  #if !defined(_WIN32)
-   { char hnbuf[257]; hnbuf[0] = '\0'; // in case homedir is an NFS mount: add a level of indirection to achieve per-host editor state
-   if( 0 == gethostname( BSOB( hnbuf ) ) && hnbuf[0] ) {
-      s_EditorStateDir += PATH_SEP_STR;   0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
-      s_EditorStateDir += hnbuf;          0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
+   auto mkdir_stf = [&]() {
       if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
       if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
-      s_EditorStateDir += PATH_SEP_STR;   0 && DD && DBG( "4: %s", s_EditorStateDir.c_str() );
+      s_EditorStateDir += PATH_SEP_STR;   0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
+      };
+   mkdir_stf();
+  #if !defined(_WIN32)
+   // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host
+   { char hnbuf[257]; hnbuf[0] = '\0';
+   if( 0 == gethostname( BSOB( hnbuf ) ) && hnbuf[0] ) {
+      s_EditorStateDir += hnbuf;          0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
+      mkdir_stf();
+      // since I am often sudo'd, and since the root-associated edit-fileset often can't be accessed (and root-written state files
+      // can't be rewritten) by non-root, track them separately by adding a username level of indirection
       const auto pw( getpwuid( geteuid() ) );
       if( pw ) {
          s_EditorStateDir += pw->pw_name;
-         if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
-         if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
+         mkdir_stf();
          }
       }
    }
   #endif
-   s_EditorStateDir += PATH_SEP_CH;                        DD && DBG( "s_EditorStateDir = '%s'", s_EditorStateDir.c_str() );
    PutEnvOk( "K_STATEDIR", s_EditorStateDir.c_str() );
    }
 
