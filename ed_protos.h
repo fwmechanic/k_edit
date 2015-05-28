@@ -279,11 +279,7 @@ extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
 extern  void   swid_ch(  PChar dest, size_t sizeofDest, char ch );
 
 extern   void  FBufRead_Assign_Switches( PFBUF pFBuf );
-#if defined(_WIN32)
-extern   void  FBufRead_Assign_Win32( PFBUF pFBuf );
-#else
-STIL     void  FBufRead_Assign_Win32( PFBUF pFBuf ) {}
-#endif
+extern   void  FBufRead_Assign_OsInfo( PFBUF pFBuf );
 
 extern   void  AssignLogTag( PCChar tag );
 enum { RSRCFILE_COMMENT_DELIM = '#' };

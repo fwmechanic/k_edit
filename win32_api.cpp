@@ -66,9 +66,9 @@ STATIC_FXN PChar GetCPName( PChar buf, size_t sizeofBuf, Win32::UINT cp ) {
    return buf;
    }
 
-void FBufRead_Assign_Win32( PFBUF pFBuf ) {
+void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
+   pFBuf->FmtLastLine( "#-------------------- %s", "Win32 Status" );
    pFBuf->FmtLastLine( "OsVerStr                 = %s" , OsVerStr() );
-
    // To set a console's input code page, use the SetConsoleCP function. To set and query a console's output code page, use the SetConsoleOutputCP and GetConsoleOutputCP functions.
    pathbuf pbuf;
    pFBuf->FmtLastLine( "Console INPUT  Code Page = Win32::GetConsoleCP()       = %s" , GetCPName( BSOB(pbuf), Win32::GetConsoleCP() ) );

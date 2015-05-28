@@ -181,15 +181,8 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, szMasterRepo );
    pFBuf->PutLastLine( " " );
 
-#if defined(_WIN32)
-   pFBuf->FmtLastLine( "#-------------------- %s", "Win32 Status" );
-   FBufRead_Assign_Win32( pFBuf );
+   FBufRead_Assign_OsInfo( pFBuf );
    pFBuf->PutLastLine( " " );
-#else
-   // pFBuf->FmtLastLine( "#-------------------- %s", "Linux Status" );
-   // FBufRead_Assign_Win32( pFBuf );
-   // pFBuf->PutLastLine( " " );
-#endif
 
    pFBuf->FmtLastLine( "#-------------------- %s", "Metadata" );
    pFBuf->FmtLastLine( "pgmdir   %s", ThisProcessInfo::ExePath() );

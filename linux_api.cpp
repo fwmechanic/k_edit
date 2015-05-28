@@ -165,3 +165,13 @@ bool FileOrDirExists( PCChar pszFileName ) {
 PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
    return strerror_r( errno, dest, sizeofDest );
    }
+
+int ThisProcessInfo::umask() { const auto rv( ::umask( 0 ) ); ::umask( rv ); return rv; }
+
+void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
+   pFBuf->FmtLastLine( "#-------------------- %s", "Linux Status" );
+
+   pFBuf->FmtLastLine( "%s@%s", ThisProcessInfo::euname(), ThisProcessInfo::hostname() );
+   pFBuf->FmtLastLine( "umask : %03o", ThisProcessInfo::umask() );
+
+   }

@@ -236,6 +236,7 @@ namespace ThisProcessInfo {
    PCChar hostname();
    PCChar euname(); // username of euid()
    int    euid();
+   int    umask();
 #endif
    }
 
