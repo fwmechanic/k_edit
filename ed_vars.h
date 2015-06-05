@@ -512,8 +512,11 @@ STIL   bool        IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedB
 
 //############  SWITCH VALUE VARIABLES
 
-
+#ifdef _WIN32
 enum { BIG_BULLET = 249, SMALL_BULLET = 250 };
+#else
+enum { BIG_BULLET = '^', SMALL_BULLET = '`' };
+#endif
 
 extern char  g_chTabDisp         ;
 extern bool  g_fTrailSpace       ;

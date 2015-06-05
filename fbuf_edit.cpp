@@ -102,14 +102,10 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
    }
 
 
-#if defined(_WIN32)
-   #define XLAT_chFill( chFill ) \
-                    if( chFill == BIG_BULLET && USING_MS_OEM_CHARSET ) { \
-                        chFill = SMALL_BULLET;                           \
-                        }
-#else
-   #define XLAT_chFill( chFill )
-#endif
+#define XLAT_chFill( chFill ) \
+                 if( chFill == BIG_BULLET /* && USING_MS_OEM_CHARSET */ ) { \
+                     chFill = SMALL_BULLET;                                 \
+                     }
 
 // intent (20141221) is that FormatExpandedSeg replace PrettifyMemcpy
 // what's preventing this from happening?
