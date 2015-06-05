@@ -579,7 +579,7 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
       }
    if( !TrailSpcsKept() ) {
       auto trailSpcs = 0;
-      for( auto it( srSrc.crbegin() ) ; it != srSrc.crend() && *it == ' ' ; ++it ) {
+      for( auto it( srSrc.crbegin() ) ; it != srSrc.crend() && isBlank( *it ) ; ++it ) {
          ++trailSpcs;
          }
       srSrc.remove_suffix( trailSpcs );
