@@ -65,10 +65,6 @@
 #define NOIMAGE
 #define NOTAPE
 
-// USING_MS_OEM_CHARSET should only change (from 1) when unix port is done
-//
-#define USING_MS_OEM_CHARSET  1
-
 // MSVC uses certain values to identify certain states.
 //
 // CCCCCCCC means a local variable which was never initialized
