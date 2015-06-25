@@ -374,7 +374,7 @@
    tabconvsome:shift+tab
 
    softcrtogl:= cancel arg "softcr:invert" assign
-   softcrtogl:shift+enter
+   i:=softcrtogl   # mnemonic: toggle (auto)Indent
 
    wwraptogl:= cancel arg "wordwrap:invert" assign
    # wwraptogl:alt+w
