@@ -46,7 +46,7 @@ STATIC_FXN void keyname_to_code( const char *name, U16 edkc ) { enum { DB=0 };
                                       DB && DBG( "tigetstr+ %s", name );
    const auto s( tigetstr( name ) );  DB && DBG( "tigetstr- %s", name );
    if( !s || (long)(s) == -1 ) {
-      DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, name, "", edkcnmbuf );
+      0 && DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, name, "", edkcnmbuf );
       return;
       }                               DB && DBG( "key_defined+ %s", s );
    const auto code( key_defined(s) ); DB && DBG( "key_defined- %s", s );
