@@ -227,6 +227,7 @@ void DBG_init() {
          exit(EXIT_FAILURE);
          }
       fprintf( ofh_DBG, "logging to %s\n", buf );
+      PutEnvOk( "K_LOGFNM", buf );
    // fprintf( stderr , "logging to %s\n", buf );
       }
    }

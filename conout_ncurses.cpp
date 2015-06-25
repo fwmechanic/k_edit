@@ -144,7 +144,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
       return false;
       }
 
-   start_color();  DBG( "curses_version()=\"%s\"\ncan_change_color() = %d\nKEY_MIN=%d, KEY_MAX=%d\nCOLORS = %d\nCOLOR_PAIRS = %d", curses_version(), can_change_color(), KEY_MIN, KEY_MAX, COLORS, COLOR_PAIRS );
+   start_color();  DBG( "TERM=%s\ncurses_version()=\"%s\"\ncan_change_color() = %d\nKEY_MIN=%d, KEY_MAX=%d\nCOLORS = %d\nCOLOR_PAIRS = %d", getenv("TERM"), curses_version(), can_change_color(), KEY_MIN, KEY_MAX, COLORS, COLOR_PAIRS );
    conin_ncurses_init();
    ConOut::Resize();
    return true;
