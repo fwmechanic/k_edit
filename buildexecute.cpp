@@ -161,7 +161,8 @@ STATIC_FXN void IncArgCnt() {
    }
 
 bool ARG::bp() {
-   *(static_cast<int *>( nullptr )) = 0; // intentional crash
+   int *pcrash( nullptr );
+   *pcrash = 0; // intentional crash
    SW_BP;
    return true;
    }
