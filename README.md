@@ -1,5 +1,6 @@
-K is my personal Win32 programmer's text editor, whose design is derived
-from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
+K is my personal programmer's text editor, whose design is derived from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
+
+K is a TUI app that runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
 
 [Github has no markdown TOC feature; what a drag]
 
@@ -14,7 +15,7 @@ from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.t
  * **K**: (Partial) syntax highlighting (C/C++, Lua, Python)
      * comments
      * literal strings/characters
-     * C/C++ preprocessor conditional regions
+     * conditional regions: C/C++ preprocessor, GNU make
  * **K**: Powerful file/source-code navigation
      * K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), enabling a hypertext-linking experience navigating amongst tagged items in your programming project.
      * K can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc. it's easy to quickly construct a buffer containing only
@@ -32,17 +33,9 @@ The K source code distro contains, and K uses, the following source code from ex
 
 # Limitations
 
- * K is a Win32 Console or Linux ncurses app with no mouse support (except the "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors)).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
- * K has no "virtual memory" mechanism (as M did); edited files are loaded in
-toto into RAM; K WILL CRASH if you attempt to open a file that is larger than
-the biggest malloc'able block available to the K process.  I get hit by this
-maybe once a year, and it's easy enough to head/tail/grep to chop a huge
-(usually some sort of log) file into manageable pieces.  Also, the 
-64-bit version raises this ceiling considerably.
- * K operates on ASCII files; is has no support for Unicode/MBCS/etc. content (it's a text-editor, not a word processor).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED
-into the charset that K uses.  If I then construct a cmdline to rename said
-file/dir (a task I often perform with K), the command will fail because the filename (containing the translated character instead of the original character) will not exist.  As with the "lack of VM" limitation, this is rarely annoying, and will only be resolved (a large
-undertaking) if it becomes much more annoying to me (which seems unlikely).
+ * K is a Win32 Console or Linux ncurses app with no mouse support (aside from "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors)).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+ * K has no "virtual memory" mechanism (as M did); edited files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process.  I get hit by this maybe once a year, and it's easy enough to head/tail/grep to chop a huge (usually some sort of log) file into manageable pieces.  Also, the (default) 64-bit version raises this ceiling considerably.
+ * K operates on ASCII files; is has no support for Unicode/MBCS/etc. content (it's a text-editor, not a word processor).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED into the charset that K uses.  If I then construct a cmdline to rename said file/dir (a task I often perform with K), the command will fail because the filename (containing the translated character instead of the original character) will not exist.  As with the "lack of VM" limitation, this is rarely annoying, and will only be resolved (a large undertaking) if it becomes much more annoying to me (which seems unlikely).
 
 # Building
 
@@ -65,12 +58,12 @@ undertaking) if it becomes much more annoying to me (which seems unlikely).
 
 ## To build
 
-    make clean  & rem unnecessary the first time
+    make clean
     make -j     & the build is parallel-make-safe
 
 To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 
-    make zap    & rem clean plus nuke all lua.exe related
+    make zap    & clean plus nuke all lua.exe related
 
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
@@ -134,9 +127,9 @@ The following outline describes all possible argtypes.  Different `ARG::function
 The editor implements a large number of functions, all of which the user can invoke. Every key has one function bound to it (and the user is completely free to change these bindings), and functions can also be invoked within macros and via the `execute` function.  Following are some of the most commonly used functions:
 
  * `exit` (`ctrl+4`, `alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
- * `undo` (`alt+backspace`) undo the most recent editing operation.  Repeatedly invoking `undo` will successively undo all editing operations.
- * `redo` (`ctrl+backspace`) redo the most recently `undo`ne editing operation.  Repeatedly invoking `redo` will successively redo all `undo`ne editing operations.
- * `arg` is assigned to `center` (numeric keypad 5 key with numlock off (the state I always use).  Used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this may (depending on the editor function implementation) serve to modify the behavior of `anyfunction` (see `setfile`)
+ * `undo` (`ctrl+e`,`alt+backspace`) undo the most recent editing operation.  Repeatedly invoking `undo` will successively undo all editing operations.
+ * `redo` (`ctrl+r`,`ctrl+backspace`) redo the most recently `undo`ne editing operation.  Repeatedly invoking `redo` will successively redo all `undo`ne editing operations.
+ * `arg` (`center`: numeric keypad 5 key with numlock off (the state I always use)).  Used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this may (depending on the editor function implementation) serve to modify the behavior of `anyfunction` (see `setfile`)
  * `alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
     * switches with current values (and comments regarding effect).
     * functions with current key assignment (and comments regarding effect).
@@ -149,7 +142,7 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
     * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
- * `ctrl+q` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
+ * `ctrl+q`,`alt+F2` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
  * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers via <clipboard>.
  * `execute` (`ctrl+x`):
     * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
@@ -212,11 +205,10 @@ Until 2012/06, I compiled K using the free "Microsoft Visual C++ Toolkit 2003" c
 
 I have no fondness for Visual Studio, nor for installers, so when I finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
-advantage of the major generic features of C++11.  As a result, K no longer
-compiles with the MSVC 7.1 compiler.
+advantage of the major generic features of C++11.  As a result, K no longer compiles with the MSVC 7.1 compiler.
 
 Per
 [Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx)
-the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."
+the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and works fine).
 
 [README Markdown Syntax Reference](https://confluence.atlassian.com/display/STASH/Markdown+syntax+guide)
