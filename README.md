@@ -1,4 +1,4 @@
-K is my personal programmer's text editor, whose design is derived from Microsoft's "M" editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
+K is my personal programmer's text editor, whose design is derived from Microsoft's ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M) editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
 K is a TUI app that runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
 
@@ -192,12 +192,12 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
 K is heavily based upon Microsoft's M editor (released as M.EXE for DOS, and MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
-> system editor (Better than VI!) [They ended up with "M", the "Microsoft
+> system editor (Better than VI!) [They ended up with ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M), the "Microsoft
 > Editor" which was a derivative of the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html)].
 
 K development started (in spirit) in 1988 when I started writing extensions for the Microsoft "M" Editor which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next MSC releases (6.0, 6.0a, 7.x) MS soon bloated-up M into PWB (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
-2014/11/23: I just discovered the ["Q" Text Editor](http://www.schulenberg.com/page2.htm) which is another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
+2014/11/23: I just discovered ["Q" Text Editor](http://www.schulenberg.com/page2.htm), another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
 
 ## Toolchain notes
 
