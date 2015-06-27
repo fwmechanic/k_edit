@@ -1,4 +1,4 @@
-K is my personal programmer's text editor, whose design is derived from Microsoft's ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M) editor which was itself derived from the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
+K is my personal programmer's text editor, whose design is derived from Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) which was itself derived from the [Z](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
 K is a TUI app that runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
 
@@ -88,7 +88,7 @@ The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used 
 
 # Editor State Files
 
-K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*` (`~/.kedit` on Linux).  Information stored in state files includes:
+K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*` (`${HOME}/.kedit/*hostname*/` on Linux).  Information stored in state files includes:
 
  *  files edited (including window/cursor position)
  *  search-key and replace-string history
@@ -189,26 +189,24 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
 
 # Historical Notes
 
-K is heavily based upon Microsoft's M editor (released as M.EXE for DOS, and MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
+K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (released as M.EXE for DOS, and MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
 > system editor (Better than VI!) [They ended up with ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M), the "Microsoft
 > Editor" which was a derivative of the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html)].
 
-K development started (in spirit) in 1988 when I started writing extensions for the Microsoft "M" Editor which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next MSC releases (6.0, 6.0a, 7.x) MS soon bloated-up M into PWB (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
+K development started (in spirit) in 1988 when I started writing extensions for the Microsoft [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next Microsoft C releases (6.0, 6.0a, 7.x) for DOS and OS/2, Microsoft bloated-up M into [PWB](http://www.texteditors.org/cgi-bin/wiki.pl?PWB) (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
 2014/11/23: I just discovered ["Q" Text Editor](http://www.schulenberg.com/page2.htm), another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
 
 ## Toolchain notes
 
-Until 2012/06, I compiled K using the free "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  While I used these MS build tools, I used [WinDbg](http://en.wikipedia.org/wiki/WinDbg), to debug crashes.
+Until 2012/06, I compiled K using the free "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  While I used these MS build tools, I used [WinDbg](http://en.wikipedia.org/wiki/WinDbg) to debug crashes.
 
-I have no fondness for Visual Studio, nor for installers, so when I finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
+I have no fondness for massive IDE's (e.g. Visual Studio), nor for installers, so when I finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
-advantage of the major generic features of C++11.  As a result, K no longer compiles with the MSVC 7.1 compiler.
+advantage of the major generic features of C++11; consequently K no longer compiles with MSVC++ 7.1.
 
-Per
-[Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx)
-the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and works fine).
+Per [Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx) the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and 64-bit Linux K has no known anomalies).
 
 [README Markdown Syntax Reference](https://confluence.atlassian.com/display/STASH/Markdown+syntax+guide)
