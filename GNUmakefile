@@ -34,6 +34,7 @@
 # $|  The names of all the order-only prerequisites, with spaces between them.
 # $*  The stem with which an implicit rule matches
 #
+$(info make $(MAKE_VERSION))
 
 .SUFFIXES:
 .PHONY: zap clean cleanliblua
@@ -332,6 +333,18 @@ CLEAN_ARGS = $(OBJS) *.d *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(
 ZAP_ARGS := $(EXE_TGTS) $(LUA_T)
 
 all : tags
+
+print-%: ; @echo $* = '$($*)' from $(origin $*)
+
+.PHONY: printvars
+printvars:
+	$(foreach V,$(sort $(.VARIABLES)), \
+	  $(if \
+	     $(filter-out environment% default automatic,$(origin $V)), \
+	       $(info $V=$($V) ($(value $V))) \
+	  ) \
+	)
+
 
 TAGS_CMDLN = ctags$(EXE_EXT) --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -R
 
