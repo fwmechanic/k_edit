@@ -42,7 +42,8 @@
 // different way...
 //
 // An important requirement of this implementation is that type-safety NOT be
-// compromised; there are NO void pointers or casts used herein!
+// compromised; there are NO void pointers, and only a few const_casts (and no
+// other casts) used herein!
 //
 // One advantage of this implementation is that the prev and next pointers are
 // (intended to be) stored within the object being linked.  IOW, the extra node
@@ -64,8 +65,8 @@
 
 template <class T>
 struct DLinkHead {
-   // following members are logically private, should be axsd only by DLINK_ macros below
-   typedef       T *P;
+   // following members are logically private, should be accessed only by DLINK_ macros below
+   typedef       T * P;
    typedef const T *CP;
    P                dl_first = nullptr;
    P                dl_last  = nullptr;
@@ -75,31 +76,29 @@ public: // the intended "public interface"
 
    void clear()          { dl_first = dl_last = nullptr; count = 0; }
    bool empty()    const { return dl_first == nullptr; }
-   CP   frontK()   const { return CP(dl_first); } // probably never needed; DO NOT rename front()
-   P    front()    const { return    dl_first ; }
-   CP   backK()    const { return CP(dl_last) ; } // probably never needed; DO NOT rename back()
-   P    back ()    const { return    dl_last  ; }
+   CP   frontK()   const { return const_cast<CP>(dl_first); } // probably never needed; DO NOT rename front()
+   P    front()    const { return                dl_first ; }
+   CP   backK()    const { return const_cast<CP>(dl_last) ; } // probably never needed; DO NOT rename back()
+   P    back ()    const { return                dl_last  ; }
    DLINK_COUNT( unsigned length() const { return count; } )
    };
 
 
 template <class T>
-struct DLinkEntry
-   {
-   // following members are logically private, should be axsd only by DLINK_ macros below
-   typedef       T *P;
+struct DLinkEntry {
+   // following members are logically private, should be accessed only by DLINK_ macros below
+   typedef       T * P;
    typedef const T *CP;
-   P          dl_next;
-   P          dl_prev;
+   P                dl_next = nullptr;
+   P                dl_prev = nullptr;
 
 public: // the intended "public interface"
 
-   DLinkEntry() : dl_next( nullptr ), dl_prev( nullptr ) {}
-   void clear() { dl_next = dl_prev = nullptr; }
-   CP Next() const { return CP(dl_next); }
-   P  Next()       { return    dl_next ; }
-   CP Prev() const { return CP(dl_prev); }
-   P  Prev()       { return    dl_prev ; }
+   void clear()       { dl_next = dl_prev = nullptr; }
+   CP Next()    const { return const_cast<CP>(dl_next); }
+   P  Next()          { return                dl_next ; }
+   CP Prev()    const { return const_cast<CP>(dl_prev); }
+   P  Prev()          { return                dl_prev ; }
    };
 
 
