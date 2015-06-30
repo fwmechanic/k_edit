@@ -114,7 +114,7 @@ const COL LINELEN  = (512)+1  ;
 const COL BUFBYTES = LINELEN+1;
 
 typedef char linebuf[BUFBYTES];       // line buffer
-typedef char dbllinebuf[2*BUFBYTES];  // double line buffer
+// typedef char dbllinebuf[2*BUFBYTES];  // double line buffer
 typedef char pathbuf[_MAX_PATH+1];    // Pathname buffer
 
 typedef  FixedCharArray<BUFBYTES>     Linebuf;
