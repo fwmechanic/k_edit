@@ -198,7 +198,7 @@ COL PrettifyMemcpy
    ( const PChar dest, const size_t sizeof_dest
    , stref src, COL tabWidth, char chTabExpand, COL src_xMin, char chTrailSpcs
    ) {
-   // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
+   // src.data() IS NOT NUL terminated (since it may point at a line within a file image buffer)!!!
    //
    if( !chTabExpand || !StrContainsTabs( src ) ) {
       if( src_xMin > src.length() ) { return 0; }
