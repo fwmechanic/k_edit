@@ -114,7 +114,7 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 // 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
 //    display line
 
-STATIC_FXN void PrettifyAppend( std::string &dest, stref src, COL src_xMin, size_t maxCharsToWrite, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
+STATIC_FXN void PrettifyAppend( std::string &dest, size_t maxCharsToWrite, stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
    // NB: we DO NOT clear dest!!!
    const auto initial_dest_length( dest.length() );
    auto dit( back_inserter(dest) );
@@ -177,7 +177,7 @@ void FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, 
    , stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    dest.clear();
-   PrettifyAppend( dest, src, src_xMin, maxCharsToWrite, tabWidth, chTabExpand, chTrailSpcs );
+   PrettifyAppend( dest, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
    }
 
 std::string FormatExpandedSeg // less efficient version: uses virgin dest each call, thus hits the heap each time
@@ -185,7 +185,7 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
    , stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    std::string dest;
-   PrettifyAppend( dest, src, src_xMin, maxCharsToWrite, tabWidth, chTabExpand, chTrailSpcs );
+   PrettifyAppend( dest, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
    return dest;
    }
 
@@ -193,8 +193,7 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
 // return value is # of chars actually written to dest
 COL PrettifyMemcpy
    ( const PChar dest, const size_t sizeof_dest
-   , stref src
-   , COL tabWidth, char chTabExpand, COL src_xMin, char chTrailSpcs
+   , stref src, COL tabWidth, char chTabExpand, COL src_xMin, char chTrailSpcs
    ) {
    // src.data() IS NOT NUL terminated (since it can be a pointer into a file image buffer)!!!
    //
