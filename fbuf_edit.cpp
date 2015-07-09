@@ -114,8 +114,11 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 // 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
 //    display line
 
-STATIC_FXN void PrettifyAppend( std::string &dest, size_t maxCharsToWrite, stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs ) {
-   // NB: we DO NOT clear dest!!!
+STATIC_FXN void PrettifyAppend
+   ( std::string &dest, size_t maxCharsToWrite        // dest  NOT cleared herein!!!
+   , stref src, COL src_xMin                          // src
+   , COL tabWidth, char chTabExpand, char chTrailSpcs // xfr
+   ) {
    const auto initial_dest_length( dest.length() );
    auto dit( back_inserter(dest) );
    if( !chTabExpand || !StrContainsTabs( src ) ) {
@@ -141,19 +144,19 @@ STATIC_FXN void PrettifyAppend( std::string &dest, size_t maxCharsToWrite, stref
    // even though we aren't necessarily _copying_ from the beginning.
 
    COL xCol( 0 );
-   auto WR_CHAR = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; } };
+   auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; } };
    const Tabber tabr( tabWidth );
    auto sit( src.cbegin() );
    while( sit != src.cend() && dest.length() < maxCharsToWrite ) {
       const auto ch( *sit++ );
       if( ch != HTAB ) {
-         WR_CHAR(ch);
+         wr_char(ch);
          }
       else {
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
-         auto chFill( chTabExpand );                       // chTabExpand == BIG_BULLET has special behavior:
+         auto chFill( chTabExpand );                              // chTabExpand == BIG_BULLET has special behavior:
          while( xCol < tgt && dest.length() < maxCharsToWrite ) { // col containing actual HTAB will disp as BIG_BULLET
-            WR_CHAR(chFill);                               // remaining fill-in chars will show as SMALL_BULLET
+            wr_char( chFill );                                    // remaining fill-in chars will show as SMALL_BULLET
             XLAT_chFill( chFill )
             }
          }
@@ -223,7 +226,7 @@ COL PrettifyMemcpy
          auto pD(dest);
 #define  PD_EFF   (pD - src_xMin)
    COL xCol( 0 );
-   auto WR_CHAR = [&]( char ch ) {
+   auto wr_char = [&]( char ch ) {
       if( PD_EFF >= dest ) { *PD_EFF = ch; }
       ++pD; ++xCol;
       };
@@ -232,13 +235,13 @@ COL PrettifyMemcpy
    while( sit != src.cend() && PD_EFF <= pDestRightmostWritable ) {
       const auto ch( *sit++ );
       if( ch != HTAB ) {
-         WR_CHAR(ch);
+         wr_char(ch);
          }
       else {
          const auto limit( pD + tabr.FillCountToNextTabStop( xCol ) );
          auto chFill( chTabExpand );                                 // chTabExpand == BIG_BULLET has special behavior:
          while( pD < limit && PD_EFF <= pDestRightmostWritable ) {   // col containing actual HTAB will disp as BIG_BULLET
-            WR_CHAR(chFill);                                         // remaining fill-in chars will show as SMALL_BULLET
+            wr_char( chFill );                                       // remaining fill-in chars will show as SMALL_BULLET
             XLAT_chFill( chFill )
             }
          }
