@@ -679,8 +679,8 @@ bool ARG::noedit() {
    //
    // Toggle the no-edit mode for the current file.
    //
-   if( !(g_CurFBuf()->FnmIsPseudo()) )
-      g_CurFBuf()->ToglNoEdit(); {
+   if( !(g_CurFBuf()->FnmIsPseudo()) ) {
+      g_CurFBuf()->ToglNoEdit();
       }
 
    // Returns
