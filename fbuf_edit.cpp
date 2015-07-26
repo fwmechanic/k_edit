@@ -2133,7 +2133,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
       const auto pPastImageBufEnd( d_pOrigFileImage + fileBytes );
 
       while( pCurImageBuf < pPastImageBufEnd ) { // we are about to read line 'curLineNum'
-         if( d_naLineInfoElements <= curLineNum ) { // need to reallocate d_paLineInfo
+         if( d_naLineInfoElements <= curLineNum /* CID128050 */ && curLineNum > 0 /* CID128050 */ ) { // need to reallocate d_paLineInfo
             // this is a little obscure, since for brevity I'm using 'curLineNum' as an alias
             // for 'LineCount()'; these are equivalent since 'curLineNum' hasn't been stored yet.
             //
