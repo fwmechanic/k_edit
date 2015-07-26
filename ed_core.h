@@ -1268,7 +1268,7 @@ private:
    bool           d_fSavedToStateFileYet = false ; // used by statefile writer code only!
    bool           d_fNoEdit = false    ; // file may not be edited
    bool           d_fPreserveTrailSpc  ;
-   bool           d_fTabSettingsFrozen ; // file's tab settings should not be auto-changed
+   bool           d_fTabSettingsFrozen = false ; // file's tab settings should not be auto-changed
 
    S8             d_TabWidth;
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
