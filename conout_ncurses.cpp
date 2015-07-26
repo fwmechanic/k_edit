@@ -87,7 +87,8 @@ int ConOut::BufferWriteString( const char *pszStringToDisp, int StringLen, int y
    0 && DBG( "%s@%d,%d=%*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
-   if( sizeY==sizeY && xColWithinConsoleWindow >= sizeX ) { return 0; }
+   sizeY = sizeY; // CID128046 keep compiler etc quiet about unused variable
+   if( xColWithinConsoleWindow >= sizeX ) { return 0; }
    int slen = StringLen;
    for( auto ix(0) ; ix < slen; ++ix ) {
       if( '\0' == pszStringToDisp[ix] ) {
