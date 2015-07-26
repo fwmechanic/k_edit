@@ -743,6 +743,7 @@ private:
 
 
 int HiliteAddin_cond_CPP::close_level( int level_ix, int yLast ) {
+   if( level_ix < 0 ) { return -1; } // CID128055
    auto &level( d_PerViewableLine[ level_ix ].level );
    level.yMax = yLast;
    for( auto ixLine(level.yMin) ; ixLine <= level.yMax ; ++ixLine ) {
