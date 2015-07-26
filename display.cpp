@@ -3192,8 +3192,8 @@ PCChar swixCursorsize( stref param ) {
    if( param.length() != 1 ) return "CursorSize: Value must be 0 or 1 (!len)";
    switch( param[0] ) {
       default:  return "CursorSize: Value must be 0 or 1";
-      case '0': ConOut::SetCursorSize( ToBOOL(g_iCursorSize=false) ); return nullptr;
-      case '1': ConOut::SetCursorSize( ToBOOL(g_iCursorSize=true ) ); return nullptr;
+      case '0': g_iCursorSize = false; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); return nullptr;
+      case '1': g_iCursorSize = true ; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); return nullptr;
       }
    }
 
