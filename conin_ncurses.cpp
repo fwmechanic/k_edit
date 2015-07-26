@@ -269,7 +269,7 @@ STATIC_FXN int ConGetEscEvent() {
       }
 
    if( ch == ERR ) {
-      result = kbAlt ? EdKC_a_esc : EdKC_esc;
+      result = EdKC_esc;
       }
    else if (ch == '[' || ch == 'O') {
       int ch1 = getch();
