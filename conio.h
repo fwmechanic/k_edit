@@ -24,7 +24,7 @@
 struct YX_t {
    int  lin;
    int  col;
-   YX_t() {} //lint !e1401
+   YX_t() : lin(0) , col(0) {}
    YX_t( int lin_, int col_ ) : lin(lin_) , col(col_) {}
    bool operator==( const YX_t &rhs ) const { return lin == rhs.lin && col == rhs.col; }
    bool operator!=( const YX_t &rhs ) const { return !(*this == rhs); }
