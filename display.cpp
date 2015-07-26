@@ -2641,7 +2641,7 @@ STATIC_FXN void DrawStatusLine();
 STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to completion w/o blocking (calling anything that calls GlobalVariableLock)
    FULL_DB && DBG( "%s+", __func__ );
    PCWV;
-   if( !(g_CurFBuf() && pcw && pcv) )
+   if( !(g_CurFBuf() && pcv) )
       return;
 
    FULL_DB && DBG( "%s: working", __func__ );
