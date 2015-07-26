@@ -329,9 +329,6 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
             }
 
          if( sit != src.cend() && !fNxtChEscaped ) {
-            if( fInQuotedRgn )
-               goto TO_ELSE;
-
             switch( *sit ) {
                case chQuot1:
                case chQuot2:  fInQuotedRgn = true;
@@ -350,7 +347,6 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
          }
       else {
          if( sit != src.cend() && !fNxtChEscaped ) {
-TO_ELSE:
             if( *sit == quoteCh )
                fInQuotedRgn = false;
             else if( *sit == chESC ) // ESCAPE char, not PathSepCh!
