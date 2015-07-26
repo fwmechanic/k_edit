@@ -132,7 +132,7 @@ STATIC_FXN void PrettifyAppend
          if( chTrailSpcs && CopyBytes==src.length() ) {
             const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
             for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) {
-               *drit == chTrailSpcs;
+               *drit = chTrailSpcs;
                }
             }
          }
@@ -169,7 +169,7 @@ STATIC_FXN void PrettifyAppend
       if( sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
          const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
          for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) { // xlat all trailing spaces present in dest
-            *drit == chTrailSpcs;
+            *drit = chTrailSpcs;
             }
          }
       }
