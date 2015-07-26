@@ -267,7 +267,7 @@ int qx( std::string &dest, std::string &system_param ) {
    while( true ) {
       char buffer[1024];
       const auto bc( piper.Read( BSOB(buffer) ) );
-      if( bc == 0 ) {
+      if( bc <= 0 ) {
          return piper.Status();
          }
       dest.append( buffer, bc );
