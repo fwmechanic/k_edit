@@ -66,8 +66,9 @@ class Regex {
    enum { MAX_CAPTURES = 40, CAPT_DIVISOR = 2 };
 
    struct pcreCapture {
-      int oFirst;
-      int oPastLast;
+      int oFirst    = -1;
+      int oPastLast = -1;
+      bool NoMatch() const { return oFirst == -1 && oPastLast == -1; }
       int Len() const { return oPastLast - oFirst; }
       };
 

@@ -113,7 +113,7 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
          // this happens, both offset values corresponding to the unused
          // subpattern are set to -1.
          //
-         if( d_capture[ix].Len() == -1 ) { // empty capture?
+         if( d_capture[ix].NoMatch() || d_capture[ix].Len() < 0 ) {
             // clear() already cleared this entry
             }
          else {
