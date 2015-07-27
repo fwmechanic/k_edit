@@ -62,21 +62,6 @@ STATIC_FXN const NamedPoint *NamedPointFind( const NamedPointHead &hd, PCChar ps
    return nullptr;
    }
 
-struct MarkRmvr {
-   const PCChar d_markname;
-   const Point *d_pPt;
-   int          matchCount;
-   MarkRmvr( PCChar markname, Point *pPt ) : d_markname(markname), d_pPt(pPt) {}
-   void operator()( NamedPoint *pThis ) {
-      if( pThis->NameMatch( d_markname ) && (!d_pPt || *d_pPt != pThis->Pt()) ) {
-         ++matchCount;
-         delete pThis;
-         // DLINK_REMOVE( hd, pThis, dlink );
-         }
-      }
-   };
-
-
 STATIC_FXN int NamedPointListDeleteAllMatches( NamedPointHead &hd, PCChar pszName, const Point *pPt=nullptr ) {
    auto matchCount(0);
    NamedPoint *pThis, *pNext;
