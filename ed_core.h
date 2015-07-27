@@ -914,7 +914,7 @@ struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win 
    ViewHead  ViewHd;   // public: exposed
    Point     d_Size;   // public: exposed
    Point     d_UpLeft; // public: exposed
-   int       d_wnum;
+   int       d_wnum = 0;  // will be set correctly if/when this is sorted into correct place
 
 public:
              Win();

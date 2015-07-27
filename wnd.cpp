@@ -262,7 +262,6 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
 Win::Win( PCChar pC ) // Used during ReadStateFile processing ONLY!
    : pimpl{ new impl{} }
    {
-   d_wnum = 0;
    0 && DBG( "RdSF: WIN-GEOM '%s'", pC );
    sscanf( pC, " %d %d %d %d "
       , &d_UpLeft.col
