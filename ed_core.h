@@ -234,7 +234,7 @@ typedef Point *PPoint;
 class FBufLocn { // dflt ctor leaves locn empty; must be Set() later
    PFBUF d_pFBuf;
    Point d_pt;
-   COL   d_width;
+   COL   d_width = 1;
 
 public:
 
