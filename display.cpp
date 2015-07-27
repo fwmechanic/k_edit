@@ -478,8 +478,8 @@ private:
    std::string  d_stSel;    // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
 
    COL          d_wucLen;
-   LINE         d_yWuc;     // BUGBUG need to set d_yWuc = -1 (or d_wucbuf[0] = 0) if edits occur
-   COL          d_xWuc;
+   LINE         d_yWuc = -1; // BUGBUG if edits occur, need to set d_yWuc = -1 (or d_wucbuf[0] = 0)
+   COL          d_xWuc = -1;
    };
 
 void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { enum { DBG_HL_EVENT=0 };
@@ -1248,8 +1248,8 @@ class HiliteAddin_lua : public HiliteAddin_StreamParse {
    scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_long    ( PCFBUF pFile, Point &pt ) ;
    Point    d_start_C; // where last /* comment started
-   unsigned d_long_level;
-   bool     d_long_comment; // if false, is long string
+   unsigned d_long_level = 0;
+   bool     d_long_comment = false; // if false, is long string
 
 public:
    HiliteAddin_lua( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
