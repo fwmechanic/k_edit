@@ -32,8 +32,6 @@ Getopt::Getopt( int argc_, PPCChar argv_, PCChar optset_ )
    : d_argc( argc_ )
    , d_argv( argv_ )
    , d_pOptSet( optset_ )
-   , d_argi( 1 )
-   , d_pAddlOpt( nullptr )
    , d_pgm( BSR2STR( Path::RefFnm( d_argv[0] ) ) )
    {
    if( 0 ) {

@@ -29,11 +29,11 @@ class Getopt
    const PPCChar d_argv;       // saved parameter
    const PCChar  d_pOptSet;    // saved parameter
 
-   int           d_argi;       // index of which argument is next
-   PCChar        d_pOptarg;    // pointer to argument of current option (if any)
-   PCChar        d_pAddlOpt;   // remember next option char's location.  If d_pAddlOpt is not nullptr
-                               // it is pointing into a string at an option character (a SW
-                               // char has already been seen)
+   int           d_argi     = 1;       // index of which argument is next
+   PCChar        d_pOptarg  = nullptr; // pointer to argument of current option (if any)
+   PCChar        d_pAddlOpt = nullptr; // remember next option char's location.  If d_pAddlOpt is not nullptr
+                                       // it is pointing into a string at an option character (a SW
+                                       // char has already been seen)
    char          d_chLastopt;  // for error reporting
 
    typedef char pathbuf[_MAX_PATH+1];
