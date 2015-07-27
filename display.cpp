@@ -1395,7 +1395,7 @@ class HiliteAddin_python : public HiliteAddin_StreamParse {
    scan_rv find_end_2Qrstr  ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_2Q3rstr ( PCFBUF pFile, Point &pt ) ;
    Point    d_start_C; // where last /* comment started
-   bool     d_in_3str;
+   bool     d_in_3str = false;
 
 public:
    HiliteAddin_python( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
