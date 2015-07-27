@@ -2108,22 +2108,17 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
 
    d_EolMode = platform_eol;
 
-   auto InitLineInfo = [this] ( int initial_sample_lines ) {
-      d_naLineInfoElements = initial_sample_lines;
-      VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", d_naLineInfoElements ); )
+   const auto initial_sample_lines( fileBytes == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
+                                                   : 508 );   // slightly less than a power of 2
+   d_naLineInfoElements = initial_sample_lines;
+   VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", d_naLineInfoElements ); )
+   AllocArrayNZ(      d_paLineInfo, d_naLineInfoElements, "initial d_paLineInfo" );
+   InitLineInfoRange( 0           , d_naLineInfoElements );
 
-      AllocArrayNZ(      d_paLineInfo, d_naLineInfoElements, "initial d_paLineInfo" );
-      InitLineInfoRange( 0           , d_naLineInfoElements );
-      };
-
-   if( fileBytes == 0 ) {
-      InitLineInfo( 1 ); // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
-      }
-   else {
+   if( fileBytes > 0 ) {
       auto numCRs( 0 );
       auto numLFs( 0 );
       auto curLineNum( 0 );
-      InitLineInfo( 508 ); // slightly less than a power of 2
       auto pLi( d_paLineInfo );
       auto pCurImageBuf( d_pOrigFileImage );
       const auto pPastImageBufEnd( d_pOrigFileImage + fileBytes );
@@ -2133,8 +2128,9 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
             // this is a little obscure, since for brevity I'm using 'curLineNum' as an alias
             // for 'LineCount()'; these are equivalent since 'curLineNum' hasn't been stored yet.
             //
-            const double avgBytesPerLine(static_cast<double>(pCurImageBuf - d_pOrigFileImage) / curLineNum);
-                  double dNewLineCntEstimate( (fileBytes / avgBytesPerLine) * 1.025 );
+            const auto abpl_scale( 1.025 );
+            const double avgBytesPerLine( Max( abpl_scale, static_cast<double>(pCurImageBuf - d_pOrigFileImage) / curLineNum ) );
+                  double dNewLineCntEstimate( (fileBytes / avgBytesPerLine) * abpl_scale );
             if( dNewLineCntEstimate <= d_naLineInfoElements )
                 dNewLineCntEstimate = Max( static_cast<double>(d_naLineInfoElements * 1.125)
                                          , static_cast<double>(d_naLineInfoElements + FileReadLineHeadSpace)
@@ -2150,7 +2146,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                   );
                )
 
-            d_naLineInfoElements = newLineCntEstimate;
+            d_naLineInfoElements = Min( INT_MAX, newLineCntEstimate );
             //
             //------------------------------------------------------------------------------------
 
