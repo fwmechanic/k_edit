@@ -122,9 +122,10 @@ int Getopt::NextOptCh() {
          }
 
       const PCChar pOptMatch( strchr( d_pOptSet, ch ) );
-      if( !pOptMatch || ch == ':' )
+      if( !pOptMatch || ch == ':' ) {
          VErrorOut( FmtStr<_MAX_PATH+30>( "%s: invalid option -%c\n", d_pgm.c_str(), ch ) );
-
+         return 0;
+         }
       if( pOptMatch[1] == ':' ) { // ch takes arg?
          d_argi++;                     // next d_argv element is arg for this option
          if( *d_pAddlOpt == '\0' ) {   // at end of current d_argv element? try the next one...
