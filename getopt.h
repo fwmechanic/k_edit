@@ -34,8 +34,6 @@ class Getopt
    PCChar        d_pAddlOpt = nullptr; // remember next option char's location.  If d_pAddlOpt is not nullptr
                                        // it is pointing into a string at an option character (a SW
                                        // char has already been seen)
-   char          d_chLastopt;  // for error reporting
-
    typedef char pathbuf[_MAX_PATH+1];
 
 

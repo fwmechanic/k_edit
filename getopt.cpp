@@ -144,7 +144,6 @@ int Getopt::NextOptCh() {
             }
          d_pOptarg = nullptr;              // no arg
          }
-      d_chLastopt = ch;
       return ch;
       }
    // ----------------------------------------------
