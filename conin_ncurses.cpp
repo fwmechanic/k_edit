@@ -368,7 +368,7 @@ STATIC_FXN int ConGetEscEvent() {
          else if( ch == '/'  )             { return EdKC_a_SLASH;          }
          else if( ch == ';'  )             { return EdKC_a_SEMICOLON;      }
          else if( ch == '='  )             { return EdKC_a_EQUAL;          }
-         else if( ch == '['  )             { return EdKC_a_LEFT_SQ;        }
+      // else if( ch == '['  )             { return EdKC_a_LEFT_SQ;        } CID128049
          else if( ch == '\\' )             { return EdKC_a_BACKSLASH;      }
          else if( ch == ']'  )             { return EdKC_a_RIGHT_SQ;       }
          else if( ch == '`'  )             { return EdKC_a_BACKTICK;       }
