@@ -2,6 +2,13 @@ K is my personal programmer's text editor, whose design is derived from Microsof
 
 K is a TUI app that runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
 
+```html
+<a href="https://scan.coverity.com/projects/5869">
+  <img alt="Coverity Scan Build Status"
+       src="https://img.shields.io/coverity/scan/5869.svg"/>
+</a>
+```
+
 [Github has no markdown TOC feature; what a drag]
 
 # Features
