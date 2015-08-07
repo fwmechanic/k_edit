@@ -550,9 +550,8 @@ stref IsolateTagStr( stref src ) {
    return src.substr( 0, ixRSQ );
    }
 
-STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) { enum { DB=0 };
-   DB && DBG( "FindRsrcTag: '%s'", pszSectionName );
-   stref srKey( pszSectionName );
+STATIC_FXN LINE FindRsrcTag( stref srKey, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) { enum { DB=0 };
+   DB && DBG( "FindRsrcTag: '%" PR_BSR "'", BSR(srKey) );
    for( auto yLine(startLine) ; yLine <= pFBuf->LastLine(); ++yLine ) {
       const auto rl( pFBuf->PeekRawLine( yLine ) );
       const stref tag( IsolateTagStr( rl ) );
@@ -583,22 +582,14 @@ STATIC_FXN LINE FindRsrcTag( PCChar pszSectionName, PFBUF pFBuf, const LINE star
 
 class RsrcSectionWalker {
    LINE    d_lnum;
-   linebuf d_tagbuf;
+   stref   d_tagbuf;
 
    public:
 
-   RsrcSectionWalker( stref pszSectionName );
+   RsrcSectionWalker( stref pszSectionName ) : d_lnum(0), d_tagbuf(pszSectionName) {}
    bool NextSectionInstance( FBufLocn *fl, bool fHiLiteTag=false );
-   PCChar SectionName() const { return d_tagbuf; }
+   stref SectionName() const { return d_tagbuf; }
    };
-
-RsrcSectionWalker::RsrcSectionWalker( stref pszSectionName ) : d_lnum(0) {
-   const auto len( bcpy( d_tagbuf, ThisProcessInfo::ExeName() ) );
-   if( !pszSectionName.empty() ) {
-      bcat( bcat( len, d_tagbuf, "-" ), d_tagbuf, pszSectionName );
-      }
-   _strlwr( d_tagbuf ); // mostly to normalize errmsgs, logs, etc.
-   }
 
 bool RsrcSectionWalker::NextSectionInstance( FBufLocn *fl, bool fHiLiteTag ) {
    if( OpenRsrcFileFailed() )
@@ -632,7 +623,7 @@ bool ARG::ext() {
               ++count;
 
            if( !count )
-              return Msg( "no sections matching '%s'", rsw.SectionName() );
+              return Msg( "no sections matching '%" PR_BSR "'", BSR(rsw.SectionName()) );
            }
 
            // pass 2: let the user choose the tag/section he wants
@@ -643,7 +634,7 @@ bool ARG::ext() {
                  fl.ScrollToOk();
                  DispDoPendingRefreshes();
                  if( count == 1 ) {
-                    Msg( "only one section matching '%s'", rsw.SectionName() );
+                    Msg( "only one section matching '%" PR_BSR "'", BSR(rsw.SectionName()) );
                     return true;
                     }
 
@@ -658,8 +649,9 @@ bool ARG::ext() {
 
 
 STATIC_FXN bool RsrcLdSectionFound( stref pszSectionName, int *pAssignCountAccumulator ) {
+   if( pszSectionName.length() == 0 ) { return false; }
    RsrcSectionWalker rsw( pszSectionName );
-   FmtStr<90> tag( "LoadRsrcSection [%s]", rsw.SectionName() );
+   FmtStr<90> tag( "LoadRsrcSection [%" PR_BSR "]", BSR(rsw.SectionName()) );
    AssignLogTag( tag.k_str() );
 
    auto fFound(false);
@@ -710,10 +702,10 @@ STATIC_FXN int ReinitializeMacros( bool fEraseExistingMacros ) {
 
    auto assignDone(0);
    if( s_fLoadRsrcFile ) {
-      RsrcLdSectionFound( ""              , &assignDone ); // [editorname]
-      RsrcLdSectionFound( GetOsName()     , &assignDone ); // [editorname-osname]
-      RsrcLdSectionFound( OsVerStr()      , &assignDone ); // [editorname-osver]
-      RsrcLdSectionFound( GetDisplayName(), &assignDone ); // [editorname-vidname]
+      RsrcLdSectionFound( "@startup"      , &assignDone ); // [@startup]
+      RsrcLdSectionFound( GetOsName()     , &assignDone ); // [osname]
+      RsrcLdSectionFound( OsVerStr()      , &assignDone ); // [osver]
+      RsrcLdSectionFound( GetDisplayName(), &assignDone ); // [vidname]
       }
 
    if( g_CurFBuf() ) {

@@ -1,4 +1,4 @@
-[k k-main] #*****************************       === GLOBAL LOAD ===   *****************************
+[@startup] #*****************************       === GLOBAL LOAD ===   *****************************
 
    # === SWITCHES ===
    #
@@ -588,7 +588,7 @@
    # systemfilemenu:Alt+2
 
 
-[k-menu]
+[menu]
    menu:alt+m                    # allframes = MACRO> arg arg "[0-9][0-9][0-9][rt]x" grep
    listmenu:=arg "Lists/Logs" menu
    # listmenu:alt+L
@@ -596,10 +596,10 @@
    pseudomenu:alt+,
 
 
-[k-W.5.1] # WinXP
-[k-W.6.1] # Win7
-[k-W.6.2] # Win8
-[k-os.win32]
+[W.5.1] # WinXP
+[W.6.1] # Win7
+[W.6.2] # Win8
+[os.win32]
    savescreen:ctrl+k
    cliptext:shift+ins
    towinclip:ctrl+num+
@@ -608,7 +608,7 @@
    usemouse:yes
    arg:tab   # this breaks Linux/X paste which types literal chars into the editor
 
-[k-os.linux]
+[os.linux]
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
@@ -624,69 +624,69 @@ ux_2:=""ux_1""
 ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 
-[k-ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
+[ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    delims: {[(
    mfspec_:="*.*"
 
-[k-.bat] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
+[.bat] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    ftype:msbatch
    wordchars:$_
 
-[k-ftype:wildcard]  # wildcard expansion
+[ftype:wildcard]  # wildcard expansion
 
-[k-.*]  # wildcard expansion
+[.*]  # wildcard expansion
    ftype:wildcard
 
-[k-ftype:pseudo]  # wildcard expansion
+[ftype:pseudo]  # wildcard expansion
 
-[k-.<>]  # PSEUDOFILE
+[.<>]  # PSEUDOFILE
    ftype:pseudo
 
-[k-.]  # USED IF FILE HAS NO EXTENSION and content decode reveals nothing
+[.]  # USED IF FILE HAS NO EXTENSION and content decode reveals nothing
    ftype:unknown
 
-[k-.~dat] # qq --filter output file
+[.~dat] # qq --filter output file
    rm:= "rm " mword arg arg execute setfile
 
-[k-.lua k-.luastate k-.luaedit k-.filesettings]
+[.lua .luastate .luaedit .filesettings]
    ftype:lua
 
-[k-ftype:lua]
+[ftype:lua]
    wordchars:
    delims: {[(
    mfspec_:="*.lua"
    rmargin:80
 
-[k-.pl k-.pm]
+[.pl .pm]
    ftype:perl
 
-[k-ftype:perl]
+[ftype:perl]
    wordchars:@$%
    delims: {[(
    mfspec_:="*.pl;*.pm"
    rmargin:80
 
-[k-.spa]
+[.spa]
    wordwrap:yes
    rmargin:77
 
-[k-.tcl]
+[.tcl]
    mfspec_:="$TAGZ:*.tcl"
    rmargin:80
 
-[k-.cmd]
+[.cmd]
    ftype:msbatch
    tabwidth:8
    mfspec_:="*.cmd"
    delims: {[(`
 
-[k-.mak k-.mik]
+[.mak .mik]
    ftype:make
 
-[k-.conf]
+[.conf]
    ftype:make
 
-[k-ftype:make]
+[ftype:make]
    #graphic:tab # using GNU make, we need ability to insert literal tabs
    tabwidth:8
    entab:leading  # ...  whitespace converted to tabs
@@ -694,58 +694,58 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    delims: {[(
    mfspec_:="*.mak;*.mik"
 
-[k-.cod]
+[.cod]
    # wordchars:@$?
    tabwidth:8
    mfspec_:="*.cod"
    hl:=arg arg "(?-i)^\s+(if|else|for|while|do).*$" searchall
 
-[k-.list]
+[.list]
    mfspec_:="*.list" # need "%Fd" which inserts path of file from which this command is executed
 
-[k-.journl]
+[.journl]
    mfspec_:="*.list" # need "%Fd" which inserts path of file from which this command is executed
    jentry:=endfile begline cur_yymmdd " " cur_hhmmss " "
    jentry:alt+j
 
-[k-.pas k-.dpr]
+[.pas .dpr]
    ftype:pascal
 
-[k-ftype:pascal]
+[ftype:pascal]
    mfspec_:="*.pas;*.dpr"
    rmargin:100
 
-[k-.mod k-.def]
+[.mod .def]
    ftype:modula2
 
-[k-ftype:modula2]
+[ftype:modula2]
    mfspec_:="*.def;*.mod"
 
-[k-.asm k-.s k-.inc]
+[.asm .s .inc]
    ftype:asm
 
-[k-ftype:bash]
+[ftype:bash]
 
-[k-ftype:asm]
+[ftype:asm]
    mfspec_:="*.inc;*.asm;*.map"
    call:=savecur arg "call" searchall restcur
    rmargin:100
 
-[k-.fclog]
+[.fclog]
    mfspec_:="*.fclog"
 
-[k-.xml k-.html k-.htm k-.dtd k-.vpj k-.vpw]
+[.xml .html .htm .dtd .vpj .vpw]
    delims: <
 
-[k-.py k-.cs]
+[.py .cs]
    wucminlen:1
 
-[k-.c k-.cpp k-.cc k-.cs k-.m k-.cxx k-32.kc k-.h k-.hpp k-.hxx k-32.kh]
+[.c .cpp .cc .cs .m .cxx 32.kc .h .hpp .hxx 32.kh]
    ftype:clang
 
-[k-ftype:diff]
+[ftype:diff]
 
-[k-ftype:clang]
+[ftype:clang]
    delims: {[(
    wucminlen:1
    mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"
@@ -785,7 +785,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    # bcc:alt+,
    # ecc:alt+.
 
-[k-.txt]
+[.txt]
    nofor:=cancel replace "’" nl "'" nl    replace "“" nl """ nl  replace "”" nl """ nl
 
    rmargin:80
@@ -797,30 +797,30 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    nxtspceol:num/
    joinallspeceol:= :>again nxtspceol -> join =>again
 
-[k-.e]
+[.e]
    mfspec_:="*.e"
 
-[k-.kdb]
+[.kdb]
    delims: {[(
    mfspec_:="*.kdb"
    rmargin:80
    mfspec_:= curfilepath "*" curfileext
 
-[k-.!!!]
+[.!!!]
    mfspec_:="*.!!!"
 
-[k-.awk k-.twk k-.twl k-.kxt k-.kxl]
+[.awk .twk .twl .kxt .kxl]
    ftype:awk
 
-[k-ftype:awk]
+[ftype:awk]
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
    mfspec_:="%TAGZ%\<*.twk;*.twl;*.awk;*.kxt;*.kxl>"
    rmargin:100
 
-[k-.fclog]
+[.fclog]
    tmd:=arg arg "^\d{8}:\d{6}.\d{6}" grep
 
-[k-.tabbed]
+[.tabbed]
    tabwidth:3
    realtabs:yes
    tabconv:2
