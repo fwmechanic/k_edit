@@ -1145,6 +1145,8 @@ public:
 private:
    PChar          d_pOrigFileImage = nullptr;
    size_t         d_cbOrigFileImage = 0;
+   enum text_encode_t { TXTENC_ASCII=0, TXTENC_UTF8=1 };
+   text_encode_t  d_OrigFileImageContentEncoding = TXTENC_ASCII;
 
    void           FreeOrigFileImage();
 
