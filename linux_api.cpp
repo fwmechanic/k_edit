@@ -41,21 +41,20 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
    // contrast with canonical() which requires that the passed name exists
                                                   DB && DBG( "%s +in '%s'", __func__, pszFilename );
    try {
-      const auto src( absolute( boost::filesystem::path( pszFilename ) ) );
+      const auto src( absolute( boost::filesystem::path( pszFilename ) ) ); // src = absolutized copy of pszFilename
                                                   DB && DBG( "%s -src'%s' -> '%s'", __func__, pszFilename, src.c_str() );
-      // Get canonical version of the existing part of src
+      //--- Get canonical version of the existing part of src (canonical only works on existing paths)
       auto it( src.begin() );
-      auto rv( *it++ );
+      auto rv( *it++ );       // leading element
       for( ; it != src.end() ; ++it ) {
-         auto tmp( rv / *it );                    DB && DBG( "%s +inc'%s'", __func__, tmp.c_str() );
-         if( !exists( tmp ) ) { break; }
-         rv = tmp;
-         }
-                                                  DB && DBG( "%s +can'%s'", __func__, rv.c_str() );
-      rv = canonical(rv);
-                                                  DB && DBG( "%s -can'%s'", __func__, rv.c_str() );
-      for( ; it != src.end(); ++it ) {  // now blindly append nonexistent components, handling "." and ".."
-         if      (*it == "..") { rv = rv.parent_path(); } // "cancels" trailing rv component
+         const auto appendNxt( rv / *it );        DB && DBG( "%s +inc'%s'", __func__, appendNxt.c_str() );
+         if( !exists( appendNxt ) ) { break; }
+         rv = appendNxt;
+         }                                        DB && DBG( "%s +can'%s'", __func__, rv.c_str() );
+      rv = canonical(rv);                         DB && DBG( "%s -can'%s'", __func__, rv.c_str() );
+      //--- now blindly append nonexistent elements, handling "." and ".."
+      for( ; it != src.end(); ++it ) {
+         if      (*it == "..") { rv = rv.parent_path(); } // "cancels" trailing rv element
          else if (*it == "." ) {}                         // nop
          else                  { rv /= *it; }             // else cat
          }
@@ -68,7 +67,7 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
    catch( const boost::filesystem::filesystem_error & /*exc*/ ) {
       // terminate called after throwing an instance of 'boost::filesystem::filesystem_error'
       // what():  boost::filesystem::status: Permission denied: "/export/depot/@triggersrcs"
-      // occurs (Linux) when permissions prevent access to path components
+      // occurs (Linux) when permissions prevent access to path elements
       Msg( "%s caught boost::filesystem::filesystem_error on %s", __func__, pszFilename );
       return "";
       };
