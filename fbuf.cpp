@@ -1367,6 +1367,11 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          return Msg( "Cannot open %s - %s", Name(), strerror( errno ) );
          }
 
+      if( Namesr().starts_with( "/tmp/" ) ) {
+         DBG( "FRd! not creating /tmp/ file" );
+         return false;
+         }
+
       if(    !fAllowDiskFileCreate
          || (!fCreateSilently && !ConIO::Confirm( Sprintf2xBuf( "%s does not exist. Create? ", Name() ) ))
         ) {
