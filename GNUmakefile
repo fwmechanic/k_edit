@@ -388,8 +388,12 @@ RLS_PKG_FILES = $(TGT)_rls.7z $(TGT)_rls.exe
 
 .PHONY: rls
 rls: $(RLS_FILES)
+ifdef ComSpec
 	7z a      $(TGT)_rls.7z  $(RLS_FILES)
 	7z a -sfx $(TGT)_rls.exe $(RLS_FILES)
+else
+	GZIP=-9 tar -zcvf $(TGT)_rls.tgz $(RLS_FILES)
+endif
 
 # phrases used in linking recipes
 BLD_TIME_OBJ = @$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
