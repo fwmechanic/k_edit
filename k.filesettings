@@ -42,10 +42,9 @@ local stdColors = {
    wuc = bfg( hiWhite  ,   Cyan   ),
    com = bfg(   Blue   , hiGreen  ),
    str = bfg(   Blue   , hiPink   ),
-   str = bfg(   Black  , hiCyan   ),
    str = bfg(   Green  , hiCyan   ),
-   str = bfg(   Black  , hiCyan   ),
    str = bfg(   Black  , hiRed    ),
+   str = bfg(   Black  , hiCyan   ),
    }
 
 print "hello 4"
@@ -64,6 +63,8 @@ local darkColors = {
    com = bfg(   Black  ,   Yellow  ),
    str = bfg(  Gray  ,    Black  ),
    str = bfg(  Black  ,   Red     ),
+   str = bfg(   Black  , hiRed    ),
+   str = bfg(   Black  , hiCyan   ),
    }
 
 print "hello 5"
