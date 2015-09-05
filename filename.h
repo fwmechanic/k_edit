@@ -35,6 +35,12 @@
 
 #include "my_types.h"
 
+// moved from my_strutils.h
+extern PCChar StrToPrevOrNull_(   PCChar pBuf, PCChar pInBuf, PCChar toMatch );
+TF_Ptr STIL Ptr  StrToPrevOrNull(        Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return const_cast<Ptr>(StrToPrevOrNull_  ( pBuf, pInBuf, toMatch )); }
+TF_Ptr STIL Ptr  StrToPrevBlankOrNull(   Ptr pBuf, Ptr pInBuf ) { return StrToPrevOrNull  ( pBuf, pInBuf, szSpcTab      ); }
+
+
 namespace Path {
    typedef std::string str_t; // Path::str_t
 

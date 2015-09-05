@@ -172,7 +172,6 @@ PCChar fxnm( PCChar p0, PCChar pX, PCChar toMatch ) {        \
    }
 
 StrToPastPrevOrNull_def( StrToPrevOrNull_  , != ) // do NOT call this directly!  use StrToPrevOrNull or StrToPrevBlankOrNull instead!
-StrToPastPrevOrNull_def( StrPastPrevOrNull_, == ) // do NOT call this directly!  use StrToPrevOrNull or StrToPrevBlankOrNull instead!
 
 #undef StrToPastPrevOrNull_def
 

@@ -360,25 +360,13 @@ TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos(
 TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
+// these are extern vs. inline because the requisite predicates are not public
 extern sridx FirstNonBlankOrEnd( stref src, sridx start=0 );
 extern sridx FirstBlankOrEnd   ( stref src, sridx start=0 );
 
 extern sridx FirstNonWordOrEnd( stref src, sridx start=0 );
-
-extern sridx IdxFirstWordCh( stref src, sridx start );
+extern sridx IdxFirstWordCh( stref src, sridx start=0 );
 extern sridx StrLastWordCh(  stref src );
-
-//-----------------
-
-extern PCChar StrToPrevOrNull_(   PCChar pBuf, PCChar pInBuf, PCChar toMatch );
-extern PCChar StrPastPrevOrNull_( PCChar pBuf, PCChar pInBuf, PCChar toMatch );
-
-TF_Ptr STIL Ptr  StrToPrevOrNull(        Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return const_cast<Ptr>(StrToPrevOrNull_  ( pBuf, pInBuf, toMatch )); }
-TF_Ptr STIL Ptr  StrPastPrevOrNull(      Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return const_cast<Ptr>(StrPastPrevOrNull_( pBuf, pInBuf, toMatch )); }
-
-TF_Ptr STIL Ptr  StrPastPrevWordOrNull(  Ptr pBuf, Ptr pInBuf ) { return StrPastPrevOrNull( pBuf, pInBuf, g_szWordChars ); }
-TF_Ptr STIL Ptr  StrToPrevBlankOrNull(   Ptr pBuf, Ptr pInBuf ) { return StrToPrevOrNull  ( pBuf, pInBuf, szSpcTab      ); }
-TF_Ptr STIL Ptr  StrPastPrevBlankOrNull( Ptr pBuf, Ptr pInBuf ) { return StrPastPrevOrNull( pBuf, pInBuf, szSpcTab      ); }
 
 //-----------------
 
