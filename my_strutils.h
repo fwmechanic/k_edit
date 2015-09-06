@@ -75,6 +75,12 @@ STIL sridx isri2osri( const stref &osr, const stref &isr, sridx isri ) { return 
 STIL bool atEnd( const stref       &str, sridx idx ) { return idx == str.length(); }
 STIL bool atEnd( const std::string &str, sridx idx ) { return idx == str.length(); }
 
+static sridx find( stref this_, stref key, sridx start=0 ) {
+   this_.remove_prefix( start );
+   const auto rv( this_.find( key ) );
+   return rv == eosr ? eosr : rv + start ;
+   }
+
 template < typename cont_inst, typename Pred >
 typename cont_inst::size_type ToNextOrEnd( Pred pred, cont_inst src, typename cont_inst::size_type start ) {
    if( start < src.length() ) {
@@ -398,6 +404,10 @@ static sridx FirstAlphaOrEnd( stref src, sridx start=0 ) {
    }
 
 static sridx FirstDigitOrEnd( stref src, sridx start=0 ) {
+   return ToNextOrEnd( isdigit, src, start );
+   }
+
+static sridx FirstMatchOrEnd( stref src, stref key, sridx start=0 ) {
    return ToNextOrEnd( isdigit, src, start );
    }
 
