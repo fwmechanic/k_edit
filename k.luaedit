@@ -3237,166 +3237,105 @@ do
          }
    end
 
-   if false then -- 20120205 kgoodwin new impl
+   local nextmsgFBufName_ = "<search-results>"
+   nextmsg_setbufnm_FROM_C = function(st)  nextmsgFBufName_ = st  end  -- CAREFUL called from C++
+   nextmsgFBufName    = function()   return nextmsgFBufName_ end
 
-      local nxtmsgbufs = {}
-      nextmsg_setbufnm_FROM_C = function(st)      nxtmsgbufs[1+#nxtmsgbufs] = st  end  -- CAREFUL called from C++
-      nextmsgFBufName         = function() return nxtmsgbufs[  #nxtmsgbufs] or "<search-results>" end
+   IsLineCompileSectionHdr = function( yLine,ldata )
+      return ldata:match( "^%+^%-^%+%s+(.*)" )
+      end
 
-      IsLineCompileSectionHdr = function( yLine,ldata )
-         return 1 == yLine
+   local prevFnmGoneTo = nil
+
+   nextmsgFBuf = function( arg )
+      local win = Win.by_filename( nextmsgFBufName() )
+      if win then  return win:CurFBUF(), win:CurView(), false  end
+      local vw, fb, win = w4comp()
+      if win then return fb, vw, true end
+      return nil, "no visible "..nextmsgFBufName()
+      end
+
+   nextmsg_engine = function(arg,direction)
+      assert( arg.argCount <= 2, "test assert" )
+
+      local nmfb, nmvw, fReopen = assert( nextmsgFBuf() )
+      if fReopen then
+         arg.argCount = 2  -- force popup menu
          end
 
-      nextmsgFBuf = function( arg )
-         local nmbfnm = nxtmsgbufs[#nxtmsgbufs] or arg.fbuf:Name()
-         local win = Win.by_filename( nmbfnm )
-         if win then  return win:CurFBUF(), win:CurView(), false  end
-         local vw, fb, win = window_for_compile( nmbfnm, 25 )
-         if win then return fb, vw, true end
-         return nil, "no visible "..nmbfnm
-         end
-
-      local prevFnmGoneTo
-      nextmsg_engine = function(arg,direction)
-         assert( arg.argCount <= 2, "test assert" )
-
-         local nmfb, nmvw, fReopen = assert( nextmsgFBuf(arg) )
-         local searchedFnm, metaLines = arg.fbuf:IsGrepBuf()
-         local curline = nmvw:GetLineCompile()
-         -- printf( "engine: %s curline = %d", tostring(nmvw), curline )
-
-         local fToNextFile = arg.argCount >= 1
-         while true do
-            curline = Min( nmfb:LastLine(), curline ) + direction
-            -- DBG("curline="..curline)
-            local ldata = nmfb:GetLine( curline )
-            if nil == ldata then
-               -- we've reached the end of the current section; wrap (move to opposite end of section)
-               Msgf( "no %s messages (%d)", ifx(direction>0,"more","prev"), curline )
-               while true do
-                  curline = curline - direction  -- back up one
-                  -- printf( "loop: %s curline = %d", tostring(nmvw), curline )
-                  local ldata = nmfb:GetLine( curline )
-                  if nil == ldata then
-                     nmvw:SetLineCompile( curline )
-                     return
-                     end
-                  end
-               end
-
-            local fnm = gofileline( "", ldata, false, ifx(fToNextFile, prevFnmGoneTo, nil) )
-            if fnm then
-               prevFnmGoneTo = fnm
-               -- DBG(tostring(nmvw)..":SetLineCompile="..curline)
-               nmvw:SetLineCompile( curline )
-               return
-               end
+      local searchedFnm, metaLines = arg.fbuf:IsGrepBuf()
+      if searchedFnm then  -- copy any current <grep.%d+> buffer content into nmfb
+         nextmsg_newsection_FROM_C( arg.fbuf:Name() .. " metalines="..tostring(metaLines) )
+         for lnum=1+metaLines,arg.fbuf:LastLine() do
+            nmfb:PutLastLine( searchedFnm .." ".. arg.fbuf:GetLine(lnum) )
             end
          end
 
-   else
+      local curline = nmvw:GetLineCompile()
+      printf( "engine: %s curline = %d", tostring(nmvw), curline )
+      local fToNextFile = false
 
-      local nextmsgFBufName_ = "<search-results>"
-      nextmsg_setbufnm_FROM_C = function(st)  nextmsgFBufName_ = st  end  -- CAREFUL called from C++
-      nextmsgFBufName    = function()   return nextmsgFBufName_ end
-
-      IsLineCompileSectionHdr = function( yLine,ldata )
-         return ldata:match( "^%+^%-^%+%s+(.*)" )
-         end
-
-      local prevFnmGoneTo = nil
-
-      nextmsgFBuf = function( arg )
-         local win = Win.by_filename( nextmsgFBufName() )
-         if win then  return win:CurFBUF(), win:CurView(), false  end
-         local vw, fb, win = w4comp()
-         if win then return fb, vw, true end
-         return nil, "no visible "..nextmsgFBufName()
-         end
-
-      nextmsg_engine = function(arg,direction)
-         assert( arg.argCount <= 2, "test assert" )
-
-         local nmfb, nmvw, fReopen = assert( nextmsgFBuf() )
-         if fReopen then
-            arg.argCount = 2  -- force popup menu
-            end
-
-         local searchedFnm, metaLines = arg.fbuf:IsGrepBuf()
-         if searchedFnm then  -- copy any current <grep.%d+> buffer content into nmfb
-            nextmsg_newsection_FROM_C( arg.fbuf:Name() .. " metalines="..tostring(metaLines) )
-            for lnum=1+metaLines,arg.fbuf:LastLine() do
-               nmfb:PutLastLine( searchedFnm .." ".. arg.fbuf:GetLine(lnum) )
+      if arg.argCount==1 then
+         fToNextFile = true
+      elseif arg.argCount>1 then  -- popup menu?
+         local choice_ = {}
+         local snum = 0
+         for yLine,text in nmfb:Lines() do
+            local compileCmd = IsLineCompileSectionHdr( yLine,text )
+            if compileCmd then
+               snum = snum + 1
+               choice_[ #choice_+1 ] = { fmt( "Section %d: %s", snum, compileCmd ), yLine }
                end
             end
 
-         local curline = nmvw:GetLineCompile()
-         printf( "engine: %s curline = %d", tostring(nmvw), curline )
-         local fToNextFile = false
+         if #choice_ == 0 then  Msg( "No header strings found" ) return  end
 
-         if arg.argCount==1 then
+         local line = choice_[1][2]
+         local choices = tu.a_cat(
+                 not fReopen and { { "--- Next File ---", 1-2 }, { "--- Prev File ---", -1-2 } } or {}
+               , #choice_ > 1 and choice_ or {}
+               )
+
+         if #choices > 0 then
+            local _
+            _,line = Menu.new{ title="<compile> entries", choices=choices }:PickOne()
+            end
+
+         if not line then return end
+         if line < 0 then  -- next or previous _file_?
             fToNextFile = true
-         elseif arg.argCount>1 then  -- popup menu?
-            local choice_ = {}
-            local snum = 0
-            for yLine,text in nmfb:Lines() do
-               local compileCmd = IsLineCompileSectionHdr( yLine,text )
-               if compileCmd then
-                  snum = snum + 1
-                  choice_[ #choice_+1 ] = { fmt( "Section %d: %s", snum, compileCmd ), yLine }
-                  end
-               end
-
-            if #choice_ == 0 then  Msg( "No header strings found" ) return  end
-
-            local line = choice_[1][2]
-            local choices = tu.a_cat(
-                    not fReopen and { { "--- Next File ---", 1-2 }, { "--- Prev File ---", -1-2 } } or {}
-                  , #choice_ > 1 and choice_ or {}
-                  )
-
-            if #choices > 0 then
-               local _
-               _,line = Menu.new{ title="<compile> entries", choices=choices }:PickOne()
-               end
-
-            if not line then return end
-            if line < 0 then  -- next or previous _file_?
-               fToNextFile = true
-               direction = line + 2
-            else
-               curline,prevFnmGoneTo = line,nil
-               end
-            end
-
-         while true do
-            curline = Min( nmfb:LastLine(), curline ) + direction
-            -- DBG("curline="..curline)
-            local ldata = nmfb:GetLine( curline )
-            if nil == ldata or IsLineCompileSectionHdr( curline,ldata ) then
-               -- we've reached the end of the current section; wrap (move to opposite end of section)
-               Msgf( "no %s messages (%d)", ifx(direction>0,"more","prev"), curline )
-               while true do
-                  curline = curline - direction  -- back up one
-                  printf( "loop: %s curline = %d", tostring(nmvw), curline )
-                  local ldata = nmfb:GetLine( curline )
-                  if nil == ldata or IsLineCompileSectionHdr( curline,ldata ) then
-                     nmvw:SetLineCompile( curline )
-                     return
-                     end
-                  end
-               end
-
-            local fnm = gofileline( "", ldata, false, ifx(fToNextFile, prevFnmGoneTo, nil) )
-            if fnm then
-               prevFnmGoneTo = fnm
-               -- DBG(tostring(nmvw)..":SetLineCompile="..curline)
-               nmvw:SetLineCompile( curline )
-               return
-               end
+            direction = line + 2
+         else
+            curline,prevFnmGoneTo = line,nil
             end
          end
 
+      while true do
+         curline = Min( nmfb:LastLine(), curline ) + direction
+         -- DBG("curline="..curline)
+         local ldata = nmfb:GetLine( curline )
+         if nil == ldata or IsLineCompileSectionHdr( curline,ldata ) then
+            -- we've reached the end of the current section; wrap (move to opposite end of section)
+            Msgf( "no %s messages (%d)", ifx(direction>0,"more","prev"), curline )
+            while true do
+               curline = curline - direction  -- back up one
+               printf( "loop: %s curline = %d", tostring(nmvw), curline )
+               local ldata = nmfb:GetLine( curline )
+               if nil == ldata or IsLineCompileSectionHdr( curline,ldata ) then
+                  nmvw:SetLineCompile( curline )
+                  return
+                  end
+               end
+            end
+
+         local fnm = gofileline( "", ldata, false, ifx(fToNextFile, prevFnmGoneTo, nil) )
+         if fnm then
+            prevFnmGoneTo = fnm
+            -- DBG(tostring(nmvw)..":SetLineCompile="..curline)
+            nmvw:SetLineCompile( curline )
+            return
+            end
+         end
       end
 
    AddEdFxn{ name = "nextmsg", help = "next message", attr = NOARG+NULLARG+TEXTARG , key = "alt+n"
