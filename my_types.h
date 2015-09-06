@@ -83,6 +83,7 @@ typedef std::back_insert_iterator<std::string > string_back_inserter;
 
 typedef boost::string_ref stref;
 typedef stref::size_type  sridx; // a.k.a. boost::string_ref::size_type
+const auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::npos )' syntax is used!
 
 struct sridx2 {
    sridx ix0;
