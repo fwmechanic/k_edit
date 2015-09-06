@@ -1,4 +1,4 @@
-//
+// -*- c is foobar -*-
 // Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
@@ -942,9 +942,58 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    return shebang;
    }
 
+
+/*
+   20150906_110400 real WIP: need a general split stref into walkable/iterable strefs solution
+                             split and match (all w/o touching heap)
+   an API/interface problem is how to signify "end-of-walk" condition: empty
+   stref is not ideal since it's a legit mid-split outcome; in this case I'd
+   need to have next() skip these
+*/
+class stref_split_walk {
+   const stref whole_thing;
+   sridx begin, end;
+
+public:
+   stref_split_walk( stref whole_thing_ ) : whole_thing( whole_thing_ ) {}
+   stref next();
+   };
+
+
+STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software/emacs/manual/html_node/emacs/Choosing-Modes.html
+#if 0 // following WORKS, except  isolate "mode: param"  functionality has not been written (pending impl of stref_split_walk etc.)
+   // find first nonblank line
+   stref rv( "" );
+   for( auto yLine(0) ; yLine < pfb->LineCount() ; ++yLine ) {
+      const auto rl( pfb->PeekRawLine( yLine ) );
+      if( !IsStringBlank( rl ) && !(yLine==0 && rl.starts_with( "#!" )) ) {
+         rv = rl;
+         break;
+         }
+      }
+   if( 0 == rv.length() ) {
+      return rv;
+      }
+
+   stref mode_delim( "-*-" );
+   const auto first( rv.find( mode_delim ) );
+   if( first != eosr ) {
+      rv.remove_prefix( first + mode_delim.length() );
+      const auto second( rv.find( mode_delim ) );
+      if( second != eosr ) {
+         rv.remove_suffix( rv.length() - second ); 1 && DBG( "emacs_major_mode=%" PR_BSR "'", BSR(rv) );
+         // isolate "mode: param"
+         }
+      }
+#endif
+   return "";
+   }
+
+
 STATIC_FXN stref content_to_ftype( PCFBUF pfb ) {
    typedef stref (*content_deducer_t)( PCFBUF pfb );
    STATIC_CONST content_deducer_t content_deducers[] = {
+      emacs_major_mode     ,
       shebang_binary_name  ,
       is_content_diff      ,
       };
