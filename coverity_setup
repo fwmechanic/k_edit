@@ -1,0 +1,2 @@
+coverity_version="cov-analysis-linux64-7.6.0"
+export PATH="$PATH:$HOME/coverity/${coverity_version}/bin"
