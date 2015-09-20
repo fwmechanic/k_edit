@@ -885,7 +885,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    #define  HOME_ENVVAR_NM  "APPDATA"
    #define  HOME_SUBDIR_NM  "Kevins Editor"
    const PCChar appdataVal( getenv( HOME_ENVVAR_NM ) );
-   if( !appdataVal )          { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
+   if( !(appdataVal && appdataVal[0]) )          { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
    if( !IsDir( appdataVal ) ) { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
    s_EditorStateDir = appdataVal;                     0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
    s_EditorStateDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
@@ -904,14 +904,14 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    #define  HOME_ENVVAR_SUFFIXNM  ".cache"
    #define  HOME_SUBDIR_NM        "kedit"
    PCChar baseVarVal( getenv( CACHE_ENVVAR_NM ) );
-   if( baseVarVal ) {
+   if( baseVarVal && baseVarVal[0] ) {
       s_EditorStateDir = baseVarVal;
       mkdir_stf();  // fprintf( stderr, "$" CACHE_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
       }
    else {
       baseVarVal = getenv( HOME_ENVVAR_NM );
-      fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", baseVarVal );
-      if( !baseVarVal || !baseVarVal[0] ) { fprintf( stderr, "$" HOME_ENVVAR_NM " is not defined???\n" ); exit( 1 ); }
+      if( !(baseVarVal && baseVarVal[0]) ) { fprintf( stderr, "$" HOME_ENVVAR_NM " is not defined???\n" ); exit( 1 ); }
+      // fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", baseVarVal );
       if( !IsDir( baseVarVal ) )          { fprintf( stderr, "dir $" HOME_ENVVAR_NM " %s does not exist???\n", baseVarVal ); exit( 1 ); }
       s_EditorStateDir = baseVarVal;      //       fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
       s_EditorStateDir += PATH_SEP_STR HOME_ENVVAR_SUFFIXNM; // fprintf( stderr, "$" HOME_ENVVAR_NM "/" HOME_ENVVAR_SUFFIXNM " %s\n", s_EditorStateDir.c_str() );
