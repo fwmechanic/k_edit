@@ -90,7 +90,7 @@ The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used 
 
 # Editor State Files
 
-K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*` (`${HOME}/.kedit/*hostname*/` on Linux).  Information stored in state files includes:
+K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*` (`${XDG_CACHE_HOME}/kedit/$(hostname)/` on Linux).  Information stored in state files includes:
 
  *  files edited (including window/cursor position)
  *  search-key and replace-string history

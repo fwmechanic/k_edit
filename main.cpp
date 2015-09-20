@@ -876,13 +876,14 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    PutEnvOk( "K_RUNNING?", "yes" );
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
 
+   auto mkdir_stf = [&]() {
+      if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
+      if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
+      s_EditorStateDir += PATH_SEP_STR;   0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
+      };
 #if defined(_WIN32)
    #define  HOME_ENVVAR_NM  "APPDATA"
    #define  HOME_SUBDIR_NM  "Kevins Editor"
-#else
-   #define  HOME_ENVVAR_NM  "HOME"
-   #define  HOME_SUBDIR_NM  ".kedit"
-#endif
    const PCChar appdataVal( getenv( HOME_ENVVAR_NM ) );
    if( !appdataVal )          { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
    if( !IsDir( appdataVal ) ) { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
@@ -890,12 +891,37 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    s_EditorStateDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
 #undef   HOME_ENVVAR_NM
 #undef   HOME_SUBDIR_NM
+#else
+   //
+   // ifdef XDG_CACHE_HOME
+   //    "$XDG_CACHE_HOME/kedit"
+   // else
+   //    "$HOME/.cache/kedit"
+   // endif
+   //
+   #define  CACHE_ENVVAR_NM       "XDG_CACHE_HOME"
+   #define  HOME_ENVVAR_NM        "HOME"
+   #define  HOME_ENVVAR_SUFFIXNM  ".cache"
+   #define  HOME_SUBDIR_NM        "kedit"
+   PCChar baseVarVal( getenv( CACHE_ENVVAR_NM ) );
+   if( baseVarVal ) {
+      s_EditorStateDir = baseVarVal;
+      mkdir_stf();  // fprintf( stderr, "$" CACHE_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
+      }
+   else {
+      baseVarVal = getenv( HOME_ENVVAR_NM );
+      fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", baseVarVal );
+      if( !baseVarVal || !baseVarVal[0] ) { fprintf( stderr, "$" HOME_ENVVAR_NM " is not defined???\n" ); exit( 1 ); }
+      if( !IsDir( baseVarVal ) )          { fprintf( stderr, "dir $" HOME_ENVVAR_NM " %s does not exist???\n", baseVarVal ); exit( 1 ); }
+      s_EditorStateDir = baseVarVal;      //       fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
+      s_EditorStateDir += PATH_SEP_STR HOME_ENVVAR_SUFFIXNM; // fprintf( stderr, "$" HOME_ENVVAR_NM "/" HOME_ENVVAR_SUFFIXNM " %s\n", s_EditorStateDir.c_str() );
+      mkdir_stf();
+      }
+   s_EditorStateDir += HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
+#undef   HOME_ENVVAR_NM
+#undef   HOME_SUBDIR_NM
+#endif
 
-   auto mkdir_stf = [&]() {
-      if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
-      if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
-      s_EditorStateDir += PATH_SEP_STR;   0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
-      };
    mkdir_stf();
   #if !defined(_WIN32)
    { // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host
