@@ -623,6 +623,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
        , s_expandedTags
        , s_alias_to
        , s_tagsFilename
+       , s_tagsFilepath
        , s_tagsFiletime
        , s_taggedFilesLc
        , s_prevTagLookedUp
@@ -640,10 +641,11 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          if IsFile( fn ) then
             tagDirnm = dir
             -- tagF = io.open( fn, "rt" )
-            s_tagsFilename = fn
             tagF = FBUF.new( fn )
             tagF:SetNoEdit()
             s_tagsFilename = tagF:Name()
+            s_tagsFilepath = PathOf( s_tagsFilename )
+            -- print( "s_tagsFilepath=" .. s_tagsFilepath )
             s_tagsFiletime = tagF:ModifyTimeOfDiskFile()
             break
             end
@@ -855,8 +857,11 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       local tagInfo = assert( a_taginfo[ tagEntryNum ], tagStr .."[".. tagEntryNum.."] is undefined" )
       local fb,vw = GotoFileLineCol( tagInfo.fname, tagInfo.lineNum, 1 )
       if not fb then
-         Msg( "cannot open file "..tagInfo.fname )
-         return
+         fb,vw = GotoFileLineCol( s_tagsFilepath..tagInfo.fname, tagInfo.lineNum, 1 )
+         if not fb then
+            Msg( "cannot open file "..tagInfo.fname )
+            return
+            end
          end
       local ldat = fb:GetLine( tagInfo.lineNum )
       if not ldat then
