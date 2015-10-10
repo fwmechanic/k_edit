@@ -39,39 +39,44 @@
 //       7       Alt + Control
 //       8       Shift + Alt + Control
 //
-STATIC_VAR U16 s_to_EdKC[600];
+STATIC_VAR U16 s_to_EdKC[600]; // indexed by ncurses_code
 
-STATIC_FXN void keyname_to_code( const char *name, U16 edkc ) { enum { DB=0 };
+STATIC_FXN void cap_nm_to_ncurses_code( const char *cap_nm, U16 edkc ) { enum { DB=0 };
+   // tigetstr() <- "retrieves a capability from the terminfo database"
+   // cap_nm is a terminfo "capability name", the key of a key=value mapping defined in a terminfo file
+   // see http://invisible-island.net/xterm/terminfo-contents.html  ; EX:
+   // xterm+pce3|fragment with modifyCursorKeys:3,
+   //         kDC=\E[>3;2~,                               key=kDC, value=\E[>3;2~
    linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), edkc );
-                                      DB && DBG( "tigetstr+ %s", name );
-   const auto s( tigetstr( name ) );  DB && DBG( "tigetstr- %s", name );
-   if( !s || (long)(s) == -1 ) {
-      0 && DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, name, "", edkcnmbuf );
+                                                 DB && DBG( "tigetstr+ %s", cap_nm );
+   const char *escseqstr( tigetstr( cap_nm ) );  DB && DBG( "tigetstr- %s", cap_nm );
+   if( !escseqstr || (long)(escseqstr) == -1 ) {
+      0 && DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, cap_nm, "", edkcnmbuf );
       return;
-      }                               DB && DBG( "key_defined+ %s", s );
-   const auto code( key_defined(s) ); DB && DBG( "key_defined- %s", s );
-   DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", code, code, name, s, edkcnmbuf );
-   if( code > 0 ) {
-      if( code < ELEMENTS( s_to_EdKC ) ) {
-         if( s_to_EdKC[ code ] ) {
-            StrFromEdkc( BSOB(edkcnmbuf), s_to_EdKC[ code ] );
-            DBG( "0%04o=%d EdKC=%s overridden!", code, code, edkcnmbuf );
+      }                                               DB && DBG( "key_defined+ %s", escseqstr );
+   const auto ncurses_code( key_defined(escseqstr) ); DB && DBG( "key_defined- %s", escseqstr ); // key_defined() <- ncurses
+   DBG( "0%04o=0d%d=tigetstr(%s)=%s EdKC=%s", ncurses_code, ncurses_code, cap_nm, escseqstr, edkcnmbuf );
+   if( ncurses_code > 0 ) {
+      if( ncurses_code < ELEMENTS( s_to_EdKC ) ) {
+         if( s_to_EdKC[ ncurses_code ] ) {
+            StrFromEdkc( BSOB(edkcnmbuf), s_to_EdKC[ ncurses_code ] );
+            DBG( "0%04o=%d EdKC=%s overridden!", ncurses_code, ncurses_code, edkcnmbuf );
             }
-         s_to_EdKC[ code ] = edkc;
+         s_to_EdKC[ ncurses_code ] = edkc;
          }
       else {
-         Msg( "INTERNAL ERROR: code=%d out of range of s_to_EdKC[]!", code );
+         Msg( "INTERNAL ERROR: ncurses_code=%d out of range of s_to_EdKC[]!", ncurses_code );
          }
       }
    }
 
-void conin_ncurses_init() {
+void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    noecho();
    nonl();
    keypad(stdscr, TRUE);
    meta(stdscr, 1);
 
-   STATIC_VAR const struct { const char *kynm; U16 edkc; } s_kn2kc[] = {
+   STATIC_VAR const struct { const char *cap_nm; U16 edkc; } s_kn2kc[] = {
       { "kDC"  , EdKC_del    }, { "kDC3" , EdKC_a_del   }, { "kDC5" , EdKC_c_del   }, { "kDC6" , EdKC_cs_del  },
       /* 0=shifted */           { "kDN"  , EdKC_s_down  }, { "kDN3" , EdKC_a_down  }, { "kDN5" , EdKC_c_down  }, { "kDN6" , EdKC_cs_down  },
 
@@ -101,7 +106,7 @@ void conin_ncurses_init() {
       { "kf12", EdKC_f12 }, { "kf24", EdKC_s_f12 }, { "kf36", EdKC_c_f12 }, { "kf48" , EdKC_cs_f12 }, { "kf60", EdKC_a_f12 },
    };
    for( auto ix( 0u ) ; ix < ELEMENTS(s_kn2kc) ; ++ix ) {
-      keyname_to_code( s_kn2kc[ix].kynm, s_kn2kc[ix].edkc );
+      cap_nm_to_ncurses_code( s_kn2kc[ix].cap_nm, s_kn2kc[ix].edkc );
       }
    }
 
@@ -183,7 +188,7 @@ STATIC_FXN int ConGetEvent() {
    // terminal specific values for shift + up / down
    const auto ch( getch() );
    if( ch < 0 )                      { return -1; }
-   if( s_to_EdKC[ ch ] ) {
+   if( ch < ELEMENTS(s_to_EdKC) && s_to_EdKC[ ch ] ) {
       const auto rv( s_to_EdKC[ ch ] );
       linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), rv ); DBG( "s_to_EdKC[ %d ] => %s", ch, edkcnmbuf );
       return rv;
@@ -198,17 +203,17 @@ STATIC_FXN int ConGetEvent() {
       }
    switch (ch) {
                  // > 0xFF      // this column DOESN'T WORK: these keys map to ascii number chars
-      CR(KEY_RIGHT, EdKC_right) CR(KEY_SRIGHT   , EdKC_s_right)
-      CR(KEY_LEFT , EdKC_left ) CR(KEY_SLEFT    , EdKC_s_left )
-      CR(KEY_DC   , EdKC_del  ) CR(KEY_SDC      , EdKC_s_del  )
-      CR(KEY_IC   , EdKC_ins  ) CR(KEY_SIC      , EdKC_s_ins  )
-      CR(KEY_HOME , EdKC_home ) CR(KEY_SHOME    , EdKC_s_home )
-      CR(KEY_END  , EdKC_end  ) CR(KEY_SEND     , EdKC_s_end  )
-      CR(KEY_NPAGE, EdKC_pgdn ) CR(KEY_SNEXT    , EdKC_s_pgdn )
-      CR(KEY_PPAGE, EdKC_pgup ) CR(KEY_SPREVIOUS, EdKC_s_pgup )
-      CR(KEY_UP   , EdKC_up   )
-      CR(KEY_DOWN , EdKC_down )
-      CR(KEY_BACKSPACE, EdKC_bksp)
+      CR( KEY_RIGHT     , EdKC_right ) CR( KEY_SRIGHT    , EdKC_s_right )
+      CR( KEY_LEFT      , EdKC_left  ) CR( KEY_SLEFT     , EdKC_s_left  )
+      CR( KEY_DC        , EdKC_del   ) CR( KEY_SDC       , EdKC_s_del   )
+      CR( KEY_IC        , EdKC_ins   ) CR( KEY_SIC       , EdKC_s_ins   )
+      CR( KEY_HOME      , EdKC_home  ) CR( KEY_SHOME     , EdKC_s_home  )
+      CR( KEY_END       , EdKC_end   ) CR( KEY_SEND      , EdKC_s_end   )
+      CR( KEY_NPAGE     , EdKC_pgdn  ) CR( KEY_SNEXT     , EdKC_s_pgdn  )
+      CR( KEY_PPAGE     , EdKC_pgup  ) CR( KEY_SPREVIOUS , EdKC_s_pgup  )
+      CR( KEY_UP        , EdKC_up    )
+      CR( KEY_DOWN      , EdKC_down  )
+      CR( KEY_BACKSPACE , EdKC_bksp  )
 
       // replaced (possibly unnecessarily) by keyname_to_code()
       // CR(KEY_F(1) , EdKC_f1 ) CR(KEY_F(13), EdKC_s_f1 )   CR(KEY_F(25), EdKC_c_f1 ) CR(KEY_F(49), EdKC_a_f1 )
