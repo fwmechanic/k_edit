@@ -171,6 +171,7 @@ void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
    pFBuf->FmtLastLine( "#-------------------- %s", "Linux Status" );
 
    pFBuf->FmtLastLine( "%s@%s", ThisProcessInfo::euname(), ThisProcessInfo::hostname() );
-   pFBuf->FmtLastLine( "umask : %03o", ThisProcessInfo::umask() );
+   pFBuf->FmtLastLine( "umask=%03o", ThisProcessInfo::umask() );
+   pFBuf->FmtLastLine( "TERM=%s", getenv("TERM") );
 
    }

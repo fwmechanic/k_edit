@@ -39,33 +39,39 @@
 //       7       Alt + Control
 //       8       Shift + Alt + Control
 //
-STATIC_VAR U16 s_to_EdKC[600]; // indexed by ncurses_code
+STATIC_VAR U16 ncurses_ch_to_EdKC[600]; // indexed by ncurses_ch
 
-STATIC_FXN void cap_nm_to_ncurses_code( const char *cap_nm, U16 edkc ) { enum { DB=0 };
-   // tigetstr() <- "retrieves a capability from the terminfo database"
-   // cap_nm is a terminfo "capability name", the key of a key=value mapping defined in a terminfo file
-   // see http://invisible-island.net/xterm/terminfo-contents.html  ; EX:
-   // xterm+pce3|fragment with modifyCursorKeys:3,
-   //         kDC=\E[>3;2~,                               key=kDC, value=\E[>3;2~
+STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, U16 edkc ) { enum { DB=0 };
+   /* if terminfo defines a capability named cap_nm (as an escseqstr), _and_ ncurses maps that
+      escseqstr to an ncurses_ch (that which getch() returns), then add an entry
+      ncurses_ch_to_EdKC[ncurses_ch] = EdKC  # where EdKC is the EDITOR KEYCODE which corresponds to cap_nm
+
+      cap_nm is a terminfo "capability name", the key of a key=value mapping defined in a terminfo file
+      see http://invisible-island.net/xterm/terminfo-contents.html  ; EX:
+      xterm+pce3|fragment with modifyCursorKeys:3,
+              kDC=\E[>3;2~,                               key=cap_nm=kDC, value=escseqstr=\E[>3;2~
+   */
+
+
    linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), edkc );
                                                  DB && DBG( "tigetstr+ %s", cap_nm );
-   const char *escseqstr( tigetstr( cap_nm ) );  DB && DBG( "tigetstr- %s", cap_nm );
+   const char *escseqstr( tigetstr( cap_nm ) );  DB && DBG( "tigetstr- %s", cap_nm ); // tigetstr() <- "retrieves a capability from the terminfo database"
    if( !escseqstr || (long)(escseqstr) == -1 ) {
       0 && DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, cap_nm, "", edkcnmbuf );
       return;
-      }                                               DB && DBG( "key_defined+ %s", escseqstr );
-   const auto ncurses_code( key_defined(escseqstr) ); DB && DBG( "key_defined- %s", escseqstr ); // key_defined() <- ncurses
-   DBG( "0%04o=0d%d=tigetstr(%s)=%s EdKC=%s", ncurses_code, ncurses_code, cap_nm, escseqstr, edkcnmbuf );
-   if( ncurses_code > 0 ) {
-      if( ncurses_code < ELEMENTS( s_to_EdKC ) ) {
-         if( s_to_EdKC[ ncurses_code ] ) {
-            StrFromEdkc( BSOB(edkcnmbuf), s_to_EdKC[ ncurses_code ] );
-            DBG( "0%04o=%d EdKC=%s overridden!", ncurses_code, ncurses_code, edkcnmbuf );
+      }                                             DB && DBG( "key_defined+ %s", escseqstr );
+   const auto ncurses_ch( key_defined(escseqstr) ); DB && DBG( "key_defined- %s", escseqstr ); // key_defined() <- ncurses
+   DBG( "0%04o=0d%d=tigetstr(%s)=%s EdKC=%s", ncurses_ch, ncurses_ch, cap_nm, escseqstr, edkcnmbuf );
+   if( ncurses_ch > 0 ) {
+      if( ncurses_ch < ELEMENTS( ncurses_ch_to_EdKC ) ) {
+         if( ncurses_ch_to_EdKC[ ncurses_ch ] ) {
+            StrFromEdkc( BSOB(edkcnmbuf), ncurses_ch_to_EdKC[ ncurses_ch ] );
+            DBG( "0%04o=%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, edkcnmbuf );
             }
-         s_to_EdKC[ ncurses_code ] = edkc;
+         ncurses_ch_to_EdKC[ ncurses_ch ] = edkc;
          }
       else {
-         Msg( "INTERNAL ERROR: ncurses_code=%d out of range of s_to_EdKC[]!", ncurses_code );
+         Msg( "INTERNAL ERROR: ncurses_ch=%d out of range of ncurses_ch_to_EdKC[]!", ncurses_ch );
          }
       }
    }
@@ -106,7 +112,7 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       { "kf12", EdKC_f12 }, { "kf24", EdKC_s_f12 }, { "kf36", EdKC_c_f12 }, { "kf48" , EdKC_cs_f12 }, { "kf60", EdKC_a_f12 },
    };
    for( auto ix( 0u ) ; ix < ELEMENTS(s_kn2kc) ; ++ix ) {
-      cap_nm_to_ncurses_code( s_kn2kc[ix].cap_nm, s_kn2kc[ix].edkc );
+      cap_nm_to_ncurses_ch( s_kn2kc[ix].cap_nm, s_kn2kc[ix].edkc );
       }
    }
 
@@ -188,9 +194,9 @@ STATIC_FXN int ConGetEvent() {
    // terminal specific values for shift + up / down
    const auto ch( getch() );
    if( ch < 0 )                      { return -1; }
-   if( ch < ELEMENTS(s_to_EdKC) && s_to_EdKC[ ch ] ) {
-      const auto rv( s_to_EdKC[ ch ] );
-      linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), rv ); DBG( "s_to_EdKC[ %d ] => %s", ch, edkcnmbuf );
+   if( ch < ELEMENTS(ncurses_ch_to_EdKC) && ncurses_ch_to_EdKC[ ch ] ) {
+      const auto rv( ncurses_ch_to_EdKC[ ch ] );
+      // linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), rv ); DBG( "ncurses_ch_to_EdKC[ %d ] => %s", ch, edkcnmbuf );
       return rv;
       }
    if( ch <= 0xFF ) {
