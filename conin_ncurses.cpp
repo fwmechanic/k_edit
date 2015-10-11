@@ -17,6 +17,7 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <functional>
 #include <ncurses.h>
 #include <stdio.h>
 #include "conio.h"
@@ -118,8 +119,9 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
 
 // get keyboard event
 STATIC_FXN int ConGetEvent();
-// get extended event (more komplex keystrokes)
-STATIC_FXN int ConGetEscEvent();
+// get extended event (more complex keystrokes)
+
+STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh );
 
 bool ConIn::FlushKeyQueueAnythingFlushed(){ return flushinp(); }
 
@@ -177,6 +179,20 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
    return rv;
    }
 
+void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
+   if( ch == 27 )           { snprintf_full( &dest, &sizeofDest, "\\E" ); }
+   else if( isprint( ch ) ) { snprintf_full( &dest, &sizeofDest, "%c", ch ); }
+   else                     { snprintf_full( &dest, &sizeofDest, "\\%03o", ch ); }
+   }
+
+PChar terminfo_str( PChar &dest, size_t &sizeofDest, const int *ach, int numCh ) {
+   for( auto ix(0) ; ix < numCh ; ++ix ) {
+      terminfo_ch( dest, sizeofDest, ach[ ix ] );
+      }
+   return dest;
+   }
+
+
 #define CR( is, rv )  case is: return rv;
 
 #define CAS5( kynm ) \
@@ -200,7 +216,38 @@ STATIC_FXN int ConGetEvent() {
       return rv;
       }
    if( ch <= 0xFF ) {
-      if( ch == 27 )                 { return ConGetEscEvent(); }
+      if( ch == 27 ) {
+         int chin[32] = { 0 };
+         int chinIx( 0 );
+         chin[ chinIx++ ] = 27; // assume: rx'd this prior to being called
+         auto getCh = [&chin, &chinIx]() {
+            int newch = getch();
+            if( chinIx < ELEMENTS(chin) ) {
+               chin[ chinIx++ ] = newch;
+               }
+            return newch;
+            };
+
+         const auto rv( DecodeEscSeq_xterm( getCh ) );
+
+         auto showChin = [&chin, &chinIx, &rv]() {
+            char obuf[65]; auto pob( obuf ); auto nob( sizeof( obuf ) ); terminfo_str( pob, nob, chin, chinIx );
+            char edkcnmbuf[65] ; StrFromEdkc( BSOB(edkcnmbuf), rv );
+            DBG( "escseq: %s=%s", edkcnmbuf, obuf );
+
+         /*
+            snprintf_full( &pob, &nob, ", ch1/mod/end=" ); terminfo_ch(  pob, nob, ch1   );
+            snprintf_full( &pob, &nob, "/" );              terminfo_ch(  pob, nob, endch );
+            snprintf_full( &pob, &nob, "/" );              terminfo_ch(  pob, nob, modch );
+            DBG( "%s", obuf );
+          */
+            };
+
+         showChin();
+
+         return rv;
+         }
+
       if( ch == '\r' || ch == '\n' ) { return EdKC_enter; }
       if( ch == '\t' )               { return EdKC_tab; }
       if( ch >= 28 && ch <= 31 )     { return EdKC_c_4 + (ch - 28); }
@@ -267,103 +314,122 @@ struct kpto_er {
       }
    };
 
-STATIC_FXN int ConGetEscEvent() {
-   int result = -1;
+STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-PC-Style-Function-Keys
+   enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
+   auto decode_modch = []( int ch ) {
+      // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-PC-Style-Function-Keys
+      //
+      //   Code     Modifiers
+      // ---------+---------------------------
+      //    2     | Shift
+      //    3     | Alt
+      //    4     | Shift + Alt
+      //    5     | Control
+      //    6     | Shift + Control
+      //    7     | Alt + Control
+      //    8     | Shift + Alt + Control
+      int mod;  enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
+      switch( ch ) {
+         default : mod =    0     +    0    +    0     ; break;
+         case '2': mod =    0     +    0    + mod_shift; break;
+         case '3': mod =    0     + mod_alt +    0     ; break;
+         case '4': mod =    0     + mod_alt + mod_shift; break;
+         case '5': mod = mod_ctrl +    0    +    0     ; break;
+         case '6': mod = mod_ctrl +    0    + mod_shift; break;
+         case '7': mod = mod_ctrl + mod_alt +    0     ; break;
+         case '8': mod = mod_ctrl + mod_alt + mod_shift; break;
+         }
+      return mod;
+      };
+
    bool kbAlt = false;
    kpto_er kpto_cleaner;
-   int ch = getch();
-   if( ch == 27 ) { // ESC?
-      ch = getch();
+   int ch = getCh();
+   if( ch == ERR ) { return EdKC_esc; }
+   if( ch == 27 ) { // 2nd consecutive ESC?
+      ch = getCh();
       if( ch == '[' || ch == 'O' ) {
          kbAlt = true;
          }
       }
+   if( ch == '[' || ch == 'O' ) { // decode CSI and SS3 sequences; 98% identical
+      const auto fSS3( ch == 'O' ); const auto fCSI( !fSS3 );
+      int ch1 = getCh();
+      if( ch1 == ERR ) { return fCSI ? EdKC_a_LEFT_SQ : EdKC_a_o ; }
 
-   if( ch == ERR ) {
-      result = EdKC_esc;
-      }
-   else if (ch == '[' || ch == 'O') {
-      int ch1 = getch();
-      int endch = '\0';
-      int modch = '\0';
+      // https://en.wikipedia.org/wiki/ANSI_escape_code
+      // "Old versions of Terminator generate `SS3 1 ; modifiers char` when F1-F4 are
+      // pressed with modifiers.  The faulty behavior was copied from GNOME Terminal."
 
-      if (ch1 == ERR) { // translate to Alt-[ or Alt-O
-         result = EdKC_a_LEFT_SQ;
+      auto endch(0);
+      if( /* fCSI && */ ch1 >= '1' && ch1 <= '8' ) { // CSI 1..8
+         endch = getCh();
+         if( endch == ERR ) { // //[n, not valid
+            // TODO, should this be ALT-7 ?
+            endch = '\0';
+            ch1 = '\0';
+            }
          }
-      else {
-         if( ch1 >= '1' && ch1 <= '8' ) { // [n...
-            endch = getch();
-            if( endch == ERR) { // //[n, not valid
-               // TODO, should this be ALT-7 ?
-               endch = '\0';
-               ch1 = '\0';
-               }
-            }
-         else { // [A
-            endch = ch1;
-            ch1 = '\0';
-            }
+      else { // CSI !(1..8) || SS3 do not have trailing ~
+         endch = ch1;
+         ch1 = '\0';
+         }
 
-         if( endch == ';' ) { // [n;mX
-            modch = getch();
-            endch = getch();
-            }
-         else if (ch1 != '\0' && endch != '~' && endch != '$') { // [mA
-            modch = ch1;
-            ch1 = '\0';
-            }
-
-         auto mod( 0 );  enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
-         if( modch != '\0' ) {
-            const int ctAlSh( ch1 - '1' );
-            if( (ctAlSh & 0x4) || modch == 53) { mod |= mod_ctrl;  }
-            if( (ctAlSh & 0x2) || modch == 51) { kbAlt = true;     }
-            if( (ctAlSh & 0x1) || modch == 50) { mod |= mod_shift; }
-            }
-         if( kbAlt ) mod |= mod_alt;
-         enum { mod_cas= 0          ,
-                mod_caS= mod_shift  ,
-                mod_cAs= mod_alt    ,
-                mod_Cas= mod_ctrl   ,
-                mod_CaS= mod_ctrl | mod_shift,
-              };
-         switch (endch) {
-            default:  Msg( "%s unhandled event *cas=%X 0%o %d\n", __func__, mod, endch, endch ); return -1;
-            case 'A': CAS5( up       ); break;
-            case 'B': CAS5( down     ); break;
-            case 'C': CAS5( right    ); break;
-            case 'D': CAS5( left     ); break;
-            case 'E': CAS5( center   ); break;
-            case 'F': CAS5( end      ); break;
-            case 'H': CAS5( home     ); break;
-            case 'P': CAS5( f1       ); break;
-            case 'Q': CAS5( f2       ); break;
-            case 'R': CAS5( f3       ); break;
-            case 'S': CAS5( f4       ); break;
-            case 'j': CAS5( numStar  ); break;
-            case 'k': CAS5( numPlus  ); break;
-            case 'm': CAS5( numMinus ); break;
-            case 'o': CAS5( numSlash ); break;
-            case 'a': return (mod & mod_ctrl) ? EdKC_cs_up    : EdKC_s_up;
-            case 'b': return (mod & mod_ctrl) ? EdKC_cs_down  : EdKC_s_down;
-            case 'c': return (mod & mod_ctrl) ? EdKC_cs_right : EdKC_s_right;
-            case 'd': return (mod & mod_ctrl) ? EdKC_cs_left  : EdKC_s_left;
-            case '$': mod |= mod_shift;  /* FALL THRU!!! */
-            case '~':
-                switch (ch1 - '0') {
-                   default: Msg( "%s unhandled event ~cas=%X 0%o %d\n", __func__, mod, ch1 - '0', ch1 - '0' ); return -1;
-                   case 1: CAS5( home ); break;
-                   case 7: CAS5( home ); break;
-                   case 4: CAS5( end  ); break;
-                   case 8: CAS5( end  ); break;
-                   case 2: CAS5( ins  ); break;
-                   case 3: CAS5( del  ); break;
-                   case 5: CAS5( pgup ); break;
-                   case 6: CAS5( pgdn ); break;
-                   }
-                break;
-            }
-      }
+      auto modch(0);
+      if( endch == ';' ) { // [n;mX
+         modch = getCh();
+         endch = getCh();
+         }
+      else if( ch1 != '\0' && endch != '~' && endch != '$' ) { // [mA
+         modch = ch1;
+         ch1 = '\0';
+         }
+      auto mod( decode_modch( modch ) );
+      if( kbAlt ) mod |= mod_alt;
+      enum { mod_cas= 0          ,
+             mod_caS= mod_shift  ,
+             mod_cAs= mod_alt    ,
+             mod_Cas= mod_ctrl   ,
+             mod_CaS= mod_ctrl | mod_shift,
+           };
+      switch (endch) {
+         default:  Msg( "%s unhandled event *cas=%X 0%o %c\n", __func__, mod, endch, endch ); return -1;
+         case 'A': CAS5( up       ); break;
+         case 'B': CAS5( down     ); break;
+         case 'C': CAS5( right    ); break;
+         case 'D': CAS5( left     ); break;
+         case 'E': CAS5( center   ); break;
+         case 'F': CAS5( end      ); break;
+         case 'G': CAS5( center   ); break;  // TERM=screen (only mod_cas==mod seen)
+         case 'H': CAS5( home     ); break;
+         case 'P': CAS5( f1       ); break; // SS3 P
+         case 'Q': CAS5( f2       ); break; // SS3 Q
+         case 'R': CAS5( f3       ); break; // SS3 R
+         case 'S': CAS5( f4       ); break; // SS3 S
+         case 'j': CAS5( numStar  ); break;
+         case 'k': CAS5( numPlus  ); break;
+         case 'm': CAS5( numMinus ); break;
+         case 'o': CAS5( numSlash ); break;
+         case 'a': return (mod & mod_ctrl) ? EdKC_cs_up    : EdKC_s_up;
+         case 'b': return (mod & mod_ctrl) ? EdKC_cs_down  : EdKC_s_down;
+         case 'c': return (mod & mod_ctrl) ? EdKC_cs_right : EdKC_s_right;
+         case 'd': return (mod & mod_ctrl) ? EdKC_cs_left  : EdKC_s_left;
+                   //----------------------------------------------------
+         case '$': mod |= mod_shift;  /* FALL THRU!!! */
+         case '~':
+             switch (ch1) { // CSI n ~
+                default: Msg( "%s unhandled event ~cas=%X 0%o %d\n", __func__, mod, ch1 - '0', ch1 - '0' ); return -1;
+                case '1': CAS5( home ); break;
+                case '7': CAS5( home ); break;
+                case '4': CAS5( end  ); break;
+                case '8': CAS5( end  ); break;
+                case '2': CAS5( ins  ); break;
+                case '3': CAS5( del  ); break; // CSI 3 ~
+                case '5': CAS5( pgup ); break;
+                case '6': CAS5( pgdn ); break;
+                }
+             break;
+         }
    } else { // alt+...
       if (ch == '\r' || ch == '\n')        { return EdKC_a_enter; }
       else if( ch == '\t' )                { return EdKC_a_tab;   }
@@ -388,5 +454,5 @@ STATIC_FXN int ConGetEscEvent() {
          }
       }
 
-   return result;
+   return ERR;
    }
