@@ -23,6 +23,27 @@
 #include "conio.h"
 #include "ed_main.h"
 
+
+void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
+   if( ch == 27 )           { snprintf_full( &dest, &sizeofDest, "\\E" ); }
+   else if( isprint( ch ) ) { snprintf_full( &dest, &sizeofDest, "%c", ch ); }
+   else                     { snprintf_full( &dest, &sizeofDest, "\\%03o", ch ); }
+   }
+
+PChar terminfo_str( PChar &dest, size_t &sizeofDest, const int *ach, int numCh ) {
+   for( auto ix(0) ; ix < numCh ; ++ix ) {
+      terminfo_ch( dest, sizeofDest, ach[ ix ] );
+      }
+   return dest;
+   }
+
+PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int numCh ) {
+   for( auto ix(0) ; ix < numCh ; ++ix ) {
+      terminfo_ch( dest, sizeofDest, ach[ ix ] );
+      }
+   return dest;
+   }
+
 //
 // from http://invisible-island.net/xterm/terminfo.html
 //
@@ -60,14 +81,16 @@ STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, U16 edkc ) { enum { DB
    if( !escseqstr || (long)(escseqstr) == -1 ) {
       0 && DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, cap_nm, "", edkcnmbuf );
       return;
-      }                                             DB && DBG( "key_defined+ %s", escseqstr );
-   const auto ncurses_ch( key_defined(escseqstr) ); DB && DBG( "key_defined- %s", escseqstr ); // key_defined() <- ncurses
-   DBG( "0%04o=0d%d=tigetstr(%s)=%s EdKC=%s", ncurses_ch, ncurses_ch, cap_nm, escseqstr, edkcnmbuf );
+      }
+   char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, escseqstr, Strlen(escseqstr) );
+                                                    DB && DBG( "key_defined+ %s", tib );
+   const auto ncurses_ch( key_defined(escseqstr) ); DB && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
+   DBG( "0%04o=0d%d <= %s=%s EdKC=%s", ncurses_ch, ncurses_ch, cap_nm, tib, edkcnmbuf );
    if( ncurses_ch > 0 ) {
       if( ncurses_ch < ELEMENTS( ncurses_ch_to_EdKC ) ) {
          if( ncurses_ch_to_EdKC[ ncurses_ch ] ) {
             StrFromEdkc( BSOB(edkcnmbuf), ncurses_ch_to_EdKC[ ncurses_ch ] );
-            DBG( "0%04o=%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, edkcnmbuf );
+            DBG( "0%04o=0d%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, edkcnmbuf );
             }
          ncurses_ch_to_EdKC[ ncurses_ch ] = edkc;
          }
@@ -191,20 +214,6 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
    StrFromEdkc( dest, sizeofDest, rv.EdKcEnum );
    return rv;
    }
-
-void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
-   if( ch == 27 )           { snprintf_full( &dest, &sizeofDest, "\\E" ); }
-   else if( isprint( ch ) ) { snprintf_full( &dest, &sizeofDest, "%c", ch ); }
-   else                     { snprintf_full( &dest, &sizeofDest, "\\%03o", ch ); }
-   }
-
-PChar terminfo_str( PChar &dest, size_t &sizeofDest, const int *ach, int numCh ) {
-   for( auto ix(0) ; ix < numCh ; ++ix ) {
-      terminfo_ch( dest, sizeofDest, ach[ ix ] );
-      }
-   return dest;
-   }
-
 
 #define CR( is, rv )  case is: return rv;
 
