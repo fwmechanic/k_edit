@@ -25,9 +25,23 @@
 
 
 void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
-   if( ch == 27 )           { snprintf_full( &dest, &sizeofDest, "\\E" ); }
-   else if( isprint( ch ) ) { snprintf_full( &dest, &sizeofDest, "%c", ch ); }
-   else                     { snprintf_full( &dest, &sizeofDest, "\\%03o", ch ); }
+   switch( ch ) {
+      case '\200' : snprintf_full( &dest, &sizeofDest, "\\0"  ); break;
+      case '\\'   : snprintf_full( &dest, &sizeofDest, "\\\\" ); break;
+      case 27     : snprintf_full( &dest, &sizeofDest, "\\E"  ); break;
+      case '^'    : snprintf_full( &dest, &sizeofDest, "\\^"  ); break;
+      case ','    : snprintf_full( &dest, &sizeofDest, "\\,"  ); break;
+      case ':'    : snprintf_full( &dest, &sizeofDest, "\\:"  ); break;
+      case '\n'   : snprintf_full( &dest, &sizeofDest, "\\n"  ); break;
+      case '\r'   : snprintf_full( &dest, &sizeofDest, "\\r"  ); break;
+      case '\t'   : snprintf_full( &dest, &sizeofDest, "\\t"  ); break;
+      case '\b'   : snprintf_full( &dest, &sizeofDest, "\\b"  ); break;
+      case '\f'   : snprintf_full( &dest, &sizeofDest, "\\f"  ); break;
+      case ' '    : snprintf_full( &dest, &sizeofDest, "\\s"  ); break;
+      default     : if( ch >= 1 && ch <= 26 ) { snprintf_full( &dest, &sizeofDest, isprint( ch ) ? "^%c" : "\\%03o", ch-1+'A' ); }
+                    else                      { snprintf_full( &dest, &sizeofDest, isprint( ch ) ? "%c" : "\\%03o", ch ); }
+                    break;
+      }
    }
 
 PChar terminfo_str( PChar &dest, size_t &sizeofDest, const int *ach, int numCh ) {
@@ -73,19 +87,18 @@ STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, U16 edkc ) { enum { DB
       xterm+pce3|fragment with modifyCursorKeys:3,
               kDC=\E[>3;2~,                               key=cap_nm=kDC, value=escseqstr=\E[>3;2~
    */
-
-
    linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), edkc );
                                                  DB && DBG( "tigetstr+ %s", cap_nm );
    const char *escseqstr( tigetstr( cap_nm ) );  DB && DBG( "tigetstr- %s", cap_nm ); // tigetstr() <- "retrieves a capability from the terminfo database"
    if( !escseqstr || (long)(escseqstr) == -1 ) {
-      0 && DBG( "0%04o=%d=tigetstr(%s)=%s EdKC=%s", 0, 0, cap_nm, "", edkcnmbuf );
+#define KEYMAPFMT  "0%04o=0d%d <= %-5s => %-8s => %s"
+      0 && DBG( KEYMAPFMT, 0, 0, cap_nm, "", edkcnmbuf );
       return;
       }
    char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, escseqstr, Strlen(escseqstr) );
                                                     DB && DBG( "key_defined+ %s", tib );
    const auto ncurses_ch( key_defined(escseqstr) ); DB && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
-   DBG( "0%04o=0d%d <= %s=%s EdKC=%s", ncurses_ch, ncurses_ch, cap_nm, tib, edkcnmbuf );
+   DBG( KEYMAPFMT, ncurses_ch, ncurses_ch, cap_nm, tib, edkcnmbuf );
    if( ncurses_ch > 0 ) {
       if( ncurses_ch < ELEMENTS( ncurses_ch_to_EdKC ) ) {
          if( ncurses_ch_to_EdKC[ ncurses_ch ] ) {
@@ -148,9 +161,11 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       { "kf11", EdKC_f11 }, { "kf23", EdKC_s_f11 }, { "kf35", EdKC_c_f11 }, { "kf47" , EdKC_cs_f11 }, { "kf59", EdKC_a_f11 },
       { "kf12", EdKC_f12 }, { "kf24", EdKC_s_f12 }, { "kf36", EdKC_c_f12 }, { "kf48" , EdKC_cs_f12 }, { "kf60", EdKC_a_f12 },
    };
+   DBG( "%s", "" );
    for( auto ix( 0u ) ; ix < ELEMENTS(s_kn2kc) ; ++ix ) {
       cap_nm_to_ncurses_ch( s_kn2kc[ix].cap_nm, s_kn2kc[ix].edkc );
       }
+   DBG( "%s", "" );
    }
 
 // get keyboard event
@@ -241,10 +256,10 @@ STATIC_FXN int ConGetEvent() {
       if( ch == 27 ) {
          int chin[32] = { 0 };
          int chinIx( 0 );
-         chin[ chinIx++ ] = 27; // assume: rx'd this prior to being called
+         chin[ chinIx++ ] = ch;
          auto getCh = [&chin, &chinIx]() {
             int newch = getch();
-            if( chinIx < ELEMENTS(chin) ) {
+            if( newch >= 0 && chinIx < ELEMENTS(chin) ) {
                chin[ chinIx++ ] = newch;
                }
             return newch;
