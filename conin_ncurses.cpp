@@ -84,6 +84,19 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    meta(stdscr, 1);
 
    STATIC_VAR const struct { const char *cap_nm; U16 edkc; } s_kn2kc[] = {
+      // early/leading instances are overridden by later
+
+      //------------------------------------------------------------------------------
+      // from (any?) terminfo(5) man page   man 5 terminfo
+      // "In addition, if the keypad has a 3 by 3 array of keys including the
+      // four arrow keys, the other five keys can be given as ka1, ka3, kb2, kc1,
+      // and kc3.  These keys are useful when the effects of a 3 by 3 directional
+      // pad are needed."
+      { "ka1"  , EdKC_home, },                           { "ka3", EdKC_pgup },
+                               { "kb2"  , EdKC_center },
+      { "kc1"  , EdKC_end,  },                           { "kc3", EdKC_pgdn },
+      //------------------------------------------------------------------------------
+
       { "kDC"  , EdKC_del    }, { "kDC3" , EdKC_a_del   }, { "kDC5" , EdKC_c_del   }, { "kDC6" , EdKC_cs_del  },
       /* 0=shifted */           { "kDN"  , EdKC_s_down  }, { "kDN3" , EdKC_a_down  }, { "kDN5" , EdKC_c_down  }, { "kDN6" , EdKC_cs_down  },
 
