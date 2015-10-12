@@ -58,8 +58,9 @@ STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int 
    return dest;
    }
 
+// http://emacswiki.org/emacs/PuTTY  seems a goldmine for the enigma that is putty
 //
-// from http://invisible-island.net/xterm/terminfo.html
+// from http://invisible-island.net/xterm/terminfo.html  "terminfo for XTERM"
 //
 // Some names are extensions allowed by ncurses, e.g.,
 //       kDN, kDN5, kDN6, kLFT5, kLFT6, kRIT5, kRIT6, kUP, kUP5, kUP6
