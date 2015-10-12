@@ -24,7 +24,7 @@
 #include "ed_main.h"
 
 
-void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
+STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
    switch( ch ) {
       case '\200' : snprintf_full( &dest, &sizeofDest, "\\0"  ); break;
       case '\\'   : snprintf_full( &dest, &sizeofDest, "\\\\" ); break;
@@ -38,20 +38,20 @@ void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
       case '\b'   : snprintf_full( &dest, &sizeofDest, "\\b"  ); break;
       case '\f'   : snprintf_full( &dest, &sizeofDest, "\\f"  ); break;
       case ' '    : snprintf_full( &dest, &sizeofDest, "\\s"  ); break;
-      default     : if( ch >= 1 && ch <= 26 ) { snprintf_full( &dest, &sizeofDest, isprint( ch ) ? "^%c" : "\\%03o", ch-1+'A' ); }
+      default     : if( ch >= 1 && ch <= 26 ) { snprintf_full( &dest, &sizeofDest, "^%c", ch-1+'A' ); }
                     else                      { snprintf_full( &dest, &sizeofDest, isprint( ch ) ? "%c" : "\\%03o", ch ); }
                     break;
       }
    }
 
-PChar terminfo_str( PChar &dest, size_t &sizeofDest, const int *ach, int numCh ) {
+STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, const int *ach, int numCh ) {
    for( auto ix(0) ; ix < numCh ; ++ix ) {
       terminfo_ch( dest, sizeofDest, ach[ ix ] );
       }
    return dest;
    }
 
-PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int numCh ) {
+STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int numCh ) {
    for( auto ix(0) ; ix < numCh ; ++ix ) {
       terminfo_ch( dest, sizeofDest, ach[ ix ] );
       }
@@ -192,8 +192,8 @@ STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API
 
       if( fPassThreadBaton )  MainThreadWaitForGlobalVariableLock();
 
-      if( ev != -1 ) {
-         if( ev >= 0 && ev < EdKC_COUNT ) {
+      if( ev >= 0 ) {
+         if( ev < EdKC_COUNT ) {
             if( ev == 0 ) { // (ev == 0) corresponds to keys we currently do not decode
                }
             else {
@@ -244,7 +244,6 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
 
 // return -1 indicates that event should be ignored (resize event as an example)
 STATIC_FXN int ConGetEvent() {
-   // terminal specific values for shift + up / down
    const auto ch( getch() );
    if( ch < 0 )                      { return -1; }
    if( ch < ELEMENTS(ncurses_ch_to_EdKC) && ncurses_ch_to_EdKC[ ch ] ) {
@@ -254,7 +253,7 @@ STATIC_FXN int ConGetEvent() {
       }
    if( ch <= 0xFF ) {
       if( ch == 27 ) {
-         int chin[32] = { 0 };
+         int chin[32];
          int chinIx( 0 );
          chin[ chinIx++ ] = ch;
          auto getCh = [&chin, &chinIx]() {
@@ -267,20 +266,14 @@ STATIC_FXN int ConGetEvent() {
 
          const auto rv( DecodeEscSeq_xterm( getCh ) );
 
-         auto showChin = [&chin, &chinIx, &rv]() {
-            char obuf[65]; auto pob( obuf ); auto nob( sizeof( obuf ) ); terminfo_str( pob, nob, chin, chinIx );
+         char obuf[65]; auto pob( obuf ); auto nob( sizeof( obuf ) ); terminfo_str( pob, nob, chin, chinIx );
+         if( rv >= 0 ) {
             char edkcnmbuf[65] ; StrFromEdkc( BSOB(edkcnmbuf), rv );
             DBG( "escseq: %s=%s", edkcnmbuf, obuf );
-
-         /*
-            snprintf_full( &pob, &nob, ", ch1/mod/end=" ); terminfo_ch(  pob, nob, ch1   );
-            snprintf_full( &pob, &nob, "/" );              terminfo_ch(  pob, nob, endch );
-            snprintf_full( &pob, &nob, "/" );              terminfo_ch(  pob, nob, modch );
-            DBG( "%s", obuf );
-          */
-            };
-
-         showChin();
+            }
+         else {
+            Msg( "unrecognized escseq %s\n", obuf );
+            }
 
          return rv;
          }
@@ -292,7 +285,6 @@ STATIC_FXN int ConGetEvent() {
       return ch;
       }
    switch (ch) {
-                 // > 0xFF      // this column DOESN'T WORK: these keys map to ascii number chars
       CR( KEY_RIGHT     , EdKC_right ) CR( KEY_SRIGHT    , EdKC_s_right )
       CR( KEY_LEFT      , EdKC_left  ) CR( KEY_SLEFT     , EdKC_s_left  )
       CR( KEY_DC        , EdKC_del   ) CR( KEY_SDC       , EdKC_s_del   )
@@ -330,12 +322,12 @@ STATIC_FXN int ConGetEvent() {
       case KEY_SF:       KEvent->Code = kfShift | kbDown;  break;
       case KEY_SR:       KEvent->Code = kfShift | kbUp;    break;
       case KEY_SRIGHT:   KEvent->Code = kfShift | kbRight; */
-           Msg( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
+           // Msg( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
            return -1;
 
       default:
            // fprintf(stderr, "Unknown 0%o %d\n", ch, ch);
-           Msg( "%s Unknown event 0%o %d\n", __func__, ch, ch );
+           // Msg( "%s Unknown event 0%o %d\n", __func__, ch, ch );
            return -1;
       }
    }
@@ -430,7 +422,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
              mod_CaS= mod_ctrl | mod_shift,
            };
       switch (endch) {
-         default:  Msg( "%s unhandled event *cas=%X 0%o %c\n", __func__, mod, endch, endch ); return -1;
+         default : return -1;
          case 'A': CAS5( up       ); break;
          case 'B': CAS5( down     ); break;
          case 'C': CAS5( right    ); break;
@@ -455,7 +447,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          case '$': mod |= mod_shift;  /* FALL THRU!!! */
          case '~':
              switch (ch1) { // CSI n ~
-                default: Msg( "%s unhandled event ~cas=%X 0%o %d\n", __func__, mod, ch1 - '0', ch1 - '0' ); return -1;
+                default : return -1;
                 case '1': CAS5( home ); break;
                 case '7': CAS5( home ); break;
                 case '4': CAS5( end  ); break;
@@ -470,7 +462,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
    } else { // alt+...
       if (ch == '\r' || ch == '\n')        { return EdKC_a_enter; }
       else if( ch == '\t' )                { return EdKC_a_tab;   }
-      else if( ch < ' '   )                { Msg( "%s unhandled event alt+ 0%o %d\n", __func__, ch, ch ); return -1; } // alt + ctr + key;  unsupported by 'K'
+      else if( ch < ' '   )                { return -1; } // alt + ctr + key;  unsupported by 'K'
       else {
          if     ( ch >= '0' && ch <= '9' ) { return EdKC_a_0 + (ch - '0'); }
          else if( ch >= 'a' && ch <= 'z' ) { return EdKC_a_a + (ch - 'a'); }
