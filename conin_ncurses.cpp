@@ -114,11 +114,20 @@ STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, U16 edkc ) { enum { DB
       }
    }
 
+STATIC_VAR bool s_keypad_mode;
+STATIC_FXN void keypad_mode_disable() { keypad(stdscr, 0); s_keypad_mode = false; }
+STATIC_FXN void keypad_mode_enable()  { keypad(stdscr, 1); s_keypad_mode = true ; }
+
+STATIC_VAR bool s_conin_blocking_read;
+STATIC_FXN void conin_nonblocking_read() { timeout(10); s_conin_blocking_read = false; } // getCh blocks for 10 milliseconds, and returns ERR if there is still no input
+STATIC_FXN void conin_blocking_read()    { timeout(-1); s_conin_blocking_read = true;  } // getCh blocks waiting for next char
+
 void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
-   noecho();
-   nonl();
-   keypad(stdscr, TRUE);
-   meta(stdscr, 1);
+   noecho();              // we do not change
+   nonl();                // we do not change
+   conin_blocking_read();
+   keypad_mode_enable();
+   meta(stdscr, 1);       // we do not change
 
    STATIC_VAR const struct { const char *cap_nm; U16 edkc; } s_kn2kc[] = {
       // early/leading instances are overridden by later
@@ -231,6 +240,17 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest )
    return rv;
    }
 
+struct kpto_er {
+   kpto_er() {
+      keypad_mode_disable();
+      conin_nonblocking_read();
+      }
+   ~kpto_er() {
+      conin_blocking_read();
+      keypad_mode_enable();
+      }
+   };
+
 #define CR( is, rv )  case is: return rv;
 
 #define CAS5( kynm ) \
@@ -265,16 +285,12 @@ STATIC_FXN int ConGetEvent() {
             return newch;
             };
 
+         kpto_er kpto_cleaner;
          const auto rv( DecodeEscSeq_xterm( getCh ) );
 
-         char obuf[65]; auto pob( obuf ); auto nob( sizeof( obuf ) ); terminfo_str( pob, nob, chin, chinIx );
-         if( rv >= 0 ) {
-            char edkcnmbuf[65] ; StrFromEdkc( BSOB(edkcnmbuf), rv );
-            DBG( "escseq: %s=%s", edkcnmbuf, obuf );
-            }
-         else {
-            Msg( "unrecognized escseq %s\n", obuf );
-            }
+         char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, chin, chinIx );
+         if( rv < 0 ) { Msg( "unrecognized escseq %s\n", tib ); }
+         else { char edkcnmbuf[65] ; StrFromEdkc( BSOB(edkcnmbuf), rv ); DBG( "escseq: %s=%s", edkcnmbuf, tib ); }
 
          return rv;
          }
@@ -333,17 +349,6 @@ STATIC_FXN int ConGetEvent() {
       }
    }
 
-struct kpto_er {
-   kpto_er() {
-      keypad(stdscr, 0);
-      timeout(10);
-      }
-   ~kpto_er() {
-      timeout(-1);
-      keypad(stdscr, 1);
-      }
-   };
-
 STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-PC-Style-Function-Keys
    enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
    auto decode_modch = []( int ch ) {
@@ -373,7 +378,6 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
       };
 
    bool kbAlt = false;
-   kpto_er kpto_cleaner;
    int ch = getCh();
    if( ch == ERR ) { return EdKC_esc; }
    if( ch == 27 ) { // 2nd consecutive ESC?
