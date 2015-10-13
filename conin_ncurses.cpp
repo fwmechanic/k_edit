@@ -79,14 +79,14 @@ STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int 
 STATIC_VAR U16 ncurses_ch_to_EdKC[600]; // indexed by ncurses_ch
 
 STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, U16 edkc ) { enum { DB=0 };
-   /* if terminfo defines a capability named cap_nm (as an escseqstr), _and_ ncurses maps that
-      escseqstr to an ncurses_ch (that which getch() returns), then add an entry
-      ncurses_ch_to_EdKC[ncurses_ch] = EdKC  # where EdKC is the EDITOR KEYCODE which corresponds to cap_nm
+   /* if terminfo defines a capability named cap_nm (as an escseqstr), _and_ ncurses maps that escseqstr
+      to an ncurses_ch (which getch() returns), then add an entry ncurses_ch_to_EdKC[ncurses_ch] = EdKC #
+      where EdKC is the EDITOR KEYCODE which corresponds to cap_nm
 
       cap_nm is a terminfo "capability name", the key of a key=value mapping defined in a terminfo file
       see http://invisible-island.net/xterm/terminfo-contents.html  ; EX:
       xterm+pce3|fragment with modifyCursorKeys:3,
-              kDC=\E[>3;2~,                               key=cap_nm=kDC, value=escseqstr=\E[>3;2~
+              kDC=\E[3;2~,                               key=cap_nm=kDC, value=escseqstr=\E[>3;2~
    */
    linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), edkc );
                                                  DB && DBG( "tigetstr+ %s", cap_nm );
@@ -102,11 +102,13 @@ STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, U16 edkc ) { enum { DB
    DBG( KEYMAPFMT, ncurses_ch, ncurses_ch, cap_nm, tib, edkcnmbuf );
    if( ncurses_ch > 0 ) {
       if( ncurses_ch < ELEMENTS( ncurses_ch_to_EdKC ) ) {
-         if( ncurses_ch_to_EdKC[ ncurses_ch ] ) {
-            StrFromEdkc( BSOB(edkcnmbuf), ncurses_ch_to_EdKC[ ncurses_ch ] );
-            DBG( "0%04o=0d%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, edkcnmbuf );
+         if( ncurses_ch_to_EdKC[ ncurses_ch ] != edkc ) {
+            if( ncurses_ch_to_EdKC[ ncurses_ch ] ) {
+               StrFromEdkc( BSOB(edkcnmbuf), ncurses_ch_to_EdKC[ ncurses_ch ] );
+               DBG( "0%04o=0d%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, edkcnmbuf );
+               }
+            ncurses_ch_to_EdKC[ ncurses_ch ] = edkc;
             }
-         ncurses_ch_to_EdKC[ ncurses_ch ] = edkc;
          }
       else {
          Msg( "INTERNAL ERROR: ncurses_ch=%d out of range of ncurses_ch_to_EdKC[]!", ncurses_ch );
@@ -129,7 +131,53 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    keypad_mode_enable();
    meta(stdscr, 1);       // we do not change
 
-   STATIC_VAR const struct { const char *cap_nm; U16 edkc; } s_kn2kc[] = {
+   STATIC_VAR const struct { short nckc; U16 edkc; } s_nckc2edkc[] = {
+      {KEY_RIGHT     , EdKC_right }, {KEY_SRIGHT    , EdKC_s_right },
+      {KEY_LEFT      , EdKC_left  }, {KEY_SLEFT     , EdKC_s_left  },
+      {KEY_DC        , EdKC_del   }, {KEY_SDC       , EdKC_s_del   },
+      {KEY_IC        , EdKC_ins   }, {KEY_SIC       , EdKC_s_ins   },
+      {KEY_HOME      , EdKC_home  }, {KEY_SHOME     , EdKC_s_home  },
+      {KEY_END       , EdKC_end   }, {KEY_SEND      , EdKC_s_end   },
+      {KEY_NPAGE     , EdKC_pgdn  }, {KEY_SNEXT     , EdKC_s_pgdn  },
+      {KEY_PPAGE     , EdKC_pgup  }, {KEY_SPREVIOUS , EdKC_s_pgup  },
+      {KEY_UP        , EdKC_up    },
+      {KEY_DOWN      , EdKC_down  },
+      {KEY_BACKSPACE , EdKC_bksp  },
+
+      {KEY_LL   , EdKC_end }, // used in old termcap/infos
+
+      // see also capabilities ka1, ka3, kb2, kc1, kc3 above
+      {KEY_A1, EdKC_home },                       {KEY_A3, EdKC_pgup },
+                            {KEY_B2, EdKC_center},
+      {KEY_C1, EdKC_end  },                       {KEY_C3, EdKC_pgdn },
+
+      {KEY_ENTER, EdKC_enter }, // mimic Win32 behavior
+
+      // replaced (possibly unnecessarily}, by cap_nm_to_ncurses_ch(},
+      {KEY_F( 1), EdKC_f1 }, {KEY_F(13), EdKC_s_f1 },  {KEY_F(25), EdKC_c_f1 }, {KEY_F(49), EdKC_a_f1 },
+      {KEY_F( 2), EdKC_f2 }, {KEY_F(14), EdKC_s_f2 },  {KEY_F(26), EdKC_c_f2 }, {KEY_F(50), EdKC_a_f2 },
+      {KEY_F( 3), EdKC_f3 }, {KEY_F(15), EdKC_s_f3 },  {KEY_F(27), EdKC_c_f3 }, {KEY_F(51), EdKC_a_f3 }, // decoded elsewhere too
+      {KEY_F( 4), EdKC_f4 }, {KEY_F(16), EdKC_s_f4 },  {KEY_F(28), EdKC_c_f4 }, {KEY_F(52), EdKC_a_f4 }, // decoded elsewhere too
+      {KEY_F( 5), EdKC_f5 }, {KEY_F(17), EdKC_s_f5 },  {KEY_F(29), EdKC_c_f5 }, {KEY_F(53), EdKC_a_f5 },
+      {KEY_F( 6), EdKC_f6 }, {KEY_F(18), EdKC_s_f6 },  {KEY_F(30), EdKC_c_f6 }, {KEY_F(54), EdKC_a_f6 },
+      {KEY_F( 7), EdKC_f7 }, {KEY_F(19), EdKC_s_f7 },  {KEY_F(31), EdKC_c_f7 }, {KEY_F(55), EdKC_a_f7 },
+      {KEY_F( 8), EdKC_f8 }, {KEY_F(20), EdKC_s_f8 },  {KEY_F(32), EdKC_c_f8 }, {KEY_F(56), EdKC_a_f8 },
+      {KEY_F( 9), EdKC_f9 }, {KEY_F(21), EdKC_s_f9 },  {KEY_F(33), EdKC_c_f9 }, {KEY_F(57), EdKC_a_f9 },
+      {KEY_F(10), EdKC_f10}, {KEY_F(22), EdKC_s_f10},  {KEY_F(34), EdKC_c_f10}, {KEY_F(58), EdKC_a_f10},
+      {KEY_F(11), EdKC_f11}, {KEY_F(23), EdKC_s_f11},  {KEY_F(35), EdKC_c_f11}, {KEY_F(59), EdKC_a_f11},
+      {KEY_F(12), EdKC_f12}, {KEY_F(24), EdKC_s_f12},  {KEY_F(36), EdKC_c_f12}, {KEY_F(60), EdKC_a_f12},
+      };
+   DBG( "%s", "" );
+   for( auto ix( 0u ) ; ix < ELEMENTS(s_nckc2edkc) ; ++ix ) {
+      if( has_key( s_nckc2edkc[ix].nckc ) ) {
+         ncurses_ch_to_EdKC[ s_nckc2edkc[ix].nckc ] = s_nckc2edkc[ix].edkc;
+         char edkcnmbuf[65]; StrFromEdkc( BSOB(edkcnmbuf), s_nckc2edkc[ix].edkc );
+         DBG( KEYMAPFMT, s_nckc2edkc[ix].nckc, s_nckc2edkc[ix].nckc, "nckc#", "?", edkcnmbuf );
+         }
+      }
+   DBG( "%s", "" );
+
+   STATIC_VAR const struct { const char *cap_nm; U16 edkc; } s_kn2edkc[] = {
       // early/leading instances are overridden by later
 
       //------------------------------------------------------------------------------
@@ -171,9 +219,8 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       { "kf11", EdKC_f11 }, { "kf23", EdKC_s_f11 }, { "kf35", EdKC_c_f11 }, { "kf47" , EdKC_cs_f11 }, { "kf59", EdKC_a_f11 },
       { "kf12", EdKC_f12 }, { "kf24", EdKC_s_f12 }, { "kf36", EdKC_c_f12 }, { "kf48" , EdKC_cs_f12 }, { "kf60", EdKC_a_f12 },
    };
-   DBG( "%s", "" );
-   for( auto ix( 0u ) ; ix < ELEMENTS(s_kn2kc) ; ++ix ) {
-      cap_nm_to_ncurses_ch( s_kn2kc[ix].cap_nm, s_kn2kc[ix].edkc );
+   for( auto ix( 0u ) ; ix < ELEMENTS(s_kn2edkc) ; ++ix ) {
+      cap_nm_to_ncurses_ch( s_kn2edkc[ix].cap_nm, s_kn2edkc[ix].edkc );
       }
    DBG( "%s", "" );
    }
@@ -301,38 +348,7 @@ STATIC_FXN int ConGetEvent() {
       if( ch < 27 )                  { return EdKC_c_a + (ch -  1); }
       return ch;
       }
-   switch (ch) {
-      CR( KEY_RIGHT     , EdKC_right ) CR( KEY_SRIGHT    , EdKC_s_right )
-      CR( KEY_LEFT      , EdKC_left  ) CR( KEY_SLEFT     , EdKC_s_left  )
-      CR( KEY_DC        , EdKC_del   ) CR( KEY_SDC       , EdKC_s_del   )
-      CR( KEY_IC        , EdKC_ins   ) CR( KEY_SIC       , EdKC_s_ins   )
-      CR( KEY_HOME      , EdKC_home  ) CR( KEY_SHOME     , EdKC_s_home  )
-      CR( KEY_END       , EdKC_end   ) CR( KEY_SEND      , EdKC_s_end   )
-      CR( KEY_NPAGE     , EdKC_pgdn  ) CR( KEY_SNEXT     , EdKC_s_pgdn  )
-      CR( KEY_PPAGE     , EdKC_pgup  ) CR( KEY_SPREVIOUS , EdKC_s_pgup  )
-      CR( KEY_UP        , EdKC_up    )
-      CR( KEY_DOWN      , EdKC_down  )
-      CR( KEY_BACKSPACE , EdKC_bksp  )
-
-      // replaced (possibly unnecessarily) by keyname_to_code()
-      // CR(KEY_F(1) , EdKC_f1 ) CR(KEY_F(13), EdKC_s_f1 )   CR(KEY_F(25), EdKC_c_f1 ) CR(KEY_F(49), EdKC_a_f1 )
-      // CR(KEY_F(2) , EdKC_f2 ) CR(KEY_F(14), EdKC_s_f2 )   CR(KEY_F(26), EdKC_c_f2 ) CR(KEY_F(50), EdKC_a_f2 )
-      // CR(KEY_F(3) , EdKC_f3 ) CR(KEY_F(15), EdKC_s_f3 ) /*CR(KEY_F(27), EdKC_c_f3 ) CR(KEY_F(51), EdKC_a_f3 ) decoded elsewhere */
-      // CR(KEY_F(4) , EdKC_f4 ) CR(KEY_F(16), EdKC_s_f4 ) /*CR(KEY_F(28), EdKC_c_f4 ) CR(KEY_F(52), EdKC_a_f4 ) decoded elsewhere */
-      // CR(KEY_F(5) , EdKC_f5 ) CR(KEY_F(17), EdKC_s_f5 )   CR(KEY_F(29), EdKC_c_f5 ) CR(KEY_F(53), EdKC_a_f5 )
-      // CR(KEY_F(6) , EdKC_f6 ) CR(KEY_F(18), EdKC_s_f6 )   CR(KEY_F(30), EdKC_c_f6 ) CR(KEY_F(54), EdKC_a_f6 )
-      // CR(KEY_F(7) , EdKC_f7 ) CR(KEY_F(19), EdKC_s_f7 )   CR(KEY_F(31), EdKC_c_f7 ) CR(KEY_F(55), EdKC_a_f7 )
-      // CR(KEY_F(8) , EdKC_f8 ) CR(KEY_F(20), EdKC_s_f8 )   CR(KEY_F(32), EdKC_c_f8 ) CR(KEY_F(56), EdKC_a_f8 )
-      // CR(KEY_F(9) , EdKC_f9 ) CR(KEY_F(21), EdKC_s_f9 )   CR(KEY_F(33), EdKC_c_f9 ) CR(KEY_F(57), EdKC_a_f9 )
-      // CR(KEY_F(10), EdKC_f10) CR(KEY_F(22), EdKC_s_f10)   CR(KEY_F(34), EdKC_c_f10) CR(KEY_F(58), EdKC_a_f10)
-      // CR(KEY_F(11), EdKC_f11) CR(KEY_F(23), EdKC_s_f11)   CR(KEY_F(35), EdKC_c_f11) CR(KEY_F(59), EdKC_a_f11)
-      // CR(KEY_F(12), EdKC_f12) CR(KEY_F(24), EdKC_s_f12)   CR(KEY_F(36), EdKC_c_f12) CR(KEY_F(60), EdKC_a_f12)
-
-      // used in old termcap/infos
-      CR(KEY_LL   , EdKC_end   )
-      CR(KEY_B2   , EdKC_center)
-      CR(KEY_ENTER, EdKC_enter ) // mimic Win32 behavior
-
+   switch (ch) { // translate "active" ncurses keycodes:
       case KEY_RESIZE:   ConOut::Resize();  return -1;
       case KEY_MOUSE:  /*Event->What = evNone;
                          ConGetMouseEvent(Event);  break;
