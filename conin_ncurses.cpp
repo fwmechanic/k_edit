@@ -168,11 +168,11 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       {KEY_F(12), EdKC_f12}, {KEY_F(24), EdKC_s_f12},  {KEY_F(36), EdKC_c_f12}, {KEY_F(60), EdKC_a_f12},
       };
    DBG( "%s", "" );
-   for( auto ix( 0u ) ; ix < ELEMENTS(s_nckc2edkc) ; ++ix ) {
-      if( has_key( s_nckc2edkc[ix].nckc ) ) {
-         ncurses_ch_to_EdKC[ s_nckc2edkc[ix].nckc ] = s_nckc2edkc[ix].edkc;
-         char edkcnmbuf[65]; StrFromEdkc( BSOB(edkcnmbuf), s_nckc2edkc[ix].edkc );
-         DBG( KEYMAPFMT, s_nckc2edkc[ix].nckc, s_nckc2edkc[ix].nckc, "nckc#", "?", edkcnmbuf );
+   for( auto &el : s_nckc2edkc ) {
+      if( has_key( el.nckc ) ) {
+         ncurses_ch_to_EdKC[ el.nckc ] = el.edkc;
+         char edkcnmbuf[65]; StrFromEdkc( BSOB(edkcnmbuf), el.edkc );
+         DBG( KEYMAPFMT, el.nckc, el.nckc, "nckc#", "?", edkcnmbuf );
          }
       }
    DBG( "%s", "" );
@@ -218,9 +218,9 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       { "kf10", EdKC_f10 }, { "kf22", EdKC_s_f10 }, { "kf34", EdKC_c_f10 }, { "kf46" , EdKC_cs_f10 }, { "kf58", EdKC_a_f10 },
       { "kf11", EdKC_f11 }, { "kf23", EdKC_s_f11 }, { "kf35", EdKC_c_f11 }, { "kf47" , EdKC_cs_f11 }, { "kf59", EdKC_a_f11 },
       { "kf12", EdKC_f12 }, { "kf24", EdKC_s_f12 }, { "kf36", EdKC_c_f12 }, { "kf48" , EdKC_cs_f12 }, { "kf60", EdKC_a_f12 },
-   };
-   for( auto ix( 0u ) ; ix < ELEMENTS(s_kn2edkc) ; ++ix ) {
-      cap_nm_to_ncurses_ch( s_kn2edkc[ix].cap_nm, s_kn2edkc[ix].edkc );
+      };
+   for( auto &el : s_kn2edkc ) {
+      cap_nm_to_ncurses_ch( el.cap_nm, el.edkc );
       }
    DBG( "%s", "" );
    }
