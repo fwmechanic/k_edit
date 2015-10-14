@@ -4,7 +4,7 @@ K is a TUI app that runs on Win32 (Console) and Linux (ncurses) platforms, in 32
 
 [![Coverity Scan Build Status](https://img.shields.io/coverity/scan/5869.svg)](https://scan.coverity.com/projects/5869)
 
-[Github has no markdown TOC feature; what a drag]
+[unlike BitBucket, Github has no markdown TOC feature; Fix this!](https://github.com/isaacs/github/issues/215)
 
 # Features
 
@@ -31,7 +31,7 @@ K itself is released under the [GPLv3 license](http://opensource.org/licenses/GP
 The K source code distro contains, and K uses, the following source code from external sources:
 
  * [Lua 5.1](http://www.lua.org/versions.html#5.1) from 2005, licensed under the [MIT License](http://opensource.org/licenses/mit-license.html)
- * [James S. Plank's Red-Black Tree library](http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html) from 2000, licensed under [LGPL](http://opensource.org/licenses/LGPL-2.1)
+ * [James S. Plank's Red-Black Tree library](http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html) from 2000 (substantially modified), licensed under [LGPL](http://opensource.org/licenses/LGPL-2.1)
 
 # Limitations
 
@@ -72,15 +72,31 @@ which it assumes is already present on any Windows PC.
 
 ## Create Release files
 
-A release file is a 7zip archive containing the minimum fileset needed to use the editor.  Two variants of the release file are created by `make rls`: `k_rls.7z` and `k_rls.exe` (a self-extracting-console archive). 
+A release file is a 7zip (Linux: tgz) archive containing the minimum fileset needed to use the editor.  On Windows two (2) variants of the release file are created by `make rls`: `k_rls.7z` and `k_rls.exe` (a self-extracting-console archive).
 
-Use: decompress the release file in an empty directory and run `k.exe`.  K was designed to be "copy and run" (a "release") anywhere.  I have successfully run it from network shares and "thumb drives".
+Use: decompress the release file in an empty directory and run `k.exe` (Linux: `k`).  K was designed to be "copy and run" (a "release") anywhere.  I have successfully run it from network/NFS shares and "thumb drives".
 
 ## Stability notes
 
-The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Win32 platform is clearly x64 only.
+The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
 
 The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
+
+# Linux key-decoding status quo
+
+The default (Windows-originated) K key mappings make extensive use of `ctrl+` and `alt+` modulated function and keypad keys.  Getting such key combinations to decode correctly on Linux/ncurses has been by far the most time-consuming and code-churning part of the port to Ubuntu Linux 14.04+ (see file conin_ncurses.md for the current state of this activity).  I (a Linux/Unix terminal-programming novice) have learned a lot in this process:
+
+  * Ubuntu 14.04+ Desktop
+    * common: with TERM=xterm, _after_ you diable various terminal-menu/-command key-modulation (e.g. alt+) hooks, default terminfo for xterm decodes a substantial proportion of the K-Windows-supported key combinations.
+    * Lubuntu Desktop: mouse scroll wheel does not work.
+    * I think I've exhausted the possibilities here
+  * PuTTY (also PuTTYtray) (to Ubuntu 14.04+)
+    * _must_ configure PuTTY to set TERM=putty (or TERM=putty-256color)
+    * even with TERM=putty, most ctrl+ and alt+ function and keypad modulations K-Windows-supported key combinations do not work (truly sad).
+    * I've not yet exhausted the possibilities here.
+  * tmux (1.8 - 2.0)
+    * most ctrl+ and alt+ function and keypad modulations do not work.
+    * I've not yet exhausted the possibilities here.
 
 # Debug/Development
 
@@ -90,7 +106,7 @@ The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used 
 
 # Editor State Files
 
-K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*` (`${XDG_CACHE_HOME}/kedit/$(hostname)/` on Linux).  Information stored in state files includes:
+K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*` (`${XDG_CACHE_HOME:-$HOME/.cache}/kedit/$(hostname)/` on Linux; `$(hostname)` is added since it is not unusual for a user's $HOME to be located on a shared filesystem (e.g. NFS)).  Information stored in state files includes:
 
  *  files edited (including window/cursor position)
  *  search-key and replace-string history
@@ -174,7 +190,7 @@ The editor implements a large number of functions, all of which the user can inv
 
 K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a number of editor functions which generate a list of chioces to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is `arg` "fxnm" `ctrl+x`
 
- * `mom` menu of Lua-based commands
+ * `mom` menu of Lua-based menu editor functions
  * `sb` "system buffers"
  * `dp` "dirs of parent" all parent dirs
  * `dc` "dirs child" all child dirs
