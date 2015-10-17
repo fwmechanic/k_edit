@@ -1,6 +1,6 @@
-K is my personal programmer's text editor, whose design is derived from Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) which was itself derived from the [Z](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
+K is my personal programmer's text editor, whose design is derived from Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor") which was itself derived from the [Z](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
-K is a TUI app that runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
+K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is writen in C++ with Lua 5.1 embedded.
 
 [![Coverity Scan Build Status](https://img.shields.io/coverity/scan/5869.svg)](https://scan.coverity.com/projects/5869)
 
@@ -12,17 +12,18 @@ K is a TUI app that runs on Win32 (Console) and Linux (ncurses) platforms, in 32
      * This allows each editor function (one bound to each key) to potentially perform many different operations, minimizing consumption of the "keyboard namespace".  EX: `setfile` (described below).
  * **Z**: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
  * **M**: No installation: copy and run, delete when done. Run from removable storage.
+ * **M**: Easily accessible history of recent files visited, strings searched for and replaced, stored in files in user's homedir.
  * **M**: Edit undo/redo limited only by available memory (effectively infinite).
  * **M**: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` of being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; **use DVCS**!
- * **K**: (Partial) syntax highlighting (C/C++, Lua, Python)
+ * **K**: highlighting
+     * "word-under-cursor"
      * comments
      * literal strings/characters
      * conditional regions: C/C++ preprocessor, GNU make
  * **K**: Powerful file/source-code navigation
      * K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), enabling a hypertext-linking experience navigating amongst tagged items in your programming project.
-     * K can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.  K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc. it's easy to quickly construct a buffer containing only
-the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a
-"project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
+     * K can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.
+     * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing only the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
 # Licensing
 
@@ -82,20 +83,20 @@ The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.
 
 The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
 
-# Linux key-decoding status quo
+## Linux key-decoding status quo
 
-The default (Windows-originated) K key mappings make extensive use of `ctrl+` and `alt+` modulated function and keypad keys.  Getting such key combinations to decode correctly on Linux/ncurses has been by far the most time-consuming and code-churning part of the port to Ubuntu Linux 14.04+ (see file conin_ncurses.md for the current state of this activity).  I (a Linux/Unix terminal-programming novice) have learned a lot in this process:
+The default (Windows-originated) K key mappings make extensive use of `ctrl+` and `alt+` modulated function and keypad keys.  Getting such key combinations to decode correctly on Linux/ncurses has been by far the most time-consuming and code-churning part of the port to Ubuntu Linux 14.04+ (see file conin_ncurses.md for the current state of this activity).  The status quo:
 
   * Ubuntu 14.04+ Desktop
-    * common: with TERM=xterm, _after_ you diable various terminal-menu/-command key-modulation (e.g. alt+) hooks, default terminfo for xterm decodes a substantial proportion of the K-Windows-supported key combinations.
-    * Lubuntu Desktop: mouse scroll wheel does not work.
+    * common: with `TERM=xterm`, _after_ you diable various terminal-menu/-command key-modulation (e.g. `alt+`) hooks, default terminfo for xterm correctly decodes a substantial proportion of the Windows-supported key combinations that K uses.
+    * Lubuntu Desktop (`lxterminal` nee `x-terminal-emulator`): mouse scroll wheel does not work.
     * I think I've exhausted the possibilities here
   * PuTTY (also PuTTYtray) (to Ubuntu 14.04+)
-    * _must_ configure PuTTY to set TERM=putty (or TERM=putty-256color)
-    * even with TERM=putty, most ctrl+ and alt+ function and keypad modulations K-Windows-supported key combinations do not work (truly sad).
+    * _must_ configure PuTTY to set `TERM=putty` (or `TERM=putty-256color`)
+    * even with `TERM=putty*`, most Windows-supported key combinations do not work.
     * I've not yet exhausted the possibilities here.
-  * tmux (1.8 - 2.0)
-    * most ctrl+ and alt+ function and keypad modulations do not work.
+  * tmux (1.8 - 2.0) (`TERM=screen`)
+    * most `ctrl+` and `alt+` function and keypad modulations do not work.
     * I've not yet exhausted the possibilities here.
 
 # Debug/Development
@@ -104,12 +105,19 @@ I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx)
 
 The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable (e.g. when nuwen.net MinGW distros omitted `gdb`) I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
-# Editor State Files
+# Editor State/History Persistence
 
-K ignores the Windows Registry.  K persists information between sessions in state files written to `%APPDATA%\Kevins Editor\*` (`${XDG_CACHE_HOME:-$HOME/.cache}/kedit/$(hostname)/` on Linux; `$(hostname)` is added since it is not unusual for a user's $HOME to be located on a shared filesystem (e.g. NFS)).  Information stored in state files includes:
+K persists information between sessions in state files written to
 
- *  files edited (including window/cursor position)
- *  search-key and replace-string history
+ * Windows: `%APPDATA%\Kevins Editor\*`
+    * K ignores the Windows Registry.
+ * Linux: `${XDG_CACHE_HOME:-$HOME/.cache}/kedit/$(hostname)/`
+    * `$(hostname)` is added since it is not unusual for a user's $HOME to be located on a shared filesystem (e.g. NFS).
+
+Information stored in state files includes:
+
+ *  recent files edited (including window/cursor position)
+ *  recent search-key and replace-string values
  *  function invocation accumulator-counters
 
 # Tutorial
@@ -190,7 +198,7 @@ The editor implements a large number of functions, all of which the user can inv
 
 K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a number of editor functions which generate a list of chioces to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is `arg` "fxnm" `ctrl+x`
 
- * `mom` menu of Lua-based menu editor functions
+ * `mom` "menu of menus": menu of Lua-based editor menu functions
  * `sb` "system buffers"
  * `dp` "dirs of parent" all parent dirs
  * `dc` "dirs child" all child dirs
@@ -207,7 +215,7 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
 
 # Historical Notes
 
-K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (released as M.EXE for DOS, and MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
+K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor", released as M.EXE for DOS, and MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
 > system editor (Better than VI!) [They ended up with ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M), the "Microsoft
