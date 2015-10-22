@@ -37,8 +37,8 @@ The K source code distro contains, and K uses, the following source code from ex
 # Limitations
 
  * K is a Win32 Console or Linux ncurses app with no mouse support (aside from "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors)).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
- * K has no "virtual memory" mechanism (as M did); edited files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process.  I get hit by this maybe once a year, and it's easy enough to head/tail/grep to chop a huge (usually some sort of log) file into manageable pieces.  Also, the (default) 64-bit version raises this ceiling considerably.
- * K operates on ASCII files; is has no support for Unicode/MBCS/etc. content (it's a text-editor, not a word processor).  Lately (very rarely) I get hit with problems related to non-ASCII filenames: when I download music, the names of file or dirs in the received package occasionally contain characters which have to be TRANSLATED into the charset that K uses.  If I then construct a cmdline to rename said file/dir (a task I often perform with K), the command will fail because the filename (containing the translated character instead of the original character) will not exist.  As with the "lack of VM" limitation, this is rarely annoying, and will only be resolved (a large undertaking) if it becomes much more annoying to me (which seems unlikely).
+ * K has no "virtual memory" mechanism (as M did); files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process (now that all OS's default-deploy their x64 variant (and K is buildable as an x64 app) this is practically never a concern).
+ * K operates on ASCII files; is has no support for Unicode/UTF-8/MBCS/etc. content (it's a text-editor, not a word processor).  I am increasingly entertaining the possibility of adding UTF-8 support.
 
 # Building
 
@@ -88,7 +88,7 @@ The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *
 The default (Windows-originated) K key mappings make extensive use of `ctrl+` and `alt+` modulated function and keypad keys.  Getting such key combinations to decode correctly on Linux/ncurses has been by far the most time-consuming and code-churning part of the port to Ubuntu Linux 14.04+ (see file conin_ncurses.md for the current state of this activity).  The status quo:
 
   * Ubuntu 14.04+ Desktop
-    * common: with `TERM=xterm`, _after_ you diable various terminal-menu/-command key-modulation (e.g. `alt+`) hooks, default terminfo for xterm correctly decodes a substantial proportion of the Windows-supported key combinations that K uses.
+    * common: with `TERM=xterm`, _after_ you disable various terminal-menu/-command key-modulation (e.g. `alt+`) hooks, default terminfo for xterm correctly decodes a substantial proportion of the Windows-supported key combinations that K uses.
     * Lubuntu Desktop (`lxterminal` nee `x-terminal-emulator`): mouse scroll wheel does not work.
     * I think I've exhausted the possibilities here
   * PuTTY (also PuTTYtray) (to Ubuntu 14.04+)
