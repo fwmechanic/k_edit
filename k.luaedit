@@ -2024,8 +2024,9 @@ do
                   end
                end
          else
-            local fnm = str:match( "%+%+%+ b/(.+)" )
+            local fnm = str:match( "^%+%+%+ (%S+)" )
             if fnm then
+               fnm = fnm:gsub("^b/","")
                printf( "gofileline_dif: fnm=%s", fnm )
                return GotoFileYX_Msg_( fnm, ybase, arg.cursorX-1, "dif", "dif", 0 )
                end
