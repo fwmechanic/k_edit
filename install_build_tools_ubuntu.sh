@@ -24,7 +24,7 @@
 # gcc 4.8.x is sufficient for our needs, and is much less of a
 #           memory hog (thus runs faster on <= 2GB VMs)
 
-sudo apt-get install -y \
+sudo apt-get install -yq \
 exuberant-ctags         \
 g++-4.8                 \
 gcc-4.8                 \
@@ -33,4 +33,5 @@ libboost-filesystem-dev \
 libboost-system-dev     \
 libncurses5-dev         \
 libpcre3-dev            \
+ncurses-term            \
 make
