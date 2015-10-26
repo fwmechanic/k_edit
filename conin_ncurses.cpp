@@ -218,6 +218,18 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       { "kf10", EdKC_f10 }, { "kf22", EdKC_s_f10 }, { "kf34", EdKC_c_f10 }, { "kf46" , EdKC_cs_f10 }, { "kf58", EdKC_a_f10 },
       { "kf11", EdKC_f11 }, { "kf23", EdKC_s_f11 }, { "kf35", EdKC_c_f11 }, { "kf47" , EdKC_cs_f11 }, { "kf59", EdKC_a_f11 },
       { "kf12", EdKC_f12 }, { "kf24", EdKC_s_f12 }, { "kf36", EdKC_c_f12 }, { "kf48" , EdKC_cs_f12 }, { "kf60", EdKC_a_f12 },
+
+      // from the Putty manual, chapter 4
+      // In SCO mode,
+      // the function keys F1 to F12          generate ESC [M through to ESC [X.        kf1..kf12
+      // Together with shift,            they generate ESC [Y through to ESC [j.        kf13..kf24
+      // With control                    they generate ESC [k through to ESC [v, and    kf25..kf36
+      // with shift and control together they generate ESC [w through to ESC [{.        kf37..kf48
+      // (note that "together with alt" is not supported)                                   ^
+      //                                                                                    |
+      // these can be mapped into ----------------------------------------------------------
+      // by `export TERM=putty-sco` _and_, in Putty config / Terminal / Keyboard , selecting SCO in "the function keys and keypad" section
+      // putty-sco terminfo is probably installed (on ubuntu) by installing the ncurses-term package
       };
    for( auto &el : s_kn2edkc ) {
       cap_nm_to_ncurses_ch( el.cap_nm, el.edkc );

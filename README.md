@@ -94,6 +94,8 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
   * PuTTY (also PuTTYtray) (to Ubuntu 14.04+)
     * _must_ configure PuTTY to set `TERM=putty` (or `TERM=putty-256color`)
     * even with `TERM=putty*`, most Windows-supported key combinations do not work.
+    * TERM=putty-sco adds support for shift+, ctrl+, and shift+ctrl+, but _NOT_ alt+ function keys.
+    * On Debian-based Linux, installing package ncurses-term may be necessary to access these terminfos.
     * I've not yet exhausted the possibilities here.
   * tmux (1.8 - 2.0) (`TERM=screen`)
     * most `ctrl+` and `alt+` function and keypad modulations do not work.
