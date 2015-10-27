@@ -52,7 +52,7 @@
 # cc           cc                        NOARG        , Interactive color selection
   cdelete      cdelete        MODIFIES+CURSORFUNC     , Deletes prev character, excluding line breaks. If cursor is in column 1, Cdelete move cursor to end of previous line
 # cfx          cfx                       BOXSTR + TEXTARG, tester for StrSubstituterGenerator and CFX_to_SSG
-w cliptext     cliptext                  KEEPMETA+NOARG+NULLARG , Like lasttext, except Windows Clipboard data is inserted on dialog line
+  cliptext     cliptext                  KEEPMETA+NOARG+NULLARG , Like lasttext, except Windows Clipboard data is inserted on dialog line
   compile      compile                   BOXSTR + NOARG + TEXTARG + NULLARG
   copy         copy                      BOXARG + MARKARG + NUMARG + NULLEOL + STREAMARG + NOARG + LINEARG + TEXTARG , Copies cursor line to clipboard
 # csort        csort                     BOXARG + LINEARG

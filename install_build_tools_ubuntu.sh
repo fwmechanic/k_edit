@@ -17,7 +17,7 @@
 # with K.  If not, see <http:#www.gnu.org/licenses/>.
 #
 
-# run to unilaterally install prereqs for building K
+# run to unilaterally install prereqs for building & running K
 
 # gcc 4.9.x is the dflt version on *ubuntu 14.10, and seems to be
 #           a major memory hog (I've observed this w/MinGW too)
@@ -25,7 +25,7 @@
 #           memory hog (thus runs faster on <= 2GB VMs)
 
 sudo apt-get install -yq \
-exuberant-ctags         \
+make                    \
 g++-4.8                 \
 gcc-4.8                 \
 libboost-dev            \
@@ -33,5 +33,6 @@ libboost-filesystem-dev \
 libboost-system-dev     \
 libncurses5-dev         \
 libpcre3-dev            \
+exuberant-ctags         \
 ncurses-term            \
-make
+xclip

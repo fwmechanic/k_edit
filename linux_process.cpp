@@ -274,15 +274,49 @@ int qx( std::string &dest, PCChar system_param ) {
       }
    }
 
+STATIC_CONST char cli_fromxclip[] = "xclip -selection c -o";
+STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
+
 bool ARG::fromwinclip() {
    std::string dest;
-   const auto rv( qx( dest, "xclip -o -selection c" ) );
+   const auto rv( qx( dest, cli_fromxclip ) );
    if( 0 == rv ) {
       Clipboard_PutText_Multiline( dest.c_str() );
       Msg( "X clipboard -> <clipboard> ok" );
       }
    return rv == 0;
    }
+
+void WinClipGetFirstLine( std::string &dest ) {
+   const auto rv( qx( dest, cli_fromxclip ) );
+   if( 0 == rv ) {
+      const auto eol( StrToNextOrEos( dest.c_str(), "\n" ) );
+      dest.resize( eol - dest.c_str() );
+      }
+   else {
+      dest = "qx xclip failed!";
+      }
+   }
+
+#ifdef fn_towinclip
+
+bool ARG::towinclip() {
+   // Create one way pipeline with call to popen()
+   auto pipe_fp( popen( cli_toxclip ) );
+   if( !pipe_fp ) {
+      return Msg("popen(%s) failed!", cli_toxclip );
+      }
+
+   for( cntr=0; cntr<MAXSTRS; cntr++ ) {
+      fputs(strings[cntr], pipe_fp);
+      fputc('\n', pipe_fp);
+      }
+
+   pclose( pipe_fp );
+   return(0);
+   }
+
+#endif
 
 //#################################################################################################################################
 //#################################################################################################################################

@@ -251,7 +251,7 @@
    # exitsaveall:alt+f4
 
    clip:=cancel arg "<clipboard>" setfile
-   clip:alt+y
+   # clip:alt+y
 
    #
    # CURSOR/File movement
@@ -447,6 +447,8 @@
    c2ansi:=replace "/*" nl "//" nl  lastselect replace "*/" nl arg <y nl
    # c2ansi:alt+y
 
+   cliptext:alt+y
+
    ##########################################################################################
    #
    # http://www.sfwriter.com/wordstar.htm      sel-mode
@@ -601,7 +603,6 @@
 [W.6.2] # Win8
 [os.win32]
    savescreen:ctrl+k
-   cliptext:shift+ins
    towinclip:ctrl+num+
    resize:alt+w
    delims: {[(          # test code
