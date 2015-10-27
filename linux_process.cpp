@@ -257,10 +257,10 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
       }
    }
 
-int qx( std::string &dest, std::string &system_param ) {
+int qx( std::string &dest, PCChar system_param ) {
    dest.clear();
    piped_forker piper;
-   if( !piper.ForkChildOk( system_param.c_str() ) ) {
+   if( !piper.ForkChildOk( system_param ) ) {
       return -1;
       }
 
@@ -272,6 +272,16 @@ int qx( std::string &dest, std::string &system_param ) {
          }
       dest.append( buffer, bc );
       }
+   }
+
+bool ARG::fromwinclip() {
+   std::string dest;
+   const auto rv( qx( dest, "xclip -o -selection c" ) );
+   if( 0 == rv ) {
+      Clipboard_PutText_Multiline( dest.c_str() );
+      Msg( "X clipboard -> <clipboard> ok" );
+      }
+   return rv == 0;
    }
 
 //#################################################################################################################################

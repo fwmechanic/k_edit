@@ -167,13 +167,9 @@ bool ARG::fromwinclip() {
             if( !pClip )
                ErrPause( "GlobalLock on ClipboardData failed" );
             else {
-               //################################################################
-               g_pFbufClipboard->MakeEmpty();
-               const int lineCount( g_pFbufClipboard->PutLastMultiline( pClip ) );
-               g_ClipboardType = (lineCount == 1) ? BOXARG : LINEARG;
-               Msg( "WinClip -> <clipboard> ok" );
-               //################################################################
+               Clipboard_PutText_Multiline( pClip );
                Win32::GlobalUnlock( hglb );
+               Msg( "WinClip -> <clipboard> ok" );
                retVal = true;
                }
             }
