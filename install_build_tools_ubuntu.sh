@@ -25,9 +25,7 @@
 #           memory hog (thus runs faster on <= 2GB VMs)
 
 sudo apt-get install -yq \
-make                    \
-g++-4.8                 \
-gcc-4.8                 \
+build-essential         \
 libboost-dev            \
 libboost-filesystem-dev \
 libboost-system-dev     \
