@@ -341,7 +341,7 @@ STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
    return false;
    }
 
-#ifdef fn_towinclip
+#ifdef fn_toxclip
 
 STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
 STATIC_CONST char ClipUnavail[] = "Windows Clipboard Unavailable";
@@ -349,7 +349,7 @@ STATIC_CONST char ClipUnavail[] = "Windows Clipboard Unavailable";
 typedef  PChar  hglbCopy_t;
 
 STATIC_FXN PChar PrepClip( long size, hglbCopy_t &hglbCopy ) {
-   hglbCopy = malloc( size );
+   hglbCopy = static_cast<PChar>( malloc( size ) );
    return hglbCopy;
    }
 
