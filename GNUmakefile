@@ -406,7 +406,7 @@ ifdef APP_IN_DLL
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT) $(ED_DLL)$(DLL_EXT)
 
 $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
-	$(LINK) $^ -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)
+	$(LINK.cpp) $^ -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)
 	$(SHOW_BINARY)
 
 $(ED_DLL)$(DLL_EXT): $(OBJS) $(LIBLUA)
