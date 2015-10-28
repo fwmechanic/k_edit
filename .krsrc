@@ -508,7 +508,7 @@
    edf:=arg curfile endline
    edf:Alt+3
 
-   myscripts:="c:\klg\pers\"
+   myscripts:="%USERPROFILE%\klg\pers\"
 
 
    #
