@@ -55,6 +55,7 @@ The K source code distro contains, and K uses, the following source code from ex
 ### Ubuntu Linux (14.04, 14.10, 15.10)
 
  * after cloning this repo, run `./install_build_tools_ubuntu.sh` to install the necessary packages.
+    * I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it probably will not build with any lesser GCC version.
 
 ## To build
 
@@ -168,7 +169,8 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
     * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
- * `ctrl+c` and `ctrl+v` xfr text between the Win32 (Windows) or X (Linux) Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.  The Linux implementation depends on [`xclip`](http://sourceforge.net/projects/xclip/) being installed; `sudo apt-get install xclip` FTW!
+ * `ctrl+c` and `ctrl+v` xfr text between the Win32 (Windows) or X (Linux) Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
+    * The Linux implementation depends on [`xclip`](http://sourceforge.net/projects/xclip/) being installed; `sudo apt-get install xclip` FTW!
  * `ctrl+q`,`alt+F2` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
  * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers via <clipboard>.
  * `execute` (`ctrl+x`):
