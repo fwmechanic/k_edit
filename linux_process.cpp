@@ -274,9 +274,6 @@ int qx( std::string &dest, PCChar system_param ) {
       }
    }
 
-STATIC_CONST char cli_fromxclip[] = "xclip -selection c -o";
-STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
-
 #include <sys/wait.h>
 
 STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
@@ -301,6 +298,8 @@ STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
       }
    return false;
    }
+
+STATIC_CONST char cli_fromxclip[] = "xclip -selection c -o";
 
 bool ARG::fromwinclip() {
    std::string dest;
@@ -344,10 +343,29 @@ STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
 
 #ifdef fn_towinclip
 
-bool ARG::towinclip() {
-   stref sr = form_toclipboard_buffer(); // todo: merge with Win32 impl, since the (significant!) arg prep is 95% common to both
-   return popen_wr_ok( cli_toxclip, sr );
+STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
+STATIC_CONST char ClipUnavail[] = "Windows Clipboard Unavailable";
+
+typedef  PChar  hglbCopy_t;
+
+STATIC_FXN PChar PrepClip( long size, hglbCopy_t &hglbCopy ) {
+   hglbCopy = malloc( size );
+   return hglbCopy;
    }
+
+STATIC_FXN PCChar WrToClipEMsg( hglbCopy_t hglbCopy ) {
+   const auto wrOk( popen_wr_ok( cli_toxclip, hglbCopy ) );
+   return wrOk ? nullptr : "xclip write failed" ;
+   }
+
+STATIC_FXN size_t sizeof_eol() { return 1; }
+STATIC_FXN void cat_eol( PChar &bufptr ) {
+   *bufptr++ = '\n';
+   }
+
+STATIC_FXN PCChar DestNm() { return "X"; }
+
+#include "impl_towinclip.h"
 
 #endif
 
