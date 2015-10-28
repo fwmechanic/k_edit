@@ -355,6 +355,7 @@ STATIC_FXN PChar PrepClip( long size, hglbCopy_t &hglbCopy ) {
 
 STATIC_FXN PCChar WrToClipEMsg( hglbCopy_t hglbCopy ) {
    const auto wrOk( popen_wr_ok( cli_toxclip, hglbCopy ) );
+   free( hglbCopy );
    return wrOk ? nullptr : "xclip write failed" ;
    }
 
