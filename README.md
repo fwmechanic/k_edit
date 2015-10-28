@@ -52,12 +52,9 @@ The K source code distro contains, and K uses, the following source code from ex
  * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K, and must be in `PATH`.
  * `7z.exe` ([7zip](http://www.7-zip.org/)) is invoked when building the `rls` `make` target, and must be in `PATH`.
 
-### Ubuntu Linux (14.04, 14.10)
+### Ubuntu Linux (14.04, 14.10, 15.10)
 
- * each time you open a terminal to build K, run `. setup_build_tools_ubuntu.sh` (tab-completion is your friend); this operation (which corresponds with executing `mingw.bat` in Windows) will
-    * remap the K build to use GCC 4.8.x rather than the default version of GCC
-    * install GCC 4.8.x and other build tools/libraries if they're missing; in this case, `sudo apt-get ...` is executed, so you'll be prompted by `sudo` for your password.
-        * the install-checking in `setup_build_tools_ubuntu.sh` is decidedly imperfect; to unilaterally install the build prereqs on *Ubuntu, run `install_build_tools_ubuntu.sh`
+ * after cloning this repo, run `./install_build_tools_ubuntu.sh` to install the necessary packages.
 
 ## To build
 
