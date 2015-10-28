@@ -168,6 +168,7 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
     * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
+ * `ctrl+c` and `ctrl+v` xfr text between the Win32 (Windows) or X (Linux) Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.  The Linux implementation depends on [`xclip`](http://sourceforge.net/projects/xclip/) being installed; `sudo apt-get install xclip` FTW!
  * `ctrl+q`,`alt+F2` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
  * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers via <clipboard>.
  * `execute` (`ctrl+x`):
@@ -207,7 +208,6 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
 
 ### Win32-only functions
 
- * `ctrl+c` and `ctrl+v` xfr text between the Windows Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
  * `websearch` (`alt+6`): perform web search on string (opens in default browser)
      * `arg` "search string" `websearch`: perform Google web search for "search string"
@@ -215,7 +215,7 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
 
 # Historical Notes
 
-K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor", released as M.EXE for DOS, and MEP.EXE for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
+K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor", released as `M.EXE` for DOS, and `MEP.EXE` for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
 > system editor (Better than VI!) [They ended up with ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M), the "Microsoft
