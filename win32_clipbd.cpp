@@ -59,6 +59,9 @@ STATIC_FXN PCChar WrToClipEMsg( hglbCopy_t hglbCopy ) {
    //
    const auto wrOk( Win32::SetClipboardData( CF_OEMTEXT, hglbCopy ) );
    Win32::CloseClipboard();
+   if( !wrOk ) {
+      Win32::GlobalFree( hglbCopy );
+      }
    return wrOk ? nullptr : "Win32::SetClipboardData write failed" ;
    }
 
