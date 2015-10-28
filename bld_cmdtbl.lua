@@ -37,7 +37,7 @@ function mangleName( name )
 function nextArg() return table.remove( arg, 1 ) end
 
 local platform_arg = assert( nextArg(), "missing platform_arg" )
-local foobar = {win32="w",other=""}
+local foobar = {win32="w",other="u"}
 local w_only = assert( foobar[platform_arg], platform_arg.." is unknown platform_arg" )
 
 -- io.write( "w_only = '", w_only,"'","\n" )  os.exit(1)

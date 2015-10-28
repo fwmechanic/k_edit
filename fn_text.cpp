@@ -476,6 +476,12 @@ void Clipboard_PutText( stref sr ) {
    g_ClipboardType = BOXARG;
    }
 
+void Clipboard_PutText_Multiline( PCChar szData ) {
+   g_pFbufClipboard->MakeEmpty();
+   const int lineCount( g_pFbufClipboard->PutLastMultiline( szData ) );
+   g_ClipboardType = (lineCount == 1) ? BOXARG : LINEARG;
+   }
+
 #ifdef fn_ascii2hex
 
 //////////////////////////////////////////////////////////////////////////

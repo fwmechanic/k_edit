@@ -92,12 +92,15 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
     * Lubuntu Desktop (`lxterminal` nee `x-terminal-emulator`): mouse scroll wheel does not work.
     * I think I've exhausted the possibilities here
   * PuTTY (also PuTTYtray) (to Ubuntu 14.04+)
-    * _must_ configure PuTTY to set `TERM=putty` (or `TERM=putty-256color`)
-    * even with `TERM=putty*`, most Windows-supported key combinations do not work.
-    * I've not yet exhausted the possibilities here.
+    * _must_ configure PuTTY to set `TERM=putty` (or `TERM=putty-256color`) because the default (`TERM=xterm`) is remarkably broken.
+       * even using these two terminal types, only unmodulated function keys are correctly decoded; shift+, ctrl+, shift+ctrl+, and alt+ modulated function keys map to the corresponding unmodulated function keys.
+    * better (but with a caveat): `TERM=putty-sco` adds support for shift+, ctrl+, and shift+ctrl+, but _NOT_ alt+ function keys.
+       * **caveat**: `TERM=putty-sco` **requires nondefault PuTTY config**: Terminal / Keyboard / the function keys and keypad : select `SCO`.
+    * to make these terminal types available on Debian-based (i.e. *ubuntu) Linux, package `ncurses-term` _may_ need to be installed.
+    * [emacswiki/emacs/PuTTY](http://emacswiki.org/emacs/PuTTY) seems a good resource regarding PuTTY keyboard peculiarities.
   * tmux (1.8 - 2.0) (`TERM=screen`)
     * most `ctrl+` and `alt+` function and keypad modulations do not work.
-    * I've not yet exhausted the possibilities here.
+    * I've not begun investigating the possibilities here.
 
 # Debug/Development
 
@@ -150,7 +153,7 @@ The following outline describes all possible argtypes.  Different `ARG::function
 
 ## Essential Functions
 
-The editor implements a large number of functions, all of which the user can invoke. Every key has one function bound to it (and the user is completely free to change these bindings), and functions can also be invoked within macros and via the `execute` function.  Following are some of the most commonly used functions:
+The editor implements a large number of functions, all of which the user can invoke by name using the `execute` or `selcmd` functions, or bind to any key. Every key has one function bound to it (and the user is completely free to change these bindings).  The current key bindings can be viewed by executing function `newhelp` bound to `alt+h`. Functions can also be invoked by/within macros.  Following are some of the most commonly used functions:
 
  * `exit` (`ctrl+4`, `alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `undo` (`ctrl+e`,`alt+backspace`) undo the most recent editing operation.  Repeatedly invoking `undo` will successively undo all editing operations.

@@ -418,7 +418,10 @@ extern  bool   MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=fa
 
 extern  stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
 
+// the distinction between the following two is small...
 extern  void Clipboard_PutText( stref sr );
+extern  void Clipboard_PutText_Multiline( PCChar szData );
+extern  void WinClipGetFirstLine( std::string &xb );
 
 
 //#####################  functionality implemented in  Lua  #####################

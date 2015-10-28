@@ -257,10 +257,10 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
       }
    }
 
-int qx( std::string &dest, std::string &system_param ) {
+int qx( std::string &dest, PCChar system_param ) {
    dest.clear();
    piped_forker piper;
-   if( !piper.ForkChildOk( system_param.c_str() ) ) {
+   if( !piper.ForkChildOk( system_param ) ) {
       return -1;
       }
 
@@ -273,6 +273,101 @@ int qx( std::string &dest, std::string &system_param ) {
       dest.append( buffer, bc );
       }
    }
+
+#include <sys/wait.h>
+
+STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
+   auto fp( popen( szcmdline, "r" ) );
+   if( fp != NULL ) {
+      char buf[8192];
+      while( fgets( buf, sizeof buf, fp ) != NULL ) {
+         dest += buf;
+         }
+      const auto status( pclose(fp) );
+      if( status == -1 ) { /* Error reported by pclose() */
+         }
+      else {
+         /* http://pubs.opengroup.org/onlinepubs/009695399/functions/wait.html
+            Use macros described under wait() to inspect `status' in order
+            to determine success/failure of command executed by popen()
+          */
+         if( WIFEXITED(status) && 0 == WEXITSTATUS(status) ) {
+            return true;
+            }
+         }
+      }
+   return false;
+   }
+
+STATIC_CONST char cli_fromxclip[] = "xclip -selection c -o";
+
+bool ARG::fromwinclip() {
+   std::string dest;
+   if( popen_rd_ok( dest, cli_fromxclip ) ) {
+      Clipboard_PutText_Multiline( dest.c_str() );
+      Msg( "X clipboard -> <clipboard> ok" );
+      return true;
+      }
+   return false;
+   }
+
+void WinClipGetFirstLine( std::string &dest ) {
+   dest.clear();
+   if( popen_rd_ok( dest, cli_fromxclip ) ) {
+      const auto eol( StrToNextOrEos( dest.c_str(), "\n" ) );
+      dest.resize( eol - dest.c_str() );
+      return;
+      }
+   dest = "qx xclip failed!";
+   }
+
+STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
+   auto fp( popen( szcmdline, "w" ) );
+   if( fp != NULL ) {
+      fwrite( sr.data(), sr.length(), 1, fp ); // ignore error here as it will show up when we pclose()
+      const auto status( pclose(fp) );
+      if( status == -1 ) { /* Error reported by pclose() */
+         }
+      else {
+         /* http://pubs.opengroup.org/onlinepubs/009695399/functions/wait.html
+            Use macros described under wait() to inspect `status' in order
+            to determine success/failure of command executed by popen()
+          */
+         if( WIFEXITED(status) && 0 == WEXITSTATUS(status) ) {
+            return true;
+            }
+         }
+      }
+   return false;
+   }
+
+#ifdef fn_towinclip
+
+STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
+STATIC_CONST char ClipUnavail[] = "Windows Clipboard Unavailable";
+
+typedef  PChar  hglbCopy_t;
+
+STATIC_FXN PChar PrepClip( long size, hglbCopy_t &hglbCopy ) {
+   hglbCopy = malloc( size );
+   return hglbCopy;
+   }
+
+STATIC_FXN PCChar WrToClipEMsg( hglbCopy_t hglbCopy ) {
+   const auto wrOk( popen_wr_ok( cli_toxclip, hglbCopy ) );
+   return wrOk ? nullptr : "xclip write failed" ;
+   }
+
+STATIC_FXN size_t sizeof_eol() { return 1; }
+STATIC_FXN void cat_eol( PChar &bufptr ) {
+   *bufptr++ = '\n';
+   }
+
+STATIC_FXN PCChar DestNm() { return "X"; }
+
+#include "impl_towinclip.h"
+
+#endif
 
 //#################################################################################################################################
 //#################################################################################################################################
