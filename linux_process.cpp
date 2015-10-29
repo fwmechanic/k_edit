@@ -300,6 +300,7 @@ STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
    }
 
 STATIC_CONST char cli_fromxclip[] = "xclip -selection c -o";
+STATIC_CONST char fromxclip_err[] = "X clipboard read failed; is xclip pkg installed?";
 
 bool ARG::fromwinclip() {
    std::string dest;
@@ -308,6 +309,7 @@ bool ARG::fromwinclip() {
       Msg( "X clipboard -> <clipboard> ok" );
       return true;
       }
+   Msg( "%s", fromxclip_err );
    return false;
    }
 
@@ -318,7 +320,7 @@ void WinClipGetFirstLine( std::string &dest ) {
       dest.resize( eol - dest.c_str() );
       return;
       }
-   dest = "qx xclip failed!";
+   dest = fromxclip_err;
    }
 
 STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
@@ -344,7 +346,6 @@ STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
 #ifdef fn_toxclip
 
 STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
-STATIC_CONST char ClipUnavail[] = "Windows Clipboard Unavailable";
 
 typedef  PChar  hglbCopy_t;
 
