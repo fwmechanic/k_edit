@@ -37,8 +37,8 @@ function mangleName( name )
 function nextArg() return table.remove( arg, 1 ) end
 
 local platform_arg = assert( nextArg(), "missing platform_arg" )
-local foobar = {win32="w",other="u"}
-local w_only = assert( foobar[platform_arg], platform_arg.." is unknown platform_arg" )
+local plat_pats = {mingw="[ w]",linux="[ x]"}
+local plat_pat = "^" .. assert( plat_pats[platform_arg], platform_arg.." is unknown platform_arg" )
 
 -- io.write( "w_only = '", w_only,"'","\n" )  os.exit(1)
 
@@ -50,39 +50,36 @@ local tbl = {}
 
 for line in io.lines() do
    line = line:gsub( "#.*$", "" )
-   if #line > 0 then
-      local ch1 = line:sub( 1,1 )  -- io.write( "ch1 = '", ch1,"'","\n" )
-      if ch1 == " " or ch1 == w_only then
-         line = line:gsub( "^.", "" )
-         line = trim( line )
-         -- print( line )
-         -- print( "\""..line.."\"" )
-         local name,fxn,attr_tail = line:match( "^%s*(%S+)%s+(%S+)%s+(.+)$" )
-         local oComma = attr_tail:find( "," )
-         local attr_expr  = attr_tail
-         local helpString = ""
-         if oComma then
-            attr_expr  = attr_tail:sub( 1, oComma-1 )
-            helpString = trim( attr_tail:sub( oComma+1 ) )
-            end
-
-         attr_expr = nowhite( attr_expr )
-         local mname = mangleName( name )
-         name = name:lower()
-         -- print( fmt( "mnm=\"%s\", nm=\"%s\", fxn=\"%s\", attr=\"%s\" hlp=\"%s\"", mname, name, fxn, attr_expr, helpString ) )
-         assert( nil == tbl[name], "name "..name.." defined twice! (case INsensitive!)" )
-         tbl[name] = {
-              fxn   = fxn
-            , attr  = attr_expr
-            , help  = helpString
-            , mname = mname
-            }
-
-         if maxNameWidth  < #name      then maxNameWidth  = #name      end
-         if maxMNameWidth < #mname     then maxMNameWidth = #mname     end
-         if maxAttrWidth  < #attr_expr then maxAttrWidth  = #attr_expr end
-         if maxfnmWidth   < #fxn       then maxfnmWidth   = #fxn       end
+   if line:match( plat_pat ) then
+      line = line:gsub( "^.", "" )
+      line = trim( line )
+      -- print( line )
+      -- print( "\""..line.."\"" )
+      local name,fxn,attr_tail = line:match( "^%s*(%S+)%s+(%S+)%s+(.+)$" )
+      local oComma = attr_tail:find( "," )
+      local attr_expr  = attr_tail
+      local helpString = ""
+      if oComma then
+         attr_expr  = attr_tail:sub( 1, oComma-1 )
+         helpString = trim( attr_tail:sub( oComma+1 ) )
          end
+
+      attr_expr = nowhite( attr_expr )
+      local mname = mangleName( name )
+      name = name:lower()
+      -- print( fmt( "mnm=\"%s\", nm=\"%s\", fxn=\"%s\", attr=\"%s\" hlp=\"%s\"", mname, name, fxn, attr_expr, helpString ) )
+      assert( nil == tbl[name], "name "..name.." defined twice! (case INsensitive!)" )
+      tbl[name] = {
+           fxn   = fxn
+         , attr  = attr_expr
+         , help  = helpString
+         , mname = mname
+         }
+
+      if maxNameWidth  < #name      then maxNameWidth  = #name      end
+      if maxMNameWidth < #mname     then maxMNameWidth = #mname     end
+      if maxAttrWidth  < #attr_expr then maxAttrWidth  = #attr_expr end
+      if maxfnmWidth   < #fxn       then maxfnmWidth   = #fxn       end
       end
    end
 

@@ -92,7 +92,7 @@ w dvlog        dvlog                     TEXTARG , write string to DbgView using
 # findfile     findfile                  BOXSTR + TEXTARG + NOARG
   flipcase     flipcase       MODIFIES + KEEPMETA+NOARG+BOXARG+NULLEOW , Flips case of char under cursor, or selection; also: '+' <-> '-'
 w fromwinclip  fromwinclip               NOARG , Windows Clipboard ==> <clipboard>
-u fromxclip    fromwinclip               NOARG , X Clipboard ==> <clipboard>
+x fromxclip    fromwinclip               NOARG , X Clipboard ==> <clipboard>
   ftab         ftab                      NOARG , Interactively change the editor's tab width and tab visibility
 # glds         glds                      NOARG , test harness for Win32::GetLogicalDriveStrings
   gmg          gmg                       NOARG , Merge all <grep_n> buffers having a common source buffer into the topmost matching <grep_n>, deleting the others
@@ -176,7 +176,7 @@ w savescreen   savescreen                NOARG+TEXTARG+BOXSTR , save screen cont
   tab          tab            CURSORFUNC
   tell         tell                      BOXSTR + NOARG + TEXTARG, Describe a key assignment or macro
 w towinclip    towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+NULLEOW , <clipboard> ==> Windows Clipboard
-u toxclip      towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+NULLEOW , <clipboard> ==> X Clipboard
+x toxclip      towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+NULLEOW , <clipboard> ==> X Clipboard
   true         true_                     BOXARG + STREAMARG + NOARG + LINEARG
   udelete      udelete        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , user interface delete; works intuitively in both stream and box modes
   unassigned   unassigned                BOXARG + STREAMARG + NOARG + LINEARG + NULLARG + TEXTARG  # this help will not show

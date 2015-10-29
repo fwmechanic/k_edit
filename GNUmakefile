@@ -65,7 +65,6 @@ export PLAT
 SHELL=cmd
 export SHELL # inherited by child (recursive) makes such as that which builds $(LUA_T)
 
-CMDTBL_ARG=win32
 # dflt $(RM) for MinGW is rm -f
 RM= del /F /Q
 RM= rm -f
@@ -88,7 +87,6 @@ else
 PLAT = linux
 export PLAT
 
-CMDTBL_ARG=other
 MV = mv
 export MV
 RM= rm -f
@@ -352,7 +350,7 @@ tags : $(EXE_TGTS)
 	$(TAGS_CMDLN)
 
 $(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat bld_cmdtbl.lua
-	$(LUA_T) bld_cmdtbl.lua $(CMDTBL_ARG) < cmdtbl.dat
+	$(LUA_T) bld_cmdtbl.lua $(PLAT) < cmdtbl.dat
 
 cleanliblua:
 	cd $(LUA_DIR) && $(MAKE) clean
