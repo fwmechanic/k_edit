@@ -952,7 +952,6 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
 */
 class stref_split_walk {
    const stref whole_thing;
-   sridx begin, end;
 
 public:
    stref_split_walk( stref whole_thing_ ) : whole_thing( whole_thing_ ) {}
