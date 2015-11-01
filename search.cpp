@@ -1110,7 +1110,7 @@ STATIC_FXN bool SearchSpecifierOK( ARG *pArg ) {
                        s_searchSpecifier->CaseUpdt();
                        }
                     else {
-                       if( !g_pFBufSearchLog && FBOP::IsLineBlank( g_pFBufSearchLog, 0 ) ) {
+                       if( !g_pFBufSearchLog || FBOP::IsLineBlank( g_pFBufSearchLog, 0 ) ) {
                           return ErrorDialogBeepf( "No search string specified, %s empty", szSearchLog );
                           }
 
