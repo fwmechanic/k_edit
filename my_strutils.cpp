@@ -315,7 +315,9 @@ int strcmp4humans( PCChar pA, PCChar pB ) {
 PChar _strupr( PChar buf ) {
    const auto rv( buf );
    for( ; *buf ; ++buf ) {
-      *buf = toupper( *buf );
+      if( islower( *buf ) ) {
+         *buf = toupper( *buf );
+         }
       }
    return rv;
    }
@@ -323,7 +325,9 @@ PChar _strupr( PChar buf ) {
 PChar _strlwr( PChar buf ) {
    const auto rv( buf );
    for( ; *buf ; ++buf ) {
-      *buf = tolower( *buf );
+      if( isupper( *buf ) ) {
+         *buf = tolower( *buf );
+         }
       }
    return rv;
    }
