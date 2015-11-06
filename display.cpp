@@ -2096,7 +2096,7 @@ void View::HiliteAddins_Init() {
                                           IAL( HiliteAddin_python          ); }
       else if( L(lua)                 ) { IAL( HiliteAddin_lua             ); }
       else if( L(perl) || L(python)   ) { IAL( HiliteAddin_python          ); }
-      else if( L(bash) || L(sh)       ) { IAL( HiliteAddin_bash            ); }
+      else if( L(bash) || L(sh) || L(expect) ) { IAL( HiliteAddin_bash            ); }
       else if( L(diff)                ) { IAL( HiliteAddin_Diff            ); }
       else if( hasEolComment          ) { IAL( HiliteAddin_EolComment      ); }
 
