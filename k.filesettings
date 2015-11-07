@@ -95,6 +95,7 @@ ftype_map = {  -- ref'd from C
    clang        = clang_settings                       ,
    msbatch      = bat_settings                         ,
    lua          = lua_settings                         ,
+   expect       = python_settings                      ,
    perl         = python_settings                      ,
    python       = python_settings                      ,
    make         = make_settings                        ,
