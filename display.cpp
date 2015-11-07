@@ -239,9 +239,20 @@ STATIC_FXN inline FTypeSetting *IdxNodeToFTS( RbNode *pNd ) { return static_cast
 
 struct FTypeSetting {
    enum { DB=0 };
+   enum HL_ID {
+          HL_none   ,
+          HL_C      ,
+          HL_MAKE   ,
+          HL_LUA    ,
+          HL_PYTHON ,
+          HL_BASH   ,
+          HL_DIFF   ,
+        };
+
    Path::str_t d_key;  // rbtree key
    ViewColors  d_colors;
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
+   HL_ID       d_hl_id;
 
    void  Update();
 
@@ -261,19 +272,43 @@ STATIC_FXN int Show_FTypeSettings() {                                        FTy
    return 1;
    }
 
-
 void FTypeSetting::Update() {
    linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
    snprintf_full( &pbuf, &kybufBytes, "filesettings.ftype_map.%s.", d_key.c_str() );
    d_eolCommentDelim[0] = '\0';
    scpy( pbuf, kybufBytes, "eolCommentDelim" );
    LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
+
+   {
+   scpy( pbuf, kybufBytes, "hilite" );
+   char hiliteNmBuf[21];
+   LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
+   stref key( hiliteNmBuf );
+   STATIC_CONST struct {
+      PCChar   nm;
+      HL_ID    enumval;
+      } hlnms[] = {
+      { "c"      , HL_C      },
+      { "make"   , HL_MAKE   },
+      { "lua"    , HL_LUA    },
+      { "python" , HL_PYTHON },
+      { "bash"   , HL_BASH   },
+      { "diff"   , HL_DIFF   },
+      };
+   d_hl_id = HL_none;
+   for( const auto &cc : hlnms ) {
+      if( eq( key, cc.nm ) ) {
+         d_hl_id = cc.enumval;
+         break;
+         }
+      }
+   }
+
    snprintf_full( &pbuf, &kybufBytes, "colors." );
    for( const auto &c2L : s_color2Lua ) {
       scpy( pbuf, kybufBytes, c2L.pLuaName );
       d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf, c2L.dflt );   DB && DBG( "%s: %s = 0x%02X", __func__, kybuf, d_colors[ c2L.ofs ] );
       }
-
 // d_colors[ COLOR::CXY ] = GenAltHiliteColor( d_colors[ COLOR::TXT ] );
    }
 
@@ -2078,79 +2113,35 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
 
 GLOBAL_VAR bool g_fLangHilites = true;
 
-
-
-
-#if 0
-
-STATIC_CONST char s_hl_c      [] = "c"      ;
-STATIC_CONST char s_hl_make   [] = "make"   ;
-STATIC_CONST char s_hl_lua    [] = "lua"    ;
-STATIC_CONST char s_hl_python [] = "python" ;
-STATIC_CONST char s_hl_bash   [] = "bash"   ;
-STATIC_CONST char s_hl_diff   [] = "diff"   ;
-
-
-
-
-
-STATIC_CONST CppCondEntry_t cond_keywds[] = {
-      { s_hl_c      },
-      { s_hl_make   },
-      { s_hl_lua    },
-      { s_hl_python },
-      { s_hl_bash   },
-      { s_hl_diff   },
-   };
-for( const auto &cc : cond_keywds ) {
-   if( eq( word, cc.nm ) ) {
-      *pxMin = o2;
-      return cc.val;
-      }
-   }
-
-//     swixFtype
-PCChar swixLanghilite( stref param ) {
-   Set_s_cur_Ftype( param );
-   s_cur_Ftype_assigned = true;
-   return nullptr;
-   }
-
-//   swidFtype
-void swidLanghilite( PChar dest, size_t sizeofDest, void *src ) {
-   scpy( dest, sizeofDest, s_cur_Ftype );
-   }
-
-#endif
-
 void View::HiliteAddins_Init() {
    DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
    if( g_fLangHilites && d_addins.empty() &&
        (d_pFBuf->HasLines() || d_pFBuf->FnmIsPseudo())
      ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, d_pFBuf->FType().c_str() );
       const auto pFTS( GetFTypeSettings() );
-      const auto hasEolComment( pFTS->d_eolCommentDelim[0] );
-     #define L(lang) d_pFBuf->FTypeEq(#lang)
      #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
-      /* the last-inserted InsertAddinLast has "last say" and therefore "wins".  Thus because I want
-         HiliteAddin_CursorLine, to be visible in all cases, it's added last */
-             /* ALWAYS */               { IAL( HiliteAddin_Pbal            ); }
-      if     ( L(clang)               ) { IAL( HiliteAddin_cond_CPP        );
-                                          IAL( HiliteAddin_clang           ); }
-      else if( L(make)                ) { IAL( HiliteAddin_cond_gmake      );
-                                          IAL( HiliteAddin_python          ); }
-      else if( L(lua)                 ) { IAL( HiliteAddin_lua             ); }
-      else if( L(perl) || L(python)   ) { IAL( HiliteAddin_python          ); }
-      else if( L(bash) || L(sh) || L(expect) ) { IAL( HiliteAddin_bash            ); }
-      else if( L(diff)                ) { IAL( HiliteAddin_Diff            ); }
-      else if( hasEolComment          ) { IAL( HiliteAddin_EolComment      ); }
-
+             /* ALWAYS */              IAL( HiliteAddin_Pbal            );
+      switch( pFTS->d_hl_id ) {
+         case FTypeSetting::HL_C     : IAL( HiliteAddin_cond_CPP        );
+                                       IAL( HiliteAddin_clang           );  break;
+         case FTypeSetting::HL_MAKE  : IAL( HiliteAddin_cond_gmake      );
+                                       IAL( HiliteAddin_python          );  break;
+         case FTypeSetting::HL_LUA   : IAL( HiliteAddin_lua             );  break;
+         case FTypeSetting::HL_PYTHON: IAL( HiliteAddin_python          );  break;
+         case FTypeSetting::HL_BASH  : IAL( HiliteAddin_bash            );  break;
+         case FTypeSetting::HL_DIFF  : IAL( HiliteAddin_Diff            );  break;
+         default: if( pFTS->d_eolCommentDelim[0] ) {
+                     IAL( HiliteAddin_EolComment );
+                     }
+                  break;
+         }
              /* ALWAYS */               { IAL( HiliteAddin_WordUnderCursor ); }
       if( USE_HiliteAddin_CompileLine ) { IAL( HiliteAddin_CompileLine     ); }
+      /* later IAL's have "last say" and therefore take precedence.  Because I want
+         HiliteAddin_CursorLine, to be visible in all cases, it's IAL'd last */
       if( USE_HiliteAddin_CursorLine  ) { IAL( HiliteAddin_CursorLine      ); }
       DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
      #undef IAL
-     #undef L
       }
    }
 

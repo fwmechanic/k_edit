@@ -79,22 +79,25 @@ local function colors( tbl, meta )
    end
 
 local text_settings  = { colors = stdColors }
+local diff_settings  = { colors = stdColors, hilite = "diff" }
+
 local bat_settings   = { colors = stdColors, eolCommentDelim = "rem " }
-local clang_settings = { colors = darkColors }
-local lua_settings   = { colors = DeepCopy(darkColors) }
+local clang_settings = { colors = darkColors, hilite = "c"  }
+local lua_settings   = { colors = DeepCopy(darkColors), hilite = "lua" }
     -- lua_settings.colors.com = bfg( Blue, hiPink )
 
-local python_settings  = { colors = stdColors }
-local perl_settings  = { colors = darkColors }
-local ushell_settings= { colors = darkColors }
+local python_settings  = { colors = stdColors, hilite = "python" }
+local perl_settings  = { colors = darkColors, hilite = "python" }
+local make_settings  = { colors = darkColors, hilite = "make" }
+local ushell_settings= { colors = darkColors, hilite = "bash" }
 
 ftype_map = {  -- ref'd from C
    clang        = clang_settings                       ,
    msbatch      = bat_settings                         ,
    lua          = lua_settings                         ,
-   perl         = perl_settings                        ,
+   perl         = python_settings                      ,
    python       = python_settings                      ,
-   make         = perl_settings                        ,
+   make         = make_settings                        ,
    kdb          = text_settings                        ,
    text         = text_settings                        ,
    sh           = ushell_settings                      ,
@@ -102,7 +105,7 @@ ftype_map = {  -- ref'd from C
    pseudo       = ushell_settings                      ,
    unknown      = ushell_settings                      ,
    wildcard     = ushell_settings                      ,
-   diff         = text_settings                        ,
+   diff         = diff_settings                        ,
    [""]         = { colors = stdColors }               ,
    }
 
