@@ -2078,6 +2078,51 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
 
 GLOBAL_VAR bool g_fLangHilites = true;
 
+
+
+
+#if 0
+
+STATIC_CONST char s_hl_c      [] = "c"      ;
+STATIC_CONST char s_hl_make   [] = "make"   ;
+STATIC_CONST char s_hl_lua    [] = "lua"    ;
+STATIC_CONST char s_hl_python [] = "python" ;
+STATIC_CONST char s_hl_bash   [] = "bash"   ;
+STATIC_CONST char s_hl_diff   [] = "diff"   ;
+
+
+
+
+
+STATIC_CONST CppCondEntry_t cond_keywds[] = {
+      { s_hl_c      },
+      { s_hl_make   },
+      { s_hl_lua    },
+      { s_hl_python },
+      { s_hl_bash   },
+      { s_hl_diff   },
+   };
+for( const auto &cc : cond_keywds ) {
+   if( eq( word, cc.nm ) ) {
+      *pxMin = o2;
+      return cc.val;
+      }
+   }
+
+//     swixFtype
+PCChar swixLanghilite( stref param ) {
+   Set_s_cur_Ftype( param );
+   s_cur_Ftype_assigned = true;
+   return nullptr;
+   }
+
+//   swidFtype
+void swidLanghilite( PChar dest, size_t sizeofDest, void *src ) {
+   scpy( dest, sizeofDest, s_cur_Ftype );
+   }
+
+#endif
+
 void View::HiliteAddins_Init() {
    DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
    if( g_fLangHilites && d_addins.empty() &&
