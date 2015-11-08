@@ -1,3 +1,4 @@
+#!lua
 --[[
 
 20070823 kgoodwin wrote
@@ -91,7 +92,7 @@ local perl_settings  = { colors = darkColors, hilite = "python" }
 local make_settings  = { colors = darkColors, hilite = "make" }
 local ushell_settings= { colors = darkColors, hilite = "bash" }
 
-ftype_map = {  -- ref'd from C
+ftype_map = {  -- ref'd from C, key source: arg "DetermineFType" tags
    clang        = clang_settings                       ,
    msbatch      = bat_settings                         ,
    lua          = lua_settings                         ,
