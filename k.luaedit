@@ -3711,14 +3711,15 @@ do
       print( "loading "..fnm )
       local ok,fxn = pcall( loadfile, fnm )         -- print( "compiled something" )
       if not ok then
-         print( "pcall loadfile "..fnm.. " NOT OK" )
+         print( "pcall loadfile "..fnm.. " compile failed: "..fxn )
          return
          end
       env = env or {}
       env._G = env
       setfenv( fxn, env )
-      if not pcall( fxn ) then
-         print( "pcall fxn "..fnm.. " NOT OK" )
+      local pcstat, em = pcall( fxn )
+      if not pcstat then
+         print( "pcall fxn "..fnm.. " NOT OK: "..em )
          return
          end
       -- ObjectShow( env, "prod.lua for "..fnm )
@@ -3920,8 +3921,8 @@ function ReadPseudoFileOk_FROM_C( fb )  -- return Lua true (not (rv==nil or rv==
 printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )
 
 --########################################################################################################################################
--- DO NOT DELETE NEXT LINE!  filesettings IS READ BY C++ CODE!!!
-filesettings = load_env( RsrcFilename( "filesettings" ), { print = print, NameExtOf = NameExtOf, ExtOf = ExtOf, DeepCopy=DeepCopy } )
+-- DO NOT DELETE NEXT LINE!  (the global variable) filesettings IS READ BY C++ CODE!!!
+filesettings = load_env( RsrcFilename( "filesettings" ), { print=print, NameExtOf=NameExtOf, ExtOf=ExtOf, DeepCopy=DeepCopy, setmetatable=setmetatable } )
 print( "filesettings is a "..type(filesettings) )
 --########################################################################################################################################
 

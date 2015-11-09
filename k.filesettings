@@ -14,6 +14,13 @@ local function bfg(bg,fg) return bg*16 + fg end
 
 print "hello 2"
 
+print "getenv"
+
+local function proto( base, tb )
+   setmetatable( tb, { __index = base } )
+   return tb
+   end
+
 local Black    = 0
 local Blue     = 1
 local Green    = 2
@@ -70,14 +77,7 @@ local darkColors = {
 
 print "hello 5"
 
-
-local Color = {}
-      Color.mt = { __index = stdColors }
-
-local function colors( tbl, meta )
-   setmetatable( tbl, meta or Color.mt )
-   return tbl
-   end
+--------------------------------------------------
 
 local text_settings  = { colors = stdColors }
 local diff_settings  = { colors = stdColors, hilite = "diff" }
@@ -89,7 +89,7 @@ local lua_settings   = { colors = DeepCopy(darkColors), hilite = "lua" }
 
 local python_settings  = { colors = stdColors, hilite = "python" }
 local perl_settings  = { colors = darkColors, hilite = "python" }
-local make_settings  = { colors = darkColors, hilite = "make" }
+local make_settings  = { colors = proto( darkColors, { txt = bfg( Purple, hiYellow ), } ), hilite = "make" }
 local ushell_settings= { colors = darkColors, hilite = "bash" }
 
 ftype_map = {  -- ref'd from C, key source: arg "DetermineFType" tags
