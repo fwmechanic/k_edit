@@ -751,6 +751,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:diff]
 
 [ftype:clang]
+   wordchars:d
    delims: {[(
    wucminlen:1
    mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"

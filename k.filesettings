@@ -79,7 +79,7 @@ print "hello 5"
 
 --------------------------------------------------
 
-local text_settings  = { colors = stdColors }
+local text_settings  = { colors = darkColors }
 local diff_settings  = { colors = stdColors, hilite = "diff" }
 
 local bat_settings   = { colors = stdColors, eolCommentDelim = "rem " }
@@ -105,7 +105,7 @@ ftype_map = {  -- ref'd from C, key source: arg "DetermineFType" tags
    text         = text_settings                        ,
    sh           = ushell_settings                      ,
    bash         = ushell_settings                      ,
-   pseudo       = ushell_settings                      ,
+   pseudo       = text_settings                        ,
    unknown      = ushell_settings                      ,
    wildcard     = ushell_settings                      ,
    diff         = diff_settings                        ,

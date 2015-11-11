@@ -144,13 +144,13 @@ bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    if( 0==cmpi( "nonwhite", pS ) ) {
       memset( s_isWordChar_, true, sizeof s_isWordChar_ );
       s_isWordChar_[0]    = false;
-      s_isWordChar_[' ']  = false;
+      s_isWordChar_[unsigned(' ')]  = false;
       s_isWordChar_[unsigned(HTAB)] = false;
       bcpy( g_szWordChars, "nonwhite" );
       }
    else {
       memset( s_isWordChar_, 0, sizeof s_isWordChar_ );
-      for(          auto pC(dfltWordChars); *pC ; ++pC )  s_isWordChar_[ UI(*pC) ] = true;
+      for( auto ch : dfltWordChars ) { s_isWordChar_[ UI(ch) ] = true; }
       if( !pS.empty() ) for( auto pC(pS.cbegin()); pC != pS.cend() ; ++pC )  s_isWordChar_[ UI(*pC) ] = true;
       auto pWc( g_szWordChars );
       for( auto ix(1) ; ix < 256 ; ++ix )
