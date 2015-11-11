@@ -84,19 +84,20 @@ local diff_settings  = { colors = stdColors, hilite = "diff" }
 
 local bat_settings   = { colors = stdColors, eolCommentDelim = "rem " }
 local clang_settings = { colors = darkColors, hilite = "c"  }
+local expect_settings  = { colors = DeepCopy(darkColors), hilite = "python" }
 local lua_settings   = { colors = DeepCopy(darkColors), hilite = "lua" }
     -- lua_settings.colors.com = bfg( Blue, hiPink )
 
 local python_settings  = { colors = stdColors, hilite = "python" }
 local perl_settings  = { colors = darkColors, hilite = "python" }
-local make_settings  = { colors = proto( darkColors, { txt = bfg( Purple, hiYellow ), } ), hilite = "make" }
+local make_settings  = { colors = proto( darkColors, { txt = bfg( Black, White ), } ), hilite = "make" }
 local ushell_settings= { colors = darkColors, hilite = "bash" }
 
 ftype_map = {  -- ref'd from C, key source: arg "DetermineFType" tags
    clang        = clang_settings                       ,
    msbatch      = bat_settings                         ,
    lua          = lua_settings                         ,
-   expect       = python_settings                      ,
+   expect       = expect_settings                      ,
    perl         = python_settings                      ,
    python       = python_settings                      ,
    make         = make_settings                        ,
