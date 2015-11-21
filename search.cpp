@@ -392,6 +392,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
    if( 0 == GetLifetimeMatchCount() )
       LuaCtxt_Edit::LocnListInsertCursor(); // do this IFF a match was found
 
+   CapturePrevLineCountAllWindows( d_pOutputFile );
    {
    const auto rl( pFBuf->PeekRawLine( cur.lin ) );
    d_sb.assign( pFBuf->Namestr() );
@@ -399,7 +400,6 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
    d_sb.append( rl.data(), rl.length() );
    d_pOutputFile->PutLastLine( d_sb, d_stmp );
    }
-
    MoveCursorToEofAllWindows( d_pOutputFile );
 
    return true;  // action taken!

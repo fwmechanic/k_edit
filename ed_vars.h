@@ -534,8 +534,6 @@ extern bool  g_fErrPrompt        ;
 extern bool  g_fFastsearch       ;
 extern bool  g_fForcePlatformEol ;
 extern bool  g_fMsgflush         ;
-extern bool  g_fViewsActivelyTailOutput;
-
 extern bool  g_fRealtabs         ;
 extern bool  g_fShowFbufDetails  ;
 extern bool  g_fSoftCr           ;

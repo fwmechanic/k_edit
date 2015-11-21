@@ -938,6 +938,7 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       bcpy( lbufNew, pCmd->Name() );
       }
 
+   CapturePrevLineCountAllWindows( g_pFbufRecord );
    std::string stmp;
    if( st.length() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
       st += " \\";
@@ -948,8 +949,8 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       st += lbufNew;
       g_pFbufRecord->PutLine( lastLine  , st     , stmp );
       }
-
    MoveCursorToEofAllWindows( g_pFbufRecord );
+
    return 1;
    }
 

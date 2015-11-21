@@ -286,6 +286,19 @@ bool ARG::pmlines( int direction ) { PCWrV;
 bool ARG::plines() { return pmlines( +1 ); }
 bool ARG::mlines() { return pmlines( -1 ); }
 
+void View::CapturePrevLineCount() { d_prevLineCount = CFBuf()->LineCount(); }
+
+void CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
+   for( auto ix(0), max=g_iWindowCount() ; ix < max ; ++ix ) {
+      const auto pWin( g_Win(ix) );
+      if( (fIncludeCurWindow || pWin != g_CurWin()) && pWin->CurView()->FBuf() == pFBuf ) {
+         pWin->CurViewWr()->CapturePrevLineCount();
+         }
+      }
+   }
+
+// sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi
+
 bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
    enum { CURSOR_ON_LINE_AFTER_LAST = 1 }; // = 0 to have "tailing cursor" sit atop last line
    auto retVal( false );
@@ -293,16 +306,16 @@ bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
       const auto pWin( g_Win(ix) );
       if( (fIncludeCurWindow || pWin != g_CurWin()) && pWin->CurView()->FBuf() == pFBuf ) {
          const auto pView( pWin->CurViewWr() );
-         const auto yCursor( pFBuf->LastLine() + CURSOR_ON_LINE_AFTER_LAST );
-         const auto yOrigin( Max( yCursor - pWin->d_Size.lin + 1, 0 ) );
-         if(   0       != pView->Cursor().col
-            || 0       != pView->Origin().col
-            || yCursor != pView->Cursor().lin
-            || yOrigin != pView->Origin().lin
-           ) {
-            pView->ScrollOriginAndCursor( yOrigin, 0, yCursor, 0 );
-            0 && DBG( "CurTRUE %d", pFBuf->LastLine() );
-            retVal = true;
+         if( pView->Cursor().lin >= pView->PrevLineCount() ) { // "smart tailing": if the user has moved the cursor above the tail line, don't molest the cursor
+            const auto yCursor( pFBuf->LastLine() + CURSOR_ON_LINE_AFTER_LAST );
+            const auto yOrigin( Max( yCursor - pWin->d_Size.lin + 1, 0 ) );
+            if(   0 != pView->Cursor().col || yCursor != pView->Cursor().lin
+               || 0 != pView->Origin().col || yOrigin != pView->Origin().lin
+              ) {
+               pView->ScrollOriginAndCursor( yOrigin, 0, yCursor, 0 );
+               0 && DBG( "CurTRUE %d", pFBuf->LastLine() );
+               retVal = true;
+               }
             }
          }
       }

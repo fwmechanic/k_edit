@@ -414,7 +414,9 @@ extern  bool   PutEnvOk( PCChar szNameEqualsVal );
 
 extern  void   SetCwdChanged( PCChar newName );
 
-extern  bool   MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );
+// call around FBUF::PutLastLine() calls to effect (smart) cursor-tailing
+extern  void   CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );
+extern  bool   MoveCursorToEofAllWindows     ( PFBUF pFBuf, bool fIncludeCurWindow=false );
 
 extern  stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
 

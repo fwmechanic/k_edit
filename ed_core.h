@@ -794,6 +794,7 @@ public:
 private:
    ULC_Cursor   d_current;       // current window & cursor state
    ULC_Cursor   d_prev;          // window state before any cursor movements
+   LINE         d_prevLineCount; // used for tail-cursor-scrolling
 public:
    ULC_Cursor   d_saved;         // window state saved by ARG::savecur
 
@@ -806,6 +807,9 @@ public:
    void         ScrollToPrev();
 
    void         GetCursor( PPoint pPt ) const { *pPt = d_current.Cursor; }
+
+   void         CapturePrevLineCount();
+   LINE         PrevLineCount() const { return d_prevLineCount; }
 
 private:
    void         MoveCursor_( LINE yLine, COL xColumn, COL xWidth, bool fUpdtWUC );

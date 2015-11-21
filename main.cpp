@@ -35,7 +35,6 @@ GLOBAL_VAR bool  g_fWordwrap                   ;
 GLOBAL_VAR bool  g_fFuncRetVal                 ;
 GLOBAL_VAR bool  g_fMeta                       ;
 GLOBAL_VAR bool  g_fMsgflush                   ;
-GLOBAL_VAR bool  g_fViewsActivelyTailOutput = true;
 GLOBAL_VAR int   g_ClipboardType               ; // 0 == EMPTY
 GLOBAL_VAR int   g_iTabWidth          =       8;
 GLOBAL_VAR int   g_iHike              =      25;
