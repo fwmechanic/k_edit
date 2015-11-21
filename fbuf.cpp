@@ -1268,10 +1268,11 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "
 // use IsolateFilename() to convert from ADORNED name to UNadorned name
 //
 
-char Path::DelimChar( PCChar fnm ) {
-   if( !strchr( fnm, ' '  ) )  return 0;    // no delim needed
-   if( !strchr( fnm, '"'  ) )  return '"';  // "
-   if( !strchr( fnm, '\'' ) )  return '\''; // '
+char Path::DelimChar( PCChar fnm ) { // BUGBUG this needs to be (a) purpose-clarified, (b) made per OS (shell?)
+   const stref srfnm( fnm );
+   if( atEnd( srfnm, ToNextOrEnd( stref(" ,&;^*"), srfnm, 0 ) ) )  return 0;    // no delim needed
+   if( atEnd( srfnm, ToNextOrEnd( '"' , srfnm, 0 ) ) ) { return '"';  } // "
+   if( atEnd( srfnm, ToNextOrEnd( '\'', srfnm, 0 ) ) ) { return '\''; } // '
    return '|'; // last ditch: ugly, but NEVER a valid filename char(?)
    }
 
