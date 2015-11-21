@@ -67,13 +67,11 @@ enum { MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
 // condition with the index equivalent of the cend() iterator value:
 STIL sridx nposToEnd( const stref       &str, sridx from ) { return from == stref::npos ? str.length() : from; }
 STIL sridx nposToEnd( const std::string &str, sridx from ) { return from == stref::npos ? str.length() : from; }
+STIL bool atEnd( const stref       &str, sridx idx ) { return idx == str.length(); }
+STIL bool atEnd( const std::string &str, sridx idx ) { return idx == str.length(); }
 
 // INNER stringref index to OUTER stringref index
 STIL sridx isri2osri( const stref &osr, const stref &isr, sridx isri ) { return isri + (isr.data()-osr.data()); }
-
-
-STIL bool atEnd( const stref       &str, sridx idx ) { return idx == str.length(); }
-STIL bool atEnd( const std::string &str, sridx idx ) { return idx == str.length(); }
 
 static sridx find( stref this_, stref key, sridx start=0 ) {
    this_.remove_prefix( start );
@@ -107,7 +105,7 @@ typename cont_inst::size_type ToNextOrEnd( const char key, cont_inst src, typena
    return std::distance( src.cbegin(), src.cend() );
    }
 
-template < typename cont_inst, typename Pred >
+template < typename cont_inst >
 typename cont_inst::size_type ToNextOrEnd( stref key, cont_inst src, typename cont_inst::size_type start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
@@ -121,7 +119,7 @@ typename cont_inst::size_type ToNextOrEnd( stref key, cont_inst src, typename co
    return std::distance( src.cbegin(), src.cend() );
    }
 
-template < typename cont_inst, typename Pred >
+template < typename cont_inst >
 typename cont_inst::size_type ToNextNotOrEnd( stref key, cont_inst src, typename cont_inst::size_type start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
