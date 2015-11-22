@@ -1,0 +1,13 @@
+diff --git a/ed_core.h b/ed_core.h
+index 9d828f6..9e509b3 100644
+--- a/ed_core.h
++++ b/ed_core.h
+@@ -19,7 +19,7 @@
+ 
+ #pragma once
+ 
+-static_assert( CHAR_MAX > SCHAR_MAX, "char not unsigned" );
++// static_assert( CHAR_MAX > SCHAR_MAX, "char not unsigned" );
+ 
+ //
+ // MACRO_BACKSLASH_ESCAPES - Affects escape char defn and behavior in macro
