@@ -297,7 +297,7 @@ void CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
       }
    }
 
-// sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi&sleep 2&echo hi
+// sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi&&sleep 2&&echo hi
 
 bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
    enum { CURSOR_ON_LINE_AFTER_LAST = 1 }; // = 0 to have "tailing cursor" sit atop last line
