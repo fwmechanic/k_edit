@@ -29,7 +29,7 @@ class CapturedStrings {
 
    protected:
 
-   std::vector<std::string> d_Capture;
+   std::vector<stref> d_Capture;
 
    public:
 
@@ -45,7 +45,7 @@ class CapturedStrings {
       d_Capture.emplace_back( src, srcLen );
       }
 
-   const std::vector<std::string> &get() const { return d_Capture; }
+   const std::vector<stref> &get() const { return d_Capture; }
    };
 
 //******************************************************************************

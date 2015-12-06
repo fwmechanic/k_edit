@@ -109,6 +109,11 @@ int Strlen( register PCChar pc ) { // this MAY be faster than RTL version (which
    return pc - start;
    }
 
+//----- no-longer-used begin
+
+extern int  stricmp_eos( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 );
+extern int  strcmp_eos ( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 );
+
 #define strcmp_eos_def( fxnm, CMPFX )                        \
 int fxnm( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 ) { \
    const auto l1( eos1-s1 );                                 \
@@ -122,6 +127,8 @@ strcmp_eos_def( stricmp_eos, Strnicmp )
 strcmp_eos_def( strcmp_eos , memcmp   )
 
 #undef strcmp_eos_def
+
+//----- no-longer-used end
 
 int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2 )              { return Strnicmp( s1, s2,      Strlen( s1 )            ); }
 int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars ) { return Strnicmp( s1, s2, Min( Strlen( s1 ), s2chars ) ); }

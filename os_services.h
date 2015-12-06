@@ -125,7 +125,6 @@ public:
    NO_ASGN_OPR(FileAttribs);
    };
 
-
 //----------------------------------------------------------------
 // higher-level (one-shot) ops
 
@@ -276,6 +275,12 @@ void STIL SetUserChoseEarlyCmdTerminate() { SetUserInterrupt_( USER_CHOSE_EARLY_
 
 extern PCChar OsVerStr();
 
+//--------------------------------------------------------------------------------
+
+extern PChar GetenvStrdup( PCChar src, size_t len );
+STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, eos - src ); }
+
+//--------------------------------------------------------------------------------
 
 enum WildCardMatchMode { ONLY_FILES=1, ONLY_DIRS=2, FILES_AND_DIRS=ONLY_FILES | ONLY_DIRS };
 

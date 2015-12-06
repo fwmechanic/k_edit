@@ -185,8 +185,6 @@ NO_MATCH:
 //#######################################################################################
 
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
-extern int  stricmp_eos( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 );
-extern int  strcmp_eos ( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 );
 
 extern int  strnicmp_LenOfFirstStr( PCChar s1, PCChar s2 );
 extern int  strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
@@ -195,8 +193,8 @@ extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
 extern bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars );
 
 extern   int    StrToInt_variable_base( stref pszParam, int numberBase );
-extern   stref  StrSpnSignedInt( stref src );
-extern   bool  StrSpnSignedInt( PCChar pszString );
+// extern   stref  StrSpnSignedInt( stref src );
+extern   bool   StrSpnSignedInt( PCChar pszString );
 extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
 extern   char  FlipCase( char ch );
@@ -204,17 +202,14 @@ extern PChar   xlatCh( PChar pStr, int fromCh, int toCh );
 extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
 
-       STIL  bool   isBlank(    char ch ) { return ch == HTAB || ch == ' '; }
-       STIL  bool   notBlank(   char ch ) { return !isBlank( ch ); }
-      extern bool   isWordChar( char ch );
-       STIL  bool   notWordChar( char ch ) { return !isWordChar( ch ); }
-       STIL  bool   isDecDigit( char ch ) { return ch >= '0'  && ch <= '9'; }
+// char predicates
+STIL   bool   isBlank(     char ch ) { return ch == HTAB || ch == ' '; }
+STIL   bool   notBlank(    char ch ) { return !isBlank( ch ); }
+extern bool   isWordChar(  char ch );
+STIL   bool   notWordChar( char ch ) { return !isWordChar( ch ); }
+STIL   bool   isDecDigit(  char ch ) { return ch >= '0'  && ch <= '9'; }
 
-       STIL  bool   StrContainsTabs( PCChar data, int dataBytes )  { return ToBOOL(memchr( data, HTAB, dataBytes  )); }
-       STIL  bool   StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
-
-// TF_Ptr STIL  Ptr    StrNxtTab      ( Ptr data, Ptr eos )  { const auto pm( const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data )))); return (pm ? pm : eos); }
-TF_Ptr STIL  Ptr    StrNxtTabOrNull( Ptr data, Ptr eos )  {         return const_cast<Ptr>(static_cast<PChar>(memchr( data, HTAB, eos - data ))) ; }
+STIL   bool   StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
 extern char  toLower( char ch );
 
@@ -298,11 +293,6 @@ extern int Strlen( PCChar pS );
 #endif
 //--------------------------------------------------------------------------------
 
-extern PChar GetenvStrdup( PCChar src, size_t len );
-STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, eos - src ); }
-
-//--------------------------------------------------------------------------------
-
 extern size_t scpy( PChar dest, size_t sizeof_dest, stref src );
 extern size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
 
@@ -355,14 +345,8 @@ extern size_t Strncspn ( PCChar str1, PCChar eos1, PCChar needle );
 TF_Ptr STIL Ptr  StrToNextOrEos( Ptr pszToSearch, PCChar pszToSearchFor ) { return pszToSearch + Strncspn( pszToSearch, nullptr, pszToSearchFor ); }
 TF_Ptr STIL Ptr  StrPastAny(     Ptr pszToSearch, PCChar pszToSearchFor ) { return pszToSearch + Strnspn ( pszToSearch, nullptr, pszToSearchFor ); }
 
-TF_Ptr STIL Ptr  StrToNextOrEos( Ptr ps, Ptr eos, PCChar pszToSearchFor ) { return ps + Strncspn( ps, eos, pszToSearchFor ); }
-TF_Ptr STIL Ptr  StrPastAny(     Ptr ps, Ptr eos, PCChar pszToSearchFor ) { return ps + Strnspn ( ps, eos, pszToSearchFor ); }
-
 TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr pszToSearch ) { return StrPastAny(     pszToSearch, szSpcTab ); }
 TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, szSpcTab ); }
-
-TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr ps, Ptr eos ) { return StrPastAny(     ps, eos, szSpcTab ); }
-TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr ps, Ptr eos ) { return StrToNextOrEos( ps, eos, szSpcTab ); }
 
 // these are extern vs. inline because the requisite predicates are not public
 extern sridx FirstNonBlankOrEnd( stref src, sridx start=0 );
@@ -402,10 +386,6 @@ static sridx FirstAlphaOrEnd( stref src, sridx start=0 ) {
    }
 
 static sridx FirstDigitOrEnd( stref src, sridx start=0 ) {
-   return ToNextOrEnd( isdigit, src, start );
-   }
-
-static sridx FirstMatchOrEnd( stref src, stref key, sridx start=0 ) {
    return ToNextOrEnd( isdigit, src, start );
    }
 
@@ -487,7 +467,7 @@ private:
 //
 // Useful in cases where the inability to store a string (due to "out of space"
 // in the fixed-sized buffer) is not catastrophic, but general case of storing a
-// sequece of strings w/ NO heap interaction is appreciated.
+// sequence of strings w/ NO heap interaction is appreciated.
 //
 // sample that adds strings to the sequence
 //
