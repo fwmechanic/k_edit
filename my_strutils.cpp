@@ -62,7 +62,7 @@ PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) {
    return dest;
    }
 
-size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
+stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( 0==destLen && sizeof_dest > 0 && dest[0] ) { destLen = Strlen( dest ); }
    auto truncd( 0 );
    auto srcLen( src.length() );
@@ -81,10 +81,10 @@ size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( truncd )
        StrTruncd_( __func__, truncd, src.data(), dest );
 
-   return rv;
+   return stref( dest, rv );
    }
 
-size_t scpy( PChar dest, size_t sizeof_dest, stref src ) {
+stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
    auto truncd( 0 );
    auto srcLen( src.length() );
    if( srcLen >= sizeof_dest ) {
@@ -98,7 +98,7 @@ size_t scpy( PChar dest, size_t sizeof_dest, stref src ) {
    if( truncd )
        StrTruncd_( __func__, truncd, src.data(), dest );
 
-   return srcLen;
+   return stref( dest, srcLen );
    }
 
 int Strlen( register PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...

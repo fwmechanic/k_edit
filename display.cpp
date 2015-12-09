@@ -504,6 +504,7 @@ private:
    StringsBuf<BUFBYTES> d_sb;
 
    void   Reset()                                  {        d_sb.Reset(); d_wucLen = 0; }
+   PCChar AddKey( stref sr )                       { return d_sb.AddString( sr ); }
    PCChar AddKey( PCChar key, PCChar eos=nullptr ) { return d_sb.AddString( key, eos ); }
    PCChar Strings()                                { return d_sb.Strings()            ; }
 
@@ -531,7 +532,7 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
       }
 
    Reset(); // aaa aaa aaa aaa
-   CPCChar wuc( AddKey( src.data(), src.data() + src.length() ) );                                              DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
+   CPCChar wuc( AddKey( src ) );                                                                                DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
    if( !wuc ) {                                                                                                 DBG_HL_EVENT && DBG( "%s toolong", __func__);
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%s",wuc );
@@ -553,7 +554,7 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
             }
          else {
             if( (d_wucLen > 1) && (d_wucLen < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
-               bcat( bcat( bcpy( scratch, vnr_pfx ), scratch, wuc ), scratch, vnr_sfx );
+               bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx );
                PCChar key( AddKey( scratch ) );                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }

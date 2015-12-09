@@ -293,8 +293,8 @@ extern int Strlen( PCChar pS );
 #endif
 //--------------------------------------------------------------------------------
 
-extern size_t scpy( PChar dest, size_t sizeof_dest, stref src );
-extern size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
+extern stref scpy( PChar dest, size_t sizeof_dest, stref src );
+extern stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
 
 #define    bcpy( d, s )     scpy( BSOB(d), s )
 #define    bcat( l, d, s )  scat( BSOB(d), s, (l) )
@@ -521,6 +521,17 @@ public:
       if( len > ((d_buf + sizeof(d_buf) - 1) - d_nxtS) - 2 ) return nullptr;
       auto rv( d_nxtS );
       memcpy( d_nxtS, key, len );
+       d_nxtS += len;
+      *d_nxtS++ = '\0';
+      *d_nxtS   = '\0';
+      return rv;
+      }
+
+   PCChar AddString( stref sr ) {
+      const auto len( sr.length() );
+      if( len > ((d_buf + sizeof(d_buf) - 1) - d_nxtS) - 2 ) return nullptr;
+      auto rv( d_nxtS );
+      memcpy( d_nxtS, sr.data(), len );
        d_nxtS += len;
       *d_nxtS++ = '\0';
       *d_nxtS   = '\0';
