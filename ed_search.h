@@ -23,33 +23,6 @@
 #error  USE_PCRE not defined
 #endif
 
-class CapturedStrings {
-   NO_ASGN_OPR(CapturedStrings);
-   NO_COPYCTOR(CapturedStrings);
-
-   protected:
-
-   std::vector<stref> d_Capture;
-
-   public:
-
-    CapturedStrings() {}
-   ~CapturedStrings() {}
-
-   // on the accessor side, we do not differentiate between an empty capture and
-   // a nonexistent capture (both have Len()==0, and Str()=="")
-
-   void clear() { d_Capture.clear(); }
-
-   void Set( int ix, PCChar src, size_t srcLen ) {
-      d_Capture.emplace_back( src, srcLen );
-      }
-
-   const std::vector<stref> &get() const { return d_Capture; }
-   };
-
-//******************************************************************************
-
 enum HaystackHas { STR_HAS_BOL_AND_EOL, STR_MISSING_BOL, STR_MISSING_EOL }; // so we can tell PCRE whether the searched string can match ^ or $
 
 #if USE_PCRE
@@ -87,7 +60,7 @@ class Regex {
 
    int MaxPossCaptures() const { return d_maxPossCaptures; }
 
-   PCChar Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, CapturedStrings *pcs );
+   PCChar Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, std::vector<stref> &captures );
    };
 
 //******************************************************************************
