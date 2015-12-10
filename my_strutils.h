@@ -186,9 +186,9 @@ NO_MATCH:
 
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
 
-extern int  strnicmp_LenOfFirstStr( PCChar s1, PCChar s2 );
+extern int  strnicmp_LenOfFirstStr( stref s1, stref s2 );
 extern int  strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
-extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2 );
+extern int  strncmp_LenOfFirstStr( stref s1, stref s2 );
 extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
 extern bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars );
 
@@ -293,8 +293,8 @@ extern int Strlen( PCChar pS );
 #endif
 //--------------------------------------------------------------------------------
 
-extern size_t scpy( PChar dest, size_t sizeof_dest, stref src );
-extern size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
+extern stref scpy( PChar dest, size_t sizeof_dest, stref src );
+extern stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
 
 #define    bcpy( d, s )     scpy( BSOB(d), s )
 #define    bcat( l, d, s )  scat( BSOB(d), s, (l) )
@@ -331,8 +331,8 @@ extern  PChar _strlwr( PChar buf );
 
 #endif
 
-extern int   consec_xdigits( PCChar pSt, PCChar eos=nullptr );
-extern int   consec_bdigits( PCChar pSt, PCChar eos=nullptr );
+extern int   consec_xdigits( stref sr );
+extern int   consec_bdigits( stref sr );
 
 STIL int Strnicmp( PCChar string1, PCChar string2, size_t count ) { return WL( _strnicmp, strncasecmp )( string1, string2, count ); }
 STIL int Stricmp ( PCChar string1, PCChar string2 )               { return WL( _strcmpi , strcasecmp  )( string1, string2 ); }
@@ -504,23 +504,32 @@ class StringsBuf {
 
 public:
    StringsBuf() {
-      Reset();
+      clear();
       }
 
-   PCChar Strings() { return d_buf; }
+   PCChar data() const { return d_buf; }
 
-   void Reset() {
+   bool find( stref st ) const {
+      for( auto pNeedle( d_buf ) ; *pNeedle ;  ) {
+         const stref needle( pNeedle );
+         if( needle == st ) { return true; }
+         pNeedle += needle.length() + 1;
+         }
+      return false;
+      }
+
+   bool empty() const { return d_buf[0] == '\0'; }
+   void clear() {
       d_buf[0] = '\0';
       d_buf[1] = '\0';  // not ABSOLUTELY necessary, but cheap insurance...
       d_nxtS = d_buf;
       }
 
-   PCChar AddString( PCChar key, PCChar eos=nullptr ) {
-      if( !eos ) eos = Eos( key );
-      const auto len( eos-key );
+   PCChar AddString( stref sr ) {
+      const auto len( sr.length() );
       if( len > ((d_buf + sizeof(d_buf) - 1) - d_nxtS) - 2 ) return nullptr;
       auto rv( d_nxtS );
-      memcpy( d_nxtS, key, len );
+      memcpy( d_nxtS, sr.data(), len );
        d_nxtS += len;
       *d_nxtS++ = '\0';
       *d_nxtS   = '\0';

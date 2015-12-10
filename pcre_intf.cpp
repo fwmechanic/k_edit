@@ -60,7 +60,7 @@ Regex::~Regex() {
    (*pcre_free)( d_pPcreExtra );
    }
 
-PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, CapturedStrings *pcs ) {
+PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, std::vector<stref> &captures ) {
    0 && DBG( "Regex::Match called!" );
    *matchChars = 0;
    if( validBufChars < 0 )
@@ -95,30 +95,28 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
 
    0 && DBG( "Regex::Match returned %d", rc );
 
-   if( pcs ) {
-      pcs->clear();
+   captures.clear();
 
-      // if PCRE returns 0, it says there were more captures than we gave him space for (MAX_CAPTURES)
-      // in that case PCRE has filled in all it can (MAX_CAPTURES), so we use a count of MAX_CAPTURES.
+   // if PCRE returns 0, it says there were more captures than we gave him space for (MAX_CAPTURES)
+   // in that case PCRE has filled in all it can (MAX_CAPTURES), so we use a count of MAX_CAPTURES.
+   //
+   const auto actualCount( (rc == 0) ? MAX_CAPTURES : rc );
+
+   0 && DBG( "Regex::Match count=%d", actualCount );
+
+   for( auto ix(0); ix < actualCount; ++ix ) {
+      // It is possible for an capturing subpattern number n+1 to match some
+      // part of the subject when subpattern n has not been used at all.  For
+      // example, if the string "abc" is matched against the pattern
+      // (a|(z))(bc) subpatterns 1 and 3 are matched, but 2 is not.  When
+      // this happens, both offset values corresponding to the unused
+      // subpattern are set to -1.
       //
-      const auto actualCount( (rc == 0) ? MAX_CAPTURES : rc );
-
-      0 && DBG( "Regex::Match count=%d", actualCount );
-
-      for( auto ix(0); ix < actualCount; ++ix ) {
-         // It is possible for an capturing subpattern number n+1 to match some
-         // part of the subject when subpattern n has not been used at all.  For
-         // example, if the string "abc" is matched against the pattern
-         // (a|(z))(bc) subpatterns 1 and 3 are matched, but 2 is not.  When
-         // this happens, both offset values corresponding to the unused
-         // subpattern are set to -1.
-         //
-         if( d_capture[ix].NoMatch() || d_capture[ix].Len() < 0 ) {
-            // clear() already cleared this entry
-            }
-         else {
-            pcs->Set( ix, pBuf + d_capture[ix].oFirst, d_capture[ix].Len() );
-            }
+      if( d_capture[ix].NoMatch() || d_capture[ix].Len() < 0 ) {
+         // captures.clear() already cleared this entry
+         }
+      else {
+         captures.emplace_back( pBuf + d_capture[ix].oFirst, d_capture[ix].Len() );
          }
       }
 
@@ -148,14 +146,15 @@ Regex *RegexCompile( PCChar pszSearchStr, bool fCase ) {
       return nullptr;
       }
 
-   auto xtra( pcre_study( re, 0, &errMsg ) );
+   auto xtra( pcre_study( re, PCRE_STUDY_JIT_COMPILE, &errMsg ) );
    if( errMsg ) {
+      (*pcre_free)( re );
       Msg( "Regex study failed: %s", errMsg );
       return nullptr;
       }
 
    int maxPossCaptures;
-   pcre_fullinfo( re, xtra, 2, &maxPossCaptures );
+   pcre_fullinfo( re, xtra, PCRE_INFO_CAPTURECOUNT, &maxPossCaptures );
    ++maxPossCaptures; // the 0th capture is the WHOLE match
    0 && DBG( "captures: %d", maxPossCaptures );
 

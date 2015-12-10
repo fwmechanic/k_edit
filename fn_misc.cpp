@@ -160,7 +160,7 @@ class FcLogTm {
       v[ e_usec ] = 0;
       }
 
-   FcLogTm( const CapturedStrings * const pc );
+   FcLogTm( std::vector<stref> &pc );
    FcLogTm( const FcLogTm &from );
 
    void  decr( const FcLogTm& decr_by );
@@ -293,29 +293,29 @@ FcLogTm::FcLogTm( const FcLogTm &from ) { // copy ctor
    }
 
 
-FcLogTm::FcLogTm( const CapturedStrings *pc ) { DBG( "Count=%d", pc->Count() );
+FcLogTm::FcLogTm( std::vector<stref> &pc ) { DBG( "Count=%d", pc->Count() );
    for( auto ix(0) ; ix < pc->Count() ; ++ix )
       DBG( "%d: '%s'", ix, pc->Str(ix) );
 
    Assert( pc->Count() == 8 ); // remember: 0th capture is the implicit "whole match"!
 #if THE_EASY_WAY
    struct tm stm;
-   stm.tm_year( atoi( pc->Str(1) ) -1900 );
-   stm.tm_mon ( atoi( pc->Str(2) ) -1    );
-   stm.tm_mday( atoi( pc->Str(3) ) -1    );
-   stm.tm_hour( atoi( pc->Str(4) )       );
-   stm.tm_min ( atoi( pc->Str(5) )       );
-   stm.tm_sec ( atoi( pc->Str(6) )       );
+   stm.tm_year( atoi( pc[1] ) -1900 );
+   stm.tm_mon ( atoi( pc[2] ) -1    );
+   stm.tm_mday( atoi( pc[3] ) -1    );
+   stm.tm_hour( atoi( pc[4] )       );
+   stm.tm_min ( atoi( pc[5] )       );
+   stm.tm_sec ( atoi( pc[6] )       );
    d_tt = mktime( &stm );
 #else
-   YYYY( atoi( pc->Str(1) ) ); 0 && DBG( "YYYY:%s", pc->Str(1) );
-   MM  ( atoi( pc->Str(2) ) ); 0 && DBG( "MM  :%s", pc->Str(2) );
-   DD  ( atoi( pc->Str(3) ) ); 0 && DBG( "DD  :%s", pc->Str(3) );
-   hh  ( atoi( pc->Str(4) ) ); 0 && DBG( "hh  :%s", pc->Str(4) );
-   mm  ( atoi( pc->Str(5) ) ); 0 && DBG( "mm  :%s", pc->Str(5) );
-   ss  ( atoi( pc->Str(6) ) ); 0 && DBG( "ss  :%s", pc->Str(6) );
+   YYYY( atoi( pc[1] ) ); 0 && DBG( "YYYY:%s", pc[1] );
+   MM  ( atoi( pc[2] ) ); 0 && DBG( "MM  :%s", pc[2] );
+   DD  ( atoi( pc[3] ) ); 0 && DBG( "DD  :%s", pc[3] );
+   hh  ( atoi( pc[4] ) ); 0 && DBG( "hh  :%s", pc[4] );
+   mm  ( atoi( pc[5] ) ); 0 && DBG( "mm  :%s", pc[5] );
+   ss  ( atoi( pc[6] ) ); 0 && DBG( "ss  :%s", pc[6] );
 #endif
-   usec( atoi( pc->Str(7) ) ); 0 && DBG( "usec:%s", pc->Str(7) );
+   usec( atoi( pc[7] ) ); 0 && DBG( "usec:%s", pc[7] );
    // linebuf lb; DBG( "%s", ToStr( BSOB(lb) ) );
    }
 
@@ -337,7 +337,7 @@ class FcLogTmMatchHandler : public FileSearchMatchHandler {
 
    protected:
 
-   bool VMatchActionTaken(        PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures );
+   bool VMatchActionTaken(        PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures );
    bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ); // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
    };
 
@@ -345,7 +345,7 @@ bool FcLogTmMatchHandler::VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL
    return d_arg.Within( cur, MatchCols );
    }
 
-bool FcLogTmMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) {
+bool FcLogTmMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures ) {
    FcLogTm val( pCaptures );
 
    if( d_arg.d_cArg == 1 && !d_foundBaseline ) {

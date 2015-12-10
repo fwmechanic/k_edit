@@ -225,7 +225,7 @@ class FileSearchMatchHandler {
                 d_curFileStats.Reset();
                 }
 
-           bool FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures );
+           bool FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures );
            bool VCanForgetCurFile() {
                 0 && DBG( "%5d all %5d:%5d cur %5d:%5d"
                         , d_lifetimeFileCount
@@ -251,7 +251,7 @@ class FileSearchMatchHandler {
       // called by FoundMatchContinueSearching
       //
       virtual bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ) { return true; }; // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
-      virtual bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ); // cur MAY BE MODIFIED!!!
+      virtual bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures ); // cur MAY BE MODIFIED!!!
       virtual bool VContinueSearching() { return true; }
 
       // called by ShowResults
@@ -267,7 +267,7 @@ class FileSearchMatchHandler {
    int GetLifetimeFileCountMatchAction()  const { return d_lifetimeFileCountMatchAction   ; }
    };
 
-bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) {
+bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures ) {
    if( VMatchWithinColumnBounds( pFBuf, cur, MatchCols ) ) { // it IS a MATCH?
       if( d_fScrollToFirstMatch && !d_flToScroll.IsSet() )
          d_flToScroll.Set( pFBuf, cur, MatchCols );
@@ -283,7 +283,7 @@ bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, Point &cu
    return VContinueSearching();
    }
 
-bool FileSearchMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) {
+bool FileSearchMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures ) {
    PCV;
    if( pcv->FBuf() == pFBuf ) {
       pcv->SetMatchHiLite( cur, MatchCols, g_fCase );
@@ -373,7 +373,7 @@ class MFGrepMatchHandler : public FileSearchMatchHandler {
 
    protected:
 
-   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) override;
+   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures ) override;
    void VShowResultsNoMacs() override;
 
    public:
@@ -388,7 +388,7 @@ class MFGrepMatchHandler : public FileSearchMatchHandler {
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
 
-bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) {
+bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures ) {
    if( 0 == GetLifetimeMatchCount() )
       LuaCtxt_Edit::LocnListInsertCursor(); // do this IFF a match was found
 
@@ -487,12 +487,12 @@ class FileSearcher {
    Point                  d_end;
    PFBUF                  d_pFBuf;
 
-   CapturedStrings       *d_pCaptures;
+   std::vector<stref>     d_pCaptures;
 
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
    virtual void  VPrepLine_( std::string &lbuf ) const {};
-   virtual sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const = 0; // rv=0 if no match found or PCChar within pBuf of match
+   virtual sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) = 0; // rv=0 if no match found or PCChar within pBuf of match
 
    public:
 
@@ -576,7 +576,6 @@ void FileSearcher::SetInputFile( PFBUF pFBuf ) {
 FileSearcher::~FileSearcher() {
    if( d_pFBuf )
       d_mh.VLeavingFile( d_pFBuf );
-   Delete0( d_pCaptures );
    }
 
 
@@ -615,7 +614,7 @@ class  FileSearcherString : public FileSearcher {
    ~FileSearcherString() {}
 
    void  VPrepLine_( std::string &lbuf ) const override;
-   sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
+   sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) override;
    };
 
 class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
@@ -633,7 +632,7 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
    virtual ~FileSearcherFast() {}
    void   VFindMatches_() override;
    void   VPrepLine_( std::string &lbuf ) const override;
-   sridx  VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
+   sridx  VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) override;
    };
 
 #if USE_PCRE
@@ -645,7 +644,7 @@ class  FileSearcherRegex : public FileSearcher {
    public:
 
    FileSearcherRegex( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const override;
+   sridx VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) override;
    };
 
 #endif
@@ -1647,7 +1646,6 @@ FileSearcher::FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss,
    , d_ss   ( ss )
    , d_mh   ( mh )
    , d_pFBuf( nullptr  )
-   , d_pCaptures( new CapturedStrings() )
    {
    }
 
@@ -1678,7 +1676,7 @@ void FileSearcherString::VPrepLine_( std::string &lbuf ) const {
       string_tolower( lbuf );
    }
 
-sridx FileSearcherString::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const {
+sridx FileSearcherString::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) {
    const auto rv( searchFindString( src.data()+startingBufOffset, src.length()-startingBufOffset, d_searchKey.data(), d_searchKey.length() ) );
    *pMatchChars = rv ? d_searchKey.length() : 0;
    return rv ? rv - src.data() : stref::npos;
@@ -1692,8 +1690,6 @@ FileSearcherRegex::FileSearcherRegex( const SearchScanMode &sm, const SearchSpec
    : FileSearcher( sm, ss, mh )
    {
    Assert( d_ss.IsRegex() );
-   if( !d_ss.HasError() )
-      d_pCaptures = new CapturedStrings();
    }
 
 #endif
@@ -1709,7 +1705,7 @@ STATIC_FXN PCChar ShowHaystackHas( HaystackHas has ) {
 
 #if USE_PCRE
 
-sridx FileSearcherRegex::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const
+sridx FileSearcherRegex::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent )
    {
    VS_(
                DBG( "++++++" );
@@ -1839,7 +1835,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
                   {
                   const auto colMatchStart( ColOfFreeIdx ( tw, rl, ixMatch ) );
                   Point matchPt( curPt.lin, colMatchStart );
-                  if( !d_mh.FoundMatchContinueSearching( d_pFBuf, matchPt, d_searchKey.length(), nullptr ) )
+                  if( !d_mh.FoundMatchContinueSearching( d_pFBuf, matchPt, d_searchKey.length(), d_pCaptures ) )
                      return;
                   }
                   curPt.col = ixMatch + d_searchKey.length();
@@ -1856,7 +1852,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
 void   FileSearcherFast::VPrepLine_( std::string &lbuf ) const { Assert( 0 != 0 ); }
-sridx  FileSearcherFast::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) const { Assert( 0 != 0 ); return stref::npos; }
+sridx  FileSearcherFast::VFindStr_( sridx startingBufOffset, stref src, COL *pMatchChars, HaystackHas lineContent ) { Assert( 0 != 0 ); return stref::npos; }
 
 //===============================================
 
@@ -2324,12 +2320,12 @@ class CGrepperMatchHandler : public FileSearchMatchHandler {
 
    CGrepperMatchHandler( CGrepper &cg ) : d_cg( cg ) {}
 
-   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) override;
+   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures ) override;
 
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
 
-bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, const CapturedStrings *pCaptures ) {
+bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, std::vector<stref> &pCaptures ) {
    d_cg.LineMatches( cur.lin );
    return true;  // "action" taken!
    }

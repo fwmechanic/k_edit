@@ -437,7 +437,7 @@ STATIC_FXN void l_handle_pcall_error( lua_State *L, bool fCompileErr=false ) { /
 
    // For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use RegexCompile + Regex::Match
 
-   CapturedStrings cs( 4 );
+   std::vector<stref> cs( 4 );
    {
    auto pre( RegexCompile( "^(.*):(\\d+): (.*)$", true ) );
    if( !pre ) {

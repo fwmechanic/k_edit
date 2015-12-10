@@ -62,7 +62,7 @@ PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) {
    return dest;
    }
 
-size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
+stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( 0==destLen && sizeof_dest > 0 && dest[0] ) { destLen = Strlen( dest ); }
    auto truncd( 0 );
    auto srcLen( src.length() );
@@ -81,10 +81,10 @@ size_t scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( truncd )
        StrTruncd_( __func__, truncd, src.data(), dest );
 
-   return rv;
+   return stref( dest, rv );
    }
 
-size_t scpy( PChar dest, size_t sizeof_dest, stref src ) {
+stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
    auto truncd( 0 );
    auto srcLen( src.length() );
    if( srcLen >= sizeof_dest ) {
@@ -98,7 +98,7 @@ size_t scpy( PChar dest, size_t sizeof_dest, stref src ) {
    if( truncd )
        StrTruncd_( __func__, truncd, src.data(), dest );
 
-   return srcLen;
+   return stref( dest, srcLen );
    }
 
 int Strlen( register PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...
@@ -130,9 +130,9 @@ strcmp_eos_def( strcmp_eos , memcmp   )
 
 //----- no-longer-used end
 
-int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2 )              { return Strnicmp( s1, s2,      Strlen( s1 )            ); }
+int strnicmp_LenOfFirstStr( stref s1, stref s2 )                { return Strnicmp( s1.data(), s2.data(), s1.length()    ); }
 int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars ) { return Strnicmp( s1, s2, Min( Strlen( s1 ), s2chars ) ); }
-int strncmp_LenOfFirstStr ( PCChar s1, PCChar s2 )              { return strncmp ( s1, s2,      Strlen( s1 )            ); }
+int strncmp_LenOfFirstStr ( stref s1, stref s2 )                { return strncmp ( s1.data(), s2.data(), s1.length()    ); }
 int strncmp_LenOfFirstStr ( PCChar s1, PCChar s2, int s2chars ) { return strncmp ( s1, s2, Min( Strlen( s1 ), s2chars ) ); }
 
 bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars ) {
@@ -273,21 +273,21 @@ bool StrSpnSignedInt( PCChar pszString ) {
 
 typedef bool (*isfxn)(char);
 
-STATIC_FXN int consec_is_its( isfxn ifx, PCChar pSt, PCChar eos ) {
-   if( !eos ) eos = Eos( pSt );
-   auto pS( pSt );
-   for( ; pS != eos ; ++pS ) {
-      if( !ifx( *pS ) )
+STATIC_FXN int consec_is_its( isfxn ifx, stref sr ) {
+   auto rv( 0 );
+   for( auto ch : sr ) {
+      if( !ifx( ch ) )
          break;
+      ++rv;
       }
-   return pS - pSt;
+   return rv;
    }
 
 STATIC_FXN bool isxdigit_( char ch ) { return isxdigit( ch ); }
 STATIC_FXN bool isbdigit_( char ch ) { return ch == '0' || ch == '1'; }
 
-int consec_xdigits( PCChar pSt, PCChar eos ) { return consec_is_its( isxdigit_, pSt, eos ); }
-int consec_bdigits( PCChar pSt, PCChar eos ) { return consec_is_its( isbdigit_, pSt, eos ); }
+int consec_xdigits( stref sr ) { return consec_is_its( isxdigit_, sr ); }
+int consec_bdigits( stref sr ) { return consec_is_its( isbdigit_, sr ); }
 
 // from http://www.stereopsis.com/strcmp4humans.html
 STIL int parsedecnum( PCChar & pch ) {
