@@ -504,27 +504,25 @@ class StringsBuf {
 
 public:
    StringsBuf() {
-      Reset();
+      clear();
       }
 
-   PCChar Strings() { return d_buf; }
+   PCChar data() const { return d_buf; }
 
-   void Reset() {
+   bool find( stref st ) const {
+      for( auto pNeedle( d_buf ) ; *pNeedle ;  ) {
+         const stref needle( pNeedle );
+         if( needle == st ) { return true; }
+         pNeedle += needle.length() + 1;
+         }
+      return false;
+      }
+
+   bool empty() const { return d_buf[0] == '\0'; }
+   void clear() {
       d_buf[0] = '\0';
       d_buf[1] = '\0';  // not ABSOLUTELY necessary, but cheap insurance...
       d_nxtS = d_buf;
-      }
-
-   PCChar AddString( PCChar key, PCChar eos=nullptr ) {
-      if( !eos ) eos = Eos( key );
-      const auto len( eos-key );
-      if( len > ((d_buf + sizeof(d_buf) - 1) - d_nxtS) - 2 ) return nullptr;
-      auto rv( d_nxtS );
-      memcpy( d_nxtS, key, len );
-       d_nxtS += len;
-      *d_nxtS++ = '\0';
-      *d_nxtS   = '\0';
-      return rv;
       }
 
    PCChar AddString( stref sr ) {

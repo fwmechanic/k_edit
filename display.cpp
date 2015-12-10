@@ -494,7 +494,7 @@ public:
    HiliteAddin_WordUnderCursor( PView pView )
       : HiliteAddin( pView )
       {
-      Reset();
+      clear();
       }
 
    ~HiliteAddin_WordUnderCursor() {}
@@ -503,9 +503,8 @@ public:
 private:
    StringsBuf<BUFBYTES> d_sb;
 
-   void   Reset()               {        d_sb.Reset(); d_wucLen = 0; }
+   void   clear()               {        d_sb.clear(); d_wucLen = 0; }
    PCChar AddKey( stref sr )    { return d_sb.AddString( sr )      ; }
-   PCChar Strings()             { return d_sb.Strings()            ; }
 
    void   SetNewWuc( stref src, LINE lin, COL col );
 
@@ -521,8 +520,8 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
    d_stSel.clear();
    if(   d_yWuc == lin
       && d_wucLen == src.length()
-      && 0 == memcmp( Strings(), src.data(), d_wucLen )
-     ) {                                                                                                        DBG_HL_EVENT && DBG("unch->%s", Strings() );
+      && d_sb.find( src )    // assume transitivity
+     ) {                                                                                                        DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
       if( d_xWuc != col ) {
           d_xWuc  = col;
           DispNeedsRedrawAllLines();
@@ -530,7 +529,7 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
       return;
       }
 
-   Reset(); // aaa aaa aaa aaa
+   clear(); // aaa aaa aaa aaa
    stref wuc( AddKey( src ) );
    if( !wuc.data() ) {                                                                                        DBG_HL_EVENT && DBG( "%s toolong", __func__);
       return;
@@ -622,7 +621,7 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
          0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
          d_yWuc = -1;
          d_xWuc = -1;
-         Reset();
+         clear();
          DispNeedsRedrawAllLines();
          }
       }
@@ -636,7 +635,7 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
             }
          }
       else { // NOT ON A WORD
-         if( Strings()[0] && yCursor == d_yWuc )
+         if( !d_sb.empty() && yCursor == d_yWuc )
             DispNeedsRedrawAllLines(); // BUGBUG s/b optimized
          }
       }
@@ -646,7 +645,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    auto fb( CFBuf() );
    const auto rl( fb->PeekRawLine( yLine ) );
    if( !rl.empty() ) {
-      const auto keyStart( Strings()[0] ? Strings() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
+      const auto keyStart( !d_sb.empty() ? d_sb.data() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
       if( keyStart ) {
          const auto tw( fb->TabWidth() );
          for( size_t ofs( 0 ) ; ofs < rl.length() ; ) {
