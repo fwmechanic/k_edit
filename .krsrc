@@ -343,6 +343,7 @@
    # ctrl+bksp does not decode in ncurses ubuntu 14.04, so we remap
    undo:ctrl+e
    redo:ctrl+r
+   copy:ctrl+k
 
    # splitcompilewnd25pct := arg "<compile>" splitwnd25pct
 
