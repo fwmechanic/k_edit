@@ -186,9 +186,9 @@ NO_MATCH:
 
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
 
-extern int  strnicmp_LenOfFirstStr( PCChar s1, PCChar s2 );
+extern int  strnicmp_LenOfFirstStr( stref s1, stref s2 );
 extern int  strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
-extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2 );
+extern int  strncmp_LenOfFirstStr( stref s1, stref s2 );
 extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
 extern bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars );
 
@@ -331,8 +331,8 @@ extern  PChar _strlwr( PChar buf );
 
 #endif
 
-extern int   consec_xdigits( PCChar pSt, PCChar eos=nullptr );
-extern int   consec_bdigits( PCChar pSt, PCChar eos=nullptr );
+extern int   consec_xdigits( stref sr );
+extern int   consec_bdigits( stref sr );
 
 STIL int Strnicmp( PCChar string1, PCChar string2, size_t count ) { return WL( _strnicmp, strncasecmp )( string1, string2, count ); }
 STIL int Stricmp ( PCChar string1, PCChar string2 )               { return WL( _strcmpi , strcasecmp  )( string1, string2 ); }

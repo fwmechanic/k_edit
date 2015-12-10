@@ -505,7 +505,6 @@ private:
 
    void   Reset()                                  {        d_sb.Reset(); d_wucLen = 0; }
    PCChar AddKey( stref sr )                       { return d_sb.AddString( sr ); }
-   PCChar AddKey( PCChar key, PCChar eos=nullptr ) { return d_sb.AddString( key, eos ); }
    PCChar Strings()                                { return d_sb.Strings()            ; }
 
    void   SetNewWuc( stref src, LINE lin, COL col );
@@ -532,53 +531,54 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
       }
 
    Reset(); // aaa aaa aaa aaa
-   CPCChar wuc( AddKey( src ) );                                                                                DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
-   if( !wuc ) {                                                                                                 DBG_HL_EVENT && DBG( "%s toolong", __func__);
+   stref wuc( AddKey( src ) );
+   if( !wuc.data() ) {                                                                                        DBG_HL_EVENT && DBG( "%s toolong", __func__);
       return;
-      }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%s",wuc );
+      }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
 
    d_wucLen = src.length();
    d_yWuc   = lin;
    d_xWuc   = col;
-   if( lin >= 0 ) {                                                                                                                             auto keynum( 1 );
+
+   if( lin >= 0 ) {
+                                                                                                                                                auto keynum( 1 );
       if(0) { // GCCARM variations: funcname -> __funcname_veneer
-         char scratch[61];
          STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
          STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
          const auto vnr_fx_len( KSTRLEN(vnr_pfx)+KSTRLEN(vnr_sfx) );
-         if(  (d_wucLen > vnr_fx_len)
-            && 0==KSTRCMP( vnr_pfx, wuc )
-            && 0==KSTRCMP( vnr_sfx, wuc+d_wucLen-KSTRLEN(vnr_sfx) )
+         if( (d_wucLen > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx )
            ){
-            PCChar key( AddKey( wuc+KSTRLEN(vnr_pfx), wuc+d_wucLen-KSTRLEN(vnr_sfx) ) );                        DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            PCChar key( AddKey( wuc.substr( KSTRLEN(vnr_pfx), wuc.length() - vnr_fx_len ) ) );                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
             }
          else {
+            char scratch[61];
             if( (d_wucLen > 1) && (d_wucLen < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
-               bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx );
-               PCChar key( AddKey( scratch ) );                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+               PCChar key( AddKey( bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx ) ) );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }
          }
       if(0) { // MWDT hexnum variations: 0xdeadbeef, 0xdead_beef (<- old MWDT elfdump format), deadbeef
          if( (d_wucLen > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {
-            const int xrun( consec_xdigits( wuc+2 ) );                                                          DBG_HL_EVENT && DBG( "xrun=%d",xrun );
-            if( (10==d_wucLen) && (8==xrun) ) {                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, wuc+2 );
-               PCChar key( AddKey( wuc+2 ) );                                                                   DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            auto hex( wuc ); hex.remove_prefix( 2 );
+            const int xrun( consec_xdigits( hex ) );                                                            DBG_HL_EVENT && DBG( "xrun=%d",xrun );
+            if( (8==hex.length()) && (8==xrun) ) {                                                              DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, hex.data() );
+               PCChar key( AddKey( hex ) );                                                                     DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
-            else if( (11==d_wucLen) && (4==xrun) && ('_'==wuc[6]) && (4==consec_xdigits( wuc+7 )) ) {
-               char key1[] = { wuc[2], wuc[3], wuc[4], wuc[ 5], wuc[7], wuc[8], wuc[9], wuc[10], 0 };           DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key1 );
-               PCChar key( AddKey( key1, key1 + KSTRLEN( key1 ) ) );                                            DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            else if( (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
+               char key1[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };             DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key1 );
+               PCChar key( AddKey( stref( key1 ) ) );                                                           DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }
-         else if( (8==d_wucLen) && (8==consec_xdigits( wuc, wuc + d_wucLen )) ) {                               DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, wuc+2 );
-            PCChar key( AddKey( FmtStr<20>( "0x%s", wuc ) ) );                                                                                                        ++keynum;
+         else if( (8==wuc.length()) && (8==consec_xdigits( wuc )) ) {       //                                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, wuc+2 );
+            char key1[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], wuc[4], wuc[5], wuc[6], wuc[7], 0 };
+            PCChar key( AddKey( key1 ) );                                                                                                                             ++keynum;
             char key2[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], '_', wuc[4], wuc[5], wuc[6], wuc[7], 0 };  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key2 );
-            key = AddKey( key2, key2 + KSTRLEN( key2 ) );                                                       DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            key = AddKey( key2 );                                                                               DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
             }
          }
       }
 
-   DispNeedsRedrawAllLines();                                                                                   DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
+   DispNeedsRedrawAllLines();                                                                                // DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
    }
 
 GLOBAL_VAR int g_iWucMinLen = 2;
