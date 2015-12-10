@@ -503,9 +503,9 @@ public:
 private:
    StringsBuf<BUFBYTES> d_sb;
 
-   void   Reset()                                  {        d_sb.Reset(); d_wucLen = 0; }
-   PCChar AddKey( stref sr )                       { return d_sb.AddString( sr ); }
-   PCChar Strings()                                { return d_sb.Strings()            ; }
+   void   Reset()               {        d_sb.Reset(); d_wucLen = 0; }
+   PCChar AddKey( stref sr )    { return d_sb.AddString( sr )      ; }
+   PCChar Strings()             { return d_sb.Strings()            ; }
 
    void   SetNewWuc( stref src, LINE lin, COL col );
 
@@ -565,15 +565,20 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
                PCChar key( AddKey( hex ) );                                                                     DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             else if( (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
-               char key1[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };             DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key1 );
-               PCChar key( AddKey( stref( key1 ) ) );                                                           DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+               char kb[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };               DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, kb );
+               PCChar key( AddKey( stref( kb ) ) );                                                             DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }
          else if( (8==wuc.length()) && (8==consec_xdigits( wuc )) ) {       //                                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, wuc+2 );
-            char key1[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], wuc[4], wuc[5], wuc[6], wuc[7], 0 };
-            PCChar key( AddKey( key1 ) );                                                                                                                             ++keynum;
-            char key2[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], '_', wuc[4], wuc[5], wuc[6], wuc[7], 0 };  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key2 );
-            key = AddKey( key2 );                                                                               DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            char kb[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], wuc[4], wuc[5], wuc[6], wuc[7], 0, 0 };
+            PCChar key( AddKey( kb ) );                                                                         DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            kb[ 6] = '_';
+            kb[ 7] = wuc[4];
+            kb[ 8] = wuc[5];
+            kb[ 9] = wuc[6];
+            kb[10] = wuc[7];
+            kb[11] = 0;
+            key = AddKey( kb );                                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
             }
          }
       }
