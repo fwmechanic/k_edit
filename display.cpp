@@ -503,25 +503,22 @@ public:
 private:
    StringsBuf<BUFBYTES> d_sb;
 
-   void   clear()               {        d_sb.clear(); d_wucLen = 0; }
-   PCChar AddKey( stref sr )    { return d_sb.AddString( sr )      ; }
+   void   clear()               {        d_sb.clear();         }
+   PCChar AddKey( stref sr )    { return d_sb.AddString( sr ); }
 
    void   SetNewWuc( stref src, LINE lin, COL col );
 
    std::string  d_stCandidate;
    std::string  d_stSel;    // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
 
-   COL          d_wucLen;
    LINE         d_yWuc = -1; // BUGBUG if edits occur, need to set d_yWuc = -1 (or d_wucbuf[0] = 0)
    COL          d_xWuc = -1;
    };
 
 void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { enum { DBG_HL_EVENT=0 };
    d_stSel.clear();
-   if(   d_yWuc == lin
-      && d_wucLen == src.length()
-      && d_sb.find( src )    // assume transitivity
-     ) {                                                                                                        DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
+   if( d_yWuc == lin && d_sb.find( src ) ) { // assume transitivity
+                                                                                                                DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
       if( d_xWuc != col ) {
           d_xWuc  = col;
           DispNeedsRedrawAllLines();
@@ -531,11 +528,10 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
 
    clear(); // aaa aaa aaa aaa
    stref wuc( AddKey( src ) );
-   if( !wuc.data() ) {                                                                                        DBG_HL_EVENT && DBG( "%s toolong", __func__);
+   if( !wuc.data() ) {                                                                                          DBG_HL_EVENT && DBG( "%s toolong", __func__);
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
 
-   d_wucLen = src.length();
    d_yWuc   = lin;
    d_xWuc   = col;
 
@@ -545,19 +541,19 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
          STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
          STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
          const auto vnr_fx_len( KSTRLEN(vnr_pfx)+KSTRLEN(vnr_sfx) );
-         if( (d_wucLen > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx )
+         if( (wuc.length() > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx )
            ){
             PCChar key( AddKey( wuc.substr( KSTRLEN(vnr_pfx), wuc.length() - vnr_fx_len ) ) );                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
             }
          else {
             char scratch[61];
-            if( (d_wucLen > 1) && (d_wucLen < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
+            if( (wuc.length() > 1) && (wuc.length() < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
                PCChar key( AddKey( bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx ) ) );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }
          }
       if(0) { // MWDT hexnum variations: 0xdeadbeef, 0xdead_beef (<- old MWDT elfdump format), deadbeef
-         if( (d_wucLen > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {
+         if( (wuc.length() > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {
             auto hex( wuc ); hex.remove_prefix( 2 );
             const int xrun( consec_xdigits( hex ) );                                                            DBG_HL_EVENT && DBG( "xrun=%d",xrun );
             if( (8==hex.length()) && (8==xrun) ) {                                                              DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, hex.data() );
@@ -565,19 +561,20 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
                }
             else if( (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
                char kb[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };               DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, kb );
-               PCChar key( AddKey( stref( kb ) ) );                                                             DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+               PCChar key( AddKey( kb ) );                                                                      DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }
          else if( (8==wuc.length()) && (8==consec_xdigits( wuc )) ) {       //                                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, wuc+2 );
             char kb[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], wuc[4], wuc[5], wuc[6], wuc[7], 0, 0 };
-            PCChar key( AddKey( kb ) );                                                                         DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-            kb[ 6] = '_';
-            kb[ 7] = wuc[4];
-            kb[ 8] = wuc[5];
-            kb[ 9] = wuc[6];
-            kb[10] = wuc[7];
-            kb[11] = 0;
-            key = AddKey( kb );                                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            stref key( AddKey( kb ) );                                                                          DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key.data() );   ++keynum;
+            auto ix( 6 );
+            kb[ix++] = '_';
+            kb[ix++] = wuc[4];
+            kb[ix++] = wuc[5];
+            kb[ix++] = wuc[6];
+            kb[ix++] = wuc[7];
+            kb[ix++] = 0;
+            key = AddKey( kb );                                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key.data() );   ++keynum;
             }
          }
       }
