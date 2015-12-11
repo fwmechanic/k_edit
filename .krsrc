@@ -68,7 +68,13 @@
   #colornoise  : 0a
    colorsta    : 2f
 
+   # TAB <--> SPACE conversion parameters (pertains TO MODIFIED LINES ONLY!)
+      realtabs:no       #tabs expanded into spaces
+      tabwidth:4
+
    graphic:tab  # easy access to tab-insertion
+   tabalign:yes
+   realtabs:yes
 
    ts0:=cancel arg "trailspace:no"  assign
    ts1:=cancel arg "trailspace:yes" assign
@@ -85,10 +91,6 @@
    r1e1:=cancel rt1 et1
 
    bdm4:=cancel rt0 arg "blankdispmask:4" assign
-
-   # TAB <--> SPACE conversion parameters (pertains TO MODIFIED LINES ONLY!)
-      realtabs:no       #tabs expanded into spaces
-      tabwidth:4
 
    unix:=cancel arg seteol
    dos:=cancel arg arg seteol
@@ -607,7 +609,7 @@
    resize:alt+w
    delims: {[(          # test code
    usemouse:yes
-   arg:tab   # this breaks Linux/X paste which types literal chars into the editor
+   # arg:tab   # this breaks Linux/X paste which types literal chars into the editor
 
 [os.linux]
 
