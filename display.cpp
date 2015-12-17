@@ -537,6 +537,13 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
 
    if( lin >= 0 ) {
                                                                                                                                                 auto keynum( 1 );
+      if( !wuc.starts_with( "$" )) { // experimental
+         char scratch[81]; PCChar key;
+               bcat( bcpy( scratch, "$"  ).length(), scratch, wuc );                          key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+         bcat( bcat( bcpy( scratch, "$(" ).length(), scratch, wuc ).length(), scratch, ")" ); key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+         bcat( bcat( bcpy( scratch, "${" ).length(), scratch, wuc ).length(), scratch, "}" ); key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+         }
+
       if(0) { // GCCARM variations: funcname -> __funcname_veneer
          STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
          STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
