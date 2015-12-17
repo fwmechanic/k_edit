@@ -60,7 +60,9 @@ class Regex {
 
    int MaxPossCaptures() const { return d_maxPossCaptures; }
 
-   PCChar Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, std::vector<stref> &captures );
+   typedef std::vector<stref> capture_container;
+
+   capture_container::size_type Match( capture_container &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has );
    };
 
 //******************************************************************************

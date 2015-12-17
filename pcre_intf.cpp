@@ -60,24 +60,20 @@ Regex::~Regex() {
    (*pcre_free)( d_pPcreExtra );
    }
 
-PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL *matchChars, HaystackHas tgtContent, std::vector<stref> &captures ) {
+Regex::capture_container::size_type Regex::Match( std::vector<stref> &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
    0 && DBG( "Regex::Match called!" );
-   *matchChars = 0;
-   if( validBufChars < 0 )
-      return nullptr;
-
    const int options
-      ( tgtContent == STR_MISSING_BOL ? PCRE_NOTBOL
-      : tgtContent == STR_MISSING_EOL ? PCRE_NOTEOL
+      ( haystack_has == STR_MISSING_BOL ? PCRE_NOTBOL
+      : haystack_has == STR_MISSING_EOL ? PCRE_NOTEOL
       :                                 0
       );
 
    const int rc( pcre_exec(
            d_pPcre
          , d_pPcreExtra
-         , pBuf
-         , validBufChars
-         , startingBufOffset
+         , haystack.data()
+         , haystack.length()
+         , haystack_offset
          , options
          , reinterpret_cast<int *>(d_capture)
          , sizeof(d_capture) / sizeof(int)
@@ -90,7 +86,7 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
          default: ErrorDialogBeepf( "PCRE returned %d", rc );
                   break;
          }
-      return nullptr;
+      return 0;
       }
 
    0 && DBG( "Regex::Match returned %d", rc );
@@ -116,12 +112,10 @@ PCChar Regex::Match( COL startingBufOffset, PCChar pBuf, COL validBufChars, COL 
          // captures.clear() already cleared this entry
          }
       else {
-         captures.emplace_back( pBuf + d_capture[ix].oFirst, d_capture[ix].Len() );
+         captures.emplace_back( haystack.data() + d_capture[ix].oFirst, d_capture[ix].Len() );
          }
       }
-
-   *matchChars = d_capture[0].Len();
-   return pBuf + d_capture[0].oFirst;
+   return captures.size();
    }
 
 
