@@ -1543,41 +1543,6 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
    return rv;
    }
 
-STATIC_FXN PCChar searchFindString( PCChar pBuf, COL charsToSearch, PCChar pSrchKey, COL SrchKeyLen ) {
-   0 && DBG( "searchFindString charsToSearch=%d SrchKeyLen=%d '%s'", charsToSearch, SrchKeyLen, pBuf );
-   if( SrchKeyLen > charsToSearch ) { 0 && DBG( "searchFindString:0  SrchKeyLen > charsToSearch" );  // couldn't possibly have a match
-      return nullptr;
-      }
-
-#if 0
-   // removed since Assert IS being hit
-   const auto schars( Strlen( pBuf ) );
-   if( !(schars >= charsToSearch) ) {
-      DBG( "!!! strlen( pBuf )[%d] < charsToSearch[%d]", schars, charsToSearch );
-      }
-
-   Assert( schars >= charsToSearch );
-#endif
-
-   const auto pFirstMatch( PCChar( memchr( pBuf, pSrchKey[0], charsToSearch ) ) );
-   if( pFirstMatch ) {
-      auto ixKey(0);
-      auto ixBuf(pFirstMatch - pBuf);
-      while( ixBuf < charsToSearch ) {
-         if( pSrchKey[ixKey++] == pBuf[ixBuf++] ) {
-            if( ixKey >= SrchKeyLen )
-               return pBuf + ixBuf - SrchKeyLen; // MATCH!
-            }
-         else {
-            ixBuf -= ixKey - 1;
-            ixKey = 0;
-            }
-         }
-      }
-
-   return nullptr;
-   }
-
 //===============================================
 
 bool SearchSpecifier::CaseUpdt() {
@@ -1677,10 +1642,12 @@ void FileSearcherString::VPrepLine_( std::string &lbuf ) const {
    }
 
 stref FileSearcherString::VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) {
-   const auto rv( searchFindString( src.data()+src_offset, src.length()-src_offset, d_searchKey.data(), d_searchKey.length() ) );
-   return rv ? stref( rv, d_searchKey.length() )
-             : stref( "" )
-             ;
+   stref offset_eaten( src ); offset_eaten.remove_prefix( src_offset );
+   const auto ixMatch( offset_eaten.find( d_searchKey ) );
+   if( ixMatch == stref::npos ) {
+      return stref();
+      }
+   return offset_eaten.substr( ixMatch, d_searchKey.length() ); // MATCH!
    }
 
 //===============================================
@@ -1853,7 +1820,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
 void   FileSearcherFast::VPrepLine_( std::string &lbuf ) const { Assert( 0 != 0 ); }
-stref  FileSearcherFast::VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) { Assert( 0 != 0 ); return stref(""); }
+stref  FileSearcherFast::VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) { Assert( 0 != 0 ); return stref(); }
 
 //===============================================
 

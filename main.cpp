@@ -539,12 +539,12 @@ STATIC_FXN bool OpenRsrcFileFailed() {
 stref IsolateTagStr( stref src ) {
    const auto ixLSQ( src.find_first_not_of( "\t " ) );
    if( stref::npos==ixLSQ || src[ixLSQ] != '[' )
-      return stref("");
+      return stref();
 
    src.remove_prefix( ixLSQ+1 );
    const auto ixRSQ( src.find( ']' ) );
    if( stref::npos==ixRSQ )
-      return stref("");
+      return stref();
 
    return src.substr( 0, ixRSQ );
    }
