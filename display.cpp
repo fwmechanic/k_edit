@@ -3309,7 +3309,8 @@ void View::InsertHiLitesOfLineSeg
 // "repackaging".
 
 void View::GetLineForDisplay
-   ( const PChar              dest
+   ( std::string             &dest
+   , const COL                xLeft
    , const COL                xWidth
    ,       LineColorsClipped &alcc
    ,       const HiLiteRec * &pFirstPossibleHiLite
@@ -3317,20 +3318,22 @@ void View::GetLineForDisplay
    , const bool               isActiveWindow
    ) const {
    enum { PCT_WIDTH=7 };
-   memset( dest, ' ', xWidth );  // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
-
+   dest.replace( xLeft, xWidth, xWidth, ' ' ); // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
    if( yLineOfFile > d_pFBuf->LastLine() ) {
       alcc.PutColorRaw( Origin().col, xWidth, 0x07 );
-      dest[0] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
+      dest[xLeft] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
       }
    else {
       alcc.PutColor( Origin().col, xWidth, COLOR::TXT );
-      PrettifyMemcpy( dest, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->TrailDispChar() );
+      PrettifyMemcpy( const_cast<PChar>(dest.data()) + xLeft, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->TrailDispChar() );
       if( DrawVerticalCursorHilite() && isActiveWindow && (xWidth > PCT_WIDTH) && (g_CursorLine() == yLineOfFile) ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
          stref pct( pctst.k_str() );
-         memcpy( dest + xWidth - pct.length(), pct.data(), pct.length() );
+         auto di( xLeft + xWidth - pct.length() );
+         for( auto ch : pct ) {
+            dest[di++] = ch;
+            }
          }
       }
 
@@ -3358,7 +3361,7 @@ void Win::GetLineForDisplay
          const auto pView( this->CurView() );
          const auto yLineOfFile( pView->Origin().lin - d_UpLeft.lin + yLineOfDisplay );
          LineColorsClipped alcc( *pView, alc, d_UpLeft.col, pView->Origin().col, d_Size.col );
-         pView->GetLineForDisplay( const_cast<PChar>(dest.data()) + d_UpLeft.col, d_Size.col, alcc, pFirstPossibleHiLite, yLineOfFile, this == g_CurWin() );
+         pView->GetLineForDisplay( dest, d_UpLeft.col, d_Size.col, alcc, pFirstPossibleHiLite, yLineOfFile, this == g_CurWin() );
          }
       if( d_UpLeft.col > 0 ) { // this window not on left edge? (i.e. window has visible left border?) plug in a line-draw char to make the border
          auto    &chLeftBorder( dest[ d_UpLeft.col - 1 ] );

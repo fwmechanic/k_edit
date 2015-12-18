@@ -851,10 +851,10 @@ public:
                    , bool                isActiveWindow
                    , bool                isCursorLine
                    ) const;
-
    void         GetLineForDisplay
-                   ( PChar              pTextBuf
-                   , COL                xWidth
+                   ( std::string             &dest
+                   , const COL                xLeft
+                   , const COL                xWidth
                    , LineColorsClipped &alcc
                    , const HiLiteRec * &pFirstPossibleHiLite
                    , LINE               yLineOfFile
