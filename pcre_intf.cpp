@@ -60,7 +60,7 @@ Regex::~Regex() {
    (*pcre_free)( d_pPcreExtra );
    }
 
-Regex::capture_container::size_type Regex::Match( std::vector<stref> &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
+Regex::capture_container::size_type Regex::Match( Regex::capture_container &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
    0 && DBG( "Regex::Match called!" );
    const int options
       ( haystack_has == STR_MISSING_BOL ? PCRE_NOTBOL
@@ -109,10 +109,11 @@ Regex::capture_container::size_type Regex::Match( std::vector<stref> &captures, 
       // subpattern are set to -1.
       //
       if( d_capture[ix].NoMatch() || d_capture[ix].Len() < 0 ) {
+         captures.emplace_back( stref( haystack.data() + d_capture[ix].oFirst, d_capture[ix].Len() ) );
          // captures.clear() already cleared this entry
          }
       else {
-         captures.emplace_back( haystack.data() + d_capture[ix].oFirst, d_capture[ix].Len() );
+         captures.emplace_back( stref( haystack.data() + d_capture[ix].oFirst, d_capture[ix].Len() ) );
          }
       }
    return captures.size();

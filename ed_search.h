@@ -30,11 +30,27 @@ enum HaystackHas { STR_HAS_BOL_AND_EOL, STR_MISSING_BOL, STR_MISSING_EOL }; // s
 #define PCRE_STATIC
 #include "pcre.h"
 
+//----------- RegEx
+// For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use RegexCompile + Regex::Match
 class Regex {
    NO_ASGN_OPR(Regex);
    NO_COPYCTOR(Regex);
 
    public:
+
+   // a vector of RegexCapture (capture_container) is used to collect and return captures
+   // a vector of stref is not used since a matching regex capture can be the empty string
+   // which cannot be distinguished from a non-matching capture w/o extra info; d_valid is that
+   class RegexCapture { //
+      bool  d_valid;
+      stref d_value;
+   public:
+      RegexCapture()             : d_valid( false ), d_value(    ) {}
+      RegexCapture( stref val_ ) : d_valid( true  ), d_value(val_) {}
+      bool  valid() const { return d_valid; }
+      stref value() const { return d_value; }
+      };
+   typedef std::vector<RegexCapture> capture_container;
 
    enum { MAX_CAPTURES = 40, CAPT_DIVISOR = 2 };
 
@@ -55,26 +71,18 @@ class Regex {
 
    public:
 
-   Regex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures );
+   Regex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called by RegexCompile when it is successful, to create rtn value
    ~Regex();
 
    int MaxPossCaptures() const { return d_maxPossCaptures; }
 
-   typedef std::vector<stref> capture_container;
-
    capture_container::size_type Match( capture_container &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has );
    };
 
-//******************************************************************************
-
-//----------- RegEx
+extern Regex *RegexCompile( PCChar pszSearchStr, bool fCase );
+extern void   RegexDestroy( Regex *pRe );
 
 extern void register_atexit_search();
-
-// For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use RegexCompile + Regex::Match
-
-extern   Regex *RegexCompile( PCChar pszSearchStr, bool fCase );
-extern   void   RegexDestroy( Regex *pRe );
 
 #else
 
