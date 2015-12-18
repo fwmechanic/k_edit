@@ -3330,10 +3330,7 @@ void View::GetLineForDisplay
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
          stref pct( pctst.k_str() );
-         auto di( xLeft + xWidth - pct.length() );
-         for( auto ch : pct ) {
-            dest[di++] = ch;
-            }
+         dest.replace( xLeft + xWidth - pct.length(), pct.length(), pct.data() );
          }
       }
 
