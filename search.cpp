@@ -492,7 +492,7 @@ class FileSearcher {
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
    virtual void  VPrepLine_( std::string &lbuf ) const {};
-   virtual stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) = 0; // rv=0 if no match found or PCChar within pBuf of match
+   virtual stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) = 0; // rv.empty() if no match found
 
    public:
 
@@ -503,9 +503,6 @@ class FileSearcher {
 
            void FindMatches();
    virtual void VFindMatches_();
-   // void FindMatchesMultifile( PCChar macroContainingWildcards );
-   // void SkipMatch();
-   // void SkipLine();
    void SetInputFile( PFBUF pFBuf=g_CurFBuf() );
    void SetBoundsWholeFile();
    void SetBoundsToEnd( Point StartPt );
@@ -1112,9 +1109,6 @@ STATIC_FXN bool SearchSpecifierOK( ARG *pArg ) {
                        if( !g_pFBufSearchLog || FBOP::IsLineBlank( g_pFBufSearchLog, 0 ) ) {
                           return ErrorDialogBeepf( "No search string specified, %s empty", szSearchLog );
                           }
-
-                       PCChar bos, eos;
-
                        const auto rl( g_pFBufSearchLog->PeekRawLine( 0 ) );
                        if( !SetNewSearchSpecifierOK( rl, false ) ) {
                           return ErrorDialogBeepf( "bad search specifier '%" PR_BSR "'", BSR(rl) );
@@ -1843,7 +1837,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
             ; iC   = pcc.c2i( curPt.col ) + 1, xCol = pcc.i2c( iC )
             ) {
             const auto srMatch( VFindStr_( d_sbuf, iC, STR_HAS_BOL_AND_EOL ) );
-            if( srMatch.length() == 0 )
+            if( srMatch.empty() )
                break; // no matches on this line!
 
             //*****  HOUSTON, WE HAVE A MATCH  *****
@@ -1875,7 +1869,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
          #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
 
          const auto srMatch( VFindStr_( haystack, 0, SET_HaystackHas(0) ) );
-         if( srMatch.length() ) {
+         if( !srMatch.empty() ) {
             COL goodMatchChars( srMatch.length() );
             auto iGoodMatch( srMatch.data() - haystack.data() );
 
@@ -1884,7 +1878,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
             while( iGoodMatch < maxCharsToSearch ) {
                const auto startIdx( iGoodMatch + 1 );   VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "-search: iAYSTACK=%" PR_SIZET "u '%" PR_BSR "'", startIdx, BSR(newHaystack) ); } )
                const auto srNextMatch( VFindStr_( haystack, startIdx, SET_HaystackHas(startIdx) ) );
-               if( !srNextMatch.length() )
+               if( srNextMatch.empty() )
                   break;
 
                const auto iNextMatch( srNextMatch.data() - haystack.data() );
@@ -1906,7 +1900,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
 
 // not my proudest moment, but replicating the code below everywhere would be immoral!
 
-FileSearcher *NewFileSearcher(
+STATIC_FXN FileSearcher *NewFileSearcher(
      FileSearcher::StringSearchVariant  type
    , const SearchScanMode              &sm
    , const SearchSpecifier             &ss
