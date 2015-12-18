@@ -225,7 +225,7 @@ class FileSearchMatchHandler {
                 d_curFileStats.Reset();
                 }
 
-           bool FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, Regex::capture_container &captures );
+           bool FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures );
            bool VCanForgetCurFile() {
                 0 && DBG( "%5d all %5d:%5d cur %5d:%5d"
                         , d_lifetimeFileCount
@@ -251,7 +251,7 @@ class FileSearchMatchHandler {
       // called by FoundMatchContinueSearching
       //
       virtual bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ) { return true; }; // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
-      virtual bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, Regex::capture_container &captures ); // cur MAY BE MODIFIED!!!
+      virtual bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ); // cur MAY BE MODIFIED!!!
       virtual bool VContinueSearching() { return true; }
 
       // called by ShowResults
@@ -267,7 +267,7 @@ class FileSearchMatchHandler {
    int GetLifetimeFileCountMatchAction()  const { return d_lifetimeFileCountMatchAction   ; }
    };
 
-bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, Regex::capture_container &captures ) {
+bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ) {
    if( VMatchWithinColumnBounds( pFBuf, cur, MatchCols ) ) { // it IS a MATCH?
       if( d_fScrollToFirstMatch && !d_flToScroll.IsSet() )
          d_flToScroll.Set( pFBuf, cur, MatchCols );
@@ -283,7 +283,7 @@ bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, Point &cu
    return VContinueSearching();
    }
 
-bool FileSearchMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, Regex::capture_container &captures ) {
+bool FileSearchMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ) {
    PCV;
    if( pcv->FBuf() == pFBuf ) {
       pcv->SetMatchHiLite( cur, MatchCols, g_fCase );
@@ -373,7 +373,7 @@ class MFGrepMatchHandler : public FileSearchMatchHandler {
 
    protected:
 
-   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, Regex::capture_container &captures ) override;
+   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ) override;
    void VShowResultsNoMacs() override;
 
    public:
@@ -388,7 +388,7 @@ class MFGrepMatchHandler : public FileSearchMatchHandler {
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
 
-bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, Regex::capture_container &captures ) {
+bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ) {
    if( 0 == GetLifetimeMatchCount() )
       LuaCtxt_Edit::LocnListInsertCursor(); // do this IFF a match was found
 
@@ -414,7 +414,7 @@ struct SearchSpecifier {
    std::string  d_rawStr;
 #if USE_PCRE
    bool   d_fRegexCase;   // state when last (re-)init'd
-   Regex *d_re;
+   CompiledRegex *d_re;
    bool   d_reCompileErr;
 #endif
    bool   d_fCanUseFastSearch;
@@ -427,10 +427,10 @@ struct SearchSpecifier {
    bool   IsRegex() const;
    bool   HasError() const;
 #if USE_PCRE
-   const Regex *GetRegex() const { return d_re; }
+   const CompiledRegex *GetRegex() const { return d_re; }
 #endif
    bool   CanUseFastSearch() const { return d_fCanUseFastSearch && g_fFastsearch; }
-   bool   CaseUpdt(); // in case case switch has changed since Regex was compiled
+   bool   CaseUpdt(); // in case case switch has changed since CompiledRegex was compiled
    void   Dbgf( PCChar tag ) const;
    stref  SrchStr()    const { return d_rawStr; }
    };
@@ -487,7 +487,7 @@ class FileSearcher {
    Point                  d_end;
    PFBUF                  d_pFBuf;
 
-   Regex::capture_container d_captures;
+   CompiledRegex::capture_container d_captures;
 
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
@@ -659,7 +659,7 @@ class  FileSearcherRegex : public FileSearcher {
  #elif USE_PCRE
 
 STATIC_VAR bool     s_fSearchNReplaceUsingRegExp;
-STATIC_VAR Regex *  s_pSandR_CompiledSearchPattern;
+STATIC_VAR CompiledRegex *  s_pSandR_CompiledSearchPattern;
 
  #endif
 
@@ -1293,7 +1293,7 @@ bool ARG::mfgrep() {
 
 
 #if USE_PCRE
-STIL bool CheckRegExpReplacementString( Regex *, PCChar ) { return false; }
+STIL bool CheckRegExpReplacementString( CompiledRegex *, PCChar ) { return false; }
 #endif
 
 STATIC_FXN void MFReplaceProcessFile( PCChar filename, ReplaceCharWalker *pMrcw ) {
@@ -1333,7 +1333,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
  #if REPLC_CLASSES
 
    if( !SetNewSearchSpecifierOK( g_SnR_szSearch, d_cArg >= 2 ) ) {
-      return false; // RegexCompile internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
+      return false; // Compile_Regex internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
       }
 
  #else
@@ -1341,10 +1341,9 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    #if USE_PCRE
    s_fSearchNReplaceUsingRegExp = d_cArg >= 2;
    if( s_fSearchNReplaceUsingRegExp ) {
-      RegexDestroy( s_pSandR_CompiledSearchPattern );
-      s_pSandR_CompiledSearchPattern = RegexCompile( g_SnR_szSearch.c_str(), g_fCase );
+      DeleteUp( s_pSandR_CompiledSearchPattern, Compile_Regex( g_SnR_szSearch.c_str(), g_fCase ) );
       if( !s_pSandR_CompiledSearchPattern ) {
-         return false; // RegexCompile internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
+         return false; // Compile_Regex internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
          }
       }
    #endif
@@ -1546,7 +1545,7 @@ bool SearchSpecifier::CaseUpdt() {
 
       // recompile
       Delete0( d_re );
-      d_re = RegexCompile( d_rawStr.c_str(), d_fRegexCase );
+      d_re = Compile_Regex( d_rawStr.c_str(), d_fRegexCase );
       if( !d_re )
          d_reCompileErr = true;
       }
@@ -1564,7 +1563,7 @@ SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) {  // Assert( fReg
 #if USE_PCRE
    if( fRegex ) {
       d_fCanUseFastSearch = false;
-      d_re = RegexCompile( d_rawStr.c_str(), d_fRegexCase );
+      d_re = Compile_Regex( d_rawStr.c_str(), d_fRegexCase );
       d_reCompileErr = (d_re == nullptr);
       }
    else
@@ -1576,7 +1575,7 @@ SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) {  // Assert( fReg
 
 SearchSpecifier::~SearchSpecifier() {
 #if USE_PCRE
-   RegexDestroy( d_re );
+   Delete0( d_re );
 #endif
    }
 
@@ -2285,12 +2284,12 @@ class CGrepperMatchHandler : public FileSearchMatchHandler {
 
    CGrepperMatchHandler( CGrepper &cg ) : d_cg( cg ) {}
 
-   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, Regex::capture_container &captures ) override;
+   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ) override;
 
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
 
-bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, Regex::capture_container &captures ) {
+bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ) {
    d_cg.LineMatches( cur.lin );
    return true;  // "action" taken!
    }

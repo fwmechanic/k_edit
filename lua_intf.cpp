@@ -435,18 +435,18 @@ STATIC_FXN void l_handle_pcall_error( lua_State *L, bool fCompileErr=false ) { /
    PCChar pMsg = pll && (*(pll+1) == '\t') && *(pll+2) ? pll+2 : msg;  // if Lua's emsg is multiline, the last line has a leading tab to skip
    DBG( "pMsg='%s'", pMsg );
 
-   // For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use RegexCompile + Regex::Match
+   // For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use Compile_Regex + CompiledRegex::Match
 
    std::vector<stref> cs( 4 );
    {
-   auto pre( RegexCompile( "^(.*):(\\d+): (.*)$", true ) );
+   auto pre( Compile_Regex( "^(.*):(\\d+): (.*)$", true ) );
    if( !pre ) {
       Msg( "%s had regex COMPILE error", __func__ );
       return;
       }
    int mc;
    auto pmatch( pre->Match( 0, pMsg, Strlen(pMsg), &mc, STR_HAS_BOL_AND_EOL, &cs ) );
-   RegexDestroy( pre );
+   Delete0( pre );
    if( !pmatch ) {
       Msg( "%s had regex match error", __func__ );
       return;

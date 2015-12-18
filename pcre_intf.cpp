@@ -50,20 +50,20 @@ void PCRE_API_INIT() {
 //------------------------------------------------------------------------------
 
 enum { CAPT_DIVISOR = 2 };
-Regex::Regex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures )
+CompiledRegex::CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures )
    : d_pPcre(pPcre)
    , d_pPcreExtra(pPcreExtra)
    , d_maxPossCaptures(maxPossCaptures)
    , d_pcreCapture(maxPossCaptures + ((maxPossCaptures+(CAPT_DIVISOR-1))/CAPT_DIVISOR)) // oddity: PCRE needs last third of this buffer for workspace
    {}
 
-Regex::~Regex() {
+CompiledRegex::~CompiledRegex() {
    (*pcre_free)( d_pPcre );
    (*pcre_free)( d_pPcreExtra );
    }
 
-Regex::capture_container::size_type Regex::Match( Regex::capture_container &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
-   0 && DBG( "Regex::Match called!" );
+CompiledRegex::capture_container::size_type CompiledRegex::Match( CompiledRegex::capture_container &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
+   0 && DBG( "CompiledRegex::Match called!" );
    const int options
       ( haystack_has == STR_MISSING_BOL ? PCRE_NOTBOL
       : haystack_has == STR_MISSING_EOL ? PCRE_NOTEOL
@@ -80,7 +80,7 @@ Regex::capture_container::size_type Regex::Match( Regex::capture_container &capt
          , sizeof(d_pcreCapture) / sizeof(int)
          )
       );
-   0 && DBG( "Regex::Match returned %d", rc );
+   0 && DBG( "CompiledRegex::Match returned %d", rc );
    captures.clear(); // before any return
    if( rc <= 0 ) {
       switch( rc ) {
@@ -98,7 +98,7 @@ Regex::capture_container::size_type Regex::Match( Regex::capture_container &capt
       ErrorDialogBeepf( "PCRE: rc(%d) > d_maxPossCaptures(%d)", rc, d_maxPossCaptures );
       return 0;
       }
-   0 && DBG( "Regex::Match count=%d", rc );
+   0 && DBG( "CompiledRegex::Match count=%d", rc );
    if( rc > 0 ) {
       captures.reserve( rc );
       for( auto ix(0); ix < rc; ++ix ) {
@@ -120,14 +120,10 @@ Regex::capture_container::size_type Regex::Match( Regex::capture_container &capt
    return captures.size();
    }
 
-void RegexDestroy( Regex *pRe ) {
-   delete pRe;
-   }
-
-Regex *RegexCompile( PCChar pszSearchStr, bool fCase ) {
+CompiledRegex *Compile_Regex( PCChar pszSearchStr, bool fCase ) {
    PCRE_API_INIT();
 
-   0 && DBG( "RegexCompile! %s", pszSearchStr );
+   0 && DBG( "Compile_Regex! %s", pszSearchStr );
 
    const int options( fCase ? 0 : PCRE_CASELESS );
 
@@ -152,7 +148,7 @@ Regex *RegexCompile( PCChar pszSearchStr, bool fCase ) {
    ++maxPossCaptures; // the 0th capture is the WHOLE match
    0 && DBG( "captures: %d", maxPossCaptures );
 
-   return new Regex( re, xtra, maxPossCaptures );
+   return new CompiledRegex( re, xtra, maxPossCaptures );
    }
 
 

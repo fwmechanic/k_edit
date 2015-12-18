@@ -30,11 +30,11 @@ enum HaystackHas { STR_HAS_BOL_AND_EOL, STR_MISSING_BOL, STR_MISSING_EOL }; // s
 #define PCRE_STATIC
 #include "pcre.h"
 
-//----------- RegEx
-// For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use RegexCompile + Regex::Match
-class Regex {
-   NO_ASGN_OPR(Regex);
-   NO_COPYCTOR(Regex);
+//----------- CompiledRegex
+// For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use Compile_Regex + CompiledRegex::Match
+class CompiledRegex {
+   NO_ASGN_OPR(CompiledRegex);
+   NO_COPYCTOR(CompiledRegex);
 
 public:
 
@@ -68,17 +68,16 @@ private:
 
 public:
 
-   // User code SHOULD NOT call this ctor, _SHOULD_ CREATE Regex via RegexCompile!
-   Regex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called ONLY by RegexCompile (when it is successful)
-   ~Regex();
+   // User code SHOULD NOT call this ctor, _SHOULD_ CREATE CompiledRegex via Compile_Regex!
+   CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called ONLY by Compile_Regex (when it is successful)
+   ~CompiledRegex();
 
    int MaxPossCaptures() const { return d_maxPossCaptures; }
 
    capture_container::size_type Match( capture_container &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has );
    };
 
-extern Regex *RegexCompile( PCChar pszSearchStr, bool fCase );
-extern void   RegexDestroy( Regex *pRe );
+extern CompiledRegex *Compile_Regex( PCChar pszSearchStr, bool fCase );
 
 extern void register_atexit_search();
 
