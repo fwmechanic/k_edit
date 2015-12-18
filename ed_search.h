@@ -36,7 +36,7 @@ class Regex {
    NO_ASGN_OPR(Regex);
    NO_COPYCTOR(Regex);
 
-   public:
+public:
 
    // a vector of Capture (capture_container) is used to collect and return captures
    // a vector of stref is not used since a matching regex capture can be the empty string
@@ -52,7 +52,7 @@ class Regex {
       };
    typedef std::vector<Capture> capture_container;
 
-   enum { MAX_CAPTURES = 40, CAPT_DIVISOR = 2 };
+private:
 
    struct pcreCapture {
       int oFirst    = -1;
@@ -61,15 +61,12 @@ class Regex {
       int Len() const { return oPastLast - oFirst; }
       };
 
-   private:
-
    pcre       *d_pPcre;
    pcre_extra *d_pPcreExtra;
    const int   d_maxPossCaptures;
-                        // PCRE oddity: it needs last third of this buffer for workspace
-   pcreCapture d_capture[ MAX_CAPTURES + ((MAX_CAPTURES+(CAPT_DIVISOR-1))/CAPT_DIVISOR) ];
+   std::vector<pcreCapture> d_pcreCapture;
 
-   public:
+public:
 
    // User code SHOULD NOT call this ctor, _SHOULD_ CREATE Regex via RegexCompile!
    Regex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called ONLY by RegexCompile (when it is successful)

@@ -49,10 +49,12 @@ void PCRE_API_INIT() {
 
 //------------------------------------------------------------------------------
 
+enum { CAPT_DIVISOR = 2 };
 Regex::Regex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures )
    : d_pPcre(pPcre)
    , d_pPcreExtra(pPcreExtra)
    , d_maxPossCaptures(maxPossCaptures)
+   , d_pcreCapture(maxPossCaptures + ((maxPossCaptures+(CAPT_DIVISOR-1))/CAPT_DIVISOR)) // oddity: PCRE needs last third of this buffer for workspace
    {}
 
 Regex::~Regex() {
@@ -65,9 +67,8 @@ Regex::capture_container::size_type Regex::Match( Regex::capture_container &capt
    const int options
       ( haystack_has == STR_MISSING_BOL ? PCRE_NOTBOL
       : haystack_has == STR_MISSING_EOL ? PCRE_NOTEOL
-      :                                 0
+      :                                   0
       );
-
    const int rc( pcre_exec(
            d_pPcre
          , d_pPcreExtra
@@ -75,43 +76,49 @@ Regex::capture_container::size_type Regex::Match( Regex::capture_container &capt
          , haystack.length()
          , haystack_offset
          , options
-         , reinterpret_cast<int *>(d_capture)
-         , sizeof(d_capture) / sizeof(int)
+         , &d_pcreCapture[0].oFirst
+         , sizeof(d_pcreCapture) / sizeof(int)
          )
       );
-
-   if( rc < 0 ) {
+   0 && DBG( "Regex::Match returned %d", rc );
+   captures.clear(); // before any return
+   if( rc <= 0 ) {
       switch( rc ) {
          case PCRE_ERROR_NOMATCH: break; // the only "expected" error: be silent
-         default: ErrorDialogBeepf( "PCRE returned %d", rc );
+         case 0:  // if PCRE returns 0, it says there were more captures than we gave him space for (sizeof(d_pcreCapture) / sizeof(int)).
+                  // This is an internal error.
+                  ErrorDialogBeepf( "PCRE: actualPcreCaptureCount(?) < d_pcreCapture.size()(%d)", d_maxPossCaptures );
+                  break;
+         default: ErrorDialogBeepf( "PCRE returned %d?", rc );
                   break;
          }
       return 0;
       }
-   0 && DBG( "Regex::Match returned %d", rc );
-   // if PCRE returns 0, it says there were more captures than we gave him space for (MAX_CAPTURES)
-   // in that case PCRE has filled in all it can (MAX_CAPTURES), so we use a count of MAX_CAPTURES.
-   const auto actualCount( (rc == 0) ? MAX_CAPTURES : rc );  0 && DBG( "Regex::Match count=%d", actualCount );
-   captures.clear();
-   for( auto ix(0); ix < actualCount; ++ix ) {
-      // It is possible for an capturing subpattern number n+1 to match some
-      // part of the subject when subpattern n has not been used at all.  For
-      // example, if the string "abc" is matched against the pattern
-      // (a|(z))(bc) subpatterns 1 and 3 are matched, but 2 is not.  When
-      // this happens, both offset values corresponding to the unused
-      // subpattern are set to -1.
-      //
-      if( d_capture[ix].NoMatch() || d_capture[ix].Len() < 0 ) {
-         captures.emplace_back();
-         }
-      else {
-         captures.emplace_back( stref( haystack.data() + d_capture[ix].oFirst, d_capture[ix].Len() ) );
+   if( rc > d_maxPossCaptures ) {
+      ErrorDialogBeepf( "PCRE: rc(%d) > d_maxPossCaptures(%d)", rc, d_maxPossCaptures );
+      return 0;
+      }
+   0 && DBG( "Regex::Match count=%d", rc );
+   if( rc > 0 ) {
+      captures.reserve( rc );
+      for( auto ix(0); ix < rc; ++ix ) {
+         // It is possible for an capturing subpattern number n+1 to match some
+         // part of the subject when subpattern n has not been used at all.  For
+         // example, if the string "abc" is matched against the pattern
+         // (a|(z))(bc) subpatterns 1 and 3 are matched, but 2 is not.  When
+         // this happens, both offset values corresponding to the unused
+         // subpattern are set to -1.
+         //
+         if( d_pcreCapture[ix].NoMatch() || d_pcreCapture[ix].Len() < 0 ) {
+            captures.emplace_back();
+            }
+         else {
+            captures.emplace_back( stref( haystack.data() + d_pcreCapture[ix].oFirst, d_pcreCapture[ix].Len() ) );
+            }
          }
       }
    return captures.size();
    }
-
-
 
 void RegexDestroy( Regex *pRe ) {
    delete pRe;
