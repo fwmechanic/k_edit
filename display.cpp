@@ -3310,14 +3310,14 @@ void View::InsertHiLitesOfLineSeg
 
 void View::GetLineForDisplay
    ( const PChar              dest
+   , const COL                xWidth
    ,       LineColorsClipped &alcc
    ,       const HiLiteRec * &pFirstPossibleHiLite
    , const LINE               yLineOfFile
    , const bool               isActiveWindow
-   , const COL                xWidth
    ) const {
    enum { PCT_WIDTH=7 };
-   memset( dest, ' ', xWidth );  // dflt for line seg is spaces
+   memset( dest, ' ', xWidth );  // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
 
    if( yLineOfFile > d_pFBuf->LastLine() ) {
       alcc.PutColorRaw( Origin().col, xWidth, 0x07 );
@@ -3354,12 +3354,12 @@ void Win::GetLineForDisplay
    ) const {
    const auto oRightBorder( d_UpLeft.col + d_Size.col );  0 && DBG( "L%05d w%d [%03d..%03d]", yLineOfDisplay, winNum, this->d_UpLeft.col, oRightBorder - 1 );
    if( VisibleOnDisplayLine( yLineOfDisplay ) ) {
-      {
-      const auto pView( this->CurView() );
-      const auto yLineOfFile( pView->Origin().lin - d_UpLeft.lin + yLineOfDisplay );
-      LineColorsClipped alcc( *pView, alc, d_UpLeft.col, pView->Origin().col, d_Size.col );
-      pView->GetLineForDisplay( const_cast<PChar>(dest.data()) + d_UpLeft.col, alcc, pFirstPossibleHiLite, yLineOfFile, this == g_CurWin(), d_Size.col );
-      }
+      NewScope {
+         const auto pView( this->CurView() );
+         const auto yLineOfFile( pView->Origin().lin - d_UpLeft.lin + yLineOfDisplay );
+         LineColorsClipped alcc( *pView, alc, d_UpLeft.col, pView->Origin().col, d_Size.col );
+         pView->GetLineForDisplay( const_cast<PChar>(dest.data()) + d_UpLeft.col, d_Size.col, alcc, pFirstPossibleHiLite, yLineOfFile, this == g_CurWin() );
+         }
       if( d_UpLeft.col > 0 ) { // this window not on left edge? (i.e. window has visible left border?) plug in a line-draw char to make the border
          auto    &chLeftBorder( dest[ d_UpLeft.col - 1 ] );
          if     ( chLeftBorder == H__                               // 'Í' -> '¹'

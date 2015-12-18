@@ -193,15 +193,16 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
    }
 
 // a terminating NUL IS NOT added!!!
-// return value is # of chars actually written to dest
-COL PrettifyMemcpy
+void PrettifyMemcpy
    ( const PChar dest, const size_t sizeof_dest
    , stref src, COL tabWidth, char chTabExpand, COL src_xMin, char chTrailSpcs
    ) {
    // src.data() IS NOT NUL terminated (since it may point at a line within a file image buffer)!!!
    //
    if( !chTabExpand || !StrContainsTabs( src ) ) {
-      if( src_xMin > src.length() ) { return 0; }
+      if( src_xMin > src.length() ) {
+         return;
+         }
       src.remove_prefix( src_xMin );
 
       const auto CopyBytes( Min( src.length(), sizeof_dest ) );
@@ -214,7 +215,7 @@ COL PrettifyMemcpy
          }
 
       Assert( CopyBytes <= sizeof_dest );
-      return CopyBytes;
+      return;
       }
 
    // the only way to solve the problem of "what happens if src_xMin is in the
@@ -259,9 +260,7 @@ COL PrettifyMemcpy
                }
             }
          }
-      return copyBytes;
       }
-   return 0;
    }
 #undef  PD_EFF
 
