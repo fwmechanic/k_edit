@@ -82,24 +82,17 @@ Regex::capture_container::size_type Regex::Match( Regex::capture_container &capt
 
    if( rc < 0 ) {
       switch( rc ) {
-         case -1: break; // PCRE_ERROR_NOMATCH is the only "expected" error: be silent
+         case PCRE_ERROR_NOMATCH: break; // the only "expected" error: be silent
          default: ErrorDialogBeepf( "PCRE returned %d", rc );
                   break;
          }
       return 0;
       }
-
    0 && DBG( "Regex::Match returned %d", rc );
-
-   captures.clear();
-
    // if PCRE returns 0, it says there were more captures than we gave him space for (MAX_CAPTURES)
    // in that case PCRE has filled in all it can (MAX_CAPTURES), so we use a count of MAX_CAPTURES.
-   //
-   const auto actualCount( (rc == 0) ? MAX_CAPTURES : rc );
-
-   0 && DBG( "Regex::Match count=%d", actualCount );
-
+   const auto actualCount( (rc == 0) ? MAX_CAPTURES : rc );  0 && DBG( "Regex::Match count=%d", actualCount );
+   captures.clear();
    for( auto ix(0); ix < actualCount; ++ix ) {
       // It is possible for an capturing subpattern number n+1 to match some
       // part of the subject when subpattern n has not been used at all.  For
@@ -109,8 +102,7 @@ Regex::capture_container::size_type Regex::Match( Regex::capture_container &capt
       // subpattern are set to -1.
       //
       if( d_capture[ix].NoMatch() || d_capture[ix].Len() < 0 ) {
-         captures.emplace_back( stref( haystack.data() + d_capture[ix].oFirst, d_capture[ix].Len() ) );
-         // captures.clear() already cleared this entry
+         captures.emplace_back();
          }
       else {
          captures.emplace_back( stref( haystack.data() + d_capture[ix].oFirst, d_capture[ix].Len() ) );

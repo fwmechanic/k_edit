@@ -38,19 +38,19 @@ class Regex {
 
    public:
 
-   // a vector of RegexCapture (capture_container) is used to collect and return captures
+   // a vector of Capture (capture_container) is used to collect and return captures
    // a vector of stref is not used since a matching regex capture can be the empty string
    // which cannot be distinguished from a non-matching capture w/o extra info; d_valid is that
-   class RegexCapture { //
+   class Capture { //
       bool  d_valid;
       stref d_value;
    public:
-      RegexCapture()             : d_valid( false ), d_value(    ) {}
-      RegexCapture( stref val_ ) : d_valid( true  ), d_value(val_) {}
+      Capture()             : d_valid( false ), d_value(    ) {}
+      Capture( stref val_ ) : d_valid( true  ), d_value(val_) {}
       bool  valid() const { return d_valid; }
       stref value() const { return d_value; }
       };
-   typedef std::vector<RegexCapture> capture_container;
+   typedef std::vector<Capture> capture_container;
 
    enum { MAX_CAPTURES = 40, CAPT_DIVISOR = 2 };
 
@@ -71,7 +71,8 @@ class Regex {
 
    public:
 
-   Regex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called by RegexCompile when it is successful, to create rtn value
+   // User code SHOULD NOT call this ctor, _SHOULD_ CREATE Regex via RegexCompile!
+   Regex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called ONLY by RegexCompile (when it is successful)
    ~Regex();
 
    int MaxPossCaptures() const { return d_maxPossCaptures; }
