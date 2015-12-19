@@ -3325,7 +3325,7 @@ void View::GetLineForDisplay
       }
    else {
       alcc.PutColor( Origin().col, xWidth, COLOR::TXT );
-      PrettifyMemcpy( const_cast<PChar>(dest.data()) + xLeft, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), Origin().col, d_pFBuf->TrailDispChar() );
+      PrettifyMemcpy( dest, xLeft, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), Origin().col, d_pFBuf->TabWidth(), d_pFBuf->TabDispChar(), d_pFBuf->TrailDispChar() );
       if( DrawVerticalCursorHilite() && isActiveWindow && (xWidth > PCT_WIDTH) && (g_CursorLine() == yLineOfFile) ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );

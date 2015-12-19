@@ -106,21 +106,15 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
        chFill =  SMALL_BULLET;  \
        }
 
-// intent (20141221) is that FormatExpandedSeg replace PrettifyMemcpy
-// what's preventing this from happening?
-// 1) dest receives a terminating NUL merely by dint of being a std::string
-// 2) Xbuf offers a writable-string (PChar) interface to the underlying allocated buffer
-//    (while std::string does NOT)
-// 3) PrettifyMemcpy is called multiple times on the same buffer, to generate a console
-//    display line
-
-STATIC_FXN void PrettifyAppend
-   ( std::string &dest, size_t maxCharsToWrite        // dest  NOT cleared herein!!!
+template <typename T>
+void PrettifyWriter
+   ( std::string &dest
+   , T dit
+   , size_t maxCharsToWrite        // dest  NOT cleared herein!!!
    , stref src, COL src_xMin                          // src
    , COL tabWidth, char chTabExpand, char chTrailSpcs // xfr
    ) {
    const auto initial_dest_length( dest.length() );
-   auto dit( back_inserter(dest) );
    if( !chTabExpand || !StrContainsTabs( src ) ) {
       if( src_xMin <= src.length() ) {
          src.remove_prefix( src_xMin );
@@ -175,6 +169,24 @@ STATIC_FXN void PrettifyAppend
       }
    }
 
+void PrettifyMemcpy
+   ( std::string &dest, COL xLeft
+   , size_t maxCharsToWrite
+   , stref src, COL src_xMin
+   , COL tabWidth, char chTabExpand, char chTrailSpcs
+   ) {
+   PrettifyWriter< decltype( begin(dest) ) >       ( dest , begin(dest) + xLeft, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
+   }
+
+STATIC_FXN void PrettifyAppend
+   ( std::string &dest
+   , size_t maxCharsToWrite
+   , stref src, COL src_xMin
+   , COL tabWidth, char chTabExpand, char chTrailSpcs
+   ) {
+   PrettifyWriter< decltype(back_inserter(dest)) > ( dest, back_inserter(dest) , maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
+   }
+
 void FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently
    ( std::string &dest, size_t maxCharsToWrite
    , stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs
@@ -191,78 +203,6 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
    PrettifyAppend( dest, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
    return dest;
    }
-
-// a terminating NUL IS NOT added!!!
-void PrettifyMemcpy
-   ( const PChar dest, const size_t sizeof_dest
-   , stref src, COL tabWidth, char chTabExpand, COL src_xMin, char chTrailSpcs
-   ) {
-   // src.data() IS NOT NUL terminated (since it may point at a line within a file image buffer)!!!
-   //
-   if( !chTabExpand || !StrContainsTabs( src ) ) {
-      if( src_xMin > src.length() ) {
-         return;
-         }
-      src.remove_prefix( src_xMin );
-
-      const auto CopyBytes( Min( src.length(), sizeof_dest ) );
-      memcpy( dest, src.data(), CopyBytes );
-
-      if( chTrailSpcs && CopyBytes==src.length() ) {
-         for( auto pC(dest + CopyBytes - 1) ; *pC == ' ' ; --pC ) {
-            *pC = chTrailSpcs;
-            }
-         }
-
-      Assert( CopyBytes <= sizeof_dest );
-      return;
-      }
-
-   // the only way to solve the problem of "what happens if src_xMin is in the
-   // middle of a tab-expansion?" is to walk the src string from its beginning,
-   // even though we aren't necessarily _copying_ from the beginning.
-
-   const Tabber tabr( tabWidth );
-   const auto pDestRightmostWritable( dest + sizeof_dest - 1 );
-         auto pD(dest);
-#define  PD_EFF   (pD - src_xMin)
-   COL xCol( 0 );
-   auto wr_char = [&]( char ch ) {
-      if( PD_EFF >= dest ) { *PD_EFF = ch; }
-      ++pD; ++xCol;
-      };
-
-   auto sit( src.cbegin() );
-   while( sit != src.cend() && PD_EFF <= pDestRightmostWritable ) {
-      const auto ch( *sit++ );
-      if( ch != HTAB ) {
-         wr_char(ch);
-         }
-      else {
-         const auto limit( pD + tabr.FillCountToNextTabStop( xCol ) );
-         auto chFill( chTabExpand );                                 // chTabExpand == BIG_BULLET has special behavior:
-         while( pD < limit && PD_EFF <= pDestRightmostWritable ) {   // col containing actual HTAB will disp as BIG_BULLET
-            wr_char( chFill );                                       // remaining fill-in chars will show as SMALL_BULLET
-            XLAT_chFill( chFill )
-            }
-         }
-      }
-
-   const auto copyBytes(PD_EFF - dest);
-   if( copyBytes > 0 ) {
-      if( chTrailSpcs ) {
-         // sit points just after the last source-char copied/xlated;
-         //    sit == src.cend() (if the above loop terminated because sit == src.cend())
-         // OR sit  < src.cend() (if the above loop terminated due to PD_EFF <= pDestRightmostWritable being false)
-         if( sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
-            for( --pD ; PD_EFF >= dest && *PD_EFF == ' ' ; --pD ) { // xlat all trailing spaces present in dest
-               *PD_EFF = chTrailSpcs;
-               }
-            }
-         }
-      }
-   }
-#undef  PD_EFF
 
 COL ColPrevTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfPrevTabStop( xCol ); }
 COL ColNextTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfNextTabStop( xCol ); }

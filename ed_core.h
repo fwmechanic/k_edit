@@ -1555,7 +1555,8 @@ extern std::string FormatExpandedSeg // less efficient version: uses virgin dest
           ( size_t maxCharsToWrite                     // dest-related
           , stref src, COL src_xMin, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0
           );
-extern void    PrettifyMemcpy( PChar pDestBuf, size_t sizeof_dest, stref src, COL tabWidth, char chTabExpand, COL src_xMin=0, char chTrailSpcs=0 );
+
+extern void    PrettifyMemcpy( std::string &dest, COL xLeft, size_t maxCharsToWrite, stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs );
 
 //************ tabWidth-dependent col-of-ptr/ptr-of-col xlators
 //             FreeIdxOfCol returns index that MAY be out of range; used to see whether col maps to content, or is beyond it
