@@ -605,11 +605,11 @@
    # 0xFA (centered dot, faint)
    trailspace:yes
    traildisp: 0xFA
-   tabdisp: <
    tabdisp: ^
    tabdisp: 0xF9
    tabdisp: >
    tabdisp: -
+   tabdisp: <
 
    savescreen:ctrl+k
    towinclip:ctrl+num+
