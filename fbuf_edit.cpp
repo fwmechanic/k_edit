@@ -122,16 +122,16 @@ void PrettifyWriter
       chTabExpand == '<'    ? stref( "<->"      ) :
                               stref( &chTabExpand, sizeof(chTabExpand) )
       );
+   const auto chLast( srTabExpand.length() > 2 ? srTabExpand[2] : srTabExpand[0] );
+   const auto chFill( srTabExpand.length() > 1 ? srTabExpand[1] : srTabExpand[0] );
    while( sit != src.cend() && dix < maxCharsToWrite ) {
       const auto ch( *sit++ );
       if( ch != HTAB ) {
          wr_char( ch );
          }
       else { // expand an HTAB-spring
-         const auto chLast( srTabExpand.length() > 2 ? srTabExpand[2] : srTabExpand[0] );
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
          wr_char( (xCol == tgt-1) ? chLast : srTabExpand[0] );
-         const auto chFill( srTabExpand.length() > 1 ? srTabExpand[1] : srTabExpand[0] );
          while( xCol < tgt && dix < maxCharsToWrite ) {
             wr_char( (xCol == tgt-1) ? chLast : chFill );
             }
