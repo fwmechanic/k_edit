@@ -110,9 +110,9 @@ template <typename T>
 void PrettifyWriter
    ( std::string &dest
    , T dit
-   , size_t maxCharsToWrite        // dest  NOT cleared herein!!!
-   , stref src, COL src_xMin                          // src
-   , COL tabWidth, char chTabExpand, char chTrailSpcs // xfr
+   , size_t maxCharsToWrite
+   , stref src, COL src_xMin
+   , COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    const auto initial_dest_length( dest.length() );
    if( !chTabExpand || !StrContainsTabs( src ) ) {
@@ -124,6 +124,7 @@ void PrettifyWriter
             *dit++ = *sit++;
             }
          if( chTrailSpcs && CopyBytes==src.length() ) {
+         // const auto drend( dest.rbegin() + (dest.length() - initial_dest_length) + 1 );
             const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
             for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) {
                *drit = chTrailSpcs;
@@ -141,7 +142,7 @@ void PrettifyWriter
    auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; } };
    const Tabber tabr( tabWidth );
    auto sit( src.cbegin() );
-   while( sit != src.cend() && dest.length() < maxCharsToWrite ) {
+   while( sit != src.cend() && (dest.length() - initial_dest_length) < maxCharsToWrite ) {
       const auto ch( *sit++ );
       if( ch != HTAB ) {
          wr_char(ch);
@@ -149,9 +150,9 @@ void PrettifyWriter
       else {
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
          auto chFill( chTabExpand );                              // chTabExpand == BIG_BULLET has special behavior:
-         while( xCol < tgt && dest.length() < maxCharsToWrite ) { // col containing actual HTAB will disp as BIG_BULLET
-            wr_char( chFill );                                    // remaining fill-in chars will show as SMALL_BULLET
-            XLAT_chFill( chFill )
+         while( xCol < tgt && (dest.length() - initial_dest_length) < maxCharsToWrite ) {
+            wr_char( chFill );                                    // col containing actual HTAB will disp as BIG_BULLET
+            XLAT_chFill( chFill )                                 // remaining fill-in chars will show as SMALL_BULLET
             }
          }
       }
@@ -161,10 +162,11 @@ void PrettifyWriter
       //    sit == src.cend() (if the above loop terminated because 'sit == src.cend()')
       // OR sit != src.cend() (if the above loop terminated due to 'dest.length() < maxCharsToWrite' being false)
       if( sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
+      // const auto drend( dest.rbegin() + (dest.length() - initial_dest_length) + 1 );
          const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
          for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) { // xlat all trailing spaces present in dest
             *drit = chTrailSpcs;
-            }
+            }            // std::reverse_iterator<dit>
          }
       }
    }
@@ -178,7 +180,7 @@ void PrettifyMemcpy
    PrettifyWriter< decltype( begin(dest) ) >       ( dest , begin(dest) + xLeft, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
    }
 
-STATIC_FXN void PrettifyAppend
+STATIC_FXN void PrettifyInsert
    ( std::string &dest
    , size_t maxCharsToWrite
    , stref src, COL src_xMin
@@ -192,7 +194,7 @@ void FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, 
    , stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    dest.clear();
-   PrettifyAppend( dest, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
+   PrettifyInsert( dest, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
    }
 
 std::string FormatExpandedSeg // less efficient version: uses virgin dest each call, thus hits the heap each time
@@ -200,7 +202,7 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
    , stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
    std::string dest;
-   PrettifyAppend( dest, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
+   PrettifyInsert( dest, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
    return dest;
    }
 
