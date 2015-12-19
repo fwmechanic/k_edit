@@ -109,40 +109,21 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 template <typename T>
 void PrettifyWriter
    ( std::string &dest
-   , T dit
-   , size_t maxCharsToWrite
+   , T            dit
+   , COL          dofs
+   , size_t       maxCharsToWrite
    , stref src, COL src_xMin
    , COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
-   const auto initial_dest_length( dest.length() );
-   if( !chTabExpand || !StrContainsTabs( src ) ) {
-      if( src_xMin <= src.length() ) {
-         src.remove_prefix( src_xMin );
-         const auto CopyBytes( Min( src.length(), maxCharsToWrite ) );
-         auto sit( src.cbegin() );
-         for( auto ix( 0u ) ; ix < CopyBytes ; ++ix ) {
-            *dit++ = *sit++;
-            }
-         if( chTrailSpcs && CopyBytes==src.length() ) {
-         // const auto drend( dest.rbegin() + (dest.length() - initial_dest_length) + 1 );
-            const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
-            for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) {
-               *drit = chTrailSpcs;
-               }
-            }
-         }
-      return;
-      }
-
+   T dit0( dit );
+   auto sit( src.cbegin() );
    // the only way to solve the problem of "what happens if src_xMin is in the
    // middle of a tab-expansion?" is to walk the src string from its beginning,
    // even though we aren't necessarily _copying_ from the beginning.
-
-   COL xCol( 0 );
-   auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; } };
+   COL xCol( 0 ); COL dix( 0 );
+   auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; dix++; } };
    const Tabber tabr( tabWidth );
-   auto sit( src.cbegin() );
-   while( sit != src.cend() && (dest.length() - initial_dest_length) < maxCharsToWrite ) {
+   while( sit != src.cend() && dix < maxCharsToWrite ) {
       const auto ch( *sit++ );
       if( ch != HTAB ) {
          wr_char(ch);
@@ -150,23 +131,20 @@ void PrettifyWriter
       else {
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
          auto chFill( chTabExpand );                              // chTabExpand == BIG_BULLET has special behavior:
-         while( xCol < tgt && (dest.length() - initial_dest_length) < maxCharsToWrite ) {
+         while( xCol < tgt && dix < maxCharsToWrite ) {
             wr_char( chFill );                                    // col containing actual HTAB will disp as BIG_BULLET
             XLAT_chFill( chFill )                                 // remaining fill-in chars will show as SMALL_BULLET
             }
          }
       }
 
-   if( chTrailSpcs ) {
-      // sit points just after the last source-char copied/xlated;
-      //    sit == src.cend() (if the above loop terminated because 'sit == src.cend()')
-      // OR sit != src.cend() (if the above loop terminated due to 'dest.length() < maxCharsToWrite' being false)
-      if( sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
-      // const auto drend( dest.rbegin() + (dest.length() - initial_dest_length) + 1 );
-         const auto drend( dest.rbegin() + (initial_dest_length - dest.length()) + 1 );
-         for( auto drit( dest.rbegin() ) ; drit != drend && *drit == ' ' ; ++drit ) { // xlat all trailing spaces present in dest
-            *drit = chTrailSpcs;
-            }            // std::reverse_iterator<dit>
+   if( chTrailSpcs && sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
+      stref destseg( dest.data() + dofs, dix ); // what we wrote above
+      auto ix_last_non_white( destseg.find_last_not_of( " \t" ) );
+      if( ix_last_non_white != dix-1 ) { // any trailing blanks at all?
+         // ix_last_non_white==eosr means ALL are blanks
+         const auto rlen( ix_last_non_white==eosr ? dix : dix-1 - ix_last_non_white );
+         dest.replace( dofs + (dix-rlen), rlen, rlen, chTrailSpcs );
          }
       }
    }
@@ -177,7 +155,7 @@ void PrettifyMemcpy
    , stref src, COL src_xMin
    , COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
-   PrettifyWriter< decltype( begin(dest) ) >       ( dest , begin(dest) + xLeft, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
+   PrettifyWriter< decltype( begin(dest) ) >       ( dest , begin(dest) + xLeft,  xLeft, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
    }
 
 STATIC_FXN void PrettifyInsert
@@ -186,7 +164,7 @@ STATIC_FXN void PrettifyInsert
    , stref src, COL src_xMin
    , COL tabWidth, char chTabExpand, char chTrailSpcs
    ) {
-   PrettifyWriter< decltype(back_inserter(dest)) > ( dest, back_inserter(dest) , maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
+   PrettifyWriter< decltype(back_inserter(dest)) > ( dest, back_inserter(dest) ,      0, maxCharsToWrite, src, src_xMin, tabWidth, chTabExpand, chTrailSpcs );
    }
 
 void FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently
