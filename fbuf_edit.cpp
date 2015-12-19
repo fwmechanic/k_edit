@@ -114,19 +114,15 @@ void PrettifyWriter
    , size_t       maxCharsToWrite
    , stref src, COL src_xMin
    , COL tabWidth, char chTabExpand, char chTrailSpcs
-   ) {
-   T dit0( dit );
+   ) { // proper tabx requires walking src from its beginning, even though we aren't necessarily _copying_ from the beginning.
    auto sit( src.cbegin() );
-   // the only way to solve the problem of "what happens if src_xMin is in the
-   // middle of a tab-expansion?" is to walk the src string from its beginning,
-   // even though we aren't necessarily _copying_ from the beginning.
    COL xCol( 0 ); COL dix( 0 );
-   auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; dix++; } };
+   auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; ++dix; } };
    const Tabber tabr( tabWidth );
    while( sit != src.cend() && dix < maxCharsToWrite ) {
       const auto ch( *sit++ );
       if( ch != HTAB ) {
-         wr_char(ch);
+         wr_char( ch );
          }
       else {
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
@@ -144,7 +140,11 @@ void PrettifyWriter
       if( ix_last_non_white != dix-1 ) { // any trailing blanks at all?
          // ix_last_non_white==eosr means ALL are blanks
          const auto rlen( ix_last_non_white==eosr ? dix : dix-1 - ix_last_non_white );
-         dest.replace( dofs + (dix-rlen), rlen, rlen, chTrailSpcs );
+         for( auto iy( dofs + (dix-rlen) ); iy < dofs + dix ; ++iy ) {
+            if( dest[iy] == ' ' ) { // don't touch tab-replacement done above
+                dest[iy] = chTrailSpcs;
+                }
+            }
          }
       }
    }
