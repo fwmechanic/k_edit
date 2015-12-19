@@ -19,15 +19,7 @@
       #tagfile:!tags
 
    # NUMERIC
-   #
-   #   0xF9 (centered dot, strong)
-   #   0xFA (centered dot, faint)
-      traildisp: 0xFA
-      trailspace:yes
-   #  trailspace:no
       rmargin:  76
-      tabdisp: 0xF9
-      tabdisp: <
 
       vscroll:   1
       hscroll:   1
@@ -608,6 +600,17 @@
 [W.6.1] # Win7
 [W.6.2] # Win8
 [os.win32]
+   # Windows OEM charset:
+   # 0xF9 (centered dot, strong)
+   # 0xFA (centered dot, faint)
+   trailspace:yes
+   traildisp: 0xFA
+   tabdisp: <
+   tabdisp: ^
+   tabdisp: 0xF9
+   tabdisp: >
+   tabdisp: -
+
    savescreen:ctrl+k
    towinclip:ctrl+num+
    resize:alt+w
@@ -616,6 +619,9 @@
    # arg:tab   # this breaks Linux/X paste which types literal chars into the editor
 
 [os.linux]
+   trailspace:yes
+   traildisp: ?
+   tabdisp: <
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 

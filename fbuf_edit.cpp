@@ -115,32 +115,29 @@ void PrettifyWriter
    COL xCol( 0 ); COL dix( 0 );
    auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; ++dix; } };
    const Tabber tabr( tabWidth );
+   const stref srTabExpand( // ultimately, srTabExpand should be passed in (replacing chTabExpand)...
+      chTabExpand == '\xF9' ? stref( "\xF9\xFA" ) :
+      chTabExpand == '^'    ? stref( "^`"       ) :
+      chTabExpand == '-'    ? stref( "-->"      ) :
+      chTabExpand == '<'    ? stref( "<->"      ) :
+                              stref( &chTabExpand, sizeof(chTabExpand) )
+      );
    while( sit != src.cend() && dix < maxCharsToWrite ) {
       const auto ch( *sit++ );
       if( ch != HTAB ) {
          wr_char( ch );
          }
-      else {
+      else { // expand an HTAB-spring
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
-         auto chFill( chTabExpand );
-         switch( chFill ) {
-            case BIG_BULLET: // magical behavior
-               while( xCol < tgt && dix < maxCharsToWrite ) {
-                  wr_char( chFill );        // col containing actual HTAB will disp as BIG_BULLET
-                  chFill =  SMALL_BULLET;   // remaining fill-in chars will show as SMALL_BULLET
-                  } break;
-            case '<': // magical behavior
-               while( xCol < tgt && dix < maxCharsToWrite ) {
-                  wr_char( xCol == tgt-1 ? '>' : chFill );
-                  chFill = '-';
-                  } break;
-            default:
-               while( xCol < tgt && dix < maxCharsToWrite ) { wr_char( chFill ); }
-               break;
+         auto chFill( srTabExpand[0] );
+         while( xCol < tgt && dix < maxCharsToWrite ) {
+            wr_char( (xCol == tgt-1) && (srTabExpand.length() > 2) ? srTabExpand[2] : chFill );
+            if( srTabExpand.length() > 1 ) {
+               chFill = srTabExpand[1];   // remaining fill-in chars will show as srTabExpand[1]
+               }
             }
          }
       }
-
    if( chTrailSpcs && sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
       stref destseg( dest.data() + dofs, dix ); // what we wrote above
       auto ix_last_non_white( destseg.find_last_not_of( SPCTAB ) );
