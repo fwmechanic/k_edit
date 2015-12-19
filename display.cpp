@@ -1014,7 +1014,7 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
       if( ixTgt != stref::npos ) {
          const auto tw( CFBuf()->TabWidth() );
          const auto xC  ( ColOfFreeIdx( tw, rl, ixTgt                        ) );
-         const auto xPWS( ColOfFreeIdx( tw, rl, rl.find_last_not_of( " \t" ) ) );
+         const auto xPWS( ColOfFreeIdx( tw, rl, rl.find_last_not_of( SPCTAB ) ) );
          alcc.PutColor( xC, xPWS - xC + 1, COLOR::COM );
          }
       }
@@ -2997,9 +2997,11 @@ void swid_ch( PChar dest, size_t sizeofDest, char ch ) {
    }
 
 STATIC_FXN bool swixChardisp( stref param, char &charVar ) {
+   DBG( "%s: param=%" PR_BSR "'", __PRETTY_FUNCTION__, BSR( param ) );
    charVar = char(StrToInt_variable_base( param, 10 ));
-   if( 0 == charVar )
-      charVar = ' ';
+   if( char(-1) == charVar ) {
+      charVar = param.length() == 1 ? param[0] : ' ';
+      }
 
    DispNeedsRedrawAllLinesAllWindows();
    return true;

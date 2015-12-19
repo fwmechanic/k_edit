@@ -22,7 +22,6 @@
 // std::unique_ptr<int> up( new int(42) ); these _do_ compile, as
 // std::shared_ptr<int> sp( new int(42) ); PoC of availability...
 
-GLOBAL_CONST char szSpcTab[] = " \t";
 GLOBAL_CONST char szMacroTerminators[] = "#";
 
 bool CMD::IsFnCancel()     const { return &ARG::cancel     == d_func || fn_cancel     == d_func; }

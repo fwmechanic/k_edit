@@ -101,19 +101,15 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
    return true;
    }
 
-#define XLAT_chFill( chFill )   \
-   if( chFill == BIG_BULLET ) { \
-       chFill =  SMALL_BULLET;  \
-       }
-
 template <typename T>
 void PrettifyWriter
    ( std::string &dest
    , T            dit
-   , COL          dofs
-   , size_t       maxCharsToWrite
-   , stref src, COL src_xMin
-   , COL tabWidth, char chTabExpand, char chTrailSpcs
+   , const COL    dofs
+   , const size_t maxCharsToWrite
+   , const stref src
+   , const COL src_xMin
+   , const COL tabWidth, const char chTabExpand, const char chTrailSpcs
    ) { // proper tabx requires walking src from its beginning, even though we aren't necessarily _copying_ from the beginning.
    auto sit( src.cbegin() );
    COL xCol( 0 ); COL dix( 0 );
@@ -126,17 +122,28 @@ void PrettifyWriter
          }
       else {
          const auto tgt( tabr.ColOfNextTabStop( xCol ) );
-         auto chFill( chTabExpand );                              // chTabExpand == BIG_BULLET has special behavior:
-         while( xCol < tgt && dix < maxCharsToWrite ) {
-            wr_char( chFill );                                    // col containing actual HTAB will disp as BIG_BULLET
-            XLAT_chFill( chFill )                                 // remaining fill-in chars will show as SMALL_BULLET
+         auto chFill( chTabExpand );
+         switch( chFill ) {
+            case BIG_BULLET: // magical behavior
+               while( xCol < tgt && dix < maxCharsToWrite ) {
+                  wr_char( chFill );        // col containing actual HTAB will disp as BIG_BULLET
+                  chFill =  SMALL_BULLET;   // remaining fill-in chars will show as SMALL_BULLET
+                  } break;
+            case '<': // magical behavior
+               while( xCol < tgt && dix < maxCharsToWrite ) {
+                  wr_char( xCol == tgt-1 ? '>' : chFill );
+                  chFill = '-';
+                  } break;
+            default:
+               while( xCol < tgt && dix < maxCharsToWrite ) { wr_char( chFill ); }
+               break;
             }
          }
       }
 
    if( chTrailSpcs && sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
       stref destseg( dest.data() + dofs, dix ); // what we wrote above
-      auto ix_last_non_white( destseg.find_last_not_of( " \t" ) );
+      auto ix_last_non_white( destseg.find_last_not_of( SPCTAB ) );
       if( ix_last_non_white != dix-1 ) { // any trailing blanks at all?
          // ix_last_non_white==eosr means ALL are blanks
          const auto rlen( ix_last_non_white==eosr ? dix : dix-1 - ix_last_non_white );

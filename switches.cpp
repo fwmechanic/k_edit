@@ -296,6 +296,7 @@ void swidColorvarx( PChar dest, size_t sizeofDest, void *src )  { safeSprintf( d
 #endif
 
 STATIC_CONST SWI s_SwiTable[] = {
+//  name                        act                        pfxDefn       pfxDisp        kszHelp
  { "askexit"        , Var2TPfx( g_fAskExit              ), swinVAR_BOOL, swidBool       _AHELP( "enable last-chance prompt before terminating the editor session" ) },
  {  kszBackup       , Fxn2TPfx( swixBackup              ), swinFXN_STR , swidBackup     _AHELP( "choices are 'undel', 'bak' or 'none'; see online help for details" ) },
  { "beep"           , Var2TPfx( g_fAllowBeep            ), swinVAR_BOOL, swidBool       _AHELP( "beeping allowed (yes) or not (no)" ) },
@@ -377,9 +378,10 @@ void FBufRead_Assign_Switches( PFBUF pFBuf ) {
       }
    }
 
-bool SetSwitch( stref pszSwitchName, stref pszNewValue ) { 0 && DBG( "SetSwitch '%" PR_BSR "' ", BSR(pszSwitchName) );
-   auto pSwi( FindSwitch( pszSwitchName ) ); if( !pSwi ) return Msg( "'%" PR_BSR "' is not an editor switch", BSR(pszSwitchName) );
-   if( g_pFBufAssignLog ) g_pFBufAssignLog->FmtLastLine( "ASGN  %" PR_BSR "='%" PR_BSR "'", BSR(pszSwitchName), BSR(pszNewValue) );
-   if( pszNewValue.empty() ) return Msg( "%" PR_BSR ": empty switch value", BSR(pszSwitchName) );
-   return pSwi->pfxDefn( pSwi, pszNewValue );
+bool SetSwitch( stref switchName, stref newValue ) {
+   trim( switchName ); trim( newValue );  0 && DBG( "SetSwitch '%" PR_BSR "' ", BSR(switchName) );
+   auto pSwi( FindSwitch( switchName ) ); if( !pSwi ) return Msg( "'%" PR_BSR "' is not an editor switch", BSR(switchName) );
+   if( g_pFBufAssignLog ) g_pFBufAssignLog->FmtLastLine( "ASGN  %" PR_BSR "='%" PR_BSR "'", BSR(switchName), BSR(newValue) );
+   if( newValue.empty() ) return Msg( "%" PR_BSR ": empty switch value", BSR(switchName) );
+   return pSwi->pfxDefn( pSwi, newValue );
    }

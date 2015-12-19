@@ -315,7 +315,7 @@ extern PChar  safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) A
 //
 //-----------------
 
-extern const char szSpcTab[];
+#define SPCTAB  " \t"
 extern const char szMacroTerminators[];
 extern       char g_szWordChars[];
 
@@ -345,8 +345,8 @@ extern size_t Strncspn ( PCChar str1, PCChar eos1, PCChar needle );
 TF_Ptr STIL Ptr  StrToNextOrEos( Ptr pszToSearch, PCChar pszToSearchFor ) { return pszToSearch + Strncspn( pszToSearch, nullptr, pszToSearchFor ); }
 TF_Ptr STIL Ptr  StrPastAny(     Ptr pszToSearch, PCChar pszToSearchFor ) { return pszToSearch + Strnspn ( pszToSearch, nullptr, pszToSearchFor ); }
 
-TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr pszToSearch ) { return StrPastAny(     pszToSearch, szSpcTab ); }
-TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, szSpcTab ); }
+TF_Ptr STIL Ptr  StrPastAnyBlanks(    Ptr pszToSearch ) { return StrPastAny(     pszToSearch, SPCTAB ); }
+TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos( pszToSearch, SPCTAB ); }
 
 // these are extern vs. inline because the requisite predicates are not public
 extern sridx FirstNonBlankOrEnd( stref src, sridx start=0 );
@@ -365,6 +365,21 @@ TF_Ptr STIL Ptr DquotStrToNextOrEos( Ptr  pszToSearch, PCChar pszToSearchFor ) {
 TF_Ptr STIL Ptr StrToNextMacroTermOrEos( Ptr pszToSearch ) { return DquotStrToNextOrEos( pszToSearch, szMacroTerminators ); }
 
 template<typename strlval> void string_tolower( strlval &inout ) { std::transform( inout.begin(), inout.end(), inout.begin(), ::tolower ); }
+
+template<typename strlval>
+STIL void trim( strlval &inout ) { // remove leading and trailing whitespace
+   const auto ox( inout.find_first_not_of( SPCTAB ) );
+   if( ox != eosr ) {
+      inout.remove_prefix( ox );
+      }
+   const auto ix_last_non_white( inout.find_last_not_of( SPCTAB ) );
+   const auto dix( inout.length() );
+   if( ix_last_non_white != dix-1 ) { // any trailing blanks at all?
+      // ix_last_non_white==eosr means ALL are blanks
+      const auto rlen( ix_last_non_white==eosr ? dix : dix-1 - ix_last_non_white );
+      inout.remove_prefix( rlen );
+      }
+   }
 
 template<typename strlval>
 void rmv_trail_blanks( strlval &inout ) {

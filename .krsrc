@@ -22,9 +22,12 @@
    #
    #   0xF9 (centered dot, strong)
    #   0xFA (centered dot, faint)
-      traildisp: 0xFA trailspace:yes
+      traildisp: 0xFA
+      trailspace:yes
    #  trailspace:no
       rmargin:  76
+      tabdisp: 0xF9
+      tabdisp: <
 
       vscroll:   1
       hscroll:   1
