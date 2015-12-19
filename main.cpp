@@ -537,7 +537,7 @@ STATIC_FXN bool OpenRsrcFileFailed() {
 
 
 stref IsolateTagStr( stref src ) {
-   const auto ixLSQ( src.find_first_not_of( "\t " ) );
+   const auto ixLSQ( src.find_first_not_of( SPCTAB ) );
    if( stref::npos==ixLSQ || src[ixLSQ] != '[' )
       return stref();
 

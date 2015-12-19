@@ -103,17 +103,14 @@ STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos
 
 template <typename T>
 void PrettifyWriter
-   ( std::string &dest
-   , T            dit
-   , const COL    dofs
+   ( std::string &dest, T dit, const COL dofs
    , const size_t maxCharsToWrite
-   , const stref src
-   , const COL src_xMin
+   , const stref src, const COL src_xMin
    , const COL tabWidth, const char chTabExpand, const char chTrailSpcs
    ) { // proper tabx requires walking src from its beginning, even though we aren't necessarily _copying_ from the beginning.
    auto sit( src.cbegin() );
    COL xCol( 0 ); COL dix( 0 );
-   auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; ++dix; } };
+   const auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; ++dix; } };
    const Tabber tabr( tabWidth );
    const stref srTabExpand( // ultimately, srTabExpand should be passed in (replacing chTabExpand)...
       chTabExpand == '\xF9' ? stref( "\xF9\xFA" ) :
@@ -139,7 +136,7 @@ void PrettifyWriter
       }
    if( chTrailSpcs && sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
       stref destseg( dest.data() + dofs, dix ); // what we wrote above
-      auto ix_last_non_white( destseg.find_last_not_of( SPCTAB ) );
+      const auto ix_last_non_white( destseg.find_last_not_of( SPCTAB ) );
       if( ix_last_non_white != dix-1 ) { // any trailing blanks at all?
          // ix_last_non_white==eosr means ALL are blanks
          const auto rlen( ix_last_non_white==eosr ? dix : dix-1 - ix_last_non_white );

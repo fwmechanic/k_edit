@@ -3329,7 +3329,13 @@ void View::GetLineForDisplay
       alcc.PutColor( Origin().col, xWidth, COLOR::TXT );
       const auto activeLine( isActiveWindow && (g_CursorLine() == yLineOfFile) );
       const auto showBlanks( d_pFBuf->RevealBlanks() || activeLine );
-      PrettifyMemcpy( dest, xLeft, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), Origin().col, d_pFBuf->TabWidth(), showBlanks ? d_pFBuf->TabDispChar() : ' ', showBlanks ? d_pFBuf->TrailDispChar() : 0 );
+      PrettifyMemcpy( dest, xLeft, xWidth
+         ,              d_pFBuf->PeekRawLine( yLineOfFile )
+         , Origin().col
+         ,              d_pFBuf->TabWidth()
+         , showBlanks ? d_pFBuf->TabDispChar()   : ' '
+         , showBlanks ? d_pFBuf->TrailDispChar() : 0
+         );
       if( DrawVerticalCursorHilite() && (xWidth > PCT_WIDTH) && activeLine ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
