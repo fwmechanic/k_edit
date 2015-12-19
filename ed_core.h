@@ -1356,8 +1356,8 @@ public:
    eEntabModes    Entab() const { return d_Entab; }
    bool           SetEntabOk( int newEntab ); // NOT CONST!!!
 
-   char           TabDispChar()   const { return RevealBlanks() ? g_chTabDisp        : ' '; }
-   char           TrailDispChar() const { return RevealBlanks() ? g_chTrailSpaceDisp : 0  ; }
+   char           TabDispChar()   const { return g_chTabDisp; }
+   char           TrailDispChar() const { return g_chTrailSpaceDisp; }
 
    //************ tab-width-dependent line-content-related calcs
    int            TabWidth() const { return d_TabWidth; }
