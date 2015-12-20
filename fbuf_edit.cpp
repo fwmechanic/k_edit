@@ -571,28 +571,29 @@ bool ARG::emacscdel() { return DeletePrevChar( true  ); }
 //------------------------------------------------------------------------------
 
 STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE yLine, const COL xLeft, const COL boxWidth, bool fCollapse ) {
-   pf->getLineTabxPerRealtabs( dest, yLine );
-   const auto xEolNul( dest.length() );
-   if( xEolNul <= xLeft )
+   const auto xEolNul( FBOP::LineCols( pf, yLine ) );
+   if( xEolNul <= xLeft ) {
+      // 1 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
       return;
-
+      }
    const auto tw( pf->TabWidth() );
+   pf->getLineTabxPerRealtabs( dest, yLine );
    const auto ixLeft( CaptiveIdxOfCol( tw, dest, xLeft ) );
-   const auto xRight( xLeft + boxWidth );
+   const auto xRight( xLeft + boxWidth ); // dest[xRight] will be 0th char of kept 2nd segment
    if( xRight >= xEolNul ) { // trailing segment of line is being deleted?
-      0 && DBG( "%s trim, %" PR_SIZET "u <= %d '%c'", __func__, xEolNul, xRight, dest[ixLeft] );
+      0 && DBG( "%s trim, %u <= %d '%c'", __func__, xEolNul, xRight, dest[ixLeft] );
       dest.resize( ixLeft ); // the first (leftmost) char in the selected box
       return;
       }
-   if( boxWidth == 0 )
-      return;
-
-   const auto charsInGap( boxWidth );
-   if( fCollapse ) { // Collapse
-      dest.erase( ixLeft, charsInGap );
-      }
-   else { // fill Gap w/blanks
-      dest.replace( ixLeft, charsInGap, charsInGap, ' ' );
+   const auto ixRight( CaptiveIdxOfCol( tw, dest, xRight ) );
+   const auto charsInGap( ixRight - ixLeft );
+   if( charsInGap > 0 ) {
+      if( fCollapse ) { /* Collapse */     0 && DBG( "b4:%s'", dest.c_str() );
+         dest.erase( ixLeft, charsInGap ); 0 && DBG( "af:%s'", dest.c_str() );
+         }
+      else { // fill Gap w/blanks
+         dest.replace( ixLeft, charsInGap, charsInGap, ' ' );
+         }
       }
    }
 
