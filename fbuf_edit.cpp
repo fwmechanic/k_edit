@@ -112,8 +112,8 @@ void PrettifyWriter
    COL xCol( 0 ); COL dix( 0 );
    const auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; ++dix; } };
    const Tabber tabr( tabWidth );
-   const stref srTabExpand( // ultimately, srTabExpand should be passed in (replacing chTabExpand)...
-      chTabExpand == '\xF9' ? stref( "\xF9\xFA" ) :
+   const stref srTabExpand( // ultimately, srTabExpand could be passed in (replacing chTabExpand)...
+      chTabExpand == '\xF9' ? stref( "\xF9\xFA" ) : // but mind the chTabExpand == '\0' case below!
       chTabExpand == '^'    ? stref( "^`"       ) :
       chTabExpand == '-'    ? stref( "-->"      ) :
       chTabExpand == '<'    ? stref( "<->"      ) :
@@ -123,7 +123,7 @@ void PrettifyWriter
    const auto chFill( srTabExpand[ srTabExpand.length() > 1 ? 1 : 0 ] );
    while( sit != src.cend() && dix < maxCharsToWrite ) {
       const auto ch( *sit++ );
-      if( ch != HTAB ) {
+      if( ch != HTAB || chTabExpand == '\0' ) {
          wr_char( ch );
          }
       else { // expand an HTAB-spring
