@@ -1664,11 +1664,12 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    bool           PopFirstLine( std::string &st, PFBUF pFbuf );
 
    //************ char-level ops
-   extern void    PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 );
-   STIL void      InsertChar ( PFBUF fb, LINE yLine, COL xCol, char theChar, std::string &tmp1, std::string &tmp2 ) { PutChar_( fb, yLine, xCol, theChar, true , tmp1, tmp2 ); }
-   STIL void      ReplaceChar( PFBUF fb, LINE yLine, COL xCol, char theChar, std::string &tmp1, std::string &tmp2 ) { PutChar_( fb, yLine, xCol, theChar, false, tmp1, tmp2 ); }
-   STIL void      DelChar( PFBUF fb, COL xLeft, LINE yTop ) { fb->DelBox( xLeft, yTop, xLeft, yTop ); }
-   STIL void      DelChar( PFBUF fb, Point pt )             { DelChar( fb, pt.col, pt.lin ); }
+   extern COL     PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 );
+   STIL COL       InsertChar ( PFBUF fb, LINE yLine, COL xCol, char theChar, std::string &tmp1, std::string &tmp2 ) { return PutChar_( fb, yLine, xCol, theChar, true , tmp1, tmp2 ); }
+   STIL COL       ReplaceChar( PFBUF fb, LINE yLine, COL xCol, char theChar, std::string &tmp1, std::string &tmp2 ) { return PutChar_( fb, yLine, xCol, theChar, false, tmp1, tmp2 ); }
+   extern COL     DelChar_( PFBUF fb, LINE yLine, COL xCol );
+   STIL COL       DelChar(  PFBUF fb, LINE yLine, COL xCol ) { return DelChar_( fb, yLine, xCol ); }
+   STIL COL       DelChar(  PFBUF fb, Point pt )             { return DelChar( fb, pt.lin, pt.col ); }
 
    //************ text-content scanners
    extern PChar   IsGrepBuf( PCFBUF fb, PChar fnmbuf, const size_t sizeof_fnmbuf, int *pGrepHdrLines );

@@ -558,26 +558,25 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
       return true;
       }
 
-   const auto xCol( pcv->Cursor().col - 1 );
-   FBOP::DelChar( pcf, xCol, yLine );
-   pcv->MoveCursor( yLine, xCol );
+   const auto x0( pcv->Cursor().col );
+   const auto colsDeld( FBOP::DelChar( pcf, yLine, x0 - 1 ) );
+   pcv->MoveCursor( yLine, x0 - Max( colsDeld, 1 ) );
    return true;
    }
 
 bool ARG::cdelete  () { return DeletePrevChar( false ); }
 bool ARG::emacscdel() { return DeletePrevChar( true  ); }
 
-//
 //------------------------------------------------------------------------------
 
 STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE yLine, const COL xLeft, const COL boxWidth, bool fCollapse ) {
-   const auto xEolNul( FBOP::LineCols( pf, yLine ) );
+   pf->getLineTabxPerRealtabs( dest, yLine );
+   const auto tw( pf->TabWidth() );
+   const auto xEolNul( StrCols( tw, dest ) );
    if( xEolNul <= xLeft ) {
       // 1 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
       return;
       }
-   const auto tw( pf->TabWidth() );
-   pf->getLineTabxPerRealtabs( dest, yLine );
    const auto ixLeft( CaptiveIdxOfCol( tw, dest, xLeft ) );
    const auto xRight( xLeft + boxWidth ); // dest[xRight] will be 0th char of kept 2nd segment
    if( xRight >= xEolNul ) { // trailing segment of line is being deleted?
@@ -905,13 +904,25 @@ bool ARG::linsert() { PCF;
    return true;  // Linsert always returns true.
    }
 
-void FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 ) {
+COL FBOP::DelChar_( PFBUF fb, LINE yPt, COL xPt ) {
+   const auto lc0( FBOP::LineCols( fb, yPt ) );
+   fb->DelBox( xPt, yPt, xPt, yPt );
+   const auto lc1( FBOP::LineCols( fb, yPt ) );
+   const auto rv( lc0 - lc1 );
+   return rv;
+   }
+
+COL FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 ) {
+   const auto lc0( FBOP::LineCols( fb, yLine ) );
    fb->DupLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );        0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
    tmp1[ CaptiveIdxOfCol( fb->TabWidth(), tmp1, xCol ) ] = theChar;   0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
-   if( fInsert ) {
-      AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+1, yLine );
-      }
    fb->PutLine( yLine, tmp1, tmp2 );
+   const auto lc1( FBOP::LineCols( fb, yLine ) );
+   const auto rv( lc1 - lc0 );
+   if( rv ) {
+      AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+rv, yLine );
+      }
+   return rv;
    }
 
 
@@ -1192,8 +1203,7 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
             }
          }
       }
-   FBOP::InsertChar( pcf, yLine, xCol, theChar, tmp1, tmp2 );
-   noargNoMeta.right();
+   pcv->MoveCursor( yLine, xCol + FBOP::InsertChar( pcf, yLine, xCol, theChar, tmp1, tmp2 ) );
    return true;
    }
 
