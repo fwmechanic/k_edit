@@ -529,7 +529,7 @@ void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
    PutLine( yLine, sbuf, tmp );
    }
 
-COL ColOfFreeIdx( COL tabWidth, const stref &content, sridx offset ) {
+COL ColOfFreeIdx( COL tabWidth, stref content, sridx offset ) {
    const Tabber tabr( tabWidth );
    auto xCol( 0 );
    for( auto it( content.cbegin() ) ; it != content.cend() ; ++it ) {
@@ -1198,7 +1198,7 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
 
 // pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
 // retval < pEos
-sridx FreeIdxOfCol( const COL tabWidth, const stref &content, const COL colTgt ) {
+sridx FreeIdxOfCol( const COL tabWidth, stref content, const COL colTgt ) {
    if( colTgt <= 0 ) { return 0; }
 
 #if 1 // ==0 to test the "realtabs:yes" ... code below

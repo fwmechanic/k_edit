@@ -731,15 +731,19 @@ enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH
 
 class CharWalker {
 public:
-   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, const stref &sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) = 0;
+   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) = 0;
    virtual ~CharWalker() {};
    };
 
 
 STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, const stref &sr, COL xCol, int delta ) {
+ #if 0
    return g_fRealtabs
           ? ColOfFreeIdx( tabWidth, sr, FreeIdxOfCol( tabWidth, sr, xCol ) + delta )
           :                                                         xCol   + delta ;
+ #else
+   return xCol + delta;
+ #endif
    }
 
 // CharWalkRect is called by PBalFindMatching, PMword, and
@@ -828,7 +832,7 @@ class ReplaceCharWalker : public CharWalker {
       , d_iReplacementFileCandidates ( 0 )
       {}
 
-   CheckNextRetval VCheckNext( PFBUF pFBuf, const stref &sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
 
    private:
 
@@ -864,7 +868,7 @@ void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &co
    }
 
 
-CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, const stref &sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    const auto haystack( sr.substr( ix_curPt_Col, d_stSearch.length() ) );
 
    0 && DBG( "%s ( %d, %d L %" PR_SIZET "u ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
@@ -1995,12 +1999,12 @@ struct CharWalkerPBal : public CharWalker {
       , d_fClosureFound( false )
       { /*DBG("");*/ Push( chStart ); }
 
-   CheckNextRetval VCheckNext( PFBUF pFBuf, const stref &sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
    };
 
 #undef XXX
 
-CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, const stref &sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    const char ch( sr[ix_curPt_Col] );
    PCChar pA, pB;
    if( d_fFwd ) { pA = g_delims      ; pB = g_delimMirrors; }
@@ -2047,7 +2051,7 @@ CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, const stref &sr, sridx 
    return CONTINUE_SEARCH;
    }
 
-char CharAtCol( COL tabWidth, const stref &content, const COL colTgt ) {
+char CharAtCol( COL tabWidth, stref content, const COL colTgt ) {
    const auto ix( FreeIdxOfCol( tabWidth, content, colTgt ) );
    return ix < content.length() ? content[ ix ] : 0;
    }
@@ -2150,10 +2154,10 @@ class PMWordCharWalker : public CharWalker {
    public:
 
    PMWordCharWalker( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
-   CheckNextRetval VCheckNext( PFBUF pFBuf, const stref &sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
    };
 
-CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, const stref &sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt->col is FIRST CHAR OF WORD
       if( !isWordChar( sr[ix_curPt_Col] ) || (ix_curPt_Col > 0 && isWordChar( sr[ix_curPt_Col-1] )) )
          return CONTINUE_SEARCH;
