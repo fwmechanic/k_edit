@@ -729,10 +729,10 @@ public:
 
 enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH, /* CONTINUE_SEARCH_NEXT_LINE */ };
 
-class CharWalker {
+class CharWalker_ {
 public:
    virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) = 0;
-   virtual ~CharWalker() {};
+   virtual ~CharWalker_() {};
    };
 
 
@@ -748,7 +748,7 @@ STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, const stref &sr, COL xCol
 
 // CharWalkRect is called by PBalFindMatching, PMword, and
 // GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
-STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fWalkFwd, CharWalker &walker ) {
+STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fWalkFwd, CharWalker_ &walker ) {
    0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
 
    const auto tw( pFBuf->TabWidth() );
@@ -803,7 +803,7 @@ STATIC_VAR std::string g_SavedSearchString_Buf ;
 GLOBAL_VAR std::string g_SnR_szSearch          ;
 GLOBAL_VAR std::string g_SnR_szReplacement     ;
 
-class ReplaceCharWalker : public CharWalker {
+class CharWalkerReplace : public CharWalker_ {
    std::string        d_sbuf;
    std::string        d_stmp;
    const std::string& d_stSearch;
@@ -818,7 +818,7 @@ class ReplaceCharWalker : public CharWalker {
    int               d_iReplacementFiles;
    int               d_iReplacementFileCandidates;
 
-   ReplaceCharWalker(
+   CharWalkerReplace(
         bool fDoReplaceQuery
       , bool fSearchCase
       )
@@ -845,7 +845,7 @@ class ReplaceCharWalker : public CharWalker {
 
 
 // replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
-void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+void CharWalkerReplace::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
    const auto ixCol( CaptiveIdxOfCol( pFBuf->TabWidth(), d_sbuf, curPt->col ) );
    0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET "u LoSB=%" PR_SIZET "d", curPt->col, curPt->lin, d_stReplace.length(), d_sbuf.length() );
@@ -868,7 +868,7 @@ void ReplaceCharWalker::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &co
    }
 
 
-CheckNextRetval ReplaceCharWalker::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    const auto haystack( sr.substr( ix_curPt_Col, d_stSearch.length() ) );
 
    0 && DBG( "%s ( %d, %d L %" PR_SIZET "u ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
@@ -1300,7 +1300,7 @@ bool ARG::mfgrep() {
 STIL bool CheckRegExpReplacementString( CompiledRegex *, PCChar ) { return false; }
 #endif
 
-STATIC_FXN void MFReplaceProcessFile( PCChar filename, ReplaceCharWalker *pMrcw ) {
+STATIC_FXN void MFReplaceProcessFile( PCChar filename, CharWalkerReplace *pMrcw ) {
    const auto pFBuf( FBOP::FindOrAddFBuf( filename ) );
    0 && DBG( "d_dhdViewsOfFBUF.IsEmpty(%s)==%c", filename, pFBuf->ViewCount()==0?'t':'f' );
    const auto fWeCanGarbageCollectFBUF( !pFBuf->HasLines() );
@@ -1371,7 +1371,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
       return ErrorDialogBeepf( "Invalid replacement pattern" );
 #endif
 
-   ReplaceCharWalker mrcw( fInteractive, d_fMeta ? !g_fCase : g_fCase );
+   CharWalkerReplace mrcw( fInteractive, d_fMeta ? !g_fCase : g_fCase );
 
    if( fMultiFileReplace ) {
       const auto startingTopFbuf( g_CurFBuf() );
@@ -1978,7 +1978,7 @@ bool ARG::psearch()   { return GenericSearch( this, smFwd    ); }
 
 //-------------------------- pbal
 
-struct CharWalkerPBal : public CharWalker {
+struct CharWalkerPBal : public CharWalker_ {
    const bool d_fFwd;
    const bool d_fHiliteMatch;
    linebuf    d_stack;
@@ -2148,16 +2148,16 @@ bool ARG::balln() {
 
 //-------------------------- pword/mword
 
-class PMWordCharWalker : public CharWalker {
+class CharWalkerPMWord : public CharWalker_ {
    bool d_fPMWordSearchMeta;
 
    public:
 
-   PMWordCharWalker( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
+   CharWalkerPMWord( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
    CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
    };
 
-CheckNextRetval PMWordCharWalker::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt->col is FIRST CHAR OF WORD
       if( !isWordChar( sr[ix_curPt_Col] ) || (ix_curPt_Col > 0 && isWordChar( sr[ix_curPt_Col-1] )) )
          return CONTINUE_SEARCH;
@@ -2190,7 +2190,7 @@ STATIC_FXN bool PMword( bool fSearchFwd, bool fMeta ) {
    const FBufLocnNow cp;
 
    Rect rgnSearch( fSearchFwd );
-   PMWordCharWalker chSrchr( fMeta );
+   CharWalkerPMWord chSrchr( fMeta );
    CharWalkRect( g_CurFBuf(), rgnSearch, g_CurView()->Cursor(), fSearchFwd, chSrchr );
 
    return cp.Moved();
