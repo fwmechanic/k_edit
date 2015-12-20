@@ -1293,7 +1293,7 @@ stref FBUF::PeekRawLine( LINE yLine ) const {
       return stref( d_paLineInfo[ yLine ].GetLineRdOnly(), len );
       }
    else {
-      return stref( "", 0 );
+      return stref();
       }
    }
 
@@ -1301,7 +1301,7 @@ stref FBUF::PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
    auto rl( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
    const auto ixMinIncl( FreeIdxOfCol( tw, rl, xMinIncl ) );
-   if( ixMinIncl >= rl.length() ) return stref( "" );
+   if( ixMinIncl >= rl.length() ) return stref();
    const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) ); 0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
    rl.remove_suffix( (rl.length()-1) - ixMaxIncl );
    rl.remove_prefix( ixMinIncl );                               0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );

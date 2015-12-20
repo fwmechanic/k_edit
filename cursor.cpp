@@ -39,11 +39,8 @@ STATIC_FXN COL TabAlignedCol( COL tabWidth, stref rl, COL xCol, COL xBias ) {
    } // arg "realtabs:yes" assign arg "tabalign:yes" assign
 
 STATIC_FXN COL ConstrainCursorX( PFBUF pFBuf, LINE yPos, COL xPos, COL xBias ) {
-   PCChar ptr,eos;
-   if( CursorCannotBeInTabFill() ) {
-      return TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos, xBias );
-      }
-   return xPos + xBias;
+   return CursorCannotBeInTabFill() ? TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos, xBias )
+                                    : xPos + xBias;
    }
 
 STATIC_FXN bool CurView_MoveCursor_fMoved( LINE yLine, COL xColumn ) {
@@ -52,7 +49,7 @@ STATIC_FXN bool CurView_MoveCursor_fMoved( LINE yLine, COL xColumn ) {
    return cp.Moved();
    }
 
-STIL COL CurLineLenTabs2Spcs() {
+STIL COL CurLineCols() {
    return FBOP::LineCols( g_CurFBuf(), g_CursorLine() );
    }
 
@@ -64,7 +61,7 @@ bool ARG::right() { PCWrV;
    const auto g_CursorCol_was( g_CursorCol() );
    pcv->MoveCursor( g_CursorLine(), xNewCol );
    0 && DBG( "xNewCol=%d -> %d -> %d", g_CursorCol_was, xNewCol, g_CursorCol() );
-   return g_CursorCol() == CurLineLenTabs2Spcs();
+   return g_CursorCol() == CurLineCols();
    }
 
 STATIC_FXN COL ColOfFirstNonBlankChar( PCFBUF fb, LINE yLine ) {
@@ -81,7 +78,7 @@ bool ARG::begline() {
    }
 
 bool ARG::endline() {
-   const auto xEoLn(  CurLineLenTabs2Spcs() );
+   const auto xEoLn(  CurLineCols() );
    const auto xEoWin( g_CurView()->Origin().col + g_CurWin()->d_Size.col - 1 );
    return CurView_MoveCursor_fMoved( g_CursorLine(), d_fMeta || (g_CursorCol() == xEoLn) ? xEoWin : xEoLn );
    }
@@ -131,7 +128,7 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    // HORIZONTAL WINDOW SCROLL HANDLING
    //
    // hscroll: The number of columns that the editor scrolls the text left or
-   // right when the you move the cursor out of the window.  When the window
+   // right when you move the cursor out of the window.  When the window
    // does not occupy the full screen, the amount scrolled is in proportion to
    // the window size.
    //
