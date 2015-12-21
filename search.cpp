@@ -738,9 +738,7 @@ public:
 
 STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, const stref &sr, COL xCol, int delta ) {
  #if 0
-   return g_fRealtabs
-          ? ColOfFreeIdx( tabWidth, sr, FreeIdxOfCol( tabWidth, sr, xCol ) + delta )
-          :                                                         xCol   + delta ;
+   return g_fRealtabs ? TabAlignedCol( tabWidth, sr, xCol, delta ) : xCol + delta;
  #else
    return xCol + delta;
  #endif

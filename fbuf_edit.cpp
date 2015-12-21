@@ -35,10 +35,16 @@ public:
    Tabber( int tabWidth ) : d_tabWidth(tabWidth) {}
    int  FillCountToNextTabStop ( int col ) const { return d_tabWidth - (col % d_tabWidth) ; }
    int  ColOfNextTabStop       ( int col ) const { return col + FillCountToNextTabStop( col ); }
-   int  ColOfPrevTabStop       ( int col ) const { return col - ((d_tabWidth == 0) ? 0 : 1 + ((col - 1) % d_tabWidth)); }
+   int  ColOfPrevTabStop       ( int col ) const { return col - (1 + ((col - 1) % d_tabWidth)); }
    bool ColAtTabStop           ( int col ) const { return (col % d_tabWidth) == 0; }
    };
 
+STIL COL TabAlignedCol_( COL tabWidth, stref rl, COL xCol, COL xBias ) { // The DBG version
+   const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
+   const auto rv( ColOfFreeIdx( tabWidth, rl, ix + xBias ) );
+   DBG( "%s %d->[%d], [%d]->%d", __func__, xCol, ix, ix + xBias, rv );
+   return rv;
+   }
 
 void swidTabwidth( PChar dest, size_t sizeofDest, void *src ) {
    scpy( dest, sizeofDest, "status ln's \"e?\"" );
@@ -600,6 +606,7 @@ void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollaps
    if( xRight < xLeft )
       return;
 
+   1 && DBG( "%s Y:[%d,%d] X:[%d,%d]", __func__, yTop, yBottom, xLeft, xRight );
    AdjMarksForBoxDeletion( this, xLeft, yTop, xRight, yBottom );
    const auto boxWidth( xRight - xLeft + 1 );
    std::string src; std::string stmp;
@@ -759,7 +766,7 @@ void PCFV_delete_ToEOL( Point const &curpos, bool copyToClipboard ) { PCFV;
 bool ARG::sdelete() { PCFV;
    switch( d_argType ) {
     default:        return BadArg();
-    case NOARG:     FBOP::DelChar( pcf, pcv->Cursor() ); break; // Delete the CHARACTER at the cursor w/o saving it to <clipboard>
+    case NOARG:     FBOP::DelChar( pcf, pcv->Cursor().lin, pcv->Cursor().col ); break; // Delete the CHARACTER at the cursor w/o saving it to <clipboard>
     case NULLARG:   PCFV_delete_STREAMARG( { d_nullarg.cursor.lin, d_nullarg.cursor.col, d_nullarg.cursor.lin+1, 0 }, !d_fMeta ); break;  // Deletes text from the cursor to the end of the line, INCLUDING THE LINE BREAK.
     case BOXARG:    // STREAMARG ³ BOXARG ³ LINEARG: Deletes the selected stream of text
                     // from the starting point of the selection to the cursor and copies
@@ -904,27 +911,41 @@ bool ARG::linsert() { PCF;
    return true;  // Linsert always returns true.
    }
 
-COL FBOP::DelChar_( PFBUF fb, LINE yPt, COL xPt ) {
-   const auto lc0( FBOP::LineCols( fb, yPt ) );
-   fb->DelBox( xPt, yPt, xPt, yPt );
-   const auto lc1( FBOP::LineCols( fb, yPt ) );
-   const auto rv( lc0 - lc1 );
+COL FBOP::DelChar( PFBUF fb, LINE yPt, COL xPt ) {
+   const auto tw( fb->TabWidth() );
+   const auto rl( fb->PeekRawLine( yPt ) );
+   const auto lc0( StrCols( tw, rl ) );
+   if( xPt >= lc0 ) { // xPt to right of line content?
+      return 0;       // this is a nop
+      }
+   // Here we are deleting a CHARACTER, whereas DelBox deletes COLUMNS; if the character is an HTAB,
+   // the # of COLUMNS to be deleted in order to delete the underlying CHARACTER is variable:
+   // NB: xNxtChar != xPt+1 iff realtabs and (HTAB==rl[ ix(xPt) ])
+   const auto xNxtChar( TabAlignedCol( tw, rl, xPt, +1 ) );
+   fb->DelBox( xPt, yPt, xNxtChar-1, yPt );
+   const auto rv( xNxtChar - xPt ); DBG( "%s returns %d", __func__, rv );
    return rv;
    }
 
 COL FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 ) {
    const auto lc0( FBOP::LineCols( fb, yLine ) );
-   fb->DupLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );        0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
-   tmp1[ CaptiveIdxOfCol( fb->TabWidth(), tmp1, xCol ) ] = theChar;   0 && DBG( "%s=%" PR_BSR "'", __func__, BSR(tmp1) );
-   fb->PutLine( yLine, tmp1, tmp2 );
-   const auto lc1( FBOP::LineCols( fb, yLine ) );
-   const auto rv( lc1 - lc0 );
-   if( rv ) {
-      AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+rv, yLine );
+   fb->DupLineForInsert( tmp1, yLine, xCol, fInsert ? 1 : 0 );        0 && DBG( "%s 1=%" PR_BSR "'", __func__, BSR(tmp1) );
+   const auto tw( fb->TabWidth() );
+   const auto destIx( CaptiveIdxOfCol( tw, tmp1, xCol ) );
+   if( !fInsert && theChar == tmp1[ destIx ] ) {
+      return 0;       // this is a nop
       }
-   return rv;
+   tmp1[ destIx ] = theChar;                                          0 && DBG( "%s 2=%" PR_BSR "'", __func__, BSR(tmp1) );
+   fb->PutLine( yLine, tmp1, tmp2 );
+   // everything that follows is to determine the number of columns added by the insertion of theChar
+   // (which is used to determine the new cursor position if a user keystroke op caused us to be doing this)
+   // BUGBUG: this might be WRONG in the case of overwrite (replace, !fInsert) if theChar or what is replaces is an HTAB!
+   const auto colsInserted( TabAlignedCol( tw, tmp1, xCol, +1 ) - xCol );
+   if( xCol < lc0 ) { // actual content added?
+      AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+colsInserted, yLine );
+      }
+   return colsInserted;
    }
-
 
 #ifdef fn_xquote
 

@@ -1578,6 +1578,11 @@ STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, stref content, COL x0, COL x1 ) {
                   }
 extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset );
 
+// see also TabAlignedCol_ the DEBUG version of this function
+STIL COL TabAlignedCol( COL tabWidth, stref rl, COL xCol, COL xBias ) {
+   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + xBias );
+   }
+
 struct rlc1 {
    stref ln;
    sridx ix0;
@@ -1667,9 +1672,7 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    extern COL     PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, std::string &tmp1, std::string &tmp2 );
    STIL COL       InsertChar ( PFBUF fb, LINE yLine, COL xCol, char theChar, std::string &tmp1, std::string &tmp2 ) { return PutChar_( fb, yLine, xCol, theChar, true , tmp1, tmp2 ); }
    STIL COL       ReplaceChar( PFBUF fb, LINE yLine, COL xCol, char theChar, std::string &tmp1, std::string &tmp2 ) { return PutChar_( fb, yLine, xCol, theChar, false, tmp1, tmp2 ); }
-   extern COL     DelChar_( PFBUF fb, LINE yLine, COL xCol );
-   STIL COL       DelChar(  PFBUF fb, LINE yLine, COL xCol ) { return DelChar_( fb, yLine, xCol ); }
-   STIL COL       DelChar(  PFBUF fb, Point pt )             { return DelChar( fb, pt.lin, pt.col ); }
+   extern COL     DelChar( PFBUF fb, LINE yLine, COL xCol );
 
    //************ text-content scanners
    extern PChar   IsGrepBuf( PCFBUF fb, PChar fnmbuf, const size_t sizeof_fnmbuf, int *pGrepHdrLines );
