@@ -42,7 +42,7 @@ public:
 STIL COL TabAlignedCol_( COL tabWidth, stref rl, COL xCol, COL xBias ) { // The DBG version
    const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
    const auto rv( ColOfFreeIdx( tabWidth, rl, ix + xBias ) );
-   DBG( "%s %d->[%d], [%d]->%d", __func__, xCol, ix, ix + xBias, rv );
+   DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, ix + xBias, rv );
    return rv;
    }
 
@@ -580,7 +580,7 @@ STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE y
    const auto tw( pf->TabWidth() );
    const auto xEolNul( StrCols( tw, dest ) );
    if( xEolNul <= xLeft ) {
-      // 1 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
+      0 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
       return;
       }
    const auto ixLeft( CaptiveIdxOfCol( tw, dest, xLeft ) );
@@ -606,7 +606,7 @@ void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollaps
    if( xRight < xLeft )
       return;
 
-   1 && DBG( "%s Y:[%d,%d] X:[%d,%d]", __func__, yTop, yBottom, xLeft, xRight );
+   0 && DBG( "%s Y:[%d,%d] X:[%d,%d]", __func__, yTop, yBottom, xLeft, xRight );
    AdjMarksForBoxDeletion( this, xLeft, yTop, xRight, yBottom );
    const auto boxWidth( xRight - xLeft + 1 );
    std::string src; std::string stmp;
