@@ -1,0 +1,9 @@
+coverity_version="cov-analysis-linux64-7.7.0.4"
+PATH="$PATH:$HOME/coverity/${coverity_version}/bin"
+tarball=k_edit-coverity.xz
+
+   mkdir -p cov-int \
+&& make clean \
+&& cov-build --dir cov-int make -j 4 \
+&& tar caf k_edit-coverity.xz cov-int \
+&& printf "%s/k_edit-coverity.xz\nis ready to submit to\nhttps://scan.coverity.com/projects/fwmechanic-k_edit\n" `pwd`
