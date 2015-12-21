@@ -267,7 +267,7 @@ STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API
                }
             else {
                EdKC_Ascii rv;
-               rv.Ascii    = ev;
+               rv.Ascii    = ev == EdKC_tab ? '\t' : ev;  // hack alert!
                rv.EdKcEnum = ev;
                return rv;  // normal exit path
                }
