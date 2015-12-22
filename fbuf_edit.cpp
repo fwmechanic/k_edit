@@ -186,19 +186,6 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
 COL ColPrevTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfPrevTabStop( xCol ); }
 COL ColNextTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfNextTabStop( xCol ); }
 
-COL StrCols( COL tabWidth, const stref &src ) {
-   const Tabber tabr( tabWidth );
-   auto col( 0 );
-   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
-      col = (*it == HTAB) ? tabr.ColOfNextTabStop( col ) : col + 1;
-      }
-   return col;
-   }
-
-COL FBOP::LineCols( PCFBUF fb, LINE yLine ) {
-   return StrCols( fb->TabWidth(), fb->PeekRawLine( yLine ) );
-   }
-
 bool FBOP::IsLineBlank( PCFBUF fb, LINE yLine ) {
    return IsStringBlank( fb->PeekRawLine( yLine ) );
    }
@@ -1225,16 +1212,9 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
 // pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
 // retval < pEos
 sridx FreeIdxOfCol( const COL tabWidth, stref content, const COL colTgt ) {
-   if( colTgt <= 0 ) { return 0; }
-
-#if 1 // ==0 to test the "realtabs:yes" ... code below
-   if( tabWidth <= 1 || !( /* g_fRealtabs && */ StrContainsTabs( content )) ) { // this is the most common exit path
-      return colTgt;
+   if( colTgt <= 0 ) {
+      return 0;
       }
-#endif
-
-   // "realtabs:yes" AND there's an HTAB in the string
-   //
    const Tabber tabr( tabWidth );
    auto col( 0 );
    for( auto it( content.cbegin() ) ; it != content.cend() ; ++it ) {
@@ -1302,16 +1282,6 @@ void test_CaptiveIdxOfCol() {
 
 //--------------------------------------------------------------------------------------------------
 
-stref FBUF::PeekRawLine( LINE yLine ) const {
-   auto len( 0 );
-   if( KnownLine( yLine ) && (len = LineLength( yLine )) > 0 ) {
-      return stref( d_paLineInfo[ yLine ].GetLineRdOnly(), len );
-      }
-   else {
-      return stref();
-      }
-   }
-
 stref FBUF::PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
    auto rl( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
@@ -1363,16 +1333,14 @@ void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl
 int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
    const auto tw       ( TabWidth() );
    auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
-   auto       strCols  ( StrCols( tw, dest ) );
-   const auto lineCols ( ColOfFreeIdx( tw, dest, dest.length() ) );  DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d)", __func__, BSR(dest), lineCols, strCols, xIns );
-   // Assert( lineCols == lineChars );
-   if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
-      dest.append( xIns - lineCols, ' ' );
+   const auto lineCols ( StrCols( tw, dest ) );                   DB && DBG( "%s: %" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
+   if( xIns > lineCols ) {                 // line shorter than insert point?
+      dest.append( xIns - lineCols, ' ' ); // append spaces thru dest[xIns-1]; dest[xIns] == 0
       }
    if( insertCols > 0 ) {
-      const auto ix( FreeIdxOfCol( tw, dest, xIns ) );               DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
-      dest.insert( ix, insertCols, ' ' );
-      }                                                              DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
+      const auto ixIns( FreeIdxOfCol( tw, dest, xIns ) );         DB && DBG( "%s: %" PR_BSR "| L %d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, xIns, ixIns );
+      dest.insert( ixIns, insertCols, ' ' );
+      }                                                           DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
    return dest.length();
    }
 
@@ -1831,9 +1799,9 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       }
    const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
    std::string stmp;
-   const auto ixDst   ( FreeIdxOfCol( FBdest->TabWidth(), destbuf, xDst    ) ); // where destbuf text PAST insertion point; where destbuf content is split
+   const auto ixDst   ( FreeIdxOfCol( FBdest->TabWidth(), destbuf, xDst ) ); // where destbuf text PAST insertion point; where destbuf content is split
    {
-   const auto ixSrcEnd( FreeIdxOfCol( tws, srcbuf , xSrcEnd ) );
+   const auto ixSrcEnd( FreeIdxOfCol( tws, srcbuf, xSrcEnd ) );
    srcbuf.replace( ixSrcEnd, srcbuf.length() - ixSrcEnd, destbuf, ixDst, std::string::npos ); // destbuf text PAST insertion point -> srcbuf past xSrcEnd
    //*** merge & write last line of FBsrc stream  srcbuf[0..ixSrcEnd) : destbuf[ixDst..end]]
    FBdest->PutLine( yDstLast, srcbuf, stmp );
