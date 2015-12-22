@@ -1229,19 +1229,11 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
    return true;
    }
 
-// pEos points AFTER last valid char in pS; if pS were a standard C string, *pEos == 0, BUT pS MAY NOT BE a standard C string!
-// retval < pEos
 sridx FreeIdxOfCol( const COL tabWidth, stref content, const COL colTgt ) {
-   if( colTgt <= 0 ) { return 0; }
-
-#if 1 // ==0 to test the "realtabs:yes" ... code below
-   if( tabWidth <= 1 || !( /* g_fRealtabs && */ StrContainsTabs( content )) ) { // this is the most common exit path
-      return colTgt;
+   if( colTgt <= 0 ) {
+      return 0;
       }
-#endif
 
-   // "realtabs:yes" AND there's an HTAB in the string
-   //
    const Tabber tabr( tabWidth );
    auto col( 0 );
    for( auto it( content.cbegin() ) ; it != content.cend() ; ++it ) {
