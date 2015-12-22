@@ -39,10 +39,11 @@ public:
    bool ColAtTabStop           ( int col ) const { return (col % d_tabWidth) == 0; }
    };
 
-STIL COL TabAlignedCol_( COL tabWidth, stref rl, COL xCol, COL xBias ) { // The DBG version
+STIL COL TabAlignedCol_DBG( COL tabWidth, stref rl, COL xCol, COL xBias ) { // The DBG version
    const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
-   const auto rv( ColOfFreeIdx( tabWidth, rl, ix + xBias ) );
-   DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, ix + xBias, rv );
+   const auto nix( ix + xBias );
+   const auto rv( nix < 0 ? -1 : ColOfFreeIdx( tabWidth, rl, nix ) );
+   DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, nix, rv );
    return rv;
    }
 

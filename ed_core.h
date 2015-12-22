@@ -1578,7 +1578,6 @@ STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, stref content, COL x0, COL x1 ) {
                   }
 extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset );
 
-// see also TabAlignedCol_ the DEBUG version of this function
 STIL COL TabAlignedCol( COL tabWidth, stref rl, COL xCol, COL xBias ) {
    return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + xBias );
    }
