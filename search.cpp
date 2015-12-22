@@ -77,14 +77,6 @@ char toLower( char ch ) {
    return low.my_lower_[ U8(ch) ];
    }
 
-STIL COL TabAlignedCol_DBG( COL tabWidth, stref rl, COL xCol, COL xBias ) { // The DBG version
-   const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
-   const auto nix( ix + xBias );
-   const auto rv( nix < 0 ? -1 : ColOfFreeIdx( tabWidth, rl, nix ) );
-   DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, nix, rv );
-   return rv;
-   }
-
 //--------------------------------------------------------------
 
 // pointer to one of the two following functions
@@ -743,15 +735,6 @@ public:
    virtual ~CharWalker_() {};
    };
 
-
-STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, const stref &sr, COL xCol, int delta ) {
-   return
- #if 1
-          g_fRealtabs ? TabAlignedCol_DBG( tabWidth, sr, xCol, delta ) :
- #endif
-          xCol + delta ;
-   }
-
 // CharWalkRect is called by PBalFindMatching, PMword, and
 // GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
 STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fWalkFwd, CharWalker_ &walker ) {
@@ -778,7 +761,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          NoMoreThan( &colLastPossibleLastMatchChar, constrainingRect.flMax.col );
          for(
             ; curPt.col <= colLastPossibleLastMatchChar
-            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl, curPt.col, +1 )
+            ; curPt.col = ColOfNextChar( tw, rl, curPt.col )
             ) CHECK_NEXT
          ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
          }
@@ -788,10 +771,9 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
       if( constrainingRect.flMin.col > curPt.col ) { --curPt.lin;  curPt.col = constrainingRect.flMax.col; }
       for( auto yMin(constrainingRect.flMin.lin) ; curPt.lin >= yMin ; ) {
          SETUP_LINE_TEXT;
-         auto maxiter( 2 * colLastPossibleLastMatchChar );
          for( curPt.col = Min( colLastPossibleLastMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
-            ; DBG("%s: %d,%d >= %d ?", __func__, curPt.lin, curPt.col, constrainingRect.flMin.col ) && curPt.col >= constrainingRect.flMin.col && --maxiter
-            ; curPt.col = (curPt.col<=0) ? curPt.col-1 : ColPlusDeltaWithinStringRegion( tw, rl, curPt.col, -1 )
+            ; curPt.col >= constrainingRect.flMin.col
+            ; curPt.col = ColOfPrevChar( tw, rl, curPt.col )
             ) CHECK_NEXT
          --curPt.lin;
          }

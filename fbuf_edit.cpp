@@ -39,14 +39,6 @@ public:
    bool ColAtTabStop           ( int col ) const { return (col % d_tabWidth) == 0; }
    };
 
-STIL COL TabAlignedCol_DBG( COL tabWidth, stref rl, COL xCol, COL xBias ) { // The DBG version
-   const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
-   const auto nix( ix + xBias );
-   const auto rv( nix < 0 ? -1 : ColOfFreeIdx( tabWidth, rl, nix ) );
-   DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, nix, rv );
-   return rv;
-   }
-
 void swidTabwidth( PChar dest, size_t sizeofDest, void *src ) {
    scpy( dest, sizeofDest, "status ln's \"e?\"" );
    }
@@ -916,14 +908,14 @@ COL FBOP::DelChar( PFBUF fb, LINE yPt, COL xPt ) {
    const auto tw( fb->TabWidth() );
    const auto rl( fb->PeekRawLine( yPt ) );
    const auto lc0( StrCols( tw, rl ) );
-   xPt = TabAlignedCol( tw, rl, xPt, 0 );
+   xPt = TabAlignedCol( tw, rl, xPt );
    if( xPt >= lc0 ) { // xPt to right of line content?
       return 0;       // this is a nop
       }
    // Here we are deleting a CHARACTER, whereas DelBox deletes COLUMNS; if the character is an HTAB,
    // the # of COLUMNS to be deleted in order to delete the underlying CHARACTER is variable:
    // NB: xNxtChar != xPt+1 iff realtabs and (HTAB==rl[ ix(xPt) ])
-   const auto xNxtChar( TabAlignedCol( tw, rl, xPt, +1 ) );
+   const auto xNxtChar( ColOfNextChar( tw, rl, xPt ) );
    fb->DelBox( xPt, yPt, xNxtChar-1, yPt );
    const auto rv( xNxtChar - xPt ); 0 && DBG( "%s returns %d-%d= %d", __func__, xNxtChar, xPt, rv );
    return rv;
@@ -942,7 +934,7 @@ COL FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, 
    // everything that follows is to determine the number of columns added by the insertion of theChar
    // (which is used to determine the new cursor position if a user keystroke op caused us to be doing this)
    // BUGBUG: this might be WRONG in the case of overwrite (replace, !fInsert) if theChar or what is replaces is an HTAB!
-   const auto colsInserted( TabAlignedCol( tw, tmp1, xCol, +1 ) - xCol );
+   const auto colsInserted( ColOfNextChar( tw, tmp1, xCol ) - xCol );
    if( xCol < lc0 ) { // actual content added?
       AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+colsInserted, yLine );
       }

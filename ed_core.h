@@ -1578,8 +1578,26 @@ STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, stref content, COL x0, COL x1 ) {
                   }
 extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset );
 
-STIL COL TabAlignedCol( COL tabWidth, stref rl, COL xCol, COL xBias ) {
-   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + xBias );
+STIL COL TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
+   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) );
+   }
+
+STIL COL ColOfNextChar( COL tabWidth, stref rl, COL xCol ) {
+   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + 1 );
+   }
+
+STIL COL ColOfPrevChar( COL tabWidth, stref rl, COL xCol ) {
+   const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
+   COL rv;
+   if( ix == 0 ) {
+      rv = -1;
+      }
+   else {
+      const auto nix( ix - 1 );
+      rv = ColOfFreeIdx( tabWidth, rl, nix );
+      // 0 && DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, nix, rv );
+      }
+   return rv;
    }
 
 struct rlc1 {
