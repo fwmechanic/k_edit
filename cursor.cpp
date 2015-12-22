@@ -34,15 +34,8 @@ bool swixVscroll( stref param ) {
    return true;
    }
 
-STATIC_FXN COL ConstrainCursorX_0( PFBUF pFBuf, LINE yPos, COL xPos ) {
-   return CursorCannotBeInTabFill() ? TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos )
-                                    : xPos + 1;
-   }
-
-STATIC_FXN COL ConstrainCursorX_1( PFBUF pFBuf, LINE yPos, COL xPos ) {
-   return CursorCannotBeInTabFill() ? ColOfNextChar( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos )
-                                    : xPos;
-   }
+STIL COL ConstrainCursorX_0( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos; }
+STIL COL ConstrainCursorX_1( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  ColOfNextChar( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos + 1; }
 
 STATIC_FXN bool CurView_MoveCursor_fMoved( LINE yLine, COL xColumn ) {
    const FBufLocnNow cp;
