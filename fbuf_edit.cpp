@@ -915,6 +915,7 @@ COL FBOP::DelChar( PFBUF fb, LINE yPt, COL xPt ) {
    const auto tw( fb->TabWidth() );
    const auto rl( fb->PeekRawLine( yPt ) );
    const auto lc0( StrCols( tw, rl ) );
+   xPt = TabAlignedCol( tw, rl, xPt, 0 );
    if( xPt >= lc0 ) { // xPt to right of line content?
       return 0;       // this is a nop
       }
@@ -923,7 +924,7 @@ COL FBOP::DelChar( PFBUF fb, LINE yPt, COL xPt ) {
    // NB: xNxtChar != xPt+1 iff realtabs and (HTAB==rl[ ix(xPt) ])
    const auto xNxtChar( TabAlignedCol( tw, rl, xPt, +1 ) );
    fb->DelBox( xPt, yPt, xNxtChar-1, yPt );
-   const auto rv( xNxtChar - xPt ); DBG( "%s returns %d", __func__, rv );
+   const auto rv( xNxtChar - xPt ); 0 && DBG( "%s returns %d-%d= %d", __func__, xNxtChar, xPt, rv );
    return rv;
    }
 
