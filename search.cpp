@@ -109,7 +109,8 @@ STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
 
 #if USE_STL_SEARCH
 STATIC_FXN bool lower_test( char ll, char rr ) {
-   return std::tolower( ll ) == std::tolower( rr );
+// return std::tolower( ll ) == std::tolower( rr );
+   return toLower( ll ) == toLower( rr );
    }
 #endif
 
