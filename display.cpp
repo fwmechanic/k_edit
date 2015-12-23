@@ -2029,9 +2029,6 @@ STATIC_VAR bool                               s_fDrawVerticalCursorHilite;
 STIL void ndVertCursorDraw()         {        s_fDrawVerticalCursorHilite = true; }
 STIL bool DrawVerticalCursorHilite() { return s_fDrawVerticalCursorHilite; }
 
-#define  USE_HiliteAddin_CursorLine  1
-#if      USE_HiliteAddin_CursorLine
-
 class HiliteAddin_CursorLine : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
 
@@ -2065,8 +2062,6 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
       }
    return false;
    }
-
-#endif//HiliteAddin_CursorLine
 
 //************************************************************************************************************
 //************************************************************************************************************
@@ -2148,7 +2143,7 @@ void View::HiliteAddins_Init() {
       if( USE_HiliteAddin_CompileLine ) { IAL( HiliteAddin_CompileLine     ); }
       /* later IAL's have "last say" and therefore take precedence.  Because I want
          HiliteAddin_CursorLine, to be visible in all cases, it's IAL'd last */
-      if( USE_HiliteAddin_CursorLine  ) { IAL( HiliteAddin_CursorLine      ); }
+                                        { IAL( HiliteAddin_CursorLine      ); }
       DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
      #undef IAL
       }
@@ -3264,30 +3259,6 @@ void View::InsertHiLitesOfLineSeg
          return;
          }
       }
-
-   #if !USE_HiliteAddin_CursorLine
-   NewScope { // handle cursor-line and cursor-column hiliting
-      const auto cxy( ColorIdx2Attr( COLOR::CXY ) );
-      const auto fg ( ColorIdx2Attr( COLOR::TXT ) );
-      // const auto ViewCols( Win()->d_Size.col );
-      if( isCursorLine ) {
-         alcc.   PutColorRaw( 0            , COL_MAX, cxy );
-         if( DrawVerticalCursorHilite() )
-            return;
-         }
-      else {
-         if( isActiveWindow && DrawVerticalCursorHilite() ) {
-            alcc.PutColorRaw( 0            , COL_MAX, fg  );
-            alcc.PutColorRaw( g_CursorCol(),       1, cxy );
-            return;
-            }
-
-         if( !USE_HiliteAddin_CompileLine && Get_LineCompile() == yLine ) {
-            alcc.PutColor(    0            , COL_MAX, COLOR::STA );
-            }
-         }
-      }
-   #endif
 
    NewScope {
       DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
