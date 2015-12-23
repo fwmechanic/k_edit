@@ -1,9 +1,14 @@
 coverity_version="cov-analysis-linux64-7.7.0.4"
 PATH="$PATH:$HOME/coverity/${coverity_version}/bin"
-tarball=k_edit-coverity.xz
+# apparently the tarball filename MUST BE same as the Coverity Project Name?
+my_cov_projnm=k_edit
+tarball=${my_cov_projnm}.tgz
+cov_dir=cov-int
+k_make_cmd="make -j 6"
 
-   mkdir -p cov-int \
+   rm -rf $cov_dir \
+&& mkdir -p $cov_dir \
 && make clean \
-&& cov-build --dir cov-int make -j 4 \
-&& tar caf k_edit-coverity.xz cov-int \
-&& printf "%s/k_edit-coverity.xz\nis ready to submit to\nhttps://scan.coverity.com/projects/fwmechanic-k_edit\n" `pwd`
+&& cov-build --dir $cov_dir $k_make_cmd \
+&& tar czvf $tarball $cov_dir \
+&& printf "%s/$tarball\nis ready to submit to\nhttps://scan.coverity.com/projects/fwmechanic-k_edit\n" `pwd`
