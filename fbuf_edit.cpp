@@ -39,13 +39,6 @@ public:
    bool ColAtTabStop           ( int col ) const { return (col % d_tabWidth) == 0; }
    };
 
-STIL COL TabAlignedCol_( COL tabWidth, stref rl, COL xCol, COL xBias ) { // The DBG version
-   const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
-   const auto rv( ColOfFreeIdx( tabWidth, rl, ix + xBias ) );
-   DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, ix + xBias, rv );
-   return rv;
-   }
-
 void swidTabwidth( PChar dest, size_t sizeofDest, void *src ) {
    scpy( dest, sizeofDest, "status ln's \"e?\"" );
    }
@@ -192,19 +185,6 @@ std::string FormatExpandedSeg // less efficient version: uses virgin dest each c
 
 COL ColPrevTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfPrevTabStop( xCol ); }
 COL ColNextTabstop( COL tabWidth, COL xCol ) { return Tabber( tabWidth ).ColOfNextTabStop( xCol ); }
-
-COL StrCols( COL tabWidth, const stref &src ) {
-   const Tabber tabr( tabWidth );
-   auto col( 0 );
-   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
-      col = (*it == HTAB) ? tabr.ColOfNextTabStop( col ) : col + 1;
-      }
-   return col;
-   }
-
-COL FBOP::LineCols( PCFBUF fb, LINE yLine ) {
-   return StrCols( fb->TabWidth(), fb->PeekRawLine( yLine ) );
-   }
 
 bool FBOP::IsLineBlank( PCFBUF fb, LINE yLine ) {
    return IsStringBlank( fb->PeekRawLine( yLine ) );
@@ -915,14 +895,14 @@ COL FBOP::DelChar( PFBUF fb, LINE yPt, COL xPt ) {
    const auto tw( fb->TabWidth() );
    const auto rl( fb->PeekRawLine( yPt ) );
    const auto lc0( StrCols( tw, rl ) );
-   xPt = TabAlignedCol( tw, rl, xPt, 0 );
+   xPt = TabAlignedCol( tw, rl, xPt );
    if( xPt >= lc0 ) { // xPt to right of line content?
       return 0;       // this is a nop
       }
    // Here we are deleting a CHARACTER, whereas DelBox deletes COLUMNS; if the character is an HTAB,
    // the # of COLUMNS to be deleted in order to delete the underlying CHARACTER is variable:
    // NB: xNxtChar != xPt+1 iff realtabs and (HTAB==rl[ ix(xPt) ])
-   const auto xNxtChar( TabAlignedCol( tw, rl, xPt, +1 ) );
+   const auto xNxtChar( ColOfNextChar( tw, rl, xPt ) );
    fb->DelBox( xPt, yPt, xNxtChar-1, yPt );
    const auto rv( xNxtChar - xPt ); 0 && DBG( "%s returns %d-%d= %d", __func__, xNxtChar, xPt, rv );
    return rv;
@@ -941,7 +921,7 @@ COL FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, 
    // everything that follows is to determine the number of columns added by the insertion of theChar
    // (which is used to determine the new cursor position if a user keystroke op caused us to be doing this)
    // BUGBUG: this might be WRONG in the case of overwrite (replace, !fInsert) if theChar or what is replaces is an HTAB!
-   const auto colsInserted( TabAlignedCol( tw, tmp1, xCol, +1 ) - xCol );
+   const auto colsInserted( ColOfNextChar( tw, tmp1, xCol ) - xCol );
    if( xCol < lc0 ) { // actual content added?
       AdjMarksForInsertion( fb, fb, xCol, yLine, COL_MAX, yLine, xCol+colsInserted, yLine );
       }
@@ -1233,7 +1213,6 @@ sridx FreeIdxOfCol( const COL tabWidth, stref content, const COL colTgt ) {
    if( colTgt <= 0 ) {
       return 0;
       }
-
    const Tabber tabr( tabWidth );
    auto col( 0 );
    for( auto it( content.cbegin() ) ; it != content.cend() ; ++it ) {
@@ -1301,16 +1280,6 @@ void test_CaptiveIdxOfCol() {
 
 //--------------------------------------------------------------------------------------------------
 
-stref FBUF::PeekRawLine( LINE yLine ) const {
-   auto len( 0 );
-   if( KnownLine( yLine ) && (len = LineLength( yLine )) > 0 ) {
-      return stref( d_paLineInfo[ yLine ].GetLineRdOnly(), len );
-      }
-   else {
-      return stref();
-      }
-   }
-
 stref FBUF::PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
    auto rl( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
@@ -1362,16 +1331,14 @@ void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl
 int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
    const auto tw       ( TabWidth() );
    auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
-   auto       strCols  ( StrCols( tw, dest ) );
-   const auto lineCols ( ColOfFreeIdx( tw, dest, dest.length() ) );  DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d)", __func__, BSR(dest), lineCols, strCols, xIns );
-   // Assert( lineCols == lineChars );
-   if( lineCols < xIns ) { // line shorter than caller requires? append spaces thru dest[xIns-1]; dest[xIns] == 0
-      dest.append( xIns - lineCols, ' ' );
+   const auto lineCols ( StrCols( tw, dest ) );                   DB && DBG( "%s: %" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
+   if( xIns > lineCols ) {                 // line shorter than insert point?
+      dest.append( xIns - lineCols, ' ' ); // append spaces thru dest[xIns-1]; dest[xIns] == 0
       }
    if( insertCols > 0 ) {
-      const auto ix( FreeIdxOfCol( tw, dest, xIns ) );               DB && DBG( "%s: %" PR_BSR "| L %d/%d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, strCols, xIns, ix );
-      dest.insert( ix, insertCols, ' ' );
-      }                                                              DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
+      const auto ixIns( FreeIdxOfCol( tw, dest, xIns ) );         DB && DBG( "%s: %" PR_BSR "| L %d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, xIns, ixIns );
+      dest.insert( ixIns, insertCols, ' ' );
+      }                                                           DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
    return dest.length();
    }
 
@@ -1830,9 +1797,9 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       }
    const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
    std::string stmp;
-   const auto ixDst   ( FreeIdxOfCol( FBdest->TabWidth(), destbuf, xDst    ) ); // where destbuf text PAST insertion point; where destbuf content is split
+   const auto ixDst   ( FreeIdxOfCol( FBdest->TabWidth(), destbuf, xDst ) ); // where destbuf text PAST insertion point; where destbuf content is split
    {
-   const auto ixSrcEnd( FreeIdxOfCol( tws, srcbuf , xSrcEnd ) );
+   const auto ixSrcEnd( FreeIdxOfCol( tws, srcbuf, xSrcEnd ) );
    srcbuf.replace( ixSrcEnd, srcbuf.length() - ixSrcEnd, destbuf, ixDst, std::string::npos ); // destbuf text PAST insertion point -> srcbuf past xSrcEnd
    //*** merge & write last line of FBsrc stream  srcbuf[0..ixSrcEnd) : destbuf[ixDst..end]]
    FBdest->PutLine( yDstLast, srcbuf, stmp );

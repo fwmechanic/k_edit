@@ -1444,7 +1444,15 @@ public:
                // in my_strutils.h and the tabWidth-dependent col-of-ptr/ptr-of-col xlators
                // to reference/parse line content w/o copying (MUCH more efficient to
                // avoid a heap alloc).  SEE ALSO: PeekRawLineSeg()
-   stref          PeekRawLine( LINE yLine ) const; // returns RAW line content BY REFERENCE
+   stref          PeekRawLine( LINE yLine ) const { // returns RAW line content BY REFERENCE
+                  auto len( 0 );
+                  if( KnownLine( yLine ) && (len = LineLength( yLine )) > 0 ) {
+                     return stref( d_paLineInfo[ yLine ].GetLineRdOnly(), len );
+                     }
+                  else {
+                     return stref();
+                     }
+                  }
 
                // most of the time, you can just use PeekRawLine() and stref methods + helper functions
                // in my_strutils.h and the tabWidth-dependent col-of-ptr/ptr-of-col xlators
@@ -1543,9 +1551,11 @@ inline bool LineInfo::fCanFree_pLineData( const FBUF &fbuf ) const { return !fbu
 inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCompile < d_pFBuf->LineCount(); }
 
 //************ tabWidth-dependent string fxns
+extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset );
+
 extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
-extern COL     StrCols(        COL tabWidth, const stref &src );
+STIL   COL     StrCols( COL tabWidth, const stref &src ) { return ColOfFreeIdx( tabWidth, src, src.length() ); }
 
 extern void        FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently
           ( std::string &dest, size_t maxCharsToWrite  // dest-related
@@ -1576,11 +1586,27 @@ STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, stref content, COL x0, COL x1 ) {
                   rv.ix1 = CaptiveIdxOfCol( tabWidth, content, x1 );
                   return rv;
                   }
-extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset );
 
-// see also TabAlignedCol_ the DEBUG version of this function
-STIL COL TabAlignedCol( COL tabWidth, stref rl, COL xCol, COL xBias ) {
-   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + xBias );
+STIL COL TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
+   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) );
+   }
+
+STIL COL ColOfNextChar( COL tabWidth, stref rl, COL xCol ) {
+   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + 1 );
+   }
+
+STIL COL ColOfPrevChar( COL tabWidth, stref rl, COL xCol ) {
+   const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
+   COL rv;
+   if( ix == 0 ) {
+      rv = -1;
+      }
+   else {
+      const auto nix( ix - 1 );
+      rv = ColOfFreeIdx( tabWidth, rl, nix );
+      // 0 && DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, nix, rv );
+      }
+   return rv;
    }
 
 struct rlc1 {
@@ -1637,7 +1663,7 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
 
    //************ tab-width-dependent line-content-related calcs
 
-   extern COL     LineCols(               PCFBUF fb, LINE yLine );
+   STIL COL       LineCols( PCFBUF fb, LINE yLine ) { return StrCols( fb->TabWidth(), fb->PeekRawLine( yLine ) ); }
 
    //************ copy LINE/BOX/STREAM file->file
    extern void    CopyLines(  PFBUF FBdest, LINE yDestStart    , PCFBUF FBsrc, LINE ySrcStart, LINE ySrcEnd );

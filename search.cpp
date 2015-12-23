@@ -735,20 +735,10 @@ public:
    virtual ~CharWalker_() {};
    };
 
-
-STIL COL ColPlusDeltaWithinStringRegion( COL tabWidth, const stref &sr, COL xCol, int delta ) {
- #if 0
-   return g_fRealtabs ? TabAlignedCol( tabWidth, sr, xCol, delta ) : xCol + delta;
- #else
-   return xCol + delta;
- #endif
-   }
-
 // CharWalkRect is called by PBalFindMatching, PMword, and
 // GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
 STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fWalkFwd, CharWalker_ &walker ) {
    0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
-
    const auto tw( pFBuf->TabWidth() );
    #define SETUP_LINE_TEXT                                      \
            if( ExecutionHaltRequested() ) {                     \
@@ -756,8 +746,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
               return false;                                     \
               }                                                 \
            auto rl( pFBuf->PeekRawLine( curPt.lin ) );          \
-           auto colLastPossibleLastMatchChar( ColOfFreeIdx( tw, rl, rl.length()-1 ) ); \
-
+           auto colLastPossibleLastMatchChar( ColOfFreeIdx( tw, rl, rl.length()-1 ) );
    #define CHECK_NEXT  {  \
            const auto rv( walker.VCheckNext( pFBuf, rl, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleLastMatchChar )  );  \
            if( STOP_SEARCH == rv ) return true;       \
@@ -765,7 +754,6 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
               rl = pFBuf->PeekRawLine( curPt.lin );   \
               }                                       \
            }
-
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       Point curPt( start.lin, start.col + 1 );
       for( auto yMax(constrainingRect.flMax.lin) ; curPt.lin <= yMax ; ) {
@@ -773,7 +761,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          NoMoreThan( &colLastPossibleLastMatchChar, constrainingRect.flMax.col );
          for(
             ; curPt.col <= colLastPossibleLastMatchChar
-            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl, curPt.col, +1 )
+            ; curPt.col = ColOfNextChar( tw, rl, curPt.col )
             ) CHECK_NEXT
          ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
          }
@@ -785,7 +773,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          SETUP_LINE_TEXT;
          for( curPt.col = Min( colLastPossibleLastMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
             ; curPt.col >= constrainingRect.flMin.col
-            ; curPt.col = ColPlusDeltaWithinStringRegion( tw, rl, curPt.col, -1 )
+            ; curPt.col = ColOfPrevChar( tw, rl, curPt.col )
             ) CHECK_NEXT
          --curPt.lin;
          }

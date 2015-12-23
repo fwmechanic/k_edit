@@ -34,10 +34,8 @@ bool swixVscroll( stref param ) {
    return true;
    }
 
-STATIC_FXN COL ConstrainCursorX( PFBUF pFBuf, LINE yPos, COL xPos, COL xBias ) {
-   return CursorCannotBeInTabFill() ? TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos, xBias )
-                                    : xPos + xBias;
-   }
+STIL COL ConstrainCursorX_0( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos; }
+STIL COL ConstrainCursorX_1( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  ColOfNextChar( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos + 1; }
 
 STATIC_FXN bool CurView_MoveCursor_fMoved( LINE yLine, COL xColumn ) {
    const FBufLocnNow cp;
@@ -52,7 +50,7 @@ STIL COL CurLineCols() {
 bool ARG::right() { PCWrV;
    const auto xNewCol( d_fMeta
                     ? pcw->d_Size.col + pcv->Origin().col - 1
-                    : ConstrainCursorX( pcv->FBuf(), g_CursorLine(), g_CursorCol(), +1 )
+                    : ConstrainCursorX_1( pcv->FBuf(), g_CursorLine(), g_CursorCol() )
                     );
    const auto g_CursorCol_was( g_CursorCol() );
    pcv->MoveCursor( g_CursorLine(), xNewCol );
@@ -117,7 +115,7 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    0 && DBG( "%s(%d,%d) fUpdtWUC=%c", __func__, yCursor, xCursor, fUpdtWUC?'t':'f' );
    NoLessThan( &xCursor, 0 );
    NoLessThan( &yCursor, 0 );
-   xCursor = ConstrainCursorX( d_pFBuf, yCursor, xCursor, 0 );
+   xCursor = ConstrainCursorX_0( d_pFBuf, yCursor, xCursor );
    const auto winHeight( d_pWin->d_Size.lin );
    const auto winWidth ( d_pWin->d_Size.col );
 
