@@ -3319,7 +3319,7 @@ void View::GetLineForDisplay
    , const LINE               yLineOfFile
    , const bool               isActiveWindow
    ) const {
-   enum { PCT_WIDTH=7 };
+   const auto isActiveLine( isActiveWindow && g_CursorLine() == yLineOfFile );
    dest.replace( xLeft, xWidth, xWidth, ' ' ); // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
    if( yLineOfFile > d_pFBuf->LastLine() ) {
       alcc.PutColorRaw( Origin().col, xWidth, 0x07 );
@@ -3327,31 +3327,25 @@ void View::GetLineForDisplay
       }
    else {
       alcc.PutColor( Origin().col, xWidth, COLOR::TXT );
-      const auto activeLine( isActiveWindow && (g_CursorLine() == yLineOfFile) );
-      const auto showBlanks( d_pFBuf->RevealBlanks() || activeLine );
-      PrettifyMemcpy( dest, xLeft, xWidth
-         ,              d_pFBuf->PeekRawLine( yLineOfFile )
-         , Origin().col
+      const auto showBlanks( d_pFBuf->RevealBlanks() || isActiveLine );
+      PrettifyMemcpy( dest, xLeft, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), Origin().col
          ,              d_pFBuf->TabWidth()
          , showBlanks ? d_pFBuf->TabDispChar()   : ' '
          , showBlanks ? d_pFBuf->TrailDispChar() : 0
          );
-      if( DrawVerticalCursorHilite() && (xWidth > PCT_WIDTH) && activeLine ) {
+      enum { PCT_WIDTH=7 };
+      if( DrawVerticalCursorHilite() && (xWidth > PCT_WIDTH) && isActiveLine ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
          stref pct( pctst.k_str() );
          dest.replace( xLeft + xWidth - pct.length(), pct.length(), pct.data() );
          }
       }
-
    InsertHiLitesOfLineSeg(  // patch in any hilites [which MAY be present when yLineOfFile > d_pFBuf->LastLine(); think "cursorline highlight" or selecting beyond EOF]
         yLineOfFile
       , Origin().col
       , Origin().col + xWidth - 1
-      , alcc
-      , pFirstPossibleHiLite
-      , isActiveWindow
-      , isActiveWindow && g_CursorLine() == yLineOfFile
+      , alcc, pFirstPossibleHiLite, isActiveWindow, isActiveLine
       );
    }
 
