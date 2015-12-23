@@ -84,7 +84,12 @@ typedef     sridx (* pFxn_strstr   ) ( stref haystack, stref needle );
 STATIC_FXN  sridx         strnstr    ( stref haystack, stref needle );
 STATIC_FXN  sridx         strnstri   ( stref haystack, stref needle );
 
+#define USE_STL_SEARCH  1
+
 STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
+ #if USE_STL_SEARCH
+   return haystack.find( needle );
+ #else
    if( needle.length() > haystack.length() ) return stref::npos;
    const auto hcend( haystack.cend() - needle.length() + 1 );
    for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
@@ -99,9 +104,20 @@ STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
          }
       }
    return stref::npos;
+ #endif
    }
 
+#if USE_STL_SEARCH
+STATIC_FXN bool lower_test( char ll, char rr ) {
+   return std::tolower( ll ) == std::tolower( rr );
+   }
+#endif
+
 STATIC_FXN sridx strnstri_nl( stref haystack, stref needle ) { // ASSUMES needle has been LOWERCASED!!!
+ #if USE_STL_SEARCH
+   const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), lower_test ) );
+   return pos == haystack.cend() ? stref::npos : std::distance( haystack.cbegin(), pos );
+ #else
    if( needle.length() > haystack.length() ) return stref::npos;
    const auto hcend( haystack.cend() - needle.length() + 1 );
    for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
@@ -116,9 +132,14 @@ STATIC_FXN sridx strnstri_nl( stref haystack, stref needle ) { // ASSUMES needle
          }
       }
    return stref::npos;
+ #endif
    }
 
 STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // DOES NOT ASSUME needle has been LOWERCASED!!!
+ #if USE_STL_SEARCH
+   const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), lower_test ) );
+   return pos == haystack.cend() ? stref::npos : std::distance( haystack.cbegin(), pos );
+ #else
    if( needle.length() > haystack.length() ) return stref::npos;
    const auto hcend( haystack.cend() - needle.length() + 1 );
    for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
@@ -133,6 +154,7 @@ STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // DOES NOT ASSUME n
          }
       }
    return stref::npos;
+ #endif
    }
 
 
