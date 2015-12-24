@@ -400,22 +400,17 @@ int View::ColorIdx2Attr( int colorIdx ) const {
 class HiliteAddin { // prototype base/interface class: public HiliteAddin
 protected:
    View  &d_view ;
-
 public:
-
    HiliteAddin( PView pView ) : d_view( *pView ) {}
    virtual bool VWorthKeeping() { return true; }
    virtual PCChar Name() const = 0;
    virtual ~HiliteAddin() {}
-
-
    /* update/event-receive methods: any useful incarnation of HiliteAddin must
       implement at least one of these, which is used to optimally update object
       state which is derived from the event's info */
    virtual void VCursorMoved( bool fUpdtWUC ) {}
    virtual void VFbufLinesChanged( LINE yMin, LINE yMax ) {}
    virtual void VWinResized() {}
-
    /* output methods: the _purpose_ of HiliteAddin objects; how they manifest
       themselves at the user level (by changing the color of displayed FBUF content).
       retval of bool HilitLine...(): true means stop hiliting after this */
@@ -423,9 +418,7 @@ public:
    virtual bool VHilitLineSegs( LINE yLine,              LineColorsClipped &alcc ) { return false; }
 
    DLinkEntry <HiliteAddin> dlinkAddins;
-
 protected:
-
          PCFBUF CFBuf()               const { return d_view.CFBuf(); }
          LINE   Get_LineCompile()     const { return d_view.Get_LineCompile(); }
    const Point &Cursor()              const { return d_view.Cursor(); }
@@ -447,21 +440,17 @@ protected:
 class HiliteAddin_Pbal : public HiliteAddin {
    void VCursorMoved( bool fUpdtWUC ) override;
    bool VHilitLineSegs( LINE yLine,              LineColorsClipped &alcc ) override;
-
 public:
    HiliteAddin_Pbal( PView pView )
       : HiliteAddin( pView )
       , d_fPbalMatchValid( false )
       {}
-
    ~HiliteAddin_Pbal() {}
    PCChar Name() const override { return "PBal"; }
-
 private:
    bool  d_fPbalMatchValid;
    Point d_ptPbalMatch;
    };
-
 
 void HiliteAddin_Pbal::VCursorMoved( bool fUpdtWUC ) {
    const auto prevPbalValid( d_fPbalMatchValid );
@@ -492,33 +481,26 @@ class HiliteAddin_WordUnderCursor : public HiliteAddin {
 
 public:
    HiliteAddin_WordUnderCursor( PView pView )
-      : HiliteAddin( pView )
-      {
+      : HiliteAddin( pView ) {
       clear();
       }
-
    ~HiliteAddin_WordUnderCursor() {}
    PCChar Name() const override { return "WUC"; }
 
 private:
    StringsBuf<BUFBYTES> d_sb;
-
    void   clear()               {        d_sb.clear();         }
    PCChar AddKey( stref sr )    { return d_sb.AddString( sr ); }
-
    void   SetNewWuc( stref src, LINE lin, COL col );
-
    std::string  d_stCandidate;
    std::string  d_stSel;    // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
-
    LINE         d_yWuc = -1; // BUGBUG if edits occur, need to set d_yWuc = -1 (or d_wucbuf[0] = 0)
    COL          d_xWuc = -1;
    };
 
 void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { enum { DBG_HL_EVENT=0 };
    d_stSel.clear();
-   if( d_yWuc == lin && d_sb.find( src ) ) { // assume transitivity
-                                                                                                                DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
+   if( d_yWuc == lin && d_sb.find( src ) ) { /* assume transitivity */                                          DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
       if( d_xWuc != col ) {
           d_xWuc  = col;
           DispNeedsRedrawAllLines();
@@ -532,11 +514,8 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
 
-   d_yWuc   = lin;
-   d_xWuc   = col;
-
-   if( lin >= 0 ) {
-                                                                                                                                                auto keynum( 1 );
+   d_yWuc = lin; d_xWuc = col;
+   if( lin >= 0 ) {                                                                                                                             auto keynum( 1 );
       if( !wuc.starts_with( "$" )) { // experimental
          char scratch[81]; PCChar key;
                bcat( bcpy( scratch, "$"  ).length(), scratch, wuc );                          key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
@@ -585,7 +564,6 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
             }
          }
       }
-
    DispNeedsRedrawAllLines();                                                                                // DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
    }
 
@@ -745,25 +723,21 @@ class HiliteAddin_cond_CPP : public HiliteAddin {
       d_PerViewableLine.resize( ViewLines() );
       d_need_refresh = true;
       }
-
    virtual cppc IsCppConditional( stref src, int *pxPound ) { return ::IsCppConditional( src, pxPound ); }
 
 public:
 
    HiliteAddin_cond_CPP( PView pView )
-      : HiliteAddin( pView )
-      {
+      : HiliteAddin( pView ) {
       d_PerViewableLine.resize( ViewLines() );
       d_need_refresh = true;
       }
-
    ~HiliteAddin_cond_CPP() {}
    PCChar Name() const override { return "cond_CPP"; }
 
 private:
 
    bool d_need_refresh = false;
-
    struct PerViewableLineInfo {
       struct    {
          cppc   acppc;
