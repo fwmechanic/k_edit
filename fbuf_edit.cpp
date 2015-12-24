@@ -477,7 +477,7 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
       }
    if( !TrailSpcsKept() ) {
       auto trailSpcs = 0;
-      for( auto it( srSrc.crbegin() ) ; it != srSrc.crend() && isBlank( *it ) ; ++it ) {
+      for( auto it( srSrc.crbegin() ) ; it != srSrc.crend() && isblank( *it ) ; ++it ) {
          ++trailSpcs;
          }
       srSrc.remove_suffix( trailSpcs );
@@ -943,7 +943,7 @@ STATIC_FXN int GetHexDigit() {
    while( !(pCmd=GetGraphic()) || !isxdigit( pCmd->d_argData.chAscii() ) )
       continue;
 
-   const char ch( toLower( pCmd->d_argData.chAscii() ) );
+   const char ch( tolower( pCmd->d_argData.chAscii() ) );
    return (ch <= '9') ? ch - '0' : ch + 10 - 'a';
    }
 

@@ -168,7 +168,7 @@ NO_MATCH:
    }
 
 template < typename cont_inst >
-typename cont_inst::size_type ToNextOrEndSkipQuoted( const char key, cont_inst src, typename cont_inst::size_type start ) {
+typename cont_inst::size_type ToNextOrEndSkipQuoted( const int key, cont_inst src, typename cont_inst::size_type start ) {
    if( start < src.length() ) {
       char quoteCh( '\0' );
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
@@ -197,21 +197,18 @@ extern   int    StrToInt_variable_base( stref pszParam, int numberBase );
 extern   bool   StrSpnSignedInt( PCChar pszString );
 extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
-extern   char  FlipCase( char ch );
+extern   int   FlipCase( int ch );
 extern PChar   xlatCh( PChar pStr, int fromCh, int toCh );
 extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
 
-// char predicates
-STIL   bool   isBlank(     char ch ) { return ch == HTAB || ch == ' '; }
-STIL   bool   notBlank(    char ch ) { return !isBlank( ch ); }
-extern bool   isWordChar(  char ch );
-STIL   bool   notWordChar( char ch ) { return !isWordChar( ch ); }
-STIL   bool   isDecDigit(  char ch ) { return ch >= '0'  && ch <= '9'; }
+// char predicates; return int to match http://en.cppreference.com/w/cpp/header/cctype is functions
+STIL   int   notBlank    ( int ch ) { return !isblank( ch ); }
+extern int   isWordChar  ( int ch );
+STIL   int   notWordChar ( int ch ) { return !isWordChar( ch ); }
+STIL   int   isbdigit    ( int ch ) { return ch == '0' || ch == '1'; }
 
-STIL   bool   StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
-
-extern char  toLower( char ch );
+STIL   bool  StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
 STIL bool eq( stref s1, stref s2 ) {
    if( s1.length() != s2.length() ) {
@@ -225,13 +222,12 @@ STIL bool eq( stref s1, stref s2 ) {
    return true;
    }
 
-
-STIL int cmp( char c1, char c2 ) {
+STIL int cmp( int c1, int c2 ) {
    if( c1 == c2 ) { return 0; }
    return c1 < c2 ? -1 : +1;
    }
 
-STIL int cmpi( char c1, char c2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
+STIL int cmpi( int c1, int c2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
    const auto cd( 'a'-'A' );
    if( c1 == c2 || (c1 ^ cd) == c2 ) { return 0; }
    return (c1 | cd) < (c2 | cd) ? -1 : +1;
@@ -277,7 +273,7 @@ STIL int cmpi( const stref &s1, const stref &s2 ) {
 
 STIL bool IsStringBlank( stref src ) {
    for( auto ch : src ) {
-      if( !isBlank( ch ) ) {
+      if( !isblank( ch ) ) {
          return false;
          }
       }
@@ -383,7 +379,7 @@ STIL void trim( strlval &inout ) { // remove leading and trailing whitespace
 
 template<typename strlval>
 void rmv_trail_blanks( strlval &inout ) {
-   while( !inout.empty() && isBlank( inout.back() ) ) {
+   while( !inout.empty() && isblank( inout.back() ) ) {
       inout.pop_back();
       }
    }

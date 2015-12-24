@@ -91,7 +91,7 @@ STATIC_FXN sridx ToAssignCommentDelimOrEndSkipQuoted( stref src, sridx start ) {
    if( start < src.length() ) {
       char quoteCh( '\0' );
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         if( RSRCFILE_COMMENT_DELIM == *it && (it == src.cbegin() || isBlank( *(it-1) )) ) {
+         if( RSRCFILE_COMMENT_DELIM == *it && (it == src.cbegin() || isblank( *(it-1) )) ) {
             return std::distance( src.cbegin(), it );
             }
          SKIP_QUOTED_STR( quoteCh, it, src, NO_MATCH )
@@ -863,38 +863,6 @@ bool ARG::tell() {
    }
 
 
-int StrToInt_variable_base( stref pszParam, int numberBase ) {
-   if( (10 == numberBase || 16 == numberBase)
-      && '0' == pszParam[0]
-      && ('x' == pszParam[1] || 'X' == pszParam[1])
-     ) {
-      pszParam.remove_prefix( 2 );
-      numberBase = 16;
-      }
-
-   if( numberBase < 2 || numberBase > 36 )
-      return -1;
-
-   auto accum(0);
-   auto pC( pszParam.cbegin() );
-   for( ; pC != pszParam.cend() ; ++pC ) {
-      auto ch( *pC ); // cannot auto: *pC => const char, we need ch to be non-const
-      if( isDecDigit( ch ) )            { ch -= '0'     ; }
-      else if( ch >= 'a' && ch <= 'z' ) { ch -= 'a' - 10; }
-      else if( ch >= 'A' && ch <= 'Z' ) { ch -= 'A' - 10; }
-      else                              { break;          }
-
-      if( ch >= numberBase )
-         break;
-
-      accum = (accum * numberBase) + ch;
-      }
-
-   const auto rv( std::distance( pszParam.cbegin(), pC ) ? accum : -1 );
-   return rv;
-   }
-
-
 GLOBAL_VAR PFBUF g_pFbufRecord;
 
 STATIC_VAR bool  s_fInRecordDQuote; // if set than output is in the middle of a '"'-delimited (literal) string
@@ -1137,7 +1105,7 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
          break;
          }
 
-      fChIsBlank = isBlank( *it );
+      fChIsBlank = isblank( *it );
 
       switch( state ) {
        default:             break;

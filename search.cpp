@@ -56,27 +56,6 @@
 // Last remaining optimization that I can think of is to flatten the code
 // (remove subrtne calls) by making fewer bigger functions...
 //
-
-//--------------------------------------------------------------
-
-struct xlatLower {
-   U8 my_lower_[256];  // contains lowercase version of its index
-   xlatLower();
-   };
-
-xlatLower::xlatLower() {
-   for( int ix(0); ix < ELEMENTS(my_lower_); ++ix )
-      my_lower_[ix] = ix;
-
-   for( int ix('A'); ix <= 'Z'; ++ix )
-      my_lower_[ix] |= 'a' - 'A';
-   }
-
-char toLower( char ch ) {
-   STATIC_VAR xlatLower low;
-   return low.my_lower_[ U8(ch) ];
-   }
-
 //--------------------------------------------------------------
 
 // pointer to one of the two following functions
@@ -109,8 +88,7 @@ STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
 
 #if USE_STL_SEARCH
 STATIC_FXN bool lower_test( char ll, char rr ) {
-// return std::tolower( ll ) == std::tolower( rr );
-   return toLower( ll ) == toLower( rr );
+   return std::tolower( ll ) == std::tolower( rr );
    }
 #endif
 
@@ -122,14 +100,14 @@ STATIC_FXN sridx strnstri_nl( stref haystack, stref needle ) { // ASSUMES needle
    if( needle.length() > haystack.length() ) return stref::npos;
    const auto hcend( haystack.cend() - needle.length() + 1 );
    for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
-      if( toLower( *hit ) == needle[0] ) {
+      if( tolower( *hit ) == needle[0] ) {
          auto pH( hit ); auto pN( needle.cbegin() );
          do {
             ++pH; ++pN;
             if( pN == needle.cend() ) {
                 return std::distance( haystack.cbegin(), hit );
                 }
-            } while( toLower( *pH ) == *pN );
+            } while( tolower( *pH ) == *pN );
          }
       }
    return stref::npos;
@@ -144,14 +122,14 @@ STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // DOES NOT ASSUME n
    if( needle.length() > haystack.length() ) return stref::npos;
    const auto hcend( haystack.cend() - needle.length() + 1 );
    for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
-      if( toLower( *hit ) == toLower( needle[0] ) ) {
+      if( tolower( *hit ) == tolower( needle[0] ) ) {
          auto pH( hit ); auto pN( needle.cbegin() );
          do {
             ++pH; ++pN;
             if( pN == needle.cend() ) {
                 return std::distance( haystack.cbegin(), hit );
                 }
-            } while( toLower( *pH ) == toLower( *pN ) );
+            } while( tolower( *pH ) == tolower( *pN ) );
          }
       }
    return stref::npos;

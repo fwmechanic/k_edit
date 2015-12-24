@@ -163,7 +163,7 @@ bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    return true;
    }
 
-bool isWordChar( char ch ) {
+int isWordChar( int ch ) {
    if( !s_isWordChar_['a'] ) {
       swixWordchars( "" );
       }

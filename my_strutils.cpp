@@ -271,7 +271,7 @@ bool StrSpnSignedInt( PCChar pszString ) {
    return *StrPastAny( pszString, "0123456789" ) == 0;
    }
 
-typedef bool (*isfxn)(char);
+typedef int (*isfxn)(int);
 
 STATIC_FXN int consec_is_its( isfxn ifx, stref sr ) {
    auto rv( 0 );
@@ -283,17 +283,45 @@ STATIC_FXN int consec_is_its( isfxn ifx, stref sr ) {
    return rv;
    }
 
-STATIC_FXN bool isxdigit_( char ch ) { return isxdigit( ch ); }
-STATIC_FXN bool isbdigit_( char ch ) { return ch == '0' || ch == '1'; }
+int consec_xdigits( stref sr ) { return consec_is_its( isxdigit, sr ); }
+int consec_bdigits( stref sr ) { return consec_is_its( isbdigit, sr ); }
 
-int consec_xdigits( stref sr ) { return consec_is_its( isxdigit_, sr ); }
-int consec_bdigits( stref sr ) { return consec_is_its( isbdigit_, sr ); }
+int StrToInt_variable_base( stref pszParam, int numberBase ) {
+   if( (10 == numberBase || 16 == numberBase)
+      && '0' == pszParam[0]
+      && ('x' == pszParam[1] || 'X' == pszParam[1])
+     ) {
+      pszParam.remove_prefix( 2 );
+      numberBase = 16;
+      }
+
+   if( numberBase < 2 || numberBase > 36 )
+      return -1;
+
+   auto accum(0);
+   auto pC( pszParam.cbegin() );
+   for( ; pC != pszParam.cend() ; ++pC ) {
+      auto ch( *pC ); // cannot auto: *pC => const char, we need ch to be non-const
+      if( isdigit( ch ) )               { ch -= '0'     ; }
+      else if( ch >= 'a' && ch <= 'z' ) { ch -= 'a' - 10; }
+      else if( ch >= 'A' && ch <= 'Z' ) { ch -= 'A' - 10; }
+      else                              { break;          }
+
+      if( ch >= numberBase )
+         break;
+
+      accum = (accum * numberBase) + ch;
+      }
+
+   const auto rv( std::distance( pszParam.cbegin(), pC ) ? accum : -1 );
+   return rv;
+   }
 
 // from http://www.stereopsis.com/strcmp4humans.html
 STIL int parsedecnum( PCChar & pch ) {
    auto result( *pch - '0' );
    ++pch;
-   while( isDecDigit(*pch) ) {
+   while( isdigit(*pch) ) {
       result *= 10;
       result += *pch - '0';
       ++pch;
@@ -307,8 +335,8 @@ int strcmp4humans( PCChar pA, PCChar pB ) {
    if (pA == nullptr) return -1;
    if (pB == nullptr) return  1;
    for ( ; *pA && *pB ; ++pA, ++pB ) {
-      const auto a0( isDecDigit(*pA) ? parsedecnum(pA) + 256 :  toLower(*pA) );  // will contain either a number or a letter
-      const auto b0( isDecDigit(*pB) ? parsedecnum(pB) + 256 :  toLower(*pB) );  // will contain either a number or a letter
+      const auto a0( isdigit(*pA) ? parsedecnum(pA) + 256 :  tolower(*pA) );  // will contain either a number or a letter
+      const auto b0( isdigit(*pB) ? parsedecnum(pB) + 256 :  tolower(*pB) );  // will contain either a number or a letter
       if( a0 < b0 ) return -1;
       if( a0 > b0 ) return  1;
       }
@@ -346,5 +374,5 @@ sridx FirstNonBlankOrEnd( stref src, sridx start ) {
    }
 
 sridx FirstBlankOrEnd( stref src, sridx start ) {
-   return ToNextOrEnd( isBlank , src, start );
+   return ToNextOrEnd( isblank , src, start );
    }

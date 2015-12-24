@@ -37,7 +37,7 @@ STATIC_FXN char first_alpha( PCChar str ) {
    return *str;
    }
 
-char FlipCase( char ch ) {
+int FlipCase( int ch ) {
    if( isalpha(ch) )  return islower(ch) ? _toupper(ch) : _tolower(ch);
    switch( ch ) {
       case '+' : return '-' ;
@@ -201,7 +201,7 @@ bool ARG::longline() {
 
 bool ARG::quik() {
    fnMsg( "?" );
-   const auto ch( toLower( CharAsciiFromKybd() ) );
+   const auto ch( tolower( CharAsciiFromKybd() ) );
    switch( ch ) {
       default :  return Msg( "quik + %c ?", ch );
       case 'a':  return mword();
@@ -252,7 +252,7 @@ bool ARG::makebox() {
    fnMsg( "Key->Box: 0->Å 1->Î 2->Ø 3->× 4->+ 5->= 6->° 7->± 8->² 9->Û A->þ ?->?" );
    fnMsg( "Key->Box: 1->Å 2->Î 3->Ø 4->× 5->+ 6->= 7->° 8->± 9->² 0->Û A->þ ?->?" );
 
-   const char ch( toLower( CharAsciiFromKybd() ) );
+   const char ch( tolower( CharAsciiFromKybd() ) );
    if( ch == 27 )  // ESC == cancel
       return false;
 

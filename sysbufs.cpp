@@ -69,7 +69,7 @@ STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"
       }
    const auto numst( pszName.substr( 4, pszName.length()-4-1 ) );
    for( auto ch : numst ) {
-      if( !isDecDigit( ch ) ) {
+      if( !isdigit( ch ) ) {
          return -1;
          }
       }
