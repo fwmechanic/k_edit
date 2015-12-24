@@ -233,12 +233,16 @@ STIL int cmpi( int c1, int c2 ) { // impl w/highly ASCII-centric optzn taken fro
    return (c1 | cd) < (c2 | cd) ? -1 : +1;
    }
 
+STATIC_FXN bool eqi_( char ll, char rr ) {
+   return std::tolower( ll ) == std::tolower( rr );
+   }
+
 STIL bool eqi( stref s1, stref s2 ) {
    if( s1.length() != s2.length() ) {
       return false;
       }
    for( sridx ix( 0 ); ix < s1.length() ; ++ix ) {
-      if( 0!=cmpi( s1[ix], s2[ix] ) ) {
+      if( !eqi_( s1[ix], s2[ix] ) ) {
          return false;
          }
       }

@@ -63,79 +63,19 @@ typedef     sridx (* pFxn_strstr   ) ( stref haystack, stref needle );
 STATIC_FXN  sridx         strnstr    ( stref haystack, stref needle );
 STATIC_FXN  sridx         strnstri   ( stref haystack, stref needle );
 
-#define USE_STL_SEARCH  1
-
 STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
- #if USE_STL_SEARCH
    return haystack.find( needle );
- #else
-   if( needle.length() > haystack.length() ) return stref::npos;
-   const auto hcend( haystack.cend() - needle.length() + 1 );
-   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
-      if( *hit == needle[0] ) {
-         auto pH( hit ); auto pN( needle.cbegin() );
-         do {
-            ++pH; ++pN;
-            if( pN == needle.cend() ) {
-                return std::distance( haystack.cbegin(), hit );
-                }
-            } while( *pH == *pN );
-         }
-      }
-   return stref::npos;
- #endif
    }
-
-#if USE_STL_SEARCH
-STATIC_FXN bool lower_test( char ll, char rr ) {
-   return std::tolower( ll ) == std::tolower( rr );
-   }
-#endif
 
 STATIC_FXN sridx strnstri_nl( stref haystack, stref needle ) { // ASSUMES needle has been LOWERCASED!!!
- #if USE_STL_SEARCH
-   const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), lower_test ) );
+   const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), eqi_ ) );
    return pos == haystack.cend() ? stref::npos : std::distance( haystack.cbegin(), pos );
- #else
-   if( needle.length() > haystack.length() ) return stref::npos;
-   const auto hcend( haystack.cend() - needle.length() + 1 );
-   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
-      if( tolower( *hit ) == needle[0] ) {
-         auto pH( hit ); auto pN( needle.cbegin() );
-         do {
-            ++pH; ++pN;
-            if( pN == needle.cend() ) {
-                return std::distance( haystack.cbegin(), hit );
-                }
-            } while( tolower( *pH ) == *pN );
-         }
-      }
-   return stref::npos;
- #endif
    }
 
 STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // DOES NOT ASSUME needle has been LOWERCASED!!!
- #if USE_STL_SEARCH
-   const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), lower_test ) );
+   const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), eqi_ ) );
    return pos == haystack.cend() ? stref::npos : std::distance( haystack.cbegin(), pos );
- #else
-   if( needle.length() > haystack.length() ) return stref::npos;
-   const auto hcend( haystack.cend() - needle.length() + 1 );
-   for( auto hit( haystack.cbegin() ) ; hit != hcend ; ++hit ) {
-      if( tolower( *hit ) == tolower( needle[0] ) ) {
-         auto pH( hit ); auto pN( needle.cbegin() );
-         do {
-            ++pH; ++pN;
-            if( pN == needle.cend() ) {
-                return std::distance( haystack.cbegin(), hit );
-                }
-            } while( tolower( *pH ) == tolower( *pN ) );
-         }
-      }
-   return stref::npos;
- #endif
    }
-
 
 GLOBAL_VAR PFBUF g_pFBufSearchLog;
 GLOBAL_VAR PFBUF g_pFBufSearchRslts;
