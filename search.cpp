@@ -58,21 +58,13 @@
 //
 //--------------------------------------------------------------
 
-// pointer to one of the two following functions
-typedef     sridx (* pFxn_strstr   ) ( stref haystack, stref needle );
-STATIC_FXN  sridx         strnstr    ( stref haystack, stref needle );
-STATIC_FXN  sridx         strnstri   ( stref haystack, stref needle );
-
+typedef sridx (* pFxn_strstr)( stref haystack, stref needle );
+                                                                // HAYSTACK
 STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
    return haystack.find( needle );
    }
 
-STATIC_FXN sridx strnstri_nl( stref haystack, stref needle ) { // ASSUMES needle has been LOWERCASED!!!
-   const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), eqi_ ) );
-   return pos == haystack.cend() ? stref::npos : std::distance( haystack.cbegin(), pos );
-   }
-
-STATIC_FXN sridx strnstri( stref haystack, stref needle ) { // DOES NOT ASSUME needle has been LOWERCASED!!!
+STATIC_FXN sridx strnstri( stref haystack, stref needle ) {
    const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), eqi_ ) );
    return pos == haystack.cend() ? stref::npos : std::distance( haystack.cbegin(), pos );
    }
@@ -432,7 +424,6 @@ class FileSearcher {
 
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
-   virtual void  VPrepLine_( std::string &lbuf ) const {};
    virtual stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) = 0; // rv.empty() if no match found
 
    public:
@@ -541,7 +532,8 @@ void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digre
 STATIC_FXN FileSearcher *NewFileSearcher( FileSearcher::StringSearchVariant type, const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
 class  FileSearcherString : public FileSearcher {
-   std::string d_searchKey;
+   std::string        d_searchKey;
+   const pFxn_strstr  d_pfxStrnstr;
 
    NO_COPYCTOR(FileSearcherString);
    NO_ASGN_OPR(FileSearcherString);
@@ -551,14 +543,12 @@ class  FileSearcherString : public FileSearcher {
    FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    ~FileSearcherString() {}
 
-   void  VPrepLine_( std::string &lbuf ) const override;
    stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) override;
    };
 
 class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
-   std::string d_searchKey;
-   pFxn_strstr d_pfxStrnstr;
-
+   std::string        d_searchKey;
+   const pFxn_strstr  d_pfxStrnstr;
    std::vector<stref> d_pNeedles;
 
    NO_COPYCTOR(FileSearcherFast);
@@ -569,7 +559,6 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
    FileSearcherFast( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    virtual ~FileSearcherFast() {}
    void   VFindMatches_() override;
-   void   VPrepLine_( std::string &lbuf ) const override;
    stref  VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) override;
    };
 
@@ -1555,19 +1544,13 @@ void FileSearcher::Dbgf() const {
 FileSearcherString::FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh )
    : FileSearcher( sm, ss, mh )
    , d_searchKey( ss.d_rawStr )
+   , d_pfxStrnstr( g_fCase ? strnstr : strnstri )
    {
-   if( !g_fCase )
-      string_tolower( d_searchKey );
-   }
-
-void FileSearcherString::VPrepLine_( std::string &lbuf ) const {
-   if( !g_fCase )
-      string_tolower( lbuf );
    }
 
 stref FileSearcherString::VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) {
    stref offset_eaten( src ); offset_eaten.remove_prefix( src_offset );
-   const auto ixMatch( offset_eaten.find( d_searchKey ) );
+   const auto ixMatch( d_pfxStrnstr( offset_eaten, d_searchKey ) );
    if( ixMatch == stref::npos ) {
       return stref();
       }
@@ -1618,6 +1601,7 @@ stref FileSearcherRegex::VFindStr_( stref src, sridx src_offset, HaystackHas hay
 
 FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh )
    : FileSearcher( sm, ss, mh )
+   , d_pfxStrnstr( g_fCase ? strnstr : strnstri )
    {
    stref pS( ss.d_rawStr );
    // BUGBUG deprecate for now 20150101 KG
@@ -1650,14 +1634,6 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
    d_searchKey.assign( pS.data(), pS.length() );
    if( fNdAppendTrailingAltSepChar )
       d_searchKey += AltSepChar;
-
-   if( !g_fCase ) {
-      string_tolower( d_searchKey );
-      d_pfxStrnstr = strnstri_nl;
-      }
-   else {
-      d_pfxStrnstr = strnstr;
-      }
 
    // gateway to alternation (logical OR) in grep/TEXTARG: "^![,.|]"
    // replace the user's chosen separator with the separator that
@@ -1743,7 +1719,6 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ REPLACES FileSearcher::VFindMatches_, and
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
-void   FileSearcherFast::VPrepLine_( std::string &lbuf ) const { Assert( 0 != 0 ); }
 stref  FileSearcherFast::VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) { Assert( 0 != 0 ); return stref(); }
 
 //===============================================
@@ -1754,7 +1729,6 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
          d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
-         VPrepLine_( d_sbuf );
          const IdxCol pcc( tw, d_sbuf );
          const auto lnCols( pcc.cols() );
          auto iC( pcc.c2i( curPt.col ) );
@@ -1784,7 +1758,6 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
             continue;
             }
          d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
-         VPrepLine_( d_sbuf );
          const IdxCol pcc( tw, d_sbuf );
          auto iC( pcc.c2i( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, d_sbuf.length(), BSR(d_sbuf) ); )
          if( iC < d_sbuf.length() ) // if curPt.col is in middle of line...
