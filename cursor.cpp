@@ -60,7 +60,7 @@ bool ARG::right() { PCWrV;
 
 STATIC_FXN COL ColOfFirstNonBlankChar( PCFBUF fb, LINE yLine ) {
    const auto rl( fb->PeekRawLine( yLine ) );
-   if( IsStringBlank( rl ) )           return -1;
+   if( IsStringBlank( rl ) ) { return -1; }
    const auto ix( FirstNonBlankOrEnd( rl ) );
    return ColOfFreeIdx( fb->TabWidth(), rl, ix );
    }
@@ -127,13 +127,12 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    // the window size.
    //
    // Text is never scrolled in increments greater than the size of the window.
-
    const auto hscrollCols( Max( 1, (g_iHscroll * winWidth) / EditScreenCols() ) );
          auto xWinOrigin( Origin().col );
    const auto xWinCursor( xCursor - xWinOrigin );
-   if( xWinCursor <         0 ) { xWinOrigin -= hscrollCols;  if( xWinCursor < -hscrollCols            )  xWinOrigin += xWinCursor + 1       ; } // hscroll left?
+   if( xWinCursor <         0 ) { xWinOrigin -= hscrollCols;  if( xWinCursor < -hscrollCols            ) { xWinOrigin += xWinCursor + 1       ; } } // hscroll left?
    else
-   if( xWinCursor >= winWidth ) { xWinOrigin += hscrollCols;  if( xWinCursor >= hscrollCols + winWidth )  xWinOrigin += xWinCursor - winWidth; } // hscroll right?
+   if( xWinCursor >= winWidth ) { xWinOrigin += hscrollCols;  if( xWinCursor >= hscrollCols + winWidth ) { xWinOrigin += xWinCursor - winWidth; } } // hscroll right?
    {
    const auto  xWinCurs( xCursor - xWinOrigin );
    0 && DBG( "xWinCurs=%d", xWinCurs );
@@ -142,9 +141,8 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    const auto xMax  ( xWinOrigin + winWidth - 1 );
    const auto xRight( xCursor    +   xWidth - 1 );
    const auto xShort( xRight     -         xMax );
-   if( xShort > 0 )  xWinOrigin += xShort;
+   if( xShort > 0 ) { xWinOrigin += xShort; }
    }
-
    // VERTICAL WINDOW SCROLL HANDLING
    //
    // vscroll: The number of lines scrolled when you move the cursor out of the
@@ -152,12 +150,9 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    // scrolled is in proportion to the window size.
    //
    // Text is never scrolled in increments greater than the size of the window.
-
    const auto vscrollCols( Max( 1, (g_iVscroll * winHeight) / EditScreenLines() ) );
-
          auto yWinOrigin( Origin().lin );
    const auto yWinCursor( yCursor - yWinOrigin );
-
    if( (yWinCursor >= -vscrollCols) && (yWinCursor < winHeight + vscrollCols) ) { // within one vscroll of the window boundaries?
       if( yWinCursor <          0 ) { yWinOrigin -= vscrollCols; }
       else
@@ -170,7 +165,6 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
       //
       Constrain( 1, &g_iHike, 99 );
       const auto yHikeLines( Max( 1, (winHeight * g_iHike) / 100 ) );
-
 #if 1
       yWinOrigin = yCursor - yHikeLines;
 #else
@@ -193,10 +187,8 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
                  ;
 #endif
       }
-
    NoLessThan( &xWinOrigin, 0 );
    NoLessThan( &yWinOrigin, 0 );
-
    ScrollOriginAndCursor_( yWinOrigin, xWinOrigin, yCursor, xCursor, fUpdtWUC );
    }
 
@@ -217,9 +209,9 @@ void View::ScrollToPrev() {
    }
 
 bool View::RestCur() { // selecting
-   if( !d_saved.fValid )
+   if( !d_saved.fValid ) {
       return false;
-
+      }
    ScrollOriginAndCursor( d_saved );
    return true;
    }
@@ -250,7 +242,6 @@ bool ARG::setwindow() { PCV;
    switch( d_argType ) {
     default:      DispNeedsRedrawTotal();  // bug-masker: if color is changed interactively or in a startup macro the change did not affect all lines w/o this change
                   return true;
-
     case NULLARG: pcv->ScrollOriginYX( g_CursorLine(), d_cArg == 1 ? g_CursorCol() : pcv->Origin().col );
                   return true;
     }
@@ -310,10 +301,9 @@ bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
             }
          }
       }
-
-   if( retVal )
+   if( retVal ) {
       FBOP::PrimeRedrawLineRangeAllWin( pFBuf, 0, pFBuf->LineCount() );
-
+      }
    return retVal;
    }
 
@@ -330,33 +320,33 @@ STIL bool LastLineOfPara ( PFBUF fb, LINE yLine )  { return  FBOP::IsLineBlank( 
 bool ARG::ppara() {
    const auto origLine( g_CursorLine() );
    const auto pFBuf( g_CurFBuf() );
-   if( pFBuf->LineCount() <= g_CursorLine() )
+   if( pFBuf->LineCount() <= g_CursorLine() ) {
       return false;
-
-   if( ArgCount() > 0 )  d_fMeta = !d_fMeta; // makes this fn more useful for selection purposes
-
+      }
+   if( ArgCount() > 0 ) { d_fMeta = !d_fMeta; } // makes this fn more useful for selection purposes
    auto yLine( g_CursorLine() + 1 );
-   for( ; yLine < pFBuf->LineCount(); ++yLine )
-      if( d_fMeta ? LastLineOfPara( pFBuf, yLine ) : FirstLineOfPara( pFBuf, yLine ) )
-          break;
-
+   for( ; yLine < pFBuf->LineCount(); ++yLine ) {
+      if( d_fMeta ? LastLineOfPara( pFBuf, yLine ) : FirstLineOfPara( pFBuf, yLine ) ) {
+         break;
+         }
+      }
    g_CurView()->MoveCursor_NoUpdtWUC( yLine, g_CursorCol() );
    return g_CursorLine() != origLine;
    }
 
 bool ARG::mpara() {
    const auto origLine( g_CursorLine() );
-   if( g_CursorLine() == 0 )
+   if( g_CursorLine() == 0 ) {
       return false;
-
+      }
    // if( ArgCount() > 0 )  d_fMeta = !d_fMeta; // makes this fn more useful for selection purposes
-
    auto yLine( g_CursorLine() - 1 );
    const auto pFBuf( g_CurFBuf() );
-   for( ; yLine; --yLine )
-      if( d_fMeta ? LineFollowsPara( pFBuf, yLine ) : FirstLineOfPara( pFBuf, yLine ) )
-          break;
-
+   for( ; yLine; --yLine ) {
+      if( d_fMeta ? LineFollowsPara( pFBuf, yLine ) : FirstLineOfPara( pFBuf, yLine ) ) {
+         break;
+         }
+      }
    g_CurView()->MoveCursor_NoUpdtWUC( yLine, g_CursorCol() );
    return g_CursorLine() != origLine;
    }
@@ -367,36 +357,34 @@ STATIC_FXN bool SameIndentRange( PCFBUF fb, LINE *yMin, LINE *yMax, LINE start )
    auto yLine( start );
    for( ; yLine; --yLine ) {
       goal = ColOfFirstNonBlankChar( fb, yLine );
-      if( goal >= 0 )
+      if( goal >= 0 ) {
          break;
+         }
       }
-   if( goal < 0 ) return false;
-
+   if( goal < 0 ) { return false; }
    for( ; yLine ; --yLine ) {
       const COL dent( ColOfFirstNonBlankChar( fb, yLine ) );
       if( dent >= 0 ) {
-         if     ( dent == goal ) *yMin = yLine;
-         else if( dent <  goal ) break;
+         if     ( dent == goal ) { *yMin = yLine; }
+         else if( dent <  goal ) { break;         }
          }
       }
-   if( *yMin < 0 ) *yMin = 0;
-
+   if( *yMin < 0 ) { *yMin = 0; }
    for( yLine = start ; yLine < fb->LineCount(); ++yLine ) {
       const auto dent( ColOfFirstNonBlankChar( fb, yLine ) );
       if( dent >= 0 ) {
-         if     ( dent == goal ) *yMax = yLine;
-         else if( dent <  goal ) break;
+         if     ( dent == goal ) { *yMax = yLine; }
+         else if( dent <  goal ) { break;         }
          }
       }
    if( *yMax < 0 ) *yMax = fb->LineCount() - 1;
-
    return true;
    }
 
 STATIC_FXN bool cursorToBoundOfIndentBlock( int bottom ) {
    LINE yMin, yMax;
    const auto rv( SameIndentRange( g_CurFBuf(), &yMin, &yMax, g_CursorLine() ) );
-   if( !rv ) return false;
+   if( !rv ) { return false; }
    g_CurView()->MoveCursor_NoUpdtWUC( (bottom>0)?yMax:yMin, g_CursorCol() );
    return true;
    }

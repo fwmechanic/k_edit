@@ -98,17 +98,15 @@ struct SearchScanMode {
    bool d_fSearchForward;
    };
 
-   STATIC_CONST SearchScanMode smFwd    = { true  };
-   STATIC_CONST SearchScanMode smBackwd = { false };
+STATIC_CONST SearchScanMode smFwd    = { true  };
+STATIC_CONST SearchScanMode smBackwd = { false };
 
 //****************************
 
 class SearchStats { // found only in FileSearchMatchHandler
    int d_matchCount;  // FOR both SEARCH AND REPLACE, any match is a match.
    int d_actionCount; // FOR SEARCH, an action is a match; FOR REPLACE, it's a replace actually being performed
-
-   public:
-
+public:
    SearchStats() { Reset(); }
    void Reset() {
       d_matchCount  = 0;
@@ -116,7 +114,6 @@ class SearchStats { // found only in FileSearchMatchHandler
       }
    void IncMatch()       { ++d_matchCount ; }
    void IncMatchAction() { ++d_actionCount; }
-
    int  GetMatches()      const { return d_matchCount ; }
    int  GetMatchActions() const { return d_actionCount; }
    };
@@ -124,8 +121,7 @@ class SearchStats { // found only in FileSearchMatchHandler
 //****************************
 
 class FileSearchMatchHandler {
-   protected:
-
+protected:
    int         d_lifetimeFileCount;
    int         d_lifetimeFileCountMatch      ;
    int         d_lifetimeFileCountMatchAction;
@@ -133,12 +129,9 @@ class FileSearchMatchHandler {
    SearchStats d_curFileStats;
    bool        d_fScrollToFirstMatch;
    FBufLocn    d_flToScroll;
-
    Point       d_scrollPoint;
    MainThreadPerfCounter d_pc;
-
-   public:
-
+public:
    FileSearchMatchHandler( bool fScrollToFirstMatch=true )
       : d_lifetimeFileCount           (0)
       , d_lifetimeFileCountMatch      (0)
@@ -149,7 +142,6 @@ class FileSearchMatchHandler {
    virtual ~FileSearchMatchHandler() {}
 
    // External Event Hooks
-
    virtual void VEnteringFile( PFBUF pFBuf ) { // could add a file skip retval here
                 ++d_lifetimeFileCount;
                 if( d_curFileStats.GetMatches()      ) { ++d_lifetimeFileCountMatch;       }
@@ -177,22 +169,15 @@ class FileSearchMatchHandler {
 
    virtual bool VOverallRetval() { return d_lifetimeStats.GetMatchActions() > 0; } // retval for ARG:ffXxxx
 
-   protected:
-
+protected:
    // SUBCLASS Event Hooks
-
       // called by FoundMatchContinueSearching
-      //
       virtual bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ) { return true; }; // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
       virtual bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ); // cur MAY BE MODIFIED!!!
       virtual bool VContinueSearching() { return true; }
-
       // called by ShowResults
-      //
       virtual void VShowResultsNoMacs() {}
-
    // common tools for SUBCLASS Event Hooks to use
-
    bool ScrollToFLOk() const; // useful in VShowResultsNoMacs()
    int GetLifetimeMatchCount()            const { return d_lifetimeStats.GetMatchActions(); }
    int GetLifetimeFileCount()             const { return d_lifetimeFileCount              ; }
@@ -231,23 +216,16 @@ bool FileSearchMatchHandler::ScrollToFLOk() const { return d_flToScroll.ScrollTo
 class FindPrevNextMatchHandler : public FileSearchMatchHandler {
    NO_COPYCTOR(FindPrevNextMatchHandler);
    NO_ASGN_OPR(FindPrevNextMatchHandler);
-
    const char   d_dirCh;
    const bool   d_fIsRegex;
    const std::string d_SrchStr;
    const std::string d_SrchDispStr;
-
    void DrawDialog( PCChar hdr, PCChar trlr );
-
-   protected:
-
+protected:
    bool VContinueSearching() override { return false; };  // stop at first match
-
-   public:
-
+public:
    FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, stref srchStr );
    ~FindPrevNextMatchHandler() {}
-
    void VShowResultsNoMacs() override;
    };
 
@@ -301,20 +279,15 @@ class MFGrepMatchHandler : public FileSearchMatchHandler {
    PFBUF d_pOutputFile;
    std::string  d_sb;
    std::string  d_stmp;
-
-   protected:
-
+protected:
    bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ) override;
    void VShowResultsNoMacs() override;
-
-   public:
-
+public:
    MFGrepMatchHandler( PFBUF pOutputFile )
       : d_pOutputFile(pOutputFile)
       {
       Msg( "searching cache" );  // rewrite the dialog line so user doesn't think we've hung
       }
-
    void InitLogFile( const FileSearcher &FSearcher );
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
@@ -399,35 +372,23 @@ void MFGrepMatchHandler::VShowResultsNoMacs() {
 class FileSearcher {
    NO_COPYCTOR(FileSearcher);
    NO_ASGN_OPR(FileSearcher);
-
-   protected:
-
+protected:
    const SearchScanMode   &d_sm;
    const SearchSpecifier  &d_ss;
-
-   public:
-
+public:
    std::string             d_sbuf;
-
    FileSearchMatchHandler &d_mh;
-
    Point                  d_start;
    Point                  d_end;
    PFBUF                  d_pFBuf;
-
    CompiledRegex::capture_container d_captures;
-
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-
    virtual stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) = 0; // rv.empty() if no match found
-
-   public:
-
+public:
    enum StringSearchVariant {
       fsTABSAFE_STRING ,  // FileSearcherString also bidirectional
       fsFAST_STRING    ,  // FileSearcherFast   about 20% faster than fsTABSAFE_STRING (WHEN SEARCHING CACHED FILES!!!)  (CANNOT SEARCH BACKWARD!)
       };
-
            void FindMatches();
    virtual void VFindMatches_();
    void SetInputFile( PFBUF pFBuf=g_CurFBuf() );
@@ -444,11 +405,8 @@ class FileSearcher {
       false;
 #endif
       }
-
    virtual ~FileSearcher();
-
-   protected:
-
+protected:
    void ResolveDfltBounds();
    };
 
@@ -510,7 +468,6 @@ void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digre
    LuaCtxt_Edit::nextmsg_setbufnm( szSearchRslts );
    LuaCtxt_Edit::nextmsg_newsection_ok( SprintfBuf( "mfgrep::%s %" PR_BSR, FSearcher.IsRegex() ? "regex" : "str", BSR( FSearcher.SrchStr() ) ) );
 #else
-
    if( d_pOutputFile->LineCount() > 0 ) {
        d_pOutputFile->PutLastLine( "" );
        }
@@ -523,21 +480,16 @@ void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digre
 #endif
    }
 
-
 STATIC_FXN FileSearcher *NewFileSearcher( FileSearcher::StringSearchVariant type, const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
 class  FileSearcherString : public FileSearcher {
    std::string        d_searchKey;
    const pFxn_strstr  d_pfxStrnstr;
-
    NO_COPYCTOR(FileSearcherString);
    NO_ASGN_OPR(FileSearcherString);
-
-   public:
-
+public:
    FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    ~FileSearcherString() {}
-
    stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) override;
    };
 
@@ -545,12 +497,9 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
    std::string        d_searchKey;
    const pFxn_strstr  d_pfxStrnstr;
    std::vector<stref> d_pNeedles;
-
    NO_COPYCTOR(FileSearcherFast);
    NO_ASGN_OPR(FileSearcherFast);
-
-   public:
-
+public:
    FileSearcherFast( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    virtual ~FileSearcherFast() {}
    void   VFindMatches_() override;
@@ -562,9 +511,7 @@ class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
 class  FileSearcherRegex : public FileSearcher {
    NO_COPYCTOR(FileSearcherRegex);
    NO_ASGN_OPR(FileSearcherRegex);
-
-   public:
-
+public:
    FileSearcherRegex( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) override;
    };
@@ -588,7 +535,6 @@ STATIC_VAR CompiledRegex *  s_pSandR_CompiledSearchPattern;
 
  #endif
 
-
 Rect::Rect( PFBUF pFBuf ) {
    flMin.col = 0;
    flMin.lin = 0;
@@ -602,7 +548,6 @@ Rect::Rect( bool fSearchFwd ) {
    flMax.col = COL_MAX;
    flMax.lin = g_CurFBuf()->LastLine();
    }
-
 
 bool FBUF::RefreshFailed() {
    if( HasLines() ) {
@@ -644,12 +589,10 @@ void View::SetMatchHiLite( const Point &pt, COL Cols, bool fErrColor ) {
 
 class HiLiteFreer {
    const PView d_View;
-
 public:
    HiLiteFreer() :  d_View( g_CurView() ) {}
    ~HiLiteFreer() { d_View->FreeHiLiteRects(); }
    };
-
 
 enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH, /* CONTINUE_SEARCH_NEXT_LINE */ };
 
@@ -720,14 +663,11 @@ class CharWalkerReplace : public CharWalker_ {
    const std::string& d_stReplace;
    bool               d_fDoReplaceQuery;
    const pFxn_strstr  d_pfxStrnstr;
-
-   public:
-
+public:
    int               d_iReplacementsPoss;
    int               d_iReplacementsMade;
    int               d_iReplacementFiles;
    int               d_iReplacementFileCandidates;
-
    CharWalkerReplace(
         bool fDoReplaceQuery
       , bool fSearchCase
@@ -741,18 +681,14 @@ class CharWalkerReplace : public CharWalker_ {
       , d_iReplacementFiles ( 0 )
       , d_iReplacementFileCandidates ( 0 )
       {}
-
    CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
-
-   private:
-
+private:
    void DoFinalPartOfReplace(
         PFBUF        pFBuf                           // buffer where replace is taking place
       , Point       *curPt                           // start of match
       , COL         &colLastPossibleLastMatchChar
       );
    };
-
 
 // replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
 void CharWalkerReplace::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &colLastPossibleLastMatchChar ) {
@@ -803,16 +739,13 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_c
    const auto pView( pFBuf->PutFocusOn() );
    pView->FreeHiLiteRects();
    DispDoPendingRefreshesIfNotInMacro();
-
  #if 1
    curPt->ScrollTo( d_stSearch.length() );
  #else
    pView->MoveAndCenterCursor( *curPt, d_stSearch.length() );
  #endif
-
    pView->SetMatchHiLite( *curPt, d_stSearch.length(), true );
    DispDoPendingRefreshesIfNotInMacro();
-
    HiLiteFreer hf;
                                        //  allowed responses
                                        //  |       interactive dflt: cause retry by NOT matching any explicit case below
@@ -830,7 +763,6 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_c
       case 'n': return CONTINUE_SEARCH;
       }
    }
-
 
 //
 //  Compile
@@ -887,7 +819,6 @@ int FBUF::SyncWriteIfDirty_Wrote() {
       WriteToDisk();
       return 1;
       }
-
    return 0;
    }
 
@@ -933,7 +864,6 @@ STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all dup
          pFbuf->DelLine( ln-- ); // delete ALL duplicate strings
          }
       }
-
    std::string tmp;
    pFbuf->InsLine( 0, str, tmp );
    pFbuf->UnDirty();  // cosmetic
@@ -979,9 +909,7 @@ bool ARG::searchlog() {
    if( TEXTARG == d_argType ) {
       if(  !isdigit( d_textarg.pText[0] )
         ||      0 != d_textarg.pText[1]
-        ) {
-         return Msg( "textarg of searchlog can only be single char ['1'..'9'] = line number!" );
-         }
+        ) { return Msg( "textarg of searchlog can only be single char ['1'..'9'] = line number!" ); }
       yLine = d_textarg.pText[0] - '0';
       }
    g_pFBufSearchLog->PutFocusOn();
@@ -1024,7 +952,6 @@ STATIC_FXN void GarbageCollectFBUF( PFBUF pFBuf, bool fGarbageCollect ) {
       pFBuf->FreeLinesAndUndoInfo();
    // DeleteAllViewsOntoFbuf( pFBuf );
       }
-
    // we don't want to clutter the editor state file with the names of files
    // we've only opened because of mfgrep/mfreplace activity, BUT this occurs
    // automatically because in mfgrep/mfreplace code, a searched FBUF for which
@@ -1032,7 +959,6 @@ STATIC_FXN void GarbageCollectFBUF( PFBUF pFBuf, bool fGarbageCollect ) {
    // (mfreplace) activity actually causes the FBUF to get focus.  FBUFs not
    // linked to any View are not saved in the state file (state file generation
    // is driven by walking the windows' View lists).
-
    }
 
 STATIC_FXN void MFGrepProcessFile( PCChar filename, FileSearcher *d_fs ) {
@@ -1104,7 +1030,6 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
       return new FilelistCfxFilenameGenerator( pFBufMfspec );
       }
    }
-
    {
    const auto mfspec_text( DupTextMacroValue( "mfspec" ) );
    if( !IsStringBlank( mfspec_text ) ) {
@@ -1123,12 +1048,10 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
       return rv;
       }
    }
-
    if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "no mfspec setting active" ); }
    DB && DBG( "%s: returns NULL!", __func__ );
    return nullptr;
    }
-
 
 #ifdef fn_mgl
 bool ARG::mgl() {
@@ -1140,7 +1063,6 @@ bool ARG::mgl() {
          DBG( "  [%d] = '%s'", ix++, pbuf );
       Delete0( pGen );
       }
-
    return true;
    }
 #endif
@@ -1247,9 +1169,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
       return ErrorDialogBeepf( "Invalid replacement pattern" );
       }
 #endif
-
    CharWalkerReplace mrcw( fInteractive, d_fMeta ? !g_fCase : g_fCase );
-
    if( fMultiFileReplace ) {
       const auto startingTopFbuf( g_CurFBuf() );
       auto pGen( GrepMultiFilenameGenerator() );
@@ -1281,13 +1201,11 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
        default:
        case NOARG:   { Rect rn( true ); CharWalkRect( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), true, mrcw ); } break;
        case NULLARG: { Rect rn( true ); CharWalkRect( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), true, mrcw ); } break;
-
        case LINEARG: { Rect rn;
                        rn.flMin.lin = d_linearg.yMin;  rn.flMin.col = 0;
                        rn.flMax.lin = d_linearg.yMax;  rn.flMax.col = COL_MAX;
                        CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), true, mrcw );
                      } break;
-
        case STREAMARG: if( d_streamarg.flMin.lin == d_streamarg.flMax.lin ) {
                           CharWalkRect( g_CurFBuf(), d_streamarg, Point( d_streamarg.flMin, 0, -1 ), true, mrcw );
                           }
@@ -1295,19 +1213,15 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
                           rn.flMin.lin = d_streamarg.flMin.lin;      rn.flMin.col = 0;
                           rn.flMax.lin = d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
                           CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin.lin, d_streamarg.flMin.col - 1 ), true, mrcw );
-
                           rn.flMax.col = d_streamarg.flMax.col;
                           rn.flMax.lin++;
                           rn.flMin.lin = rn.flMax.lin;
                           CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), true, mrcw );
                           }
                        break;
-
        case BOXARG:    CharWalkRect( g_CurFBuf(), d_boxarg, Point( d_boxarg.flMin, 0, -1 ), true, mrcw );
                        break;
        }
-
-
       Msg( "%d of %d occurrences replaced%s"
          , mrcw.d_iReplacementsMade
          , mrcw.d_iReplacementsPoss
@@ -1320,7 +1234,6 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    //
    // if( USER_CHOSE_EARLY_CMD_TERMINATE == ExecutionHaltRequested() )
    //    ClrExecutionHaltRequest(); // ExecutionHaltRequest is used in this code to implement the 'Q' response to interactive query
-
    return mrcw.d_iReplacementsMade != 0;
    }
 
@@ -1381,7 +1294,6 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
          }
       ED && DBG( "wcBuf='%s'" , wcBuf  );
       ED && DBG( "dirBuf='%s'", dirBuf );
-
       Path::str_t pbuf, fbuf;
       DirListGenerator dlg( dirBuf );
       std::string tmp;
@@ -1570,11 +1482,9 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
              )
          ) ? pS[1] : 0
       );
-
    auto fNdAppendTrailingAltSepChar( 0 );
    if( AltSepChar ) {
       pS.remove_prefix( 2 );
-
       // IF ALTERNATION
       //    arg "!,AltSepChar,fNdAppendTrailingAltSepChar" grep
       //    arg arg "(AltSepChar|fNdAppendTrailingAltSepChar)" grep
@@ -1584,7 +1494,6 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
          fNdAppendTrailingAltSepChar = 1;
          }
       }
-
    d_searchKey.assign( pS.data(), pS.length() );
    if( fNdAppendTrailingAltSepChar ) {
       d_searchKey += AltSepChar;
@@ -1593,7 +1502,6 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
    // replace the user's chosen separator with the separator that
    // FileSearcherFast::FindMatches requires
    0 && DBG( "srchStrLen=%" PR_BSRSIZET "u: '%" PR_BSR "'", d_searchKey.length(), BSR(d_searchKey) );
-
    {
    auto ix(0);
    stref rk( d_searchKey );
@@ -1609,7 +1517,6 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
    d_pNeedles.emplace_back( pStart, std::distance( pStart, it ) );
    0 && DBG( "needleCount=%" PR_BSRSIZET "u", d_pNeedles.size() );
    }
-
    // for( int ix(0) ; ix < d_needleCount ; ++ix ) {
    //    DBG( "NeedleLen[%d]=%d", ix, d_pNeedleLens[ ix ] );
    //    }
@@ -1720,17 +1627,14 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
             }
          const auto maxCharsToSearch( Min( iC, d_sbuf.length() ) );
          const stref haystack( d_sbuf.c_str(), maxCharsToSearch ); VS_( DBG( "-search: HAYSTACK='%" PR_BSR "'", BSR(haystack) ); )
-
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to
          // prev one)
          #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
-
          const auto srMatch( VFindStr_( haystack, 0, SET_HaystackHas(0) ) );
          if( !srMatch.empty() ) {
             COL goodMatchChars( srMatch.length() );
             auto iGoodMatch( srMatch.data() - haystack.data() );
-
             /* line contains _A_ match? */  VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
             // find the rightmost match by repeatedly searching (left->right) until search fails, using the last good match
             while( iGoodMatch < maxCharsToSearch ) {
@@ -1744,7 +1648,6 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
                iGoodMatch     = iNextMatch;
                goodMatchChars = nextMatchChars;         VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: +MATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
                }
-
             curPt.col  =          pcc.i2c( iGoodMatch                            )              ;
             const auto matchCols( pcc.i2c( goodMatchChars + pcc.c2i( curPt.col ) ) - curPt.col );
                                                         VS_( DBG( "-search: #MATCH y=%d (%d L %d)=>COL(%d L %d)", curPt.lin, iGoodMatch, goodMatchChars, curPt.col, matchCols ); )
@@ -1796,7 +1699,6 @@ STATIC_FXN FileSearcher *NewFileSearcher(
    VS_( rv->Dbgf(); )
    return rv;
    }
-
 
 bool GenericSearch( ARG *pArg, const SearchScanMode &sm ) {
    if( !SearchSpecifierOK( pArg ) ) {
@@ -1998,19 +1900,10 @@ CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_cu
       return STOP_SEARCH;
       }
    else { // rtn true iff curPt->col is LAST CHAR OF WORD
-      if( curPt->col <= 0 ) {
-         return CONTINUE_SEARCH;
-         }
-      if( !isWordChar( sr[ix_curPt_Col-1] ) ) {
-         return CONTINUE_SEARCH;
-         }
-      if( !isWordChar( sr[ix_curPt_Col] ) ) {
-         curPt->ScrollTo();
-         return STOP_SEARCH;
-         }
-      if( curPt->col != colLastPossibleLastMatchChar ) {
-         return CONTINUE_SEARCH;
-         }
+      if( curPt->col <= 0 )                   { return CONTINUE_SEARCH; }
+      if( !isWordChar( sr[ix_curPt_Col-1] ) ) { return CONTINUE_SEARCH; }
+      if( !isWordChar( sr[ix_curPt_Col  ] ) ) { curPt->ScrollTo(); return STOP_SEARCH; }
+      if( curPt->col != colLastPossibleLastMatchChar ) { return CONTINUE_SEARCH; }
       g_CurView()->MoveCursor( curPt->lin, curPt->col+1 );
       return STOP_SEARCH;
       }
@@ -2085,18 +1978,13 @@ public:
       // to set up initial conditions
       memset( d_MatchingLines, d_fFindAllNegate, sizeof(*d_MatchingLines) * d_InfLines );
       }
-
    ~CGrepper() { Free_( d_MatchingLines ); }
-
    void FindAllMatches( stref srchStr, bool fUseRegEx );
    void LineMatches( LINE line ) { d_MatchingLines[ line ] = !d_fFindAllNegate; }
-
    // to write results
    LINE WriteOutput( PCChar thisMetaLine, PCChar origSrchfnm );
-
 private:
    void RmvLine( LINE line ) { d_MatchingLines[ line ] = 0; }
-
    CGrepper & operator=( const CGrepper &rhs ); // so assignment op can't be used...
    };
 
@@ -2104,15 +1992,10 @@ private:
 
 class CGrepperMatchHandler : public FileSearchMatchHandler {
    NO_ASGN_OPR(CGrepperMatchHandler);
-
    CGrepper &d_cg;
-
-   public:
-
+public:
    CGrepperMatchHandler( CGrepper &cg ) : d_cg( cg ) {}
-
    bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &captures ) override;
-
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
 
@@ -2120,7 +2003,6 @@ bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL Match
    d_cg.LineMatches( cur.lin );
    return true;  // "action" taken!
    }
-
 
 void CGrepper::FindAllMatches( stref srchStr, bool fUseRegEx ) {
    if( !SetNewSearchSpecifierOK( srchStr, fUseRegEx ) ) {
@@ -2411,7 +2293,6 @@ PView FindClosestGrepBufForCurfile( PView pv, PCChar srchFilename ) {
    return nullptr;
    }
 
-
 bool merge_grep_buf( PFBUF dest, PFBUF src ) {
    pathbuf srcSrchFnm , destSrchFnm  ;
    int     srcHdrLines, destHdrLines ;
@@ -2432,7 +2313,6 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
       }
    return true;
    }
-
 
 bool ARG::gmg() { // arg "gmg" edhelp  # for docmentation
    const auto fDestroySrcsBufs( 0 == d_cArg );

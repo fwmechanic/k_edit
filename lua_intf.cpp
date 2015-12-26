@@ -238,26 +238,19 @@ enum { DBG_LUA_ALLOC=0 };
 
 STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
    static_cast<void>(ud); // mask 'not used' warning
-
    if( nsize == osize ) { // yes this happens ?!
       return ptr;
       }
-
    const auto delta( nsize - osize );
-
    s_LuaHeapSize += delta;
-
    if( nsize == 0 ) {
       DBG_LUA_ALLOC && ptr && DBG( "%s %" PR_SIZET "u free %5" PR_SIZET "u (%5" PR_SIZET "u/%5" PR_SIZET "u) P=            %p", __func__, s_LuaHeapSize, delta, osize, nsize, ptr );
       free( ptr );   // ANSI requires that free(nullptr) has no effect
       return nullptr;
       }
-
    // most of this conditional code is for debug/logging purposes
-
    const PVoid rv( realloc( ptr, nsize ) );  // ANSI requires that realloc(nullptr, size) == malloc(size)
    DBG_LUA_ALLOC && DBG( "%s %" PR_SIZET "u %s %5" PR_SIZET "u (%5" PR_SIZET "u/%5" PR_SIZET "u) P=%p -> %p", __func__, s_LuaHeapSize, ptr ? "real" : "new ", delta, osize, nsize, ptr, rv );
-
    return rv;
    }
 
@@ -296,9 +289,7 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
             }
          name[depth++] = pc+1;
          }
-
    DB && DBG( "%s depth = %d", __func__, depth );
-
    auto ix(0);
    for( ; ix < depth-1; ++ix ) { DB && DBG(  "%s ix = %d", __func__, ix );
       if( !getTblVal( L, name[ix], ix ) ) {
@@ -308,7 +299,6 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
          return false;
          }
       }
-
    DB && DBG( "%s ix(out) = %d", __func__, ix );
    return getTblVal( L, name[ix], ix ); // *** caller is responsible for converting TOS to appropriate C value ***
    }
@@ -347,7 +337,6 @@ STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar 
 STATIC_FXN int lua_atpanic_handler( lua_State *L ) {
    linebuf msg;
    CopyLuaString( BSOB(msg), L, -1 );
-
    DBG( "########################################## %s called ##########################################", __func__ );
    DBG( "###  %s", msg );
    DBG( "########################################## %s called ##########################################", __func__ );
@@ -422,21 +411,15 @@ STATIC_FXN void l_handle_pcall_error( lua_State *L, bool fCompileErr=false ) { /
    const auto yMsgStart( s_pFbufLuaLog->LastLine()+1 );
    s_pFbufLuaLog->FmtLastLine( "*** Lua %stime error", tp );
    s_pFbufLuaLog->PutLastMultiline( msg );
-
 #if 1
-
    s_pFbufLuaLog->PutLastLine( "" );
-
    const auto pv( s_pFbufLuaLog->PutFocusOn() );
    pv->MoveCursor( yMsgStart, 0 );
-
 #else
    const PCChar pll = strrchr( msg, '\n' );
    PCChar pMsg = pll && (*(pll+1) == '\t') && *(pll+2) ? pll+2 : msg;  // if Lua's emsg is multiline, the last line has a leading tab to skip
    DBG( "pMsg='%s'", pMsg );
-
    // For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use Compile_Regex + CompiledRegex::Match
-
    std::vector<stref> cs( 4 );
    {
    auto pre( Compile_Regex( "^(.*):(\\d+): (.*)$", true ) );
@@ -451,35 +434,28 @@ STATIC_FXN void l_handle_pcall_error( lua_State *L, bool fCompileErr=false ) { /
       Msg( "%s had regex match error", __func__ );
       return;
       }
-
    0 && DBG( "%d captures!", cs.Count() );
    // for( int ix=0; ix < cs.Count(); ++ix )
    //    DBG( "cs%d='%s'", ix, cs.Str(ix) );
-
    if( cs.Count() != 4 ) {
       Msg( "%s had regexcapture-count error", __func__ );
       return;
       }
    }
-
    PChar endptr;
    const auto yLine( strtoul( cs.Str(2), &endptr, 10 ) - 1 );
-
    auto pFBuf( OpenFileNotDir_NoCreate( cs.Str(1) ) );
    if( !pFBuf ) {
       return;
       }
    goto_file_line( pFBuf, yLine );
-
    PCChar emsg( cs.Str(3) );
-
    // if possible, display a truncated msg, so user doesn't have to mentally
    // discard the file location info which we've just navigated to for his
    // convenience...
    //
    Msg( rtErrTmplt, tp, emsg );
    s_pFbufLuaLog->FmtLastLine( rtErrTmplt, tp, emsg );
-
 #endif
    }
 
@@ -490,18 +466,13 @@ STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) {
    if( !L || LREGI_get_EvtHandlerEnabled( L ) < 1 ) {
       return;
       }
-
    DBG_LUA_ALLOC && DBG( "%s: heapChange ...", __func__ );
-
    const size_t s_LuaHeapBytesAtStart( LuaHeapSize() );
-
    LuaCallCleanup( L );
-
    if( lh_getglobal_failed( L, "CallEventHandlers" ) || !lua_isfunction( L, -1 ) ) {
       return;
       }
    lua_pushstring( L, eventName );  0 && DBG( "C calling CallEventHandlers(%s)", eventName );
-
    const auto failed( docall_known_nres( L, 1, 0 ) );
    if( failed ) {
       LREGI_set_EvtHandlerEnabled( L, 0 );         // don't want avalanche of errors
@@ -553,12 +524,10 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
             argTypeNm = kszAnyarg;
          }
       }
-
    if( !lua_isfunction( L, -1 ) ) {
       if( funcIsTable ) { return Msg( "Lua CMD %s.%s is not a function", cmdName, argTypeNm ); }
       else              { return Msg( "Lua CMD %s is not a function", cmdName );               }
       }
-
    // note that only a SUBSET of ARG type bits can be set here, leading to
    // non-obvious Lua EdFxn mapping of attr to function-key (e.g.  CURSORFUNC &
    // MACROFUNC both map to NOARG functions)
@@ -574,19 +543,16 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
    switch( actualArg ) {
       case STREAMARG : return BadArg();  // not yet supported
       default        : return BadArg();
-
       case LINEARG   : setfield( L, "minY", 1+d_linearg.yMin );
                        setfield( L, "maxY", 1+d_linearg.yMax );
                        setfield( L, "minX", 1+0              );
                        setfield( L, "maxX",   COL_MAX        );
                        break;
-
       case BOXARG    : setfield( L, "minY", 1+d_boxarg.flMin.lin );
                        setfield( L, "maxY", 1+d_boxarg.flMax.lin );
                        setfield( L, "minX", 1+d_boxarg.flMin.col );
                        setfield( L, "maxX", 1+d_boxarg.flMax.col );
                        break;
-
       case TEXTARG   : setfield( L, "text"   , d_textarg.pText ); //lint -fallthrough
       case NOARG     :                                            //lint -fallthrough
       case NULLARG   :{const int xAll( 1+g_CursorCol () );
@@ -599,14 +565,11 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
                        setfield( L, "maxY"   , yAll );
                       }break;
       }                                                                          DB && DBG( ".%s = %d", "type", actualArg );
-
    setfield( L, "argCount", d_cArg );
    setfield( L, "type"    , actualArg );
-
    l_construct_FBUF( L, g_CurFBuf() );  lua_setfield( L, -2, "fbuf" );
    l_View_function_cur( L );            lua_setfield( L, -2, "view" );
    lua_pushboolean( L, d_fMeta );       lua_setfield( L, -2, "fMeta" );          DB && DBG( ".%s = %s", "fMeta", d_fMeta?"true":"false" );
-
    const auto failed( docall_known_nres( L, 1, 1 ) );
    if( failed ) {
       UnhideCursor();
@@ -640,13 +603,11 @@ STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void
       lua_close( *pL );
       *pL = nullptr;
       }
-
    if( !openlibs ) {
       return true;
       }
    s_pFbufLuaLog->MakeEmpty();
    s_pFbufLuaLog->MoveCursorToBofAllViews();
-
    0 && DBG( "%s+ *(%p)=init'ing", __func__, pL );
    { // NB: each Lua 5.1.2 lua_newstate consumes 2.5KB!  20070724 kgoodwin
     const auto luaHeapBytesAtStart( LuaHeapSize() );
@@ -657,28 +618,20 @@ STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void
        }
     DBG_LUA_ALLOC && DBG( "%s lua_newstate (%" PR_SIZET "u bytes)  ******************************************", __func__, heapChange );
    }
-
    {
    lua_getfield( *pL, LUA_REGISTRYINDEX, "schickelgruber-nickel" );
    Assert( lua_isnil( *pL, -1 ) );
    lua_pop( *pL, 1 );
    }
-
    lua_atpanic( *pL, lua_atpanic_handler );
    lua_sethook( *pL, l_hook_handler, LUA_MASKLINE | LUA_MASKCOUNT, INT_MAX );
-
    LuaCallCleanup( *pL );
-
    openlibs( *pL );
-
    // override package.path so required Lua code is only looked for in sm dir as editor exe
    // (I used to setenv("LUA_PATH") but that impacted child processes that ran Lua.exe)
-
    lua_getglobal( *pL, "package" );  Assert( lua_istable( *pL, -1 ) );  // NB: package table does not exist until l_OpenStdLibs() has been called!
    setfield( *pL, "path", FmtStr<_MAX_PATH>( "%s?.lua", getenv( "KINIT" ) ) );
-
    LREGP_set_cleanup( *pL, reinterpret_cast<void *>(cleanup) );
-
    0 && DBG( "%s- *(%p)=%p", __func__, pL, *pL );
    return true;
    }
@@ -695,7 +648,6 @@ STATIC_FXN bool loadLuaFileFailed( lua_State **pL, PCChar fnm ) {
       case LUA_ERRSYNTAX:  DBG( "LUA_ERRSYNTAX" ); l_handle_pcall_error( *pL, true ); break;
       case LUA_ERRMEM:     Msg( "Lua memory error while loading '%s'"     , fnm );  break;
       default:             Msg( "Unknown Lua error %d loading '%s'", luaRC, fnm );  break;
-
       case 0:
            FDBG && LDS( "LoadLuaFileFailed post-load/pre-pcall", *pL );
            {
@@ -718,7 +670,6 @@ STATIC_FXN bool loadLuaFileFailed( lua_State **pL, PCChar fnm ) {
            // const char tnm[] = "_VERSION";
            // const char tnm[] = "package.loaded.string.gmatch";
               const char tnm[] = "dp.help";
-
               linebuf lbutt;
               DBG( "%s = '%s'", tnm, LuaTbl2S( *pL, BSOB(lbutt), tnm, "" ) );
            #endif
@@ -727,13 +678,10 @@ STATIC_FXN bool loadLuaFileFailed( lua_State **pL, PCChar fnm ) {
            }
            break;
       }
-
    FDBG && DBG( "%s+3 L=%p fLoadOK=%c",  __func__, *pL, fLoadOK?'t':'f' );
-
    if( !fLoadOK && *pL ) { DBG( "%s failed", __func__ );
       init_lua_ok( pL );
       }
-
    FDBG && DBG( "%s- L=%p fLoadOK=%c",  __func__, *pL, fLoadOK?'t':'f' );
    return fLoadOK;
    }
@@ -761,10 +709,12 @@ STATIC_FXN bool LuaCtxt_InitOk(
 
 STATIC_FXN void L_restore_save_post_load( lua_State *L ) { // Lua environment-loaded hook-outs
    }
+
 STATIC_FXN void L_std_openlibs( lua_State *L ) {
    l_OpenStdLibs( L );
 // l_register_EdLib( L ); //BUGBUG remove or trim down?
    }
+
 STATIC_VAR PChar psrc_LuaCtxt_restore_save;
 bool LuaCtxt_State::InitOk( PCChar filename ) {
    return LuaCtxt_InitOk(
@@ -776,7 +726,6 @@ bool LuaCtxt_State::InitOk( PCChar filename ) {
       ,  L_restore_save_post_load
       );
    }
-
 
 STATIC_FXN void L_edit_post_load( lua_State *L ) { // Lua environment-loaded hook-outs
    LREGI_set_EvtHandlerEnabled( L, 1 );
@@ -806,9 +755,7 @@ bool ARG::lua() {
       s_pFbufLuaLog->PutFocusOn();
       return true;
       }
-
    WriteAllDirtyFBufs();  // In case any required Lua files are dirty. Pseudofiles are not saved.
-
    if( psrc_LuaCtxt_Edit ) {
       const auto pFBuf( OpenFileNotDir_NoCreate( psrc_LuaCtxt_Edit ) );
       if( !pFBuf ) {
@@ -823,11 +770,9 @@ bool ARG::lua() {
    return false;
    }
 
-
 struct StrDest {
    PChar  d_pBuf;
    size_t d_bytes;
-
         StrDest( PChar pBuf, size_t bytes ) : d_pBuf( pBuf ), d_bytes( bytes ) {}
    void BindBuf( PChar pBuf, size_t bytes ) { d_pBuf= pBuf ;  d_bytes= bytes ;  }
    void CopyTo( PCChar src, size_t bytes ) {
@@ -836,7 +781,6 @@ struct StrDest {
       d_bytes = actual;
       }
    };
-
 
 // straight from PIL2e (call_va), a _REALLY DANGEROUS_ interface
 
@@ -848,7 +792,6 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
    if( lh_getglobal_failed( L, szFuncnm ) || !lua_isfunction( L, -1 ) ) {
       return Msg( "%s: Lua symbol '%s' is NOT A FUNCTION", __func__, szFuncnm );
       }
-
    // push arguments
    auto pszSigStart( szSig );
    for( ; *szSig && *szSig != '>' ; ++szSig ) {
@@ -866,7 +809,6 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
        }
       luaL_checkstack( L, 1, "too many arguments" );
       }
-
    const auto narg( szSig - pszSigStart );  // number of args pushed
    if( *szSig=='>' ) { ++szSig; }
    const auto nres_( Strlen( szSig ) );      // number of results expected
@@ -881,16 +823,13 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
                  {const auto lval( lua_tonumber( L, nres ) );             DB && DBG( "%s->%s() d[%d]=%f", __func__, szFuncnm, nres, lval );
                   *va_arg(vl, double *) = lval;
                  }break;
-
        case 'i':  if( !lua_isnumber( L, nres ) )  goto WRONG_RESULT_TYPE;
                  {const auto lval( lua_tointeger( L, nres ) );            DB && DBG( "%s->%s() d[%d]=%" PR_SIZET "d", __func__, szFuncnm, nres, lval );
                   *va_arg(vl, int *)    = lval;
                  }break;
-
        case 'b': {const auto lval( lua_toboolean( L, nres ) );            DB && DBG( "%s->%s() b[%d]=%d", __func__, szFuncnm, nres, lval );
                   *va_arg(vl, LUA_BOOL *) = lval; // NB: Lua boolean is int-sized!  *******************************************************************
                  }break;
-
        case 'h':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
                  {size_t srcBytes;
                   auto pSrc( lua_tolstring(L, nres, &srcBytes) );         DB && DBG( "%s->%s() h[%d]=%" PR_SIZET "u bytes", __func__, szFuncnm, nres, srcBytes );
@@ -901,21 +840,16 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
                   psd->BindBuf( pDest, srcBytes );
                   psd->CopyTo( pSrc, srcBytes );
                  }break;
-
        case 'S':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
                  {size_t srcBytes;
                   auto pSrc( lua_tolstring(L, nres, &srcBytes) );         DB && DBG( "%s->%s() S[%d]=%" PR_SIZET "u bytes", __func__, szFuncnm, nres, srcBytes );
                   va_arg(vl, std::string *)->assign( pSrc, srcBytes );
                  }break;
-
        default:   return Msg( "%s: unsupported return type specifier '%c'", __func__, *szSig );
        }
       }
-
    return true;
-
 WRONG_RESULT_TYPE:
-
    return Msg( "%s: wrong result-type[%d] (expected '%c')", __func__, nres_, szSig[0] );
    }
 

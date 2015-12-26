@@ -100,14 +100,15 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
    // if( !Interpreter::Interpreting() )
          {
          FixedCharArray<100> buf;
-         if( fLinesel )
+         if( fLinesel ) {
             buf.Sprintf( "Arg [%d]  %d lines [%d..%d]"
                , ArgCount()
                , hilite.Height()
                , hilite.flMin.lin + 1
                , hilite.flMax.lin + 1
                );
-         else
+            }
+         else {
             buf.Sprintf( "Arg [%d]  %dw x %dh box (%d,%d) (%d,%d)"
                , ArgCount()
                , hilite.Width()
@@ -117,6 +118,7 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
                , hilite.flMax.lin + 1
                , hilite.flMax.col + 1
                );
+            }
          DispRawDialogStr( buf.k_str() );
          }
       pcv->InsHiLiteBox( COLOR::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -128,7 +130,6 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
       else { // MULTILINE STREAM
          // redraw ANCHOR-line hilite
          pcv->InsHiLite1Line( COLOR::SEL, s_SelAnchor.lin, s_SelAnchor.col, (s_SelAnchor.lin <= pt.lin) ? COL_MAX : 0 );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
          // redraw middle line(s) hilite, if any
          const auto yDelta( pt.lin - s_SelAnchor.lin );
          if( Abs(yDelta) > 1 ) {
@@ -139,12 +140,10 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
             hilite.flMax.col = COL_MAX;
             pcv->InsHiLiteBox( COLOR::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             }
-
          // redraw CURSOR-line hilite
          COL xFirst, xLast;
          if( s_SelAnchor.lin > pt.lin ) { xFirst = COL_MAX;  xLast = pt.col    ; }
          else                           { xFirst = 0      ;  xLast = pt.col - 1; }
-
          pcv->InsHiLite1Line( COLOR::SEL, pt.lin, xFirst, xLast );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
          }
       }
@@ -172,17 +171,15 @@ bool ARG::cancel() {
    switch( d_argType ) {
       case NOARG: MsgClr();
                   break;
-
-      default:    if( !Interpreter::Interpreting() )
+      default:    if( !Interpreter::Interpreting() ) {
                      fnMsg( "Argument cancelled" );
-
+                     }
                   ClearArgAndSelection();
                   break;
       }
-
-   if( !Interpreter::Interpreting() )
+   if( !Interpreter::Interpreting() ) {
       DispNeedsRedrawVerticalCursorHilite();
-
+      }
    FlushKeyQueuePrimeScreenRedraw();
    return true;
    }
@@ -225,8 +222,9 @@ PChar ArgTypeNames( PChar buf, size_t sizeofBuf, int argval ) {
    auto rv( buf );
    BoolOneShot first;
    for( const auto &te : tbl ) {
-      if( te.mask & argval )
+      if( te.mask & argval ) {
          snprintf_full( &buf, &sizeofBuf, "%s%s", first() ? "" : "+", te.name );
+         }
       }
    return rv;
    }
@@ -370,7 +368,6 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
    d_cArg = g_iArgCount;                                     g_iArgCount           = 0;
    d_pFBuf = g_CurFBuf();
    const auto Cursor( g_CurView()->Cursor() );
-
    if( d_cArg == 0 ) {
       if( d_pCmd->d_argType & NOARGWUC ) {
          auto start( Cursor );
@@ -379,25 +376,18 @@ bool ARG::FillArgStructFailed() { enum {DB=0};                                  
             d_argType       = TEXTARG;
             d_textarg.ulc   = Cursor;
             TextArgBuffer().assign( wuc.data(), wuc.length() );
-            d_textarg.pText = TextArgBuffer().c_str();
-                                                                                                          DB && DBG( "NOARGWUC='%s'", d_textarg.pText );
+            d_textarg.pText = TextArgBuffer().c_str();                                                    DB && DBG( "NOARGWUC='%s'", d_textarg.pText );
             return false; //==============================================================================
             }
          }
-
       if( d_pCmd->d_argType & NOARG ) {
          d_argType      = NOARG;
-         d_noarg.cursor = Cursor;
-                                                                                                          DB && DBG( "%s NOARG", __func__ );
+         d_noarg.cursor = Cursor;                                                                         DB && DBG( "%s NOARG", __func__ );
          return false; //=================================================================================
-         }
-
-                                                                                                          DB && DBG( "%s !NOARG", __func__ );
+         }                                                                                                DB && DBG( "%s !NOARG", __func__ );
       return true; //=====================================================================================
       }
-
    g_CurView()->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );
-
    auto NumArg_value(0);
    if( fHaveLiteralTextarg ) {
       if( (d_pCmd->d_argType & NUMARG) && StrSpnSignedInt( TextArgBuffer().c_str() ) ) {
@@ -523,7 +513,6 @@ bool ARG::stream() {  // test for StreamArgToString
    auto cArg(0);      // stream:alt+k
    switch( d_argType ) {
       default:        return BadArg();
-
       case STREAMARG: {
                       const auto ststr( StreamArgToString( g_CurFBuf(), d_streamarg ) );
                       DBG( "Stream:%s|", ststr.c_str() );
@@ -540,7 +529,7 @@ bool ARG::stream() {  // test for StreamArgToString
 STATIC_FXN bool ConsumeMeta() {
    const auto fMetaWas( g_fMeta );
                         g_fMeta = false;
-   if( fMetaWas ) DispNeedsRedrawStatLn();
+   if( fMetaWas ) { DispNeedsRedrawStatLn(); }
    return fMetaWas;
    }
 
@@ -554,10 +543,8 @@ bool ARG::InitOk( PCCMD pCmd ) {
    d_pCmd  = pCmd;
    d_fMeta = (d_pCmd->d_argType & KEEPMETA) ? false : ConsumeMeta();
    d_cArg  = 0;
-
    d_argType      = NOARG;
    d_noarg.cursor = g_CurView()->Cursor();
-
    if( d_pCmd->d_argType & TAKES_ARG ) {
       if( FillArgStructFailed() ) { // consumes ArgCount()
          ClearArgAndSelection();
@@ -571,9 +558,7 @@ bool ARG::InitOk( PCCMD pCmd ) {
 
 bool ARG::Invoke() { 0 && DBG( "%s %s", FUNC, CmdName() );
    d_pCmd->IncrCallCount();
-
    // most of what follows is monitoring activity, not functionality-related...
-
 #define  MONITOR_INVOCATION  (0 && DEBUG_LOGGING)
 #if      MONITOR_INVOCATION
    STATIC_VAR int s_nestLevel;
@@ -587,10 +572,8 @@ bool ARG::Invoke() { 0 && DBG( "%s %s", FUNC, CmdName() );
       0 && DBG( "%s %-15s", lbuf, CmdName() );
       }
 #endif
-
    g_CurFBuf()->UndoInsertCmdAnnotation( d_pCmd );
    const auto rv( CALL_METHOD( *this, d_pCmd->d_func )() );
-
 #if      MONITOR_INVOCATION
    --s_nestLevel;
 #endif
@@ -602,13 +585,13 @@ STATIC_VAR ARG s_RepeatArg;
 void ARG::SaveForRepeat() const {
    //--------  save new repeat-arg information  --------
    // (basically, this is the assignment operator for ARG)
-   if( s_RepeatArg.d_argType == TEXTARG )
+   if( s_RepeatArg.d_argType == TEXTARG ) {
       Free0( s_RepeatArg.d_textarg.pText );
-
+      }
    s_RepeatArg = *this;
-
-   if( d_argType == TEXTARG )
+   if( d_argType == TEXTARG ) {
       s_RepeatArg.d_textarg.pText = Strdup( d_textarg.pText );
+      }
    }
 
 bool ARG::repeat() {
@@ -620,17 +603,16 @@ bool CMD::BuildExecute() const {  0 && DBG( "%s+ %s", __func__, Name() );
       ClearArgAndSelection();
       return false;
       }
-
    ARG argStruct;
-   if( !argStruct.InitOk( this ) )
+   if( !argStruct.InitOk( this ) ) {
       return false;
-
-   if( IsCmdXeqInhibitedByRecord() && d_func != fn_record )
+      }
+   if( IsCmdXeqInhibitedByRecord() && d_func != fn_record ) {
       return false;
-
-   if( d_func != fn_repeat && !Interpreter::Interpreting() )
+      }
+   if( d_func != fn_repeat && !Interpreter::Interpreting() ) {
       argStruct.SaveForRepeat();
-
+      }
    return argStruct.Invoke();
    }
 
@@ -643,9 +625,7 @@ class EditPrompt {
    const PCChar d_pszEditText;
    const COL    d_xCursor;
    const int    d_colorAttribute;
-
 public:
-
    EditPrompt( PCChar pszPrompt, PCChar pszEditText, int colorAttribute, COL xCursor )
        : d_pszPrompt(pszPrompt)
        , d_pszEditText(pszEditText)
@@ -661,13 +641,11 @@ void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszP
    const auto promptLen( Strlen( d_pszPrompt ) );
    auto oEditText( Max( 0, d_xCursor - EditScreenCols() + promptLen + 1 ) );
    auto editTextLen( Strlen( d_pszEditText ) );
-
    if( oEditText > 0 ) {
       oEditText   -= oEditText % g_iHscroll;
       oEditText   += g_iHscroll;
       editTextLen -= oEditText;
       }
-
    {
    const auto editTextShown( Min( EditScreenCols() - promptLen, editTextLen ) );
    VideoFlusher vf;
@@ -676,7 +654,6 @@ void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszP
    if( promptLen + editTextShown < EditScreenCols() )
       VidWrStrColor( DialogLine(), promptLen+editTextShown, " "   , 1            , d_colorAttribute, true  );
    }
-
    CursorLocnOutsideView_Set( DialogLine(), d_xCursor - oEditText + promptLen );
    }
 
@@ -685,16 +662,11 @@ void EditPrompt::UnWrite() const { CursorLocnOutsideView_Unset(); }
 class GetTextargString_CMD_reader : public CMD_reader
    {
    const EditPrompt &d_ep;
-
-   protected:
-
+protected:
    void VWritePrompt()   override { d_ep.Write  (); }
    void VUnWritePrompt() override { d_ep.UnWrite(); }
-
-   public:
-
+public:
    GetTextargString_CMD_reader( const EditPrompt &ep ) : d_ep( ep ) {}
-
    PCCMD GetNextCMD( bool fGetKbInput ); // OVERRIDE parent-class method
    };
 
@@ -723,7 +695,6 @@ STATIC_FXN void Bell_FlushKeyQueue_WaitForKey() {
 
 STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
    enum { DBG_GTA=1 };
-
    DBG_GTA && DBG( "+%s CMD='%s' dest='%s' flags=%X prompt='%s'"
       , __func__
       , pCmd?pCmd->Name():""
@@ -731,20 +702,14 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       , flags
       , pszPrompt?pszPrompt:""
       );
-
    const auto xColInFile( pCmd ? s_SelAnchor.col : g_CursorCol() );   0 && DBG( "%s+ xColInFile=%d (%d : %d)", __func__, xColInFile, s_SelAnchor.col, g_CursorCol() );
-
    auto fBellAndFreezeKbInput( false );
    const auto fSavedMeta( g_fMeta );      0 && DBG( "%s+ g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
-
    *pfGotAnyInputFromKbd = false;
-
    auto textargStackPos(-1);
-
    std::string pbTabxBase;
    DirMatches *pDirContent(nullptr);
    std::string stTmp;
-
    while(1) { //******************************************************************
       // BUGBUG GetTextargString_CMD_reader may prevent the following
       // fBellAndFreezeKbInput code from achieving it's intended task
@@ -762,42 +727,33 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          fBellAndFreezeKbInput = false;
          Bell_FlushKeyQueue_WaitForKey();
          }
-
       const auto fInitialStringSelected( ToBOOL(flags & gts_DfltResponse) );
-
       if( !pCmd ) {
          EditPrompt ep( pszPrompt, stb.c_str(), fInitialStringSelected ? g_colorError : g_colorInfo, xCursor );
          GetTextargString_CMD_reader gtas( ep );
          pCmd = gtas.GetNextCMD( ToBOOL(flags & gts_fKbInputOnly) );
          if( !pCmd )
             break;
-
          if( gtas.GotAnyInputFromKbd() )
             *pfGotAnyInputFromKbd = true;
          }
-
       //=============== switch( pCmd->d_func ) ===============
-
       const funcCmd func( pCmd->d_func );
-
       //##############  Begin TabX  ##############
       if( pCmd->d_argData.eka.EdKcEnum != EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          Delete0( pDirContent );
          pbTabxBase.clear(); // forget prev used WC
          }
-
       if( pCmd->d_argData.eka.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          if( !pDirContent ) {
             if( pbTabxBase.empty() ) // no prev'ly used WC?
                pbTabxBase = stb;  // create based on curr content
-
             pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
             }
          Path::str_t nxt;
          do {
             nxt = pDirContent->GetNext();
             } while( Path::IsDotOrDotDot( nxt ) );
-
          if( !nxt.empty() ) {
             stb = nxt;
             xCursor = stb.length();  // past end
@@ -810,7 +766,6 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
             }
          }
          //##############  End   TabX  ##############
-
    #ifdef fn_dispmstk
       else if( func == fn_dispmstk ) {
          noargNoMeta.dispmstk();
@@ -950,21 +905,14 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       else {
          ConOut::Bell();
          }
-
       //====== Some editing or cursor movement was done and we will be continuing to edit.
       //====== Consume meta + pCmd
-
       if( !(pCmd->d_argType & KEEPMETA) )
          g_fMeta = false;
-
       pCmd = nullptr;
-
       flags &= ~gts_DfltResponse;
-
       } //*************************** while **********************************
-
    Delete0( pDirContent );
-
    DBG_GTA && DBG( "-%s CMD='%s' arg='%s'"
       , __func__
       , pCmd?pCmd->Name():""
@@ -1096,29 +1044,27 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
 GLOBAL_VAR int g_fExecutingInternal; // to support correct recording-to-macro
 
 bool fExecute( PCChar strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%s'", __func__, strToExecute );
-   if( fInternalExec )  ++g_fExecutingInternal;
-
-   if( Interpreter::PushMacroStringOk( strToExecute, Interpreter::breakOutHere ) )
+   if( fInternalExec ) { ++g_fExecutingInternal; }
+   if( Interpreter::PushMacroStringOk( strToExecute, Interpreter::breakOutHere ) ) {
       FetchAndExecuteCMDs( false );
-
-   if( fInternalExec )  --g_fExecutingInternal;
-
+      }
+   if( fInternalExec ) { --g_fExecutingInternal; }
    return g_fFuncRetVal;
    }
 
 STATIC_FXN bool GetTextargStringNXeq( std::string &str, int cArg, COL xCursor ) {
-   while( cArg-- )
+   while( cArg-- ) {
       IncArgCnt();
-
+      }
    bool fGotAnyInputFromKbd;
    const auto pCmd( GetTextargString( str, FmtStr<25>( "Arg [%d]: ", ArgCount() ), xCursor, nullptr, gts_DfltResponse, &fGotAnyInputFromKbd ) );
-   if( !pCmd ) // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
+   if( !pCmd ) { // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
       return false;
-
+      }
    s_fHaveLiteralTextarg = true;
-   if( fGotAnyInputFromKbd )
+   if( fGotAnyInputFromKbd ) {
       AddToTextargStack( str );
-
+      }
    return pCmd->BuildExecute();
    }
 
@@ -1132,7 +1078,6 @@ bool ARG::cliptext() { // patterned after lasttext
       case NOARG:   cArg++;
                     break;
       }
-
    WinClipGetFirstLine( TextArgBuffer() );
    return GetTextargStringNXeq( TextArgBuffer(), cArg, 0 );
    }
@@ -1146,15 +1091,12 @@ bool ARG::lasttext() {
       case NULLARG:   cArg = d_cArg;  //lint -fallthrough
       case NOARG:     cArg++;
                       break;
-
       case LINEARG:   g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_linearg.yMin, 0, COL_MAX );
                       cArg = d_cArg;
                       break;
-
       case STREAMARG: TextArgBuffer() = StreamArgToString( g_CurFBuf(), d_streamarg );
                       cArg = d_cArg;
                       break;
-
       case BOXARG:    g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col );
                       cArg = d_cArg;
                       break;
@@ -1167,22 +1109,20 @@ bool ARG::prompt() {
       return BadArg();
       }
    std::string src( d_textarg.pText );
-
    auto cArg( d_cArg );
-   while( cArg-- )
+   while( cArg-- ) {
       IncArgCnt();
-
+      }
    TextArgBuffer().clear();
-
    bool fGotAnyInputFromKbd;
    const auto pCmd( GetTextargString( TextArgBuffer(), src.c_str(), 0, nullptr, gts_fKbInputOnly+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
-   if( !pCmd || pCmd->IsFnCancel() )
+   if( !pCmd || pCmd->IsFnCancel() ) {
       return false;
-
+      }
    s_fHaveLiteralTextarg = true;
-   if( fGotAnyInputFromKbd )
+   if( fGotAnyInputFromKbd ) {
       AddToTextargStack( TextArgBuffer() );
-
+      }
    return true;
    }
 
@@ -1197,9 +1137,9 @@ bool ARG::arg() {
    }
 
 bool ARG::lastselect() {
-   if( ArgCount() != 0 )
+   if( ArgCount() != 0 ) {
       return false;
-
+      }
    ArgMainLoop( true );
    return true;
    }
@@ -1322,10 +1262,9 @@ STATIC_FXN bool BuildXeqArgCmdStr( bool fMeta, int cArg, PCChar cmdName, PCChar 
       --cArg;
       }
    NoGreaterThan( &cArg, 9 );
-   for( auto ix(0); ix < cArg ; ++ix )  snprintf_full( &pLbuf, &lbufBytes, "arg " );
-   if( fMeta )                          snprintf_full( &pLbuf, &lbufBytes, "meta " );
-   if( pTextarg )                       snprintf_full( &pLbuf, &lbufBytes, "\"%s\" ", pTextarg );
-
+   for( auto ix(0); ix < cArg ; ++ix ) { snprintf_full( &pLbuf, &lbufBytes, "arg " );              }
+   if( fMeta )                         { snprintf_full( &pLbuf, &lbufBytes, "meta " );             }
+   if( pTextarg )                      { snprintf_full( &pLbuf, &lbufBytes, "\"%s\" ", pTextarg ); }
    snprintf_full( &pLbuf, &lbufBytes, "%s", cmdName );
    Msg( "running '%s'", lbuf );
    return fExecute( lbuf );
@@ -1344,17 +1283,14 @@ bool ARG::selcmd() { // selcmd:alt+0
       if( !GtaTermCmd || GtaTermCmd->IsFnCancel() ) {
          return fnMsg( "cancelled" );
          }
-
       if( fGotAnyInputFromKbd ) {
          AddToTextargStack( cmdNameBuf );
          }
-
       const PCCMD newCmd( CmdFromName( cmdNameBuf ) );
       if( !newCmd ) {
          fnMsg( "'%s' is unknown cmd", cmdNameBuf.c_str() );
          continue;
          }
-
       0 && DBG( "%s [1] d_argType=0x%X", __func__, d_argType );
       0 && DBG( "%s [2] CMD=%s, d_argType=0x%X", __func__, cmdNameBuf.c_str(), newCmd->d_argType );
       const auto box2str( d_argType == BOXARG && (newCmd->d_argType & BOXSTR) && d_boxarg.flMin.lin == d_boxarg.flMax.lin );
@@ -1377,11 +1313,9 @@ bool ARG::selcmd() { // selcmd:alt+0
          if( box2str ) {
             BOXSTR_to_TEXTARG( d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col+1 );
             }
-
          0 && DBG( "%s CMD '%s'", __func__, newCmd->Name() );
          return Invoke();
          }
-
 #if 0
       //
       // if selcmd were to call Invoke() on the macro CMD as above, what selcmd
@@ -1404,7 +1338,6 @@ bool ARG::selcmd() { // selcmd:alt+0
          case TEXTARG:    return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), d_textarg.pText );
          }
 #endif
-
       return fnMsg( "%s: unsupported arg for '%s'", __func__, newCmd->Name() );
       }
    }
@@ -1441,29 +1374,23 @@ void ARG::DelArgRegion() const {
 int ARG::GetLineRange( LINE *pyMin, LINE *pyMax ) const {
    switch( d_argType ) {
       default:        return 1; // NOT OK
-
       case NOARG:     *pyMin = d_noarg.cursor.lin;
                       *pyMax = d_noarg.cursor.lin;
                       return 0; // OK
-
       case NULLARG:   //lint -fallthrough
       case NULLEOL:   //lint -fallthrough
       case NULLEOW:   *pyMin = d_nullarg.cursor.lin;
                       *pyMax = d_nullarg.cursor.lin;
                       return 0; // OK
-
       case BOXARG:    *pyMin = d_boxarg.flMin.lin;
                       *pyMax = d_boxarg.flMax.lin;
                       return 0; // OK
-
       case LINEARG:   *pyMin = d_linearg.yMin;
                       *pyMax = d_linearg.yMax;
                       return 0; // OK
-
       case STREAMARG: *pyMin = d_streamarg.flMin.lin;
                       *pyMax = d_streamarg.flMax.lin;
                       return 0; // OK
-
       }
    }
 
@@ -1501,7 +1428,6 @@ void ARG::GetColumnRange( COL *pxMin, COL *pxMax ) const {
     case BOXARG: *pxMin = d_boxarg.flMin.col;
                  *pxMax = d_boxarg.flMax.col;
                  break;
-
     default:     *pxMin = 0;
                  *pxMax = COL_MAX;
                  break;
@@ -1510,29 +1436,25 @@ void ARG::GetColumnRange( COL *pxMin, COL *pxMax ) const {
 
 bool ARG::Within( const Point &pt, COL len ) const { // Within() pays attention to the x dimension (COLumn), while Beyond() DOES NOT
    const auto xLast( pt.col + Max( len-1, 0 ) );
-
    switch( d_argType ) {
     case LINEARG:   return WithinRangeInclusive( d_linearg.yMin, pt.lin, d_linearg.yMax   );
-
     case BOXARG:    return WithinRangeInclusive( d_boxarg.flMin.lin, pt.lin, d_boxarg.flMax.lin )
                         && WithinRangeInclusive( d_boxarg.flMin.col, pt.col, d_boxarg.flMax.col )
                         && WithinRangeInclusive( d_boxarg.flMin.col, xLast , d_boxarg.flMax.col );
-
-    case STREAMARG: if( !WithinRangeInclusive( d_streamarg.flMin.lin, pt.lin, d_streamarg.flMax.lin ) )
+    case STREAMARG: if( !WithinRangeInclusive( d_streamarg.flMin.lin, pt.lin, d_streamarg.flMax.lin ) ) {
                        return false;
-
-                    if( pt.lin == d_streamarg.flMin.lin )
+                       }
+                    if( pt.lin == d_streamarg.flMin.lin ) {
                        return WithinRangeInclusive( d_streamarg.flMin.col, pt.col, COL_MAX )
                            && WithinRangeInclusive( d_streamarg.flMin.col, xLast , COL_MAX )
                            ;
-
-                    if( pt.lin == d_streamarg.flMax.lin )
+                       }
+                    if( pt.lin == d_streamarg.flMax.lin ) {
                        return WithinRangeInclusive( 0, pt.col, d_streamarg.flMax.col )
                            && WithinRangeInclusive( 0, xLast , d_streamarg.flMax.col )
                            ;
-
+                       }
                     return true;
-
                     // traversing "none of the above" is treated as a whole-file traverse
     default:        return !(pt.lin >  g_CurFBuf()->LastLine());
     }
@@ -1565,10 +1487,8 @@ bool ARG::execute() {
    bool rv;
    switch( d_argType ) {
     default:       return BadArg();
-
     // BUGBUG this code should use AppendLineToMacroSrcString or a derivative,
     // NOT StrToNextMacroTermOrEos to parse comments, etc.
-
     case TEXTARG:  if( d_cArg == 1 ) { // meta is passed thru to macro invoked
                       std::string strToExecute( (d_fMeta?kszMeta_:"") + std::string( d_textarg.pText ) );  // *** MUST *** COPY d_textarg.pText to stack buffer (strToExecute)
                       strToExecute.erase( StrToNextMacroTermOrEos( strToExecute.c_str() ) - strToExecute.c_str() );
@@ -1587,7 +1507,6 @@ bool ARG::execute() {
                     #endif
                       }
                    break;
-
     case BOXARG:   //lint -fallthrough
     case LINEARG:  0 && DBG( "%s: d_cArg=%d", __func__ , d_cArg );
                    if( d_cArg == 1 ) {
@@ -1599,10 +1518,9 @@ bool ARG::execute() {
                             dest += " ";
                             }
                          }
-
-                      if( dest.empty() )
+                      if( dest.empty() ) {
                          return false;
-
+                         }
                       rv = fExecute( dest.c_str(), false );
                       }
                    else {
@@ -1618,7 +1536,6 @@ bool ARG::execute() {
                       }
                    break;
     }
-
    DispDoPendingRefreshesIfNotInMacro();
    return rv;
    }
@@ -1626,7 +1543,6 @@ bool ARG::execute() {
 int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... )
    {
    0 && DBG( "%s+ '%s'", __func__, pszPrompt );
-
    //-------------------------------------------------------------
    //
    // chGetAnyMacroPromptResponse()
@@ -1636,27 +1552,22 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
    // rtns char if actual response
    //
    int chMacroPromptResponse( Interpreter::chGetAnyMacroPromptResponse() );
-
    if(   (chMacroPromptResponse == Interpreter::AskUser)
       || (chMacroPromptResponse == Interpreter::UseDflt && ((chMacroPromptResponse=chDfltMacroResponse) == 0))
       || (strchr( szAllowedResponses, (chMacroPromptResponse=tolower( chMacroPromptResponse )) ) == nullptr)
      ) {
       DispDoPendingRefreshes();
-
       char lbuf[_MAX_PATH+1];
       va_list val;
       va_start(val, pszPrompt);
       use_vsnprintf( lbuf, sizeof(lbuf), pszPrompt, val );
       va_end(val);
-
       const auto xCol( Strlen( lbuf ) );
       Msg( "%s", lbuf );  0 && DBG( "%s: '%s'", __func__, lbuf );
-
       CursorLocnOutsideView_Set( DialogLine(), xCol );
       ViewCursorRestorer cr;
       PCV;
       const auto yStart( pcv->Origin().lin );
-
       char fdbk[3] = { 0,'?',0 };
       do {
          VideoFlusher vf;
@@ -1680,7 +1591,6 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
             }
          } while( strchr( szAllowedResponses, chMacroPromptResponse ) == nullptr );
       }
-
    0 && DBG( "%s- '%c'", __func__, chMacroPromptResponse );
    return chMacroPromptResponse;
    }

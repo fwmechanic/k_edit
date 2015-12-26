@@ -29,9 +29,7 @@ GLOBAL_VAR bool g_fM4backtickquote;
 
 class Tabber {
    const int d_tabWidth;
-
 public:
-
    Tabber( int tabWidth ) : d_tabWidth(tabWidth) {}
    int  FillCountToNextTabStop ( int col ) const { return d_tabWidth - (col % d_tabWidth) ; }
    int  ColOfNextTabStop       ( int col ) const { return col + FillCountToNextTabStop( col ); }
@@ -55,8 +53,9 @@ PCChar swixTabwidth( stref param ) {
 
 void FBUF::SetTabWidthOk( COL NewTabWidth ) {
    const auto inRange( NewTabWidth >= 1 && NewTabWidth <= MAX_TAB_WIDTH );
-   if( inRange )
+   if( inRange ) {
       d_TabWidth = NewTabWidth;
+      }
    }
 
 STATIC_CONST PCChar s_entabNames[] = {
@@ -94,8 +93,9 @@ PCChar swixEntab( stref param ) { enum { DB=1 }; DB && DBG( "%s+ %" PR_BSR "'", 
 
 STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos ) {
    for( ; ptr != eos; ++ptr ) {
-      if( *ptr != ' ' )
+      if( *ptr != ' ' ) {
          return false;
+         }
       }
    return true;
    }
@@ -191,10 +191,11 @@ bool FBOP::IsLineBlank( PCFBUF fb, LINE yLine ) {
    }
 
 bool FBOP::IsBlank( PCFBUF fb ) {
-   for( auto iy( 0 ); iy < fb->LineCount() ; ++iy )
-      if( !FBOP::IsLineBlank( fb, iy ) )
+   for( auto iy( 0 ); iy < fb->LineCount() ; ++iy ) {
+      if( !FBOP::IsLineBlank( fb, iy ) ) {
          return false;
-
+         }
+      }
    return true;
    }
 
@@ -227,22 +228,18 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
                   }
                ++sit;
                }
-
             while( x_Cx-- ) {
                *dit++ = ' ';
                }
             }
-
          if( sit != src.cend() && !fNxtChEscaped ) {
             switch( *sit ) {
                case chQuot1:
                case chQuot2:  fInQuotedRgn = true;
                               quoteCh = *sit;
                               break;
-
                case chESC:    fNxtChEscaped = true; // ESCAPE char, not PathSepCh!
                               break;
-
                default:       break;
                }
             }
@@ -261,7 +258,6 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
             fNxtChEscaped = false;
             }
          }
-
       if( sit != src.cend() ) {
          *dit++ = *sit++;
          ++destCol;
@@ -290,11 +286,9 @@ STATIC_FXN void spcs2tabs_all( string_back_inserter dit, stref src, TabberParam 
             }
          ++sit;
          }
-
       while( ix-- ) {
          *dit++ = ' ';
          }
-
       if( sit != src.cend() ) {
          *dit++ = *sit++;
          ++xCol;
@@ -321,16 +315,13 @@ STATIC_FXN void spcs2tabs_leading( string_back_inserter dit, stref src, TabberPa
             }
          }
       }
-
    while( ix-- ) {
       *dit++ = ' ';
       }
-
    for( ; sit != src.cend() ; ++sit ) {
       *dit++ = *sit;
       }
    }
-
 
 //*******************************  END TABS *******************************
 //*******************************  END TABS *******************************
@@ -387,18 +378,16 @@ int FBUF::PutLastMultiline( PCChar buf ) {
          ++lineCount;
          pX = pSegStart = pNxtSegStart;
          }
-      else
+      else {
          ++pX;
+         }
       }
-
    if( pSegStart < pEos ) {
       PutLine( LineCount(), se2bsr( pSegStart, pEos ), tmp );
       ++lineCount;
       }
-
    return lineCount;
    }
-
 
 void FBUF::xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val ) {
    std::string tmp;
@@ -406,9 +395,9 @@ void FBUF::xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val ) {
    auto pBuf( pxb->wbuf() );
    for(;;) {
       const auto pNL( Strchr( pBuf, '\n' ) );
-      if(  pNL ) *pNL = '\0';
+      if(  pNL ) { *pNL = '\0'; }
       InsLine( lineNum++, pBuf, tmp );
-      if( !pNL ) break;
+      if( !pNL ) { break; }
       pBuf = pNL + 1;
       }
    }
@@ -420,9 +409,9 @@ void FBUF::Vsprintf( LINE lineNum, PCChar format, va_list val ) {
    auto pBuf( xb.wbuf() );
    for(;;) {
       const auto pNL( Strchr( pBuf, '\n' ) );
-      if(  pNL ) *pNL = '\0';
+      if(  pNL ) { *pNL = '\0'; }
       InsLine( lineNum++, pBuf, tmp );
-      if( !pNL ) break;
+      if( !pNL ) { break; }
       pBuf = pNL + 1;
       }
    }
@@ -462,7 +451,6 @@ void FBUF::FmtLastLine( PCChar format, ...  ) {
 void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
    // if( IsNoEdit() ) { DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() ); }
    BadParamIf( , IsNoEdit() );
-
    if( ENTAB_0_NO_CONV != Entab() ) {
       stbuf.clear();
       const Tabber tabr( this->TabWidth() );
@@ -533,17 +521,16 @@ COL ColOfFreeIdx( COL tabWidth, stref content, sridx offset ) {
 STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
    const auto yLine( pcv->Cursor().lin );
    if( pcv->Cursor().col == 0 ) { // cursor @ beginning of line?
-      if( yLine == 0 )
+      if( yLine == 0 ) {
          return false; // no prev char
-
+         }
       auto xCol( FBOP::LineCols( pcf, yLine-1 ) );
-      if( fEmacsmode ) // join current and prev lines
+      if( fEmacsmode ) { // join current and prev lines
          pcf->DelStream( xCol, yLine-1, 0, yLine );
-
+         }
       pcv->MoveCursor( yLine-1, xCol );
       return true;
       }
-
    const auto x0( pcv->Cursor().col );
    const auto colsDeld( FBOP::DelChar( pcf, yLine, x0 - 1 ) );
    pcv->MoveCursor( yLine, x0 - Max( colsDeld, 1 ) );
@@ -583,9 +570,9 @@ STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE y
    }
 
 void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollapse ) {
-   if( xRight < xLeft )
+   if( xRight < xLeft ) {
       return;
-
+      }
    0 && DBG( "%s Y:[%d,%d] X:[%d,%d]", __func__, yTop, yBottom, xLeft, xRight );
    AdjMarksForBoxDeletion( this, xLeft, yTop, xRight, yBottom );
    const auto boxWidth( xRight - xLeft + 1 );
@@ -611,7 +598,6 @@ void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
    std::string stLast;  DupLineSeg( stLast, yStart, xEnd, COL_MAX );
    stFirst += stLast;
    PutLine( yStart, stFirst, stLast );
-
    AdjMarksForInsertion( this, this, xEnd, yStart, COL_MAX, yStart, xStart, yStart );
    }
 
@@ -634,9 +620,9 @@ STATIC_VAR struct {
 
 PFBUF GetClipFBufToRead( int *pClipboardArgType ) {
    const auto &cinfo( s_Clip.info[ s_Clip.curIdx ] );
-   if( cinfo.pFBuf )
+   if( cinfo.pFBuf ) {
       *pClipboardArgType = cinfo.contentType;
-
+      }
    return cinfo.pFBuf;
    }
 
@@ -658,14 +644,12 @@ PFBUF GetNextClipFBufToWrite( int clipboardArgType ) {
          }
       }
    // _ALL_ aClipFBufs have been made readonly!  User has to pick one to overwrite, OR cancel the copy-to-clip op
-
    // MenuChooseClip( "Choose <clip> to overwrite" );
    const auto menuChoice( -1 );
-   if( menuChoice < 0 )
+   if( menuChoice < 0 ) {
       return nullptr;
-
+      }
    s_Clip.curIdx = menuChoice;
-
    auto &cinfo( s_Clip.info[ s_Clip.curIdx ] );
    cinfo.pFBuf->ClrNoEdit();
    cinfo.pFBuf->MakeEmpty();
@@ -720,7 +704,7 @@ void PCFV_delete_LINEARG( ARG::LINEARG_t const &d_linearg, bool copyToClipboard 
    }
 
 void PCFV_delete_BOXARG( ARG::BOXARG_t const &d_boxarg, bool copyToClipboard, bool fCollapse ) { PCFV;
-   if( copyToClipboard ) PCFV_Copy_BOXARG_ToClipboard( d_boxarg );
+   if( copyToClipboard ) { PCFV_Copy_BOXARG_ToClipboard( d_boxarg ); }
    pcf->DelBox( d_boxarg.flMin.col, d_boxarg.flMin.lin, d_boxarg.flMax.col, d_boxarg.flMax.lin, fCollapse );
    pcv->MoveCursor( d_boxarg.flMin.lin, d_boxarg.flMin.col );
    }
@@ -761,9 +745,9 @@ bool ARG::sdelete() { PCFV;
    }
 
 bool ARG::ldelete() { PCFV;
-   if( d_argType == STREAMARG )
+   if( d_argType == STREAMARG ) {
       ConvertStreamargToLineargOrBoxarg();
-
+      }
    switch( d_argType ) {
     default:        return BadArg();
     case NOARG:     PCFV_delete_LINEARG( { d_noarg.cursor.lin, d_noarg.cursor.lin }, !d_fMeta ); break; // Deletes the line at the cursor
@@ -849,12 +833,11 @@ bool ARG::copy() {
    }
 
 bool ARG::linsert() { PCF;
-   if( d_argType == STREAMARG )
+   if( d_argType == STREAMARG ) {
       ConvertStreamargToLineargOrBoxarg();
-
+      }
    switch( d_argType ) {
     default:        return BadArg();
-
     case NULLARG:   {
                     // Inserts or deletes blanks at the beginning of a line to move the
                     // first nonblank character to the cursor.
@@ -874,17 +857,14 @@ bool ARG::linsert() { PCF;
                        pcf->PutLine( d_nullarg.cursor.lin, sbuf, stmp );
                        }
                     } break;
-
     case NOARG:     pcf->InsBlankLinesBefore( d_noarg.cursor.lin );  // Inserts one blank line above the current line.
                     break;
-
     case LINEARG:   // LINEARG or BOXARG: Inserts blanks within the specified area.  The
                     // argument is a linearg or boxarg regardless of the current selection
                     // mode.  The argument is a linearg if the starting and ending points are
                     // in the same column.
                     pcf->InsBlankLinesBefore( d_linearg.yMin, d_linearg.yMax - d_linearg.yMin + 1 );
                     break;
-
     case BOXARG:    PCFV_BoxInsertBlanks( d_boxarg );
                     break;
     }
@@ -932,17 +912,17 @@ COL FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, 
 
 STATIC_FXN PCCMD GetGraphic() {
    CPCCMD pCmd( CmdFromKbdForExec() );
-   if( !pCmd || !pCmd->IsFnGraphic() )
+   if( !pCmd || !pCmd->IsFnGraphic() ) {
       return nullptr;
-
+      }
    return pCmd;
    }
 
 STATIC_FXN int GetHexDigit() {
    PCCMD pCmd;
-   while( !(pCmd=GetGraphic()) || !isxdigit( pCmd->d_argData.chAscii() ) )
+   while( !(pCmd=GetGraphic()) || !isxdigit( pCmd->d_argData.chAscii() ) ) {
       continue;
-
+      }
    const char ch( tolower( pCmd->d_argData.chAscii() ) );
    return (ch <= '9') ? ch - '0' : ch + 10 - 'a';
    }
@@ -1021,12 +1001,11 @@ bool ARG::insert() {
    }
 
 bool ARG::emacsnewl() {
-   if( ArgCount() != 0 )
+   if( ArgCount() != 0 ) {
       return newline();
-
+      }
    const auto pfb( g_CurFBuf() );
    const auto xIndent( FBOP::GetSoftcrIndent( pfb ) );
-
    // Original bug report 20070305:
    //
    // "emacsnewl "touches" the current line even when the cursor is beyond
@@ -1051,24 +1030,19 @@ bool ARG::emacsnewl() {
          , xIndent      , g_CursorLine() + 1 // src
          );
    // }
-
    g_CurView()->MoveCursor( g_CursorLine() + 1, xIndent );
-
    return true;
    }
 
 bool ARG::paste() {
    switch( d_argType ) {
     default:        break;
-
     case STREAMARG: //-lint fallthrough
     case BOXARG:    //-lint fallthrough
     case LINEARG:   DelArgRegion(); // Replace the selected text with the contents of <clipboard>
                     break;
-
     case TEXTARG:   {
                     g_pFbufClipboard->MakeEmpty();
-
                     if( d_cArg < 2 ) {
                        Clipboard_PutText( d_textarg.pText );
                        }
@@ -1087,9 +1061,7 @@ bool ARG::paste() {
                        //
                        pathbuf tmpfilenamebuf;
                        Pathbuf cmdstrbuf;
-
                        tmpfilenamebuf[0] = '\0'; // init to 'no tmpfile created'
-
                        auto pSrcFnm( StrPastAnyBlanks( d_textarg.pText ) ); // arg arg "!dir" paste
                        if( *pSrcFnm == '!' ) {
                           NOAUTO CPCChar pszCmd( pSrcFnm + 1 );
@@ -1101,26 +1073,25 @@ bool ARG::paste() {
                           RunChildSpawnOrSystem( cmdstrbuf );
                           }
 
-                       if( FBUF::FnmIsPseudo( pSrcFnm ) )
+                       if( FBUF::FnmIsPseudo( pSrcFnm ) ) {
                           cmdstrbuf.Strcpy( pSrcFnm );
-                       else
+                          }
+                       else {
                           CompletelyExpandFName_wEnvVars( BSOB(cmdstrbuf), pSrcFnm );
-
+                          }
                        const auto pFBuf( FindFBufByName( cmdstrbuf ) );
                        if( pFBuf ) {
-                          if( pFBuf->RefreshFailedShowError() )
+                          if( pFBuf->RefreshFailedShowError() ) {
                              return false;
-
+                             }
                           FBOP::CopyLines( g_pFbufClipboard, 0, pFBuf, 0, pFBuf->LastLine() );
                           }
                        else { // couldntFindFile
                           g_pFbufClipboard->ReadOtherDiskFileNoCreateFailed( cmdstrbuf );
                           }
-
                        if( tmpfilenamebuf[0] ) {
                           unlinkOk( tmpfilenamebuf );
                           }
-
                        g_ClipboardType = LINEARG;
 #endif
                        }
@@ -1132,10 +1103,8 @@ bool ARG::paste() {
 
    switch( g_ClipboardType ) {
     default:        return false;
-
     case LINEARG:   FBOP::CopyLines( g_CurFBuf(), g_CursorLine(), g_pFbufClipboard, 0, g_pFbufClipboard->LastLine() );
                     return true;
-
     case STREAMARG: FBOP::CopyStream( g_CurFBuf(),
                          g_CursorCol()                                                   , g_CursorLine()
                        , g_pFbufClipboard
@@ -1143,7 +1112,6 @@ bool ARG::paste() {
                        , FBOP::LineCols( g_pFbufClipboard, g_pFbufClipboard->LastLine() ), g_pFbufClipboard->LastLine()
                        );
                     return true;
-
     case BOXARG:    {
                     const COL boxWidth( FBOP::LineCols( g_pFbufClipboard, 0 ) ); // w/clipboard in BOXARG mode is assumed that all lines have sm len
                     if( boxWidth == 0 )  return false;
@@ -1162,9 +1130,9 @@ bool ARG::paste() {
 GLOBAL_VAR ARG noargNoMeta; // s!b modified!
 
 bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &tmp2 ) { PCFV;
-   if( pcf->CantModify() )
+   if( pcf->CantModify() ) {
       return false;
-
+      }
    auto yLine( pcv->Cursor().lin );
    auto xCol ( pcv->Cursor().col );
    if( g_fWordwrap && g_iRmargin > 0 ) {
@@ -1179,7 +1147,6 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
          pcv->MoveCursor( yLine + 1, xIndent );
          return true;
          }
-
       if( g_iRmargin + 5 <= xCol ) {
          pcf->DupLineForInsert( tmp1, yLine, xCol, 0 );
          const auto lbuf( tmp1.c_str() );
@@ -1284,7 +1251,7 @@ stref FBUF::PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
    auto rl( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
    const auto ixMinIncl( FreeIdxOfCol( tw, rl, xMinIncl ) );
-   if( ixMinIncl >= rl.length() ) return stref();
+   if( ixMinIncl >= rl.length() ) { return stref(); }
    const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) ); 0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
    rl.remove_suffix( (rl.length()-1) - ixMaxIncl );
    rl.remove_prefix( ixMinIncl );                               0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
@@ -1372,12 +1339,8 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
    Assert( yMax >= yMin );
    const auto lines   ( yMax - yMin + 1 );
    const auto keyBytes( xMax - xMin + 1 + 1 ); // extra +1 for NUL byte
-
-   const auto ruKeyBytes( ROUNDUP_TO_NEXT_POWER2( keyBytes, 16 ) );
+   const auto ruKeyBytes( ROUNDUP_TO_NEXT_POWER2( keyBytes, 16 ) );  0 && DBG( "XXXXX  %d - > %d", keyBytes, ruKeyBytes );
    const auto sizeofLSR( sizeof( LineSortRec ) + ruKeyBytes );
-
-   0 && DBG( "XXXXX  %d - > %d", keyBytes, ruKeyBytes );
-
    auto papLSR( PPLineSortRec( Alloc0d( lines * sizeof(PLineSortRec) ) ) );
    auto ppLSR ( papLSR );
    auto paLSR ( PLineSortRec( AllocNZ( lines * sizeofLSR ) ) );
@@ -1393,14 +1356,11 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
       else {
          pLSR->keydata[0] = '\0';
          }
-
       fb->DupRawLine( pLSR->lbuf, yY );
       *ppLSR++ = pLSR;
       pLSR = PLineSortRec( PChar(pLSR) + sizeofLSR );
       }
-
    qsort( papLSR, lines, sizeof(PLineSortRec), fAscending ? CmpLSRAscend : CmpLSRDescend );
-
    ppLSR = papLSR;
    auto yMaxEff( yPastEnd );
    for( auto yY( yMin ) ; yY < yMaxEff ; ) {
@@ -1416,14 +1376,12 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
          fb->PutLine( yY++, (*ppLSR++)->lbuf );
          }
       }
-
-   if( yMaxEff <= yPastEnd )
+   if( yMaxEff <= yPastEnd ) {
       fb->DelLine( yMaxEff, yPastEnd );
-
+      }
    Free0( paLSR );
    Free0( papLSR );
    }
-
 
 bool ARG::csort() {
    LINE yMin, yMax;  GetLineRange  ( &yMin, &yMax );
@@ -1557,15 +1515,14 @@ void LineInfo::FreeContent( const FBUF &fbuf ) {
    }
 
 void FBUF::DirtyFBufAndDisplay() {
-   if( IsDirty() )
+   if( IsDirty() ) {
       return;
-
-   if( this == g_CurFBuf() )
+      }
+   if( this == g_CurFBuf() ) {
       DispNeedsRedrawStatLn();
-
+      }
    SetDirty();
    }
-
 
 enum { LineHeadSpace =  1
                  //    50
@@ -1573,15 +1530,14 @@ enum { LineHeadSpace =  1
      };
 
 void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const bool fSaveUndoInfo ) {
-   if( yInsAt > LastLine() ) // no existing line inserted in front of?
+   if( yInsAt > LastLine() ) { // no existing line inserted in front of?
       return;
-
+      }
    FBOP::PrimeRedrawLineRangeAllWin( this, yInsAt, LineCount() + lineInsertCount );
    DirtyFBufAndDisplay();
-
-   if( fSaveUndoInfo )
+   if( fSaveUndoInfo ) {
       UndoInsertLineRangeHole( yInsAt, lineInsertCount );  // generate a undo record
-
+      }
    // 20091218 kgoodwin this version, in the event we have to realloc d_paLineInfo[], saves a redundant hole-opening MoveArray which is now done as part of copying
    // was: InsertLineInfo( yInsAt, lineInsertCount );  // make sure there's a place to open a hole into
    if( lineInsertCount > 0 ) {
@@ -1601,7 +1557,6 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
                }
             FreeUp( d_paLineInfo, pNewLi );
             d_naLineInfoElements = linesToAlloc;
-
             if( linesToAlloc > linesNeeded ) {  // tail-hole exists?
                const auto arg0( d_naLineInfoElements - LineHeadSpace );  0 && DBG( "%s InitLineInfoRange(%d,%d)", __func__, arg0, LineHeadSpace );
                InitLineInfoRange( arg0, LineHeadSpace );  // empty the tail-hole
@@ -1616,7 +1571,6 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
          }
       }
    // 20091218 kgoodwin
-
    IncLineCount( lineInsertCount );
    FBufEvent_LineInsDel( yInsAt, lineInsertCount );
    }
@@ -1631,35 +1585,29 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
 //
 void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) {
    0 && DBG("%s [%d..%d]", __func__, firstLine, lastLine );
-   if( firstLine > LastLine() ) // if user is deleting lines that are displayed, but not actually present in the file
+   if( firstLine > LastLine() ) { // if user is deleting lines that are displayed, but not actually present in the file
       return;
-
+      }
    BadParamIf( , (firstLine > lastLine) );
-
    FBOP::PrimeRedrawLineRangeAllWin( this, firstLine, LineCount() );
    DirtyFBufAndDisplay();
    Min( &lastLine, LastLine() );
-
-   if( fSaveUndoInfo )
+   if( fSaveUndoInfo ) {
       UndoSaveLineRange( firstLine, lastLine );
+      }
  #if 0  // if you do this (to fix what looks like a memory leak), undo/redo BREAKS because it calls this API with fSaveUndoInfo == false
    else { // d_paLineInfo[firstLine..lastLine] abt to be overwritten: free
       for( auto iy(firstLine) ; iy <= lastLine ; ++iy )
          d_paLineInfo[iy].FreeContent();
       }
  #endif
-
    // slide higher-numbered-line's lineinfo's down to fill in d_paLineInfo[firstLine..lastLine]
-
    MoveArray( d_paLineInfo + firstLine, d_paLineInfo + lastLine + 1, LastLine() - lastLine );
-
    const auto yDelta( lastLine - firstLine + 1 );
    IncLineCount( -yDelta ); // CANNOT swap with next stmt
    InitLineInfoRange( LineCount(), yDelta ); // fill in hole left by "slide ... down"
-
    FBufEvent_LineInsDel( firstLine, -yDelta );
    }
-
 
 void FBUF::FreeOrigFileImage() {
    Free0( d_pOrigFileImage );
@@ -1668,7 +1616,6 @@ void FBUF::FreeOrigFileImage() {
 
 void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    DestroyMarks();
-
    { // formerly DestroyLineInfoArray()
    if( d_paLineInfo ) {
       for( auto iy(0) ; iy < d_LineCount ; ++iy ) {
@@ -1679,10 +1626,8 @@ void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    d_LineCount = 0;
    }
    d_naLineInfoElements = 0;
-
    DiscardUndoInfo();   // call before FreeOrigFileImage() (some EditOp's have d_pFBuf)!
    FreeOrigFileImage(); // call after  DiscardUndoInfo()!
-
    UnDirty();
    }
 
@@ -1691,7 +1636,6 @@ void FBUF::FBufEvent_LineInsDel( LINE yLine, LINE lineDelta ) { // negative line
    DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, dlinkViewsOfFBUF, pv ) {
       pv->ViewEvent_LineInsDel( yLine, lineDelta );
       }
-
    if( lineDelta > 0 )      { AdjustMarksForLineInsertion( yLine, lineDelta, this ); }
    else if( lineDelta < 0 ) { AdjustMarksForLineDeletion ( this, 0, yLine, COL_MAX, yLine - lineDelta + 1 ); }
    }
@@ -1773,18 +1717,15 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
    BadParamIf( , (FBdest == FBsrc) );
    BadParamIf( , (ySrcStart > ySrcEnd) );
    BadParamIf( , (ySrcStart == ySrcEnd && xSrcStart >= xSrcEnd) );
-
    if( ySrcStart == ySrcEnd ) { // single line?
       FBOP::CopyBox( FBdest, xDst, yDst, FBsrc, xSrcStart, ySrcStart, xSrcEnd-1, ySrcEnd );
       return;
       }
 
    //*** copy middle portion of stream
-
    FBOP::CopyLines( FBdest, yDst+1, FBsrc, ySrcStart+1, ySrcEnd );
 
    //*** merge & write last line of FBsrc stream  [srcbuf:destbuf]
-
   #if 1
    std::string destbuf; FBdest->DupLineForInsert( destbuf, yDst, xDst, 0 ); // rd dest line containing insertion point
    std::string srcbuf; auto tws( 1 );
@@ -1877,18 +1818,14 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
 // and destination regions must not overlap. To copy overlapped
 // regions, you must create a temporary intermediate file.
 //
-
 void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft, LINE ySrcTop, COL xSrcRight, LINE ySrcBottom ) {
    BadParamIf( , (xSrcRight < xSrcLeft) );
-
    0 && DBG( "%s: ( xDst=%d, yDst=%d, src=%s, xSrcLeft=%d, ySrcTop=%d, xSrcRight=%d, ySrcBottom=%d )", __func__, xDst, yDst, FBsrc->Name(), xSrcLeft, ySrcTop, xSrcRight, ySrcBottom );
-
    if( (FBsrc == FBdest) &&
        (  (WithinRangeInclusive( xSrcLeft,                        xDst, xSrcRight ) && WithinRangeInclusive( ySrcTop, yDst                       , ySrcBottom) )
        || (WithinRangeInclusive( xSrcLeft, xSrcRight - xSrcLeft + xDst, xSrcRight ) && WithinRangeInclusive( ySrcTop, yDst - ySrcTop + ySrcBottom, ySrcBottom) )
        )
      ) { return; }
-
    AdjMarksForInsertion( FBsrc, FBdest, xSrcLeft, ySrcTop, xSrcRight, ySrcBottom, xDst, yDst );
    const auto tws( FBsrc ? FBsrc ->TabWidth() : 0 );
    const auto twd(         FBdest->TabWidth()     );
@@ -1910,19 +1847,15 @@ void FBUF::SetLineInfoCount( const LINE linesNeeded ) {
       const auto linesToAlloc( linesNeeded + LineHeadSpace );
       LineInfo *pNewLi;
       AllocArrayNZ( pNewLi, linesToAlloc, "Expanding d_paLineInfo" );
-
       if( d_paLineInfo ) {
          MoveArray( pNewLi, d_paLineInfo, LineCount() );
          Free_( d_paLineInfo );
          }
-
       d_paLineInfo = pNewLi;
       d_naLineInfoElements = linesToAlloc;
-
       InitLineInfoRange( LineCount(), linesToAlloc - LineCount() );
       }
    }
-
 
 STIL void rdNoiseSeek() { DisplayNoise( kszRdNoiseSeek ); }
 STIL void rdNoiseAllc() { DisplayNoise( kszRdNoiseAllc ); }
@@ -1940,13 +1873,10 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
       Msg( "filesize is larger than UINT_MAX" );
       return true;
       }
-
    d_cbOrigFileImage = fileBytes;
-
    rdNoiseAllc();
    AllocBytesNZ( d_pOrigFileImage, fileBytes+1, __func__ );
    d_pOrigFileImage[fileBytes] = '\0'; // so wcslen works
-
    VR_(
       DBG( "ReadDiskFile %s: %uKB buf=[%p..%p)"
          , Name()
@@ -1955,22 +1885,17 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
          , d_pOrigFileImage + d_cbOrigFileImage
          );
       )
-
    rdNoiseRead();
-
    struct {
       int leadBlankLines = 0;
       int lead_Tab_Lines = 0;
       } tabStats;
-
    MainThreadPerfCounter pc;
-
    if( !fio::ReadOk( hFile, d_pOrigFileImage, fileBytes ) ) {
       FreeOrigFileImage();
       ErrorDialogBeepf( "Read NOT OK!" );
       return true;
       }
-
    //--------------------------------------------------------------------------------------------------------
    // UTF-8:    [EX: .vcxproj files generated by VS13 are UTF-8]
    //
@@ -2020,22 +1945,17 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
          }
       }
    //--------------------------------------------------------------------------------------------------------
-
    rdNoiseScan();
-
 #if VERBOSE_READ
    const auto tmIO( pc.Capture() );
 #endif
-
    d_EolMode = platform_eol;
-
    const auto initial_sample_lines( fileBytes == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
                                                    : 508 );   // slightly less than a power of 2
    d_naLineInfoElements = initial_sample_lines;
    VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", d_naLineInfoElements ); )
    AllocArrayNZ(      d_paLineInfo, d_naLineInfoElements, "initial d_paLineInfo" );
    InitLineInfoRange( 0           , d_naLineInfoElements );
-
    if( fileBytes > 0 ) {
       auto numCRs( 0 );
       auto numLFs( 0 );
@@ -2048,17 +1968,15 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
          if( d_naLineInfoElements <= curLineNum /* CID128050 */ && curLineNum > 0 /* CID128050 */ ) { // need to reallocate d_paLineInfo
             // this is a little obscure, since for brevity I'm using 'curLineNum' as an alias
             // for 'LineCount()'; these are equivalent since 'curLineNum' hasn't been stored yet.
-            //
             const auto abpl_scale( 1.025 );
             const double avgBytesPerLine( Max( abpl_scale, static_cast<double>(pCurImageBuf - d_pOrigFileImage) / curLineNum ) );
                   double dNewLineCntEstimate( (fileBytes / avgBytesPerLine) * abpl_scale );
-            if( dNewLineCntEstimate <= d_naLineInfoElements )
+            if( dNewLineCntEstimate <= d_naLineInfoElements ) {
                 dNewLineCntEstimate = Max( static_cast<double>(d_naLineInfoElements * 1.125)
                                          , static_cast<double>(d_naLineInfoElements + FileReadLineHeadSpace)
                                          );
-
+               }
             const auto newLineCntEstimate( static_cast<LINE>(dNewLineCntEstimate) );
-
             VR_(
                DBG( "ReadDiskFile LineInfo %7d -> %7d (avg=%4.1f)"
                   , d_naLineInfoElements
@@ -2066,29 +1984,22 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                   , avgBytesPerLine
                   );
                )
-
             d_naLineInfoElements = Min( INT_MAX, newLineCntEstimate );
-            //
             //------------------------------------------------------------------------------------
-
             LineInfo *pNewLi;
             AllocArrayNZ( pNewLi, d_naLineInfoElements, "revised d_paLineInfo" );
             MoveArray(    pNewLi, d_paLineInfo, curLineNum );
             FreeUp( d_paLineInfo, pNewLi );
             InitLineInfoRange( curLineNum, d_naLineInfoElements - curLineNum );
-
             pLi = d_paLineInfo + curLineNum;
             }
-
          switch( *pCurImageBuf ) {
             case HTAB: ++tabStats.lead_Tab_Lines;
             case ' ' : ++tabStats.leadBlankLines; //lint -fallthrough
             default  : break;                     //lint -fallthrough
             }
-
          const auto pLineStart( pCurImageBuf );
          SetLineCount( curLineNum + 1 );
-
          auto cbEOL( 0 );
          do { // scan to next EOL-marker
             const auto ch( *pCurImageBuf++ );
@@ -2097,19 +2008,16 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                ++cbEOL;
                break;
                }
-
             if( ch == 0x0A ) { // LF=Unix EOL?  treated as TRUE EOL indicator
                ++numLFs;
                ++cbEOL;
                break;          // treat as EOL
                }
-
             if( ch == 0x0D ) { // CR=(start of) MS EOL?  simply skipped while awaiting next LF
                ++cbEOL;
                ++numCRs;
                continue;
                }
-
             if( cbEOL ) {      // unexpected: prev ch was CR but this ch is not LF (ancient Macintosh EOL=CR only???)
                --pCurImageBuf; // current char is part of NEXT line
                break;          // treat as EOL
@@ -2132,21 +2040,18 @@ IS_EOL:
                }
 #endif
             } while( pCurImageBuf < pPastImageBufEnd );
-
          if( ExecutionHaltRequested() ) {
             ConIn::FlushKeyQueueAnythingFlushed();
             MakeEmpty();
             MoveCursorToBofAllViews();
             return true;
             }
-
          pLi->d_pLineData = pLineStart;
          pLi->d_iLineLen = (pCurImageBuf - pLineStart) - cbEOL;
          0 && DBG( "ReadDiskFile %s: L %d = %p L %d", Name(), curLineNum, pLi->d_pLineData, pLi->d_iLineLen );
          ++pLi;
          ++curLineNum;
          } // while( pCurImageBuf < pPastImageBufEnd )
-
       // switch away from the default EOL iff file is pure non-default
       0 && DBG( "numCRs=%u, numLFs%u", numCRs, numLFs );
 #if defined(_WIN32)
@@ -2154,9 +2059,7 @@ IS_EOL:
 #else
       if( numLFs > 0 && numCRs == numLFs ) { d_EolMode = EolCRLF; }
 #endif
-
       d_Entab = ENTAB_0_NO_CONV;
-
       enum { PERCENT_LEAD_BLANK_TO_CAUSE_ENTAB_MODE = 50 };
       if(  tabStats.leadBlankLines > 0
         && (    (tabStats.lead_Tab_Lines > (MAX_LINES / 100))  // mk sure no ovflw
@@ -2165,20 +2068,16 @@ IS_EOL:
         ) {
          d_Entab = ENTAB_1_LEADING_SPCS_TO_TABS;
          }
-
       // maybe add a LineInfo shrinker algorithm here?
 #if VERBOSE_READ
       NewScope {
          const auto tmScan( pc.Capture() );
-
          double pctSCAN( 100 * (tmScan / (tmScan + tmIO)) );
-
          unsigned wastedLIbytesNow( (d_naLineInfoElements - LineCount()) * sizeof(*d_paLineInfo) );
          STATIC_VAR unsigned wastedLIbytes ;  wastedLIbytes += wastedLIbytesNow     ;
          STATIC_VAR unsigned PredLC        ;  PredLC        += d_naLineInfoElements ;
          STATIC_VAR unsigned actualLC      ;  actualLC      += LineCount()          ;
          STATIC_VAR unsigned files         ;  files         += 1                    ;
-
          DBG( "ReadDiskFile Done  scan/IO=%4.1f%%  %7d (avg=%4.1f) wastage=%d/%dKB (%4.1f%%) cum=%dKB (%4.1f%%), %dKB per %d files"
             , pctSCAN
             , LineCount()
@@ -2186,7 +2085,6 @@ IS_EOL:
             , wastedLIbytesNow / 1024
             , (d_naLineInfoElements) * sizeof(*d_paLineInfo) / 1024
             , 100.0*((double)d_naLineInfoElements - LineCount()) / (double)LineCount()
-
             , wastedLIbytes / 1024
             , 100.0*((double)PredLC - actualLC) / (double)actualLC
             , (wastedLIbytes / 1024) / files
@@ -2195,12 +2093,9 @@ IS_EOL:
          }
 #endif
       }
-
    UnDirty();
-
    return false;
    }
-
 
 // these are new work based on ReadDiskFile 15/16-Mar-2003 klg
 
@@ -2215,20 +2110,16 @@ void FBUF::ImgBufAlloc( size_t bufBytes, int PreallocLines ) {
 
 LineInfo & FBUF::ImgBufNextLineInfo() {
    // LineCount is the NUMBER of the NEW LINE!
-
    SetLineInfoCount( LineCount()+1 );
-
    auto &newLI( d_paLineInfo[ LineCount() ] );
-
-   if( LineCount() == 0 )
+   if( LineCount() == 0 ) {
       newLI.d_pLineData = d_pOrigFileImage;
+      }
    else {
       auto &preLI( d_paLineInfo[ LastLine() ] );
       newLI.d_pLineData = preLI.d_pLineData + preLI.d_iLineLen;
       }
-
    IncLineCount( 1 );  // LineCount() NOT CHANGED UNTIL HERE
-
    return newLI;
    }
 
@@ -2243,9 +2134,9 @@ void FBUF::ImgBufAppendLine( PCChar pNewLineData, int LineLen ) {
 void FBUF::ImgBufAppendLine( PFBUF pFBufSrc, int srcLineNum, PCChar prefix ) {
    auto &newLI( ImgBufNextLineInfo() );
    auto preLen(0);
-   if( prefix )
+   if( prefix ) {
       memcpy( newLI.d_pLineData, prefix, (preLen = Strlen( prefix )) );
-
+      }
    auto &srcLI( pFBufSrc->d_paLineInfo[srcLineNum] );
    memcpy( newLI.d_pLineData+preLen, srcLI.d_pLineData, srcLI.d_iLineLen );
    newLI.d_iLineLen = srcLI.d_iLineLen + preLen;

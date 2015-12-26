@@ -84,7 +84,7 @@ class LineColors {
       }
 
    int runLength( int ix ) const {
-      if( !inRange( ix ) ) return 0;
+      if( !inRange( ix ) ) { return 0; }
       const auto ix0( ix );
       const auto color( colorAt( ix ) );
       for( ++ix ; inRange( ix ) && colorAt( ix ) == color ; ++ix ) {}
@@ -123,7 +123,7 @@ class LineColorsClipped {
 
    void PutColorRaw( int col, int len, int color ) {
       0 && DBG( "%s a: %3d L %3d", __func__, col, len );
-      if( col > d_colWinLeft+d_width || col + len < d_colWinLeft )  return;
+      if( col > d_colWinLeft+d_width || col + len < d_colWinLeft ) { return; }
       0 && DBG( "%s b: %3d L %3d", __func__, col, len );
       const auto colMin( Max( col      , d_colWinLeft           ) );
       const auto colMax( Min( col+len-1, d_colWinLeft+d_width-1 ) );
@@ -202,13 +202,13 @@ STATIC_FXN char GenAltHiliteColor( const char color ) {
    // algorithm ATTEMPTS to choose a _readable_ hilite-alternative-color for a given color
    const char fgColor( (color & FGmask)    );
    const char bgColor( (color & BGmask)    );
-   if( bgBLK == bgColor ) return ( fgColor | (bgColor ^ 0x10) );
+   if( bgBLK == bgColor ) { return ( fgColor | (bgColor ^ 0x10) ); }
    const auto fgBrite( (color & FGhi) != 0 );
    const auto bgBrite( (color & BGhi) != 0 );
-   if(        fgBrite &&  bgBrite )  return ( color ^ BGhi );
-   else if(   fgBrite && !bgBrite )  return ( color ^ BGhi );
-   else if(  !fgBrite &&  bgBrite )  return ( color ^ FGhi );
-   else                              return ( color ^ BGhi );
+   if(        fgBrite &&  bgBrite ) { return ( color ^ BGhi ); }
+   else if(   fgBrite && !bgBrite ) { return ( color ^ BGhi ); }
+   else if(  !fgBrite &&  bgBrite ) { return ( color ^ FGhi ); }
+   else                             { return ( color ^ BGhi ); }
    }
 
 STATIC_CONST struct {  // contents init'd from $KINIT:k.filesettings
@@ -303,7 +303,6 @@ void FTypeSetting::Update() {
          }
       }
    }
-
    snprintf_full( &pbuf, &kybufBytes, "colors." );
    for( const auto &c2L : s_color2Lua ) {
       scpy( pbuf, kybufBytes, c2L.pLuaName );
@@ -507,13 +506,11 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
           }
       return;
       }
-
    clear(); // aaa aaa aaa aaa
    stref wuc( AddKey( src ) );
    if( !wuc.data() ) {                                                                                          DBG_HL_EVENT && DBG( "%s toolong", __func__);
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
-
    d_yWuc = lin; d_xWuc = col;
    if( lin >= 0 ) {                                                                                                                             auto keynum( 1 );
       if( !wuc.starts_with( "$" )) { // experimental
@@ -522,7 +519,6 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
          bcat( bcat( bcpy( scratch, "$(" ).length(), scratch, wuc ).length(), scratch, ")" ); key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
          bcat( bcat( bcpy( scratch, "${" ).length(), scratch, wuc ).length(), scratch, "}" ); key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
          }
-
       if(0) { // GCCARM variations: funcname -> __funcname_veneer
          STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
          STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
@@ -617,8 +613,9 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
             }
          }
       else { // NOT ON A WORD
-         if( !d_sb.empty() && yCursor == d_yWuc )
+         if( !d_sb.empty() && yCursor == d_yWuc ) {
             DispNeedsRedrawAllLines(); // BUGBUG s/b optimized
+            }
          }
       }
    }
@@ -724,9 +721,7 @@ class HiliteAddin_cond_CPP : public HiliteAddin {
       d_need_refresh = true;
       }
    virtual cppc IsCppConditional( stref src, int *pxPound ) { return ::IsCppConditional( src, pxPound ); }
-
 public:
-
    HiliteAddin_cond_CPP( PView pView )
       : HiliteAddin( pView ) {
       d_PerViewableLine.resize( ViewLines() );
@@ -734,9 +729,7 @@ public:
       }
    ~HiliteAddin_cond_CPP() {}
    PCChar Name() const override { return "cond_CPP"; }
-
 private:
-
    bool d_need_refresh = false;
    struct PerViewableLineInfo {
       struct    {
@@ -752,13 +745,10 @@ private:
          COL    xBox;
          }      level;
       };
-
    std::vector<PerViewableLineInfo> d_PerViewableLine ;
-
    int close_level( int level_ix, int yLast );
    void refresh( LINE, LINE );
    };
-
 
 int HiliteAddin_cond_CPP::close_level( int level_ix, int yLast ) {
    if( level_ix < 0 ) { return -1; } // CID128055
@@ -839,18 +829,16 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
 
 bool HiliteAddin_cond_CPP::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    try {
-      if( d_need_refresh )  // BUGBUG fix this!!!!!!!!!!
+      if( d_need_refresh ) { // BUGBUG fix this!!!!!!!!!!
          refresh( 0, 0 );
-
+         }
       const auto lineInWindow( yLine - Origin().lin );
       Assert( lineInWindow >= 0 && lineInWindow < ViewLines() );
       const auto &line( d_PerViewableLine[ lineInWindow ].line );
-
       // highlight any CPPcond that occurs on this line
       if( cppcNone != line.acppc ) {
          alcc.PutColor( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, COLOR::CPP );
          }
-
       // continue any "surrounds" of other highlit CPPconds above/below
       for( auto level_idx(line.level_ix) ; level_idx > -1 ; level_idx = d_PerViewableLine[ level_idx ].level.containing_level_idx ) {
          auto &level( d_PerViewableLine[ level_idx ].level );
@@ -893,12 +881,9 @@ bool HiliteAddin_cond_CPP::VHilitLine( LINE yLine, COL xIndent, LineColorsClippe
 
 #endif
 
-
 class HiliteAddin_cond_gmake : public HiliteAddin_cond_CPP {
    cppc IsCppConditional( stref src, int *pxPound ) override { return ::IsGnuMakeConditional( src, pxPound ); }
-
 public:
-
    HiliteAddin_cond_gmake( PView pView )
       : HiliteAddin_cond_CPP( pView )
       {
@@ -906,7 +891,6 @@ public:
    ~HiliteAddin_cond_gmake() {}
    PCChar Name() const override { return "cond_make"; }
    };
-
 
 void View::Set_LineCompile( LINE yLine ) {
    if( d_LineCompile != yLine ) {
@@ -921,7 +905,6 @@ void View::Set_LineCompile( LINE yLine ) {
 
 class HiliteAddin_CompileLine : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
-
 public:
    HiliteAddin_CompileLine( PView pView ) : HiliteAddin( pView ) { }
    ~HiliteAddin_CompileLine() {}
@@ -944,10 +927,8 @@ bool HiliteAddin_CompileLine::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
 
 class HiliteAddin_EolComment : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
-
    std::string       d_eolCommentDelim;
    stref d_eolCommentDelimWOTrailSpcs;
-
 public:
    HiliteAddin_EolComment( PView pView )
    : HiliteAddin( pView )
@@ -978,7 +959,6 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          delimiters occurring within them).  HiliteAddin_StreamParse and
          children do this and are thus preferred if/when the language of the file
          is known */
-
       auto ixTgt( rl.find( d_eolCommentDelim ) );
       if( ixTgt == stref::npos && !d_eolCommentDelimWOTrailSpcs.empty() ) {
          if( rl.ends_with( d_eolCommentDelimWOTrailSpcs ) ) {
@@ -1142,7 +1122,6 @@ void HiliteAddin_StreamParse::VFbufLinesChanged( LINE yMin, LINE yMax ) {
 
 class HiliteAddin_clang : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
-
    enum scan_rv { atEOF, in_code, in_1Qstr, in_2Qstr, in_comment };
    // scan_pass() methods; all must have same proto as called via pfx
    scan_rv find_end_code    ( PCFBUF pFile, Point &pt ) ;
@@ -1150,7 +1129,6 @@ class HiliteAddin_clang : public HiliteAddin_StreamParse {
    scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_comment ( PCFBUF pFile, Point &pt ) ;
    Point d_start_C; // where last /* comment started
-
 public:
    HiliteAddin_clang( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
    ~HiliteAddin_clang() {}
@@ -1164,7 +1142,6 @@ public:
 HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_code( PCFBUF pFile, Point &pt ) {
 /* some */0 && DBG(/* tests */"FNNC @y=%d x=%d", pt.lin, pt.col );/* here */
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
@@ -1564,16 +1541,14 @@ void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
 class HiliteAddin_bash : public HiliteAddin_StreamParse {
    enum { DBBASH=0 };
    void scan_pass( LINE yMaxScan ) override;
-
    enum scan_rv { atEOF, in_code,
       in_1Qstr    , // https://docs.python.org/2/reference/lexical_analysis.html#string-literals
       in_2Qstr    ,
-   };
+      };
    // scan_pass() methods; all must have same proto as called via pfx
    scan_rv find_end_code    ( PCFBUF pFile, Point &pt, int nest );
    scan_rv find_end_chQuot1 ( PCFBUF pFile, Point &pt, int nest );
    scan_rv find_end_chQuot2 ( PCFBUF pFile, Point &pt, int nest );
-
 public:
    HiliteAddin_bash( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
    ~HiliteAddin_bash() {}
@@ -1652,7 +1627,6 @@ void HiliteAddin_bash::scan_pass( LINE yMaxScan ) {
 
 class HiliteAddin_Diff : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
-
 public:
    STATIC_FXN bool Applies( PFBUF pFile );
    HiliteAddin_Diff( PView pView ) : HiliteAddin( pView ) {}
@@ -1772,28 +1746,20 @@ STIL int SpeedTableIndexFirstLine( int idx )  { return idx * HILITE_SPEEDTABLE_L
 
 class ViewHiLites {
    friend class View;
-
    const FBUF       &d_FBuf;
    const int         d_SpdTblEls;
-
    HiLiteSpeedTable *d_SpeedTable;
    HiLiteHead        d_HiLiteList;
-
    void        UpdtSpeedTbl( HiLiteRec *pThis );
    const HiLiteRec *FindFirstEntryAffectingOrAfterLine( LINE yLine ) const;
-
    ViewHiLites( PFBUF pFBuf );
-
    int  SpeedTableIndex( LINE yLine ) const { return Min( ::SpeedTableIndex( yLine ), d_SpdTblEls-1 ); }
-
    void vhInsHiLiteBox(   int newColorIdx, Rect newRgn );
    void PrimeRedraw() const;
    int  InsertHiLitesOfLineSeg( LINE yLine, COL Indent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const;
-
 public:
    ~ViewHiLites(); // the ONLY public member, and it's only needed because View::FreeHiLiteRects calls Delete0 (an STIL utility fxn)
    };
-
 
 ViewHiLites::ViewHiLites( PFBUF pFBuf )
    : d_FBuf(*pFBuf)
@@ -1807,7 +1773,6 @@ ViewHiLites::ViewHiLites( PFBUF pFBuf )
 ViewHiLites::~ViewHiLites() {
    PrimeRedraw();
    delete [] d_SpeedTable;  d_SpeedTable = nullptr;  // cannot use Delete0 due to []
-
    while( auto pEl=d_HiLiteList.front() ) { // zap d_HiLiteList list
       DLINK_REMOVE_FIRST( d_HiLiteList, pEl, dlink );
       delete pEl;
@@ -1828,10 +1793,9 @@ STIL void ShowHilite( const HiLiteRec &hl, PCChar str ) {
       );
    }
 
-
 int Rect::LineNotWithin( const LINE yLine ) const { // IGNORES COLUMN!
-   if( yLine < flMin.lin ) return -1;
-   if( yLine > flMax.lin ) return +1;
+   if( yLine < flMin.lin ) { return -1; }
+   if( yLine > flMax.lin ) { return +1; }
    return 0;
    }
 
@@ -1862,8 +1826,9 @@ void ViewHiLites::PrimeRedraw() const {
 
 
 void View::RedrawHiLiteRects() {
-   if( d_pHiLites )
+   if( d_pHiLites ) {
        d_pHiLites->PrimeRedraw();
+       }
    }
 
 //-----------------------------------------------------------------------------
@@ -1880,7 +1845,6 @@ void DbgHilite_( char ch, PCChar func ) {
    }
 #endif
 
-
 STATIC_FXN bool Rect1ContainsRect2( const Rect &r1, const Rect &r2 ) {
    return (r1.flMin.lin <= r2.flMin.lin)
        && (r1.flMax.lin >= r2.flMax.lin)
@@ -1892,19 +1856,16 @@ STATIC_FXN bool Rect1ContainsRect2( const Rect &r1, const Rect &r2 ) {
 void ViewHiLites::UpdtSpeedTbl( HiLiteRec *pThis ) {
    const auto idx( SpeedTableIndex( pThis->rect.flMax.lin ) );
    auto &stEntry( d_SpeedTable[ idx ].pHL );
-   if( !stEntry ||  pThis->rect.flMax.lin < stEntry->rect.flMax.lin )
-       stEntry = pThis;
+   if( !stEntry ||  pThis->rect.flMax.lin < stEntry->rect.flMax.lin ) {
+        stEntry = pThis;
+        }
    }
 
 void ViewHiLites::vhInsHiLiteBox( int newColorIdx, Rect newRgn ) {
    DbgHilite( '+' );
-
    FBOP::PrimeRedrawLineRangeAllWin( &d_FBuf, newRgn.flMin.lin, newRgn.flMax.lin );
-
    DBGHILITE && DBG( "SetHiLite   c=%02X [%d-%d] [%d-%d]", newColorIdx, newRgn.flMin.lin, newRgn.flMax.lin, newRgn.flMin.col, newRgn.flMax.col );
-
    auto &Head( d_HiLiteList );
-
    // walk last to first: THIS IS A LOT FASTER in the heaviest-usage case (searchall) where hilites are added at ever-higher line numbers
    int ix = 0;
    DLINKC_LAST_TO_FIRST( Head, dlink, pThis ) {
@@ -1916,13 +1877,11 @@ void ViewHiLites::vhInsHiLiteBox( int newColorIdx, Rect newRgn ) {
             DbgHilite( '-' );
             return;
             }
-
          if( Rect1ContainsRect2( thisRn, newRgn ) ) { // already exists: do nothing
             DbgHilite( '-' );
             return;
             }
          }
-
       if( newRgn.flMin > thisRn.flMin ) {
          auto pNew( new HiLiteRec( newRgn, newColorIdx ) );
          DLINK_INSERT_AFTER( Head, pThis, pNew, dlink );
@@ -1931,7 +1890,6 @@ void ViewHiLites::vhInsHiLiteBox( int newColorIdx, Rect newRgn ) {
          return;
          }
       }
-
    auto pNew( new HiLiteRec( newRgn, newColorIdx ) );
    DLINK_INSERT_FIRST( Head, pNew, dlink );
    UpdtSpeedTbl( pNew );
@@ -1939,9 +1897,9 @@ void ViewHiLites::vhInsHiLiteBox( int newColorIdx, Rect newRgn ) {
    }
 
 void View::InsHiLiteBox( int newColorIdx, Rect newRgn ) {
-   if( !d_pHiLites )
+   if( !d_pHiLites ) {
         d_pHiLites = new ViewHiLites( d_pFBuf );
-
+        }
    d_pHiLites->vhInsHiLiteBox( newColorIdx, newRgn );
    }
 
@@ -1958,9 +1916,9 @@ void View::InsHiLite1Line( int newColorIdx, LINE yLine, COL xLeft, COL xRight ) 
 
 int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const
    { 0 && DBG( "IHLoS+ %d", yLine );
-   if( !pFirstPossibleHiLite )
+   if( !pFirstPossibleHiLite ) {
         pFirstPossibleHiLite = FindFirstEntryAffectingOrAfterLine( yLine );
-
+        }
    auto rv(0);
    for( auto pHL(pFirstPossibleHiLite) ; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
       const auto &Rn( pHL->rect );
@@ -1974,7 +1932,6 @@ int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, Lin
             rn_xMin = rn_xMax;
             rn_xMax = tmp;
             }
-
          if( !(xIndent > rn_xMax || xMax < rn_xMin) ) {
             // be VERY careful when trying to optimize/clarify the xLeft and Len calcs
                   auto xLeft( Max( xIndent, rn_xMin )          );
@@ -2005,7 +1962,6 @@ STIL bool DrawVerticalCursorHilite() { return s_fDrawVerticalCursorHilite; }
 
 class HiliteAddin_CursorLine : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
-
 public:
    HiliteAddin_CursorLine( PView pView ) : HiliteAddin( pView ) { }
    ~HiliteAddin_CursorLine() {}
@@ -2020,8 +1976,9 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
    const auto isCursorLine( isActiveWindow_ && g_CursorLine() == yLine );
    if( isCursorLine ) {
       alcc.   PutColorRaw( 0            , COL_MAX, cxy );
-      if( DrawVerticalCursorHilite() )
+      if( DrawVerticalCursorHilite() ) {
          return true;
+         }
       }
    else {
       if( isActiveWindow_ && DrawVerticalCursorHilite() ) {
@@ -2029,7 +1986,6 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          alcc.PutColorRaw( g_CursorCol(),       1, cxy );
          return true;
          }
-
       if( !USE_HiliteAddin_CompileLine && Get_LineCompile() == yLine ) {
          alcc.PutColor(    0            , COL_MAX, COLOR::STS );
          }
@@ -2039,7 +1995,6 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
 
 //************************************************************************************************************
 //************************************************************************************************************
-
 
 void Point::ScrollTo( COL xWidth ) const {
    g_CurView()->MoveCursor( lin, col, xWidth );
@@ -2065,9 +2020,9 @@ void View::CommonInit() {
 
 void FBUF::Push_yChangedMin() {
    const auto yMax( LastLine() );
-   if( d_yChangedMin > yMax )
+   if( d_yChangedMin > yMax ) {
       return;
-
+      }
    DBG_HL_EVENT && DBG( "%s(%d,%d)", __func__, d_yChangedMin, yMax );
    DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, dlinkViewsOfFBUF, pv ) {
       pv->HiliteAddin_Event_FBUF_content_changed( d_yChangedMin, yMax );
@@ -2133,10 +2088,8 @@ View::View( const View &src, PWin pWin )
    d_saved           = src.d_saved          ;
    d_LastSelectBegin = src.d_LastSelectBegin;
    d_LastSelectEnd   = src.d_LastSelectEnd  ;
-
    CommonInit();
    }
-
 
 // pardon me while I go insane
 #if (defined(__x86_64__) || defined(__ppc64__)) && defined(_WIN32)
@@ -2151,7 +2104,6 @@ View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
    {
    d_current.Cursor.Set( 0, 0 );
    d_current.Origin.Set( 0, 0 );
-
    if( szViewOrdinates ) {
       time_t temptv( 0 );
       sscanf( szViewOrdinates, " %d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d"
@@ -2163,15 +2115,11 @@ View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
          );
       d_pFBuf->Set_TmLastWrToDisk( temptv );
       }
-
    d_prev = d_saved = d_current;
-
    d_LastSelectBegin.Set( -1, -1 );  // !isValid
    d_LastSelectEnd  .Set(  0,  0 );
-
    CommonInit();
    }
-
 
 void View::HiliteAddins_Delete() {
    while( auto pEl=d_addins.front() ) { // zap list
@@ -2180,12 +2128,10 @@ void View::HiliteAddins_Delete() {
       }
    }
 
-
 View::~View() {
    HiliteAddins_Delete();
    FreeHiLiteRects();
    }
-
 
 void View::Write( FILE *fout ) const {
    fprintf( fout, " %s|%d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d\n"
@@ -2239,17 +2185,15 @@ void View::ViewEvent_LineInsDel( LINE yLine, LINE lineDelta ) {
          0 && DBG( "%s %s %s moved!", __func__, fOriginMoved?"Origin":"", fCursorMoved?"Cursor":"" );
          // MoveCursor( Cursor().lin, Cursor().col );
          }
-
       AddLineDelta( d_prev.Origin.lin, yLine, lineDelta );
       AddLineDelta( d_prev.Cursor.lin, yLine, lineDelta );
       }
    }
 
-
 void View::ULC_Cursor::EnsureWinContainsCursor( Point winSize ) {
-   if( !fValid )
+   if( !fValid ) {
       return;
-
+      }
 #define CONSTRAIN_FIELD( xxx ) \
    if(              (Cursor.xxx - Origin.xxx) > (winSize.xxx-1) ) \
       Origin.xxx += (Cursor.xxx - Origin.xxx) - (winSize.xxx-1) ;
@@ -2259,7 +2203,6 @@ void View::ULC_Cursor::EnsureWinContainsCursor( Point winSize ) {
 
 #undef CONSTRAIN_FIELD
    }
-
 
 void View::EnsureWinContainsCursor() {
    d_prev   .EnsureWinContainsCursor( Win()->d_Size );
@@ -2276,11 +2219,9 @@ void View::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, 
    // BUGBUG This causes the View list to link to self; don't know why!?
    // ViewHead &cvwHd = g_CurViewHd();
    // DLINK_INSERT_FIRST( cvwHd, this, dlink );
-
    EnsureWinContainsCursor();  // window resize may have occurred
    ForceCursorMovedCondition();
    HiliteAddins_Init();
-
    d_tmFocusedOn = time( nullptr );
    }
 
@@ -2316,14 +2257,12 @@ void FlushKeyQueuePrimeScreenRedraw() {
    DispNeedsRedrawTotal();
    }
 
-
 STATIC_FXN void DispErrMsg( PCChar emsg ) { DBG( "!!! '%s'", emsg );
    SetCmdAbend();
    ConOut::Bell();
    ConIn::FlushKeyQueueAnythingFlushed();
    // HideCursor();
    VidWrStrColorFlush( DialogLine(), 0, emsg, Strlen(emsg), g_colorError, true );
-
    if( g_fErrPrompt ) {
       STATIC_CONST char szPAK[] = "Press any key...";
       VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, szPAK, KSTRLEN(szPAK), g_colorError, true );
@@ -2337,13 +2276,11 @@ STATIC_FXN void DispErrMsg( PCChar emsg ) { DBG( "!!! '%s'", emsg );
    // UnhideCursor();
    }
 
-
 void VErrorDialogBeepf( PCChar format, va_list args ) {
    linebuf buffer;
    chkdVsnprintf( BSOB(buffer), format, args );
    DispErrMsg( buffer );
    }
-
 
 bool ErrorDialogBeepf( PCChar format, ... ) {
    linebuf buffer;
@@ -2355,21 +2292,18 @@ bool ErrorDialogBeepf( PCChar format, ... ) {
    return false;
    }
 
-
 int DispRawDialogStr( PCChar st ) {
    const auto showCols( Min( Strlen( st ), EditScreenCols() ) );
    VidWrStrColorFlush( DialogLine(), 0, st, showCols, g_colorInfo, true );
    return showCols;
    }
 
-
 int VMsg( PCChar pszFormat, va_list val ) {
-   if( !pszFormat ) pszFormat = "";
+   if( !pszFormat ) { pszFormat = ""; }
    Linebuf buffer;  buffer.Vsprintf( pszFormat, val );
    WL(0,1) && DBG( "*** '%s'", buffer.k_str() );  // <-- enable this for more UI visibility
    return DispRawDialogStr( buffer.k_str() );
    }
-
 
 bool Msg( PCChar pszFormat, ... ) {
    va_list args;
@@ -2401,7 +2335,7 @@ bool ARG::message() {
       case NOARG:                         MsgClr();
                       return true;
       case TEXTARG:                       bcpy( mbuf, d_textarg.pText );
-                                          if( d_fMeta ) DispNeedsRedrawTotal();  // brute-force redraw EVERYTHING
+                                          if( d_fMeta ) { DispNeedsRedrawTotal(); } // brute-force redraw EVERYTHING
                                           Msg( "%s", mbuf );
                       return true;
       }
@@ -2437,8 +2371,6 @@ STATIC_FXN void conDisplayNoiseBlank() {
 #endif
 
 //=============================================================================
-
-
 
 STATIC_VAR auto                   s_fStatLnRedraw = true;
 void DispNeedsRedrawStatLn_()   { s_fStatLnRedraw = true; }
@@ -2499,7 +2431,6 @@ STATIC_FXN void RedrawScreen() {
    #else
    #define  ShowDraws( code )
    #endif
-
    const auto yDispMin( MinDispLine() );
    const auto scrnCols( EditScreenCols() );
    STATIC_VAR std::string buf;
@@ -2529,7 +2460,6 @@ STATIC_FXN void RedrawScreen() {
          }
       ShowDraws( *pLbf++ = ch; )
       }
-
    s_paScreenLineNeedsRedraw->ClrAllBits();
    #if SHOW_DRAWS
    *pLbf++ = chRSQ;  *pLbf = '\0';  DBG( "%s- [%2d..%2d): %s", __func__, yTop, yBottom, lbf );
@@ -2537,9 +2467,9 @@ STATIC_FXN void RedrawScreen() {
    }
 
 void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // for single-line Prime, yMin == yMax
-   if( yMin > yMax )
+   if( yMin > yMax ) {
       std::swap( yMin, yMax );
-
+      }
    FULL_DB && DBG( "Prime FL [%d..%d]", yMin, yMax );
    for( int ix=0 ; ix < g_iWindowCount() ; ++ix ) {
       const auto pWin ( g_Win(ix)         );
@@ -2548,8 +2478,9 @@ void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // fo
          NewScope { // hilighting: if the word moves under the cursor, it's the same as the cursor moving
             Point cursor;
             pView->GetCursor( &cursor );
-            if( yMin <= cursor.lin && yMax >= cursor.lin )
+            if( yMin <= cursor.lin && yMax >= cursor.lin ) {
                pView->ForceCursorMovedCondition();
+               }
             }
          FULL_DB && DBG( "Prime win%d [%d..%d]", ix, yMin, yMax );
          for( auto wyMin( pWin->d_UpLeft.lin + LargerOf(                     0, yMin - pView->Origin().lin ) ),
@@ -2561,17 +2492,14 @@ void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // fo
             }
          }
       }
-
    #if TRACE_DISP_NEEDS
    DBG( "%s by %s L %d", "ndScreenRedraw", __func__, __LINE__ );
    #endif
    }
 
-
 void DispNeedsRedrawAllLinesCurWin_() {
    g_CurWin()->DispNeedsRedrawAllLines();
    }
-
 
 // dialogtop:invert
 // dialogtop:-
@@ -2603,9 +2531,8 @@ STATIC_VAR auto s_CursorLocnBeforeOutsideView = Point ( -1, -1 );
 STATIC_VAR auto s_CursorLocnOutsideView       = Point ( -1, -1 );
 
 void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
-   #if 0
+  #if 0
    // new way, still not working great
-
    Point newPt(y,x);
    if(  !s_CursorLocnBeforeOutsideView.isValid()
       && newPt.isValid()
@@ -2613,7 +2540,6 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
       bool dummy;
       ConOut::GetCursorState( &s_CursorLocnBeforeOutsideView, &dummy );
       }
-
    if( newPt.isValid() ) {
       s_CursorLocnOutsideView = newPt;
       }
@@ -2621,21 +2547,15 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
       newPt = s_CursorLocnBeforeOutsideView;
       s_CursorLocnBeforeOutsideView.Set(-1,-1);
       }
-
    DBG( "%s(y=%d,x=%d) from %s", __func__, newPt.lin, newPt.col, from );
    ConOut::SetCursorLocn( newPt.lin, newPt.col );
-
-   #else
-
+  #else
    // old way
-
    s_CursorLocnOutsideView.lin = y;
    s_CursorLocnOutsideView.col = x;
    FULL_DB && DBG( "%s(y=%d,x=%d)", __func__, y, x );
    ConOut::SetCursorLocn( y, x );
-
-   #endif
-
+  #endif
    // DispNeedsRedrawCursorMoved();  this has the effect of HIDING the cursor when the dialog line is accepting typed input
    }
 
@@ -2655,16 +2575,13 @@ STATIC_FXN void DrawStatusLine();
 STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to completion w/o blocking (calling anything that calls GlobalVariableLock)
    FULL_DB && DBG( "%s+", __func__ );
    PCWV;
-   if( !(g_CurFBuf() && pcv) )
+   if( !(g_CurFBuf() && pcv) ) {
       return;
-
+      }
    FULL_DB && DBG( "%s: working", __func__ );
-
    // PerfCounter pc;
-
    VideoFlusher vf;
    STATIC_VAR bool s_fHideVerticalCursorHilite;
-
    Point cursorNew;
    bool  fCursorMovePending;
    {
@@ -2673,7 +2590,6 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
    ConOut::GetCursorState( &cursorNow, &fCursorVisible );
    fCursorMovePending = (cursorNew.lin != cursorNow.lin || cursorNew.col != cursorNow.col);
    }
-
    auto did(0);
    pcv->HiliteAddin_Event_If_CursorMoved();
    auto fScreenRedrawPending( NeedRedrawScreen() );
@@ -2685,10 +2601,8 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
       DispNeedsRedrawAllLinesCurWin();
       fScreenRedrawPending = true;
       }
-
    for( auto ix(0) ; ix < g_iWindowCount(); ++ix )
       g_Win(ix)->CurView()->FBuf()->Push_yChangedMin(); // used by HiliteAddin methods
-
    if( fScreenRedrawPending ) {
       did |= 0x000A0000;
       pcv->HiliteAddin_Event_FBUF_content_changed( 0, 0 ); // bugbug needed to make cpp hilites update correctly
@@ -2696,19 +2610,16 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
       s_fHideVerticalCursorHilite = s_fDrawVerticalCursorHilite;
                                     s_fDrawVerticalCursorHilite = false;
       }
-
    if( s_fStatLnRedraw ) { s_fStatLnRedraw = false;
       did |= 0x00000A00;
       DrawStatusLine();
       DISP_LL_STAT_COLLECT(++d_stats.statLnUpdates);
       }
-
    if( fCursorMovePending ) {
       did |= 0x0000000C;
       ConOut::SetCursorLocn( cursorNew.lin, cursorNew.col );
       DISP_LL_STAT_COLLECT(++d_stats.cursorScrolls);
       }
-
    if( FULL_DB && did ) { DBG( "%s did=%08X", __func__, did ); }
    }
 
@@ -2728,7 +2639,7 @@ void DispNeedsRedrawCurWin_()                { DispNeedsRedrawAllLinesCurWin(); 
 void DispNeedsRedrawTotal_()                 { DispNeedsRedrawAllLinesAllWindows(); }
 void DispNeedsRedrawVerticalCursorHilite_()  { ndVertCursorDraw(); }
 void DispDoPendingRefreshes_()               { MEM_CBP( true ); UpdtDisplay(); MEM_CBP( false );  }
-void DispDoPendingRefreshesIfNotInMacro_()   { if( !Interpreter::Interpreting() ) DispDoPendingRefreshes_(); }
+void DispDoPendingRefreshesIfNotInMacro_()   { if( !Interpreter::Interpreting() ) { DispDoPendingRefreshes_(); } }
 void DispRefreshWholeScreenNow_()            { DispNeedsRedrawTotal_(); DispDoPendingRefreshes_(); }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -2758,8 +2669,8 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
       maxCharsToDisp  -= segLen;
       }
 
-   if( ScreenCols() > xCol )  VidWrStrColor( yLine, xCol, " "    , 1, lastColor, true  );
-// else                       VidWrStrColor( yLine, xCol, nullptr, 0, lastColor, false );
+   if( ScreenCols() > xCol ) { VidWrStrColor( yLine, xCol, " "    , 1, lastColor, true  ); }
+// else                      { VidWrStrColor( yLine, xCol, nullptr, 0, lastColor, false ); }
    FULL_DB && DBG( "%s-", __func__ );
    return xCol;
    }
@@ -2834,16 +2745,14 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    else {
       cl.Cat( COLOR::INF, pfh->IsDirty() ? "*" : "" );
       }
-
    if( pfh->FnmIsDiskWritable() && pfh->EolMode()!=platform_eol ) {
       if( g_fForcePlatformEol )                                           cl.Cat( COLOR::ERRM, "!" );
                                                                           cl.Cat( COLOR::INF , pfh->EolName() );
       }
-   if( pfh->IsNoEdit() )                                                  cl.Cat( COLOR::ERRM, " !edit!" );
+   if( pfh->IsNoEdit() )                                                 { cl.Cat( COLOR::ERRM, " !edit!" ); }
 #if defined(_WIN32)
-   if( pfh->IsDiskRO() )                                                  cl.Cat( COLOR::ERRM, " DiskRO" );
+   if( pfh->IsDiskRO() )                                                 { cl.Cat( COLOR::ERRM, " DiskRO" ); }
 #endif
-
    cl.Cat( COLOR::SEL , FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR "%s]", BSR( pfh->FType() ), LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
@@ -2856,7 +2765,6 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 // cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "E!=e" : "E==e" ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "Q!=q" : "Q==q" ).k_str() );
    cl.Cat( COLOR::INF , FmtStr<20>( "%s"           , g_fCase ? "A!=a" : "A==a" ).k_str() );
-
    if( 0 ) { // 20150105 KG: seems superfluous
       if( g_pFbufClipboard && g_pFbufClipboard->LineCount() ) {
          PCChar st;
@@ -2873,13 +2781,11 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
          }
       cl.Cat( COLOR::INF, " " );
       }
-
    cl.Cat( COLOR::INF, FmtStr<40>( "%s%s"
             , g_fMeta                  ? " META"      : ""
             , IsMacroRecordingActive() ? (IsCmdXeqInhibitedByRecord() ? " NOX-RECORDING" : " RECORDING") : ""
             ).k_str()
          );
-
    //-----------------------------------------------------------------------
    // Display that part of pfh->Namestr() which is common with the cwd in a
    // different color than the remainder of pfh->Namestr().  Display any part
@@ -2898,7 +2804,6 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    const auto uniqLen( fnLen - commonLen - uniqPathLen );
    //
    //-----------------------------------------------------------------------
-
    ColoredLine out;
    const auto maxFnLen( EditScreenCols() - cl.textcols() );
    if( fnLen > maxFnLen ) {
@@ -2917,7 +2822,6 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
       if( uniqPathLen ) { out.Cat( COLOR::ERRM, stref(pfnm, uniqPathLen) ); pfnm += uniqPathLen; }
       if( uniqLen     ) { out.Cat( COLOR::TXT , stref(pfnm, uniqLen    ) ); pfnm += uniqLen    ; }
       }
-
    out.Cat( cl );                       0 && DBG( "%s+", __func__ );
    out.VidWrLine( StatusLine() );       FULL_DB && DBG( "%s-", __func__ );
    }
@@ -2971,7 +2875,6 @@ STATIC_FXN bool swixChardisp( stref param, char &charVar ) {
    if( char(-1) == charVar ) {
       charVar = param.length() == 1 ? param[0] : ' ';
       }
-
    DispNeedsRedrawAllLinesAllWindows();
    return true;
    }
@@ -3009,19 +2912,15 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, const LINE yCursor
       , d_current.Origin.lin, d_current.Origin.col, d_current.Cursor.lin, d_current.Cursor.col
       , yOrigin, xOrigin, yCursor, xCursor, fUpdtWUC?'t':'f'
       );
-
    const auto yOriginInitial( d_current.Origin.lin );
    const auto yCursorInitial( d_current.Cursor.lin );
    const auto xCursorInitial( d_current.Cursor.col );  0 && DBG( "cc0=%d", d_current.Cursor.col );
-
    // first see if origin must (needs to) change:
-
    const auto hscrollCols( Max( 1, (g_iHscroll * d_pWin->d_Size.col) / EditScreenCols() ) );  0 && DBG( "hscrollCols=%d", hscrollCols );
 // auto newUlcCol( hscrollCols + COL_MAX - d_pWin->d_Size.col );
    auto newUlcCol(               COL_MAX - d_pWin->d_Size.col );
    Constrain( 0, &newUlcCol, xOrigin );
    xOrigin      = newUlcCol;
-
    SHOWDBG && DBG( "lastline=%d, winsize=%d, vscroll=%d, 1/3=%d", d_pFBuf->LastLine(), d_pWin->d_Size.lin, g_iVscroll, (d_pWin->d_Size.lin/3) ); // max 1/3 of window contains past-EOF
    const auto yCursorMax( d_pFBuf->LastLine()
       #if 1
@@ -3035,13 +2934,10 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, const LINE yCursor
    SHOWDBG && DBG( "yCursorMax = %d", yCursorMax );
    Constrain( 0, &yOrigin, yCursorMax );  // d_pWin value defines the bottom scroll limit
    SHOWDBG && DBG( "yOrigin = %d", yOrigin );
-
    const auto yOriginDelta( yOrigin - d_current.Origin.lin );
    const auto xOriginDelta( xOrigin - d_current.Origin.col );
-
    d_current.Origin.lin = yOrigin; // don't use yOrigin below here; use d_current.Origin.lin
    d_current.Origin.col = xOrigin; // don't use xOrigin below here; use d_current.Origin.col
-
    LINE yMin, yMax;
    if( xOriginDelta || yOriginDelta ) {
       // CopyCurrentCursLocnToSaved(); 15-Jul-2004 klg d_pWin makes savecur/restcur less than useful
@@ -3057,13 +2953,10 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, const LINE yCursor
    else { // origin has not moved in y dimension
       yMin = yMax = yCursorInitial;
       }
-
               d_current.Cursor.col = d_current.Origin.col + d_pWin->d_Size.col - 1;   0 && DBG( "ccF=%d", d_current.Cursor.col );
    Constrain( d_current.Origin.col, &d_current.Cursor.col, xCursor );                 0 && DBG( "ccG=%d", d_current.Cursor.col );
-
               d_current.Cursor.lin = d_current.Origin.lin + d_pWin->d_Size.lin - 1;
    Constrain( d_current.Origin.lin, &d_current.Cursor.lin, yCursor );
-
    //##########################################################################################
    //##########################################################################################
    //##
@@ -3071,9 +2964,7 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, const LINE yCursor
    //##
    //##########################################################################################
    //##########################################################################################
-
    SHOWDBG && DBG( "ScrollW&C-  UlcYX=(%d,%d) CurYX=(%d,%d) --------------", d_current.Origin.lin, d_current.Origin.col, d_current.Cursor.lin, d_current.Cursor.col );
-
    if( ActiveInWin() ) { // this is the current view of a(ny) window?
                          // push display updates out
       const auto fVertScreenScroll( yOriginInitial != d_current.Origin.lin );
@@ -3092,11 +2983,9 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, const LINE yCursor
          FBOP::PrimeRedrawLineRangeAllWin( d_pFBuf, yCursorInitial      , yCursorInitial       );
          FBOP::PrimeRedrawLineRangeAllWin( d_pFBuf, d_current.Cursor.lin, d_current.Cursor.lin );
          }
-
       if( fUpdtWUC && (fVertCursorMove || fHorzCursorMove) ) {
          d_fUpdtWUC_pending = true;
          }
-
       if( xOriginDelta || yOriginDelta ) { // origin has changed, so "scrolling" (screen rewrite) is REQUIRED
          DispNeedsRedrawStatLn();
          d_pWin->DispNeedsRedrawAllLines();
@@ -3119,7 +3008,6 @@ VideoFlusher::~VideoFlusher() {
       s_VideoFlushData.fDidVideoWrite = false;
       }
    }
-
 
 STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { WL( 0, 0 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
    if( src ) {
@@ -3227,13 +3115,11 @@ void View::InsertHiLitesOfLineSeg
       const int hls( d_pHiLites->InsertHiLitesOfLineSeg( yLine, xIndent, xMax, alcc, pFirstPossibleHiLite ) );  0 && DBG( "%d hls=%d", yLine, hls );
       // if( hls > 0 ) return;
       }
-
    DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
       if( pDispAddin->VHilitLine( yLine, xIndent, alcc ) ) {
          return;
          }
       }
-
    NewScope {
       DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
          if( pDispAddin->VHilitLineSegs( yLine, alcc ) ) {
@@ -3358,7 +3244,6 @@ PView FBUF::PutFocusOnView() { enum{ DD=0 };
       }
    DLINK_INSERT_FIRST( cvwHd, myView, dlinkViewsOfWindow );
    }
-
    myView->PutFocusOn();
    return myView;
    }
@@ -3403,21 +3288,17 @@ bool FBUF::UnlinkAllViews() {
 bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ) {
    const auto fEntirelyRmvd( pFBuf->UnlinkAllViews() ); // pFBuf MAY NOT be valid after this call
    // if fEntirelyRmvd==false pFBuf's GlobalPtr is set and WE WILL return with *pFBuf still existing ()!
-
    SetWindowSetValidView( -1 );
-
    return fEntirelyRmvd;
    }
 
 void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset ) {
    const auto errMsgLen( Strlen(errMsg) );
    const auto pszSearchStrLen( Strlen(pszSearchStr) );
-
    const char kszRexFail[] = "Regex err %s: %s ";
    SprintfBuf buf( kszRexFail, errMsg, pszSearchStr );
    0 && DBG( "%s", buf.k_str() );
    0 && DBG( "%s, errOffset=%d", buf.k_str(), errOffset );
-
    ColoredLine out;
    out.Cat( g_colorStatus, "Regex err" );
    out.Cat( g_colorError , errMsg );
@@ -3439,9 +3320,7 @@ void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset
 
 STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt ) {
    DBG( "Confirm_: %s", pszPrompt );
-
    MainThreadPerfCounter::PauseAll();
-
    const auto mboxrv(
 #if 1
       Lua_ConfirmYes( pszPrompt ) ? crYES : crNO
@@ -3449,9 +3328,7 @@ STATIC_FXN ConfirmResponse Confirm_( int MBox_uType, PCChar pszPrompt ) {
       Win32::Confirm_MsgBox( pszPrompt )
 #endif
       );
-
    MainThreadPerfCounter::ResumeAll();
-
    return mboxrv;
    }
 
