@@ -494,7 +494,6 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
 
 static_assert( ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT, "ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT" );
 
-
 // s_CmdIdxAddins is a dynamic tree which is searched prior to g_CmdTable
 // during user-function-lookups: all CMDs indexed herein (for macros and Lua
 // functions) are heap-allocated, and can thus be created and destroyed at will:
@@ -505,9 +504,9 @@ STIL PCMD IdxNodeToPCMD( RbNode *pNd ) { return static_cast<PCMD>( rb_val(pNd) )
 STATIC_VAR RbCtrl s_CmdIdxRbCtrl = { AllocNZ_, Free_, };
 
 STATIC_FXN void CMD_PlacementFree_SameName( PCMD pCmd ) {
-   if( pCmd->IsRealMacro() )
+   if( pCmd->IsRealMacro() ) {
       Free0( pCmd->d_argData.pszMacroDef );
-
+      }
    AHELP( Free0( pCmd->d_HelpStr ); )
    }
 
@@ -527,7 +526,6 @@ STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
    //
    size_t yMin( 0 );
    auto   yMax( ELEMENTS( g_CmdTable ) - 1 );
-
    while( yMin <= yMax ) {
       //                ( (yMax + yMin) / 2 );           // old overflow-susceptible version
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
@@ -564,19 +562,17 @@ STATIC_FXN void cmdIdxAdd( stref name, funcCmd pFxn, int argType, stref macroDef
       pCmd->d_name = Strdup( name );
       rb_insert_before( s_CmdIdxAddins, pNd, pCmd->Name(), pCmd );
       }
-
    pCmd->d_func    = pFxn;
    pCmd->d_argType = argType;
    if( pCmd->IsRealMacro() ) {
       pCmd->d_argData.pszMacroDef = Strdup( macroDef );
       }
-
    AHELP( pCmd->d_HelpStr = Strdup( helpStr ? helpStr : "" ); )
-
    // semi-hacky: replace any references to same-named builtin function
    const auto pCmdBuiltIn( CmdFromNameBuiltinOnly( name ) );
-   if( pCmdBuiltIn )
+   if( pCmdBuiltIn ) {
       EventCmdSupercede( pCmdBuiltIn, pCmd );
+      }
    }
 
 void CmdIdxAddLuaFunc( PCChar name, funcCmd pFxn, int argType  _AHELP( PCChar helpStr ) ) {
@@ -592,11 +588,10 @@ STATIC_FXN void DeleteCmd( PCMD pCmd ) {
    const auto pCmdBuiltIn( CmdFromNameBuiltinOnly( pCmd->d_name ) );
    EventCmdSupercede( pCmd, pCmdBuiltIn ? pCmdBuiltIn : pCMD_unassigned );
    }
-
    Free0( pCmd->d_name );
-   if( pCmd->IsRealMacro() )
+   if( pCmd->IsRealMacro() ) {
       Free0( pCmd->d_argData.pszMacroDef );
-
+      }
    AHELP( Free0( pCmd->d_HelpStr ); )
    Free0( pCmd );
    }
@@ -614,9 +609,7 @@ int CmdIdxRmvCmdsByFunction( funcCmd pFxn ) {
       DeleteCmd( pCmd );
       }
       ++rv;
-
       rb_delete_node( s_CmdIdxAddins, pNd );
-
       // now (since cur node has been deleted), set pNd to prev node
       // locate prev node by searching for pPrevKey
       if( pPrevKey.empty() ) {
@@ -628,7 +621,6 @@ int CmdIdxRmvCmdsByFunction( funcCmd pFxn ) {
          Assert( equal );
          }
       }
-
    return rv;
    }
 
@@ -683,9 +675,9 @@ void cmdusage_updt() {
       for(;;) {
          char buf[300];
          auto p( fgets( BSOB(buf), ifh ) );
-         if( !p )
+         if( !p ) {
             break;
-
+            }
          //DBG( "%s: '%s'", __func__, p );
          pathbuf  savedCmdnm;
          unsigned savedCount;

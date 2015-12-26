@@ -325,10 +325,12 @@ STATIC_FXN PChar LuaTbl2S0( lua_State *L, PChar dest, size_t sizeof_dest, PCChar
 STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
    auto rv( LuaTbl2S0( L, dest, sizeof_dest, tableDescr ) );
    if( !rv ) {
-      if( pszDflt )
+      if( pszDflt ) {
          scpy( dest, sizeof_dest, pszDflt );
-      else
+         }
+      else {
          dest[0] = '\0';
+         }
       }
                                                                              0 && DBG( "-%s '%s' -> '%s'", __func__ , tableDescr, dest );
    return dest;
@@ -498,7 +500,6 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
    const auto cmdName( CmdName() );                                              DB && DBG( "%s: '%s'", __func__, cmdName );
    const auto L( L_edit );
    LuaCallCleanup( L );
-
    // table=GetEdFxn_FROM_C(cmdName)    -- 20110216 kgoodwin replaced old scheme which wrote all cmd tables into k.lua._G (!!!)
    // GetEdFxn_FROM_C is implemented in k.luaedit
    STATIC_CONST auto s_edfx_lookup = "GetEdFxn_FROM_C";
@@ -705,7 +706,6 @@ STATIC_FXN bool LuaCtxt_InitOk(
       }
    return *pL != nullptr;
    }
-
 
 STATIC_FXN void L_restore_save_post_load( lua_State *L ) { // Lua environment-loaded hook-outs
    }

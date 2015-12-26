@@ -110,17 +110,15 @@ STATIC_FXN bool IsolateFilename( sridx *pMin, sridx *pMax, stref rl ) {
       ixEnd   = FirstBlankOrEnd   ( rl, ixStart+1 );
       }
    if( ixStart >= ixEnd ) return false;
-
    *pMin = ixStart;
    *pMax = ixEnd  ;
-
    return true;
    }
 
 int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const {
-   if( yLine > LastLine() )
+   if( yLine > LastLine() ) {
       return -1;
-
+      }
    auto rl( PeekRawLine( yLine ) ); PCChar bos( rl.data() ); PCChar eos( rl.data()+rl.length() );
    const auto ixCol( CaptiveIdxOfCol( g_CurFBuf()->TabWidth(), rl, xCol ) );
    rl.remove_prefix( ixCol );
@@ -174,13 +172,12 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    dest.clear();
    while( true ) {
       if( d_pCfxGen ) {
-         if( d_pCfxGen->VGetNextName( dest ) )
+         if( d_pCfxGen->VGetNextName( dest ) ) {
             return true;
-
+            }
          Delete0( d_pCfxGen );
          }
       RTN_false_ON_BRK;
-
       const auto glif_rv( d_pFBuf->GetLineIsolateFilename( d_sbuf, d_curLine++, 0 ) );
       if( glif_rv < 0 ) return false;  // no more lines
       if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_sbuf, ONLY_FILES );
@@ -196,19 +193,15 @@ enum { ENV_REFS_NONE, ENV_REFS_PARSE_ERR, ENV_REFS_UNAMBIG, ENV_REFS_MID_LIST, E
 class StrSubstituterGenerator {
    NO_COPYCTOR(StrSubstituterGenerator);
    NO_ASGN_OPR(StrSubstituterGenerator);
-
    struct SubStrSubstituter {
       NO_COPYCTOR(SubStrSubstituter);
       NO_ASGN_OPR(SubStrSubstituter);
-
       DLinkEntry<SubStrSubstituter> dlink;
-
       const int  d_xReplStart;
       const int  d_replLen;
       int        d_valueIdx;
       int        d_nValues;
       PPCChar    d_values;
-
       SubStrSubstituter( PCChar pValue, int chValDelim, const int xReplStart_, const int replLen_ );
       ~SubStrSubstituter() {
          if( d_values ) {
@@ -217,26 +210,18 @@ class StrSubstituterGenerator {
             }
          }
       };
-
    bool                         d_fCombinationsExhaused;
    Path::str_t                  d_pBaseString;
    DLinkHead<SubStrSubstituter> d_SubStrSubstituter;
-
-   public:
-
+public:
    StrSubstituterGenerator() : d_fCombinationsExhaused(false) {}
    ~StrSubstituterGenerator();
-
    void SetBaseStr( PCChar pBase ) { d_pBaseString = pBase; }
    bool GetNextString( std::string &st );
-
    void AddMultiExpandableSeg( PCChar pValue, int chValDelim, int xReplStart, int replLen );
-
-   private:
-
+private:
    void NextCombination();
    };
-
 
 StrSubstituterGenerator::SubStrSubstituter::SubStrSubstituter( PCChar pValue, int chValDelim, const int xReplStart_, const int replLen_ )
    : d_xReplStart(xReplStart_)
@@ -247,14 +232,15 @@ StrSubstituterGenerator::SubStrSubstituter::SubStrSubstituter( PCChar pValue, in
    {
    auto pVal( Strdup( pValue ) );
    for( auto pc( pValue ) ; *pc ; ++pc ) {
-      if( *pc == chValDelim ) ++d_nValues;
+      if( *pc == chValDelim ) { ++d_nValues; }
       }
    AllocArrayNZ( d_values, d_nValues );
    for( auto iy(0) ; ; ++iy ) {
       d_values[ iy ] = pVal;  // [0] is the Strdup()'d string itself, which must be freed later!
       const auto pSep( strchr( pVal, chValDelim ) );
-      if( !pSep )
+      if( !pSep ) {
          break;
+         }
       *pSep = '\0';
       pVal = pSep+1; // [1..n] are pointers within [0], the Strdup()'d string
       }
@@ -274,12 +260,11 @@ StrSubstituterGenerator::~StrSubstituterGenerator() {
 
 void StrSubstituterGenerator::NextCombination() {
    DLINKC_LAST_TO_FIRST(d_SubStrSubstituter,dlink,pSSS) {
-      if( ++pSSS->d_valueIdx < pSSS->d_nValues )
+      if( ++pSSS->d_valueIdx < pSSS->d_nValues ) {
          return;
-
+         }
       pSSS->d_valueIdx = 0;
       }
-
    d_fCombinationsExhaused = true;
    }
 
@@ -288,10 +273,8 @@ bool StrSubstituterGenerator::GetNextString( std::string &st ) {
       st.clear();
       return false;
       }
-
    PCChar pLit0( d_pBaseString.c_str() );
    PCChar pLit( pLit0 );
-
    DLINKC_FIRST_TO_LASTA(d_SubStrSubstituter,dlink,pSSS) {
       const auto prevLitLen( pSSS->d_xReplStart - (pLit - pLit0) );
       st.append( pLit, prevLitLen );
@@ -299,7 +282,6 @@ bool StrSubstituterGenerator::GetNextString( std::string &st ) {
       pLit += prevLitLen + pSSS->d_replLen;
       }
    st.append( pLit );
-
    NextCombination();
    return true;
    }
@@ -313,11 +295,9 @@ bool StrSubstituterGenerator::GetNextString( std::string &st ) {
 // You can run this with a NULL pSSG in order to pre-check (examine rv)
 //
 STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
-   if( pSSG )  pSSG->SetBaseStr( inbuf );
-
+   if( pSSG ) { pSSG->SetBaseStr( inbuf ); }
    auto pC( inbuf );
    decltype(pC) pRefStart;
-
    auto rv( ENV_REFS_NONE );
    while( (pRefStart=StrToNextOrEos( pC, "$%" )) && *pRefStart ) {
       auto pName( pRefStart + 1 );
@@ -334,22 +314,19 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
                    else
                       term = ':';
                    break;
-
          case '%': term = '%';
                    break;
-
          default:  /*suppress warning*/term = 0; Assert( 0 );
          }
       const decltype(pName) pTerm( strchr( pName, term ) );
-      if( !pTerm )
+      if( !pTerm ) {
          return ENV_REFS_PARSE_ERR;
-
+         }
       pC = pTerm + 1;
-      if( pTerm == pName ) // empty reference?
-         continue;         // leave as literal
-
+      if( pTerm == pName ) { // empty reference?
+         continue;           // leave as literal
+         }
       const auto fLeadingEnvRef( pRefStart == inbuf );
-
       pathbuf pbuf;
       bcpy( pbuf, PP2SR( pName, pTerm ) );
       PCChar pValue( getenv( pbuf ) );
@@ -361,13 +338,10 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
       else if( (!pValue || !*pValue) && fLeadingEnvRef ) { // undefined or has no value?
          pValue = ".";  // leading value == cwd
          }
-
       if( pValue && *pValue ) { // defined and has value?
-         if( pSSG )  pSSG->AddMultiExpandableSeg( pValue, Path::chEnvSep, pRefStart - inbuf, pTerm - pRefStart + 1 );
-
+         if( pSSG ) { pSSG->AddMultiExpandableSeg( pValue, Path::chEnvSep, pRefStart - inbuf, pTerm - pRefStart + 1 ); }
          // const auto fHasWC( StrToNextOrEos( pValue, "*?" )[0] != 0 );
          const auto fIsList( ToBOOL( strchr( pValue, Path::chEnvSep ) ) );
-
          if(      fLeadingEnvRef      )  { rv = fIsList ? ENV_REFS_LEADING_LIST : ENV_REFS_UNAMBIG; }
          else if( fIsList             )  { rv = ENV_REFS_MID_LIST; }
          else if( ENV_REFS_NONE == rv )  { rv = ENV_REFS_UNAMBIG; }
@@ -375,7 +349,6 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
       }
    return rv;
    }
-
 
 #ifdef fn_cfx
 
@@ -389,9 +362,7 @@ bool ARG::cfx() {
       default:       return BadArg();
       case TEXTARG:  break;
       }
-
    DBG( "[-] %s", d_textarg.pText );
-
    StrSubstituterGenerator ssg;
    CFX_to_SSG( d_textarg.pText, &ssg );
    pathbuf pbuf;
@@ -399,7 +370,6 @@ bool ARG::cfx() {
    while( ssg.GetNextString( BSOB(pbuf) ) ) {
       DBG( "[%d] %s", ix++, pbuf );
       }
-
    return true;
    }
 
@@ -408,9 +378,9 @@ bool ARG::cfx() {
 //------------------------------------------------------------------------------
 
 bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
-   if( d_output.empty() )
+   if( d_output.empty() ) {
       return false;
-
+      }
    auto pEl( d_output.front() );
    DLINK_REMOVE_FIRST( d_output, pEl, dlink );
    dest = pEl->string;
@@ -428,21 +398,16 @@ DirListGenerator::DirListGenerator( PCChar dirName ) {
       Path::str_t pStartDir( dirName ? dirName : Path::GetCwd() );
       AddName( pStartDir );
       }
-
    Path::str_t pbuf;
    while( auto pNxt=d_input.front() ) {
       DLINK_REMOVE_FIRST( d_input, pNxt, dlink );
       pbuf = Path::str_t( pNxt->string ) + (PATH_SEP_STR "*");
       FreeStringListEl( pNxt );
-
       0 && DBG( "Looking in ='%s'", pbuf.c_str() );
-
       WildcardFilenameGenerator wcg( pbuf.c_str(), ONLY_DIRS );
-
       while( wcg.VGetNextName( pbuf ) ) {
          if( !Path::IsDotOrDotDot( pbuf ) )
             AddName( pbuf );
-
          0 && DBG( "   PBUF='%s' DBUF='%" PR_BSR "'", pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
          }
       }
@@ -459,28 +424,23 @@ DirListGenerator::~DirListGenerator() {
 
 bool ARG::wct() {
    pathbuf searchSpec;
-
    switch( d_argType ) {
       default:       return BadArg();
       case NOARG:    bcpy( searchSpec, "*" )  ;            break;
       case TEXTARG:  bcpy( searchSpec, d_textarg.pText );  break;
       }
-
    DirListGenerator dirs;
-
    pathbuf pbuf;
    const auto pF( g_CurFBuf() );
    while( dirs.VGetNextName( BSOB(pbuf) ) ) {
       // if( !Path::IsDotOrDotDot( pbuf.c_str() ) )
       //    pF->FmtLastLine( pbuf );
-
       WildcardFilenameGenerator wcg( FmtStr<MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf, searchSpec ), ONLY_FILES );
       pathbuf fbuf;
       while( wcg.VGetNextName( BSOB(fbuf) ) ) {
          pF->FmtLastLine( fbuf );
          }
       }
-
    return true;
    }
 
@@ -507,7 +467,6 @@ CfxFilenameGenerator::~CfxFilenameGenerator() {
 bool CfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    RTN_false_ON_BRK;
    dest.clear();
-
    if( d_pWcGen ) {
 NEXT_WILDCARD_MATCH:
       if( d_pWcGen->VGetNextName( dest ) ) {
@@ -516,7 +475,6 @@ NEXT_WILDCARD_MATCH:
          }
       Delete0( d_pWcGen );
       }
-
    if( d_pSSG ) {
 NEXT_SSG_COMBINATION:
       if( d_pSSG->GetNextString( dest ) ) {
@@ -524,7 +482,6 @@ NEXT_SSG_COMBINATION:
          d_pWcGen = new WildcardFilenameGenerator( dest.c_str(), d_matchMode );
          goto NEXT_WILDCARD_MATCH;
          }
-
       Delete0( d_pSSG );
       }
    d_pszEntrySuffix = d_splitLine.GetNext( d_pszEntrySuffix );
@@ -534,7 +491,6 @@ NEXT_SSG_COMBINATION:
       CFX_to_SSG( d_pszEntrySuffix, d_pSSG );
       goto NEXT_SSG_COMBINATION;
       }
-
    MFSPEC_D && DBG( "%s- Exhausted", __func__ );
    return false;
    }
@@ -627,8 +583,9 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
 #endif
          }
       else {
-         if( path.length() > WL( 3, 1 ) && Path::IsPathSepCh( path.back() ) )
+         if( path.length() > WL( 3, 1 ) && Path::IsPathSepCh( path.back() ) ) {
             path.remove_suffix( 1 );  // remove the trailing PathSepCh so CfxFilenameGenerator works
+            }
          }
       CfxFilenameGenerator mfg( path, ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
@@ -667,7 +624,6 @@ Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=1 };
    if( FBUF::FnmIsPseudo( pszSrc ) ) {                               DB && DBG( "%s- (FnmIsPseudo) '%s'", __func__, pszSrc );
       return Path::str_t( pszSrc );
       }
-
    Path::str_t st( pszSrc );
    if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {
       DB && DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
@@ -679,7 +635,6 @@ Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=1 };
          st = pszSrc;
       }
    DB && DBG( "%s post-expansion='%s'", __func__, st.c_str() );
-
    st = Path::Absolutize( st.c_str() );
    DB && DBG( "%s- '%s'", __func__, st.c_str() );
    return st;

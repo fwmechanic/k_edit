@@ -84,7 +84,6 @@ int FBUF::DbgCheck() {
    if( !d_paLineInfo ) {
       return 0;
       }
-
    auto errors(0);
    auto pLi( d_paLineInfo );
    for( auto pLiPastEnd(pLi + LineCount()) ; pLi < pLiPastEnd ; ++pLi ) {
@@ -109,9 +108,9 @@ void IdleIntegrityCheck() {
 #if DO_IDLE_FILE_VALIDATE
    auto errors( 0 );
    const auto next( CheckPFBUF( g_CurFBuf(), &errors ) );
-   if( next )
+   if( next ) {
       CheckPFBUF( next, &errors );
-
+      }
    if( errors ) {
       DBG( "idleCheck %d ERRORS ***********************************************", errors );
       ConIO::DbgPopf( "idleCheck detected %d ERRORS!!!", errors );
@@ -140,7 +139,6 @@ FBUF::~FBUF() {
 void FBUF::RemoveFBufOnly() {  // ONLY USE THIS AT SHUTDOWN TIME, or within private_RemovedFBuf()!
    0 && DBG( "%s %p", __func__, this );
    0 && DBG( "%s %s", __func__, this->Name() );
-
 #if FBUF_TREE
    rb_delete_node( g_FBufIdx, d_pRbNode );
 #else
@@ -149,11 +147,9 @@ void FBUF::RemoveFBufOnly() {  // ONLY USE THIS AT SHUTDOWN TIME, or within priv
    delete this;  // http://www.parashift.com/c++-faq-lite/delete-this.html
    }
 
-
 STIL PFBUF NewFbuf( stref filename, PPFBUF ppGlobalPtr ) { // this _IS_ the PFBUF constructor (separate for greppability)
    return new FBUF( filename, ppGlobalPtr );
    }
-
 
 PFBUF FBUF::AddFBuf( stref filename, PFBUF *ppGlobalPtr ) { 0 && DBG( "%s <- %" PR_BSR "", __func__, BSR(filename) );
    const auto pFBuf( NewFbuf( filename, ppGlobalPtr ) );
@@ -175,7 +171,6 @@ PFBUF FBOP::FindOrAddFBuf( stref filename, PFBUF *ppGlobalPtr ) {
          }
       return pFBuf;
       }
-
    return AddFBuf( filename, ppGlobalPtr );
    }
 
@@ -183,7 +178,6 @@ bool FBOP::PopFirstLine( std::string &st, PFBUF pFbuf ) {
    if( !pFbuf || pFbuf->LineCount() == 0 ) {
       return false;
       }
-
    pFbuf->DupRawLine( st, 0 );
    pFbuf->DelLine( 0 );
    return true;
@@ -235,7 +229,6 @@ void FBUF::MakeEmpty() {
    FBOP::PrimeRedrawLineRangeAllWin( this, 0, LineCount() );
    FreeLinesAndUndoInfo();
    InitUndoInfo();
-
    MakeEmptyAllViewsOntoFbuf( this );
    }
 
@@ -258,16 +251,12 @@ COL FBOP::MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom 
 class MaxIndentAccumulator {
    int      d_sampleCount;
    unsigned d_firstIndentAt[10];
-
 public:
-
    MaxIndentAccumulator() : d_sampleCount( 0 ) {
       memset( d_firstIndentAt, 0, sizeof(d_firstIndentAt) );
       }
-
    int addSample( sridx indent, bool fLastLine );
    };
-
 
 int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
    auto fSampled( false );
@@ -276,7 +265,6 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
       ++d_sampleCount;
       fSampled = true;
       }
-
    // periodically check for a clear winner
    //
    if( fLastLine || (1 && fSampled && ((d_sampleCount % 512) == 0)) ) {
@@ -303,7 +291,6 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
       best[0].val = milliQ[2];
       for( auto ix(3) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) {
          if( milliQ[ ix ] <
-
          }
      #endif
       // if fLastLine, we have limited information, so relax criteria
@@ -362,7 +349,6 @@ bool ARG::in() { // for debugging CalcIndent
 
 #endif
 
-
 bool FileStat::Refresh( int fd ) {
    // const auto fbytes( fio::SeekEoF( fh ) );
    struct_stat stat_buf;
@@ -411,17 +397,13 @@ void FBUF::SetLastFileStatFromDisk() {
    d_LastFileStat = GetFileStat( Name() );
    }
 
-
 #ifdef fn_su
-
 bool ARG::silentUpdate() {
    g_CurFBuf()->SetSilentUpdateMode();
    Msg( "SilentUpdateMode=on for current file" );
    return true;
    }
-
 #endif
-
 
 bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff file changed, false if not
    auto why( "newer" );
@@ -467,9 +449,7 @@ bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff 
 // VASL( these, {p1,p2} );
 // printlist( VASLPASS( name ) );
 
-
 #if 0  // might be useful for an assertion later?
-
 bool FbufKnown( PFBUF pThis ) {
    // BEWARE!  There is a possible RACE CONDITION for callers of this function!
    // It is comparing (but not deref'ing) a pointer to a FBUF memory block that
@@ -492,7 +472,6 @@ bool FbufKnown( PFBUF pThis ) {
       }
    return false;
    }
-
 #endif
 
 bool FBUF::private_RemovedFBuf() { // adjusts g_CurFBuf() as necessary: does NOT touch any View (caller must do this!)
@@ -509,7 +488,6 @@ bool FBUF::private_RemovedFBuf() { // adjusts g_CurFBuf() as necessary: does NOT
 // active window.  The file is moved to the top of the file instance list for
 // the active window (its file history).
 //
-
 PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->Name() );
    {
    bool fContentChanged;                            DB && DBG( "%s+ %s %sHasLines %sIsAutoRead", __func__, this->Name(), this->HasLines()?"":"!", this->IsAutoRead()?"":"!" );
@@ -533,18 +511,14 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
       const auto fSyncUpdated( this->SyncNoWrite() > 0 );
       fContentChanged = fSyncUpdated;
       }
-
    if( !fContentChanged && g_CurFBuf() == this ) {  // fileAlreadyHasView?
       Assert( g_CurView() && g_CurView()->FBuf() == this );
       return g_CurView();
       }
    DB && DBG( "%s is %s will be %s", __func__, g_CurFBuf()?g_CurFBuf()->Name():"", this->Name() );
-
    g_UpdtCurFBuf( this ); //##########################################################################
    // Assert( this == g_CurFBuf() );
-
    FBOP::CurFBuf_AssignMacros_RsrcLd(); // note that some assignments map to g_CurFBuf() so g_UpdtCurFBuf( this ) above is an absolute prerequisite
-
    if( fContentChanged ) {
       CalcIndent();
       if( d_TabWidth < 2 ) {
@@ -552,15 +526,10 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
          }
       }
    }
-
    const auto pCurView( this->PutFocusOnView() );
-
    DispNeedsRedrawCurWin();
-
    LuaCtxt_ALL::call_EventHandler( "GETFOCUS" );
-
    DB && DBG( "%s- %s", __func__, this->Name() );
-
    return pCurView;
    }
 
@@ -601,7 +570,6 @@ STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl
    if( rl.ends_with( "{" ) ) {                DB && DBG( "%s rl.ends_with( \"{\" )", __func__ );
       return xNonb + indent;
       }
-
    STATIC_VAR stref c_statement_names[] = {
       "if"       ,
       "else"     ,
@@ -614,14 +582,12 @@ STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl
       "struct"   ,
       "class"    ,
       };
-
    for( const auto &sr : c_statement_names ) {
       if( rl.starts_with( sr ) && (rl.length()==sr.length() || (rl.length()>sr.length() && !isalpha( rl[sr.length()]) ) ) ) {
          DB && DBG( "%s c_statement_names[%" PR_BSR "]", __func__, BSR(sr) );
          return xNonb + indent;
          }
       }
-
    DB && DBG( "%s eoFxn, -1", __func__ );
    return -1;
    }
@@ -660,7 +626,6 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) { // cursor has NOT been moved
    return rv;
    }
 
-
 bool ARG::noedit() {
    DispNeedsRedrawStatLn();
    if( !d_fMeta ) {
@@ -682,7 +647,6 @@ bool ARG::noedit() {
    if( !(g_CurFBuf()->FnmIsPseudo()) ) {
       g_CurFBuf()->ToglNoEdit();
       }
-
    // Returns
    //
    // True:  File or editor in no-edit mode; modification disallowed
@@ -724,7 +688,6 @@ bool ARG::sync() {
      #endif
       filesRefreshed += pFBuf->SyncNoWrite();
       }
-
    Msg( "sync: %d file%s refreshed", filesRefreshed, Add_s( filesRefreshed ) );
    return true;
    }
@@ -744,7 +707,6 @@ void WriteAllDirtyFBufs() {
      #endif
       saveCount += pFBuf->SyncWriteIfDirty_Wrote();
       }
-
    Msg( "Saved %d file%s", saveCount, Add_s( saveCount ) );
    }
 
@@ -758,11 +720,9 @@ STATIC_FXN bool RmvFileByName( stref filename ) {
    if( !pfToRm ) {
       return Msg( "no FBUF for '%" PR_BSR "'", BSR(filename) );
       }
-
    if( pfToRm->IsDirty() && !ConIO::Confirm( Sprintf2xBuf( "Forget DIRTY FBUF '%" PR_BSR "'?", BSR(filename) ) ) ) {
       return Msg( "Dirty FBUF not forgotten '%" PR_BSR "'", BSR(filename) );
       }
-
    const auto fDidRmv( DeleteAllViewsOntoFbuf( pfToRm ) );
    Msg( "%s FBUF '%" PR_BSR "'", fDidRmv ? "Forgot" : "COULDN'T FORGET", BSR(filename) );
    return fDidRmv;
@@ -778,7 +738,6 @@ STATIC_FXN bool RefreshCurFileIfMatchesPseudoName( PCChar pseudoName ) {
 bool ARG::refresh() {
    switch( d_argType ) {
     default:       return BadArg();
-
     case NOARG:    { PCF;
                    if(  pcf->FnmIsDiskWritable() // no confirm if WC file
                      && pcf->IsDirty()           // only confirm if DIRTY file
@@ -786,30 +745,25 @@ bool ARG::refresh() {
                      ) {
                       return false;
                       }
-
                    pcf->ReadDiskFileNoCreateFailed();
                    DispNeedsRedrawStatLn();
                    return true;
                    }
-
-    case NULLARG:  if( DLINK_NEXT( g_CurView(), dlinkViewsOfWindow ) == nullptr )
+    case NULLARG:  if( DLINK_NEXT( g_CurView(), dlinkViewsOfWindow ) == nullptr ) {
                       return fnMsg( "no alternate file" );
-
+                      }
                    if( !ConIO::Confirm( "Forget the current file (from all windows)?! " ) ) {
                       return false;
                       }
-
                    KillTheCurrentView();
                    DispNeedsRedrawAllLinesAllWindows();
                    SetWindowSetValidView( -1 );
                    return true;
-
     case TEXTARG:  {
                    const auto rv( RmvFileByName( d_textarg.pText ) );
                    RefreshCurFileIfMatchesPseudoName( szFiles );
                    return rv;
                    }
-
     case BOXARG:   //lint -fallthrough
     case LINEARG:  {
                    auto attemptCount( 0 );
@@ -836,7 +790,6 @@ int DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc ) {
          }
       ++pSrc;
       }
-
    *pLastNul = '\0';
    return pDest - rv; // strlen of resulting string
    }
@@ -853,13 +806,11 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
 
 STATIC_FXN stref is_content_diff( PCFBUF pFile ) {
    0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
-
    auto lnum(0);
    stref rl;
 #define  CHKL()       (rl=pFile->PeekRawLine( lnum ), lnum <= pFile->LastLine())
 #define  CMPL(kstr)   (rl.starts_with( kstr ))
 #define  NXTL()       (++lnum,CHKL())
-
    // from http://git-scm.com/docs/git-diff   search for "new file mode"
    STATIC_CONST char diff_[] = "diff ";
    STATIC_CONST char min_ [] = "--- ";
@@ -924,7 +875,6 @@ STATIC_FXN stref is_content_diff( PCFBUF pFile ) {
 #endif
    0 && DBG( "%s %s (%d) ? %s", __PRETTY_FUNCTION__, pFile->Name(), pFile->LineCount(), ok?"yes":"no" );
    return ok ? "diff" : "";
-
 #undef  CHKL
 #undef  NXTL
 #undef  CMPL
@@ -942,7 +892,6 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    return shebang;
    }
 
-
 /*
    20150906_110400 real WIP: need a general split stref into walkable/iterable strefs solution
                              split and match (all w/o touching heap)
@@ -952,12 +901,10 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
 */
 class stref_split_walk {
    const stref whole_thing;
-
 public:
    stref_split_walk( stref whole_thing_ ) : whole_thing( whole_thing_ ) {}
    stref next();
    };
-
 
 STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software/emacs/manual/html_node/emacs/Choosing-Modes.html
 #if 0 // following WORKS, except  isolate "mode: param"  functionality has not been written (pending impl of stref_split_walk etc.)
@@ -973,7 +920,6 @@ STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software
    if( 0 == rv.length() ) {
       return rv;
       }
-
    stref mode_delim( "-*-" );
    const auto first( rv.find( mode_delim ) );
    if( first != eosr ) {
@@ -987,7 +933,6 @@ STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software
 #endif
    return "";
    }
-
 
 STATIC_FXN stref content_to_ftype( PCFBUF pfb ) {
    typedef stref (*content_deducer_t)( PCFBUF pfb );
@@ -1133,7 +1078,7 @@ STATIC_FXN Path::str_t xlat_fnm( PCChar pszName ) {
    if( rv.empty() ) {
       ErrorDialogBeepf( "Cannot access %s - %s", pszName, strerror( errno ) );
       const auto fb( FindFBufByName( pszName ) );
-      if( fb )  DeleteAllViewsOntoFbuf( fb );
+      if( fb ) { DeleteAllViewsOntoFbuf( fb ); }
       }
    return rv;
    }
@@ -1151,9 +1096,9 @@ STATIC_FXN Path::str_t xlat_fnm( PCChar pszName ) {
 PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heavily patterned after fChangeFile, but w/o reliance on global vars
                                                                  DP && DBG( "OFND+     '%s'", pszName );
    const auto fnamebuf( xlat_fnm( pszName ) );
-   if( fnamebuf.empty() )
+   if( fnamebuf.empty() ) {
       return nullptr;
-
+      }
    auto pFBuf( FindFBufByName( fnamebuf ) );
    CPCChar pFnm( fnamebuf.c_str() );                             DP && DBG( "OFND xlat='%s'", pFnm );
    if( !pFBuf ) {
@@ -1162,8 +1107,7 @@ PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heav
          if( !fa.Exists() ) {
             if( fCreateOk ) {
                goto ADD_FBUF;
-               }
-                                                                 DP && DBG( "OFND! NoD '%s'", pFnm );
+               }                                                 DP && DBG( "OFND! NoD '%s'", pFnm );
             Msg( "File '%s' does not exist", pFnm );
             return nullptr;
             }
@@ -1175,7 +1119,6 @@ PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heav
 ADD_FBUF:
       pFBuf = AddFBuf( pFnm );
       }
-
    if( !pFBuf->HasLines() && pFBuf->ReadDiskFileAllowCreateFailed( fCreateOk ) ) {
                                                                  DP && DBG( "OFND! !rd '%s'", pFnm );
       DeleteAllViewsOntoFbuf( pFBuf );
@@ -1218,12 +1161,10 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
    return true;
    }
 
-
 bool ARG::popd() { // arg "_sdup" _spush arg "fn" _spush arg _spop _spop msearch
    std::string ts;
    return FBOP::PopFirstLine( ts, g_pFBufCwd ) ? fChangeFile( ts.c_str(), false ) : ErrPause( "empty cwd stack" );
    }
-
 
 // The fChangeFile function changes the current file, drive, or directory to
 // the specified pszName and returns true if successful.
@@ -1235,7 +1176,6 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "
    if( fnamebuf.empty() ) {  DP && DBG( "%s- xlat_fnm FAIL '%s'", __func__, pszName );
       return false;
       }
-
    CPCChar pFnm( fnamebuf.c_str() );
    auto pFBuf( FindFBufByName( fnamebuf ) );     DP && DBG( "%s '%s' -->PFBUF %p", __func__, pFnm, pFBuf );
    if( !pFBuf ) {
@@ -1254,7 +1194,6 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "
    DP && DBG( "%s- PutFocusOn=%c '%s'", __func__, rv?'t':'f', pszName );
    return rv; // pFBuf == g_CurFBuf() == g_CurView()->FBuf()
    }
-
 
 //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1317,7 +1256,6 @@ void FBUF::BlankAnnoDispSrcEdge( int cause, bool fReveal ) {
    // always de/assert the source
    if( fReveal ) { d_BlankAnnoDispSrcAsserted |=  cause; }
    else          { d_BlankAnnoDispSrcAsserted &= ~cause; }
-
    const auto wantReveal( 0 != (d_BlankAnnoDispSrcAsserted & (g_iBlankAnnoDispSrcMask | BlankDispSrc_USER_ALWAYS)) );
    const auto revealedBefore( d_fRevealBlanks );
    d_fRevealBlanks = wantReveal; // update even if not currently being viewed
@@ -1383,15 +1321,12 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       FBufRead_Wildcard( this );
       return true;
       }
-
    if( FnmIsPseudo() ) {                                       0 && DBG( "%s+ %s' FnmIsPseudo", FUNC, Name() );
       return ReadPseudoFileOk( this );
       }
-
    if( !FnmIsDiskWritable() ) {
       return Msg( "%s failed! FnmIs!DiskWritable", __func__ );
       }
-
   #if defined(_WIN32)
    // scenario: WinNT filesystems are case-preserving but case-insensitive
    // user edits file in K, then later renames it, changing only case of name
@@ -1403,24 +1338,18 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
   #else
    // Linux filesys is case-sensitive so this scenario cannot happen
   #endif
-
    //###########  disk file read !!!
-
    rdNoiseOpen();
-
    DisplayNoiseBlanker dblank;
-
    int hFile;
    if( fio::OpenFileFailed( &hFile, Name(), false ) ) {
       if( errno != ENOENT ) {
          return Msg( "Cannot open %s - %s", Name(), strerror( errno ) );
          }
-
       if( Namesr().starts_with( "/tmp/" ) ) {
          DBG( "FRd! not creating /tmp/ file" );
          return false;
          }
-
       if(    !fAllowDiskFileCreate
          || (!fCreateSilently && !ConIO::Confirm( Sprintf2xBuf( "%s does not exist. Create? ", Name() ) ))
         ) {
@@ -1428,19 +1357,15 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          DBG( "FRd! user denied create" );
          return false;
          }
-
       if( fio::OpenFileFailed( &hFile, Name(), false, DFLT_TEXTFILE_CREATE_MODE ) )
          return Msg( "Cannot create %s - %s", Name(), strerror( errno ) );
-
       VR_( DBG( "FRd: created newfile '%s'", Name() ); )
-
       std::string tmp;
       PutLine( 0, "", tmp );
       }
    else {
       if( ReadDiskFileFailed( hFile ) ) {
          DBG( "FRd! ReadDiskFile failed" );
-
          //---------------------------------------------------------------------
          // This is a little wierd.  While creating and testing the
          // EdKC_EVENT_ProgramGotFocus handling code, I encountered a problem
@@ -1460,25 +1385,19 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          // this blank screen IS NOT a actual representation of the disk file.
          //
          // 20070309 kgoodwin
-
          PutLastLine( "*** The last attempt to read this file from disk FAILED!!! ***" );
          UnDirty();  // MUST do this otherwise the refresh inserts a prompt
          //---------------------------------------------------------------------
-
          FlushKeyQueuePrimeScreenRedraw();
          fio::Close( hFile );
          return false;
          }
       // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
       DialogLddFile( Name(), d_cbOrigFileImage );
-
       VR_( DBG( "FRd: VMRead done" ); )
       }
-
    fio::Close( hFile );
-
    ClrNoEdit();
-
   #if defined(_WIN32)
    if( IsFileReadonly( Name() ) ) {
       VR_( DBG( "FRd: is RO_FILE" ); )
@@ -1492,22 +1411,18 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       SetDiskRW();
       }
   #endif
-
    SetLastFileStatFromDisk();
-
    VR_( DBG( "FRd- OK" ); )
    return true;
    }
 
 bool FBUF::ReadOtherDiskFileNoCreateFailed( PCChar pszName ) {
    rdNoiseOpen();
-
    int hFile;
    if( fio::OpenFileFailed( &hFile, pszName, false ) ) {
       ErrorDialogBeepf( "%s does not exist", pszName );
       return true;
       }
-
    const auto failed( ReadDiskFileFailed( hFile ) );
    fio::Close( hFile );
    return failed;
@@ -1538,9 +1453,7 @@ PCChar swixBackup( stref param ) {
    return nullptr;
    }
 
-
 enum { VERBOSE_WRITE = 1 };
-
 STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
    VERBOSE_WRITE && DBG( "FWr: bkup[%s] start d='%s'", kszBackupMode( backupMode ), fnmToBkup );
    switch( backupMode ) {
@@ -1560,11 +1473,11 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                     #endif
                      if( !MoveFileOk( fnmToBkup, BAK_FileNm.c_str() ) ) {
                         const auto emsg( strerror( errno ) );
-                        if( FileOrDirExists( fnmToBkup ) )
+                        if( FileOrDirExists( fnmToBkup ) ) {
                            return Msg( "Can't rename %s to %s - %s", fnmToBkup, BAK_FileNm.c_str(), emsg );
+                           }
                         }
                      } break;
-
     case bkup_UNDEL: // The old file is moved to a child directory.  The number of copies saved is
                      { VERBOSE_WRITE && DBG( "FWr: bkup_UNDEL" ); // specified by the Undelcount switch.
                      const auto rc( SaveFileMultiGenerationBackup( fnmToBkup ) );
@@ -1580,14 +1493,14 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                      VERBOSE_WRITE && DBG( "FWr: bkup_NONE" );
                      if( !unlinkOk( fnmToBkup ) ) {
                         const auto emsg( strerror( errno ) );
-                        if( FileOrDirExists( fnmToBkup ) )
+                        if( FileOrDirExists( fnmToBkup ) ) {
                            return Msg( "Can't delete %s - %s", fnmToBkup, emsg );
+                           }
                         }
                      break;
     }
    return true;
    }
-
 
 bool FBUF::write_to_disk( PCChar destFileNm ) {
    // BUGBUG there are security-hazard file/directory race conditions to be found here!
@@ -1619,61 +1532,51 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    // copy-based backup algorithm above.
    //
    PChar pStream = strchr( destFnm+3, ':' );
-   if( pStream )  *pStream = '\0';
+   if( pStream ) { *pStream = '\0'; }
   #endif
-
   #if defined(_WIN32)
    {
    FileAttribs dest( destFnm.c_str() );
    if( dest.Exists() && dest.IsReadonly() ) {
       if(   ConIO::Confirm( Sprintf2xBuf( "File '%s' is readonly; overwrite anyway?", destFnm.c_str() ) )
          && dest.MakeWritableFailed( destFnm.c_str() )
-        )
+        ) {
          return Msg( "Could not make '%s' writable!", destFnm.c_str() );
-
+         }
       if( IsFileReadonly( destFnm.c_str() ) ) {
          return Msg( "'%s' is not writable", destFnm.c_str() );
          }
       }
    }
   #endif
-
    const auto tmpFnm( Path::Union( ".$k$", destFnm.c_str() ) );
    DisplayNoiseBlanker dblank;
-
    extern bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName );
    if( !FBUF_WriteToDiskOk( this, tmpFnm.c_str() ) ) {
       return false;
       }
    d_tmLastWrToDisk = time( nullptr ); // note this is not == stat mtime, thus not comparable to same
-
    wrNoiseBak();
-
    const auto abs_dest( Path::Absolutize( destFnm.c_str() ) );
    if( !backupOldDiskFile( abs_dest.c_str(), d_backupMode==bkup_USE_SWITCH ? g_iBackupMode : d_backupMode ) ) {
       unlinkOk( tmpFnm.c_str() );
       return false;
       }
-
    wrNoiseRenm();
-
    if( !MoveFileOk( tmpFnm.c_str(), destFnm.c_str() ) ) {
       Msg( "Can't rename %s to %s - %s", tmpFnm.c_str(), destFnm.c_str(), strerror( errno ) );
       unlinkOk( tmpFnm.c_str() );
       return false;
       }
-
    if( !NameMatch( destFnm ) ) {
       ChangeName( destFnm.c_str() );
       }
-
   #if defined(_WIN32)
    SetDiskRW(),
   #endif
    UnDirty(), SetLastFileStatFromDisk(); DispNeedsRedrawStatLn();
    return !Msg( "Saved  %s", Name() ); // xtra spc to match Msg( "Saving %s" ... above
    }
-
 
 void FBUF::ChangeName( stref newName ) { // DBG( "%s %" PR_BSR "'", __func__, BSR(newName) );
    d_filename.assign( newName.data(), newName.length() ); // THE ONLY PLACE where FBUF::d_filename is changed!!!
@@ -1688,28 +1591,21 @@ bool FBUF::WriteToDisk( PCChar pszSavename ) {
          return Msg( "Cannot resolve '%s'", pszSavename );
          }
       }
-
    const auto fFnmChanging( dest[0] && !NameMatch( dest ) );
    Path::str_t pseudoFnm;
    PPFBUF gp( nullptr );  // if it has a gp, it is a pseudo file
-   if( !fFnmChanging )             dest      = Name();
-   else if( (gp=GetGlobalPtr()) )  pseudoFnm = Name();  // if it is a pseudo file w/a gp, it needs to hang around
-
+   if( !fFnmChanging )            { dest      = Name(); }
+   else if( (gp=GetGlobalPtr()) ) { pseudoFnm = Name(); } // if it is a pseudo file w/a gp, it needs to hang around
    if( fFnmChanging ) { VERBOSE_WRITE && DBG( "FWr+ %s -> %s", Name(), dest.c_str() ); }
    else               { VERBOSE_WRITE && DBG( "FWr+ %s", Name() );                           }
-
    if( !FnmIsDiskWritable() && !fFnmChanging ) { // unwritable FBUF not being saved to alt file?
       return Msg( "Can't save pseudofile to disk under it's own name; use 'arg arg \"diskname\" setfile'" );
       }
-
    VERBOSE_WRITE && DBG( "FWr: dst=%s", dest.c_str() );
-
    if( IsDir( dest.c_str() ) ) {
       return Msg( "Cannot write '%s'; directory in the way", dest.c_str() );
       }
-
    VERBOSE_WRITE && DBG( "FWr: A" );
-
    const auto saveOk( write_to_disk( dest.c_str() ) );
    if( 0 ) {
       struct_stat stat_buf;
@@ -1719,7 +1615,6 @@ bool FBUF::WriteToDisk( PCChar pszSavename ) {
          ConIO::DbgPopf( "write_to_disk() leaked!  '%s' does NOT exist (or is 0 bytes) on disk !!!", dest.c_str() );
          }
       }
-
    if( saveOk && gp ) { // a FBUF having a GlobalPtr (which by defn WAS a pseudofile) has been saved under a new name?
                         // must create a new FBUF having the old name, and point the GlobalPtr at it
       UnsetGlobalPtr(); // no GlobalPtr associated with 'this' anymore
@@ -1732,34 +1627,27 @@ bool FBUF::SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation ) {
    if( pszNewName[0] == '\0' ) {
       return Msg( "new filename is empty?" );
       }
-
    const auto filenameBuf( CompletelyExpandFName_wEnvVars( pszNewName ) );
    {
    auto pDupFBuf( FindFBufByName( filenameBuf ) );
    if( pDupFBuf && pDupFBuf == this ) {
       return Msg( "current filename and new filename are same; nothing done" );
       }
-
    if( fNeedUserConfirmation && !ConIO::Confirm( Sprintf2xBuf( "Do you want to save this file as %s ?", filenameBuf.c_str() ) ) ) {
       FlushKeyQueuePrimeScreenRedraw();
       return false;
       }
-
    if( pDupFBuf ) {
       if( pDupFBuf->IsDirty() && !ConIO::Confirm( "You are currently editing the new-named file in a different buffer!  Destroy edits?!" ) ) {
          return false;
          }
-
       pDupFBuf = pDupFBuf->ForciblyRemoveFBuf();
       }
    }
-
    if( !WriteToDisk( filenameBuf.c_str() ) ) { DBG( "%s: WriteToDisk( '%s' -> '%s' ) FAILED?", __func__, Name(), filenameBuf.c_str() );
       return false;
       }
-
    SetRememberAfterExit();
-
    0 && DBG( "%s: wrote( '%s' -> '%s' ) OK", __func__, Name(), filenameBuf.c_str() );
    return true;
    }
@@ -1770,22 +1658,18 @@ STATIC_FXN bool IfOnlyOneFilespecInCurWcFileSwitchToIt() {
    if( pFBuf->LineCount() != 1 ) {
       return true;
       }
-
    Path::str_t fnm;
    if( pFBuf->GetLineIsolateFilename( fnm, 0, 0 ) < 1 ) { // read first line from pseudofile
       return Msg( "GetLineIsolateFilename(0) failed!" );
       }
-
    const auto pFn( fnm.c_str() );
    if( IsDir( pFn ) ) {
       return true;
       }
-
    const auto new_pFbuf( OpenFileNotDir_NoCreate( pFn ) );  // switch to the only file
    if( !new_pFbuf ) {
       return Msg( "Failure switching to top file!" );
       }
-
    new_pFbuf->PutFocusOn();
    DeleteAllViewsOntoFbuf( pFBuf );  // zap the wildcard pseudofile so it can't go on-screen
    return !Msg( "There was only one match: you're looking at it!" );
@@ -1832,14 +1716,12 @@ namespace BufdWr { // BufdWr "mini module"
       }
    };
 
-
 STATIC_FXN bool FileWrErr( int hFile_Write, PCChar pszDestName, PCChar Dialog_fmtstr ) {
    fio::Close( hFile_Write );
    unlinkOk( pszDestName );
    if( Dialog_fmtstr ) {
       Msg( Dialog_fmtstr, pszDestName );
       }
-
    FlushKeyQueuePrimeScreenRedraw();
    return false;
    }
@@ -1858,9 +1740,7 @@ bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hid
      ) {
       return Msg( "Cannot open or create %s - %s", pszDestName, strerror( errno ) );
       }
-
    wrNoiseWrite();
-
    const auto fForced( g_fForcePlatformEol && pFBuf->EolMode() != platform_eol );
    if( fForced ) {
       pFBuf->SetEolModeChanged( platform_eol );
@@ -1869,9 +1749,7 @@ bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hid
    PCChar pszEolStr;  size_t eolStrlen;
    if( pFBuf->EolMode() == EolLF ) { STATIC_CONST char   lf[] =     "\x0A"; pszEolStr = lf  ; eolStrlen = KSTRLEN(lf  ); DB&&DBG( "%s w/LF%s"  , __func__, fForced ? " forced":"" ); }
    else                            { STATIC_CONST char crlf[] = "\x0D\x0A"; pszEolStr = crlf; eolStrlen = KSTRLEN(crlf); DB&&DBG( "%s w/CRLF%s", __func__, fForced ? " forced":"" ); }
-
    BufdWr::ResetVars();
-
    auto maxLine( pFBuf->LineCount() );
    if( !g_fTrailLineWrite ) {
       while( maxLine > 0 ) {
@@ -1879,10 +1757,8 @@ bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hid
             break;
             }
          }
-
       ++maxLine;
       }
-
    for( auto yLine( 0 ); yLine < maxLine; ++yLine ) {
       if( ExecutionHaltRequested() ) {
          return FileWrErr( hFile_Write, pszDestName, "User break writing '%s'" );
@@ -1894,18 +1770,14 @@ bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hid
          return FileWrErr( hFile_Write, pszDestName, ExecutionHaltRequested() ? "User break writing '%s'" : "Out of space on '%s'" );
          }
       }
-
-   if( BufdWr::FlushFailed( hFile_Write ) )
+   if( BufdWr::FlushFailed( hFile_Write ) ) {
       return FileWrErr( hFile_Write, pszDestName, ExecutionHaltRequested() ? "User break writing '%s'" : "Out of space on '%s'" );
-
+      }
    fio::Fsync( hFile_Write );
    fio::Close( hFile_Write );
-
    DB&&DBG( "disk-wrote '%s'", pszDestName );
-
    return true;
    }
-
 
 //
 //  Setfile
@@ -2047,46 +1919,39 @@ bool ARG::shex() {
 bool ARG::setfile() {
    MainThreadPerfCounter pc;
    Path::str_t fnm;
-
    switch( d_argType ) {
     default:      return BadArg(); //--------------------------------------------
-
     case NOARG:   {
                   const auto nxtvw( DLINK_NEXT( g_CurView(), dlinkViewsOfWindow ) );
-                  if( !nxtvw ) return fnMsg( "no alternate file" );
+                  if( !nxtvw ) { return fnMsg( "no alternate file" ); }
                   fnm = nxtvw->FBuf()->Namestr();
                   } break; //-------------------------------------------------------
-
     case NULLARG: if( d_cArg > 1 ) {
-                     if( !d_fMeta && d_cArg >= 3 )                 return fExecute( "wrstatefile saveall" );
-                     if( d_cArg == 2 && !g_CurFBuf()->IsDirty() )  return !fnMsg( "current file not dirty" );
+                     if( !d_fMeta && d_cArg >= 3 )                { return fExecute( "wrstatefile saveall" );  }
+                     if( d_cArg == 2 && !g_CurFBuf()->IsDirty() ) { return !fnMsg( "current file not dirty" ); }
                      return g_CurFBuf()->WriteToDisk() == false;   // *** 'arg arg setfile' saves current file to disk
                      }
-
-                  if( g_CurFBuf()->GetLineIsolateFilename( fnm, d_nullarg.cursor.lin, d_nullarg.cursor.col ) < 1 ) // read first line from pseudofile
+                  if( g_CurFBuf()->GetLineIsolateFilename( fnm, d_nullarg.cursor.lin, d_nullarg.cursor.col ) < 1 ) { // read first line from pseudofile
                      return false;
+                     }
                   break; //-------------------------------------------------------
-
     case TEXTARG: if( d_cArg >= 2 ) { // save file with new name, pFBuf takes on new name identity
-                     if( !FnmIsLogicalWildcard( d_textarg.pText ) )
+                     if( !FnmIsLogicalWildcard( d_textarg.pText ) ) {
                         return RenameCurFileOk( d_textarg.pText, !d_fMeta );
-
+                        }
                      // ADD TBD special handling for wildcard specs when d_cArg >= 2
                      }
                   fnm = d_textarg.pText;
                   break; //-------------------------------------------------------
     }
    0 && DBG( "%s: %s", __func__, fnm.c_str() );
-
    if( d_argType != NOARG ) { // for NOARG we HAVE a definitive name, skip the following reinterpretations
       if( LuaCtxt_Edit::ExecutedURL( fnm.c_str() ) ) { // WINDOWS-ONLY HOOK
          return true;
          }
-
       LuaCtxt_Edit::ExpandEnvVarsOk( fnm );
       SearchEnvDirListForFile( fnm, true );
       }
-
    const auto rv( fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( fnm.c_str() ) );
    DBG( "### %s t=%9.6f %s", __func__, pc.Capture(), fnm.c_str() );
    0 && DBG( "%s: %s", __func__, fnm.c_str() );

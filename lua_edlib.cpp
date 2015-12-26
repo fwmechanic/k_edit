@@ -25,8 +25,8 @@
 //####  lh_ = my Lua Helper functions
 
 STATIC_FXN int lh_rtnStrOrNil( lua_State *L, PCChar src ) {
-   if( src )  lua_pushstring( L, src );
-   else       lua_pushnil( L );
+   if( src ) { lua_pushstring( L, src ); }
+   else      { lua_pushnil( L );         }
    return 1;
    }
 
@@ -122,7 +122,6 @@ LUAFUNC_(Path_FnameExt) { const auto rv( Path::RefFnameExt( S_(1) ) ); R_lstr( r
 LUAFUNC_(GetChildDirs) {
    lua_newtable(L);  // result
    DirListGenerator dlg;
-
    Path::str_t xb;
    for( int tblIdx=1 ; dlg.VGetNextName( xb ) ; ++tblIdx ) {
       lua_pushstring( L, xb.c_str() );
@@ -130,6 +129,7 @@ LUAFUNC_(GetChildDirs) {
       }
    return 1;  // return the table
    }
+
 LUAFUNC_(Get_SearchCaseSensitive)      { R_bool( g_fCase ); }
 LUAFUNC_(Getenv)      { return lh_rtnStr(      L, getenv( S_(1) ) ); }
 LUAFUNC_(GetenvOrNil) { return lh_rtnStrOrNil( L, getenv( S_(1) ) ); }
@@ -155,17 +155,13 @@ LUAFUNC_(valueof)     {  0 && DBG( "%s: '%s'", __func__, S_(1) );
 
 #define  ROUNDUP_TO_NEXT_POWER2( val, pow2 )  ((val + ((pow2)-1)) & ~((pow2)-1))
 
-
 LUAFUNC_(IsFile)  { R_bool( IsFile( S_(1) ) ); }
 LUAFUNC_(IsDir)   { R_bool( IsDir(  S_(1) ) ); }
 
-
 LUAFUNC_(SleepMs)   { SleepMs( U_(1) ); RZ; }
-
 
 //------------------------------------------------------------------------------
 typedef PCChar (*TLuaSplitFxn)( PCChar pszToSearch, PCChar pszToSearchFor, int *matchLen );
-
 
 STATIC_FXN PCChar StrToNextOrEos_( PCChar pszToSearch, PCChar pszToSearchFor, int *matchLen ) {
    *matchLen = 1;
@@ -178,10 +174,8 @@ STATIC_FXN PCChar FindStr_( PCChar pszToSearch, PCChar pszToSearchFor, int *matc
       *matchLen = Strlen( pszToSearchFor );
       return match;
       }
-
    return Eos( pszToSearch );
    }
-
 
 // BUGBUG - if SPLIT_RTNS_TABLE == 0, lua_split_ could return a potentially
 //          unlimited number of values (on the stack), and Lua has a fixed stack
@@ -193,7 +187,6 @@ STATIC_FXN int lua_split_rtn_mult( lua_State *L, TLuaSplitFxn sf ) {
    auto strToSplit = S_(1);
    auto sep = S_(2);
    int    i   = 1;
-
    // repeat for each separator
    PCChar pastEnd;
    int sepLen(0);
@@ -202,10 +195,8 @@ STATIC_FXN int lua_split_rtn_mult( lua_State *L, TLuaSplitFxn sf ) {
       ++i;
       strToSplit = pastEnd + sepLen;  // skip separator
       }
-
    // push last substring
    lua_pushstring( L, strToSplit );
-
    0 && DBG( "%s rtns %d", __func__, i );
    return i;  // return number of strings pushed
    }
@@ -214,9 +205,7 @@ STATIC_FXN int lua_split_rtn_tbl( lua_State *L, TLuaSplitFxn sf ) {
    auto strToSplit = S_(1);
    auto sep = S_(2);
    auto i   = 1;
-
    lua_newtable(L);  // result
-
    // repeat for each separator
    PCChar pastEnd;
    int sepLen(0);
@@ -226,17 +215,14 @@ STATIC_FXN int lua_split_rtn_tbl( lua_State *L, TLuaSplitFxn sf ) {
       ++i;
       strToSplit = pastEnd + sepLen;  // skip separator
       }
-
    // push last substring
    lua_pushstring( L, strToSplit );
    lua_rawseti( L, -2, i );
-
    return 1;  // return the table
    }
 
 LUAFUNC_(split_ch)      { return lua_split_rtn_mult( L, StrToNextOrEos_ ); }
 LUAFUNC_(split_ch_tbl)  { return lua_split_rtn_tbl(  L, StrToNextOrEos_ ); }
-
 LUAFUNC_(split_str)     { return lua_split_rtn_mult( L, FindStr_ );        }
 LUAFUNC_(split_str_tbl) { return lua_split_rtn_tbl(  L, FindStr_ );        }
 
@@ -251,9 +237,9 @@ STATIC_FXN PChar nib2bitstr_( PChar p5, int nib ) {
 
 LUAFUNC_(hexstr2bitstr) {
    auto inst = S_(1);
-   if( inst[0] == '0' && tolower(inst[1]) == 'x' ) inst += 2; // skip redundant "hex prefix"
+   if( inst[0] == '0' && tolower(inst[1]) == 'x' ) { inst += 2; } // skip redundant "hex prefix"
    const int xdigits( consec_xdigits( inst ) );
-   if( 0 == xdigits ) luaL_error(L, "string '%s' contains no leading hexits", inst);
+   if( 0 == xdigits ) { luaL_error(L, "string '%s' contains no leading hexits", inst); }
    luaL_Buffer lb; luaL_buffinit(L, &lb);
    for( int ix=0; ix < xdigits; ++ix ) {
       const U8 ch( tolower( inst[ix] ) );
@@ -270,10 +256,9 @@ STATIC_CONST char b2x[] = { '0','1','2','3','4','5','6','7','8','9','A','B','C',
 LUAFUNC_(bitstr2hexstr) {
    auto inst = S_(1);
    luaL_Buffer b; luaL_buffinit(L, &b);
-   if( inst[0] == '0' && tolower(inst[1]) == 'b' ) inst += 2; // skip redundant "bin prefix"
+   if( inst[0] == '0' && tolower(inst[1]) == 'b' ) { inst += 2; } // skip redundant "bin prefix"
    const auto bdigits( consec_bdigits( inst ) );
    const auto outchars( (bdigits / 4) + ((bdigits % 4) != 0) );
-
    const PChar outbuf = PChar( alloca( outchars+1 ) );
    outbuf[outchars] = '\0';
    auto pb = outbuf + outchars;
@@ -288,8 +273,9 @@ LUAFUNC_(bitstr2hexstr) {
          bits = bbuf = 0;
          }
       }
-   if( bits > 0 )
+   if( bits > 0 ) {
       *(--pb) = b2x[bbuf];
+      }
    Assert( pb >= outbuf );
    R_str( outbuf );
    }
@@ -304,11 +290,9 @@ LUAFUNC_(enqueue_compile_jobs) {
       0 && DBG( "%s", pCmd );
       sl.push_front( pCmd );
       }
-
    CompilePty_CmdsAsyncExec( sl, true );
    RZ;
    }
-
 
 STATIC_CONST char KevinsMetatable_FBUF[] = "KevinsMetatable.FBUF";
 struct lua_FBUF { PFBUF pFBuf; };
@@ -317,9 +301,9 @@ STATIC_FXN int l_FBUF_function_getmetatable( lua_State *L ) {
    luaL_getmetatable( L, KevinsMetatable_FBUF );
    return 1;
    }
+
 int l_construct_FBUF( lua_State *L, PFBUF pFBuf ) {
    if( !pFBuf ) { R_nil(); }
-
    const auto ud( static_cast<lua_FBUF *>( lua_newuserdata( L, sizeof( lua_FBUF ) ) ) );
    ud->pFBuf = pFBuf;
    l_FBUF_function_getmetatable( L );
@@ -503,7 +487,6 @@ STATIC_FXN int l_Win_function_getmetatable( lua_State *L ) {
    }
 int l_construct_Win( lua_State *L, PWin pWin ) {
    if( !pWin ) { R_nil(); }
-
    const auto ud( static_cast<lua_Win *>( lua_newuserdata( L, sizeof( lua_Win ) ) ) );
    ud->pWin = pWin;
    l_Win_function_getmetatable( L );
@@ -514,7 +497,6 @@ int l_construct_Win( lua_State *L, PWin pWin ) {
 int l_construct_Win( lua_State *L, int winIdx ) {
    return l_construct_Win( L, winIdx >= 0 && winIdx < g_iWindowCount() ? g_WinWr( winIdx ) : 0 );
    }
-
 
 // FBUF_(PutFocusOn)  // Note that Win ctor is a FBUF _method_
 //    {
@@ -538,10 +520,11 @@ STATIC_FXN int l_Win_function_getn( lua_State *L ) { return l_construct_Win( L, 
 
 STATIC_FXN int l_Win_function_by_filename( lua_State *L ) { // Beware!  There MAY BE more than one window onto a given file
    auto pFnm = S_(1);
-   for( auto ix(0) ; ix < g_iWindowCount(); ++ix )
-      if( g_Win( ix )->ViewHd.front()->FBuf()->NameMatch( pFnm ) )
+   for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
+      if( g_Win( ix )->ViewHd.front()->FBuf()->NameMatch( pFnm ) ) {
          return l_construct_Win( L, ix );
-
+         }
+      }
    R_nil();
    }
 
@@ -560,7 +543,6 @@ LUAFUNC_(SplitCurWnd) {
          return l_construct_Win( L, rv );
          }
       }
-
    R_nil();
    }
 
@@ -760,7 +742,6 @@ void l_SetEditorGlobalsInts( lua_State *L ) {
       { "MACROFUNC"   , MACROFUNC  },
       { "MAXCOL"      , COL_MAX    },
    };
-
    for( const auto &pE : intVals ) { 0 && DBG_LUA && DBG( "%s *** loading %s ***", __func__, pE.name );
       setglobal( L, pE.name, pE.value );
       }
@@ -809,7 +790,6 @@ STATIC_FXN void l_register_Win_object( lua_State *L ) {
 //    { "__ge", l_Win_mmethod__ge },
       { 0 , 0 }
       };
-
    STATIC_CONST luaL_reg methods[] = {
       #define  LUA_FUNC_I( func )   { #func, l_Win_method_##func },
       LUA_FUNC_I(CurFBUF)
@@ -819,7 +799,6 @@ STATIC_FXN void l_register_Win_object( lua_State *L ) {
       #undef   LUA_FUNC_I
       { 0 , 0 }
       };
-
    STATIC_CONST luaL_reg functions[] = {
       { "getmetatable" , l_Win_function_getmetatable },
       { "cur"          , l_Win_function_cur         },
@@ -827,10 +806,8 @@ STATIC_FXN void l_register_Win_object( lua_State *L ) {
       { "by_filename"  , l_Win_function_by_filename },
       { 0 , 0 }
       };
-
    l_register_class( L, "Win", KevinsMetatable_Win, metamethods, functions, methods );
    }
-
 
 STATIC_FXN void l_register_View_object( lua_State *L ) {
    STATIC_CONST luaL_reg methods[] = {
@@ -847,16 +824,13 @@ STATIC_FXN void l_register_View_object( lua_State *L ) {
       #undef   LUA_FUNC_I
       { 0 , 0 }
       };
-
    STATIC_CONST luaL_reg functions[] = {
       { "getmetatable", l_View_function_getmetatable },
       { "cur"         , l_View_function_cur          },
       { 0 , 0 }
       };
-
    l_register_class( L, "View", KevinsMetatable_View, 0, functions, methods );
    }
-
 
 STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
    STATIC_CONST luaL_reg methods[] = {
@@ -921,11 +895,9 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       LUA_FUNC_I(TrailSpcsKept)
       LUA_FUNC_I(UnDirty)
       LUA_FUNC_I(cat)
-
       #undef   LUA_FUNC_I
       { 0 , 0 }
       };
-
    STATIC_CONST luaL_reg functions[] = {
       { "getmetatable"    , l_FBUF_function_getmetatable },
       { "new"             , l_FBUF_function_new     },
@@ -935,10 +907,8 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       { "log"             , l_FBUF_function_getlog  },
       { 0 , 0 }
       };
-
    l_register_class( L, "FBUF", KevinsMetatable_FBUF, 0, functions, methods );
    }
-
 
 void l_register_Editor_objects( lua_State *L ) {
    typedef void (* objReg) (lua_State *L);
@@ -947,12 +917,10 @@ void l_register_Editor_objects( lua_State *L ) {
       , l_register_View_object
       , l_register_Win_object
       };
-
    for( const auto &mlo : myLuaObjects ) {
       mlo( L );
       }
    }
-
 
 void l_register_EdLib( lua_State *L ) {
    l_SetEditorGlobalsInts   ( L );

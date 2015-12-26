@@ -36,9 +36,9 @@ PChar GetenvStrdup( PCChar pStart, size_t len ) {
 
 PChar GetenvStrdup( PCChar pszEnvName ) {
    auto penv( getenv( pszEnvName ) );
-   if( penv )
+   if( penv ) {
        penv = Strdup( penv );
-
+       }
    return penv;
    }
 
@@ -52,9 +52,9 @@ STATIC_VAR struct {
 
 PFBUF PseudoBuf( ePseudoBufType pseudoBufType, int fNew ) {
    auto &selNum( pseudoBufInfo[ pseudoBufType ].counter );
-   if( fNew )
+   if( fNew ) {
       ++selNum;
-
+      }
    return OpenFileNotDir_NoCreate( FmtStr<20>( "<%s.%u>", pseudoBufInfo[ pseudoBufType ].name, selNum ) );
    }
 

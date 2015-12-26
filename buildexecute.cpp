@@ -53,7 +53,6 @@ void ClearArgAndSelection() { PCV;
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
    pcv->FreeHiLiteRects();
    s_SelEnd.lin = -1;
-
    if( g_iArgCount ) {
       0 && DBG( "ClearArgAndSelection()+" );
    //      MoveCursor
@@ -96,7 +95,6 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
                }
             }
          }
-
    // if( !Interpreter::Interpreting() )
          {
          FixedCharArray<100> buf;
@@ -651,8 +649,9 @@ void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszP
    VideoFlusher vf;
    VidWrStrColor( DialogLine(), 0        , d_pszPrompt            , promptLen    , d_colorAttribute, false );
    VidWrStrColor( DialogLine(), promptLen, d_pszEditText+oEditText, editTextShown, g_colorStatus   , false );
-   if( promptLen + editTextShown < EditScreenCols() )
+   if( promptLen + editTextShown < EditScreenCols() ) {
       VidWrStrColor( DialogLine(), promptLen+editTextShown, " "   , 1            , d_colorAttribute, true  );
+      }
    }
    CursorLocnOutsideView_Set( DialogLine(), d_xCursor - oEditText + promptLen );
    }
@@ -732,10 +731,12 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          EditPrompt ep( pszPrompt, stb.c_str(), fInitialStringSelected ? g_colorError : g_colorInfo, xCursor );
          GetTextargString_CMD_reader gtas( ep );
          pCmd = gtas.GetNextCMD( ToBOOL(flags & gts_fKbInputOnly) );
-         if( !pCmd )
+         if( !pCmd ) {
             break;
-         if( gtas.GotAnyInputFromKbd() )
+            }
+         if( gtas.GotAnyInputFromKbd() ) {
             *pfGotAnyInputFromKbd = true;
+            }
          }
       //=============== switch( pCmd->d_func ) ===============
       const funcCmd func( pCmd->d_func );
@@ -746,8 +747,9 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          }
       if( pCmd->d_argData.eka.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
          if( !pDirContent ) {
-            if( pbTabxBase.empty() ) // no prev'ly used WC?
-               pbTabxBase = stb;  // create based on curr content
+            if( pbTabxBase.empty() ) { // no prev'ly used WC?
+               pbTabxBase = stb;       // create based on curr content
+               }
             pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
             }
          Path::str_t nxt;
@@ -772,8 +774,9 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          }
    #endif
       else if( func == fn_newline || func == fn_emacsnewl ) {
-         if( flags & gts_OnlyNewlAffirms )
+         if( flags & gts_OnlyNewlAffirms ) {
             break;
+            }
          ConOut::Bell();
          }
       else if( func == fn_graphic ) {
@@ -877,10 +880,12 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          const auto pb( stb.c_str() ); const auto len( stb.length() );
          if( xCursor >= len ) xCursor = len - 1;
          while( xCursor > 0 ) {
-            if( --xCursor == 0 )
+            if( --xCursor == 0 ) {
                break;
-            if( !isWordChar( pb[xCursor-1] ) && isWordChar( pb[xCursor] ) )
+               }
+            if( !isWordChar( pb[xCursor-1] ) && isWordChar( pb[xCursor] ) ) {
                break;
+               }
             }
          }
       else if( func == fn_flipcase ) {
@@ -918,13 +923,10 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       , pCmd?pCmd->Name():""
       , stb.c_str()
       );
-
    g_fMeta = fSavedMeta;
-
    if( *pfGotAnyInputFromKbd ) {
       ViewCursorRestorer cr;
       }
-
    0 && DBG( "%s- g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
    return pCmd;
    }
@@ -955,9 +957,9 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
    {
    PCV;
    if( fSelectLastSelection ) {
-      if( !pcv->d_LastSelectBegin.isValid() )
+      if( !pcv->d_LastSelectBegin.isValid() ) {
          return Msg( "view has no previous selection" );
-
+         }
       s_SelAnchor = pcv->d_LastSelectBegin;
       pcv->d_LastSelectEnd.ScrollTo();
       ++g_iArgCount;
@@ -968,12 +970,11 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
    ExtendSelectionHilite( pcv->Cursor() );
    }
    s_fSelectionActive = true;
-
    while(1) {
       auto pCmd( CMD_reader().GetNextCMD() );
-      if( !pCmd )
+      if( !pCmd ) {
          return false; //************************************************************
-
+         }
       PCV;
       if( pCmd->d_func == fn_arg ) {
          // ARG::arg _IS NOT CALLED_: instead inline-execute here:
@@ -981,14 +982,12 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
          ExtendSelectionHilite( pcv->Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
          continue; //================================================================
          }
-
       if( pCmd->isCursorFunc() || pCmd->d_func == fn_meta ) {
          // fn_meta and all CURSORFUNC's are called w/o ARG buildup and may alter the selection state
          g_fFuncRetVal = pCmd->BuildExecute();
          ExtendSelectionHilite( pcv->Cursor() );
          continue; //================================================================
          }
-
       // We HAVE a valid CMD that is not arg, meta, or a CURSORFUNC
       // We SHALL call pCmd->BuildExecute() and return from this function
       s_fSelectionActive = false; // this fn is consuming the selection
@@ -1000,19 +999,18 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
             Msg( "Selection keymap enabled" );
             continue; //=============================================================
             }
-
          // Feed this literal char (via pCmd) into GetTextargString,
          // execute returned CMD (unless canceled).
          TextArgBuffer().clear();
          bool fGotAnyInputFromKbd;
          pCmd = GetTextargString( TextArgBuffer(), FmtStr<20>( "Arg [%d]? ", ArgCount() ), 0, pCmd, 0, &fGotAnyInputFromKbd );
-         if( !pCmd ) // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
+         if( !pCmd ) { // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
             return false; //*********************************************************
-
+            }
          s_fHaveLiteralTextarg = true;
-         if( fGotAnyInputFromKbd )
+         if( fGotAnyInputFromKbd ) {
             AddToTextargStack( TextArgBuffer() );
-
+            }
          // a valid pCmd was invoked by user to exit GetTextargString; execute it
          // (BuildExecute() grabs from TextArgBuffer()()).
          }
@@ -1020,7 +1018,6 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
          pcv->d_LastSelectBegin = s_SelAnchor;
          pcv->d_LastSelectEnd   = pcv->Cursor();
          }
-
       const auto rv( pCmd->BuildExecute() ); //************************************************
       return rv;
       }

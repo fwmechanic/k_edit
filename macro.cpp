@@ -49,8 +49,9 @@ bool ARG::assignlog() { // toggle function
 
 void AssignLogTag( PCChar tag ) {
    0 && DBG( "===== %s ====================", tag );
-   if( g_pFBufAssignLog )
+   if( g_pFBufAssignLog ) {
        g_pFBufAssignLog->FmtLastLine( "===== %s ====================", tag );
+       }
    }
 
 // ALLOCA_STRDUP( pszStringToAssign, slen, src.data(), src.length() )
@@ -116,17 +117,16 @@ void CMD::RedefMacro( stref newDefn ) {
 bool DefineMacro( stref pszMacroName, stref pszMacroCode ) { 0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'", __func__, BSR(pszMacroName), BSR(pszMacroCode) );
    const auto pCmd( CmdFromName( pszMacroName ) );
    if( pCmd ) {
-      if( !pCmd->IsRealMacro() )
+      if( !pCmd->IsRealMacro() ) {
          return Msg( "'%" PR_BSR "' is a non-macro function; cannot redefine as macro", BSR(pszMacroName) );
-
+         }
       // replace old macro-code string with new one
       pCmd->RedefMacro( pszMacroCode );
-      if( g_pFBufAssignLog )  g_pFBufAssignLog->FmtLastLine( "REDEF %" PR_BSR "='%" PR_BSR "'", BSR(pszMacroName), BSR(pszMacroCode) );
+      if( g_pFBufAssignLog ) { g_pFBufAssignLog->FmtLastLine( "REDEF %" PR_BSR "='%" PR_BSR "'", BSR(pszMacroName), BSR(pszMacroCode) ); }
       return true;
       }
-
    CmdIdxAddMacro( pszMacroName, pszMacroCode );
-   if( g_pFBufAssignLog )  g_pFBufAssignLog->FmtLastLine( "NWDEF %" PR_BSR "='%" PR_BSR "'", BSR(pszMacroName), BSR(pszMacroCode) );
+   if( g_pFBufAssignLog ) { g_pFBufAssignLog->FmtLastLine( "NWDEF %" PR_BSR "='%" PR_BSR "'", BSR(pszMacroName), BSR(pszMacroCode) ); }
    return true;
    }
 
@@ -235,7 +235,6 @@ STATIC_FXN bool PushStrftimeMacro( PCChar fmtstr ) {
       s_now_lt = localtime( &s_now );
       }
    }
-
    linebuf lbuf;
    strftime( BSOB(lbuf), fmtstr, s_now_lt );
    return PushVariableMacro( lbuf );
@@ -256,26 +255,20 @@ bool ARG::cur_y4  () { return PushStrftimeMacro( "%Y" ); }
 
 namespace Interpreter {
    enum { MAX_MACRO_NESTING = 32 };  // allowing infinite nesting is not a service to the programmer...
-
    class MacroRuntimeStkEntry {
       PCChar d_pStartOfText;
       PCChar d_pCurTxt     ;
       int    d_flags       ;
-
    public:
       void   clear();
       bool   ClearIsBreak();
       void   Ctor( PCChar pszMacroString, int macroFlags );
-
       enum   eGot { EXHAUSTED=0, GotLitCh, GotToken };
       eGot   GetNextTokenIsLiteralCh( PChar pDestBuf, int destBufLen );
-
       int    chGetAnyMacroPromptResponse();
-
       bool   BranchToLabel( PCChar pszBranchToken );
       bool   Breaks()          const { return ToBOOL(d_flags & breakOutHere ); }
       bool   IsVariableMacro() const { return ToBOOL(d_flags & variableMacro); }
-
    private:
       bool   Advance();
       // Advance commentary: the active pointer (d_pCurTxt) is kept pointing at the
@@ -283,23 +276,17 @@ namespace Interpreter {
       // just prior to the return.  Thus if GetNextTokenIsLiteralCh is returning the
       // last character of a literal string, d_pCurTxt will point outside that string,
       // at the next token/string in the macro stream.
-
       bool   NON_ESCAPED_DQUOTE() { return '"' == d_pCurTxt[0]
 #if !MACRO_BACKSLASH_ESCAPES
                                                                && '"' != d_pCurTxt[1]
 #endif
-
                                   ; }
-
       };
-
    STATIC_VAR  MacroRuntimeStkEntry  s_MacroRuntimeStack[ MAX_MACRO_NESTING ];
    STATIC_VAR  int                   s_ixPastTOS;
-
    STIL int                   ixPastTOS()     { return s_ixPastTOS; }
         bool                  Interpreting()  { return s_ixPastTOS > 0; }
    STIL MacroRuntimeStkEntry &TOS() { return s_MacroRuntimeStack[ s_ixPastTOS - 1 ]; }
-
    STATIC_FXN    bool  PopIsBreak();
    STATIC_FXN    bool  PopUntilBreak();
    STATIC_FXN    PCCMD AbortUntilBreak( PCChar emsg );
@@ -308,10 +295,11 @@ namespace Interpreter {
    } // namespace Interpreter
 
 STATIC_FXN bool Interpreter::AnyStackEntryBreaksOut() {
-   for( auto ix(0) ; ix < s_ixPastTOS ; ++ix )
-      if( s_MacroRuntimeStack[ ix ].Breaks() )
+   for( auto ix(0) ; ix < s_ixPastTOS ; ++ix ) {
+      if( s_MacroRuntimeStack[ ix ].Breaks() ) {
          return true;
-
+         }
+      }
    return false;
    }
 
@@ -327,9 +315,9 @@ bool Interpreter::Interpreting_VariableMacro() { return Interpreting() && TOS().
 // Strdup'd, to be consumed "on demand".
 //
 bool Interpreter::PushMacroStringOk( PCChar pszMacroString, int macroFlags ) {
-   if( ELEMENTS(s_MacroRuntimeStack) == ixPastTOS() )
+   if( ELEMENTS(s_MacroRuntimeStack) == ixPastTOS() ) {
       return ErrorDialogBeepf( "Macros nested too deep (%" PR_SIZET "u levels)! recursive macro defn?", ELEMENTS(s_MacroRuntimeStack) );
-
+      }
    0 && DBG( "PushMacStr[%d] '%s'", ixPastTOS(), pszMacroString );
    s_MacroRuntimeStack[ s_ixPastTOS++ ].Ctor( pszMacroString, macroFlags );
    return true;
@@ -390,10 +378,11 @@ bool Interpreter::MacroRuntimeStkEntry::BranchToLabel( PCChar pszBranchToken ) {
    // pszBranchToken[0] = ':';     // pszBranchToken[0] is branch prefix char [=+-]; change to label-DEFINITION prefix
    d_pCurTxt = d_pStartOfText;  // start from beginning
    linebuf token;  MacroRuntimeStkEntry::eGot got;
-   while( EXHAUSTED != (got=GetNextTokenIsLiteralCh( BSOB(token) )) )
-      if( GotToken==got && (':'==token[0]) && Stricmp( pszBranchToken+1, token+1 ) == 0 )
+   while( EXHAUSTED != (got=GetNextTokenIsLiteralCh( BSOB(token) )) ) {
+      if( GotToken==got && (':'==token[0]) && Stricmp( pszBranchToken+1, token+1 ) == 0 ) {
          return true;
-
+         }
+      }
    return false;
    }
 
@@ -403,15 +392,14 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( PChar pDestBuf, int 
    if( 0 == d_pCurTxt[0] ) { 0 && DBG("GetNxtTok-    %X EXHAUSTED",d_flags);
       return EXHAUSTED;
       }
-
    eGot rv;
    if( d_flags & insideDQuotedString ) {
       bool fEscaped = false;
       #if MACRO_BACKSLASH_ESCAPES
          if( '\\' == d_pCurTxt[0] ) {
-            if( 0 == d_pCurTxt[1] )
+            if( 0 == d_pCurTxt[1] ) {
                return false;
-
+               }
             d_pCurTxt++;     // skip escaping char
             fEscaped = true;
             }
@@ -422,7 +410,6 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( PChar pDestBuf, int 
             }
       #endif
                       0 && fEscaped && DBG( "ESCAPED '%c' !!!", d_pCurTxt[0] );  // stest:= "1 "" 2"""    " this is a test "
-
       // Assert( destBufLen >= 2 );
       pDestBuf[0] = *d_pCurTxt++;
       pDestBuf[1] = '\0';
@@ -435,12 +422,10 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( PChar pDestBuf, int 
       if( 0 == d_pCurTxt[0] ) {   0 && DBG("GetNxtTok-    %X EXHAUSTED",d_flags);
          return EXHAUSTED;
          }
-
       CPCChar pPastEndOfToken( StrToNextBlankOrEos( d_pCurTxt ) );
       const auto len( Min( static_cast<ptrdiff_t>(destBufLen-1), pPastEndOfToken - d_pCurTxt ) );
       memcpy( pDestBuf, d_pCurTxt, len );
       pDestBuf[len] = '\0';
-
       d_pCurTxt = pPastEndOfToken;
       rv = GotToken;
       }
@@ -449,7 +434,6 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( PChar pDestBuf, int 
    return rv;
    }
 
-
 STATIC_FXN bool Interpreter::PopIsBreak() {
    const auto rv( TOS().ClearIsBreak() );
    --s_ixPastTOS;
@@ -457,10 +441,11 @@ STATIC_FXN bool Interpreter::PopIsBreak() {
    }
 
 STATIC_FXN bool Interpreter::PopUntilBreak() {
-   while( Interpreting() )
-      if( PopIsBreak() )
+   while( Interpreting() ) {
+      if( PopIsBreak() ) {
          return true;
-
+         }
+      }
    return false;
    }
 
@@ -472,9 +457,9 @@ STIL PCCMD CleanupPendingMacroStream() {
    }
 
 STATIC_FXN bool CleanupExecutionHaltRequests( const bool fCatchExecutionHaltRequests ) {
-   if( Interpreter::Interpreting() ) // if the ExecutionHaltRequest was not created in the macro-decode process, any queued
-      CleanupPendingMacroStream();   // macros are still there; MUST clean them up so they're not mistakenly used later
-
+   if( Interpreter::Interpreting() ) { // if the ExecutionHaltRequest was not created in the macro-decode process, any queued
+      CleanupPendingMacroStream();     // macros are still there; MUST clean them up so they're not mistakenly used later
+      }
    if( fCatchExecutionHaltRequests ) { // the buck stops here?
       FlushKeyQueuePrimeScreenRedraw();
       DispRawDialogStr( FmtStr<80>( "*** Execution interrupted: %s ***", ExecutionHaltReason() ) );
@@ -497,29 +482,24 @@ bool fExecuteSafe( PCChar str ) { // use ONLY when fExecute is _NOT_ called (eve
 
 void FetchAndExecuteCMDs( const bool fCatchExecutionHaltRequests ) {
    NOAUTO PCCMD prevPCMD( pCMD_unassigned );
-
    while( !s_fRtndFrom_fExecuted_macro ) {
       SelKeymapDisable();
-
       if(   ExecutionHaltRequested()
          && !CleanupExecutionHaltRequests( fCatchExecutionHaltRequests )
         ) {     // the buck stops _later_; exit this instance
          break; // DON'T RELY on s_fRtndFrom_fExecuted_macro being set (although it SHOULD be)
          }
-
       if( const auto newPCMD = CMD_reader().GetNextCMD() ) {
-         if( !prevPCMD->IsFnGraphic() || !newPCMD->IsFnGraphic() )
+         if( !prevPCMD->IsFnGraphic() || !newPCMD->IsFnGraphic() ) {
             g_CurFBuf()->PutUndoBoundary();
-
+            }
          g_fFuncRetVal = newPCMD->BuildExecute();
          // _ASSERTE( _CrtCheckMemory() );
          prevPCMD = newPCMD;
          }
       }
-
    s_fRtndFrom_fExecuted_macro = false;
    }
-
 
 STATIC_FXN PCCMD Interpreter::AbortUntilBreak( PCChar emsg ) {
    ErrorDialogBeepf( "%s", emsg );
@@ -528,31 +508,26 @@ STATIC_FXN PCCMD Interpreter::AbortUntilBreak( PCChar emsg ) {
    return CleanupPendingMacroStream();
    }
 
-
 STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
    Assert( Interpreting() );
-
    auto &tos( TOS() );
-
    linebuf token; NOAUTO MacroRuntimeStkEntry::eGot got;
    while( MacroRuntimeStkEntry::EXHAUSTED != (got=tos.GetNextTokenIsLiteralCh( BSOB(token) )) ) {
-      if( ExecutionHaltRequested() )                // testme:= popd popd
+      if( ExecutionHaltRequested() ) {              // testme:= popd popd
          return CleanupPendingMacroStream();
-
+         }
       if( MacroRuntimeStkEntry::GotLitCh==got ) { 0 && DBG( "%s LIT '%c'", __func__, token[0] );
          STATIC_VAR CMD macro_graphic = { .d_name="macro_graphic", .d_func=&ARG::graphic };
          macro_graphic.d_argData.eka.Ascii    = token[0];
          macro_graphic.d_argData.eka.EdKcEnum = token[0];
          return &macro_graphic;
          }
-
       { 0 && DBG( "%s non-LIT '%s'", __func__, token );
       const auto pCmd( CmdFromName( token ) );
       if( pCmd ) { 0 && DBG( "%s CMD '%s'", __func__, pCmd->Name() );
          return pCmd;
          }
       }
-
       // OK, a token was found, but it's not a literal char, and it doesn't
       // match any known command.  Last choice is a branch command/defn:
       //
@@ -562,17 +537,17 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
            || ('+' == cond &&  g_fFuncRetVal)  // branch if prev cmd true?
            || ('-' == cond && !g_fFuncRetVal)  // branch if prev cmd false?
            ) { // perform branch
-            if( '\0' == token[2] ) // absence of dest-label means return from macro
+            if( '\0' == token[2] ) { // absence of dest-label means return from macro
                break;
-
-            if( !tos.BranchToLabel( token ) )
+               }
+            if( !tos.BranchToLabel( token ) ) {
                return AbortUntilBreak( FmtStr<BUFBYTES>( "Cannot find label '%s'", token+2 ) );
+               }
             }
          continue; // branch not taken or branch-label defn
          }
       return AbortUntilBreak( FmtStr<BUFBYTES>( "unknown function '%s'", token ) );
       }
-
    // break exited the loop: this means the macro exited normally: unnest one level
    //
    s_fRtndFrom_fExecuted_macro = PopIsBreak();
@@ -583,16 +558,13 @@ int Interpreter::chGetAnyMacroPromptResponse() { // return int so we can return 
    return Interpreting() ? TOS().chGetAnyMacroPromptResponse() : AskUser;
    }
 
-
 #ifdef fn_dispmstk
-
 namespace Interpreter {
    STATIC_FXN void ShowStack( PFBUF pFBuf );
    };
 
 STATIC_FXN void Interpreter::ShowStack( PFBUF pFBuf ) {
    pFBuf->PutLastLine( " " );
-
    auto nestLevel( ixPastTOS() );
    while( nestLevel > 0 ) {
       const auto &tos( s_MacroRuntimeStack[ --nestLevel ] );
@@ -610,17 +582,13 @@ bool ARG::dispmstk() {
    Interpreter::ShowStack( FBOP::FindOrAddFBuf( "<mstk>" ) );
    return true;
    }
-
 #endif
-
 
 PCCMD CmdFromKbdForExec() {
    const auto cmddata( ConIn::EdKC_Ascii_FromNextKey() );
-
    if( 0 == cmddata.EdKcEnum && ExecutionHaltRequested() ) { 0 && DBG( "CmdFromKbdForExec sending pCMD_cancel" );
       return pCMD_cancel;
       }
-
    if( cmddata.EdKcEnum >= EdKC_Count ) { DBG( "!!! KC=0x%X", cmddata.EdKcEnum );
       return pCMD_unassigned;
       }
@@ -631,16 +599,13 @@ PCCMD CmdFromKbdForExec() {
       DBG( "EdKc=%s", kystr );
       }
 #endif
-
    const auto pCmd( g_Key2CmdTbl[ cmddata.EdKcEnum ] );
-   if( pCmd && !pCmd->IsRealMacro() )
-        pCmd->d_argData.eka = cmddata;
-
+   if( pCmd && !pCmd->IsRealMacro() ) {
+       pCmd->d_argData.eka = cmddata;
+       }
    return pCmd;
    }
 
-
-//
 // How we record a command stream into a macro
 //
 // DON'T record macros, DO record all non-macro commands that they invoke
@@ -673,12 +638,11 @@ STIL void RecordCmd( PCCMD pCmd ) {
       || g_fExecutingInternal      // don't record contents of fExecute's done by non-execute EdFuncs
       || pCmd->IsFnUnassigned()
       || fn_record == pCmd->d_func // don't record (closing) record function
-     )
+     ) {
       return;
-
+      }
    SaveCMDInMacroRecordFbuf( pCmd );
    }
-
 
 void  CMD_reader::VWritePrompt() {}
 void  CMD_reader::VUnWritePrompt() {}
@@ -687,9 +651,7 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
       if( fRtnNullOnMacroRtn && s_fRtndFrom_fExecuted_macro ) { 0 && DBG( "-%s 0", __func__ );
          return nullptr;
          }
-
       0 && DBG( ":%s %s", __func__, Interpreter::Interpreting() ? "MACRO?" : "KB?" );
-
       // much of the complexity that follows is due to the difficulty of
       // deciding which CMD's need to be recorded-to-macro, or not
       // (see "How we record a command stream into a macro" above)
@@ -700,12 +662,10 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
          fCmdFromInterpreter ?                                Interpreter::CmdFromCurMacro()
                              : ( VWritePrompt(), DispDoPendingRefreshes(), CmdFromKbdForExec() )
          );
-
-      if( ExecutionHaltRequested() )
+      if( ExecutionHaltRequested() ) {
          return nullptr;
-
+         }
       d_fAnyInputFromKbd = !fCmdFromInterpreter;
-
       if( pCmd ) {
          if( !pCmd->ExecutesLikeMacro() ) { // not a macro?
             // The choice relating to VariableMacros is highly dependent on
@@ -723,16 +683,15 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
             // DeferredTextMacro itself would be the correct/sensical approach,
             // so that old and new run output will be trivially comparable.
             //
-            if( !fInterpreting_VariableMacro ) // we DON'T want to record the expansion of VariableMacros ...
-               RecordCmd( pCmd );              // as these are typically situation-(time-)dependent
-
+            if( !fInterpreting_VariableMacro ) { // we DON'T want to record the expansion of VariableMacros ...
+               RecordCmd( pCmd );                // as these are typically situation-(time-)dependent
+               }
             0 && DBG( "-%s %s", __func__, pCmd->Name() );
             return pCmd;                       // caller will execute
             }
-
-         if( !pCmd->IsRealMacro() && !fInterpreting_VariableMacro )
+         if( !pCmd->IsRealMacro() && !fInterpreting_VariableMacro ) {
             RecordCmd( pCmd );
-
+            }
          //------------------------------------------------------------------------
          // pCmd->ExecutesLikeMacro():
          //
@@ -751,11 +710,11 @@ bool ARG::assign() {
    switch( d_argType ) {
     default:      return BadArg();
     case NOARG:  {const auto ok( TruncComment_AssignStrOk( g_CurFBuf()->PeekRawLine( d_noarg.cursor.lin ) ) );
-                  if( !ok ) ErrorDialogBeepf( "assign failed" );
+                  if( !ok ) { ErrorDialogBeepf( "assign failed" ); }
                   return ok;
                  }
     case TEXTARG:{const auto ok( TruncComment_AssignStrOk( d_textarg.pText ) );
-                  if( !ok ) ErrorDialogBeepf( "assign failed" );
+                  if( !ok ) { ErrorDialogBeepf( "assign failed" ); }
                   return ok;
                  }
     case LINEARG:{int assignsDone; Point errPt;
@@ -767,7 +726,6 @@ bool ARG::assign() {
                   Msg( "%d assign%s done", assignsDone, Add_s( assignsDone ) );
                   return true;
                   }
-
     case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                      if( aw.GetLine() ) {
                         if( !TruncComment_AssignStrOk( aw.lineref() ) ) {
@@ -780,13 +738,13 @@ bool ARG::assign() {
     }
    }
 
-
 void UnbindMacrosFromKeys() {
-   for( auto &pCmd : g_Key2CmdTbl )
-      if( pCmd->IsRealMacro() )
+   for( auto &pCmd : g_Key2CmdTbl ) {
+      if( pCmd->IsRealMacro() ) {
          pCmd = pCMD_unassigned;
+         }
+      }
    }
-
 
 void FreeAllMacroDefs() {
    CmdIdxRmvCmdsByFunction( fn_runmacro() );
@@ -796,20 +754,20 @@ void FreeAllMacroDefs() {
 // literal" problem!  Is this actually needed?
 //
 STATIC_FXN bool PutStringIntoCurfileAtCursor( PCChar pszString, std::string &tmp1, std::string &tmp2 ) {
-   for( ; *pszString ; ++pszString )
-      if( !PutCharIntoCurfileAtCursor( *pszString, tmp1, tmp2 ) )
+   for( ; *pszString ; ++pszString ) {
+      if( !PutCharIntoCurfileAtCursor( *pszString, tmp1, tmp2 ) ) {
          return false;
-
+         }
+      }
    return true;
    }
 
 STATIC_FXN void PutMacroStringIntoCurfileAtCursor( PCChar pStr ) {
-   if( g_CurFBuf()->CantModify() )
+   if( g_CurFBuf()->CantModify() ) {
       return;
-
+      }
    const auto savefWordwrap( g_fWordwrap );
    g_fWordwrap = false; // we will wrap manually below to provide "  \" line continuation sequence
-
    std::string tmp1, tmp2;
    for( ; *pStr; ++pStr ) {
       if( ' ' == *pStr && g_CursorCol() >= g_iRmargin ) {
@@ -820,48 +778,41 @@ STATIC_FXN void PutMacroStringIntoCurfileAtCursor( PCChar pStr ) {
          PutCharIntoCurfileAtCursor( *pStr, tmp1, tmp2 );
          }
       }
-
    g_fWordwrap = savefWordwrap;
    }
 
-
 bool ARG::tell() {
    linebuf keystringBuffer;
-
    PCCMD pCmd;
    switch( d_argType ) {
     default:      return BadArg();
-
     case NOARG:   Msg( "Press key to tell about:" );
                   pCmd = CmdFromKbdForInfo( BSOB(keystringBuffer) );
                   break;
-
     case TEXTARG: pCmd = CmdFromName( d_textarg.pText );
-                  if( !pCmd )
+                  if( !pCmd ) {
                      return Msg( "%s is not an editor function or macro", d_textarg.pText );
-
+                     }
                   keystringBuffer[0] = '\0';
                   break;
     }
-
    Linebuf outbuf;
    outbuf.Sprintf( "%s:%s", pCmd->Name(), keystringBuffer[0] ? keystringBuffer : pCmd->Name() );
-
-   if( pCmd->IsRealMacro() )
+   if( pCmd->IsRealMacro() ) {
       outbuf.SprintfCat( "  %s:=%s", pCmd->Name(), pCmd->MacroText() );
+      }
    else {
       linebuf lbuf;
       outbuf.SprintfCat( "  (%s)", ArgTypeNames( BSOB(lbuf), pCmd->d_argType ) );
       }
-
-   if( d_fMeta )
+   if( d_fMeta ) {
       PutMacroStringIntoCurfileAtCursor( outbuf.k_str() );
-   else
+      }
+   else {
       Msg( "%s", outbuf.k_str() );
-
+      }
    return fn_unassigned == pCmd->d_func;
    }
-
 
 GLOBAL_VAR PFBUF g_pFbufRecord;
 
@@ -904,7 +855,6 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
 
       bcpy( lbufNew, pCmd->Name() );
       }
-
    CapturePrevLineCountAllWindows( g_pFbufRecord );
    std::string stmp;
    if( st.length() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
@@ -931,10 +881,11 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
    while( 1 ) {
       g_pFbufRecord->DupRawLine( sbuf, g_pFbufRecord->LastLine() );
       auto pC( pMacroTextChunk + Min( g_iRmargin - sbuf.length() + int(ELEMENTS(kszContinuation)), static_cast<sridx>(Strlen( pMacroTextChunk )) ) );
-      for( ; pC > pMacroTextChunk; --pC )
-         if( 0 == *pC || ' ' == *pC || HTAB == *pC )
+      for( ; pC > pMacroTextChunk; --pC ) {
+         if( 0 == *pC || ' ' == *pC || HTAB == *pC ) {
             break;
-
+            }
+         }
       auto fDone( false );
       if( *pC != 0 && pC != pMacroTextChunk ) {
          sbuf.append( pMacroTextChunk, pC - pMacroTextChunk );
@@ -945,16 +896,13 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
          sbuf.append( pMacroTextChunk );
          fDone = true;
          }
-
       g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), sbuf, stmp );
-
-      if( fDone )
+      if( fDone ) {
          return;
+         }
       }
    }
 
-
-//
 //  Record
 //
 //  The Record function toggles macro recording.
@@ -1006,16 +954,13 @@ GLOBAL_VAR bool g_fCmdXeqInhibitedByRecord;
 bool ARG::record() {
    STATIC_VAR auto s_macro_defn_first_line(-1);
    auto fUsersMacroName( false );
-
    if( IsMacroRecordingActive() ) { 0 && DBG( "###########  %s w/fMacroRecordingActive, %s", __func__, ArgTypeName() );
       g_fMacroRecordingActive    = false;
       g_fCmdXeqInhibitedByRecord = false;
-
       if( 0 && NOARG == d_argType ) {
          DispNeedsRedrawStatLn();
          return false; // always false
          }
-
       if( RecordingInDQuote() ) {
          ClrInRecordDQuote();
          std::string src, stmp;
@@ -1023,12 +968,11 @@ bool ARG::record() {
          src.append( "\"" );
          g_pFbufRecord->PutLine( g_pFbufRecord->LastLine(), src, stmp );
          }
-
       int   assignsDone;
       Point errPt;
-      if( AssignLineRangeHadError( "record", g_pFbufRecord, s_macro_defn_first_line, g_pFbufRecord->LastLine(), &assignsDone, &errPt ) )
+      if( AssignLineRangeHadError( "record", g_pFbufRecord, s_macro_defn_first_line, g_pFbufRecord->LastLine(), &assignsDone, &errPt ) ) {
          ErrorDialogBeepf( "Error assigning <record> contents at line %d!", errPt.lin );
-
+         }
       Msg( "%d assign%s done", assignsDone, Add_s( assignsDone ) );
       }
    else { 0 && DBG( "###########  %s w/!fMacroRecordingActive, %s", __func__, ArgTypeName() );
@@ -1041,7 +985,6 @@ bool ARG::record() {
       else {
          pMacroName = s_pCmdRecordMacro ? s_pCmdRecordMacro->Name() : "playback";
          }
-
       s_pCmdRecordMacro = CmdFromName( pMacroName );
       if(  !s_pCmdRecordMacro
         && (  !DefineMacro( pMacroName, "" )  // define empty macro failed
@@ -1050,7 +993,6 @@ bool ARG::record() {
         ) {
          return false;
          }
-
       const auto f_cArg_GT_1( d_cArg > 1 );
       if( !f_cArg_GT_1 || fUsersMacroName ) {
 #ifdef RECORD_CLEARS_RECORDBUF
@@ -1060,14 +1002,12 @@ bool ARG::record() {
 #endif
          g_pFbufRecord->PutLastLine( SprintfBuf( "%s:=", pMacroName ) );
          s_macro_defn_first_line = g_pFbufRecord->LastLine();
-
-         if( f_cArg_GT_1 )
+         if( f_cArg_GT_1 ) {
             PrintMacroDefToRecordFile( s_pCmdRecordMacro );
+            }
          }
-
       g_fMacroRecordingActive = true;
       ClrInRecordDQuote();
-
       g_fCmdXeqInhibitedByRecord = d_fMeta;
       if( d_fMeta ) {
          linebuf     kynmBuf;
@@ -1075,19 +1015,15 @@ bool ARG::record() {
          Msg( "No-Execute Record Mode - Press %s to resume normal editing", kynmBuf );
          }
       }
-
    DispNeedsRedrawStatLn();
    return IsMacroRecordingActive();
    }
 
-
 STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
    enum states { outsideQuote, inQuote, prevCharBlank, contCharSeen };
-
    states stateWhereBlankLastSeen( outsideQuote );
    states state( outsideQuote );
    auto fChIsBlank( true );
-
    #if 0
    auto showStChange = []( int line, states statevar, states newval, PCChar pC, PCChar pC_start ) {
       DBG( "[%3d] %c: St %d -> %d L%d", pC - pC_start, *pC, statevar, newval, line );
@@ -1096,7 +1032,6 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
    #else
    #define  ChangeState( newval )  ( state = newval )
    #endif
-
    auto itEarlyTerm       ( src.cend() );
    auto itContinuationChar( src.cend() );
    for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
@@ -1104,12 +1039,9 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
          itEarlyTerm = it; // term string early and force a break from innerLoop
          break;
          }
-
       fChIsBlank = isblank( *it );
-
       switch( state ) {
        default:             break;
-
        case outsideQuote:   if( fChIsBlank ) {
                                stateWhereBlankLastSeen = state;
                                ChangeState( prevCharBlank );
@@ -1118,7 +1050,6 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
                                ChangeState( inQuote );
                                }
                             break;
-
        case inQuote:        if( fChIsBlank ) {
                                stateWhereBlankLastSeen = state;
                                ChangeState( prevCharBlank );
@@ -1127,7 +1058,6 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
                                ChangeState( outsideQuote );
                                }
                             break;
-
        case prevCharBlank:  if( '\\' == *it ) { // continuation char seen?
                                ChangeState( contCharSeen );
                                itContinuationChar = it;
@@ -1144,12 +1074,10 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
        }
       }
    #undef  ChangeState
-
    continues = contCharSeen == state;
    if( continues && itEarlyTerm == src.cend() ) {
       itEarlyTerm = itContinuationChar - 1; // the continuation char is always preceded by a space which is NOT included in the macro text
       }
-
    const auto rv( src.substr( 0, std::distance( src.cbegin(), itEarlyTerm ) ) );
    0 && DBG( "--> %" PR_BSR "|", BSR(rv) );
    return rv;
@@ -1160,7 +1088,6 @@ bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd,
    if( yEnd < 0 || yEnd > pFBuf->LastLine() ) {
       yEnd = pFBuf->LastLine();
       }
-
    enum AL2MSS { HAVE_CONTENT, FOUND_TAG, BLANK_LINE, };
    std::string d_dest;
    auto d_yMacCur = yStart;
@@ -1171,7 +1098,6 @@ bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd,
          if( !IsolateTagStr( rl ).empty() ) { DBGEN && DBG( "L %d TAG VIOLATION", d_yMacCur );
             return FOUND_TAG;
             }
-
          auto continues( false );
          const auto parsed( ParseRawMacroText_ContinuesNextLine( rl, continues ) );
          d_dest.append( parsed.data(), parsed.length() );  DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(d_dest) );
@@ -1183,7 +1109,6 @@ bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd,
       DBGEN && DBG( "RTN ?" );
       return !IsStringBlank( d_dest ) ? HAVE_CONTENT : BLANK_LINE;
       };
-
    auto fContinueScan( true ); auto fAssignError( false ); auto assignsDone( 0 );
    for( ; fContinueScan && d_yMacCur <= yEnd ; ++d_yMacCur ) {  DBGEN && DBG( "%s L %d", __func__, d_yMacCur );
       const auto rslt( AppendLineToMacroSrcString() );
@@ -1207,8 +1132,6 @@ bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd,
          }
       }
    DBGEN && DBG( "%s: {%s} L [%d..%d/%d] = %d", __func__, title, yStart, d_yMacCur, yEnd, assignsDone );
-
-   if( pAssignsDone )  *pAssignsDone = assignsDone;
-
+   if( pAssignsDone ) { *pAssignsDone = assignsDone; }
    return fAssignError;
    }

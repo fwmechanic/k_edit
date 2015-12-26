@@ -321,12 +321,9 @@ struct SearchSpecifier {
    bool   d_reCompileErr;
 #endif
    bool   d_fCanUseFastSearch;
-
-   public:
-
+public:
    SearchSpecifier( stref rawSrc, bool fRegex=false );
    ~SearchSpecifier();
-
    bool   IsRegex() const;
    bool   HasError() const;
 #if USE_PCRE
@@ -378,9 +375,9 @@ protected:
 public:
    std::string             d_sbuf;
    FileSearchMatchHandler &d_mh;
-   Point                  d_start;
-   Point                  d_end;
-   PFBUF                  d_pFBuf;
+   Point                   d_start;
+   Point                   d_end;
+   PFBUF                   d_pFBuf;
    CompiledRegex::capture_container d_captures;
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    virtual stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) = 0; // rv.empty() if no match found
@@ -520,17 +517,9 @@ public:
 
 //*****************************************************************************************************
 
-#define  REPLC_CLASSES  0
+ #if USE_PCRE
 
-
- #if REPLC_CLASSES
-
-#define         s_fSearchNReplaceUsingRegExp    (s_searchSpecifier->IsRegex())
-#define         s_pSandR_CompiledSearchPattern  (s_searchSpecifier->d_re     )
-
- #elif USE_PCRE
-
-STATIC_VAR bool     s_fSearchNReplaceUsingRegExp;
+STATIC_VAR bool             s_fSearchNReplaceUsingRegExp;
 STATIC_VAR CompiledRegex *  s_pSandR_CompiledSearchPattern;
 
  #endif
@@ -646,10 +635,8 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
          }
       }
    return false;
-
-   #undef SETUP_LINE_TEXT
-   #undef CHECK_NEXT
-
+  #undef SETUP_LINE_TEXT
+  #undef CHECK_NEXT
    }
 
 STATIC_VAR std::string g_SavedSearchString_Buf ;
@@ -887,7 +874,6 @@ STATIC_FXN bool SearchLogSwap() {
    return false;
    }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 //
 // SearchLog - switch to <searchlog> pseudofile
@@ -943,7 +929,6 @@ STATIC_FXN bool SearchSpecifierOK( ARG *pArg ) {
                        }
                     break;
       }
-
    return true;
    }
 
@@ -1132,15 +1117,11 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    {
    bool fGotAnyInputFromKbd;
    const auto pCmd( GetTextargString( g_SnR_szSearch, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
-   if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.empty() )
+   if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.empty() ) {
       return false;
-   }
- #if REPLC_CLASSES
-   if( !SetNewSearchSpecifierOK( g_SnR_szSearch, d_cArg >= 2 ) ) {
-      return false; // Compile_Regex internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
       }
- #else
-   #if USE_PCRE
+   }
+#if USE_PCRE
    s_fSearchNReplaceUsingRegExp = d_cArg >= 2;
    if( s_fSearchNReplaceUsingRegExp ) {
       DeleteUp( s_pSandR_CompiledSearchPattern, Compile_Regex( g_SnR_szSearch.c_str(), g_fCase ) );
@@ -1148,10 +1129,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
          return false; // Compile_Regex internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
          }
       }
-   #endif
-
- #endif
-
+#endif
    {
    bool fGotAnyInputFromKbd;
    const auto pCmd( GetTextargString( g_SnR_szReplacement, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
@@ -1249,7 +1227,7 @@ void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySk
    while( yMin <= yMax ) {
       //                ( (yMax + yMin) / 2 );           // old overflow-susceptible version
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
-      const auto xbChars( fb->getLineTabxPerRealtabs( tmp, cmpLine ) );
+      fb->getLineTabxPerRealtabs( tmp, cmpLine );
       auto rslt( cmpi( src, tmp ) * cmpSignMul );
       if( 0 == rslt ) {
          rslt = cmp( src, tmp ) * cmpSignMul;

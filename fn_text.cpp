@@ -31,9 +31,9 @@ sridx first_alpha( stref src, sridx start ) {
    }
 
 STATIC_FXN char first_alpha( PCChar str ) {
-   while( (*str != '\0') && (!isalpha(*str)) )
+   while( (*str != '\0') && (!isalpha(*str)) ) {
       ++str;
-
+      }
    return *str;
    }
 
@@ -44,7 +44,6 @@ int FlipCase( int ch ) {
       case '-' : return '+' ;
       case '/' : return '\\';
       case '\\': return '/' ;
-
       case chBackTick : return chQuot1    ;
       case chQuot1    : return chBackTick ;
       default:  return ch;
@@ -110,7 +109,6 @@ public:
 bool ARG::flipcase() {
    std::string stbuf;
    PCF;
-
    switch( d_argType ) {
       // case STREAMARG: someday!?
       case BOXARG: {
@@ -118,17 +116,15 @@ bool ARG::flipcase() {
          const auto yMax( d_boxarg.flMax.lin );
          const auto xMin( d_boxarg.flMin.col );
          const auto xMax( d_boxarg.flMax.col );
-
          // locate first alphabetic char in box
          char zc;
          do {
             const auto inbuf( DupLineSeg_( pcf, stbuf, yMin, xMin, xMax ) );
             zc = first_alpha( inbuf );
             } while( (zc == '\0') && (++yMin <= yMax) );
-
-         if( zc == '\0' )
+         if( zc == '\0' ) {
             return fnMsg( no_alpha );
-
+            }
          auto pfx_casexlat( ToBOOL( islower(zc) ) ? _strupr : _strlwr );
          std::string t0,t1;
          for( ; yMin <= yMax; ++yMin ) {
@@ -138,7 +134,6 @@ bool ARG::flipcase() {
             }
          return true;
          }
-
       case NOARG: {
          const auto rls( pcf->PeekRawLineSeg( d_noarg.cursor.lin, d_noarg.cursor.col, d_noarg.cursor.col ) ); if( rls.empty() ) { return false; }
          const auto newCh( FlipCase( rls[0] ) ); if( newCh == rls[0] ) { return false; }
@@ -146,7 +141,6 @@ bool ARG::flipcase() {
          FBOP::ReplaceChar( pcf, d_noarg.cursor.lin, d_noarg.cursor.col, newCh, tmp1, tmp2 );
          return true;
          }
-
       case TEXTARG: { // actually NULLEOW (never BOXSTR)
         #if USE_TEXTARG_NULLEOx_edit
          TEXTARG_NULLEOx_edit_flipcase editor( *this, *g_CurFBuf() );
@@ -155,18 +149,16 @@ bool ARG::flipcase() {
          linebuf argBuf;
          bcpy( argBuf, d_textarg.pText );
          const auto zc( first_alpha( argBuf ) );
-         if( !zc )
+         if( !zc ) {
             return fnMsg( no_alpha );
-
+            }
          islower(zc) ? _strupr(argBuf) : _strlwr(argBuf);
-
          auto xLeft( d_textarg.ulc.col );
          std::string t0,t1;
          pcf->PutLineSeg( d_textarg.ulc.lin, argBuf, t0,t1, xLeft, xLeft+Strlen(argBuf)-1 );  // overlay converted string
          return true;
         #endif
          }
-
       default:
          return false;
       }

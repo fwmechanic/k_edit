@@ -83,53 +83,38 @@ void DBGFbufWriter::VWriteLn( PCChar string ) const {
 
 class EditRec { // abstract base class   public EditRec
 protected:
-
    const PFBUF d_pFBuf;
-
    EditRec( PFBUF pFBuf, int only );
    EditRec( PFBUF pFBuf );
-
 private:
-
    DBG_EDOP( STATIC_VAR unsigned d_SerNumSeed; )
    DBG_EDOP( const      unsigned d_SerNum; )
-
 public:
-
    EditRec  *d_pRedo; // public cuz clients walk EditRec lists themselves
    EditRec  *d_pUndo; // public cuz clients walk EditRec lists themselves
-
    void Dbgf() const;
-
    virtual     ~EditRec() = 0;
    virtual void VUndo()    = 0;
    virtual void VRedo()    = 0;
    virtual void VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const = 0; // for ARG::eds
-
    // for PutUndoBoundary
    //
    virtual bool VIsBoundary()    const  { return false; } // rtn true iff isA EdOpBoundary
    virtual bool VUpdtBoundary()         { return false; } // rtn true (and updated content) iff isA EdOpBoundary
-
    // for SetUndoStateToBoundrec
    //
    virtual bool VUpdtFromBoundary()     { return false; } // rtn true (and updated PFBUF from content) iff isA EdOpBoundary
-
    // for UndoReplaceLineContent
    //
    virtual bool VPrevWasSaveOnSameLine( LINE lineNum ) { return false; }
-
 protected:
-
    NO_COPYCTOR(EditRec);
    NO_ASGN_OPR(EditRec);
-
    };
 
 DBG_EDOP( unsigned EditRec::d_SerNumSeed; )
 
 EditRec::~EditRec() {} // defn for pure virtual destructor
-
 
 EditRec::EditRec( PFBUF pFBuf, int only_placeholder )
    : d_pFBuf(pFBuf)
@@ -139,7 +124,6 @@ EditRec::EditRec( PFBUF pFBuf, int only_placeholder )
    {
    d_pRedo = nullptr;
    d_pUndo = nullptr;
-
    d_pFBuf->d_UndoCount    = 0;
    d_pFBuf->d_pNewestEdit  = this;
    d_pFBuf->d_pCurrentEdit = this;
@@ -209,11 +193,9 @@ void EdOpSaveLineContent::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *p
 void EdOpSaveLineContent::VUndo() {
    d_pFBuf->FBufEvent_LineInsDel( d_lineNum, 0 );
    std::swap( d_pFBuf->d_paLineInfo[ d_lineNum ], d_li );
-
    // this seems redundant: EdOpSaveLineContent does not change the file's line count
    // Assert( d_pFBuf->LineCount() == fileLength ); // UPDT: this HAS blown!
    d_pFBuf->SetLineCount( d_fileLength ); // but shouldn't this be std::swap( d_pFBuf->LineCount(), d_fileLength ); ????????
-
    IF_UNDO_REDO_MARKS( copyUndoMarks( d_pFBuf, d_MarkListHd, d_lineNum ); )
    }
 
@@ -233,19 +215,15 @@ bool EdOpSaveLineContent::VPrevWasSaveOnSameLine( LINE lineNum ) {
    return d_lineNum == lineNum;
    }
 
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 class EdOpLineRangeInsert : public EditRec {
    const LINE d_fileLength; // length of file beforehand
    const LINE d_firstLine;  // number of first line that was operated on
    const LINE d_linesInserted;  // number of lines inserted
-
 public:
-
    EdOpLineRangeInsert( PFBUF pFBuf, LINE firstLine, int lineCount );
    // ~EdOpLineRangeInsert() {} // does nothing
-
    void VUndo() override;
    void VRedo() override;
    void VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const override;
@@ -288,17 +266,13 @@ class EdOpLineRangeDelete : public EditRec {
    const LINE      d_linesDeleted;  // number of lines deleted
          LineInfo *d_paLi;
    IF_UNDO_REDO_MARKS( NamedPointHead  d_MarkListHd; )
-
 public:
-
    EdOpLineRangeDelete( PFBUF pFBuf, LINE firstLine_, LINE lastLine );
    ~EdOpLineRangeDelete();
-
    void VUndo() override;
    void VRedo() override;
    void VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const override;
    };
-
 
 EdOpLineRangeDelete::EdOpLineRangeDelete( PFBUF pFBuf, LINE firstLine_, LINE lastLine )
    : EditRec        ( pFBuf )
@@ -309,7 +283,6 @@ EdOpLineRangeDelete::EdOpLineRangeDelete( PFBUF pFBuf, LINE firstLine_, LINE las
    {
    IF_UNDO_REDO_MARKS( d_MarkListHd = updateMarksForLineDeletion_DupMarks( pFBuf, firstLine_, lastLine ); )
    }
-
 
 EdOpLineRangeDelete::~EdOpLineRangeDelete() {
 #if 1
@@ -340,9 +313,7 @@ EdOpLineRangeDelete::~EdOpLineRangeDelete() {
 void EdOpLineRangeDelete::VUndo() {
    d_pFBuf->InsertLines__ForUndoRedo( d_firstLine        , d_linesDeleted );
    MoveArray( d_pFBuf->d_paLineInfo + d_firstLine, d_paLi, d_linesDeleted );
-
    d_pFBuf->SetLineCount( d_fileLength );
-
    IF_UNDO_REDO_MARKS( copyUndoMarks( d_pFBuf, d_MarkListHd, d_firstLine ); )
    }
 
@@ -354,7 +325,6 @@ void EdOpLineRangeDelete::VRedo() {
 void EdOpLineRangeDelete::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const {
    const auto savepBuf( *ppBuf );
    const auto saveBufBytes( *pBufBytes );
-
    snprintf_full( ppBuf, pBufBytes, DBG_EDOP( "%03X " ) "Delete Lines %3d L %3d"
 #if USE_DBGF_EDOPS
       , d_SerNum
@@ -363,21 +333,17 @@ void EdOpLineRangeDelete::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *p
       , d_linesDeleted
    // , d_fileLength
       );
-
    if( d_linesDeleted > 0 ) {
       getLineInfoStr( ppBuf, pBufBytes, d_paLi[0] );
       for( auto line(1); line < d_linesDeleted; ++line ) {
          ow.VWriteLn( savepBuf );
-
          *ppBuf     = savepBuf;
          *pBufBytes = saveBufBytes;
-
          snprintf_full(  ppBuf, pBufBytes, kszSpcs );
          getLineInfoStr( ppBuf, pBufBytes, d_paLi[line] );
          }
       }
    }
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //
@@ -401,14 +367,10 @@ class EdOpBoundary : public EditRec {
    FileStat     d_LastFileStat; // Date/Time of last modify
          Point  d_ViewOrigin;
          Point  d_ViewCursor;
-
 public:
-
    EdOpBoundary( PFBUF pFBuf );           // normal ctor
    EdOpBoundary( PFBUF pFBuf, int only ); // no-focus-info ctor
-
    ~EdOpBoundary() {}
-
    void VUndo() override {}
    void VRedo() override {}
    void VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const override;
@@ -427,13 +389,11 @@ bool EdOpBoundary::VUpdtBoundary() {
 
 bool EdOpBoundary::VUpdtFromBoundary() {
    d_fDirty || (d_pFBuf->d_LastFileStat != d_LastFileStat) ? d_pFBuf->SetDirty() : d_pFBuf->UnDirty();
-
    PCV;
    if( pcv->FBuf() == d_pFBuf ) {
       pcv->ScrollOriginAndCursor( d_ViewOrigin, d_ViewCursor );
       DispNeedsRedrawStatLn();
       }
-
    DispNeedsRedrawAllLinesAllWindows();
    return true;
    }
@@ -460,7 +420,6 @@ EdOpBoundary::EdOpBoundary( PFBUF pFBuf, int only ) // ONLY to be used when assi
    {
    }
 
-
 void EdOpBoundary::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const {
    snprintf_full( ppBuf, pBufBytes, DBG_EDOP( "%03X " ) "%s {%s} [%cts=%08lX,%09d org=(%d,%d) cur=(%d,%d)" DBG_EDOP( " %s" ) "]"
 #if USE_DBGF_EDOPS
@@ -481,13 +440,8 @@ void EdOpBoundary::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufByte
       );
    }
 
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // ShowEdits ("eds") show editops list of current buffer
@@ -514,12 +468,10 @@ int FBUF::GetUndoCounts( int *pBRTowardUndo, int *pARTowardUndo, int *pBRTowardR
    *pBRTowardUndo = *pBRTowardRedo = 0; // BR = BoundRecs only
    *pARTowardUndo = *pARTowardRedo = 0; // AR = all records
    auto pEr( OldestEdit() );
-   for( ; pEr && pEr != CurrentEdit() ; pEr=pEr->d_pRedo )  pEr->VIsBoundary() ? ++(*pBRTowardUndo) : ++(*pARTowardUndo);
-   for( ; pEr                         ; pEr=pEr->d_pRedo )  pEr->VIsBoundary() ? ++(*pBRTowardRedo) : ++(*pARTowardRedo);
-
+   for( ; pEr && pEr != CurrentEdit() ; pEr=pEr->d_pRedo ) { pEr->VIsBoundary() ? ++(*pBRTowardUndo) : ++(*pARTowardUndo); }
+   for( ; pEr                         ; pEr=pEr->d_pRedo ) { pEr->VIsBoundary() ? ++(*pBRTowardRedo) : ++(*pARTowardRedo); }
    return *pBRTowardUndo + *pBRTowardRedo;
    }
-
 
 bool ARG::eds() { // nee ARG::showedits
    STATIC_VAR unsigned edBufNum;
@@ -528,18 +480,15 @@ bool ARG::eds() { // nee ARG::showedits
    obuf->MakeEmpty();
    obuf->FmtLastLine( "UndoCount=%u", pFBuf->UndoCount() );
    obuf->PutLastLine( "(oldest)" );
-
-   for( auto pEr(pFBuf->OldestEdit()) ; pEr ; pEr=pEr->d_pRedo )
+   for( auto pEr(pFBuf->OldestEdit()) ; pEr ; pEr=pEr->d_pRedo ) {
       DumpEditOp( obuf, pFBuf, pEr );
-
+      }
    obuf->PutLastLine( "(newest)" );
    obuf->ClearUndo();
    obuf->UnDirty();
    obuf->PutFocusOn();
-
    return true;
    }
-
 
 // <041101> klg  for debug/test: 'rmeds'
 
@@ -555,13 +504,9 @@ bool ARG::rmeds() {
 //
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 bool FBUF::RmvOneEdOp_fNextIsBoundary( bool fFromListHead ) {
    // DBG_EDOP( _ASSERTE( _CrtCheckMemory() ); )
-
    EditRec *pEr; EditRec *pNextEr;
    if( fFromListHead ) {
       pEr              = d_pNewestEdit;
@@ -575,13 +520,9 @@ bool FBUF::RmvOneEdOp_fNextIsBoundary( bool fFromListHead ) {
       d_pOldestEdit    = pNextEr;
       pNextEr->d_pUndo = nullptr;
       }
-
    DBG_EDOP( DBGEditOp( pEr ); )
-
    Delete0( pEr );
-
    // DBG_EDOP( _ASSERTE( _CrtCheckMemory() ); )
-
    return pNextEr->VIsBoundary();
    }
 
@@ -617,26 +558,20 @@ void FBUF::AddNewEditOpToListHead( EditRec *pEr ) {
                                                    DBGEditOp( this );
                                                    DBG( "**************** END   EdOpIns *********" );
                                                    )
-
    d_pNewestEdit->d_pRedo = pEr;
-
    pEr->d_pRedo = nullptr;
    pEr->d_pUndo = d_pNewestEdit;
-
    d_pNewestEdit  = pEr;
    d_pCurrentEdit = pEr;
    }
 
-
 void FBUF::UndoReplaceLineContent( LINE lineNum, stref newContent ) {
    0 && DBG( "%s+ L%d %s", __func__, lineNum, Name() );
    BadParamIf( , IsNoEdit() );
-
-   if( d_pNewestEdit == nullptr )
+   if( d_pNewestEdit == nullptr ) {
       InitUndoInfo();
-
+      }
    const auto pLineInfo( d_paLineInfo + lineNum );
-
    if( d_pNewestEdit->VPrevWasSaveOnSameLine( lineNum ) ) {
       // Multiple sequential edits on the same line result in a single/reused
       // EditRec containing the line content at the beginning of the edit sequence.
@@ -651,24 +586,23 @@ void FBUF::UndoReplaceLineContent( LINE lineNum, stref newContent ) {
       //
       new EdOpSaveLineContent( this, lineNum, pLineInfo );
       }
-
    pLineInfo->PutContent( newContent );
    Set_yChangedMin( lineNum );
    0 && DBG( "%s- L%d %s", __func__, lineNum, Name() );
    }
 
 void FBUF::UndoInsertLineRangeHole( LINE firstLine, int lineCount ) {
-   if( IsNoEdit() )  return;
+   if( IsNoEdit() ) { return; }
    new EdOpLineRangeInsert( this, firstLine, lineCount );
    }
 
 void FBUF::UndoSaveLineRange( LINE firstLine, LINE lastLine ) {
-   if( IsNoEdit() )  return;
+   if( IsNoEdit() ) { return; }
    new EdOpLineRangeDelete( this, firstLine, lastLine );
    }
 
 void FBUF::PutUndoBoundary() {
-   if( IsNoEdit() )  return;
+   if( IsNoEdit() ) { return; }
    if( d_pCurrentEdit->VUpdtBoundary() ) {
       0 && DBG( "PUB: updt" );
       }
@@ -676,15 +610,14 @@ void FBUF::PutUndoBoundary() {
       0 && DBG( "PUB: new" );
       // add a new BoundaryRec based on current state
       new EdOpBoundary( this );
-
       ++d_UndoCount;
-
-      while( d_UndoCount > g_iMaxUndo )
-         if( RmvOneEdOp_fNextIsBoundary( false ) )
+      while( d_UndoCount > g_iMaxUndo ) {
+         if( RmvOneEdOp_fNextIsBoundary( false ) ) {
             --d_UndoCount;
+            }
+         }
       }
    }
-
 
 void FBUF::DiscardUndoInfo() {
    while( d_pOldestEdit ) {
@@ -692,7 +625,6 @@ void FBUF::DiscardUndoInfo() {
       d_pOldestEdit = d_pOldestEdit->d_pRedo;
       Delete0( er );
       }
-
    d_UndoCount    = 0;
    d_pCurrentEdit = nullptr;
    d_pNewestEdit  = nullptr;
@@ -721,7 +653,7 @@ bool FBUF::EditOpRedo() {
    }
 
 bool FBUF::AnythingToUndoRedo( bool fChkRedo ) const {
-   if( d_pCurrentEdit == nullptr )  return false;
+   if( d_pCurrentEdit == nullptr ) { return false; }
    return ToBOOL(fChkRedo ? d_pCurrentEdit->d_pRedo : d_pCurrentEdit->d_pUndo);
    }
 
@@ -740,19 +672,16 @@ bool FBUF::DoUserUndoOrRedo( bool fRedo ) {
    //           False: There was nothing to undo or redo
    //
    if( !AnythingToUndoRedo( fRedo ) ) {
-      if( !Interpreter::Interpreting() )
+      if( !Interpreter::Interpreting() ) {
          Msg( fRedo ? "Nothing to ReDo" : "Nothing to UnDo" );
-
+         }
       return false;
       }
-
    PutUndoBoundary();
-
-   while( (fRedo ? EditOpRedo() : EditOpUndo()) )
+   while( (fRedo ? EditOpRedo() : EditOpUndo()) ) {
       continue;
-
+      }
    SetUndoStateToBoundrec();
-
    return true;
    }
 

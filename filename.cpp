@@ -125,13 +125,11 @@ Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
    if( !Path::IsDotOrDotDot( fnm ) ) {
       ext =  Path::RefExt  ( s1 )  ; if( ext.empty() )  ext = Path::RefExt  ( s2 );  // DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
       }
-
    Path::str_t rv;
    rv.reserve( dir.length() + fnm.length() + ext.length() + 1 );
    rv.append( dir.data(), dir.length() );
    rv.append( fnm.data(), fnm.length() );
    rv.append( ext.data(), ext.length() );
-
    // following code was once commented out since this code
    //   converts "path\*." into "path\*", and "path\*" is equiv to "path\*.*",
    //   while "path\*." matches only extension-less files, which is sometimes
@@ -139,13 +137,12 @@ Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
    // UPDT: Win32::GetFullPathName does the same thing (converts "path\*." into "path\*")
    //       so I've restoring this code, which helps in other areas.
    //
-   if( rv.back() == '.' )
+   if( rv.back() == '.' ) {
       rv.pop_back();
-
+      }
    // DB && DBG( "RExt: '%s' + '%s' -> '%s+%s'", s2, s1, dir.c_str(), fnm.c_str() );
    return rv;
    }
-
 
 bool Path::SetCwdOk( PCChar dnm ) {
    return !( WL( _chdir, chdir )( dnm ) == -1);

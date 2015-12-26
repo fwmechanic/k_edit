@@ -105,22 +105,20 @@ Getopt::Getopt( int argc_, PPCChar argv_, PCChar optset_ )
 int Getopt::NextOptCh() {
    if( d_argi < d_argc ) { // any arguments remain?
       if( !d_pAddlOpt ) { // not in midst of option group at present
-         if( !(d_pAddlOpt=d_argv[d_argi]) || !isSwitchPrefixCh( *d_pAddlOpt++ ) )
+         if( !(d_pAddlOpt=d_argv[d_argi]) || !isSwitchPrefixCh( *d_pAddlOpt++ ) ) {
             goto NOT_AN_OPTION;
-
+            }
          // d_pAddlOpt now points to char after SW
          if( isSwitchPrefixCh( *d_pAddlOpt ) ) { // two SW in a row means "stop processing options"
             d_argi++;
             goto NOT_AN_OPTION;
             }
          }
-
       const char ch( *d_pAddlOpt++ );
       if( ch == '\0' ) { // no more options?
          d_argi++;
          goto NOT_AN_OPTION;
          }
-
       const PCChar pOptMatch( strchr( d_pOptSet, ch ) );
       if( !pOptMatch || ch == ':' ) {
          VErrorOut( FmtStr<_MAX_PATH+30>( "%s: invalid option -%c\n", d_pgm.c_str(), ch ) );
@@ -129,9 +127,9 @@ int Getopt::NextOptCh() {
       if( pOptMatch[1] == ':' ) { // ch takes arg?
          d_argi++;                     // next d_argv element is arg for this option
          if( *d_pAddlOpt == '\0' ) {   // at end of current d_argv element? try the next one...
-            if( d_argc <= d_argi )     // no more d_argv's avail?
+            if( d_argc <= d_argi ) {   // no more d_argv's avail?
                VErrorOut( FmtStr<70>( "%s: option -%c missing argument\n", d_pgm.c_str(), ch ) );
-
+               }
             d_pAddlOpt = d_argv[d_argi++]; // more d_argv's avail...
             }
          d_pOptarg = d_pAddlOpt;
@@ -147,9 +145,7 @@ int Getopt::NextOptCh() {
       return ch;
       }
    // ----------------------------------------------
-
 NOT_AN_OPTION: // end of arguments seen
-
    d_pOptarg = d_pAddlOpt = nullptr;
    return (d_argi < d_argc) ? ' ' : 0;
    }

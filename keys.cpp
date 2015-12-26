@@ -455,8 +455,9 @@ STATIC_FXN int MaxKeyNameLen_() {
    auto maxLen(0);
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
       const auto len( Strlen( ky2Nm.name ) );
-      if( maxLen < len )
+      if( maxLen < len ) {
           maxLen = len;
+          }
       }
    return maxLen;
    }
@@ -466,9 +467,9 @@ STATIC_FXN int MaxKeyNameLen_() {
    GLOBAL_CONST int g_MaxKeyNameLen = MaxKeyNameLen_();  // <-- Exuberant Ctags DOES     tag g_MaxKeyNameLen
 
 int edkcFromKeyname( stref pszKeyStr ) {
-   if( pszKeyStr.length() == 1 )
+   if( pszKeyStr.length() == 1 ) {
       return pszKeyStr[0];
-
+      }
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
       if( 0==cmpi( ky2Nm.name, pszKeyStr ) ) {
          return ky2Nm.EdKC_;
@@ -479,13 +480,12 @@ int edkcFromKeyname( stref pszKeyStr ) {
 
 int KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word ) {
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
-      if( ky2Nm.EdKC_ == keyNum_word )
+      if( ky2Nm.EdKC_ == keyNum_word ) {
          return snprintf_full( ppDestBuf, bufBytesLeft, "%s", ky2Nm.name );
+         }
       }
-
    return 0;
    }
-
 
 void StrFromEdkc( PChar dest, size_t sizeofDest, int edKC, sridx width ) {
    Assert( sizeofDest > 2 );
@@ -516,7 +516,6 @@ void StrFromEdkc( PChar dest, size_t sizeofDest, int edKC, sridx width ) {
          }
       }
    }
-
 
 int BindKeyToCMD( stref pszCmdName, stref pszKeyName ) {
    const auto edKC( edkcFromKeyname( pszKeyName ) ); if( !edKC ) return SetKeyRV_BADKEY;
@@ -553,11 +552,13 @@ void StringOfAllKeyNamesFnIsAssignedTo( PChar dest, size_t sizeofDest, PCCMD pCm
       for( const auto &pCmd : g_Key2CmdTbl ) {
          if( pCmd == pCmdToFind ) {
             if( pCur != dest ) {
-               if( snprintf_full( &pCur, &sizeofDest, "%s", sep ) )
+               if( snprintf_full( &pCur, &sizeofDest, "%s", sep ) ) {
                   break;
+                  }
                }
-            if( KeyStr_full( &pCur, &sizeofDest, &pCmd - g_Key2CmdTbl ) )
+            if( KeyStr_full( &pCur, &sizeofDest, &pCmd - g_Key2CmdTbl ) ) {
                break;
+               }
             }
          }
       }
@@ -574,9 +575,9 @@ PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width ) 
    }
 
 void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll, std::string &tmp1, std::string &tmp2 ) {
-   if( Cmd.IsFnUnassigned() || Cmd.IsFnGraphic() )
+   if( Cmd.IsFnUnassigned() || Cmd.IsFnGraphic() ) {
       return;
-
+      }
    FmtStr<50> cmdNm( "%-20s: ", Cmd.Name() );
    const PCChar pText( Cmd.IsRealMacro() ? Cmd.MacroText() :
 #if AHELPSTRINGS
@@ -587,7 +588,6 @@ void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<s
       )
 #endif
       );
-
    auto fFoundAssignment(false);
    coll.reserve( 4 );
    for( const auto &pCmd : g_Key2CmdTbl ) {
@@ -602,7 +602,6 @@ void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<s
          fFoundAssignment = true;
          }
       }
-
    if( !fFoundAssignment ) {
       coll.clear();
       coll.emplace_back( cmdNm.k_str() );
@@ -614,12 +613,10 @@ void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<s
       }
    }
 
-
 STATIC_CONST char spinners[] = { '-', '\\', '|', '/' };
 
 class SpinChar {
    int d_spindex;
-
 public:
    SpinChar() : d_spindex(0) {}
    char next() {
@@ -629,34 +626,27 @@ public:
       }
    };
 
-
 void WaitForKey( int secondsToWait ) {
 // if( Interpreter::Interpreting() )
 //    return;
-
    secondsToWait = Min( secondsToWait, 1 );
    ConIn::FlushKeyQueueAnythingFlushed();
-
    SpinChar sc;
-
    auto timeNow( time( nullptr ) );
    const auto timeEnd( timeNow + secondsToWait + 1 );
    auto maxWidth(0);
    do {
-      if( ConIn::FlushKeyQueueAnythingFlushed() )
+      if( ConIn::FlushKeyQueueAnythingFlushed() ) {
          break;
-
+         }
       SleepMs( 50 );
-
       timeNow = time( nullptr );
       const auto spinner( sc.next() );
       FmtStr<71> msg( " You have %c%2" PR_TIMET "d%c seconds to press any key ", spinner, (timeEnd - timeNow), spinner );
       const auto mlen( msg.Len() );
       NoLessThan( &maxWidth, mlen );
       VidWrStrColorFlush( DialogLine(), EditScreenCols() - mlen, msg.k_str(), mlen, g_colorError, true );
-
       } while( timeNow < timeEnd );
-
    VidWrStrColorFlush( DialogLine(), EditScreenCols() - maxWidth, "", 0, g_colorInfo, true );
    }
 
@@ -673,11 +663,9 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
    auto count(0);
    auto tblCol(0);
    Linebuf lbuf;
-
    const auto col_width( g_MaxKeyNameLen + 1 );
    enum { KBUF_WIDTH = 32 };
    Assert( g_MaxKeyNameLen <= KBUF_WIDTH );
-
    for( const auto &pCmd : g_Key2CmdTbl ) {
       if( pCmd->IsFnUnassigned() ) {
          char KeyStringBuf[KBUF_WIDTH+1];
@@ -694,11 +682,9 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
             }
          }
       }
-
    if( pFBuf && tblCol > 0 ) {
       pFBuf->PutLastLine( lbuf.k_str() );
       }
-
    return count;
    }
 

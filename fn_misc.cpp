@@ -44,26 +44,22 @@ bool ARG::seteol() {
 #if defined(_WIN32)
 bool FBUF::MakeDiskFileWritable() {
    auto fFileROAttrChanged( false );
-
    if( FnmIsDiskWritable() ) {
       FileAttribs fa( Name() );
       if( fa.Exists() && fa.IsReadonly() ) {
-         if( fa.MakeWritableFailed( Name() ) )
+         if( fa.MakeWritableFailed( Name() ) ) {
             return Msg( "Could not make '%s' writable!", Name() );
-
+            }
          fFileROAttrChanged = true;
          }
       }
-
    SetDiskRW();
-
    if( !IsNoEdit() ) { // buffer already RW?
-      if( fFileROAttrChanged )
+      if( fFileROAttrChanged ) {
          return !Msg( "%s buf was RW, diskfile now RW", Name() );
-
+         }
       return Msg( "%s buf was RW, did nothing", Name() );
       }
-
    SetDiskRW();
    ClrNoEdit();
    Msg( "%s buf now RW, diskfile %s RW"
@@ -101,12 +97,9 @@ bool ARG::rw() {
 
 #define  THE_EASY_WAY  0
 
-
 class FcLogTm {
    enum { e_YYYY, e_MM, e_DD, e_hh, e_mm, e_ss, e_usec, e_ArrayEls };
-
    int v[e_ArrayEls];
-
    int YYYY()        const { return v[ e_YYYY ]; }
    int MM  ()        const { return v[ e_MM   ]; }
    int DD  ()        const { return v[ e_DD   ]; }
@@ -114,7 +107,6 @@ class FcLogTm {
    int mm  ()        const { return v[ e_mm   ]; }
    int ss  ()        const { return v[ e_ss   ]; }
    int usec()        const { return v[ e_usec ]; }
-
    void YYYY( int val )    { v[ e_YYYY ] = val; }
    void MM  ( int val )    { v[ e_MM   ] = val; }
    void DD  ( int val )    { v[ e_DD   ] = val; }
@@ -122,15 +114,11 @@ class FcLogTm {
    void mm  ( int val )    { v[ e_mm   ] = val; }
    void ss  ( int val )    { v[ e_ss   ] = val; }
    void usec( int val )    { v[ e_usec ] = val; }
-
    STATIC_CONST PCChar nms[e_ArrayEls];
    PCChar FldName( int fnum ) const { return nms[fnum]; }
-
    typedef int (FcLogTm::*pfxUnitConv)( int ith ); // declare type of pointer to class method
-
    STATIC_CONST pfxUnitConv tuConvTbl[e_ArrayEls];
    STATIC_CONST int         daysInMonth[13];
-
    int Sec2Usec( int ) const    { return 1000000; }
    int Min2Sec(  int ) const    { return 60; }
    int Hr2Min(   int ) const    { return 60; }
@@ -142,14 +130,9 @@ class FcLogTm {
          ) ? 1 : 0;              // add one day to Feb for leap year
       }
    int Yr2Mon( int )       { return 12; }
-
-
-
    bool BorrowOk( int fieldToDecr );
    bool decrStepOk( const FcLogTm& decr_by, int fieldToDecr );
-
-   public:
-
+public:
    FcLogTm() {
       v[ e_YYYY ] = 0;
       v[ e_MM   ] = 0;
@@ -159,17 +142,12 @@ class FcLogTm {
       v[ e_ss   ] = 0;
       v[ e_usec ] = 0;
       }
-
    FcLogTm( CompiledRegex::capture_container &pc );
    FcLogTm( const FcLogTm &from );
-
    void  decr( const FcLogTm& decr_by );
    PChar ToStr( PChar buf, int bufSize ) const;
-
    STATIC_CONST char szRe[];
-
    };
-
                            //      1       2       3        4       5       6          7
                            //      Y       M       D        h       m       s          u
 const char   FcLogTm::szRe[] = "(\\d{4})(\\d{2})(\\d{2}):(\\d{2})(\\d{2})(\\d{2})\\.(\\d{6})";
@@ -197,41 +175,29 @@ bool FcLogTm::BorrowOk( int fieldToDecr ) {
       Msg( "Underflow!" );
       return false;
       }
-
    auto &l(      v[ fieldToDecr+1 ] );
    auto &l_borr( v[ fieldToDecr ]   );
-
    0 && DBG( "Borrowing from %s=%d (now %s=%d)", FldName( fieldToDecr ), l_borr, FldName( fieldToDecr+1 ), l );
-
    if( l_borr == 0 ) {
       if( !BorrowOk( fieldToDecr-1 ) )
          return false;
       }
-
    --l_borr;
-
    const auto more( (this->*tuConvTbl[fieldToDecr])( l_borr-1 ) ); // whooee!  http://groups.google.com/groups?hl=en&lr=&selm=Xns947E7EF2B844BukcoREMOVEfreenetrtw%40195.129.110.200&rnum=5
-
    l += more;
-
    0 && DBG( "Borrowed 1=%d from %s to get %d %s", more, FldName( fieldToDecr ), l, FldName( fieldToDecr+1 ) );
-
    return true;
    }
 
 bool FcLogTm::decrStepOk( const FcLogTm& decr_by, int fieldToDecr ) {
    auto       &l(         v[ fieldToDecr ] );
    const auto &r( decr_by.v[ fieldToDecr ] );
-
    0 && DBG( "%s: %d - %d", FldName( fieldToDecr ), l, r );
-
    while( l < r ) { // borrow needed?
       if( !BorrowOk( fieldToDecr-1 ) )
          return false;
       }
-
    l -= r;
-
    return true;
    }
 
@@ -243,12 +209,12 @@ void FcLogTm::decr( const FcLogTm& decr_by ) {
       usec += 1000000;
       dt   -= 1;
       }
-
 #else
-   for( auto ix(e_usec); ix >= e_YYYY; --ix )
-      if( !decrStepOk( decr_by, ix ) )
+   for( auto ix(e_usec); ix >= e_YYYY; --ix ) {
+      if( !decrStepOk( decr_by, ix ) ) {
          break;
-
+         }
+      }
 #endif
    linebuf lb; DBG( "post-decr: %s", ToStr( BSOB(lb) ) );
    }
@@ -292,11 +258,10 @@ FcLogTm::FcLogTm( const FcLogTm &from ) { // copy ctor
 #endif
    }
 
-
 FcLogTm::FcLogTm( CompiledRegex::capture_container &pc ) { DBG( "Count=%d", pc->Count() );
-   for( auto ix(0) ; ix < pc->Count() ; ++ix )
+   for( auto ix(0) ; ix < pc->Count() ; ++ix ) {
       DBG( "%d: '%s'", ix, pc->Str(ix) );
-
+      }
    Assert( pc->Count() == 8 ); // remember: 0th capture is the implicit "whole match"!
 #if THE_EASY_WAY
    struct tm stm;
@@ -324,19 +289,13 @@ FcLogTm::FcLogTm( CompiledRegex::capture_container &pc ) { DBG( "Count=%d", pc->
 
 class FcLogTmMatchHandler : public FileSearchMatchHandler {
    NO_ASGN_OPR(FcLogTmMatchHandler);
-
    FcLogTm d_ltmBaseline;
    bool    d_foundBaseline;
-
    const ARG &d_arg;
-
-   public:
-
+public:
    FcLogTmMatchHandler( ARG &arg ) : d_foundBaseline( false ), d_arg( arg ) {}
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
-
-   protected:
-
+protected:
    bool VMatchActionTaken(        PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &pCaptures );
    bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ); // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
    };
@@ -347,27 +306,21 @@ bool FcLogTmMatchHandler::VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL
 
 bool FcLogTmMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &pCaptures ) {
    FcLogTm val( pCaptures );
-
    if( d_arg.d_cArg == 1 && !d_foundBaseline ) {
       d_foundBaseline = true;
       d_ltmBaseline = val;
       }
-
    FcLogTm rslt( val );
-
    rslt.decr( d_ltmBaseline );
-
-   if( d_arg.d_cArg > 1 )
+   if( d_arg.d_cArg > 1 ) {
       d_ltmBaseline = val;
-
+      }
    linebuf lb;
    rslt.ToStr( BSOB(lb) );
    std::string t0,t1;
    pFBuf->PutLineSeg( cur.lin, lb, t0,t1, cur.col, cur.col + MatchCols );
    InsHiLite1Line( pFBuf, cur, MatchCols );
-
    // DispNeedsRedrawAllLinesAllWindows();
-
    return true;  // "action" taken!
    }
 
@@ -406,16 +359,15 @@ bool ARG::deltalogtm() {
    //
 
    SearchSpecifier ss( FcLogTm::szRe, true );
-   if( ss.HasError() )
+   if( ss.HasError() ) {
       return false;
-
+      }
    FcLogTmMatchHandler mh( *this );
    FileSearcher *pSrchr = new FileSearcherRegex( mh.sm(), ss, mh, false );
    pSrchr->SetInputFile();
    pSrchr->SetBounds( *this );
    pSrchr->FindMatches();
    Delete0( pSrchr );
-
    return true;
    }
 
