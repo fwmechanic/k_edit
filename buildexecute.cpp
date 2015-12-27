@@ -878,7 +878,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          }
       else if( func == fn_mword ) {
          const auto pb( stb.c_str() ); const auto len( stb.length() );
-         if( xCursor >= len ) xCursor = len - 1;
+         if( xCursor >= len ) { xCursor = len - 1; }
          while( xCursor > 0 ) {
             if( --xCursor == 0 ) {
                break;
@@ -1466,8 +1466,8 @@ void ARG::ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const {
       case BOXARG:    *pxLeftIncl  = d_boxarg.flMin.col;
                       *pxRightIncl = d_boxarg.flMax.col;
                       break;
-      case STREAMARG: if(      yLine == d_streamarg.flMin.lin ) *pxLeftIncl  = d_streamarg.flMin.col;
-                      else if( yLine == d_streamarg.flMax.lin ) *pxRightIncl = d_streamarg.flMax.col;
+      case STREAMARG: if(      yLine == d_streamarg.flMin.lin ) { *pxLeftIncl  = d_streamarg.flMin.col; }
+                      else if( yLine == d_streamarg.flMax.lin ) { *pxRightIncl = d_streamarg.flMax.col; }
                       break;
       }
    }

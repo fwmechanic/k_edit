@@ -361,11 +361,12 @@ FTypeSetting *View::GetFTypeSettings() {
    }
 
 int View::ColorIdx2Attr( int colorIdx ) const {
-   if( colorIdx < COLOR::VIEW_COLOR_COUNT )  return  d_pFTS
-                                                  ?  d_pFTS->d_colors[ colorIdx ]
-                                                  : *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
-   if( colorIdx < COLOR::COLOR_COUNT )       return *g_colorVars[ colorIdx    - COLOR::VIEW_COLOR_COUNT ];
-                                             return *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
+   if( colorIdx < COLOR::VIEW_COLOR_COUNT ) { return  d_pFTS
+                                                   ?  d_pFTS->d_colors[ colorIdx ]
+                                                   : *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
+                                            }
+   if( colorIdx < COLOR::COLOR_COUNT )      { return *g_colorVars[ colorIdx    - COLOR::VIEW_COLOR_COUNT ]; }
+                                              return *g_colorVars[ COLOR::ERRM - COLOR::VIEW_COLOR_COUNT ];
    }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -523,8 +524,7 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { en
          STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
          STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
          const auto vnr_fx_len( KSTRLEN(vnr_pfx)+KSTRLEN(vnr_sfx) );
-         if( (wuc.length() > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx )
-           ){
+         if( (wuc.length() > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx ) ) {
             PCChar key( AddKey( wuc.substr( KSTRLEN(vnr_pfx), wuc.length() - vnr_fx_len ) ) );                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
             }
          else {
@@ -641,7 +641,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                   } // xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX
                pNeedle += needle.length() + 1;
                }
-            if( ixBest == stref::npos ) break;
+            if( ixBest == stref::npos ) { break; }
             const auto xFound( ColOfFreeIdx( tw, rl, ixBest ) );
             if(   -1 == d_yWuc // is a selection pseudo-WUC?
                || // or a true WUC
@@ -664,8 +664,8 @@ struct CppCondEntry_t {
    };
 
 STATIC_FXN cppc IsCppConditional( stref src, int *pxMin ) { // *pxMin indexes into src[] which is RAW line text
-   const auto o1( FirstNonBlankOrEnd( src, 0      ) );  if( o1 >= src.length() || !('#' == src[o1]) ) return cppcNone;
-   const auto o2( FirstNonBlankOrEnd( src, o1 + 1 ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
+   const auto o1( FirstNonBlankOrEnd( src, 0      ) );  if( o1 >= src.length() || !('#'   ==   src[o1]) ) { return cppcNone; }
+   const auto o2( FirstNonBlankOrEnd( src, o1 + 1 ) );  if( o2 >= src.length() || !isWordChar( src[o2]) ) { return cppcNone; }
    const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
    STATIC_CONST CppCondEntry_t cond_keywds[] = {
          { "if"      , cppcIf   },
@@ -686,7 +686,7 @@ STATIC_FXN cppc IsCppConditional( stref src, int *pxMin ) { // *pxMin indexes in
 
 STATIC_FXN cppc IsGnuMakeConditional( stref src, int *pxMin ) { // *pxMin indexes into src[] which is RAW line text
    if( !src.empty() && src[0] == HTAB ) { return cppcNone; }
-   const auto o2( FirstNonBlankOrEnd( src, 0      ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) return cppcNone;
+   const auto o2( FirstNonBlankOrEnd( src, 0      ) );  if( o2 >= src.length() || !isWordChar( src[o2] ) ) { return cppcNone; }
    const auto o3( FirstNonWordOrEnd ( src, o2 + 1 ) );  const auto word( src.substr( o2, o3-o2 ) );
    STATIC_CONST CppCondEntry_t cond_keywds[] = {
          { "ifeq"    , cppcIf   },
@@ -1053,7 +1053,7 @@ public:
    };
 
 bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
-   if( 0 == d_num_hl_rgns_found ) return false;
+   if( 0 == d_num_hl_rgns_found ) { return false; }
  //const auto ixStart(                                   0 );
    const auto ixStart( (d_yCache <= yLine) ? d_ixCache : 0 );
    d_ixCache = d_num_hl_rgns_found+1;
@@ -1069,9 +1069,9 @@ bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
          break;
          }
       }
-   if( !(d_ixCache < d_num_hl_rgns_found) ) return false;
+   if( !(d_ixCache < d_num_hl_rgns_found) ) { return false; }
    0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, d_ixCache, d_hl_rgn_array[d_ixCache].rgn.flMin.lin, d_hl_rgn_array[d_ixCache].rgn.flMax.lin );
-   if( yLine < d_hl_rgn_array[d_ixCache].rgn.flMin.lin ) return false;
+   if( yLine < d_hl_rgn_array[d_ixCache].rgn.flMin.lin ) { return false; }
    const auto pFile( CFBuf() );
    const auto rl( pFile->PeekRawLine( yLine ) );
    if( !IsStringBlank( rl ) ) {
@@ -2746,8 +2746,8 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
       cl.Cat( COLOR::INF, pfh->IsDirty() ? "*" : "" );
       }
    if( pfh->FnmIsDiskWritable() && pfh->EolMode()!=platform_eol ) {
-      if( g_fForcePlatformEol )                                           cl.Cat( COLOR::ERRM, "!" );
-                                                                          cl.Cat( COLOR::INF , pfh->EolName() );
+      if( g_fForcePlatformEol )                                          { cl.Cat( COLOR::ERRM, "!" ); }
+                                                                           cl.Cat( COLOR::INF , pfh->EolName() );
       }
    if( pfh->IsNoEdit() )                                                 { cl.Cat( COLOR::ERRM, " !edit!" ); }
 #if defined(_WIN32)
@@ -2811,10 +2811,12 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
       // TODO copy pfh->Name() into pathbuf, adjust commonLen, uniqLen accordingly, fall into else case
       STATIC_CONST char s_dot3[] = "...";
       const auto truncBy( fnLen - (maxFnLen - KSTRLEN(s_dot3)) );
-      if( truncBy > fnLen )
+      if( truncBy > fnLen ) {
          out.Cat( COLOR::TXT, s_dot3 );
-      else
+         }
+      else {
          out.Cat( COLOR::TXT, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).k_str() );
+         }
       }
    else {
       auto pfnm( pfh->Name() );
@@ -3068,7 +3070,7 @@ void ConIO_Shutdown() {
 //***********************************************************************************************
 
 STATIC_FXN bool EditorScreenSizeAllowed( const Point &newSize ) { // checks EDITOR rules for whether new screen size is OK
-   if( newSize.col <= g_iHscroll )        return Msg( "newSize.col (%d) <= g_iHscroll (%d)", newSize.col, g_iHscroll );
+   if( newSize.col <= g_iHscroll ) { return Msg( "newSize.col (%d) <= g_iHscroll (%d)", newSize.col, g_iHscroll ); }
    return Wins_CanResizeContent( newSize );
    }
 
@@ -3081,10 +3083,10 @@ bool VideoSwitchModeToXYOk( Point &newSize ) {
    return rv;
    }
 
-void DispNeedsRedrawCursorMoved() { if( g_CurView() ) g_CurView()->ForceCursorMovedCondition(); }
+void DispNeedsRedrawCursorMoved() { if( g_CurView() ) { g_CurView()->ForceCursorMovedCondition(); } }
 
-void UnhideCursor()  { if( ConOut::SetCursorVisibilityChanged( true  ) )  DispNeedsRedrawCursorMoved(); }
-void HideCursor()    { if( ConOut::SetCursorVisibilityChanged( false ) )  DispNeedsRedrawCursorMoved(); }
+void UnhideCursor()  { if( ConOut::SetCursorVisibilityChanged( true  ) ) { DispNeedsRedrawCursorMoved(); } }
+void HideCursor()    { if( ConOut::SetCursorVisibilityChanged( false ) ) { DispNeedsRedrawCursorMoved(); } }
 
 GLOBAL_VAR int g_iCursorSize = 1;
 
@@ -3093,7 +3095,7 @@ void swidCursorsize( PChar dest, size_t sizeofDest, void *src ) {
    }
 
 PCChar swixCursorsize( stref param ) {
-   if( param.length() != 1 ) return "CursorSize: Value must be 0 or 1 (!len)";
+   if( param.length() != 1 ) { return "CursorSize: Value must be 0 or 1 (!len)"; }
    switch( param[0] ) {
       default:  return "CursorSize: Value must be 0 or 1";
       case '0': g_iCursorSize = false; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); return nullptr;
@@ -3123,10 +3125,12 @@ void View::InsertHiLitesOfLineSeg
    NewScope {
       DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
          if( pDispAddin->VHilitLineSegs( yLine, alcc ) ) {
-            if( EXCLUSIVE_VIEWHILITES )
+            if( EXCLUSIVE_VIEWHILITES ) {
                return;
-            else
+               }
+            else {
                break;
+               }
             }
          }
       }
@@ -3299,16 +3303,14 @@ void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset
    SprintfBuf buf( kszRexFail, errMsg, pszSearchStr );
    0 && DBG( "%s", buf.k_str() );
    0 && DBG( "%s, errOffset=%d", buf.k_str(), errOffset );
-   ColoredLine out;
-   out.Cat( g_colorStatus, "Regex err" );
-   out.Cat( g_colorError , errMsg );
-   out.Cat( g_colorStatus, ": " );
-   if( errOffset > 1 )
-   out.Cat( g_colorStatus, stref( pszSearchStr            , errOffset -1 ) );  // leading OK part of pattern
-   out.Cat( g_colorStatus, stref( pszSearchStr+errOffset  , 1            ) );  // err char of pattern
-   if( pszSearchStrLen > errOffset+1 )
-   out.Cat( g_colorStatus, pszSearchStr+errOffset+1                        );  // post-err part of pattern
-   out.VidWrLine( DialogLine() );
+   ColoredLine                           out;
+                                         out.Cat( g_colorStatus, "Regex err" );
+                                         out.Cat( g_colorError , errMsg );
+                                         out.Cat( g_colorStatus, ": " );
+   if( errOffset > 1 ) {                 out.Cat( g_colorStatus, stref( pszSearchStr            , errOffset -1 ) ); } // leading OK part of pattern
+                                         out.Cat( g_colorStatus, stref( pszSearchStr+errOffset  , 1            ) );  // err char of pattern
+   if( pszSearchStrLen > errOffset+1 ) { out.Cat( g_colorStatus, pszSearchStr+errOffset+1                        ); } // post-err part of pattern
+                                         out.VidWrLine( DialogLine() );
    }
 
 //

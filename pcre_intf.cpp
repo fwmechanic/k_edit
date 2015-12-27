@@ -23,7 +23,6 @@
 #define PCRE_STATIC
 #include <pcre.h>
 
-
 PCRE_EXP_DECL void * pcre_malloc_( size_t bytes ) {
    0 && DBG( "%s: %" PR_SIZET "u bytes", __func__, bytes );
    return AllocNZ_( bytes );
@@ -37,11 +36,9 @@ void PCRE_API_INIT() {
    STATIC_VAR BoolOneShot first;
    if( first() ) {
       0 && DBG( "PCRE version '%s'", pcre_version() );
-
       // Msg( "loaded PCRE %s", version() ); if last saved SRCH was regex, this
       //    will crash because screen-geom vars are not initialized until after the
       //    saved search strings are loaded
-
       pcre_malloc = pcre_malloc_;
       pcre_free   = pcre_free_  ;
       }
@@ -122,11 +119,8 @@ CompiledRegex::capture_container::size_type CompiledRegex::Match( CompiledRegex:
 
 CompiledRegex *Compile_Regex( PCChar pszSearchStr, bool fCase ) {
    PCRE_API_INIT();
-
    0 && DBG( "Compile_Regex! %s", pszSearchStr );
-
    const int options( fCase ? 0 : PCRE_CASELESS );
-
    PCChar errMsg;
    int errOffset;
    auto re( pcre_compile( pszSearchStr, options, &errMsg, &errOffset, nullptr ) );
@@ -135,29 +129,25 @@ CompiledRegex *Compile_Regex( PCChar pszSearchStr, bool fCase ) {
                   Display_hilite_regex_err(        errMsg,        pszSearchStr,     errOffset );
       return nullptr;
       }
-
    auto xtra( pcre_study( re, PCRE_STUDY_JIT_COMPILE, &errMsg ) );
    if( errMsg ) {
       (*pcre_free)( re );
       Msg( "Regex study failed: %s", errMsg );
       return nullptr;
       }
-
    int maxPossCaptures;
    pcre_fullinfo( re, xtra, PCRE_INFO_CAPTURECOUNT, &maxPossCaptures );
    ++maxPossCaptures; // the 0th capture is the WHOLE match
    0 && DBG( "captures: %d", maxPossCaptures );
-
    return new CompiledRegex( re, xtra, maxPossCaptures );
    }
-
 
 #if 0
 
 bool ARG::pcre() {
-   if( !pcre_LdOk() )
+   if( !pcre_LdOk() ) {
       return false;
-
+      }
    PCChar error;
    int erroffset;
    auto re( pcre_compile( "^A.*Z", nullptr, &error, &erroffset, nullptr ) );
@@ -165,9 +155,7 @@ bool ARG::pcre() {
       Msg( "compile failed: %s", error );
       return false;
       }
-
    Msg( "compile OK!" );
-
    pcreCapture ovector[ MAX_CAPTURES + (MAX_CAPTURES/2) ];
    const char str[] = "ABBAZABZBA";
    auto rc( pcre_exec( re, nullptr, str, Strlen(str), nullptr, 0, ovector, sizeof(ovector) / sizeof(int) ) );
@@ -290,12 +278,10 @@ bool ARG::pcre() {
       //
       Msg( "'%.*s' matched", ovector[0].Len(), str+ovector[0].oFirst );
       }
-
    return true;
    }
 
 #endif
-
 
 //
 // GenericListEl was developed for encoding regex replacement strings which can
@@ -311,32 +297,25 @@ bool ARG::pcre() {
 //
 struct GenericListEl {
    DLinkEntry<GenericListEl> dlink;
-
    enum { IS_INT, IS_STRING } d_typeof;
    union {
       int   num;
       char  str[ sizeof(int) ];
       } value;
-
    bool   IsStr( const char **ppStr ) const {
       *ppStr = d_typeof == IS_STRING ? value.str : nullptr;
       return   d_typeof == IS_STRING;
       }
-
    bool   IsInt( int *pInt ) const {
       *pInt = d_typeof == IS_INT ? value.num : 0;
       return  d_typeof == IS_INT;
       }
-
    };
-
 
 struct GenericList {
    DLinkHead<GenericListEl> d_head;
-
    GenericList() {}
    virtual ~GenericList();
-
    void Cat( int num );
    void Cat( PCChar src, size_t len );
    };
@@ -358,9 +337,9 @@ void GenericList::Cat( int num ) {
    }
 
 void GenericList::Cat( PCChar src, size_t len ) {
-   if( len == 0 )
+   if( len == 0 ) {
        len = Strlen( src );
-
+       }
    GenericListEl *rv = static_cast<GenericListEl *>( // cannot use auto due to 'sizeof( *rv )'
          AllocNZ_(
            sizeof( *rv )     // needed control struct
@@ -416,7 +395,6 @@ STATIC_FXN void test_rpc( PCChar szRawReplace ) {
          }
       }
    }
-
 
 #if 0
 
