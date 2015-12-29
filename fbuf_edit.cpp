@@ -133,7 +133,7 @@ void PrettifyWriter
             }
          }
       }
-   if( chTrailSpcs && sit == src.cend() || spacesonly( sit, src.cend() ) ) { // _trailing_ spaces on the source side
+   if( chTrailSpcs && (sit == src.cend() || spacesonly( sit, src.cend() )) ) { // _trailing_ spaces on the source side
       stref destseg( dest.data() + dofs, dix ); // what we wrote above
       const auto ix_last_non_white( destseg.find_last_not_of( SPCTAB ) );
       if( ix_last_non_white != dix-1 ) { // any trailing blanks at all?
