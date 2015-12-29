@@ -19,7 +19,7 @@
 
 #pragma once
 
-static_assert( CHAR_MAX > SCHAR_MAX, "char not unsigned" );
+// static_assert( CHAR_MAX > SCHAR_MAX, "char not unsigned" );
 
 //
 // MACRO_BACKSLASH_ESCAPES - Affects escape char defn and behavior in macro
@@ -794,7 +794,7 @@ public:
 private:
    ULC_Cursor   d_current;       // current window & cursor state
    ULC_Cursor   d_prev;          // window state before any cursor movements
-   LINE         d_prevLineCount; // used for tail-cursor-scrolling
+   LINE         d_prevLineCount = -1; // used for tail-cursor-scrolling
 public:
    ULC_Cursor   d_saved;         // window state saved by ARG::savecur
 
