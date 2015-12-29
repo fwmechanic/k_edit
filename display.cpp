@@ -969,10 +969,9 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          const auto tw( CFBuf()->TabWidth() );
          const auto xC  ( ColOfFreeIdx( tw, rl, ixTgt                        ) );
          const auto xPWS( ColOfFreeIdx( tw, rl, rl.find_last_not_of( SPCTAB ) ) );
-         alcc.PutColor( xC, xPWS - xC + 1, COLOR::COM );
+         alcc.PutColor( xC, xPWS - xC + 1, COLOR::COM ); // len extends 1 char into dead space beyond line text: is cosmetically appealing
          }
       }
-
    return false;
    }
 
