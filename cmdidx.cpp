@@ -532,9 +532,14 @@ STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
       const auto &cand( g_CmdTable[ cmpLine ] );
       const auto rslt( cmpi( src, cand.Name() ) );
       if( rslt == 0 ) { 0 && DBG( "%s=[%" PR_SIZET "u]: %" PR_BSR "|", __func__, cmpLine, BSR(src) );
-         return const_cast<PCMD>( &cand ); }
-      if( rslt <  0 ) { /* handle unsigned underflow/wraparound */ if( cmpLine==0 ) break;
-                        yMax = cmpLine - 1; }
+         return const_cast<PCMD>( &cand );
+         }
+      if( rslt <  0 ) { /* handle unsigned underflow/wraparound */
+         if( cmpLine==0 ) {
+            break;
+            }
+         yMax = cmpLine - 1;
+         }
       if( rslt >  0 ) { yMin = cmpLine + 1; }
       0 && DBG( "%s=[%" PR_SIZET "u,%" PR_SIZET "u]: %" PR_BSR "|", __func__, yMin, yMax, BSR(src) );
       }

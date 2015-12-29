@@ -109,7 +109,7 @@ STATIC_FXN bool IsolateFilename( sridx *pMin, sridx *pMax, stref rl ) {
       ixStart = FirstNonBlankOrEnd( rl, ixStart   );
       ixEnd   = FirstBlankOrEnd   ( rl, ixStart+1 );
       }
-   if( ixStart >= ixEnd ) return false;
+   if( ixStart >= ixEnd ) { return false; }
    *pMin = ixStart;
    *pMax = ixEnd  ;
    return true;
@@ -179,8 +179,8 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
          }
       RTN_false_ON_BRK;
       const auto glif_rv( d_pFBuf->GetLineIsolateFilename( d_sbuf, d_curLine++, 0 ) );
-      if( glif_rv < 0 ) return false;  // no more lines
-      if( glif_rv > 0 ) d_pCfxGen = new CfxFilenameGenerator( d_sbuf, ONLY_FILES );
+      if( glif_rv < 0 ) { return false; } // no more lines
+      if( glif_rv > 0 ) { d_pCfxGen = new CfxFilenameGenerator( d_sbuf, ONLY_FILES ); }
       }
    }
 
@@ -311,8 +311,9 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
                       ++pName;
                       term = '}';
                       }
-                   else
+                   else {
                       term = ':';
+                      }
                    break;
          case '%': term = '%';
                    break;
@@ -406,8 +407,9 @@ DirListGenerator::DirListGenerator( PCChar dirName ) {
       0 && DBG( "Looking in ='%s'", pbuf.c_str() );
       WildcardFilenameGenerator wcg( pbuf.c_str(), ONLY_DIRS );
       while( wcg.VGetNextName( pbuf ) ) {
-         if( !Path::IsDotOrDotDot( pbuf ) )
+         if( !Path::IsDotOrDotDot( pbuf ) ) {
             AddName( pbuf );
+            }
          0 && DBG( "   PBUF='%s' DBUF='%" PR_BSR "'", pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
          }
       }
@@ -629,10 +631,8 @@ Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=1 };
       DB && DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
       }
    else {
-      if( '$' == pszSrc[0] )
-         SearchEnvDirListForFile( st );
-      else
-         st = pszSrc;
+      if( '$' == pszSrc[0] ) { SearchEnvDirListForFile( st ); }
+      else                   { st = pszSrc; }
       }
    DB && DBG( "%s post-expansion='%s'", __func__, st.c_str() );
    st = Path::Absolutize( st.c_str() );
