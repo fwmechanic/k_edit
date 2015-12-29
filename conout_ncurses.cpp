@@ -84,7 +84,7 @@ void ConOut::SetCursorLocn( int yLine, int xCol ) {
    refresh();
    }
 int ConOut::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
-   0 && DBG( "%s@%d,%d=%*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
+   0 && DBG( "%s@%d,%d=%.*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
    sizeY = sizeY; // CID128046, CID131906 keep compiler quiet about unused variable
