@@ -81,25 +81,23 @@ STATIC_FXN bool SwitchToNextCmdlineFile() {
       const auto fOptT( pNxtArg[0] == '|' );
       const auto pFnm( pNxtArg + (fOptT ? 1 : 0) );
       if( fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( pFnm ) ) {
-         if( fOptT )
+         if( fOptT ) {
             g_CurFBuf()->SetForgetOnExit();
-
+            }
          return true;
          }                         0 && DBG( "%s failed %s", FUNC, pNxtArg );
       }
-
    return false;
    }
-
 
 STATIC_CONST char kszThisProgVersion[] = "2.0";
 STATIC_CONST char kszTmpFBufMagic[] = "FMT0";
 
 PCChar ProgramVersion() {
    STATIC_VAR char szProgramVersion[40];
-   if( !szProgramVersion[0] )
+   if( !szProgramVersion[0] ) {
       safeSprintf( BSOB(szProgramVersion), "Kevin's Editor %s", kszThisProgVersion );
-
+      }
    return szProgramVersion;
    }
 
@@ -115,7 +113,6 @@ PCChar ExecutableFormat() {
       ;
    return kszExecutableFormat_;
    }
-
 
 STATIC_FXN bool fgotline( Xbuf *xb, FILE *f ) {
    if( feof( f ) ) return false;
@@ -146,10 +143,8 @@ STATIC_FXN void StrStartOfNext2Tokens( PChar pszStringToSplit, PPChar pchTokenSt
       *pC++ = '\0';
       pC = StrPastAnyBlanks( pC );
       }
-
    *pchNextTokenStart = pC;
    }
-
 
 STATIC_VAR struct {
    bool  fDoIt;
@@ -163,16 +158,15 @@ STATIC_FXN void InitNewView_File( PChar filename ) {
       *filenameEnd = '\0'; // filename becomes ASCIZ as filename APIs mostly require ASCIZ (OS ABI defines filename strings thus)
       pNextTokenStart = filenameEnd + 1;
       }
-   else
+   else {
       StrStartOfNext2Tokens( filename, &filename, &pNextTokenStart );
-
+      }
    if( s_ForgetAbsentFiles.fDoIt && !FileAttribs( filename ).Exists() ) {
       // garbage-discard mode: don't create Views for nonexistent files
       if( !s_ForgetAbsentFiles.logfb ) {
          FBOP::FindOrAddFBuf( "<forgotten-files>", &s_ForgetAbsentFiles.logfb );
          s_ForgetAbsentFiles.logfb->PutFocusOn();
          }
-
       s_ForgetAbsentFiles.logfb->PutLastLine( filename );
       DispDoPendingRefreshes();
       //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -216,8 +210,9 @@ STATIC_FXN void saveScrnDims( FILE *fout ) { fprintf( fout, "%s%dx%d\n", kszSCRN
 STATIC_CONST char kszSRC[] = "SRC:";
 STATIC_FXN bool recovSRC( PCChar lbuf ) {
    const auto fFailed( ToBOOL( Strnicmp( lbuf, kszSRC, KSTRLEN(kszSRC) ) ) );
-   if( !fFailed )
+   if( !fFailed ) {
       g_SnR_szSearch = lbuf+KSTRLEN(kszSRC);
+      }
    return fFailed;
    }
 STATIC_FXN void saveSRC( FILE *fout ) { fprintf( fout, "%s%s\n", kszSRC, g_SnR_szSearch.c_str() ); }
@@ -225,8 +220,9 @@ STATIC_FXN void saveSRC( FILE *fout ) { fprintf( fout, "%s%s\n", kszSRC, g_SnR_s
 STATIC_CONST char kszDST[] = "DST:";
 STATIC_FXN bool recovDST( PCChar lbuf ) {
    const auto fFailed( ToBOOL( Strnicmp( lbuf, kszDST, KSTRLEN(kszDST) ) ) );
-   if( !fFailed )
+   if( !fFailed ) {
       g_SnR_szReplacement = lbuf+KSTRLEN(kszDST);
+      }
    return fFailed;
    }
 STATIC_FXN void saveDST( FILE *fout ) { fprintf( fout, "%s%s\n", kszDST, g_SnR_szReplacement.c_str() ); }
@@ -250,19 +246,17 @@ STATIC_CONST struct {
 STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
    auto fSyncd( false );
    Xbuf xb( BUFBYTES+10 );  // as long as an editor line, plus room for tmpfile line prefixes (e.g. "SRCH:")
-
    int ix(0);
    for( ; ix < ELEMENTS(stateF_lineprocessor) ; ++ix ) {
-      if( stateF_lineprocessor[ ix ].lpRecov )
+      if( stateF_lineprocessor[ ix ].lpRecov ) {
          break;
+         }
       }
    if( !(ix < ELEMENTS(stateF_lineprocessor)) ) {
       DBG( "%s couldn't find first reader in stateF_lineprocessor", FUNC );
       return;
       }
-
    DBG_RECOV && DBG( "first reader is %s", stateF_lineprocessor[ ix ].description );
-
    while( 1 ) {
       if( !fgotline( &xb, ifh ) ) {
          DBG( "%s hit EOF (or rd err) while trying to sync at line %d of tmpfile", FUNC, ix+1 );
@@ -275,7 +269,6 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
          break;
          }
       }
-
    for( ++ix ; ix < ELEMENTS(stateF_lineprocessor) ; ++ix ) {
       if( !fgotline( &xb, ifh ) ) {
          DBG( "%s hit EOF (or rd err) at line %d of tmpfile", FUNC, ix+1 );
@@ -290,13 +283,11 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
          return;
          }
       }
-
    // move existing Views, later append them to tail
    // works IFF "case '>': InitNewWin" is commented out below!!!
    ViewHead tmpVHd;
    ViewHead &cvh( g_CurViewHd() );
    DLINK_MOVE_HD( tmpVHd, cvh );
-
    auto winCnt(0);
    while( winCnt <= 1 && fgotline( &xb, ifh ) ) {
       const auto buf( xb.wbuf() );
@@ -310,10 +301,8 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
          case ' ': InitNewView_File( buf+1 );  break;  // another View + FBUF entry
          }
       }
-
    DLINK_JOIN( cvh, tmpVHd, dlinkViewsOfWindow );
    cvh.front()->PutFocusOn();
-
    if( s_ForgetAbsentFiles.logfb ) {
        s_ForgetAbsentFiles.logfb->ClearUndo();
        s_ForgetAbsentFiles.logfb->UnDirty();
@@ -359,10 +348,11 @@ STATIC_FXN void RecoverFromStateFile() {
    }
 
 STATIC_FXN void WriteStateFile( FILE *ofh ) {
-   for( const auto &sflp : stateF_lineprocessor )
-      if( sflp.lpSave )
+   for( const auto &sflp : stateF_lineprocessor ) {
+      if( sflp.lpSave ) {
           sflp.lpSave( ofh );
-
+          }
+      }
    Wins_WriteStateFile( ofh );
    }
 
@@ -389,7 +379,6 @@ STATIC_FXN void InitFromStateFile() { enum { DD=0 };   DD && DBG( "%s+", FUNC );
    DD && DBG( "%s-", FUNC );
    }
 
-
 //*************************************************************************************************
 //*************************************************************************************************
 //*************************************************************************************************
@@ -398,9 +387,7 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    if( processExitCode != 0 ) {                          DV && DBG("%s invoking SW_BP", __func__ );
       SW_BP;  // sw breakpoint
       }
-
    Msg( nullptr );
-
    if( fWriteStateFile ) {                               DV && DBG("%s LuaCtxt_ALL::call_EventHandler( \"EXIT\" );", __func__ );
       LuaCtxt_ALL::call_EventHandler( "EXIT" );          DV && DBG("%s WriteStateFile();", __func__ );
       WriteStateFile();
@@ -414,9 +401,9 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
                                                          DV && DBG("%s CloseFTypeSettings();", __func__ );
    CloseFTypeSettings();
                                                          DV && DBG("%s DestroyViewList(%d);", __func__, g_iWindowCount() );
-   for( auto &win : g__.aWindow )
+   for( auto &win : g__.aWindow ) {
       DestroyViewList( &win->ViewHd );
-                                                         DV && DBG("%s RemoveFBufOnly();", __func__ );
+      }                                                  DV && DBG("%s RemoveFBufOnly();", __func__ );
    while( auto pFb = g_FBufHead.front() )
       pFb->RemoveFBufOnly();
 
@@ -427,11 +414,9 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    exit( processExitCode );
    }
 
-
 STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
    enum { rvUSER_ESCAPED = true, rvWILL_EXIT = false };
    BoolOneShot NeedToQueryUser;
-
 #if FBUF_TREE
    rb_traverse( pNd, g_FBufIdx )
 #else
@@ -456,7 +441,6 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
                if( pFBuf2->IsDirty() && pFBuf2->FnmIsDiskWritable() )
                   ++numDirtyFiles;
                }
-
             switch( chGetCmdPromptResponse( "yna", -1, -1, "Save ALL %d remaining changed files (Y/N)? ", numDirtyFiles ) ) {
                default:   Assert( 0 );  // chGetCmdPromptResponse bug or params out of sync
                case 'n':                         break;        // will ask user about each file in turn
@@ -465,7 +449,6 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
                case 'y':  WriteAllDirtyFBufs();  return rvWILL_EXIT;
                }
             }
-
          switch( chGetCmdPromptResponse( "yna", -1, -1, "%s has changed!  Save changes (Y/N/A)? ", pFBuf->Name() ) ) {
             default:   Assert( 0 );            // chGetCmdPromptResponse bug or params out of sync
             case -1:                           return rvUSER_ESCAPED;
@@ -475,7 +458,6 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
             }
          }
       }
-
    return rvWILL_EXIT;
    }
 
@@ -484,12 +466,10 @@ GLOBAL_VAR bool g_fAskExit; // global/switchval
 
 bool ARG::exit() {
    DBG( "%s ***************************************************", FUNC );
-
    bool fToNextFile;
    switch( d_argType )
     {
     default:      return BadArg();
-
     case NULLARG: DBG( "%s NULLARG", FUNC );
                   {
                   const auto filesRemaining( NumberOfCmdlineFilesRemaining() );
@@ -502,17 +482,14 @@ bool ARG::exit() {
                      );
                   }
                   break;
-
     case NOARG:   DBG( "%s NOARG", FUNC );
                   fToNextFile = true;
                   break;
     }
-
    if( fToNextFile && SwitchToNextCmdlineFile()     ) { DBG( "%s ********* switching to another file *********", FUNC );  return false; }
    if( !KillAllBkgndProcesses()                     ) { DBG( "%s ********* !KillAllBkgndProcesses() *********" , FUNC );  return false; }
    if( g_fAskExit && !ConIO::Confirm( "Exit the Editor?" ) ) { DBG( "%s ********* user cancelled exit A *********"    , FUNC );  return false; }
    if( SaveAllDirtyFilesUserEscaped()               ) { DBG( "%s ********* user cancelled exit B *********"    , FUNC );  return false; }
-
    DBG( "%s exiting ===========================================================", FUNC );
    EditorExit( 0, true );
    return false; // silence compiler warning
@@ -521,31 +498,27 @@ bool ARG::exit() {
 STATIC_VAR PFBUF s_pFBufRsrc;
 
 STATIC_FXN bool OpenRsrcFileFailed() {
-   if( s_pFBufRsrc ) return false;
-
+   if( s_pFBufRsrc ) { return false; }
    STATIC_VAR Path::str_t s_pszRsrcFilename;
    if( s_pszRsrcFilename.empty() ) {
       s_pszRsrcFilename = ThisProcessInfo::ExePath() + static_cast<Path::str_t>(".krsrc");
       SearchEnvDirListForFile( s_pszRsrcFilename );
       }
-
    0 && DBG( "%s opens Rsrc file '%s'", FUNC, s_pszRsrcFilename.c_str() );
-
    FBOP::FindOrAddFBuf( s_pszRsrcFilename, &s_pFBufRsrc );
    return s_pFBufRsrc->ReadDiskFileNoCreateFailed();
    }
 
-
 stref IsolateTagStr( stref src ) {
    const auto ixLSQ( src.find_first_not_of( SPCTAB ) );
-   if( stref::npos==ixLSQ || src[ixLSQ] != '[' )
+   if( stref::npos==ixLSQ || src[ixLSQ] != '[' ) {
       return stref();
-
+      }
    src.remove_prefix( ixLSQ+1 );
    const auto ixRSQ( src.find( ']' ) );
-   if( stref::npos==ixRSQ )
+   if( stref::npos==ixRSQ ) {
       return stref();
-
+      }
    return src.substr( 0, ixRSQ );
    }
 
@@ -578,41 +551,33 @@ STATIC_FXN LINE FindRsrcTag( stref srKey, PFBUF pFBuf, const LINE startLine, boo
    return -1;
    }
 
-
 class RsrcSectionWalker {
    LINE    d_lnum;
    stref   d_tagbuf;
-
-   public:
-
+public:
    RsrcSectionWalker( stref pszSectionName ) : d_lnum(0), d_tagbuf(pszSectionName) {}
    bool NextSectionInstance( FBufLocn *fl, bool fHiLiteTag=false );
    stref SectionName() const { return d_tagbuf; }
    };
 
 bool RsrcSectionWalker::NextSectionInstance( FBufLocn *fl, bool fHiLiteTag ) {
-   if( OpenRsrcFileFailed() )
+   if( OpenRsrcFileFailed() ) {
       return false;
-
-   if( (d_lnum=FindRsrcTag( d_tagbuf, s_pFBufRsrc, d_lnum, fHiLiteTag )) < 0 )
+      }
+   if( (d_lnum=FindRsrcTag( d_tagbuf, s_pFBufRsrc, d_lnum, fHiLiteTag )) < 0 ) {
       return false;
-
+      }
    fl->Set( s_pFBufRsrc, Point(d_lnum,0) );
-
    ++d_lnum; // next call will find a different section tag
-
    return true;
    }
-
 
 bool ARG::ext() {
    switch( d_argType ) {
       default:
            return BadArg();
-
       case NOARG: { // if noarg, go to extension- or ftype- section of .krsrc assoc w/curfile
            const auto lastTag( LastRsrcLdFileSectionNm() );
-
            // pass 1: find out how many matching tags there are
            auto count(0);
            {
@@ -620,11 +585,10 @@ bool ARG::ext() {
            FBufLocn fl_dummy;
            while( rsw.NextSectionInstance( &fl_dummy ) )
               ++count;
-
-           if( !count )
+           if( !count ) {
               return Msg( "no sections matching '%" PR_BSR "'", BSR(rsw.SectionName()) );
+              }
            }
-
            // pass 2: let the user choose the tag/section he wants
            while(1) {
               RsrcSectionWalker rsw( lastTag );
@@ -636,9 +600,9 @@ bool ARG::ext() {
                     Msg( "only one section matching '%" PR_BSR "'", BSR(rsw.SectionName()) );
                     return true;
                     }
-
-                 if( ConIO::Confirm( FmtStr<50>( "Stop here (%d of %d)? ", ix, count ) ) )
+                 if( ConIO::Confirm( FmtStr<50>( "Stop here (%d of %d)? ", ix, count ) ) ) {
                     return true;
+                    }
                  }
               }
            // break; unreachable
@@ -646,13 +610,11 @@ bool ARG::ext() {
       }
    }
 
-
 STATIC_FXN bool RsrcLdSectionFound( stref pszSectionName, int *pAssignCountAccumulator ) {
    if( pszSectionName.length() == 0 ) { return false; }
    RsrcSectionWalker rsw( pszSectionName );
    FmtStr<90> tag( "LoadRsrcSection [%" PR_BSR "]", BSR(rsw.SectionName()) );
    AssignLogTag( tag.k_str() );
-
    auto fFound(false);
    auto totalAssignsDone(0);
    FBufLocn fl;
@@ -663,12 +625,10 @@ STATIC_FXN bool RsrcLdSectionFound( stref pszSectionName, int *pAssignCountAccum
       AssignLineRangeHadError( tag.k_str(), s_pFBufRsrc, fl.Pt().lin, -1, &assignsDone );
       totalAssignsDone += assignsDone;
       }
-
-   if( pAssignCountAccumulator )
+   if( pAssignCountAccumulator ) {
       *pAssignCountAccumulator += totalAssignsDone;
-
+      }
    0 && DBG( "%s %+d for [%" PR_BSR "]", FUNC, fFound ? totalAssignsDone : -1, BSR(pszSectionName) );
-
    return fFound;
    }
 
@@ -693,12 +653,10 @@ STATIC_FXN int ReinitializeMacros( bool fEraseExistingMacros ) {
       UnbindMacrosFromKeys();
       FreeAllMacroDefs();
       }
-
    AssignStrOk( "curfilename:=" );
    AssignStrOk( "curfile:="     );
    AssignStrOk( "curfileext:="  );
    AssignStrOk( "curfilepath:=" );
-
    auto assignDone(0);
    if( s_fLoadRsrcFile ) {
       RsrcLdSectionFound( "@startup"      , &assignDone ); // [@startup]
@@ -706,13 +664,10 @@ STATIC_FXN int ReinitializeMacros( bool fEraseExistingMacros ) {
       RsrcLdSectionFound( OsVerStr()      , &assignDone ); // [osver]
       RsrcLdSectionFound( GetDisplayName(), &assignDone ); // [vidname]
       }
-
    if( g_CurFBuf() ) {
       FBOP::CurFBuf_AssignMacros_RsrcLd();
       }
-
    DispNeedsRedrawAllLinesAllWindows();
-
    return assignDone;
    }
 
@@ -723,10 +678,9 @@ STATIC_VAR Path::str_t s_sLastRsrcLdFileSectionNm;
 bool RsrcLdFileSection( stref pszSectionName ) {
    auto fDummy(0);
    const auto fSectionExists( RsrcLdSectionFound( pszSectionName, &fDummy ) );
-
-   if( fSectionExists )
+   if( fSectionExists ) {
       s_sLastRsrcLdFileSectionNm.assign( BSR2STR(pszSectionName) );
-
+      }
    return fSectionExists;
    }
 
@@ -775,21 +729,18 @@ PCChar LastRsrcLdFileSectionNm() {
 //
 
 bool ARG::initialize() {
-   if( OpenRsrcFileFailed() )
+   if( OpenRsrcFileFailed() ) {
       return false;
-
+      }
    auto assignsDone(0);
    switch( d_argType ) {
     default:      return BadArg();
-
     case TEXTARG: RsrcLdSectionFound( d_textarg.pText, &assignsDone );
                   break;
-
     case NOARG:   s_pFBufRsrc->ReadDiskFileNoCreateFailed(); // force reread
                   assignsDone = ReinitializeMacros( true );
                   break;
     }
-
    Msg( "%d assign%s done", assignsDone, Add_s( assignsDone ) );
    return assignsDone > 0;
    }
@@ -800,9 +751,9 @@ bool ARG::initialize() {
 
 STATIC_FXN bool putenv_ok( PCChar szNameEqualsVal ) {
    const auto ok( _putenv( szNameEqualsVal ) == 0 );
-   if( !ok )
+   if( !ok ) {
       ErrorDialogBeepf( "%s(%s) FAILED: %s", FUNC, szNameEqualsVal, strerror( errno ) );
-
+      }
    return ok;
    }
 
@@ -825,7 +776,6 @@ bool PutEnvOk( PCChar szNameEqualsVal ) {
    if( pEQ == szNameEqualsVal ) { // no name?
       return false; // not OK
       }
-
    if( !pEQ ) {
 #if !defined(_WIN32)
       return 0 == unsetenv( szNameEqualsVal );
@@ -849,14 +799,11 @@ STATIC_FXN bool PutEnvChkOk( PCChar szNameEqualsVal ) {
       }
    }
 
-
 #ifdef fn_setenv
-
 bool ARG::setenv() {
    switch( d_argType ) {
       default:      return BadArg();
       case TEXTARG: return PutEnvChkOk( d_textarg.pText );
-
       case LINEARG: //lint -fallthrough
       case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                        if( aw.GetLine() && !PutEnvChkOk( aw.c_str() ) ) {
@@ -866,7 +813,6 @@ bool ARG::setenv() {
                     return true;
       }
    }
-
 #endif// fn_setenv
 
 //------------------------------------------------
@@ -874,7 +820,6 @@ bool ARG::setenv() {
 STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    PutEnvOk( "K_RUNNING?", "yes" );
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
-
    auto mkdir_stf = [&]() {
       if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
       if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
@@ -920,7 +865,6 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
 #undef   HOME_ENVVAR_NM
 #undef   HOME_SUBDIR_NM
 #endif
-
    mkdir_stf();
   #if !defined(_WIN32)
    { // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host
@@ -942,13 +886,10 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    }
 
 class kGetopt : public Getopt {
-   public:
-
+public:
    void VErrorOut( PCChar msg );
-
    kGetopt( int argc_, PPCChar argv_, PCChar optset_ ) : Getopt( argc_, argv_, optset_ ) {}
    };
-
 
 void kGetopt::VErrorOut( PCChar msg ) {
    printf(
@@ -990,10 +931,9 @@ void kGetopt::VErrorOut( PCChar msg ) {
       , d_pgm.c_str()
       , szAssignLog
       );
-
-   if( msg )
+   if( msg ) {
       printf( "\n***>>> %s\n", msg );
-
+      }
    exit( 1 );
    }
 
@@ -1016,7 +956,6 @@ STATIC_FXN void CreateStartupPseudofiles() { // construct special files early so
       { szRecord        , &g_pFbufRecord       , KEEPTRAILSPCS },
       { szClipboard     , &g_pFbufClipboard    , KEEPTRAILSPCS }, // aside: <clipboard> is filtered out of <files>
       };
-
    for( const auto &sPf : startupPseudofiles ) {
       const auto pFbuf( AddFBuf( sPf.name, sPf.ppFBufVar ) );
       if( sPf.flags & KEEPTRAILSPCS )  pFbuf->KeepTrailSpcs();
@@ -1031,46 +970,37 @@ STATIC_FXN ptrdiff_t memdelta() {
    return delta;
    }
 
-
 // NB: CANNOT use Main function's envp parameter to initialize g_envp: it does
 //     not point to the same environment that _environ does (the latter is the
 //     one that's modified by _putenv())
 //
 GLOBAL_VAR char ** &g_envp = WL( _environ, environ );
 
-#ifdef APP_IN_DLL
-DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint from K.EXE
-#else
+#ifndef APP_IN_DLL
 int CDECL__ main( int argc, const char *argv[], const char *envp[] )
+#else
+DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint from K.EXE
 #endif
    {
    extern void test_CaptiveIdxOfCol();
    //          test_CaptiveIdxOfCol();
-
    ThisProcessInfo::Init();
-
    enum { DBGFXN=1 };
    DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT "d", __func__, memdelta() );
-
 #if defined(_Win32)
    extern void TestMQ();
    TestMQ();
 #endif
-
    0 && DBG( "Got to Main!!!" );
-
    // for( auto argi(0); argi < argc; ++argi ) { DBG( "argv[%d] = '%s'", argi, argv[argi] ); }
-
    AssignLogTag( "InitEnvRelatedSettings" );
    InitEnvRelatedSettings();
    CmdIdxInit();
    InitFTypeSettings();
-
 #if FBUF_TREE
    FBufIdxInit();
 #endif
    CreateStartupPseudofiles();
-
    auto fForceNewConsole(false);
    PCChar cmdlineMacro(nullptr);
    kGetopt opt( argc, argv, "acde:h?nt:vx:" );
@@ -1078,51 +1008,37 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
      switch( ch ) {
        default:  opt.VErrorOut( FmtStr<60>( "internal error: unsupported option -%c\n", ch ) );
                  break;
-
        case ' ': // NON-OPTION-ARGUMENT
                  AddCmdlineFile( opt.nextarg(), false );
                  break;
-
        case 'a': AddFBuf( szAssignLog, &g_pFBufAssignLog );
                  AssignLogTag( "editor startup" );
                  break;
-
        case 'c': s_ForgetAbsentFiles.fDoIt = true;
                  break;
-
        case 'd': s_fLoadRsrcFile = false; // don't read .krsrc or the status file.
                  break;
-
        case 'e': PutEnvChkOk( opt.optarg() );
                  break;
-
-       case '?':
+       case '?': //lint -fallthrough
        case 'h': opt.VErrorOut( nullptr );
                  break;
-
        case 'n': fForceNewConsole = true;
                  break;
-
        case 'v': g_fViewOnly = true;
                  break;
-
        case 't': AddCmdlineFile( opt.optarg(), true ); // The following filename is not retained in the tmpfile.
                  break;
-
        case 'x': cmdlineMacro = opt.optarg();
                  break;
        }
      }
-
    {                             DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
    MainThreadPerfCounter pc;
-
    if( !ConIO_InitOK( fForceNewConsole ) ) { exit( 1 ); }
                                  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ConIO_InitOK"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-
    CreateWindow0();
    s_pFbufLog->PutFocusOn();
-
    {
    auto pb( RsrcFilename( "luaedit" ) );
    if( IsFile( pb.c_str() ) ) {
@@ -1141,34 +1057,26 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
                                  DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
       }
    }
-
    register_atexit_search();
-
    InitFromStateFile();          DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    ReinitializeMacros( false );  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    // MsgClr(); // hack this is the earliest that it will actually have the effect of clearing the dialog line on startup (which is REALLY necessary in dialogtop mode)
    InitJobQueues();              DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru InitJobQueues"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
                                  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d done"                   , __func__, pc.Capture(), memdelta() );
    }
-
    win_fully_on_desktop();
-
    if( CmdFromName( "autostart" ) ) {
       AssignLogTag( FmtStr<_MAX_PATH+50>( "running 'autostart' macro on FBUF \"%s\"", g_CurFBuf()->Name() ) );
       fExecuteSafe( "autostart" );
       }
-
    if( cmdlineMacro ) {
       AssignLogTag( FmtStr<_MAX_PATH+50+50>( "running cmdline macro '%s' on FBUF \"%s\"", cmdlineMacro, g_CurFBuf()->Name() ) );
       fExecuteSafe( cmdlineMacro );
       }
-
    DispDoPendingRefreshes();
-
 #if 0 && !defined(_WIN32)
    ConIO_Shutdown();
    exit(0);
 #endif
-
    FetchAndExecuteCMDs( true );  // the mainloop: NEVER RETURNS
    }

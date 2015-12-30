@@ -174,7 +174,6 @@ bool ARG::longline() {
       yMin = 0;
       yMax = pcf->LineCount();
       }
-
    auto max_lnum( 0 );  auto max_len ( 0 );
    for( auto iy(yMin); iy <= yMax; ++iy ) {
       const auto len( FBOP::LineCols( pcf, iy ) );
@@ -183,7 +182,6 @@ bool ARG::longline() {
          max_len  = len;
          }
       }
-
    const Point Cursor( pcv->Cursor() );
    pcv->MoveCursor( fMoveLine ? max_lnum : Cursor.lin, max_len );
    return true;
@@ -243,11 +241,10 @@ bool ARG::makebox() {
 
    fnMsg( "Key->Box: 0->Å 1->Î 2->Ø 3->× 4->+ 5->= 6->° 7->± 8->² 9->Û A->þ ?->?" );
    fnMsg( "Key->Box: 1->Å 2->Î 3->Ø 4->× 5->+ 6->= 7->° 8->± 9->² 0->Û A->þ ?->?" );
-
    const char ch( tolower( CharAsciiFromKybd() ) );
-   if( ch == 27 )  // ESC == cancel
+   if( ch == 27 ) { // ESC == cancel
       return false;
-
+      }
    char   cbuf[CORNER_CHARS];
    PCChar pchBox;
    STATIC_CONST char achMenuChar[]="1234567890A";
@@ -259,7 +256,6 @@ bool ARG::makebox() {
    else {
       pchBox = achBox[pchBox - achMenuChar];
       }
-
    std::string buf;
    std::string stTmp;
    switch( d_argType ) {
@@ -270,12 +266,10 @@ bool ARG::makebox() {
          g_CurFBuf()->PutLine( d_noarg.cursor.lin, buf, stTmp );
          g_CurView()->MoveCursor( d_noarg.cursor.lin, d_noarg.cursor.col + 1 );
          break;
-
       case BOXARG: {
          const auto fBox(  d_cArg == 1 );
                auto xTemp( d_boxarg.flMin.col );
                auto yTemp( d_boxarg.flMin.lin );
-
          if( d_boxarg.flMin.col == d_boxarg.flMax.col ) { // VERTICAL LINE?
             GetMinLine( buf, yTemp, xTemp, g_CurFBuf() );
             buf[xTemp] = ((buf[xTemp] == pchBox[EW]) && fBox) ? pchBox[NN] : pchBox[NS];
@@ -308,7 +302,6 @@ bool ARG::makebox() {
                }
             buf[xTemp++] = pchBox[NE];
             g_CurFBuf()->PutLine( yTemp++, buf, stTmp );
-
             // MIDDLE LINE(S)
             //
             while( yTemp < d_boxarg.flMax.lin ) {
@@ -322,7 +315,6 @@ bool ARG::makebox() {
                buf[xTemp] = pchBox[NS];
                g_CurFBuf()->PutLine( yTemp++, buf, stTmp );
                }
-
             // BOTTOM LINE
             //
             xTemp = d_boxarg.flMin.col;
@@ -384,9 +376,7 @@ bool ARG::vrepeat() {
    std::string st; g_CurFBuf()->DupLineSeg( st, lx++, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
    CPCChar inbuf( st.c_str() );
    1 && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
-
    const auto fInsertArg( d_cArg < 2 );
-
    std::string t0,t1;
    if( !d_fMeta ) {
       for( ; lx <= d_boxarg.flMax.lin; ++lx ) { // each line in boxarg
@@ -406,7 +396,6 @@ bool ARG::vrepeat() {
       const auto width( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  DBG( "width=%d", width );
       if( width > MAX_INT_PRINT_CHARS ) { return Msg( "internal error, width %d > %d", width, MAX_INT_PRINT_CHARS ); }
       FmtStr<7>fmts( "%%%s%dd", fLead0 ? "0":"", width ); const auto fmt( fmts.k_str() );   DBG( "fmt='%s'", fmt );
-
       FmtStr<1+MAX_INT_PRINT_CHARS> st0( fmt, val ); auto ps0 = st0.k_str();  DBG( "st0='%s'", ps0 );
       g_CurFBuf()->PutLineSeg( lx-1, ps0, t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col-1, false );
       const auto xMax( d_boxarg.flMin.col+width-1 );
@@ -414,7 +403,6 @@ bool ARG::vrepeat() {
          g_CurFBuf()->PutLineSeg( lx, FmtStr<1+MAX_INT_PRINT_CHARS>( fmt, ++val ).k_str(), t0,t1, d_boxarg.flMin.col, xMax, true );
          }
       }
-
    return true;
    }
 
@@ -426,7 +414,6 @@ bool ARG::numlines () {
       }
    return true;
    }
-
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -448,15 +435,14 @@ bool ARG::erasebuf() {
    //       update any corresponding disk file!
    //
    auto delfl( FindFBufByName( d_textarg.pText ) );
-   if( !delfl )
+   if( !delfl ) {
       return fnMsg( "buffer '%s' doesn't exist", d_textarg.pText );
-
+      }
    auto curfile( g_CurFBuf() );
    delfl->MakeEmpty();
    delfl->MoveCursorToBofAllViews();   // BUGBUG this is wierd: port to Lua?
    delfl->PutFocusOn();              // BUGBUG this is wierd: port to Lua?
    g_CurView()->MoveCursor( 0, 0 );  // BUGBUG this is wierd: port to Lua?
-                                     // BUGBUG this is wierd: port to Lua?
    curfile->PutFocusOn();
    return true;
    }
@@ -487,12 +473,12 @@ void Clipboard_PutText_Multiline( PCChar szData ) {
 
 bool ARG::ascii2hex() {
    linebuf buf; buf[0] = '\0'; auto pB(buf); auto cbB( sizeof(buf) );
-   for( auto pC(d_textarg.pText) ; *pC ; ++pC )
+   for( auto pC(d_textarg.pText) ; *pC ; ++pC ) {
       snprintf_full( &pB, &cbB, "0x%02X,", *pC );
-
-   if( pB > buf )
+      }
+   if( pB > buf ) {
        pB[-1] = '\0';
-
+       }
    Clipboard_PutText( buf );
    Msg( "%s", buf );
 
@@ -506,12 +492,11 @@ bool ARG::ascii2hex() {
 #if MACRO_BACKSLASH_ESCAPES
 
 void StrUnDoubleBackslashes( PChar pszString ) {
-   if( !pszString || *pszString == 0 )
+   if( !pszString || *pszString == 0 ) {
       return;
-
+      }
    auto   pWr( pszString );
    PCChar pRd( pszString );
-
    do {
       if( (*pWr++ = *pRd++) == '\\' && *pRd == '\\' ) {
          ++pRd;
