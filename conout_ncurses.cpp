@@ -93,6 +93,7 @@ int ConOut::BufferWriteString( const char *pszStringToDisp, int StringLen, int y
    for( auto ix(0) ; ix < slen; ++ix ) {
       if( '\0' == pszStringToDisp[ix] ) {
          slen = ix;
+         if( !fPadWSpcs && slen < StringLen ) { DBG( "%s short string received: %d < %d", __func__, slen, StringLen ); }
          break;
          }
       }

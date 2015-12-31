@@ -173,12 +173,9 @@ class TPipeReader {
    char          d_rawBuffer[1024];
    int           RdChar();
    enum { EMPTY = -1 };
-
 public:
-
    TPipeReader( piped_forker &piper ) : d_piper( piper ), d_bytesInRawBuffer( 0 ), d_pRawBuffer( d_rawBuffer ) {}
    ~TPipeReader() { }
-
    int GetFilteredLine( std::string &dest );
    };
 
@@ -230,11 +227,9 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    if( !(cmdFlags & NO_ECHO_CMDLN) ) {
       PutLastLogLine( pfLogBuf, pS );
       }
-
    //  -ls -l && echo sleep 2 && sleep 2 && echo hello world
    //  -ls -l
    //  -ls -l && echo sleep 10 && sleep 10
-
    if( !piper.ForkChildOk( pS ) ) {
       char erbuf[265]; OsErrStr( BSOB(erbuf) );
       ErrorDialogBeepf( "%s: piper.ForkChildOk '%s' FAILED: %s!!!", __func__, pS, erbuf );
@@ -343,6 +338,8 @@ STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
 
 #ifdef fn_toxclip
 
+// NB!  following are referenced by impl_towinclip.h
+//
 STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
 
 typedef  PChar  hglbCopy_t;
@@ -376,9 +373,7 @@ STATIC_FXN PCChar DestNm() { return "X"; }
 class InternalShellJobExecutor {
    NO_COPYCTOR(InternalShellJobExecutor);
    NO_ASGN_OPR(InternalShellJobExecutor);
-
    STATIC_FXN void ChildProcessCtrlThread( InternalShellJobExecutor *pIsjx );
-
    PFBUF                       d_pfLogBuf;
    StringList                 *d_pSL;
    const size_t                d_numJobsRequested;
@@ -387,19 +382,14 @@ class InternalShellJobExecutor {
    std::mutex                  d_jobQueueMtx;
    // Win32::ManualClrEvent       d_AllJobsDone;  BUGBUG
    std::thread                 d_hThread;  // should be LAST!!!
-
 public:
-
    InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput );
    ~InternalShellJobExecutor();
-
    void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const {
       *pNumRequested  = d_numJobsRequested;
       *pNumNotStarted = d_pSL->length();
       }
-
 private:
-
    void ThreadFxnRunAllJobs();
    int  KillAllJobsInBkgndProcessQueue();
    int  DeleteAllEnqueuedJobs_locks();
@@ -425,7 +415,6 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       WhileHoldingGlobalVariableLock gvlock;     // wait until we own the I/O
       d_pfLogBuf->MakeEmpty();
       }
-
    auto failedJobsIgnored(0);
    auto unstartedJobCnt(0);
    PerfCounter pc;
@@ -446,11 +435,9 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
          }
       DLINK_REMOVE_FIRST( d_pSL->Head(), pEl, dlink );
       } // ##################### LockTheJobQueue ######################
-
       auto cmdFlags(0);
       PChar pS( analyze_cmdline( pEl->string, &cmdFlags ) );
       if( *pS ) { prep_cmdline( pS, cmdFlags, __func__ ); }
-
       piped_forker piper;
       const auto cp_rc( CreateProcess_piped( piper, &d_ChildProcessExitCode, d_pfLogBuf, pS, cmdFlags, x2 ) );
       if( CP_PIPED_RC_OK == cp_rc ) {
@@ -463,7 +450,6 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       } //**************** outerthreadloop ****************
    ConOut::Bell();
    }
-
 
 STATIC_CONST auto cpct_start_fmts = "%s::CPCT vvvvvvvvvvvvvvvvvv THREAD STARTS vvvvvvvvvvvvvvvvvv";
 STATIC_CONST auto cpct_exit_fmts  = "%s::CPCT ^^^^^^^^^^^^^^^^^^ THREAD EXITS  ^^^^^^^^^^^^^^^^^^";
@@ -489,7 +475,6 @@ PFBUF StartInternalShellJob( StringList *sl, bool fAppend ) {
 NEXT_OUTBUF:
       ++s_nxt_shelljob_output_FBUF_num;
       }
-
    char fnm[30];
    auto pFB( FBOP::FindOrAddFBuf( safeSprintf( BSOB(fnm), "<shell_output-%03" PR_SIZET "u>", s_nxt_shelljob_output_FBUF_num ) ) );
    if( pFB ) {
@@ -513,7 +498,6 @@ int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
 
 int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
-
    if(   INVALID_ProcessId != d_Pid
       && ConIO::Confirm( Sprintf2xBuf( "Kill background %s process (PID=%d)?", d_pfLogBuf->Name(), d_Pid ) )
       && INVALID_ProcessId != d_Pid
@@ -531,15 +515,12 @@ int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
 bool ARG::compile() {
    switch( d_argType ) {
       default:      return BadArg();
-
       case NOARG:  {const auto fCompiling( IsCompileJobQueueThreadActive() );
                     Msg( "%scompile in progress", fCompiling ? "" : "no " );
                     return fCompiling;
                     }
-
       case NULLARG: CompilePty_KillAllJobs();
                     return false;
-
       case TEXTARG:{g_CurFBuf()->SyncWriteIfDirty_Wrote();
                     DispDoPendingRefreshesIfNotInMacro();
                     const auto cmdCnt( CompilePty_CmdsAsyncExec( StringList( d_textarg.pText ), true ) );
@@ -563,8 +544,9 @@ STATIC_FXN bool EditorFilesystemNoneDirty() {
   #endif
       if( pFBuf->HasLines() && pFBuf->FnmIsDiskWritable() ) {
          ++openFBufs;
-         if( pFBuf->IsDirty() )
+         if( pFBuf->IsDirty() ) {
             ++dirtyFBufs;
+            }
          }
       }
    return dirtyFBufs == 0;
@@ -576,12 +558,10 @@ STATIC_FXN void IdleThread() {
    1 && DBG( "*** %s STARTING***", __func__ );
    while( true ) {
       std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was 50 @ 20130101
-
       WhileHoldingGlobalVariableLock gvlock;
-
-      if( g_fSystemShutdownOrLogoffRequested && EditorFilesystemNoneDirty() ) // silently exit if no harm would be done
+      if( g_fSystemShutdownOrLogoffRequested && EditorFilesystemNoneDirty() ) { // silently exit if no harm would be done
          EditorExit( 0, true );
-
+         }
       // DispDoPendingRefreshes() is here PRIMARILY for aux-thread related screen
       // updates (when the screen changes NOT as a result of user edit activity,
       // but from piped in output from a child process): when this is commented
@@ -594,9 +574,7 @@ STATIC_FXN void IdleThread() {
       //       <compile> ("alt+m,u,t" is simplest example) had no screen
       //       updates.  Otherwise, there was ZERO noticable difference.
       //
-
       DispDoPendingRefreshes();
-
       LuaIdleGC();
       }
    }

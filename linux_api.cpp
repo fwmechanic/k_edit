@@ -119,22 +119,20 @@ bool DirMatches::KeepMatch() {
    }
 
 const Path::str_t DirMatches::GetNext() {
-   if( d_globsIt == d_globs.cend() ) // already hit no-more-matches condition?
+   if( d_globsIt == d_globs.cend() ) { // already hit no-more-matches condition?
       return Path::str_t("");
-
+      }
    for( ; d_globsIt != d_globs.cend() ; ++d_globsIt ) {
       if( KeepMatch() ) {
          break;
          }
       }
-
-   if( d_globsIt == d_globs.cend() ) //         hit no-more-matches condition?
+   if( d_globsIt == d_globs.cend() ) { //         hit no-more-matches condition?
       return Path::str_t("");
-
+      }
    d_buf = *d_globsIt++;
    // if( ToBOOL(d_sbuf.st_mode & S_IFDIR) ) // GLOB_MARK does this for us
    //    d_buf.append( PATH_SEP_STR );
-
    0 && DBG( "DirMatches::GetNext: '%s' (%X)", d_buf.c_str(), d_sbuf.st_mode );
    return d_buf;
    }
@@ -169,9 +167,7 @@ int ThisProcessInfo::umask() { const auto rv( ::umask( 0 ) ); ::umask( rv ); ret
 
 void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
    pFBuf->FmtLastLine( "#-------------------- %s", "Linux Status" );
-
    pFBuf->FmtLastLine( "%s@%s", ThisProcessInfo::euname(), ThisProcessInfo::hostname() );
    pFBuf->FmtLastLine( "umask=%03o", ThisProcessInfo::umask() );
    pFBuf->FmtLastLine( "TERM=%s", getenv("TERM") );
-
    }
