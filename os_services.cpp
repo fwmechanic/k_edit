@@ -84,11 +84,13 @@ OsEnv::OsEnv() {
       char *linkname = static_cast<PChar>( malloc( bufbytes ) );
       if( !linkname ) {
          perror( "readlink(/proc/self/exe) memory exhausted" );
+         free( linkname );
+         return;
          }
       ssize_t r = readlink( s_link_nm, linkname, bufbytes );
       if( r < 0 ) {
-         free( linkname );
          perror( "readlink(/proc/self/exe) < 0" );
+         free( linkname );
          return;
          }
       if( r < bufbytes ) {
