@@ -76,6 +76,7 @@ OsEnv::OsEnv() {
       struct stat sb;
       if( lstat( s_link_nm, &sb ) == -1 ) {
          perror( "lstat(/proc/self/exe) failed" );
+         return;
          }
       }
    size_t bufbytes = PATH_MAX;
@@ -88,6 +89,7 @@ OsEnv::OsEnv() {
       if( r < 0 ) {
          free( linkname );
          perror( "readlink(/proc/self/exe) < 0" );
+         return;
          }
       if( r < bufbytes ) {
          linkname[r] = '\0';
