@@ -7,6 +7,7 @@ cov_dir=cov-int
 k_make_cmd="make -j 6"
 
    rm -rf $cov_dir \
+&& rm -f $tarball \
 && mkdir -p $cov_dir \
 && make clean \
 && cov-build --dir $cov_dir $k_make_cmd \
