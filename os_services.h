@@ -244,9 +244,10 @@ namespace ThisProcessInfo {
 //
 
 // from http://stackoverflow.com/questions/8268243/porting-interlockedexchange-using-gcc-intrinsics-only
-typedef WL( Win32::LONG, uint32_t ) InterlockedExchangeOperand;
+typedef WL( Win32::LONG              ,                           uint32_t ) InterlockedExchangeRetval;
+typedef WL( InterlockedExchangeRetval, volatile InterlockedExchangeRetval ) InterlockedExchangeOperand;
 
-STIL InterlockedExchangeOperand InterlockedExchange_( InterlockedExchangeOperand& data, InterlockedExchangeOperand& new_val ) {
+STIL InterlockedExchangeRetval InterlockedExchange_( InterlockedExchangeOperand& data, InterlockedExchangeOperand& new_val ) {
 #if defined(_WIN32)
    return Win32::InterlockedExchange( &data, new_val );
 #else
@@ -257,7 +258,7 @@ STIL InterlockedExchangeOperand InterlockedExchange_( InterlockedExchangeOperand
 enum HaltReason { NEVER_REQUESTED, USER_INTERRUPT, CMD_ABEND, USER_CHOSE_EARLY_CMD_TERMINATE };
 extern  PCChar    ExecutionHaltReason();
 STIL    void      SetUserInterrupt_( InterlockedExchangeOperand reason )  { extern InterlockedExchangeOperand s_fHaltExecution; InterlockedExchange_( s_fHaltExecution, reason ); }
-STIL    void      ClrExecutionHaltRequest()               { SetUserInterrupt_( NEVER_REQUESTED ); }
+STIL    void      ClrExecutionHaltRequest()                               { SetUserInterrupt_( NEVER_REQUESTED ); }
 extern HaltReason ExecutionHaltRequested_( PCChar ident );
 #define           ExecutionHaltRequested()          ExecutionHaltRequested_( __PRETTY_FUNCTION__ )
 

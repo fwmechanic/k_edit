@@ -117,7 +117,7 @@ PCChar ThisProcessInfo::euname()   { return g_Process->euname(); }
 PCChar ThisProcessInfo::hostname() { return g_Process->hostname(); }
 #endif
 
-volatile InterlockedExchangeOperand s_fHaltExecution;
+InterlockedExchangeOperand s_fHaltExecution;
 
 PCChar ExecutionHaltReason() {
    switch( s_fHaltExecution ) {
