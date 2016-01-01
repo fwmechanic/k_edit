@@ -103,22 +103,16 @@ class ColorChanger : public KeyChanger
    {
    NO_COPYCTOR(ColorChanger);
    NO_ASGN_OPR(ColorChanger);
-
          U8 &d_colorVar;
    const U8  d_origColor;
-
    void SetColor( int val ) { d_colorVar = val; }
-
    void IncDecColor( bool fg, int incr ) {
       const int mask ( fg ? 0xF0 : 0x0F );
       const int shift( fg ?    4 :    0 );
       d_colorVar = (((((d_colorVar & mask) >> shift) + incr) << shift) & mask) | (d_colorVar & ~mask);
       }
-
-   public:
-
+public:
    ColorChanger( U8 &colorVar ) : d_colorVar(colorVar), d_origColor(colorVar) {}
-
    void updtMsg    () override { d_msgbuf.Sprintf( "colorFG=%02X", d_colorVar ); }
    void actionEsc  () override { SetColor( d_origColor  ); }
    void actionDown () override { IncDecColor( false, +1 ); }
@@ -140,21 +134,17 @@ class ConsoleSizeChanger : public KeyChanger
    {
    NO_COPYCTOR(ConsoleSizeChanger);
    NO_ASGN_OPR(ConsoleSizeChanger);
-
    Win32ConsoleFontChanger d_wcfc;
-
    const int d_origWidth ;
    const int d_origHeight;
    int       d_fontNow;
    int       d_numFonts;
-
    void Resize_Screen( int newX, int newY ) {
       Point newSize; newSize.lin=newY; newSize.col=newX;
       if( VideoSwitchModeToXYOk( newSize ) && newSize.lin==newY && newSize.col==newX ) {
          d_wcfc.GetFontInfo();
          }
       }
-
    bool SetFont( int idx ) {
       if( d_wcfc.GetFontAspectRatio( idx ) <= 1.0 ) {
          d_fontNow = idx;
@@ -163,15 +153,12 @@ class ConsoleSizeChanger : public KeyChanger
          }
       return false;
       }
-
-   public:
-
+public:
    ConsoleSizeChanger() : d_origWidth(EditScreenCols()), d_origHeight(ScreenLines())
       {
       d_fontNow  = d_wcfc.OrigFont();
       d_numFonts = d_wcfc.NumFonts();
       }
-
    void updtMsg    () { d_msgbuf.Sprintf( "ConsoleSizeChanger: %d x %d, font %d = %dx%d (%4.2f)"
                            , EditScreenCols()     , ScreenLines()
                            , d_fontNow
@@ -209,18 +196,13 @@ class TabWidthChanger : public KeyChanger
    {
    NO_COPYCTOR(TabWidthChanger);
    NO_ASGN_OPR(TabWidthChanger);
-
    const int  d_origTabWidth;
    const bool d_orig_BADSA;
-
    void IncDecTabWidth( int incr ) { g_CurFBuf()->SetTabWidthOk( g_CurFBuf()->TabWidth() + incr ); }
-
-   public:
-
+public:
    TabWidthChanger() : d_origTabWidth(  g_CurFBuf()->TabWidth() )
                      , d_orig_BADSA( g_CurFBuf()->BlankAnnoDispSrcAsserted( BlankDispSrc_USER_ALWAYS ) )
                      {}
-
    void updtMsg    () { d_msgbuf.Sprintf( "tabwidth=%d, arrows change: LEFT--, RIGHT++, UP:keep visible DOWN:hide", g_CurFBuf()->TabWidth() ); }
    void actionEsc  () { g_CurFBuf()->SetTabWidthOk( d_origTabWidth );
                         g_CurFBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_USER_ALWAYS, d_orig_BADSA );
@@ -235,7 +217,6 @@ class TabWidthChanger : public KeyChanger
         g_iTabWidth = g_CurFBuf()->TabWidth();
         // g_CurFBuf()->CalcIndent();
         }
-
    };
 
 bool ARG::ftab() {

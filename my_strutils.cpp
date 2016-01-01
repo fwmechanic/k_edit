@@ -26,7 +26,6 @@
 #include "my_strutils.h"
 #include "my_log.h"
 
-
 //-------------------------------------------------------------------------------------------------------
 
 void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
@@ -70,17 +69,15 @@ stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
       truncd = srcLen - (sizeof_dest - destLen - 1);
       srcLen = sizeof_dest - destLen - 1;
       }
-
    auto rv( srcLen );
    if( srcLen > 0 ) {
       memcpy( dest + destLen, src.data(), srcLen );
       dest[ destLen + srcLen ] = '\0';
       rv = destLen + srcLen;
       }
-
-   if( truncd )
-       StrTruncd_( __func__, truncd, src.data(), dest );
-
+   if( truncd ) {
+      StrTruncd_( __func__, truncd, src.data(), dest );
+      }
    return stref( dest, rv );
    }
 
@@ -91,21 +88,18 @@ stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
        truncd = srcLen - (sizeof_dest - 1);
        srcLen = sizeof_dest - 1;
        }
-
    memcpy( dest, src.data(), srcLen );
    dest[ srcLen ] = '\0';
-
-   if( truncd )
-       StrTruncd_( __func__, truncd, src.data(), dest );
-
+   if( truncd ) {
+      StrTruncd_( __func__, truncd, src.data(), dest );
+      }
    return stref( dest, srcLen );
    }
 
 int Strlen( register PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...
    const auto start(pc);
-   for( ; *pc ; ++pc )
-      ;
-
+   for( ; *pc ; ++pc ) {
+      }
    return pc - start;
    }
 
@@ -168,14 +162,14 @@ Strnspn_def( Strncspn, != ) // returns: The length of the initial part of str1 c
 //
 // returns NULL if ALL chars preceding pX match 'toMatch'
 
-#define StrToPastPrevOrNull_def( fxnm, EQ_OP )               \
-PCChar fxnm( PCChar p0, PCChar pX, PCChar toMatch ) {        \
-   if( !pX ) pX = Eos( p0 );                                 \
-   if( pX == p0 ) return nullptr; /* no "prev" to match? */  \
-   for( --pX ;  ; --pX ) {                                   \
-      if( nullptr EQ_OP strchr( toMatch, *pX ) ) return pX;  \
-      if( pX == p0 ) return nullptr;                         \
-      }                                                      \
+#define StrToPastPrevOrNull_def( fxnm, EQ_OP )                 \
+PCChar fxnm( PCChar p0, PCChar pX, PCChar toMatch ) {          \
+   if( !pX ) pX = Eos( p0 );                                   \
+   if( pX == p0 ) {return nullptr;} /* no "prev" to match? */  \
+   for( --pX ;  ; --pX ) {                                     \
+      if( nullptr EQ_OP strchr( toMatch, *pX ) ) return pX;    \
+      if( pX == p0 ) {return nullptr;}                         \
+      }                                                        \
    }
 
 StrToPastPrevOrNull_def( StrToPrevOrNull_  , != ) // do NOT call this directly!  use StrToPrevOrNull or StrToPrevBlankOrNull instead!
@@ -189,15 +183,19 @@ int Dquot_strcspn( PCChar pszToSearch, PCChar pszToSearchFor ) {
    for( ; (ch=*pszToSearch); ++pszToSearch ) {
       const auto isDQUOT( ch == '"' && (pszToSearch > p0) && (pszToSearch[-1] != '\\') );
       if( fInDQuotedStr ) {
-         if( isDQUOT )
+         if( isDQUOT ) {
             fInDQuotedStr = false;
+            }
          }
       else {
-         if( isDQUOT )
+         if( isDQUOT ) {
             fInDQuotedStr = true;
-         else
-            if( strchr( pszToSearchFor, ch ) )
+            }
+         else {
+            if( strchr( pszToSearchFor, ch ) ) {
                return pszToSearch - p0;
+               }
+            }
          }
       }
    return pszToSearch - p0; // pszToSearch[ retVal ] == 0
@@ -211,15 +209,13 @@ int Dquot_strcspn( PCChar pszToSearch, PCChar pszToSearchFor ) {
 int snprintf_full( char **ppBuf, size_t *pBufBytesRemaining, PCChar fmt, ... ) {
     // if prev call EXACTLY filled the buffer
     // then (*pBufBytesRemaining) == 1 !!!
-
-    if( *pBufBytesRemaining <= 1 )
+    if( *pBufBytesRemaining <= 1 ) {
        return 1;
-
+       }
     va_list ap;
     va_start( ap, fmt );
     const int chars_wr = vsnprintf( *ppBuf, *pBufBytesRemaining, fmt, ap );
     va_end( ap );
-
     //
     //           DON'T BELIEVE EVERY MAN PAGE YOU READ!
     //
@@ -248,10 +244,8 @@ int snprintf_full( char **ppBuf, size_t *pBufBytesRemaining, PCChar fmt, ... ) {
        *pBufBytesRemaining = 0;
        return 1;
        }
-
     *ppBuf              += chars_wr;
     *pBufBytesRemaining -= chars_wr;
-
     return *pBufBytesRemaining <= 1;
     }
 
@@ -276,8 +270,9 @@ typedef int (*isfxn)(int);
 STATIC_FXN int consec_is_its( isfxn ifx, stref sr ) {
    auto rv( 0 );
    for( auto ch : sr ) {
-      if( !ifx( ch ) )
+      if( !ifx( ch ) ) {
          break;
+         }
       ++rv;
       }
    return rv;
@@ -294,10 +289,9 @@ int StrToInt_variable_base( stref pszParam, int numberBase ) {
       pszParam.remove_prefix( 2 );
       numberBase = 16;
       }
-
-   if( numberBase < 2 || numberBase > 36 )
+   if( numberBase < 2 || numberBase > 36 ) {
       return -1;
-
+      }
    auto accum(0);
    auto pC( pszParam.cbegin() );
    for( ; pC != pszParam.cend() ; ++pC ) {
@@ -306,13 +300,11 @@ int StrToInt_variable_base( stref pszParam, int numberBase ) {
       else if( ch >= 'a' && ch <= 'z' ) { ch -= 'a' - 10; }
       else if( ch >= 'A' && ch <= 'Z' ) { ch -= 'A' - 10; }
       else                              { break;          }
-
-      if( ch >= numberBase )
+      if( ch >= numberBase ) {
          break;
-
+         }
       accum = (accum * numberBase) + ch;
       }
-
    const auto rv( std::distance( pszParam.cbegin(), pC ) ? accum : -1 );
    return rv;
    }
@@ -331,17 +323,17 @@ STIL int parsedecnum( PCChar & pch ) {
    }
 
 int strcmp4humans( PCChar pA, PCChar pB ) {
-   if (pA == pB     ) return  0;
-   if (pA == nullptr) return -1;
-   if (pB == nullptr) return  1;
+   if( pA == pB      ) { return  0; }
+   if( pA == nullptr ) { return -1; }
+   if( pB == nullptr ) { return  1; }
    for ( ; *pA && *pB ; ++pA, ++pB ) {
       const auto a0( isdigit(*pA) ? parsedecnum(pA) + 256 :  tolower(*pA) );  // will contain either a number or a letter
       const auto b0( isdigit(*pB) ? parsedecnum(pB) + 256 :  tolower(*pB) );  // will contain either a number or a letter
-      if( a0 < b0 ) return -1;
-      if( a0 > b0 ) return  1;
+      if( a0 < b0 ) { return -1; }
+      if( a0 > b0 ) { return  1; }
       }
-   if (*pA) return  1;
-   if (*pB) return -1;
+   if( *pA ) { return  1; }
+   if( *pB ) { return -1; }
    return 0;
    }
 

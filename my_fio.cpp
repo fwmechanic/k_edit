@@ -47,31 +47,32 @@ bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int crea
       )
     );
 #endif
-   if( fh == -1 )
+   if( fh == -1 ) {
       return true;
-
+      }
    1 && DBG( "%s [%d] %c mode=%03o '%s'", __func__, fh, fWrAccess?'W':'w', create_mode, pszFileName );
    struct_stat stat;
    if( func_fstat( fh, &stat ) == 0 && 0 == (stat.st_mode & WL( _S_IFREG, S_IFREG ) ) ) {
       WL( _close, close )( fh );
       return true;
       }
-
    *pfh = fh;
    return false;
    }
 
 int fio::Read( int fh, PVoid pBuf, size_t bytesToRead ) {
    auto rv( WL( _read, read )( fh, pBuf, bytesToRead ) );
-   if( rv == -1 )
+   if( rv == -1 ) {
        rv = 0;
+       }
    return rv;
    }
 
 int fio::Write( int fh, PCVoid pBuf, size_t bytesToWrite ) {
    auto rv( WL( _write, write )( fh, pBuf, bytesToWrite ) );  0 && DBG( "%s [%d]: %" PR_SIZET "d -> %" WL( "d", "ld" ), __func__, fh, bytesToWrite, rv );
-   if( rv == -1 )
+   if( rv == -1 ) {
        rv = 0;
+       }
    return rv;
    }
 
@@ -83,14 +84,11 @@ bool MoveFileOk( PCChar pszCurFileName, PCChar pszNewFilename ) {
       0 && DBG( "renamed '%s' -> '%s' OK", pszCurFileName, pszNewFilename );
       return true; // we're all done!
       }
-
    if( !CopyFileManuallyOk( pszCurFileName, pszNewFilename ) ) {
       return false;
       }
-
    return unlinkOk( pszCurFileName );
    }
-
 
 bool unlinkOk_( PCChar filename, PCChar caller ) {
    const auto err( WL( _unlink, unlink )( filename ) == -1 );
@@ -99,13 +97,11 @@ bool unlinkOk_( PCChar filename, PCChar caller ) {
    return !err;
    }
 
-
 bool mkdirOk_( PCChar dirname, PCChar caller ) {
    if( IsDir( dirname ) ) {
       0 && DBG( "mkdir (by %s) of already existing dir '%s'", caller, dirname );
       return true;
       }
-
    const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
    if( err ) { DBG( "!!! mkdir (by %s) of '%s' failed, emsg='%s'", caller, dirname, strerror( errno ) );
       }
@@ -114,10 +110,8 @@ bool mkdirOk_( PCChar dirname, PCChar caller ) {
          return false;
          }
       }
-
    return !err;
    }
-
 
 bool CopyFileManuallyOk_( PCChar pszCurFileName, PCChar pszNewFilename, PCChar caller ) { DBG( "%s: manually copying", caller );
    auto cur_FILE( fopen( pszCurFileName, "rb" ) );
