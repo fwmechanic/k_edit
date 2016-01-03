@@ -1584,8 +1584,8 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
                break; // no matches on this line!
                }
             //*****  HOUSTON, WE HAVE A MATCH  *****
-            curPt.col  =          pcc.i2c( srMatch.data() - d_sbuf.data()                                  );
-            const auto matchCols( pcc.i2c( srMatch.data() + srMatch.length() - d_sbuf.data() ) - curPt.col );
+            curPt.col  =          pcc.i2c( (srMatch.data() - d_sbuf.data())                    )              ;
+            const auto matchCols( pcc.i2c( (srMatch.data() - d_sbuf.data()) + srMatch.length() ) - curPt.col );
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) { // NB: curPt can be modified here!
                return;
                }
