@@ -1445,14 +1445,14 @@ public:
                // to reference/parse line content w/o copying (MUCH more efficient to
                // avoid a heap alloc).  SEE ALSO: PeekRawLineSeg()
    stref          PeekRawLine( LINE yLine ) const { // returns RAW line content BY REFERENCE
-                  auto len( 0 );
-                  if( KnownLine( yLine ) && (len = LineLength( yLine )) > 0 ) {
-                     return stref( d_paLineInfo[ yLine ].GetLineRdOnly(), len );
+                     auto len( 0 );
+                     if( KnownLine( yLine ) && (len = LineLength( yLine )) > 0 ) {
+                        return stref( d_paLineInfo[ yLine ].GetLineRdOnly(), len );
+                        }
+                     else {
+                        return stref();
+                        }
                      }
-                  else {
-                     return stref();
-                     }
-                  }
 
                // most of the time, you can just use PeekRawLine() and stref methods + helper functions
                // in my_strutils.h and the tabWidth-dependent col-of-ptr/ptr-of-col xlators

@@ -145,7 +145,7 @@ x fromxclip    fromwinclip               NOARG , X Clipboard ==> <clipboard>
   pword        pword          CURSORFUNC , Moves cursor to first char of next word.  META: Moves cursor to first char following next word
   qreplace     qreplace       MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Interactive single-file (or arg-region) replace
   quik         quik           CURSORFUNC
-  rawline      rawline                   BOXARG, for debug
+# rawline      rawline                   BOXARG, for debug
   record       record                    NOARG + NULLARG + TEXTARG
   redo         redo                      NOARG , Redo most recently undone major edit step
   refresh      refresh                   NOARG + NULLARG + TEXTARG +           BOXSTR + BOXARG + LINEARG

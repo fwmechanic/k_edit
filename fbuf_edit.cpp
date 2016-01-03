@@ -939,17 +939,14 @@ bool ARG::graphic() { enum { DB=0 };
          linsert();
          return true;
          }
-
       // <000612> klg Finally did this!  Been needing it for YEARS!
-      //
       // g_delims, g_delimMirrors
-      //
       //                                                m4 `quoting'
       //                                                |
       STATIC_CONST char chOpeningDelim[]    = "_%'\"(<{[`";
       STATIC_CONST char chClosingDelim[]    = "_%'\")>}]`";
       STATIC_CONST char chClosingDelim_m4[] = "_%'\")>}]'";
-             const auto pMatch( strchr( chOpeningDelim, usrChar ) );
+      const auto pMatch( strchr( chOpeningDelim, usrChar ) );
       if( pMatch ) {
          const char chClosing( (g_fM4backtickquote?chClosingDelim_m4:chClosingDelim)[ pMatch - chOpeningDelim ] );
          const auto fConformRight( (d_cArg > 1 || (usrChar == chQuot2 || usrChar == chQuot1 || usrChar == chBackTick)) ); // word-conforming bracketing of a BOXARG?
@@ -1230,7 +1227,6 @@ void test_CaptiveIdxOfCol() {
    testcmp(a1, a2);
    testcmp(a1, a3);
    }
-
    if( 0 ) {
       const auto tw( 3 );
       sweep_CaptiveIdxOfCol( tw, ""    ); sweep_FreeIdxOfCol( tw, ""    ); sweep_ColOfFreeIdx( tw, ""   , 3    );
@@ -1307,9 +1303,7 @@ int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
 //--------------------------------------------------------------------------------------------------
 
 #ifdef fn_csort
-
 #error
-
 struct LineSortRec {
    LINE    yLine;
    Linebuf lbuf;
@@ -1384,7 +1378,6 @@ bool ARG::csort() {
    FBOP::SortLineRange( g_CurFBuf(), yMin, yMax, d_cArg > 1, g_fCase, xMin, xMax, g_fMeta );
    return true;
    }
-
 #endif
 
 //--------------------------------------------------------------------------------------------------
@@ -1401,7 +1394,7 @@ void LineInfo::PutContent( stref src ) { // assume previous content has been des
    }
 
 void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
-   enum { DE=0 };                                       DE && DBG( "%s+ L %d [%d..%d] <= '%" PR_BSR "' )", __func__, yLine, xLeftIncl, xRightIncl, BSR(ins) );
+   enum { DE=0 };                                                              DE && DBG( "%s+ L %d [%d..%d] <= '%" PR_BSR "' )", __func__, yLine, xLeftIncl, xRightIncl, BSR(ins) );
    // insert ins into gap = [xLeftIncl, xRightIncl]
    // rules:
    //    - portion of ins placed into line is NEVER longer than gap
@@ -1416,15 +1409,12 @@ void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, st
       PutLine( yLine, ins, stmp ); // optimal/trivial line-replace case
       }
    else { // segment ins/overwrite case
-
-#if 1
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
       const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "u/%" PR_BSRSIZET "u]", __func__, xLeftIncl, holewidth, inslen );
       DupLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );
       const auto lcols( StrCols( TabWidth(), dest ) );
       const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "u/%d maxCol=%" PR_BSRSIZET "u", __func__, dest.length(), lcols, maxCol );
       Assert( lcols >= xLeftIncl );
-
       // dest contains:
       //    !fInsert: at least xLeftIncl           chars
       //     fInsert: at least xLeftIncl+holewidth chars
@@ -1442,64 +1432,6 @@ void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, st
          }
       DE && DBG( "%s- PutLine(merged) )", __func__ );
       PutLine( yLine, dest, stmp );
-#else
-
-//    dbllinebuf buf;
-//    auto lineChars( getLineTabx( BSOB(buf), yLine ) );
-//    if( !fInsert )
-//       NoMoreThan( &xRightIncl, lineChars - 1 ); // prevent gratuitous trailspace generation
-//
-//    auto gapChars( xRightIncl - xLeftIncl + 1); // as defined by caller
-//    auto segChars( Strlen( ins ));              // what he gave us to fill it in
-//
-//    auto gapStart( buf+xLeftIncl );
-//    if( fInsert && lineChars > xLeftIncl ) { // Inserting & gap falls inside existing string?
-//       0 && DBG( "%s L %d A", __func__, yLine );
-//       // if caller passed in a string longer than the gap is wide make the
-//       // gap as wide as the string being inserted (gapChars only matters when
-//       // the gap > length(ins))
-//       //
-//       NoSmallerThan( &gapChars, segChars );
-//
-//       // NB: CODE BELOW COULD FORCE LONGER THAN LEGAL LINE, SO WE USE dbllinebuf buf
-//       memmove(gapStart+gapChars, gapStart, Strlen(gapStart)+1 ); // open gap, COPYING EoL
-//       // NB: CODE ABOVE COULD FORCE LONGER THAN LEGAL LINE, SO WE USE dbllinebuf buf
-//       memcpy( gapStart, ins, segChars );                         // ins new str seg w/no termination
-//       if( gapChars > segChars )
-//          memset( gapStart+segChars, ' ', gapChars-segChars );    // fill right part of gap
-//       }
-//    else {
-//       0 && DBG( "%s B Ln %d, gap=%d, seg=%d", __func__, yLine, gapChars, segChars );
-//
-//       if( lineChars < xLeftIncl ) { // existing string doesn't reach to gap?
-//          memset( buf+lineChars, ' ', xLeftIncl-lineChars ); // fill in upto gap
-//          lineChars = xLeftIncl;
-//          memcpy( gapStart, ins, segChars+1 );
-//          }
-//       else if( lineChars > xRightIncl ) { // existing string exists to right of gap?
-//          if( segChars > gapChars ) { // overwrite gap, push right those existing chars to right of gap
-//             0 && DBG( "A" );
-//             memmove( gapStart+gapChars+(segChars-gapChars), gapStart+gapChars, Strlen(gapStart+gapChars)+1 ); // widen gap, COPYING EoL
-//             memcpy( gapStart, ins, segChars );
-//             }
-//          else if( segChars < gapChars ) { // overwrite gap with ins + space-fill
-//             0 && DBG( "B" );
-//             memcpy( gapStart         , ins, segChars );
-//             memset( gapStart+segChars, ' ', gapChars-segChars );
-//             }
-//          else {
-//             0 && DBG( "C" );
-//             memcpy( gapStart, ins, segChars );
-//             }
-//          }
-//       else { // existing line ends within gap; simply overwrite
-//          0 && DBG( "D" );
-//          memcpy( gapStart, ins, segChars+1 ); // COPY EoL
-//          }
-//       }
-//    PutLine( yLine, buf, stmp );
-
-#endif
       }
    }
 
@@ -1570,7 +1502,6 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
    FBufEvent_LineInsDel( yInsAt, lineInsertCount );
    }
 
-//
 // This is an "INTERESTING" fxn!  It's called both by upper-level edit code (as
 // DelLine) AND by Undo/Redo code (as DeleteLines__ForUndoRedo).  When
 // DeleteLines__ForUndoRedo is called, fSaveUndoInfo == false.
@@ -1643,7 +1574,6 @@ int FBUF::ViewCount() {
    return rv;
    }
 
-
 //***********************************************************************************************
 //***********************************************************************************************
 //***********************************************************************************************
@@ -1694,7 +1624,6 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
       }
    }
 
-//
 // CopyStream copies a stream of text, including line breaks, from one
 // file to another.
 //
@@ -1716,12 +1645,9 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       FBOP::CopyBox( FBdest, xDst, yDst, FBsrc, xSrcStart, ySrcStart, xSrcEnd-1, ySrcEnd );
       return;
       }
-
    //*** copy middle portion of stream
    FBOP::CopyLines( FBdest, yDst+1, FBsrc, ySrcStart+1, ySrcEnd );
-
    //*** merge & write last line of FBsrc stream  [srcbuf:destbuf]
-  #if 1
    std::string destbuf; FBdest->DupLineForInsert( destbuf, yDst, xDst, 0 ); // rd dest line containing insertion point
    std::string srcbuf; auto tws( 1 );
    if( FBsrc ) {
@@ -1749,48 +1675,11 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       destbuf.replace( ixDst, alen, srcbuf, ixSrcStart, alen );
       }
    FBdest->PutLine( yDst, destbuf, stmp );
-  #else
-// Xbuf xbFirst; FBdest->DupLineForInsert( &xbFirst, yDst, xDst, 0 ); // rd dest line containing insertion point
-// Xbuf xbLast;
-// if( FBsrc ) {
-//    FBsrc->DupLineForInsert( &xbLast, ySrcEnd, xSrcEnd, 0 );  // rd last line of src test
-//    }
-// else {
-//    if( xSrcEnd > 0 ) { memset( xbLast.wresize( xSrcEnd ), ' ', xSrcEnd ); } // if is not strictly necessary, but silences a GCC warning "memset used with constant zero length parameter" (when this entire fxn is inlined!!!)
-//    }
-//
-// const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
-// const auto twd( FBdest->TabWidth() );
-// std::string stmp;
-// {
-// const auto pDestSplit( PtrOfColWithinStringRegion( twd, xbFirst.wbuf(), xbFirst.wbuf()+xbFirst.length(), xDst ) ); // dest text PAST insertion point
-// DBG( "pDestSplit[0]=%u", pDestSplit[0] );
-// auto taillen( Strlen( pDestSplit ) );
-// auto srcbuf( xbLast.wresize( xSrcEnd + taillen + 1 ) );  // worst case, ignores possible tab compression
-// strcpy( PtrOfColWithinStringRegion( twd, srcbuf, Eos(srcbuf), xSrcEnd ), pDestSplit ); // dest text PAST insertion point -> srcbuf past xSrcEnd
-// FBdest->PutLine( yDstLast, srcbuf, stmp );
-// pDestSplit[0] = '\0'; // this belongs as else case for if( FBsrc ) below, but uses this scope's pDestSplit
-// }
-//
-// //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
-// if( FBsrc ) {
-//    FBsrc->DupLineForInsert( &xbLast, ySrcStart, xSrcStart, 0 );
-//    const auto pSrc( PtrOfColWithinStringRegion( FBsrc->TabWidth(), xbLast.wbuf(), xbLast.wbuf()+xbLast.length(), xSrcStart ) );
-//    const auto taillen( Strlen( pSrc ) );
-//    const auto dstbuf( xbFirst.wresize( xDst + taillen + 1 ) );
-//    const auto pDestSplit( PtrOfColWithinStringRegion( twd, dstbuf, Eos(dstbuf), xDst ) ); // dest text PAST insertion point
-//    memcpy( pDestSplit, pSrc, taillen + 1 );
-//    }
-// FBdest->PutLine( yDst, xbFirst.c_str(), stmp );
-
-  #endif
-
    AdjMarksForInsertion( FBdest, FBdest, xDst     , yDst     , COL_MAX, yDst     , xSrcEnd-1, yDstLast );
    AdjMarksForInsertion( FBsrc , FBdest,         0, ySrcEnd  , xSrcEnd, ySrcEnd  ,         0, yDstLast );
    AdjMarksForInsertion( FBsrc , FBdest, xSrcStart, ySrcStart, COL_MAX, ySrcStart, xDst     , yDst     );
    }
 
-//
 // CopyBox copies a box of text from one file to another.
 //
 // The source and destination files are specified by pFBufSrc and
