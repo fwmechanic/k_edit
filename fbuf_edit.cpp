@@ -92,12 +92,7 @@ PCChar swixEntab( stref param ) { enum { DB=1 }; DB && DBG( "%s+ %" PR_BSR "'", 
    }
 
 STATIC_FXN bool spacesonly( stref::const_iterator ptr, stref::const_iterator eos ) {
-   for( ; ptr != eos; ++ptr ) {
-      if( *ptr != ' ' ) {
-         return false;
-         }
-      }
-   return true;
+   return std::all_of( ptr, eos, []( char ch ){ return ch == ' '; } );
    }
 
 template <typename T>

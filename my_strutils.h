@@ -211,26 +211,7 @@ STIL   int   isbdigit    ( int ch ) { return ch == '0' || ch == '1'; }
 STIL   bool  StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
 STIL bool eq( stref s1, stref s2 ) {
-   if( s1.length() != s2.length() ) {
-      return false;
-      }
-   for( sridx ix( 0 ); ix < s1.length() ; ++ix ) {
-      if( s1[ix] != s2[ix] ) {
-         return false;
-         }
-      }
-   return true;
-   }
-
-STIL int cmp( int c1, int c2 ) {
-   if( c1 == c2 ) { return 0; }
-   return c1 < c2 ? -1 : +1;
-   }
-
-STIL int cmpi( int c1, int c2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
-   const auto cd( 'a'-'A' );
-   if( c1 == c2 || (c1 ^ cd) == c2 ) { return 0; }
-   return (c1 | cd) < (c2 | cd) ? -1 : +1;
+   return s1 == s2;
    }
 
 STATIC_FXN bool eqi_( char ll, char rr ) {
@@ -247,6 +228,17 @@ STIL bool eqi( stref s1, stref s2 ) {
          }
       }
    return true;
+   }
+
+STIL int cmp( int c1, int c2 ) {
+   if( c1 == c2 ) { return 0; }
+   return c1 < c2 ? -1 : +1;
+   }
+
+STIL int cmpi( int c1, int c2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
+   const auto cd( 'a'-'A' );
+   if( c1 == c2 || (c1 ^ cd) == c2 ) { return 0; }
+   return (c1 | cd) < (c2 | cd) ? -1 : +1;
    }
 
 STIL int cmp( const stref &s1, const stref &s2 ) {
@@ -275,22 +267,25 @@ STIL int cmpi( const stref &s1, const stref &s2 ) {
 
 // the Blank family...
 
-STIL bool IsStringBlank( stref src ) {
-   for( auto ch : src ) {
-      if( !isblank( ch ) ) {
-         return false;
-         }
-      }
-   return true; // note that empty strings are Blank strings!
+STIL bool IsStringBlank( stref src ) { // note that empty strings are Blank strings!
+   return std::all_of( src.cbegin(), src.cend(), []( char ch ){ return isblank( ch ); } );
    }
 
 //--------------------------------------------------------------------------------
 // to avoid signed/unsigned mismatch warnings:
 #if 0
-STIL   int Strlen( PCChar pS ) { return int( strlen(pS) ); }
+STIL int Strlen( PCChar pS ) { return int( strlen(pS) ); }
 #else
-extern int Strlen( PCChar pS );
+STIL int Strlen( register PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...
+   const auto start(pc);
+   for( ; *pc ; ++pc ) {
+      }
+   return pc - start;
+   }
 #endif
+
+TF_Ptr STIL Ptr  Eos( Ptr psz ) { return psz + Strlen( psz ); }
+
 //--------------------------------------------------------------------------------
 
 extern stref scpy( PChar dest, size_t sizeof_dest, stref src );
@@ -318,8 +313,6 @@ extern PChar  safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) A
 #define SPCTAB  " \t"
 extern const char szMacroTerminators[];
 extern       char g_szWordChars[];
-
-TF_Ptr STIL Ptr  Eos( Ptr psz ) { return psz + Strlen( psz ); }
 
 STIL PCChar Strchr( PCChar psz, int ch ) { return       strchr( psz, ch ); }
 STIL PChar  Strchr( PChar  psz, int ch ) { return PChar(strchr( psz, ch )); }
@@ -396,13 +389,8 @@ STIL void rmv_trail_blanks( stref &inout ) {
    inout.remove_suffix( trailSpcs );
    }
 
-static sridx FirstAlphaOrEnd( stref src, sridx start=0 ) {
-   return ToNextOrEnd( isalpha, src, start );
-   }
-
-static sridx FirstDigitOrEnd( stref src, sridx start=0 ) {
-   return ToNextOrEnd( isdigit, src, start );
-   }
+static sridx FirstAlphaOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isalpha, src, start ); }
+static sridx FirstDigitOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isdigit, src, start ); }
 
 //#######################################################################################
 

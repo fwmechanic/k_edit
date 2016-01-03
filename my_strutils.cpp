@@ -96,13 +96,6 @@ stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
    return stref( dest, srcLen );
    }
 
-int Strlen( register PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...
-   const auto start(pc);
-   for( ; *pc ; ++pc ) {
-      }
-   return pc - start;
-   }
-
 //----- no-longer-used begin
 
 extern int  stricmp_eos( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 );
