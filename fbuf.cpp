@@ -200,8 +200,9 @@ void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf ) {
       const auto pWin( g_Win( wix ) );
       DLINKC_FIRST_TO_LASTA( pWin->ViewHd, dlinkViewsOfWindow, pv ) {
          if( pv->FBuf() == pFBuf ) {
-            if( pv->Get_LineCompile() >= 0 )
+            if( pv->Get_LineCompile() >= 0 ) {
                 pv->Set_LineCompile( 0 );
+                }
             }
          }
       }
@@ -382,15 +383,15 @@ FileStat GetFileStat( PCChar pszFilename ) { enum { DB=0 };
    }
 
 FBUF::DiskFileVsFbufStatus FBUF::checkDiskFileStatus() const {
-   if( !FnmIsDiskWritable() )           return DISKFILE_SAME_AS_FBUF;
+   if( !FnmIsDiskWritable() )          { return DISKFILE_SAME_AS_FBUF; }
    const auto pName( Name() );
-   if( HasWildcard( pName ) )           return DISKFILE_SAME_AS_FBUF;
+   if( HasWildcard( pName ) )          { return DISKFILE_SAME_AS_FBUF; }
    const auto diskm( GetFileStat( pName ) );
-   if( diskm.none() )                   return DISKFILE_NO_EXIST;
+   if( diskm.none() )                  { return DISKFILE_NO_EXIST; }
    const auto s1_v_s2( cmp( diskm, d_LastFileStat ) );
-   if( s1_v_s2 > 0 )                    return DISKFILE_NEWERTHAN_FBUF;
-   if( s1_v_s2 < 0 )                    return DISKFILE_OLDERTHAN_FBUF;
-                                        return DISKFILE_SAME_AS_FBUF;
+   if( s1_v_s2 > 0 )                   { return DISKFILE_NEWERTHAN_FBUF; }
+   if( s1_v_s2 < 0 )                   { return DISKFILE_OLDERTHAN_FBUF; }
+                                         return DISKFILE_SAME_AS_FBUF;
    }
 
 void FBUF::SetLastFileStatFromDisk() {
@@ -539,8 +540,9 @@ PFBUF FindFBufByName( stref name ) {
    return pNd ? IdxNodeToFBUF( pNd ) : nullptr;
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf) {
-      if( pFBuf->NameMatch( name ) )
+      if( pFBuf->NameMatch( name ) ) {
          return pFBuf;
+         }
       }
    return nullptr;
 #endif
@@ -1209,9 +1211,9 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "
 
 char Path::DelimChar( PCChar fnm ) { // BUGBUG this needs to be (a) purpose-clarified, (b) made per OS (shell?)
    const stref srfnm( fnm );
-   if( atEnd( srfnm, ToNextOrEnd( stref(" ,&;^"), srfnm, 0 ) ) )  return 0;    // no delim needed
-   if( atEnd( srfnm, ToNextOrEnd( '"' , srfnm, 0 ) ) ) { return '"';  } // "
-   if( atEnd( srfnm, ToNextOrEnd( '\'', srfnm, 0 ) ) ) { return '\''; } // '
+   if( atEnd( srfnm, ToNextOrEnd( stref(" ,&;^"), srfnm, 0 ) ) ) { return 0; }   // no delim needed
+   if( atEnd( srfnm, ToNextOrEnd( '"'           , srfnm, 0 ) ) ) { return '"';  } // "
+   if( atEnd( srfnm, ToNextOrEnd( '\''          , srfnm, 0 ) ) ) { return '\''; } // '
    return '|'; // last ditch: ugly, but NEVER a valid filename char(?)
    }
 
@@ -1357,8 +1359,9 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          DBG( "FRd! user denied create" );
          return false;
          }
-      if( fio::OpenFileFailed( &hFile, Name(), false, DFLT_TEXTFILE_CREATE_MODE ) )
+      if( fio::OpenFileFailed( &hFile, Name(), false, DFLT_TEXTFILE_CREATE_MODE ) ) {
          return Msg( "Cannot create %s - %s", Name(), strerror( errno ) );
+         }
       VR_( DBG( "FRd: created newfile '%s'", Name() ); )
       std::string tmp;
       PutLine( 0, "", tmp );

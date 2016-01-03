@@ -578,12 +578,11 @@ void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollaps
       }
    }
 
-//
 // NB: See "STREAM definition" in ARG::FillArgStruct to understand parameters!
-// Nutshell: Last char of stream IS NOT INCLUDED in operation!
+// Nutshell: LAST CHAR OF STREAM IS EXCLUDED from operation!
 //
 void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
-   if( yStart == yEnd ) { // xEnd-1 because "Last char of stream IS NOT INCLUDED in operation!"
+   if( yStart == yEnd ) { // xEnd-1 because "LAST CHAR OF STREAM IS EXCLUDED from operation!"
       0 && DBG( "%s [%d..%d]", __func__, xStart, xEnd-1 );
       DelBox( xStart, yStart, xEnd-1, yStart );
       return;
@@ -777,14 +776,12 @@ bool ARG::delete_() {  // BUGBUG make this NOT save to clipboard!!! (current wor
 bool ARG::sinsert() { PCF;
    switch( d_argType ) {
     default:          return BadArg();
-
     case NOARG:       FBOP::CopyBox( pcf,
                            d_noarg.cursor.col, d_noarg.cursor.lin, nullptr
                          , d_noarg.cursor.col, d_noarg.cursor.lin
                          , d_noarg.cursor.col, d_noarg.cursor.lin
                          );
                       return true;
-
     case NULLARG:     FBOP::CopyStream( pcf,
                            d_nullarg.cursor.col, d_nullarg.cursor.lin
                          , nullptr
@@ -792,7 +789,6 @@ bool ARG::sinsert() { PCF;
                          , 0                   , d_nullarg.cursor.lin + 1
                          );
                       return true;
-
     case BOXARG:      //lint -fallthrough
     case LINEARG:     ConvertLineOrBoxArgToStreamArg();
                       //lint -fallthrough
