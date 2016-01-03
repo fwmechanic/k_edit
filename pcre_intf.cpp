@@ -110,7 +110,7 @@ CompiledRegex::capture_container::size_type CompiledRegex::Match( CompiledRegex:
             captures.emplace_back();
             }
          else {
-            captures.emplace_back( stref( haystack.data() + d_pcreCapture[ix].oFirst, d_pcreCapture[ix].Len() ) );
+            captures.emplace_back( d_pcreCapture[ix].oFirst, stref( haystack.data() + d_pcreCapture[ix].oFirst, d_pcreCapture[ix].Len() ) );
             }
          }
       }

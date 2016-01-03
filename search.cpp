@@ -1436,7 +1436,7 @@ stref FileSearcherRegex::VFindStr_( stref src, sridx src_offset, HaystackHas hay
       else {
          }                                         DBG( "------" );
       )
-   return rv > 0 ? d_captures[0].value() : stref();
+   return rv > 0 && d_captures[0].valid() ? d_captures[0].value() : stref();
    }
 
 #endif

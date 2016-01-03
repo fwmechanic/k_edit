@@ -42,19 +42,20 @@ public:
    // a vector of stref is not used since a matching regex capture can be the empty string
    // which cannot be distinguished from a non-matching capture w/o extra info; d_valid is that
    class Capture { //
-      bool  d_valid;
+      sridx d_ofs;
       stref d_value;
    public:
-      Capture()             : d_valid( false ), d_value(    ) {}
-      Capture( stref val_ ) : d_valid( true  ), d_value(val_) {}
-      bool  valid() const { return d_valid; }
-      stref value() const { return d_value; }
+      Capture()                       : d_ofs(           eosr       ), d_value(    ) {}
+      Capture( int ofs_, stref val_ ) : d_ofs(ofs_ < 0 ? eosr : ofs_), d_value(val_) {}
+      bool  valid()  const { return d_ofs != eosr; }
+      stref value()  const { return d_value; }
+      sridx offset() const { return d_ofs  ; }
       };
    typedef std::vector<Capture> capture_container;
 
 private:
 
-   struct pcreCapture {
+   struct pcreCapture { // struct / content required by PCRE API
       int oFirst    = -1;
       int oPastLast = -1;
       bool NoMatch() const { return oFirst == -1 && oPastLast == -1; }
