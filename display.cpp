@@ -2060,7 +2060,7 @@ void View::HiliteAddins_Init() {
                                        IAL( HiliteAddin_python          );  break;
          case FTypeSetting::HL_LUA   : IAL( HiliteAddin_lua             );  break;
          case FTypeSetting::HL_PYTHON: IAL( HiliteAddin_python          );  break;
-         case FTypeSetting::HL_BASH  : IAL( HiliteAddin_bash            );  break;
+         case FTypeSetting::HL_BASH  : IAL( HiliteAddin_python          );  break;
          case FTypeSetting::HL_DIFF  : IAL( HiliteAddin_Diff            );  break;
          default: if( pFTS->d_eolCommentDelim[0] ) {
                      IAL( HiliteAddin_EolComment );
