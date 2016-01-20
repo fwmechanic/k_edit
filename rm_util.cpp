@@ -41,15 +41,14 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    DB && DBG( "SFMG+ '%s'", pszFileName );
    struct_stat stat_buf;
    if( func_stat( pszFileName, &stat_buf ) == -1 ) { DB && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
-      return SFMG_NO_EXISTING;
+      return SFMG_NO_SRCFILE;
       }
    auto dest( std::string( BSR2STR(Path::RefDirnm( pszFileName )) ) + szBakDirNm );
    auto mkdirLen( dest.length() );
    NewScope { // validity of dirname
    const auto dirname( dest.c_str() );
    const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
-   if( !err ) {
-      0 && DBG( "mkdir (by %s) of already existing dir '%s'", __func__, dirname );
+   if( !err ) { 0 && DBG( "mkdir (by %s) created dir '%s'", __func__, dirname );
      #if defined(_WIN32)
       SetFileAttrsOk( dirname, FILE_ATTRIBUTE_HIDDEN );
      #endif

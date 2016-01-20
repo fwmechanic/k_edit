@@ -823,9 +823,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    auto mkdir_stf = [&]() {
       const auto dirname( s_EditorStateDir.c_str() );
       const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
-      if( !err ) {
-         0 && fprintf( stderr, "mkdir (by %s) of already existing dir '%s'", __func__, dirname );
-         }
+      if( !err ) { 0 && fprintf( stderr, "created dir '%s'", dirname ); }
       else {
          switch( errno ) {
             case EEXIST: break;
