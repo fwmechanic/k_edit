@@ -36,7 +36,5 @@
 
 #include "my_types.h"
 
-
-enum { SFMG_OK=0, SFMG_NO_EXISTING=1, SFMG_CANT_MV_ORIG= 2, SFMG_IDX_WR_ERR=3, SFMG_CANT_MK_BAKDIR };
-
+enum { SFMG_OK, SFMG_NO_EXISTING, SFMG_CANT_MV_ORIG, SFMG_CANT_MK_BAKDIR };
 extern int SaveFileMultiGenerationBackup( PCChar pszFileName );

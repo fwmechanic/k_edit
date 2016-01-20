@@ -39,45 +39,43 @@ GLOBAL_CONST char szBakDirNm[] = ".kbackup";
 
 int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    DB && DBG( "SFMG+ '%s'", pszFileName );
-   {
-   FileAttribs fa( pszFileName );
-   if( !fa.Exists() ) { DB && DBG( "SFMG! [1] noFile" );
-      return SFMG_NO_EXISTING;
-      }
-   if( fa.IsReadonly() ) { DB && DBG( "SFMG! [2] ROfile" );
-      return SFMG_CANT_MV_ORIG;
-      }
-   }
-
-   auto dest( std::string( BSR2STR(Path::RefDirnm( pszFileName )) ) + szBakDirNm );
-   {
-   FileAttribs fd( dest.c_str() );
-   if( fd.Exists() && fd.IsDir() ) {
-      }
-   else {
-      if( !mkdirOk( dest.c_str() ) ) { DB && DBG( "SFMG! [2] Cant Mkdir" );
-         return SFMG_CANT_MK_BAKDIR;
-         }
-#if defined(_WIN32)
-      SetFileAttrsOk( dest.c_str(), FILE_ATTRIBUTE_HIDDEN );
-#endif
-      DB && DBG("SFMG  mkdir '%s'", dest.c_str() );
-      }
-   }
-   const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  DB && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
-
-   char tbuf[32];
-   {
    struct_stat stat_buf;
    if( func_stat( pszFileName, &stat_buf ) == -1 ) { DB && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
-      return SFMG_CANT_MV_ORIG;
+      return SFMG_NO_EXISTING;
       }
-   strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", localtime( &stat_buf.st_mtime ) );
+   auto dest( std::string( BSR2STR(Path::RefDirnm( pszFileName )) ) + szBakDirNm );
+   auto mkdirLen( dest.length() );
+   NewScope { // validity of dirname
+   const auto dirname( dest.c_str() );
+   const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
+   if( !err ) {
+      0 && DBG( "mkdir (by %s) of already existing dir '%s'", __func__, dirname );
+     #if defined(_WIN32)
+      SetFileAttrsOk( dirname, FILE_ATTRIBUTE_HIDDEN );
+     #endif
+      }
+   else {
+      mkdirLen = 0;
+      switch( errno ) {
+         case EEXIST: break;
+         default    : DBG( "!!! mkdir (by %s) of '%s' failed, emsg='%s'", __func__, dirname, strerror( errno ) );
+                      return SFMG_CANT_MK_BAKDIR;
+         }
+      }
    }
+   char tbuf[32];
+   strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", localtime( &stat_buf.st_mtime ) );
+   const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  DB && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
    dest += (PATH_SEP_STR + std::string( BSR2STR( filenameNoPath ) ) + "." + tbuf);
-
+  #if defined(_WIN32)
    unlinkOk( dest.c_str() );
-   if( !MoveFileOk( pszFileName, dest.c_str() ) ) { DB && DBG( "SFMG! [2] mv '%s' -> '%s' failed", pszFileName, dest.c_str() );
+  #endif
+   if( rename( pszFileName, dest.c_str() ) ) {
+      DB && DBG( "SFMG! [2] mv '%s' -> '%s' failed", pszFileName, dest.c_str() );
+      if( mkdirLen ) { // something to undo?
+         dest.resize( mkdirLen ); // retrieve dirname as ASCIZ
+         WL( _rmdir, rmdir )( dest.c_str() ); // undo mkdir
+         }
       return SFMG_CANT_MV_ORIG;
       }
 

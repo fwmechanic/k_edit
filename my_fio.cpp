@@ -98,15 +98,16 @@ bool unlinkOk_( PCChar filename, PCChar caller ) {
    }
 
 bool mkdirOk_( PCChar dirname, PCChar caller ) {
-   if( IsDir( dirname ) ) {
+   const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
+   if( EEXIST == err ) {
       0 && DBG( "mkdir (by %s) of already existing dir '%s'", caller, dirname );
       return true;
       }
-   const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
    if( err ) { DBG( "!!! mkdir (by %s) of '%s' failed, emsg='%s'", caller, dirname, strerror( errno ) );
       }
    else { 0 && DBG( "!!! mkdir (by %s) of '%s' successful", caller, dirname );
-      if( 0 && !IsDir( dirname ) ) { DBG( "!!! mkdir (by %s) of '%s' failed, doesn't exist after successful create", caller, dirname );
+      const auto err2( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
+      if( EEXIST == err2 ) { DBG( "!!! mkdir (by %s) of '%s' failed, doesn't exist after successful create", caller, dirname );
          return false;
          }
       }

@@ -1485,9 +1485,11 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                      { VERBOSE_WRITE && DBG( "FWr: bkup_UNDEL" ); // specified by the Undelcount switch.
                      const auto rc( SaveFileMultiGenerationBackup( fnmToBkup ) );
                      switch( rc ) {
-                        default:               return Msg( "Can't delete old version of %s", fnmToBkup );
-                        case SFMG_OK:          break;
-                        case SFMG_NO_EXISTING: break;
+                        case SFMG_OK             : break;
+                        case SFMG_NO_EXISTING    : return Msg( "Can't stat %s", fnmToBkup );
+                        case SFMG_CANT_MV_ORIG   : return Msg( "Can't move %s", fnmToBkup );
+                        case SFMG_CANT_MK_BAKDIR : return Msg( "Can't create dest dir" );
+                        default:                   return Msg( "unknown SFMG error %d", rc );
                         }
                      }
                      //-lint fallthrough
