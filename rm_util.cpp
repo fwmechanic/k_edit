@@ -18,22 +18,15 @@
 //
 
 #include "ed_main.h"
-
 #include "rm_util.h"
 #include "my_log.h"
 #include "filename.h"
-
 #include <stdlib.h>
-
 #include "my_strutils.h"
-
 #include "my_fio.h"
-
 #if defined(_WIN32)
 #include "win32_base.h"
 #endif
-
-extern int g_iMaxUndel;
 
 GLOBAL_CONST char szBakDirNm[] = ".kbackup";
 

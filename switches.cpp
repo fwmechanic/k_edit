@@ -326,7 +326,6 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "luagcstep"      , Var2TPfx( g_iLuaGcStep            ), swinVAR_INT , swidInt        _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) },
  { "m4backtickquote", Var2TPfx( g_fM4backtickquote      ), swinVAR_BOOL, swidBool       _AHELP( "spanning backtick quoting right ends with ' (yes) or ` (no)" ) },
  { "maxfilehist"    , Var2TPfx( g_iMaxfilehist          ), swinVAR_INT , swidInt        _AHELP( "the maximum number of files kept in the file history between sessions; 0=no limit" ) },
- { "maxundel"       , Var2TPfx( g_iMaxUndel             ), swinVAR_INT , swidInt        _AHELP( "The maximum number of backup copies of a given file saved by the editor when when the Backup switch is set to 'undel'" ) },
  { "maxundo"        , Var2TPfx( g_iMaxUndo              ), swinVAR_INT , swidInt        _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) },
  { "memusgink"      , Var2TPfx( g_fShowMemUseInK        ), swinVAR_BOOL, swidBool       _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) },
  { "msgflush"       , Var2TPfx( g_fMsgflush             ), swinVAR_BOOL, swidBool       _AHELP( "<compile> is flushed (yes) or retained (no) when a new job is started" ) },

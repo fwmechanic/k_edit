@@ -564,7 +564,6 @@ extern int   g_iHike             ;
 extern COL   g_iHscroll          ;
 extern int   g_iRmargin          ;
 extern int   g_iMaxfilehist      ;
-extern int   g_iMaxUndel         ;
 extern int   g_iMaxUndo          ;
 extern COL   g_iVscroll          ;
 extern int   g_iWucMinLen        ;

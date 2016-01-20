@@ -41,7 +41,6 @@ GLOBAL_VAR int   g_iHike              =      25;
 GLOBAL_VAR int   g_iHscroll           =      10;
 GLOBAL_VAR int   g_iRmargin           =      80;
 GLOBAL_VAR int   g_iMaxfilehist       =       0; // Keep info on last 'maxfilehist' files edited (0=never ends)
-GLOBAL_VAR int   g_iMaxUndel          =    5000;
 GLOBAL_VAR int   g_iMaxUndo           =  100000;
 GLOBAL_VAR int   g_iVscroll           =       1;
 
