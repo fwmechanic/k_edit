@@ -422,7 +422,7 @@ bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff 
                                       && !SilentUpdateMode()
                                       #endif
                                    // && DBG( "confirming" )
-                                      && !ConIO::Confirm( Sprintf2xBuf( "%s has been changed DiskFile %s than buffer:  Refresh? ", Name(), why ) )
+                                      && !ConIO::Confirm( Sprintf2xBuf( "%s has been changed DiskFile %s than buffer: Refresh? ", Name(), why ) )
                                     )
                                      {
                                      0 && DBG( "not confirmed" );
@@ -1507,10 +1507,11 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
    return true;
    }
 
+STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName );
+
 bool FBUF::write_to_disk( PCChar destFileNm ) {
    // BUGBUG there are security-hazard file/directory race conditions to be found here!
-   Path::str_t destFnm( destFileNm );
-
+  #if defined(_WIN32)
   #if 0
    //
    // NOTES 20090721 kgoodwin editing NTFS ADS (Alt Data STREAMS) hits the rocks
@@ -1536,50 +1537,54 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    // The remaining step is to make the backup functions perform the ADS
    // copy-based backup algorithm above.
    //
+   Path::str_t destFnm( destFileNm );
    PChar pStream = strchr( destFnm+3, ':' );
    if( pStream ) { *pStream = '\0'; }
   #endif
-  #if defined(_WIN32)
    {
-   FileAttribs dest( destFnm.c_str() );
+   FileAttribs dest( destFileNm );
    if( dest.Exists() && dest.IsReadonly() ) {
-      if(   ConIO::Confirm( Sprintf2xBuf( "File '%s' is readonly; overwrite anyway?", destFnm.c_str() ) )
-         && dest.MakeWritableFailed( destFnm.c_str() )
+      if(   ConIO::Confirm( Sprintf2xBuf( "File '%s' is readonly; overwrite anyway?", destFileNm ) )
+         && dest.MakeWritableFailed( destFileNm )
         ) {
-         return Msg( "Could not make '%s' writable!", destFnm.c_str() );
+         return Msg( "Could not make '%s' writable!", destFileNm );
          }
-      if( IsFileReadonly( destFnm.c_str() ) ) {
-         return Msg( "'%s' is not writable", destFnm.c_str() );
+      if( IsFileReadonly( destFileNm ) ) {
+         return Msg( "'%s' is not writable", destFileNm );
          }
       }
    }
   #endif
-   const auto tmpFnm( Path::Union( ".$k$", destFnm.c_str() ) );
+   const auto tmpFnm( Path::Union( ".$k$", destFileNm ) );
    DisplayNoiseBlanker dblank;
-   extern bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName );
    if( !FBUF_WriteToDiskOk( this, tmpFnm.c_str() ) ) {
-      return false;
+      // cannot write tmpFnm: directory is probably not writable
+      // last chance: try overwriting target file directly
+      if( FBUF_WriteToDiskOk( this, destFileNm ) ) {
+         return !Msg( "Overwrote %s", Name() );
+         }
+      return Msg( "Cannot write %s", destFileNm );
       }
    d_tmLastWrToDisk = time( nullptr ); // note this is not == stat mtime, thus not comparable to same
    wrNoiseBak();
-   const auto abs_dest( Path::Absolutize( destFnm.c_str() ) );
+   const auto abs_dest( Path::Absolutize( destFileNm ) );
    if( !backupOldDiskFile( abs_dest.c_str(), d_backupMode==bkup_USE_SWITCH ? g_iBackupMode : d_backupMode ) ) {
       unlinkOk( tmpFnm.c_str() );
       return false;
       }
    wrNoiseRenm();
-   if( !MoveFileOk( tmpFnm.c_str(), destFnm.c_str() ) ) {
-      Msg( "Can't rename %s to %s - %s", tmpFnm.c_str(), destFnm.c_str(), strerror( errno ) );
+   if( !MoveFileOk( tmpFnm.c_str(), destFileNm ) ) {
+      Msg( "Can't rename %s to %s - %s", tmpFnm.c_str(), destFileNm, strerror( errno ) );
       unlinkOk( tmpFnm.c_str() );
       return false;
       }
-   if( !NameMatch( destFnm ) ) {
-      ChangeName( destFnm.c_str() );
+   if( !NameMatch( destFileNm ) ) {
+      ChangeName( destFileNm );
       }
   #if defined(_WIN32)
-   SetDiskRW(),
+   SetDiskRW();
   #endif
-   UnDirty(), SetLastFileStatFromDisk(); DispNeedsRedrawStatLn();
+   UnDirty(); SetLastFileStatFromDisk(); DispNeedsRedrawStatLn();
    return !Msg( "Saved  %s", Name() ); // xtra spc to match Msg( "Saving %s" ... above
    }
 
@@ -1736,7 +1741,7 @@ PCChar EolName( Eol_t eol ) { return eol==EolLF ? "LF" : "CRLF"; }
 GLOBAL_VAR bool g_fTrailLineWrite   = false;
 GLOBAL_VAR bool g_fForcePlatformEol = false;
 
-bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hidden/private FBUF method
+STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hidden/private FBUF method
    wrNoiseOpen();
    int hFile_Write;
    const auto create_mode( pFBuf->GetLastFileStat().d_mode );

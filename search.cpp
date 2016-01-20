@@ -2094,9 +2094,9 @@ LINE CGrepper::WriteOutput
    for( auto iy(0); iy < d_InfLines; ++iy ) {
       if( d_MatchingLines[iy] ) {
          FixedCharArray<20> prefix;
-         if( fFirstGen ) // this is a 1st-generation search: include line # right justified w/in fixed-width field
+         if( fFirstGen ) { // this is a 1st-generation search: include line # right justified w/in fixed-width field
             prefix.Sprintf( "%*d  ", lwidth, iy + 1 );
-
+            }
          outfile->ImgBufAppendLine( d_SrchFile, iy, fFirstGen ? prefix.k_str() : nullptr );
          }
       }

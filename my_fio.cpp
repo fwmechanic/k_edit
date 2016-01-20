@@ -34,7 +34,7 @@ bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int crea
 #if defined(_WIN32)
    const auto fh( _sopen(
         pszFileName
-      , _O_BINARY | (fWrAccess ? _O_RDWR : _O_RDONLY) | (create_mode ? O_CREAT : 0)
+      , _O_BINARY | (fWrAccess ? (_O_WRONLY|_O_TRUNC) : _O_RDONLY) | (create_mode ? O_CREAT : 0)
       , _SH_DENYNO
       , create_mode // permissions relevant iff _O_CREAT specified (and subject to umask anyway)
       )
@@ -42,7 +42,7 @@ bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int crea
 #else
    const auto fh( open(
         pszFileName
-      , (fWrAccess ? O_RDWR : O_RDONLY) | (create_mode ? O_CREAT : 0)
+      , (fWrAccess ? (O_WRONLY|O_TRUNC) : O_RDONLY) | (create_mode ? O_CREAT : 0)
       , create_mode // permissions relevant iff O_CREAT specified (and subject to umask anyway)
       )
     );
