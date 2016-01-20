@@ -63,9 +63,6 @@ public:
 #define     unlinkOk( filename )  unlinkOk_( (filename), __func__ )
 extern bool unlinkOk_( PCChar filename, PCChar caller );
 
-#define     mkdirOk( dirname )  mkdirOk_( (dirname), __func__ )
-extern bool mkdirOk_( PCChar dirname, PCChar caller );
-
 extern bool MoveFileOk( PCChar pszCurFileName, PCChar pszNewFilename );
 
 #define     CopyFileManuallyOk( pszCurFileName, pszNewFilename )  CopyFileManuallyOk_( pszCurFileName, pszNewFilename, __func__ )

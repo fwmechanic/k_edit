@@ -97,23 +97,6 @@ bool unlinkOk_( PCChar filename, PCChar caller ) {
    return !err;
    }
 
-bool mkdirOk_( PCChar dirname, PCChar caller ) {
-   const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
-   if( EEXIST == err ) {
-      0 && DBG( "mkdir (by %s) of already existing dir '%s'", caller, dirname );
-      return true;
-      }
-   if( err ) { DBG( "!!! mkdir (by %s) of '%s' failed, emsg='%s'", caller, dirname, strerror( errno ) );
-      }
-   else { 0 && DBG( "!!! mkdir (by %s) of '%s' successful", caller, dirname );
-      const auto err2( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
-      if( EEXIST == err2 ) { DBG( "!!! mkdir (by %s) of '%s' failed, doesn't exist after successful create", caller, dirname );
-         return false;
-         }
-      }
-   return !err;
-   }
-
 bool CopyFileManuallyOk_( PCChar pszCurFileName, PCChar pszNewFilename, PCChar caller ) { DBG( "%s: manually copying", caller );
    auto cur_FILE( fopen( pszCurFileName, "rb" ) );
    if( cur_FILE == nullptr ) {  DBG( "%s(%s -> %s) fopen of src FAILED", caller, pszCurFileName, pszNewFilename );

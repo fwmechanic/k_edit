@@ -821,9 +821,19 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    PutEnvOk( "K_RUNNING?", "yes" );
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
    auto mkdir_stf = [&]() {
-      if( !IsDir( s_EditorStateDir.c_str() ) ) { mkdirOk( s_EditorStateDir.c_str() ); }
-      if( !IsDir( s_EditorStateDir.c_str() ) ) { fprintf( stderr, "mkdir(%s) FAILED\n", s_EditorStateDir.c_str() ); exit( 1 ); }
-      s_EditorStateDir += PATH_SEP_STR;   0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
+      const auto dirname( s_EditorStateDir.c_str() );
+      const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
+      if( !err ) {
+         0 && fprintf( stderr, "mkdir (by %s) of already existing dir '%s'", __func__, dirname );
+         }
+      else {
+         switch( errno ) {
+            case EEXIST: break;
+            default    : fprintf( stderr, "mkdir(%s) failed: %s\n", dirname, strerror( errno ) );
+                         exit( 1 );
+            }
+         }
+      s_EditorStateDir += PATH_SEP_STR;  0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
       };
 #if defined(_WIN32)
    #define  HOME_ENVVAR_NM  "APPDATA"
