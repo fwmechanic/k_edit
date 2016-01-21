@@ -842,8 +842,7 @@ bool HiliteAddin_cond_CPP::VHilitLine( LINE yLine, COL xIndent, LineColorsClippe
          }
       // continue any "surrounds" of other highlit CPPconds above/below
       for( auto level_idx(line.level_ix) ; level_idx > -1 ; level_idx = d_PerViewableLine[ level_idx ].level.containing_level_idx ) {
-         auto &level( d_PerViewableLine[ level_idx ].level );
-         const auto xBar( level.xBox );
+         const auto xBar( d_PerViewableLine[ level_idx ].level.xBox );
          alcc.PutColor( xBar, 1, COLOR::CPP );
          }
       }
@@ -1091,12 +1090,11 @@ bool HiliteAddin_StreamParse::VHilitLine( const LINE yLine, const COL xIndent, L
          const auto tw( pFile->TabWidth() );
          const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
          for( ; ix < d_hl_rgns.size() && 0==d_hl_rgns[ix].rgn.cmp_line( yLine ) ; ++ix ) {
-            const auto &comment( d_hl_rgns[ix] );
-            COL xMin=0; COL xMax=xMaxOfLine;
-            if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfFreeIdx( tw, rl, comment.rgn.flMin.col ); }
-            if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfFreeIdx( tw, rl, comment.rgn.flMax.col ); }
+            const auto &hl( d_hl_rgns[ix] );
+            const auto xMin( hl.rgn.flMin.lin == yLine ? ColOfFreeIdx( tw, rl, hl.rgn.flMin.col ) :          0 );
+            const auto xMax( hl.rgn.flMax.lin == yLine ? ColOfFreeIdx( tw, rl, hl.rgn.flMax.col ) : xMaxOfLine );
             0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
-            alcc.PutColor( xMin, xMax-xMin+1, comment.color );
+            alcc.PutColor( xMin, xMax-xMin+1, hl.color );
             }
          }
       return false;
