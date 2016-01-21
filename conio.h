@@ -36,6 +36,7 @@ struct EdKC_Ascii {
    };
 
    enum ConfirmResponse { crYES, crNO, crCANCEL };
+
 namespace ConIO {
    bool  StartupOk( bool fForceNewConsole );
    void  Shutdown();

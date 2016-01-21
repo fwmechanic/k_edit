@@ -59,20 +59,23 @@ public:
    bool IsBitSet( size_t bn ) const { return (d_bits[ elenum( bn ) ] &   BIT( bitnum( bn ) )) != 0; }
    bool IsAnyBitSet() const { // _this_ is the reason for this class existing: fast search for any bit being set
       const P pastEnd( d_bits + d_T_els );
-      for( P pel=d_bits ; pel < pastEnd ; ++pel )
-         if( *pel )
+      for( P pel=d_bits ; pel < pastEnd ; ++pel ) {
+         if( *pel ) {
             return true;
-
+            }
+         }
       return false;
       }
    void ClrAllBits() {
       const P pastEnd( d_bits + d_T_els );
-      for( P pel=d_bits ; pel < pastEnd ; ++pel )
+      for( P pel=d_bits ; pel < pastEnd ; ++pel ) {
          *pel = 0;
+         }
       }
    void SetAllBits() {
       const P pastEnd( d_bits + d_T_els );
-      for( P pel=d_bits ; pel < pastEnd ; ++pel )
+      for( P pel=d_bits ; pel < pastEnd ; ++pel ) {
          *pel = ALLBITS;
+         }
       }
    };

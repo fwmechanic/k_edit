@@ -81,7 +81,6 @@ typedef FBUF const * PCFBUF;
 typedef      PFBUF * PPFBUF;
 typedef     PCFBUF const * CPPFBUF;
 
-
 typedef  DLinkHead<FBUF> FBufHead;
 
 // Use OpenFileNotDir_... in lieu of fChangeFile if you don't want to affect
@@ -122,7 +121,6 @@ typedef  FixedCharArray<BUFBYTES>     Linebuf;
 typedef  FmtStr<BUFBYTES>    SprintfBuf;
 typedef  FmtStr<2*BUFBYTES>  Sprintf2xBuf;
 
-
 //=============================================================================
 
 #define  USE_CURSORLINE_HILITE       1
@@ -130,8 +128,6 @@ typedef  FmtStr<2*BUFBYTES>  Sprintf2xBuf;
 
 //
 // Editor color table indicies
-//
-
 enum { // these are COLOR CODES!
    fgBLK =  0x0,
    fgBLU =  0x1,
@@ -202,7 +198,6 @@ extern U8 g_colorError    ; // ERR
 
 #define  HILITE_CPP_CONDITIONALS  1
 
-
 #include "conio.h"
 
 struct Point {   // file location
@@ -251,12 +246,10 @@ public:
    const Point &Pt()        const { return d_pt   ; }
    };
 
-class FBufLocnNow : public FBufLocn // dflt ctor uses curfile, cursor; const instances work fine
-   {
+class FBufLocnNow : public FBufLocn { // dflt ctor uses curfile, cursor; const instances work fine
 public:
    FBufLocnNow();
    };
-
 
 struct Rect {
    Point flMin;  // - Lower line, or leftmost col
@@ -283,44 +276,20 @@ class Xbuf {
    // ever-growing line buffer intended to be used for all lines touched over
    // the duration of a command or operation, in lieu of malloc'ing a buffer for
    // each line touched.
-
    PChar                  d_buf;
    size_t                 d_buf_bytes;
    STATIC_VAR char        ds_empty;
-
-   public:
-
-   Xbuf()
-      : d_buf      ( &ds_empty )
-      , d_buf_bytes( 0 )
-      {}
-
-   Xbuf( size_t size )
-      : d_buf      ( nullptr )
-      , d_buf_bytes( 0 )
-      { wresize( size ); }
-
-   Xbuf( PCChar str )
-      : d_buf      ( nullptr )
-      , d_buf_bytes( 0 )
-      { assign( str ); }
-
-   Xbuf( PCChar str, size_t len_ )
-      : d_buf      ( nullptr )
-      , d_buf_bytes( 0 )
-      { assign( str, len_ ); }
-
-   ~Xbuf() {
-          if( &ds_empty==d_buf ) {} else
-          { Free_( d_buf ); }
-          }
-
+public:
+   Xbuf()                          : d_buf (&ds_empty), d_buf_bytes( 0 ) {}
+   Xbuf( size_t size )             : d_buf ( nullptr ), d_buf_bytes( 0 ) { wresize( size ); }
+   Xbuf( PCChar str )              : d_buf ( nullptr ), d_buf_bytes( 0 ) { assign( str ); }
+   Xbuf( PCChar str, size_t len_ ) : d_buf ( nullptr ), d_buf_bytes( 0 ) { assign( str, len_ ); }
+   ~Xbuf() { if( &ds_empty!=d_buf ) { Free_( d_buf ); } }
 public:
    PChar    wbuf()      const { return d_buf;       }
    PCChar   c_str()     const { return d_buf;       }
    size_t   buf_bytes() const { return d_buf_bytes; }
    void     clear()           { poke( 0, '\0' );    }
-
    PChar wresize( size_t size ) {
       if( d_buf_bytes < size ) {
           d_buf_bytes = ROUNDUP_TO_NEXT_POWER2( size, 512 );
@@ -329,12 +298,10 @@ public:
          }
       return d_buf;
       }
-
    size_t length() {
       const auto pnul( PChar( memchr( d_buf, 0, d_buf_bytes ) ) );
       return pnul ? pnul - d_buf : 0;
       }
-
    PCChar push_back( char ch ) {
       const auto slen( length() );
       const auto rv( wresize( slen+2 ) );
@@ -342,11 +309,9 @@ public:
       rv[slen+1] = '\0';
       return rv;
       }
-
    PCChar cat( PCChar str ) {
       return cat( str, Strlen(str) );
       }
-
 private:
    PCChar cat( PCChar str, size_t len_ ) {
       const auto len0( d_buf ? Strlen(d_buf) : 0 );
@@ -355,7 +320,6 @@ private:
       rv[len0+len_] = '\0';
       return rv;
       }
-
    PCChar assign( PCChar str ) {
       const size_t len_( Strlen(str) );
       const auto rv( wresize( 1+len_ ) );
@@ -363,14 +327,12 @@ private:
       rv[len_] = '\0';
       return rv;
       }
-
    PCChar assign( PCChar str, const size_t len_ ) {
       const auto rv( wresize( 1+len_ ) );
       memcpy( rv, str, len_ );
       rv[len_] = '\0';
       return rv;
       }
-
    PCChar poke( int xCol, char ch, char fillch=' ' ) {
       const auto rv( wresize( 1+xCol ) );
       const auto len0( length() );
@@ -383,7 +345,6 @@ private:
          }
       return rv;
       }
-
 public:
    PCChar vFmtStr( PCChar format, va_list val ) {
       va_list  val_copy;        // http://stackoverflow.com/questions/9937505/va-list-misbehavior-on-linux
@@ -407,27 +368,21 @@ public:
 
 class LineInfo { // LineInfo is a standalone class since it is used by both FBUF and various subclasses of EditRec (undo/redo)
    friend class FBUF;
-
    NO_COPYCTOR(LineInfo);
    NO_ASGN_OPR(LineInfo);
-
    PChar d_pLineData;           // CAN be -1 when REPLACEREC is for line that didn't exist
    COL   d_iLineLen;
-
 public:
-
    void clear() {
       d_pLineData = nullptr;
       d_iLineLen  = 0;
       }
-
    LineInfo(LineInfo&& rhs)               // move constructor     so we can std::swap(), std::move() these
       : d_pLineData( rhs.d_pLineData )
       , d_iLineLen ( rhs.d_iLineLen  )
       {
       rhs.clear();
       }
-
    LineInfo& operator=(LineInfo&& rhs) {  // move assignment op   so we can std::swap() these
       if( this != &rhs ) {
          d_pLineData = rhs.d_pLineData ;
@@ -436,19 +391,16 @@ public:
          }
       return *this;
       }
-
    void CheckDump( PCChar msg, PFBUF pFBuf, LINE yLine ) const;
    bool Check( PCChar msg, PFBUF pFBuf, LINE yLine ) const {
-      if( !d_pLineData || d_iLineLen < 5000 )
+      if( !d_pLineData || d_iLineLen < 5000 ) {
          return false;
-
+         }
       CheckDump( msg, pFBuf, yLine );
       return true;
       }
-
    void   PutContent( stref src );
    void   FreeContent( const FBUF &fbuf );
-
    PCChar GetLineRdOnly()                        const { return d_pLineData; }
    COL    GetLineLen()                           const { return d_iLineLen;  }
    bool   fCanFree_pLineData( const FBUF &fbuf ) const;
@@ -466,12 +418,9 @@ class LineColorsClipped;
 union CmdData {
    EdKC_Ascii eka;
    PChar      pszMacroDef;
-
    char  chAscii() const { return eka.Ascii; }
-
    int   isEmpty() const { return pszMacroDef == nullptr; }
    };
-
 
 struct SearchScanMode; // forward
 
@@ -529,34 +478,26 @@ typedef CMD const * const CPCCMD;
 struct ARG {
    U32  d_argType;
    int  d_cArg;        // count of <arg>s pressed: 0 for NOARG
-
    struct {            // no argument specified
       Point cursor;    // - cursor
       } d_noarg;
-
    struct {            // null argument specified
       Point cursor;    // - cursor
       } d_nullarg;
-
    struct {            // text argument specified
       Point  ulc;      // - cursor (or left end of seln if any)
       PCChar pText;    // - ptr to text of arg
       } d_textarg;
-
    struct LINEARG_t {  // line argument specified
       LINE   yMin;     // - starting line of selection
       LINE   yMax;     // - ending   line of selection
       } d_linearg;
-
    typedef Rect STREAMARG_t;  STREAMARG_t d_streamarg; // stream argument specified  (char at 'd_streamarg.flMax' is NOT INCLUDED in the selection)
    typedef Rect BOXARG_t;     BOXARG_t    d_boxarg;    // box argument specified
-
    bool  d_fMeta;
    PCCMD d_pCmd;
    PFBUF d_pFBuf;
-
    //*********  END OF DATA
-
    void  DelArgRegion() const;
    void  BeginPt( Point *pPt ) const;
    void  EndPt( Point *pPt ) const;
@@ -566,17 +507,12 @@ struct ARG {
    void  ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const;
    void  GetColumnRange( COL *pxMin, COL *pxMax ) const;
    int   GetLineRange( LINE *yTop, LINE *yBottom ) const;
-
 private:
-
    bool  FillArgStructFailed();
    bool  BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
-
    bool  GenericReplace( bool fInteractive, bool fMultiFileReplace );
 // bool  GenericSearch( const SearchScanMode &sm, FileSearchMatchHandler &mh, Point curPt );
-
 public:
-
    bool   InitOk( PCCMD pCmd );
    void   SaveForRepeat() const;
    PCChar CmdName() const;
@@ -585,35 +521,24 @@ public:
    bool   BadArg() const; // a specific error: boilerplate (but informative) err msg
    bool   ErrPause( PCChar fmt, ... ) const ATTR_FORMAT(2, 3) ;
    PCChar ArgTypeName() const;
-
    void   ConvertStreamargToLineargOrBoxarg();
    void   ConvertLineOrBoxArgToStreamArg();
    U32    ActualArgType() const { return d_argType & ACTUAL_ARGS; }
-
 private:
-
    bool   pmlines( int direction ); // factored from mlines and plines
-
 public:
-
    typedef bool (*BoxStringFunction)( PCChar pszLineSeg, LINE yAbs, LINE yRel, COL xCol );
-
    // EDITOR_FXNs start here!!!
-
    typedef bool (ARG::*pfxCMD)(); // declare type of pointer to class method
-
    bool nextmsg_engine( const bool fFwd );
-
    bool RunMacro();
    bool ExecLuaFxn();
 // bool _spushArg();
-
    //--------------------------
    #define CMDTBL_H_ARG_METHODS
    #include "cmdtbl.h"
    #undef  CMDTBL_H_ARG_METHODS
    //--------------------------
-
    };  typedef ARG const * const CPCARG;
 
 extern std::string StreamArgToString( PFBUF pfb, Rect stream );
@@ -629,7 +554,6 @@ extern void PCFV_delete_ToEOL    ( Point            const &curpos     , bool cop
 class ArgLineWalker {
    NO_COPYCTOR(ArgLineWalker);
    NO_ASGN_OPR(ArgLineWalker);
-
    // Simplest way to traverse an ARG region: thin wrapper encapsulating ARG + a
    // Point variable.  Useful for simple iterations: when the Point IS NOT
    // manipulated by other agents like FileSearcher
@@ -640,15 +564,8 @@ class ArgLineWalker {
    CPCARG       d_Arg;
    Point        d_pt;
    std::string  d_st;
-
 public:
-
-   ArgLineWalker( CPCARG Arg )
-      : d_Arg(Arg)
-      {
-      d_Arg->BeginPt( &d_pt );
-      }
-
+   ArgLineWalker( CPCARG Arg ) : d_Arg(Arg) { d_Arg->BeginPt( &d_pt ); }
    bool   Beyond()              const { return d_Arg->Beyond( d_pt ); }
    bool   Within( COL len=-1 )  const { return d_Arg->Within( d_pt, len ); }
    LINE   Line()                const { return d_pt.lin; }
@@ -660,7 +577,6 @@ public:
    stref  lineref()             const { return d_st; }
    };
 
-
 //
 //  Function definition table definitions
 //
@@ -668,7 +584,6 @@ typedef ARG::pfxCMD funcCmd;
 
 STIL funcCmd fn_runmacro()  { return &ARG::RunMacro   ; }
 STIL funcCmd fn_runLua()    { return &ARG::ExecLuaFxn ; }
-
 
 #define AHELPSTRINGS  1
 #if     AHELPSTRINGS
@@ -678,7 +593,6 @@ STIL funcCmd fn_runLua()    { return &ARG::ExecLuaFxn ; }
 #   define  AHELP( x )
 #   define _AHELP( x )
 #endif//AHELPSTRINGS
-
 
 struct CMD {             // function definition entry
    PCChar   d_name;      // - pointer to name of fcn     !!! DON'T CHANGE ORDER OF FIRST 2 ELEMENTS
@@ -690,10 +604,8 @@ struct CMD {             // function definition entry
    CmdData  d_argData;   // - NON-MACRO: key that invoked; MACRO: ptr to macro string (defn)
    mutable  U32  d_callCount;  // - how many times user has invoked (this session) since last cmdusage_updt() call
    mutable  U32  d_gCallCount; // - how many times user has invoked, global
-
    bool     isCursorFunc(        )  const { return ToBOOL(d_argType &  CURSORFUNC); }
    bool     isCursorOrWindowFunc()  const { return ToBOOL(d_argType & (CURSORFUNC|WINDOWFUNC)); }
-
             // There are a number of functions which are macro-like (have
             // d_argType |= MACROFUNC) in order to take advantage of that ability
             // to push (typically) a literal string onto the interpreter stack
@@ -704,27 +616,20 @@ struct CMD {             // function definition entry
    bool     ExecutesLikeMacro()     const { return ToBOOL(d_argType & MACROFUNC); } // see cmdtbl for all builtin MACROFUNC fxns
    bool     IsRealMacro()           const { return d_func == fn_runmacro(); }
    bool     IsLuaFxn()              const { return d_func == fn_runLua()  ; }
-
    PCChar   Name()                  const { return d_name; }
    bool     NameMatch( PCChar str ) const { return Stricmp( str, d_name ) == 0; }
-
    PCChar   MacroText()             const { return PCChar( d_argData.pszMacroDef ); }
    stref    MacroStref()            const { return PCChar( d_argData.pszMacroDef ); }
-
    bool     BuildExecute()          const;
-
    bool     IsFnCancel()            const;
    bool     IsFnUnassigned()        const;
    bool     IsFnGraphic()           const;
-
    // mutators
-
    void     RedefMacro( stref newDefn );
    void     IncrCallCount() const { ++d_callCount; }
    };
 
 inline PCChar ARG::CmdName() const { return d_pCmd->Name(); }
-
 
 // forward decls:
 
@@ -733,19 +638,15 @@ struct                           HiLiteRec;
 class                            View;
    typedef View       *          PView;
    typedef View const *          PCView;
-
 typedef  DLinkHead<View>         ViewHead;
 class                            ViewHiLites;
 class                            FileTypeSettings;
 struct                           Win;
    typedef Win        *          PWin;
    typedef Win const  *          PCWin;
-
 class                            HiliteAddin;
 typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;
-
 extern void DestroyViewList( ViewHead *pViewHd );
-
 
 struct FTypeSetting;
 
@@ -882,7 +783,6 @@ private:
                                            // which is passed to the VCursorMoved method
 public:
    void         ForceCursorMovedCondition() { d_fCursorMoved = true; }
-
 private:
    HiliteAddinHead d_addins;
    bool         InsertAddinLast( HiliteAddin *pAddin );
@@ -1047,36 +947,31 @@ private:
    bool           private_RemovedFBuf();
 public:
    PFBUF          ForciblyRemoveFBuf() {
-                     if( !DeleteAllViewsOntoFbuf( this ) )
+                     if( !DeleteAllViewsOntoFbuf( this ) ) {
                         private_RemovedFBuf();
+                        }
                      return nullptr;          // returns NULL always
                      }
    void           RemoveFBufOnly();  // ONLY USE THIS AT SHUTDOWN TIME, or within private_RemovedFBuf()!
-
    //************ FBUF name
 private:
    Path::str_t    d_filename; // on heap
    bool           d_fFnmDiskWritable;
    void           ChangeName( stref newName );  // THE ONLY PLACE WHERE AN FBUF's NAME MAY BE SET!!!
    char           UserNameDelimChar() const;
-
 public:
    bool           FnmIsDiskWritable() const { return d_fFnmDiskWritable; }
    PCChar         Name() const { return d_filename.c_str(); }
    const Path::str_t &Namestr() const { return d_filename; }
    stref              Namesr() const { return stref( d_filename.data(), d_filename.length() ); }
-
    PChar          UserName( PChar dest, size_t destSize ) const;
    int            UserNameLen() const {
                      const auto len( d_filename.length() );
                      return UserNameDelimChar() ? len + 2 : len;
                      }
-
    bool           NameMatch( stref name ) const { return Path::eq( d_filename, name ); }
-
    STATIC_FXN bool FnmIsPseudo( PCChar name )   { return  name[0] == '<'; }
    bool            FnmIsPseudo()          const { return  FnmIsPseudo( Name() ); }
-
    //***********  membership in list of all FBUFs
  #if              FBUF_TREE
 private:
@@ -1093,7 +988,6 @@ public:
                          return dlinkAllFBufs.Next();
                      #endif
                          }
-
    /* d_ppGlobalPtr: support global pointer for this
 
       d_ppGlobalPtr allows direct (pointer) reference to a FBUF (that must
@@ -1110,28 +1004,23 @@ public:
 
       The methods below provide a framework that fulfills the requirements
       outlined above.
-
    */
 private:
    PPFBUF         d_ppGlobalPtr; // init'd by the "only ctor"; nullptr or addr-of a global ptr which points at this object
    PPFBUF         GetGlobalPtr()   const { return d_ppGlobalPtr; }
 public:
-
    void           UnsetGlobalPtr() {
                      if( d_ppGlobalPtr ) {
                        *d_ppGlobalPtr = nullptr;          // un-cross-link any existing reference
                         d_ppGlobalPtr = nullptr;          // new reference: none
                         }
                      }
-
    void           SetGlobalPtr( PPFBUF ppGlobalPtr ) { // Assert( nullptr==d_ppGlobalPtr );
                      d_ppGlobalPtr = ppGlobalPtr;                    // new reference: add
                      if( d_ppGlobalPtr ) { *d_ppGlobalPtr = this; }  // cross-link
                      }
-
    bool           HasGlobalPtr()                 const { return ToBOOL(d_ppGlobalPtr); }
    bool           IsSysPseudo()                  const { return HasGlobalPtr(); }
-
    //***********  (list of) Views of this (FBUF)
 private:
    ViewHead       d_dhdViewsOfFBUF;
@@ -1140,7 +1029,6 @@ public:
    void           LinkView( PView pv );
    void           UnlinkView( PView pv );
    int            ViewCount();
-
    //************ affect all Views of FBUF
    bool           UnlinkAllViews();
 private:
@@ -1148,31 +1036,24 @@ private:
 public:
    void           MoveCursorToBofAllViews()  { MoveCursorAllViews( 0, 0 ); }
    void           MoveCursorToEofAllViews()  { MoveCursorAllViews( LastLine()+1, 0 ); }
-
    //***********  OrigFileImage
 private:
    PChar          d_pOrigFileImage = nullptr;
    size_t         d_cbOrigFileImage = 0;
    enum text_encode_t { TXTENC_ASCII=0, TXTENC_UTF8=1 };
    text_encode_t  d_OrigFileImageContentEncoding = TXTENC_ASCII;
-
    void           FreeOrigFileImage();
-
    LINE           d_naLineInfoElements = 0;
    LineInfo      *d_paLineInfo = nullptr;       // array of LineInfo, has d_naLineInfoElements elements alloc'd, d_LineCount used
    LINE           d_LineCount = 0;
-
 public:
    bool           HasLines()                 const { return ToBOOL(d_paLineInfo); }
    LINE           LineCount()                const { return d_LineCount; }
    bool           KnownLine( LINE lineNum )  const { return lineNum >= 0 && lineNum < d_LineCount; }
    LINE           LastLine()                 const { return d_LineCount - 1; }
    COL            LineLength( LINE lineNum ) const { return d_paLineInfo[lineNum].d_iLineLen; }
-
    bool           PtrWithinOrigFileImage( PChar pc ) const { return pc >= d_pOrigFileImage && pc < (d_pOrigFileImage + d_cbOrigFileImage); }
-
    filesize_t     cbOrigFileImage() const { return d_cbOrigFileImage; }
-
    //************ ImgBuf manipulators (currently used only in CGrepper::WriteOutput)
 private:
    int            d_ImgBufBytesWritten = 0;
@@ -1181,14 +1062,12 @@ public:
    void           ImgBufAlloc(      size_t bufBytes, int PreallocLines=400 );
    void           ImgBufAppendLine( PCChar pNewLineData, int LineLen );
    void           ImgBufAppendLine( PFBUF pFBufSrc, int srcLineNum, PCChar prefix=nullptr );
-
    //************ Undo/Redo storage
    friend class   EditRec;
    friend class   EdOpBoundary;
    friend class   EdOpSaveLineContent;
    friend class   EdOpLineRangeInsert;
    friend class   EdOpLineRangeDelete;
-
 private:
    int            d_UndoCount;
    EditRec       *d_pNewestEdit;  // most recent edit action
@@ -1196,7 +1075,6 @@ private:
    EditRec       *d_pOldestEdit;  // least recent edit action
    void           InitUndoInfo(); // CTOR for 4 above private vars via EdOpBoundary::EdOpBoundary( PFBUF pFBuf, int only ) and EditRec::EditRec( PFBUF pFBuf, int only_placeholder )
    void           AddNewEditOpToListHead( EditRec *pEr );
-
    //************ Undo/Redo intf used by ARG::eds()
 public:
    int            UndoCount()   const { return d_UndoCount   ; }
@@ -1204,7 +1082,6 @@ public:
    EditRec       *OldestEdit()  const { return d_pOldestEdit ; }
    EditRec       *NewestEdit()  const { return d_pNewestEdit ; }
    int            GetUndoCounts( int *pBRTowardUndo, int *pARTowardUndo, int *pBRTowardRedo, int *pARTowardRedo ) const;
-
    //************ user-level undo/redo impl
 private:          // called by DoUserUndoOrRedo
    bool           EditOpUndo();
@@ -1214,23 +1091,19 @@ private:          // called by DoUserUndoOrRedo
    void           SetUndoStateToBoundrec();
 public:
    bool           DoUserUndoOrRedo( bool fRedo ); // API actually called ARG::undo() & ARG::redo()
-
    //************ Undo/Redo FBUF edit API
 private:
    void           UndoReplaceLineContent(  LINE lineNum  , stref newContent );
    void           UndoSaveLineRange(       LINE firstLine, LINE lastLine );
    void           UndoInsertLineRangeHole( LINE firstLine, int lineCount );
-
    void           InsertLines__( LINE firstLine, LINE lineCount, bool fSaveUndoInfo );
    void           DeleteLines__( LINE firstLine, LINE lastLine , bool fSaveUndoInfo );
    void           DeleteLines__ForUndoRedo( LINE firstLine, LINE lastLine  )  { DeleteLines__( firstLine, lastLine , false ); }
    void           InsertLines__ForUndoRedo( LINE firstLine, LINE lineCount )  { InsertLines__( firstLine, lineCount, false ); }
-
    //************ Undo/Redo user-level-command execution boundary insertion
 public:
    void           UndoInsertCmdAnnotation( PCCMD Cmd ); // used by buildexecute
    void           PutUndoBoundary();
-
    //************ command-level FBUF-content cleanup
 private:
    void           DiscardUndoInfo();
@@ -1238,7 +1111,6 @@ public:
    void           FreeLinesAndUndoInfo();
    void           MakeEmpty();
    void           ClearUndo();
-
    //***********  yChangedMin
 private:
    unsigned       d_contentRevision = 1; // used to passively detect FBUF content change; each change incrs this value; init value 1 allows others who maintain copied to init these to 0
@@ -1247,25 +1119,20 @@ private:
 public:
    void           Push_yChangedMin();
    unsigned       CurrContentRevision() const { return d_contentRevision; }
-
    //************ FLAGS FLAGS FLAGS
    //************ FLAGS FLAGS FLAGS
    //************ FLAGS FLAGS FLAGS
 private:
    bool           d_fDirty = false; // file state (content) is different from (last saved) disk state
                                     // ****** d_fDirty is saved in EdOpBoundary, restored on undo/redo ******
-
  #ifdef           fn_su
    bool           d_fSilentUpdateMode = false ;
  #endif
-
    bool           d_fAutoRead = false  ; // re-read every time file is fSetfile'd (gen'ly only useful for pseudofiles)
-
    Eol_t          d_EolMode = platform_eol;
 #if defined(_WIN32)
    bool           d_fDiskRdOnly = false ; // file on disk is read only
 #endif
-
    bool           d_fInhibitRsrcLoad = false ;
                                          // DO NOT call RsrcLdFileSection in FBOP::CurFBuf_AssignMacros_RsrcLd().
                                          // Why?  Some pseudofiles exist to show the user the current state
@@ -1273,48 +1140,38 @@ private:
                                          // section.  This flag prevents that, so such pseudofiles give a
                                          // 100% accurate picture of the editor state prior to switching to
                                          // that pseudofile.  Initial use includes <CMD-SWI-Keys> and <macdefs>
-
    bool           d_fForgetOnExit = false ; // file state will not be written to statefile on editor close or saveall
    bool           d_fSavedToStateFileYet = false ; // used by statefile writer code only!
    bool           d_fNoEdit = false    ; // file may not be edited
    bool           d_fPreserveTrailSpc  ;
    bool           d_fTabSettingsFrozen = false ; // file's tab settings should not be auto-changed
-
    S8             d_TabWidth;
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
-
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
-
    std::string    d_ftype;
-
 public:
    const std::string &FType()            const { return  d_ftype; }
    bool           FTypeEmpty()           const { return  d_ftype.empty(); }
    bool           FTypeEq( stref ft )    const { return  eq( d_ftype, ft ); }
    void           DetermineFType();
    void           SetFType( stref ft )         {         d_ftype.assign( BSR2STR(ft) ); }
-
  #ifdef           fn_su
    bool           SilentUpdateMode()     const { return  d_fSilentUpdateMode; }
    void           SetSilentUpdateMode()               {  d_fSilentUpdateMode = true; }
  #endif
-
    bool           IsDirty()              const { return  d_fDirty; }
-
    void           UnDirty()                           {  // public since used by many ARG:: methods
                                                          SetDirty( false );
                                                       }
    bool           BlankAnnoDispSrcAsserted( int cause ) const { return ToBOOL( d_BlankAnnoDispSrcAsserted & cause ); }
    void           BlankAnnoDispSrcEdge( int cause, bool fReveal );
    bool           RevealBlanks() const { return d_fRevealBlanks; }
-
 private:
    void           SetDirty( bool fDirty=true );
 public:
    void           SetAutoRead()                       {  d_fAutoRead = true; }
    bool           IsAutoRead()           const { return  d_fAutoRead; }
-
 #if defined(_WIN32)
    // in Linux we adopt a policy of "we'll determine whether the file is writable or not only when we attempt to write it"
 public:
@@ -1323,11 +1180,9 @@ private:
    void           SetDiskRW()                         {  d_fDiskRdOnly = false; }
    void           SetDiskRO()                         {  d_fDiskRdOnly = true; }
 #endif
-
 public:
    bool           IsRsrcLdBlocked()      const { return  d_fInhibitRsrcLoad; }
    void           SetBlockRsrcLd()                    {  d_fInhibitRsrcLoad = true; }
-
 public:
    Eol_t          EolMode()              const { return  d_EolMode; }
    PCChar         EolName()              const { return ::EolName( d_EolMode ); }
@@ -1338,57 +1193,44 @@ public:
    bool           ToForgetOnExit()       const { return  d_fForgetOnExit; }
    void           SetForgetOnExit()                   {  d_fForgetOnExit = true; }
    void           SetRememberAfterExit()              {  d_fForgetOnExit = false; }
-
    bool           IsSavedToStateFile()   const { return  d_fSavedToStateFileYet; }
    void           SetSavedToStateFile()               {  d_fSavedToStateFileYet = true; }
    void           NotSavedToStateFile()               {  d_fSavedToStateFileYet = false; }
-
    bool           IsNoEdit()             const { return  d_fNoEdit; }
    void           ClrNoEdit()                         {  d_fNoEdit = false; }
    void           SetNoEdit()                         {  d_fNoEdit = true;  }
    void           ToglNoEdit()                        {  d_fNoEdit = !d_fNoEdit; }
-
    bool           TrailSpcsKept()        const { return  d_fPreserveTrailSpc; }
    void           DiscardTrailSpcs()                  {  d_fPreserveTrailSpc = false; }
    void           KeepTrailSpcs()                     {  d_fPreserveTrailSpc = true;  }
-
 #if defined(_WIN32)
    bool           MakeDiskFileWritable();
 #endif
    bool           CantModify() const;
-
    eEntabModes    Entab() const { return d_Entab; }
    bool           SetEntabOk( int newEntab ); // NOT CONST!!!
-
    char           TabDispChar()   const { return g_chTabDisp; }
    char           TrailDispChar() const { return g_chTrailSpaceDisp; }
-
    //************ tab-width-dependent line-content-related calcs
    int            TabWidth() const { return d_TabWidth; }
    void           SetTabWidthOk( COL NewTabWidth ); // NOT CONST!!!
-
    void           FreezeTabSettings()       { d_fTabSettingsFrozen = true; }
    bool           TabSettingsFrozen() const { return d_fTabSettingsFrozen; }
-
    //************ file-type checkers
 public:
    bool           IsFileInfoFile(    int widx ) const;
    bool           IsInvisibleFile(   int widx ) const;
    bool           IsInterestingFile( int widx ) const;
-
    //************ Diskfile READ
 private:
    FileStat       d_LastFileStat;
    void           SetLastFileStatFromDisk();
-
    enum DiskFileVsFbufStatus { DISKFILE_NO_EXIST, DISKFILE_NEWERTHAN_FBUF, DISKFILE_SAME_AS_FBUF, DISKFILE_OLDERTHAN_FBUF };
    DiskFileVsFbufStatus checkDiskFileStatus() const;
-
    PView          PutFocusOnView();
    bool           FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently );
    bool           ReadDiskFileFailed( int hFile );
    bool           UpdateFromDisk( bool fPromptBeforeRefreshing );
-
 public:
    FileStat       GetLastFileStat() const { return d_LastFileStat; }
    bool           ReadDiskFileAllowCreateFailed( bool fCreateSilently=false ) { return !FBufReadOk( true , fCreateSilently ); }
@@ -1398,47 +1240,36 @@ public:
    bool           RefreshFailedShowError();
    int            SyncNoWrite();
    int            SyncWriteIfDirty_Wrote();
-
    //************ (Internal) LineCount & LineInfo management
 private:
    void           SetLineCount( LINE newlc ) { d_LineCount  = newlc; }
    void           IncLineCount( LINE delta ) { d_LineCount += delta; }
-
    void           InitLineInfoRange( LINE yMin, LINE numToInit ) {
                      auto pLi( d_paLineInfo + yMin );
                      for( const auto pLiPastEnd( pLi + numToInit ) ; pLi < pLiPastEnd ; ++pLi )
                         pLi->clear();
                      }
-
    void           SetLineInfoCount( LINE linesNeeded );
-
    //------------------------------------------------------------------
    void           FBufEvent_LineInsDel( LINE yLine, LINE lineDelta );  // negative lineDelta value signifies deletion of lines
    //------------------------------------------------------------------
-
    //************ Diskfile WRITE
 private:
    int            d_backupMode = bkup_USE_SWITCH;
    time_t         d_tmLastWrToDisk = 0; // http://en.wikipedia.org/wiki/Year_2038_problem
-
    bool           write_to_disk( PCChar DestFileNm );
-
 public:
-
    bool           WriteToDisk( PCChar pszSavename=nullptr );
    time_t         TmLastWrToDisk() const { return d_tmLastWrToDisk; }
    void           Set_TmLastWrToDisk( time_t viewVal ) { if( viewVal > d_tmLastWrToDisk ) { d_tmLastWrToDisk = viewVal; } }
    void           Reset_TmLastWrToDisk() { d_tmLastWrToDisk = 0; }
    void           SetBackupMode( int backupMode ) { d_backupMode = backupMode; }
-
    bool           SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation );
-
    //************ Marks
 public:
    NamedPointHead d_MarkHead; // needs to be public since Mark subsys manages it directly
    bool           FindMark( PCChar pszMarkname, FBufLocn *pFL );
    void           DestroyMarks();
-
    //************ GetLine
 private:
    COL            getLine_( std::string &dest, LINE yLine, int chExpandTabs=0 ) const;
@@ -1457,7 +1288,6 @@ public:
                         return stref();
                         }
                      }
-
                // most of the time, you can just use PeekRawLine() and stref methods + helper functions
                // in my_strutils.h and the tabWidth-dependent col-of-ptr/ptr-of-col xlators
                // to reference/parse line content w/o copying (MUCH more efficient to
@@ -1468,22 +1298,16 @@ public:
                      const auto rv( PeekRawLine( yLine ) );
                      dest.assign( rv.data(), rv.length() );
                      }
-
    COL            getLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ?0:' ' ); }
-
                // DupLineLua should only be used by Lua (I haven't yet figured out how to get the
                // tab-handling niceties available here (C++ ed_core.h) into Lua, or whether it would be
                // worth the hassle/headache.  In the meantime for Lua coding only, tabs are ALWAYS
                // translated to spaces).
    COL            DupLineLua( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
-
    stref          PeekRawLineSeg(                LINE yLine, COL xMinIncl, COL xMaxIncl=COL_MAX ) const; // returns RAW line content BY REFERENCE
    void           DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const;
-
    int            DupLineForInsert     (  std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
-
-
    //************ PutLine
 public:
                // meat-and-potatoes PutLine functions; note surfacing of tmp buffer for efficiency
@@ -1492,58 +1316,47 @@ public:
    void           PutLineSeg( LINE yLine, const stref &ins, std::string &tmp0, std::string &tmp1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
    void           PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 );
    void           PutLastLine(         const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 ) { PutLine( 1+LastLine(), vsrSrc, stbuf0, stbuf1 ); }
-
                // _oddball_ PutLine... functions; may soon be deprecated; use sparingly!
    void           PutLine( LINE yLine, CPCChar pa[], int elems );
    int            PutLastMultiline( PCChar pszNewLineData );
    void           PutLastLine( PCChar pszNewLineData )   { PutLastMultiline( pszNewLineData ); }
    void           PutLastLine( CPCChar pa[], int elems ) { PutLine( 1+LastLine(), pa, elems ); }
-
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
    void           InsLine( LINE yLine, const stref &srSrc, std::string &tmp )  // WITH UNDO
                      {
                      InsBlankLinesBefore( yLine );
                      PutLine( yLine, srSrc, tmp );
                      }
-
    void           cat( PCChar pszNewLineData );
-
 private:
    void           xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val );
    void           Vsprintf( LINE lineNum, PCChar format, va_list val );
-
                // these 2 are UNREF'D?:
    void           FmtLine( LINE lineNum, PCChar format, ... ) ATTR_FORMAT(3, 4) ;
    void          xFmtLine( PXbuf pxb, LINE lineNum, PCChar format, ...  ) ATTR_FORMAT(4, 5) ;
-
    void          vFmtLastLine( PCChar format, va_list val );
    void         xvFmtLastLine( PXbuf pxb, PCChar format, va_list val );
 public:
    void          xFmtLastLine( PXbuf pxb, PCChar format, ...  ) ATTR_FORMAT(3, 4) ;
    void           FmtLastLine( PCChar format, ... ) ATTR_FORMAT(2, 3) ;
-
    //************ delete LINE/BOX/STREAM
 public:
    void           DelLine            ( LINE firstLine                   ) { DeleteLines__( firstLine, firstLine, true  ); }
    void           DelLines           ( LINE firstLine, LINE lastLine    ) { DeleteLines__( firstLine, lastLine , true  ); }
    void           DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollapse=true );
    void           DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd );
-
 private:
    void           DirtyFBufAndDisplay();
-
    //************ indent infrastructure
 private:
    int            d_IndentIncrement = 0;
 public:
    void           CalcIndent( bool fWholeFileScan=false );
    int            IndentIncrement() const { return d_IndentIncrement; }
-
    //************ misc junk
 public:
    int            DbgCheck();
    InternalShellJobExecutor *d_pInternalShellJobExecutor = nullptr;
-
    }; // end of class FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
 
 STIL PFBUF AddFBuf( stref pBufferName, PFBUF *ppGlobalPtr=nullptr ) {
