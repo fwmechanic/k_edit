@@ -270,7 +270,11 @@ struct Rect {
 
    COL  Width()  const { return flMax.col - flMin.col + 1; }
    COL  Height() const { return flMax.lin - flMin.lin + 1; }
-   int  LineNotWithin( LINE yLine ) const; // IGNORES EFFECT OF COLUMNS!
+   int  cmp_line( LINE yLine ) const { // IGNORES EFFECT OF COLUMNS!
+      if( yLine < flMin.lin ) { return -1; }
+      if( yLine > flMax.lin ) { return +1; }
+      return 0;
+      }
    };
 
 

@@ -1005,6 +1005,39 @@ C. a serious underlying problem: we do not have robust detection of "FBUF conten
    of the former.
 */
 
+#if 1
+int search_hl_rgn_t( const std::vector<hl_rgn_t> &ary, unsigned &ixCache, LINE &yCache, LINE yLine ) {
+   if( 0 == ary.size() ) { return -1; }
+   const auto ixStart( (yCache <= yLine) ? ixCache : 0 );
+   ixCache = ary.size()+1;
+   yCache = yLine;
+   for( auto ix=ixStart ; ix < ary.size() ; ++ix ) {
+      if( 0==ary[ix].rgn.cmp_line( yLine ) ) { 0 && DBG("direct hit");
+         ixCache = ix;
+         break;
+         }
+      if( yLine < ary[ix].rgn.flMin.lin ) {         0 && DBG("past hit");
+         ixCache = ix==0 ? 0 : ix-1;
+         break;
+         }
+      }
+   if( !(ixCache < ary.size()) ) { return -1; }
+   0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, ixCache, ary[ixCache].rgn.flMin.lin, ary[ixCache].rgn.flMax.lin );
+   if( yLine < ary[ixCache].rgn.flMin.lin ) { return -1; }
+
+  #if 0
+   const auto pFile( CFBuf() );
+   const auto rl( pFile->PeekRawLine( yLine ) );
+   if( !IsStringBlank( rl ) ) {
+      const auto tw( pFile->TabWidth() );
+      const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
+      for( auto ix=ixCache ; ix < ary.size() && 0==ary[ix].rgn.cmp_line( yLine ) ; ++ix ) {
+         const auto &comment( ary[ix] );
+  #endif
+   return -1;
+   }
+#endif
+
 class HiliteAddin_StreamParse : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
    void VFbufLinesChanged( LINE yMin, LINE yMax ) override;
@@ -1045,72 +1078,36 @@ public:
 
 size_t HiliteAddin_StreamParse::VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) { return 0; }
 
-#if 1
-int search_hl_rgn_t( const std::vector<hl_rgn_t> &ary, unsigned &ixCache, LINE &yCache, LINE yLine ) {
-   if( 0 == ary.size() ) { return -1; }
-   const auto ixStart( (yCache <= yLine) ? ixCache : 0 );
-   ixCache = ary.size()+1;
-   yCache = yLine;
-   for( auto ix=ixStart ; ix < ary.size() ; ++ix ) {
-      if( 0==ary[ix].rgn.LineNotWithin( yLine ) ) { 0 && DBG("direct hit");
-         ixCache = ix;
-         break;
-         }
-      if( yLine < ary[ix].rgn.flMin.lin ) {         0 && DBG("past hit");
-         ixCache = ix==0 ? 0 : ix-1;
-         break;
-         }
-      }
-   if( !(ixCache < ary.size()) ) { return -1; }
-   0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, ixCache, ary[ixCache].rgn.flMin.lin, ary[ixCache].rgn.flMax.lin );
-   if( yLine < ary[ixCache].rgn.flMin.lin ) { return -1; }
-
-  #if 0
-   const auto pFile( CFBuf() );
-   const auto rl( pFile->PeekRawLine( yLine ) );
-   if( !IsStringBlank( rl ) ) {
-      const auto tw( pFile->TabWidth() );
-      const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
-      for( auto ix=ixCache ; ix < ary.size() && 0==ary[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
-         const auto &comment( ary[ix] );
-  #endif
-   return -1;
-   }
-#endif
-
-bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
+bool HiliteAddin_StreamParse::VHilitLine( const LINE yLine, const COL xIndent, LineColorsClipped &alcc ) {
    if( 0 == d_hl_rgns.size() ) { return false; }
- //const auto ixStart(                                   0 );
    const auto ixStart( (d_cacheValAtIdx <= yLine) ? d_cacheIdx : 0 );
-   d_cacheIdx = d_hl_rgns.size()+1;
+
+   auto hl_line = [&]( unsigned ix ) { 0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, ix, d_hl_rgns[ix].rgn.flMin.lin, d_hl_rgns[ix].rgn.flMax.lin );
+      d_cacheIdx = ix;
+      if( yLine < d_hl_rgns[ix].rgn.flMin.lin ) { return false; }
+      const auto pFile( CFBuf() );
+      const auto rl( pFile->PeekRawLine( yLine ) );
+      if( !IsStringBlank( rl ) ) {
+         const auto tw( pFile->TabWidth() );
+         const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
+         for( ; ix < d_hl_rgns.size() && 0==d_hl_rgns[ix].rgn.cmp_line( yLine ) ; ++ix ) {
+            const auto &comment( d_hl_rgns[ix] );
+            COL xMin=0; COL xMax=xMaxOfLine;
+            if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfFreeIdx( tw, rl, comment.rgn.flMin.col ); }
+            if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfFreeIdx( tw, rl, comment.rgn.flMax.col ); }
+            0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
+            alcc.PutColor( xMin, xMax-xMin+1, comment.color );
+            }
+         }
+      return false;
+      };
+
+   d_cacheIdx = d_hl_rgns.size()+1; // invalid
    d_cacheValAtIdx = yLine;
    for( auto ix=ixStart ; ix < d_hl_rgns.size() ; ++ix ) {
-      if( 0==d_hl_rgns[ix].rgn.LineNotWithin( yLine ) ) { 0 && DBG("direct hit");
-         d_cacheIdx = ix;
-         break;
-         }
-      if( yLine < d_hl_rgns[ix].rgn.flMin.lin ) {         0 && DBG("past hit");
-       //d_cacheIdx = ix;
-         d_cacheIdx = ix==0 ? 0 : ix-1;
-         break;
-         }
-      }
-   if( !(d_cacheIdx < d_hl_rgns.size()) ) { return false; }
-   0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, d_cacheIdx, d_hl_rgns[d_cacheIdx].rgn.flMin.lin, d_hl_rgns[d_cacheIdx].rgn.flMax.lin );
-   if( yLine < d_hl_rgns[d_cacheIdx].rgn.flMin.lin ) { return false; }
-   const auto pFile( CFBuf() );
-   const auto rl( pFile->PeekRawLine( yLine ) );
-   if( !IsStringBlank( rl ) ) {
-      const auto tw( pFile->TabWidth() );
-      const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
-      for( auto ix=d_cacheIdx ; ix < d_hl_rgns.size() && 0==d_hl_rgns[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
-         const auto &comment( d_hl_rgns[ix] );
-         COL xMin=0; COL xMax=xMaxOfLine;
-         if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfFreeIdx( tw, rl, comment.rgn.flMin.col ); }
-         if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfFreeIdx( tw, rl, comment.rgn.flMax.col ); }
-         0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
-         alcc.PutColor( xMin, xMax-xMin+1, comment.color );
-         }
+      const auto cmp( d_hl_rgns[ix].rgn.cmp_line( yLine ) );
+      if( cmp ==0 ) { 0 && DBG("direct hit"); return hl_line( ix );               }
+      if( cmp < 0 ) { 0 && DBG("past hit"  ); return hl_line( ix==0 ? 0 : ix-1 ); }
       }
    return false;
    }
@@ -1813,12 +1810,6 @@ STIL void ShowHilite( const HiLiteRec &hl, PCChar str ) {
       );
    }
 
-int Rect::LineNotWithin( const LINE yLine ) const { // IGNORES COLUMN!
-   if( yLine < flMin.lin ) { return -1; }
-   if( yLine > flMax.lin ) { return +1; }
-   return 0;
-   }
-
 const HiLiteRec *ViewHiLites::FindFirstEntryAffectingOrAfterLine( LINE yLine ) const {
    0 && DBG( "FFEAoAL+ %d", yLine );
    for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpdTblEls ; ++idx ) {
@@ -1941,29 +1932,30 @@ int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, Lin
         }
    auto rv(0);
    for( auto pHL(pFirstPossibleHiLite) ; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
-      const auto &Rn( pHL->rect );
-      0 && DBG( "HL L %5d: c=%02X [%d-%d] [%d-%d]", yLine, pHL->colorIndex, Rn.flMin.lin, Rn.flMax.lin, Rn.flMin.col, Rn.flMax.col );
-      const auto within( Rn.LineNotWithin( yLine ) );
-      if( 0 == within ) {  0 && DBG( "HL C? %d %d", Rn.flMin.col, Rn.flMax.col );
-         auto rn_xMin( Rn.flMin.col );
-         auto rn_xMax( Rn.flMax.col  );
-         if( rn_xMax < rn_xMin ) {
-            const auto tmp( rn_xMin - 1 ); // NOT a simple swap!
-            rn_xMin = rn_xMax;
-            rn_xMax = tmp;
-            }
-         if( !(xIndent > rn_xMax || xMax < rn_xMin) ) {
-            // be VERY careful when trying to optimize/clarify the xLeft and Len calcs
-                  auto xLeft( Max( xIndent, rn_xMin )          );
-            const auto Len  ( Min( xMax, rn_xMax ) - xLeft + 1 );
-                       xLeft -= xIndent;
-            0 && DBG( "HL C! %d L %d ci=%02X", xLeft, Len, pHL->colorIndex );
-            alcc.PutColor( xLeft+xIndent, Len, pHL->colorIndex );
-            ++rv;
-            }
+      const auto &Rn( pHL->rect );              0 && DBG( "HL L %5d: c=%02X [%d-%d] [%d-%d]", yLine, pHL->colorIndex, Rn.flMin.lin, Rn.flMax.lin, Rn.flMin.col, Rn.flMax.col );
+      const auto lcmp( Rn.cmp_line( yLine ) );
+      if( lcmp < 0 ) {  // performance improv: since list is sorted, there's NO reason
+         break;         // to walk the whole damned thing when we'll never have another match!
          }
-      else if( within < 0 ) {  // performance improv: since list is sorted, there's NO reason
-         break;                // to walk the whole damned thing when we'll never have another match!
+      if( lcmp > 0 ) {
+         continue;
+         }
+      0 && DBG( "HL C? %d %d", Rn.flMin.col, Rn.flMax.col );
+      auto rn_xMin( Rn.flMin.col );
+      auto rn_xMax( Rn.flMax.col );
+      if( rn_xMax < rn_xMin ) {
+         const auto tmp( rn_xMin - 1 ); // NOT a simple swap!
+         rn_xMin = rn_xMax;
+         rn_xMax = tmp;
+         }
+      if( !(xIndent > rn_xMax || xMax < rn_xMin) ) {
+         // be VERY careful when trying to optimize/clarify the xLeft and Len calcs
+               auto xLeft( Max( xIndent, rn_xMin )          );
+         const auto Len  ( Min( xMax, rn_xMax ) - xLeft + 1 );
+                    xLeft -= xIndent;
+         0 && DBG( "HL C! %d L %d ci=%02X", xLeft, Len, pHL->colorIndex );
+         alcc.PutColor( xLeft+xIndent, Len, pHL->colorIndex );
+         ++rv;
          }
       }
    0 && DBG( "IHLoS- %d", yLine );
