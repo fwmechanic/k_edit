@@ -1051,6 +1051,37 @@ public:
 
 size_t HiliteAddin_StreamParse::VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) { return 0; }
 
+int search_hl_rgn_t( const hl_rgn_t *ary, size_t sizeofAry, unsigned &ixCache, LINE &yCache, LINE yLine ) {
+   if( 0 == sizeofAry ) { return -1; }
+   const auto ixStart( (yCache <= yLine) ? ixCache : 0 );
+   ixCache = sizeofAry+1;
+   yCache = yLine;
+   for( auto ix=ixStart ; ix < sizeofAry ; ++ix ) {
+      if( 0==ary[ix].rgn.LineNotWithin( yLine ) ) { 0 && DBG("direct hit");
+         ixCache = ix;
+         break;
+         }
+      if( yLine < ary[ix].rgn.flMin.lin ) {         0 && DBG("past hit");
+         ixCache = ix==0 ? 0 : ix-1;
+         break;
+         }
+      }
+   if( !(ixCache < sizeofAry) ) { return -1; }
+   0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, ixCache, ary[ixCache].rgn.flMin.lin, ary[ixCache].rgn.flMax.lin );
+   if( yLine < ary[ixCache].rgn.flMin.lin ) { return -1; }
+
+  #if 0
+   const auto pFile( CFBuf() );
+   const auto rl( pFile->PeekRawLine( yLine ) );
+   if( !IsStringBlank( rl ) ) {
+      const auto tw( pFile->TabWidth() );
+      const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
+      for( auto ix=ixCache ; ix < sizeofAry && 0==ary[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
+         const auto &comment( ary[ix] );
+  #endif
+   return -1;
+   }
+
 bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    if( 0 == d_num_hl_rgns_found ) { return false; }
  //const auto ixStart(                                   0 );
