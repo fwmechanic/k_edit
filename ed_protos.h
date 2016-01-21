@@ -229,6 +229,7 @@ extern void  Event_ScreenSizeChanged( const Point &newSize );
 struct hl_rgn_t {
    int  color;
    Rect rgn;
+   hl_rgn_t( int color_, LINE yulc_, COL xulc_, LINE ylrc_, COL xlrc_ ) : color( color_ ), rgn( yulc_, xulc_, ylrc_, xlrc_ ) {}
    };
 
 // if newSize is not supported, and a supported size can be switched to:

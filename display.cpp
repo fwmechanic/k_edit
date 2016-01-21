@@ -1003,29 +1003,23 @@ B. Array-based impl forces 2-pass design; a dlink design was tried first, but of
 C. a serious underlying problem: we do not have robust detection of "FBUF content changed" event
    vs. "redrawing screen" event, which leads to excessive numbers of the latter being used in lieu
    of the former.
-
-   An alternative might be to use a std::vector, which will realloc as the required size of the
-   vector increases...
 */
 
 class HiliteAddin_StreamParse : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
    void VFbufLinesChanged( LINE yMin, LINE yMax ) override;
 
-   hl_rgn_t * d_hl_rgn_array = nullptr;
-   unsigned d_hl_rgn_array_elems = 0;
-   unsigned d_hl_rgn_array_insIdx = 0;
+   bool d_counting = false; // scan_pass() called 2x: 1: counting, 2: collecting
    unsigned d_num_hl_rgns_found = 0;
+   std::vector<hl_rgn_t> d_hl_rgns;
 
    void add_hl_rgn( int color, LINE yulc, COL xulc, LINE ylrc, COL xlrc ) {
-      if( !d_hl_rgn_array ) { ++d_num_hl_rgns_found; return; } // efficiency hack!
-      0 && DBG( "%02X: %d,%d-%d,%d", color, yulc, xulc, ylrc, xlrc );
-      auto &rc = d_hl_rgn_array[d_hl_rgn_array_insIdx++];
-      rc.color         = color;
-      rc.rgn.flMin.lin = yulc;
-      rc.rgn.flMin.col = xulc; // note this is a RAW col value
-      rc.rgn.flMax.lin = ylrc;
-      rc.rgn.flMax.col = xlrc; // note this is a RAW col value
+      if( d_counting ) {
+         ++d_num_hl_rgns_found;
+         }
+      else { 0 && DBG( "%02X: %d,%d-%d,%d", color, yulc, xulc, ylrc, xlrc );
+         d_hl_rgns.emplace_back( color, yulc, xulc, ylrc, xlrc );
+         }
       }
 
    unsigned d_FbufContentRev = 0;
@@ -1033,30 +1027,31 @@ class HiliteAddin_StreamParse : public HiliteAddin {
    enum { SCAN_ALL_LINES=1 }; // SCAN_ALL_LINES is set to 1 so that, when we scroll downward in a file, the hilite metadata will be there (BUGBUG need fixing)
 
 protected:
-   void refresh();   // calls scan_pass() 2x, 1=counting: w/d_hl_rgn_array==nullptr, 2=collecting: d_hl_rgn_array!=nullptr
+   void refresh();
    virtual void scan_pass( LINE yMaxScan ) = 0; // yes this is an ABSTRACT BASE CLASS!
 
    void add_comment( LINE yulc, COL xulc, LINE ylrc, COL xlrc ) { add_hl_rgn( COLOR::COM, yulc, xulc, ylrc, xlrc ); }
    void add_litstr ( LINE yulc, COL xulc, LINE ylrc, COL xlrc ) { add_hl_rgn( COLOR::STR, yulc, xulc, ylrc, xlrc ); }
 
    // "caching" speeds VHilitLine lookup
-   LINE      d_yCache = 0;
-   unsigned  d_ixCache = 0; // d_hl_rgn_array[d_ixCache] is entry d_yCache
+   unsigned  d_cacheIdx = 0; // d_hl_rgns[d_cacheIdx] is ...
+   LINE      d_cacheValAtIdx = 0;  // ... entry for d_cacheValAtIdx
 
 public:
    HiliteAddin_StreamParse( PView pView ) : HiliteAddin( pView ) {}
-   ~HiliteAddin_StreamParse() { delete[] d_hl_rgn_array; }
+   ~HiliteAddin_StreamParse() {}
    size_t VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) override;
    };
 
 size_t HiliteAddin_StreamParse::VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) { return 0; }
 
-int search_hl_rgn_t( const hl_rgn_t *ary, size_t sizeofAry, unsigned &ixCache, LINE &yCache, LINE yLine ) {
-   if( 0 == sizeofAry ) { return -1; }
+#if 1
+int search_hl_rgn_t( const std::vector<hl_rgn_t> &ary, unsigned &ixCache, LINE &yCache, LINE yLine ) {
+   if( 0 == ary.size() ) { return -1; }
    const auto ixStart( (yCache <= yLine) ? ixCache : 0 );
-   ixCache = sizeofAry+1;
+   ixCache = ary.size()+1;
    yCache = yLine;
-   for( auto ix=ixStart ; ix < sizeofAry ; ++ix ) {
+   for( auto ix=ixStart ; ix < ary.size() ; ++ix ) {
       if( 0==ary[ix].rgn.LineNotWithin( yLine ) ) { 0 && DBG("direct hit");
          ixCache = ix;
          break;
@@ -1066,7 +1061,7 @@ int search_hl_rgn_t( const hl_rgn_t *ary, size_t sizeofAry, unsigned &ixCache, L
          break;
          }
       }
-   if( !(ixCache < sizeofAry) ) { return -1; }
+   if( !(ixCache < ary.size()) ) { return -1; }
    0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, ixCache, ary[ixCache].rgn.flMin.lin, ary[ixCache].rgn.flMax.lin );
    if( yLine < ary[ixCache].rgn.flMin.lin ) { return -1; }
 
@@ -1076,39 +1071,40 @@ int search_hl_rgn_t( const hl_rgn_t *ary, size_t sizeofAry, unsigned &ixCache, L
    if( !IsStringBlank( rl ) ) {
       const auto tw( pFile->TabWidth() );
       const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
-      for( auto ix=ixCache ; ix < sizeofAry && 0==ary[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
+      for( auto ix=ixCache ; ix < ary.size() && 0==ary[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
          const auto &comment( ary[ix] );
   #endif
    return -1;
    }
+#endif
 
 bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
-   if( 0 == d_num_hl_rgns_found ) { return false; }
+   if( 0 == d_hl_rgns.size() ) { return false; }
  //const auto ixStart(                                   0 );
-   const auto ixStart( (d_yCache <= yLine) ? d_ixCache : 0 );
-   d_ixCache = d_num_hl_rgns_found+1;
-   d_yCache = yLine;
-   for( auto ix=ixStart ; ix < d_num_hl_rgns_found ; ++ix ) {
-      if( 0==d_hl_rgn_array[ix].rgn.LineNotWithin( yLine ) ) { 0 && DBG("direct hit");
-         d_ixCache = ix;
+   const auto ixStart( (d_cacheValAtIdx <= yLine) ? d_cacheIdx : 0 );
+   d_cacheIdx = d_hl_rgns.size()+1;
+   d_cacheValAtIdx = yLine;
+   for( auto ix=ixStart ; ix < d_hl_rgns.size() ; ++ix ) {
+      if( 0==d_hl_rgns[ix].rgn.LineNotWithin( yLine ) ) { 0 && DBG("direct hit");
+         d_cacheIdx = ix;
          break;
          }
-      if( yLine < d_hl_rgn_array[ix].rgn.flMin.lin ) {         0 && DBG("past hit");
-       //d_ixCache = ix;
-         d_ixCache = ix==0 ? 0 : ix-1;
+      if( yLine < d_hl_rgns[ix].rgn.flMin.lin ) {         0 && DBG("past hit");
+       //d_cacheIdx = ix;
+         d_cacheIdx = ix==0 ? 0 : ix-1;
          break;
          }
       }
-   if( !(d_ixCache < d_num_hl_rgns_found) ) { return false; }
-   0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, d_ixCache, d_hl_rgn_array[d_ixCache].rgn.flMin.lin, d_hl_rgn_array[d_ixCache].rgn.flMax.lin );
-   if( yLine < d_hl_rgn_array[d_ixCache].rgn.flMin.lin ) { return false; }
+   if( !(d_cacheIdx < d_hl_rgns.size()) ) { return false; }
+   0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, d_cacheIdx, d_hl_rgns[d_cacheIdx].rgn.flMin.lin, d_hl_rgns[d_cacheIdx].rgn.flMax.lin );
+   if( yLine < d_hl_rgns[d_cacheIdx].rgn.flMin.lin ) { return false; }
    const auto pFile( CFBuf() );
    const auto rl( pFile->PeekRawLine( yLine ) );
    if( !IsStringBlank( rl ) ) {
       const auto tw( pFile->TabWidth() );
       const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
-      for( auto ix=d_ixCache ; ix < d_num_hl_rgns_found && 0==d_hl_rgn_array[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
-         const auto &comment( d_hl_rgn_array[ix] );
+      for( auto ix=d_cacheIdx ; ix < d_hl_rgns.size() && 0==d_hl_rgns[ix].rgn.LineNotWithin( yLine ) ; ++ix ) {
+         const auto &comment( d_hl_rgns[ix] );
          COL xMin=0; COL xMax=xMaxOfLine;
          if( comment.rgn.flMin.lin == yLine ) { xMin = ColOfFreeIdx( tw, rl, comment.rgn.flMin.col ); }
          if( comment.rgn.flMax.lin == yLine ) { xMax = ColOfFreeIdx( tw, rl, comment.rgn.flMax.col ); }
@@ -1121,21 +1117,15 @@ bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
 
 void HiliteAddin_StreamParse::refresh() { 0 && DBG( "%s", __FUNCTION__ );
    // try to reuse alloc: transfer to save_, act as if deleted
-   auto save_alloc = d_hl_rgn_array; d_hl_rgn_array = nullptr;
    const auto yMaxScan( SCAN_ALL_LINES ? CFBuf()->LastLine() : MaxVisibleFbufLine() );
+   d_counting = true;
    d_num_hl_rgns_found = 0;
    scan_pass( yMaxScan );
-   if( d_num_hl_rgns_found > d_hl_rgn_array_elems ) { 0 && DBG( "d_num_hl_rgns_found=%u > %u realloc", d_num_hl_rgns_found, d_hl_rgn_array_elems );
-      delete[] save_alloc; save_alloc = nullptr; // free it
-      d_hl_rgn_array_elems = d_num_hl_rgns_found + ViewLines(); // add in some extra to avoid frequent allocs when scrolling down one-line-at-a-time
-      d_hl_rgn_array = new hl_rgn_t[d_hl_rgn_array_elems];
-      }
-   else { 0 && DBG( "d_num_hl_rgns_found=%u <= %u recycle", d_num_hl_rgns_found, d_hl_rgn_array_elems );
-      d_hl_rgn_array = save_alloc;
-      }
+   d_counting = false;
+   d_hl_rgns.clear();
+   d_hl_rgns.reserve( d_num_hl_rgns_found );
    if( d_num_hl_rgns_found ) {
-      d_ixCache = 0;
-      d_hl_rgn_array_insIdx = 0;
+      d_cacheIdx = 0;
       scan_pass( yMaxScan );
       }
    }
