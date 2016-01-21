@@ -226,6 +226,11 @@ extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
 
 extern void  Event_ScreenSizeChanged( const Point &newSize );
 
+struct hl_rgn_t {
+   int  color;
+   Rect rgn;
+   };
+
 // if newSize is not supported, and a supported size can be switched to:
 //    it will be switched to, newSize will be updated, "OK" status will be returned
 extern bool  VideoSwitchModeToXYOk( Point &newSize );

@@ -416,6 +416,7 @@ public:
       retval of bool HilitLine...(): true means stop hiliting after this */
    virtual bool VHilitLine    ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) { return false; }
    virtual bool VHilitLineSegs( LINE yLine,              LineColorsClipped &alcc ) { return false; }
+   virtual size_t VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) { return 0; /* number of valid entries in hlrt */ }
 
    DLinkEntry <HiliteAddin> dlinkAddins;
 protected:
@@ -1011,10 +1012,6 @@ class HiliteAddin_StreamParse : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
    void VFbufLinesChanged( LINE yMin, LINE yMax ) override;
 
-   struct hl_rgn_t {
-      int  color;
-      Rect rgn;
-      };
    hl_rgn_t * d_hl_rgn_array = nullptr;
    unsigned d_hl_rgn_array_elems = 0;
    unsigned d_hl_rgn_array_insIdx = 0;
@@ -1049,7 +1046,10 @@ protected:
 public:
    HiliteAddin_StreamParse( PView pView ) : HiliteAddin( pView ) {}
    ~HiliteAddin_StreamParse() { delete[] d_hl_rgn_array; }
+   size_t VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) override;
    };
+
+size_t HiliteAddin_StreamParse::VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) { return 0; }
 
 bool HiliteAddin_StreamParse::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    if( 0 == d_num_hl_rgns_found ) { return false; }
