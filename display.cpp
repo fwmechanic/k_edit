@@ -1040,11 +1040,9 @@ int search_hl_rgn_t( const std::vector<hl_rgn_t> &ary, unsigned &ixCache, LINE &
 class HiliteAddin_StreamParse : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
    void VFbufLinesChanged( LINE yMin, LINE yMax ) override;
-
    bool d_counting = false; // scan_pass() called 2x: 1: counting, 2: collecting
    unsigned d_num_hl_rgns_found = 0;
    std::vector<hl_rgn_t> d_hl_rgns;
-
    void add_hl_rgn( int color, LINE yulc, COL xulc, LINE ylrc, COL xlrc ) {
       if( d_counting ) {
          ++d_num_hl_rgns_found;
@@ -1053,22 +1051,16 @@ class HiliteAddin_StreamParse : public HiliteAddin {
          d_hl_rgns.emplace_back( color, yulc, xulc, ylrc, xlrc );
          }
       }
-
    unsigned d_FbufContentRev = 0;
-
    enum { SCAN_ALL_LINES=1 }; // SCAN_ALL_LINES is set to 1 so that, when we scroll downward in a file, the hilite metadata will be there (BUGBUG need fixing)
-
 protected:
    void refresh();
    virtual void scan_pass( LINE yMaxScan ) = 0; // yes this is an ABSTRACT BASE CLASS!
-
    void add_comment( LINE yulc, COL xulc, LINE ylrc, COL xlrc ) { add_hl_rgn( COLOR::COM, yulc, xulc, ylrc, xlrc ); }
    void add_litstr ( LINE yulc, COL xulc, LINE ylrc, COL xlrc ) { add_hl_rgn( COLOR::STR, yulc, xulc, ylrc, xlrc ); }
-
    // "caching" speeds VHilitLine lookup
    unsigned  d_cacheIdx = 0; // d_hl_rgns[d_cacheIdx] is ...
    LINE      d_cacheValAtIdx = 0;  // ... entry for d_cacheValAtIdx
-
 public:
    HiliteAddin_StreamParse( PView pView ) : HiliteAddin( pView ) {}
    ~HiliteAddin_StreamParse() {}
@@ -1080,7 +1072,6 @@ size_t HiliteAddin_StreamParse::VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) {
 bool HiliteAddin_StreamParse::VHilitLine( const LINE yLine, const COL xIndent, LineColorsClipped &alcc ) {
    if( 0 == d_hl_rgns.size() ) { return false; }
    const auto ixStart( (d_cacheValAtIdx <= yLine) ? d_cacheIdx : 0 );
-
    auto hl_line = [&]( unsigned ix ) { 0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, ix, d_hl_rgns[ix].rgn.flMin.lin, d_hl_rgns[ix].rgn.flMax.lin );
       d_cacheIdx = ix;
       if( yLine < d_hl_rgns[ix].rgn.flMin.lin ) { return false; }
@@ -1099,7 +1090,6 @@ bool HiliteAddin_StreamParse::VHilitLine( const LINE yLine, const COL xIndent, L
          }
       return false;
       };
-
    d_cacheIdx = d_hl_rgns.size()+1; // invalid
    d_cacheValAtIdx = yLine;
    for( auto ix=ixStart ; ix < d_hl_rgns.size() ; ++ix ) {
