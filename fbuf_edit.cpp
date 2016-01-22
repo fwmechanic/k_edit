@@ -1562,7 +1562,7 @@ void FBUF::FBufEvent_LineInsDel( LINE yLine, LINE lineDelta ) { // negative line
    else if( lineDelta < 0 ) { AdjustMarksForLineDeletion ( this, 0, yLine, COL_MAX, yLine - lineDelta + 1 ); }
    }
 
-int FBUF::ViewCount() {
+int FBUF::ViewCount() const {
    auto rv( 0 );
    DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, dlinkViewsOfFBUF, pv ) {
       ++rv;

@@ -40,7 +40,6 @@
 //
 #define  MACRO_BACKSLASH_ESCAPES  0
 
-
 // Editor Meta-Types
 
 #if 0
@@ -203,15 +202,11 @@ extern U8 g_colorError    ; // ERR
 struct Point {   // file location
    LINE    lin;
    COL     col;
-
    Point() {} //lint !e1401
    Point( LINE yLine, COL xCol ) : lin(yLine), col(xCol) {}
-
    Point( const Point  &rhs, LINE yDelta=0, COL xDelta=0 ) : lin(rhs.lin + yDelta), col(rhs.col + xDelta) {} // COPY CTOR
-
    void Set( LINE yLine, COL xCol ) { lin = yLine, col = xCol; }
    bool isValid() const { return lin >= 0 && col >= 0; }
-
    void ScrollTo( COL xWidth=1 ) const;
    bool operator==( const Point &rhs ) const { return lin == rhs.lin && col == rhs.col; }
    bool operator!=( const Point &rhs ) const { return !(*this == rhs); }
@@ -219,9 +214,7 @@ struct Point {   // file location
    bool operator> ( const Point &rhs ) const { return lin > rhs.lin || (lin == rhs.lin && col > rhs.col); }
    bool operator>=( const Point &rhs ) const { return !(*this < rhs); }
    bool operator<=( const Point &rhs ) const { return !(*this > rhs); }
-
    Point( const YX_t &src ) : lin( src.lin ), col( src.col) {}
-
    }; // HAS CTORS, so union canNOT HAS-A one of these
 
 typedef Point *PPoint;
@@ -230,15 +223,11 @@ class FBufLocn { // dflt ctor leaves locn empty; must be Set() later
    PFBUF d_pFBuf;
    Point d_pt;
    COL   d_width = 1;
-
 public:
-
    FBufLocn() : d_pFBuf(nullptr) {}
    FBufLocn( PFBUF pFBuf, const Point &pt ) : d_pFBuf(pFBuf), d_pt(pt) {}
    void Set( PFBUF pFBuf, Point pt, COL width=1 ) { d_pFBuf=pFBuf, d_pt=pt, d_width=width; }
-
    bool ScrollToOk() const;
-
    bool         IsSet()     const { return d_pFBuf != nullptr; }
    bool         InCurFBuf() const;
    bool         Moved()     const;
@@ -254,13 +243,11 @@ public:
 struct Rect {
    Point flMin;  // - Lower line, or leftmost col
    Point flMax;  // - Higher, or rightmost
-
    Rect() {}
    Rect( Point ulc, Point lrc ) : flMin(ulc), flMax(lrc) {}
    Rect( LINE yUlc, COL xUlc, LINE yLrc, COL xLrc ) : flMin(yUlc, xUlc), flMax(yLrc, xLrc) {}
    Rect( PFBUF pFBuf );
    Rect( bool fSearchFwd );
-
    COL  Width()  const { return flMax.col - flMin.col + 1; }
    COL  Height() const { return flMax.lin - flMin.lin + 1; }
    int  cmp_line( LINE yLine ) const { // IGNORES EFFECT OF COLUMNS!
@@ -269,7 +256,6 @@ struct Rect {
       return 0;
       }
    };
-
 
 class Xbuf {
    // ever-growing string class :-) which implements an ...
@@ -355,16 +341,13 @@ public:
                          WL(_vsnprintf,vsnprintf)( rv     , olen, format, val );
       return rv;
       }
-
    PCChar FmtStr( PCChar format, ... ) ATTR_FORMAT(2, 3) {
       va_list val; va_start(val, format);
       vFmtStr( format, val );
       va_end(val);
       return c_str();
       }
-
    };  typedef Xbuf *PXbuf;
-
 
 class LineInfo { // LineInfo is a standalone class since it is used by both FBUF and various subclasses of EditRec (undo/redo)
    friend class FBUF;
@@ -654,36 +637,26 @@ class View { // View View View View View View View View View View View View View
 public:
    DLinkEntry<View> dlinkViewsOfWindow;
    DLinkEntry<View> dlinkViewsOfFBUF;
-
                 View( const View & );
                 View( const View &, PWin pWin );
                 View( PFBUF pFBuf , PWin pWin, PCChar szViewOrdinates=nullptr );
                 ~View();
-
    void         Write( FILE *fout ) const;
-
 private:
                 View() = delete; // NO dflt CTOR !
-
    const PWin   d_pWin;     // back pointer, needed cuz our owning Win knows things we don't, but need
    const PFBUF  d_pFBuf;    // back pointer
    ViewHiLites *d_pHiLites = nullptr; // we own this!
-
    void         CommonInit();
-
    time_t       d_tmFocusedOn = 0; // http://en.wikipedia.org/wiki/Year_2038_problem
-
 public:
    void         PutFocusOn();
-
    time_t       TmFocusedOn() const { return d_tmFocusedOn; }
-
    PCFBUF       CFBuf()  const { return d_pFBuf; }
    PFBUF        FBuf()   const { return d_pFBuf; }
    PCWin        Win()    const { return d_pWin ; }
    PWin         wr_Win() const { return d_pWin ; }
    bool         ActiveInWin();
-
    struct ULC_Cursor {
       Point     Origin;
       Point     Cursor;
@@ -695,27 +668,21 @@ public:
          }
       void EnsureWinContainsCursor( Point winSize );
       };
-
 private:
    ULC_Cursor   d_current;       // current window & cursor state
    ULC_Cursor   d_prev;          // window state before any cursor movements
    LINE         d_prevLineCount = -1; // used for tail-cursor-scrolling
 public:
    ULC_Cursor   d_saved;         // window state saved by ARG::savecur
-
    const Point  &Cursor() const { return d_current.Cursor; }
    const Point  &Origin() const { return d_current.Origin; }
-
    bool         RestCur();
    void         SaveCur()     { d_saved.Set( d_current ); }
    void         SavePrevCur() { d_prev .Set( d_current ); }
    void         ScrollToPrev();
-
    void         GetCursor( PPoint pPt ) const { *pPt = d_current.Cursor; }
-
    void         CapturePrevLineCount();
    LINE         PrevLineCount() const { return d_prevLineCount; }
-
 private:
    void         MoveCursor_( LINE yLine, COL xColumn, COL xWidth, bool fUpdtWUC );
 public:
@@ -736,13 +703,10 @@ public:
    void         ScrollOrigin_X_Rel( int colDelta  )  { ScrollOrigin_X_Abs( Origin().col + colDelta     ); }
    void         ScrollOrigin_Y_Rel( int lineDelta )  { ScrollOrigin_Y_Abs( Origin().lin + lineDelta    ); }
    void         ScrollByPages( int pages );
-
    void         EnsureWinContainsCursor();
-
    //********** screen highlights
    void         SetStrHiLite  ( const Point &pt, COL Cols, int color );
    void         SetMatchHiLite( const Point &pt, COL Cols, bool fErrColor );
-
    void         InsHiLiteBox( int newColorIdx, Rect newRgn );
    void         InsHiLite1Line( int newColorIdx, LINE yLine, COL xLeft, COL xRight );
    void         FreeHiLiteRects();
@@ -765,7 +729,6 @@ public:
                    , LINE               yLineOfFile
                    , bool               isActiveWindow
                    ) const;
-
 private:
    LINE         d_LineCompile = -1;
 public:
@@ -776,7 +739,6 @@ public:
                    d_LineCompile += delta;
                    return LineCompileOk();
                    }
-
 private:
    bool         d_fCursorMoved     = true;
    bool         d_fUpdtWUC_pending = true; // fUpdtWUC_pending is state ASSOCIATED with (or perhaps independent of) fCursorMoved
@@ -793,68 +755,50 @@ public:
    void         HiliteAddin_Event_If_CursorMoved();
    void         HiliteAddin_Event_WinResized();
    void         HiliteAddin_Event_FBUF_content_changed( LINE yMinChangedLine, LINE yMaxChangedLine );
-
    void         Event_Win_Resized( const Point &newSize );
    void         ViewEvent_LineInsDel( LINE yLine, LINE lineDelta );
    void         PokeOriginLine_HACK( LINE yLine ) { d_current.Origin.lin = yLine; }
-
    char         CharUnderCursor(); // cursor being a View concept...
    bool         PBalFindMatching( bool fSetHilite, Point *pPt );
-
    bool         GetBOXSTR_Selection( std::string &st );
-
    Point        d_LastSelectBegin, d_LastSelectEnd;
-
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
-
 //private:
 public:
    FTypeSetting *d_pFTS = nullptr;
 public:
    FTypeSetting *GetFTypeSettings();
-
    int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
-
 
 struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
    ViewHead  ViewHd;   // public: exposed
    Point     d_Size;   // public: exposed
    Point     d_UpLeft; // public: exposed
    int       d_wnum = 0;  // will be set correctly if/when this is sorted into correct place
-
 public:
              Win();
              Win( PCChar pC );
              Win( Win &rhs, bool fSplitVertical, int ColumnOrLineToSplitAt );
              ~Win();
-
    void      Maximize();
-
    bool      operator< ( const Win &rhs ) const { return d_UpLeft < rhs.d_UpLeft; }
-
    void      Write( FILE *fout ) const;
    PCView    CurView()   const { return ViewHd.front(); }
    PView     CurViewWr() const { return ViewHd.front(); }
    void      DispNeedsRedrawAllLines() const;
-
    void      Event_Win_Reposition( const Point &newUlc );
    void      Event_Win_Resized( const Point &newSize );
    void      Event_Win_Resized( const Point &newSize, const Point &newSizePct );
-
    bool      VisibleOnDisplayLine( LINE yLineOfDisplay ) const { return( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ); }
    bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
-
    bool      GetCursorForDisplay( Point *pt ) const;
    void      GetLineForDisplay( int winNum, std::string &dest, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
-
 public: // std pimpl implemenations declare it as private, but we have "special needs"
    class impl;
    std::unique_ptr<impl> pimpl;
-
    }; // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
-
 
 inline bool View::ActiveInWin() { return d_pWin->CurView() == this; }
 
@@ -863,11 +807,9 @@ inline bool View::ActiveInWin() { return d_pWin->CurView() == this; }
 struct   NamedPoint;
 typedef  DLinkHead<NamedPoint>  NamedPointHead;
 
-
 extern bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ); // a very friendly (with FBUF) function
 
 extern void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf );
-
 
 extern bool g_fRealtabs;         // some inline code below references
 extern char g_chTabDisp;         // some inline code below references
@@ -884,8 +826,6 @@ enum cppc
    , cppcElse
    , cppcEnd
    };
-
-
 
 #define   FBUF_TREE   0
 #if       FBUF_TREE
@@ -925,7 +865,6 @@ STIL int cmp( const FileStat &a, const FileStat &b ) {
    if( a.d_Filesize   < b.d_Filesize   ) return -1;
    return 0;
    }
-
 
 enum Eol_t { EolLF, EolCRLF };
 extern const Eol_t platform_eol;
@@ -1007,7 +946,7 @@ public:
    */
 private:
    PPFBUF         d_ppGlobalPtr; // init'd by the "only ctor"; nullptr or addr-of a global ptr which points at this object
-   PPFBUF         GetGlobalPtr()   const { return d_ppGlobalPtr; }
+   PPFBUF         GetGlobalPtr() const { return d_ppGlobalPtr; }
 public:
    void           UnsetGlobalPtr() {
                      if( d_ppGlobalPtr ) {
@@ -1019,8 +958,8 @@ public:
                      d_ppGlobalPtr = ppGlobalPtr;                    // new reference: add
                      if( d_ppGlobalPtr ) { *d_ppGlobalPtr = this; }  // cross-link
                      }
-   bool           HasGlobalPtr()                 const { return ToBOOL(d_ppGlobalPtr); }
-   bool           IsSysPseudo()                  const { return HasGlobalPtr(); }
+   bool           HasGlobalPtr() const { return ToBOOL(d_ppGlobalPtr); }
+   bool           IsSysPseudo()  const { return HasGlobalPtr(); }
    //***********  (list of) Views of this (FBUF)
 private:
    ViewHead       d_dhdViewsOfFBUF;
@@ -1028,7 +967,7 @@ public:
    PView          PutFocusOn();
    void           LinkView( PView pv );
    void           UnlinkView( PView pv );
-   int            ViewCount();
+   int            ViewCount() const;
    //************ affect all Views of FBUF
    bool           UnlinkAllViews();
 private:
@@ -1155,7 +1094,7 @@ public:
    bool           FTypeEmpty()           const { return  d_ftype.empty(); }
    bool           FTypeEq( stref ft )    const { return  eq( d_ftype, ft ); }
    void           DetermineFType();
-   void           SetFType( stref ft )         {         d_ftype.assign( BSR2STR(ft) ); }
+   void           SetFType( stref ft )                {  d_ftype.assign( BSR2STR(ft) ); }
  #ifdef           fn_su
    bool           SilentUpdateMode()     const { return  d_fSilentUpdateMode; }
    void           SetSilentUpdateMode()               {  d_fSilentUpdateMode = true; }
@@ -1414,16 +1353,7 @@ STIL COL ColOfNextChar( COL tabWidth, stref rl, COL xCol ) {
 
 STIL COL ColOfPrevChar( COL tabWidth, stref rl, COL xCol ) {
    const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
-   COL rv;
-   if( ix == 0 ) {
-      rv = -1;
-      }
-   else {
-      const auto nix( ix - 1 );
-      rv = ColOfFreeIdx( tabWidth, rl, nix );
-      // 0 && DBG( "%s %d->[%" PR_BSRSIZET "u], [%" PR_BSRSIZET "u]->%d", __func__, xCol, ix, nix, rv );
-      }
-   return rv;
+   return ix == 0 ? -1 : ColOfFreeIdx( tabWidth, rl, ix - 1 );
    }
 
 struct rlc1 {
@@ -1433,9 +1363,9 @@ struct rlc1 {
       : ln( pfb->PeekRawLine( yy ) )
       , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, x0 ) )
       {}
-   bool beyond()                                  const { return ix0 >= ln.length(); }
+   bool beyond()           const { return ix0 >= ln.length(); }
    bool beyond( sridx ix ) const { return ix  >= ln.length(); }
-   char ch0() const { return ln[ix0]; }
+   char ch0()              const { return ln[ix0]; }
    };
 
 struct rlc2 {
