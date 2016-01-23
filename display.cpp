@@ -71,18 +71,14 @@ extern void DbgHilite_( char ch, PCChar func );
 class LineColors {
    enum { END_MARKER=0, ELEMENTS_=BUFBYTES };  // one simplifying assumption: color==0 is not used (used for EOS)
    U8 b[ ELEMENTS_+1 ];
-
-   public:
-
+public:
    bool inRange( int ix ) const { return ix < ELEMENTS(b); }
    U8   colorAt( int ix ) const { return b[ ix ]; }
    int  cols()            const { return Strlen( PCChar(&b[0]) ); }  // BUGBUG assumes END_MARKER == 0 !
-
    LineColors( U8 initcolor=END_MARKER ) {
       memset( b, initcolor, ELEMENTS_ );
       b[ ELEMENTS_ ] = END_MARKER;
       }
-
    int runLength( int ix ) const {
       if( !inRange( ix ) ) { return 0; }
       const auto ix0( ix );
@@ -90,27 +86,22 @@ class LineColors {
       for( ++ix ; inRange( ix ) && colorAt( ix ) == color ; ++ix ) {}
       return ix - ix0;
       }
-
    void PutColor( int ix, int len, int color ) {
       const auto maxIx( ix+len );
       for( ; ix < maxIx && inRange( ix ) ; ++ix ) {
          b[ ix ] = U8(color);
          }
       }
-
    void Cat( const LineColors &rhs );
    };
 
 class LineColorsClipped {
    const View &d_view ;
-
          LineColors &d_alc;
    const int d_idxWinLeft ;  // LineColors ix of leftmost visible char
    const int d_colWinLeft ;
    const int d_width      ;
-
-   public:
-
+public:
    LineColorsClipped( const View &view, LineColors &alc, int idxWinLeft, int colWinLeft, int width )
       : d_view        ( view )
       , d_alc         ( alc         )
@@ -120,7 +111,6 @@ class LineColorsClipped {
       {
       0 && DBG( "%s iWL=%d cWL=%d width=%d", __func__, idxWinLeft, colWinLeft, width );
       }
-
    void PutColorRaw( int col, int len, int color ) {
       0 && DBG( "%s a: %3d L %3d", __func__, col, len );
       if( col > d_colWinLeft+d_width || col + len < d_colWinLeft ) { return; }
@@ -132,7 +122,6 @@ class LineColorsClipped {
       0 && DBG( "%s c: %3d L %3d", __func__, ixMin, ixMax );
       d_alc.PutColor( ixMin, ixMax - ixMin+1, color );
       }
-
    void PutColor( int col, int len, int color ) { PutColorRaw( col, len, d_view.ColorIdx2Attr( color ) ); }
    };
 
@@ -263,7 +252,6 @@ struct FTypeSetting {
 
    };
 
-
 STATIC_FXN int Show_FTypeSettings() {                                        FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
    rb_traverse( pNd, s_FTS_idx ) {
       const auto pFTS( IdxNodeToFTS( pNd ) );
@@ -278,7 +266,6 @@ void FTypeSetting::Update() {
    d_eolCommentDelim[0] = '\0';
    scpy( pbuf, kybufBytes, "eolCommentDelim" );
    LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
-
    {
    scpy( pbuf, kybufBytes, "hilite" );
    char hiliteNmBuf[21];
@@ -373,7 +360,6 @@ int View::ColorIdx2Attr( int colorIdx ) const {
 
 #define  KSTRCMP( kstr, sz )  memcmp( kstr, sz, KSTRLEN(kstr) )
 
-
 /*
    design notes, HiliteAddin system
 
@@ -417,7 +403,6 @@ public:
    virtual bool VHilitLine    ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) { return false; }
    virtual bool VHilitLineSegs( LINE yLine,              LineColorsClipped &alcc ) { return false; }
    virtual size_t VGetStreamParse( LINE yLine, hl_rgn_t *&hlrt ) { return 0; /* number of valid entries in hlrt */ }
-
    DLinkEntry <HiliteAddin> dlinkAddins;
 protected:
          PCFBUF CFBuf()               const { return d_view.CFBuf(); }
@@ -429,10 +414,8 @@ protected:
          LINE   MaxVisibleFbufLine()  const { return Origin().lin + ViewLines() - 1; }
          bool   isActiveWindow()      const { return d_view.Win() == g_CurWin(); }
    int  ColorIdx2Attr( int colorIdx ) const { return d_view.ColorIdx2Attr( colorIdx ); }
-
    NO_COPYCTOR(HiliteAddin);
    NO_ASGN_OPR(HiliteAddin);
-
    void DispNeedsRedrawAllLines() { d_view.Win()->DispNeedsRedrawAllLines(); }
    };
 
@@ -479,7 +462,6 @@ class HiliteAddin_WordUnderCursor : public HiliteAddin {
    void VCursorMoved( bool fUpdtWUC ) override;
 // void VFbufLinesChanged( LINE yMin, LINE yMax )  { /* d_wucbuf[0] = '\0'; */ }
    bool VHilitLineSegs( LINE yLine,              LineColorsClipped &alcc ) override;
-
 public:
    HiliteAddin_WordUnderCursor( PView pView )
       : HiliteAddin( pView ) {
@@ -487,7 +469,6 @@ public:
       }
    ~HiliteAddin_WordUnderCursor() {}
    PCChar Name() const override { return "WUC"; }
-
 private:
    StringsBuf<BUFBYTES> d_sb;
    void   clear()               {        d_sb.clear();         }
@@ -801,7 +782,6 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
       maxUnIfdEnds = 1;
       }
    }
-
    // pass 2:
    auto level_alloc_idx(-1);  // increases monotonically
    auto level_idx(-1);        // goes up and down
@@ -821,7 +801,6 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
          default      : break;
          }
       }
-
    while( level_idx > -1 ) {
       level_idx = close_level( level_idx, ViewLines()-1 );
       }
@@ -902,7 +881,6 @@ void View::Set_LineCompile( LINE yLine ) {
 
 #define  USE_HiliteAddin_CompileLine  1
 #if      USE_HiliteAddin_CompileLine
-
 class HiliteAddin_CompileLine : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
 public:
@@ -910,14 +888,12 @@ public:
    ~HiliteAddin_CompileLine() {}
    PCChar Name() const override { return "CompileLine"; }
    };
-
 bool HiliteAddin_CompileLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    if( d_view.Get_LineCompile() == yLine ) {
       alcc.PutColor( 0, COL_MAX, COLOR::CXY );
       }
    return false;
    }
-
 #endif//USE_HiliteAddin_CompileLine
 
 //=============================================================================
@@ -1003,39 +979,6 @@ C. a serious underlying problem: we do not have robust detection of "FBUF conten
    vs. "redrawing screen" event, which leads to excessive numbers of the latter being used in lieu
    of the former.
 */
-
-#if 1
-int search_hl_rgn_t( const std::vector<hl_rgn_t> &ary, unsigned &ixCache, LINE &yCache, LINE yLine ) {
-   if( 0 == ary.size() ) { return -1; }
-   const auto ixStart( (yCache <= yLine) ? ixCache : 0 );
-   ixCache = ary.size()+1;
-   yCache = yLine;
-   for( auto ix=ixStart ; ix < ary.size() ; ++ix ) {
-      if( 0==ary[ix].rgn.cmp_line( yLine ) ) { 0 && DBG("direct hit");
-         ixCache = ix;
-         break;
-         }
-      if( yLine < ary[ix].rgn.flMin.lin ) {         0 && DBG("past hit");
-         ixCache = ix==0 ? 0 : ix-1;
-         break;
-         }
-      }
-   if( !(ixCache < ary.size()) ) { return -1; }
-   0 && DBG( "yLine=%d [%d->%d]: [%d..%d]", yLine, ixStart, ixCache, ary[ixCache].rgn.flMin.lin, ary[ixCache].rgn.flMax.lin );
-   if( yLine < ary[ixCache].rgn.flMin.lin ) { return -1; }
-
-  #if 0
-   const auto pFile( CFBuf() );
-   const auto rl( pFile->PeekRawLine( yLine ) );
-   if( !IsStringBlank( rl ) ) {
-      const auto tw( pFile->TabWidth() );
-      const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
-      for( auto ix=ixCache ; ix < ary.size() && 0==ary[ix].rgn.cmp_line( yLine ) ; ++ix ) {
-         const auto &comment( ary[ix] );
-  #endif
-   return -1;
-   }
-#endif
 
 class HiliteAddin_StreamParse : public HiliteAddin {
    bool VHilitLine   ( LINE yLine, COL xIndent, LineColorsClipped &alcc ) override;
@@ -1373,7 +1316,6 @@ void HiliteAddin_lua::scan_pass( LINE yMaxScan ) {
 
 class HiliteAddin_python : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
-
    enum scan_rv { atEOF, in_code,
       in_1Qstr    , // https://docs.python.org/2/reference/lexical_analysis.html#string-literals
       in_1Qrstr   ,
@@ -1396,7 +1338,6 @@ class HiliteAddin_python : public HiliteAddin_StreamParse {
    scan_rv find_end_2Q3rstr ( PCFBUF pFile, Point &pt ) ;
    Point    d_start_C; // where last /* comment started
    bool     d_in_3str = false;
-
 public:
    HiliteAddin_python( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
    ~HiliteAddin_python() {}
@@ -1451,7 +1392,6 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
       }                                                                        \
    return atEOF;                                                               \
    }
-
 
 #define find_end_Qstr1r( class, nm, delim )                                    \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
@@ -1535,7 +1475,6 @@ void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
       }
    }
 
-
 //=============================================================================
 #if 1
 
@@ -1585,12 +1524,10 @@ class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { en
          switch( rl[pt.col] ) {                                                                                                                       \
             default:      break;                                                                                                                      \
             case '\\' :   ++pt.col; /* skip escaped char */ break;                                                                                    \
-                                                                                                                                                      \
             case sec:     ++pt.col;                                                                                                                   \
                           find_end_ ## sec( pFile, pt, nest+1 );                   DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
                           --pt.col; /* compensate for ++pt.col in 3d for clause */                                                                    \
                           break;                                                                                                                      \
-                                                                                                                                                      \
             case pri:     if( 0==nest ) {                                                                                                             \
                              add_litstr( start.lin, start.col, pt.lin, pt.col-1 );                                                                    \
                              }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
@@ -1724,7 +1661,6 @@ struct HiLiteRec {
    Rect                  rect;
    int                   colorIndex;
    DLinkEntry<HiLiteRec> dlink;
-
    HiLiteRec( const Rect &rect_, int colorIndex_ )
       : rect(rect_)
       , colorIndex( colorIndex_ )
@@ -1732,7 +1668,6 @@ struct HiLiteRec {
       DBGHILITE && DBG( "[HL%p] + HiliteAllc", this );
       }
    };
-
 
 typedef DLinkHead<HiLiteRec> HiLiteHead;
 
@@ -1823,7 +1758,6 @@ void ViewHiLites::PrimeRedraw() const {
       }
    }
 
-
 void View::RedrawHiLiteRects() {
    if( d_pHiLites ) {
        d_pHiLites->PrimeRedraw();
@@ -1909,7 +1843,6 @@ void View::InsHiLite1Line( int newColorIdx, LINE yLine, COL xLeft, COL xRight ) 
    newRgn.flMax.col = xRight;
    InsHiLiteBox( newColorIdx, newRgn );
    }
-
 
 //-----------------------------------------------------------------------------
 
@@ -2078,7 +2011,6 @@ void View::HiliteAddins_Init() {
       }
    }
 
-
 View::View( const View &src, PWin pWin )
    : d_pWin ( pWin )
    , d_pFBuf( src.d_pFBuf )
@@ -2210,7 +2142,6 @@ void View::EnsureWinContainsCursor() {
    d_current.EnsureWinContainsCursor( Win()->d_Size );
    }
 
-//
 // we defer the initialization of certain View fields until the View is actually
 // used to display an FBUF.  View::PutFocusOn()'s responsibility is to
 // initialize these fields
@@ -2327,7 +2258,6 @@ bool ARG::debug() {  // like message but used for debug
       }
    }
 
-
 bool ARG::message() {
    linebuf mbuf; // meta arg "test message" message
    switch( d_argType ) {
@@ -2340,7 +2270,6 @@ bool ARG::message() {
                       return true;
       }
    }
-
 
 STATIC_VAR int s_dispNoiseMaxLen;
 
@@ -2518,14 +2447,10 @@ LINE StatusLine()  { return g_fDialogTop ? 0 : s_iHeight-1; }
 void Event_ScreenSizeChanged( const Point &newSize ) { DBG( "%s %d,%d->%d,%d", __func__, s_iHeight, s_iWidth, newSize.lin, newSize.col );
    s_iHeight = newSize.lin; // THE ONLY PLACE WHERE THIS VARIABLE IS ASSIGNED!!!
    s_iWidth  = newSize.col; // THE ONLY PLACE WHERE THIS VARIABLE IS ASSIGNED!!!
-
    DeleteUp( s_paScreenLineNeedsRedraw, new srd_linevect ( EditScreenLines() ) );
-
    Wins_ScreenSizeChanged( newSize );
-
    DispNeedsRedrawTotal();
    }
-
 
 STATIC_VAR auto s_CursorLocnBeforeOutsideView = Point ( -1, -1 );
 STATIC_VAR auto s_CursorLocnOutsideView       = Point ( -1, -1 );
@@ -2662,13 +2587,11 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
       const auto segLen( Min( alc->runLength( ix ), maxCharsToDisp ) );
       FULL_DB && DBG( "%s Len=%d", __func__, segLen );
       VidWrStrColor( yLine, xCol, pszStringToDisp, segLen, lastColor, 0 );
-
       ix              += segLen;
       xCol            += segLen;
       pszStringToDisp += segLen;
       maxCharsToDisp  -= segLen;
       }
-
    if( ScreenCols() > xCol ) { VidWrStrColor( yLine, xCol, " "    , 1, lastColor, true  ); }
 // else                      { VidWrStrColor( yLine, xCol, nullptr, 0, lastColor, false ); }
    FULL_DB && DBG( "%s-", __func__ );
@@ -2689,20 +2612,15 @@ class ColoredLine {
    size_t      d_curLen;
    linebuf     d_charBuf;
    LineColors  d_alc;
-
 public:
-
    ColoredLine()
       : d_curLen( 0 )
       {
       d_charBuf[0] = '\0';
       }
-
    int  textcols() const { return d_curLen; }
-
    void Cat( int ColorIdx, stref src );
    void Cat( const ColoredLine &rhs );
-
    void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), &d_alc, true ); }
    };
 
@@ -2721,7 +2639,6 @@ void ColoredLine::Cat( const ColoredLine &rhs ) {
    memcpy( d_charBuf + d_curLen, rhs.d_charBuf, rhs.d_curLen );
    d_curLen += rhs.d_curLen;
    d_charBuf[ d_curLen ] = '\0';
-
    d_alc.Cat( rhs.d_alc );
    }
 
