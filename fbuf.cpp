@@ -1486,7 +1486,7 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                      const auto rc( SaveFileMultiGenerationBackup( fnmToBkup ) );
                      switch( rc ) {
                         case SFMG_OK             : break;
-                        case SFMG_NO_SRCFILE     : return Msg( "Can't stat %s", fnmToBkup );
+                        case SFMG_NO_SRCFILE     : break; // return Msg( "Can't stat %s", fnmToBkup );
                         case SFMG_CANT_MV_ORIG   : return Msg( "Can't move %s", fnmToBkup );
                         case SFMG_CANT_MK_BAKDIR : return Msg( "Can't create dest dir" );
                         default:                   return Msg( "unknown SFMG error %d", rc );
