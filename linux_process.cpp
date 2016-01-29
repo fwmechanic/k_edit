@@ -270,6 +270,7 @@ int qx( std::string &dest, PCChar system_param ) {
 #include <sys/wait.h>
 
 STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
+   dest.clear();
    auto fp( popen( szcmdline, "r" ) );
    if( fp != NULL ) {
       char buf[8192];
@@ -293,27 +294,42 @@ STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
    }
 
 STATIC_CONST char cli_fromxclip[] = "xclip -selection c -o";
-STATIC_CONST char fromxclip_err[] = "X clipboard read failed; is xclip pkg installed?";
+STATIC_CONST char xclip_rderr[] = "X clipboard read (xclip -selection c -o) failed?";
+STATIC_CONST char xclip_notinst[] = "xclip not in PATH; apt-get install xclip needed?";
+
+STATIC_FXN bool xclip_installed( std::string &dest ) {
+   if( popen_rd_ok( dest, "command -v xclip" ) ) {
+      DBG( "%s: %s", __func__, dest.c_str() );
+      return true;
+      }
+   dest = xclip_notinst;
+   return false;
+   }
+
+STATIC_FXN bool xclip_read( std::string &dest ) {
+   if( popen_rd_ok( dest, cli_fromxclip ) ) {
+      return true;
+      }
+   dest = xclip_rderr;
+   return false;
+   }
 
 bool ARG::fromwinclip() {
    std::string dest;
-   if( popen_rd_ok( dest, cli_fromxclip ) ) {
+   if( xclip_installed( dest ) && xclip_read( dest ) ) {
       Clipboard_PutText_Multiline( dest.c_str() );
       Msg( "X clipboard -> <clipboard> ok" );
       return true;
       }
-   Msg( "%s", fromxclip_err );
+   Msg( "%s", dest.c_str() );
    return false;
    }
 
 void WinClipGetFirstLine( std::string &dest ) {
-   dest.clear();
-   if( popen_rd_ok( dest, cli_fromxclip ) ) {
+   if( xclip_installed( dest ) && xclip_read( dest ) ) {
       const auto eol( StrToNextOrEos( dest.c_str(), "\n" ) );
       dest.resize( eol - dest.c_str() );
-      return;
       }
-   dest = fromxclip_err;
    }
 
 STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
