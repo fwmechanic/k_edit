@@ -350,35 +350,42 @@ void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+class lineIterator { enum { DV=0 };
+   stref d_remainder;
+
+public:
+   lineIterator( stref remainder ) : d_remainder( remainder ) { DV&&DBG( "ctor: '%" PR_BSR "'", BSR(d_remainder) ); }
+   bool empty() const { return d_remainder.empty(); }
+   stref next() {
+      if( d_remainder.empty() ) { return stref(); }
+      auto len( nposToEnd( d_remainder, d_remainder.find_first_of( "\n\r" ) ) );
+      const auto rv( d_remainder.substr( 0, len ) );
+      d_remainder.remove_prefix( len );
+      if( !d_remainder.empty() ) { // d_remainder[0] === '\n' or '\r'
+         auto toRmv( 1 );
+         // accommodate all possible EOL sequences:
+         // Windows => "\x0D\x0A".
+         // UNIX    => "\x0A"
+         // MacOS   => "\x0A\x0D"
+         // ???     => "\x0D"
+         if( d_remainder.length() > 1 &&
+               (d_remainder[0] == '\n' && d_remainder[1] == '\r')
+            || (d_remainder[0] == '\r' && d_remainder[1] == '\n')
+           ) { ++toRmv; }
+         d_remainder.remove_prefix( toRmv ); // skip logical newline (may be one or two characters)
+         }
+      DV&&DBG( "next: '%" PR_BSR "'", BSR(rv) );
+      return rv;
+      }
+   };
+
 int FBUF::PutLastMultiline( PCChar buf ) {
    const auto pEos( buf + Strlen( buf ) );
-   std::string tmp;
-   auto pX( buf );
-   auto pSegStart( buf );
+   lineIterator li( buf );
    auto lineCount( 0 );
-   while( pX < pEos ) {
-      // EXPECTED ("Windows Standard") EOL sequence is "\x0D\x0A".
-      // in some cases (Clearcase diff GUI), UNIX newlines ('\x0A', I'm
-      // guessing) ALONE are used as line terminators.  This causes
-      // havoc, since existing code here never makes a line-break, and
-      // the '\x0A' chars are literally shown.  28-Jan-2004 klg
-      //
-      PCChar pSegEnd( nullptr ), pNxtSegStart( nullptr );
-      switch( pX[0] ) {
-         case '\x0D': pSegEnd = pX;  pNxtSegStart = pX + 1 + (pX[1] == '\x0A' ? 1 : 0);  break; // normal (Windows) case
-         case '\x0A': pSegEnd = pX;  pNxtSegStart = pX + 1 + (pX[1] == '\x0D' ? 1 : 0);  break;
-         }
-      if( pSegEnd ) {
-         PutLine( LineCount(), se2bsr( pSegStart, pSegEnd ), tmp );
-         ++lineCount;
-         pX = pSegStart = pNxtSegStart;
-         }
-      else {
-         ++pX;
-         }
-      }
-   if( pSegStart < pEos ) {
-      PutLine( LineCount(), se2bsr( pSegStart, pEos ), tmp );
+   std::string tmp;
+   while( !li.empty() ) {
+      PutLine( LineCount(), li.next(), tmp );
       ++lineCount;
       }
    return lineCount;
@@ -387,13 +394,9 @@ int FBUF::PutLastMultiline( PCChar buf ) {
 void FBUF::xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val ) {
    std::string tmp;
    pxb->vFmtStr( format, val );
-   auto pBuf( pxb->wbuf() );
-   for(;;) {
-      const auto pNL( Strchr( pBuf, '\n' ) );
-      if(  pNL ) { *pNL = '\0'; }
-      InsLine( lineNum++, pBuf, tmp );
-      if( !pNL ) { break; }
-      pBuf = pNL + 1;
+   lineIterator li( pxb->sr() );
+   while( !li.empty() ) {
+      InsLine( lineNum++, li.next(), tmp );
       }
    }
 
@@ -401,13 +404,9 @@ void FBUF::Vsprintf( LINE lineNum, PCChar format, va_list val ) {
    std::string tmp;
    Xbuf xb;
    xb.vFmtStr( format, val );
-   auto pBuf( xb.wbuf() );
-   for(;;) {
-      const auto pNL( Strchr( pBuf, '\n' ) );
-      if(  pNL ) { *pNL = '\0'; }
-      InsLine( lineNum++, pBuf, tmp );
-      if( !pNL ) { break; }
-      pBuf = pNL + 1;
+   lineIterator li( xb.sr() );
+   while( !li.empty() ) {
+      InsLine( lineNum++, li.next(), tmp );
       }
    }
 

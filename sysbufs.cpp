@@ -178,16 +178,9 @@ void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
 
 STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
-   pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, szMasterRepo );
-   pFBuf->PutLastLine( " " );
-
+   pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s\n ", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, szMasterRepo );
    FBufRead_Assign_OsInfo( pFBuf );
-   pFBuf->PutLastLine( " " );
-
-   pFBuf->FmtLastLine( "#-------------------- %s", "Metadata" );
-   pFBuf->FmtLastLine( "pgmdir   %s", ThisProcessInfo::ExePath() );
-   pFBuf->FmtLastLine( "statedir %s", EditorStateDir() );
-
+   pFBuf->FmtLastLine( " \n#-------------------- %s\npgmdir   %s\nstatedir %s", "Metadata", ThisProcessInfo::ExePath(), EditorStateDir() );
    FBufRead_Assign_Switches( pFBuf );
 
    // We do most print loops twice: first time to determine the count for the header

@@ -284,10 +284,11 @@ public:
          }
       return d_buf;
       }
-   size_t length() {
+   size_t length() const {
       const auto pnul( PChar( memchr( d_buf, 0, d_buf_bytes ) ) );
       return pnul ? pnul - d_buf : 0;
       }
+   stref sr() const { return stref( d_buf, length() ); }
    PCChar push_back( char ch ) {
       const auto slen( length() );
       const auto rv( wresize( slen+2 ) );
