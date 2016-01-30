@@ -166,8 +166,5 @@ PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
 int ThisProcessInfo::umask() { const auto rv( ::umask( 0 ) ); ::umask( rv ); return rv; }
 
 void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
-   pFBuf->FmtLastLine( "#-------------------- %s", "Linux Status" );
-   pFBuf->FmtLastLine( "%s@%s", ThisProcessInfo::euname(), ThisProcessInfo::hostname() );
-   pFBuf->FmtLastLine( "umask=%03o", ThisProcessInfo::umask() );
-   pFBuf->FmtLastLine( "TERM=%s", getenv("TERM") );
+   pFBuf->FmtLastLine( "#-------------------- %s\n%s@%s\numask=%03o\nTERM=%s", "Linux Status", ThisProcessInfo::euname(), ThisProcessInfo::hostname(), ThisProcessInfo::umask(), getenv("TERM") );
    }

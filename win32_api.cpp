@@ -78,17 +78,16 @@ void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
    pFBuf->FmtLastLine( "  Win32::GetACP() (ANSI)      = %s" , GetCPName( BSOB(pbuf), Win32::GetACP() )   );
    }
 
-
 PCChar OsErrStr( PChar dest, size_t sizeofDest, int errorCode ) {
    dest[0] = '\0';
-   if( errorCode )
+   if( errorCode ) {
       Win32::FormatMessage(
            0x1000 // Win32::FORMAT_MESSAGE_FROM_SYSTEM
          | 0x0200 // Win32::FORMAT_MESSAGE_IGNORE_INSERTS
          | 0x00FF // Win32::FORMAT_MESSAGE_MAX_WIDTH_MASK
          , nullptr, errorCode, 0, dest, sizeofDest, nullptr
          );
-
+      }
    return dest;
    }
 
@@ -96,12 +95,9 @@ PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
    return OsErrStr( dest, sizeofDest, Win32::GetLastError() );
    }
 
-
-//
 //#############################################################################################################################
 //###########################################  Win32 DIALOG BOXES, ETC  #######################################################
 //#############################################################################################################################
-//
 
 int ConIO::DbgPopf( PCChar fmt, ... ) {
    FixedCharArray<512> buf;
@@ -109,23 +105,17 @@ int ConIO::DbgPopf( PCChar fmt, ... ) {
    va_start( val, fmt );
    buf.Vsprintf( fmt, val );
    va_end( val );
-
    DebugLog( buf.k_str() );
-
    MainThreadPerfCounter::PauseAll();
-
    const auto retq( Win32::MessageBox(
       nullptr,                           // handle of owner window
       buf.c_str(),                       // address of text in message box
       "Kevin's _awesome_ editor DEBUG",  // address of title of message box
       MB_TASKMODAL | MB_SETFOREGROUND
       ) );
-
    MainThreadPerfCounter::ResumeAll();
-
    return retq == IDYES;
    }
-
 
 void AssertDialog_( PCChar function, int line ) {
    ConIO::DbgPopf( "Assertion failed, %s L %d", function, line );
@@ -136,10 +126,9 @@ void AssertDialog_( PCChar function, int line ) {
 void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum ) {
    FmtStr<100> msg( "GotHere: %s line %d", fn, lnum );
    DBG( "%s", msg.k_str() );
-
-   if( !*dialogShown )
+   if( !*dialogShown ) {
       ConIO::DbgPopf( "%s", msg.k_str() );
-
+      }
    *dialogShown = true;
    }
 
@@ -153,7 +142,6 @@ ConfirmResponse Win32::Confirm_MsgBox( int MBox_uType, PCChar prompt ) {
         MBox_uType | MB_ICONWARNING |  // styles of message box
         MB_TASKMODAL | MB_SETFOREGROUND
       );
-
    switch( mboxrv ) {
       case IDYES:    return crYES;
       default:       DBG( "unknown MessageBox rv!!!" ); //lint -fallthrough

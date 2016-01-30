@@ -1167,9 +1167,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
          CON_DBG && DBG( "ReadConsoleOutputA srcRgn: Y=(%4d,%4d), X=(%d,%d)", srcRgn.Top, srcRgn.Bottom, srcRgn.Left, srcRgn.Right );
          if( Win32::ReadConsoleOutputA( hConout, dest_buf, dest_buf_size, bufPos, &srcRgn ) == 0 ) {
             linebuf oseb;
-            g_pFBufConsole->PutLastLine( "***/" );
-            g_pFBufConsole->FmtLastLine( "*** Win32::ReadConsoleOutputA FAILED: %s ***", OsErrStr( BSOB(oseb) ) );
-            g_pFBufConsole->PutLastLine( "***\\" );
+            g_pFBufConsole->FmtLastLine( "***/\n*** Win32::ReadConsoleOutputA FAILED: %s ***\n***\\", OsErrStr( BSOB(oseb) ) );
             }
          else {
             auto pc( dest_buf );

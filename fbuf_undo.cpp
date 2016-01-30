@@ -478,8 +478,7 @@ bool ARG::eds() { // nee ARG::showedits
    auto pFBuf( g_CurFBuf() );
    auto obuf( OpenFileNotDir_NoCreate( FmtStr<_MAX_PATH+20>( "<eds_%s_%X>", pFBuf->Name(), edBufNum++ ) ) );
    obuf->MakeEmpty();
-   obuf->FmtLastLine( "UndoCount=%u", pFBuf->UndoCount() );
-   obuf->PutLastLine( "(oldest)" );
+   obuf->FmtLastLine( "UndoCount=%u\n(oldest)", pFBuf->UndoCount() );
    for( auto pEr(pFBuf->OldestEdit()) ; pEr ; pEr=pEr->d_pRedo ) {
       DumpEditOp( obuf, pFBuf, pEr );
       }

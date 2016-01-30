@@ -221,13 +221,11 @@ struct maxFileInfos {
    int        lineCntLog10 ;
    filesize_t imgSize ;
    int        imgSizeLog10 ;
-
    maxFileInfos()
       : nmLen   (0)
       , lineCnt (0), lineCntLog10(5)
       , imgSize (0), imgSizeLog10(9)
       {}
-
    void Accum( PCFBUF pFBuf ) {
       if( g_fShowFbufDetails && (pFBuf->HasLines() || pFBuf->FnmIsPseudo()) ) {
          NoLessThan( &imgSize , pFBuf->cbOrigFileImage() );
@@ -235,7 +233,6 @@ struct maxFileInfos {
          }
       NoLessThan(    &nmLen   , pFBuf->UserNameLen()     );
       }
-
    void Calc() {
       NoMoreThan( &nmLen, 120 );
       lineCntLog10 = uint_log_10( lineCnt );
@@ -270,16 +267,14 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
                              , pFBuf->EolName()
          );
       }
-   else
+   else {
       pFout->FmtLastLine( "%s", pFBuf->UserName( BSOB(pb) ) );
+      }
    }
-
-
 
 STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
    //*** preprocessing pass to determine max width of some fields:
    maxFileInfos max;
-
    {
 #if FBUF_TREE
    rb_traverse( pNd, g_FBufIdx )
@@ -290,17 +285,14 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
 #if FBUF_TREE
       PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      if( !pFBuf->HasLines() )
+      if( !pFBuf->HasLines() ) {
          continue;
-
+         }
       max.Accum( pFBuf );
       }
    }
-
    max.Calc();
-
    //*** content-fill pass:
-
 #if FBUF_TREE
    rb_traverse( pNd, g_FBufIdx )
 #else
@@ -312,30 +304,27 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
 #endif
       if( !pFBuf->HasLines() )
          continue;
-
       ShowAFilesInfo( pFout, pFBuf, max );
       }
    }
 
 void FBufRead_WInformation( PFBUF pFout, int widx ) { // fxn that fills "<winN>"
-
    //*** preprocessing pass to determine max width of some fields:
    maxFileInfos max;
    DLINKC_FIRST_TO_LASTA( g_CurViewHd(), dlinkViewsOfWindow, pv ) {
       auto pFBuf( pv->FBuf() );
-      if( !pFBuf || pFBuf->IsInvisibleFile( widx ) )
+      if( !pFBuf || pFBuf->IsInvisibleFile( widx ) ) {
          continue;
-
+         }
       max.Accum( pFBuf );
       }
    max.Calc();
-
    //*** content-fill pass:
    DLINKC_FIRST_TO_LASTA( g_CurViewHd(), dlinkViewsOfWindow, pv ) {
       auto pFBuf( pv->FBuf() );
-      if( !pFBuf || pFBuf->IsInvisibleFile( widx ) )
+      if( !pFBuf || pFBuf->IsInvisibleFile( widx ) ) {
          continue;
-
+         }
       ShowAFilesInfo( pFout, pFBuf, max );
       }
    }
@@ -343,18 +332,17 @@ void FBufRead_WInformation( PFBUF pFout, int widx ) { // fxn that fills "<winN>"
 STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
    auto nmLen(0);
-
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsRealMacro() ) {
          Max( &nmLen, Strlen( pCmd->Name() ) );
          }
       }
-
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) { // sorted traversal
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsRealMacro() )
+      if( pCmd->IsRealMacro() ) {
          pFBuf->PutLastLine( SprintfBuf( "%-*s %s", nmLen, pCmd->Name(), pCmd->MacroText() ) );
+         }
       }
    }
 
@@ -362,8 +350,9 @@ STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
 
 STATIC_FXN void FBufRead_Environment( PFBUF pFBuf, int ) {
    std::string tmp;
-   for( auto ix(0) ; g_envp[ ix ] ; ++ix )
+   for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
       FBOP::InsLineSortedAscending( pFBuf, tmp, 0, g_envp[ix] );
+      }
    }
 
 STATIC_FXN int CDECL__ qsort_cmp_env( PCVoid pA, PCVoid pB ) {
@@ -372,17 +361,15 @@ STATIC_FXN int CDECL__ qsort_cmp_env( PCVoid pA, PCVoid pB ) {
 
 STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
    auto envEntries(0);
-   for( auto ix(0) ; g_envp[ ix ] ; ++ix )
+   for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
       ++envEntries;
-
+      }
    PPCChar             lines  ;
    AllocArrayNZ(       lines  , envEntries, __func__ );
-
-   for( auto ix(0) ; g_envp[ ix ] ; ++ix )
+   for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
       lines[ix] =  g_envp[ ix ];
-
+      }
    qsort( lines, envEntries, sizeof(*lines), qsort_cmp_env );
-
    auto bytes(0);
    std::string sbuf, stmp;
    for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
@@ -402,11 +389,9 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
             sbuf.append( pSegStart, slen );
             pFBuf->PutLastLine( sbuf, stmp );
             }
-
          pPrevSEMI = pSEMI;
          pFirstSeg = nullptr;
          }
-
       const auto pSegStart( pFirstSeg ? pFirstSeg : pPrevSEMI+1 );
       const auto curIndent( pFirstSeg ? 0 : indent );
       const auto slen( pd2Int( pEos - pSegStart ) );
@@ -416,12 +401,9 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
          pFBuf->PutLastLine( sbuf, stmp );
          }
       }
-
    Msg( "environment size = %d bytes", bytes );
-
    Free0( lines );
    }
-
 
 struct UsageCtxt {
    PFBUF fbOut;
@@ -500,7 +482,6 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
          }
       }
    }
-
    PPFBUF        fbufs  ;
    AllocArrayNZ( fbufs  , count, __func__ );
    auto ix( 0u );
@@ -519,15 +500,12 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
          }
       }
    }
-
    qsort( fbufs, count, sizeof(*fbufs), qsort_cmp_fbuf_wrtime );
-
    for( ix=0u ; ix < count ; ++ix ) {
       PCFBUF pFBuf( fbufs[ix] );
       dest->PutLastLine( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
       }
    Free0( fbufs );
-
    Msg( "%u files have been written to disk", count );
    }
 
@@ -556,14 +534,11 @@ STATIC_FXN void FBufRead_AsciiTbl( PFBUF pFBuf, int ) {
       }
    }
 
-
 typedef void (*FbufReaderFxn)( PFBUF, int );
 
 STATIC_FXN void CallFbufReader( PFBUF pFBuf, FbufReaderFxn readerFxn, int instance ) {
    pFBuf->MakeEmpty();
-
    readerFxn( pFBuf, instance );
-
    pFBuf->MoveCursorToBofAllViews();
    pFBuf->ClearUndo();
    pFBuf->UnDirty();
@@ -611,15 +586,12 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, 
          return true;
          }
       }
-
    const auto widx( IsWFilesName( pFBuf->Namestr() ) );
-
    if( widx >= 0 ) {
       CallFbufReader( pFBuf, FBufRead_WInformation, widx );
       }
    else if( widx == -2 ) {
       return Msg( "that window was deleted" ); // caller should clobber pFBuf!
       }
-
    return true;
    }
