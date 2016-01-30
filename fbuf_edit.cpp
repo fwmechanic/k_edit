@@ -324,35 +324,8 @@ STATIC_FXN void spcs2tabs_leading( string_back_inserter dit, stref src, TabberPa
 
 //==========================================================================================
 
-void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
-   auto pBuf( pszNewLineData );
-   std::string tmp;
-   while( 1 ) {
-      decltype(pBuf) pNL( strchr( pBuf, '\n' ) );
-      if( pNL == pszNewLineData ) {  // leading \n?
-         pBuf = pNL + 1;
-         pNL = strchr( pBuf, '\n' );
-         }
-      if( pBuf == pszNewLineData ) {
-         const auto rl( PeekRawLine( LastLine() ) );
-         std::string lbuf;
-         lbuf.assign( rl.data(), rl.length() );
-         lbuf.append( pBuf, pNL-pBuf );
-         PutLine( LastLine(), lbuf, tmp );
-         }
-      else {
-         PutLine( LineCount(), se2bsr( pBuf, pNL ), tmp );
-         }
-      if( !pNL ) break;
-      pBuf = pNL + 1;
-      }
-   }
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 class lineIterator { enum { DV=0 };
    stref d_remainder;
-
 public:
    lineIterator( stref remainder ) : d_remainder( remainder ) { DV&&DBG( "ctor: '%" PR_BSR "'", BSR(d_remainder) ); }
    bool empty() const { return d_remainder.empty(); }
@@ -379,8 +352,28 @@ public:
       }
    };
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
+   BoolOneShot first;
+   std::string tmp;
+   lineIterator li( pszNewLineData );
+   while( !li.empty() ) {
+      auto ln( li.next() );
+      if( first() && !ln.empty() ) {
+         const auto rl( PeekRawLine( LastLine() ) );
+         std::string lbuf; lbuf.reserve( rl.length() + ln.length() );
+         lbuf.assign( rl.data(), rl.length() );
+         lbuf.append( ln.data(), ln.length() );
+         PutLine( LastLine(), lbuf, tmp );
+         }
+      else {
+         PutLine( LineCount(), ln, tmp );
+         }
+      }
+   }
+
 int FBUF::PutLastMultiline( PCChar buf ) {
-   const auto pEos( buf + Strlen( buf ) );
    lineIterator li( buf );
    auto lineCount( 0 );
    std::string tmp;
