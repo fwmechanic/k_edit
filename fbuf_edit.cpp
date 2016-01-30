@@ -533,8 +533,7 @@ STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE y
    pf->getLineTabxPerRealtabs( dest, yLine );
    const auto tw( pf->TabWidth() );
    const auto xEolNul( StrCols( tw, dest ) );
-   if( xEolNul <= xLeft ) {
-      0 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
+   if( xEolNul <= xLeft ) { 0 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
       return;
       }
    const auto ixLeft( CaptiveIdxOfCol( tw, dest, xLeft ) );
@@ -574,9 +573,8 @@ void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollaps
 // Nutshell: LAST CHAR OF STREAM IS EXCLUDED from operation!
 //
 void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
-   if( yStart == yEnd ) { // xEnd-1 because "LAST CHAR OF STREAM IS EXCLUDED from operation!"
-      0 && DBG( "%s [%d..%d]", __func__, xStart, xEnd-1 );
-      DelBox( xStart, yStart, xEnd-1, yStart );
+   if( yStart == yEnd ) { 0 && DBG( "%s [%d..%d]", __func__, xStart, xEnd-1 );
+      DelBox( xStart, yStart, xEnd-1, yStart ); // xEnd-1 because "LAST CHAR OF STREAM IS EXCLUDED from operation!"
       return;
       }
    std::string stFirst; DupLineSeg( stFirst, yStart, 0, xStart-1 );
@@ -709,7 +707,6 @@ void PCFV_delete_ToEOL( Point const &curpos, bool copyToClipboard ) { PCFV;
       }
    --xRight;
    0 && DBG( "%s: xRight=%d", __func__, xRight );
-
    PCFV_delete_BOXARG( {curpos.lin, xLeft, curpos.lin, xRight }, copyToClipboard );
    }
 
@@ -752,7 +749,6 @@ bool ARG::udelete() { // "user interface" delete; does not convert BOX/LINE/STRE
     case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, !d_fMeta );                              break;
     case LINEARG:   PCFV_delete_LINEARG( d_linearg, !d_fMeta );                                  break;
     case BOXARG:    PCFV_delete_BOXARG( d_boxarg, !d_fMeta, d_cArg < 2 );                        break;
-
     }
    return true;
    }
@@ -1052,7 +1048,6 @@ bool ARG::paste() {
                           cmdstrbuf.Sprintf( "%s >\"%s\" 2>&1", pszCmd, tmpfilenamebuf );
                           RunChildSpawnOrSystem( cmdstrbuf );
                           }
-
                        if( FBUF::FnmIsPseudo( pSrcFnm ) ) {
                           cmdstrbuf.Strcpy( pSrcFnm );
                           }
@@ -1105,7 +1100,6 @@ bool ARG::paste() {
                     return true;
     }
    }
-
 
 GLOBAL_VAR ARG noargNoMeta; // s!b modified!
 
@@ -1835,7 +1829,6 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
       auto pLi( d_paLineInfo );
       auto pCurImageBuf( d_pOrigFileImage + MBCS_skip );
       const auto pPastImageBufEnd( d_pOrigFileImage + fileBytes );
-
       while( pCurImageBuf < pPastImageBufEnd ) { // we are about to read line 'curLineNum'
          if( d_naLineInfoElements <= curLineNum /* CID128050 */ && curLineNum > 0 /* CID128050 */ ) { // need to reallocate d_paLineInfo
             // this is a little obscure, since for brevity I'm using 'curLineNum' as an alias

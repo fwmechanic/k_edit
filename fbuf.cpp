@@ -429,15 +429,13 @@ bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff 
                                      SetLastFileStatFromDisk();
                                      return false;
                                      }
-
-                                  if( ReadDiskFileNoCreateFailed() )
+                                  if( ReadDiskFileNoCreateFailed() ) {
                                      return false;
-
+                                     }
                                 #ifdef fn_su
                                   if( SilentUpdateMode() )
                                      Msg( "%s Silently Updated from %s diskfile", Name(), why );
                                 #endif
-
                                   DispNeedsRedrawTotal();
                                   return true;
     }
@@ -484,7 +482,6 @@ bool FBUF::private_RemovedFBuf() { // adjusts g_CurFBuf() as necessary: does NOT
    return false;
    }
 
-//
 // Makes the file specified by this the current file and displays it in the
 // active window.  The file is moved to the top of the file instance list for
 // the active window (its file history).
@@ -1073,7 +1070,6 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
       1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), fb->Name() );
       }
    }
-
 
 STATIC_FXN Path::str_t xlat_fnm( PCChar pszName ) {
    auto rv( CompletelyExpandFName_wEnvVars( pszName ) );

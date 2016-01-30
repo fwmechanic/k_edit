@@ -28,15 +28,12 @@
 #endif
 
 //------------------------------------------------------------------------------
-//
 extern void AssertDialog_( PCChar function, int line );
 extern void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum );
 #define Assert( expr )  if( expr ) {} else { AssertDialog_( __func__, __LINE__ ); /*SW_BP;*/ }
 #define BadParamIf( rv , expr )  if( !expr ) {} else { AssertDialog_( __func__, __LINE__ ); return rv ; }
 #define GotHereDialog( pfDialogShown )  GotHereDialog_( pfDialogShown, __func__, __LINE__ )
-//
 //------------------------------------------------------------------------------
-
 
 // so far (20140209) I haven't been able to figure out a way to annotate
 // a field width or field precision printf format sub-string such that a value
@@ -57,7 +54,6 @@ STIL int pd2Int( ptrdiff_t pd ) {
 #endif
 
 extern   int   uint_log_10( int lmax );
-
 
 class BoolOneShot { // simple utility functor
    bool first;
@@ -87,7 +83,6 @@ extern   bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *
               };
 extern   PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd );
 
-//
 // CMD_reader embeds a VWritePrompt() hook in GetNextCMD_ExpandAnyMacros for writing
 // screen prompt if the keyboard is going to be read.  This (base) class defines
 // a empty VWritePrompt(), so it better not read the keyboard!
@@ -99,17 +94,12 @@ extern   PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor,
 //
 class CMD_reader {
 protected:
-
    bool d_fAnyInputFromKbd;
-
    virtual void  VWritePrompt();
    virtual void  VUnWritePrompt();
            PCCMD GetNextCMD_ExpandAnyMacros( bool fRtnOnMacroHalt );
-
 public:
-
    CMD_reader() : d_fAnyInputFromKbd( false ) {}
-
    PCCMD GetNextCMD()               { return GetNextCMD_ExpandAnyMacros( true ); }
    bool  GotAnyInputFromKbd() const { return d_fAnyInputFromKbd; }
    };
@@ -134,7 +124,6 @@ extern void    WaitForKey( int secondsToWait );
 extern void    FlushKeyQueuePrimeScreenRedraw();
 
 //--------------------------------------------------------------------------------------------
-
 // display-refresh API
 
 extern void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from );
@@ -144,8 +133,7 @@ extern void CursorLocnOutsideView_Unset();
 
 extern void DispNeedsRedrawCursorMoved();
 
-class ViewCursorRestorer
-   {
+class ViewCursorRestorer {
 public:
    ~ViewCursorRestorer() { CursorLocnOutsideView_Unset(); }
    };
@@ -162,19 +150,16 @@ extern void DispRefreshWholeScreenNow_()           ;
 
 #define  TRACE_DISP_NEEDS  0
 #if      TRACE_DISP_NEEDS
-
 #define  DispNeedsRedrawStatLn()                ( DBG( "%s by %s L %d", "DispNeedsRedrawStatLn"              , __func__, __LINE__ ), DispNeedsRedrawStatLn_()               )
 #define  DispNeedsRedrawVerticalCursorHilite()  ( DBG( "%s by %s L %d", "DispNeedsRedrawVerticalCursorHilite", __func__, __LINE__ ), DispNeedsRedrawVerticalCursorHilite_() )
 #define  DispNeedsRedrawAllLinesCurWin()        ( DBG( "%s by %s L %d", "DispNeedsRedrawAllLinesCurWin"      , __func__, __LINE__ ), DispNeedsRedrawAllLinesCurWin_()       )
 #define  DispNeedsRedrawAllLinesAllWindows()    ( DBG( "%s by %s L %d", "DispNeedsRedrawAllLinesAllWindows"  , __func__, __LINE__ ), DispNeedsRedrawAllLinesAllWindows_()   )
 #define  DispNeedsRedrawCurWin()                ( DBG( "%s by %s L %d", "DispNeedsRedrawCurWin"              , __func__, __LINE__ ), DispNeedsRedrawCurWin_()               )
 #define  DispNeedsRedrawTotal()                 ( DBG( "%s by %s L %d", "DispNeedsRedrawTotal"               , __func__, __LINE__ ), DispNeedsRedrawTotal_()                )
-#define  DispDoPendingRefreshes()               (                                                                                    DispDoPendingRefreshes_()               )
-#define  DispDoPendingRefreshesIfNotInMacro()   ( DBG( "%s by %s L %d", "DispDoPendingRefreshesIfNotInMacro" , __func__, __LINE__ ), DispDoPendingRefreshesIfNotInMacro_()   )
-#define  DispRefreshWholeScreenNow()            ( DBG( "%s by %s L %d", "DispRefreshWholeScreenNow"          , __func__, __LINE__ ), DispRefreshWholeScreenNow_()            )
-
+#define  DispDoPendingRefreshes()               (                                                                                    DispDoPendingRefreshes_()              )
+#define  DispDoPendingRefreshesIfNotInMacro()   ( DBG( "%s by %s L %d", "DispDoPendingRefreshesIfNotInMacro" , __func__, __LINE__ ), DispDoPendingRefreshesIfNotInMacro_()  )
+#define  DispRefreshWholeScreenNow()            ( DBG( "%s by %s L %d", "DispRefreshWholeScreenNow"          , __func__, __LINE__ ), DispRefreshWholeScreenNow_()           )
 #else
-
 STIL void DispNeedsRedrawStatLn()               { DispNeedsRedrawStatLn_()              ; }
 STIL void DispNeedsRedrawVerticalCursorHilite() { DispNeedsRedrawVerticalCursorHilite_(); }
 STIL void DispNeedsRedrawAllLinesCurWin()       { DispNeedsRedrawAllLinesCurWin_()      ; }
@@ -184,16 +169,13 @@ STIL void DispNeedsRedrawTotal()                { DispNeedsRedrawTotal_()       
 STIL void DispDoPendingRefreshes()              { DispDoPendingRefreshes_()             ; }
 STIL void DispDoPendingRefreshesIfNotInMacro()  { DispDoPendingRefreshesIfNotInMacro_() ; }
 STIL void DispRefreshWholeScreenNow()           { DispRefreshWholeScreenNow_()          ; }
-
 #endif
 
 #define DISP_LL_STATS  0
 #if     DISP_LL_STATS
-
 extern int DispCursorMoves();
 extern int DispStatLnUpdates();
 extern int DispScreenRedraws();
-
 #endif//DISP_LL_STATS
 
 //--------------------------------------------------------------------------------------------
@@ -242,7 +224,7 @@ extern void  DirectVidClear();
 
 class VideoFlusher {
    bool d_fWantToFlush;
-   public:
+public:
    VideoFlusher( bool fWantToFlush_=true ) : d_fWantToFlush(fWantToFlush_) {}
    ~VideoFlusher();
    };
