@@ -545,8 +545,9 @@ void FBUF::AddNewEditOpToListHead( EditRec *pEr ) {
                                                       DBG( "**************** BEGIN GarbageCollBeforeEdOpIns *********" );
                                                       }
                                                    )
-      if( d_pNewestEdit->VIsBoundary() )
+      if( d_pNewestEdit->VIsBoundary() ) {
          --d_UndoCount;
+         }
       RmvOneEdOp_fNextIsBoundary( true );
       }
                                                 DBG_EDOP(
