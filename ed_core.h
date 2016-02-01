@@ -200,9 +200,9 @@ extern U8 g_colorError    ; // ERR
 #include "conio.h"
 
 struct Point {   // file location
-   LINE    lin;
-   COL     col;
-   Point() {} //lint !e1401
+   LINE    lin = 0;
+   COL     col = 0;
+   Point() {}
    Point( LINE yLine, COL xCol ) : lin(yLine), col(xCol) {}
    Point( const Point  &rhs, LINE yDelta=0, COL xDelta=0 ) : lin(rhs.lin + yDelta), col(rhs.col + xDelta) {} // COPY CTOR
    void Set( LINE yLine, COL xCol ) { lin = yLine, col = xCol; }
@@ -399,13 +399,6 @@ class LineColorsClipped;
 
 #include "conio.h"
 
-union CmdData {
-   EdKC_Ascii eka;
-   PChar      pszMacroDef;
-   char  chAscii() const { return eka.Ascii; }
-   int   isEmpty() const { return pszMacroDef == nullptr; }
-   };
-
 struct SearchScanMode; // forward
 
 // ARG type bits
@@ -585,7 +578,12 @@ struct CMD {             // function definition entry
 #if AHELPSTRINGS
    PCChar   d_HelpStr;   // - help string shown in <CMD-SWI-Keys>
 #endif
-   CmdData  d_argData;   // - NON-MACRO: key that invoked; MACRO: ptr to macro string (defn)
+   union {
+      EdKC_Ascii eka;
+      PChar      pszMacroDef;
+      char  chAscii() const { return eka.Ascii; }
+      int   isEmpty() const { return pszMacroDef == nullptr; }
+      } d_argData;   // - NON-MACRO: key that invoked; MACRO: ptr to macro string (defn)
    mutable  U32  d_callCount;  // - how many times user has invoked (this session) since last cmdusage_updt() call
    mutable  U32  d_gCallCount; // - how many times user has invoked, global
    bool     isCursorFunc(        )  const { return ToBOOL(d_argType &  CURSORFUNC); }

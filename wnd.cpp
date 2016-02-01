@@ -43,7 +43,7 @@ bool Win::GetCursorForDisplay( Point *pt ) const {
    const auto pcv( ViewHd.front() );
    pt->lin = d_UpLeft.lin + (pcv->Cursor().lin - pcv->Origin().lin) + MinDispLine();
    pt->col = d_UpLeft.col + (pcv->Cursor().col - pcv->Origin().col);
-   return true;
+   return true; // used to chain (with CursorLocnOutsideView_Get)
    }
 
 void View::Event_Win_Resized( const Point &newSize ) { 0 && DBG( "%s %s", __func__, d_pFBuf->Name() );

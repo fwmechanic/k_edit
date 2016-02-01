@@ -763,20 +763,20 @@ STATIC_FXN bool PutStringIntoCurfileAtCursor( PCChar pszString, std::string &tmp
    return true;
    }
 
-STATIC_FXN void PutMacroStringIntoCurfileAtCursor( PCChar pStr ) {
+STATIC_FXN void PutMacroStringIntoCurfileAtCursor( stref sr ) {
    if( g_CurFBuf()->CantModify() ) {
       return;
       }
    const auto savefWordwrap( g_fWordwrap );
    g_fWordwrap = false; // we will wrap manually below to provide "  \" line continuation sequence
    std::string tmp1, tmp2;
-   for( ; *pStr; ++pStr ) {
-      if( ' ' == *pStr && g_CursorCol() >= g_iRmargin ) {
+   for( const auto ch : sr ) {
+      if( ' ' == ch && g_CursorCol() >= g_iRmargin ) {
          PutStringIntoCurfileAtCursor( "  \\", tmp1, tmp2 );
          g_CurView()->MoveCursor( g_CursorLine() + 1, FBOP::GetSoftcrIndent( g_CurFBuf() ) );
          }
       else {
-         PutCharIntoCurfileAtCursor( *pStr, tmp1, tmp2 );
+         PutCharIntoCurfileAtCursor( ch, tmp1, tmp2 );
          }
       }
    g_fWordwrap = savefWordwrap;
@@ -807,7 +807,7 @@ bool ARG::tell() {
       outbuf.SprintfCat( "  (%s)", ArgTypeNames( BSOB(lbuf), pCmd->d_argType ) );
       }
    if( d_fMeta ) {
-      PutMacroStringIntoCurfileAtCursor( outbuf.k_str() );
+      PutMacroStringIntoCurfileAtCursor( outbuf.sr() );
       }
    else {
       Msg( "%s", outbuf.k_str() );

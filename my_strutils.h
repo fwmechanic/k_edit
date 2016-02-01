@@ -424,26 +424,21 @@ STIL void insert_hole( PChar b, size_t sizeof_b, int xCol, int insertWidth=1 )
 template <int elements>
 class FixedCharArray {
    char d_buf[ elements ];
-
 public:
-
    FixedCharArray() { d_buf[0] = '\0'; }
    FixedCharArray( stref src ) { bcpy( d_buf, src ); }
-
+   stref  sr()    const { return stref( d_buf, Min( elements-1, Strlen( d_buf ) ) ); }
    PCChar k_str() const { return d_buf; }
    PChar  c_str()       { return d_buf; }
-
    void Vsprintf( PCChar format, va_list val ) { // yes, part of the PUBLIC interface!
       use_vsnprintf( BSOB(d_buf), format, val );
       }
-
    PCChar Sprintf( PCChar format, ... ) ATTR_FORMAT(2,3) {
       va_list args; va_start(args, format);
       Vsprintf( format, args );
       va_end(args);
       return d_buf;
       }
-
    PChar SprintfCat( PCChar format, ... ) ATTR_FORMAT(2,3) {
       const auto len( Strlen( d_buf ) );
       if( len < sizeof( d_buf ) - 1 ) {
@@ -453,7 +448,6 @@ public:
          }
       return d_buf;
       }
-
 private:
    // NO_ASGN_OPR(FixedCharArray);
    };

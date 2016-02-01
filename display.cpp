@@ -2231,9 +2231,9 @@ int DispRawDialogStr( PCChar st ) {
 
 int VMsg( PCChar pszFormat, va_list val ) {
    if( !pszFormat ) { pszFormat = ""; }
-   Linebuf buffer;  buffer.Vsprintf( pszFormat, val );
-   WL(0,1) && DBG( "*** '%s'", buffer.k_str() );  // <-- enable this for more UI visibility
-   return DispRawDialogStr( buffer.k_str() );
+   Xbuf xb; xb.vFmtStr( pszFormat, val );
+   WL(0,1) && DBG( "*** '%s'", xb.c_str() );  // <-- enable this for more UI visibility
+   return DispRawDialogStr( xb.c_str() );
    }
 
 bool Msg( PCChar pszFormat, ... ) {
@@ -2526,8 +2526,9 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
       DispNeedsRedrawAllLinesCurWin();
       fScreenRedrawPending = true;
       }
-   for( auto ix(0) ; ix < g_iWindowCount(); ++ix )
+   for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
       g_Win(ix)->CurView()->FBuf()->Push_yChangedMin(); // used by HiliteAddin methods
+      }
    if( fScreenRedrawPending ) {
       did |= 0x000A0000;
       pcv->HiliteAddin_Event_FBUF_content_changed( 0, 0 ); // bugbug needed to make cpp hilites update correctly
@@ -2551,11 +2552,9 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
 // public layer around DispUpdt
 
 #if     DISP_LL_STATS
-
 int DispCursorMoves()   { return d_stats.cursorScrolls; }
 int DispStatLnUpdates() { return d_stats.statLnUpdates; }
 int DispScreenRedraws() { return d_stats.screenRedraws; }
-
 #endif
 
 // BUGBUG note that if DispRefreshWholeScreenNow_ is called really often (like every time a key is hit, in autorepeat mode), the process(/thread?) hangs

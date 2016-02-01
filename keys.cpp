@@ -662,7 +662,7 @@ bool ARG::waitkey15() {
 int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only interested in # of avail keys
    auto count(0);
    auto tblCol(0);
-   Linebuf lbuf;
+   linebuf lbuf;
    const auto col_width( g_MaxKeyNameLen + 1 );
    enum { KBUF_WIDTH = 32 };
    Assert( g_MaxKeyNameLen <= KBUF_WIDTH );
@@ -673,17 +673,17 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
          if( KeyStringBuf[0] ) {
             ++count;
             if( pFBuf ) {
-               sprintf( lbuf.c_str() + (col_width * tblCol), "%-*s ", col_width-1, KeyStringBuf );
+               sprintf( lbuf + (col_width * tblCol), "%-*s ", col_width-1, KeyStringBuf );
                if( tblCol++ == (g_CurWin()->d_Size.col / col_width) - 1 ) {
                   tblCol = 0;
-                  pFBuf->PutLastLine( lbuf.k_str() );
+                  pFBuf->PutLastLine( lbuf );
                   }
                }
             }
          }
       }
    if( pFBuf && tblCol > 0 ) {
-      pFBuf->PutLastLine( lbuf.k_str() );
+      pFBuf->PutLastLine( lbuf );
       }
    return count;
    }
