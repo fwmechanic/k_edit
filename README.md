@@ -4,7 +4,7 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
 
 [![Coverity Scan Build Status](https://img.shields.io/coverity/scan/5869.svg)](https://scan.coverity.com/projects/5869)
 
-[unlike BitBucket, Github has no markdown TOC feature; Fix this!](https://github.com/isaacs/github/issues/215)
+[unlike BitBucket, Github has no markdown TOC feature; Please fix this!](https://github.com/isaacs/github/issues/215)
 
 # Features
 
@@ -52,7 +52,7 @@ The K source code distro contains, and K uses, the following source code from ex
  * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K, and must be in `PATH`.
  * `7z.exe` ([7zip](http://www.7-zip.org/)) is invoked when building the `rls` `make` target, and must be in `PATH`.
 
-### Ubuntu Linux (14.04, 14.10, 15.10)
+### Linux (Ubuntu 14.04+ (tested on 14.04, 14.10, 15.10))
 
  * after cloning this repo, run `./install_build_tools_ubuntu.sh` to install the necessary packages.
     * I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it probably will not build with any lesser GCC version.
@@ -60,11 +60,11 @@ The K source code distro contains, and K uses, the following source code from ex
 ## To build
 
     make clean
-    make -j     & the build is parallel-make-safe
+    make -j     # the build is parallel-make-safe
 
 To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
 
-    make zap    & clean plus nuke all lua.exe related
+    make zap    # clean plus nuke all lua.exe related
 
 Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
 which it assumes is already present on any Windows PC.
@@ -119,7 +119,7 @@ Information stored in state files includes:
 
  *  recent files edited (including window/cursor position)
  *  recent search-key and replace-string values
- *  function invocation accumulator-counters
+ *  function-invocation-count accumulators (for fact-driven key assignment choices)
 
 # Tutorial
 
