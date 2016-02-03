@@ -530,8 +530,9 @@ char CharAsciiFromKybd() {
 
 void EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd ) {
    for( auto &pCmd : g_Key2CmdTbl ) {
-      if( pCmd == pOldCmd )
+      if( pCmd == pOldCmd ) {
           pCmd =  pNewCmd;
+          }
       }
    }
 

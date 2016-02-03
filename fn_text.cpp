@@ -309,8 +309,9 @@ bool ARG::makebox() {
                GetMinLine( buf, yTemp, d_boxarg.flMax.col, g_CurFBuf() );
                buf[xTemp] = pchBox[NS];
                for( ++xTemp ; xTemp < d_boxarg.flMax.col ; ++xTemp ) {
-                  if( d_cArg > 1 )
+                  if( d_cArg > 1 ) {
                      buf[xTemp] = pchBox[CE];
+                     }
                   }
                buf[xTemp] = pchBox[NS];
                g_CurFBuf()->PutLine( yTemp++, buf, stTmp );

@@ -223,8 +223,9 @@ bool ARG::savecur() { PCV;  // left here for macro programming
 
 bool ARG::restcur() { PCV;
    if( ArgCount() > 0 ) {
-      if( !pcv->RestCur() )
+      if( !pcv->RestCur() ) {
          return fnMsg( "no cursor location saved" );
+         }
       }
    else {
       pcv->SaveCur();
@@ -339,7 +340,7 @@ bool ARG::mpara() {
    if( g_CursorLine() == 0 ) {
       return false;
       }
-   // if( ArgCount() > 0 )  d_fMeta = !d_fMeta; // makes this fn more useful for selection purposes
+   // if( ArgCount() > 0 ) { d_fMeta = !d_fMeta; } // makes this fn more useful for selection purposes
    auto yLine( g_CursorLine() - 1 );
    const auto pFBuf( g_CurFBuf() );
    for( ; yLine; --yLine ) {
@@ -377,7 +378,7 @@ STATIC_FXN bool SameIndentRange( PCFBUF fb, LINE *yMin, LINE *yMax, LINE start )
          else if( dent <  goal ) { break;         }
          }
       }
-   if( *yMax < 0 ) *yMax = fb->LineCount() - 1;
+   if( *yMax < 0 ) { *yMax = fb->LineCount() - 1; }
    return true;
    }
 

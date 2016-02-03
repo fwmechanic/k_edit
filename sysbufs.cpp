@@ -23,7 +23,6 @@
 #include "ed_main.h"
 
 GLOBAL_CONST char szMasterRepo[] = "https://github.com/fwmechanic/k_edit.git";
-
 GLOBAL_CONST char szClipboard[] = "<clipboard>";
 GLOBAL_CONST char szConsole[] = "<console>";
 GLOBAL_CONST char szSearchLog[] = "<search-keys>";
@@ -37,7 +36,6 @@ GLOBAL_CONST char szAsnFile  [] = "<CMD-SWI-Keys>";
 GLOBAL_CONST char szUsgFile  [] = "<usage>";
 GLOBAL_CONST char szMacDefs  [] = "<macdefs>";
 GLOBAL_CONST char szNoFile   [] = "*";
-
 
 STATIC_VAR CPCChar s_InvisibleFilenames[] = {
    szClipboard  ,
@@ -56,10 +54,11 @@ STATIC_VAR CPCChar s_UninterestingFilenames[] = {
    };
 
 STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, CPCChar *pC, CPCChar *pPastEnd ) {
-   for( ; pC < pPastEnd ; ++pC )
-      if( pFBuf->NameMatch( *pC ) )
+   for( ; pC < pPastEnd ; ++pC ) {
+      if( pFBuf->NameMatch( *pC ) ) {
          return true;
-
+         }
+      }
    return false;
    }
 
@@ -74,32 +73,32 @@ STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"
          }
       }
    const auto wnum( StrToInt_variable_base( numst, 10 ) );
-   if( !(wnum < g_iWindowCount()) )
+   if( !(wnum < g_iWindowCount()) ) {
       return -2;
-
+      }
    return wnum;
    }
 
 //==========================================================================================
 
 bool FBUF::IsFileInfoFile( int widx ) const {
-   if( widx >= 0 && IsWFilesName( Namestr() ) == widx )
+   if( widx >= 0 && IsWFilesName( Namestr() ) == widx ) {
       return true;
-
+      }
    return NameMatch( szFiles );
    }
 
 bool FBUF::IsInvisibleFile( int widx ) const {
-   if( widx >= 0 && IsWFilesName( Namestr() ) == widx )
+   if( widx >= 0 && IsWFilesName( Namestr() ) == widx ) {
       return true;
-
+      }
    return FileMatchesNameInList( this, s_InvisibleFilenames, PAST_END( s_InvisibleFilenames ) );
    }
 
 bool FBUF::IsInterestingFile( int widx ) const {
-   if( widx >= 0 && IsWFilesName( Namestr() ) == widx )
+   if( widx >= 0 && IsWFilesName( Namestr() ) == widx ) {
       return false;
-
+      }
    return !FileMatchesNameInList( this, s_UninterestingFilenames, PAST_END( s_UninterestingFilenames ) );
    }
 
@@ -109,8 +108,9 @@ STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFB
       DLINKC_FIRST_TO_LASTA( g_CurViewHd(), dlinkViewsOfWindow, pv ) // find
          if( pv->FBuf()->IsInterestingFile( widx ) ) {
             pFBufs[ix++] = pv->FBuf();
-            if( !(ix < pFBufsEls) )
+            if( !(ix < pFBufsEls) ) {
                break;
+               }
             }
       }
    else {
@@ -125,15 +125,14 @@ STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFB
 #endif
          if( pFBuf->IsInterestingFile( widx ) ) {
             pFBufs[ix++] = pFBuf;
-            if( !(ix < pFBufsEls) )
+            if( !(ix < pFBufsEls) ) {
                break;
+               }
             }
          }
       }
-
    return ix;
    }
-
 
 bool ARG::files() {  // bound to alt+f2
 // const auto fWinFiles( (g_iWindowCount() > 1) != (d_cArg > 0) );
@@ -142,7 +141,6 @@ bool ARG::files() {  // bound to alt+f2
    if( !g_CurFBuf()->IsFileInfoFile( winIdx ) ) {
       return fChangeFile( fWinFiles ? FmtStr<20>("<win%d>", winIdx ) : szFiles );
       }
-
    //////////////////////////////////////////////////////////////////////////
    //
    // <files> or <wfiles> WAS current when the cmd was executed:
@@ -152,24 +150,22 @@ bool ARG::files() {  // bound to alt+f2
    // directly.
    //
    //////////////////////////////////////////////////////////////////////////
-
    PFBUF pFBufs[2];
-   if( ELEMENTS(pFBufs) != NextNInterestingFiles( winIdx, fWinFiles, pFBufs, ELEMENTS(pFBufs) ) )
+   if( ELEMENTS(pFBufs) != NextNInterestingFiles( winIdx, fWinFiles, pFBufs, ELEMENTS(pFBufs) ) ) {
       return Msg( "not enough files" );
-
+      }
    0 && DBG( "%s: [0]=%s, [1]=%s", __func__, pFBufs[0]->Name(), pFBufs[1]->Name() );
-
    pFBufs[1]->PutFocusOn();
    pFBufs[0]->PutFocusOn();
    MsgClr();
    return true;
    }
 
-
 void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
    pFBuf->PutLastLine( " " );
-   if(true)
+   if(true) {
       pFBuf->FmtLastLine( "#-------------------- %d %s", count, subhd );
+      }
    else {
       CPCChar frags[] = { "#-------------------- ", FmtStr<12>( "%d ", count ), subhd };  // this is overkill (in this case)
       pFBuf->PutLastLine( frags, ELEMENTS(frags) );
@@ -182,33 +178,28 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    FBufRead_Assign_OsInfo( pFBuf );
    pFBuf->FmtLastLine( " \n#-------------------- %s\npgmdir   %s\nstatedir %s", "Metadata", ThisProcessInfo::ExePath(), EditorStateDir() );
    FBufRead_Assign_Switches( pFBuf );
-
    // We do most print loops twice: first time to determine the count for the header
    auto macroCmds(0);
    auto luaCmds  (0);
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if(      pCmd->IsRealMacro() ) ++macroCmds;
-      else if( pCmd->IsLuaFxn()    ) ++luaCmds  ;
-      else                           DBG( "%s ???", __func__ );
+      if(      pCmd->IsRealMacro() ) { ++macroCmds; }
+      else if( pCmd->IsLuaFxn()    ) { ++luaCmds  ; }
+      else                           { DBG( "%s ???", __func__ ); }
       }
-
    std::vector<stref> coll_tmp;
    std::string tmp1, tmp2;
    FBufRead_Assign_SubHd( pFBuf, "Lua functions", luaCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsLuaFxn() ) PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
+      if( pCmd->IsLuaFxn() ) { PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 ); }
       }
-
    FBufRead_Assign_intrinsicCmds( pFBuf, coll_tmp, tmp1, tmp2 );
-
    FBufRead_Assign_SubHd( pFBuf, "Macros", macroCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsRealMacro() ) PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 );
+      if( pCmd->IsRealMacro() ) { PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 ); }
       }
-
    FBufRead_Assign_SubHd( pFBuf, "Available Keys", ShowAllUnassignedKeys( nullptr ) );
    ShowAllUnassignedKeys( pFBuf );
    }
@@ -302,8 +293,9 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
 #if FBUF_TREE
       PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      if( !pFBuf->HasLines() )
+      if( !pFBuf->HasLines() ) {
          continue;
+         }
       ShowAFilesInfo( pFout, pFBuf, max );
       }
    }
@@ -526,7 +518,7 @@ STATIC_FXN void FBufRead_AsciiTbl( PFBUF pFBuf, int ) {
    linebuf buf; buf[0] = '\0'; auto pb( buf ); auto sb( sizeof buf );
    for( auto ch(0); ch < 0x100; ++ch ) {
       if( (ch % 0x10) == 0 ) {
-         if( buf[0] )  pFBuf->PutLastLine( buf );
+         if( buf[0] ) { pFBuf->PutLastLine( buf ); }
          pb = buf, sb = sizeof buf;
          snprintf_full( &pb, &sb, "%02X:", ch );
          }

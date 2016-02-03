@@ -61,7 +61,6 @@ EXTERNC void abort() {
 //=================================================================
 #endif
 
-
 STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 0 && DBG( "%s(%s)", FUNC, filename );
    g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
    if( 0 ) {
@@ -120,11 +119,10 @@ STATIC_FXN bool fgotline( Xbuf *xb, FILE *f ) {
    for(;;) {
       const auto buf( xb->wbuf()+ofs );
       const auto fgrv( fgets( buf, xb->buf_bytes()-ofs, f ) );
-      if( fgrv != buf )
+      if( fgrv != buf ) {
          return rvbuf != nullptr;
-
-      if( !rvbuf ) rvbuf = xb->wbuf();
-
+         }
+      if( !rvbuf ) { rvbuf = xb->wbuf(); }
       const auto len( Strlen( buf ) );
       if( len > 0 && buf[len-1] == '\n' ) {
          buf[len-1] = '\0';
@@ -403,9 +401,9 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    for( auto &win : g__.aWindow ) {
       DestroyViewList( &win->ViewHd );
       }                                                  DV && DBG("%s RemoveFBufOnly();", __func__ );
-   while( auto pFb = g_FBufHead.front() )
+   while( auto pFb = g_FBufHead.front() ) {
       pFb->RemoveFBufOnly();
-
+      }
    // finally, garbage-collect the bits and pieces:
                                                          DV && DBG("%s ConIO_Shutdown();", __func__ );
    ConIO_Shutdown();
@@ -459,7 +457,6 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
       }
    return rvWILL_EXIT;
    }
-
 
 GLOBAL_VAR bool g_fAskExit; // global/switchval
 
@@ -582,8 +579,9 @@ bool ARG::ext() {
            {
            RsrcSectionWalker rsw( lastTag );
            FBufLocn fl_dummy;
-           while( rsw.NextSectionInstance( &fl_dummy ) )
+           while( rsw.NextSectionInstance( &fl_dummy ) ) {
               ++count;
+              }
            if( !count ) {
               return Msg( "no sections matching '%" PR_BSR "'", BSR(rsw.SectionName()) );
               }
@@ -836,8 +834,8 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    #define  HOME_ENVVAR_NM  "APPDATA"
    #define  HOME_SUBDIR_NM  "Kevins Editor"
    const PCChar appdataVal( getenv( HOME_ENVVAR_NM ) );
-   if( !(appdataVal && appdataVal[0]) )          { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
-   if( !IsDir( appdataVal ) ) { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
+   if( !(appdataVal && appdataVal[0]) )  { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
+   if( !IsDir( appdataVal ) )            { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
    s_EditorStateDir = appdataVal;                     0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
    s_EditorStateDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
 #undef   HOME_ENVVAR_NM
@@ -863,7 +861,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
       baseVarVal = getenv( HOME_ENVVAR_NM );
       if( !(baseVarVal && baseVarVal[0]) ) { fprintf( stderr, "$" HOME_ENVVAR_NM " is not defined???\n" ); exit( 1 ); }
       // fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", baseVarVal );
-      if( !IsDir( baseVarVal ) )          { fprintf( stderr, "dir $" HOME_ENVVAR_NM " %s does not exist???\n", baseVarVal ); exit( 1 ); }
+      if( !IsDir( baseVarVal ) )           { fprintf( stderr, "dir $" HOME_ENVVAR_NM " %s does not exist???\n", baseVarVal ); exit( 1 ); }
       s_EditorStateDir = baseVarVal;      //       fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
       s_EditorStateDir += PATH_SEP_STR HOME_ENVVAR_SUFFIXNM; // fprintf( stderr, "$" HOME_ENVVAR_NM "/" HOME_ENVVAR_SUFFIXNM " %s\n", s_EditorStateDir.c_str() );
       mkdir_stf();
@@ -877,7 +875,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    { // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host
    const auto hostname( ThisProcessInfo::hostname() );
    if( hostname[0] ) {
-      s_EditorStateDir += hostname;          0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
+      s_EditorStateDir += hostname;      0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
       mkdir_stf();
       // since I am often sudo'd, and since the root-associated edit-fileset often can't be accessed (and root-written state files
       // can't be rewritten) by non-root, track them separately by adding a username level of indirection

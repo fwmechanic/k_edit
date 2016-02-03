@@ -706,7 +706,6 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
       }
    }
 
-
 bool ARG::assign() {
    switch( d_argType ) {
     default:      return BadArg();
@@ -836,11 +835,13 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
          }
       const auto ch( pCmd->d_argData.chAscii() );  0 && DBG( "record ascii '%c'", ch );
 #if MACRO_BACKSLASH_ESCAPES
-      if( '"' == ch || '\\' == ch )
+      if( '"' == ch || '\\' == ch ) {
          *pNew++ = '\\'; // escape!
+         }
 #else
-      if( '"' == ch )
+      if( '"' == ch ) {
          *pNew++ = '"';  // double all literal '"'s!
+         }
 #endif
       *pNew++ = ch;
       *pNew   = '\0';
@@ -853,7 +854,6 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       else {
          st += " ";
          }
-
       bcpy( lbufNew, pCmd->Name() );
       }
    CapturePrevLineCountAllWindows( g_pFbufRecord );
@@ -868,14 +868,11 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       g_pFbufRecord->PutLine( lastLine  , st     , stmp );
       }
    MoveCursorToEofAllWindows( g_pFbufRecord );
-
    return 1;
    }
 
-
 STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
    STATIC_CONST char kszContinuation[] = "  \\";
-
    std::string sbuf;
    std::string stmp;
    auto pMacroTextChunk( pCmd->MacroText() );

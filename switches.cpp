@@ -38,7 +38,6 @@ union USwiAct {             // switch location or routine
    bool    *fval;           // - flag value for BOOLEAN
    };
 
-
 struct SWI;
 
 typedef bool (*pfxDefnswi)( const SWI *pSwi, stref newValue );
@@ -50,10 +49,8 @@ struct SWI {                 // switch definition entry
    pfxDefnswi pfxDefn;
    pfxDispswi pfxDisp;
    AHELP( PCChar kszHelp; )  // - pointer to name of switch
-
    bool NameMatch( PCChar str ) const { return Stricmp( str, name ) == 0; }
    };
-
 
 #define EXT_SWID(nm)  extern void swid##nm( PChar dest, size_t sizeofDest, void *src )
 
@@ -134,9 +131,11 @@ STATIC_CONST char dfltWordChars[] = "_0123456789abcdefghijlkmnopqrstuvwxyzABCDEF
 
 void swidWordchars( PChar dest, size_t sizeofDest, void *src ) {
    const PCChar p0( dest );
-   for( auto ix(1) ; ix < 256 && (dest - p0 - 1) < sizeofDest ; ++ix )
-      if( s_isWordChar_[ix] && !strchr( dfltWordChars, ix ) )
+   for( auto ix(1) ; ix < 256 && (dest - p0 - 1) < sizeofDest ; ++ix ) {
+      if( s_isWordChar_[ix] && !strchr( dfltWordChars, ix ) ) {
          *dest++ = ix;
+         }
+      }
    *dest = '\0';
    }
 
@@ -153,10 +152,11 @@ bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
       for( auto ch : dfltWordChars ) { s_isWordChar_[ UI(ch) ] = true; }
       if( !pS.empty() ) for( auto pC(pS.cbegin()); pC != pS.cend() ; ++pC )  s_isWordChar_[ UI(*pC) ] = true;
       auto pWc( g_szWordChars );
-      for( auto ix(1) ; ix < 256 ; ++ix )
-         if( s_isWordChar_[ix] )
+      for( auto ix(1) ; ix < 256 ; ++ix ) {
+         if( s_isWordChar_[ix] ) {
             *pWc++ = ix;
-
+            }
+         }
       *pWc = '\0';
       }
    0&&DBG( "%s-", __func__ );
@@ -215,36 +215,32 @@ STATIC_FXN bool swinVAR_BOOL( const SWI *pSwi, stref newValue ) { 0 && DBG( "VAR
       *pSwi->act.fval = false;
       return true;
       }
-
    if(   0==cmpi( "yes", newValue ) || ("1" == newValue) ) {
       *pSwi->act.fval = true;
       return true;
       }
-
    if(   0==cmpi( "invert", newValue ) || ("-" == newValue) ) {
       *pSwi->act.fval = !*pSwi->act.fval;
       return true;
       }
-
    return ErrorDialogBeepf( "Boolean switch '%s' needs 'yes', 'no', or 'invert' (0/1/-) value", pSwi->name );
    }
 
 STATIC_FXN bool swinCOLOR( const SWI *pSwi, stref newValue ) {
    const auto newVal( StrToInt_variable_base( newValue, 16 ) );
-   if( newVal == -1 )
+   if( newVal == -1 ) {
       return ErrorDialogBeepf( "Numeric switch '%s': bad value", pSwi->name );
-
+      }
    *pSwi->act.bval = newVal & 0xFF;
-
    DispNeedsRedrawTotal();  // if color is changed interactively or in a startup macro the change did not affect all lines w/o this change
    return true;
    }
 
 STATIC_FXN bool swinVAR_INT( const SWI *pSwi, stref newValue ) {
    const auto newVal( StrToInt_variable_base( newValue, 10 ) );
-   if( newVal == -1 )
+   if( newVal == -1 ) {
       return ErrorDialogBeepf( "Numeric switch: bad value %" PR_BSR "", BSR(newValue) );
-
+      }
    *pSwi->act.ival = newVal;
    return true;
    }
@@ -252,14 +248,14 @@ STATIC_FXN bool swinVAR_INT( const SWI *pSwi, stref newValue ) {
 #if VARIABLE_WINBORDER
 bool swinWBC_INT( const SWI *pSwi, stref newValue ) {
    const auto newVal( StrToInt_variable_base( newValue, 10 ) );
-   if( newVal == -1 )
+   if( newVal == -1 ) {
       return ErrorDialogBeepf( "Numeric switch: bad value %" PR_BSR "", BSR(newValue) );
-
+      }
    extern int              Max_wbc_idx();
    const auto max_wbc_idx( Max_wbc_idx() );
-   if( newVal < 0 || newVal > max_wbc_idx )
+   if( newVal < 0 || newVal > max_wbc_idx ) {
       return ErrorDialogBeepf( "Numeric switch: out of range [0..%d]", max_wbc_idx );
-
+      }
    *pSwi->act.ival = newVal;
    DispNeedsRedrawTotal();
    return true;
@@ -267,17 +263,17 @@ bool swinWBC_INT( const SWI *pSwi, stref newValue ) {
 #endif
 
 STATIC_FXN bool swinFXN_BOOL( const SWI *pSwi, stref newValue ) {
-   if( pSwi->act.pFunc( newValue ) )
+   if( pSwi->act.pFunc( newValue ) ) {
       return true;
-
+      }
    return ErrorDialogBeepf( "%s: Invalid value '%" PR_BSR "'", pSwi->name, BSR(newValue) );
    }
 
 STATIC_FXN bool swinFXN_STR( const SWI *pSwi, stref newValue ) {
    const auto msg( pSwi->act.pFunc2( newValue ) );
-   if( !msg )
+   if( !msg ) {
       return true;
-
+      }
    return ErrorDialogBeepf( "%s", msg );
    }
 
@@ -353,18 +349,17 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "wucminlen"      , Var2TPfx( g_iWucMinLen            ), swinVAR_INT , swidInt        _AHELP( "minimum length of a word for it to qualify for 'word under the cursor' status" ) },
  };
 
-
 STATIC_FXN const SWI *FindSwitch( stref pszSwiName ) {
-   for( const auto &Swi : s_SwiTable )
-      if( 0==cmpi( Swi.name, pszSwiName ) )
+   for( const auto &Swi : s_SwiTable ) {
+      if( 0==cmpi( Swi.name, pszSwiName ) ) {
          return &Swi;
-
+         }
+      }
    return nullptr;
    }
 
 void FBufRead_Assign_Switches( PFBUF pFBuf ) {
    FBufRead_Assign_SubHd( pFBuf, "Switches", ELEMENTS(s_SwiTable) );
-
    Xbuf xb;
    for( const auto &Swi : s_SwiTable ) {
       linebuf lbuf; lbuf[0] = '\0';

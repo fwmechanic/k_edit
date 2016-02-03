@@ -1044,8 +1044,9 @@ bool ARG::mgl() {
    if( pGen ) {
       auto ix(0);
       pathbuf pbuf;
-      while( pGen->GetNextName( BSOB(pbuf) ) )
+      while( pGen->GetNextName( BSOB(pbuf) ) ) {
          DBG( "  [%d] = '%s'", ix++, pbuf );
+         }
       Delete0( pGen );
       }
    return true;
@@ -1725,8 +1726,6 @@ public:
       { /*DBG("");*/ Push( chStart ); }
    CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
    };
-
-#undef XXX
 
 CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    const char ch( sr[ix_curPt_Col] );
