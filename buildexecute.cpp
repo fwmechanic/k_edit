@@ -563,11 +563,11 @@ bool ARG::Invoke() { 0 && DBG( "%s %s", FUNC, CmdName() );
    ++s_nestLevel;
    enum { NEST_CHARS = 6 };
    const auto ixEos( s_nestLevel * NEST_CHARS );
-   if( g_fDvlogcmds && !d_pCmd->isCursorOrWindowFunc() && ixEos < sizeof(linebuf)-1 ) {
+   if( 0 && g_fDvlogcmds && !d_pCmd->isCursorOrWindowFunc() && ixEos < sizeof(linebuf)-1 ) {
       linebuf lbuf;
-      memset( lbuf, '>', ixEos );
+      for( auto ix=0 ; ix < ixEos ; ++ix ) { lbuf[ix] = '>'; }
       lbuf[ ixEos ] = '\0';
-      0 && DBG( "%s %-15s", lbuf, CmdName() );
+      DBG( "%s %-15s", lbuf, CmdName() );
       }
 #endif
    g_CurFBuf()->UndoInsertCmdAnnotation( d_pCmd );

@@ -127,12 +127,12 @@ bool swixDelims( stref param ) {
 GLOBAL_VAR char g_szWordChars[257];
 GLOBAL_VAR bool s_isWordChar_[256];
 
-STATIC_CONST char dfltWordChars[] = "_0123456789abcdefghijlkmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ";
+STATIC_CONST char s_dfltWordChars[] = "_0123456789abcdefghijlkmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ";
 
 void swidWordchars( PChar dest, size_t sizeofDest, void *src ) {
    const PCChar p0( dest );
    for( auto ix(1) ; ix < 256 && (dest - p0 - 1) < sizeofDest ; ++ix ) {
-      if( s_isWordChar_[ix] && !strchr( dfltWordChars, ix ) ) {
+      if( s_isWordChar_[ix] && !strchr( s_dfltWordChars, ix ) ) {
          *dest++ = ix;
          }
       }
@@ -141,15 +141,15 @@ void swidWordchars( PChar dest, size_t sizeofDest, void *src ) {
 
 bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    if( 0==cmpi( "nonwhite", pS ) ) {
-      memset( s_isWordChar_, true, sizeof s_isWordChar_ );
-      s_isWordChar_[0]    = false;
-      s_isWordChar_[unsigned(' ')]  = false;
+      for( auto &ch : s_isWordChar_ ) { ch = true; }
+      s_isWordChar_[            0 ] = false;
+      s_isWordChar_[unsigned(' ') ] = false;
       s_isWordChar_[unsigned(HTAB)] = false;
       bcpy( g_szWordChars, "nonwhite" );
       }
    else {
-      memset( s_isWordChar_, 0, sizeof s_isWordChar_ );
-      for( auto ch : dfltWordChars ) { s_isWordChar_[ UI(ch) ] = true; }
+      for( auto &ch : s_isWordChar_ ) { ch = false; }
+      for( auto  ch : s_dfltWordChars ) { s_isWordChar_[ UI(ch) ] = true; }
       if( !pS.empty() ) for( auto pC(pS.cbegin()); pC != pS.cend() ; ++pC )  s_isWordChar_[ UI(*pC) ] = true;
       auto pWc( g_szWordChars );
       for( auto ix(1) ; ix < 256 ; ++ix ) {

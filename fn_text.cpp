@@ -250,7 +250,7 @@ bool ARG::makebox() {
    STATIC_CONST char achMenuChar[]="1234567890A";
    if( (pchBox = strchr( achMenuChar, ch )) == nullptr ) {
       // Character not in menu, so use it as the drawing character
-      memset( cbuf, ch, sizeof(cbuf) );
+      for( auto &cbc : cbuf ) { cbc = ch; }
       pchBox = cbuf;
       }
    else {

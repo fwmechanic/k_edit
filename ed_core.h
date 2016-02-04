@@ -324,11 +324,11 @@ private:
       const auto rv( wresize( 1+xCol ) );
       const auto len0( length() );
       if( xCol > len0 ) {
-         memset( rv+len0, fillch, xCol-len0 );
+         for( auto ir=len0; ir < xCol ; ++ir ) { rv[ir] = fillch; }
          }
       rv[xCol] = ch;
       if( ch && xCol >= len0 ) {
-         rv[xCol+1] = '\0';
+         rv[1+xCol] = '\0';
          }
       return rv;
       }

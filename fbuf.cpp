@@ -254,7 +254,7 @@ class MaxIndentAccumulator {
    unsigned d_firstIndentAt[10];
 public:
    MaxIndentAccumulator() : d_sampleCount( 0 ) {
-      memset( d_firstIndentAt, 0, sizeof(d_firstIndentAt) );
+      for( auto &val : d_firstIndentAt ) { val = 0; }
       }
    int addSample( sridx indent, bool fLastLine );
    };

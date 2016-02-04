@@ -76,7 +76,7 @@ public:
    U8   colorAt( int ix ) const { return b[ ix ]; }
    int  cols()            const { return Strlen( PCChar(&b[0]) ); }  // BUGBUG assumes END_MARKER == 0 !
    LineColors( U8 initcolor=END_MARKER ) {
-      memset( b, initcolor, ELEMENTS_ );
+      for( auto &ch : b ) { ch = initcolor; }
       b[ ELEMENTS_ ] = END_MARKER;
       }
    int runLength( int ix ) const {
