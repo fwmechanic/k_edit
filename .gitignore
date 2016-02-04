@@ -3,6 +3,7 @@ dif
 lua
 k-*.log
 .svn/
+cov-int/
 .kbackup/
 bkz/
 *_unittest
