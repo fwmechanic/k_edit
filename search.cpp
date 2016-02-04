@@ -1781,6 +1781,8 @@ char View::CharUnderCursor() {
 bool View::PBalFindMatching( bool fSetHilite, Point *pPt ) {
    const auto startCh( CharUnderCursor() );
    if( !startCh ) { return false; }
+   0 && DBG( "%s: %c in '%s'?", __func__, startCh, g_delims       );
+   0 && DBG( "%s: %c in '%s'?", __func__, startCh, g_delimMirrors );
    bool fSearchFwd;
    if(      strchr( g_delims      , startCh ) ) { fSearchFwd = true;  }
    else if( strchr( g_delimMirrors, startCh ) ) { fSearchFwd = false; }

@@ -1966,9 +1966,8 @@ void FBUF::Push_yChangedMin() {
 enum { DBADIN=0 };
 
 bool View::InsertAddinLast( HiliteAddin *pAddin ) {
-   const auto nm( pAddin->Name() );
-   if( pAddin->VWorthKeeping() ) {
-      DBADIN && DBG( "%s %s", __PRETTY_FUNCTION__, nm );
+   const auto nm( pAddin->Name() );                   DBADIN && DBG( "%s %s", __PRETTY_FUNCTION__, nm );
+   if( pAddin->VWorthKeeping() ) {                    DBADIN && DBG( "%s %s is VWorthKeeping", __PRETTY_FUNCTION__, nm );
       DLINK_INSERT_LAST( d_addins, pAddin, dlinkAddins );
       return true;
       }

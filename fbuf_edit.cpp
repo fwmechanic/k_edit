@@ -41,7 +41,7 @@ void swidTabwidth( PChar dest, size_t sizeofDest, void *src ) {
    scpy( dest, sizeofDest, "status ln's \"e?\"" );
    }
 
-PCChar swixTabwidth( stref param ) {
+PCChar swixTabwidth( stref param ) { enum { DB=1 }; DB && DBG( "%s+ %" PR_BSR "'", __func__, BSR(param) );
    const auto val( StrToInt_variable_base( param, 10 ) );
    const auto inRange( val >= 1 && val <= MAX_TAB_WIDTH );
    if( inRange ) {

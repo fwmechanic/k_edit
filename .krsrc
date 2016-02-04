@@ -614,7 +614,6 @@
    savescreen:ctrl+k
    towinclip:ctrl+num+
    resize:alt+w
-   delims: {[(          # test code
    usemouse:yes
    # arg:tab   # this breaks Linux/X paste which types literal chars into the editor
 
@@ -638,7 +637,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 
 [ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
-   delims: {[(
    mfspec_:="*.*"
 
 [.bat] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
@@ -666,7 +664,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:lua]
    wordchars:
-   delims: {[(
    mfspec_:="*.lua"
    rmargin:80
 
@@ -675,11 +672,9 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:expect]
    wordchars:
-   delims: {[(
 
 [ftype:perl]
    wordchars:@$%
-   delims: {[(
    mfspec_:="*.pl;*.pm"
    rmargin:80
 
@@ -695,7 +690,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:msbatch
    tabwidth:8
    mfspec_:="*.cmd"
-   delims: {[(`
 
 [.mak .mik]
    ftype:make
@@ -708,7 +702,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    tabwidth:8
    entab:leading  # ...  whitespace converted to tabs
    wordchars: .
-   delims: {[(
    mfspec_:="*.mak;*.mik"
 
 [.cod]
@@ -764,7 +757,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:clang]
    wordchars:d
-   delims: {[(
    wucminlen:1
    mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"
    # mfspec_:="%TAGZ%\<*.h;*.hpp;*.hxx;*.kh;*.c;*.cpp;*.cc;*.cxx;*.kc>"
@@ -819,7 +811,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    mfspec_:="*.e"
 
 [.kdb]
-   delims: {[(
    mfspec_:="*.kdb"
    rmargin:80
    mfspec_:= curfilepath "*" curfileext

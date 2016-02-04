@@ -983,8 +983,14 @@ PCChar swixFtype( stref param ) {
    return nullptr;
    }
 
+STATIC_FXN void FtypeRestoreDefaults() {
+   extern bool swixDelims( stref param );
+   swixDelims( "{[(" );
+   }
+
 STATIC_CONST char s_sftype_prefix[] = "ftype:";
 STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
+   FtypeRestoreDefaults();
    char section[ KSTRLEN(s_sftype_prefix) + SIZEOF_MAX_FTYPE ];
    bcat( bcpy( section, s_sftype_prefix ).length(), section, ftype );              0 && DBG( "%s %s", __func__, section );
    const auto rv( RsrcLdFileSection( section ) );   0 && DBG( "%s %c %s", __func__, rv?'y':'n', section );
