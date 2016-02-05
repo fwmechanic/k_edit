@@ -118,7 +118,6 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    xCursor = ConstrainCursorX_0( d_pFBuf, yCursor, xCursor );
    const auto winHeight( d_pWin->d_Size.lin );
    const auto winWidth ( d_pWin->d_Size.col );
-
    // HORIZONTAL WINDOW SCROLL HANDLING
    //
    // hscroll: The number of columns that the editor scrolls the text left or
@@ -130,9 +129,8 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    const auto hscrollCols( Max( 1, (g_iHscroll * winWidth) / EditScreenCols() ) );
          auto xWinOrigin( Origin().col );
    const auto xWinCursor( xCursor - xWinOrigin );
-   if( xWinCursor <         0 ) { xWinOrigin -= hscrollCols;  if( xWinCursor < -hscrollCols            ) { xWinOrigin += xWinCursor + 1       ; } } // hscroll left?
-   else
-   if( xWinCursor >= winWidth ) { xWinOrigin += hscrollCols;  if( xWinCursor >= hscrollCols + winWidth ) { xWinOrigin += xWinCursor - winWidth; } } // hscroll right?
+   if     ( xWinCursor <         0 ) { xWinOrigin -= hscrollCols;  if( xWinCursor < -hscrollCols            ) { xWinOrigin += xWinCursor + 1       ; } } // hscroll left?
+   else if( xWinCursor >= winWidth ) { xWinOrigin += hscrollCols;  if( xWinCursor >= hscrollCols + winWidth ) { xWinOrigin += xWinCursor - winWidth; } } // hscroll right?
    {
    const auto  xWinCurs( xCursor - xWinOrigin );
    0 && DBG( "xWinCurs=%d", xWinCurs );
@@ -154,9 +152,8 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
          auto yWinOrigin( Origin().lin );
    const auto yWinCursor( yCursor - yWinOrigin );
    if( (yWinCursor >= -vscrollCols) && (yWinCursor < winHeight + vscrollCols) ) { // within one vscroll of the window boundaries?
-      if( yWinCursor <          0 ) { yWinOrigin -= vscrollCols; }
-      else
-      if( yWinCursor >= winHeight ) { yWinOrigin += vscrollCols; }
+      if     ( yWinCursor <          0 ) { yWinOrigin -= vscrollCols; }
+      else if( yWinCursor >= winHeight ) { yWinOrigin += vscrollCols; }
       }
    else {
       //  hike: the distance from the cursor to the top/bottom of the window
@@ -193,13 +190,10 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    }
 
 #if 0
-
 // BUGBUG need to define the appropriate place to "drop this anchor"!
-
 STATIC_FXN void CopyCurrentCursLocnToSaved() { PCV;
    pcv->SavePrevCur();
    }
-
 #endif
 
 void View::ScrollToPrev() {

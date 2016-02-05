@@ -1505,8 +1505,9 @@ void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) {
       }
  #if 0  // if you do this (to fix what looks like a memory leak), undo/redo BREAKS because it calls this API with fSaveUndoInfo == false
    else { // d_paLineInfo[firstLine..lastLine] abt to be overwritten: free
-      for( auto iy(firstLine) ; iy <= lastLine ; ++iy )
+      for( auto iy(firstLine) ; iy <= lastLine ; ++iy ) {
          d_paLineInfo[iy].FreeContent();
+         }
       }
  #endif
    // slide higher-numbered-line's lineinfo's down to fill in d_paLineInfo[firstLine..lastLine]
