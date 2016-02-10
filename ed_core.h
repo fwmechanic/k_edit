@@ -1305,13 +1305,7 @@ inline bool LineInfo::fCanFree_pLineData( const FBUF &fbuf ) const { return !fbu
 
 inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCompile < d_pFBuf->LineCount(); }
 
-//************ tabWidth-dependent string fxns
-extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset );
-
-extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
-extern COL     ColNextTabstop( COL tabWidth, COL xCol );
-STIL   COL     StrCols( COL tabWidth, const stref &src ) { return ColOfFreeIdx( tabWidth, src, src.length() ); }
-
+//************ Format for display
 extern void        FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently
           ( std::string &dest, size_t maxCharsToWrite  // dest-related
           , stref src, COL src_xMin, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0
@@ -1323,17 +1317,27 @@ extern std::string FormatExpandedSeg // less efficient version: uses virgin dest
 
 extern void    PrettifyMemcpy( std::string &dest, COL xLeft, size_t maxCharsToWrite, stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs );
 
-//************ tabWidth-dependent col-of-ptr/ptr-of-col xlators
-//             FreeIdxOfCol returns index that MAY be out of range; used to see whether col maps to content, or is beyond it
-extern sridx   FreeIdxOfCol    ( COL tabWidth, stref content, const COL colTgt );
-extern char    CharAtCol       ( COL tabWidth, stref content, const COL colTgt ); // returns 0 if col is not present in content
-
+//************ tabWidth-dependent string fxns
+//---          FreeIdxOfCol returns index that MAY be out of range; used to see whether col maps to content, or is beyond it
+extern sridx   FreeIdxOfCol  ( COL tabWidth, stref content, const COL colTgt );
+extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset );
+//---          tabWidth-dependent col-of-ptr/ptr-of-col xlators
+STIL   COL     ColOfNextChar( COL tabWidth, stref rl, COL xCol ) {
+                  return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + 1 );
+                  }
+STIL  COL      ColOfPrevChar( COL tabWidth, stref rl, COL xCol ) {
+                  const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
+                  return ix == 0 ? -1 : ColOfFreeIdx( tabWidth, rl, ix - 1 );
+                  }
+extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
+extern COL     ColNextTabstop( COL tabWidth, COL xCol );
+STIL   COL     StrCols( COL tabWidth, const stref &src ) { return ColOfFreeIdx( tabWidth, src, src.length() ); }
+extern char    CharAtCol     ( COL tabWidth, stref content, const COL colTgt ); // returns 0 if col is not present in content
 //             CaptiveIdxOfCol content[CaptiveIdxOfCol(colTgt)] is always valid; colTgt values which
 //                             map beyond the last char of content elicit the index of the last char
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, stref content, const COL colTgt ) {
                   return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length()-1 );
                   }
-
 //             CaptiveIdxOfCols  two for the price of one?
 STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, stref content, COL x0, COL x1 ) {
                   sridx2 rv;
@@ -1341,20 +1345,9 @@ STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, stref content, COL x0, COL x1 ) {
                   rv.ix1 = CaptiveIdxOfCol( tabWidth, content, x1 );
                   return rv;
                   }
-
-STIL COL TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
-   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) );
-   }
-
-STIL COL ColOfNextChar( COL tabWidth, stref rl, COL xCol ) {
-   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + 1 );
-   }
-
-STIL COL ColOfPrevChar( COL tabWidth, stref rl, COL xCol ) {
-   const auto ix( FreeIdxOfCol( tabWidth, rl, xCol ) );
-   return ix == 0 ? -1 : ColOfFreeIdx( tabWidth, rl, ix - 1 );
-   }
-
+STIL   COL     TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
+                  return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) );
+                  }
 struct rlc1 {
    stref ln;
    sridx ix0;
@@ -1366,7 +1359,6 @@ struct rlc1 {
    bool beyond( sridx ix ) const { return ix  >= ln.length(); }
    char ch0()              const { return ln[ix0]; }
    };
-
 struct rlc2 {
    stref ln;
    sridx ix0;
@@ -1380,17 +1372,14 @@ struct rlc2 {
    bool beyond( sridx ix ) const { return ix  >= ln.length(); }
    stref middle() const { return ln.substr( ix0, ix1-ix0 ); }
    };
-
 class IdxCol {
    const COL    d_tw;
    const stref  d_sr;
-
 public:
    IdxCol( const COL tw, stref sr )
       : d_tw    ( tw )
       , d_sr    ( sr )
       {}
-
    COL    i2c ( sridx  iC   ) const { return ColOfFreeIdx( d_tw, d_sr, iC ); }
    sridx  c2i ( COL    xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
    COL    cols(             ) const { return StrCols( d_tw, d_sr ); }
