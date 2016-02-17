@@ -63,9 +63,7 @@ EXTERNC void abort() {
 
 STATIC_FXN void AddCmdlineFile( PCChar filename, bool fForgetFile ) { 0 && DBG( "%s(%s)", FUNC, filename );
    g_pFBufCmdlineFiles->FmtLastLine( "%s%s", (fForgetFile ? "|" : ""), filename );
-   if( 0 ) {
-      DBG( "%s readback(%" PR_BSR  ")", FUNC, BSR( g_pFBufCmdlineFiles->PeekRawLine( 0 ) ) );
-      }
+   0 && DBG( "%s readback(%" PR_BSR  ")", FUNC, BSR( g_pFBufCmdlineFiles->PeekRawLine( 0 ) ) );
    }
 
 STATIC_FXN int NumberOfCmdlineFilesRemaining() {
@@ -196,9 +194,10 @@ STATIC_FXN bool recovScrnDims( PCChar lbuf ) {
    auto fFailed( ToBOOL( Strnicmp( lbuf, kszSCRN, KSTRLEN(kszSCRN) ) ) );
    if( !fFailed ) {
       Point newSize;
-      fFailed = 2 != sscanf( lbuf+KSTRLEN(kszSCRN), "%dx%d", &newSize.col, &newSize.lin );
-      if( !fFailed )
+      fFailed = (2 != sscanf( lbuf+KSTRLEN(kszSCRN), "%dx%d", &newSize.col, &newSize.lin ));
+      if( !fFailed ) {
          VideoSwitchModeToXYOk( newSize );
+         }
       }
    return fFailed;
    }
