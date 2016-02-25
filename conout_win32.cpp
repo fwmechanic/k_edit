@@ -1085,6 +1085,9 @@ STATIC_FXN PCChar ftNm( const Win32::DWORD ft ) {
    }
 
 STATIC_VAR Win32::HANDLE s_hParentActiveConsoleScreenBuffer = nullptr;
+STATIC_CONST Win32::UINT s_invalid_CP{ 0xFFFFFFFFu };   CompileTimeAssert( sizeof(Win32::UINT) == 4 );
+STATIC_VAR   auto s_atStartupConsoleCP      ( s_invalid_CP );
+STATIC_VAR   auto s_atStartupConsoleOutputCP( s_invalid_CP );
 
 bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&DBG( "%s+", __PRETTY_FUNCTION__ );
    {
@@ -1122,10 +1125,10 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
    CON_DBG&&DBG( "%s 1", __PRETTY_FUNCTION__ );
    {
    const auto OemCP( Win32::GetOEMCP() );
-   if( Win32::GetConsoleCP() != OemCP && !Win32::SetConsoleCP(OemCP) ) {
+   if( (s_atStartupConsoleCP=Win32::GetConsoleCP())             != OemCP && !Win32::SetConsoleCP(OemCP) ) {
       linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleCP(OemCP) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
       }
-   if( Win32::GetConsoleOutputCP() != OemCP && !Win32::SetConsoleOutputCP(OemCP) ) {
+   if( (s_atStartupConsoleOutputCP=Win32::GetConsoleOutputCP()) != OemCP && !Win32::SetConsoleOutputCP(OemCP) ) {
       linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleOutputCP(OemCP) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
       }
    }
@@ -1191,6 +1194,8 @@ void ConIO::Shutdown() {
    if( s_hParentActiveConsoleScreenBuffer ) {
       Win32::SetConsoleActiveScreenBuffer( s_hParentActiveConsoleScreenBuffer );
       }
+   if( s_atStartupConsoleCP       != s_invalid_CP && s_atStartupConsoleCP       != Win32::GetConsoleCP()       ) { Win32::SetConsoleCP      ( s_atStartupConsoleCP       ); }
+   if( s_atStartupConsoleOutputCP != s_invalid_CP && s_atStartupConsoleOutputCP != Win32::GetConsoleOutputCP() ) { Win32::SetConsoleOutputCP( s_atStartupConsoleOutputCP ); }
    ConinRelease();
    }
 //
