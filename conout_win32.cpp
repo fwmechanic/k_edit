@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -1223,11 +1223,28 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
    CON_DBG && PRTF_IT( "STARTUPINFO.hStdInput     = %p\n"  , startupInfo.hStdInput     );
    CON_DBG && PRTF_IT( "STARTUPINFO.hStdOutput    = %p\n"  , startupInfo.hStdOutput    );
    CON_DBG && PRTF_IT( "STARTUPINFO.hStdError     = %p\n"  , startupInfo.hStdError     );
-#undef   PRTF_IT
    }
+   if( CON_DBG ) {
+      char pbuf[81];
+      PRTF_IT( "Console INPUT  Code Page = Win32::GetConsoleCP()       = %s" , GetCPName( BSOB(pbuf), Win32::GetConsoleCP() ) );
+      PRTF_IT( "Console OUTPUT Code Page = Win32::GetConsoleOutputCP() = %s" , GetCPName( BSOB(pbuf), Win32::GetConsoleOutputCP() ) );
+      PRTF_IT( "Misc Code Pages:" );
+      PRTF_IT( "  Win32::GetOEMCP()           = %s" , GetCPName( BSOB(pbuf), Win32::GetOEMCP() ) );
+      PRTF_IT( "  Win32::GetACP() (ANSI)      = %s" , GetCPName( BSOB(pbuf), Win32::GetACP() )   );
+      }
 
+
+#undef   PRTF_IT
    CON_DBG&&DBG( "%s 1", __PRETTY_FUNCTION__ );
-
+   {
+   const auto OemCP( Win32::GetOEMCP() );
+   if( Win32::GetConsoleCP() != OemCP && !Win32::SetConsoleCP(OemCP) ) {
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleCP(OemCP) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+      }
+   if ( Win32::GetConsoleOutputCP() != OemCP && !Win32::SetConsoleOutputCP(OemCP)) {
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleOutputCP(OemCP) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+      }
+   }
    // following is VERY sequence-dependent code
 
    // PHASE 1: close all STDHANDLES, in the process capturing any needed info associated

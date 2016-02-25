@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -22,7 +22,6 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
-
 
 //------------------------------------------------------------------------------
 #if !defined(__GNUC__)
@@ -78,11 +77,9 @@
 //
 //------------------------------------------------------------------------------
 
-
 namespace Win32 {
    #include "shellapi.h"
    }
-
 
 #if defined(__GNUC__)
    #define K_STDCALL __stdcall
@@ -90,14 +87,12 @@ namespace Win32 {
    #define K_STDCALL
 #endif
 
-
 // see http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
 template<typename pfn_t>
 inline bool LoadFuncOk( pfn_t &fn, Win32::HMODULE hmod, const char *name) {
    fn = (pfn_t)Win32::GetProcAddress(hmod, name);
    return fn != nullptr;
    }
-
 
 struct WhileHoldingGlobalVariableLock
    {
@@ -126,57 +121,42 @@ public:
 
 class Mutex {
    Win32::CRITICAL_SECTION d_critsec;
-
-   public:
-
+public:
    Mutex()        { InitializeCriticalSection( &d_critsec ); }
    ~Mutex()       { DeleteCriticalSection( &d_critsec ); }
    void Acquire() { EnterCriticalSection( &d_critsec ); }
    void Release() { LeaveCriticalSection( &d_critsec ); }
-
-   private:
-
+private:
    NO_COPYCTOR(Mutex);
    NO_ASGN_OPR(Mutex);
    };
 
 class AcquiredMutex : public Mutex {
-   public:
-
+public:
    AcquiredMutex() { Acquire(); }
-
-   private:
-
+private:
    NO_COPYCTOR(AcquiredMutex);
    NO_ASGN_OPR(AcquiredMutex);
    };
 
-
 template<class T> class AutoSync {
    T & d_syncObj;
-
-   public:
-
+public:
    AutoSync( T & m ) : d_syncObj(m) { d_syncObj.Acquire(); }
    ~AutoSync()                      { d_syncObj.Release(); }
-
    // for those cases where the mutex needs toggling within it's scope
    void Acquire()                   { d_syncObj.Acquire(); }
    void Release()                   { d_syncObj.Release(); }
-
-   private:
-
+private:
    // NON-supported
    AutoSync();
    NO_COPYCTOR(AutoSync);
    NO_ASGN_OPR(AutoSync);
    };
 
-
 typedef AutoSync<Mutex> AutoMutex;
 
 //--------------------------------------------------------------------------------------------
-
 
 // this experiment FAILED: leaving here so I don't repeat it in a year or more.
 //
@@ -192,19 +172,13 @@ typedef AutoSync<Mutex> AutoMutex;
 #define  HANDLE_CTRL_CLOSE_EVENT( x )
 #endif
 
-
 extern const Win32::HANDLE g_hCurProc; // == Win32::GetCurrentProcess()
-
 extern volatile bool g_fSystemShutdownOrLogoffRequested;
-
 extern void Conin_Init();
 extern void ConinRelease();
-
 extern void VidInitApiError( PCChar errmsg );
-
 extern void UpdateConsoleTitle();
-
 extern bool EditorFilesystemNoneDirty();
-
 extern bool IsWin7();
 extern bool IsWin7OrLater();
+extern PChar GetCPName( PChar buf, size_t sizeofBuf, Win32::UINT cp );

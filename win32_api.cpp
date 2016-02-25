@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -55,7 +55,7 @@ bool IsWin7OrLater() {
    }
 
 
-STATIC_FXN PChar GetCPName( PChar buf, size_t sizeofBuf, Win32::UINT cp ) {
+PChar GetCPName( PChar buf, size_t sizeofBuf, Win32::UINT cp ) {
    Win32::CPINFOEX cpix;
    if( Win32::GetCPInfoEx( cp, 0, &cpix ) ) {
       scpy( buf, sizeofBuf, cpix.CodePageName );
