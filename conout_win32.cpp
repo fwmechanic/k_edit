@@ -38,35 +38,27 @@ struct W32_ScreenSize_CursorLocn {
    };
 
 class TConsoleOutputControl {
-
    class TConsoleOutputCacheLineInfo {
       COL         d_xMinDirty;
       COL         d_xMaxDirty;
       ScreenCell *d_paCHAR_INFO_BufStart;
-
    public:
-
       bool fLineDirty() const { return d_xMinDirty <= d_xMaxDirty; }
-
       void ColUpdated( int col ) {
          Min( &d_xMinDirty, col );
          Max( &d_xMaxDirty, col );
          }
-
       void BoundValidColumns( COL *minColUpdated, COL *maxColUpdated ) const {
          Min( minColUpdated, d_xMinDirty );
          Max( maxColUpdated, d_xMaxDirty );
          }
-
       ScreenCell *BufPtrOfCol( int col ) const {
          return d_paCHAR_INFO_BufStart + col;
          }
-
       void Undirty() {
          d_xMinDirty = INT_MAX;
          d_xMaxDirty = -1;
          }
-
       void Init( ScreenCell *pChIB, ScreenCell *pChIB_pastend ) {
          Undirty();
          d_paCHAR_INFO_BufStart = pChIB;
@@ -76,38 +68,25 @@ class TConsoleOutputControl {
             }
          }
       };
-
    const Win32::HANDLE d_hConsoleScreenBuffer;
-
    std::vector<TConsoleOutputCacheLineInfo> d_vLineControl; // one per line
-
    bool              d_fCursorVisible;
    bool              d_fBigCursor;
-
    std::vector<ScreenCell> d_vOutputBufferCache;
-
    struct {
       int first;
       int last;
       }              d_LineToUpdt;
-
    Mutex             d_mutex;
-
    W32_ScreenSize_CursorLocn d_xyState; // height of CSB-mapped window
-
 public: //**************************************************
-
    TConsoleOutputControl( int yHeight, int xWidth );
-
    bool WriteToFileOk( FILE *ofh ); // debug/test facility
-
    Win32::HANDLE GetConsoleScreenBufferHandle() const { return d_hConsoleScreenBuffer; }
-
    void NullifyUpdtLineRange() {
       d_LineToUpdt.first = d_xyState.size.lin;
       d_LineToUpdt.last  = 0;
       }
-
    void  GetSizeCursorLocn( W32_ScreenSize_CursorLocn *cxy ); // not const cuz hits mutex!
    YX_t  GetMaxConsoleSize();                                 // not const cuz hits mutex!
    bool  GetCursorState( YX_t *pt, bool *pfVisible );        // not const cuz hits mutex!
@@ -119,11 +98,8 @@ public: //**************************************************
    void  FlushConsoleBufferToScreen();
    void  ScrollConsole( LINE ulc_yLine, COL ulc_xCol, LINE lrc_yLine, COL lrc_xCol, LINE deltaLine );
    bool  SetConsolePalette( const unsigned palette[16] );
-
 private://**************************************************
-
    void  SetNewScreenSize( const YX_t &newSize );
-
    int   WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL xMin, COL xMax );
    void  SetConsoleCursorInfo();
    };
@@ -141,14 +117,10 @@ class ConsoleScreenBufferInfo {
    bool                              d_isValid;
    Win32::CONSOLE_SCREEN_BUFFER_INFO d_csbi;
    Win32::COORD                      d_maxSize;
-
 public:
-
    ConsoleScreenBufferInfo( Win32::HANDLE hCSB, PCChar name=nullptr, bool fFailQuietly=false );
    bool isValid() const { return d_isValid; }
-
    const Win32::SMALL_RECT & srWindow() const { return d_csbi.srWindow; }
-
    YX_t  WindowSize()     const { return YX_t( d_csbi.srWindow.Bottom - d_csbi.srWindow.Top  + 1
                                              , d_csbi.srWindow.Right  - d_csbi.srWindow.Left + 1
                                              );
@@ -217,17 +189,14 @@ TConsoleOutputControl::TConsoleOutputControl( int yHeight, int xWidth )
    , d_fCursorVisible               ( true )
    {
    0 && DBG( "%s", __func__ );
-
    // associate d_hConsoleScreenBuffer w/"the window" FIRST so that csbi, which
    // is derived from d_hConsoleScreenBuffer, will return correct window dims
    if( Win32::SetConsoleActiveScreenBuffer( d_hConsoleScreenBuffer ) == 0 ) {
       linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleActiveScreenBuffer FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
       exit( 1 );
       }
-
    YX_t newSize; newSize.lin=yHeight; newSize.col=xWidth;
    SetConsoleSizeOk( newSize );
-
    const ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "new editor console" );
    if( !csbi.isValid() ) {
       exit( 1 ); // error-msgs already displayed, just bail
@@ -257,24 +226,19 @@ void TConsoleOutputControl::SetNewScreenSize( const YX_t &newSize ) {
 HANDLE_CTRL_CLOSE_EVENT( volatile bool g_fProcessExitRequested; )
 
 #if defined(__GNUC__) && !defined(__x86_64)
-
 namespace Win32 {
 #ifdef __cplusplus
 extern "C" {
 #endif
 BOOL WINAPI GetCurrentConsoleFont(HANDLE hConsoleOutput,BOOL bMaximumWindow,PCONSOLE_FONT_INFO lpConsoleCurrentFont);
 COORD WINAPI GetConsoleFontSize(HANDLE hConsoleOutput,DWORD nFont);
-
 #ifdef __cplusplus
 }
 #endif
 }
-
 #endif
 
-
 //--------------------------------------------------------------------------------------------
-
 
 void TConsoleOutputControl::SetConsoleCursorInfo() {
    Win32::CONSOLE_CURSOR_INFO ConsoleCursorInfo;
@@ -285,10 +249,10 @@ void TConsoleOutputControl::SetConsoleCursorInfo() {
       }
    }
 
-
 void ConOut::SetCursorSize( bool fBigCursor ) {
-   if( s_EditorScreen )
+   if( s_EditorScreen ) {
        s_EditorScreen->SetCursorSize( fBigCursor );
+       }
    }
 
 void TConsoleOutputControl::SetCursorSize( bool fBigCursor ) {
@@ -296,17 +260,14 @@ void TConsoleOutputControl::SetCursorSize( bool fBigCursor ) {
    SetConsoleCursorInfo();
    }
 
-
 bool TConsoleOutputControl::SetCursorVisibilityChanged( bool fVisible ) { enum { DV=0 };
    if( !fVisible &&  d_fCursorVisible ) { DV && DBG( "**************** Making CURSOR INVISIBLE *********************" ); }
    if(  fVisible && !d_fCursorVisible ) { DV && DBG( "**************** Making CURSOR   VISIBLE *********************" ); }
    const auto retVal( d_fCursorVisible != fVisible );
    d_fCursorVisible = fVisible;
-
    SetConsoleCursorInfo();
    return retVal;
    }
-
 
 bool TConsoleOutputControl::GetCursorState( YX_t *pt, bool *pfVisible ) {
    AutoMutex mtx( d_mutex );
@@ -325,7 +286,7 @@ bool ConOut::SetCursorVisibilityChanged( bool fVisible ) {
    }
 
 void ConOut::SetCursorLocn( LINE yLine, COL xCol ) {
-   if( s_EditorScreen ) s_EditorScreen->SetCursorLocn( yLine, xCol );
+   if( s_EditorScreen ) { s_EditorScreen->SetCursorLocn( yLine, xCol ); }
    }
 
 void TConsoleOutputControl::SetCursorLocn( LINE yLine, COL xCol ) {
@@ -348,7 +309,6 @@ COL ConOut::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLine
 
 COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars, LINE yConsole, int xConsole, const int attr, bool fPadWSpcs ) {
    AutoMutex mtx( d_mutex );
-
    if(   yConsole  >= d_xyState.size.lin
       || xConsole  >= d_xyState.size.col
       || (srcChars == 0 && !fPadWSpcs)
@@ -356,7 +316,6 @@ COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars
       0 && DBG( "%s BAILS!", __func__ );
       return 0;
       }
-
    const auto maxConChars( d_xyState.size.col - xConsole );
    Min( &srcChars, maxConChars );
    const auto padLen( fPadWSpcs ? maxConChars - srcChars : 0 );
@@ -372,7 +331,6 @@ COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars
       lc.ColUpdated( xConsole );
       ++updtdCells;
       };
-
    for( auto ix(0); ix < srcChars; ++ix, ++pCI, ++xConsole ) {
       UpdtCell( *src++ );
       }
@@ -385,7 +343,6 @@ COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars
       }
    return srcChars + padLen;
    }
-
 
 STATIC_FXN bool SetConsoleWindowSizeOk( const Win32::HANDLE d_hConsoleScreenBuffer, LINE yheight, COL xWidth ) {
    enum { SHOWDBG = 0 };
@@ -403,12 +360,10 @@ STATIC_FXN bool SetConsoleWindowSizeOk( const Win32::HANDLE d_hConsoleScreenBuff
    newWinMapRect.Left   = 0;
    newWinMapRect.Right  = xWidth  - 1;
    newWinMapRect.Bottom = yheight - 1;
-
    SHOWDBG && DBG( "%s (%dx%d)", __func__
       , newWinMapRect.Right  +1
       , newWinMapRect.Bottom +1
       );
-
    if( !Win32::SetConsoleWindowInfo( d_hConsoleScreenBuffer, 1, &newWinMapRect ) ) {
       linebuf oseb;
       DBG( "%s FAILED: %s", __func__, OsErrStr( BSOB(oseb) ) );
@@ -435,10 +390,8 @@ void win_fully_on_desktop() {
    Win32::GetWindowRect( hwnd                     , &win_now     );
    Win32::GetWindowRect( Win32::GetDesktopWindow(), &desktop     ); // rect includes taskbar
    Win32::SystemParametersInfo( SPI_GETWORKAREA, 0, &workarea, 0 ); // rect EXcludes taskbar
-
    const auto padx(0); // Win32::GetSystemMetrics( SM_CXBORDER );
    const auto pady(0); // Win32::GetSystemMetrics( SM_CYBORDER );
-
    auto moved(false);
    auto win_new(win_now);
    if( win_new.right +padx > workarea.right  ) { moved = true; win_new.left -= win_new.right  - (workarea.right +(2*padx)); }
@@ -446,7 +399,6 @@ void win_fully_on_desktop() {
    // !!! next 2 lines must be AFTER prev 2 lines
    if( win_new.left  -padx < workarea.left   ) { moved = true; win_new.left  = workarea.left+padx; }
    if( win_new.top   -pady < workarea.top    ) { moved = true; win_new.top   = workarea.top +pady; }
-
    if( moved ) {
    // SHOWDBG && DBG( "SM_CXSIZEFRAME =%4d,%4d", Win32::GetSystemMetrics( SM_CXSIZEFRAME  ), Win32::GetSystemMetrics( SM_CXSIZEFRAME  ) );
    // SHOWDBG && DBG( "SM_CXEDGE      =%4d,%4d", Win32::GetSystemMetrics( SM_CXEDGE       ), Win32::GetSystemMetrics( SM_CYEDGE       ) );
@@ -467,14 +419,12 @@ void win_fully_on_desktop() {
       }
    }
 
-
 STATIC_FXN bool SetConsoleBufferSizeOk( const Win32::HANDLE d_hConsoleScreenBuffer, LINE yheight, COL xWidth ) {
    enum { SHOWDBG = 0 };
    Win32::COORD dwSize;
    dwSize.X = xWidth ;
    dwSize.Y = yheight;
    SHOWDBG && DBG( "%s (%dx%d)", __func__, dwSize.X, dwSize.Y );
-
    if( !Win32::SetConsoleScreenBufferSize( d_hConsoleScreenBuffer, dwSize ) ) {
       // *** ConsoleScreenBuffer resize failed (likely too small): restore window mapping and exit
       linebuf oseb;
@@ -506,10 +456,8 @@ YX_t TConsoleOutputControl::GetMaxConsoleSize() {
 bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
    enum { DODBG = 0 };
    AutoMutex mtx( d_mutex );  //##################################################
-
    FmtStr<80> trying( "%s+ Ask(%dx%d)", __func__, newSize.col, newSize.lin );
    DODBG && DBG( "%s", trying.k_str() );
-
    // NB: GetLargestConsoleWindowSize()'s retVal will change if the console
    //    font size is changed, so WE CAN'T JUST alloc the dynamic buffers for
    //    the biggest size and forget about them forevermore.
@@ -522,16 +470,13 @@ bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
       DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
       return false;
       }
-
    const auto winSize( csbi.WindowSize() );
    const auto bufSize( csbi.BufferSize() );
    const auto maxSize( csbi.MaxBufSize() );
    DODBG && DBG( "%s + Win=(%4d,%4d), Buf=(%4d,%4d) Max=(%4d,%4d)", __func__, winSize.col, winSize.lin, bufSize.col, bufSize.lin, maxSize.col, maxSize.lin );
-
    if( newSize.lin > maxSize.lin )       { newSize.lin = maxSize.lin      ; }
    if( newSize.col > maxSize.col )       { newSize.col = maxSize.col      ; }
    if( newSize.col > sizeof(Linebuf)-1 ) { newSize.col = sizeof(Linebuf)-1; }
-
    auto retVal(false);
    if(   winSize.col == bufSize.col && bufSize.col == newSize.col
       && winSize.lin == bufSize.lin && bufSize.lin == newSize.lin
@@ -539,7 +484,6 @@ bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
       DODBG && DBG( "%s - Nothing to do", __func__ );
       goto SIZE_OK;
       }
-
    do { // NOT a loop; just so I can use break (instead of goto) in this block
       if( newSize.lin < winSize.lin || newSize.col < winSize.col ) {
          // *** Either or BOTH of desired width OR height are LESS THAN current values.
@@ -555,20 +499,17 @@ bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
             break;
             }
          }
-
       if( !SetConsoleBufferSizeOk( d_hConsoleScreenBuffer, newSize.lin, newSize.col ) ) {
          // *** ConsoleScreenBuffer resize failed (likely too small): restore window mapping and exit
          Win32::SetConsoleWindowInfo( d_hConsoleScreenBuffer, 1, &csbi.srWindow() );
          DBG( "%s SetConsoleScreenBufferSize FAILED!", trying.k_str() );
          break;
          }
-
       //lint -e{734}
       if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, newSize.lin, newSize.col ) ) {
          DBG( "%s growing SetConsoleWindowSizeOk FAILED!", trying.k_str() );
          break;
          }
-
       {
       // Win32::COORD maxSize = Win32::GetLargestConsoleWindowSize( d_hConsoleScreenBuffer );
       0 && DBG( "%s Max=(%4d,%4d)", __func__, maxSize.col, maxSize.lin );
@@ -576,21 +517,15 @@ bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
       // Win32::GetConsoleScreenBufferInfo( d_hConsoleScreenBuffer, &csbi );
       0 && DBG( "%s - Win=(%4d,%4d), Buf=(%4d,%4d) Max=(%4d,%4d)", __func__, winSize.col, winSize.lin, bufSize.col, bufSize.lin, maxSize.col, maxSize.lin );
       }
-
 SIZE_OK:
-
       win_fully_on_desktop();
       SetNewScreenSize( newSize );
-
       Event_ScreenSizeChanged( newSize );
       retVal = true;
       } while(0); // NOT a loop; just so I can use break (not goto) above
-
    0 && DBG( "%s- rv=%d", __func__, retVal );
-
    return retVal;
    }
-
 
 Win32ConsoleFontChanger::~Win32ConsoleFontChanger() {
    Free0( d_pFonts     );
@@ -606,15 +541,13 @@ Win32ConsoleFontChanger::Win32ConsoleFontChanger()
      || !LoadFuncOk( d_SetConsoleFont         , hmod, "SetConsoleFont"          )
      || !LoadFuncOk( d_GetConsoleFontInfo     , hmod, "GetConsoleFontInfo"      )
      || !LoadFuncOk( d_GetNumberOfConsoleFonts, hmod, "GetNumberOfConsoleFonts" )
-     )
+     ) {
       return;
-
+      }
    d_hwnd    = Win32::GetConsoleWindow();
    d_hConout = s_EditorScreen->GetConsoleScreenBufferHandle();
-
    Win32::CONSOLE_FONT_INFO ConsoleCurrentFont;
    d_setFont = d_origFont = GetCurrentConsoleFont( d_hConout, 0, &ConsoleCurrentFont ) ? ConsoleCurrentFont.nFont : 0xFFFF;
-
    d_num_fonts = d_GetNumberOfConsoleFonts();
    AllocArrayNZ( d_pFonts, d_num_fonts, "CONSOLE_FONT_INFO" );
    GetFontInfo();
@@ -638,7 +571,7 @@ int Win32ConsoleFontChanger::GetFontSizeY() const {
    }
 
 double Win32ConsoleFontChanger::GetFontAspectRatio( int idx ) const {
-   if( !validFontIdx( idx ) ) return 2.0;
+   if( !validFontIdx( idx ) ) { return 2.0; }
    return double(d_pFontSizes[idx].X) / d_pFontSizes[idx].Y;
    }
 
@@ -660,7 +593,6 @@ void Win32ConsoleFontChanger::SetFont( Win32::DWORD idx ) {
       d_SetConsoleFont(d_hConout, d_pFonts[idx].nFont);
       Win32::InvalidateRect(d_hwnd, nullptr, FALSE);
       Win32::UpdateWindow(d_hwnd);
-
       const auto yHeight( d_pFonts[idx].dwFontSize.Y );
             auto xWidth ( d_pFonts[idx].dwFontSize.X );
       const size_t write_bytes( xWidth * (yHeight-2) * sizeof(ScreenCell) );
@@ -685,13 +617,11 @@ int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL x
    // written.  Win32::WriteConsoleOutput will read
    // d_vOutputBufferCache/d_hConsoleScreenBuffer directly, using bufferSize
    // to determine its geometry.
-
    // convert everything to Win32-isms
    auto              srcBuffer     ( &d_vOutputBufferCache[0] );
    Win32::COORD      srcBufferDims ; srcBufferDims.X = d_xyState.size.col; srcBufferDims.Y = d_xyState.size.lin;
    Win32::COORD      srcOrigin     ; srcOrigin.X = xMin; srcOrigin.Y = yMin;
    Win32::SMALL_RECT destRect      ; destRect.Top = yMin; destRect.Bottom = yMax; destRect.Left = xMin; destRect.Right = xMax;
-
    if( 0 ) {
       Assert( destRect.Left    >= 0 );
       Assert( destRect.Right   >= 0 );
@@ -715,7 +645,6 @@ int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL x
          }
       DBG( "*** junk-check done" );
       }
-
    const auto before( destRect );
    if( !Win32::WriteConsoleOutputA(
              d_hConsoleScreenBuffer // dest buffer handle
@@ -726,7 +655,6 @@ int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL x
                             // ON OUTPUT, the structure members specify the actual rectangle that was used.
            )
      ) { linebuf oseb; DBG( "%s FAILED: %s", "WriteConsoleOutput", OsErrStr( BSOB(oseb) ) ); }
-
    if( LOG_CONSOLE_WRITES &&
        (  before.Top    != destRect.Top
        || before.Bottom != destRect.Bottom
@@ -734,7 +662,6 @@ int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL x
        || before.Right  != destRect.Right
        )
      ) { DBG( "*** WriteConsoleOutput before != destRect" ); }
-
    if( LOG_CONSOLE_WRITES ) {
       g_WriteConsoleOutputCalls++;
       g_WriteConsoleOutputLines += destRect.Bottom - destRect.Top + 1;
@@ -749,35 +676,32 @@ int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL x
 void TConsoleOutputControl::FlushConsoleBufferToScreen() {
    auto ConWriteCount(0);
    AutoMutex mtx( d_mutex );  //##################################################
-
 #define  CONSOLE_VIDEO_FLUSH_MODE   1
-
    // CONSOLE_VIDEO_FLUSH_MODE == 0
    // minimizes # of calls to Win32::WriteConsoleOutputA;
    // may unnecessarily rewrite many many bytes/lines
-
    // CONSOLE_VIDEO_FLUSH_MODE == 1
    // minimizes # of bytes written to video device; may call
    // Win32::WriteConsoleOutputA many many times
-
    if( d_LineToUpdt.first <= d_LineToUpdt.last ) {
       LOG_CONSOLE_WRITES && DBG( "%s *** line range %d..%d", __func__, d_LineToUpdt.first, d_LineToUpdt.last );
-
 #if  CONSOLE_VIDEO_FLUSH_MODE
       for( auto yLine( d_LineToUpdt.first ) ; yLine <= d_LineToUpdt.last ; ) {
          // find next sequence of dirty lines
-         for( ; yLine <= d_LineToUpdt.last; ++yLine )
-            if( d_vLineControl[yLine].fLineDirty() )  //*** skip leading not-dirty lines
+         for( ; yLine <= d_LineToUpdt.last; ++yLine ) {
+            if( d_vLineControl[yLine].fLineDirty() ) { //*** skip leading not-dirty lines
                break;
-
-         if( !(yLine <= d_LineToUpdt.last) )
+               }
+            }
+         if( !(yLine <= d_LineToUpdt.last) ) {
             break;
-
+            }
          const auto firstDirtyLine( yLine ); // drop anchor
-         for( ; yLine < d_LineToUpdt.last; ++yLine )
-            if( !d_vLineControl[yLine+1].fLineDirty() )
+         for( ; yLine < d_LineToUpdt.last; ++yLine ) {
+            if( !d_vLineControl[yLine+1].fLineDirty() ) {
                break;
-
+               }
+            }
          // next sequence of dirty lines = [firstDirtyLine..yLine];
          // find minimum dirty column-set [xMin..xMax] across this range of lines
          auto xMin(COL_MAX);  auto xMax(-1);
@@ -804,7 +728,6 @@ void TConsoleOutputControl::FlushConsoleBufferToScreen() {
       LOG_CONSOLE_WRITES && DBG( "%s *** %d calls", __func__, ConWriteCount );
       }
    }
-
 
 void ConOut::GetScreenSize( YX_t *rv ) { // returning 8 byte struct msvc
    W32_ScreenSize_CursorLocn cxy;
@@ -860,7 +783,6 @@ STATIC_FXN bool savescreen( CPCChar ofnm ) {
    }
 
 #ifdef fn_savescreen
-
 bool ARG::savescreen() { // 20111113 kgoodwin for regression testing purposes
    switch( d_argType ) {
       default     : return BadArg();
@@ -868,7 +790,6 @@ bool ARG::savescreen() { // 20111113 kgoodwin for regression testing purposes
       case TEXTARG: return ::savescreen( d_textarg.pText );
       }
    }
-
 #endif
 
 // 20120821_140511 a currently incomplete attempt to support arbitrary color mapping
@@ -936,12 +857,10 @@ enum { gnConsoleSectionSize = sizeof(CONSOLE_INFO)+1024 };
 bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
    Win32::DWORD dwConsoleOwnerPid; // Retrieve the process which "owns" the console
    const auto dwConsoleThreadId( Win32::GetWindowThreadProcessId( hwndConsole, &dwConsoleOwnerPid ) );
-
    if( 0 && dwConsoleOwnerPid != Win32::GetCurrentProcessId() ) {
       DBG( "console was created by another process!" );
       return Msg( "console was created by another process!" );
       }
-
    // Create a SECTION object backed by page-file, then map a view of
    // this section into the owner process so we can write *pci into it
    //
@@ -952,7 +871,6 @@ bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
          return false;
          }
       }
-
    // Copy *pci into the section-object: map, copy, unmap[, SendMessage(hwndConsole, WM_SETCONSOLEINFO...)]
    //
    const auto ptrView( Win32::MapViewOfFile( ghConsoleSection, FILE_MAP_WRITE|FILE_MAP_READ, 0, 0, gnConsoleSectionSize ) );
@@ -960,7 +878,6 @@ bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
       linebuf oseb;  DBG( "'%s' -> Can't MapViewOfFile: %s", __func__, OsErrStr( BSOB(oseb) ) );
       return false;
       }
-
 #define  RESTORE_WIN_VISIBILITY  0
 #if      RESTORE_WIN_VISIBILITY
    const auto lbWasVisible( Win32::IsWindowVisible( hwndConsole ) );
@@ -972,15 +889,11 @@ bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
       pci->WindowPosY = rcAllMonRect.top - 1024;
       }
 #endif
-
    memcpy( ptrView, pci, pci->Length );
-
    Win32::UnmapViewOfFile( ptrView );
-
    // Send console window the "update" message
    const auto dwConInfoRc ( Win32::SendMessage( hwndConsole, WM_SETCONSOLEINFO, (Win32::WPARAM)ghConsoleSection, 0 ) );
    const auto dwConInfoErr( Win32::GetLastError() );
-
 #if      RESTORE_WIN_VISIBILITY
    if( !lbWasVisible && Win32::IsWindowVisible( hwndConsole ) ) {
       Win32::ShowWindow( hwndConsole, SW_HIDE );
@@ -989,70 +902,54 @@ bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
       }
 #endif
 #undef  RESTORE_WIN_VISIBILITY
-
    return true;
    }
 
 bool TConsoleOutputControl::SetConsolePalette( const unsigned palette[16] ) {
    enum { DM=0 };
    auto hwndConsole( Win32::GetConsoleWindow() );
-
    CONSOLE_INFO ci = { sizeof(ci) };
-
    // stuff that seems to be working OK:
    ci.Hwnd                     = hwndConsole;
    ci.ConsoleTitle[0]          = L'\0';
    ci.CodePage                 = 0;//0x352;
-
    ci.CursorSize               = d_fBigCursor ? 100 : 25;
    ci.FullScreen               = FALSE;
    ci.QuickEdit                = TRUE;
    ci.AutoPosition             = 0x10000;
    ci.InsertMode               = TRUE;
-
 #define  MAKE_WORD(low, high)  ((U16)((((U16)(high)) << 8) | ((U8)(low))))
-
    ci.ScreenColors             = MAKE_WORD(0x7, 0x0);
    ci.PopupColors              = MAKE_WORD(0x5, 0xf);
-
    ci.HistoryNoDup             = TRUE;
    ci.HistoryBufferSize        = 1;
    ci.NumberOfHistoryBuffers   = 1;
-
 #define  H(xx)  (((xx)>>16)&BITS(8))|(((xx)&BITS(8))<<16)|((xx)&0xFF00)
-
    for( auto ix(0); ix < ELEMENTS(ci.ColorTable); ++ix ) {
       ci.ColorTable[ix] = H( palette[ix] );
       }
-
 #undef H
-
    { // this works OK
    Win32::CONSOLE_SCREEN_BUFFER_INFO csbi;
    Win32::GetConsoleScreenBufferInfo( d_hConsoleScreenBuffer, &csbi );
-
    ci.ScreenBufferSize = csbi.dwSize;
    ci.WindowSize.X     = csbi.srWindow.Right  - csbi.srWindow.Left + 1;
    ci.WindowSize.Y     = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;  DM && DBG( "%s: %ux%u", __func__, ci.WindowSize.X, ci.WindowSize.Y );
    ci.WindowPosX       = csbi.srWindow.Left;
    ci.WindowPosY       = csbi.srWindow.Top;
    }
-
    { // this DOES NOT work OK: only in Vista+ is GetCurrentConsoleFontEx available to obtain FontFamily & FontWeight
    Win32::CONSOLE_FONT_INFO cfi;
    auto curFont( Win32::GetCurrentConsoleFont( d_hConsoleScreenBuffer, FALSE, &cfi ) ? cfi.nFont : 0xFFFF );  DM && DBG( "CurFont=%lu", curFont );
    auto fsize( Win32::GetConsoleFontSize( d_hConsoleScreenBuffer, curFont ) );                                DM && DBG( "FontSiz=%u x %u", fsize.X,fsize.Y );
-
 #if 1
    ci.FontSize = fsize;
 #else
    ci.FontSize.X = fsize.X;
    ci.FontSize.Y = fsize.Y;
 #endif
-
    ci.FontFamily = 0x30                 ; // 0x30 works (preserves font)
                 // FF_MODERN|FIXED_PITCH; // DOESN'T WORK (resets font to ?startup font?)
-
    // it seems 1000 is the max FontWeight allowed, values above this mean "don't change"?
    // updt: not exactly; the font IS changed when this is executed; the "to what" means
    // the change isn't always NOTICED...
@@ -1061,7 +958,6 @@ bool TConsoleOutputControl::SetConsolePalette( const unsigned palette[16] ) {
    ci.FontWeight = FontWeight_UNCHANGED;
    ci.FaceName[0] = L'\0';
    }
-
    return SetConsoleInfo( hwndConsole, &ci );
    }
 
@@ -1069,15 +965,12 @@ bool ConOut::SetConsolePalette( const unsigned palette[16] ) {
    return s_EditorScreen ? s_EditorScreen->SetConsolePalette( palette ) : false;
    }
 
-
 #ifdef fn_ctwk
 
 bool ARG::ctwk() {
    STATIC_VAR bool fTweaked;
-
    // note that these colors are encoded as HTML: RGB (whereas the stupid MS COLORSET is encoded BGR)
    // http://html-color-codes.info/
-
    STATIC_CONST unsigned TweakedColors[16] =
    {
 #if 0
@@ -1095,7 +988,6 @@ bool ARG::ctwk() {
         0x6c71c4, 0x268bd2, 0x2aa198, 0x859900,
 #endif
    };
-
    STATIC_CONST unsigned DefaultColors[16] =
    {
         0x000000, 0x000080, 0x008000, 0x008080,
@@ -1103,16 +995,13 @@ bool ARG::ctwk() {
         0x808080, 0x0000ff, 0x00ff00, 0x00ffff,
         0xff0000, 0xff00ff, 0xffff00, 0xffffff,
    };
-
    const auto rv( ConOut::SetConsolePalette( fTweaked ? DefaultColors : TweakedColors ) );
    fTweaked = !fTweaked;
    DBG( "%s done(%u)", __func__, rv );
    Msg( "%s done(%u)", __func__, rv );
    return rv;
    }
-
 #endif
-
 
 //
 //   END CONSOLE_OUTPUT  END CONSOLE_OUTPUT  END CONSOLE_OUTPUT  END CONSOLE_OUTPUT  END CONSOLE_OUTPUT  END CONSOLE_OUTPUT
@@ -1139,13 +1028,11 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
    CON_DBG && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET "u bytes) = %" PR_SIZET "u bytes", src_size.col, src_size.lin, sizeof(ScreenCell), src_size.col * src_size.lin * sizeof(ScreenCell) );
    if( g_pFBufConsole->LineCount() == 0 ) {
       enum { maxReadConsoleBufsize = 48*1024 };
-
       // Documented maxReadConsoleBufsize is 64KB, however experiments and
       // http://www.tech-archive.net/Archive/Development/microsoft.public.win32.programmer.kernel/2005-12/msg00292.html
       // indicate that the limit is "somewhat smaller", so I said "fine, I'll
       // assume the limit is much smaller than the documented limit and be
       // done with it."  20090818 kgoodwin
-
       Win32::COORD dest_buf_size;
       dest_buf_size.X  = src_size.col;
       dest_buf_size.Y  = ( maxReadConsoleBufsize / (src_size.col * sizeof(ScreenCell)) );
@@ -1180,14 +1067,11 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
                }
             }
          }
-
       Free0( dest_buf );
-
       g_pFBufConsole->ClearUndo();
       g_pFBufConsole->UnDirty();
       }
    }
-
 
 STATIC_FXN PCChar ftNm( const Win32::DWORD ft ) {
    switch( ft ) {
@@ -1214,15 +1098,17 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
    if( CON_DBG && (startupInfo.dwFlags & STARTF_USESHOWWINDOW) ) { PRTF_IT( "   STARTF_USESHOWWINDOW|" ); }
    if( CON_DBG && (startupInfo.dwFlags & STARTF_USEPOSITION  ) ) { PRTF_IT( "   STARTF_USEPOSITION|"   ); }
    if( CON_DBG && (startupInfo.dwFlags & STARTF_RUNFULLSCREEN) ) { PRTF_IT( "   STARTF_RUNFULLSCREEN|" ); }
-   CON_DBG && PRTF_IT( "\n" );
-   CON_DBG && PRTF_IT( "STARTUPINFO.wShowWindow   = %d\n"  , startupInfo.wShowWindow   );
-   CON_DBG && PRTF_IT( "STARTUPINFO.dwXSize       = %ld\n" , startupInfo.dwXSize       );
-   CON_DBG && PRTF_IT( "STARTUPINFO.dwYSize       = %ld\n" , startupInfo.dwYSize       );
-   CON_DBG && PRTF_IT( "STARTUPINFO.dwXCountChars = %ld\n" , startupInfo.dwXCountChars );
-   CON_DBG && PRTF_IT( "STARTUPINFO.dwYCountChars = %ld\n" , startupInfo.dwYCountChars );
-   CON_DBG && PRTF_IT( "STARTUPINFO.hStdInput     = %p\n"  , startupInfo.hStdInput     );
-   CON_DBG && PRTF_IT( "STARTUPINFO.hStdOutput    = %p\n"  , startupInfo.hStdOutput    );
-   CON_DBG && PRTF_IT( "STARTUPINFO.hStdError     = %p\n"  , startupInfo.hStdError     );
+   if( CON_DBG ) {
+      PRTF_IT( "\n" );
+      PRTF_IT( "STARTUPINFO.wShowWindow   = %d\n"  , startupInfo.wShowWindow   );
+      PRTF_IT( "STARTUPINFO.dwXSize       = %ld\n" , startupInfo.dwXSize       );
+      PRTF_IT( "STARTUPINFO.dwYSize       = %ld\n" , startupInfo.dwYSize       );
+      PRTF_IT( "STARTUPINFO.dwXCountChars = %ld\n" , startupInfo.dwXCountChars );
+      PRTF_IT( "STARTUPINFO.dwYCountChars = %ld\n" , startupInfo.dwYCountChars );
+      PRTF_IT( "STARTUPINFO.hStdInput     = %p\n"  , startupInfo.hStdInput     );
+      PRTF_IT( "STARTUPINFO.hStdOutput    = %p\n"  , startupInfo.hStdOutput    );
+      PRTF_IT( "STARTUPINFO.hStdError     = %p\n"  , startupInfo.hStdError     );
+      }
    }
    if( CON_DBG ) {
       char pbuf[81];
@@ -1232,8 +1118,6 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
       PRTF_IT( "  Win32::GetOEMCP()           = %s" , GetCPName( BSOB(pbuf), Win32::GetOEMCP() ) );
       PRTF_IT( "  Win32::GetACP() (ANSI)      = %s" , GetCPName( BSOB(pbuf), Win32::GetACP() )   );
       }
-
-
 #undef   PRTF_IT
    CON_DBG&&DBG( "%s 1", __PRETTY_FUNCTION__ );
    {
@@ -1241,14 +1125,12 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
    if( Win32::GetConsoleCP() != OemCP && !Win32::SetConsoleCP(OemCP) ) {
       linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleCP(OemCP) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
       }
-   if ( Win32::GetConsoleOutputCP() != OemCP && !Win32::SetConsoleOutputCP(OemCP)) {
+   if( Win32::GetConsoleOutputCP() != OemCP && !Win32::SetConsoleOutputCP(OemCP) ) {
       linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleOutputCP(OemCP) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
       }
    }
    // following is VERY sequence-dependent code
-
    // PHASE 1: close all STDHANDLES, in the process capturing any needed info associated
-
    // PHASE 1: stdin
    { // close any pipes that idiot spawning processes (like Accurev) may have bound to our STDHANDLES
    const auto hStdin( Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
@@ -1264,10 +1146,8 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
       }
    }
    CON_DBG&&DBG( "%s 20", __PRETTY_FUNCTION__ );
-
    Point initialWinSize( 43, 120 );
    auto fNewConsole( false );
-
    // PHASE 1: stdout
    {
    const auto hConout( Win32::GetStdHandle( Win32::Std_Output_Handle() ) );
@@ -1275,19 +1155,15 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
       linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::GetStdHandle( STD_OUTPUT_HANDLE ) FAILED: returned INVALID_HANDLE_VALUE %s", OsErrStr( BSOB(oseb) ) ) );
       exit( 1 );
       }
-
    if( nullptr != hConout ) {                                                             // VidInitApiError( "Win32::GetStdHandle( STD_INPUT_HANDLE ) FAILED: returned NULL" );
       const auto fto( Win32::GetFileType( hConout ) );                                       CON_DBG && DBG( "%s: sho=%p, fto = 0x%lX (%s)\n", __func__, hConout, fto, ftNm( fto ) );
       if( FILE_TYPE_CHAR == fto ) {
          const ConsoleScreenBufferInfo parentCsbi( hConout, "parentConsole", true );
          fNewConsole = !parentCsbi.isValid() || fForceNewConsole;                            CON_DBG && DBG( "%s: fNewConsole=%d=%d|%d\n", __func__, fNewConsole, !parentCsbi.isValid(), fForceNewConsole );
-
          if( parentCsbi.isValid() ) { // this is almost certainly true if (FILE_TYPE_CHAR == fto), but...
             if( fNewConsole ) printf( "K editor PID %lu%s", Win32::GetCurrentProcessId(), (CON_DBG?"\n":"") );
             Copy_CSBI_content_to_g_pFBufConsole( hConout, parentCsbi );
-
             s_hParentActiveConsoleScreenBuffer = hConout;
-
             initialWinSize = parentCsbi.WindowSize();                                        CON_DBG && DBG( "%s: initialWinSize from parent = %dx%d\n", __func__, initialWinSize.col, initialWinSize.lin );
             }
          }
@@ -1315,10 +1191,8 @@ void ConIO::Shutdown() {
    if( s_hParentActiveConsoleScreenBuffer ) {
       Win32::SetConsoleActiveScreenBuffer( s_hParentActiveConsoleScreenBuffer );
       }
-
    ConinRelease();
    }
-
 //
 //#############################################################################################################################
 //#############################################################################################################################

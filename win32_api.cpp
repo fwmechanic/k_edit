@@ -21,7 +21,6 @@
 
 #include "win32_pvt.h"
 
-
 // OsVerStr WinXP Pro = "W.5.1"
 // OsVerStr Win7      = "W.6.1"
 // OsVerStr Win8      = "W.6.2"
@@ -45,7 +44,6 @@ bool IsWin7() {
    return ((major == 6) && (minor == 1));
    }
 
-
 bool IsWin7OrLater() {
    Win32::OSVERSIONINFO osvi = { sizeof osvi };
    Win32::GetVersionEx(&osvi);
@@ -53,7 +51,6 @@ bool IsWin7OrLater() {
    const auto minor( osvi.dwMinorVersion );
    return (major > 6) || ((major == 6) && (minor >= 1));
    }
-
 
 PChar GetCPName( PChar buf, size_t sizeofBuf, Win32::UINT cp ) {
    Win32::CPINFOEX cpix;
@@ -151,9 +148,7 @@ ConfirmResponse Win32::Confirm_MsgBox( int MBox_uType, PCChar prompt ) {
    }
 
 #ifdef fn_dvlog
-
 GLOBAL_VAR bool g_fDvlogcmds = true; // global/switchval
-
 bool ARG::dvlog() {
    switch( d_argType ) { // arg "DBGVIEWCLEAR" dvlog
       default:      return BadArg();
@@ -161,9 +156,7 @@ bool ARG::dvlog() {
                     return true;
       }
    }
-
 #endif
-
 
 typedef unsigned long
 //      double         using double here raises size of DLL by 10K bytes
@@ -186,7 +179,6 @@ typedef unsigned long
 //       }
 //    return EditorTime(0);
 //    }
-
 
 //###########################################################################################################
 //###########################################################################################################
