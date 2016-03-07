@@ -341,7 +341,10 @@ bool View::GetBOXSTR_Selection( std::string &st ) {
          0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
          const auto xMin( Min( s_SelAnchor.col, cursor.col ) );
          const auto xMax( Max( s_SelAnchor.col, cursor.col ) );
-         FBuf()->DupLineSeg( st, cursor.lin, xMin, xMax-1 );
+         auto sr( FBuf()->PeekRawLineSeg( cursor.lin, xMin, xMax-1 ) );
+         0 && DBG("x:%d,%d '%" PR_BSR "'", xMin, xMax-1, BSR(sr) );
+         trim( sr );
+         st.assign( sr.data(), sr.length() );
          return true;
          }
       }
