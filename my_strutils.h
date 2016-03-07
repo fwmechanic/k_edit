@@ -370,7 +370,7 @@ STIL void trim( strlval &inout ) { // remove leading and trailing whitespace
    if( ix_last_non_white != dix-1 ) { // any trailing blanks at all?
       // ix_last_non_white==eosr means ALL are blanks
       const auto rlen( ix_last_non_white==eosr ? dix : dix-1 - ix_last_non_white );
-      inout.remove_prefix( rlen );
+      inout.remove_suffix( rlen );
       }
    }
 
