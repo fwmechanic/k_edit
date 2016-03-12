@@ -52,15 +52,10 @@ fi
 
 if [ "$ID" = "centos" ] ; then
    echo "${hdr}STARTING"
-   yum groupinstall "Development Tools"   &&
-   yum install libboost-devel             &&
-   yum install libboost-filesystem-devel  &&
-   yum install libboost-system-devel      &&
-   yum install libncurses5-devel          &&
-   yum install libpcre3-devel             &&
-   yum install exuberant-ctags            &&
-   yum install ncurses-term               &&
-   yum install xclip
+   yum -yq groupinstall "Development Tools"   &&
+   yum -yq install boost-devel ncurses-devel pcre-devel ncurses-term &&
+   yum -yq install exuberant-ctags
+   yum -yq install xclip
    complete
 fi
 
