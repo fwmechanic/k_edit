@@ -1394,23 +1394,25 @@ void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, st
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
       const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "u/%" PR_BSRSIZET "u]", __func__, xLeftIncl, holewidth, inslen );
       DupLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );
-      const auto lcols( StrCols( TabWidth(), dest ) );
+      const auto tw( TabWidth() );
+      const auto lcols( StrCols( tw, dest ) );
       const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "u/%d maxCol=%" PR_BSRSIZET "u", __func__, dest.length(), lcols, maxCol );
+      const auto ixLeftIncl( FreeIdxOfCol( tw, dest, xLeftIncl ) );
       Assert( lcols >= xLeftIncl );
       // dest contains:
       //    !fInsert: at least xLeftIncl           chars
       //     fInsert: at least xLeftIncl+holewidth chars
       //
       // in any case, we need to copy (ins L inslen) into buf+xLeftIncl
-      dest.replace( xLeftIncl, inslen, ins.data(), inslen );
+      dest.replace( ixLeftIncl, inslen, ins.data(), inslen );
       // now, either
       // a. terminate the seg-zone immediately after (ins L inslen)
       // b. space-pad the remainder of the seg-zone (IF there are any original-line chars on the trailing side of the seg-zone), or
       if( lcols < xRightIncl ) {
-         dest.resize( xLeftIncl + inslen );
+         dest.resize( ixLeftIncl + inslen );
          }
       else if( holewidth > inslen ) {
-         dest.replace( xLeftIncl + inslen, holewidth - inslen, holewidth - inslen, ' ' );
+         dest.replace( ixLeftIncl + inslen, holewidth - inslen, holewidth - inslen, ' ' );
          }
       DE && DBG( "%s- PutLine(merged) )", __func__ );
       PutLine( yLine, dest, stmp );
