@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #
 # Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
@@ -24,13 +26,47 @@
 # gcc 4.8.x is sufficient for our needs, and is much less of a
 #           memory hog (thus runs faster on <= 2GB VMs)
 
-sudo apt-get install -yq \
-build-essential         \
-libboost-dev            \
-libboost-filesystem-dev \
-libboost-system-dev     \
-libncurses5-dev         \
-libpcre3-dev            \
-exuberant-ctags         \
-ncurses-term            \
-xclip
+hdr="$ID K-prereq-install: "
+complete() {
+   local rv="$?"
+   [ "$rv" -gt "0" ] && { echo "${hdr}FAILED"    ; exit 1 ; }
+                        { echo "${hdr}SUCCEEDED" ; exit 0 ; }
+   }
+
+. /etc/os-release
+
+if [ "$ID" = "ubuntu" ] ; then
+   echo "${hdr}STARTING"
+   sudo apt-get install -yq   \
+      build-essential         \
+      libboost-dev            \
+      libboost-filesystem-dev \
+      libboost-system-dev     \
+      libncurses5-dev         \
+      libpcre3-dev            \
+      exuberant-ctags         \
+      ncurses-term            \
+      xclip
+   complete
+fi
+
+if [ "$ID" = "centos" ] ; then
+   echo "${hdr}STARTING"
+   yum -yq groupinstall "Development Tools"   &&
+   yum -yq install boost-devel ncurses-devel pcre-devel ncurses-term &&
+   yum -yq install exuberant-ctags
+   yum -yq install xclip
+   complete
+fi
+
+echo "${hdr}FAILED: '$ID' unknown" ; exit 1
+
+yum groupinstall "Development Tools"
+yum install libboost-devel
+yum install libboost-filesystem-devel
+yum install libboost-system-devel
+yum install libncurses5-devel
+yum install libpcre3-devel
+yum install exuberant-ctags
+yum install ncurses-term
+yum install xclip

@@ -487,13 +487,20 @@ khelp.html: khelp.txt
 
 .PHONY: run_unittests run_krbtree_unittest run_dlink_unittest
 
-run_unittests: run_krbtree_unittest run_dlink_unittest
+run_unittests: run_boost_stref_unittest run_krbtree_unittest run_dlink_unittest
 
 run_dlink_unittest: dlink_unittest$(EXE_EXT)
 	$(THISDIR)dlink_unittest$(EXE_EXT)
 
 dlink_unittest$(EXE_EXT): CXXFLAGS += -Werror
 dlink_unittest$(EXE_EXT): dlink_unittest.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+run_boost_stref_unittest: boost_stref_unittest$(EXE_EXT)
+	$(THISDIR)boost_stref_unittest$(EXE_EXT)
+
+boost_stref_unittest$(EXE_EXT): CXXFLAGS += -Werror
+boost_stref_unittest$(EXE_EXT): boost_stref_unittest.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_krbtree_unittest: krbtree_unittest$(EXE_EXT)
