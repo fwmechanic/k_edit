@@ -137,7 +137,7 @@ else
 STRIP      := -s
 C_OPTS_DBG :=
 GCC_OPTZ := -Os
-GCC_OPTZ := -O3
+GCC_OPTZ := -flto -O3
 endif
 
 LUA_DIR=lua-5.1/src
