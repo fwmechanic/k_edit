@@ -75,7 +75,6 @@ export MV
 EXE_EXT := .exe
 export EXE_EXT
 DLL_EXT := .dll
-LS_BINARY = $(LS_L) $@ $(LS_L_TAIL)
 OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:" $@.exp | grep -Fivf std.dynlib.mingw
 OS_LIBS := -lpsapi
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
@@ -97,7 +96,7 @@ RM= rm -f
 export RM
 EXE_EXT :=
 DLL_EXT := .so
-OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && readelf -d $1 | grep NEEDED
+OBJDUMP_BINARY = echo "objdumping $@" && objdump -p $@ > $@.exp && readelf -d $@ | grep NEEDED | grep -Fvf std.dynlib.linux
 CPPFLAGS += -pthread
 # NB: once certain C++ _compiles_ see CPPFLAGS, should remove -lpthread
 OS_LIBS := -lncurses -lpthread
@@ -400,6 +399,7 @@ endif
 
 # common phrases used in linking recipes
 BLD_TIME_OBJ = @$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
+LS_BINARY = $(LS_L) $@ $(LS_L_TAIL)
 SHOW_BINARY = $(OBJDUMP_BINARY) $(UNCOND_CMD_SEP) $(LS_BINARY)
 
 ifdef APP_IN_DLL

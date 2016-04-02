@@ -1,0 +1,7 @@
+libncurses.so
+libtinfo.so
+libpthread.so
+libpcre.so
+libm.so
+libc.so
+ld-linux-x86-64.so
