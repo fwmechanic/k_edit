@@ -475,7 +475,7 @@ private:
    PCChar AddKey( stref sr )    { return d_sb.AddString( sr ); }
    void   SetNewWuc( stref src, LINE lin, COL col );
    std::string  d_stCandidate;
-   std::string  d_stSel;    // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
+   std::string  d_stSel;     // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
    LINE         d_yWuc = -1; // BUGBUG if edits occur, need to set d_yWuc = -1 (or d_wucbuf[0] = 0)
    COL          d_xWuc = -1;
    };
@@ -577,7 +577,7 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
    if( d_view.GetBOXSTR_Selection( d_stCandidate ) && !IsStringBlank( d_stCandidate ) ) {
       if( d_stSel != d_stCandidate ) {
          d_stSel = d_stCandidate;
-         d_stSel.push_back( 0 );  // d_stSel content must look like Strings content, which means an extra/2nd NUL marks the end of the last string
+         d_stSel.push_back( 0 );  // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
          0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
          d_yWuc = -1;
          d_xWuc = -1;
@@ -2304,15 +2304,16 @@ STATIC_VAR auto                   s_fStatLnRedraw = true;
 void DispNeedsRedrawStatLn_()   { s_fStatLnRedraw = true; }
 
 /*
-   see also USE_HiliteAddin_CompileLine right now there is, in terms of what
-   HiliteAddin events get generated, an admixture of "current View only" and
-   "all visible Views": in this fxn, only the current View receives
-   HiliteAddin_Event_If_CursorMoved and HiliteAddin_Event_FBUF_content_changed.  As
-   usual, the counterexample (for non-current Views needing events) is
-   CompileLine (changes).  There s/b some (not cascadingly complex) way for
-   non-current Views to see events when they need them.  But what does that
-   look like???  _Event_CursorMoved event will not "cover" a
-   CompileLineChanged situation.  Do I create a new event
+   see also USE_HiliteAddin_CompileLine
+
+   right now there is, in terms of what HiliteAddin events get generated, an
+   admixture of "current View only" and "all visible Views": in this fxn, only
+   the current View receives HiliteAddin_Event_If_CursorMoved and
+   HiliteAddin_Event_FBUF_content_changed.  As usual, the counterexample (for
+   non-current Views needing events) is CompileLine (changes).  There s/b some
+   (not cascadingly complex) way for non-current Views to see events when they
+   need them.  But what does that look like???  _Event_CursorMoved event will not
+   "cover" a CompileLineChanged situation.  Do I create a new event
    _Event_CompileLineChanged just for this case???
 
    20070611 kgoodwin
@@ -2320,8 +2321,7 @@ void DispNeedsRedrawStatLn_()   { s_fStatLnRedraw = true; }
    hmmm; I've gone a fair way toward getting this stuff working, but run into
    some challenges
 
-   mainly, how to fbuf-scope events get translated into view scope events,
-   etc.
+   mainly, how fbuf-scope events get translated into view scope events, etc.
 
    the xlation challenge is prob related to the fact that the hilighting
    addins "architecture" was not designed as a full screen-redraw engine,

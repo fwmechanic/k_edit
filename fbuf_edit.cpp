@@ -59,11 +59,12 @@ void FBUF::SetTabWidthOk( COL NewTabWidth ) {
    }
 
 STATIC_CONST PCChar s_entabNames[] = {
-   "none"     ,
-   "leading"  ,
-   "exoquote" ,
-   "all"      ,
+   [ENTAB_0_NO_CONV]                   = "none"     ,
+   [ENTAB_1_LEADING_SPCS_TO_TABS]      = "leading"  ,
+   [ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS] = "exoquote" ,
+   [ENTAB_3_ALL_SPC_TO_TABS]           = "all"      ,
    };
+CompileTimeAssert( MAX_ENTAB_INVALID == ELEMENTS(s_entabNames) );  // static_assert does not work here
 
 bool FBUF::SetEntabOk( int newEntab ) {
    const auto inRange( newEntab >= ENTAB_0_NO_CONV && newEntab < MAX_ENTAB_INVALID );
