@@ -76,7 +76,7 @@ EXE_EXT := .exe
 export EXE_EXT
 DLL_EXT := .dll
 LS_BINARY = $(LS_L) $@ $(LS_L_TAIL)
-OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:" $@.exp | grep -v -F -f std.dynlib.mingw
+OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:" $@.exp | grep -Fivf std.dynlib.mingw
 OS_LIBS := -lpsapi
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
 # LS_L_TAIL is from http://ss64.com/nt/dir.html (MS BATch programming and cmdline utils suck SO BAD!)
