@@ -64,6 +64,7 @@ export PLAT
 
 SHELL=cmd
 export SHELL # inherited by child (recursive) makes such as that which builds $(LUA_T)
+UNCOND_CMD_SEP := &
 
 # dflt $(RM) for MinGW is rm -f
 RM= del /F /Q
@@ -74,6 +75,8 @@ export MV
 EXE_EXT := .exe
 export EXE_EXT
 DLL_EXT := .dll
+LS_BINARY = $(LS_L) $@ $(LS_L_TAIL)
+OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:" $@.exp | grep -v -F -f std.dynlib.mingw
 OS_LIBS := -lpsapi
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
 # LS_L_TAIL is from http://ss64.com/nt/dir.html (MS BATch programming and cmdline utils suck SO BAD!)
@@ -86,6 +89,7 @@ CPPFLAGS += -DWINVER=0x0501
 else
 PLAT = linux
 export PLAT
+UNCOND_CMD_SEP := ;
 
 MV = mv
 export MV
@@ -93,6 +97,7 @@ RM= rm -f
 export RM
 EXE_EXT :=
 DLL_EXT := .so
+OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && readelf -d $1 | grep NEEDED
 CPPFLAGS += -pthread
 # NB: once certain C++ _compiles_ see CPPFLAGS, should remove -lpthread
 OS_LIBS := -lncurses -lpthread
@@ -393,11 +398,9 @@ else
 	GZIP=-9 tar -zcvf $(TGT)_rls.tgz $(RLS_FILES)
 endif
 
-# phrases used in linking recipes
+# common phrases used in linking recipes
 BLD_TIME_OBJ = @$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
-LS_BINARY = $(LS_L) $@ $(LS_L_TAIL)
-OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp
-SHOW_BINARY = @$(OBJDUMP_BINARY) && $(LS_BINARY)
+SHOW_BINARY = $(OBJDUMP_BINARY) $(UNCOND_CMD_SEP) $(LS_BINARY)
 
 ifdef APP_IN_DLL
 
@@ -405,12 +408,12 @@ BUILT_RLS_FILES = $(TGT)$(EXE_EXT) $(ED_DLL)$(DLL_EXT)
 
 $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
 	$(LINK.cpp) $^ -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)
-	$(SHOW_BINARY)
+	@$(SHOW_BINARY)
 
 $(ED_DLL)$(DLL_EXT): $(OBJS) $(LIBLUA)
 	$(BLD_TIME_OBJ)
 	@echo linking $@&& $(CXX) -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)
-	$(SHOW_BINARY)
+	@$(SHOW_BINARY)
 
 else
 
@@ -423,7 +426,7 @@ LINK_EXE = @echo linking $@&& $(LINK_EXE_RAW)
 $(TGT)$(EXE_EXT): $(OBJS) $(LIBLUA) $(WINDRES)
 	$(BLD_TIME_OBJ)
 	$(LINK_EXE)
-	$(SHOW_BINARY)
+	@$(SHOW_BINARY)
 
 endif
 
