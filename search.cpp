@@ -905,14 +905,14 @@ bool ARG::searchlog() {
    return true;
    }
 
-STATIC_FXN bool SearchSpecifierOK( ARG *pArg ) {
-   if( pArg->d_fMeta ) { g_fCase = !g_fCase; }
-   switch( pArg->d_argType ) {
-      default:      return pArg->BadArg();
+STATIC_FXN bool SearchSpecifierOK( const ARG &arg ) {
+   if( arg.d_fMeta ) { g_fCase = !g_fCase; }
+   switch( arg.d_argType ) {
+      default:      return arg.BadArg();
       case TEXTARG: SearchLogSwap();
-                    AddToSearchLog( pArg->d_textarg.pText );
-                    if( !SetNewSearchSpecifierOK( pArg->d_textarg.pText, pArg->d_cArg >= 2 ) ) {
-                       return ErrorDialogBeepf( "bad search specifier '%s'", pArg->d_textarg.pText );
+                    AddToSearchLog( arg.d_textarg.pText );
+                    if( !SetNewSearchSpecifierOK( arg.d_textarg.pText, arg.d_cArg >= 2 ) ) {
+                       return ErrorDialogBeepf( "bad search specifier '%s'", arg.d_textarg.pText );
                        }
                     break;
       case NOARG:   if( s_searchSpecifier ) {
@@ -1058,7 +1058,7 @@ bool ARG::mgl() {
 // envvars occur in macroName's content, these are expanded, and each element of
 // the expansion is searched.
 bool ARG::mfgrep() {
-   if( !SearchSpecifierOK( this ) ) {
+   if( !SearchSpecifierOK( *this ) ) {
       return false;
       }
    MFGrepMatchHandler mh( g_pFBufSearchRslts );
@@ -1111,7 +1111,7 @@ STATIC_FXN void MFReplaceProcessFile( PCChar filename, CharWalkerReplace *pMrcw 
       }
    }
 
-bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
+STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFileReplace ) {
    STATIC_CONST char szReplace[] = "Replace string: "; // these two defined adjacently so ...
    STATIC_CONST char szSearch [] = "Search string:  "; // ... they are kept the same length
    DispDoPendingRefreshesIfNotInMacro();
@@ -1123,7 +1123,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
       }
    }
 #if USE_PCRE
-   s_fSearchNReplaceUsingRegExp = d_cArg >= 2;
+   s_fSearchNReplaceUsingRegExp = arg.d_cArg >= 2;
    if( s_fSearchNReplaceUsingRegExp ) {
       DeleteUp( s_pSandR_CompiledSearchPattern, Compile_Regex( g_SnR_szSearch.c_str(), g_fCase ) );
       if( !s_pSandR_CompiledSearchPattern ) {
@@ -1148,7 +1148,7 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
       return ErrorDialogBeepf( "Invalid replacement pattern" );
       }
 #endif
-   CharWalkerReplace mrcw( fInteractive, d_fMeta ? !g_fCase : g_fCase );
+   CharWalkerReplace mrcw( fInteractive, arg.d_fMeta ? !g_fCase : g_fCase );
    if( fMultiFileReplace ) {
       const auto startingTopFbuf( g_CurFBuf() );
       auto pGen( GrepMultiFilenameGenerator() );
@@ -1176,29 +1176,29 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
          }
       }
    else {
-      switch( d_argType ) {
+      switch( arg.d_argType ) {
        default:
        case NOARG:   { Rect rn( true ); CharWalkRect( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), true, mrcw ); } break;
        case NULLARG: { Rect rn( true ); CharWalkRect( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), true, mrcw ); } break;
        case LINEARG: { Rect rn;
-                       rn.flMin.lin = d_linearg.yMin;  rn.flMin.col = 0;
-                       rn.flMax.lin = d_linearg.yMax;  rn.flMax.col = COL_MAX;
+                       rn.flMin.lin = arg.d_linearg.yMin;  rn.flMin.col = 0;
+                       rn.flMax.lin = arg.d_linearg.yMax;  rn.flMax.col = COL_MAX;
                        CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), true, mrcw );
                      } break;
-       case STREAMARG: if( d_streamarg.flMin.lin == d_streamarg.flMax.lin ) {
-                          CharWalkRect( g_CurFBuf(), d_streamarg, Point( d_streamarg.flMin, 0, -1 ), true, mrcw );
+       case STREAMARG: if( arg.d_streamarg.flMin.lin == arg.d_streamarg.flMax.lin ) {
+                          CharWalkRect( g_CurFBuf(), arg.d_streamarg, Point( arg.d_streamarg.flMin, 0, -1 ), true, mrcw );
                           }
                        else { Rect rn;
-                          rn.flMin.lin = d_streamarg.flMin.lin;      rn.flMin.col = 0;
-                          rn.flMax.lin = d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
-                          CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin.lin, d_streamarg.flMin.col - 1 ), true, mrcw );
-                          rn.flMax.col = d_streamarg.flMax.col;
+                          rn.flMin.lin = arg.d_streamarg.flMin.lin;      rn.flMin.col = 0;
+                          rn.flMax.lin = arg.d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
+                          CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin.lin, arg.d_streamarg.flMin.col - 1 ), true, mrcw );
+                          rn.flMax.col = arg.d_streamarg.flMax.col;
                           rn.flMax.lin++;
                           rn.flMin.lin = rn.flMax.lin;
                           CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), true, mrcw );
                           }
                        break;
-       case BOXARG:    CharWalkRect( g_CurFBuf(), d_boxarg, Point( d_boxarg.flMin, 0, -1 ), true, mrcw );
+       case BOXARG:    CharWalkRect( g_CurFBuf(), arg.d_boxarg, Point( arg.d_boxarg.flMin, 0, -1 ), true, mrcw );
                        break;
        }
       Msg( "%d of %d occurrences replaced%s"
@@ -1216,9 +1216,9 @@ bool ARG::GenericReplace( bool fInteractive, bool fMultiFileReplace ) {
    return mrcw.d_iReplacementsMade != 0;
    }
 
-bool ARG::mfreplace() { return GenericReplace( true , true  ); }
-bool ARG::qreplace()  { return GenericReplace( true , false ); }
-bool ARG::replace()   { return GenericReplace( false, false ); }
+bool ARG::mfreplace() { return GenericReplace( *this, true , true  ); }
+bool ARG::qreplace()  { return GenericReplace( *this, true , false ); }
+bool ARG::replace()   { return GenericReplace( *this, false, false ); }
 
 void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, const stref &src ) {
    const auto cmpSignMul( descending ? -1 : +1 );
@@ -1679,8 +1679,8 @@ STATIC_FXN FileSearcher *NewFileSearcher(
    return rv;
    }
 
-bool GenericSearch( ARG *pArg, const SearchScanMode &sm ) {
-   if( !SearchSpecifierOK( pArg ) ) {
+STATIC_FXN bool GenericSearch( const ARG &arg, const SearchScanMode &sm ) {
+   if( !SearchSpecifierOK( arg ) ) {
       return false;
       }
    Point                         curPt;
@@ -1703,8 +1703,8 @@ bool GenericSearch( ARG *pArg, const SearchScanMode &sm ) {
    return rv;
    }
 
-bool ARG::msearch()   { return GenericSearch( this, smBackwd ); }
-bool ARG::psearch()   { return GenericSearch( this, smFwd    ); }
+bool ARG::msearch()   { return GenericSearch( *this, smBackwd ); }
+bool ARG::psearch()   { return GenericSearch( *this, smFwd    ); }
 
 //-------------------------- pbal
 
@@ -2113,7 +2113,7 @@ LINE CGrepper::WriteOutput
 //***************************************************************************************************
 
 bool ARG::grep() {
-   if( !SearchSpecifierOK( this ) ) {
+   if( !SearchSpecifierOK( *this ) ) {
       return false;
       }
    stref       srchText( g_SavedSearchString_Buf );

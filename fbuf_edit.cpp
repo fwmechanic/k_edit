@@ -436,20 +436,20 @@ void FBUF::FmtLastLine( PCChar format, ...  ) {
    va_end( val );
    }
 
-void FBUF::PutLine( LINE yLine, stref srSrc, std::string &stbuf ) {
+void FBUF::PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ) {
    // if( IsNoEdit() ) { DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() ); }
    BadParamIf( , IsNoEdit() );
    if( ENTAB_0_NO_CONV != Entab() ) {
-      stbuf.clear();
+      tmpbuf.clear();
       const Tabber tabr( this->TabWidth() );
       switch( Entab() ) { // compress spaces into tabs per this->Entab()
          default:
-         case ENTAB_0_NO_CONV:                   Assert( 0 );                                                   break;
-         case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(stbuf), srSrc, tabr ); break;
-         case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(stbuf), srSrc, tabr ); break;
-         case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(stbuf), srSrc, tabr ); break;
+         case ENTAB_0_NO_CONV:                   Assert( 0 );                                                    break;
+         case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(tmpbuf), srSrc, tabr ); break;
+         case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(tmpbuf), srSrc, tabr ); break;
+         case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(tmpbuf), srSrc, tabr ); break;
          }
-      srSrc = stbuf;
+      srSrc = tmpbuf;
       }
    if( !TrailSpcsKept() ) {
       auto trailSpcs = 0;
@@ -1270,8 +1270,8 @@ void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
 int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
+   getLineTabxPerRealtabs( dest, yLine );
    const auto tw       ( TabWidth() );
-   auto       lineChars( getLineTabxPerRealtabs( dest, yLine ) );
    const auto lineCols ( StrCols( tw, dest ) );                   DB && DBG( "%s: %" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
    if( xIns > lineCols ) {                 // line shorter than insert point?
       dest.append( xIns - lineCols, ' ' ); // append spaces thru dest[xIns-1]; dest[xIns] == 0

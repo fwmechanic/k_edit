@@ -487,8 +487,6 @@ struct ARG {
 private:
    bool  FillArgStructFailed();
    bool  BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
-   bool  GenericReplace( bool fInteractive, bool fMultiFileReplace );
-// bool  GenericSearch( const SearchScanMode &sm, FileSearchMatchHandler &mh, Point curPt );
 public:
    bool   InitOk( PCCMD pCmd );
    void   SaveForRepeat() const;
@@ -1248,12 +1246,12 @@ public:
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
    //************ PutLine
 public:
-               // meat-and-potatoes PutLine functions; note surfacing of tmp buffer for efficiency
-   void           PutLine( LINE yLine, stref srSrc, std::string &tmp ); // WITH UNDO
-   void           PutLastLine(         stref srSrc, std::string &tmp ) { PutLine( 1+LastLine(), srSrc, tmp ); }
-   void           PutLineSeg( LINE yLine, const stref &ins, std::string &tmp0, std::string &tmp1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
-   void           PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 );
-   void           PutLastLine(         const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 ) { PutLine( 1+LastLine(), vsrSrc, stbuf0, stbuf1 ); }
+               // meat-and-potatoes PutLine functions; note surfacing of tmpbuf(s) for efficiency
+   void           PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ); // WITH UNDO
+   void           PutLastLine(         stref srSrc, std::string &tmpbuf ) { PutLine( 1+LastLine(), srSrc, tmpbuf ); }
+   void           PutLineSeg( LINE yLine, const stref &ins, std::string &tmpbuf0, std::string &tmpbuf1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
+   void           PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &tmpbuf0, std::string &tmpbuf1 );
+   void           PutLastLine(         const std::vector<stref> &vsrSrc, std::string &tmpbuf0, std::string &tmpbuf1 ) { PutLine( 1+LastLine(), vsrSrc, tmpbuf0, tmpbuf1 ); }
                // _oddball_ PutLine... functions; may soon be deprecated; use sparingly!
    void           PutLine( LINE yLine, CPCChar pa[], int elems );
    int            PutLastMultiline( PCChar pszNewLineData );
