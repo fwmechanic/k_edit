@@ -320,17 +320,19 @@ struct SearchSpecifier {
    CompiledRegex *d_re;
    bool   d_reCompileErr;
 #endif
+   bool   d_fNegateMatch; // same as grep's -v option
    bool   d_fCanUseFastSearch;
 public:
    SearchSpecifier( stref rawSrc, bool fRegex=false );
    ~SearchSpecifier();
    bool   IsRegex() const;
+   bool   MatchNegated() const { return d_fNegateMatch; };
    bool   HasError() const;
 #if USE_PCRE
-   const CompiledRegex *GetRegex() const { return d_re; }
+   const  CompiledRegex *GetRegex() const { return d_re; }
 #endif
    bool   CanUseFastSearch() const { return d_fCanUseFastSearch && g_fFastsearch; }
-   bool   CaseUpdt(); // in case case switch has changed since CompiledRegex was compiled
+   void   CaseUpdt(); // in case case switch has changed since CompiledRegex was compiled
    void   Dbgf( PCChar tag ) const;
    stref  SrchStr()    const { return d_rawStr; }
    };
@@ -1303,7 +1305,7 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
 
 //===============================================
 
-bool SearchSpecifier::CaseUpdt() {
+void SearchSpecifier::CaseUpdt() {
 #if USE_PCRE
    if( d_re && (d_fRegexCase != g_fCase) ) {
       d_fRegexCase = g_fCase;
@@ -1315,10 +1317,13 @@ bool SearchSpecifier::CaseUpdt() {
          }
       }
 #endif
-   return g_fCase;
    }
 
 SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) {  // Assert( fRegex && rawStr ); // if fRegex true then rawStr cannot be 0
+   d_fNegateMatch = rawSrc.starts_with( "!!" );
+   if( d_fNegateMatch ) {
+      rawSrc.remove_prefix( 2 );
+      }
 #if USE_PCRE
    d_re = nullptr;
    d_fRegexCase = g_fCase;
@@ -1933,13 +1938,13 @@ private:
    // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
    // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
    // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
-   const LINE  d_InfLines;       // FIRST  !!!
-   PChar       d_MatchingLines;  // SECOND !!! depends on d_InfLines
+   const LINE        d_InfLines;       // FIRST  !!!
+   std::vector<bool> d_MatchingLines;  // SECOND !!! depends on d_InfLines
    // order not important for the following
    // order not important for the following
    // order not important for the following
    PFBUF         d_SrchFile;
-   LINE          d_MetaLineCount;
+   const LINE    d_MetaLineCount;
    MainThreadPerfCounter d_pc;
                  // if !d_fFindAllNegate, do ADDITIVE    search: look for and ADD lines that match
                  // if  d_fFindAllNegate, do SUBTRACTIVE search: look for and RMV lines that match
@@ -1948,22 +1953,20 @@ public:
    CGrepper( PFBUF srchfile, LINE MetaLineCount, bool fNegate )
         // ORDER OF FOLLOWING CLAUSES DOES NOT CAUSE THE ORDERING OF THEIR EXECUTION!!!
       : d_InfLines( srchfile->LineCount() )
-      , d_MatchingLines( PChar( Alloc0d( sizeof(*d_MatchingLines) * d_InfLines ) ) )
+      , d_MatchingLines( d_InfLines, fNegate )
       , d_SrchFile( srchfile )
       , d_MetaLineCount( MetaLineCount )
       , d_fFindAllNegate( fNegate )
       {
       DBG( "CGrepper: d_SrchFile='%s', d_MetaLineCount=%i, srchLines=%d", d_SrchFile->Name(), d_MetaLineCount, d_InfLines );
-      // to set up initial conditions
-      memset( d_MatchingLines, d_fFindAllNegate, sizeof(*d_MatchingLines) * d_InfLines );
       }
-   ~CGrepper() { Free_( d_MatchingLines ); }
-   void FindAllMatches( stref srchStr, bool fUseRegEx );
+   ~CGrepper() {}
+   void FindAllMatches();
    void LineMatches( LINE line ) { d_MatchingLines[ line ] = !d_fFindAllNegate; }
    // to write results
    LINE WriteOutput( PCChar thisMetaLine, PCChar origSrchfnm );
 private:
-   void RmvLine( LINE line ) { d_MatchingLines[ line ] = 0; }
+   void RmvLine( LINE line ) { d_MatchingLines[ line ] = false; }
    CGrepper & operator=( const CGrepper &rhs ); // so assignment op can't be used...
    };
 
@@ -1983,10 +1986,7 @@ bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL Match
    return true;  // "action" taken!
    }
 
-void CGrepper::FindAllMatches( stref srchStr, bool fUseRegEx ) {
-   if( !SetNewSearchSpecifierOK( srchStr, fUseRegEx ) ) {
-      return;
-      }
+void CGrepper::FindAllMatches() {
    CGrepperMatchHandler mh( *this );
    auto pSrchr( NewFileSearcher( FileSearcher::fsFAST_STRING, mh.sm(), *s_searchSpecifier, mh ) );
    if( !pSrchr ) {
@@ -2116,11 +2116,6 @@ bool ARG::grep() {
    if( !SearchSpecifierOK( *this ) ) {
       return false;
       }
-   stref       srchText( g_SavedSearchString_Buf );
-   const auto  fNegate( srchText.starts_with( "!!" ) );
-   if( fNegate ) {
-      srchText.remove_prefix( 2 );
-      }
    // read first line to get header size
    auto    curfile( g_CurFBuf() );
    int     metaLines;
@@ -2138,16 +2133,17 @@ bool ARG::grep() {
          }
       }
    // create aux header for THIS search
-   const auto fUseRegEx( d_cArg > 1 );
+   const auto fNegate( s_searchSpecifier->MatchNegated() );
+   const auto fUseRegEx( s_searchSpecifier->IsRegex() );
    SprintfBuf auxHdrBuf( "%s'%" PR_BSR "'%s, by Grep, case:%s"
       , fNegate   ? "*NOT* " : ""
-      , BSR(srchText)
+      , BSR( s_searchSpecifier->SrchStr() )
       , fUseRegEx ? " (RE)"  : ""
       , g_fCase   ? "sen"    : "ign"
       );
    // At last, do the searching (the easy part...)
    CGrepper gr( curfile, metaLines, fNegate );
-   gr.FindAllMatches( srchText, fUseRegEx );
+   gr.FindAllMatches();
    const auto Matches( gr.WriteOutput( auxHdrBuf, pSearchedFnm ) );
    return Matches > 0;
    }
@@ -2187,11 +2183,10 @@ bool ARG::fg() { // fgrep
          }
       }
    // create aux header for THIS search
-   SprintfBuf auxHdrBuf(
-        "fgrep keys from %s case:%s"
-      , curfile->Name()
-      , g_fCase ? "sen" : "ign"
-      );
+   SprintfBuf auxHdrBuf( "fgrep keys from %s case:%s"
+                                          , curfile->Name()
+                                                  , g_fCase ? "sen" : "ign"
+                       );
    s_pFbufLog->FmtLastLine( "'%s'", auxHdrBuf.k_str() );
    auto keyLen(2); // for alternation header (2 chars)
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
@@ -2226,9 +2221,12 @@ bool ARG::fg() { // fgrep
          *pC = keySep;
          }
       }
+   if( !SetNewSearchSpecifierOK( pszKey, false ) ) {
+      return false;
+      }
    // At last, do the searching (the easy part...)
    CGrepper gr( srchfile, 0, false );
-   gr.FindAllMatches( pszKey, false );
+   gr.FindAllMatches();
    const auto Matches( gr.WriteOutput( auxHdrBuf, nullptr ) );
    Msg( "%u lines matched", Matches );
    return bool(Matches > 0);
