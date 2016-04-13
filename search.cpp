@@ -558,11 +558,6 @@ bool FBUF::RefreshFailedShowError() {
 
 //=============================================================================================
 
-STATIC_FXN void InsHiLite1Line( PView pView, const Point &pt, int Cols ) {
-   const auto hiliteWidth( Cols > 0 ? Cols : 1 );
-   pView->InsHiLite1Line( COLOR::HIL, pt.lin, pt.col, pt.col + hiliteWidth - 1 );
-   }
-
 void View::SetStrHiLite( const Point &pt, COL Cols, int color ) {
    const auto hiliteWidth( Cols > 0 ? Cols : 1 );
    InsHiLite1Line( color, pt.lin, pt.col, pt.col + hiliteWidth - 1 );
@@ -571,7 +566,6 @@ void View::SetStrHiLite( const Point &pt, COL Cols, int color ) {
 void View::SetMatchHiLite( const Point &pt, COL Cols, bool fErrColor ) {
    const auto colorIdx( fErrColor ? COLOR::ERRM : COLOR::SEL );
    const auto hiliteWidth( Cols > 0 ? Cols : 1 );
-
    enum { MWHOSMHL = 0 }; // -> MASK_WUC_HILITES_ON_SEARCH_MATCH_HILIT_LINE
    if( MWHOSMHL && pt.col > 0 ) { InsHiLite1Line( COLOR::CXY, pt.lin, 0                   , pt.col               - 1 ); }
                                   InsHiLite1Line( colorIdx  , pt.lin, pt.col              , pt.col + hiliteWidth - 1 );
@@ -1931,16 +1925,10 @@ bool ARG::mword() { return PMword( false,                               d_fMeta 
 class CGrepper {
 private:
    enum { ED=0 };
-   // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
-   // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
-   // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
-   const LINE        d_InfLines;       // FIRST  !!!
-   std::vector<bool> d_MatchingLines;  // SECOND !!! depends on d_InfLines
-   // order not important for the following
-   // order not important for the following
-   // order not important for the following
-   PFBUF         d_SrchFile;
-   const LINE    d_MetaLineCount;
+   const LINE        d_InfLines;
+   std::vector<bool> d_MatchingLines;
+   PFBUF             d_SrchFile;
+   const LINE        d_MetaLineCount;
    MainThreadPerfCounter d_pc;
                  // if !d_fFindAllNegate, do ADDITIVE    search: look for and ADD lines that match
                  // if  d_fFindAllNegate, do SUBTRACTIVE search: look for and RMV lines that match
@@ -1949,7 +1937,7 @@ public:
    CGrepper( PFBUF srchfile, LINE MetaLineCount, bool fNegate )
         // ORDER OF FOLLOWING CLAUSES DOES NOT CAUSE THE ORDERING OF THEIR EXECUTION!!!
       : d_InfLines( srchfile->LineCount() )
-      , d_MatchingLines( d_InfLines, fNegate )
+      , d_MatchingLines( srchfile->LineCount(), fNegate )
       , d_SrchFile( srchfile )
       , d_MetaLineCount( MetaLineCount )
       , d_fFindAllNegate( fNegate )
