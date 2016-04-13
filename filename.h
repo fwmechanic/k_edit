@@ -78,6 +78,7 @@ namespace Path {
 #else
    STIL   str_t CanonizeCase ( PCChar fnmBuf ) { return str_t( fnmBuf ); }
 #endif
+   extern str_t UserName     ( PCChar name );
    STIL bool PathChEq( const char c1, const char c2 ) {
 #if defined(_WIN32)
       return ::tolower( c1 ) == ::tolower( c2 );

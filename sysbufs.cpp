@@ -241,7 +241,7 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
 #else
          "%-*s %c%*d L %*u %d%s {%s%s%s%s%s}"
 #endif
-            , max.nmLen, pFBuf->UserName( BSOB(pb) )
+            , max.nmLen, pFBuf->UserName().c_str()
                , pFBuf->IsDirty()         ? '*'       : ' '
                        , max.lineCntLog10, pFBuf->LineCount()
                            , max.imgSizeLog10, pFBuf->cbOrigFileImage()
@@ -259,7 +259,7 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
          );
       }
    else {
-      pFout->FmtLastLine( "%s", pFBuf->UserName( BSOB(pb) ) );
+      pFout->FmtLastLine( "%s", pFBuf->UserName().c_str() );
       }
    }
 

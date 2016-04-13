@@ -1245,13 +1245,8 @@ void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySk
    }
 
 STATIC_FXN void InsFnm( PFBUF pFbuf, std::string &tmp, PCChar fnm, const bool fSorted ) {
-   auto pb( fnm );
-   const auto ch( Path::DelimChar( fnm ) );
-   char pbx[sizeof(pathbuf)+2];
-   if( ch ) {
-      pb = safeSprintf( BSOB(pbx), "%c%s%c", ch, fnm, ch );
-      }
-   if( fSorted ) { FBOP::InsLineSortedAscending( pFbuf, tmp, 0, pb ); } else { pFbuf->PutLastLine( pb ); }
+   auto pb( Path::UserName( fnm ) );
+   if( fSorted ) { FBOP::InsLineSortedAscending( pFbuf, tmp, 0, pb ); } else { pFbuf->PutLastLine( pb.c_str() ); }
    }
 
 int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted ) { enum { ED=0 }; ED && DBG( "%s '%s'", __func__, pszWildcardString );
@@ -1935,6 +1930,7 @@ bool ARG::mword() { return PMword( false,                               d_fMeta 
 
 class CGrepper {
 private:
+   enum { ED=0 };
    // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
    // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
    // ORDER IS IMPORTANT HERE because it defines CTOR-call ordering, and there ARE dependencies!!!
@@ -2028,10 +2024,7 @@ LINE CGrepper::WriteOutput
       const auto lwidth( uint_log_10( d_InfLines ) );
       for( auto iy(0); iy < d_InfLines; ++iy ) {
          if( d_MatchingLines[iy] ) {
-            char buf[20]; auto pB( buf ); auto cbB( sizeof buf );
-            snprintf_full( &pB, &cbB, "%*d  ", lwidth, iy + 1 );
-            sbuf.assign( buf, pB - buf );
-
+            sbuf.assign( FmtStr<20>( "%*d  ", lwidth, iy + 1 ) );
             const auto rl( d_SrchFile->PeekRawLine( iy ) );
             sbuf.append( rl.data(), rl.length() );
             FBOP::InsLineSortedAscending( outfile, tmp, grepHdrLines, sbuf );
@@ -2045,7 +2038,7 @@ LINE CGrepper::WriteOutput
    auto outfile( PseudoBuf( GREP_BUF, true ) );
    outfile->MakeEmpty();
    outfile->SetTabWidthOk( d_SrchFile->TabWidth() ); // inherit tabwidth from searched file
-   s_pFbufLog->FmtLastLine( "WriteOutput: thisMetaLine='%s', origSrchfnm='%s' => '%s'", thisMetaLine, origSrchfnm?origSrchfnm:"", outfile->Name() );
+   ED && DBG( "WriteOutput: thisMetaLine='%s', origSrchfnm='%s' => '%s'", thisMetaLine, origSrchfnm?origSrchfnm:"", outfile->Name() );
    //
    // data BUFFER SIZE CALC phase
    //
@@ -2059,12 +2052,11 @@ LINE CGrepper::WriteOutput
          ++MetaLinesToCopy;
          RmvLine( iy );
          }
-      s_pFbufLog->FmtLastLine( "d_MetaLineCount=%i,MetaLinesToCopy=%i", d_MetaLineCount, MetaLinesToCopy );
+      ED && DBG( "d_MetaLineCount=%i,MetaLinesToCopy=%i", d_MetaLineCount, MetaLinesToCopy );
       }
-   pathbuf pbuf;
-   SprintfBuf Line1( "*GREP* %s", origSrchfnm ? origSrchfnm : d_SrchFile->UserName( BSOB(pbuf) ) );
+   SprintfBuf Line1( "*GREP* %s", origSrchfnm ? origSrchfnm : d_SrchFile->UserName().c_str() );
    const auto Line1Len( Strlen( Line1 ) );
-   s_pFbufLog->FmtLastLine( "%s", Line1.k_str() );
+   ED && DBG( "%s", Line1.k_str() );
    imgBufBytes += Line1Len;
    auto numberedMatches(0);
    for( auto iy(0); iy < d_InfLines; ++iy ) {
@@ -2088,7 +2080,7 @@ LINE CGrepper::WriteOutput
    //
    outfile->ImgBufAppendLine( Line1, Line1Len );
    for( auto iy(1); iy < d_MetaLineCount; ++iy ) {
-      s_pFbufLog->FmtLastLine( "auxhd=%i", iy );
+      ED && DBG( "auxhd=%i", iy );
       outfile->ImgBufAppendLine( d_SrchFile, iy );
       }
    outfile->ImgBufAppendLine( LastMetaLine, LastMetaLineLen );
@@ -2112,7 +2104,7 @@ LINE CGrepper::WriteOutput
 //***************************************************************************************************
 //***************************************************************************************************
 
-bool ARG::grep() {
+bool ARG::grep() { enum { ED=0 };
    if( !SearchSpecifierOK( *this ) ) {
       return false;
       }
@@ -2148,7 +2140,7 @@ bool ARG::grep() {
    return Matches > 0;
    }
 
-bool ARG::fg() { // fgrep
+bool ARG::fg() { enum { ED=0 }; // fgrep
    PFBUF   srchfile;
    auto    metaLines( 0 ); // params that govern how...
    pathbuf origSrchFnm;    // ...srchfile is processed
@@ -2187,7 +2179,7 @@ bool ARG::fg() { // fgrep
                                           , curfile->Name()
                                                   , g_fCase ? "sen" : "ign"
                        );
-   s_pFbufLog->FmtLastLine( "'%s'", auxHdrBuf.k_str() );
+   ED && DBG( "'%s'", auxHdrBuf.k_str() );
    auto keyLen(2); // for alternation header (2 chars)
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
       const auto rl( curfile->PeekRawLine( line ) );

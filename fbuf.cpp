@@ -1219,19 +1219,22 @@ char Path::DelimChar( PCChar fnm ) { // BUGBUG this needs to be (a) purpose-clar
    return '|'; // last ditch: ugly, but NEVER a valid filename char(?)
    }
 
-char FBUF::UserNameDelimChar() const {
-   return Path::DelimChar( Name() );
-   }
-
-PChar FBUF::UserName( PChar dest, size_t destSize ) const {
-   const char delimCh( UserNameDelimChar() );
+Path::str_t Path::UserName( PCChar name ) {
+   const char delimCh( Path::DelimChar( name ) );
    if( delimCh ) {
-      safeSprintf( dest, destSize, "%c%s%c", delimCh, Name(), delimCh );
+      Path::str_t rv;
+      rv.push_back( delimCh );
+      rv.append( name );
+      rv.push_back( delimCh );
+      return rv;
       }
    else {
-      scpy(  dest, destSize, Name() );
+      return name;
       }
-   return dest;
+   }
+
+Path::str_t FBUF::UserName() const {
+   return Path::UserName( Name() );
    }
 
 // END   SUPPORT FILENAMES WITH SPACES    SUPPORT FILENAMES WITH SPACES
