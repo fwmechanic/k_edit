@@ -842,14 +842,21 @@ STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
    }
 
 STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all duplicates of the inserted line
-   for( auto ln(0); ln < pFbuf->LineCount(); ++ln ) {
+   auto mods( 0u );
+   for( auto ln(1); ln < pFbuf->LineCount(); ++ln ) {
       if( pFbuf->PeekRawLine( ln ) == str ) { // loop across all needles in [d_searchKey .. d_searchKey + d_searchKeyStrlen - 1]
          pFbuf->DelLine( ln-- ); // delete ALL duplicate strings
+         ++mods;
          }
       }
-   std::string tmp;
-   pFbuf->InsLine( 0, str, tmp );
-   pFbuf->UnDirty();  // cosmetic
+   if( pFbuf->PeekRawLine( 0 ) != str ) {
+      std::string tmp;
+      pFbuf->InsLine( 0, str, tmp );
+      ++mods;
+      }
+   if( mods ) { DBG( "mods!" );
+      pFbuf->UnDirty();  // cosmetic
+      }
    }
 
 GLOBAL_VAR PFBUF g_pFBufTextargStack;
