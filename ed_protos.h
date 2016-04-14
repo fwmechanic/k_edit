@@ -306,13 +306,8 @@ namespace Interpreter {
    enum  { AskUser = -1, UseDflt = 0 }; // special cases rtnd by chGetAnyMacroPromptResponse(), must not be [1..0xFF] (valid/useful ascii chars)
    int   chGetAnyMacroPromptResponse();
 
-   enum macroRunFlags
-      { insideDQuotedString   = BIT(0)
-      , variableMacro         = BIT(1)
-      , breakOutHere          = BIT(2)
-      };
-
-   bool  PushMacroStringOk( PCChar pszMacroString, int macroFlags );
+   enum  macroRunFlags { variableMacro=BIT(0), breakOutHere=BIT(1) };
+   bool  PushMacroStringOk( PCChar pszMacroString, int macroRunFlags );
    }
 
 extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );
