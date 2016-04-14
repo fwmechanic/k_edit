@@ -265,9 +265,9 @@ namespace Interpreter {
       bool   ClearIsBreak();
       void   Ctor( PCChar pszMacroString, int macroFlags );
       enum   eGot { EXHAUSTED=0, GotLitCh, GotToken };
-      eGot   GetNextTokenIsLiteralCh( PChar pDestBuf, int destBufLen );
+      eGot   GetNextTokenIsLiteralCh( std::string &dest );
       int    chGetAnyMacroPromptResponse();
-      bool   BranchToLabel( PCChar pszBranchToken );
+      bool   BranchToLabel( stref pszBranchToken );
       bool   Breaks()          const { return ToBOOL(d_flags & breakOutHere ); }
       bool   IsVariableMacro() const { return ToBOOL(d_flags & variableMacro); }
    private:
@@ -375,12 +375,12 @@ int Interpreter::MacroRuntimeStkEntry::chGetAnyMacroPromptResponse() { // return
 
 // if  rv, tos.d_pCurTxt points at token AFTER matching branch label
 // if !rv, NO matching branch label was found!
-bool Interpreter::MacroRuntimeStkEntry::BranchToLabel( PCChar pszBranchToken ) {
+bool Interpreter::MacroRuntimeStkEntry::BranchToLabel( stref pszBranchToken ) {
    // pszBranchToken[0] = ':';     // pszBranchToken[0] is branch prefix char [=+-]; change to label-DEFINITION prefix
    d_pCurTxt = d_pStartOfText;  // start from beginning
-   linebuf token;  MacroRuntimeStkEntry::eGot got;
-   while( EXHAUSTED != (got=GetNextTokenIsLiteralCh( BSOB(token) )) ) {
-      if( GotToken==got && (':'==token[0]) && Stricmp( pszBranchToken+1, token+1 ) == 0 ) {
+   std::string token;  MacroRuntimeStkEntry::eGot got;
+   while( EXHAUSTED != (got=GetNextTokenIsLiteralCh( token )) ) {
+      if( GotToken==got && (':'==token[0]) && cmpi( pszBranchToken[1], token[1] ) == 0 ) {
          return true;
          }
       }
@@ -388,9 +388,9 @@ bool Interpreter::MacroRuntimeStkEntry::BranchToLabel( PCChar pszBranchToken ) {
    }
 
 Interpreter::MacroRuntimeStkEntry::eGot
-Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( PChar pDestBuf, int destBufLen ) {
+Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( std::string &dest ) {
                              0 && DBG("GetNxtTok+    %X '%s'",d_flags,d_pCurTxt);
-   if( 0 == d_pCurTxt[0] ) { 0 && DBG("GetNxtTok-    %X EXHAUSTED",d_flags);
+   if( '\0' == d_pCurTxt[0] ) { 0 && DBG("GetNxtTok-    %X EXHAUSTED",d_flags);
       return EXHAUSTED;
       }
    eGot rv;
@@ -398,7 +398,7 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( PChar pDestBuf, int 
       bool fEscaped = false;
       #if MACRO_BACKSLASH_ESCAPES
          if( '\\' == d_pCurTxt[0] ) {
-            if( 0 == d_pCurTxt[1] ) {
+            if( '\0' == d_pCurTxt[1] ) {
                return false;
                }
             d_pCurTxt++;     // skip escaping char
@@ -411,26 +411,22 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( PChar pDestBuf, int 
             }
       #endif
                       0 && fEscaped && DBG( "ESCAPED '%c' !!!", d_pCurTxt[0] );  // stest:= "1 "" 2"""    " this is a test "
-      // Assert( destBufLen >= 2 );
-      pDestBuf[0] = *d_pCurTxt++;
-      pDestBuf[1] = '\0';
+      dest.assign( 1, *d_pCurTxt++ );
       rv = GotLitCh;
       }
    else {
-      while( '<' == d_pCurTxt[0] ) { // skip any Prompt Directives
+      while( '<' == d_pCurTxt[0] ) { // skip any Prompt Directive tokens
          d_pCurTxt = StrPastAnyBlanks( StrToNextBlankOrEos( d_pCurTxt ) );
          }
-      if( 0 == d_pCurTxt[0] ) {   0 && DBG("GetNxtTok-    %X EXHAUSTED",d_flags);
+      if( '\0' == d_pCurTxt[0] ) {   0 && DBG("GetNxtTok-    %X EXHAUSTED",d_flags);
          return EXHAUSTED;
          }
-      CPCChar pPastEndOfToken( StrToNextBlankOrEos( d_pCurTxt ) );
-      const auto len( Min( static_cast<ptrdiff_t>(destBufLen-1), pPastEndOfToken - d_pCurTxt ) );
-      memcpy( pDestBuf, d_pCurTxt, len );
-      pDestBuf[len] = '\0';
+      const auto pPastEndOfToken( StrToNextBlankOrEos( d_pCurTxt ) );
+      dest.assign( d_pCurTxt, pPastEndOfToken - d_pCurTxt );
       d_pCurTxt = pPastEndOfToken;
       rv = GotToken;
       }
-                                  0 && DBG("GetNxtTok-%s %X '%s'",rv==GotToken?"tok":"lit",d_flags,pDestBuf);
+                                     0 && DBG("GetNxtTok-%s %X '%s'",rv==GotToken?"tok":"lit",d_flags,dest.c_str());
    Advance();
    return rv;
    }
@@ -512,8 +508,8 @@ STATIC_FXN PCCMD Interpreter::AbortUntilBreak( PCChar emsg ) {
 STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
    Assert( Interpreting() );
    auto &tos( TOS() );
-   linebuf token; NOAUTO MacroRuntimeStkEntry::eGot got;
-   while( MacroRuntimeStkEntry::EXHAUSTED != (got=tos.GetNextTokenIsLiteralCh( BSOB(token) )) ) {
+   std::string token; NOAUTO MacroRuntimeStkEntry::eGot got;
+   while( MacroRuntimeStkEntry::EXHAUSTED != (got=tos.GetNextTokenIsLiteralCh( token )) ) {
       if( ExecutionHaltRequested() ) {              // testme:= popd popd
          return CleanupPendingMacroStream();
          }
@@ -523,7 +519,7 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
          macro_graphic.d_argData.eka.EdKcEnum = token[0];
          return &macro_graphic;
          }
-      { 0 && DBG( "%s non-LIT '%s'", __func__, token );
+      { 0 && DBG( "%s non-LIT '%s'", __func__, token.c_str() );
       const auto pCmd( CmdFromName( token ) );
       if( pCmd ) { 0 && DBG( "%s CMD '%s'", __func__, pCmd->Name() );
          return pCmd;
@@ -542,12 +538,12 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
                break;
                }
             if( !tos.BranchToLabel( token ) ) {
-               return AbortUntilBreak( FmtStr<BUFBYTES>( "Cannot find label '%s'", token+2 ) );
+               return AbortUntilBreak( FmtStr<BUFBYTES>( "Cannot find label '%s'", token.c_str()+2 ) );
                }
             }
          continue; // branch not taken or branch-label defn
          }
-      return AbortUntilBreak( FmtStr<BUFBYTES>( "unknown function '%s'", token ) );
+      return AbortUntilBreak( FmtStr<BUFBYTES>( "unknown function '%s'", token.c_str() ) );
       }
    // break exited the loop: this means the macro exited normally: unnest one level
    //
