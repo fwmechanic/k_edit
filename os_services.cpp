@@ -25,6 +25,27 @@ void ConOut::Bell() {
    if( g_fAllowBeep )  fputc( '\a', stdout );  // write RTL's stdout, which hasn't been touched since startup
    }
 
+// takes counted-string param so *pStart doesn't have to be forcibly
+// NUL-terminated (it may be a const string)
+//
+PChar Getenv( PCChar pStart, int len ) {
+   ALLOCA_STRDUP( buf, slen, pStart, len )    0 && DBG("Getenv '%s'", buf );
+   return getenv( buf );
+   }
+
+PChar GetenvStrdup( PCChar pStart, size_t len ) {
+   ALLOCA_STRDUP( buf, slen, pStart, len )    0 && DBG("GetenvStrdup '%s'", buf );
+   return GetenvStrdup( buf );
+   }
+
+PChar GetenvStrdup( PCChar pszEnvName ) {
+   auto penv( getenv( pszEnvName ) );
+   if( penv ) {
+       penv = Strdup( penv );
+       }
+   return penv;
+   }
+
 class OsEnv {
    Path::str_t d_exe_path;  // "C:\dir1\dir2\" (includes trailing '\')
    Path::str_t d_exe_name;  // "k"
