@@ -41,6 +41,7 @@ kx.def
 *.LRF
 *.map
 *.mapi
+.nfs*
 
 cfiles
 ctout.list
