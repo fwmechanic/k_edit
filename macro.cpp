@@ -368,12 +368,12 @@ TO_NXT_TOK:
 int Interpreter::MacroRuntimeStkEntry::chGetAnyMacroPromptResponse() { // return int so we can return AskUser==-1
    // see: arg "Macro Prompt Directives" edhelp arg "LIMITATION" psearch
    0 && DBG("GetPrompt+ %X '%s'",d_runFlags,d_pCurTxt);
-   if( d_insideDQuotedString )            { return AskUser; }
-   auto pC( d_pCurTxt ); if( *pC != '<' ) { return UseDflt; }
-   ++pC;  if( 0 == *pC || ' ' == *pC )    { return AskUser; }
-   const auto response( *pC );              0 && DBG( "macro prompt-response=%c!", response );
-   d_pCurTxt = StrPastAnyBlanks( pC + 1 );
-   return response;
+   if( d_insideDQuotedString )   { return AskUser; }
+   if( d_pCurTxt[0] != '<' )     { return UseDflt; }
+   const auto ch( d_pCurTxt[1] );
+   if( '\0' == ch || ' ' == ch ) { return AskUser; }
+   d_pCurTxt = StrPastAnyBlanks( d_pCurTxt + 1 );     0 && DBG( "macro prompt-response=%c!", ch );
+   return ch;
    }
 
 // if  rv, tos.d_pCurTxt points at token AFTER matching branch label
@@ -570,10 +570,10 @@ STATIC_FXN void Interpreter::ShowStack( PFBUF pFBuf ) {
       const auto &tos( s_MacroRuntimeStack[ --nestLevel ] );
       pFBuf->FmtLastLine( "[%d]%c%c%c%c='%s'"
           , nestLevel
-          , (tos.d_insideDQuotedString ) ? '"' : '\''
-          , (tos.IsVariableMacro()     ) ? 'D' : 'd'
-          , (tos.Breaks()              ) ? 'B' : 'b'
-          ,  tos.d_pCurTxt
+          , tos.d_insideDQuotedString ? '"' : '\''
+          , tos.IsVariableMacro()     ? 'D' : 'd'
+          , tos.Breaks()              ? 'B' : 'b'
+          , tos.d_pCurTxt
          );
       }
    }
