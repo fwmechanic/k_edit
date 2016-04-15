@@ -292,7 +292,6 @@ OBJS := \
  macro.o        \
  main.o         \
  mark.o         \
- misc.o         \
  my_fio.o       \
  my_strutils.o  \
  os_services.o  \

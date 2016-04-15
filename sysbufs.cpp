@@ -22,6 +22,8 @@
 
 #include "ed_main.h"
 
+char Xbuf::ds_empty = 0;
+
 GLOBAL_CONST char szMasterRepo[] = "https://github.com/fwmechanic/k_edit.git";
 GLOBAL_CONST char szClipboard[] = "<clipboard>";
 GLOBAL_CONST char szConsole[] = "<console>";
@@ -52,6 +54,27 @@ STATIC_VAR CPCChar s_UninterestingFilenames[] = {
    szUsgFile    ,
    szMacDefs    ,
    };
+
+STATIC_VAR struct {
+   PCChar name;
+   int    counter;
+   } pseudoBufInfo[] = {
+     {"grep"},
+     {"sel"},
+   };
+
+PFBUF PseudoBuf( ePseudoBufType pseudoBufType, int fNew ) {
+   auto &selNum( pseudoBufInfo[ pseudoBufType ].counter );
+   if( fNew ) {
+      ++selNum;
+      }
+   return OpenFileNotDir_NoCreate( FmtStr<20>( "<%s.%u>", pseudoBufInfo[ pseudoBufType ].name, selNum ) );
+   }
+
+bool ARG::nextselbuf() {
+   ++pseudoBufInfo[ SEL_BUF ].counter;
+   return true;
+   }
 
 STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, CPCChar *pC, CPCChar *pPastEnd ) {
    for( ; pC < pPastEnd ; ++pC ) {
