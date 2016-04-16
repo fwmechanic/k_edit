@@ -2012,14 +2012,15 @@ void View::HiliteAddins_Init() {
    }
 
 View::View( const View &src, PWin pWin )
-   : d_pWin ( pWin )
-   , d_pFBuf( src.d_pFBuf )
+   : d_pWin              ( pWin )
+   , d_pFBuf             ( src.d_pFBuf              )
+   , d_current           ( src.d_current            )
+   , d_prev              ( src.d_prev               )
+   , d_saved             ( src.d_saved              )
+   , d_LastSelect_isValid( src.d_LastSelect_isValid )
+   , d_LastSelectBegin   ( src.d_LastSelectBegin    )
+   , d_LastSelectEnd     ( src.d_LastSelectEnd      )
    {
-   d_current         = src.d_current        ;
-   d_prev            = src.d_prev           ;
-   d_saved           = src.d_saved          ;
-   d_LastSelectBegin = src.d_LastSelectBegin;
-   d_LastSelectEnd   = src.d_LastSelectEnd  ;
    CommonInit();
    }
 
@@ -2048,8 +2049,6 @@ View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
       d_pFBuf->Set_TmLastWrToDisk( temptv );
       }
    d_prev = d_saved = d_current;
-   d_LastSelectBegin.Set( -1, -1 );  // !isValid
-   d_LastSelectEnd  .Set(  0,  0 );
    CommonInit();
    }
 
@@ -2465,7 +2464,7 @@ void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
    }
 
 void CursorLocnOutsideView_Unset() { 0 && DBG( "%s", __func__ );
-   CursorLocnOutsideView_Set( -1, -1 );
+   s_CursorLocnOutsideView_isValid = false;
    }
 
 bool CursorLocnOutsideView_Get( Point *pt ) {
