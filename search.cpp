@@ -409,13 +409,13 @@ protected:
    void ResolveDfltBounds();
    };
 
-GLOBAL_CONST auto g_PtInvalid = Point( -1, -1 );
+STATIC_CONST auto s_PtInvalid = Point( -1, -1 );
 
 void FileSearcher::ResolveDfltBounds() {
    auto &Bof( d_sm.d_fSearchForward ? d_start : d_end   );
    auto &Eof( d_sm.d_fSearchForward ? d_end   : d_start );
-   if( g_PtInvalid == Bof ) { Bof = Point( 0, 0 );                         }
-   if( g_PtInvalid == Eof ) { Eof = Point( d_pFBuf->LastLine(), COL_MAX ); }
+   if( s_PtInvalid == Bof ) { Bof = Point( 0, 0 );                         }
+   if( s_PtInvalid == Eof ) { Eof = Point( d_pFBuf->LastLine(), COL_MAX ); }
    }
 
 void FileSearcher::FindMatches() {
@@ -424,14 +424,14 @@ void FileSearcher::FindMatches() {
    }
 
 void FileSearcher::SetBoundsWholeFile() {
-   d_start = g_PtInvalid;
-   d_end   = g_PtInvalid;
+   d_start = s_PtInvalid;
+   d_end   = s_PtInvalid;
    }
 
 void FileSearcher::SetBoundsToEnd( Point StartPt ) {
    // this is the only method that would be used for backward searches (since ARG::msearch is the only backward-searching cmd)
    d_start = StartPt;
-   d_end   = g_PtInvalid;
+   d_end   = s_PtInvalid;
    }
 
 void FileSearcher::SetBounds( Point StartPt, Point EndPt ) {
