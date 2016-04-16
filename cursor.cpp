@@ -113,8 +113,8 @@ bool ARG::ppage() { return pmpage( +1 ); }
 
 void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    0 && DBG( "%s(%d,%d) fUpdtWUC=%c", __func__, yCursor, xCursor, fUpdtWUC?'t':'f' );
-   NoLessThan( &xCursor, 0 );
-   NoLessThan( &yCursor, 0 );
+   NoLessThan( &xCursor, COL (0) );
+   NoLessThan( &yCursor, LINE(0) );
    xCursor = ConstrainCursorX_0( d_pFBuf, yCursor, xCursor );
    const auto winHeight( d_pWin->d_Size.lin );
    const auto winWidth ( d_pWin->d_Size.col );
@@ -126,10 +126,10 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    // the window size.
    //
    // Text is never scrolled in increments greater than the size of the window.
-   const auto hscrollCols( Max( 1, (g_iHscroll * winWidth) / EditScreenCols() ) );
+   const auto hscrollCols( Max( COL(1), (g_iHscroll * winWidth) / EditScreenCols() ) );
          auto xWinOrigin( Origin().col );
    const auto xWinCursor( xCursor - xWinOrigin );
-   if     ( xWinCursor <         0 ) { xWinOrigin -= hscrollCols;  if( xWinCursor < -hscrollCols            ) { xWinOrigin += xWinCursor + 1       ; } } // hscroll left?
+   if     ( xWinCursor <    COL(0) ) { xWinOrigin -= hscrollCols;  if( xWinCursor < -hscrollCols            ) { xWinOrigin += xWinCursor + 1       ; } } // hscroll left?
    else if( xWinCursor >= winWidth ) { xWinOrigin += hscrollCols;  if( xWinCursor >= hscrollCols + winWidth ) { xWinOrigin += xWinCursor - winWidth; } } // hscroll right?
    {
    const auto  xWinCurs( xCursor - xWinOrigin );
@@ -139,7 +139,7 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    const auto xMax  ( xWinOrigin + winWidth - 1 );
    const auto xRight( xCursor    +   xWidth - 1 );
    const auto xShort( xRight     -         xMax );
-   if( xShort > 0 ) { xWinOrigin += xShort; }
+   if( xShort > COL(0) ) { xWinOrigin += xShort; }
    }
    // VERTICAL WINDOW SCROLL HANDLING
    //
@@ -148,11 +148,11 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    // scrolled is in proportion to the window size.
    //
    // Text is never scrolled in increments greater than the size of the window.
-   const auto vscrollCols( Max( 1, (g_iVscroll * winHeight) / EditScreenLines() ) );
+   const auto vscrollCols( Max( COL(1), (g_iVscroll * winHeight) / EditScreenLines() ) );
          auto yWinOrigin( Origin().lin );
    const auto yWinCursor( yCursor - yWinOrigin );
    if( (yWinCursor >= -vscrollCols) && (yWinCursor < winHeight + vscrollCols) ) { // within one vscroll of the window boundaries?
-      if     ( yWinCursor <          0 ) { yWinOrigin -= vscrollCols; }
+      if     ( yWinCursor <    LINE(0) ) { yWinOrigin -= vscrollCols; }
       else if( yWinCursor >= winHeight ) { yWinOrigin += vscrollCols; }
       }
    else {
@@ -160,8 +160,8 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
       //  if you move the cursor out of the window by more than the number of
       //  lines specified by vscroll, specified in percent of window size
       //
-      Constrain( 1, &g_iHike, 99 );
-      const auto yHikeLines( Max( 1, (winHeight * g_iHike) / 100 ) );
+      Constrain( LINE(1), &g_iHike, 99 );
+      const auto yHikeLines( Max( LINE(1), (winHeight * g_iHike) / 100 ) );
 #if 1
       yWinOrigin = yCursor - yHikeLines;
 #else
@@ -248,7 +248,7 @@ bool ARG::pmlines( int direction ) { PCWrV;
     case NULLARG: pcv->ScrollOrigin_Y_Abs( direction > 0 ? g_CursorLine() : g_CursorLine() - pcw->d_Size.lin + 1 );
                   return true;
     case NOARG:   {
-                  const LINE scroll( Max( 1, (pcw->d_Size.lin * g_iVscroll) / EditScreenLines() ) );
+                  const LINE scroll( Max( LINE(1), (pcw->d_Size.lin * g_iVscroll) / EditScreenLines() ) );
                   pcv->ScrollOrigin_Y_Rel( direction * scroll );
                   return true;
                   }

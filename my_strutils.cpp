@@ -116,13 +116,13 @@ strcmp_eos_def( strcmp_eos , memcmp   )
 #undef strcmp_eos_def
 
 //----- no-longer-used end
+typedef int slen_t; // should be size_t or sridx
+int strnicmp_LenOfFirstStr( stref s1, stref s2 )                   { return Strnicmp( s1.data(), s2.data(), s1.length()    ); }
+int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, slen_t s2chars ) { return Strnicmp( s1, s2, Min( Strlen( s1 ), s2chars ) ); }
+int strncmp_LenOfFirstStr ( stref s1, stref s2 )                   { return strncmp ( s1.data(), s2.data(), s1.length()    ); }
+int strncmp_LenOfFirstStr ( PCChar s1, PCChar s2, slen_t s2chars ) { return strncmp ( s1, s2, Min( Strlen( s1 ), s2chars ) ); }
 
-int strnicmp_LenOfFirstStr( stref s1, stref s2 )                { return Strnicmp( s1.data(), s2.data(), s1.length()    ); }
-int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars ) { return Strnicmp( s1, s2, Min( Strlen( s1 ), s2chars ) ); }
-int strncmp_LenOfFirstStr ( stref s1, stref s2 )                { return strncmp ( s1.data(), s2.data(), s1.length()    ); }
-int strncmp_LenOfFirstStr ( PCChar s1, PCChar s2, int s2chars ) { return strncmp ( s1, s2, Min( Strlen( s1 ), s2chars ) ); }
-
-bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars ) {
+bool streq_LenOfFirstStr( PCChar s1, slen_t s1chars, PCChar s2, slen_t s2chars ) {
    if( s2chars == 0 ) { return s1chars==0; }
    return 0==Strnicmp( s1, s2, Min( s1chars, s2chars ) );
    }

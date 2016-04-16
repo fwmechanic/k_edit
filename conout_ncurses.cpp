@@ -19,8 +19,8 @@
 
 #include <ncurses.h>
 #include <stdio.h>
-#include "conio.h"
 #include "ed_main.h"
+#include "conio.h"
 
 #define PC_BLACK   0
 #define PC_BLUE    1
@@ -65,6 +65,7 @@ static void set_pcattr( int attr ) {
    }
    attrset( COLOR_PAIR(color_pr_num) | ncfg_bold );
    }
+
 void ConOut::SetCursorSize( bool fBigCursor ) {}
 static YX_t s_cursor_pos;
 bool ConOut::GetCursorState( YX_t *pt, bool *pfVisible ) {
@@ -72,34 +73,33 @@ bool ConOut::GetCursorState( YX_t *pt, bool *pfVisible ) {
    *pfVisible = true;
    return true;
    }
+
 bool ConOut::SetCursorVisibilityChanged( bool fVisible ) {
    curs_set( (fVisible ? 1 : 0) );
    refresh();
    return false;
    }
+
 void ConOut::SetCursorLocn( int yLine, int xCol ) {
    s_cursor_pos.lin = yLine;
    s_cursor_pos.col = xCol;
    move( s_cursor_pos.lin, s_cursor_pos.col );  0 && DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
    refresh();
    }
+
 int ConOut::BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
-   0 && DBG( "%s@%d,%d=%.*s'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, StringLen, pszStringToDisp );
+   stref src( pszStringToDisp, StringLen );
+   0 && DBG( "%s@%d,%d=%" PR_BSR "'", __func__, yLineWithinConsoleWindow, xColWithinConsoleWindow, BSR(src) );
    set_pcattr( colorAttribute );
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
    if( yLineWithinConsoleWindow >= sizeY ) { return 0; }
    if( xColWithinConsoleWindow  >= sizeX ) { return 0; }
-   int slen = StringLen;
-   for( auto ix(0) ; ix < slen; ++ix ) {
-      if( '\0' == pszStringToDisp[ix] ) {
-         slen = ix;
-         break;
-         }
-      }
+   const auto ixEmbdNul( src.find_first_of( '\0' ) );
+   auto slen( eosr == ixEmbdNul ? src.length() : ixEmbdNul );
    int maxX_notwritten = xColWithinConsoleWindow + slen;
    if( slen > 0 ) {
       if( maxX_notwritten > sizeX ) { slen -= (maxX_notwritten - sizeX); }
-      mvaddnstr( yLineWithinConsoleWindow, xColWithinConsoleWindow, pszStringToDisp, slen );
+      mvaddnstr( yLineWithinConsoleWindow, xColWithinConsoleWindow, src.data(), slen );
       }
    if( fPadWSpcs && maxX_notwritten < sizeX ) {
       for( auto ix(maxX_notwritten) ; ix < sizeX ; ++ix ) {
@@ -107,14 +107,15 @@ int ConOut::BufferWriteString( const char *pszStringToDisp, int StringLen, int y
          }
       return sizeX - xColWithinConsoleWindow + 1;
       }
-   if( !fPadWSpcs && slen < StringLen ) {
-      for( auto ix(maxX_notwritten) ; ix < xColWithinConsoleWindow + StringLen ; ++ix ) {
+   if( !fPadWSpcs && slen < src.length() ) {
+      for( auto ix(maxX_notwritten) ; ix < xColWithinConsoleWindow + src.length() ; ++ix ) {
          mvaddch( yLineWithinConsoleWindow, ix, '%' );
          }
-      return StringLen;
+      return src.length();
       }
    return slen;
    }
+
 void ConOut::BufferFlushToScreen() {
    move( s_cursor_pos.lin, s_cursor_pos.col );  0 && DBG( "%s move(%d,%d)", FUNC, s_cursor_pos.lin, s_cursor_pos.col );
    refresh();

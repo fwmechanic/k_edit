@@ -872,11 +872,12 @@ public:
    };
 
 void View::Set_LineCompile( LINE yLine ) {
-   if( d_LineCompile != yLine ) {
+   if( !d_LineCompile_isValid || d_LineCompile != yLine ) {
       HiliteAddins_Init();
       MoveCursor_NoUpdtWUC( yLine, 0 );
       d_LineCompile = yLine;
       }
+   d_LineCompile_isValid = true;
    }
 
 #define  USE_HiliteAddin_CompileLine  1
@@ -2436,8 +2437,8 @@ void DispNeedsRedrawAllLinesCurWin_() {
 
 GLOBAL_VAR bool g_fDialogTop = true;
 
-GLOBAL_VAR int  s_iHeight;  // global read, local write
-GLOBAL_VAR int  s_iWidth ;  // global read, local write
+GLOBAL_VAR LINE s_iHeight;  // global read, local write
+GLOBAL_VAR COL  s_iWidth ;  // global read, local write
 
 LINE MinDispLine() { return g_fDialogTop ? 2 : 0          ; }
 LINE DialogLine()  { return g_fDialogTop ? 1 : s_iHeight-2; }
@@ -2451,35 +2452,15 @@ void Event_ScreenSizeChanged( const Point &newSize ) { DBG( "%s %d,%d->%d,%d", _
    DispNeedsRedrawTotal();
    }
 
-STATIC_VAR auto s_CursorLocnBeforeOutsideView = Point ( -1, -1 );
-STATIC_VAR auto s_CursorLocnOutsideView       = Point ( -1, -1 );
+STATIC_VAR auto  s_CursorLocnOutsideView_isValid( false );
+STATIC_VAR Point s_CursorLocnOutsideView;
 
 void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from ) {
-  #if 0
-   // new way, still not working great
-   Point newPt(y,x);
-   if(  !s_CursorLocnBeforeOutsideView.isValid()
-      && newPt.isValid()
-     ) {
-      bool dummy;
-      ConOut::GetCursorState( &s_CursorLocnBeforeOutsideView, &dummy );
-      }
-   if( newPt.isValid() ) {
-      s_CursorLocnOutsideView = newPt;
-      }
-   else {
-      newPt = s_CursorLocnBeforeOutsideView;
-      s_CursorLocnBeforeOutsideView.Set(-1,-1);
-      }
-   DBG( "%s(y=%d,x=%d) from %s", __func__, newPt.lin, newPt.col, from );
-   ConOut::SetCursorLocn( newPt.lin, newPt.col );
-  #else
-   // old way
    s_CursorLocnOutsideView.lin = y;
    s_CursorLocnOutsideView.col = x;
+   s_CursorLocnOutsideView_isValid = true;
    FULL_DB && DBG( "%s(y=%d,x=%d)", __func__, y, x );
    ConOut::SetCursorLocn( y, x );
-  #endif
    // DispNeedsRedrawCursorMoved();  this has the effect of HIDING the cursor when the dialog line is accepting typed input
    }
 
@@ -2488,7 +2469,7 @@ void CursorLocnOutsideView_Unset() { 0 && DBG( "%s", __func__ );
    }
 
 bool CursorLocnOutsideView_Get( Point *pt ) {
-   if( s_CursorLocnOutsideView.isValid() ) {
+   if( s_CursorLocnOutsideView_isValid ) {
       *pt = s_CursorLocnOutsideView;
       return true;
       }

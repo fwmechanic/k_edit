@@ -111,7 +111,7 @@ PCChar ExecutableFormat() {
    }
 
 STATIC_FXN bool fgotline( Xbuf *xb, FILE *f ) {
-   if( feof( f ) ) return false;
+   if( feof( f ) ) { return false; }
    auto ofs( 0 ); enum { bump=16 };
    PChar rvbuf( nullptr );
    for(;;) {
@@ -127,7 +127,7 @@ STATIC_FXN bool fgotline( Xbuf *xb, FILE *f ) {
          return rvbuf != nullptr;
          }
       xb->wresize( xb->buf_bytes() + bump );
-      // if( bump < 2048 )  bump <<= 1;
+      // if( bump < 2048 ) { bump <<= 1; }
       }
    }
 
@@ -207,21 +207,21 @@ STATIC_CONST char kszSRC[] = "SRC:";
 STATIC_FXN bool recovSRC( PCChar lbuf ) {
    const auto fFailed( ToBOOL( Strnicmp( lbuf, kszSRC, KSTRLEN(kszSRC) ) ) );
    if( !fFailed ) {
-      g_SnR_szSearch = lbuf+KSTRLEN(kszSRC);
+      g_SnR_stSearch = lbuf+KSTRLEN(kszSRC);
       }
    return fFailed;
    }
-STATIC_FXN void saveSRC( FILE *fout ) { fprintf( fout, "%s%s\n", kszSRC, g_SnR_szSearch.c_str() ); }
+STATIC_FXN void saveSRC( FILE *fout ) { fprintf( fout, "%s%s\n", kszSRC, g_SnR_stSearch.c_str() ); }
 
 STATIC_CONST char kszDST[] = "DST:";
 STATIC_FXN bool recovDST( PCChar lbuf ) {
    const auto fFailed( ToBOOL( Strnicmp( lbuf, kszDST, KSTRLEN(kszDST) ) ) );
    if( !fFailed ) {
-      g_SnR_szReplacement = lbuf+KSTRLEN(kszDST);
+      g_SnR_stReplacement = lbuf+KSTRLEN(kszDST);
       }
    return fFailed;
    }
-STATIC_FXN void saveDST( FILE *fout ) { fprintf( fout, "%s%s\n", kszDST, g_SnR_szReplacement.c_str() ); }
+STATIC_FXN void saveDST( FILE *fout ) { fprintf( fout, "%s%s\n", kszDST, g_SnR_stReplacement.c_str() ); }
 
 typedef bool (*fxnLineRecov)( PCChar lbuf );
 typedef void (*fxnLineSave) ( FILE *fout );
@@ -434,8 +434,9 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
 #if FBUF_TREE
                auto pFBuf2( IdxNodeToFBUF( pNd2 ) );
 #endif
-               if( pFBuf2->IsDirty() && pFBuf2->FnmIsDiskWritable() )
+               if( pFBuf2->IsDirty() && pFBuf2->FnmIsDiskWritable() ) {
                   ++numDirtyFiles;
+                  }
                }
             switch( chGetCmdPromptResponse( "yna", -1, -1, "Save ALL %d remaining changed files (Y/N)? ", numDirtyFiles ) ) {
                default:   Assert( 0 );  // chGetCmdPromptResponse bug or params out of sync
@@ -944,25 +945,24 @@ void kGetopt::VErrorOut( PCChar msg ) {
 STATIC_FXN void CreateStartupPseudofiles() { // construct special files early so they are pushed to bottom of <files> list
    STATIC_CONST struct
       {
-      PCChar    name;
-      PPFBUF  ppFBufVar;
-      int       flags;
-         #define  KEEPTRAILSPCS  BIT(0)
-      } startupPseudofiles[] = {
-      { "<cmdline-args>", &g_pFBufCmdlineFiles                 },
-      { szCwdStk        , &g_pFBufCwd                          },
-      { szSearchLog     , &g_pFBufSearchLog                    },
-      { szSearchRslts   , &g_pFBufSearchRslts                  },
-      { "<lua>"         , &s_pFbufLuaLog                       },
-      { "<!>"           , &s_pFbufLog                          },
-      { szConsole       , &g_pFBufConsole                      },
-      { "<textargs>"    , &g_pFBufTextargStack , KEEPTRAILSPCS },
-      { szRecord        , &g_pFbufRecord       , KEEPTRAILSPCS },
-      { szClipboard     , &g_pFbufClipboard    , KEEPTRAILSPCS }, // aside: <clipboard> is filtered out of <files>
+      PCChar  name;
+      PFBUF  &pFBufVar;
+      bool    fKeepTrailSpcs;
+      } startupPseudofiles[] = {              // fKeepTrailSpcs
+      { "<cmdline-args>", g_pFBufCmdlineFiles        },
+      { szCwdStk        , g_pFBufCwd                 },
+      { szSearchLog     , g_pFBufSearchLog           },
+      { szSearchRslts   , g_pFBufSearchRslts         },
+      { "<lua>"         , s_pFbufLuaLog              },
+      { "<!>"           , s_pFbufLog                 },
+      { szConsole       , g_pFBufConsole             },
+      { "<textargs>"    , g_pFBufTextargStack , true },
+      { szRecord        , g_pFbufRecord       , true },
+      { szClipboard     , g_pFbufClipboard    , true }, // aside: <clipboard> is filtered out of <files>
       };
    for( const auto &sPf : startupPseudofiles ) {
-      const auto pFbuf( AddFBuf( sPf.name, sPf.ppFBufVar ) );
-      if( sPf.flags & KEEPTRAILSPCS )  pFbuf->KeepTrailSpcs();
+      const auto pFbuf( AddFBuf( sPf.name, &sPf.pFBufVar ) );
+      if( sPf.fKeepTrailSpcs ) { pFbuf->KeepTrailSpcs(); }
       }
    }
 

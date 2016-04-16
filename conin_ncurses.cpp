@@ -20,8 +20,8 @@
 #include <functional>
 #include <ncurses.h>
 #include <stdio.h>
-#include "conio.h"
 #include "ed_main.h"
+#include "conio.h"
 
 
 STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {

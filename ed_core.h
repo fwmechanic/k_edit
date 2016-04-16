@@ -64,8 +64,8 @@ const LINE MAX_LINES = PTRDIFF_MAX;
   //    prefixes in instructions" leads to better icache effects.
   // [So this will probably remain the status quo for as long as x64 is the dominant platform]
 
-typedef int   COL ;     // column or position within line
-typedef int   LINE;     // line number within file
+typedef int COL ;     // column or position within line
+typedef int LINE;     // line number within file
    enum { MAX_LINES = INT_MAX };
 
 #endif
@@ -206,7 +206,6 @@ struct Point {   // file location
    Point( LINE yLine, COL xCol ) : lin(yLine), col(xCol) {}
    Point( const Point  &rhs, LINE yDelta=0, COL xDelta=0 ) : lin(rhs.lin + yDelta), col(rhs.col + xDelta) {} // COPY CTOR
    void Set( LINE yLine, COL xCol ) { lin = yLine, col = xCol; }
-   bool isValid() const { return lin >= 0 && col >= 0; }
    void ScrollTo( COL xWidth=1 ) const;
    bool operator==( const Point &rhs ) const { return lin == rhs.lin && col == rhs.col; }
    bool operator!=( const Point &rhs ) const { return !(*this == rhs); }
@@ -727,8 +726,10 @@ public:
                    , bool               isActiveWindow
                    ) const;
 private:
+   bool         d_LineCompile_isValid = false;
    LINE         d_LineCompile = -1;
 public:
+   bool         LineCompile_Valid() const { return d_LineCompile_isValid; }
    LINE         Get_LineCompile() const { return d_LineCompile; }
    void         Set_LineCompile( LINE yLine );
    bool         LineCompileOk() const;
@@ -758,6 +759,7 @@ public:
    char         CharUnderCursor(); // cursor being a View concept...
    bool         PBalFindMatching( bool fSetHilite, Point *pPt );
    bool         GetBOXSTR_Selection( std::string &st );
+   bool         d_LastSelect_isValid = false;
    Point        d_LastSelectBegin, d_LastSelectEnd;
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
@@ -1300,7 +1302,7 @@ STIL PFBUF AddFBuf( stref pBufferName, PFBUF *ppGlobalPtr=nullptr ) {
 
 inline bool LineInfo::fCanFree_pLineData( const FBUF &fbuf ) const { return !fbuf.PtrWithinOrigFileImage( d_pLineData ); }
 
-inline bool View::LineCompileOk() const { return d_LineCompile >= 0 && d_LineCompile < d_pFBuf->LineCount(); }
+inline bool View::LineCompileOk() const { return d_LineCompile_isValid && d_LineCompile >= 0 && d_LineCompile < d_pFBuf->LineCount(); }
 
 //************ Format for display
 extern void        FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently

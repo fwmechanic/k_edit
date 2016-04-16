@@ -636,8 +636,8 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
    }
 
 STATIC_VAR std::string g_SavedSearchString_Buf ;
-GLOBAL_VAR std::string g_SnR_szSearch          ;
-GLOBAL_VAR std::string g_SnR_szReplacement     ;
+GLOBAL_VAR std::string g_SnR_stSearch          ;
+GLOBAL_VAR std::string g_SnR_stReplacement     ;
 
 class CharWalkerReplace : public CharWalker_ {
    std::string        d_sbuf;
@@ -655,8 +655,8 @@ public:
         bool fDoReplaceQuery
       , bool fSearchCase
       )
-      : d_stSearch          ( g_SnR_szSearch )
-      , d_stReplace         ( g_SnR_szReplacement )
+      : d_stSearch          ( g_SnR_stSearch )
+      , d_stReplace         ( g_SnR_stReplacement )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
       , d_iReplacementsPoss ( 0 )
@@ -1120,15 +1120,15 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
    DispDoPendingRefreshesIfNotInMacro();
    {
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( g_SnR_szSearch, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
-   if( !pCmd || pCmd->IsFnCancel() || g_SnR_szSearch.empty() ) {
+   const auto pCmd( GetTextargString( g_SnR_stSearch, szSearch, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
+   if( !pCmd || pCmd->IsFnCancel() || g_SnR_stSearch.empty() ) {
       return false;
       }
    }
 #if USE_PCRE
    s_fSearchNReplaceUsingRegExp = arg.d_cArg >= 2;
    if( s_fSearchNReplaceUsingRegExp ) {
-      DeleteUp( s_pSandR_CompiledSearchPattern, Compile_Regex( g_SnR_szSearch.c_str(), g_fCase ) );
+      DeleteUp( s_pSandR_CompiledSearchPattern, Compile_Regex( g_SnR_stSearch.c_str(), g_fCase ) );
       if( !s_pSandR_CompiledSearchPattern ) {
          return false; // Compile_Regex internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
          }
@@ -1136,17 +1136,17 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
 #endif
    {
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( g_SnR_szReplacement, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
+   const auto pCmd( GetTextargString( g_SnR_stReplacement, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
    if( !pCmd || pCmd->IsFnCancel() ) {
       return false;
       }
    }
-   if( fMultiFileReplace && g_SnR_szReplacement.c_str()[0] == 0 && !ConIO::Confirm( "Empty replacement string, confirm: " ) ) {
+   if( fMultiFileReplace && g_SnR_stReplacement.c_str()[0] == 0 && !ConIO::Confirm( "Empty replacement string, confirm: " ) ) {
       return false;
       }
 #if USE_PCRE
    if(   s_fSearchNReplaceUsingRegExp
-      && !CheckRegExpReplacementString( s_pSandR_CompiledSearchPattern, g_SnR_szReplacement.c_str() )
+      && !CheckRegExpReplacementString( s_pSandR_CompiledSearchPattern, g_SnR_stReplacement.c_str() )
      ) {
       return ErrorDialogBeepf( "Invalid replacement pattern" );
       }

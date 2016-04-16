@@ -44,8 +44,8 @@ extern PFBUF g_pFBufConsole      ;
 extern PFBUF g_pFbufClipboard    ;
 extern PFBUF g_pFBufCmdlineFiles ;
 
-extern std::string  g_SnR_szSearch      ;
-extern std::string  g_SnR_szReplacement ;
+extern std::string  g_SnR_stSearch      ;
+extern std::string  g_SnR_stReplacement ;
 
 
 typedef U16 EdKC;
@@ -551,21 +551,21 @@ extern int   g_iCursorSize       ;
 extern int   g_iTabWidth         ;
 extern int   g_iBlankAnnoDispSrcMask;
 
-STIL   COL       ScreenCols()    { extern int s_iWidth ; return s_iWidth   ; }
-STIL   COL   EditScreenCols()    {                       return ScreenCols(); }
+STIL   COL       ScreenCols()    { extern COL  s_iWidth ; return s_iWidth    ; }
+STIL   COL   EditScreenCols()    {                        return ScreenCols(); }
 
-STIL   LINE      ScreenLines()   { extern int s_iHeight; return s_iHeight  ; } // RARELY USED (so far, only in WriteStateFile(), ScreenSizeChanger)
-STIL   LINE  EditScreenLines()   { extern int s_iHeight; return s_iHeight-2; }
+STIL   LINE      ScreenLines()   { extern LINE s_iHeight; return s_iHeight  ; } // RARELY USED (so far, only in WriteStateFile(), ScreenSizeChanger)
+STIL   LINE  EditScreenLines()   { extern LINE s_iHeight; return s_iHeight-2; }
 extern LINE  DialogLine();
 extern LINE  StatusLine();
 extern LINE  MinDispLine();
 
 extern int   g_iHike             ;
-extern COL   g_iHscroll          ;
+extern int   g_iHscroll          ;
 extern int   g_iRmargin          ;
 extern int   g_iMaxfilehist      ;
 extern int   g_iMaxUndo          ;
-extern COL   g_iVscroll          ;
+extern int   g_iVscroll          ;
 extern int   g_iWucMinLen        ;
 
 

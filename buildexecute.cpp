@@ -960,7 +960,7 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
    {
    PCV;
    if( fSelectLastSelection ) {
-      if( !pcv->d_LastSelectBegin.isValid() ) {
+      if( !pcv->d_LastSelect_isValid ) {
          return Msg( "view has no previous selection" );
          }
       s_SelAnchor = pcv->d_LastSelectBegin;
@@ -1020,6 +1020,7 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
       else {
          pcv->d_LastSelectBegin = s_SelAnchor;
          pcv->d_LastSelectEnd   = pcv->Cursor();
+         pcv->d_LastSelect_isValid = true;
          }
       const auto rv( pCmd->BuildExecute() ); //************************************************
       return rv;
