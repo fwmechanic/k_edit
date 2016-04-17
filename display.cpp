@@ -2810,6 +2810,8 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, const LINE yCursor
       , d_current.Origin.lin, d_current.Origin.col, d_current.Cursor.lin, d_current.Cursor.col
       , yOrigin, xOrigin, yCursor, xCursor, fUpdtWUC?'t':'f'
       );
+   NoLessThan( &xOrigin, 0 );
+   NoLessThan( &yOrigin, 0 );
    const auto yOriginInitial( d_current.Origin.lin );
    const auto yCursorInitial( d_current.Cursor.lin );
    const auto xCursorInitial( d_current.Cursor.col );  0 && DBG( "cc0=%d", d_current.Cursor.col );

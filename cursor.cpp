@@ -34,8 +34,8 @@ bool swixVscroll( stref param ) {
    return true;
    }
 
-STIL COL ConstrainCursorX_0( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos; }
-STIL COL ConstrainCursorX_1( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  ColOfNextChar( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos + 1; }
+STIL COL TabAlignCursorPolicy( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos; }
+STIL COL ConstrainCursorX_1  ( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  ColOfNextChar( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos + 1; }
 
 STATIC_FXN bool CurView_MoveCursor_fMoved( LINE yLine, COL xColumn ) {
    const FBufLocnNow cp;
@@ -49,9 +49,9 @@ STIL COL CurLineCols() {
 
 bool ARG::right() { PCWrV;
    const auto xNewCol( d_fMeta
-                    ? pcw->d_Size.col + pcv->Origin().col - 1
-                    : ConstrainCursorX_1( pcv->FBuf(), g_CursorLine(), g_CursorCol() )
-                    );
+                     ? pcw->d_Size.col + pcv->Origin().col - 1
+                     : ConstrainCursorX_1( pcv->FBuf(), g_CursorLine(), g_CursorCol() )
+                     );
    const auto g_CursorCol_was( g_CursorCol() );
    pcv->MoveCursor( g_CursorLine(), xNewCol );
    0 && DBG( "xNewCol=%d -> %d -> %d", g_CursorCol_was, xNewCol, g_CursorCol() );
@@ -111,13 +111,13 @@ STATIC_FXN bool pmpage( int dir ) {
 bool ARG::mpage() { return pmpage( -1 ); }
 bool ARG::ppage() { return pmpage( +1 ); }
 
-void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
-   0 && DBG( "%s(%d,%d) fUpdtWUC=%c", __func__, yCursor, xCursor, fUpdtWUC?'t':'f' );
+void View::MoveCursor_( LINE yCursor, COL xCursor, COL visibleCharsAtCursor, bool fUpdtWUC ) {
+   0 && DBG( "%s(%d,%d L %d) fUpdtWUC=%c", __func__, yCursor, xCursor, visibleCharsAtCursor, fUpdtWUC?'t':'f' );
+   const auto &winSize( d_pWin->d_Size );
    NoLessThan( &xCursor, COL (0) );
    NoLessThan( &yCursor, LINE(0) );
-   xCursor = ConstrainCursorX_0( d_pFBuf, yCursor, xCursor );
-   const auto winHeight( d_pWin->d_Size.lin );
-   const auto winWidth ( d_pWin->d_Size.col );
+   Constrain( COL(1), &visibleCharsAtCursor, winSize.col ); // ensure visibleCharsAtCursor request is satisfiable
+   xCursor = TabAlignCursorPolicy( d_pFBuf, yCursor, xCursor );
    // HORIZONTAL WINDOW SCROLL HANDLING
    //
    // hscroll: The number of columns that the editor scrolls the text left or
@@ -126,20 +126,15 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    // the window size.
    //
    // Text is never scrolled in increments greater than the size of the window.
-   const auto hscrollCols( Max( COL(1), (g_iHscroll * winWidth) / EditScreenCols() ) );
-         auto xWinOrigin( Origin().col );
-   const auto xWinCursor( xCursor - xWinOrigin );
-   if     ( xWinCursor <    COL(0) ) { xWinOrigin -= hscrollCols;  if( xWinCursor < -hscrollCols            ) { xWinOrigin += xWinCursor + 1       ; } } // hscroll left?
-   else if( xWinCursor >= winWidth ) { xWinOrigin += hscrollCols;  if( xWinCursor >= hscrollCols + winWidth ) { xWinOrigin += xWinCursor - winWidth; } } // hscroll right?
-   {
-   const auto  xWinCurs( xCursor - xWinOrigin );
-   0 && DBG( "xWinCurs=%d", xWinCurs );
-   0 && DBG( "xWidth=%d", xWidth );
-   NoMoreThan( &xWidth, winWidth );
-   const auto xMax  ( xWinOrigin + winWidth - 1 );
-   const auto xRight( xCursor    +   xWidth - 1 );
-   const auto xShort( xRight     -         xMax );
-   if( xShort > COL(0) ) { xWinOrigin += xShort; }
+   const auto hscroll( Max( COL(1), (g_iHscroll * winSize.col) / EditScreenCols() ) );
+         auto xOrigin( Origin().col );
+   const auto xWinCursor( xCursor - xOrigin );
+   if     ( xWinCursor <  COL(0)      ) { xOrigin -= hscroll;  if( xWinCursor < -hscroll               ) { xOrigin += xWinCursor + 1          ; } } // hscroll left?
+   else if( xWinCursor >= winSize.col ) { xOrigin += hscroll;  if( xWinCursor >= hscroll + winSize.col ) { xOrigin += xWinCursor - winSize.col; } } // hscroll right?
+   { // if necessary, scroll to ensure [xCursor..xRight] visible (only possible if visibleCharsAtCursor > 1)
+   const auto xRight( xCursor + visibleCharsAtCursor - 1 ); visibleCharsAtCursor > 1 && 0 && DBG( "visibleCharsAtCursor=%d", visibleCharsAtCursor );
+   const auto xMax  ( xOrigin + winSize.col - 1 );
+   if( xRight > xMax ) { xOrigin += xRight - xMax; }
    }
    // VERTICAL WINDOW SCROLL HANDLING
    //
@@ -148,12 +143,12 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
    // scrolled is in proportion to the window size.
    //
    // Text is never scrolled in increments greater than the size of the window.
-   const auto vscrollCols( Max( COL(1), (g_iVscroll * winHeight) / EditScreenLines() ) );
-         auto yWinOrigin( Origin().lin );
-   const auto yWinCursor( yCursor - yWinOrigin );
-   if( (yWinCursor >= -vscrollCols) && (yWinCursor < winHeight + vscrollCols) ) { // within one vscroll of the window boundaries?
-      if     ( yWinCursor <    LINE(0) ) { yWinOrigin -= vscrollCols; }
-      else if( yWinCursor >= winHeight ) { yWinOrigin += vscrollCols; }
+   const auto vscroll( Max( COL(1), (g_iVscroll * winSize.lin) / EditScreenLines() ) );
+         auto yOrigin( Origin().lin );
+   const auto yWinCursor( yCursor - yOrigin );
+   if( (yWinCursor >= -vscroll) && (yWinCursor < winSize.lin + vscroll) ) { // within one vscroll of the window boundaries?
+      if     ( yWinCursor <  LINE(0)     ) { yOrigin -= vscroll; }
+      else if( yWinCursor >= winSize.lin ) { yOrigin += vscroll; }
       }
    else {
       //  hike: the distance from the cursor to the top/bottom of the window
@@ -161,32 +156,10 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL xWidth, bool fUpdtWUC ) {
       //  lines specified by vscroll, specified in percent of window size
       //
       Constrain( LINE(1), &g_iHike, 99 );
-      const auto yHikeLines( Max( LINE(1), (winHeight * g_iHike) / 100 ) );
-#if 1
-      yWinOrigin = yCursor - yHikeLines;
-#else
-         // Using the calcs below, hike is directional: my idea was that in many
-         // monotonic-access cases like m/psearch, m/ppara, etc. this makes sense
-         // (you can see where you're going/where you've been), but for random
-         // access cases like mfgrep where a file is entered at a match point and
-         // the current cursor position is irrelevant, this can create random
-         // behavior.
-         //
-         // I could probably add a global variable which could be set to control
-         // the intent/context of the scroll, but the benefit is probably not
-         // worth it.
-         //
-         // 20070326 kgoodwin
-         //
-      yWinOrigin = yWinCursor < 0
-                 ? yCursor - yHikeLines                // scrolling toward line 0
-                 : yCursor - (winHeight - yHikeLines)  // scrolling toward maxline
-                 ;
-#endif
+      const auto yHikeLines( Max( LINE(1), (winSize.lin * g_iHike) / 100 ) );
+      yOrigin = yCursor - yHikeLines;
       }
-   NoLessThan( &xWinOrigin, 0 );
-   NoLessThan( &yWinOrigin, 0 );
-   ScrollOriginAndCursor_( yWinOrigin, xWinOrigin, yCursor, xCursor, fUpdtWUC );
+   ScrollOriginAndCursor_( yOrigin, xOrigin, yCursor, xCursor, fUpdtWUC );
    }
 
 #if 0
