@@ -2034,6 +2034,7 @@ View::View( const View &src, PWin pWin )
 View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
    : d_pWin ( pWin_  )
    , d_pFBuf( pFBuf_ )
+   , d_LastSelect_isValid( false )
    {
    d_current.Cursor.Set( 0, 0 );
    d_current.Origin.Set( 0, 0 );

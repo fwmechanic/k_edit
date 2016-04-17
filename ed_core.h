@@ -759,7 +759,7 @@ public:
    char         CharUnderCursor(); // cursor being a View concept...
    bool         PBalFindMatching( bool fSetHilite, Point *pPt );
    bool         GetBOXSTR_Selection( std::string &st );
-   bool         d_LastSelect_isValid = false;
+   bool         d_LastSelect_isValid;
    Point        d_LastSelectBegin, d_LastSelectEnd;
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
