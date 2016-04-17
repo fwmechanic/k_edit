@@ -54,10 +54,10 @@ void ClearArgAndSelection() { PCV;
    pcv->FreeHiLiteRects();
    s_SelEnd.lin = -1;
    if( g_iArgCount ) {
-      0 && DBG( "ClearArgAndSelection()+" );
+      0 && DBG( "%s+", __func__ );
    //      MoveCursor
       pcv->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );
-      0 && DBG( "ClearArgAndSelection()-" );
+      0 && DBG( "%s-", __func__ );
       g_iArgCount = 0;
       }
    }
@@ -165,7 +165,7 @@ bool ARG::bp() {
    }
 
 bool ARG::cancel() {
-   0 && DBG( "cancel+" );
+   0 && DBG( "%s+", __func__ );
    switch( d_argType ) {
       case NOARG: MsgClr();
                   break;
@@ -953,49 +953,34 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 
 GLOBAL_VAR bool s_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
-STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
+STATIC_FXN bool ArgMainLoop() {
    // Called on first invocation (ie.  when g_iArgCount==0) of ARG::arg or
    // ARG::Lastselect.  Subsequent invocations of ARG::arg are handled
    // inline...
-   {
-   PCV;
-   if( fSelectLastSelection ) {
-      if( !pcv->d_LastSelect_isValid ) {
-         return Msg( "view has no previous selection" );
-         }
-      s_SelAnchor = pcv->d_LastSelectBegin;
-      pcv->d_LastSelectEnd.ScrollTo();
-      ++g_iArgCount;
-      }
-   else {
-      IncArgCnt();
-      }
-   ExtendSelectionHilite( pcv->Cursor() );
-   }
+   ExtendSelectionHilite( g_Cursor() );
    s_fSelectionActive = true;
    while(1) {
       auto pCmd( CMD_reader().GetNextCMD() );
       if( !pCmd ) {
          return false; //************************************************************
          }
-      PCV;
       if( pCmd->d_func == fn_arg ) {
          // ARG::arg _IS NOT CALLED_: instead inline-execute here:
          ++g_iArgCount;
-         ExtendSelectionHilite( pcv->Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
+         ExtendSelectionHilite( g_Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
          continue; //================================================================
          }
       if( pCmd->isCursorFunc() || pCmd->d_func == fn_meta ) {
          // fn_meta and all CURSORFUNC's are called w/o ARG buildup and may alter the selection state
          g_fFuncRetVal = pCmd->BuildExecute();
-         ExtendSelectionHilite( pcv->Cursor() );
+         ExtendSelectionHilite( g_Cursor() );
          continue; //================================================================
          }
       // We HAVE a valid CMD that is not arg, meta, or a CURSORFUNC
       // We SHALL call pCmd->BuildExecute() and return from this function
       s_fSelectionActive = false; // this fn is consuming the selection
       if(   pCmd->IsFnGraphic()           // user typed a literal char?
-         && pcv->Cursor() == s_SelAnchor  // no selection in effect?
+         && g_Cursor() == s_SelAnchor  // no selection in effect?
         ) {
          if( SEL_KEYMAP && pCmd->d_argData.chAscii() == ' ' ) {
             SelKeymapEnable();
@@ -1018,6 +1003,7 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
          // (BuildExecute() grabs from TextArgBuffer()()).
          }
       else {
+         PCV;
          pcv->d_LastSelectBegin = s_SelAnchor;
          pcv->d_LastSelectEnd   = pcv->Cursor();
          pcv->d_LastSelect_isValid = true;
@@ -1025,6 +1011,34 @@ STATIC_FXN bool ArgMainLoop( bool fSelectLastSelection ) {
       const auto rv( pCmd->BuildExecute() ); //************************************************
       return rv;
       }
+   }
+
+bool ARG::arg() {
+   // ArgMainLoop internally processes arg's rx'd, so there is no need for the
+   // ArgCount() checking code found in lastselect()
+   //
+   // corollary: ARG::arg() can only be called when ArgCount() == 0
+   //
+   Assert( ArgCount() == 0 );
+   IncArgCnt();
+   return ArgMainLoop();
+   }
+
+bool ARG::lastselect() {
+   if( ArgCount() != 0 ) {
+      return false;
+      }
+   {
+   PCV;
+   if( !pcv->d_LastSelect_isValid ) {
+      return Msg( "view has no previous selection" );
+      }
+   s_SelAnchor = pcv->d_LastSelectBegin;
+   pcv->d_LastSelectEnd.ScrollTo();
+   ++g_iArgCount;
+   }
+   ArgMainLoop();
+   return true;
    }
 
 //
@@ -1124,24 +1138,6 @@ bool ARG::prompt() {
    if( fGotAnyInputFromKbd ) {
       AddToTextargStack( TextArgBuffer() );
       }
-   return true;
-   }
-
-bool ARG::arg() {
-   // ArgMainLoop internally processes arg's rx'd, so there is no need for the
-   // ArgCount() checking code found in lastselect()
-   //
-   // corollary: ARG::arg() can only be called when ArgCount() == 0
-   //
-   Assert( ArgCount() == 0 );
-   return ArgMainLoop( false );
-   }
-
-bool ARG::lastselect() {
-   if( ArgCount() != 0 ) {
-      return false;
-      }
-   ArgMainLoop( true );
    return true;
    }
 
