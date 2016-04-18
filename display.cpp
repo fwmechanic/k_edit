@@ -2804,36 +2804,36 @@ void View::ScrollByPages( int pages ) {
       );
    }
 
-void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, const LINE yCursor, const COL xCursor, bool fUpdtWUC ) {
-   enum { SHOWDBG=0 };
+void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL xCursor, bool fUpdtWUC ) { enum { SHOWDBG=0 };
    SHOWDBG && DBG( "ScrollW&C+ IS: UlcYX=(%d,%d) CurYX=(%d,%d) -> REQUESTED: UlcYX=(%d,%d) CurYX=(%d,%d) fUpdtWUC=%c ++++++++++++++"
       , d_current.Origin.lin, d_current.Origin.col, d_current.Cursor.lin, d_current.Cursor.col
       , yOrigin, xOrigin, yCursor, xCursor, fUpdtWUC?'t':'f'
       );
-   NoLessThan( &xOrigin, 0 );
-   NoLessThan( &yOrigin, 0 );
+   SHOWDBG && DBG( "lastline=%d, winsize=%d, vscroll=%d, 1/3=%d", d_pFBuf->LastLine(), d_pWin->d_Size.lin, g_iVscroll, (d_pWin->d_Size.lin/3) ); // max 1/3 of window contains past-EOF
+   NewScope { // constrain x
+      Constrain( COL(0), &xCursor, COL_MAX );                 SHOWDBG && DBG( "xCursor = %d", xCursor );
+      Assert( COL_MAX > d_pWin->d_Size.col );
+      const auto xOriginMax( COL_MAX - d_pWin->d_Size.col );
+      Constrain( COL(0), &xOrigin, xOriginMax );
+      }
+   NewScope { // constrain yOrigin
+      const auto yOriginMax( d_pFBuf->LastLine() // d_pWin value defines the bottom scroll limit
+         #if 1
+            - d_pWin->d_Size.lin + g_iVscroll + (d_pWin->d_Size.lin/3) // max 1/3 of window contains past-EOF
+         #elif 0
+            - d_pWin->d_Size.lin + g_iVscroll + 1 // new behavior: only show ONE nonexistent line at bottom.
+         #else
+             // old behavior: only last line is visible (top line)
+         #endif
+         );                                                      SHOWDBG && DBG( "yOriginMax = %d", yOriginMax );
+      Constrain( LINE(0), &yOrigin, yOriginMax );                      SHOWDBG && DBG( "yOrigin = %d", yOrigin );
+      }
+
+   // save initial values for future change detection
    const auto yOriginInitial( d_current.Origin.lin );
    const auto yCursorInitial( d_current.Cursor.lin );
    const auto xCursorInitial( d_current.Cursor.col );  0 && DBG( "cc0=%d", d_current.Cursor.col );
-   // first see if origin must (needs to) change:
-   const auto hscrollCols( Max( 1, (g_iHscroll * d_pWin->d_Size.col) / EditScreenCols() ) );  0 && DBG( "hscrollCols=%d", hscrollCols );
-// auto newUlcCol( hscrollCols + COL_MAX - d_pWin->d_Size.col );
-   auto newUlcCol(               COL_MAX - d_pWin->d_Size.col );
-   Constrain( 0, &newUlcCol, xOrigin );
-   xOrigin      = newUlcCol;
-   SHOWDBG && DBG( "lastline=%d, winsize=%d, vscroll=%d, 1/3=%d", d_pFBuf->LastLine(), d_pWin->d_Size.lin, g_iVscroll, (d_pWin->d_Size.lin/3) ); // max 1/3 of window contains past-EOF
-   const auto yCursorMax( d_pFBuf->LastLine()
-      #if 1
-         - d_pWin->d_Size.lin + g_iVscroll + (d_pWin->d_Size.lin/3) // max 1/3 of window contains past-EOF
-      #elif 0
-         - d_pWin->d_Size.lin + g_iVscroll + 1 // new behavior: only show ONE nonexistent line at bottom.
-      #else
-          // old behavior: only last line is visible (top line)
-      #endif
-      );
-   SHOWDBG && DBG( "yCursorMax = %d", yCursorMax );
-   Constrain( 0, &yOrigin, yCursorMax );  // d_pWin value defines the bottom scroll limit
-   SHOWDBG && DBG( "yOrigin = %d", yOrigin );
+
    const auto yOriginDelta( yOrigin - d_current.Origin.lin );
    const auto xOriginDelta( xOrigin - d_current.Origin.col );
    d_current.Origin.lin = yOrigin; // don't use yOrigin below here; use d_current.Origin.lin
@@ -2892,7 +2892,6 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, const LINE yCursor
          }
       }
    }
-
 
 void View::ScrollOriginYX( LINE yLine, COL xCol ) {
    ScrollOriginAndCursor( yLine, xCol, d_current.Cursor.lin, d_current.Cursor.col );
@@ -3122,8 +3121,6 @@ void Win::GetLineForDisplay
    }
 
 //
-//   ViewList manipulations    ViewList manipulations    ViewList manipulations
-//   ViewList manipulations    ViewList manipulations    ViewList manipulations
 //   ViewList manipulations    ViewList manipulations    ViewList manipulations
 //
 PView FBUF::PutFocusOnView() { enum{ DD=0 };
