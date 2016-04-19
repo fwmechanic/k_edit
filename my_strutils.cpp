@@ -160,7 +160,7 @@ PCChar fxnm( PCChar p0, PCChar pX, PCChar toMatch ) {           \
    if( !pX ) { pX = Eos( p0 ); }                                \
    if( pX == p0 ) { return nullptr; } /* no "prev" to match? */ \
    for( --pX ;  ; --pX ) {                                      \
-      if( nullptr EQ_OP strchr( toMatch, *pX ) ) return pX;     \
+      if( nullptr EQ_OP strchr( toMatch, *pX ) ) { return pX; } \
       if( pX == p0 ) { return nullptr; }                        \
       }                                                         \
    }

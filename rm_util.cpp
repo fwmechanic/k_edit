@@ -58,7 +58,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    char tbuf[32];
    strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", localtime( &stat_buf.st_mtime ) );
    const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  DB && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
-   dest += (PATH_SEP_STR + std::string( BSR2STR( filenameNoPath ) ) + "." + tbuf);
+   dest.append( (PATH_SEP_STR + std::string( BSR2STR( filenameNoPath ) ) + "." + tbuf ) );
   #if defined(_WIN32)
    unlinkOk( dest.c_str() );
   #endif

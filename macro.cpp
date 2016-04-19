@@ -847,23 +847,23 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       }
    else {
       if( RecordingInDQuote() ) {
-         st += "\" ";
+         st.append( "\" " );
          ClrInRecordDQuote();
          }
       else {
-         st += " ";
+         st.append( " " );
          }
       bcpy( lbufNew, pCmd->Name() );
       }
    CapturePrevLineCountAllWindows( g_pFbufRecord );
    std::string stmp;
    if( st.length() + Strlen( lbufNew ) > g_iRmargin ) { // wrap to next line
-      st += " \\";
+      st.append( " \\" );
       g_pFbufRecord->PutLine( lastLine  , st     , stmp );
       g_pFbufRecord->PutLine( lastLine+1, lbufNew, stmp );
       }
    else {
-      st += lbufNew;
+      st.append( lbufNew );
       g_pFbufRecord->PutLine( lastLine  , st     , stmp );
       }
    MoveCursorToEofAllWindows( g_pFbufRecord );

@@ -275,7 +275,7 @@ STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
    if( fp != NULL ) {
       char buf[8192];
       while( fgets( buf, sizeof buf, fp ) != NULL ) {
-         dest += buf;
+         dest.append( buf );
          }
       const auto status( pclose(fp) );
       if( status == -1 ) { /* Error reported by pclose() */

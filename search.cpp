@@ -2142,7 +2142,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
    auto    curfile( g_CurFBuf() );
    if( TEXTARG == d_argType ) {
       srchfile = curfile;
-      Path::str_t keysFnm( "$FGS" PATH_SEP_STR );  keysFnm += d_textarg.pText;
+      Path::str_t keysFnm( ("$FGS" PATH_SEP_STR) + std::string( d_textarg.pText ) );
       curfile = OpenFileNotDir_NoCreate( keysFnm.c_str() );
       if( !curfile ) {
          return Msg( "Couldn't open '%s' [1]", origSrchFnm );

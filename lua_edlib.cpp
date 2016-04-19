@@ -106,10 +106,10 @@ LUAFUNC_(GetDynMacros) {
    std::string val( "<mfspec>" );
    const auto fb( FindFBufByName( val.c_str() ) );
    if( fb ) {
-       if( FBOP::IsBlank( fb ) ) { val += " exists but empty";                        }
-       else                      { val += FmtStr<31>( " %d lines", fb->LineCount() ); }
+       if( FBOP::IsBlank( fb ) ) { val.append( " exists but empty" ); }
+       else                      { val.append( FmtStr<31>( " %d lines", fb->LineCount() ) ); }
        }
-   else                          { val += " does not exist";                          }
+   else                          { val.append( " does not exist" ); }
    lua_pushlstring( L, val.data(), val.length() );        lua_rawseti( L, -2, ++tblIdx );
    return 1;  // return the table
    }

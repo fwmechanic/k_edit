@@ -310,9 +310,9 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
 Path::str_t RsrcFilename( PCChar ext ) {
    Path::str_t
         rv( ThisProcessInfo::ExePath() );
-        rv += ThisProcessInfo::ExeName();
-        rv += ".";
-        rv += ext;
+        rv.append( ThisProcessInfo::ExeName() );
+        rv.append( "." );
+        rv.append( ext );
    return rv;
    }
 
@@ -322,9 +322,9 @@ PCChar EditorStateDir() { return s_EditorStateDir.c_str(); }
 
 Path::str_t StateFilename( PCChar ext ) {
    auto rv( s_EditorStateDir );
-        rv += ThisProcessInfo::ExeName();
-        rv += ".";
-        rv += ext;
+        rv.append( ThisProcessInfo::ExeName() );
+        rv.append( "." );
+        rv.append( ext );
    return rv;
    }
 
@@ -828,7 +828,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
                          exit( 1 );
             }
          }
-      s_EditorStateDir += PATH_SEP_STR;  0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
+      s_EditorStateDir.append( PATH_SEP_STR );  0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
       };
 #if defined(_WIN32)
    #define  HOME_ENVVAR_NM  "APPDATA"
@@ -836,8 +836,8 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    const PCChar appdataVal( getenv( HOME_ENVVAR_NM ) );
    if( !(appdataVal && appdataVal[0]) )  { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
    if( !IsDir( appdataVal ) )            { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
-   s_EditorStateDir = appdataVal;                     0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
-   s_EditorStateDir += PATH_SEP_STR HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
+   s_EditorStateDir.assign( appdataVal );                    0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
+   s_EditorStateDir.append( PATH_SEP_STR HOME_SUBDIR_NM );   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
 #undef   HOME_ENVVAR_NM
 #undef   HOME_SUBDIR_NM
 #else
@@ -854,7 +854,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    #define  HOME_SUBDIR_NM        "kedit"
    PCChar baseVarVal( getenv( CACHE_ENVVAR_NM ) );
    if( baseVarVal && baseVarVal[0] ) {
-      s_EditorStateDir = baseVarVal;
+      s_EditorStateDir.assign( baseVarVal );
       mkdir_stf();  // fprintf( stderr, "$" CACHE_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
       }
    else {
@@ -862,11 +862,11 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
       if( !(baseVarVal && baseVarVal[0]) ) { fprintf( stderr, "$" HOME_ENVVAR_NM " is not defined???\n" ); exit( 1 ); }
       // fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", baseVarVal );
       if( !IsDir( baseVarVal ) )           { fprintf( stderr, "dir $" HOME_ENVVAR_NM " %s does not exist???\n", baseVarVal ); exit( 1 ); }
-      s_EditorStateDir = baseVarVal;      //       fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
-      s_EditorStateDir += PATH_SEP_STR HOME_ENVVAR_SUFFIXNM; // fprintf( stderr, "$" HOME_ENVVAR_NM "/" HOME_ENVVAR_SUFFIXNM " %s\n", s_EditorStateDir.c_str() );
+      s_EditorStateDir.assign( baseVarVal );    //       fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
+      s_EditorStateDir.append( PATH_SEP_STR HOME_ENVVAR_SUFFIXNM ); // fprintf( stderr, "$" HOME_ENVVAR_NM "/" HOME_ENVVAR_SUFFIXNM " %s\n", s_EditorStateDir.c_str() );
       mkdir_stf();
       }
-   s_EditorStateDir += HOME_SUBDIR_NM;   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
+   s_EditorStateDir.append( HOME_SUBDIR_NM );   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
 #undef   HOME_ENVVAR_NM
 #undef   HOME_SUBDIR_NM
 #endif
@@ -875,13 +875,13 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    { // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host
    const auto hostname( ThisProcessInfo::hostname() );
    if( hostname[0] ) {
-      s_EditorStateDir += hostname;      0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
+      s_EditorStateDir.append( hostname );      0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
       mkdir_stf();
       // since I am often sudo'd, and since the root-associated edit-fileset often can't be accessed (and root-written state files
       // can't be rewritten) by non-root, track them separately by adding a username level of indirection
       const auto euname( ThisProcessInfo::euname() );
       if( euname[0] ) {
-         s_EditorStateDir += euname;
+         s_EditorStateDir.append( euname );
          mkdir_stf();
          }
       }

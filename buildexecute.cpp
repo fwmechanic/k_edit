@@ -489,7 +489,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
    auto append_dest = [&dest]( stref src ) {
       src.remove_prefix( FirstNonBlankOrEnd( src, 0 ) );
       if( !src.empty() ) {
-         if( !dest.empty() ) { dest += ' '; }
+         if( !dest.empty() ) { dest.append( " " ); }
          dest.append( src.data(), src.length() ); // <-- could be replaced by multi-blank-eater
          rmv_trail_blanks( dest );
          }
@@ -1512,7 +1512,7 @@ bool ARG::execute() {
                          if( aw.GetLine() ) {
                             aw.buf_erase( StrToNextMacroTermOrEos( aw.c_str() ) - aw.c_str() );  0 && DBG( "2: '%" PR_BSR "'", BSR( aw.lineref() ) );
                             dest.append( aw.lineref().data(), aw.lineref().length() );
-                            dest += " ";
+                            dest.append( " " );
                             }
                          }
                       if( dest.empty() ) {
