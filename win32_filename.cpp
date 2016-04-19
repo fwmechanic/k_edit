@@ -26,14 +26,12 @@
 #define  CALLING_GetVolumeInformation  0
 #if      CALLING_GetVolumeInformation
 bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
-   if( sizeofDest < 4 ) return false;
-
+   if( sizeofDest < 4 ) { return false; }
    const auto ps1( Path::StrToNextPathSepOrEos( pSrcFullname ) );
    if( !*ps1 ) {
       DBG( "%s '%s' !1", __func__, pSrcFullname );
       return false;
       }
-
    if(  ps1 - pSrcFullname == 2
   // && is_alpha( pSrcFullname[0] )
      && pSrcFullname[1] == ':'
@@ -44,7 +42,6 @@ bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
       DBG( "%s '%s' -> '%s'", __func__, pSrcFullname, pDestBuf );
       return true;
       }
-
    if( ps1 - pSrcFullname == 1 ) { // "\\..."
       const auto ps2( Path::StrToNextPathSepOrEos( ps1 ) ); // "\\...\..."
       if( !*ps2 ) {
@@ -53,13 +50,12 @@ bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
          }
       const auto ps3( Path::StrToNextPathSepOrEos( ps2 ) ); // "\\...\...\..."
       const auto len( scpy( pDestBuf, sizeofDest, pSrcFullname, ps3 - pSrcFullname ) );
-      if( !*ps3 )
+      if( !*ps3 ) {
          scat( pDestBuf, sizeofDest, len, PATH_SEP_STR, Strlen( PATH_SEP_STR ) );
-
+         }
       DBG( "%s '%s' -> '%s'", __func__, pSrcFullname, pDestBuf );
       return true;
       }
-
    DBG( "%s '%s' !3", __func__, pSrcFullname );
    return false;
    }
@@ -97,17 +93,19 @@ bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
 */
 
 STATIC_FXN void LowerDriveLetter( PChar pbuf ) {
-   if( pbuf[0] && pbuf[1] == ':' )
+   if( pbuf[0] && pbuf[1] == ':' ) {
        pbuf[0] = tolower( pbuf[0] );
+       }
    }
 
 Path::str_t Path::GetCwd() {
    pathbuf pbuf;
-   if( !_getcwd( BSOB( pbuf ) ) )
+   if( !_getcwd( BSOB( pbuf ) ) ) {
       pbuf[0] = '\0';
-   else
+      }
+   else {
       LowerDriveLetter( pbuf );
-
+      }
    _strlwr( pbuf );
    return Path::str_t( pbuf );
    }
@@ -171,27 +169,22 @@ STIL bool KeepMatch_( const WildCardMatchMode want, const unsigned have ) {
    // FILE_ATTRIBUTE_DIRECTORY (ie.  they look like files), so if the
    // FILE_ATTRIBUTE_DIRECTORY is used, it must be examined alone
    //
-
    const auto fFileOk( ToBOOL(want & ONLY_FILES) );
    const auto fDirOk ( ToBOOL(want & ONLY_DIRS ) );
    const auto fIsDir ( ToBOOL(have & FILE_ATTRIBUTE_DIRECTORY) );
    const auto fIsFile( !fIsDir && (have & (FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_READONLY)) );
-
-   if( fDirOk  && fIsDir  ) return true;
-   if( fFileOk && fIsFile ) return true;
-   return                          false;
+   if( fDirOk && fIsDir  ) { return true; }
+   return fFileOk && fIsFile;
    }
 
 bool DirMatches::KeepMatch() {
    const auto rv( KeepMatch_( d_wcMode, d_Win32_FindData.dwFileAttributes ) );
-
    0 && DBG( "want %c, have %c '%s' rv=%d"
            , (d_wcMode & ONLY_DIRS) ? 'D':'d'
            , (d_Win32_FindData.dwFileAttributes) ? 'D':'d'
            , d_Win32_FindData.cFileName
            , rv
            );
-
    return rv;
    }
 
@@ -203,31 +196,29 @@ bool DirMatches::FoundNext() {
          d_ixDest = std::string::npos; // flag no more matches
          return false; // failed!
          }
-
       return true;
       }
-
    const auto rv( Win32::FindNextFile( d_hFindFile, &d_Win32_FindData ) != 0 );
-   if( !rv )
+   if( !rv ) {
       d_ixDest = std::string::npos; // flag no more matches
-
+      }
    return rv;
    }
 
 const Path::str_t DirMatches::GetNext() {
-   if( d_ixDest == std::string::npos ) // already hit no-more-matches condition?
+   if( d_ixDest == std::string::npos ) { // already hit no-more-matches condition?
       return Path::str_t("");
-
-   while( FoundNext() && !KeepMatch() )
+      }
+   while( FoundNext() && !KeepMatch() ) {
       continue;
-
-   if( d_ixDest == std::string::npos ) // already hit no-more-matches condition?
+      }
+   if( d_ixDest == std::string::npos ) { // already hit no-more-matches condition?
       return Path::str_t("");
-
+      }
    d_buf.replace( d_ixDest, std::string::npos, d_Win32_FindData.cFileName );
-   if( ToBOOL(d_Win32_FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !Path::IsDotOrDotDot( d_buf.c_str() ) )
+   if( ToBOOL(d_Win32_FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !Path::IsDotOrDotDot( d_buf.c_str() ) ) {
       d_buf.append( PATH_SEP_STR );
-
+      }
    0 && DBG( "DirMatches::GetNext: '%s' (%lX)", d_buf.c_str(), d_Win32_FindData.dwFileAttributes );
    return d_buf;
    }
@@ -246,18 +237,18 @@ DirMatches::DirMatches( PCChar pszPrefix, PCChar pszSuffix, WildCardMatchMode wc
    if( fAbsolutize ) {
       d_buf = Path::Absolutize( d_buf.c_str() );
       }
-
    const bool hasDriveLetter( isalpha( d_buf[0] ) && d_buf[1] == ':' ); // leading c: ?
    if( hasDriveLetter ) {
       d_buf[0] = tolower( d_buf[0] );
       }
-
    { // hackaround
    auto pDest = Path::StrToPrevPathSepOrNull( d_buf.c_str(), PCChar(nullptr) );
-   if( pDest )
+   if( pDest ) {
       d_ixDest = (pDest - d_buf.c_str()) + 1; // point past pathsep
-   else
+      }
+   else {
       d_ixDest = 0;
+      }
    }
    }
 
@@ -290,19 +281,16 @@ Path::str_t Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 
    while( Path::IsPathSepCh( *pNxtComponent ) ) {
       pNxtComponent++;
       }
-
    Path::str_t pbs( fnmBuf, pNxtComponent-fnmBuf ); // since path may grow due to (8.3-equivalent) -> longname expansion, we accumulate in pb
    if( hasDriveLetter ) {
       pbs[0] = tolower( pbs[0] );
       }
    DBG_ABS_PATH && DBG( "%s startX '%s'", __func__, pNxtComponent );
    DBG_ABS_PATH && DBG( "0 %s|", pbs.c_str() );
-
    while(1) {
       const auto pNxtComponentEnd( Path::StrToNextPathSepOrEos( pNxtComponent ) );
       const auto fLastComponent( *pNxtComponentEnd == '\0' );
       const auto nxtComponentLen( pNxtComponentEnd - pNxtComponent );  DBG_ABS_PATH && DBG( "%s NXT='%*.*s'", __func__, pd2Int(nxtComponentLen), pd2Int(nxtComponentLen), pNxtComponent );
-
       const auto segStartIx( pbs.length() );  // where EXPANDED version of pNxtComponent will be copied
       pbs.append( pNxtComponent, nxtComponentLen ); // copy INPUT version of pNxtComponent
                                                                        DBG_ABS_PATH && DBG( "1 %s|", pbs.c_str() );
@@ -317,10 +305,9 @@ Path::str_t Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 
         ) { Win32::FindClose( hFF );
          pbs.replace( segStartIx, std::string::npos, wfd.cFileName );  DBG_ABS_PATH && DBG( "2 %s|", pbs.c_str() );
          }
-
-      if( fLastComponent )
+      if( fLastComponent ) {
          break;
-
+         }
       pbs += PATH_SEP_STR;                                             DBG_ABS_PATH && DBG( "%s :::: '%s'", __func__, pbs.c_str() );
       pNxtComponent = pNxtComponentEnd + 1;
       }
@@ -343,11 +330,10 @@ bool IsFileReadonly( PCChar pszFileName ) {
 bool ARG::glds() {
    linebuf lbuf;
    auto rv( Win32::GetLogicalDriveStrings( sizeof lbuf, lbuf ) );
-   if( rv == 0 || rv > sizeof lbuf )
+   if( rv == 0 || rv > sizeof lbuf ) {
       return Msg( "Win32::GetLogicalDriveStrings FAILED" );
-
+      }
    auto pFBuf( g_CurFBuf() );
-
    auto ix(0);
    for( auto px(lbuf); *px != '\0'; ++ix, px=Eos( px )+1 ) {
       PCChar pdt;
@@ -363,7 +349,6 @@ bool ARG::glds() {
          }
       pFBuf->FmtLastLine( "%s = %s", px, pdt );
       }
-
    Msg( "Win32::GetLogicalDriveStrings returned %d strings", ix );
    return true;
    }
@@ -381,35 +366,30 @@ bool ARG::glds() {
 bool ARG::findfile() {
    STATIC_FXN auto hFindFile( Win32::Invalid_Handle_Value() );
    STATIC_VAR Win32::WIN32_FIND_DATA Win32_FindData;
-
    switch( d_argType ) {
       case TEXTARG:
            hFindFile = Win32::FindFirstFile( d_textarg.pText, &Win32_FindData );
-           if( hFindFile == Win32::Invalid_Handle_Value() )
+           if( hFindFile == Win32::Invalid_Handle_Value() ) {
               return Msg( "FindFirstFile => INVALID_HANDLE_VALUE" );
-
+              }
            {
            linebuf buf; buf[0] = '\0';
            auto pB(buf);  auto cbB(sizeof(buf));
-           if( FILE_ATTRIBUTE_ARCHIVE   ) snprintf_full( &pB, &cbB, ",ARCH" );
-           if( FILE_ATTRIBUTE_NORMAL    ) snprintf_full( &pB, &cbB, ",NORM" );
-           if( FILE_ATTRIBUTE_READONLY  ) snprintf_full( &pB, &cbB, ",RO"   );
-           if( FILE_ATTRIBUTE_DIRECTORY ) snprintf_full( &pB, &cbB, ",DIR"  );
-
+           if( FILE_ATTRIBUTE_ARCHIVE   ) { snprintf_full( &pB, &cbB, ",ARCH" ); }
+           if( FILE_ATTRIBUTE_NORMAL    ) { snprintf_full( &pB, &cbB, ",NORM" ); }
+           if( FILE_ATTRIBUTE_READONLY  ) { snprintf_full( &pB, &cbB, ",RO"   ); }
+           if( FILE_ATTRIBUTE_DIRECTORY ) { snprintf_full( &pB, &cbB, ",DIR"  ); }
            Msg( "FindFirstFile => '%s' (%X=%s)", Win32_FindData.cFileName, Win32_FindData.dwFileAttributes, buf+1 );
            }
            return true;
-
       case NOARG:
            if( Win32::FindNextFile( hFindFile, &Win32_FindData ) == 0 ) {
               Win32::FindClose( hFindFile );
               hFindFile = Win32::Invalid_Handle_Value();
               return Msg( "FindNextFile => 0 (no more matches)" );
               }
-
            Msg( "FindNextFile => '%s'", Win32_FindData.cFileName );
            return true;
-
       default:
            return BadArg();
       }

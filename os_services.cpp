@@ -22,7 +22,7 @@
 GLOBAL_VAR bool g_fAllowBeep = true; // global/switchval
 
 void ConOut::Bell() {
-   if( g_fAllowBeep )  fputc( '\a', stdout );  // write RTL's stdout, which hasn't been touched since startup
+   if( g_fAllowBeep ) { fputc( '\a', stdout ); } // write RTL's stdout, which hasn't been touched since startup
    }
 
 // takes counted-string param so *pStart doesn't have to be forcibly
@@ -194,11 +194,11 @@ void MainThreadPerfCounter::ResumeAll() {
    TCapture now;
    GetTOD( &now );
    DLINKC_FIRST_TO_LASTA(MainThreadPerfCounter::dhead,dlink,pCur) {
-      if( pCur->state() == paused )
+      if( pCur->state() == paused ) {
           pCur->Start_( now );
+          }
       }
    }
-
 
 #if !NO_LOG
 

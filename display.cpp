@@ -2471,9 +2471,8 @@ void CursorLocnOutsideView_Unset() { 0 && DBG( "%s", __func__ );
 bool CursorLocnOutsideView_Get( Point *pt ) {
    if( s_CursorLocnOutsideView_isValid ) {
       *pt = s_CursorLocnOutsideView;
-      return true;
       }
-   return false;
+   return s_CursorLocnOutsideView_isValid;
    }
 
 STATIC_FXN void DrawStatusLine();

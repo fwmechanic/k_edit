@@ -518,8 +518,8 @@ void StrFromEdkc( PChar dest, size_t sizeofDest, int edKC, sridx width ) {
    }
 
 int BindKeyToCMD( stref pszCmdName, stref pszKeyName ) {
-   const auto edKC( edkcFromKeyname( pszKeyName ) ); if( !edKC ) return SetKeyRV_BADKEY;
-   const auto pCmd( CmdFromName( pszCmdName ) );     if( !pCmd ) return SetKeyRV_BADCMD;
+   const auto edKC( edkcFromKeyname( pszKeyName ) ); if( !edKC ) { return SetKeyRV_BADKEY; }
+   const auto pCmd( CmdFromName( pszCmdName ) );     if( !pCmd ) { return SetKeyRV_BADCMD; }
    g_Key2CmdTbl[ edKC ] = pCmd;
    return SetKeyRV_OK;
    }

@@ -135,16 +135,16 @@ STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const int hProce
    enum { USER_BREAK = 99999999 }; // bugbug this MADE UP
    if( 0 == hProcessExitCode ) {
       FmtStr<30> ets( "in %.3f S", et );
-      if( failedJobsIgnored )    snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.k_str() );
-      else                       snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.k_str() );
+      if( failedJobsIgnored ) { snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.k_str() ); }
+      else                    { snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.k_str() ); }
       }
    else if( USER_BREAK == hProcessExitCode ) {
       snprintf( dest, sizeofDest, "--- process TERMINATED with prejudice" );
       }
    else {
       STATIC_CONST char hdr[] = "--- process FAILED, last exit code=0x";
-      if( unstartedJobCnt )   snprintf( dest, sizeofDest, "%s%X, %d job%s unstarted ---"     , hdr, hProcessExitCode       , unstartedJobCnt, Add_s( unstartedJobCnt ) );
-      else                    snprintf( dest, sizeofDest, "%s%X ---"                         , hdr, hProcessExitCode       );
+      if( unstartedJobCnt ) { snprintf( dest, sizeofDest, "%s%X, %d job%s unstarted ---", hdr, hProcessExitCode , unstartedJobCnt, Add_s( unstartedJobCnt ) ); }
+      else                  { snprintf( dest, sizeofDest, "%s%X ---"                    , hdr, hProcessExitCode );                                             }
       }
    return dest;
    }
@@ -494,7 +494,7 @@ NEXT_OUTBUF:
    char fnm[30];
    auto pFB( FBOP::FindOrAddFBuf( safeSprintf( BSOB(fnm), "<shell_output-%03" PR_SIZET "u>", s_nxt_shelljob_output_FBUF_num ) ) );
    if( pFB ) {
-      if( pFB->d_pInternalShellJobExecutor ) goto NEXT_OUTBUF; // don't want to append to an FBUF currently in use by a d_pInternalShellJobExecutor
+      if( pFB->d_pInternalShellJobExecutor ) { goto NEXT_OUTBUF; } // don't want to append to an FBUF currently in use by a d_pInternalShellJobExecutor
       pFB->PutFocusOn();
       pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, sl, true );
       }

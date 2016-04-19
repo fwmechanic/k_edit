@@ -150,7 +150,7 @@ bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    else {
       for( auto &ch : s_isWordChar_ ) { ch = false; }
       for( auto  ch : s_dfltWordChars ) { s_isWordChar_[ UI(ch) ] = true; }
-      if( !pS.empty() ) for( auto pC(pS.cbegin()); pC != pS.cend() ; ++pC )  s_isWordChar_[ UI(*pC) ] = true;
+      if( !pS.empty() ) for( auto pC(pS.cbegin()); pC != pS.cend() ; ++pC ) { s_isWordChar_[ UI(*pC) ] = true; }
       auto pWc( g_szWordChars );
       for( auto ix(1) ; ix < 256 ; ++ix ) {
          if( s_isWordChar_[ix] ) {
@@ -176,7 +176,7 @@ sridx FirstNonWordOrEnd( stref src, sridx start ) {
    }
 
 sridx IdxFirstWordCh( stref src, sridx start ) {
-   if( start >= src.length() ) return stref::npos;
+   if( start >= src.length() ) { return stref::npos; }
    for( auto it( src.crbegin() + (src.length() - start - 1) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
       if( !isWordChar(*it) )  { return src.length() - std::distance( src.crbegin(), it ); }
       }
@@ -374,8 +374,8 @@ void FBufRead_Assign_Switches( PFBUF pFBuf ) {
 
 bool SetSwitch( stref switchName, stref newValue ) {
    trim( switchName ); trim( newValue );  0 && DBG( "SetSwitch '%" PR_BSR "' ", BSR(switchName) );
-   auto pSwi( FindSwitch( switchName ) ); if( !pSwi ) return Msg( "'%" PR_BSR "' is not an editor switch", BSR(switchName) );
-   if( g_pFBufAssignLog ) g_pFBufAssignLog->FmtLastLine( "ASGN  %" PR_BSR "='%" PR_BSR "'", BSR(switchName), BSR(newValue) );
-   if( newValue.empty() ) return Msg( "%" PR_BSR ": empty switch value", BSR(switchName) );
+   auto pSwi( FindSwitch( switchName ) ); if( !pSwi ) { return Msg( "'%" PR_BSR "' is not an editor switch", BSR(switchName) ); }
+   if( g_pFBufAssignLog ) { g_pFBufAssignLog->FmtLastLine( "ASGN  %" PR_BSR "='%" PR_BSR "'", BSR(switchName), BSR(newValue) ); }
+   if( newValue.empty() ) { return Msg( "%" PR_BSR ": empty switch value", BSR(switchName) ); }
    return pSwi->pfxDefn( pSwi, newValue );
    }

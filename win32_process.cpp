@@ -217,30 +217,30 @@ STATIC_FXN BOOL CALLBACK TerminateAppEnum( HWND hwnd, LPARAM lParam ) {
    }
 
 STATIC_FXN int TerminateApp( const DWORD dwPID, int TmoutMs ) {
-   if( INVALID_dwProcessId == dwPID )
+   if( INVALID_dwProcessId == dwPID ) {
       return TA_FAILED;
-
+      }
    const HANDLE hProc( OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, dwPID) );
-   if( hProc == nullptr )   // If we can't open the process with the necessary rights...
-      return TA_FAILED;  // ...then we give up immediately
-
+   if( hProc == nullptr ) {  // If we can't open the process with the necessary rights...
+      return TA_FAILED;      // ...then we give up immediately
+      }
    // post WM_CLOSE to all windows whose PID matches dwPID
    ewShData sd = { dwPID };
    EnumWindows( (WNDENUMPROC)TerminateAppEnum, (LPARAM)&sd );
-
    DWORD dwRet( TA_FAILED );
-   if( !sd.matchingWindows )
+   if( !sd.matchingWindows ) {
       dwRet = GenerateConsoleCtrlEvent( CTRL_BREAK_EVENT, dwPID ) ? TA_SUCCESS_CTRL_BREAK : TA_FAILED;
+      }
    else {
       // We sent at least one WM_CLOSE, so give the receiving process some time.
       // If it self-implodes, great. If it times out, then kill it.
-      if( WaitForSingleObject( hProc, TmoutMs ) == WAIT_OBJECT_0 )
+      if( WaitForSingleObject( hProc, TmoutMs ) == WAIT_OBJECT_0 ) {
          dwRet = TA_SUCCESS_WM_CLOSE;
+         }
       }
-
-   if( dwRet == TA_FAILED )  // if nothing else worked, whack it over the head!
+   if( dwRet == TA_FAILED ) { // if nothing else worked, whack it over the head!
       dwRet = TerminateProcess( hProc, 0 ) ? TA_SUCCESS_TERM_PROCESS : TA_FAILED;
-
+      }
    CloseHandle(hProc);
    return dwRet;
    }
@@ -336,18 +336,15 @@ int TPipeReader::RdChar() { // see http://support.microsoft.com/kb/q190351/
          d_bytesInRawBuffer = 0;
          return EMPTY;
          }
-
-      if( d_bytesInRawBuffer == 0 )
+      if( d_bytesInRawBuffer == 0 ) {
          return EMPTY;
-
+         }
       d_pRawBuffer = d_rawBuffer;
       }
-
    --d_bytesInRawBuffer;
    const char rv( *d_pRawBuffer++ );
    return rv;
    }
-
 
 int TPipeReader::GetFilteredLine( PXbuf xb ) {
    xb->clear();
@@ -358,22 +355,17 @@ int TPipeReader::GetFilteredLine( PXbuf xb ) {
          case 0x0D:  break;            // drop CR
          case 0x0A:  goto END_OF_LINE; // LF signifies EOL
          case EMPTY: goto END_OF_LINE; // no more data available (for now)
-
          case HTAB:  { // expand to spaces            01234567
                      STATIC_CONST char tabspaces[] = "        ";
                      xb->cat( tabspaces+( xb->length() & (MAX_TAB_WIDTH-1)) );
                      }break;
-
          default:    xb->push_back( lastCh );
                      break;
          }
       }
-
 END_OF_LINE:
-
    return !(lastCh == EMPTY && 0 == xb->length());
    }
-
 
 class ConsoleSpawnHandles {
    // see KB_190351.c too
@@ -408,7 +400,6 @@ public:
       memset( &d_si, 0, sizeof(d_si) );
       d_si.cb = sizeof(d_si);
       d_si.dwFlags = STARTF_USESTDHANDLES;
-
       Win32::SECURITY_ATTRIBUTES PipeAttributes = { 0 };
       PipeAttributes.nLength = sizeof(PipeAttributes);
       PipeAttributes.lpSecurityDescriptor = nullptr;
@@ -451,8 +442,8 @@ public:
 STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const Win32::DWORD hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
    if( 0 == hProcessExitCode ) {
       FmtStr<30> ets( "in %.3f S", et );
-      if( failedJobsIgnored )    _snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.k_str() );
-      else                       _snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.k_str() );
+      if( failedJobsIgnored )   { _snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.k_str() ); }
+      else                      { _snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.k_str() );                                                                          }
       }
    else if( Win32::Status_Control_C_Exit() == hProcessExitCode ) {
       _snprintf( dest, sizeofDest, "--- process TERMINATED with prejudice" );
@@ -463,19 +454,18 @@ STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const Win32::DWO
       char erbuf[265];
       OsErrStr( BSOB(erbuf), hProcessExitCode );
       if( erbuf[0] ) {
-         if( unstartedJobCnt )   _snprintf( dest, sizeofDest, "%s%lX (%s), %d job%s unstarted ---", hdr, hProcessExitCode, erbuf, unstartedJobCnt, Add_s( unstartedJobCnt ) );
-         else                    _snprintf( dest, sizeofDest, "%s%lX (%s) ---"                    , hdr, hProcessExitCode, erbuf );
+         if( unstartedJobCnt )  { _snprintf( dest, sizeofDest, "%s%lX (%s), %d job%s unstarted ---", hdr, hProcessExitCode, erbuf, unstartedJobCnt, Add_s( unstartedJobCnt ) ); }
+         else                   { _snprintf( dest, sizeofDest, "%s%lX (%s) ---"                    , hdr, hProcessExitCode, erbuf );                                            }
          }
       else
      #endif
          {
-         if( unstartedJobCnt )   _snprintf( dest, sizeofDest, "%s%lX, %d job%s unstarted ---"     , hdr, hProcessExitCode       , unstartedJobCnt, Add_s( unstartedJobCnt ) );
-         else                    _snprintf( dest, sizeofDest, "%s%lX ---"                         , hdr, hProcessExitCode       );
+         if( unstartedJobCnt )  { _snprintf( dest, sizeofDest, "%s%lX, %d job%s unstarted ---"     , hdr, hProcessExitCode       , unstartedJobCnt, Add_s( unstartedJobCnt ) ); }
+         else                   { _snprintf( dest, sizeofDest, "%s%lX ---"                         , hdr, hProcessExitCode       );                                             }
          }
       }
    return dest;
    }
-
 
 #define  USE_ConsoleInputModeRestorer  0
 
@@ -517,24 +507,20 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    if( !(cmdFlags & NO_ECHO_CMDLN) ) {
       PutLastLogLine( pfLogBuf, CommandLine->c_str() + ((cmdFlags & IGNORE_ERROR) ? 0 : 1 ) );
       }
-
    ConsoleSpawnHandles csh;
    if( csh.Error() ) {
       PutLastLogLine( pfLogBuf, "Cannot create pipe - did not create process" );
       return CP_PIPED_RC_EPIPE;
       }
-
    //  ^c:\klg\bin\unxutils\ls.exe
    //  -ls -l && sleep 2 && echo hello world
    //  -ls -l
    //  -ls -l && sleep 10
-
    #if USE_ConsoleInputModeRestorer
    const ConsoleInputModeRestorer cim; // save for later restore, to solve "ctrl+c/+s going away" problem
    #endif
    const auto d_fChildProcessStarted( Win32::CreateProcessA( nullptr, pXeq, nullptr, nullptr, TRUE, CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, csh.StartHandlesSwapCriticalSection(), pPI ) );
    csh.EndHandlesSwapCriticalSection();
-
    #if USE_ConsoleInputModeRestorer
    // The following FAILS to restore this process' cim (to solve the "ctrl+c/+s
    // going away" problem) for the time period while the child process is
@@ -543,7 +529,6 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    //
    // cim.Set();
    #endif
-
    auto rv( CP_PIPED_RC_OK );
    if( !d_fChildProcessStarted ) {
       char erbuf[265];
@@ -576,15 +561,12 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
             }
          }
       } // kill pipeReader
-
    csh.PostChildTerminate();
    #if USE_ConsoleInputModeRestorer
    cim.Set(); // _if_ this is ever needed again, it may need to be done WhileHoldingGlobalVariableLock
    #endif
-
    return rv;
    }
-
 
 struct Win32pty_job_Q_el {
    PChar    d_PtyXeqParam; // heap string owned by this object!
@@ -651,16 +633,18 @@ Win32_pty *Win32_pty::s_Win32_pty_ListHead;
 
 
 void Win32_pty::QuiesceAll() {
-   for( auto pQ(s_Win32_pty_ListHead) ; pQ ; pQ=pQ->d_pNext )
+   for( auto pQ(s_Win32_pty_ListHead) ; pQ ; pQ=pQ->d_pNext ) {
       pQ->KillAllJobsInBkgndProcessQueue();
+      }
    }
 
 int Win32_pty::ActiveQueues() {
    auto sum(0);
-   for( auto pQ(s_Win32_pty_ListHead) ; pQ ; pQ=pQ->d_pNext )
-      if( pQ->IsThreadActive() )
+   for( auto pQ(s_Win32_pty_ListHead) ; pQ ; pQ=pQ->d_pNext ) {
+      if( pQ->IsThreadActive() ) {
          ++sum;
-
+         }
+      }
    return sum;
    }
 
@@ -722,12 +706,10 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
    // the warning IS generated...
    //
    auto PutLastLine_( [=]( PCChar pline ) { PutLastLogLine( d_pfLogBuf, pline ); } );
-
    if( g_fMsgflush ) {
       WhileHoldingGlobalVariableLock gvlock;     // wait until we own the I/O
       d_pfLogBuf->MakeEmpty();
       }
-
    auto failedJobsIgnored(0);
    auto unstartedJobCnt(0);
    PerfCounter pc;
@@ -746,11 +728,9 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
          d_hThread = nullptr;
          return; // ##################### LockTheJobQueue ######################
          }
-
       DLINK_REMOVE_FIRST(d_jobQHead, pEl, d_dlinkJobsOfPty); //*** job has been taken from Queue, held in pEl
       --d_numJobRequestsPending;
       } // ##################### LockTheJobQueue ######################
-
       const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_hProcessExitCode, d_pfLogBuf, pEl->d_PtyXeqParam, pEl->d_cmdFlags, &x1, &x2 ) );
       if( CP_PIPED_RC_OK == cp_rc ) {
          if( d_hProcessExitCode ) {
@@ -758,12 +738,10 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
             else                                 {  unstartedJobCnt = DeleteAllEnqueuedJobs_locks(); }
             }
          }
-
       Delete0( pEl );
       } //**************** outerthreadloop ****************
    ConOut::Bell();
    }
-
 
 STATIC_CONST auto cpct_start_fmts = "%s::CPCT vvvvvvvvvvvvvvvvvv THREAD STARTS vvvvvvvvvvvvvvvvvv";
 STATIC_CONST auto cpct_exit_fmts  = "%s::CPCT ^^^^^^^^^^^^^^^^^^ THREAD EXITS  ^^^^^^^^^^^^^^^^^^";
@@ -789,7 +767,6 @@ bool Win32_pty::EnqueueJobPrimeThread_nolock() {
       }
    return false;
    }
-
 
 int Win32_pty::EnqueueJobsAndRun( const StringList &sl ) {
    auto numAdded(0);
@@ -826,10 +803,8 @@ int Win32_pty::DeleteAllEnqueuedJobs_locks() {
    return rmCnt;
    }
 
-
 int Win32_pty::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
-
    if( IsThreadActive() && ConIO::Confirm( Sprintf2xBuf( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), d_processInfo.dwProcessId ) ) ) {
       PCChar msg;
       switch( Win32::TerminateApp( d_processInfo.dwProcessId, 2000 ) ) {
@@ -839,11 +814,9 @@ int Win32_pty::KillAllJobsInBkgndProcessQueue() {
          case TA_SUCCESS_WM_CLOSE     : msg = "TA_SUCCESS_WM_CLOSE"      ;  break;
          case TA_SUCCESS_TERM_PROCESS : msg = "TA_SUCCESS_TERM_PROCESS"  ;  break;
          }
-
       Msg( "Win32::TerminateApp returned %s", msg );
       return true;
       }
-
    return !IsThreadActive();
    }
 
@@ -865,7 +838,6 @@ bool IsCompileJobQueueThreadActive() {
    return s_pCompilePty->IsThreadActive();
    }
 
-
 //#################################################################################################################################
 //#################################################################################################################################
 //#################################################################################################################################
@@ -873,38 +845,27 @@ bool IsCompileJobQueueThreadActive() {
 class InternalShellJobExecutor {
    NO_COPYCTOR(InternalShellJobExecutor);
    NO_ASGN_OPR(InternalShellJobExecutor);
-
    PFBUF                       d_pfLogBuf;
    StringList                 *d_pSL;
    const size_t                d_numJobsRequested;
-
    Win32::PROCESS_INFORMATION  d_processInfo;
    Win32::HANDLE               d_hThread;
    Win32::DWORD                d_hProcessExitCode;
-
    Mutex                       d_jobQueueMtx;
-
    Win32::ManualClrEvent       d_AllJobsDone;
-
    STATIC_FXN Win32::DWORD K_STDCALL ChildProcessCtrlThread( Win32::LPVOID pThreadParam );
-
 public:
-
    InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput );
    ~InternalShellJobExecutor();
-
    void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const
       {
       *pNumRequested  = d_numJobsRequested;
       *pNumNotStarted = d_pSL->length();
       }
-
 private:
-
    void ThreadFxnRunAllJobs();
    int  KillAllJobsInBkgndProcessQueue();
    int  DeleteAllEnqueuedJobs_locks();
-
    };
 
 InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput )
@@ -932,7 +893,6 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       WhileHoldingGlobalVariableLock gvlock;     // wait until we own the I/O
       d_pfLogBuf->MakeEmpty();
       }
-
    auto failedJobsIgnored(0);
    auto unstartedJobCnt(0);
    PerfCounter pc;
@@ -953,11 +913,9 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
          }
       DLINK_REMOVE_FIRST( d_pSL->Head(), pEl, dlink );
       } // ##################### LockTheJobQueue ######################
-
       auto cmdFlags(0);
       PChar pS( analyze_cmdline( pEl->string, &cmdFlags ) );
       if( *pS ) { prep_cmdline( pS, cmdFlags, __func__ ); }
-
       const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_hProcessExitCode, d_pfLogBuf, pS, cmdFlags, &x1, &x2 ) );
       if( CP_PIPED_RC_OK == cp_rc ) {
          if( d_hProcessExitCode ) {
@@ -970,7 +928,6 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
    ConOut::Bell();
    }
 
-
 Win32::DWORD InternalShellJobExecutor::ChildProcessCtrlThread( Win32::LPVOID pThreadParam ) {
    0 && DBG( cpct_start_fmts, "ISJE" );
                                         static_cast<InternalShellJobExecutor *>( pThreadParam )->ThreadFxnRunAllJobs();
@@ -978,14 +935,12 @@ Win32::DWORD InternalShellJobExecutor::ChildProcessCtrlThread( Win32::LPVOID pTh
    return 0; // equivalent to ExitThread( 0 );
    }
 
-
 PFBUF StartInternalShellJob( StringList *sl, bool fAppend ) {
    STATIC_VAR size_t s_nxt_shelljob_output_FBUF_num;
    if( !fAppend ) {
 NEXT_OUTBUF:
       ++s_nxt_shelljob_output_FBUF_num;
       }
-
    char fnm[30];
    auto pFB( FBOP::FindOrAddFBuf( safeSprintf( BSOB(fnm), "<shell_output-%03Iu>", s_nxt_shelljob_output_FBUF_num ) ) );
    if( pFB ) {
@@ -995,7 +950,6 @@ NEXT_OUTBUF:
       }
    return pFB;
    }
-
 
 int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
    AutoMutex LockTheJobQueue( d_jobQueueMtx );
@@ -1008,10 +962,8 @@ int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
    return rmCnt;
    }
 
-
 int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
-
    if(   INVALID_dwProcessId != d_processInfo.dwProcessId
       && ConIO::Confirm( FmtStr<55>( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), d_processInfo.dwProcessId ) )
       && INVALID_dwProcessId != d_processInfo.dwProcessId
@@ -1024,36 +976,29 @@ int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
          case TA_SUCCESS_WM_CLOSE     : msg = "TA_SUCCESS_WM_CLOSE"      ;  break;
          case TA_SUCCESS_TERM_PROCESS : msg = "TA_SUCCESS_TERM_PROCESS"  ;  break;
          }
-
       d_processInfo.dwProcessId = INVALID_dwProcessId;
       Msg( "Win32::TerminateApp returned %s", msg );
       return 1;
       }
-
    return 1; // !IsThreadActive();
    }
-
 
 STATIC_FXN Win32::DWORD K_STDCALL IdleThread( Win32::LPVOID ) {
    0 && DBG( "*** %s STARTING***", __func__ );
    while( true ) {
       SleepMs( 100 );  // was 50 @ 20130101
-
       WhileHoldingGlobalVariableLock gvlock;
-
        {
        extern void IdleIntegrityCheck();
        IdleIntegrityCheck();
        }
-
-      if( EditorLoadCountChanged() )
+      if( EditorLoadCountChanged() ) {
          DispNeedsRedrawStatLn();
-
+         }
       UpdateConsoleTitle();
-
-      if( g_fSystemShutdownOrLogoffRequested && EditorFilesystemNoneDirty() ) // silently exit if no harm would be done
+      if( g_fSystemShutdownOrLogoffRequested && EditorFilesystemNoneDirty() ) { // silently exit if no harm would be done
          EditorExit( 0, true );
-
+         }
       // DispDoPendingRefreshes() is here PRIMARILY for aux-thread related screen
       // updates (when the screen changes NOT as a result of user edit activity,
       // but from piped in output from a child process): when this is commented
@@ -1067,12 +1012,10 @@ STATIC_FXN Win32::DWORD K_STDCALL IdleThread( Win32::LPVOID ) {
       //       updates.  Otherwise, there was ZERO noticable difference.
       //
       DispDoPendingRefreshes();
-
       LuaIdleGC();
       }
    return 0; // suppress warning
    }
-
 
 void InitJobQueues() {
    // IdleThread is quasi-related to JobQueues: it updates <compile> window when
@@ -1081,27 +1024,23 @@ void InitJobQueues() {
    Win32::DWORD ThreadId;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-   if( !Win32::CreateThread( nullptr, (4*1024), IdleThread, 0, 0, &ThreadId ) )
+   if( !Win32::CreateThread( nullptr, (4*1024), IdleThread, 0, 0, &ThreadId ) ) {
 #pragma GCC diagnostic pop
       Msg( "Unable to start Idle thread" );
-
+      }
    s_pCompilePty = new Win32_pty( szCompile );
    }
-
 
 bool ARG::compile() {
    switch( d_argType ) {
       default:      return BadArg();
-
       case NOARG:   {
                     const auto fCompiling( IsCompileJobQueueThreadActive() );
                     Msg( "%scompile in progress", fCompiling ? "" : "no " );
                     return fCompiling;
                     }
-
       case NULLARG: CompilePty_KillAllJobs();
                     return false;
-
       case TEXTARG: {
                     g_CurFBuf()->SyncWriteIfDirty_Wrote();
                     DispDoPendingRefreshesIfNotInMacro();
@@ -1111,7 +1050,6 @@ bool ARG::compile() {
                     }
       }
    }
-
 
 //###########################################################################################################
 //###########################################################################################################
@@ -1128,7 +1066,6 @@ bool ARG::compile() {
 STATIC_FXN int StartChildProcess( PCChar pFullCommandLine, int extra_dwCreationFlags ) {
    Win32::STARTUPINFO          si = { sizeof si };
    Win32::PROCESS_INFORMATION  pi;
-
    // Launches the process and (optionally) waits for it to complete
    if( Win32::CreateProcessA(
          nullptr,                       // lpApplicationName        : PChar;
@@ -1178,43 +1115,36 @@ void StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile )  {
 
 bool RunChildSpawnOrSystem( PCChar pCmdStr ) {
    const auto cmdStr( StrPastAnyBlanks( pCmdStr ) );
-   if( *cmdStr == 0 )
+   if( *cmdStr == 0 ) {
       return true;
-
+      }
    0 && DBG( "%s '%s'"   , "system", pCmdStr );
-
    const ConsoleInputModeRestorer cim;
    const auto rtnCode( system( cmdStr ) );
    ConsoleInputAcquire();
    cim.Set();
-
    DBG( "%s rtns %d", "system", rtnCode );
    if( rtnCode == -1 ) {
       ErrorDialogBeepf( "system(%s) failed: %s", cmdStr, strerror( errno ) );
       return true;
       }
-
    return false;
    }
-
 
 #ifdef fn_shell
 
 // 20091216 kgoodwin this seems superfluous so have disabled it
 
 bool ARG::shell() {
-   if( !d_fMeta )
+   if( !d_fMeta ) {
       fExecute( "saveall" );
-
+      }
    MsgClr();
-
    CursorLocnOutsideView_Set( DialogLine(), 0 );
-
    bool rv( false );
    switch( d_argType ) {
       case NOARG  : rv = RunChildSpawnOrSystem( "" );               break;
       case TEXTARG: rv = RunChildSpawnOrSystem( d_textarg.pText );  break;
-
       case LINEARG: //lint -fallthrough
       case BOXARG : for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                        if( aw.GetLine() ) {
@@ -1226,7 +1156,6 @@ bool ARG::shell() {
                        }
                     return true;
       }
-
    g_CurFBuf()->SyncNoWrite();
    return rv;
    }

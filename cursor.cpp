@@ -53,8 +53,7 @@ bool ARG::right() { PCWrV;
                      : ConstrainCursorX_1( pcv->FBuf(), g_CursorLine(), g_CursorCol() )
                      );
    const auto g_CursorCol_was( g_CursorCol() );
-   pcv->MoveCursor( g_CursorLine(), xNewCol );
-   0 && DBG( "xNewCol=%d -> %d -> %d", g_CursorCol_was, xNewCol, g_CursorCol() );
+   pcv->MoveCursor( g_CursorLine(), xNewCol );  0 && DBG( "xNewCol=%d -> %d -> %d", g_CursorCol_was, xNewCol, g_CursorCol() );
    return g_CursorCol() == CurLineCols();
    }
 
@@ -176,11 +175,11 @@ void View::ScrollToPrev() {
    }
 
 bool View::RestCur() { // selecting
-   if( !d_saved.fValid ) {
-      return false;
+   const auto saved( d_saved.fValid );
+   if( saved ) {
+      ScrollOriginAndCursor( d_saved );
       }
-   ScrollOriginAndCursor( d_saved );
-   return true;
+   return saved;
    }
 
 bool ARG::savecur() { PCV;  // left here for macro programming
@@ -196,7 +195,7 @@ bool ARG::restcur() { PCV;
       }
    else {
       pcv->SaveCur();
-      Msg( "saved cursor location" );
+      fnMsg( "saved cursor location" );
       }
    return true;
    }
@@ -225,9 +224,9 @@ bool ARG::pmlines( int direction ) { PCWrV;
                   pcv->ScrollOrigin_Y_Rel( direction * scroll );
                   return true;
                   }
-    case TEXTARG: if( !StrSpnSignedInt( d_textarg.pText ) )
+    case TEXTARG: if( !StrSpnSignedInt( d_textarg.pText ) ) {
                      return BadArg();
-
+                     }
                   pcv->ScrollOrigin_Y_Rel( direction * atoi( d_textarg.pText ) );
                   return true;
     }
@@ -251,7 +250,7 @@ void CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
 
 bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
    enum { CURSOR_ON_LINE_AFTER_LAST = 1 }; // = 0 to have "tailing cursor" sit atop last line
-   auto retVal( false );
+   auto scrolledAny( false );
    for( auto ix(0), max=g_iWindowCount() ; ix < max ; ++ix ) {
       const auto pWin( g_Win(ix) );
       if( (fIncludeCurWindow || pWin != g_CurWin()) && pWin->CurView()->FBuf() == pFBuf ) {
@@ -262,17 +261,16 @@ bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
             if(   0 != pView->Cursor().col || yCursor != pView->Cursor().lin
                || 0 != pView->Origin().col || yOrigin != pView->Origin().lin
               ) {
-               pView->ScrollOriginAndCursor( yOrigin, 0, yCursor, 0 );
-               0 && DBG( "CurTRUE %d", pFBuf->LastLine() );
-               retVal = true;
+               pView->ScrollOriginAndCursor( yOrigin, 0, yCursor, 0 );        0 && DBG( "CurTRUE %d", pFBuf->LastLine() );
+               scrolledAny = true;
                }
             }
          }
       }
-   if( retVal ) {
+   if( scrolledAny ) {
       FBOP::PrimeRedrawLineRangeAllWin( pFBuf, 0, pFBuf->LineCount() );
       }
-   return retVal;
+   return scrolledAny;
    }
 
 void FBUF::MoveCursorAllViews( LINE yLine, COL xCol ) { // NB: this affects _all Views_ referencing this!

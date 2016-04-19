@@ -119,11 +119,11 @@ Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
    // dest = (Path::CpyDirnm( s1 ) || Path::CpyDirnm( s2 ))
    //      + (Path::CpyFnm  ( s1 ) || Path::CpyFnm  ( s2 ))
    //      + (Path::CpyExt  ( s1 ) || Path::CpyExt  ( s2 ))
-   auto dir( Path::RefDirnm( s1 ) ); if( dir.empty() )  dir = Path::RefDirnm( s2 );  // DB && DBG( "RExt:dir '%s'", dir.c_str() );
-   auto fnm( Path::RefFnm  ( s1 ) ); if( fnm.empty() )  fnm = Path::RefFnm  ( s2 );  // DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
+   auto dir( Path::RefDirnm( s1 ) ); if( dir.empty() ) { dir = Path::RefDirnm( s2 ); } // DB && DBG( "RExt:dir '%s'", dir.c_str() );
+   auto fnm( Path::RefFnm  ( s1 ) ); if( fnm.empty() ) { fnm = Path::RefFnm  ( s2 ); } // DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
    stref ext;
    if( !Path::IsDotOrDotDot( fnm ) ) {
-      ext =  Path::RefExt  ( s1 )  ; if( ext.empty() )  ext = Path::RefExt  ( s2 );  // DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
+      ext =  Path::RefExt  ( s1 )  ; if( ext.empty() ) { ext = Path::RefExt  ( s2 ); } // DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
       }
    Path::str_t rv;
    rv.reserve( dir.length() + fnm.length() + ext.length() + 1 );

@@ -179,8 +179,9 @@ bool FcLogTm::BorrowOk( int fieldToDecr ) {
    auto &l_borr( v[ fieldToDecr ]   );
    0 && DBG( "Borrowing from %s=%d (now %s=%d)", FldName( fieldToDecr ), l_borr, FldName( fieldToDecr+1 ), l );
    if( l_borr == 0 ) {
-      if( !BorrowOk( fieldToDecr-1 ) )
+      if( !BorrowOk( fieldToDecr-1 ) ) {
          return false;
+         }
       }
    --l_borr;
    const auto more( (this->*tuConvTbl[fieldToDecr])( l_borr-1 ) ); // whooee!  http://groups.google.com/groups?hl=en&lr=&selm=Xns947E7EF2B844BukcoREMOVEfreenetrtw%40195.129.110.200&rnum=5
@@ -194,8 +195,9 @@ bool FcLogTm::decrStepOk( const FcLogTm& decr_by, int fieldToDecr ) {
    const auto &r( decr_by.v[ fieldToDecr ] );
    0 && DBG( "%s: %d - %d", FldName( fieldToDecr ), l, r );
    while( l < r ) { // borrow needed?
-      if( !BorrowOk( fieldToDecr-1 ) )
+      if( !BorrowOk( fieldToDecr-1 ) ) {
          return false;
+         }
       }
    l -= r;
    return true;

@@ -245,10 +245,8 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
          }
       else {
          if( sit != src.cend() && !fNxtChEscaped ) {
-            if( *sit == quoteCh )
-               fInQuotedRgn = false;
-            else if( *sit == chESC ) // ESCAPE char, not PathSepCh!
-               fNxtChEscaped = true;
+            if(      *sit == quoteCh ) { fInQuotedRgn = false; }
+            else if( *sit == chESC   ) { fNxtChEscaped = true; } // ESCAPE char, not PathSepCh!
             }
          else {
             fNxtChEscaped = false;
@@ -665,7 +663,7 @@ STATIC_FXN void PCFV_Copy_LINEARG_ToClipboard( ARG::LINEARG_t const &d_linearg )
    }
 
 void PCFV_delete_STREAMARG( ARG::STREAMARG_t const &d_streamarg, bool copyToClipboard ) { PCFV;
-   if( copyToClipboard ) PCFV_Copy_STREAMARG_ToClipboard( d_streamarg );
+   if( copyToClipboard ) { PCFV_Copy_STREAMARG_ToClipboard( d_streamarg ); }
    pcf->DelStream(  d_streamarg.flMin.col, d_streamarg.flMin.lin, d_streamarg.flMax.col, d_streamarg.flMax.lin );
    pcv->MoveCursor( d_streamarg.flMin.lin, d_streamarg.flMin.col );
    }
@@ -683,7 +681,7 @@ void PCFV_delete_LINEARG( ARG::LINEARG_t const &d_linearg, bool copyToClipboard 
    // clipboard.  The argument is a LINEARG or BOXARG regardless of the
    // current selection mode.  The argument is a LINEARG if the starting
    // and ending points are in the same column.
-   if( copyToClipboard ) PCFV_Copy_LINEARG_ToClipboard( d_linearg );
+   if( copyToClipboard ) { PCFV_Copy_LINEARG_ToClipboard( d_linearg ); }
    pcf->DelLines( d_linearg.yMin, d_linearg.yMax );
    pcv->MoveCursor( d_linearg.yMin, g_CursorCol() );
    }
@@ -1090,7 +1088,7 @@ bool ARG::paste() {
                     return true;
     case BOXARG:    {
                     const COL boxWidth( FBOP::LineCols( g_pFbufClipboard, 0 ) ); // w/clipboard in BOXARG mode is assumed that all lines have sm len
-                    if( boxWidth == 0 )  return false;
+                    if( boxWidth == 0 ) { return false; }
                     FBOP::CopyBox( g_CurFBuf(),
                          g_CursorCol(), g_CursorLine()
                        , g_pFbufClipboard
@@ -1323,7 +1321,7 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
       const auto chars( fb->getLineTabx( pLSR->lbuf, yY ) );
       if( chars > yMin ) {
          scpy( pLSR->keydata, keyBytes, pLSR->lbuf + xMin );
-         if( !fCase )  _strlwr( pLSR->keydata );
+         if( !fCase ) { _strlwr( pLSR->keydata ); }
          }
       else {
          pLSR->keydata[0] = '\0';

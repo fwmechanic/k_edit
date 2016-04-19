@@ -349,8 +349,7 @@ STATIC_FXN int ConGetEvent() {
 
          char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, chin, chinIx );
          if( rv < 0 ) { Msg( "unrecognized escseq %s\n", tib ); }
-         else { char edkcnmbuf[65] ; StrFromEdkc( BSOB(edkcnmbuf), rv ); DBG( "escseq: %s=%s", edkcnmbuf, tib ); }
-
+         else { char edkcnmbuf[65] ; StrFromEdkc( BSOB(edkcnmbuf), rv ); 0 && DBG( "escseq: %s=%s", edkcnmbuf, tib ); }
          return rv;
          }
 

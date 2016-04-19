@@ -152,7 +152,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
             for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) {
                auto winsOnLine(0);
                for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
-                  if( g_Win( iw )->VisibleOnDisplayLine( yLine ) ) ++winsOnLine;
+                  if( g_Win( iw )->VisibleOnDisplayLine( yLine ) ) { ++winsOnLine; }
                   }
                maxWinsOnAnyLine = Max( maxWinsOnAnyLine, winsOnLine );
                }
@@ -163,17 +163,17 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
             for( auto xCol(xLeft) ; xCol < xRight; ++xCol ) {
                auto winsOnCol(0);
                for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {
-                  if( g_Win( iw )->VisibleOnDisplayCol( xCol ) ) ++winsOnCol;
+                  if( g_Win( iw )->VisibleOnDisplayCol( xCol ) ) { ++winsOnCol; }
                   }
                maxWinsOnAnyCol = Max( maxWinsOnAnyCol, winsOnCol );
                }
             }
-
             DBG( "%s maxWinsOnAnyLine=%d, maxWinsOnAnyCol=%d", __func__, maxWinsOnAnyLine, maxWinsOnAnyCol );
             if( 0&&newSize.lin > MIN_WIN_HEIGHT * maxWinsOnAnyLine
                 && newSize.col > MIN_WIN_WIDTH  * maxWinsOnAnyCol
-              )
+              ) {
                return true;
+               }
             }
   */
          }
@@ -182,10 +182,10 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
 
 STATIC_FXN int PWinToWidx( PCWin tgt ) {
    for( auto it( g__.aWindow.cbegin() ) ; it != g__.aWindow.cend() ; ++it ) {
-      if( *it == tgt )
+      if( *it == tgt ) {
          return std::distance( g__.aWindow.cbegin(), it );
+         }
       }
-
    Assert( !"couldn't find PWin!" );
    return -1;
    }
@@ -219,7 +219,6 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
    : pimpl{ new impl{} }
    { // ! parent_ is a reference since this is a COPY CTOR
    parent_.DispNeedsRedrawAllLines(); // in the horizontal-split case this is somewhat overkill...
-
    // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
    const auto &parent( parent_ ); // parent_ SHALL NOT be modified until this dims have been set
    Point newParentSize, newParentSizePct;
@@ -243,7 +242,7 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
                 parent.d_Size.bbb, parent.pimpl->SizePct().bbb                        \
               , newParentSize.bbb,        newParentSizePct.bbb                        \
               ,  this->d_Size.bbb,  this->pimpl->SizePct().bbb                        \
-              );                                                                      \
+              );
 
    if( fSplitVertical ) {  SPLIT_IT( lin, col )  }
    else                 {  SPLIT_IT( col, lin )  }
@@ -251,7 +250,6 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
    #undef SPLIT_IT
 
    parent_.Event_Win_Resized( newParentSize, newParentSizePct ); // feed newParentSize back into parent
-
    // clone all of original window's Views in a new list bound to the new window  !BUGBUG a different approach should be created!
    for( auto view( parent_.CurView() ) ; view ; view = DLINK_NEXT( view, dlinkViewsOfWindow ) ) {
       auto dupdPF( new View( *view, this ) ); // DO NOT inline the 'new View( ... )' into DLINK_INSERT_LAST _macro_ !!!
@@ -321,7 +319,6 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
       Msg( "Too many windows" );
       return nullptr;
       }
-
    if( g_iWindowCount() > 1 ) {
       const auto existingSplitVertical( g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
       if( existingSplitVertical != fSplitVertical ) {
@@ -329,7 +326,6 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
          return nullptr;
          }
       }
-
    const auto pWin( g_CurWinWr() );
    if(   ( fSplitVertical && (ColumnOrLineToSplitAt < MIN_WIN_WIDTH  || pWin->d_Size.col - ColumnOrLineToSplitAt < MIN_WIN_WIDTH ))
       || (!fSplitVertical && (ColumnOrLineToSplitAt < MIN_WIN_HEIGHT || pWin->d_Size.lin - ColumnOrLineToSplitAt < MIN_WIN_HEIGHT))
@@ -337,23 +333,19 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
       Msg( "Window too small to split" );
       return nullptr;
       }
-
 // const Point svCursLocn( g_CurView()->Cursor()     ); // unnecessary?  No, this does something useful ...
    const auto  svUlcLine ( g_CurView()->Origin().lin ); // ... (ulc of orig window tends to scroll without it)
-
    // top of new window is at cursor's line
    if( !fSplitVertical ) {
       g_CurView()->PokeOriginLine_HACK( g_CursorLine() ? g_CursorLine() - 1 : g_CursorLine() );
       }
    0 && DBG( "%s+ from w%d of %d", __func__, g_CurWindowIdx(), g_iWindowCount() );
-
    auto newWin( SaveNewWin( new Win( *pWin, fSplitVertical, ColumnOrLineToSplitAt ) ) );
    SortWinArray();
-
-   if( !fSplitVertical )
+   if( !fSplitVertical ) {
       g_CurView()->PokeOriginLine_HACK( svUlcLine );
+      }
 // g_CurView()->MoveCursor( svCursLocn );
-
    newWin->CurViewWr()->HiliteAddins_Init();  // here since not called by SetWindowSetValidView
    return newWin;
    }
@@ -379,7 +371,6 @@ STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
 STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %d", __func__, winToClose, wixToMergeTo, g_iWindowCount() );
    const auto pWinToMergeTo( g_WinWr( wixToMergeTo ) );
          auto pWinToClose  ( g_WinWr( winToClose   ) );
-
    {
    DLINKC_FIRST_TO_LASTA( pWinToClose->ViewHd, dlinkViewsOfWindow, pv ) {
       const auto pFBuf( pv->FBuf() );
@@ -394,30 +385,24 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
       }
    }
    DestroyViewList( &pWinToClose->ViewHd );
-
    Point newSizePct( pWinToMergeTo->pimpl->SizePct() );
    Point newSize(    pWinToMergeTo->d_Size     );
    Point newUlc (    pWinToMergeTo->d_UpLeft   );
    #define  WIN_SIZE_MERGE( aaa )                                   \
          newSize   .aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH ; \
          newSizePct.aaa += pWinToClose->pimpl->SizePct()  .aaa    ; \
-         NoGreaterThan( &newUlc.aaa, pWinToClose->d_UpLeft.aaa )  ; \
-
+         NoGreaterThan( &newUlc.aaa, pWinToClose->d_UpLeft.aaa )  ;
    const auto fSplitVertical( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin );
    if( fSplitVertical ) { WIN_SIZE_MERGE( col ) }
    else                 { WIN_SIZE_MERGE( lin ) }
-
    #undef  WIN_SIZE_MERGE
-
    Delete0( pWinToClose ); //----------------------------------------------------------------------
-
    pWinToMergeTo->Event_Win_Reposition( newUlc ); // before sorting
    pWinToMergeTo->Event_Win_Resized( newSize, newSizePct );
-
    g__.aWindow.erase( g__.aWindow.begin() + winToClose );
-   if( winToClose < wixToMergeTo )
+   if( winToClose < wixToMergeTo ) {
       --wixToMergeTo;
-
+      }
    SetWindowIdx( wixToMergeTo );
    SortWinArray();
    SetWindowSetValidView( -1 );
@@ -434,7 +419,6 @@ STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %d", __func__,
    return false;  // cannot close
    }
 
-
 // SetWindowSetValidView is used to prep (ensure validity, i.e. displayability of) the window's current View+FBUF
 // note that it is used at editor startup to discard any leading filenames (whether from cmdline or history), as
 // well as when switching between windows post-startup
@@ -443,7 +427,6 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
    if( widx >= 0 ) {
       SetWindowIdx( widx );
       }
-
    const auto  iw( g_CurWindowIdx() );
    const auto  pWin( g_CurWin() );
          auto &vh( g_CurViewHd() );
@@ -456,7 +439,6 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
          return;
          }
       }
-
    DD && DBG( "%s Win[%d] giving up, adding %s", __func__, iw, szNoFile );
    fChangeFile( szNoFile );
    Assert( g_CurView() != nullptr );
@@ -532,13 +514,13 @@ bool ARG::window() {
                         break;
                         }
                      if( d_fMeta ) {
-                        if( !CloseWnd( g_CurWindowIdx() ) )
+                        if( !CloseWnd( g_CurWindowIdx() ) ) {
                            return Msg( "Cannot close this window" );
+                           }
                         }
                      else
                         SetWindowSetValidView( (g_CurWindowIdx()+1) % g_iWindowCount() );
                      break;
-
       case NULLARG:  const auto fSplitVertical( d_cArg != 1 );
                      const auto xyParam( fSplitVertical
                         ? d_nullarg.cursor.col - g_CurView()->Origin().col
@@ -547,7 +529,6 @@ bool ARG::window() {
                      rv = nullptr != SplitCurWnd( fSplitVertical, xyParam );
                      break;
       }
-
    DispRefreshWholeScreenNow();
    return rv;
    }
@@ -570,7 +551,6 @@ void RefreshCheckAllWindowsFBufs() {
             }
          }
       }
-
    // now that all are known, update them all
    auto updates(0);
    for( auto &pf : pfbufs ) {
@@ -579,9 +559,7 @@ void RefreshCheckAllWindowsFBufs() {
       0 && DBG( "REFRESH-CHK '%s'", pf->Name() );
       updates += pf->SyncNoWrite();
       }
-
    DispDoPendingRefreshes(); // BUGBUG leaving this work to the IdleThread can cause a CRASH
-
    if( updates ) { Msg( "%d file%s updated when you switched back", updates, Add_s( updates ) ); }
 // else          { Msg( "no files changed" ); }
    }
@@ -657,7 +635,6 @@ void Wins_WriteStateFile( FILE *ofh ) {
          hds[hdsMax++].Init( pWin->ViewHd.front() );
          }
       }
-
    auto iFilesSaved(0);
    while( 1 ) {
       class not_anon {
@@ -685,7 +662,6 @@ void Wins_WriteStateFile( FILE *ofh ) {
             }
          }
       if( best.is_empty() ) { break; /*################################################*/ }
-
       // we have an entry to write to the statefile
       auto &hd( hds[ best.get_idx() ] );
       const auto pv( hd.View() );
@@ -694,7 +670,6 @@ void Wins_WriteStateFile( FILE *ofh ) {
       pv->FBuf()->SetSavedToStateFile(); // prevent saving state for this file again
       hd.Next();
       }
-
    if( iFilesSaved == 0 ) {
       fprintf( ofh, " %s|0 0 0 0\n", szNoFile );
       }

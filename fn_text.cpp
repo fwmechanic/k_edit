@@ -38,7 +38,7 @@ STATIC_FXN char first_alpha( PCChar str ) {
    }
 
 int FlipCase( int ch ) {
-   if( isalpha(ch) )  return islower(ch) ? _toupper(ch) : _tolower(ch);
+   if( isalpha(ch) ) { return islower(ch) ? _toupper(ch) : _tolower(ch); }
    switch( ch ) {
       case '+' : return '-' ;
       case '-' : return '+' ;

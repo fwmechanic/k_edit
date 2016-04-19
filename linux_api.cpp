@@ -93,9 +93,8 @@ STIL bool KeepMatch_( const WildCardMatchMode want, const struct stat &sbuf, str
    const auto fIsDir ( ToBOOL(sbuf.st_mode & S_IFDIR) );
    const auto fIsFile( !fIsDir && (sbuf.st_mode & (S_IFREG | S_IFLNK)) );
 
-   if( fDirOk  && fIsDir  ) return !Path::IsDot( name );
-   if( fFileOk && fIsFile ) return true;
-   return                          false;
+   if( fDirOk && fIsDir ) { return !Path::IsDot( name ); }
+   return fFileOk && fIsFile;
    }
 
 bool DirMatches::KeepMatch() {

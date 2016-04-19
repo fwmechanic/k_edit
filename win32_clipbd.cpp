@@ -80,19 +80,23 @@ STATIC_FXN PCChar DestNm() { return "Win"; }
 //
 bool ARG::fromwinclip() {
    auto retVal(false);
-   if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) )
+   if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) ) {
       ErrPause( ClipUnavail ); // error: can't do the op
+      }
    else {
-      if( !Win32::IsClipboardFormatAvailable(CF_TEXT) )
+      if( !Win32::IsClipboardFormatAvailable(CF_TEXT) ) {
          ErrPause( "CF_TEXT format data not available" );
+         }
       else {
          auto hglb( Win32::GetClipboardData( CF_TEXT ) );
-         if( !hglb )
+         if( !hglb ) {
             ErrPause( "GetClipboardData failed" );
+            }
          else {
             const PCChar pClip( PChar(Win32::GlobalLock( hglb )) );
-            if( !pClip )
+            if( !pClip ) {
                ErrPause( "GlobalLock on ClipboardData failed" );
+               }
             else {
                Clipboard_PutText_Multiline( pClip );
                Win32::GlobalUnlock( hglb );
@@ -107,19 +111,23 @@ bool ARG::fromwinclip() {
    }
 
 void WinClipGetFirstLine( std::string &dest ) {
-   if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) )
+   if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) ) {
       dest = ClipUnavail;
+      }
    else {
-      if( !Win32::IsClipboardFormatAvailable(CF_TEXT) )
+      if( !Win32::IsClipboardFormatAvailable(CF_TEXT) ) {
          dest = "CF_TEXT format data not available";
+         }
       else {
          auto hglb( Win32::GetClipboardData( CF_TEXT ) );
-         if( !hglb )
+         if( !hglb ) {
             dest = "GetClipboardData failed";
+            }
          else {
             const auto pClip( PCChar(Win32::GlobalLock( hglb )) );
-            if( !pClip )
+            if( !pClip ) {
                dest = "GlobalLock on ClipboardData failed";
+               }
             else {
                dest.assign( pClip, StrToNextOrEos( pClip, "\x0D\x0A" ) - pClip );
                Win32::GlobalUnlock( hglb );

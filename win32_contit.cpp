@@ -57,23 +57,21 @@ int EditorLoadCount() {
 
 bool EditorLoadCountChanged() {
    const auto fChanged( local_DllLoadCount != g_DllLoadCount );
-   if( fChanged )
-       local_DllLoadCount = g_DllLoadCount;
-
+   if( fChanged ) {
+      local_DllLoadCount = g_DllLoadCount;
+      }
    return fChanged;
    }
 
 #define TBC_Virtual
 
 class TitleBarContributor {
-   protected:
+protected:
    TitleBarContributor() {}
-
 public:
    TBC_Virtual bool   Changed() ;
    TBC_Virtual PCChar Str()     ;
    };
-
 
 //------------------------------------------------------------------------------
 
@@ -81,11 +79,9 @@ class EditorFilesStatus : public TitleBarContributor {
    int  d_DirtyFBufs;
    int  d_OpenFBufs;
    char d_buf[40];
-
 public:
    TBC_Virtual bool Changed();
    TBC_Virtual PCChar Str();
-
    bool    NoneDirty() { return d_DirtyFBufs == 0; }
    };
 
@@ -103,8 +99,9 @@ bool EditorFilesStatus::Changed() {
 #endif
       if( pFBuf->HasLines() && pFBuf->FnmIsDiskWritable() ) {
          ++openFBufs;
-         if( pFBuf->IsDirty() )
+         if( pFBuf->IsDirty() ) {
             ++dirtyFBufs;
+            }
          }
       }
    const auto rv(  d_DirtyFBufs != dirtyFBufs
@@ -112,7 +109,6 @@ bool EditorFilesStatus::Changed() {
                 );
    d_DirtyFBufs = dirtyFBufs;
    d_OpenFBufs  = openFBufs ;
-
    return rv;
    }
 
@@ -244,10 +240,9 @@ bool BatteryStatus::Changed() {
       newVal = d_BatteryLifePercent;
       }
    }
-
-   if( fChanged )
+   if( fChanged ) {
       safeSprintf( BSOB(d_buf), "    Battery=%d%%", newVal );
-
+      }
    return fChanged;
    }
 
@@ -260,7 +255,6 @@ STATIC_VAR BatteryStatus s_bats;
 class MemStatus : public TitleBarContributor {
    typedef char dbuf[27];
    dbuf d_buf;
-
 public:
    TBC_Virtual bool Changed();
    TBC_Virtual PCChar Str();
@@ -276,7 +270,6 @@ bool MemStatus::Changed() {
    dbuf dbnew;
    const auto showSize( GetProcessMem() / (1024*(g_fShowMemUseInK ? 1 : 1024)) );
    safeSprintf( BSOB(dbnew), "%s.ProcessMem=%" PR_SIZET "u%ci", ExecutableFormat(), showSize, (g_fShowMemUseInK ? 'K' : 'M') );
-
    if( 0!=strcmp( d_buf, dbnew ) ) {
       bcpy( d_buf, dbnew );
       return true;
@@ -292,7 +285,6 @@ STATIC_VAR MemStatus s_mems;
 class LuaMemStatus : public TitleBarContributor {
    int  d_Size;
    char d_buf[25];
-
 public:
    TBC_Virtual bool Changed();
    TBC_Virtual PCChar Str();
@@ -304,10 +296,12 @@ bool LuaMemStatus::Changed() {
    d_Size = newSize;
    if( rv ) {
       const auto lheapsz( d_Size / 1024 );
-      if( d_Size )
+      if( d_Size ) {
          safeSprintf( BSOB(d_buf), ", LuaHeap=%iKi", lheapsz );
-      else
+         }
+      else {
          d_buf[0] = '\0';
+         }
       }
    return rv;
    }
@@ -331,7 +325,7 @@ bool CursMoves::Changed() {
    const auto newVal( DispCursorMoves() );
    const auto rv( d_prev != newVal );
    d_prev = newVal;
-   if( rv ) safeSprintf( BSOB(d_buf), ", CursMv=%d", newVal );
+   if( rv ) { safeSprintf( BSOB(d_buf), ", CursMv=%d", newVal ); }
    return rv;
    }
 
@@ -351,7 +345,7 @@ bool StatLnUpdts::Changed() {
    const auto newVal( DispStatLnUpdates() );
    const auto rv( d_prev != newVal );
    d_prev = newVal;
-   if( rv ) safeSprintf( BSOB(d_buf), ", StLnW=%d", newVal );
+   if( rv ) { safeSprintf( BSOB(d_buf), ", StLnW=%d", newVal ); }
    return rv;
    }
 
@@ -371,7 +365,7 @@ bool ScreenRefreshes::Changed() {
    const auto newVal( g_WriteConsoleOutputLines );
    const auto rv( d_prev != newVal );
    d_prev = newVal;
-   if( rv ) safeSprintf( BSOB(d_buf), ", ScrLnW=%d:%d", g_WriteConsoleOutputCalls, g_WriteConsoleOutputLines );
+   if( rv ) { safeSprintf( BSOB(d_buf), ", ScrLnW=%d:%d", g_WriteConsoleOutputCalls, g_WriteConsoleOutputLines ); }
    return rv;
    }
 

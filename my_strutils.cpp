@@ -106,7 +106,7 @@ int fxnm( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 ) { \
    const auto l1( eos1-s1 );                                 \
    const auto l2( eos2-s2 );                                 \
    const auto rv( CMPFX ( s1, s2, Min( l1,l2 ) ) );          \
-   if( l1==l2 || rv != 0 ) return rv;                        \
+   if( l1==l2 || rv != 0 ) { return rv; }                    \
    return (l1 > l2) ? +1 : -1;                               \
    }
 
@@ -129,7 +129,7 @@ bool streq_LenOfFirstStr( PCChar s1, slen_t s1chars, PCChar s2, slen_t s2chars )
 
 #define Strnspn_def( fxnm, EQ_OP )                           \
 size_t fxnm  ( PCChar str1, PCChar eos1, PCChar needle ) {   \
-   if( !eos1 ) eos1 = Eos( str1 );                           \
+   if( !eos1 ) { eos1 = Eos( str1 ); }                       \
    const size_t len1( eos1 - str1 );                         \
    for( size_t ix(0) ; ix < len1 ; ++ix ) {                  \
       if( nullptr EQ_OP strchr( needle, str1[ix] ) ) {       \
@@ -155,14 +155,14 @@ Strnspn_def( Strncspn, != ) // returns: The length of the initial part of str1 c
 //
 // returns NULL if ALL chars preceding pX match 'toMatch'
 
-#define StrToPastPrevOrNull_def( fxnm, EQ_OP )                 \
-PCChar fxnm( PCChar p0, PCChar pX, PCChar toMatch ) {          \
-   if( !pX ) pX = Eos( p0 );                                   \
-   if( pX == p0 ) {return nullptr;} /* no "prev" to match? */  \
-   for( --pX ;  ; --pX ) {                                     \
-      if( nullptr EQ_OP strchr( toMatch, *pX ) ) return pX;    \
-      if( pX == p0 ) {return nullptr;}                         \
-      }                                                        \
+#define StrToPastPrevOrNull_def( fxnm, EQ_OP )                  \
+PCChar fxnm( PCChar p0, PCChar pX, PCChar toMatch ) {           \
+   if( !pX ) { pX = Eos( p0 ); }                                \
+   if( pX == p0 ) { return nullptr; } /* no "prev" to match? */ \
+   for( --pX ;  ; --pX ) {                                      \
+      if( nullptr EQ_OP strchr( toMatch, *pX ) ) return pX;     \
+      if( pX == p0 ) { return nullptr; }                        \
+      }                                                         \
    }
 
 StrToPastPrevOrNull_def( StrToPrevOrNull_  , != ) // do NOT call this directly!  use StrToPrevOrNull or StrToPrevBlankOrNull instead!

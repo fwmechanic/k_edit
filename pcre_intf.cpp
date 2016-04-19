@@ -361,19 +361,19 @@ struct ReplaceWithCaptures : public GenericList {
 ReplaceWithCaptures::ReplaceWithCaptures( PCChar src ) {
          auto p   ( src );
    const auto end ( src + Strlen(p) );
-   while (p < end) {
+   while( p < end ) {
       const char *q;
       for (q = p; q < end && *q != '%'; ++q)
          {}
-      if (q != p)             Cat( p, q - p );
-      if (q < end) {
+      if( q != p )            { Cat( p, q - p ); }
+      if( q < end ) {
          if( ++q < end ) { // skip %
-            if( isdigit(*q) ) Cat( *q - '0' );
-            else              Cat( q, 1 );
+            if( isdigit(*q) ) { Cat( *q - '0' ); }
+            else              { Cat( q, 1 );     }
             }
          p = q + 1;
          }
-      else break;
+      else { break; }
       }
    }
 
@@ -496,8 +496,9 @@ int gsub (lua_State *L) {
             }
          int num;
          if( pEl->IsInt( &num ) ) {
-            if( ALG_SUBVALID (ud,num) ) // backref exists?
+            if( ALG_SUBVALID (ud,num) ) { // backref exists?
                ResultStr.Cat( argE.text + ALG_BASE(pos) + ALG_SUBBEG(ud,num), ALG_SUBLEN(ud,num) );
+               }
             continue;
             }
          }
