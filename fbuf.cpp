@@ -1761,9 +1761,7 @@ STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB
       pFBuf->SetEolModeChanged( platform_eol );
       }
    Msg( "Saving %s%s", pszDestName, fForced ? " with platform EOL forced":"" );
-   PCChar pszEolStr;  size_t eolStrlen;
-   if( pFBuf->EolMode() == EolLF ) { STATIC_CONST char   lf[] =     "\x0A"; pszEolStr = lf  ; eolStrlen = KSTRLEN(lf  ); DB&&DBG( "%s w/LF%s"  , __func__, fForced ? " forced":"" ); }
-   else                            { STATIC_CONST char crlf[] = "\x0D\x0A"; pszEolStr = crlf; eolStrlen = KSTRLEN(crlf); DB&&DBG( "%s w/CRLF%s", __func__, fForced ? " forced":"" ); }
+   const stref srEol( pFBuf->EolMode() == EolLF ? "\x0A" : "\x0D\x0A" );
    BufdWr::ResetVars();
    auto maxLine( pFBuf->LineCount() );
    if( !g_fTrailLineWrite ) {
@@ -1779,8 +1777,8 @@ STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB
          return FileWrErr( hFile_Write, pszDestName, "User break writing '%s'" );
          }
       const auto src( pFBuf->PeekRawLine( yLine ) );
-      if(   (src.length() && BufdWr::WrFailed( hFile_Write, src.data(), src.length() ))
-         ||                  BufdWr::WrFailed( hFile_Write, pszEolStr , eolStrlen    )
+      if(   (src.length() && BufdWr::WrFailed( hFile_Write, src  .data(), src  .length() ))
+         ||                  BufdWr::WrFailed( hFile_Write, srEol.data(), srEol.length() )
         ) {
          return FileWrErr( hFile_Write, pszDestName, ExecutionHaltRequested() ? "User break writing '%s'" : "Out of space on '%s'" );
          }

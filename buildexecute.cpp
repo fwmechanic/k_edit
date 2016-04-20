@@ -194,7 +194,7 @@ PCChar ARG::ArgTypeName() const {  0 && DBG( "%s: %X", __func__, ActualArgType()
       }
    }
 
-PChar ArgTypeNames( PChar buf, size_t sizeofBuf, int argval ) {
+std::string ArgTypeNames( int argval ) {
    STATIC_CONST struct {
       int    mask;
       PCChar name;
@@ -216,12 +216,12 @@ PChar ArgTypeNames( PChar buf, size_t sizeofBuf, int argval ) {
          { CURSORFUNC , "CURSORFUNC" },
          { MACROFUNC  , "MACROFUNC"  },
       };
-
-   auto rv( buf );
+   std::string rv;
    BoolOneShot first;
    for( const auto &te : tbl ) {
       if( te.mask & argval ) {
-         snprintf_full( &buf, &sizeofBuf, "%s%s", first() ? "" : "+", te.name );
+         if( !first() ) { rv.append( "+" ); }
+         rv.append( te.name );
          }
       }
    return rv;
@@ -549,8 +549,7 @@ bool ARG::InitOk( PCCMD pCmd ) {
    if( d_pCmd->d_argType & TAKES_ARG ) {
       if( FillArgStructFailed() ) { // consumes ArgCount()
          ClearArgAndSelection();
-         char tbuf[100];
-         return ErrorDialogBeepf( "Bad argument: '%s' requires %s", CmdName(), ArgTypeNames( BSOB(tbuf), d_pCmd->d_argType ) );
+         return ErrorDialogBeepf( "Bad argument: '%s' requires %s", CmdName(), ArgTypeNames( d_pCmd->d_argType ).c_str() );
          }
       ClearArgAndSelection();
       }

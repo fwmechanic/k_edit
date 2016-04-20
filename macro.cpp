@@ -801,8 +801,7 @@ bool ARG::tell() {
       outbuf.SprintfCat( "  %s:=%s", pCmd->Name(), pCmd->MacroText() );
       }
    else {
-      linebuf lbuf;
-      outbuf.SprintfCat( "  (%s)", ArgTypeNames( BSOB(lbuf), pCmd->d_argType ) );
+      outbuf.SprintfCat( "  (%s)", ArgTypeNames( pCmd->d_argType ).c_str() );
       }
    if( d_fMeta ) {
       PutMacroStringIntoCurfileAtCursor( outbuf.sr() );

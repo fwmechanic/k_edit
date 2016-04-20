@@ -296,7 +296,7 @@ extern  PCCMD  CmdFromKbdForExec();
 extern  PCCMD  CmdFromKbdForInfo( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes );
 extern   char  CharAsciiFromKybd();
 
-extern  PChar  ArgTypeNames( PChar buf, size_t sizeofBuf, int argval );
+extern  std::string ArgTypeNames( int argval );
 
 //------------ Macro execution
 
