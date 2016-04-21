@@ -1990,10 +1990,10 @@ LineInfo & FBUF::ImgBufNextLineInfo() {
    return newLI;
    }
 
-void FBUF::ImgBufAppendLine( PCChar pNewLineData, int LineLen ) {
+void FBUF::ImgBufAppendLine( stref src ) {
    auto &newLI( ImgBufNextLineInfo() );
-   newLI.d_iLineLen = LineLen;
-   memcpy( newLI.d_pLineData, pNewLineData, newLI.d_iLineLen );
+   newLI.d_iLineLen = src.length();
+   memcpy( newLI.d_pLineData, src.data(), newLI.d_iLineLen );
    0 && DBG( "ImgBufAppendLine Bytes=%d", newLI.d_iLineLen );
    d_ImgBufBytesWritten += newLI.d_iLineLen;
    }

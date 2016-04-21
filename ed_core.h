@@ -470,22 +470,22 @@ struct ARG {
       } d_linearg;
    typedef Rect STREAMARG_t;  STREAMARG_t d_streamarg; // stream argument specified  (char at 'd_streamarg.flMax' is NOT INCLUDED in the selection)
    typedef Rect BOXARG_t;     BOXARG_t    d_boxarg;    // box argument specified
-   bool  d_fMeta;
-   PCCMD d_pCmd;
-   PFBUF d_pFBuf;
+   bool   d_fMeta;
+   PCCMD  d_pCmd;
+   PFBUF  d_pFBuf;
    //*********  END OF DATA
-   void  DelArgRegion() const;
-   void  BeginPt( Point *pPt ) const;
-   void  EndPt( Point *pPt ) const;
-   bool  Within( const Point &pt, COL len=-1 ) const;
-   bool  Beyond( const Point &pt ) const;
-   COL   GetLine( std::string &st, LINE yLine ) const;
-   void  ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const;
-   void  GetColumnRange( COL *pxMin, COL *pxMax ) const;
-   int   GetLineRange( LINE *yTop, LINE *yBottom ) const;
+   void   DelArgRegion() const;
+   void   BeginPt( Point *pPt ) const;
+   void   EndPt( Point *pPt ) const;
+   bool   Within( const Point &pt, COL len=-1 ) const;
+   bool   Beyond( const Point &pt ) const;
+   COL    GetLine( std::string &st, LINE yLine ) const;
+   void   ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const;
+   void   GetColumnRange( COL *pxMin, COL *pxMax ) const;
+   int    GetLineRange( LINE *yTop, LINE *yBottom ) const;
 private:
-   bool  FillArgStructFailed();
-   bool  BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
+   bool   FillArgStructFailed();
+   bool   BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
 public:
    bool   InitOk( PCCMD pCmd );
    void   SaveForRepeat() const;
@@ -501,7 +501,6 @@ public:
 private:
    bool   pmlines( int direction ); // factored from mlines and plines
 public:
-   typedef bool (*BoxStringFunction)( PCChar pszLineSeg, LINE yAbs, LINE yRel, COL xCol );
    // EDITOR_FXNs start here!!!
    typedef bool (ARG::*pfxCMD)(); // declare type of pointer to class method
    bool nextmsg_engine( const bool fFwd );
@@ -708,18 +707,18 @@ public:
    void         FreeHiLiteRects();
    void         RedrawHiLiteRects();
    void         InsertHiLitesOfLineSeg
-                   ( LINE                yLine
-                   , COL                 xIndent
-                   , COL                 xMax
-                   , LineColorsClipped  &alcc
-                   , const HiLiteRec  * &pFirstPossibleHiLite
-                   , bool                isActiveWindow
-                   , bool                isCursorLine
+                   ( LINE               yLine
+                   , COL                xIndent
+                   , COL                xMax
+                   , LineColorsClipped &alcc
+                   , const HiLiteRec  *&pFirstPossibleHiLite
+                   , bool               isActiveWindow
+                   , bool               isCursorLine
                    ) const;
    void         GetLineForDisplay
-                   ( std::string             &dest
-                   , const COL                xLeft
-                   , const COL                xWidth
+                   ( std::string       &dest
+                   , const COL          xLeft
+                   , const COL          xWidth
                    , LineColorsClipped &alcc
                    , const HiLiteRec * &pFirstPossibleHiLite
                    , LINE               yLineOfFile
@@ -763,10 +762,10 @@ public:
    Point        d_LastSelectBegin, d_LastSelectEnd;
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
-//private:
-public:
+private:
    FTypeSetting *d_pFTS = nullptr;
 public:
+   PCChar        szFTypeSetting() const;
    FTypeSetting *GetFTypeSettings();
    int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
@@ -997,7 +996,7 @@ private:
    LineInfo      &ImgBufNextLineInfo();
 public:
    void           ImgBufAlloc(      size_t bufBytes, int PreallocLines=400 );
-   void           ImgBufAppendLine( PCChar pNewLineData, int LineLen );
+   void           ImgBufAppendLine( stref src );
    void           ImgBufAppendLine( PFBUF pFBufSrc, int srcLineNum, PCChar prefix=nullptr );
    //************ Undo/Redo storage
    friend class   EditRec;

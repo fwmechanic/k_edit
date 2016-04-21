@@ -554,8 +554,9 @@ void RefreshCheckAllWindowsFBufs() {
    // now that all are known, update them all
    auto updates(0);
    for( auto &pf : pfbufs ) {
-      if( !pf )
+      if( !pf ) {
          break;
+         }
       0 && DBG( "REFRESH-CHK '%s'", pf->Name() );
       updates += pf->SyncNoWrite();
       }

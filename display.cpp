@@ -339,6 +339,8 @@ GLOBAL_CONST unsigned char *g_colorVars[] = {
 
 static_assert( ELEMENTS(g_colorVars) == (COLOR::COLOR_COUNT - COLOR::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == COLOR::COLOR_COUNT" );
 
+PCChar View::szFTypeSetting() const { return d_pFTS ? d_pFTS->d_key.c_str() : "?"; }
+
 FTypeSetting *View::GetFTypeSettings() {
    if( !d_pFTS ) {                 0 && DBG( "%s+ ---------------------------------------------- %s", __func__, d_pFBuf->Name() );
       d_pFBuf->DetermineFType();
@@ -2653,7 +2655,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).k_str() );
-   cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR ":%s]", BSR(LastRsrcLdFileSectionNmTruncd()), g_CurView()->d_pFTS ? g_CurView()->d_pFTS->d_key.c_str() : "?" ).k_str() );
+   cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR ":%s]", BSR(LastRsrcLdFileSectionNmTruncd()), g_CurView()->szFTypeSetting() ).k_str() );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).k_str() );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).k_str() );
    cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).k_str() );

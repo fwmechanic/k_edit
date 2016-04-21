@@ -2050,9 +2050,9 @@ LINE CGrepper::WriteOutput
       ED && DBG( "d_MetaLineCount=%i,MetaLinesToCopy=%i", d_MetaLineCount, MetaLinesToCopy );
       }
    SprintfBuf Line1( "*GREP* %s", origSrchfnm ? origSrchfnm : d_SrchFile->UserName().c_str() );
-   const auto Line1Len( Strlen( Line1 ) );
+   const stref srLine1( Line1 );
    ED && DBG( "%s", Line1.k_str() );
-   imgBufBytes += Line1Len;
+   imgBufBytes += srLine1.length();
    auto numberedMatches(0);
    for( auto iy(0); iy < d_InfLines; ++iy ) {
       if( d_MatchingLines[iy] ) {
@@ -2063,8 +2063,8 @@ LINE CGrepper::WriteOutput
          }
       }
    SprintfBuf LastMetaLine( "%s %i %s t=%6.3f", outfile->Name(), numberedMatches, thisMetaLine, PerfCnt );
-   auto LastMetaLineLen( Strlen( LastMetaLine ) );
-   imgBufBytes += LastMetaLineLen;
+   const stref srLastMetaLine( LastMetaLine );
+   imgBufBytes += srLastMetaLine.length();
    const auto lwidth( fFirstGen ? uint_log_10( d_InfLines ) : 0 );
    if( fFirstGen ) {
       imgBufBytes += (lwidth+2) * numberedMatches;
@@ -2073,12 +2073,12 @@ LINE CGrepper::WriteOutput
    //
    // data COPYING phase
    //
-   outfile->ImgBufAppendLine( Line1, Line1Len );
+   outfile->ImgBufAppendLine( srLine1 );
    for( auto iy(1); iy < d_MetaLineCount; ++iy ) {
       ED && DBG( "auxhd=%i", iy );
       outfile->ImgBufAppendLine( d_SrchFile, iy );
       }
-   outfile->ImgBufAppendLine( LastMetaLine, LastMetaLineLen );
+   outfile->ImgBufAppendLine( srLastMetaLine );
    for( auto iy(0); iy < d_InfLines; ++iy ) {
       if( d_MatchingLines[iy] ) {
          FixedCharArray<20> prefix;
