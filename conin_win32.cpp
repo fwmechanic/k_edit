@@ -1255,15 +1255,17 @@ STATIC_FXN KeyData_EdKC GetInputEvent() {
    return rv;
    }
 
-STATIC_FXN void RawKeyStr( PChar dest, int sizeofDest, const KEY_DATA &k_d ) {
-   safeSprintf( dest, sizeofDest, "VK=x%02X, Flags=%s%s%s%s, ch=0x%02X (%c)"
-      ,  k_d.d_VK
-      , (k_d.kFlags & KEY_DATA::FLAG_CTRL   ) ? "C" : ""
-      , (k_d.kFlags & KEY_DATA::FLAG_ALT    ) ? "A" : ""
-      , (k_d.kFlags & KEY_DATA::FLAG_SHIFT  ) ? "S" : ""
-      , (k_d.kFlags & KEY_DATA::FLAG_NUMLOCK) ? "N" : ""
-      ,  k_d.Ascii
-      ,  k_d.Ascii
+STATIC_FXN std::string RawKeyStr( const KEY_DATA &k_d ) {
+   return std::string(
+      FmtStr<40>( "VK=x%02X, Flags=%s%s%s%s, ch=0x%02X (%c)"
+         ,  k_d.d_VK
+         , (k_d.kFlags & KEY_DATA::FLAG_CTRL   ) ? "C" : ""
+         , (k_d.kFlags & KEY_DATA::FLAG_ALT    ) ? "A" : ""
+         , (k_d.kFlags & KEY_DATA::FLAG_SHIFT  ) ? "S" : ""
+         , (k_d.kFlags & KEY_DATA::FLAG_NUMLOCK) ? "N" : ""
+         ,  k_d.Ascii
+         ,  k_d.Ascii
+         )
       );
    }
 
@@ -1279,7 +1281,7 @@ STATIC_FXN KeyData_EdKC GetKeyData_EdKC( bool fFreezeOtherThreads ) { // PRIMARY
 
       if( rv.EdKC_ < EdKC_COUNT ) {
          if( rv.EdKC_ == 0 ) { // (rv.EdKC_ == 0) corresponds to keys we currently do not decode
-            char ktmp[55];  RawKeyStr( BSOB(ktmp), rv.k_d );  0 && DBG( "%s(rv.EdKC==0): %s", __func__, ktmp );
+            0 && DBG( "%s(rv.EdKC==0): %s", __func__, RawKeyStr( rv.k_d ).c_str() );
             }
          else {
             return rv;  // normal exit path
@@ -1312,13 +1314,9 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
    return KeyData_EdKC2EdKC_Ascii( GetKeyData_EdKC( false ) );
    }
 
-EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest ) {
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( std::string &dest ) {
    const auto ki( GetKeyData_EdKC( true ) );
-   if( ki.EdKC_ == 0 )
-      RawKeyStr( dest, sizeofDest, ki.k_d );
-   else
-      StrFromEdkc( dest, sizeofDest, ki.EdKC_ );
-
+   dest.assign( (ki.EdKC_ == 0) ? RawKeyStr( ki.k_d ) : StrFromEdkc( ki.EdKC_ ) );
    return KeyData_EdKC2EdKC_Ascii( ki );
    }
 

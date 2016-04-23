@@ -1343,9 +1343,7 @@ bool ARG::selcmd() { // selcmd:alt+0
 //#############################################################################
 
 bool ARG::unassigned() {
-   linebuf keynamebuf;
-   StrFromEdkc( BSOB(keynamebuf), d_pCmd->d_argData.eka.EdKcEnum );
-   return ErrorDialogBeepf( "%s is not assigned to any editor function", keynamebuf );
+   return ErrorDialogBeepf( "%s is not assigned to any editor function", StrFromEdkc( d_pCmd->d_argData.eka.EdKcEnum ).c_str() );
    }
 
 bool ARG::boxstream() {

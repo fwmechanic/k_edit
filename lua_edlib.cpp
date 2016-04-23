@@ -43,11 +43,11 @@ LUAFUNC_(HideCursor)   { HideCursor()  ; RZ; }
 LUAFUNC_(UnhideCursor) { UnhideCursor(); RZ; }
 LUAFUNC_(DispRefreshWholeScreenNow) { DispRefreshWholeScreenNow(); RZ; }
 LUAFUNC_(GetKey)     {
+   std::string keyNm;
    while(1) {
-      char keyNm[30];
-      const PCCMD pCmd( CmdFromKbdForInfo( BSOB(keyNm) ) );
-      if( pCmd && keyNm[0] ) {
-         R_str(keyNm);
+      const PCCMD pCmd( CmdFromKbdForInfo( keyNm ) );
+      if( pCmd && !keyNm.empty() ) {
+         R_str( keyNm.c_str() );
          }
       }
    }

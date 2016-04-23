@@ -487,34 +487,26 @@ int KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word ) {
    return 0;
    }
 
-void StrFromEdkc( PChar dest, size_t sizeofDest, int edKC, sridx width ) {
-   Assert( sizeofDest > 2 );
-   dest[0] = '\0';
+std::string StrFromEdkc( int edKC, sridx width ) {
+   std::string dest;
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
       if( ky2Nm.EdKC_ == edKC ) {
-         scpy( dest, sizeofDest, ky2Nm.name );
+         dest.assign( ky2Nm.name );
          break;
          }
       }
-   if( !dest[0] ) {
+   if( dest.empty() ) {
       if( edKC < 0x100 && isprint( edKC ) ) {
-         *dest++ = edKC;
-         *dest = '\0';
+         dest.assign( 1, static_cast<char>(edKC) );
          }
       else {
-         safeSprintf( dest, sizeofDest, "edKC=0x%X", edKC );
+         dest.assign( FmtStr<24>( "edKC=0x%X", edKC ) );
          }
       }
-   if( width ) { // trail-pad with spaces to width
-      const auto tgtlen( Min( sizeofDest-1, width ) );
-      auto len( Strlen( dest ) );
-      if( len < tgtlen ) {
-         while( len < tgtlen ) {
-            dest[len++] = ' ';
-            }
-         dest[len] = '\0';
-         }
+   if( width > dest.length() ) { // trail-pad with spaces to width
+      dest.append( width - dest.length(), ' ' );
       }
+   return dest;
    }
 
 int BindKeyToCMD( stref pszCmdName, stref pszKeyName ) {
@@ -536,14 +528,13 @@ void EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd ) {
       }
    }
 
-void StrFromCmd( PChar dest, size_t sizeofDest, const CMD &CmdToFind ) {
-   dest[0] = '\0';
+std::string StrFromCmd( const CMD &CmdToFind ) {
    for( const auto &pCmd : g_Key2CmdTbl ) {
       if( pCmd == &CmdToFind ) {
-         StrFromEdkc( dest, sizeofDest, &pCmd - g_Key2CmdTbl );
-         break;
+         return StrFromEdkc( &pCmd - g_Key2CmdTbl );
          }
       }
+   return "";
    }
 
 void StringOfAllKeyNamesFnIsAssignedTo( PChar dest, size_t sizeofDest, PCCMD pCmdToFind, PCChar sep ) {
@@ -595,8 +586,7 @@ void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<s
       if( pCmd == &Cmd ) {
          coll.clear();
          coll.emplace_back( cmdNm.k_str() );
-         char keyNm[50]; StrFromEdkc( BSOB(keyNm), &pCmd - g_Key2CmdTbl, g_MaxKeyNameLen );
-         coll.emplace_back( keyNm );
+         coll.emplace_back( StrFromEdkc( &pCmd - g_Key2CmdTbl, g_MaxKeyNameLen ) );
          coll.emplace_back( " # " );
          coll.emplace_back( !fFoundAssignment ? pText : "|" );
          pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
@@ -669,12 +659,11 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
    Assert( g_MaxKeyNameLen <= KBUF_WIDTH );
    for( const auto &pCmd : g_Key2CmdTbl ) {
       if( pCmd->IsFnUnassigned() ) {
-         char KeyStringBuf[KBUF_WIDTH+1];
-         StrFromEdkc( BSOB(KeyStringBuf), &pCmd - g_Key2CmdTbl );
-         if( KeyStringBuf[0] ) {
+         auto KeyStringBuf( StrFromEdkc( &pCmd - g_Key2CmdTbl ) );
+         if( !KeyStringBuf.empty() ) {
             ++count;
             if( pFBuf ) {
-               sprintf( lbuf + (col_width * tblCol), "%-*s ", col_width-1, KeyStringBuf );
+               sprintf( lbuf + (col_width * tblCol), "%-*s ", col_width-1, KeyStringBuf.c_str() );
                if( tblCol++ == (g_CurWin()->d_Size.col / col_width) - 1 ) {
                   tblCol = 0;
                   pFBuf->PutLastLine( lbuf );
@@ -689,7 +678,7 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
    return count;
    }
 
-PCCMD CmdFromKbdForInfo( PChar pKeyStringBuffer, size_t pKeyStringBufferBytes ) {
-   const auto cd( ConIn::EdKC_Ascii_FromNextKey_Keystr( pKeyStringBuffer, pKeyStringBufferBytes ) );
+PCCMD CmdFromKbdForInfo( std::string &dest ) {
+   const auto cd( ConIn::EdKC_Ascii_FromNextKey_Keystr( dest ) );
    return cd.EdKcEnum == 0 ? pCMD_unassigned : g_Key2CmdTbl[ cd.EdKcEnum ];
    }

@@ -88,24 +88,23 @@ STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, U16 edkc ) { enum { DB
       xterm+pce3|fragment with modifyCursorKeys:3,
               kDC=\E[3;2~,                               key=cap_nm=kDC, value=escseqstr=\E[>3;2~
    */
-   linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), edkc );
-                                                 DB && DBG( "tigetstr+ %s", cap_nm );
+   auto edkcnmbuf( StrFromEdkc( edkc ) );        DB && DBG( "tigetstr+ %s", cap_nm );
    const char *escseqstr( tigetstr( cap_nm ) );  DB && DBG( "tigetstr- %s", cap_nm ); // tigetstr() <- "retrieves a capability from the terminfo database"
    if( !escseqstr || (long)(escseqstr) == -1 ) {
 #define KEYMAPFMT  "0%04o=0d%d <= %-5s => %-8s => %s"
-      0 && DBG( KEYMAPFMT, 0, 0, cap_nm, "", edkcnmbuf );
+      0 && DBG( KEYMAPFMT, 0, 0, cap_nm, "", edkcnmbuf.c_str() );
       return;
       }
    char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, escseqstr, Strlen(escseqstr) );
                                                     DB && DBG( "key_defined+ %s", tib );
    const auto ncurses_ch( key_defined(escseqstr) ); DB && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
-   DBG( KEYMAPFMT, ncurses_ch, ncurses_ch, cap_nm, tib, edkcnmbuf );
+   DBG( KEYMAPFMT, ncurses_ch, ncurses_ch, cap_nm, tib, edkcnmbuf.c_str() );
    if( ncurses_ch > 0 ) {
       if( ncurses_ch < ELEMENTS( ncurses_ch_to_EdKC ) ) {
          if( ncurses_ch_to_EdKC[ ncurses_ch ] != edkc ) {
             if( ncurses_ch_to_EdKC[ ncurses_ch ] ) {
-               StrFromEdkc( BSOB(edkcnmbuf), ncurses_ch_to_EdKC[ ncurses_ch ] );
-               DBG( "0%04o=0d%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, edkcnmbuf );
+               edkcnmbuf = StrFromEdkc( ncurses_ch_to_EdKC[ ncurses_ch ] );
+               DBG( "0%04o=0d%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, edkcnmbuf.c_str() );
                }
             ncurses_ch_to_EdKC[ ncurses_ch ] = edkc;
             }
@@ -171,8 +170,7 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    for( auto &el : s_nckc2edkc ) {
       if( has_key( el.nckc ) ) {
          ncurses_ch_to_EdKC[ el.nckc ] = el.edkc;
-         char edkcnmbuf[65]; StrFromEdkc( BSOB(edkcnmbuf), el.edkc );
-         DBG( KEYMAPFMT, el.nckc, el.nckc, "nckc#", "?", edkcnmbuf );
+         DBG( KEYMAPFMT, el.nckc, el.nckc, "nckc#", "?", StrFromEdkc( el.edkc ).c_str() );
          }
       }
    DBG( "%s", "" );
@@ -293,9 +291,9 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
    return GetEdKC_Ascii( false );
    }
 
-EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( PChar dest, size_t sizeofDest ) {
+EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( std::string &dest ) {
    const auto rv( GetEdKC_Ascii( false ) );
-   StrFromEdkc( dest, sizeofDest, rv.EdKcEnum );
+   dest.assign( StrFromEdkc( rv.EdKcEnum ) );
    return rv;
    }
 
@@ -328,7 +326,7 @@ STATIC_FXN int ConGetEvent() {
    if( ch < 0 )                      { return -1; }
    if( ch < ELEMENTS(ncurses_ch_to_EdKC) && ncurses_ch_to_EdKC[ ch ] ) {
       const auto rv( ncurses_ch_to_EdKC[ ch ] );
-      // linebuf edkcnmbuf; StrFromEdkc( BSOB(edkcnmbuf), rv ); DBG( "ncurses_ch_to_EdKC[ %d ] => %s", ch, edkcnmbuf );
+      // DBG( "ncurses_ch_to_EdKC[ %d ] => %s", ch, StrFromEdkc( rv ).c_str() );
       return rv;
       }
    if( ch <= 0xFF ) {
@@ -349,7 +347,7 @@ STATIC_FXN int ConGetEvent() {
 
          char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, chin, chinIx );
          if( rv < 0 ) { Msg( "unrecognized escseq %s\n", tib ); }
-         else { char edkcnmbuf[65] ; StrFromEdkc( BSOB(edkcnmbuf), rv ); 0 && DBG( "escseq: %s=%s", edkcnmbuf, tib ); }
+         else { 0 && DBG( "escseq: %s=%s", StrFromEdkc( rv ).c_str(), tib ); }
          return rv;
          }
 

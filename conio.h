@@ -69,7 +69,7 @@ namespace ConOut {
 
 namespace ConIn {
    EdKC_Ascii EdKC_Ascii_FromNextKey();
-   EdKC_Ascii EdKC_Ascii_FromNextKey_Keystr( char *pKeyStringBuffer, size_t pKeyStringBufferBytes );
+   EdKC_Ascii EdKC_Ascii_FromNextKey_Keystr( std::string &dest );
 
    bool  FlushKeyQueueAnythingFlushed();
    void  WaitForKey();

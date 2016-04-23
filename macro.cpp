@@ -781,22 +781,21 @@ STATIC_FXN void PutMacroStringIntoCurfileAtCursor( stref sr ) {
    }
 
 bool ARG::tell() {
-   linebuf keystringBuffer;
+   std::string keystringBuffer;
    PCCMD pCmd;
    switch( d_argType ) {
     default:      return BadArg();
     case NOARG:   Msg( "Press key to tell about:" );
-                  pCmd = CmdFromKbdForInfo( BSOB(keystringBuffer) );
+                  pCmd = CmdFromKbdForInfo( keystringBuffer );
                   break;
     case TEXTARG: pCmd = CmdFromName( d_textarg.pText );
                   if( !pCmd ) {
                      return Msg( "%s is not an editor function or macro", d_textarg.pText );
                      }
-                  keystringBuffer[0] = '\0';
                   break;
     }
    Linebuf outbuf;
-   outbuf.Sprintf( "%s:%s", pCmd->Name(), keystringBuffer[0] ? keystringBuffer : pCmd->Name() );
+   outbuf.Sprintf( "%s:%s", pCmd->Name(), !keystringBuffer.empty() ? keystringBuffer.c_str() : pCmd->Name() );
    if( pCmd->IsRealMacro() ) {
       outbuf.SprintfCat( "  %s:=%s", pCmd->Name(), pCmd->MacroText() );
       }
@@ -1006,9 +1005,7 @@ bool ARG::record() {
       ClrInRecordDQuote();
       g_fCmdXeqInhibitedByRecord = d_fMeta;
       if( d_fMeta ) {
-         linebuf     kynmBuf;
-         StrFromCmd( BSOB(kynmBuf), *pCMD_record );
-         Msg( "No-Execute Record Mode - Press %s to resume normal editing", kynmBuf );
+         Msg( "No-Execute Record Mode - Press %s to resume normal editing", StrFromCmd( *pCMD_record ).c_str() );
          }
       }
    DispNeedsRedrawStatLn();

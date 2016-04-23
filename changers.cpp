@@ -64,29 +64,29 @@ void KeyChanger::doRedraw() {
    }
 
 bool KeyChanger::Run() {
+   std::string keyNm;
    while(1) {
       doRedraw();
-      char keyNm[30];
-      const auto pCmd( CmdFromKbdForInfo( BSOB(keyNm) ) );
-      if( pCmd && *keyNm ) {
-         if(      0==strcmp( keyNm, "enter"      ) ) {                    break; }
-         else if( 0==strcmp( keyNm, "ctrl+enter" ) ) { actionC_Enter  (); break; }
-         else if( 0==strcmp( keyNm, "esc"        ) ) { actionEsc      (); break; }
-         else if( 0==strcmp( keyNm, "down"       ) ) { actionDown     (); }
-         else if( 0==strcmp( keyNm, "up"         ) ) { actionUp       (); }
-         else if( 0==strcmp( keyNm, "right"      ) ) { actionRight    (); }
-         else if( 0==strcmp( keyNm, "left"       ) ) { actionLeft     (); }
-         else if( 0==strcmp( keyNm, "num+"       ) ) { actionPlus     (); }
-         else if( 0==strcmp( keyNm, "num-"       ) ) { actionMinus    (); }
-         else if( 0==strcmp( keyNm, "num*"       ) ) { actionStar     (); }
-         else if( 0==strcmp( keyNm, "ctrl+right" ) ) { actionCtrlRight(); }
-         else if( 0==strcmp( keyNm, "ctrl+left"  ) ) { actionCtrlLeft (); }
-         else if( 0==strcmp( keyNm, "ctrl+down"  ) ) { actionCtrlDown (); }
-         else if( 0==strcmp( keyNm, "ctrl+up"    ) ) { actionCtrlUp   (); }
-         else if( 0==strcmp( keyNm, "alt+right"  ) ) { actionAltRight (); }
-         else if( 0==strcmp( keyNm, "alt+left"   ) ) { actionAltLeft  (); }
-         else if( 0==strcmp( keyNm, "alt+down"   ) ) { actionAltDown  (); }
-         else if( 0==strcmp( keyNm, "alt+up"     ) ) { actionAltUp    (); }
+      const auto pCmd( CmdFromKbdForInfo( keyNm ) );
+      if( pCmd && !keyNm.empty() ) {
+         if(      0==strcmp( keyNm.c_str(), "enter"      ) ) {                    break; }
+         else if( 0==strcmp( keyNm.c_str(), "ctrl+enter" ) ) { actionC_Enter  (); break; }
+         else if( 0==strcmp( keyNm.c_str(), "esc"        ) ) { actionEsc      (); break; }
+         else if( 0==strcmp( keyNm.c_str(), "down"       ) ) { actionDown     (); }
+         else if( 0==strcmp( keyNm.c_str(), "up"         ) ) { actionUp       (); }
+         else if( 0==strcmp( keyNm.c_str(), "right"      ) ) { actionRight    (); }
+         else if( 0==strcmp( keyNm.c_str(), "left"       ) ) { actionLeft     (); }
+         else if( 0==strcmp( keyNm.c_str(), "num+"       ) ) { actionPlus     (); }
+         else if( 0==strcmp( keyNm.c_str(), "num-"       ) ) { actionMinus    (); }
+         else if( 0==strcmp( keyNm.c_str(), "num*"       ) ) { actionStar     (); }
+         else if( 0==strcmp( keyNm.c_str(), "ctrl+right" ) ) { actionCtrlRight(); }
+         else if( 0==strcmp( keyNm.c_str(), "ctrl+left"  ) ) { actionCtrlLeft (); }
+         else if( 0==strcmp( keyNm.c_str(), "ctrl+down"  ) ) { actionCtrlDown (); }
+         else if( 0==strcmp( keyNm.c_str(), "ctrl+up"    ) ) { actionCtrlUp   (); }
+         else if( 0==strcmp( keyNm.c_str(), "alt+right"  ) ) { actionAltRight (); }
+         else if( 0==strcmp( keyNm.c_str(), "alt+left"   ) ) { actionAltLeft  (); }
+         else if( 0==strcmp( keyNm.c_str(), "alt+down"   ) ) { actionAltDown  (); }
+         else if( 0==strcmp( keyNm.c_str(), "alt+up"     ) ) { actionAltUp    (); }
          }
       }
 

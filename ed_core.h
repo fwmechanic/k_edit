@@ -108,14 +108,12 @@ terminating NUL.
 
 */
 const COL COL_MAX  = INT_MAX-1; // -1 is a HACK to avoid integer overflow in cases like alcc->PutColor( xMin, xMax-xMin+1, COLOR::COM ); where xMin==0 and xMax==COL_MAX
-const COL LINELEN  = (512)+1  ;
-const COL BUFBYTES = LINELEN+1;
 
-typedef char linebuf[BUFBYTES];       // line buffer
-// typedef char dbllinebuf[2*BUFBYTES];  // double line buffer
-typedef char pathbuf[_MAX_PATH+1];    // Pathname buffer
-
-typedef  FixedCharArray<BUFBYTES>     Linebuf;
+const COL LINELEN  = (512)+1  ;    // DEPRECATED
+const COL BUFBYTES = LINELEN+1;    // DEPRECATED
+typedef char linebuf[BUFBYTES];    // DEPRECATED line buffer
+typedef char pathbuf[_MAX_PATH+1]; // DEPRECATED Pathname buffer
+typedef  FixedCharArray<BUFBYTES> Linebuf; // DEPRECATED
 
 typedef  FmtStr<BUFBYTES>    SprintfBuf;
 typedef  FmtStr<2*BUFBYTES>  Sprintf2xBuf;
