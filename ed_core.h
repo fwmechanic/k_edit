@@ -1434,7 +1434,7 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    extern COL     DelChar( PFBUF fb, LINE yLine, COL xCol );
 
    //************ text-content scanners
-   extern PChar   IsGrepBuf( PCFBUF fb, PChar fnmbuf, const size_t sizeof_fnmbuf, int *pGrepHdrLines );
+   extern PCChar  IsGrepBuf( Path::str_t &dest, int *pGrepHdrLines, PCFBUF fb );
    extern cppc    IsCppConditional( PCFBUF fb, LINE yLine );
 
    extern bool    IsLineBlank( PCFBUF fb, LINE yLine );

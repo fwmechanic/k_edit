@@ -363,9 +363,9 @@ FBUF_(InsLineSortedDescending)  { std::string tmp;
                                   const PCChar st = S_(2);
                                   FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
                                 }
-FBUF_(IsGrepBuf)                { int metaLines;  pathbuf searchedFnm;
-                                  if( FBOP::IsGrepBuf( thisPF(), BSOB(searchedFnm), &metaLines ) ) {
-                                     P_str(searchedFnm) ; P_int(metaLines) ; return 2;
+FBUF_(IsGrepBuf)                { Path::str_t searchedFnm; int metaLines;
+                                  if( FBOP::IsGrepBuf( searchedFnm, &metaLines, thisPF() ) ) {
+                                     P_str(searchedFnm.c_str()) ; P_int(metaLines) ; return 2;
                                      }
                                   RZ;
                                 }

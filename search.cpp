@@ -2000,11 +2000,10 @@ LINE CGrepper::WriteOutput
       const auto gbnm( sbuf.c_str() );
       0 && DBG( "LuaCtxt_Edit::from_C_lookup_glock ->%s|", gbnm );
       const auto outfile( OpenFileNotDir_NoCreate( gbnm ) );
-      pathbuf GrepFBufname;
-      int     grepHdrLines;
-      if( !outfile )                                                          { Msg(    "nonexistent buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
-      if( !(FBOP::IsGrepBuf( outfile, BSOB(GrepFBufname), &grepHdrLines ) ) ) { Msg(   "non-grep-buf buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
-      if( !d_SrchFile->NameMatch( GrepFBufname ) )                            { Msg( "wrong haystack buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
+      if( !outfile )                                                    { Msg(    "nonexistent buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
+      Path::str_t GrepFBufname; int grepHdrLines;
+      if( !(FBOP::IsGrepBuf( GrepFBufname, &grepHdrLines, outfile ) ) ) { Msg(   "non-grep-buf buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
+      if( !d_SrchFile->NameMatch( GrepFBufname ) )                      { Msg( "wrong haystack buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
       auto numberedMatches(0);
       for( auto iy(0); iy < d_InfLines; ++iy ) {
          if( d_MatchingLines[iy] ) {
@@ -2104,10 +2103,9 @@ bool ARG::grep() { enum { ED=0 };
       return false;
       }
    // read first line to get header size
-   auto    curfile( g_CurFBuf() );
-   int     metaLines;
-   pathbuf origSrchFnm;
-   auto    pSearchedFnm( FBOP::IsGrepBuf( curfile, BSOB(origSrchFnm), &metaLines ) );
+   auto curfile( g_CurFBuf() );
+   Path::str_t origSrchFnm; int metaLines;
+   auto pSearchedFnm( FBOP::IsGrepBuf( origSrchFnm, &metaLines, curfile ) );
    if( pSearchedFnm ) { // Current file is a m2acc result file! (perhaps externally-concocted)
       if( d_fMeta ) { // fMeta says "re-search the _original_ file"!
          curfile = OpenFileNotDir_NoCreate( pSearchedFnm );
@@ -2138,14 +2136,13 @@ bool ARG::grep() { enum { ED=0 };
 bool ARG::fg() { enum { ED=0 }; // fgrep
    PFBUF   srchfile;
    auto    metaLines( 0 ); // params that govern how...
-   pathbuf origSrchFnm;    // ...srchfile is processed
    auto    curfile( g_CurFBuf() );
    if( TEXTARG == d_argType ) {
       srchfile = curfile;
       Path::str_t keysFnm( ("$FGS" PATH_SEP_STR) + std::string( d_textarg.pText ) );
       curfile = OpenFileNotDir_NoCreate( keysFnm.c_str() );
       if( !curfile ) {
-         return Msg( "Couldn't open '%s' [1]", origSrchFnm );
+         return Msg( "Couldn't open '%s' [1]", keysFnm.c_str() );
          }
       if( d_cArg > 1 ) {
          curfile->PutFocusOn();
@@ -2153,8 +2150,9 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
          }
       }
    else {
-      if( FBOP::IsGrepBuf( curfile, BSOB(origSrchFnm), &metaLines ) ) {
-         srchfile = OpenFileNotDir_NoCreate( origSrchFnm );
+      Path::str_t origSrchFnm;    // ...srchfile is processed
+      if( FBOP::IsGrepBuf( origSrchFnm, &metaLines, curfile ) ) {
+         srchfile = OpenFileNotDir_NoCreate( origSrchFnm.c_str() );
          }
       else {
          PCV;
@@ -2163,10 +2161,10 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
             return Msg( "no next file!" );
             }
          srchfile = nextview->FBuf();
-         bcpy( origSrchFnm, srchfile->Name() );
+         origSrchFnm.assign( srchfile->Namestr() );
          }
       if( !srchfile ) {
-         return Msg( "Couldn't open '%s'[2]", origSrchFnm );
+         return Msg( "Couldn't open '%s'[2]", origSrchFnm.c_str() );
          }
       }
    // create aux header for THIS search
@@ -2219,37 +2217,38 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
    return bool(Matches > 0);
    }
 
-PChar FBOP::IsGrepBuf( PCFBUF fb, PChar fnmbuf, const size_t sizeof_fnmbuf, int *pGrepHdrLines ) {
+PCChar FBOP::IsGrepBuf( Path::str_t &dest, int *pGrepHdrLines, PCFBUF fb ) {
    if( fb->LineCount() == 0 ) {
-FAIL: // fnmbuf gets filename of CURRENT buffer!  But generation is 0
-      scpy( fnmbuf, sizeof_fnmbuf, fb->Name() );
+FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
+      dest.assign( fb->Name() );
       *pGrepHdrLines = 0;
       return nullptr;
       }
    {
    STATIC_CONST char grep_prefix[] = "*GREP* ";
+   const stref srgp( grep_prefix );
    auto rl( fb->PeekRawLine( 0 ) );
-   if( !rl.starts_with( grep_prefix ) )       { goto FAIL; }
-   rl.remove_prefix( KSTRLEN(grep_prefix) );
-   if( IsStringBlank( rl ) )                  { goto FAIL; }
-   scpy( fnmbuf, sizeof_fnmbuf, rl );
+   if( !rl.starts_with( srgp ) )       { goto FAIL; }
+   rl.remove_prefix( srgp.length() );
+   if( IsStringBlank( rl ) )           { goto FAIL; }
+   dest.assign( BSR2STR(rl) );
    }
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {
       STATIC_CONST char grep_fnm[] = "<grep.";
       auto rl( fb->PeekRawLine( iy ) );                    0 && DBG("[%d] %s' line=%" PR_BSR "'",iy, fb->Name(), BSR(rl) );
       if( !rl.starts_with( grep_fnm ) )       { break; }
-      }                                                    0 && DBG( "%s: %s final=[%d] '%s'", __func__, fb->Name(), iy, fnmbuf );
+      }                                                    0 && DBG( "%s: %s final=[%d] '%s'", __func__, fb->Name(), iy, dest.c_str() );
    *pGrepHdrLines = iy;
-   return fnmbuf;
+   return dest.c_str();
    }
 
 PView FindClosestGrepBufForCurfile( PView pv, PCChar srchFilename ) {
    if( !pv ) pv = g_CurViewHd().front();
    pv = DLINK_NEXT( pv, dlinkViewsOfWindow );
    while( pv ) {
-      pathbuf srchFnm; int dummy;
-      if( FBOP::IsGrepBuf( pv->FBuf(), BSOB(srchFnm), &dummy ) && Path::eq( srchFnm, srchFilename ) ) {
+      Path::str_t srchFnm; int dummy;
+      if( FBOP::IsGrepBuf( srchFnm, &dummy, pv->FBuf() ) && Path::eq( srchFnm, srchFilename ) ) {
          return pv;
          }
       pv = DLINK_NEXT( pv, dlinkViewsOfWindow );
@@ -2258,10 +2257,10 @@ PView FindClosestGrepBufForCurfile( PView pv, PCChar srchFilename ) {
    }
 
 bool merge_grep_buf( PFBUF dest, PFBUF src ) {
-   pathbuf srcSrchFnm , destSrchFnm  ;
-   int     srcHdrLines, destHdrLines ;
-   if(    !FBOP::IsGrepBuf( src , BSOB(srcSrchFnm ), & srcHdrLines )
-       || !FBOP::IsGrepBuf( dest, BSOB(destSrchFnm), &destHdrLines )
+   Path::str_t srcSrchFnm , destSrchFnm  ;
+   int         srcHdrLines, destHdrLines ;
+   if(    !FBOP::IsGrepBuf( srcSrchFnm , & srcHdrLines,  src )
+       || !FBOP::IsGrepBuf( destSrchFnm, &destHdrLines,  dest)
        || !Path::eq( srcSrchFnm, destSrchFnm )
      ) { return false; }
    0 && DBG( "%s: %s copy [1..%d]", __func__, src->Name(), srcHdrLines );
@@ -2281,20 +2280,19 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
 bool ARG::gmg() { // arg "gmg" edhelp  # for docmentation
    const auto fDestroySrcsBufs( 0 == d_cArg );
    PFBUF dest(nullptr);
-   pathbuf srchFilename;
-   int     dummy;
-   if( FBOP::IsGrepBuf( g_CurFBuf(), BSOB(srchFilename), &dummy ) ) {
+   Path::str_t srchFilename; int dummy;
+   if( FBOP::IsGrepBuf( srchFilename, &dummy, g_CurFBuf() ) ) {
       dest = g_CurFBuf();
       0 && DBG( "%s: dest=cur (%s)", __func__, dest->Name() );
       }
    else {
-      bcpy( srchFilename, g_CurFBuf()->Name() );
+      srchFilename = g_CurFBuf()->Namestr();
       }
-   0 && DBG( "%s: will look for all greps of (%s)", __func__, srchFilename );
+   0 && DBG( "%s: will look for all greps of (%s)", __func__, srchFilename.c_str() );
 
    auto merges(0);
    PView pv(nullptr);
-   while( (pv=FindClosestGrepBufForCurfile( pv, srchFilename )) ) {
+   while( (pv=FindClosestGrepBufForCurfile( pv, srchFilename.c_str() )) ) {
       const auto src( pv->FBuf() );
       if( !dest ) {
          dest = src;
