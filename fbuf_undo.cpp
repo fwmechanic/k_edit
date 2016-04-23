@@ -70,7 +70,31 @@ STATIC_FXN void copyUndoMarks( PFBUF pFBuf, NamedPointHead &SavedMarkList, int L
 
 #endif //UNDO_REDO_MARKS
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
+//
+// utility interface to allow output to be directed to PFBUF, dbgview (Windows OutputDebugString()), or both
+
+struct OutputWriter {
+   virtual void VWriteLn( PCChar string ) const = 0;
+   };
+
+struct FbufWriter : public OutputWriter {
+   PFBUF d_pFBuf;
+   FbufWriter( PFBUF pFBuf ) : d_pFBuf(pFBuf) {}
+   virtual void VWriteLn( PCChar string ) const { d_pFBuf->PutLastLine( string ); }
+   };
+
+struct DBGWriter : public OutputWriter {
+   virtual void VWriteLn( PCChar string ) const;
+   };
+
+struct DBGFbufWriter : public OutputWriter {
+   PFBUF d_pFBuf;
+   DBGFbufWriter( PFBUF pFBuf ) : d_pFBuf(pFBuf) {}
+   virtual void VWriteLn( PCChar string ) const;
+   };
+//
+//---------------------------------------------------------------------------------------------------------------------
 
 void DBGWriter::VWriteLn( PCChar string ) const { DBG( "%s", string ); }
 

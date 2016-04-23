@@ -1497,29 +1497,3 @@ STIL void         g_UpdtCurFBuf( PFBUF pfb ) { extern PFBUF s_curFBuf;        s_
 #define PCFV  PCV; PCF
 
 inline bool FBufLocn::InCurFBuf() const { return g_CurFBuf() == d_pFBuf; }
-
-//---------------------------------------------------------------------------------------------------------------------
-//
-// utility interface to allow output to be directed to PFBUF, dbgview (Windows OutputDebugString()), or both
-
-struct OutputWriter {
-   virtual void VWriteLn( PCChar string ) const = 0;
-   };
-
-struct FbufWriter : public OutputWriter {
-   PFBUF d_pFBuf;
-   FbufWriter( PFBUF pFBuf ) : d_pFBuf(pFBuf) {}
-   virtual void VWriteLn( PCChar string ) const { d_pFBuf->PutLastLine( string ); }
-   };
-
-struct DBGWriter : public OutputWriter {
-   virtual void VWriteLn( PCChar string ) const;
-   };
-
-struct DBGFbufWriter : public OutputWriter {
-   PFBUF d_pFBuf;
-   DBGFbufWriter( PFBUF pFBuf ) : d_pFBuf(pFBuf) {}
-   virtual void VWriteLn( PCChar string ) const;
-   };
-//
-//---------------------------------------------------------------------------------------------------------------------
