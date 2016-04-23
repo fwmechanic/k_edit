@@ -15,6 +15,8 @@ RANLIB= ranlib
 LIBS= -lm $(MYLIBS)
 
 ifdef USE_PCRE
+# changes @ PCRE 8.37 -> 8.38 require -DPCRE_STATIC
+CPPFLAGS += -DPCRE_STATIC
 PCRE_OBJ = \
 lpcre$(OBJ_SFX) \
 lpcre_f$(OBJ_SFX) \
