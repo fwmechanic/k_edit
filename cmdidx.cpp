@@ -34,13 +34,8 @@ GLOBAL_VAR CMD g_CmdTable[] = { // *** THIS IS GLOBAL, NOT STATIC, BECAUSE #defi
 #define  IDX_EQ( idx_val )
 #endif
 
-
 // nearly identical declarations:
-#if 1
-GLOBAL_VAR PCMD     g_Key2CmdTbl[] =         // use this so assert @ end of initializer will work
-#else
-GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) works
-#endif
+STATIC_VAR PCMD s_Key2CmdTbl[] = // use this so assert @ end of initializer will work
    {
    // first 256 [0x00..0xFF] are for ASCII codes
    #define  gfc   pCMD_graphic
@@ -492,7 +487,150 @@ GLOBAL_VAR AKey2Cmd g_Key2CmdTbl   =         // use this to prove it (still) wor
    , IDX_EQ( EdKC_s_scroll     )  pCMD_unassigned
    };
 
-static_assert( ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT, "ELEMENTS( g_Key2CmdTbl ) == EdKC_COUNT" );
+static_assert( ELEMENTS( s_Key2CmdTbl ) == EdKC_COUNT, "ELEMENTS( s_Key2CmdTbl ) == EdKC_COUNT" );
+
+int BindKeyToCMD( stref pszCmdName, stref pszKeyName ) {
+   const auto edKC( EdkcOfKeyNm( pszKeyName ) ); if( !edKC ) { return SetKeyRV_BADKEY; }
+   const auto pCmd( CmdFromName( pszCmdName ) ); if( !pCmd ) { return SetKeyRV_BADCMD; }
+   s_Key2CmdTbl[ edKC ] = pCmd;
+   return SetKeyRV_OK;
+   }
+
+void AssignReplaceCmd( PCMD pOldCmd, PCMD pNewCmd ) {
+   for( auto &pCmd : s_Key2CmdTbl ) {
+      if( pCmd == pOldCmd ) {
+          pCmd =  pNewCmd;
+          }
+      }
+   }
+
+std::string FirstKeyNmAssignedToCmd( const CMD &CmdToFind ) {
+   for( const auto &pCmd : s_Key2CmdTbl ) {
+      if( pCmd == &CmdToFind ) {
+         return KeyNmOfEdkc( &pCmd - s_Key2CmdTbl );
+         }
+      }
+   return "";
+   }
+
+std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep ) {
+   if( pCmdToFind == pCMD_graphic ) {
+      return "";
+      }
+   std::string dest, kyNm;
+   BoolOneShot first;
+   for( const auto &pCmd : s_Key2CmdTbl ) {
+      if( pCmd == pCmdToFind ) {
+         if( !first() ) {
+            dest.append( sep );
+            }
+         dest.append( KeyNmOfEdkc( kyNm, &pCmd - s_Key2CmdTbl ) );
+         }
+      }
+   return dest;
+   }
+
+void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll, std::string &tmp1, std::string &tmp2 ) {
+   if( Cmd.IsFnUnassigned() || Cmd.IsFnGraphic() ) {
+      return;
+      }
+   FmtStr<50> cmdNm( "%-20s: ", Cmd.Name() );
+   const PCChar pText( Cmd.IsRealMacro() ? Cmd.MacroText() :
+#if AHELPSTRINGS
+      (Cmd.d_HelpStr && *Cmd.d_HelpStr ? Cmd.d_HelpStr
+#endif
+      : ""
+#if AHELPSTRINGS
+      )
+#endif
+      );
+   auto fFoundAssignment(false);
+   std::string keyNm;
+   coll.reserve( 4 );
+   for( const auto &pCmd : s_Key2CmdTbl ) {
+      if( pCmd == &Cmd ) {
+         coll.clear();
+         coll.emplace_back( cmdNm.k_str() );
+         KeyNmOfEdkc( keyNm, &pCmd - s_Key2CmdTbl ); // trail-pad with spaces to width
+         coll.emplace_back( PadRight( keyNm, g_MaxKeyNameLen ) );
+         coll.emplace_back( " # " );
+         coll.emplace_back( !fFoundAssignment ? pText : "|" );
+         pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
+         fFoundAssignment = true;
+         }
+      }
+   if( !fFoundAssignment ) {
+      coll.clear();
+      coll.emplace_back( cmdNm.k_str() );
+      coll.emplace_back( PadRight( keyNm, g_MaxKeyNameLen ) );
+      coll.emplace_back( " # " );
+      coll.emplace_back( pText );
+      pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
+      }
+   }
+
+int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only interested in # of avail keys
+   auto count(0);
+   auto tblCol(0);
+   const auto col_width( g_MaxKeyNameLen + 1 );
+   std::string lbuf, keyNm;
+   for( const auto &pCmd : s_Key2CmdTbl ) {
+      if( pCmd->IsFnUnassigned() ) {
+         KeyNmOfEdkc( keyNm, &pCmd - s_Key2CmdTbl );
+         if( !keyNm.empty() ) {
+            ++count;
+            if( pFBuf ) {
+               lbuf.append( PadRight( keyNm, col_width ) );
+               if( tblCol++ == (g_CurWin()->d_Size.col / col_width) - 1 ) {
+                  pFBuf->PutLastLine( lbuf.c_str() );
+                  tblCol = 0;
+                  lbuf.clear();
+                  }
+               }
+            }
+         }
+      }
+   if( pFBuf && tblCol > 0 ) {
+      pFBuf->PutLastLine( lbuf.c_str() );
+      }
+   return count;
+   }
+
+PCCMD CmdFromKbdForInfo( std::string &dest ) {
+   const auto cd( ConIn::EdKC_Ascii_FromNextKey_Keystr( dest ) );
+   return cd.EdKcEnum == 0 ? pCMD_unassigned : s_Key2CmdTbl[ cd.EdKcEnum ];
+   }
+
+PCCMD CmdFromKbdForExec() {
+   const auto cmddata( ConIn::EdKC_Ascii_FromNextKey() );
+   if( 0 == cmddata.EdKcEnum && ExecutionHaltRequested() ) { 0 && DBG( "CmdFromKbdForExec sending pCMD_cancel" );
+      return pCMD_cancel;
+      }
+   if( cmddata.EdKcEnum >= EdKC_Count ) { DBG( "!!! KC=0x%X", cmddata.EdKcEnum );
+      return pCMD_unassigned;
+      }
+#if 0 // to get every (valid) keystroke to display
+   else {
+      char kystr[50];
+      KeyNmOfEdkc( BSOB(kystr), cmddata.EdKcEnum );
+      DBG( "EdKc=%s", kystr );
+      }
+#endif
+   const auto pCmd( s_Key2CmdTbl[ cmddata.EdKcEnum ] );
+   if( pCmd && !pCmd->IsRealMacro() ) {
+       pCmd->d_argData.eka = cmddata;
+       }
+   return pCmd;
+   }
+
+void UnbindMacrosFromKeys() {
+   for( auto &pCmd : s_Key2CmdTbl ) {
+      if( pCmd->IsRealMacro() ) {
+         pCmd = pCMD_unassigned;
+         }
+      }
+   }
+
 
 // s_CmdIdxAddins is a dynamic tree which is searched prior to g_CmdTable
 // during user-function-lookups: all CMDs indexed herein (for macros and Lua
@@ -576,7 +714,7 @@ STATIC_FXN void cmdIdxAdd( stref name, funcCmd pFxn, int argType, stref macroDef
    // semi-hacky: replace any references to same-named builtin function
    const auto pCmdBuiltIn( CmdFromNameBuiltinOnly( name ) );
    if( pCmdBuiltIn ) {
-      EventCmdSupercede( pCmdBuiltIn, pCmd );
+      AssignReplaceCmd( pCmdBuiltIn, pCmd );
       }
    }
 
@@ -591,7 +729,7 @@ void CmdIdxAddMacro( stref name, stref macroDef ) { 0 && DBG( "%s: '%" PR_BSR "'
 STATIC_FXN void DeleteCmd( PCMD pCmd ) {
    { // revert to builtin CMD of same name, if any
    const auto pCmdBuiltIn( CmdFromNameBuiltinOnly( pCmd->d_name ) );
-   EventCmdSupercede( pCmd, pCmdBuiltIn ? pCmdBuiltIn : pCMD_unassigned );
+   AssignReplaceCmd( pCmd, pCmdBuiltIn ? pCmdBuiltIn : pCMD_unassigned );
    }
    Free0( pCmd->d_name );
    if( pCmd->IsRealMacro() ) {

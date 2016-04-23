@@ -296,6 +296,13 @@ extern stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 )
 
 extern PChar  safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) ATTR_FORMAT(3,4);
 
+STIL std::string & PadRight( std::string &inout, sridx width, char padCh=' ' ) {
+   if( width > inout.length() ) { // trail-pad with spaces to width
+      inout.append( width - inout.length(), padCh );
+      }
+   return inout;
+   }
+
 //--------------------------------------------------------------------------------
 //
 // We have const and non-const versions of each function, so that code can be

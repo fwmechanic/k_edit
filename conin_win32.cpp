@@ -1316,7 +1316,7 @@ EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
 
 EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( std::string &dest ) {
    const auto ki( GetKeyData_EdKC( true ) );
-   dest.assign( (ki.EdKC_ == 0) ? RawKeyStr( ki.k_d ) : StrFromEdkc( ki.EdKC_ ) );
+   dest.assign( (ki.EdKC_ == 0) ? RawKeyStr( ki.k_d ) : KeyNmOfEdkc( ki.EdKC_ ) );
    return KeyData_EdKC2EdKC_Ascii( ki );
    }
 

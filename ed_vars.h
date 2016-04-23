@@ -497,10 +497,6 @@ enum { correct_edKC_f1_val =  0x100
 static_assert( EdKC_f1 == correct_edKC_f1_val, "EdKeyCodes::EdKC_f1 == correct_edKC_f1_val" );
 static_assert( EdKC_Count == EdKC_COUNT, "EdKC_Count == enum EdKeyCodes" );
 
-
-
-typedef PCMD       AKey2Cmd[ EdKC_Count ];
-extern AKey2Cmd    g_Key2CmdTbl          ;
 extern CMD         g_CmdTable[];  // this is ALMOST const; can't BE const because CMD contains (mutatable) fields d_argData, d_callCount & d_gCallCount
 
 

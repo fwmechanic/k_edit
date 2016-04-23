@@ -266,9 +266,6 @@ extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings r
 extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
 extern  void   swid_ch(  PChar dest, size_t sizeofDest, char ch );
 
-extern   void  FBufRead_Assign_Switches( PFBUF pFBuf );
-extern   void  FBufRead_Assign_OsInfo( PFBUF pFBuf );
-
 extern   void  AssignLogTag( PCChar tag );
 enum { RSRCFILE_COMMENT_DELIM = '#' };
 #define        AssignStrOk( str )   AssignStrOk_( str, __FUNCTION__ )
@@ -282,16 +279,16 @@ extern   int   BindKeyToCMD( stref pszCmdName, stref pszKeyName );
 extern   bool  AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
 
 extern   void  UnbindMacrosFromKeys();
-extern   int   edkcFromKeyname( stref pszKeyStr );
-
 extern   void  PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
-extern   std::string StrFromEdkc( int edKC, sridx width=0 );
-extern   std::string StrFromCmd( const CMD &CmdToFind );
-
-extern   void  EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd );
+extern   void  AssignReplaceCmd( PCMD pOldCmd, PCMD pNewCmd );
 extern   int   ShowAllUnassignedKeys( PFBUF pFBuf );
-
 extern   std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep );
+extern   std::string  FirstKeyNmAssignedToCmd( const CMD &CmdToFind );
+
+extern   int          EdkcOfKeyNm( stref keyNm );
+extern   std::string  KeyNmOfEdkc(                    int edKC );
+extern   std::string &KeyNmOfEdkc( std::string &dest, int edKC );
+
 extern  PCCMD  CmdFromKbdForExec();
 extern  PCCMD  CmdFromKbdForInfo( std::string &dest );
 extern   char  CharAsciiFromKybd();
@@ -355,8 +352,11 @@ extern   void  AdjustMarksForLineInsertion( LINE Line,int LineDelta,PFBUF pFBuf 
 //------------ Pseudofile readers (ONLY call from ReadPseudoFileOk system!)
 
 extern   bool  ReadPseudoFileOk( PFBUF pFBuf );
-extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
 extern   void  FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
+extern   void  FBufRead_Assign_OsInfo( PFBUF pFBuf );
+extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
+extern   void  FBufRead_Assign_Switches( PFBUF pFBuf );
+
 
 //------------ Pseudofile writers
 

@@ -584,28 +584,6 @@ bool ARG::dispmstk() {
    }
 #endif
 
-PCCMD CmdFromKbdForExec() {
-   const auto cmddata( ConIn::EdKC_Ascii_FromNextKey() );
-   if( 0 == cmddata.EdKcEnum && ExecutionHaltRequested() ) { 0 && DBG( "CmdFromKbdForExec sending pCMD_cancel" );
-      return pCMD_cancel;
-      }
-   if( cmddata.EdKcEnum >= EdKC_Count ) { DBG( "!!! KC=0x%X", cmddata.EdKcEnum );
-      return pCMD_unassigned;
-      }
-#if 0 // to get every (valid) keystroke to display
-   else {
-      char kystr[50];
-      StrFromEdkc( BSOB(kystr), cmddata.EdKcEnum );
-      DBG( "EdKc=%s", kystr );
-      }
-#endif
-   const auto pCmd( g_Key2CmdTbl[ cmddata.EdKcEnum ] );
-   if( pCmd && !pCmd->IsRealMacro() ) {
-       pCmd->d_argData.eka = cmddata;
-       }
-   return pCmd;
-   }
-
 // How we record a command stream into a macro
 //
 // DON'T record macros, DO record all non-macro commands that they invoke
@@ -735,14 +713,6 @@ bool ARG::assign() {
                      }
                   return true;
     }
-   }
-
-void UnbindMacrosFromKeys() {
-   for( auto &pCmd : g_Key2CmdTbl ) {
-      if( pCmd->IsRealMacro() ) {
-         pCmd = pCMD_unassigned;
-         }
-      }
    }
 
 void FreeAllMacroDefs() {
@@ -1005,7 +975,7 @@ bool ARG::record() {
       ClrInRecordDQuote();
       g_fCmdXeqInhibitedByRecord = d_fMeta;
       if( d_fMeta ) {
-         Msg( "No-Execute Record Mode - Press %s to resume normal editing", StrFromCmd( *pCMD_record ).c_str() );
+         Msg( "No-Execute Record Mode - Press %s to resume normal editing", FirstKeyNmAssignedToCmd( *pCMD_record ).c_str() );
          }
       }
    DispNeedsRedrawStatLn();

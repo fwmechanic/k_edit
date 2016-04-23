@@ -454,10 +454,7 @@ static_assert( ELEMENTS( KyCd2KyNameTbl ) == (EdKC_COUNT - 256), "KyCd2KyNameTbl
 STATIC_FXN int MaxKeyNameLen_() {
    auto maxLen(0);
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
-      const auto len( Strlen( ky2Nm.name ) );
-      if( maxLen < len ) {
-          maxLen = len;
-          }
+      NoLessThan( &maxLen, Strlen( ky2Nm.name ) );
       }
    return maxLen;
    }
@@ -466,140 +463,43 @@ STATIC_FXN int MaxKeyNameLen_() {
 //        const int g_MaxKeyNameLen( MaxKeyNameLen_() ); // <-- Exuberant Ctags DOES NOT tag g_MaxKeyNameLen
    GLOBAL_CONST int g_MaxKeyNameLen = MaxKeyNameLen_();  // <-- Exuberant Ctags DOES     tag g_MaxKeyNameLen
 
-int edkcFromKeyname( stref pszKeyStr ) {
-   if( pszKeyStr.length() == 1 ) {
-      return pszKeyStr[0];
+int EdkcOfKeyNm( stref keyNm ) {
+   if( keyNm.length() == 1 ) {
+      return keyNm[0];
       }
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
-      if( 0==cmpi( ky2Nm.name, pszKeyStr ) ) {
+      if( 0==cmpi( ky2Nm.name, keyNm ) ) {
          return ky2Nm.EdKC_;
          }
       }
    return 0;
    }
 
-STATIC_FXN stref KeyStr( int keyNum_word ) {
-   for( const auto &ky2Nm : KyCd2KyNameTbl ) {
-      if( ky2Nm.EdKC_ == keyNum_word ) {
-         return ky2Nm.name;
-         }
-      }
-   return "";
-   }
-
-std::string StrFromEdkc( int edKC, sridx width ) {
-   std::string dest;
+std::string &KeyNmOfEdkc( std::string &dest, int edKC ) {
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
       if( ky2Nm.EdKC_ == edKC ) {
          dest.assign( ky2Nm.name );
-         break;
+         return dest;
          }
       }
-   if( dest.empty() ) {
-      if( edKC < 0x100 && isprint( edKC ) ) {
-         dest.assign( 1, static_cast<char>(edKC) );
-         }
-      else {
-         dest.assign( FmtStr<24>( "edKC=0x%X", edKC ) );
-         }
+   if( edKC < 0x100 && isprint( edKC ) ) {
+      dest.assign( 1, static_cast<char>(edKC) );
+      return dest;
       }
-   if( width > dest.length() ) { // trail-pad with spaces to width
-      dest.append( width - dest.length(), ' ' );
+   else {
+      dest.assign( FmtStr<24>( "edKC=0x%X", edKC ) );
+      return dest;
       }
-   return dest;
    }
 
-int BindKeyToCMD( stref pszCmdName, stref pszKeyName ) {
-   const auto edKC( edkcFromKeyname( pszKeyName ) ); if( !edKC ) { return SetKeyRV_BADKEY; }
-   const auto pCmd( CmdFromName( pszCmdName ) );     if( !pCmd ) { return SetKeyRV_BADCMD; }
-   g_Key2CmdTbl[ edKC ] = pCmd;
-   return SetKeyRV_OK;
+std::string KeyNmOfEdkc( int edKC ) {
+   std::string dest;
+   KeyNmOfEdkc( dest, edKC );
+   return dest;
    }
 
 char CharAsciiFromKybd() {
    return ConIn::EdKC_Ascii_FromNextKey().Ascii;
-   }
-
-void EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd ) {
-   for( auto &pCmd : g_Key2CmdTbl ) {
-      if( pCmd == pOldCmd ) {
-          pCmd =  pNewCmd;
-          }
-      }
-   }
-
-std::string StrFromCmd( const CMD &CmdToFind ) {
-   for( const auto &pCmd : g_Key2CmdTbl ) {
-      if( pCmd == &CmdToFind ) {
-         return StrFromEdkc( &pCmd - g_Key2CmdTbl );
-         }
-      }
-   return "";
-   }
-
-std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep ) {
-   if( pCmdToFind == pCMD_graphic ) {
-      return "";
-      }
-   std::string dest;
-   BoolOneShot first;
-   for( const auto &pCmd : g_Key2CmdTbl ) {
-      if( pCmd == pCmdToFind ) {
-         if( !first() ) {
-            dest.append( sep );
-            }
-         dest.append( BSR2STR(KeyStr( &pCmd - g_Key2CmdTbl )) );
-         }
-      }
-   return dest;
-   }
-
-STATIC_FXN PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width ) {
-   const auto tgtlen( Min( sizeofDest-1, width ) );
-   auto len( 0 );
-   while( len < tgtlen ) {
-      dest[len++] = ' ';
-      }
-   dest[len] = '\0';
-   return const_cast<PCChar>(dest);
-   }
-
-void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll, std::string &tmp1, std::string &tmp2 ) {
-   if( Cmd.IsFnUnassigned() || Cmd.IsFnGraphic() ) {
-      return;
-      }
-   FmtStr<50> cmdNm( "%-20s: ", Cmd.Name() );
-   const PCChar pText( Cmd.IsRealMacro() ? Cmd.MacroText() :
-#if AHELPSTRINGS
-      (Cmd.d_HelpStr && *Cmd.d_HelpStr ? Cmd.d_HelpStr
-#endif
-      : ""
-#if AHELPSTRINGS
-      )
-#endif
-      );
-   auto fFoundAssignment(false);
-   coll.reserve( 4 );
-   for( const auto &pCmd : g_Key2CmdTbl ) {
-      if( pCmd == &Cmd ) {
-         coll.clear();
-         coll.emplace_back( cmdNm.k_str() );
-         coll.emplace_back( StrFromEdkc( &pCmd - g_Key2CmdTbl, g_MaxKeyNameLen ) );
-         coll.emplace_back( " # " );
-         coll.emplace_back( !fFoundAssignment ? pText : "|" );
-         pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
-         fFoundAssignment = true;
-         }
-      }
-   if( !fFoundAssignment ) {
-      coll.clear();
-      coll.emplace_back( cmdNm.k_str() );
-      char keyNm[50];
-      coll.emplace_back( safeStrfill( BSOB(keyNm), ' ', g_MaxKeyNameLen ) );
-      coll.emplace_back( " # " );
-      coll.emplace_back( pText );
-      pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
-      }
    }
 
 STATIC_CONST char spinners[] = { '-', '\\', '|', '/' };
@@ -647,36 +547,3 @@ bool ARG::waitkey15() {
    }
 
 #endif
-
-int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only interested in # of avail keys
-   auto count(0);
-   auto tblCol(0);
-   linebuf lbuf;
-   const auto col_width( g_MaxKeyNameLen + 1 );
-   enum { KBUF_WIDTH = 32 };
-   Assert( g_MaxKeyNameLen <= KBUF_WIDTH );
-   for( const auto &pCmd : g_Key2CmdTbl ) {
-      if( pCmd->IsFnUnassigned() ) {
-         auto KeyStringBuf( StrFromEdkc( &pCmd - g_Key2CmdTbl ) );
-         if( !KeyStringBuf.empty() ) {
-            ++count;
-            if( pFBuf ) {
-               sprintf( lbuf + (col_width * tblCol), "%-*s ", col_width-1, KeyStringBuf.c_str() );
-               if( tblCol++ == (g_CurWin()->d_Size.col / col_width) - 1 ) {
-                  tblCol = 0;
-                  pFBuf->PutLastLine( lbuf );
-                  }
-               }
-            }
-         }
-      }
-   if( pFBuf && tblCol > 0 ) {
-      pFBuf->PutLastLine( lbuf );
-      }
-   return count;
-   }
-
-PCCMD CmdFromKbdForInfo( std::string &dest ) {
-   const auto cd( ConIn::EdKC_Ascii_FromNextKey_Keystr( dest ) );
-   return cd.EdKcEnum == 0 ? pCMD_unassigned : g_Key2CmdTbl[ cd.EdKcEnum ];
-   }
