@@ -283,7 +283,6 @@ extern   bool  AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, 
 
 extern   void  UnbindMacrosFromKeys();
 extern   int   edkcFromKeyname( stref pszKeyStr );
-extern   int   KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word );
 
 extern   void  PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
 extern   std::string StrFromEdkc( int edKC, sridx width=0 );
@@ -292,7 +291,7 @@ extern   std::string StrFromCmd( const CMD &CmdToFind );
 extern   void  EventCmdSupercede( PCMD pOldCmd, PCMD pNewCmd );
 extern   int   ShowAllUnassignedKeys( PFBUF pFBuf );
 
-extern   void  StringOfAllKeyNamesFnIsAssignedTo( PChar pDestBuf, size_t sizeofDest, PCCMD pCmdToFind, PCChar sep );
+extern   std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep );
 extern  PCCMD  CmdFromKbdForExec();
 extern  PCCMD  CmdFromKbdForInfo( std::string &dest );
 extern   char  CharAsciiFromKybd();

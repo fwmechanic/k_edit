@@ -424,6 +424,8 @@ struct UsageCtxt {
    PFBUF fbOut;
    COL   maxCmdNmLen;
    U32   maxCallCount;
+   std::string dest;
+   std::string tmp;
    };
 
 STATIC_FXN void CalledMaxNmLen( PCCMD Cmd, void *pCtxt ) {
@@ -438,17 +440,16 @@ STATIC_FXN void CalledMaxNmLen( PCCMD Cmd, void *pCtxt ) {
 STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
    if( Cmd->d_gCallCount ) {
       auto uc( static_cast<UsageCtxt*>(pCtxt) );
-      linebuf lbuf;
+      uc->dest.assign( FmtStr<132>( "%*u  %-*s  ", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name() ).k_str() );
       if(   Cmd == pCMD_graphic
          || Cmd == pCMD_unassigned
         ) {
-         bcpy( lbuf, "(many)" );
+         uc->dest.append( "(many)" );
          }
       else {
-         StringOfAllKeyNamesFnIsAssignedTo( BSOB(lbuf), Cmd, "," );
+         uc->dest.append( StringOfAllKeyNamesFnIsAssignedTo( Cmd, "," ) );
          }
-      std::string tmp;
-      FBOP::InsLineSortedDescending( uc->fbOut, tmp, 0, SprintfBuf( "%*u  %-*s  %s", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name(), lbuf ).k_str() );
+      FBOP::InsLineSortedDescending( uc->fbOut, uc->tmp, 0, uc->dest.c_str() );
       }
    }
 

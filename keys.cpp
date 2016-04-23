@@ -478,13 +478,13 @@ int edkcFromKeyname( stref pszKeyStr ) {
    return 0;
    }
 
-int KeyStr_full( PPChar ppDestBuf, size_t *bufBytesLeft, int keyNum_word ) {
+STATIC_FXN stref KeyStr( int keyNum_word ) {
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
       if( ky2Nm.EdKC_ == keyNum_word ) {
-         return snprintf_full( ppDestBuf, bufBytesLeft, "%s", ky2Nm.name );
+         return ky2Nm.name;
          }
       }
-   return 0;
+   return "";
    }
 
 std::string StrFromEdkc( int edKC, sridx width ) {
@@ -537,26 +537,24 @@ std::string StrFromCmd( const CMD &CmdToFind ) {
    return "";
    }
 
-void StringOfAllKeyNamesFnIsAssignedTo( PChar dest, size_t sizeofDest, PCCMD pCmdToFind, PCChar sep ) {
-   dest[0] = '\0';
-   if( pCmdToFind != pCMD_graphic ) {
-      auto pCur( dest );
-      for( const auto &pCmd : g_Key2CmdTbl ) {
-         if( pCmd == pCmdToFind ) {
-            if( pCur != dest ) {
-               if( snprintf_full( &pCur, &sizeofDest, "%s", sep ) ) {
-                  break;
-                  }
-               }
-            if( KeyStr_full( &pCur, &sizeofDest, &pCmd - g_Key2CmdTbl ) ) {
-               break;
-               }
+std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep ) {
+   if( pCmdToFind == pCMD_graphic ) {
+      return "";
+      }
+   std::string dest;
+   BoolOneShot first;
+   for( const auto &pCmd : g_Key2CmdTbl ) {
+      if( pCmd == pCmdToFind ) {
+         if( !first() ) {
+            dest.append( sep );
             }
+         dest.append( BSR2STR(KeyStr( &pCmd - g_Key2CmdTbl )) );
          }
       }
+   return dest;
    }
 
-PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width ) {
+STATIC_FXN PCChar safeStrfill( PChar dest, size_t sizeofDest, char fillval, size_t width ) {
    const auto tgtlen( Min( sizeofDest-1, width ) );
    auto len( 0 );
    while( len < tgtlen ) {
