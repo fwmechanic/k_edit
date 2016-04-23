@@ -75,8 +75,6 @@
    #define _MAX_PATH 513
 #endif
 
-// typedef  char                         pathbuf[_MAX_PATH+1];
-
 #include "my_types.h"
 #include "ed_mem.h"
 
