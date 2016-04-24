@@ -574,7 +574,7 @@ struct CMD {             // function definition entry
 #endif
    union {
       EdKC_Ascii eka;
-      PChar      pszMacroDef;
+      PCChar     pszMacroDef;
       char  chAscii() const { return eka.Ascii; }
       int   isEmpty() const { return pszMacroDef == nullptr; }
       } d_argData;   // - NON-MACRO: key that invoked; MACRO: ptr to macro string (defn)

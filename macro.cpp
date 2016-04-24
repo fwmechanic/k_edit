@@ -112,7 +112,7 @@ bool TruncComment_AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1};
    }
 
 void CMD::RedefMacro( stref newDefn ) {
-   FreeUp( d_argData.pszMacroDef, Strdup( newDefn ) );
+   FreeUp( d_argData.pszMacroDef, const_cast<PCChar>( Strdup( newDefn ) 	) );
    }
 
 bool DefineMacro( stref pszMacroName, stref pszMacroCode ) { 0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'", __func__, BSR(pszMacroName), BSR(pszMacroCode) );
