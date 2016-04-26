@@ -1369,7 +1369,7 @@ void LineInfo::PutContent( stref src ) { // assume previous content has been des
       }
    else {
       AllocBytesNZ( d_pLineData, src.length(), __func__ );
-      memcpy( d_pLineData, src.data(), src.length() );
+      memcpy( const_cast<PChar>(d_pLineData), src.data(), src.length() );
       }
    d_iLineLen = src.length();
    }
@@ -1519,11 +1519,6 @@ void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) {
    FBufEvent_LineInsDel( firstLine, -yDelta );
    }
 
-void FBUF::FreeOrigFileImage() {
-   Free0( d_pOrigFileImage );
-   d_cbOrigFileImage = 0;
-   }
-
 void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    DestroyMarks();
    { // formerly DestroyLineInfoArray()
@@ -1536,8 +1531,9 @@ void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    d_LineCount = 0;
    }
    d_naLineInfoElements = 0;
-   DiscardUndoInfo();   // call before FreeOrigFileImage() (some EditOp's have d_pFBuf)!
-   FreeOrigFileImage(); // call after  DiscardUndoInfo()!
+   DiscardUndoInfo();   // call before Free0( d_pOrigFileImage ) (some EditOp's have d_pFBuf)!
+   Free0( d_pOrigFileImage );
+   d_cbOrigFileImage = 0;
    UnDirty();
    }
 
@@ -1733,6 +1729,8 @@ STIL void rdNoiseScan() { DisplayNoise( kszRdNoiseScan ); }
 bool FBUF::ReadDiskFileFailed( int hFile ) {
    MakeEmpty();
    rdNoiseSeek();
+   auto MBCS_skip( 0 );
+   {
    auto fileBytes( fio::SeekEoF( hFile ) );
    0 && DBG( "fio::SeekEoF returns %8" WL( PR__i64 "u", "ld" ), fileBytes );
    Assert( fileBytes >= 0 );
@@ -1741,26 +1739,22 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
       Msg( "filesize is larger than UINT_MAX" );
       return true;
       }
-   d_cbOrigFileImage = fileBytes;
    rdNoiseAllc();
-   AllocBytesNZ( d_pOrigFileImage, fileBytes+1, __func__ );
-   d_pOrigFileImage[fileBytes] = '\0'; // so wcslen works
+   PChar fileBuf;
+   AllocBytesNZ( fileBuf, fileBytes+1, __func__ );
+   fileBuf[fileBytes] = '\0'; // so wcslen works
    VR_(
       DBG( "ReadDiskFile %s: %uKB buf=[%p..%p)"
          , Name()
          , fileBytes/1024
-         , d_pOrigFileImage
-         , d_pOrigFileImage + d_cbOrigFileImage
+         , fileBuf
+         , fileBuf + fileBytes
          );
       )
    rdNoiseRead();
-   struct {
-      int leadBlankLines = 0;
-      int lead_Tab_Lines = 0;
-      } tabStats;
    MainThreadPerfCounter pc;
-   if( !fio::ReadOk( hFile, d_pOrigFileImage, fileBytes ) ) {
-      FreeOrigFileImage();
+   if( !fio::ReadOk( hFile, fileBuf, fileBytes ) ) {
+      Free0( fileBuf );
       ErrorDialogBeepf( "Read NOT OK!" );
       return true;
       }
@@ -1771,10 +1765,9 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    // octet (IOW, ASCII content, thus both UTF-8 and UTF-16 are 100% unnecessary),
    // UTF-8 files are directly editable.
    //
-   auto MBCS_skip( 0 );
    STATIC_CONST unsigned char BoM_UTF8[] = { 0xEF, 0xBB, 0xBF }; // http://en.wikipedia.org/wiki/Byte_order_mark#UTF-8
    if( fileBytes >= sizeof(BoM_UTF8) ) {
-      if( 0==memcmp( d_pOrigFileImage, &BoM_UTF8, sizeof(BoM_UTF8) ) ) {
+      if( 0==memcmp( fileBuf, &BoM_UTF8, sizeof(BoM_UTF8) ) ) {
          MBCS_skip = sizeof(BoM_UTF8);
          // TODO BUGBUG set UTF8 content flag (and OBTW, support display, editing of UTF8 content!)
          d_OrigFileImageContentEncoding = TXTENC_UTF8;
@@ -1791,10 +1784,10 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    //
    STATIC_CONST unsigned short BoM_UTF16( 0xFEFF ); // http://en.wikipedia.org/wiki/Byte_order_mark#UTF-16
    if( fileBytes >= sizeof(BoM_UTF16) ) {
-      if( 0==memcmp( d_pOrigFileImage, &BoM_UTF16, sizeof(BoM_UTF16) ) ) {
+      if( 0==memcmp( fileBuf, &BoM_UTF16, sizeof(BoM_UTF16) ) ) {
 #ifdef _WIN32
          // adapted from http://stackoverflow.com/questions/3082620/convert-utf-16-to-utf-8
-         Win32::LPCWSTR pszTextUTF16( reinterpret_cast<Win32::LPCWSTR>( d_pOrigFileImage + sizeof(BoM_UTF16) ) );
+         Win32::LPCWSTR pszTextUTF16( reinterpret_cast<Win32::LPCWSTR>( fileBuf + sizeof(BoM_UTF16) ) );
          const auto utf16len( wcslen(pszTextUTF16) );
          const auto cp(
             //CP_UTF8   // if we could display UTF8, this would be the correct choice
@@ -1807,37 +1800,45 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
          utf16buf[utf16len] = '\0';
          Win32::WideCharToMultiByte( cp, 0, pszTextUTF16, utf16len, utf16buf, utf8len, nullptr, nullptr );
          // adjust external state accordingly
-         FreeUp( d_pOrigFileImage, utf16buf );
-         d_cbOrigFileImage = fileBytes = utf8len;
+         FreeUp( fileBuf, utf16buf );
+         fileBytes = utf8len;
 #endif
          }
       }
+   //--------------------------------------------------------------------------------------------------------
+   d_pOrigFileImage  = fileBuf;
+   d_cbOrigFileImage = fileBytes;
+   } // fileBuf, fileBytes out of scope
    //--------------------------------------------------------------------------------------------------------
    rdNoiseScan();
 #if VERBOSE_READ
    const auto tmIO( pc.Capture() );
 #endif
    d_EolMode = platform_eol;
-   const auto initial_sample_lines( fileBytes == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
-                                                   : 508 );   // slightly less than a power of 2
+   const auto initial_sample_lines( d_cbOrigFileImage == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
+                                                           : 508 );   // slightly less than a power of 2
    d_naLineInfoElements = initial_sample_lines;
    VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", d_naLineInfoElements ); )
    AllocArrayNZ(      d_paLineInfo, d_naLineInfoElements, "initial d_paLineInfo" );
    InitLineInfoRange( 0           , d_naLineInfoElements );
-   if( fileBytes > 0 ) {
+   if( d_cbOrigFileImage > 0 ) {
+      struct {
+         int leadBlankLines = 0;
+         int lead_Tab_Lines = 0;
+         } tabStats;
       auto numCRs( 0 );
       auto numLFs( 0 );
       auto curLineNum( 0 );
       auto pLi( d_paLineInfo );
       auto pCurImageBuf( d_pOrigFileImage + MBCS_skip );
-      const auto pPastImageBufEnd( d_pOrigFileImage + fileBytes );
+      const auto pPastImageBufEnd( d_pOrigFileImage + d_cbOrigFileImage );
       while( pCurImageBuf < pPastImageBufEnd ) { // we are about to read line 'curLineNum'
          if( d_naLineInfoElements <= curLineNum /* CID128050 */ && curLineNum > 0 /* CID128050 */ ) { // need to reallocate d_paLineInfo
             // this is a little obscure, since for brevity I'm using 'curLineNum' as an alias
             // for 'LineCount()'; these are equivalent since 'curLineNum' hasn't been stored yet.
             const auto abpl_scale( 1.025 );
             const double avgBytesPerLine( Max( abpl_scale, static_cast<double>(pCurImageBuf - d_pOrigFileImage) / curLineNum ) );
-                  double dNewLineCntEstimate( (fileBytes / avgBytesPerLine) * abpl_scale );
+                  double dNewLineCntEstimate( (d_cbOrigFileImage / avgBytesPerLine) * abpl_scale );
             if( dNewLineCntEstimate <= d_naLineInfoElements ) {
                 dNewLineCntEstimate = Max( static_cast<double>(d_naLineInfoElements * 1.125)
                                          , static_cast<double>(d_naLineInfoElements + FileReadLineHeadSpace)
@@ -1875,27 +1876,27 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                ++cbEOL;
                break;
                }
-            if( ch == 0x0A ) { // LF=Unix EOL?  treated as TRUE EOL indicator
+            if( ch == '\x0A' ) { // LF=Unix EOL?  treated as TRUE EOL indicator
                ++numLFs;
                ++cbEOL;
-               break;          // treat as EOL
+               break;            // treat as EOL
                }
-            if( ch == 0x0D ) { // CR=(start of) MS EOL?  simply skipped while awaiting next LF
+            if( ch == '\x0D' ) { // CR=(start of) MS EOL?  simply skipped while awaiting next LF
                ++cbEOL;
                ++numCRs;
                continue;
                }
-            if( cbEOL ) {      // unexpected: prev ch was CR but this ch is not LF (ancient Macintosh EOL=CR only???)
-               --pCurImageBuf; // current char is part of NEXT line
-               break;          // treat as EOL
+            if( cbEOL ) {        // unexpected: prev ch was CR but this ch is not LF (ancient Macintosh EOL=CR only???)
+               --pCurImageBuf;   // current char is part of NEXT line
+               break;            // treat as EOL
                }
 #else
-            if( (ch < ' ') && (ch != HTAB) ) {      // ALL "control chars" except HTAB rendered invisible (swallowed up into EOL)
+            if( (ch < ' ') && (ch != HTAB) ) { // ALL "control chars" except HTAB rendered invisible (swallowed up into EOL)
                ++cbEOL;
                switch( ch ) {
-                  case 0x0A: ++numLFs; goto IS_EOL; // LF=Unix EOL?  treated as TRUE EOL indicator
-                  case 0x0D: ++numCRs; break;       // CR=(start of) MS EOL?  simply skipped while awaiting next LF
-                  default:             break;
+                  case '\x0A': ++numLFs; goto IS_EOL; // LF=Unix EOL?  treated as TRUE EOL indicator
+                  case '\x0D': ++numCRs; break;       // CR=(start of) MS EOL?  simply skipped while awaiting next LF
+                  default:               break;
                   }
                }
             else {
@@ -1907,7 +1908,7 @@ IS_EOL:
                }
 #endif
             } while( pCurImageBuf < pPastImageBufEnd );
-         if( ExecutionHaltRequested() ) {
+         if( 0 && ExecutionHaltRequested() ) {
             ConIn::FlushKeyQueueAnythingFlushed();
             MakeEmpty();
             MoveCursorToBofAllViews();
@@ -1948,12 +1949,12 @@ IS_EOL:
          DBG( "ReadDiskFile Done  scan/IO=%4.1f%%  %7d (avg=%4.1f) wastage=%d/%dKB (%4.1f%%) cum=%dKB (%4.1f%%), %dKB per %d files"
             , pctSCAN
             , LineCount()
-            , ((double)fileBytes - numBytesToProcessInImageBuf) / (double)LineCount()
+            , (static_cast<double>(d_cbOrigFileImage) - numBytesToProcessInImageBuf) / static_cast<double>(LineCount())
             , wastedLIbytesNow / 1024
             , (d_naLineInfoElements) * sizeof(*d_paLineInfo) / 1024
-            , 100.0*((double)d_naLineInfoElements - LineCount()) / (double)LineCount()
+            , 100.0*(static_cast<double>(d_naLineInfoElements) - LineCount()) / static_cast<double>(LineCount())
             , wastedLIbytes / 1024
-            , 100.0*((double)PredLC - actualLC) / (double)actualLC
+            , 100.0*(static_cast<double>(PredLC) - actualLC) / (double)actualLC
             , (wastedLIbytes / 1024) / files
             , files
             );
@@ -1993,7 +1994,7 @@ LineInfo & FBUF::ImgBufNextLineInfo() {
 void FBUF::ImgBufAppendLine( stref src ) {
    auto &newLI( ImgBufNextLineInfo() );
    newLI.d_iLineLen = src.length();
-   memcpy( newLI.d_pLineData, src.data(), newLI.d_iLineLen );
+   memcpy( const_cast<PChar>(newLI.d_pLineData), src.data(), newLI.d_iLineLen );
    0 && DBG( "ImgBufAppendLine Bytes=%d", newLI.d_iLineLen );
    d_ImgBufBytesWritten += newLI.d_iLineLen;
    }
@@ -2002,10 +2003,10 @@ void FBUF::ImgBufAppendLine( PFBUF pFBufSrc, int srcLineNum, PCChar prefix ) {
    auto &newLI( ImgBufNextLineInfo() );
    auto preLen(0);
    if( prefix ) {
-      memcpy( newLI.d_pLineData, prefix, (preLen = Strlen( prefix )) );
+      memcpy( const_cast<PChar>(newLI.d_pLineData), prefix, (preLen = Strlen( prefix )) );
       }
    auto &srcLI( pFBufSrc->d_paLineInfo[srcLineNum] );
-   memcpy( newLI.d_pLineData+preLen, srcLI.d_pLineData, srcLI.d_iLineLen );
+   memcpy( const_cast<PChar>(newLI.d_pLineData)+preLen, srcLI.d_pLineData, srcLI.d_iLineLen );
    newLI.d_iLineLen = srcLI.d_iLineLen + preLen;
    0 && DBG( "FBUF::ImgBufAppendPFLine Bytes=%d", newLI.d_iLineLen );
    d_ImgBufBytesWritten += newLI.d_iLineLen;
