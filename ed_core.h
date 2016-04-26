@@ -972,6 +972,14 @@ public:
    void           MoveCursorToEofAllViews()  { MoveCursorAllViews( LastLine()+1, 0 ); }
    //***********  OrigFileImage
 private:
+   // 20160425 note from a failed attempt (learning experience) to switch d_pOrigFileImage to std::string
+   //    there seems to be NO WAY to read the entire content of a file into a std::string
+   //    without FIRST writing each string memloc with an initializer value.  Using the phrasing
+   //       str.ctor(), str.reserve( filebytes ), read( &str[0] ), str[filebytes] = '\0'
+   //    invokes undefined behavior (though it "seems to work" today).  To avoid undefined
+   //    behavior, replace reserve with resize (but this forces the undesired writing each string
+   //    memloc with an initializer value).
+   //    https://www.reddit.com/r/learnprogramming/comments/3qotqr/how_can_i_read_an_entire_text_file_into_a_string/
    PChar          d_pOrigFileImage = nullptr;
    size_t         d_cbOrigFileImage = 0;
    enum text_encode_t { TXTENC_ASCII=0, TXTENC_UTF8=1 };
