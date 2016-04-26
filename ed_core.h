@@ -351,8 +351,8 @@ class LineInfo { // LineInfo is a standalone class since it is used by both FBUF
    friend class FBUF;
    NO_COPYCTOR(LineInfo);
    NO_ASGN_OPR(LineInfo);
-   PChar d_pLineData;           // CAN be -1 when REPLACEREC is for line that didn't exist
-   COL   d_iLineLen;
+   PCChar d_pLineData;           // CAN be -1 when REPLACEREC is for line that didn't exist
+   COL    d_iLineLen;
 public:
    void clear() {
       d_pLineData = nullptr;
@@ -574,7 +574,7 @@ struct CMD {             // function definition entry
 #endif
    union {
       EdKC_Ascii eka;
-      PChar      pszMacroDef;
+      PCChar     pszMacroDef;
       char  chAscii() const { return eka.Ascii; }
       int   isEmpty() const { return pszMacroDef == nullptr; }
       } d_argData;   // - NON-MACRO: key that invoked; MACRO: ptr to macro string (defn)
@@ -972,11 +972,10 @@ public:
    void           MoveCursorToEofAllViews()  { MoveCursorAllViews( LastLine()+1, 0 ); }
    //***********  OrigFileImage
 private:
-   PChar          d_pOrigFileImage = nullptr;
+   PCChar         d_pOrigFileImage = nullptr;
    size_t         d_cbOrigFileImage = 0;
    enum text_encode_t { TXTENC_ASCII=0, TXTENC_UTF8=1 };
    text_encode_t  d_OrigFileImageContentEncoding = TXTENC_ASCII;
-   void           FreeOrigFileImage();
    LINE           d_naLineInfoElements = 0;
    LineInfo      *d_paLineInfo = nullptr;       // array of LineInfo, has d_naLineInfoElements elements alloc'd, d_LineCount used
    LINE           d_LineCount = 0;
@@ -986,7 +985,7 @@ public:
    bool           KnownLine( LINE lineNum )  const { return lineNum >= 0 && lineNum < d_LineCount; }
    LINE           LastLine()                 const { return d_LineCount - 1; }
    COL            LineLength( LINE lineNum ) const { return d_paLineInfo[lineNum].d_iLineLen; }
-   bool           PtrWithinOrigFileImage( PChar pc ) const { return pc >= d_pOrigFileImage && pc < (d_pOrigFileImage + d_cbOrigFileImage); }
+   bool           PtrWithinOrigFileImage( PCChar pc ) const { return pc >= d_pOrigFileImage && pc < (d_pOrigFileImage + d_cbOrigFileImage); }
    filesize_t     cbOrigFileImage() const { return d_cbOrigFileImage; }
    //************ ImgBuf manipulators (currently used only in CGrepper::WriteOutput)
 private:

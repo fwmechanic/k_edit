@@ -153,8 +153,8 @@ ConsoleScreenBufferInfo::ConsoleScreenBufferInfo( Win32::HANDLE hCSB, PCChar nam
          // 20100324 kgoodwin
          const auto smcxvs = Win32::GetSystemMetrics(SM_CXVIRTUALSCREEN); const auto smcxs = Win32::GetSystemMetrics(SM_CXSCREEN);
          const auto smcyvs = Win32::GetSystemMetrics(SM_CYVIRTUALSCREEN); const auto smcys = Win32::GetSystemMetrics(SM_CYSCREEN);
-         const auto ratX = (double)smcxvs / smcxs;
-         const auto ratY = (double)smcyvs / smcys;
+         const auto ratX = static_cast<double>(smcxvs) / smcxs;
+         const auto ratY = static_cast<double>(smcyvs) / smcys;
          d_maxSize.X *= ratX;  DBG( "smcxvs=%d, smcxs=%d, ratX=%5.3f, d_maxSize.X=%d", smcxvs, smcxs, ratX, d_maxSize.X );
          d_maxSize.Y *= ratY;  DBG( "smcyvs=%d, smcys=%d, ratY=%5.3f, d_maxSize.Y=%d", smcxvs, smcxs, ratX, d_maxSize.Y );
          }
