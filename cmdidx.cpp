@@ -637,7 +637,7 @@ void UnbindMacrosFromKeys() {
 // functions) are heap-allocated, and can thus be created and destroyed at will:
 GLOBAL_VAR RbTree *s_CmdIdxAddins;
 
-STIL PCMD IdxNodeToPCMD( RbNode *pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
+STIL PCMD IdxNodeToPCMD( PCmdIdxNd pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
 
 STATIC_VAR RbCtrl s_CmdIdxRbCtrl = { AllocNZ_, Free_, };
 
@@ -670,7 +670,7 @@ STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
       const auto &cand( g_CmdTable[ cmpLine ] );
       const auto rslt( cmpi( src, cand.Name() ) );
       if( rslt == 0 ) { 0 && DBG( "%s=[%" PR_SIZET "u]: %" PR_BSR "|", __func__, cmpLine, BSR(src) );
-         return const_cast<PCMD>( &cand );
+         return CAST_AWAY_CONST(PCMD)( &cand );
          }
       if( rslt <  0 ) { /* handle unsigned underflow/wraparound */
          if( cmpLine==0 ) {

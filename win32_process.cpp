@@ -280,7 +280,7 @@ PAST_OPTS: ;
    return *pCmdln ? pCmdln : nullptr;
    }
 
-TF_Ptr STIL Ptr analyze_cmdline( Ptr pCmdln, int *flags ) { return const_cast<Ptr>(analyze_cmdline_( pCmdln, flags )); }
+TF_Ptr STIL Ptr analyze_cmdline( Ptr pCmdln, int *flags ) { return cast_add_const(Ptr)(analyze_cmdline_( pCmdln, flags )); }
 
 STATIC_FXN void prep_cmdline_( PChar pc ) {
    // CMD shell cannot handle '/' dirsep in argv[0], so xlat to '\'

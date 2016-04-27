@@ -76,10 +76,10 @@ public: // the intended "public interface"
 
    void clear()          { dl_first = dl_last = nullptr; count = 0; }
    bool empty()    const { return dl_first == nullptr; }
-   CP   frontK()   const { return const_cast<CP>(dl_first); } // probably never needed; DO NOT rename front()
-   P    front()    const { return                dl_first ; }
-   CP   backK()    const { return const_cast<CP>(dl_last) ; } // probably never needed; DO NOT rename back()
-   P    back ()    const { return                dl_last  ; }
+   CP   frontK()   const { return cast_add_const(CP)(dl_first); } // probably never needed; DO NOT rename front()
+   P    front()    const { return                    dl_first ; }
+   CP   backK()    const { return cast_add_const(CP)(dl_last) ; } // probably never needed; DO NOT rename back()
+   P    back ()    const { return                    dl_last  ; }
    DLINK_COUNT( unsigned length() const { return count; } )
    };
 
@@ -95,10 +95,10 @@ struct DLinkEntry {
 public: // the intended "public interface"
 
    void clear()       { dl_next = dl_prev = nullptr; }
-   CP Next()    const { return const_cast<CP>(dl_next); }
-   P  Next()          { return                dl_next ; }
-   CP Prev()    const { return const_cast<CP>(dl_prev); }
-   P  Prev()          { return                dl_prev ; }
+   CP Next()    const { return cast_add_const(CP)(dl_next); }
+   P  Next()          { return                    dl_next ; }
+   CP Prev()    const { return cast_add_const(CP)(dl_prev); }
+   P  Prev()          { return                    dl_prev ; }
    };
 
 

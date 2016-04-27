@@ -1369,7 +1369,7 @@ void LineInfo::PutContent( stref src ) { // assume previous content has been des
       }
    else {
       AllocBytesNZ( d_pLineData, src.length(), __func__ );
-      memcpy( const_cast<PChar>(d_pLineData), src.data(), src.length() );
+      memcpy( CAST_AWAY_CONST(PChar)(d_pLineData), src.data(), src.length() );
       }
    d_iLineLen = src.length();
    }
@@ -1995,7 +1995,7 @@ LineInfo & FBUF::ImgBufNextLineInfo() {
 void FBUF::ImgBufAppendLine( stref src ) {
    auto &newLI( ImgBufNextLineInfo() );
    newLI.d_iLineLen = src.length();
-   memcpy( const_cast<PChar>(newLI.d_pLineData), src.data(), newLI.d_iLineLen );
+   memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData), src.data(), newLI.d_iLineLen );
    0 && DBG( "ImgBufAppendLine Bytes=%d", newLI.d_iLineLen );
    d_ImgBufBytesWritten += newLI.d_iLineLen;
    }
@@ -2004,10 +2004,10 @@ void FBUF::ImgBufAppendLine( PFBUF pFBufSrc, int srcLineNum, PCChar prefix ) {
    auto &newLI( ImgBufNextLineInfo() );
    auto preLen(0);
    if( prefix ) {
-      memcpy( const_cast<PChar>(newLI.d_pLineData), prefix, (preLen = Strlen( prefix )) );
+      memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData), prefix, (preLen = Strlen( prefix )) );
       }
    auto &srcLI( pFBufSrc->d_paLineInfo[srcLineNum] );
-   memcpy( const_cast<PChar>(newLI.d_pLineData)+preLen, srcLI.d_pLineData, srcLI.d_iLineLen );
+   memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData)+preLen, srcLI.d_pLineData, srcLI.d_iLineLen );
    newLI.d_iLineLen = srcLI.d_iLineLen + preLen;
    0 && DBG( "FBUF::ImgBufAppendPFLine Bytes=%d", newLI.d_iLineLen );
    d_ImgBufBytesWritten += newLI.d_iLineLen;

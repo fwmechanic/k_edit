@@ -52,7 +52,7 @@ int FlipCase( int ch ) {
 
 STATIC_FXN PChar DupLineSeg_( PFBUF pfb, std::string &st, LINE yLine, COL xLeftIncl, COL xRightIncl ) {
    pfb->DupLineSeg( st, yLine, xLeftIncl, xRightIncl );
-   return const_cast<PChar>( st.c_str() );
+   return CAST_AWAY_CONST(PChar)( st.c_str() );
    }
 
 STATIC_CONST char no_alpha[] = "Warning: no alphabetic chars found in argument!";

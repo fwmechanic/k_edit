@@ -241,6 +241,9 @@ typedef  int64_t S64;
 
 typedef  size_t  uint_machineword_t; // 32-bit on i386, 64-bit on x64
 
+#define CAST_AWAY_CONST(less_const_type)  const_cast<less_const_type>
+#define cast_add_const(more_const_type)   const_cast<more_const_type>
+
 typedef       char *         PChar;
 typedef const char *        PCChar;
 typedef      PChar *        PPChar;
