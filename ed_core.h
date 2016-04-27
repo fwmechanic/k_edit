@@ -1321,8 +1321,8 @@ extern std::string FormatExpandedSeg // less efficient version: uses virgin dest
 extern void    PrettifyMemcpy( std::string &dest, COL xLeft, size_t maxCharsToWrite, stref src, COL src_xMin, COL tabWidth, char chTabExpand, char chTrailSpcs );
 
 //************ tabWidth-dependent string fxns
-//---          FreeIdxOfCol returns index that MAY be out of range; used to see whether col maps to content, or is beyond it
-extern sridx   FreeIdxOfCol  ( COL tabWidth, stref content, const COL colTgt );
+//---          FreeIdxOfCol returns index that MAY be > max indexable char in content; used to see whether col maps to content, or is beyond it, and for cursor movement
+extern sridx   FreeIdxOfCol ( COL tabWidth, stref content, COL   colTgt );
 extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset );
 //---          tabWidth-dependent col-of-ptr/ptr-of-col xlators
 STIL   COL     ColOfNextChar( COL tabWidth, stref rl, COL xCol ) {
@@ -1340,13 +1340,6 @@ extern char    CharAtCol     ( COL tabWidth, stref content, const COL colTgt ); 
 //                             map beyond the last char of content elicit the index of the last char
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, stref content, const COL colTgt ) {
                   return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length()-1 );
-                  }
-//             CaptiveIdxOfCols  two for the price of one?
-STIL   sridx2  CaptiveIdxOfCols( COL tabWidth, stref content, COL x0, COL x1 ) {
-                  sridx2 rv;
-                  rv.ix0 = CaptiveIdxOfCol( tabWidth, content, x0 );
-                  rv.ix1 = CaptiveIdxOfCol( tabWidth, content, x1 );
-                  return rv;
                   }
 STIL   COL     TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
                   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) );
@@ -1383,9 +1376,9 @@ public:
       : d_tw    ( tw )
       , d_sr    ( sr )
       {}
-   COL    i2c ( sridx  iC   ) const { return ColOfFreeIdx( d_tw, d_sr, iC ); }
-   sridx  c2i ( COL    xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
-   COL    cols(             ) const { return StrCols( d_tw, d_sr ); }
+   COL    i2c ( sridx iC   ) const { return ColOfFreeIdx( d_tw, d_sr, iC ); }
+   sridx  c2i ( COL   xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
+   COL    cols(            ) const { return StrCols( d_tw, d_sr ); }
    };
 
 namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Prefer non-member non-friend functions to member functions."

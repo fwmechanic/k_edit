@@ -1154,7 +1154,7 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
       }
    else {
      #if defined(_WIN32)
-      SetCwdChanged( cwdAfter.c_str() );
+      EventCwdChanged( cwdAfter.c_str() );
      #endif
       Msg( "Changed directory to %s", cwdAfter.c_str() );
       if( fSave ) {

@@ -126,37 +126,25 @@ STATIC_VAR EditorFilesStatus s_edfs;
 class CwdStatus : public TitleBarContributor {
    bool  d_fChanged;
    Path::str_t d_buf;
-
 public:
-
-   CwdStatus();
-   void SetChanged( PCChar newName );
-
-   TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str();
+   CwdStatus()
+      : d_fChanged( true )
+      , d_buf( Path::GetCwd() )
+      {}
+   void SetChanged( PCChar newName ) {
+      d_fChanged = true;
+      d_buf = newName;
+      }
+   TBC_Virtual bool Changed() {
+      const auto rv( d_fChanged );
+      d_fChanged = false;
+      return rv;
+      }
+   TBC_Virtual PCChar Str() { return d_buf.c_str(); }
    };
 
-CwdStatus::CwdStatus()
-   : d_fChanged( true )
-   , d_buf( Path::GetCwd() )
-   {}
-
-void CwdStatus::SetChanged( PCChar newName ) {
-   d_fChanged = true;
-   d_buf = newName;
-   }
-
-bool CwdStatus::Changed() {
-   const auto rv( d_fChanged );
-   d_fChanged = false;
-   return rv;
-   }
-
-PCChar CwdStatus::Str() { return d_buf.c_str(); }
-
 STATIC_VAR CwdStatus s_cwds;
-
-void SetCwdChanged( PCChar newName ) { s_cwds.SetChanged( newName ); }
+void EventCwdChanged( PCChar newName ) { s_cwds.SetChanged( newName ); }
 
 //------------------------------------------------------------------------------
 

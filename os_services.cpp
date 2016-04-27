@@ -28,23 +28,82 @@ void ConOut::Bell() {
 // takes counted-string param so *pStart doesn't have to be forcibly
 // NUL-terminated (it may be a const string)
 //
-PChar Getenv( PCChar pStart, int len ) {
-   ALLOCA_STRDUP( buf, slen, pStart, len )    0 && DBG("Getenv '%s'", buf );
+PCChar Getenv( stref varnm ) {
+   ALLOCA_STRDUP( buf, slen, varnm.data(), varnm.length() )    0 && DBG("Getenv '%s'", buf );
    return getenv( buf );
    }
 
-PChar GetenvStrdup( PCChar pStart, size_t len ) {
-   ALLOCA_STRDUP( buf, slen, pStart, len )    0 && DBG("GetenvStrdup '%s'", buf );
-   return GetenvStrdup( buf );
+//------------------------------------------------
+
+#if defined(_WIN32)
+
+STATIC_FXN bool putenv_ok( PCChar szNameEqualsVal ) {
+   const auto ok( _putenv( szNameEqualsVal ) == 0 );
+   if( !ok ) {
+      ErrorDialogBeepf( "%s(%s) FAILED: %s", FUNC, szNameEqualsVal, strerror( errno ) );
+      }
+   return ok;
    }
 
-PChar GetenvStrdup( PCChar pszEnvName ) {
-   auto penv( getenv( pszEnvName ) );
-   if( penv ) {
-       penv = Strdup( penv );
-       }
-   return penv;
+#endif
+
+bool PutEnvOk( PCChar varName, PCChar varValue ) { // params canNOT be stref since non-_WIN32 API which takes ASCIZ strings is called directly
+   0 && DBG( "*** %s(%s=%s)", FUNC, varName, varValue );
+#if defined(_WIN32)
+   auto pBuf( PChar( alloca( Strlen(varName) + Strlen(varValue) + (1+1) ) ) ); // (1+1) = ('=' + '\0')
+   sprintf( pBuf, "%s=%s", varName, varValue ); // sprintf is OK here since we have pre-calc'd the buf size to fit
+   return putenv_ok( pBuf );
+#else
+   return 0 == setenv( varName, varValue, 1 );
+#endif
    }
+
+bool PutEnvOk( PCChar szNameEqualsVal ) {
+   0 && DBG( "*** %s(%s)", FUNC, szNameEqualsVal );
+   const auto pEQ( strchr( szNameEqualsVal, '=' ) );
+   if( pEQ == szNameEqualsVal ) { // no name?
+      return false; // not OK
+      }
+   if( !pEQ ) {
+#if !defined(_WIN32)
+      return 0 == unsetenv( szNameEqualsVal );
+#else
+      return PutEnvOk( szNameEqualsVal, "" );
+#endif
+      }
+   else {
+      ALLOCA_STRDUP( nm, nmLen, szNameEqualsVal, pEQ - szNameEqualsVal - 1 );
+      return PutEnvOk( nm, pEQ + 1 );
+      }
+   }
+
+bool PutEnvChkOk( PCChar szNameEqualsVal ) {
+   if( strchr( szNameEqualsVal, '=' ) ) {
+      return PutEnvOk( szNameEqualsVal );
+      }
+   else {
+      DBG( "%s '%s' missing '='", FUNC, szNameEqualsVal );
+      return false;
+      }
+   }
+
+#ifdef fn_setenv
+bool ARG::setenv() {
+   switch( d_argType ) {
+      default:      return BadArg();
+      case TEXTARG: return PutEnvChkOk( d_textarg.pText );
+      case LINEARG: //lint -fallthrough
+      case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
+                       if( aw.GetLine() && !PutEnvChkOk( aw.c_str() ) ) {
+                          return false;
+                          }
+                       }
+                    return true;
+      }
+   }
+#endif// fn_setenv
+
+//------------------------------------------------
 
 class OsEnv {
    Path::str_t d_exe_path;  // "C:\dir1\dir2\" (includes trailing '\')

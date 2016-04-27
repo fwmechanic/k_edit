@@ -278,8 +278,11 @@ extern PCChar OsVerStr();
 
 //--------------------------------------------------------------------------------
 
-extern PChar GetenvStrdup( PCChar src, size_t len );
-STIL   PChar GetenvStrdup( PCChar src, PCChar eos ) { return GetenvStrdup( src, eos - src ); }
+extern bool   PutEnvOk(    PCChar varName, PCChar varValue );
+extern bool   PutEnvOk(    PCChar szNameEqualsVal );
+extern bool   PutEnvChkOk( PCChar szNameEqualsVal );
+
+extern PCChar Getenv( stref varnm );
 
 //--------------------------------------------------------------------------------
 

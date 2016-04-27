@@ -389,13 +389,7 @@ extern  Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc );
 
 extern  FileStat GetFileStat( PCChar fname );
 
-extern  PChar  Getenv( PCChar pStart, int len );
-extern  PChar  GetenvStrdup( PCChar pszEnvName );
-
-extern  bool   PutEnvOk( PCChar varName, PCChar varValue );
-extern  bool   PutEnvOk( PCChar szNameEqualsVal );
-
-extern  void   SetCwdChanged( PCChar newName );
+extern  void   EventCwdChanged( PCChar newName ); // (Win32-only ATM) contit hook
 
 // call around FBUF::PutLastLine() calls to effect (smart) cursor-tailing
 extern  void   CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );

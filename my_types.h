@@ -85,11 +85,6 @@ typedef boost::string_ref stref;
 typedef stref::size_type  sridx; // a.k.a. boost::string_ref::size_type
 const auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::npos )' syntax is used!
 
-struct sridx2 {
-   sridx ix0;
-   sridx ix1;
-   };
-
 // we sometimes need to "printf" (DBG) boost::string_ref referents
 // unfortunately static_cast<int> of size_t seems unavoidable per
 // http://stackoverflow.com/questions/19145951/printf-variable-string-length-specifier

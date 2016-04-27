@@ -1699,8 +1699,9 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
       FBdest->DupLineForInsert( stDst, yDst, xDst, boxWidth );
       if( FBsrc ) {
          FBsrc->DupLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
-         const auto srl( CaptiveIdxOfCols( tws, stSrc, xSrcLeft, xSrcRight ) );
-         stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, srl.ix0, srl.ix1 - srl.ix0 + 1 );
+         const auto ixLeft ( CaptiveIdxOfCol( tws, stSrc, xSrcLeft  ) );
+         const auto ixRight( CaptiveIdxOfCol( tws, stSrc, xSrcRight ) );
+         stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, ixLeft, ixRight - ixLeft + 1 );
          }
       FBdest->PutLine( yDst, stDst, stSrc );
       }
