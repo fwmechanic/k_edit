@@ -672,7 +672,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
    //          test_CaptiveIdxOfCol();
    ThisProcessInfo::Init();
    enum { DBGFXN=1 };
-   DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT "d", __func__, memdelta() );
+   DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT, __func__, memdelta() );
 #if defined(_Win32)
    extern void TestMQ();
    TestMQ();
@@ -719,10 +719,10 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
                  break;
        }
      }
-   {                             DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT "d", __func__, memdelta() );
+   {                             DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT, __func__, memdelta() );
    MainThreadPerfCounter pc;
    if( !ConIO_InitOK( fForceNewConsole ) ) { exit( 1 ); }
-                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ConIO_InitOK"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ConIO_InitOK"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    CreateWindow0();
    s_pFbufLog->PutFocusOn();
    {
@@ -731,7 +731,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
       AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb.c_str() ) );
       MainThreadPerfCounter px;
       LuaCtxt_Edit::InitOk( pb.c_str() );
-                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
+                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT " LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
       }
    }
    {
@@ -740,15 +740,15 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
       AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb.c_str() ) );
       MainThreadPerfCounter px;
       LuaCtxt_State::InitOk( pb.c_str() );
-                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT "d LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
+                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT " LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
       }
    }
    register_atexit_search();
-   InitFromStateFile();          DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-   ReinitializeMacros( false );  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   InitFromStateFile();          DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   ReinitializeMacros( false );  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    // MsgClr(); // hack this is the earliest that it will actually have the effect of clearing the dialog line on startup (which is REALLY necessary in dialogtop mode)
-   InitJobQueues();              DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d thru InitJobQueues"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT "d done"                   , __func__, pc.Capture(), memdelta() );
+   InitJobQueues();              DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru InitJobQueues"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " done"                   , __func__, pc.Capture(), memdelta() );
    }
    win_fully_on_desktop();
    if( CmdFromName( "autostart" ) ) {

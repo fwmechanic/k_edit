@@ -61,7 +61,7 @@ STATIC_FXN LINE FindRsrcTag( stref srKey, PFBUF pFBuf, const LINE startLine, boo
                if( fHiLiteTag ) {
                   const auto pView( pFBuf->PutFocusOn() );
                   const auto iox0( isri2osri( rl, tag, ix0 ) );
-                  DB && DBG( "%s! tagging y=%d x=%" PR_SIZET "u L %" PR_SIZET "u", __func__, yLine, iox0, taglen );
+                  DB && DBG( "%s! tagging y=%d x=%" PR_SIZET " L %" PR_SIZET "u", __func__, yLine, iox0, taglen );
                   pView->SetMatchHiLite( Point(yLine,iox0), taglen, true );
                   }
                const auto rv( yLine + 1 );

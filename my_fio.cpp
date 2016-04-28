@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -69,7 +69,7 @@ int fio::Read( int fh, PVoid pBuf, size_t bytesToRead ) {
    }
 
 int fio::Write( int fh, PCVoid pBuf, size_t bytesToWrite ) {
-   auto rv( WL( _write, write )( fh, pBuf, bytesToWrite ) );  0 && DBG( "%s [%d]: %" PR_SIZET "d -> %" WL( "d", "ld" ), __func__, fh, bytesToWrite, rv );
+   auto rv( WL( _write, write )( fh, pBuf, bytesToWrite ) );  0 && DBG( "%s [%d]: %" PR_PTRDIFFT " -> %" WL( "d", "ld" ), __func__, fh, bytesToWrite, rv );
    if( rv == -1 ) {
        rv = 0;
        }

@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -83,7 +83,7 @@ bool ARG::towinclip() {
       stbuf = d_textarg.pText;
 SINGLE_LINE: // HACK O'RAMA!
       const auto blen( stbuf.length() );
-      Msg( "%s(%" PR_SIZET "u)->%sClip:\"%s\"", ArgTypeName(), blen, DestNm(), stbuf.c_str() );
+      Msg( "%s(%" PR_SIZET ")->%sClip:\"%s\"", ArgTypeName(), blen, DestNm(), stbuf.c_str() );
       if( nullptr == (bufptr=PrepClip( 1+blen, hglbCopy )) ) {
          return false;
          }

@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -50,7 +50,7 @@ int CDECL__ main( int argc, char *argv[], char *envp[] ) {
    char  buf[ MAX_PATH+1 ];
    const auto len( GetModuleFileName( nullptr, buf, sizeof buf ) );
    if( len >= sizeof(buf) ) {
-      fprintf( stderr, "GetModuleFileName rv (%lu) >= sizeof(buf) (%" PR_SIZET "u)\n", len, sizeof(buf) );
+      fprintf( stderr, "GetModuleFileName rv (%lu) >= sizeof(buf) (%" PR_SIZET ")\n", len, sizeof(buf) );
       return 1;
       }
 

@@ -82,35 +82,28 @@ typedef const void *        PCVoid;
 // x64 Linux   LP64  I32LP64   16  32    64         64          64
 // 32  <both>   ??     ??      16  32    32         32?         32
 
+// I     For signed integer types, causes printf to expect ptrdiff_t-sized integer argument; for unsigned integer types, causes printf to expect size_t-sized integer argument. Commonly found in Win32/Win64 platforms.
+// I32   For integer types, causes printf to expect a 32-bit (double word) integer argument. Commonly found in Win32/Win64 platforms.
+// I64   For integer types, causes printf to expect a 64-bit (quad word) integer argument. Commonly found in Win32/Win64 platforms.
+
 // Check GCC
 #if defined(__GNUC__)
-    #if defined(_WIN32)
-    #   define PR__i64 "I64"
-    #else
-    #   define PR__i64 "ll"
-    #endif
+    #define PR__i64       WL("I64","ll")
+    #define PR__i64d      PR__i64 "d"
+    #define PR_SIZET      WL("Iu","zu")
+    #define PR_PTRDIFFT   WL("Id","td")
+    #define PR_BSRSIZET   WL("I","l")
+    #define PR_FILESIZE_T WL(PR__i64d,"ld")
     #if defined(__x86_64__) || defined(__ppc64__)
         // #define ENVIRONMENT64
         #if defined(_WIN32)
-        #   define PR_BSRSIZET "I"
-        #   define PR_SIZET "I"
-        #   define PR_PTRDIFFT "I"
-        #   define PR_TIMET "I64"
-        #   define PR_FILESIZE_T "u"
+        #   define PR_TIMET PR__i64
         #else
-        #   define PR_BSRSIZET "l"
-        #   define PR_SIZET "z"
-        #   define PR_PTRDIFFT "t"
         #   define PR_TIMET "l"
-        #   define PR_FILESIZE_T "ld"
         #endif
     #else
         // #   define ENVIRONMENT32
-        #   define PR_BSRSIZET ""
-        #   define PR_SIZET ""
-        #   define PR_PTRDIFFT ""
         #   define PR_TIMET "l"
-        #   define PR_FILESIZE_T "u"
     #endif
 #else
     #error only GCC supported!

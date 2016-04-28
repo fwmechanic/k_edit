@@ -674,7 +674,7 @@ private:
 void CharWalkerReplace::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
    const auto ixCol( CaptiveIdxOfCol( pFBuf->TabWidth(), d_sbuf, curPt->col ) );
-   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET "u LoSB=%" PR_SIZET "d", curPt->col, curPt->lin, d_stReplace.length(), d_sbuf.length() );
+   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, d_stReplace.length(), d_sbuf.length() );
    d_sbuf.replace( ixCol, d_stSearch.length(), d_stReplace );
    pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
    ++d_iReplacementsMade;
@@ -692,7 +692,7 @@ void CharWalkerReplace::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &co
 CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
    const auto haystack( sr.substr( ix_curPt_Col, d_stSearch.length() ) );
 
-   0 && DBG( "%s ( %d, %d L %" PR_SIZET "u ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
+   0 && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
                    , curPt->lin, curPt->col, d_stSearch.length()
                                                   , BSR(d_stSearch )
                                                                    , BSR(haystack)
@@ -1616,7 +1616,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
             /* line contains _A_ match? */  VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
             // find the rightmost match by repeatedly searching (left->right) until search fails, using the last good match
             while( iGoodMatch < maxCharsToSearch ) {
-               const auto startIdx( iGoodMatch + 1 );   VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "-search: iAYSTACK=%" PR_SIZET "u '%" PR_BSR "'", startIdx, BSR(newHaystack) ); } )
+               const auto startIdx( iGoodMatch + 1 );   VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "-search: iAYSTACK=%" PR_SIZET " '%" PR_BSR "'", startIdx, BSR(newHaystack) ); } )
                const auto srNextMatch( VFindStr_( haystack, startIdx, SET_HaystackHas(startIdx) ) );
                if( srNextMatch.empty() ) {
                   break;

@@ -36,7 +36,7 @@ GLOBAL_VAR FBufHead g_FBufHead;
 // All inlines that alloc mem call this (terminating) function in their error-path
 //
 void MemErrFatal( PCChar opn, size_t byteCount, PCChar msg ) {
-   Msg( "%s %s( %" PR_SIZET "u ) failed: %s", __func__, opn, byteCount, msg );
+   Msg( "%s %s( %" PR_SIZET " ) failed: %s", __func__, opn, byteCount, msg );
    EditorExit( 4, false );
    }
 

@@ -318,7 +318,7 @@ bool Interpreter::Interpreting_VariableMacro() { return Interpreting() && TOS().
 //
 bool Interpreter::PushMacroStringOk( PCChar pszMacroString, int macroFlags ) {
    if( ELEMENTS(s_MacroRuntimeStack) == ixPastTOS() ) {
-      return ErrorDialogBeepf( "Macros nested too deep (%" PR_SIZET "u levels)! recursive macro defn?", ELEMENTS(s_MacroRuntimeStack) );
+      return ErrorDialogBeepf( "Macros nested too deep (%" PR_SIZET " levels)! recursive macro defn?", ELEMENTS(s_MacroRuntimeStack) );
       }
    0 && DBG( "PushMacStr[%d] '%s'", ixPastTOS(), pszMacroString );
    s_MacroRuntimeStack[ s_ixPastTOS++ ].Ctor( pszMacroString, macroFlags );

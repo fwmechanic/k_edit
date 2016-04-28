@@ -559,13 +559,13 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
          const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
          if( isWordChar( rl[ixC] ) ) {
             const auto ixFirst   ( IdxFirstWordCh   ( rl, ixC   ) );
-            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC   ) );  0 && DBG( "ix[%" PR_SIZET "u/%" PR_SIZET "u/%" PR_SIZET "u]", ixFirst, ixC, ixPastLast );
+            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC   ) );  0 && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
             const auto xMin( ColOfFreeIdx( tw, rl, ixFirst      ) );
             const auto xMax( ColOfFreeIdx( tw, rl, ixPastLast-1 ) );  0 && DBG( "x[%d..%d]", xMin, xMax );
             const auto wordCols ( xMax - xMin + 1 );
             const auto wordChars( ixPastLast - ixFirst );
             // this degree of paranoia only matters if the definition of a WORD includes a tab
-            if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT "d", __func__, wordCols, wordChars ); }
+            if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars ); }
             // return everything
             cursor->col = xMin;
             return stref( rl.data() + ixFirst, wordChars );
@@ -2026,7 +2026,7 @@ View::View( const View &src, PWin pWin )
    CommonInit();
    }
 
-// pardon me while I go insane
+// pardon me while I go insane  20160428 still a problem
 #if (defined(__x86_64__) || defined(__ppc64__)) && defined(_WIN32)
     #define PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "ll"
 #else
@@ -2386,7 +2386,7 @@ STATIC_FXN void RedrawScreen() {
             buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
             alc.PutColor( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorIndex );
             }
-         (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "u!=%u", buf.length(), scrnCols );
+         (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
          VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, false );
          }
       ShowDraws( *pLbf++ = ch; )
@@ -2607,7 +2607,7 @@ public:
 void ColoredLine::Cat( int ColorIdx, stref src ) {
    const auto attr( g_CurView()->ColorIdx2Attr( ColorIdx ) );
    const auto cpyLen( SmallerOf( src.length(), (int(sizeof(d_charBuf))-1) - d_curLen) );
-   if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3" PR_SIZET "u..%3" PR_SIZET "u] %02X %" PR_BSR "", d_curLen, d_curLen+cpyLen-1, attr, BSR(src) );
+   if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3" PR_SIZET "..%3" PR_SIZET "] %02X %" PR_BSR "", d_curLen, d_curLen+cpyLen-1, attr, BSR(src) );
       d_alc.PutColor( d_curLen, cpyLen, attr );
       memcpy( d_charBuf + d_curLen, src.data(), cpyLen );
       d_curLen += cpyLen;
@@ -2695,7 +2695,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    const auto cwdlen( cwdbuf.length() );
    const auto fnLen( pfh->Namestr().length() );
    const auto cfpath( Path::RefDirnm( pfh->Namestr() ) );
-   const auto commonLen( Path::CommonPrefixLen( cwdbuf, cfpath ) ); // 0 && DBG( "%s|%s (%" PR_SIZET "u)", cwdbuf.c_str(), cfpath.c_str(), commonLen );
+   const auto commonLen( Path::CommonPrefixLen( cwdbuf, cfpath ) ); // 0 && DBG( "%s|%s (%" PR_SIZET ")", cwdbuf.c_str(), cfpath.c_str(), commonLen );
    const auto divergentPath( commonLen < cwdlen );
    const auto uniqPathLen( divergentPath ? cfpath.length() - commonLen : 0 );
    const auto uniqLen( fnLen - commonLen - uniqPathLen );
@@ -2744,7 +2744,7 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
             }
          if( !eq( it->d_str, sr ) ) {
             it->d_str.assign( BSR2STR(sr) ); // overwrite same-length string with new
-                           0 && DBG( "%s [%" PR_PTRDIFFT "u]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
+                           0 && DBG( "%s [%" PR_SIZET "]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
             fChanged = true;
             }
          if( fChanged ) { // mark line dirty
@@ -2758,7 +2758,7 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
          }
       }
    const auto new_it( s_direct_vid_segs.emplace( it, tgt, colorIndex, sr ) );
-                           0 && DBG( "%s @[%" PR_PTRDIFFT "u]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
+                           0 && DBG( "%s @[%" PR_SIZET "]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
    s_paScreenLineNeedsRedraw->SetBit( new_it->d_origin.lin );
    UpdtDisplay();
    }

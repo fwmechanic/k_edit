@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -95,7 +95,7 @@ class TEXTARG_NULLEOx_edit_flipcase : public TEXTARG_NULLEOx_edit {
       const auto a1( FirstAlphaOrEnd( d_str, 0 ) );
       if( a1 == d_str.length() ) {
          return d_arg.fnMsg( no_alpha );
-         } 0 && DBG( "a1= %" PR_SIZET "u", a1 );
+         } 0 && DBG( "a1= %" PR_SIZET, a1 );
       const auto fx( islower( d_str[a1] ) ? ::toupper : ::tolower );
       std::transform( d_str.cbegin()+a1, d_str.cend(), d_str.begin()+a1, fx );
       return true;

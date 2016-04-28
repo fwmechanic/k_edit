@@ -1224,9 +1224,9 @@ stref FBUF::PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
    const auto tw( TabWidth() );
    const auto ixMinIncl( FreeIdxOfCol( tw, rl, xMinIncl ) );
    if( ixMinIncl >= rl.length() ) { return stref(); }
-   const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) ); 0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
+   const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) ); 0 && DBG( "%d[%d/%" PR_SIZET ",%d/%" PR_SIZET "]=%" PR_SIZET "=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
    rl.remove_suffix( (rl.length()-1) - ixMaxIncl );
-   rl.remove_prefix( ixMinIncl );                               0 && DBG( "%d[%d/%" PR_SIZET "u,%d/%" PR_SIZET "u]=%" PR_SIZET "u=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
+   rl.remove_prefix( ixMinIncl );                               0 && DBG( "%d[%d/%" PR_SIZET ",%d/%" PR_SIZET "]=%" PR_SIZET "=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
    return rl;
    }
 
@@ -1275,9 +1275,9 @@ int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
       dest.append( xIns - lineCols, ' ' ); // append spaces thru dest[xIns-1]; dest[xIns] == 0
       }
    if( insertCols > 0 ) {
-      const auto ixIns( FreeIdxOfCol( tw, dest, xIns ) );         DB && DBG( "%s: %" PR_BSR "| L %d (%d) [%" PR_SIZET "u]", __func__, BSR(dest), lineCols, xIns, ixIns );
+      const auto ixIns( FreeIdxOfCol( tw, dest, xIns ) );         DB && DBG( "%s: %" PR_BSR "| L %d (%d) [%" PR_SIZET "]", __func__, BSR(dest), lineCols, xIns, ixIns );
       dest.insert( ixIns, insertCols, ' ' );
-      }                                                           DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET "u (%d)", __func__, BSR(dest), dest.length(), xIns );
+      }                                                           DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET " (%d)", __func__, BSR(dest), dest.length(), xIns );
    return dest.length();
    }
 
@@ -1795,7 +1795,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
               CP_OEMCP  // but we can't (and may never), so this is the safest choice
             );
          const auto utf8len( Win32::WideCharToMultiByte( cp, 0, pszTextUTF16, utf16len, nullptr, 0, nullptr, nullptr ) ); // note this returns an int (even in x64)
-         0 && DBG( "reading UTF-16 file \"%s\": fileBytes=%" PR__i64 "u, utf16len=%" PR_SIZET "u, utf8len=%d", Name(), fileBytes, utf16len, utf8len );
+         0 && DBG( "reading UTF-16 file \"%s\": fileBytes=%" PR__i64 "u, utf16len=%" PR_SIZET ", utf8len=%d", Name(), fileBytes, utf16len, utf8len );
          PChar utf16buf;
          AllocBytesNZ( utf16buf, utf16len+1, __func__ );
          utf16buf[utf16len] = '\0';
@@ -1970,7 +1970,7 @@ IS_EOL:
 
 void FBUF::ImgBufAlloc( size_t bufBytes, int PreallocLines ) {
    d_ImgBufBytesWritten = 0;
-   0 && DBG( "ImgBufAlloc Bytes=%" PR_SIZET "u, Lines=%d", bufBytes, PreallocLines );
+   0 && DBG( "ImgBufAlloc Bytes=%" PR_SIZET ", Lines=%d", bufBytes, PreallocLines );
    d_cbOrigFileImage = bufBytes;
    AllocArrayNZ( d_pOrigFileImage, bufBytes, __func__ );
    SetLineCount( 0 );

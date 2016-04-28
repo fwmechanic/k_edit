@@ -1,5 +1,5 @@
 //
-// Copyright 2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -208,7 +208,7 @@ void TConsoleOutputControl::SetNewScreenSize( const YX_t &newSize ) {
    d_xyState.size.lin = newSize.lin; // the ONLY place d_xyState.size is written!
    d_xyState.size.col = newSize.col; // the ONLY place d_xyState.size is written!
    const size_t cells( d_xyState.size.lin * d_xyState.size.col );
-   0 && DBG( "+%s (%dx%d) cells=%" PR_SIZET "u->%" PR_SIZET "u (x %" PR_SIZET "u = %" PR_SIZET "u)", __func__, d_xyState.size.col, d_xyState.size.lin, d_vOutputBufferCache.size(), cells
+   0 && DBG( "+%s (%dx%d) cells=%" PR_SIZET "->%" PR_SIZET " (x %" PR_SIZET " = %" PR_SIZET ")", __func__, d_xyState.size.col, d_xyState.size.lin, d_vOutputBufferCache.size(), cells
          , sizeof(d_vOutputBufferCache[0])
          , sizeof(d_vOutputBufferCache[0]) * cells
          );
@@ -634,7 +634,7 @@ int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL x
       }
    if( LOG_CONSOLE_WRITES ) {
       const size_t write_bytes( (xMax-xMin+1) * (yMax-yMin+1) * sizeof(ScreenCell) );
-      if( write_bytes > MAX_CON_WR_BYTES ) { DBG( "*** WriteConsoleOutput w/too-large buffer: %" PR_SIZET "u", write_bytes ); }
+      if( write_bytes > MAX_CON_WR_BYTES ) { DBG( "*** WriteConsoleOutput w/too-large buffer: %" PR_SIZET, write_bytes ); }
       for( auto iy(yMin); iy <= yMax ; ++iy ) {
          for( auto ix(xMin); ix <= xMax ; ++ix ) {
             auto pCell( &d_vOutputBufferCache[ (iy*d_xyState.size.col)+ix ] );
@@ -1025,7 +1025,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
    // scrollback buffer may be vast, and is absolutely empty below parentCsbi.srWindow().Bottom,
    // so to save time and RAM, don't read below parentCsbi.srWindow().Bottom
    const Point src_size( parentCsbi.srWindow().Bottom, parentCsbi.BufferSize().col );
-   CON_DBG && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET "u bytes) = %" PR_SIZET "u bytes", src_size.col, src_size.lin, sizeof(ScreenCell), src_size.col * src_size.lin * sizeof(ScreenCell) );
+   CON_DBG && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET " bytes) = %" PR_SIZET " bytes", src_size.col, src_size.lin, sizeof(ScreenCell), src_size.col * src_size.lin * sizeof(ScreenCell) );
    if( g_pFBufConsole->LineCount() == 0 ) {
       enum { maxReadConsoleBufsize = 48*1024 };
       // Documented maxReadConsoleBufsize is 64KB, however experiments and
@@ -1036,7 +1036,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
       Win32::COORD dest_buf_size;
       dest_buf_size.X  = src_size.col;
       dest_buf_size.Y  = ( maxReadConsoleBufsize / (src_size.col * sizeof(ScreenCell)) );
-      CON_DBG && DBG( "dest_buf_size.Y = %u, 0x%" PR_SIZET "X bytes", dest_buf_size.Y, dest_buf_size.Y * src_size.col * sizeof(ScreenCell) );
+      CON_DBG && DBG( "dest_buf_size.Y = %u, %" PR_SIZET " bytes", dest_buf_size.Y, dest_buf_size.Y * src_size.col * sizeof(ScreenCell) );
       ScreenCell *dest_buf;
       AllocArrayNZ( dest_buf, dest_buf_size.Y * src_size.col, "<console> copy buffer" );
       std::string chbuf;

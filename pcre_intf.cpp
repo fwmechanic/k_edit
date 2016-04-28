@@ -54,7 +54,7 @@ public:
 
 
 PCRE_EXP_DECL void * pcre_malloc_( size_t bytes ) {
-   0 && DBG( "%s: %" PR_SIZET "u bytes", __func__, bytes );
+   0 && DBG( "%s: %" PR_SIZET " bytes", __func__, bytes );
    return AllocNZ_( bytes );
    }
 

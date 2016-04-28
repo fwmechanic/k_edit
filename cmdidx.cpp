@@ -669,7 +669,7 @@ STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
       const auto &cand( g_CmdTable[ cmpLine ] );
       const auto rslt( cmpi( src, cand.Name() ) );
-      if( rslt == 0 ) { 0 && DBG( "%s=[%" PR_SIZET "u]: %" PR_BSR "|", __func__, cmpLine, BSR(src) );
+      if( rslt == 0 ) { 0 && DBG( "%s=[%" PR_SIZET "]: %" PR_BSR "|", __func__, cmpLine, BSR(src) );
          return CAST_AWAY_CONST(PCMD)( &cand );
          }
       if( rslt <  0 ) { /* handle unsigned underflow/wraparound */
@@ -679,7 +679,7 @@ STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
          yMax = cmpLine - 1;
          }
       if( rslt >  0 ) { yMin = cmpLine + 1; }
-      0 && DBG( "%s=[%" PR_SIZET "u,%" PR_SIZET "u]: %" PR_BSR "|", __func__, yMin, yMax, BSR(src) );
+      0 && DBG( "%s=[%" PR_SIZET ",%" PR_SIZET "]: %" PR_BSR "|", __func__, yMin, yMax, BSR(src) );
       }
    0 && DBG( "%s:[-1]: %" PR_BSR "|", __func__, BSR(src) );
    return nullptr;

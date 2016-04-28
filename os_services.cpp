@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -135,7 +135,7 @@ OsEnv::OsEnv() {
    const auto len( Win32::GetModuleFileName( nullptr, BSOB(pb) ) );
    char exe_all   [ _MAX_PATH+1 ];  // "C:\dir1\dir2\k.exe"
    if( len >= sizeof(exe_all) ) {
-      DBG( "GetModuleFileName rv (%ld) >= sizeof(pb) (%" PR_SIZET "u)\n", len, sizeof(pb) );
+      DBG( "GetModuleFileName rv (%ld) >= sizeof(pb) (%" PR_SIZET ")\n", len, sizeof(pb) );
       Win32::ExitProcess( 1 );
       }
    d_exe_path.assign( BSR2STR( Path::RefDirnm( pb ) ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );

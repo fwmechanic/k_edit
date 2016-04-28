@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -244,13 +244,13 @@ STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
    const auto delta( nsize - osize );
    s_LuaHeapSize += delta;
    if( nsize == 0 ) {
-      DBG_LUA_ALLOC && ptr && DBG( "%s %" PR_SIZET "u free %5" PR_SIZET "u (%5" PR_SIZET "u/%5" PR_SIZET "u) P=            %p", __func__, s_LuaHeapSize, delta, osize, nsize, ptr );
+      DBG_LUA_ALLOC && ptr && DBG( "%s %" PR_SIZET " free %5" PR_SIZET " (%5" PR_SIZET "/%5" PR_SIZET ") P=            %p", __func__, s_LuaHeapSize, delta, osize, nsize, ptr );
       free( ptr );   // ANSI requires that free(nullptr) has no effect
       return nullptr;
       }
    // most of this conditional code is for debug/logging purposes
    const PVoid rv( realloc( ptr, nsize ) );  // ANSI requires that realloc(nullptr, size) == malloc(size)
-   DBG_LUA_ALLOC && DBG( "%s %" PR_SIZET "u %s %5" PR_SIZET "u (%5" PR_SIZET "u/%5" PR_SIZET "u) P=%p -> %p", __func__, s_LuaHeapSize, ptr ? "real" : "new ", delta, osize, nsize, ptr, rv );
+   DBG_LUA_ALLOC && DBG( "%s %" PR_SIZET " %s %5" PR_SIZET " (%5" PR_SIZET "/%5" PR_SIZET ") P=%p -> %p", __func__, s_LuaHeapSize, ptr ? "real" : "new ", delta, osize, nsize, ptr, rv );
    return rv;
    }
 
@@ -284,7 +284,7 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
    for( PChar pc(rvNm); pc < rvNm + rvlen; ++pc )
       if( *pc == '.' ) {
          *pc = '\0';
-         if( !(depth < ELEMENTS(name)) ) { DB && DBG( "%s MAX DEPTH (%" PR_SIZET "u) exceeded: %s", __func__, ELEMENTS(name), pcRvalNm );
+         if( !(depth < ELEMENTS(name)) ) { DB && DBG( "%s MAX DEPTH (%" PR_SIZET ") exceeded: %s", __func__, ELEMENTS(name), pcRvalNm );
             return false;
             }
          name[depth++] = pc+1;
@@ -617,7 +617,7 @@ STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void
     if( !*pL ) { DBG( "%s- lua_newstate FAILED", __func__ );
        return false;
        }
-    DBG_LUA_ALLOC && DBG( "%s lua_newstate (%" PR_SIZET "u bytes)  ******************************************", __func__, heapChange );
+    DBG_LUA_ALLOC && DBG( "%s lua_newstate (%" PR_SIZET " bytes)  ******************************************", __func__, heapChange );
    }
    {
    lua_getfield( *pL, LUA_REGISTRYINDEX, "schickelgruber-nickel" );
@@ -796,7 +796,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
    auto pszSigStart( szSig );
    for( ; *szSig && *szSig != '>' ; ++szSig ) {
       switch( *szSig ) {
-       default:   return Msg( "%s: invalid param-type[%" PR_PTRDIFFT "d] (%c)", szFuncnm, (szSig - pszSigStart), szSig[0] );
+       default:   return Msg( "%s: invalid param-type[%" PR_SIZET "] (%c)", szFuncnm, (szSig - pszSigStart), szSig[0] );
        case 'F':  l_construct_FBUF( L, va_arg(vl, PFBUF )                 );  break;
        case 'V':  l_construct_View( L, va_arg(vl, PView )                 );  break;
        case 'd':  lua_pushnumber(   L, va_arg(vl, double)                 );  break;
@@ -824,7 +824,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
                   *va_arg(vl, double *) = lval;
                  }break;
        case 'i':  if( !lua_isnumber( L, nres ) )  goto WRONG_RESULT_TYPE;
-                 {const auto lval( lua_tointeger( L, nres ) );            DB && DBG( "%s->%s() d[%d]=%" PR_SIZET "d", __func__, szFuncnm, nres, lval );
+                 {const auto lval( lua_tointeger( L, nres ) );            DB && DBG( "%s->%s() d[%d]=%" PR_PTRDIFFT, __func__, szFuncnm, nres, lval );
                   *va_arg(vl, int *)    = lval;
                  }break;
        case 'b': {const auto lval( lua_toboolean( L, nres ) );            DB && DBG( "%s->%s() b[%d]=%d", __func__, szFuncnm, nres, lval );
@@ -832,7 +832,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
                  }break;
        case 'h':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
                  {size_t srcBytes;
-                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );         DB && DBG( "%s->%s() h[%d]=%" PR_SIZET "u bytes", __func__, szFuncnm, nres, srcBytes );
+                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );         DB && DBG( "%s->%s() h[%d]=%" PR_SIZET " bytes", __func__, szFuncnm, nres, srcBytes );
                   ++srcBytes;
                   PChar pDest;
                   AllocBytesNZ( pDest, srcBytes ); // can copy binary data, not just string
@@ -842,7 +842,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
                  }break;
        case 'S':  if( !lua_isstring( L, nres ) )  goto WRONG_RESULT_TYPE;
                  {size_t srcBytes;
-                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );         DB && DBG( "%s->%s() S[%d]=%" PR_SIZET "u bytes", __func__, szFuncnm, nres, srcBytes );
+                  auto pSrc( lua_tolstring(L, nres, &srcBytes) );         DB && DBG( "%s->%s() S[%d]=%" PR_SIZET " bytes", __func__, szFuncnm, nres, srcBytes );
                   va_arg(vl, std::string *)->assign( pSrc, srcBytes );
                  }break;
        default:   return Msg( "%s: unsupported return type specifier '%c'", __func__, *szSig );

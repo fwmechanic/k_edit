@@ -257,7 +257,7 @@ size_t GetProcessMem() {
 bool MemStatus::Changed() {
    dbuf dbnew;
    const auto showSize( GetProcessMem() / (1024*(g_fShowMemUseInK ? 1 : 1024)) );
-   safeSprintf( BSOB(dbnew), "%s.ProcessMem=%" PR_SIZET "u%ci", ExecutableFormat(), showSize, (g_fShowMemUseInK ? 'K' : 'M') );
+   safeSprintf( BSOB(dbnew), "%s.ProcessMem=%" PR_SIZET "%ci", ExecutableFormat(), showSize, (g_fShowMemUseInK ? 'K' : 'M') );
    if( 0!=strcmp( d_buf, dbnew ) ) {
       bcpy( d_buf, dbnew );
       return true;

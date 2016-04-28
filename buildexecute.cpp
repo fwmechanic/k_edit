@@ -788,8 +788,8 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
                stb.erase( xCursor );
                }
             }
-         0 && DBG( "graphic @ x=%d (stlen=%" PR_SIZET "u)", xCursor, stb.length() );
-         if( xCursor > stb.length() ) { 0 && DBG( "append %" PR_SIZET "u spaces", xCursor - stb.length() );
+         0 && DBG( "graphic @ x=%d (stlen=%" PR_SIZET ")", xCursor, stb.length() );
+         if( xCursor > stb.length() ) { 0 && DBG( "append %" PR_SIZET " spaces", xCursor - stb.length() );
             stb.append( xCursor - stb.length(), ' ' );
             }
          const auto ch( pCmd->d_argData.chAscii() );
@@ -835,7 +835,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
             --xCursor;
             }
          }
-      else if( func == fn_right ) {                                      0 && DBG( "right: %d, %" PR_SIZET "u", xCursor, stb.length() );
+      else if( func == fn_right ) {                                      0 && DBG( "right: %d, %" PR_SIZET, xCursor, stb.length() );
          if( g_CurFBuf() && stb.length() == xCursor ) {
             const auto xx( xColInFile + xCursor );
             g_CurFBuf()->DupLineSeg( stTmp, g_CursorLine(), xx, xx );    0 && DBG( "%d='%" PR_BSR "'", xx, BSR(stTmp) );
@@ -1491,7 +1491,7 @@ bool ARG::execute() {
                    else { // hacky-kludgy way to get direct access to shell cmds w/o a new key asgnmt: arg arg "ls -l" execute
                       Path::str_t cmd( d_textarg.pText );
                       LuaCtxt_Edit::ExpandEnvVarsOk( cmd ); // BEFORE fChangeFile so curfile envvar expansions are correct
-                      0 && DBG( "execute (%" PR_SIZET "u) '%s'", cmd.length(), cmd.c_str() );
+                      0 && DBG( "execute (%" PR_SIZET ") '%s'", cmd.length(), cmd.c_str() );
                     #if 1
                       StartInternalShellJob( new StringList( cmd.c_str() ), false );
                       rv = true;

@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -262,7 +262,7 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
 
    if( 0 == s_Conin.CIB_ValidElements ) {
       if( s_Conin.vINPUT_RECORD.size() > conin_statics::CIB_MIN_ELEMENTS ) {
-         0 && DBG( "s_Conin.vINPUT_RECORD.size() was %" PR_SIZET "u, now %d", s_Conin.vINPUT_RECORD.size(), conin_statics::CIB_MIN_ELEMENTS );
+         0 && DBG( "s_Conin.vINPUT_RECORD.size() was %" PR_SIZET ", now %d", s_Conin.vINPUT_RECORD.size(), conin_statics::CIB_MIN_ELEMENTS );
          auto dummy(false);  GotHereDialog( &dummy );  // it's doubtful this is ever executed?
          s_Conin.vINPUT_RECORD.resize( conin_statics::CIB_MIN_ELEMENTS );
          }
