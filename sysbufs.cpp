@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -215,13 +215,13 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    FBufRead_Assign_SubHd( pFBuf, "Lua functions", luaCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsLuaFxn() ) { PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 ); }
+      if( pCmd->IsLuaFxn() ) { AssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 ); }
       }
    FBufRead_Assign_intrinsicCmds( pFBuf, coll_tmp, tmp1, tmp2 );
    FBufRead_Assign_SubHd( pFBuf, "Macros", macroCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsRealMacro() ) { PAssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 ); }
+      if( pCmd->IsRealMacro() ) { AssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 ); }
       }
    FBufRead_Assign_SubHd( pFBuf, "Available Keys", ShowAllUnassignedKeys( nullptr ) );
    ShowAllUnassignedKeys( pFBuf );
@@ -260,9 +260,9 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
       char entabStr[] = { 'e', char( '0' + pFBuf->Entab() ), 0 };
       pFout->FmtLastLine(
 #if defined(_WIN32)
-         "%-*s %c%*d L %*u %d%s {%s%s%s%s%s%s}"
+         "%-*s %c%*d L %*" PR_FILESIZE_T " %d%s {%s%s%s%s%s%s}"
 #else
-         "%-*s %c%*d L %*u %d%s {%s%s%s%s%s}"
+         "%-*s %c%*d L %*" PR_FILESIZE_T " %d%s {%s%s%s%s%s}"
 #endif
             , max.nmLen, pFBuf->UserName().c_str()
                , pFBuf->IsDirty()         ? '*'       : ' '
@@ -447,7 +447,7 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
          uc->dest.append( "(many)" );
          }
       else {
-         uc->dest.append( StringOfAllKeyNamesFnIsAssignedTo( Cmd, "," ) );
+         uc->dest.append( KeyNmAssignedToCmd_all( Cmd, "," ) );
          }
       FBOP::InsLineSortedDescending( uc->fbOut, uc->tmp, 0, uc->dest.c_str() );
       }

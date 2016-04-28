@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -23,12 +23,58 @@
 
 #pragma once
 
+// porting abbreviation tool
+#if defined(_WIN32)
+#   define WL(ww,ll)  ww
+#else
+#   define WL(ww,ll)  ll
+#endif
+
 // VC7.1: default storage class for inline is static, so defining STIL as 'STIL' was redundant
 // (other compilers may vary)
 //
 #define STIL  static inline
 
+// I've been getting auto-happy lately, but in some cases we don't want (or can't use) auto; annotate these with NOAUTO
+#define  NOAUTO
+
+#define  STIL  static inline
+#define  STATIC_VAR  static
+#define  STATIC_FXN  static
+#define  GLOBAL_VAR
+#define  GLOBAL_CONST        const
+#define  STATIC_CONST static const
+
 #include <cinttypes>
+
+//  General type Definitions
+//
+typedef unsigned int   UI;
+typedef uint8_t  U8;
+typedef uint16_t U16;
+typedef uint32_t U32;
+typedef uint64_t U64;
+
+typedef signed   int   SI ;
+typedef  int8_t  S8 ;
+typedef  int16_t S16;
+typedef  int32_t S32;
+typedef  int64_t S64;
+
+typedef  size_t  uint_machineword_t; // 32-bit on i386, 64-bit on x64
+
+#define CAST_AWAY_CONST(less_const_type)  const_cast<less_const_type>
+#define cast_add_const(more_const_type)   const_cast<more_const_type>
+
+typedef       char *         PChar;
+typedef const char *        PCChar;
+typedef      PChar *        PPChar;
+typedef char const * const CPCChar;
+typedef     PCChar *       PPCChar;
+typedef    CPCChar *      CPPCChar;
+
+typedef       void *         PVoid;
+typedef const void *        PCVoid;
 
 // Memory models
 //                           short int  long    long long    ptr/size_t
@@ -50,19 +96,21 @@
         #   define PR_SIZET "I"
         #   define PR_PTRDIFFT "I"
         #   define PR_TIMET "I64"
+        #   define PR_FILESIZE_T "u"
         #else
         #   define PR_BSRSIZET "l"
         #   define PR_SIZET "z"
         #   define PR_PTRDIFFT "t"
         #   define PR_TIMET "l"
+        #   define PR_FILESIZE_T "ld"
         #endif
-
     #else
         // #   define ENVIRONMENT32
         #   define PR_BSRSIZET ""
         #   define PR_SIZET ""
         #   define PR_PTRDIFFT ""
         #   define PR_TIMET "l"
+        #   define PR_FILESIZE_T "u"
     #endif
 #else
     #error only GCC supported!
@@ -96,6 +144,14 @@ const auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::
 
 #define PP2SR( p0, p1 )  stref( p0, (p1)-(p0) )
 
+STIL stref se2bsr( PCChar bos, PCChar eos ) { return stref( bos, eos - bos ); }
+STIL stref se2bsr( const std::string &str ) { return stref( str ); }
+
+typedef WL(__int64,off_t) filesize_t;
+
+typedef signed long FilesysTime;
+
+
 #include "attr_format.h"
 
 #if !defined(__GNUC__)
@@ -109,16 +165,6 @@ const auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::
 #else
    #define CDECL__
 #endif
-
-// I've been getting auto-happy lately, but in some cases we don't want (or can't use) auto; annotate these with NOAUTO
-#define  NOAUTO
-
-#define  STIL  static inline
-#define  STATIC_VAR  static
-#define  STATIC_FXN  static
-#define  GLOBAL_VAR
-#define  GLOBAL_CONST        const
-#define  STATIC_CONST static const
 
 //--- EXTERNC depends upon C/C++ ---
 //
@@ -194,7 +240,7 @@ template<typename T> class TD;
 // Macro that determines if a number is a power of two
 #define ISPOWER2(x) (!((x)&((x)-1)))
 
-#define  ROUNDUP_TO_NEXT_POWER2( val, pow2 )  ((val + ((pow2)-1)) & ~((pow2)-1))
+#define ROUNDUP_TO_NEXT_POWER2( val, pow2 )  ((val + ((pow2)-1)) & ~((pow2)-1))
 
 // sizeof_struct_member
 // called like offsetof, but returns sizeof the member of the struct
@@ -203,7 +249,7 @@ template<typename T> class TD;
 
 
 // use KSTRLEN on a const char array containing ASCIIZ string ONLY!
-#define  KSTRLEN( szCharArray )   (sizeof( szCharArray ) - 1)
+#define KSTRLEN( szCharArray )   (sizeof( szCharArray ) - 1)
 
 #ifndef CompileTimeAssert
    // now using static_assert
@@ -224,35 +270,6 @@ template<typename T> class TD;
 // from http://www.parashift.com/c++-faq-lite/pointers-to-members.html#faq-33.5
 //
 #define  CALL_METHOD( object, pMethod )  ((object).*(pMethod))
-
-//  General type Definitions
-//
-typedef unsigned int   UI;
-typedef uint8_t  U8;
-typedef uint16_t U16;
-typedef uint32_t U32;
-typedef uint64_t U64;
-
-typedef signed   int   SI ;
-typedef  int8_t  S8 ;
-typedef  int16_t S16;
-typedef  int32_t S32;
-typedef  int64_t S64;
-
-typedef  size_t  uint_machineword_t; // 32-bit on i386, 64-bit on x64
-
-#define CAST_AWAY_CONST(less_const_type)  const_cast<less_const_type>
-#define cast_add_const(more_const_type)   const_cast<more_const_type>
-
-typedef       char *         PChar;
-typedef const char *        PCChar;
-typedef      PChar *        PPChar;
-typedef char const * const CPCChar;
-typedef     PCChar *       PPCChar;
-typedef    CPCChar *      CPPCChar;
-
-typedef       void *         PVoid;
-typedef const void *        PCVoid;
 
 namespace Path {
    typedef std::string str_t;

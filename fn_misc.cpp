@@ -142,7 +142,7 @@ public:
       v[ e_ss   ] = 0;
       v[ e_usec ] = 0;
       }
-   FcLogTm( CompiledRegex::capture_container &pc );
+   FcLogTm( RegexMatchCaptures &pc );
    FcLogTm( const FcLogTm &from );
    void  decr( const FcLogTm& decr_by );
    PChar ToStr( PChar buf, int bufSize ) const;
@@ -260,7 +260,7 @@ FcLogTm::FcLogTm( const FcLogTm &from ) { // copy ctor
 #endif
    }
 
-FcLogTm::FcLogTm( CompiledRegex::capture_container &pc ) { DBG( "Count=%d", pc->Count() );
+FcLogTm::FcLogTm( RegexMatchCaptures &pc ) { DBG( "Count=%d", pc->Count() );
    for( auto ix(0) ; ix < pc->Count() ; ++ix ) {
       DBG( "%d: '%s'", ix, pc->Str(ix) );
       }
@@ -298,7 +298,7 @@ public:
    FcLogTmMatchHandler( ARG &arg ) : d_foundBaseline( false ), d_arg( arg ) {}
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
 protected:
-   bool VMatchActionTaken(        PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &pCaptures );
+   bool VMatchActionTaken(        PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &pCaptures );
    bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ); // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
    };
 
@@ -306,7 +306,7 @@ bool FcLogTmMatchHandler::VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL
    return d_arg.Within( cur, MatchCols );
    }
 
-bool FcLogTmMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, CompiledRegex::capture_container &pCaptures ) {
+bool FcLogTmMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &pCaptures ) {
    FcLogTm val( pCaptures );
    if( d_arg.d_cArg == 1 && !d_foundBaseline ) {
       d_foundBaseline = true;

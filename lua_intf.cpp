@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -421,10 +421,10 @@ STATIC_FXN void l_handle_pcall_error( lua_State *L, bool fCompileErr=false ) { /
    const PCChar pll = strrchr( msg, '\n' );
    PCChar pMsg = pll && (*(pll+1) == '\t') && *(pll+2) ? pll+2 : msg;  // if Lua's emsg is multiline, the last line has a leading tab to skip
    DBG( "pMsg='%s'", pMsg );
-   // For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use Compile_Regex + CompiledRegex::Match
+   // For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use Regex_Compile + CompiledRegex::Match
    std::vector<stref> cs( 4 );
    {
-   auto pre( Compile_Regex( "^(.*):(\\d+): (.*)$", true ) );
+   auto pre( Regex_Compile( "^(.*):(\\d+): (.*)$", true ) );
    if( !pre ) {
       Msg( "%s had regex COMPILE error", __func__ );
       return;

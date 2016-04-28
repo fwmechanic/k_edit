@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -72,6 +72,11 @@ extern PCChar ExecutableFormat();
 
 //----------- Arg and Selection
 
+STIL     bool IsSelectionActive()         { extern bool s_fSelectionActive; return s_fSelectionActive; }
+STIL     int  ArgCount()                  { extern int  g_iArgCount;        return g_iArgCount; }
+STIL     bool IsMacroRecordingActive()    { extern bool g_fMacroRecordingActive; return g_fMacroRecordingActive; }
+STIL     bool IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedByRecord; return g_fCmdXeqInhibitedByRecord; }
+
 extern   void ClearArgAndSelection();
 extern   void ExtendSelectionHilite( const Point &pt );
 extern   bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax );
@@ -127,7 +132,7 @@ extern void    FlushKeyQueuePrimeScreenRedraw();
 // display-refresh API
 
 extern void CursorLocnOutsideView_Set_( LINE y, COL x, PCChar from );
-#define  CursorLocnOutsideView_Set( y, x )  CursorLocnOutsideView_Set_( y, x, __func__ )
+#define     CursorLocnOutsideView_Set( y, x )  CursorLocnOutsideView_Set_( y, x, __func__ )
 extern bool CursorLocnOutsideView_Get( Point *pt );
 extern void CursorLocnOutsideView_Unset();
 
@@ -185,7 +190,7 @@ struct DisplayDriverApi {
    void  (*DisplayNoise)( PCChar buffer );
    void  (*DisplayNoiseBlank)();
    COL   (*VidWrStrColor      )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, int colorAttribute, bool fPadWSpcsToEol );
-   COL   (*VidWrStrColors     )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fUserSeesNow );
+   COL   (*VidWrStrColors     )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fFlushNow );
    };
 
 extern DisplayDriverApi g_DDI;
@@ -196,8 +201,8 @@ extern void ConIO_Shutdown();
 #define DisplayNoiseBlank()      (g_DDI.DisplayNoiseBlank())
 #define VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol )\
  (g_DDI.VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol ))
-#define VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fUserSeesNow )\
- (g_DDI.VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fUserSeesNow ))
+#define VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fFlushNow )\
+ (g_DDI.VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fFlushNow ))
 
 extern int   DispRawDialogStr( PCChar lbuf );
 extern int   VMsg( PCChar pszFormat, va_list val );
@@ -209,8 +214,8 @@ extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
 extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 struct hl_rgn_t {
-   int  color;
-   Rect rgn;
+   const int  color;
+   const Rect rgn;
    hl_rgn_t( int color_, LINE yulc_, COL xulc_, LINE ylrc_, COL xlrc_ ) : color( color_ ), rgn( yulc_, xulc_, ylrc_, xlrc_ ) {}
    };
 
@@ -228,6 +233,15 @@ public:
    VideoFlusher( bool fWantToFlush_=true ) : d_fWantToFlush(fWantToFlush_) {}
    ~VideoFlusher();
    };
+
+STIL   COL       ScreenCols()    { extern COL  s_iWidth ; return s_iWidth    ; }
+STIL   COL   EditScreenCols()    {                        return ScreenCols(); }
+
+STIL   LINE      ScreenLines()   { extern LINE s_iHeight; return s_iHeight  ; } // RARELY USED (so far, only in WriteStateFile(), ScreenSizeChanger)
+STIL   LINE  EditScreenLines()   { extern LINE s_iHeight; return s_iHeight-2; }
+extern LINE  DialogLine();
+extern LINE  StatusLine();
+extern LINE  MinDispLine();
 
 //------------ Hi-level file and view APIs
 
@@ -276,14 +290,13 @@ extern   bool  DefineMacro( stref pszMacroName, stref pszMacroCode );
 extern   void  FreeAllMacroDefs();
 enum { SetKeyRV_OK, SetKeyRV_BADKEY, SetKeyRV_BADCMD };
 extern   int   BindKeyToCMD( stref pszCmdName, stref pszKeyName );
-extern   bool  AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
 
 extern   void  UnbindMacrosFromKeys();
-extern   void  PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
-extern   void  AssignReplaceCmd( PCMD pOldCmd, PCMD pNewCmd );
+extern   void  AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
+extern   void  AssignSubstituteCmd( PCMD pOldCmd, PCMD pNewCmd );
 extern   int   ShowAllUnassignedKeys( PFBUF pFBuf );
-extern   std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep );
-extern   std::string  FirstKeyNmAssignedToCmd( const CMD &CmdToFind );
+extern   std::string  KeyNmAssignedToCmd_all( PCCMD pCmdToFind, PCChar nmSep );
+extern   std::string  KeyNmAssignedToCmd_first( const CMD &CmdToFind );
 
 extern   int          EdkcOfKeyNm( stref keyNm );
 extern   std::string  KeyNmOfEdkc(                    int edKC );
@@ -357,7 +370,6 @@ extern   void  FBufRead_Assign_OsInfo( PFBUF pFBuf );
 extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
 extern   void  FBufRead_Assign_Switches( PFBUF pFBuf );
 
-
 //------------ Pseudofile writers
 
 extern   void  AddToTextargStack( stref str );
@@ -373,11 +385,13 @@ extern   void  EditorExit( int processExitCode, bool fWriteStateFile );
 
 //------------ rsrc file section processing
 
-extern  Path::str_t RsrcFilename( PCChar ext );
+extern Path::str_t RsrcFilename( PCChar ext );
 extern stref   IsolateTagStr( stref src );
-extern   bool  RsrcLdFileSection( stref pszSectionName );
-extern PCChar  LastRsrcLdFileSectionNm();
-extern stref   LastRsrcLdFileSectionNmTruncd();
+extern bool    RsrcFileLdAllNamedSections( stref pszSectionName );
+extern bool    RsrcFileLdAllNamedSections( stref pszSectionName, int *pAssignCountAccumulator );
+extern bool    RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
+extern PCChar  LastRsrcFileLdSectionFtypeNm();
+extern int     ReinitializeMacros( bool fEraseExistingMacros );
 
 //------------ misc edit helpers
 

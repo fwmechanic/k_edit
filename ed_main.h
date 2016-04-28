@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -21,13 +21,6 @@
 
 #define  DEBUG_LOGGING  1
 #define  OLDGREP  0
-
-// porting abbreviation tool
-#if defined(_WIN32)
-#   define WL(ww,ll)  ww
-#else
-#   define WL(ww,ll)  ll
-#endif
 
 #if defined(_WIN32)
    #define  MOUSE_SUPPORT  1
@@ -101,6 +94,7 @@ extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list va
 
 #include "ed_features.h"
 #include "ed_vars.h"
+#include "ed_edkc.h"
 #include "ed_protos.h"
 
 #include "my_log.h"

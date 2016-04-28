@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -69,8 +69,6 @@ typedef int LINE;     // line number within file
    enum { MAX_LINES = INT_MAX };
 
 #endif
-
-typedef LINE *PLINE;
 
 #include "dlink.h"
 
@@ -836,9 +834,6 @@ enum bkupMode { bkup_USE_SWITCH, bkup_UNDEL, bkup_BAK, bkup_NONE };
 
 class InternalShellJobExecutor;
 
-typedef U32         filesize_t;
-typedef signed long FilesysTime;
-
 struct FileStat {
    FilesysTime    d_ModifyTime = 0;
    filesize_t     d_Filesize   = 0;
@@ -865,9 +860,6 @@ STIL int cmp( const FileStat &a, const FileStat &b ) {
 enum Eol_t { EolLF, EolCRLF };
 extern const Eol_t platform_eol;
 extern PCChar EolName( Eol_t );
-
-STIL stref se2bsr( PCChar bos, PCChar eos ) { return stref( bos, eos - bos ); }
-STIL stref se2bsr( const std::string &str ) { return stref( str ); }
 
 class FBUF { // FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
 
@@ -1075,7 +1067,7 @@ private:
    bool           d_fDiskRdOnly = false ; // file on disk is read only
 #endif
    bool           d_fInhibitRsrcLoad = false ;
-                                         // DO NOT call RsrcLdFileSection in FBOP::CurFBuf_AssignMacros_RsrcLd().
+                                         // DO NOT call RsrcFileLdAllNamedSections in FBOP::CurFBuf_AssignMacros_RsrcLd().
                                          // Why?  Some pseudofiles exist to show the user the current state
                                          // of internals that can be perturbed by loading a rsrc-file
                                          // section.  This flag prevents that, so such pseudofiles give a

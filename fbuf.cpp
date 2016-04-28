@@ -1,5 +1,5 @@
 // -*- c is foobar -*-
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -967,7 +967,8 @@ STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
 
 STATIC_VAR bool s_cur_Ftype_assigned; // hacky!
 enum { SIZEOF_MAX_FTYPE=51 };
-STATIC_VAR char s_cur_Ftype[SIZEOF_MAX_FTYPE];
+STATIC_VAR char s_cur_Ftype         [SIZEOF_MAX_FTYPE];
+STATIC_VAR char s_cur_FtypeSectionNm[SIZEOF_MAX_FTYPE];
 
 void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
    scpy( dest, sizeofDest, s_cur_Ftype );
@@ -989,18 +990,20 @@ STATIC_FXN void FtypeRestoreDefaults() {
    }
 
 STATIC_CONST char s_sftype_prefix[] = "ftype:";
-STATIC_FXN bool RsrcLdSectionFtype( stref ftype ) {
+STATIC_FXN bool RsrcFileLdSectionFtype( stref ftype ) {
    FtypeRestoreDefaults();
    char section[ KSTRLEN(s_sftype_prefix) + SIZEOF_MAX_FTYPE ];
    bcat( bcpy( section, s_sftype_prefix ).length(), section, ftype );              0 && DBG( "%s %s", __func__, section );
-   const auto rv( RsrcLdFileSection( section ) );   0 && DBG( "%s %c %s", __func__, rv?'y':'n', section );
-   return rv;
+   auto dummy( 0 );
+   const auto fSectionExists( RsrcFileLdAllNamedSections( section, &dummy ) );
+   if( fSectionExists ) {
+      bcpy( s_cur_FtypeSectionNm, ftype );
+      }
+   return fSectionExists;
    }
 
-stref LastRsrcLdFileSectionNmTruncd() {
-   stref rv( LastRsrcLdFileSectionNm() );
-   if( rv.starts_with( s_sftype_prefix ) ) { rv.remove_prefix( KSTRLEN( s_sftype_prefix ) ); }
-   return rv;
+PCChar LastRsrcFileLdSectionFtypeNm() {
+   return s_cur_FtypeSectionNm;
    }
 
 #define  EXT_NO_EXT    "."
@@ -1040,7 +1043,7 @@ void FBUF::DetermineFType() {
             }
          else {
             s_cur_Ftype_assigned = false;
-            ftype = (RsrcLdFileSection( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "";
+            ftype = (RsrcFileLdAllNamedSections( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "";
             }
          }
       Set_s_cur_Ftype( ftype );
@@ -1064,14 +1067,14 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
    const auto ext( GetRsrcExt( fb ) );
    DefineStrMacro( "curfileext", ext );
-   // call RsrcLdFileSection( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
+   // call RsrcFileLdAllNamedSections( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
    if( fb->IsRsrcLdBlocked() ) {
       }
    else {
       fb->DetermineFType();
       const auto ftype( fb->FType() );
       if( !ftype.empty() ) {
-         RsrcLdSectionFtype( ftype );
+         RsrcFileLdSectionFtype( ftype );
          }
       1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), fb->Name() );
       }

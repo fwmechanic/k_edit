@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -496,7 +496,7 @@ int BindKeyToCMD( stref pszCmdName, stref pszKeyName ) {
    return SetKeyRV_OK;
    }
 
-void AssignReplaceCmd( PCMD pOldCmd, PCMD pNewCmd ) {
+void AssignSubstituteCmd( PCMD pOldCmd, PCMD pNewCmd ) {
    for( auto &pCmd : s_Key2CmdTbl ) {
       if( pCmd == pOldCmd ) {
           pCmd =  pNewCmd;
@@ -504,7 +504,7 @@ void AssignReplaceCmd( PCMD pOldCmd, PCMD pNewCmd ) {
       }
    }
 
-std::string FirstKeyNmAssignedToCmd( const CMD &CmdToFind ) {
+std::string KeyNmAssignedToCmd_first( const CMD &CmdToFind ) {
    for( const auto &pCmd : s_Key2CmdTbl ) {
       if( pCmd == &CmdToFind ) {
          return KeyNmOfEdkc( &pCmd - s_Key2CmdTbl );
@@ -513,7 +513,7 @@ std::string FirstKeyNmAssignedToCmd( const CMD &CmdToFind ) {
    return "";
    }
 
-std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep ) {
+std::string KeyNmAssignedToCmd_all( PCCMD pCmdToFind, PCChar nmSep ) {
    if( pCmdToFind == pCMD_graphic ) {
       return "";
       }
@@ -522,7 +522,7 @@ std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep ) {
    for( const auto &pCmd : s_Key2CmdTbl ) {
       if( pCmd == pCmdToFind ) {
          if( !first() ) {
-            dest.append( sep );
+            dest.append( nmSep );
             }
          dest.append( KeyNmOfEdkc( kyNm, &pCmd - s_Key2CmdTbl ) );
          }
@@ -530,7 +530,7 @@ std::string StringOfAllKeyNamesFnIsAssignedTo( PCCMD pCmdToFind, PCChar sep ) {
    return dest;
    }
 
-void PAssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll, std::string &tmp1, std::string &tmp2 ) {
+void AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll, std::string &tmp1, std::string &tmp2 ) {
    if( Cmd.IsFnUnassigned() || Cmd.IsFnGraphic() ) {
       return;
       }
@@ -714,7 +714,7 @@ STATIC_FXN void cmdIdxAdd( stref name, funcCmd pFxn, int argType, stref macroDef
    // semi-hacky: replace any references to same-named builtin function
    const auto pCmdBuiltIn( CmdFromNameBuiltinOnly( name ) );
    if( pCmdBuiltIn ) {
-      AssignReplaceCmd( pCmdBuiltIn, pCmd );
+      AssignSubstituteCmd( pCmdBuiltIn, pCmd );
       }
    }
 
@@ -729,7 +729,7 @@ void CmdIdxAddMacro( stref name, stref macroDef ) { 0 && DBG( "%s: '%" PR_BSR "'
 STATIC_FXN void DeleteCmd( PCMD pCmd ) {
    { // revert to builtin CMD of same name, if any
    const auto pCmdBuiltIn( CmdFromNameBuiltinOnly( pCmd->d_name ) );
-   AssignReplaceCmd( pCmd, pCmdBuiltIn ? pCmdBuiltIn : pCMD_unassigned );
+   AssignSubstituteCmd( pCmd, pCmdBuiltIn ? pCmdBuiltIn : pCMD_unassigned );
    }
    Free0( pCmd->d_name );
    if( pCmd->IsRealMacro() ) {
@@ -778,7 +778,7 @@ PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd )    { return IdxNodeToPCMD( pNd ); }
 void FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 ) {
    FBufRead_Assign_SubHd( pFBuf, "Intrinsic Functions", ELEMENTS( g_CmdTable ) );
    for( auto &cand : g_CmdTable ) {
-      PAssignShowKeyAssignment( cand, pFBuf, coll_tmp, tmp1, tmp2 );
+      AssignShowKeyAssignment( cand, pFBuf, coll_tmp, tmp1, tmp2 );
       }
    }
 

@@ -1,5 +1,5 @@
 #
-# Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -297,6 +297,7 @@ OBJS := \
  os_services.o  \
  $(PCRE_OBJ)    \
  rm_util.o      \
+ rsrc.o         \
  search.o       \
  stringlist.o   \
  switches.o     \

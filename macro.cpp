@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -695,7 +695,7 @@ bool ARG::assign() {
                   return ok;
                  }
     case LINEARG:{int assignsDone; Point errPt;
-                  if( AssignLineRangeHadError( "user assign LINEARG", g_CurFBuf(), d_linearg.yMin, d_linearg.yMax, &assignsDone, &errPt ) ) {
+                  if( RsrcFileLineRangeAssignFailed( "user assign LINEARG", g_CurFBuf(), d_linearg.yMin, d_linearg.yMax, &assignsDone, &errPt ) ) {
                      errPt.ScrollTo();
                      Msg( "%d assign%s done; had error", assignsDone, Add_s( assignsDone ) );
                      return false;
@@ -935,7 +935,7 @@ bool ARG::record() {
          }
       int   assignsDone;
       Point errPt;
-      if( AssignLineRangeHadError( "record", g_pFbufRecord, s_macro_defn_first_line, g_pFbufRecord->LastLine(), &assignsDone, &errPt ) ) {
+      if( RsrcFileLineRangeAssignFailed( "record", g_pFbufRecord, s_macro_defn_first_line, g_pFbufRecord->LastLine(), &assignsDone, &errPt ) ) {
          ErrorDialogBeepf( "Error assigning <record> contents at line %d!", errPt.lin );
          }
       Msg( "%d assign%s done", assignsDone, Add_s( assignsDone ) );
@@ -975,7 +975,7 @@ bool ARG::record() {
       ClrInRecordDQuote();
       g_fCmdXeqInhibitedByRecord = d_fMeta;
       if( d_fMeta ) {
-         Msg( "No-Execute Record Mode - Press %s to resume normal editing", FirstKeyNmAssignedToCmd( *pCMD_record ).c_str() );
+         Msg( "No-Execute Record Mode - Press %s to resume normal editing", KeyNmAssignedToCmd_first( *pCMD_record ).c_str() );
          }
       }
    DispNeedsRedrawStatLn();
@@ -1046,7 +1046,7 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
    return rv;
    }
 
-bool AssignLineRangeHadError( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) { enum {DBGEN=0};
+bool RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) { enum {DBGEN=0};
    DBGEN && DBG( "%s: {%s} L [%d..%d]", __func__, title, yStart, yEnd );
    if( yEnd < 0 || yEnd > pFBuf->LastLine() ) {
       yEnd = pFBuf->LastLine();

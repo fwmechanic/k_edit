@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -2558,8 +2558,8 @@ void DispRefreshWholeScreenNow_()            { DispNeedsRedrawTotal_(); DispDoPe
 
 // NOTE: xCol & yLine are WITHIN CONSOLE WINDOW !!!
 
-STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fUserSeesNow ) {
-   VideoFlusher vf( fUserSeesNow );
+STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fFlushNow ) {
+   VideoFlusher vf( fFlushNow );
    FULL_DB && DBG( "%s+", __func__ );
    auto lastColor(0);
    for( auto ix(0) ; maxCharsToDisp > 0 && alc->inRange( ix ) ; ) {
@@ -2655,7 +2655,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).k_str() );
-   cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR ":%s]", BSR(LastRsrcLdFileSectionNmTruncd()), g_CurView()->szFTypeSetting() ).k_str() );
+   cl.Cat( COLOR::INF , FmtStr<60>( "[%s:%s]", LastRsrcFileLdSectionFtypeNm(), g_CurView()->szFTypeSetting() ).k_str() );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).k_str() );
 // cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).k_str() );
    cl.Cat( COLOR::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).k_str() );

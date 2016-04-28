@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -22,6 +22,36 @@
 
 #define PCRE_STATIC
 #include <pcre.h>
+
+//----------- CompiledRegex
+// For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use Regex_Compile + CompiledRegex::Match
+class CompiledRegex {
+   NO_ASGN_OPR(CompiledRegex);
+   NO_COPYCTOR(CompiledRegex);
+public:
+   // a vector of RegexMatchCapture (RegexMatchCaptures) is used to collect and return captures
+   // a vector of stref is not used since a matching regex capture can be the empty string
+   // which cannot be distinguished from a non-matching capture w/o extra info; d_valid is that
+private:
+   struct pcreCapture { // struct / content required by PCRE API
+      int oFirst    = -1;
+      int oPastLast = -1;
+      bool NoMatch() const { return oFirst == -1 && oPastLast == -1; }
+      int Len() const { return oPastLast - oFirst; }
+      };
+   pcre       *d_pPcre;
+   pcre_extra *d_pPcreExtra;
+   const int   d_maxPossCaptures;
+   std::vector<pcreCapture> d_pcreCapture;
+public:
+   // User code SHOULD NOT call this ctor, _SHOULD_ CREATE CompiledRegex via Regex_Compile!
+   CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called ONLY by Regex_Compile (when it is successful)
+   ~CompiledRegex();
+   int MaxPossCaptures() const { return d_maxPossCaptures; }
+   RegexMatchCaptures::size_type Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has );
+   };
+
+
 
 PCRE_EXP_DECL void * pcre_malloc_( size_t bytes ) {
    0 && DBG( "%s: %" PR_SIZET "u bytes", __func__, bytes );
@@ -59,7 +89,7 @@ CompiledRegex::~CompiledRegex() {
    (*pcre_free)( d_pPcreExtra );
    }
 
-CompiledRegex::capture_container::size_type CompiledRegex::Match( CompiledRegex::capture_container &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
+RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
    0 && DBG( "CompiledRegex::Match called!" );
    const int options
       ( haystack_has == STR_MISSING_BOL ? PCRE_NOTBOL
@@ -117,9 +147,18 @@ CompiledRegex::capture_container::size_type CompiledRegex::Match( CompiledRegex:
    return captures.size();
    }
 
-CompiledRegex *Compile_Regex( PCChar pszSearchStr, bool fCase ) {
+RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
+   return pcr->Match( captures, haystack, haystack_offset, haystack_has );
+   }
+
+CompiledRegex *Regex_Delete( CompiledRegex *pcr ) {
+   Delete0( pcr );
+   return pcr;
+   }
+
+CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase ) {
    PCRE_API_INIT();
-   0 && DBG( "Compile_Regex! %s", pszSearchStr );
+   0 && DBG( "Regex_Compile! %s", pszSearchStr );
    const int options( fCase ? 0 : PCRE_CASELESS );
    PCChar errMsg;
    int errOffset;
