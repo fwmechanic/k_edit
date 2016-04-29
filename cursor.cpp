@@ -34,6 +34,7 @@ bool swixVscroll( stref param ) {
    return true;
    }
 
+STIL bool CursorCannotBeInTabFill() { return g_fRealtabs && g_fTabAlign; }
 STIL COL TabAlignCursorPolicy( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos; }
 STIL COL ConstrainCursorX_1  ( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  ColOfNextChar( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos + 1; }
 

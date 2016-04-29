@@ -743,13 +743,13 @@ void TConsoleOutputControl::GetSizeCursorLocn( W32_ScreenSize_CursorLocn *cxy ) 
 bool TConsoleOutputControl::WriteToFileOk( FILE *ofh ) { // would be const but use of d_mutex prevents...
    AutoMutex mtx( d_mutex );  //##################################################
    const struct {
-      U32 magic          ;
-      int ySize          ;
-      int xSize          ;
-      int yCursor        ;
-      int xCursor        ;
-      U32 fCursorVisible ;
-      U32 fBigCursor     ;
+      uint32_t magic          ;
+      int ySize               ;
+      int xSize               ;
+      int yCursor             ;
+      int xCursor             ;
+      uint32_t fCursorVisible ;
+      uint32_t fBigCursor     ;
       } fhdr = {
         0x08240418           ,
         d_xyState.size.lin   ,
@@ -762,7 +762,7 @@ bool TConsoleOutputControl::WriteToFileOk( FILE *ofh ) { // would be const but u
    if( sizeof fhdr != fwrite( &fhdr, 1, sizeof fhdr, ofh ) ) { DBG( "%s fwrite of fhdr FAILED", __func__ ); return false; }
    auto pPastEnd( &d_vOutputBufferCache[ d_xyState.size.lin * d_xyState.size.col ] );
    for( auto pCI(&d_vOutputBufferCache[0]); pCI < pPastEnd; ++pCI ) {
-      U8 entry[2] = { pCI->Char.AsciiChar, U8(pCI->Attributes) };
+      uint8_t entry[2] = { pCI->Char.AsciiChar, uint8_t(pCI->Attributes) };
       if( sizeof entry != fwrite( entry, 1, sizeof entry, ofh ) ) { DBG( "%s fwrite of entry FAILED", __func__ ); return false; }
       }
    return true;
@@ -918,7 +918,7 @@ bool TConsoleOutputControl::SetConsolePalette( const unsigned palette[16] ) {
    ci.QuickEdit                = TRUE;
    ci.AutoPosition             = 0x10000;
    ci.InsertMode               = TRUE;
-#define  MAKE_WORD(low, high)  ((U16)((((U16)(high)) << 8) | ((U8)(low))))
+#define  MAKE_WORD(low, high)  ((uint16_t)((((uint16_t)(high)) << 8) | ((uint8_t)(low))))
    ci.ScreenColors             = MAKE_WORD(0x7, 0x0);
    ci.PopupColors              = MAKE_WORD(0x5, 0xf);
    ci.HistoryNoDup             = TRUE;

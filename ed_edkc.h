@@ -17,7 +17,7 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-typedef U16 EdKC;
+typedef uint16_t EdKC;
 
 enum { EdKC_Count = 256+272+91
 #if SEL_KEYMAP

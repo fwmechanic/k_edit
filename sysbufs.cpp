@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -24,35 +24,35 @@
 
 char Xbuf::ds_empty = 0;
 
-GLOBAL_CONST char szMasterRepo[] = "https://github.com/fwmechanic/k_edit.git";
-GLOBAL_CONST char szClipboard[] = "<clipboard>";
-GLOBAL_CONST char szConsole[] = "<console>";
-GLOBAL_CONST char szSearchLog[] = "<search-keys>";
-GLOBAL_CONST char szSearchRslts[] = "<search-results>";
-GLOBAL_CONST char szStkname  [] = "<stack>";
-GLOBAL_CONST char szCwdStk   [] = "<cwd>";
-GLOBAL_CONST char szFiles    [] = "<files>";
-GLOBAL_CONST char szEnvFile  [] = "<env_>";
-GLOBAL_CONST char szMyEnvFile[] = "<env>";
-GLOBAL_CONST char szAsnFile  [] = "<CMD-SWI-Keys>";
-GLOBAL_CONST char szUsgFile  [] = "<usage>";
-GLOBAL_CONST char szMacDefs  [] = "<macdefs>";
-GLOBAL_CONST char szNoFile   [] = "*";
+GLOBAL_CONST char kszAsgnFile  [] = "<CMD-SWI-Keys>";
+GLOBAL_CONST char kszClipboard[] = "<clipboard>";
+GLOBAL_CONST char kszConsole[] = "<console>";
+GLOBAL_CONST char kszCwdStk   [] = "<cwd>";
+GLOBAL_CONST char kszEnvFile  [] = "<env_>";
+GLOBAL_CONST char kszFiles    [] = "<files>";
+GLOBAL_CONST char kszMacDefs  [] = "<macdefs>";
+GLOBAL_CONST char kszMasterRepo[] = "https://github.com/fwmechanic/k_edit.git";
+GLOBAL_CONST char kszMyEnvFile[] = "<env>";
+GLOBAL_CONST char kszNoFile   [] = "*";
+GLOBAL_CONST char kszSearchLog[] = "<search-keys>";
+GLOBAL_CONST char kszSearchRslts[] = "<search-results>";
+GLOBAL_CONST char kszStkname  [] = "<stack>";
+GLOBAL_CONST char kszUsgFile  [] = "<usage>";
 
 STATIC_VAR CPCChar s_InvisibleFilenames[] = {
-   szClipboard  ,
-   szFiles      ,
-// szCompile    ,
+   kszClipboard  ,
+   kszFiles      ,
+// kszCompile    ,
    };
 
 STATIC_VAR CPCChar s_UninterestingFilenames[] = {
-   szClipboard  ,
-   szFiles      ,
-   szSearchLog  ,
-   szEnvFile    ,
-   szAsnFile    ,
-   szUsgFile    ,
-   szMacDefs    ,
+   kszClipboard  ,
+   kszFiles      ,
+   kszSearchLog  ,
+   kszEnvFile    ,
+   kszAsgnFile   ,
+   kszUsgFile    ,
+   kszMacDefs    ,
    };
 
 STATIC_VAR struct {
@@ -108,7 +108,7 @@ bool FBUF::IsFileInfoFile( int widx ) const {
    if( widx >= 0 && IsWFilesName( Namestr() ) == widx ) {
       return true;
       }
-   return NameMatch( szFiles );
+   return NameMatch( kszFiles );
    }
 
 bool FBUF::IsInvisibleFile( int widx ) const {
@@ -162,7 +162,7 @@ bool ARG::files() {  // bound to alt+f2
    const auto fWinFiles( true );
    const auto winIdx( g_CurWindowIdx() );
    if( !g_CurFBuf()->IsFileInfoFile( winIdx ) ) {
-      return fChangeFile( fWinFiles ? FmtStr<20>("<win%d>", winIdx ) : szFiles );
+      return fChangeFile( fWinFiles ? FmtStr<20>("<win%d>", winIdx ) : kszFiles );
       }
    //////////////////////////////////////////////////////////////////////////
    //
@@ -197,7 +197,7 @@ void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
 
 STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
-   pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s\n ", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, szMasterRepo );
+   pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s\n ", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, kszMasterRepo );
    FBufRead_Assign_OsInfo( pFBuf );
    pFBuf->FmtLastLine( " \n#-------------------- %s\npgmdir   %s\nstatedir %s", "Metadata", ThisProcessInfo::ExePath(), EditorStateDir() );
    FBufRead_Assign_Switches( pFBuf );
@@ -286,7 +286,7 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
       }
    }
 
-STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills szFiles
+STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills kszFiles
    //*** preprocessing pass to determine max width of some fields:
    maxFileInfos max;
    {
@@ -421,9 +421,9 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
    }
 
 struct UsageCtxt {
-   PFBUF fbOut;
-   COL   maxCmdNmLen;
-   U32   maxCallCount;
+   PFBUF       fbOut;
+   COL         maxCmdNmLen;
+   uint32_t    maxCallCount;
    std::string dest;
    std::string tmp;
    };
@@ -586,12 +586,12 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, 
       PCChar         name;
       FbufReaderFxn  readerFxn;
       } pseudofileReaders[] = {
-         { szFiles     , FBufRead_Files         },
-         { szMacDefs   , FBufRead_MacDefs       },
-         { szEnvFile   , FBufRead_Environment   },
-         { szMyEnvFile , FBufRead_MyEnvironment },
-         { szAsnFile   , FBufRead_Assign        },
-         { szUsgFile   , FBufRead_Usage         },
+         { kszFiles     , FBufRead_Files         },
+         { kszMacDefs   , FBufRead_MacDefs       },
+         { kszEnvFile   , FBufRead_Environment   },
+         { kszMyEnvFile , FBufRead_MyEnvironment },
+         { kszAsgnFile   , FBufRead_Assign        },
+         { kszUsgFile   , FBufRead_Usage         },
          { "<most_recently_written_files>" , FBufRead_WrToDisk      },
          { "<ascii>"   , FBufRead_AsciiTbl      },
       };

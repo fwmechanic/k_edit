@@ -25,31 +25,23 @@
 // see for good explanations:
 // http://www.adrianxw.dk/SoftwareSite/Consoles/Consoles5.html
 
-
 struct conin_statics {
    enum { CIB_DFLT_ELEMENTS = 32, CIB_MIN_ELEMENTS = 64 };
-
    Win32::HANDLE         hStdin;
    Win32::DWORD          InitialConsoleInputMode;
    Win32::DWORD          CIB_ValidElements;
    Win32::DWORD          CIB_IdxRead;
    Mutex                 mutex;
    std::vector<Win32::INPUT_RECORD> vINPUT_RECORD;
-
    conin_statics() : mutex() {};
-
    void ClearBuf() { CIB_IdxRead = CIB_ValidElements = 0; }
    bool ScanConinBufForKeyDowns();
-
 private:
-
    conin_statics( const conin_statics & src );
    conin_statics & operator=( const conin_statics & rhs );
    };
 
 STATIC_VAR conin_statics s_Conin;
-
-
 STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER );
 
 bool conin_statics::ScanConinBufForKeyDowns() {
@@ -62,20 +54,16 @@ bool conin_statics::ScanConinBufForKeyDowns() {
    return false;
    }
 
-
 bool ConIn::FlushKeyQueueAnythingFlushed() {
    AutoMutex mtx( s_Conin.mutex );
-
    auto rv( s_Conin.ScanConinBufForKeyDowns() );
    s_Conin.ClearBuf();
-
    Win32::DWORD NumberOfConsoleEventsPending;
    if(  0 == Win32::GetNumberOfConsoleInputEvents( s_Conin.hStdin, &NumberOfConsoleEventsPending )
      || 0 == NumberOfConsoleEventsPending
      ) {
       return rv;
       }
-
    0 && DBG( "NumberOfConsoleEventsPending = %ld", NumberOfConsoleEventsPending );
    const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, &s_Conin.vINPUT_RECORD[0], s_Conin.vINPUT_RECORD.size(), &s_Conin.CIB_ValidElements ) );
    0 && DBG( "s_Conin.CIB_ValidElements = %ld", s_Conin.CIB_ValidElements );
@@ -89,7 +77,6 @@ bool ConIn::FlushKeyQueueAnythingFlushed() {
    return rv;
    }
 
-
 STATIC_FXN void ApiFlushConsoleInputBuffer() {
    s_Conin.CIB_ValidElements = 0;
    Win32::FlushConsoleInputBuffer( s_Conin.hStdin );
@@ -99,7 +86,6 @@ STATIC_FXN Win32::DWORD GetConsoleInputMode() {
    Win32::DWORD dwMode;
    if( !Win32::GetConsoleMode( s_Conin.hStdin, &dwMode ) ) {
       // arg "GetConsoleMode fails when input piped programmer.win32" google
-
       //
       // from http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/console_handles.asp
       //
@@ -147,13 +133,11 @@ STATIC_FXN Win32::DWORD GetConsoleInputMode() {
          exit( 1 );
          }
 #endif
-
       if( !Win32::GetConsoleMode( s_Conin.hStdin, &dwMode ) ) {
          linebuf oseb;
          VidInitApiError( FmtStr<120>( "Win32::GetConsoleMode on new CONIN$ FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
          exit( 1 );
          }
-
       if( !Win32::SetStdHandle( Win32::Std_Input_Handle(), s_Conin.hStdin ) ) {
          linebuf oseb;
          VidInitApiError( FmtStr<120>( "Win32::SetStdHandle on new CONIN$ FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
@@ -161,7 +145,6 @@ STATIC_FXN Win32::DWORD GetConsoleInputMode() {
          }
       DBG( "%s ********************** REALLOCATED CONIN$ **********************", __func__ );
       }
-
    DBG( "GetConsoleMode(IN) => 0x%lX *****************************", dwMode );
    return dwMode;
    }
@@ -182,16 +165,13 @@ STATIC_FXN void SetConsoleInputMode_( Win32::DWORD dwMode, PCChar caller ) {
 ConsoleInputModeRestorer::ConsoleInputModeRestorer() : d_cim(GetConsoleInputMode()) {}
 void ConsoleInputModeRestorer::Set() const { SetConsoleInputMode( d_cim ); }
 
-
 void Conin_Init() {
    s_Conin.hStdin = Win32::CreateFile( "CONIN$", GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr );
    DBG( "INITIAL s_Conin.hStdin=%p", s_Conin.hStdin );
    s_Conin.CIB_ValidElements = 0;
    s_Conin.CIB_IdxRead       = 0;
    s_Conin.vINPUT_RECORD.resize( conin_statics::CIB_DFLT_ELEMENTS );
-
    s_Conin.InitialConsoleInputMode = GetConsoleInputMode();
-
    ConsoleInputAcquire();
    }
 
@@ -210,14 +190,12 @@ STATIC_FXN Win32::BOOL K_STDCALL CtrlBreakHandler( Win32::DWORD dwCtrlType ) {
       case CTRL_LOGOFF_EVENT  : type = "CTRL_LOGOFF_EVENT"   ; g_fSystemShutdownOrLogoffRequested = true; break;
       case CTRL_SHUTDOWN_EVENT: type = "CTRL_SHUTDOWN_EVENT" ; g_fSystemShutdownOrLogoffRequested = true; break;
       }
-
    DBG( "!!!!!!!! %s %s (cim=%lX) !!!!!!!!", __func__, type, GetConsoleInputMode() );
    return 1;
    }
 
 void ConsoleInputAcquire() {
    // SetConsoleInputMode( s_Conin.InitialConsoleInputMode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT) | ENABLE_MOUSE_INPUT );
-
    // Win32::SetConsoleCtrlHandler( 0, 0 );  // contrary to documentation, this seems to have any effect on Ctrl+C reception
    // Win32::SetConsoleCtrlHandler( 0, 1 );  // contrary to documentation, this seems to have any effect on Ctrl+C reception
 
@@ -254,19 +232,16 @@ void ConinRelease() {
 
 STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
    AutoMutex mtx( s_Conin.mutex ); //#########################################################
-
    STATIC_VAR bool fWaitingOnInput;
-
-   if( fWaitingOnInput )
+   if( fWaitingOnInput ) {
       return nullptr;
-
+      }
    if( 0 == s_Conin.CIB_ValidElements ) {
       if( s_Conin.vINPUT_RECORD.size() > conin_statics::CIB_MIN_ELEMENTS ) {
          0 && DBG( "s_Conin.vINPUT_RECORD.size() was %" PR_SIZET ", now %d", s_Conin.vINPUT_RECORD.size(), conin_statics::CIB_MIN_ELEMENTS );
          auto dummy(false);  GotHereDialog( &dummy );  // it's doubtful this is ever executed?
          s_Conin.vINPUT_RECORD.resize( conin_statics::CIB_MIN_ELEMENTS );
          }
-
       fWaitingOnInput = true;
       mtx.Release(); //#########################################################
 
@@ -310,11 +285,8 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
       //    - completion: xfr ownership of output FBUF back to main thread
       //  * view syntax parsing (if I dare, someday)?
       //
-
       // NB: s_Conin.hStdin != GetStdHandle.Stdin  !!!!!!
-
       0 && DBG( "%s s_Conin.hStdin=%p, GetStdHandle.Stdin=%p", __func__, s_Conin.hStdin, Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
-
       const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, &s_Conin.vINPUT_RECORD[0], s_Conin.vINPUT_RECORD.size(), &s_Conin.CIB_ValidElements ) );
       if( !ok ) {
          1 && DBG( "%s s_Conin.hStdin=%p, GetStdHandle.Stdin=%p", __func__, s_Conin.hStdin, Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
@@ -322,12 +294,10 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
          DBG( "Win32::ReadConsoleInputA failed: %s", OsErrStr( BSOB(oseb) ) );
          Assert( ok );
          }
-
       mtx.Acquire(); //#########################################################
       fWaitingOnInput = false;
       s_Conin.CIB_IdxRead = 0;
       }
-
    const auto rv ( &s_Conin.vINPUT_RECORD[ s_Conin.CIB_IdxRead ] );
    --s_Conin.CIB_ValidElements;
    ++s_Conin.CIB_IdxRead;
@@ -366,9 +336,7 @@ private:
    Semaphore           d_countingSem   ;
    DLinkHead<MsgType>  d_QHead         ;  // mega-hack: MQ_dlink is a necessary/assumed hard-coded field of every MsgType class
    Win32::HANDLE       d_semHandles[2] ;
-
 public:
-
    MsgQ<MsgType>( Win32::DWORD maxMsg )
       : d_maxMsg(maxMsg)
       , d_msgCount(0)
@@ -378,7 +346,6 @@ public:
       d_semHandles[0] = d_binarySem  .getHandle();
       d_semHandles[1] = d_countingSem.getHandle();
       }
-
    MsgType *Tx( MsgType *pMsg, int waitTime=MSG_Q_WAIT_FOREVER, bool fHighPriority=false ) {
       if( d_binarySem.take(waitTime) ) {
          if( d_msgCount >= d_maxMsg ) {
@@ -394,7 +361,6 @@ public:
          }
       return pMsg;
       }
-
    MsgType *Rx( int timeout=MSG_Q_WAIT_FOREVER ) {                                                                   //   v--- wait for ALL to be signaled
       if( Win32::WaitForMultipleObjects( ELEMENTS(d_semHandles), d_semHandles, TRUE, timeout ) == Win32::Wait_Object_0() ) {
          auto rv( Q_Rx() );
@@ -404,21 +370,17 @@ public:
          }
       return nullptr;
       }
-
 private:
-
    void Q_Tx( MsgType *pMsg, bool fHighPriority ) {
       if( fHighPriority ) { DLINK_INSERT_FIRST( d_QHead, pMsg, MQ_dlink ); }
       else                { DLINK_INSERT_LAST(  d_QHead, pMsg, MQ_dlink ); }
       }
-
    MsgType *Q_Rx() {
       auto pMsg( d_QHead.front() );
       DLINK_REMOVE_FIRST( d_QHead, pMsg, MQ_dlink );
       Assert( pMsg );
       return pMsg;
       }
-
    };
 
 //------------------------------------------------------------------------------
@@ -495,9 +457,9 @@ void TestMQ() {}
 //------------------------------------------------------------------------------
 
 struct RawWinKeydown {
-   U16  unicodeChar      ;
-   U16  wVirtualKeyCode  ;
-   int  dwControlKeyState;
+   uint16_t  unicodeChar      ;
+   uint16_t  wVirtualKeyCode  ;
+   int       dwControlKeyState;
    };
 
 struct EdInputEvent {
@@ -517,7 +479,6 @@ struct EdInputEvent {
 
 STATIC_FXN void InsertConinRecord( const Win32::INPUT_RECORD &ir ) {
    AutoMutex mtx( s_Conin.mutex );
-
    if( s_Conin.CIB_IdxRead == 0 ) { // trying to insert w/no leading gap?
       s_Conin.vINPUT_RECORD.insert( s_Conin.vINPUT_RECORD.begin(), ir );
       s_Conin.CIB_IdxRead++;
@@ -525,10 +486,8 @@ STATIC_FXN void InsertConinRecord( const Win32::INPUT_RECORD &ir ) {
    else {
       s_Conin.vINPUT_RECORD[--s_Conin.CIB_IdxRead] = ir;
       }
-
    ++s_Conin.CIB_ValidElements;
    }
-
 
 // used by the Mouse-event handler to simulate keystrokes
 
@@ -542,12 +501,11 @@ STATIC_FXN void InsertKeyUpDownInputEventRecord( const RawWinKeydown &rawWinKeyd
    inrec.Event.KeyEvent.wVirtualScanCode  = 0;
    inrec.Event.KeyEvent.bKeyDown          = 0;
    InsertConinRecord( inrec );
-
    inrec.Event.KeyEvent.bKeyDown          = 1;
    InsertConinRecord( inrec );
    }
 
-STATIC_FXN void InsertKeyUpDownInputEventRecord( U16 wVirtualKeyCode ) {
+STATIC_FXN void InsertKeyUpDownInputEventRecord( uint16_t wVirtualKeyCode ) {
    RawWinKeydown rwkd;
    rwkd.unicodeChar       = 0;
    rwkd.wVirtualKeyCode   = wVirtualKeyCode;
@@ -561,17 +519,13 @@ enum { // editor-generic flags
    edMOUSE_DOUBLE_CLICKED = BIT(8)                      ,
    };
 
-
 template <class T>
 class AutoClr {
    T &d_t;
-
 public:
-
    AutoClr( T &t, T v ) : d_t(t) { d_t = v; }
    ~AutoClr() { d_t = 0; }
    };
-
 
 // key that invokes a given CMD; BUGBUG these should adapt to current key assignment!
 
@@ -582,7 +536,6 @@ public:
 class OneEnterer {
    volatile Win32::LONG *d_pCount;
    const    Win32::LONG  d_myIncdVal;
-
 public:
    OneEnterer( volatile Win32::LONG *pCount ) : d_pCount( pCount ), d_myIncdVal( Win32::InterlockedIncrement( d_pCount ) ) {}
    ~OneEnterer() { Win32::InterlockedDecrement( d_pCount ); }
@@ -594,28 +547,23 @@ GLOBAL_VAR bool g_fUseMouse;
 class TMouseEvent {
    Win32::MOUSE_EVENT_RECORD d_MouseEv;
    Point                     d_mousePosition;
-
    bool LeftButtonDown()  const { return ToBOOL( d_MouseEv.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED ); }
    bool RightButtonDown() const { return ToBOOL( d_MouseEv.dwButtonState & RIGHTMOST_BUTTON_PRESSED     ); }
    bool InterestingFlags() const {
       return LeftButtonDown() || RightButtonDown() || ToBOOL(d_MouseEv.dwEventFlags & (MOUSE_WHEELED|DOUBLE_CLICK));
       }
-
    int WheelSpin() const {
       int wheelspin;
-      return ((d_MouseEv.dwEventFlags & MOUSE_WHEELED) && 0 != (wheelspin=static_cast<S16>( (d_MouseEv.dwButtonState >> 16) & 0xFFFF)))
+      return ((d_MouseEv.dwEventFlags & MOUSE_WHEELED) && 0 != (wheelspin=static_cast<int16_t>( (d_MouseEv.dwButtonState >> 16) & 0xFFFF)))
              ? wheelspin
              : 0
              ;
       }
-
    void ReinsertMouseEvent( Point mousePosition ) const;
-
 public:
    TMouseEvent( const Win32::MOUSE_EVENT_RECORD &MouseEv );
    void  Process();
    };
-
 
 // MOUSE_EVENT_RECORD  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/mouse_event_record_str.asp
 
@@ -642,16 +590,14 @@ void TMouseEvent::Process() { // usemouse:yes
       DBG( "%s  ***************************  reentered!", __func__ );
       return;
       }
-
-   if( !InterestingFlags() )
+   if( !InterestingFlags() ) {
       return;
-
+      }
    0 && DBG( "%s (Y=%3d,X=%3d)", __func__, d_mousePosition.lin, d_mousePosition.col );
    {
    STATIC_VAR bool  s_fDragging_QQQ;
    STATIC_VAR bool  s_fInserting_EDCMDVK_ARG;
    STATIC_VAR Point s_prevMousePosition;
-
    if( LeftButtonDown() ) {
       0 && DBG( "Seln=%d drag=%d inserting=%d mouseMoved=%d", IsSelectionActive(), s_fDragging_QQQ, s_fInserting_EDCMDVK_ARG, d_mousePosition != s_prevMousePosition );
       if( !IsSelectionActive() && s_fDragging_QQQ && !s_fInserting_EDCMDVK_ARG && d_mousePosition != s_prevMousePosition ) {
@@ -659,11 +605,9 @@ void TMouseEvent::Process() { // usemouse:yes
          ReinsertMouseEvent( d_mousePosition );
          InsertKeyUpDownInputEventRecord( EDCMDVK_ARG );
          ReinsertMouseEvent( s_prevMousePosition );
-
          s_fInserting_EDCMDVK_ARG = true;
          return; //*********************************************************
          }
-
       s_prevMousePosition      = d_mousePosition;
       s_fDragging_QQQ          = true;
       }
@@ -672,28 +616,23 @@ void TMouseEvent::Process() { // usemouse:yes
       s_fInserting_EDCMDVK_ARG = false;
       }
    }
-
    WhileHoldingGlobalVariableLock gvlock;
-
-   if( g_iWindowCount() > 1 && !SwitchToWinContainingPointOk( Point( d_mousePosition.lin-1, d_mousePosition.col-1 ) ) )
+   if( g_iWindowCount() > 1 && !SwitchToWinContainingPointOk( Point( d_mousePosition.lin-1, d_mousePosition.col-1 ) ) ) {
       return;
-
+      }
    // was: MouseMovedCmdExec( d_mousePosition.lin - g_CurWin()->UpLeft.lin, d_mousePosition.col - g_CurWin()->UpLeft.col, d_flags );
    // now inlined
-
    PCWrV;
    const auto yLine( d_mousePosition.lin - pcw->d_UpLeft.lin );
    const auto xCol ( d_mousePosition.col - pcw->d_UpLeft.col );
-
    int wheelspin;
 #ifdef SOME_STUFF
    STATIC_VAR bool s_fInserting_EDCMDVK_HELP;
    if( LeftButtonDown() ) {
-      if( IsSelectionActive() && RightButtonDown() )
+      if( IsSelectionActive() && RightButtonDown() ) {
          pCMD_boxstream->BuildExecute();
-
+         }
       const auto yMax( pcw->UpLeft.lin + pcw->Size.lin );
-
       if( yMax - yLine == -1 ) {
          ReinsertMouseEvent( Point( pcw->UpLeft.lin + yLine - 1, pcw->UpLeft.col + xCol ) );
          InsertKeyUpDownInputEventRecord( EDCMDVK_DOWN );
@@ -744,21 +683,17 @@ void TMouseEvent::Process() { // usemouse:yes
 #endif
    }
 
-
 bool KbHit() { // BUGBUG does this actually WORK? 20081215 kgoodwin NO it doesn't because s_Conin is not being filled unless there were leftovers from the last ReadConsoleInput call
    AutoMutex mtx( s_Conin.mutex );
-
    if( s_Conin.CIB_IdxRead < s_Conin.CIB_ValidElements ) {
       auto &inrec( s_Conin.vINPUT_RECORD[ s_Conin.CIB_IdxRead ] );
       if( inrec.EventType == KEY_EVENT && inrec.Event.KeyEvent.bKeyDown )
          return true;
       }
-
    return false;
    }
 
-
-STATIC_FXN int XlatKeysWhenNumlockOn( U16 theVK ) {
+STATIC_FXN int XlatKeysWhenNumlockOn( uint16_t theVK ) {
    switch( theVK )
       { // index into numLockXlatTbl     unshifted maps to
       case VK_NUMPAD0  : return  0;  // EdKC_num0
@@ -798,9 +733,9 @@ STATIC_FXN int XlatKeysWhenNumlockOn( U16 theVK ) {
 #define  EdKC_EVENT_ProgramExitRequested  (EdKC_COUNT+3)
 
 STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER ) {
-   if( !KER.bKeyDown ) // auto-repeat gen's a series of bKeyDown's so these are NOT skipped
+   if( !KER.bKeyDown ) { // auto-repeat gen's a series of bKeyDown's so these are NOT skipped
       return false;
-
+      }
    switch( KER.wVirtualKeyCode ) {
       case VK_MENU:    return KER.uChar.UnicodeChar != 0;
       case VK_NUMLOCK:
@@ -820,12 +755,10 @@ STATIC_FXN EdInputEvent ReadInputEventPrimitive() {
           rv.   EdKC_EVENT = EdKC_EVENT_ProgramExitRequested;
           return rv;
           }
-
       auto pIR( ReadNextUsefulConsoleInputRecord() );
       if( pIR ) { // pIR is within s_Conin.vINPUT_RECORD[]?
          switch( pIR->EventType ) {
             default:  DBG( "*** InputEvent %d ??? ***", pIR->EventType );  break;
-
             case KEY_EVENT:
                  if( IsInterestingKeyEvent( pIR->Event.KeyEvent ) ) {
                     EdInputEvent rv;
@@ -836,7 +769,6 @@ STATIC_FXN EdInputEvent ReadInputEventPrimitive() {
                     return rv;
                     }
                  break;
-
             case FOCUS_EVENT: {
                  EdInputEvent rv;
                  rv.fIsEdKC_EVENT = true;
@@ -844,16 +776,14 @@ STATIC_FXN EdInputEvent ReadInputEventPrimitive() {
                  0 && DBG( "*** InputEvent %s ***", pIR->Event.FocusEvent.bSetFocus ? "GotFocus" : "LostFocus" );
                  return rv;
                  }
-
 #if MOUSE_SUPPORT
             case MOUSE_EVENT:
                  0 && DBG( "*** InputEvent Mouse ***" );
-                 if( g_fUseMouse )
+                 if( g_fUseMouse ) {
                     TMouseEvent( pIR->Event.MouseEvent ).Process();
-
+                    }
                  break;
 #endif
-
             case WINDOW_BUFFER_SIZE_EVENT:  break;  // I CANNOT cause this to be generated
             case MENU_EVENT:                break;  // MENU_EVENT _IS_ received, but its field(s) are reserved AND it's unclear what use these could be anyway, so we'll ignore
             }
@@ -866,9 +796,7 @@ enum shiftIdx { shiftNONE, shiftALT, shiftCTRL, shiftSHIFT, shiftCTRL_SHIFT }; /
 
 STIL int VK_shift_to_EdKC( XlatForKey *XlatTbl, int theVK, shiftIdx effectiveShift ) {
    const EdKC rv( XlatTbl[ theVK ][ effectiveShift ] );
-
    0 && DBG( "XlatKey VK 0x%02X, s %d -> EdKC=%03X", theVK, effectiveShift, rv );
-
    return rv;
    }
 
@@ -1136,7 +1064,6 @@ STATIC_CONST XlatForKey normalXlatTbl[ 0xE0 ] = {
 
 // VK_PACKET (E7): The VK_PACKET key is the low word of a 32-bit Virtual Key value used for non-keyboard input methods. For more information, see Remark in KEYBDINPUT, SendInput, WM_KEYDOWN, and WM_KEYUP
 
-
 STATIC_CONST XlatForKey numLockXlatTbl[ 15 ] = {
    //    NORM       ALT               CTRL              SHIFT             CTRL+ALT
    //-------------  ----------------  ----------------  ----------------  ----------------
@@ -1163,10 +1090,9 @@ STATIC_CONST XlatForKey numLockXlatTbl[ 15 ] = {
 //            NOT to be used within any Editor data structures!!!
 //
 struct KEY_DATA {
-   U8  Ascii;  // Ascii code
-   U8  d_VK;   // VK code
-   U8  kFlags; // Flags
-
+   uint8_t  Ascii;  // Ascii code
+   uint8_t  d_VK;   // VK code
+   uint8_t  kFlags; // Flags
    // values for the kFlags field
    //
    enum {
@@ -1196,18 +1122,16 @@ STATIC_FXN KeyData_EdKC GetInputEvent() {
       rv.EdKC_      = eie.EdKC_EVENT;  0 && DBG( "EdKC_+ %04X", rv.EdKC_ );
       return rv;
       }
-
    const auto &rwkd( eie.rawkey );
    auto edKC(0);
    auto allShifts(0);
-   const U8 valAscii( 0xFF & rwkd.unicodeChar );
-   const U8 valVK(    0xFF & rwkd.wVirtualKeyCode );  0 && DBG( "VK+ %02X", valVK );
+   const uint8_t valAscii( 0xFF & rwkd.unicodeChar );
+   const uint8_t valVK(    0xFF & rwkd.wVirtualKeyCode );  0 && DBG( "VK+ %02X", valVK );
    if( valVK < ELEMENTS(normalXlatTbl) ) {
       const auto anyAlt   ( ToBOOL(rwkd.dwControlKeyState & (RIGHT_ALT_PRESSED  | LEFT_ALT_PRESSED )) );
       const auto anyCtrl  ( ToBOOL(rwkd.dwControlKeyState & (RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED)) );
       const auto anyShift ( ToBOOL(rwkd.dwControlKeyState &  SHIFT_PRESSED) );
       const auto numlockon( ToBOOL(rwkd.dwControlKeyState &  NUMLOCK_ON)    );
-
       shiftIdx effectiveShiftIdx = shiftNONE;
       if( anyAlt   ) { allShifts |= KEY_DATA::FLAG_ALT   ; effectiveShiftIdx = shiftALT         ; }
       if( anyShift ) { allShifts |= KEY_DATA::FLAG_SHIFT ; effectiveShiftIdx = shiftSHIFT       ; }
@@ -1219,23 +1143,17 @@ STATIC_FXN KeyData_EdKC GetInputEvent() {
                                                            //    }
                      }
       if( anyCtrl && anyShift ) {                          effectiveShiftIdx = shiftCTRL_SHIFT; }
-
       //*********  translate VK into EdKC  *********
-
       if( numlockon ) {
          allShifts |= KEY_DATA::FLAG_NUMLOCK;
-
          const auto numlockVK( XlatKeysWhenNumlockOn( valVK ) );
-
          if( numlockVK >= 0 )  edKC = VK_shift_to_EdKC( numLockXlatTbl, numlockVK, effectiveShiftIdx );
          else                  edKC = VK_shift_to_EdKC( normalXlatTbl , valVK    , effectiveShiftIdx );
          }
       else                     edKC = VK_shift_to_EdKC( normalXlatTbl , valVK    , effectiveShiftIdx );
       }
-
    if( edKC == 0 )
        edKC = valAscii;
-
   #if SEL_KEYMAP
    if( SEL_KEYMAP && SelKeymapEnabled() ) { 0 && DBG( "-> %03X", edKC );
       if( edKC >= EdKC_a && edKC <= EdKC_z ) { // map to EdKC_sela..EdKC_selz
@@ -1246,7 +1164,6 @@ STATIC_FXN KeyData_EdKC GetInputEvent() {
          }
       }
   #endif
-
    KeyData_EdKC rv;
    rv.k_d.Ascii  = valAscii;
    rv.k_d.d_VK   = valVK;
@@ -1274,11 +1191,8 @@ STATIC_FXN KeyData_EdKC GetKeyData_EdKC( bool fFreezeOtherThreads ) { // PRIMARY
       const auto fPassThreadBaton( !(fFreezeOtherThreads || KbHit()) );
       if( fPassThreadBaton )  MainThreadGiveUpGlobalVariableLock();
       0 && DBG( "%s %s", __func__, fPassThreadBaton ? "passing" : "holding" );
-
       const KeyData_EdKC rv( GetInputEvent() );
-
       if( fPassThreadBaton )  MainThreadWaitForGlobalVariableLock();
-
       if( rv.EdKC_ < EdKC_COUNT ) {
          if( rv.EdKC_ == 0 ) { // (rv.EdKC_ == 0) corresponds to keys we currently do not decode
             0 && DBG( "%s(rv.EdKC==0): %s", __func__, RawKeyStr( rv.k_d ).c_str() );
@@ -1294,7 +1208,6 @@ STATIC_FXN KeyData_EdKC GetKeyData_EdKC( bool fFreezeOtherThreads ) { // PRIMARY
             case EdKC_EVENT_ProgramExitRequested: EditorExit( 0, true );          break;
             }
          }
-
       CleanupAnyExecutionHaltRequest();
       }
    }
@@ -1348,7 +1261,6 @@ STATIC_FXN int setFilterKeysFailed( int flags, int delayMSec, int repeatMSec ) {
    fk.dwFlags     = flags;
    fk.iDelayMSec  = delayMSec; // smaller is faster
    fk.iRepeatMSec = repeatMSec;
-
    return !Win32::SystemParametersInfo( SPI_SETFILTERKEYS, 0, PVoid( &fk ), 0 );
    }
 
@@ -1391,7 +1303,6 @@ STATIC_FXN int setKbSpeedDelayFailed( API_UINT kbSpeed, API_UINT kbDelay ) {
 
 bool ARG::kbfast() {
    DisableFilterKeys();
-
    const API_UINT invalid_kbval(0x7777);
    const API_UINT kbSpeedSB(IsWin7OrLater()?28:31); // Should Be
    const API_UINT kbDelaySB(IsWin7OrLater()? 1: 0); // Should Be
@@ -1421,9 +1332,9 @@ STIL int setKbFastFailed() {
    }
 
 bool ARG::kbfast() {
-   if( d_fMeta ? DisableFilterKeys() : setKbFastFailed() )
+   if( d_fMeta ? DisableFilterKeys() : setKbFastFailed() ) {
       return Msg( "KB access failed" );
-
+      }
    Msg( "KB set to %sest setting",  (d_fMeta ? "slow" : "fast") );
    return true;
    }

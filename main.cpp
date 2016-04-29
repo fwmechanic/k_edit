@@ -614,7 +614,7 @@ void kGetopt::VErrorOut( PCChar msg ) {
 #else
 #endif
       , d_pgm.c_str()
-      , szAssignLog
+      , kszAssignLog
       );
    if( msg ) {
       printf( "\n***>>> %s\n", msg );
@@ -630,15 +630,15 @@ STATIC_FXN void CreateStartupPseudofiles() { // construct special files early so
       bool    fKeepTrailSpcs;
       } startupPseudofiles[] = {              // fKeepTrailSpcs
       { "<cmdline-args>", g_pFBufCmdlineFiles        },
-      { szCwdStk        , g_pFBufCwd                 },
-      { szSearchLog     , g_pFBufSearchLog           },
-      { szSearchRslts   , g_pFBufSearchRslts         },
+      { kszCwdStk       , g_pFBufCwd                 },
+      { kszSearchLog    , g_pFBufSearchLog           },
+      { kszSearchRslts  , g_pFBufSearchRslts         },
       { "<lua>"         , s_pFbufLuaLog              },
       { "<!>"           , s_pFbufLog                 },
-      { szConsole       , g_pFBufConsole             },
+      { kszConsole      , g_pFBufConsole             },
       { "<textargs>"    , g_pFBufTextargStack , true },
-      { szRecord        , g_pFbufRecord       , true },
-      { szClipboard     , g_pFbufClipboard    , true }, // aside: <clipboard> is filtered out of <files>
+      { kszRecord       , g_pFbufRecord       , true },
+      { kszClipboard    , g_pFbufClipboard    , true }, // aside: <clipboard> is filtered out of <files>
       };
    for( const auto &sPf : startupPseudofiles ) {
       const auto pFbuf( AddFBuf( sPf.name, &sPf.pFBufVar ) );
@@ -668,8 +668,8 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint from K.EXE
 #endif
    {
-   extern void test_CaptiveIdxOfCol();
-   //          test_CaptiveIdxOfCol();
+   // extern void test_CaptiveIdxOfCol();
+   //             test_CaptiveIdxOfCol();
    ThisProcessInfo::Init();
    enum { DBGFXN=1 };
    DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT, __func__, memdelta() );
@@ -697,7 +697,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
        case ' ': // NON-OPTION-ARGUMENT
                  AddCmdlineFile( opt.nextarg(), false );
                  break;
-       case 'a': AddFBuf( szAssignLog, &g_pFBufAssignLog );
+       case 'a': AddFBuf( kszAssignLog, &g_pFBufAssignLog );
                  AssignLogTag( "editor startup" );
                  break;
        case 'c': s_ForgetAbsentFiles.fDoIt = true;

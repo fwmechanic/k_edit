@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -30,8 +30,6 @@
 #define PC_PURPLE  5
 #define PC_YELLOW  6
 #define PC_WHITE   7
-
-// extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 static void set_pcattr( int attr ) {
    attr &= 0x7F; // ncurses does not have "high intensity" background attr(???), so clear it

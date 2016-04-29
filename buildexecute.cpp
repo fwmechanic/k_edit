@@ -1496,7 +1496,7 @@ bool ARG::execute() {
                       StartInternalShellJob( new StringList( cmd.c_str() ), false );
                       rv = true;
                     #else
-                      fChangeFile( szCompile );
+                      fChangeFile( kszCompile );
                       rv = CompilePty_CmdsAsyncExec( StringList( cmd.c_str() ), true ) > 0;
                     #endif
                       }

@@ -439,8 +439,8 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
          return;
          }
       }
-   DD && DBG( "%s Win[%d] giving up, adding %s", __func__, iw, szNoFile );
-   fChangeFile( szNoFile );
+   DD && DBG( "%s Win[%d] giving up, adding %s", __func__, iw, kszNoFile );
+   fChangeFile( kszNoFile );
    Assert( g_CurView() != nullptr );
    }
 
@@ -672,7 +672,7 @@ void Wins_WriteStateFile( FILE *ofh ) {
       hd.Next();
       }
    if( iFilesSaved == 0 ) {
-      fprintf( ofh, " %s|0 0 0 0\n", szNoFile );
+      fprintf( ofh, " %s|0 0 0 0\n", kszNoFile );
       }
    fprintf( ofh, ".\n" ); // EoF marker (just so if you look at the file you can confirm that this process completed)
    }

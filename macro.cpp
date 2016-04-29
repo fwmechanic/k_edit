@@ -30,17 +30,17 @@ bool CMD::IsFnGraphic()    const { return &ARG::graphic    == d_func || fn_graph
 
 GLOBAL_VAR PFBUF g_pFBufAssignLog;
 
-GLOBAL_CONST char szAssignLog[] = "<a!>";
+GLOBAL_CONST char kszAssignLog[] = "<a!>";
 
 bool ARG::assignlog() { // toggle function
    0 && DBG( "%s %p", __func__, g_pFBufAssignLog );
    if( !g_pFBufAssignLog ) {
-      // semantic: resume using any existing instance of szAssignLog, or create new instance
-      FBOP::FindOrAddFBuf( szAssignLog, &g_pFBufAssignLog );
+      // semantic: resume using any existing instance of kszAssignLog, or create new instance
+      FBOP::FindOrAddFBuf( kszAssignLog, &g_pFBufAssignLog );
       AssignLogTag( __func__ );
       }
    else {
-      // semantic: shutdown use of szAssignLog
+      // semantic: shutdown use of kszAssignLog
       AssignLogTag( "manual shutdown" );
       g_pFBufAssignLog->UnsetGlobalPtr();
       }
@@ -611,7 +611,6 @@ GLOBAL_VAR bool  g_fMacroRecordingActive;
 STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd );
 
 STIL void RecordCmd( PCCMD pCmd ) {
-   extern int g_fExecutingInternal;
    if(  !IsMacroRecordingActive()
       || g_fExecutingInternal      // don't record contents of fExecute's done by non-execute EdFuncs
       || pCmd->IsFnUnassigned()
@@ -759,25 +758,16 @@ bool ARG::tell() {
                   pCmd = CmdFromKbdForInfo( keystringBuffer );
                   break;
     case TEXTARG: pCmd = CmdFromName( d_textarg.pText );
-                  if( !pCmd ) {
-                     return Msg( "%s is not an editor function or macro", d_textarg.pText );
-                     }
+                  if( !pCmd ) { return Msg( "%s is not an editor function or macro", d_textarg.pText ); }
                   break;
     }
-   Linebuf outbuf;
-   outbuf.Sprintf( "%s:%s", pCmd->Name(), !keystringBuffer.empty() ? keystringBuffer.c_str() : pCmd->Name() );
-   if( pCmd->IsRealMacro() ) {
-      outbuf.SprintfCat( "  %s:=%s", pCmd->Name(), pCmd->MacroText() );
-      }
-   else {
-      outbuf.SprintfCat( "  (%s)", ArgTypeNames( pCmd->d_argType ).c_str() );
-      }
-   if( d_fMeta ) {
-      PutMacroStringIntoCurfileAtCursor( outbuf.sr() );
-      }
-   else {
-      Msg( "%s", outbuf.k_str() );
-      }
+   auto outbux( std::string(pCmd->Name()) + ":" + (!keystringBuffer.empty() ? keystringBuffer : pCmd->Name()) );
+   outbux.append( pCmd->IsRealMacro()
+      ? ( "  " + std::string(pCmd->Name()) + ":=" + pCmd->MacroText() )
+      : ( "  (" + ArgTypeNames( pCmd->d_argType ) + ")" )
+      );
+   if( d_fMeta ) { PutMacroStringIntoCurfileAtCursor( se2bsr( outbux ) ); }
+   else          { Msg( "%s", outbux.c_str() ); }
    return fn_unassigned == pCmd->d_func;
    }
 
@@ -912,7 +902,7 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
 //  False: Recording turned off.
 //
 
-GLOBAL_CONST char szRecord[] = "<record>";
+GLOBAL_CONST char kszRecord[] = "<record>";
 
 GLOBAL_VAR bool g_fCmdXeqInhibitedByRecord;
 
@@ -982,7 +972,7 @@ bool ARG::record() {
    return IsMacroRecordingActive();
    }
 
-STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
+stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
    enum states { outsideQuote, inQuote, prevCharBlank, contCharSeen };
    states stateWhereBlankLastSeen( outsideQuote );
    states state( outsideQuote );
@@ -1044,57 +1034,4 @@ STATIC_FXN stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues
    const auto rv( src.substr( 0, std::distance( src.cbegin(), itEarlyTerm ) ) );
    0 && DBG( "--> %" PR_BSR "|", BSR(rv) );
    return rv;
-   }
-
-bool RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) { enum {DBGEN=0};
-   DBGEN && DBG( "%s: {%s} L [%d..%d]", __func__, title, yStart, yEnd );
-   if( yEnd < 0 || yEnd > pFBuf->LastLine() ) {
-      yEnd = pFBuf->LastLine();
-      }
-   enum AL2MSS { HAVE_CONTENT, FOUND_TAG, BLANK_LINE, };
-   std::string d_dest;
-   auto d_yMacCur = yStart;
-   // reads lines until A MACRO definition is complete (IOW, an EoL w/o continuation char is reached)
-   auto AppendLineToMacroSrcString = [&]() -> AL2MSS  {
-      for( ; d_yMacCur <= yEnd ; ++d_yMacCur ) {
-         const auto rl( pFBuf->PeekRawLine( d_yMacCur ) );
-         if( !IsolateTagStr( rl ).empty() ) { DBGEN && DBG( "L %d TAG VIOLATION", d_yMacCur );
-            return FOUND_TAG;
-            }
-         auto continues( false );
-         const auto parsed( ParseRawMacroText_ContinuesNextLine( rl, continues ) );
-         d_dest.append( parsed.data(), parsed.length() );  DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(d_dest) );
-         if( !continues && !IsStringBlank( d_dest ) ) {
-            DBGEN && DBG( "RTN HvContent" );
-            return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
-            }
-         }
-      DBGEN && DBG( "RTN ?" );
-      return !IsStringBlank( d_dest ) ? HAVE_CONTENT : BLANK_LINE;
-      };
-   auto fContinueScan( true ); auto fAssignError( false ); auto assignsDone( 0 );
-   for( ; fContinueScan && d_yMacCur <= yEnd ; ++d_yMacCur ) {  DBGEN && DBG( "%s L %d", __func__, d_yMacCur );
-      const auto rslt( AppendLineToMacroSrcString() );
-      DBGEN && DBG( "%s L %d rslt=%d", __func__, d_yMacCur, rslt );
-      switch( rslt ) {
-         case HAVE_CONTENT       :  DBGEN && DBG( "assigning --- |%s|", d_dest.c_str() );
-                                    if( !AssignStrOk( d_dest ) ) {         DBGEN && DBG( "%s atom failed '%s'", __func__, d_dest.c_str() );
-                                       if( pErrorPt ) {
-                                          pErrorPt->Set( d_yMacCur, 0 );
-                                          }
-                                       fAssignError = true;
-                                       }
-                                    else {                                 DBGEN && DBG( "%s atom OKOKOK '%s'", __func__, d_dest.c_str() );
-                                       ++assignsDone;
-                                       }
-                                    d_dest.clear();
-                                    break;
-         case BLANK_LINE         :  /* keep going */        break;
-         case FOUND_TAG          :  fContinueScan = false;  break;
-         default                 :  fContinueScan = false;  break;
-         }
-      }
-   DBGEN && DBG( "%s: {%s} L [%d..%d/%d] = %d", __func__, title, yStart, d_yMacCur, yEnd, assignsDone );
-   if( pAssignsDone ) { *pAssignsDone = assignsDone; }
-   return fAssignError;
    }

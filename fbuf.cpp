@@ -22,16 +22,12 @@
 #include "my_fio.h"
 
 #if      FBUF_TREE
-GLOBAL_VAR RbTree * g_FBufIdx;
-
+   GLOBAL_VAR RbTree * g_FBufIdx;
    STATIC_VAR RbCtrl s_FBufIdxRbCtrl = { AllocNZ_, Free_, };
-
    void FBufIdxInit() { g_FBufIdx = rb_alloc_tree( &s_FBufIdxRbCtrl ); }
-
 #else
-GLOBAL_VAR FBufHead g_FBufHead;
+   GLOBAL_VAR FBufHead g_FBufHead;
 #endif
-
 
 // All inlines that alloc mem call this (terminating) function in their error-path
 //
@@ -41,8 +37,6 @@ void MemErrFatal( PCChar opn, size_t byteCount, PCChar msg ) {
    }
 
 // Helper rtnes for templates of same names
-//
-
 #if      MEM_BP
 GLOBAL_VAR bool g_fMemBpEnabled;
 #endif
@@ -60,11 +54,7 @@ PChar Strdup( stref src, size_t extra_nuls ) {
    return rv;
    }
 
-//
 //============================================================================================
-
-// ********************  consistency checking code!!!  ********************
-// ********************  consistency checking code!!!  ********************
 // ********************  consistency checking code!!!  ********************
 
 #define  DO_IDLE_FILE_VALIDATE  0
@@ -499,7 +489,6 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
          // soon?  Or maybe it's a build-output file which doesn't exist because
          // the last build attempt failed (but I will want to look at it in a
          // few seconds)?
-
          DeleteAllViewsOntoFbuf( this );
          return nullptr;
          }                                          DB && DBG( "%s+ %s %sHasLines %sIsAutoRead", __func__, this->Name(), this->HasLines()?"":"!", this->IsAutoRead()?"":"!" );
@@ -548,8 +537,7 @@ PFBUF FindFBufByName( stref name ) {
 // indent/softcr
 
 STIL int NextIndent( int curIndent, int indentIncr ) {
-   const auto rv( ((curIndent+indentIncr) / indentIncr) * indentIncr );
-   0 && DBG( "%s %d, %d => %d", __func__, curIndent, indentIncr, rv );
+   const auto rv( ((curIndent+indentIncr) / indentIncr) * indentIncr );  0 && DBG( "%s %d, %d => %d", __func__, curIndent, indentIncr, rv );
    return rv;
    }
 
@@ -562,8 +550,7 @@ STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl
       if( indent == 0 ) {
          indent = 4;
          }
-      }
-                                              DB && DBG( "%s 1 %" PR_BSR "'", __func__, BSR(rl) );
+      }                                       DB && DBG( "%s 1 %" PR_BSR "'", __func__, BSR(rl) );
    rl.remove_prefix( ixNonb );                DB && DBG( "%s 2 %" PR_BSR "'", __func__, BSR(rl) );
    rmv_trail_blanks( rl );                    DB && DBG( "%s 3 %" PR_BSR "'", __func__, BSR(rl) );
    if( rl.ends_with( "{" ) ) {                DB && DBG( "%s rl.ends_with( \"{\" )", __func__ );
@@ -760,7 +747,7 @@ bool ARG::refresh() {
                    return true;
     case TEXTARG:  {
                    const auto rv( RmvFileByName( d_textarg.pText ) );
-                   RefreshCurFileIfMatchesPseudoName( szFiles );
+                   RefreshCurFileIfMatchesPseudoName( kszFiles );
                    return rv;
                    }
     case BOXARG:   //lint -fallthrough
@@ -774,7 +761,7 @@ bool ARG::refresh() {
                          }
                       }
                    fnMsg( "Forgot %d of %d files", rmvCount, attemptCount );
-                   RefreshCurFileIfMatchesPseudoName( szFiles );
+                   RefreshCurFileIfMatchesPseudoName( kszFiles );
                    return (rmvCount > 0) && (rmvCount == attemptCount);
                    }
     }
@@ -965,10 +952,11 @@ STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
    return "";
    }
 
+STATIC_CONST char s_sftype_prefix[] = "ftype:";
 STATIC_VAR bool s_cur_Ftype_assigned; // hacky!
 enum { SIZEOF_MAX_FTYPE=51 };
-STATIC_VAR char s_cur_Ftype         [SIZEOF_MAX_FTYPE];
-STATIC_VAR char s_cur_FtypeSectionNm[SIZEOF_MAX_FTYPE];
+STATIC_VAR char s_cur_Ftype         [ SIZEOF_MAX_FTYPE ];
+STATIC_VAR char s_cur_FtypeSectionNm[ SIZEOF_MAX_FTYPE + KSTRLEN(s_sftype_prefix) ];
 
 void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
    scpy( dest, sizeofDest, s_cur_Ftype );
@@ -985,26 +973,21 @@ PCChar swixFtype( stref param ) {
    }
 
 STATIC_FXN void FtypeRestoreDefaults() {
-   extern bool swixDelims( stref param );
    swixDelims( "{[(" );
    }
 
-STATIC_CONST char s_sftype_prefix[] = "ftype:";
 STATIC_FXN bool RsrcFileLdSectionFtype( stref ftype ) {
    FtypeRestoreDefaults();
-   char section[ KSTRLEN(s_sftype_prefix) + SIZEOF_MAX_FTYPE ];
+   char section[ SIZEOF_MAX_FTYPE + KSTRLEN(s_sftype_prefix) ];
    bcat( bcpy( section, s_sftype_prefix ).length(), section, ftype );              0 && DBG( "%s %s", __func__, section );
    auto dummy( 0 );
    const auto fSectionExists( RsrcFileLdAllNamedSections( section, &dummy ) );
-   if( fSectionExists ) {
-      bcpy( s_cur_FtypeSectionNm, ftype );
-      }
+   bcpy( s_cur_FtypeSectionNm, fSectionExists ? section : s_sftype_prefix );
    return fSectionExists;
    }
 
-PCChar LastRsrcFileLdSectionFtypeNm() {
-   return s_cur_FtypeSectionNm;
-   }
+PCChar LastRsrcFileLdSectionFtypeNm       () { return s_cur_FtypeSectionNm+KSTRLEN(s_sftype_prefix); }
+PCChar LastRsrcFileLdSectionFtypeSectionNm() { return s_cur_FtypeSectionNm; }
 
 #define  EXT_NO_EXT    "."
 #define  EXT_WILDCARD  ".*"
@@ -1028,12 +1011,6 @@ STATIC_FXN stref GetRsrcExt( PCFBUF fb ) { // all rv's shall have leading '.'
    return rv;
    }
 
-STATIC_FXN bool DefineStrMacro( PCChar pszMacroName, stref pszMacroString ) { 0 && DBG( "%s '%s'='%" PR_BSR "'", __func__, pszMacroName, BSR(pszMacroString) );
-   const std::string str( "\"" + std::string( pszMacroString.data(), pszMacroString.length() ) + "\"" );
-   const auto rv( DefineMacro( pszMacroName, str ) );  0 && DBG( "%s '%s'='%" PR_BSR "'-> %c", __func__, pszMacroName, BSR(pszMacroString), rv?'y':'n' );
-   return rv;
-   }
-
 void FBUF::DetermineFType() {
    if( FTypeEmpty() ) {
       auto ftype( content_to_ftype( this ) );  0 && DBG( "%s ?%" PR_BSR "'", __func__, BSR(ftype) );
@@ -1050,6 +1027,12 @@ void FBUF::DetermineFType() {
       SetFType( ftype );
       0 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), Name() );
       }
+   }
+
+STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'"     , __func__, BSR(name), BSR(strval) );
+   const auto str( "\"" + BSR2STR(strval) + "\"" );
+   const auto rv( DefineMacro( name, str ) );                      0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'-> %c", __func__, BSR(name), BSR(strval), rv?'y':'n' );
+   return rv;
    }
 
 void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && DBG( "%s '%s'", __func__, fb->Name() );
@@ -1250,9 +1233,8 @@ Path::str_t FBUF::UserName() const {
 GLOBAL_VAR int g_iBlankAnnoDispSrcMask = BlankDispSrc_DIRTY | BlankDispSrc_SEL;
 
 void FBUF::BlankAnnoDispSrcEdge( int cause, bool fReveal ) {
-   /*
-      this function is called when one of the potential per-FBUF sources changes
-      state.  The event source is id's by cause, and its new state is fReveal.
+   /* this function is called when one of the potential per-FBUF sources changes
+      state.  The event source is ID'd by cause, and its new state is fReveal.
       all of the events/sources here are per-FBUF, but these are masked by
       a global switch, g_iBlankAnnoDispSrcMask
 
@@ -1261,7 +1243,6 @@ void FBUF::BlankAnnoDispSrcEdge( int cause, bool fReveal ) {
       always-FBUF  FBUF      user runs ARG::ftab, changes value of setting for this FBUF
       dirty        FBUF      user edits or saves FBUF
       selection    FBUF/View user makes arg selection
-
    */
    // always de/assert the source
    if( fReveal ) { d_BlankAnnoDispSrcAsserted |=  cause; }
@@ -1321,12 +1302,11 @@ const Eol_t platform_eol = WL( EolCRLF, EolLF );
 
 bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    VR_( DBG( "FRd+ %s", Name() ); )
-
 // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
+      {
       DialogLdFile( Name() );
-
-   d_EolMode = platform_eol;
-                                                               0 && DBG( "%s+ %s'", FUNC, Name() );
+      }
+   d_EolMode = platform_eol;                                   0 && DBG( "%s+ %s'", FUNC, Name() );
    if( FnmIsLogicalWildcard( Namestr() ) ) {                   0 && DBG( "%s+ %s' FnmIsLogicalWildcard", FUNC, Name() );
       FBufRead_Wildcard( this );
       return true;

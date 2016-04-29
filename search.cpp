@@ -461,7 +461,7 @@ GLOBAL_CONST char kszCompileHdr[] = "+^-^+";
 
 void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digression!
 #if 1
-   LuaCtxt_Edit::nextmsg_setbufnm( szSearchRslts );
+   LuaCtxt_Edit::nextmsg_setbufnm( kszSearchRslts );
    LuaCtxt_Edit::nextmsg_newsection_ok( SprintfBuf( "mfgrep::%s %" PR_BSR, FSearcher.IsRegex() ? "regex" : "str", BSR( FSearcher.SrchStr() ) ) );
 #else
    if( d_pOutputFile->LineCount() > 0 ) {
@@ -803,7 +803,7 @@ int FBUF::SyncWriteIfDirty_Wrote() {
    }
 
 GLOBAL_CONST char szSetfile[] = "setfile";
-GLOBAL_CONST char szCompile[] = "<compile>";
+GLOBAL_CONST char kszCompile[] = "<compile>";
 
 #if USE_PCRE
 bool SearchSpecifier::HasError() const { return d_reCompileErr; }
@@ -920,7 +920,7 @@ STATIC_FXN bool SearchSpecifierOK( const ARG &arg ) {
                        }
                     else {
                        if( !g_pFBufSearchLog || FBOP::IsLineBlank( g_pFBufSearchLog, 0 ) ) {
-                          return ErrorDialogBeepf( "No search string specified, %s empty", szSearchLog );
+                          return ErrorDialogBeepf( "No search string specified, %s empty", kszSearchLog );
                           }
                        const auto rl( g_pFBufSearchLog->PeekRawLine( 0 ) );
                        if( !SetNewSearchSpecifierOK( rl, false ) ) {

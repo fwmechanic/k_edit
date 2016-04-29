@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -91,15 +91,17 @@ inline type * DupArray( const type *pSrc, size_t elements=1 ) {
 template<typename Ptr>
 inline void AllocBytesNZ( Ptr &rv, size_t bytes, PCChar msg="" ) {
    rv = Ptr ( AllocNZ( bytes ) );
-   if( rv == nullptr )
+   if( rv == nullptr ) {
       MemErrFatal( __func__, bytes, msg );
+      }
    }
 
 template<typename Ptr>
 inline void AllocBytesZ( Ptr &rv, size_t bytes, PCChar msg="" ) {
    rv = reinterpret_cast<Ptr>( Alloc0d( bytes ) );
-   if( rv == nullptr )
+   if( rv == nullptr ) {
       MemErrFatal( __func__, bytes, msg );
+      }
    }
 
 STIL size_t CHK_PRODUCT( size_t nelems, size_t elsize, PCChar msg="" ) {
@@ -123,6 +125,7 @@ template<typename Ptr>
 inline void ReallocArray( Ptr &rv, size_t elements=1, PCChar msg="" ) {
    const auto bytes( CHK_PRODUCT( elements, sizeof(*rv), msg ) );
    rv = reinterpret_cast<Ptr>( ReallocNZ( rv, bytes ) );
-   if( rv == nullptr )
+   if( rv == nullptr ) {
       MemErrFatal( __func__, bytes, msg );
+      }
    }

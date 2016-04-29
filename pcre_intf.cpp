@@ -51,8 +51,6 @@ public:
    RegexMatchCaptures::size_type Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has );
    };
 
-
-
 PCRE_EXP_DECL void * pcre_malloc_( size_t bytes ) {
    0 && DBG( "%s: %" PR_SIZET " bytes", __func__, bytes );
    return AllocNZ_( bytes );
@@ -164,8 +162,7 @@ CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase ) {
    int errOffset;
    auto re( pcre_compile( pszSearchStr, options, &errMsg, &errOffset, nullptr ) );
    if( !re ) {
-      extern void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset );
-                  Display_hilite_regex_err(        errMsg,        pszSearchStr,     errOffset );
+      Display_hilite_regex_err( errMsg, pszSearchStr,errOffset );
       return nullptr;
       }
    auto xtra( pcre_study( re, PCRE_STUDY_JIT_COMPILE, &errMsg ) );

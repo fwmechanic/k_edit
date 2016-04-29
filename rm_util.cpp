@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -28,7 +28,7 @@
 #include "win32_base.h"
 #endif
 
-GLOBAL_CONST char szBakDirNm[] = ".kbackup";
+GLOBAL_CONST char kszBakDirNm[] = ".kbackup";
 
 int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    DB && DBG( "SFMG+ '%s'", pszFileName );
@@ -36,7 +36,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    if( func_stat( pszFileName, &stat_buf ) == -1 ) { DB && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
       return SFMG_NO_SRCFILE;
       }
-   auto dest( std::string( BSR2STR(Path::RefDirnm( pszFileName )) ) + szBakDirNm );
+   auto dest( BSR2STR(Path::RefDirnm( pszFileName )) + kszBakDirNm );
    auto mkdirLen( dest.length() );
    NewScope { // validity of dirname
    const auto dirname( dest.c_str() );
@@ -58,7 +58,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    char tbuf[32];
    strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", localtime( &stat_buf.st_mtime ) );
    const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  DB && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
-   dest.append( (PATH_SEP_STR + std::string( BSR2STR( filenameNoPath ) ) + "." + tbuf ) );
+   dest.append( (PATH_SEP_STR + BSR2STR( filenameNoPath ) + "." + tbuf ) );
   #if defined(_WIN32)
    unlinkOk( dest.c_str() );
   #endif

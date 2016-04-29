@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -76,9 +76,9 @@ STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int 
 //       7       Alt + Control
 //       8       Shift + Alt + Control
 //
-STATIC_VAR U16 ncurses_ch_to_EdKC[600]; // indexed by ncurses_ch
+STATIC_VAR uint16_t ncurses_ch_to_EdKC[600]; // indexed by ncurses_ch
 
-STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, U16 edkc ) { enum { DB=0 };
+STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, uint16_t edkc ) { enum { DB=0 };
    /* if terminfo defines a capability named cap_nm (as an escseqstr), _and_ ncurses maps that escseqstr
       to an ncurses_ch (which getch() returns), then add an entry ncurses_ch_to_EdKC[ncurses_ch] = EdKC #
       where EdKC is the EDITOR KEYCODE which corresponds to cap_nm
@@ -130,7 +130,7 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    keypad_mode_enable();
    meta(stdscr, 1);       // we do not change
 
-   STATIC_VAR const struct { short nckc; U16 edkc; } s_nckc2edkc[] = {
+   STATIC_VAR const struct { short nckc; uint16_t edkc; } s_nckc2edkc[] = {
       {KEY_RIGHT     , EdKC_right }, {KEY_SRIGHT    , EdKC_s_right },
       {KEY_LEFT      , EdKC_left  }, {KEY_SLEFT     , EdKC_s_left  },
       {KEY_DC        , EdKC_del   }, {KEY_SDC       , EdKC_s_del   },
@@ -175,7 +175,7 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       }
    DBG( "%s", "" );
 
-   STATIC_VAR const struct { const char *cap_nm; U16 edkc; } s_kn2edkc[] = {
+   STATIC_VAR const struct { const char *cap_nm; uint16_t edkc; } s_kn2edkc[] = {
       // early/leading instances are overridden by later
 
       //------------------------------------------------------------------------------
@@ -252,13 +252,10 @@ int ConIO::DbgPopf( PCChar fmt, ... ){ return 0; }
 STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API for reading a key
    while( true ) {
       const auto fPassThreadBaton( !fFreezeOtherThreads );
-      if( fPassThreadBaton )  MainThreadGiveUpGlobalVariableLock();
+      if( fPassThreadBaton ) { MainThreadGiveUpGlobalVariableLock(); }
       0 && DBG( "%s %s", __func__, fPassThreadBaton ? "passing" : "holding" );
-
       const auto ev( ConGetEvent() );
-
-      if( fPassThreadBaton )  MainThreadWaitForGlobalVariableLock();
-
+      if( fPassThreadBaton ) { MainThreadWaitForGlobalVariableLock(); }
       if( ev >= 0 ) {
          if( ev < EdKC_COUNT ) {
             if( ev == 0 ) { // (ev == 0) corresponds to keys we currently do not decode
@@ -277,7 +274,6 @@ STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API
                case EdKC_EVENT_ProgramExitRequested: EditorExit( 0, true );          break;
                }
             }
-
          CleanupAnyExecutionHaltRequest();
          }
       }

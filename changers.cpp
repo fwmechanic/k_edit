@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -103,8 +103,8 @@ class ColorChanger : public KeyChanger
    {
    NO_COPYCTOR(ColorChanger);
    NO_ASGN_OPR(ColorChanger);
-         U8 &d_colorVar;
-   const U8  d_origColor;
+         uint8_t &d_colorVar;
+   const uint8_t  d_origColor;
    void SetColor( int val ) { d_colorVar = val; }
    void IncDecColor( bool fg, int incr ) {
       const int mask ( fg ? 0xF0 : 0x0F );
@@ -112,7 +112,7 @@ class ColorChanger : public KeyChanger
       d_colorVar = (((((d_colorVar & mask) >> shift) + incr) << shift) & mask) | (d_colorVar & ~mask);
       }
 public:
-   ColorChanger( U8 &colorVar ) : d_colorVar(colorVar), d_origColor(colorVar) {}
+   ColorChanger( uint8_t &colorVar ) : d_colorVar(colorVar), d_origColor(colorVar) {}
    void updtMsg    () override { d_msgbuf.Sprintf( "colorFG=%02X", d_colorVar ); }
    void actionEsc  () override { SetColor( d_origColor  ); }
    void actionDown () override { IncDecColor( false, +1 ); }

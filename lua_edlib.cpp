@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -242,7 +242,7 @@ LUAFUNC_(hexstr2bitstr) {
    if( 0 == xdigits ) { luaL_error(L, "string '%s' contains no leading hexits", inst); }
    luaL_Buffer lb; luaL_buffinit(L, &lb);
    for( int ix=0; ix < xdigits; ++ix ) {
-      const U8 ch( tolower( inst[ix] ) );
+      const uint8_t ch( tolower( inst[ix] ) );
       const int val( ch - (ch < 'a' ? '0' : 'a' - 10) );  0 && DBG( ":: %X", val );
       char buf5[5];
       luaL_addstring( &lb, nib2bitstr_( buf5, val ) );    0 && DBG( ":: %s L %d", buf5, Strlen(buf5) );

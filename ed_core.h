@@ -186,10 +186,10 @@ namespace COLOR { // see color2Lua
 
 // CompileTimeAssert( COLOR::COLOR_COUNT <= 16 ); // all COLOR:: must fit into a nibble
 
-extern U8 g_colorInfo     ; // INF
-extern U8 g_colorStatus   ; // STA
-extern U8 g_colorWndBorder; // WND
-extern U8 g_colorError    ; // ERR
+extern uint8_t g_colorInfo     ; // INF
+extern uint8_t g_colorStatus   ; // STA
+extern uint8_t g_colorWndBorder; // WND
+extern uint8_t g_colorError    ; // ERR
 
 #define  HILITE_CPP_CONDITIONALS  1
 
@@ -448,8 +448,8 @@ typedef CMD const *        PCCMD;
 typedef CMD const * const CPCCMD;
 
 struct ARG {
-   U32  d_argType;
-   int  d_cArg;        // count of <arg>s pressed: 0 for NOARG
+   uint32_t d_argType;
+   int      d_cArg;    // count of <arg>s pressed: 0 for NOARG
    struct {            // no argument specified
       Point cursor;    // - cursor
       } d_noarg;
@@ -483,17 +483,17 @@ private:
    bool   FillArgStructFailed();
    bool   BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
 public:
-   bool   InitOk( PCCMD pCmd );
-   void   SaveForRepeat() const;
-   PCChar CmdName() const;
-   bool   Invoke();
-   bool   fnMsg( PCChar fmt, ... ) const ATTR_FORMAT(2, 3) ;
-   bool   BadArg() const; // a specific error: boilerplate (but informative) err msg
-   bool   ErrPause( PCChar fmt, ... ) const ATTR_FORMAT(2, 3) ;
-   PCChar ArgTypeName() const;
-   void   ConvertStreamargToLineargOrBoxarg();
-   void   ConvertLineOrBoxArgToStreamArg();
-   U32    ActualArgType() const { return d_argType & ACTUAL_ARGS; }
+   bool     InitOk( PCCMD pCmd );
+   void     SaveForRepeat() const;
+   PCChar   CmdName() const;
+   bool     Invoke();
+   bool     fnMsg( PCChar fmt, ... ) const ATTR_FORMAT(2, 3) ;
+   bool     BadArg() const; // a specific error: boilerplate (but informative) err msg
+   bool     ErrPause( PCChar fmt, ... ) const ATTR_FORMAT(2, 3) ;
+   PCChar   ArgTypeName() const;
+   void     ConvertStreamargToLineargOrBoxarg();
+   void     ConvertLineOrBoxArgToStreamArg();
+   uint32_t ActualArgType() const { return d_argType & ACTUAL_ARGS; }
 private:
    bool   pmlines( int direction ); // factored from mlines and plines
 public:
@@ -566,7 +566,7 @@ STIL funcCmd fn_runLua()    { return &ARG::ExecLuaFxn ; }
 struct CMD {             // function definition entry
    PCChar   d_name;      // - pointer to name of fcn     !!! DON'T CHANGE ORDER OF FIRST 2 ELEMENTS
    funcCmd  d_func;      // - pointer to function        !!! UNLESS you change initializer of macro_graphic
-   U32      d_argType;   // - user args allowed
+   uint32_t d_argType;   // - user args allowed
 #if AHELPSTRINGS
    PCChar   d_HelpStr;   // - help string shown in <CMD-SWI-Keys>
 #endif
@@ -576,8 +576,8 @@ struct CMD {             // function definition entry
       char  chAscii() const { return eka.Ascii; }
       int   isEmpty() const { return pszMacroDef == nullptr; }
       } d_argData;   // - NON-MACRO: key that invoked; MACRO: ptr to macro string (defn)
-   mutable  U32  d_callCount;  // - how many times user has invoked (this session) since last cmdusage_updt() call
-   mutable  U32  d_gCallCount; // - how many times user has invoked, global
+   mutable  uint32_t  d_callCount;  // - how many times user has invoked (this session) since last cmdusage_updt() call
+   mutable  uint32_t  d_gCallCount; // - how many times user has invoked, global
    bool     isCursorFunc(        )  const { return ToBOOL(d_argType &  CURSORFUNC); }
    bool     isCursorOrWindowFunc()  const { return ToBOOL(d_argType & (CURSORFUNC|WINDOWFUNC)); }
             // There are a number of functions which are macro-like (have
@@ -592,8 +592,8 @@ struct CMD {             // function definition entry
    bool     IsLuaFxn()              const { return d_func == fn_runLua()  ; }
    PCChar   Name()                  const { return d_name; }
    bool     NameMatch( PCChar str ) const { return Stricmp( str, d_name ) == 0; }
-   PCChar   MacroText()             const { return PCChar( d_argData.pszMacroDef ); }
-   stref    MacroStref()            const { return PCChar( d_argData.pszMacroDef ); }
+   PCChar   MacroText()             const { return d_argData.pszMacroDef; }
+   stref    MacroStref()            const { return d_argData.pszMacroDef; }
    bool     BuildExecute()          const;
    bool     IsFnCancel()            const;
    bool     IsFnUnassigned()        const;
@@ -1078,7 +1078,7 @@ private:
    bool           d_fNoEdit = false    ; // file may not be edited
    bool           d_fPreserveTrailSpc  ;
    bool           d_fTabSettingsFrozen = false ; // file's tab settings should not be auto-changed
-   S8             d_TabWidth;
+   int8_t         d_TabWidth;
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;

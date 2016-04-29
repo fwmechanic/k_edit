@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -26,8 +26,8 @@
    the "anything pending" parallel/cached status bit no longer exists, it's
    important that the any-bit-set?  test be speedy.
 
-   Note that BitVector<U32> is as efficient as it gets on a 32-bit CPU (big
-   shock there!); a BitVector<U64> is no better.
+   Note that BitVector<uint32_t> is as efficient as it gets on a 32-bit CPU (big
+   shock there!); a BitVector<uint64_t> is no better.
 
    20090223 kgoodwin
 */

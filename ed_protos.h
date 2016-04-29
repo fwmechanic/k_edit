@@ -48,8 +48,8 @@ STIL int pd2Int( ptrdiff_t pd ) { return pd; }
 #else
     // Windows x64:
 STIL int pd2Int( ptrdiff_t pd ) {
-   if( pd >= 0 ) return (pd <= INT_MAX) ? static_cast<int>(pd) : INT_MAX;
-   else          return (pd >= INT_MIN) ? static_cast<int>(pd) : INT_MIN;
+   if( pd >= 0 ) { return (pd <= INT_MAX) ? static_cast<int>(pd) : INT_MAX; }
+   else          { return (pd >= INT_MIN) ? static_cast<int>(pd) : INT_MIN; }
    }
 #endif
 
@@ -62,8 +62,8 @@ public:
    int operator() () { const bool rv( first ); first = false; return rv; }
    };
 
-               enum ePseudoBufType { GREP_BUF, SEL_BUF, };
-PFBUF    PseudoBuf( ePseudoBufType PseudoBufType, int fNew );
+                    enum ePseudoBufType { GREP_BUF, SEL_BUF, };
+extern PFBUF  PseudoBuf( ePseudoBufType PseudoBufType, int fNew );
 
 extern bool merge_grep_buf( PFBUF dest, PFBUF src );
 
@@ -153,6 +153,8 @@ extern void DispDoPendingRefreshes_()              ;
 extern void DispDoPendingRefreshesIfNotInMacro_()  ;
 extern void DispRefreshWholeScreenNow_()           ;
 
+extern void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset );
+
 #define  TRACE_DISP_NEEDS  0
 #if      TRACE_DISP_NEEDS
 #define  DispNeedsRedrawStatLn()                ( DBG( "%s by %s L %d", "DispNeedsRedrawStatLn"              , __func__, __LINE__ ), DispNeedsRedrawStatLn_()               )
@@ -239,9 +241,11 @@ STIL   COL   EditScreenCols()    {                        return ScreenCols(); }
 
 STIL   LINE      ScreenLines()   { extern LINE s_iHeight; return s_iHeight  ; } // RARELY USED (so far, only in WriteStateFile(), ScreenSizeChanger)
 STIL   LINE  EditScreenLines()   { extern LINE s_iHeight; return s_iHeight-2; }
+
 extern LINE  DialogLine();
 extern LINE  StatusLine();
 extern LINE  MinDispLine();
+extern int   Max_wbc_idx();
 
 //------------ Hi-level file and view APIs
 
@@ -279,6 +283,23 @@ extern   bool  SetSwitch( stref pszSwitchName, stref pszNewValue );
 extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
 extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
 extern  void   swid_ch(  PChar dest, size_t sizeofDest, char ch );
+
+#define EXT_SWID(nm)  extern void swid##nm( PChar dest, size_t sizeofDest, void *src )
+#define EXT_SWI_FX_BOOL(nm)  extern bool   swix##nm ( stref param );  EXT_SWID(nm);
+#define EXT_SWI_FX_STR(nm)   extern PCChar swix##nm ( stref param );  EXT_SWID(nm);
+
+EXT_SWI_FX_STR(  Cursorsize    )
+EXT_SWI_FX_STR(  Backup        )
+EXT_SWI_FX_STR(  Tabwidth      )
+EXT_SWI_FX_STR(  Entab         )
+EXT_SWI_FX_STR(  Ftype         )
+EXT_SWI_FX_BOOL( Hscroll       )
+EXT_SWI_FX_BOOL( Vscroll       )
+EXT_SWI_FX_BOOL( Tabdisp       )
+EXT_SWI_FX_BOOL( Traildisp     )
+EXT_SWI_FX_BOOL( TrailLinedisp )
+EXT_SWI_FX_BOOL( WordChars     )
+EXT_SWI_FX_BOOL( Delims        )
 
 extern   void  AssignLogTag( PCChar tag );
 enum { RSRCFILE_COMMENT_DELIM = '#' };
@@ -324,6 +345,7 @@ extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );
 extern   bool  fExecuteSafe( PCChar str );
 extern   bool  PushVariableMacro( PCChar strToExecute );
 extern   std::string DupTextMacroValue( PCChar macroName );
+extern   stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues );
 extern   void  CleanupAnyExecutionHaltRequest(); // must NOT be declared _within_ Main, where it would get a DLLX attribute
 
 //------------ FTypeSettings
@@ -346,12 +368,12 @@ typedef const RbNode *PCmdIdxNd;
 extern  PCmdIdxNd CmdIdxAddinFirst()           ;
 extern  PCmdIdxNd CmdIdxAddinNil()             ;
 extern  PCmdIdxNd CmdIdxNext(   PCmdIdxNd pNd );
-extern  PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd );
+extern  PCCMD  CmdIdxToPCMD( PCmdIdxNd pNd );
 
-typedef void (*CmdVisit)( PCCMD pCmd, void *pCtxt );
-extern  void WalkAllCMDs( void *pCtxt, CmdVisit visit );
+typedef void   (*CmdVisit)( PCCMD pCmd, void *pCtxt );
+extern  void   WalkAllCMDs( void *pCtxt, CmdVisit visit );
 
-extern  void cmdusage_updt();
+extern  void   cmdusage_updt();
 
 //------------ Mark module (deprecated)
 
@@ -379,9 +401,10 @@ extern   void  AddToSearchLog   ( stref str );
 
 extern   void  WriteAllDirtyFBufs();
 extern Path::str_t StateFilename( PCChar ext );
-extern PCChar EditorStateDir();
+extern PCChar  EditorStateDir();
 extern   void  WriteStateFile();
 extern   void  EditorExit( int processExitCode, bool fWriteStateFile );
+extern   void  IdleIntegrityCheck();
 
 //------------ rsrc file section processing
 
@@ -391,31 +414,27 @@ extern bool    RsrcFileLdAllNamedSections( stref pszSectionName );
 extern bool    RsrcFileLdAllNamedSections( stref pszSectionName, int *pAssignCountAccumulator );
 extern bool    RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
 extern PCChar  LastRsrcFileLdSectionFtypeNm();
+extern PCChar  LastRsrcFileLdSectionFtypeSectionNm();
 extern int     ReinitializeMacros( bool fEraseExistingMacros );
 
 //------------ misc edit helpers
 
-extern   bool  PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &tmp2 );
-
-extern   void  SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard=false );
-
+extern  bool   PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &tmp2 );
+extern  void   SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard=false );
 extern  Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc );
-
 extern  FileStat GetFileStat( PCChar fname );
-
 extern  void   EventCwdChanged( PCChar newName ); // (Win32-only ATM) contit hook
 
 // call around FBUF::PutLastLine() calls to effect (smart) cursor-tailing
 extern  void   CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );
 extern  bool   MoveCursorToEofAllWindows     ( PFBUF pFBuf, bool fIncludeCurWindow=false );
 
-extern  stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
+extern  stref  GetWordUnderPoint( PCFBUF pFBuf, Point *cursor );
 
 // the distinction between the following two is small...
-extern  void Clipboard_PutText( stref sr );
-extern  void Clipboard_PutText_Multiline( PCChar szData );
-extern  void WinClipGetFirstLine( std::string &xb );
-
+extern  void   Clipboard_PutText( stref sr );
+extern  void   Clipboard_PutText_Multiline( PCChar szData );
+extern  void   WinClipGetFirstLine( std::string &xb );
 
 //#####################  functionality implemented in  Lua  #####################
 //#####################  functionality implemented in  Lua  #####################
@@ -424,33 +443,26 @@ extern  void WinClipGetFirstLine( std::string &xb );
 //
 // Lua functions callable from C++:
 //
-typedef int LUA_BOOL; // NB: Lua boolean is int-sized!  *******************************************************************
+typedef int    LUA_BOOL; // NB: Lua boolean is int-sized!  *******************************************************************
 
-extern bool Lua_ConfirmYes( PCChar prompt );
+extern bool    Lua_ConfirmYes( PCChar prompt );
 
-extern size_t LuaHeapSize();
+extern size_t  LuaHeapSize();
 
-extern void LuaIdleGC();
-extern void LuaClose();
+extern void    LuaIdleGC();
+extern void    LuaClose();
 
 namespace LuaCtxt_ALL {
-
    extern void call_EventHandler( PCChar eventName );
-
    }
 
 namespace LuaCtxt_State {
-
    extern bool InitOk( PCChar filename );
-
    }
 
 namespace LuaCtxt_Edit {
-
    extern bool InitOk( PCChar filename );  // constructor
-
    extern bool ExecutedURL( PCChar strToExecute );  // if string matches "http[s]?//:", start a browser on it and return true
-
    //
    // String transformation functions have standard signature:
    //
@@ -476,13 +488,10 @@ namespace LuaCtxt_Edit {
    //###                 ###
 
    // table readers
-
    extern PChar Tbl2S(   PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ); // if any errors, return pszDflt or empty string
    extern PChar Tbl2DupS0( PCChar tableDescr, PCChar pszDflt=nullptr );             // returns dup of pszDflt or nullptr if any errors
    extern int   Tbl2Int( PCChar tableDescr, int dfltVal );                  // if any errors, returns dfltVal
-
    }
-
 
 //#####################  functionality implemented in  Lua  #####################
 //#####################  functionality implemented in  Lua  #####################

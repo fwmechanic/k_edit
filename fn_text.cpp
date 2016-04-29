@@ -364,7 +364,7 @@ int uint_log_10( int num ) {
 
 typedef int rtl_errno_t;
 
-STATIC_FXN S32 strtol_er( rtl_errno_t &conv_errno, char const *nptr, char *&endptr, int base ) {
+STATIC_FXN int32_t strtol_er( rtl_errno_t &conv_errno, char const *nptr, char *&endptr, int base ) {
    errno = 0;
    const auto rv( strtol( nptr, &endptr, base ) );
    conv_errno = errno;

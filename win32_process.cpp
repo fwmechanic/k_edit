@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -201,8 +201,8 @@ namespace Win32 {
 // #include <vdmdbg.h>
 
 struct ewShData {
-   DWORD dwPID;
-   U32   matchingWindows;
+   DWORD    dwPID;
+   uint32_t matchingWindows;
    };
 
 STATIC_FXN BOOL CALLBACK TerminateAppEnum( HWND hwnd, LPARAM lParam ) {
@@ -989,7 +989,6 @@ STATIC_FXN Win32::DWORD K_STDCALL IdleThread( Win32::LPVOID ) {
       SleepMs( 100 );  // was 50 @ 20130101
       WhileHoldingGlobalVariableLock gvlock;
        {
-       extern void IdleIntegrityCheck();
        IdleIntegrityCheck();
        }
       if( EditorLoadCountChanged() ) {
@@ -1028,7 +1027,7 @@ void InitJobQueues() {
 #pragma GCC diagnostic pop
       Msg( "Unable to start Idle thread" );
       }
-   s_pCompilePty = new Win32_pty( szCompile );
+   s_pCompilePty = new Win32_pty( kszCompile );
    }
 
 bool ARG::compile() {

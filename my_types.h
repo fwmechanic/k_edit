@@ -49,17 +49,8 @@
 
 //  General type Definitions
 //
-typedef unsigned int   UI;
-typedef uint8_t  U8;
-typedef uint16_t U16;
-typedef uint32_t U32;
-typedef uint64_t U64;
-
-typedef signed   int   SI ;
-typedef  int8_t  S8 ;
-typedef  int16_t S16;
-typedef  int32_t S32;
-typedef  int64_t S64;
+typedef unsigned int UI;
+typedef signed   int SI;
 
 typedef  size_t  uint_machineword_t; // 32-bit on i386, 64-bit on x64
 
@@ -131,8 +122,11 @@ const auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::
 // http://stackoverflow.com/questions/19145951/printf-variable-string-length-specifier
 // http://stackoverflow.com/questions/8081613/using-size-t-for-specifying-the-precision-of-a-string-in-cs-printf
 // this is dangerous; hopefully really long strings will not be encountered :-(
-#define BSR2STR(bsr) (bsr).data(),(bsr).length()
-#define BSR(bsr) static_cast<int>(bsr.length()),bsr.data()
+//      BSR2STR(stref) convert a stref to a std::string; there seems to be no added overhead if the created std::string is a temp object
+#define BSR2STR(bsr) std::string( (bsr).data(),(bsr).length() )
+//      BSR() is used to pass a stref as a single unit in a printf vararg param list (it expands to two vararg params)
+//      BSR()'s corresponding printf format string is expected to be PR_BSR (which consumes two vararg params)
+#define BSR(bsr) static_cast<int>((bsr).length()),(bsr).data()
 #define PR_BSR ".*s"
 
 #define PP2SR( p0, p1 )  stref( p0, (p1)-(p0) )

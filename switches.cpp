@@ -33,7 +33,7 @@ typedef PCChar(*TPfxStr)  (stref);
 union USwiAct {             // switch location or routine
    TPfxBool pFunc;          // - routine for text
    TPfxStr  pFunc2;         // - routine for text
-   U8      *bval;           // - byte value for NUMERIC
+   uint8_t *bval;           // - byte value for NUMERIC
    int     *ival;           // - integer value for NUMERIC
    bool    *fval;           // - flag value for BOOLEAN
    };
@@ -51,26 +51,6 @@ struct SWI {                 // switch definition entry
    AHELP( PCChar kszHelp; )  // - pointer to name of switch
    bool NameMatch( PCChar str ) const { return Stricmp( str, name ) == 0; }
    };
-
-#define EXT_SWID(nm)  extern void swid##nm( PChar dest, size_t sizeofDest, void *src )
-
-#define EXT_SWI_FX_BOOL(nm)  extern bool   swix##nm ( stref param );  EXT_SWID(nm);
-#define EXT_SWI_FX_STR(nm)   extern PCChar swix##nm ( stref param );  EXT_SWID(nm);
-
-EXT_SWI_FX_STR(  Cursorsize    )
-EXT_SWI_FX_STR(  Backup        )
-EXT_SWI_FX_STR(  Tabwidth      )
-EXT_SWI_FX_STR(  Entab         )
-EXT_SWI_FX_STR(  Ftype         )
-EXT_SWI_FX_BOOL( Hscroll       )
-EXT_SWI_FX_BOOL( Vscroll       )
-EXT_SWI_FX_BOOL( Tabdisp       )
-EXT_SWI_FX_BOOL( Traildisp     )
-EXT_SWI_FX_BOOL( TrailLinedisp )
-
-EXT_SWI_FX_BOOL( WordChars     )
-EXT_SWI_FX_BOOL( Delims        )
-
 
 GLOBAL_CONST char kszBackup    [] = "backup";
 
@@ -194,19 +174,12 @@ sridx StrLastWordCh( stref src ) {
 
 GLOBAL_VAR Linebuf SwiErrBuf; // shared buffer used to format err msg strings returned by swix functions
 
-GLOBAL_VAR U8 g_colorInfo      = 0x1e;
-GLOBAL_VAR U8 g_colorStatus    = 0x1e;
-GLOBAL_VAR U8 g_colorWndBorder = 0xa0;
-                              // 0x6c;
-GLOBAL_VAR U8 g_colorError     = 0x1e;
+GLOBAL_VAR uint8_t g_colorInfo      = 0x1e;
+GLOBAL_VAR uint8_t g_colorStatus    = 0x1e;
+GLOBAL_VAR uint8_t g_colorWndBorder = 0xa0;
+                                   // 0x6c;
+GLOBAL_VAR uint8_t g_colorError     = 0x1e;
 GLOBAL_VAR bool g_fBpEnabled;
-
-extern int  g_swiWBCidx;
-
-extern int  g_iLuaGcStep;
-extern bool g_fDialogTop;
-extern bool g_fLangHilites;
-extern bool g_fM4backtickquote;
 
 // swin(e)s
 
@@ -251,7 +224,6 @@ bool swinWBC_INT( const SWI *pSwi, stref newValue ) {
    if( newVal == -1 ) {
       return ErrorDialogBeepf( "Numeric switch: bad value %" PR_BSR "", BSR(newValue) );
       }
-   extern int              Max_wbc_idx();
    const auto max_wbc_idx( Max_wbc_idx() );
    if( newVal < 0 || newVal > max_wbc_idx ) {
       return ErrorDialogBeepf( "Numeric switch: out of range [0..%d]", max_wbc_idx );
@@ -282,7 +254,7 @@ STATIC_FXN bool swinFXN_STR( const SWI *pSwi, stref newValue ) {
 void swidBool(      PChar dest, size_t sizeofDest, void *src )  { scpy(  dest, sizeofDest, (*static_cast<bool *>(src)) ? "yes" : "no" ); }
 void swid_int(      PChar dest, size_t sizeofDest, int   val )  { safeSprintf( dest, sizeofDest, "%d", val ); }
 void swidInt(       PChar dest, size_t sizeofDest, void *src )  { swid_int(    dest, sizeofDest, (*static_cast<int *>(src)) ); }
-void swidColorvarx( PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", *static_cast<U8 *>(src) ); }
+void swidColorvarx( PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", *static_cast<uint8_t *>(src) ); }
 // void swidColorx(    PChar dest, size_t sizeofDest, void *src )  { safeSprintf( dest, sizeofDest, "%02X", g_CurView()->ColorIdx2Attr( int(src) ) ); }
 
 #if    defined(_WIN32)

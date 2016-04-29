@@ -28,7 +28,15 @@
 #endif
 
 #if DBGHILITE
-extern void DbgHilite_( char ch, PCChar func );
+void DbgHilite_( char ch, PCChar func ) {
+   DBG( "%c%s SavedHL=[%p] FileHL=[%p] (%s)"
+      , ch
+      , func
+      , s_savedHiLiteList.dl_first
+      , g_CurView()->pFBuf->d_pHiLiteList.dl_first
+      , g_CurView()->pFBuf->Name()
+      );
+   }
 #define  DbgHilite( c )  DbgHilite_( c, __func__ )
 #else
 #define  DbgHilite( c )
@@ -70,12 +78,12 @@ extern void DbgHilite_( char ch, PCChar func );
 
 class LineColors {
    enum { END_MARKER=0, ELEMENTS_=BUFBYTES };  // one simplifying assumption: color==0 is not used (used for EOS)
-   U8 b[ ELEMENTS_+1 ];
+   uint8_t b[ ELEMENTS_+1 ];
 public:
-   bool inRange( int ix ) const { return ix < ELEMENTS(b); }
-   U8   colorAt( int ix ) const { return b[ ix ]; }
+   bool    inRange( int ix ) const { return ix < ELEMENTS(b); }
+   uint8_t colorAt( int ix ) const { return b[ ix ]; }
    int  cols()            const { return Strlen( PCChar(&b[0]) ); }  // BUGBUG assumes END_MARKER == 0 !
-   LineColors( U8 initcolor=END_MARKER ) {
+   LineColors( uint8_t initcolor=END_MARKER ) {
       for( auto &ch : b ) { ch = initcolor; }
       b[ ELEMENTS_ ] = END_MARKER;
       }
@@ -89,7 +97,7 @@ public:
    void PutColor( int ix, int len, int color ) {
       const auto maxIx( ix+len );
       for( ; ix < maxIx && inRange( ix ) ; ++ix ) {
-         b[ ix ] = U8(color);
+         b[ ix ] = uint8_t(color);
          }
       }
    void Cat( const LineColors &rhs );
@@ -129,17 +137,17 @@ public:
 
 STATIC_CONST struct
    { // H -> both horiz edges, V -> both vertical edges, T -> top edge, B -> bottom edge, L -> left edge, R -> right edge
-   U8 HV_    , LV_    , RV_    , _V_    , H__    , HT_    , HB_      ;
+   uint8_t HV_    , LV_    , RV_    , _V_    , H__    , HT_    , HB_      ;
    } wbc[] =
    {
-    { U8('Å'), U8('´'), U8('Ã'), U8('³'), U8('Ä'), U8('Á'), U8('Â') },  // 0
-    { U8('×'), U8('¶'), U8('Ç'), U8('º'), U8('Ä'), U8('Ð'), U8('Ò') },  // 1
-    { U8('Ø'), U8('µ'), U8('Æ'), U8('³'), U8('Í'), U8('Ï'), U8('Ñ') },  // 2
-    { U8('Î'), U8('¹'), U8('Ì'), U8('º'), U8('Í'), U8('Ê'), U8('Ë') },  // 3
-    { U8('°'), U8('°'), U8('°'), U8('°'), U8('°'), U8('°'), U8('°') },  // 4
-    { U8('±'), U8('±'), U8('±'), U8('±'), U8('±'), U8('±'), U8('±') },  // 5
-    { U8('²'), U8('²'), U8('²'), U8('²'), U8('²'), U8('²'), U8('²') },  // 6
-    { U8('Û'), U8('Û'), U8('Û'), U8('Û'), U8('Û'), U8('Û'), U8('Û') },  // 7
+    { uint8_t('Å'), uint8_t('´'), uint8_t('Ã'), uint8_t('³'), uint8_t('Ä'), uint8_t('Á'), uint8_t('Â') },  // 0
+    { uint8_t('×'), uint8_t('¶'), uint8_t('Ç'), uint8_t('º'), uint8_t('Ä'), uint8_t('Ð'), uint8_t('Ò') },  // 1
+    { uint8_t('Ø'), uint8_t('µ'), uint8_t('Æ'), uint8_t('³'), uint8_t('Í'), uint8_t('Ï'), uint8_t('Ñ') },  // 2
+    { uint8_t('Î'), uint8_t('¹'), uint8_t('Ì'), uint8_t('º'), uint8_t('Í'), uint8_t('Ê'), uint8_t('Ë') },  // 3
+    { uint8_t('°'), uint8_t('°'), uint8_t('°'), uint8_t('°'), uint8_t('°'), uint8_t('°'), uint8_t('°') },  // 4
+    { uint8_t('±'), uint8_t('±'), uint8_t('±'), uint8_t('±'), uint8_t('±'), uint8_t('±'), uint8_t('±') },  // 5
+    { uint8_t('²'), uint8_t('²'), uint8_t('²'), uint8_t('²'), uint8_t('²'), uint8_t('²'), uint8_t('²') },  // 6
+    { uint8_t('Û'), uint8_t('Û'), uint8_t('Û'), uint8_t('Û'), uint8_t('Û'), uint8_t('Û'), uint8_t('Û') },  // 7
    };
 
 GLOBAL_VAR int g_swiWBCidx = 3;
@@ -160,23 +168,23 @@ enum WinBorderChars
    { // H -> both horiz edges, V -> both vertical edges, T -> top edge, B -> bottom edge, L -> left edge, R -> right edge
 #define    LINEDRAW_WIN  8
 #if    (0==LINEDRAW_WIN)
-                         HV_=U8('Å'), LV_=U8('´'), RV_=U8('Ã'), _V_=U8('³'), H__=U8('Ä'), HT_=U8('Á'), HB_=U8('Â'),  // "ÚÄ¿ÀÙ³Ã´ÂÁÅ",
+                         HV_=uint8_t('Å'), LV_=uint8_t('´'), RV_=uint8_t('Ã'), _V_=uint8_t('³'), H__=uint8_t('Ä'), HT_=uint8_t('Á'), HB_=uint8_t('Â'),  // "ÚÄ¿ÀÙ³Ã´ÂÁÅ",
 #elif  (1==LINEDRAW_WIN)
-                         HV_=U8('×'), LV_=U8('¶'), RV_=U8('Ç'), _V_=U8('º'), H__=U8('Ä'), HT_=U8('Ð'), HB_=U8('Ò'),  // "ÖÄ·Ó½ºÇ¶ÒÐ×",
+                         HV_=uint8_t('×'), LV_=uint8_t('¶'), RV_=uint8_t('Ç'), _V_=uint8_t('º'), H__=uint8_t('Ä'), HT_=uint8_t('Ð'), HB_=uint8_t('Ò'),  // "ÖÄ·Ó½ºÇ¶ÒÐ×",
 #elif  (2==LINEDRAW_WIN)
-                         HV_=U8('Ø'), LV_=U8('µ'), RV_=U8('Æ'), _V_=U8('³'), H__=U8('Í'), HT_=U8('Ï'), HB_=U8('Ñ'),  // "ÕÍ¸Ô¾³ÆµÑÏØ"
+                         HV_=uint8_t('Ø'), LV_=uint8_t('µ'), RV_=uint8_t('Æ'), _V_=uint8_t('³'), H__=uint8_t('Í'), HT_=uint8_t('Ï'), HB_=uint8_t('Ñ'),  // "ÕÍ¸Ô¾³ÆµÑÏØ"
 #elif  (3==LINEDRAW_WIN)
-                         HV_=U8('Î'), LV_=U8('¹'), RV_=U8('Ì'), _V_=U8('º'), H__=U8('Í'), HT_=U8('Ê'), HB_=U8('Ë'),  // "ÉÍ»È¼ºÌ¹ËÊÎ",
+                         HV_=uint8_t('Î'), LV_=uint8_t('¹'), RV_=uint8_t('Ì'), _V_=uint8_t('º'), H__=uint8_t('Í'), HT_=uint8_t('Ê'), HB_=uint8_t('Ë'),  // "ÉÍ»È¼ºÌ¹ËÊÎ",
 #elif  (4==LINEDRAW_WIN)
-                         HV_=U8('°'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "°°°°°°°°°°°"
+                         HV_=uint8_t('°'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "°°°°°°°°°°°"
 #elif  (5==LINEDRAW_WIN)
-                         HV_=U8('±'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "±±±±±±±±±±±"
+                         HV_=uint8_t('±'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "±±±±±±±±±±±"
 #elif  (6==LINEDRAW_WIN)
-                         HV_=U8('²'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "²²²²²²²²²²²"
+                         HV_=uint8_t('²'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "²²²²²²²²²²²"
 #elif  (7==LINEDRAW_WIN)
-                         HV_=U8('Û'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "ÛÛÛÛÛÛÛÛÛÛÛ"
+                         HV_=uint8_t('Û'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "ÛÛÛÛÛÛÛÛÛÛÛ"
 #elif  (8==LINEDRAW_WIN)
-                         HV_=U8(' '), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "           "
+                         HV_=uint8_t(' '), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "           "
 #endif
 #undef     LINEDRAW_WIN
    };
@@ -217,7 +225,7 @@ STATIC_CONST struct {  // contents init'd from $KINIT:k.filesettings
 #undef SINIT
    };
 
-typedef U8 ViewColors[ COLOR::VIEW_COLOR_COUNT ];
+typedef uint8_t ViewColors[ COLOR::VIEW_COLOR_COUNT ];
 
 static_assert( ELEMENTS( s_color2Lua ) == sizeof( ViewColors ), "ELEMENTS( s_color2Lua ) != ELEMENTS( ViewColors )" );
 
@@ -1769,18 +1777,6 @@ void View::RedrawHiLiteRects() {
 
 //-----------------------------------------------------------------------------
 
-#if DBGHILITE
-void DbgHilite_( char ch, PCChar func ) {
-   DBG( "%c%s SavedHL=[%p] FileHL=[%p] (%s)"
-      , ch
-      , func
-      , s_savedHiLiteList.dl_first
-      , g_CurView()->pFBuf->d_pHiLiteList.dl_first
-      , g_CurView()->pFBuf->Name()
-      );
-   }
-#endif
-
 STATIC_FXN bool Rect1ContainsRect2( const Rect &r1, const Rect &r2 ) {
    return (r1.flMin.lin <= r2.flMin.lin)
        && (r1.flMax.lin >= r2.flMax.lin)
@@ -2650,7 +2646,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 #if defined(_WIN32)
    if( pfh->IsDiskRO() )                                                 { cl.Cat( COLOR::ERRM, " DiskRO" ); }
 #endif
-   cl.Cat( COLOR::SEL , FmtStr<45>( " X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ).k_str() );
+   cl.Cat( COLOR::SEL , FmtStr<45>( "X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%" PR_BSR "%s]", BSR( pfh->FType() ), LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( COLOR::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).k_str() );
@@ -3101,23 +3097,23 @@ void Win::GetLineForDisplay
          auto    &chLeftBorder( dest[ d_UpLeft.col - 1 ] );
          if     ( chLeftBorder == H__                               // 'Í' -> '¹'
                 ||chLeftBorder == HT_                               // 'Ê' -> '¹'
-                ||chLeftBorder == HV_ ) { chLeftBorder = U8(LV_); } // 'Î' -> '¹'
-         else if( chLeftBorder == RV_ ) { chLeftBorder = U8(_V_); } // 'Ì' -> 'º'
+                ||chLeftBorder == HV_ ) { chLeftBorder = uint8_t(LV_); } // 'Î' -> '¹'
+         else if( chLeftBorder == RV_ ) { chLeftBorder = uint8_t(_V_); } // 'Ì' -> 'º'
          }
       auto    &chRightBorder( dest[ oRightBorder ] );
       if     ( chRightBorder == H__                                 // 'Í' -> 'Ì'
-             ||chRightBorder == HV_ ) { chRightBorder = U8(RV_); }  // 'Î' -> 'Ì'
-      else if( chRightBorder == LV_ ) { chRightBorder = U8(_V_); }  // '¹' -> 'º'
+             ||chRightBorder == HV_ ) { chRightBorder = uint8_t(RV_); }  // 'Î' -> 'Ì'
+      else if( chRightBorder == LV_ ) { chRightBorder = uint8_t(_V_); }  // '¹' -> 'º'
       }
    else if( yLineOfDisplay == d_UpLeft.lin - 1 ) {  // window's top border line?
       auto    &chRightBorder( dest[ oRightBorder ] );
-      if     ( chRightBorder == H__ ) { chRightBorder = U8(HB_); }  // 'Í' -> 'Ë'
-      else if( chRightBorder == HT_ ) { chRightBorder = U8(HV_); }  // 'Ê' -> 'Î'
+      if     ( chRightBorder == H__ ) { chRightBorder = uint8_t(HB_); }  // 'Í' -> 'Ë'
+      else if( chRightBorder == HT_ ) { chRightBorder = uint8_t(HV_); }  // 'Ê' -> 'Î'
       }
    else if( yLineOfDisplay == d_UpLeft.lin + d_Size.lin ) { // window's bottom border line?
       auto    &chRightBorder( dest[ oRightBorder ] );
-      if     ( chRightBorder == H__ ) { chRightBorder = U8(HT_); }  // 'Í' -> 'Ê'
-      else if( chRightBorder == HB_ ) { chRightBorder = U8(HV_); }  // 'Ë' -> 'Î'
+      if     ( chRightBorder == H__ ) { chRightBorder = uint8_t(HT_); }  // 'Í' -> 'Ê'
+      else if( chRightBorder == HB_ ) { chRightBorder = uint8_t(HV_); }  // 'Ë' -> 'Î'
       }
    }
 
