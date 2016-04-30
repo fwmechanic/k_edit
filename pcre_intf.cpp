@@ -97,7 +97,7 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
          , haystack_offset
          , pcre_exec_options
          , &d_pcreCapture[0].oFirst
-         , sizeof(d_pcreCapture) / sizeof(int)
+         , d_pcreCapture.size() * 3
          )
       );
    0 && DBG( "CompiledRegex::Match returned %d", rc );

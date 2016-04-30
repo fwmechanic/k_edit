@@ -648,9 +648,70 @@ class CharWalkerReplace : public CharWalker_ {
    std::string        d_stmp;
    const SearchSpecifier  &d_ss;  // ffffffffffff
    RegexMatchCaptures      d_captures;
-   const std::string& d_stReplace;
-   bool               d_fDoReplaceQuery;
-   const pFxn_strstr  d_pfxStrnstr;
+   struct replaceDope_t {
+      struct backref {
+         bool d_isLit;
+         int  d_contentIx;
+         backref( bool isLit, int idx ) : d_isLit( isLit ), d_contentIx( idx ) {}
+         };
+      const stref d_srRawReplace;
+      std::vector<stref>   d_Literal;
+      std::vector<backref> d_replaceRefs;
+      void AddLitRef( stref sr ) {
+         if( sr.length() > 0 ) {
+            d_Literal.emplace_back( sr );
+            d_replaceRefs.emplace_back( true, d_Literal.size()-1 );
+            }
+         }
+      void AddBackRef( int ix ) {
+         d_replaceRefs.emplace_back( false, ix );
+         }
+      replaceDope_t( stref srReplace )
+         : d_srRawReplace( srReplace )
+         {
+         stref srRaw( d_srRawReplace );
+         constexpr char chBR( '\\' );
+         sridx start( 0 );
+         for(;;) {
+            const auto ix( srRaw.find( chBR ) );
+            if( ix == eosr || ix == srRaw.length()-1 ) { break; }
+            if( srRaw[ix+1]==chBR ) {
+               AddLitRef( stref( srRaw.data(), ix+1 ) );
+               srRaw.remove_prefix( ix+2 );
+               }
+            else {
+               if( isdigit( srRaw[ix+1] ) ) {
+                  const auto brnum( srRaw[ix+1] - '0' );
+                  AddLitRef( stref( srRaw.data(), ix ) );
+                  AddBackRef( brnum );
+                  srRaw.remove_prefix( ix+2 );
+                  }
+               else {
+                  }
+               }
+            }
+         AddLitRef( srRaw );
+         }
+      };
+   replaceDope_t d_replaceDope;
+   std::string d_replaceCache;
+   stref GenerateReplacement() {
+      if( d_replaceDope.d_replaceRefs.size()==1 ) {
+         return d_replaceDope.d_replaceRefs[0].d_isLit ? d_replaceDope.d_Literal[0] : d_captures[0].value();
+         }
+      d_replaceCache.clear();
+      for( const auto &ent : d_replaceDope.d_replaceRefs ) {
+         if( ent.d_isLit ) {
+            d_replaceCache.append( BSR2STR( ent.d_contentIx < d_replaceDope.d_Literal.size() ? d_replaceDope.d_Literal[ent.d_contentIx] : "" ) );
+            }
+         else {
+            d_replaceCache.append( BSR2STR( ent.d_contentIx < d_captures.size() ? d_captures[ent.d_contentIx].value() : "" ) );
+            }
+         }
+      return stref( d_replaceCache );
+      }
+   bool              d_fDoReplaceQuery;
+   const pFxn_strstr d_pfxStrnstr;
 public:
    int               d_iReplacementsPoss;
    int               d_iReplacementsMade;
@@ -662,7 +723,7 @@ public:
       , const SearchSpecifier &ss
       )
       : d_ss                ( ss )
-      , d_stReplace         ( g_SnR_stReplacement )
+      , d_replaceDope       ( g_SnR_stReplacement )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
       , d_iReplacementsPoss ( 0 )
@@ -717,6 +778,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
    const auto xMatchMin( ColOfFreeIdx( tw, rl, ixMatchMin ) );
    const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
    ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
+   stref srReplace( GenerateReplacement() );
 
    // replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
    auto performReplace = [&]() -> void {
@@ -724,16 +786,16 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
       const auto ixdestMatchMin( ColOfFreeIdx( tw, d_sbuf, xMatchMin ) );
       const auto ixdestMatchMax( ColOfFreeIdx( tw, d_sbuf, xMatchMax ) );
       const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
-      0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, d_stReplace.length(), d_sbuf.length() );
-      d_sbuf.replace( ixdestMatchMin, ixdestMatchMax - ixdestMatchMin + 1, d_stReplace );
+      d_sbuf.replace( ixdestMatchMin, ixdestMatchMax - ixdestMatchMin + 1, BSR2STR(srReplace) );
+      0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
       pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
       ++d_iReplacementsMade;
       // replacement done: position curPt->col for next search
-      if( destMatchChars != 0 || d_stReplace.length() != 0 ) {
-         curPt->col += d_stReplace.length() - 1;
+      if( destMatchChars != 0 || srReplace.length() != 0 ) {
+         curPt->col += srReplace.length() - 1;
          }
       // did colLastPossibleLastMatchChar grow or shrink?
-      colLastPossibleLastMatchChar += d_stReplace.length() - destMatchChars;
+      colLastPossibleLastMatchChar += srReplace.length() - destMatchChars;
       NoLessThan( &colLastPossibleLastMatchChar, 0 );
       // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
       // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
