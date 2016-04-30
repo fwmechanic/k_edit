@@ -62,8 +62,6 @@ void ChopAscizzOnDelim( PChar cur, const PCChar pszDelim ) {
       }
    }
 
-//------------------------------------------------------------------------------
-
 void DiceableString::DBG() const {
    auto ix( 0u );
    PCChar cur( nullptr );
@@ -72,8 +70,6 @@ void DiceableString::DBG() const {
       }
    }
 
-//------------------------------------------------------------------------------
-//
 // UserNameDelimChars are characters which the user may use to surround
 // (delimit) filenames; they are typicaly only used when a filename contains
 // spaces.  Multiple UserNameDelimChars are offered in case a filename contains
@@ -82,13 +78,11 @@ void DiceableString::DBG() const {
 STATIC_FXN char IsUserFnmDelimChar( char ch ) {
    switch( ch ) {
       default:   return 0;
-      case '"' :
-      case '\'':
+      case '"' : //fallthru
+      case '\'': //fallthru
       case '|' : return ch;
       }
    }
-
-//------------------------------------------------------------------------------
 
 STATIC_FXN bool IsolateFilename( sridx *pMin, sridx *pMax, stref rl ) {
    // could add: lots and lots o special per-FileType code to extract
@@ -128,9 +122,6 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
    return 1;
    }
 
-//------------------------------------------------------------------------------
-
-//
 // multi-file grep/replace file selection:
 //
 // There are two forms for specifying files: a macro ("mfspec_", "mfspec"), or
@@ -166,8 +157,6 @@ bool WildcardFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    return !dest.empty();
    }
 
-//-----------------------------------
-
 bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    dest.clear();
    while( true ) {
@@ -183,8 +172,6 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
       if( glif_rv > 0 ) { d_pCfxGen = new CfxFilenameGenerator( d_sbuf, ONLY_FILES ); }
       }
    }
-
-//------------------------------------------------------------------------------
 
 enum { ENV_REFS_NONE, ENV_REFS_PARSE_ERR, ENV_REFS_UNAMBIG, ENV_REFS_MID_LIST, ENV_REFS_LEADING_LIST };
 
@@ -286,9 +273,6 @@ bool StrSubstituterGenerator::GetNextString( std::string &st ) {
    return true;
    }
 
-//------------------------------------------------------------------------------
-
-//
 // Parses a string complying with CFX grammar and (if pSSG is NZ) prepares it
 // for a StrSubstituterGenerator
 //
@@ -352,7 +336,6 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
    }
 
 #ifdef fn_cfx
-
 // $PATH:\%USERNAME%\*.exe  $PATH:${}$(PATH)*.exe  %USERPROFILE%\\\* $PATH:*.exe
 // %TAGZ%\*.h;%TAGZ%*.hpp;$(TAGZ)*.hxx;$TAGZ:*.kh;$(TAGZ)*.c;$TAGZ:*.cpp;$TAGZ:*.cc;$TAGZ:*.cxx;$TAGZ:*.kc
 // mfspec:=".\*.h;.\*.hpp;$(TAGZ)*.hxx;$TAGZ:*.kh;$(TAGZ)*.c;$TAGZ:*.cpp;$TAGZ:*.cc;$TAGZ:*.cxx;$TAGZ:*.kc"
@@ -373,10 +356,7 @@ bool ARG::cfx() {
       }
    return true;
    }
-
 #endif
-
-//------------------------------------------------------------------------------
 
 bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
    if( d_output.empty() ) {
@@ -409,8 +389,7 @@ DirListGenerator::DirListGenerator( PCChar dirName ) {
       while( wcg.VGetNextName( pbuf ) ) {
          if( !Path::IsDotOrDotDot( pbuf ) ) {
             AddName( pbuf );
-            }
-         0 && DBG( "   PBUF='%s' DBUF='%" PR_BSR "'", pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
+            }                                                    0 && DBG( "   PBUF='%s' DBUF='%" PR_BSR "'", pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
          }
       }
    }
@@ -420,10 +399,7 @@ DirListGenerator::~DirListGenerator() {
    DeleteStringList( d_output );
    }
 
-//------------------------------------------------------------------------------
-
 #ifdef fn_wct  // testbed for code used in setfile
-
 bool ARG::wct() {
    pathbuf searchSpec;
    switch( d_argType ) {
@@ -445,10 +421,7 @@ bool ARG::wct() {
       }
    return true;
    }
-
 #endif
-
-//------------------------------------------------------------------------------
 
 enum { MFSPEC_D=0 };
 
@@ -497,7 +470,6 @@ NEXT_SSG_COMBINATION:
    return false;
    }
 
-//-------------------------------------------------------------------------------------------------
 //
 // the current problem:
 //
@@ -611,7 +583,6 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
       return;
 #endif
       }
-
 OUTPUT_EQ_INPUT:
 #endif
    dest = pszSrc;                                                                     VERBOSE && DBG( "%s '%s' => NO MATCH!", __func__, pszSrc );
@@ -627,15 +598,12 @@ Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=1 };
       return Path::str_t( pszSrc );
       }
    Path::str_t st( pszSrc );
-   if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {
-      DB && DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
+   if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {                       DB && DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
       }
    else {
       if( '$' == pszSrc[0] ) { SearchEnvDirListForFile( st ); }
       else                   { st = pszSrc; }
-      }
-   DB && DBG( "%s post-expansion='%s'", __func__, st.c_str() );
-   st = Path::Absolutize( st.c_str() );
-   DB && DBG( "%s- '%s'", __func__, st.c_str() );
+      }                                                              DB && DBG( "%s post-expansion='%s'", __func__, st.c_str() );
+   st = Path::Absolutize( st.c_str() );                              DB && DBG( "%s- '%s'", __func__, st.c_str() );
    return st;
    }

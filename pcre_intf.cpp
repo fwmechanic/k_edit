@@ -48,7 +48,7 @@ public:
    CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called ONLY by Regex_Compile (when it is successful)
    ~CompiledRegex();
    int MaxPossCaptures() const { return d_maxPossCaptures; }
-   RegexMatchCaptures::size_type Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has );
+   RegexMatchCaptures::size_type Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
    };
 
 PCRE_EXP_DECL void * pcre_malloc_( size_t bytes ) {
@@ -87,20 +87,15 @@ CompiledRegex::~CompiledRegex() {
    (*pcre_free)( d_pPcreExtra );
    }
 
-RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
+RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options ) {
    0 && DBG( "CompiledRegex::Match called!" );
-   const int options
-      ( haystack_has == STR_MISSING_BOL ? PCRE_NOTBOL
-      : haystack_has == STR_MISSING_EOL ? PCRE_NOTEOL
-      :                                   0
-      );
    const int rc( pcre_exec(
            d_pPcre
          , d_pPcreExtra
          , haystack.data()
          , haystack.length()
          , haystack_offset
-         , options
+         , pcre_exec_options
          , &d_pcreCapture[0].oFirst
          , sizeof(d_pcreCapture) / sizeof(int)
          )
@@ -145,11 +140,11 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
    return captures.size();
    }
 
-RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has ) {
-   return pcr->Match( captures, haystack, haystack_offset, haystack_has );
+RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options ) {
+   return pcr->Match( captures, haystack, haystack_offset, pcre_exec_options );
    }
 
-CompiledRegex *Regex_Delete( CompiledRegex *pcr ) {
+CompiledRegex *Regex_Delete0( CompiledRegex *pcr ) {
    Delete0( pcr );
    return pcr;
    }

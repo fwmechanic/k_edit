@@ -23,8 +23,6 @@
 #error  USE_PCRE not defined
 #endif
 
-enum HaystackHas { STR_HAS_BOL_AND_EOL, STR_MISSING_BOL, STR_MISSING_EOL }; // so we can tell PCRE whether the searched string can match ^ or $
-
 #if USE_PCRE
 
 #define PCRE_STATIC
@@ -44,8 +42,8 @@ typedef std::vector<RegexMatchCapture> RegexMatchCaptures;
 
 class  CompiledRegex;
 extern CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase );
-extern CompiledRegex *Regex_Delete( CompiledRegex *pcr );
-extern RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, HaystackHas haystack_has );
+extern CompiledRegex *Regex_Delete0( CompiledRegex *pcr );
+extern RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
 extern void register_atexit_search();
 
 #else

@@ -325,9 +325,16 @@ struct SearchSpecifier {
 public:
    SearchSpecifier( stref rawSrc, bool fRegex=false );
    ~SearchSpecifier();
-   bool   IsRegex() const;
    bool   MatchNegated() const { return d_fNegateMatch; };
-   bool   HasError() const;
+#if USE_PCRE
+   bool   IsRegex()  const { return d_re != nullptr; }
+   bool   HasError() const { return IsRegex() && d_reCompileErr; }
+   int    MinHaystackLen() const { return IsRegex() ? 1 : d_rawStr.length(); }
+#else
+   bool   IsRegex()  const { return false; }
+   bool   HasError() const { return false; }
+   int    MinHaystackLen() const { return d_rawStr.length(); }
+#endif
    bool   CanUseFastSearch() const { return d_fCanUseFastSearch && g_fFastsearch; }
    void   CaseUpdt(); // in case case switch has changed since CompiledRegex was compiled
    void   Dbgf( PCChar tag ) const;
@@ -379,7 +386,7 @@ public:
    PFBUF                   d_pFBuf;
    RegexMatchCaptures      d_captures;
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   virtual stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) = 0; // rv.empty() if no match found
+   virtual stref VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) = 0; // rv.empty() if no match found
 public:
    enum StringSearchVariant {
       fsTABSAFE_STRING ,  // FileSearcherString also bidirectional
@@ -486,7 +493,7 @@ class  FileSearcherString : public FileSearcher {
 public:
    FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    ~FileSearcherString() {}
-   stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) override;
+   stref VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
    };
 
 class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
@@ -499,7 +506,7 @@ public:
    FileSearcherFast( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    virtual ~FileSearcherFast() {}
    void   VFindMatches_() override;
-   stref  VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) override;
+   stref  VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
    };
 
 #if USE_PCRE
@@ -509,7 +516,7 @@ class  FileSearcherRegex : public FileSearcher {
    NO_ASGN_OPR(FileSearcherRegex);
 public:
    FileSearcherRegex( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   stref VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) override;
+   stref VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
    };
 
 #endif
@@ -519,7 +526,7 @@ public:
  #if USE_PCRE
 
 STATIC_VAR bool             s_fSearchNReplaceUsingRegExp;
-STATIC_VAR CompiledRegex *  s_pSandR_CompiledSearchPattern;
+STATIC_VAR CompiledRegex *  s_pSandR_CompiledSearchRegex;
 
  #endif
 
@@ -580,7 +587,7 @@ enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH
 
 class CharWalker_ {
 public:
-   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) = 0;
+   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) = 0;
    virtual ~CharWalker_() {};
    };
 
@@ -597,7 +604,7 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
            auto rl( pFBuf->PeekRawLine( curPt.lin ) );          \
            auto colLastPossibleLastMatchChar( ColOfFreeIdx( tw, rl, rl.length()-1 ) );
    #define CHECK_NEXT  {  \
-           const auto rv( walker.VCheckNext( pFBuf, rl, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleLastMatchChar )  );  \
+           const auto rv( walker.VCheckNext( pFBuf, rl, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleLastMatchChar, curPt.col==constrainingRect.flMin.col ) );  \
            if( STOP_SEARCH == rv ) { return true; }   \
            if( REREAD_LINE_CONTINUE_SEARCH == rv ) {  \
               rl = pFBuf->PeekRawLine( curPt.lin );   \
@@ -639,7 +646,8 @@ GLOBAL_VAR std::string g_SnR_stReplacement     ;
 class CharWalkerReplace : public CharWalker_ {
    std::string        d_sbuf;
    std::string        d_stmp;
-   const std::string& d_stSearch;
+   const SearchSpecifier  &d_ss;  // ffffffffffff
+   RegexMatchCaptures      d_captures;
    const std::string& d_stReplace;
    bool               d_fDoReplaceQuery;
    const pFxn_strstr  d_pfxStrnstr;
@@ -651,8 +659,9 @@ public:
    CharWalkerReplace(
         bool fDoReplaceQuery
       , bool fSearchCase
+      , const SearchSpecifier &ss
       )
-      : d_stSearch          ( g_SnR_stSearch )
+      : d_ss                ( ss )
       , d_stReplace         ( g_SnR_stReplacement )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
@@ -661,70 +670,90 @@ public:
       , d_iReplacementFiles ( 0 )
       , d_iReplacementFileCandidates ( 0 )
       {}
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
-private:
-   void DoFinalPartOfReplace(
-        PFBUF        pFBuf                           // buffer where replace is taking place
-      , Point       *curPt                           // start of match
-      , COL         &colLastPossibleLastMatchChar
-      );
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) override;
    };
 
-// replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
-void CharWalkerReplace::DoFinalPartOfReplace( PFBUF pFBuf, Point *curPt, COL &colLastPossibleLastMatchChar ) {
-   pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-   const auto ixCol( CaptiveIdxOfCol( pFBuf->TabWidth(), d_sbuf, curPt->col ) );
-   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, d_stReplace.length(), d_sbuf.length() );
-   d_sbuf.replace( ixCol, d_stSearch.length(), d_stReplace );
-   pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
-   ++d_iReplacementsMade;
-   // replacement done: position curPt->col for next search
-   if( d_stSearch.length() != 0 || d_stReplace.length() != 0 ) {
-      curPt->col += d_stReplace.length() - 1;
+CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) {
+   // replace iff string *** starting at rl[ix_curPt_Col] *** matches
+   const auto srRawSearch( d_ss.SrchStr() );
+   const auto tw( pFBuf->TabWidth() );
+   const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, colLastPossibleLastMatchChar ) );
+   d_captures.clear();
+   int idxOfLastCharInMatch;
+   if( d_ss.IsRegex() ) {
+      const auto searchChars( ixLastPossibleLastMatchChar - ix_curPt_Col + 1 );
+      const auto haystack( rl.substr( ix_curPt_Col, searchChars ) );
+      0 && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
+                      , curPt->lin, curPt->col, searchChars
+                                                    , BSR(srRawSearch), BSR(haystack)
+              );
+      const auto rv( Regex_Match( d_ss.d_re, d_captures, haystack, 0, curPt_at_BOL ? 0 : PCRE_NOTBOL ) );
+      if( rv == 0 || !d_captures[0].valid() || d_captures[0].offset() > 0 ) {
+         return CONTINUE_SEARCH;
+         }
       }
-   // did colLastPossibleLastMatchChar grow or shrink?
-   colLastPossibleLastMatchChar += d_stReplace.length() - d_stSearch.length();
-   NoLessThan( &colLastPossibleLastMatchChar, 0 );
-   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
-   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
-   }
-
-CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
-   const auto haystack( sr.substr( ix_curPt_Col, d_stSearch.length() ) );
-
-   0 && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
-                   , curPt->lin, curPt->col, d_stSearch.length()
-                                                  , BSR(d_stSearch )
-                                                                   , BSR(haystack)
-           );
-   const auto relIxMatch( d_pfxStrnstr( haystack, d_stSearch ) );
-   if( relIxMatch == stref::npos ) {
+   else {
+      const auto haystack( rl.substr( ix_curPt_Col, srRawSearch.length() ) );
+      0 && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
+                      , curPt->lin, curPt->col, srRawSearch.length()
+                                                    , BSR(srRawSearch), BSR(haystack)
+              );
+      const auto relIxMatch( d_pfxStrnstr( haystack, srRawSearch ) );
+      if( relIxMatch != 0 ) {
+         return CONTINUE_SEARCH;
+         }
+      d_captures.emplace_back( relIxMatch, haystack.substr( relIxMatch, srRawSearch.length() ) );
+      }
+   const auto ixMatchMin( ix_curPt_Col + d_captures[0].offset() );
+   const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
+   if( ixMatchMax > ixLastPossibleLastMatchChar ) { // match that lies partially OUTSIDE a BOXARG: skip
+      // 0 && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds"
+      //      , BSR(haystack)
+      //      , BSR(srRawSearch)
+      //      , static_cast<int>(colLastPossibleLastMatchChar - ixMatchMax), rl.data()+ixMatchMin
+      //      );
       return CONTINUE_SEARCH;
       }
-   const auto idxOfLastCharInMatch( curPt->col + d_stSearch.length() - 1 );
-   if( idxOfLastCharInMatch > colLastPossibleLastMatchChar ) { // match that lies partially OUTSIDE a BOXARG: skip
-      0 && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds"
-           , BSR(haystack)
-           , BSR(d_stSearch)
-           , static_cast<int>(colLastPossibleLastMatchChar - idxOfLastCharInMatch), sr.data()+ix_curPt_Col
-           );
-      return CONTINUE_SEARCH;
-      }
+   const auto xMatchMin( ColOfFreeIdx( tw, rl, ixMatchMin ) );
+   const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
    ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
+
+   // replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
+   auto performReplace = [&]() -> void {
+      pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
+      const auto ixdestMatchMin( ColOfFreeIdx( tw, d_sbuf, xMatchMin ) );
+      const auto ixdestMatchMax( ColOfFreeIdx( tw, d_sbuf, xMatchMax ) );
+      const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
+      0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, d_stReplace.length(), d_sbuf.length() );
+      d_sbuf.replace( ixdestMatchMin, ixdestMatchMax - ixdestMatchMin + 1, d_stReplace );
+      pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
+      ++d_iReplacementsMade;
+      // replacement done: position curPt->col for next search
+      if( destMatchChars != 0 || d_stReplace.length() != 0 ) {
+         curPt->col += d_stReplace.length() - 1;
+         }
+      // did colLastPossibleLastMatchChar grow or shrink?
+      colLastPossibleLastMatchChar += d_stReplace.length() - destMatchChars;
+      NoLessThan( &colLastPossibleLastMatchChar, 0 );
+      // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
+      // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
+      };
+
    if( !d_fDoReplaceQuery ) { // non-interactive-replace?
-      DoFinalPartOfReplace( pFBuf , curPt , colLastPossibleLastMatchChar );
+      performReplace();
       return REREAD_LINE_CONTINUE_SEARCH;
       }
    //##### interactive-replace (mfreplace/qreplace) ONLY ...
    const auto pView( pFBuf->PutFocusOn() );
    pView->FreeHiLiteRects();
    DispDoPendingRefreshesIfNotInMacro();
+   const auto matchCols( xMatchMax - xMatchMin + 1 );
  #if 1
-   curPt->ScrollTo( d_stSearch.length() );
+   curPt->ScrollTo( matchCols );
  #else
-   pView->MoveAndCenterCursor( *curPt, d_stSearch.length() );
+   pView->MoveAndCenterCursor( *curPt, matchCols );
  #endif
-   pView->SetMatchHiLite( *curPt, d_stSearch.length(), true );
+   pView->SetMatchHiLite( *curPt, matchCols, true );
    DispDoPendingRefreshesIfNotInMacro();
    HiLiteFreer hf;
                                        //  allowed responses
@@ -738,7 +767,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_c
       case 'q': SetUserChoseEarlyCmdTerminate();
                 return STOP_SEARCH;
       case 'a': d_fDoReplaceQuery = false;           //  fall thru!
-      case 'y': DoFinalPartOfReplace( pFBuf, curPt, colLastPossibleLastMatchChar );
+      case 'y': performReplace();
                 return REREAD_LINE_CONTINUE_SEARCH;
       case 'n': return CONTINUE_SEARCH;
       }
@@ -804,14 +833,6 @@ int FBUF::SyncWriteIfDirty_Wrote() {
 
 GLOBAL_CONST char szSetfile[] = "setfile";
 GLOBAL_CONST char kszCompile[] = "<compile>";
-
-#if USE_PCRE
-bool SearchSpecifier::HasError() const { return d_reCompileErr; }
-bool SearchSpecifier::IsRegex()  const { return d_re != nullptr; }
-#else
-bool SearchSpecifier::HasError() const { return false; }
-bool SearchSpecifier::IsRegex()  const { return false; }
-#endif
 
 STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
    VS_( if( s_searchSpecifier ) { s_searchSpecifier->Dbgf( "befor" ); } )
@@ -1076,8 +1097,9 @@ bool ARG::mfgrep() {
    auto pGen( GrepMultiFilenameGenerator( gen_info, sizeof gen_info ) );
    if( pGen ) { 1 && DBG( "%s using %s", __PRETTY_FUNCTION__, gen_info );
       Path::str_t pbuf;
-      while( pGen->VGetNextName( pbuf ) )
+      while( pGen->VGetNextName( pbuf ) ) {
          MFGrepProcessFile( pbuf.c_str(), pSrchr );
+         }
       Delete0( pGen );
       }
    else {
@@ -1089,7 +1111,7 @@ bool ARG::mfgrep() {
    }
 
 #if USE_PCRE
-STIL bool CheckRegExpReplacementString( CompiledRegex *, PCChar ) { return false; }
+STIL bool CheckRegExpReplacementString( CompiledRegex *, PCChar ) { return true; }
 #endif
 
 STATIC_FXN void MFReplaceProcessFile( PCChar filename, CharWalkerReplace *pMrcw ) {
@@ -1122,16 +1144,9 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
       return false;
       }
    }
-#if USE_PCRE
-   s_fSearchNReplaceUsingRegExp = arg.d_cArg >= 2;
-   if( s_fSearchNReplaceUsingRegExp ) {
-      s_pSandR_CompiledSearchPattern = Regex_Delete( s_pSandR_CompiledSearchPattern );
-      s_pSandR_CompiledSearchPattern = Regex_Compile( g_SnR_stSearch.c_str(), g_fCase );
-      if( !s_pSandR_CompiledSearchPattern ) {
-         return false; // Regex_Compile internally shows diagnostics, but doesn't hv pause logic of ErrorDialogBeepf
-         }
+   if( !SetNewSearchSpecifierOK( g_SnR_stSearch.c_str(), arg.d_cArg >= 2 ) ) {
+      return false;
       }
-#endif
    {
    bool fGotAnyInputFromKbd;
    const auto pCmd( GetTextargString( g_SnR_stReplacement, szReplace, 0, nullptr, gts_DfltResponse+gts_OnlyNewlAffirms, &fGotAnyInputFromKbd ) );
@@ -1143,13 +1158,13 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
       return false;
       }
 #if USE_PCRE
-   if(   s_fSearchNReplaceUsingRegExp
-      && !CheckRegExpReplacementString( s_pSandR_CompiledSearchPattern, g_SnR_stReplacement.c_str() )
+   if(   s_searchSpecifier->IsRegex()
+      && !CheckRegExpReplacementString( s_pSandR_CompiledSearchRegex, g_SnR_stReplacement.c_str() )
      ) {
       return ErrorDialogBeepf( "Invalid replacement pattern" );
       }
 #endif
-   CharWalkerReplace mrcw( fInteractive, arg.d_fMeta ? !g_fCase : g_fCase );
+   CharWalkerReplace mrcw( fInteractive, arg.d_fMeta ? !g_fCase : g_fCase, *s_searchSpecifier );
    if( fMultiFileReplace ) {
       const auto startingTopFbuf( g_CurFBuf() );
       auto pGen( GrepMultiFilenameGenerator() );
@@ -1304,7 +1319,7 @@ void SearchSpecifier::CaseUpdt() {
    if( d_re && (d_fRegexCase != g_fCase) ) {
       d_fRegexCase = g_fCase;
       // recompile
-      d_re = Regex_Delete( d_re );
+      d_re = Regex_Delete0( d_re );
       d_re = Regex_Compile( d_rawStr.c_str(), d_fRegexCase );
       if( !d_re ) {
          d_reCompileErr = true;
@@ -1339,7 +1354,7 @@ SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) {  // Assert( fReg
 
 SearchSpecifier::~SearchSpecifier() {
 #if USE_PCRE
-   d_re = Regex_Delete( d_re );
+   d_re = Regex_Delete0( d_re );
 #endif
    }
 
@@ -1392,7 +1407,7 @@ FileSearcherString::FileSearcherString( const SearchScanMode &sm, const SearchSp
    {
    }
 
-stref FileSearcherString::VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) {
+stref FileSearcherString::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
    stref offset_eaten( src ); offset_eaten.remove_prefix( src_offset );
    const auto ixMatch( d_pfxStrnstr( offset_eaten, d_searchKey ) );
    if( ixMatch == stref::npos ) {
@@ -1413,23 +1428,14 @@ FileSearcherRegex::FileSearcherRegex( const SearchScanMode &sm, const SearchSpec
 
 #endif
 
-STATIC_FXN PCChar ShowHaystackHas( HaystackHas has ) {
-   switch( has ) {
-      default:                   return "???";
-      case STR_HAS_BOL_AND_EOL:  return "STR_HAS_BOL_AND_EOL";
-      case STR_MISSING_BOL    :  return "STR_MISSING_BOL";
-      case STR_MISSING_EOL    :  return "STR_MISSING_EOL";
-      }
-   }
-
 #if USE_PCRE
 
-stref FileSearcherRegex::VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) {
+stref FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
    VS_(
                DBG( "++++++" );
-               DBG( "RegEx?[%d-],%s='%*.*s'", src_offset, ShowHaystackHas(haystack_has), src.length() - src_offset, src.length() - src_offset, src.data() + src_offset );
+               DBG( "RegEx?[%d-],%s='%*.*s'", src_offset, src.length() - src_offset, src.length() - src_offset, src.data() + src_offset );
       )
-   const auto rv( Regex_Match( d_ss.d_re, d_captures, src, src_offset, haystack_has ) );
+   const auto rv( Regex_Match( d_ss.d_re, d_captures, src, src_offset, pcre_exec_options ) );
    VS_(
       if( rv ) {                                   DBG( "RegEx:->MATCH=(%d L %d)='%*.*s'", rv - src.data(), d_captures[0].length(), d_captures[0].length(), d_captures[0].length(), rv );
          }                                         DBG( "RegEx:->NO MATCH" );
@@ -1558,7 +1564,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ REPLACES FileSearcher::VFindMatches_, and
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
-stref  FileSearcherFast::VFindStr_( stref src, sridx src_offset, HaystackHas haystack_has ) { Assert( 0 != 0 ); return stref(); }
+stref  FileSearcherFast::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) { Assert( 0 != 0 ); return stref(); }
 
 //===============================================
 
@@ -1579,7 +1585,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
             ; xCol <= lnCols // <= so empty line can match Regex
             ; iC   = pcc.c2i( curPt.col ) + 1, xCol = pcc.i2c( iC )
             ) {
-            const auto srMatch( VFindStr_( d_sbuf, iC, STR_HAS_BOL_AND_EOL ) );
+            const auto srMatch( VFindStr_( d_sbuf, iC, 0 ) );
             if( srMatch.empty() ) {
                break; // no matches on this line!
                }
@@ -1608,7 +1614,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to
          // prev one)
-         #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? STR_HAS_BOL_AND_EOL : STR_MISSING_EOL)
+         #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? 0 : PCRE_NOTBOL)
          const auto srMatch( VFindStr_( haystack, 0, SET_HaystackHas(0) ) );
          if( !srMatch.empty() ) {
             COL goodMatchChars( srMatch.length() );
@@ -1723,11 +1729,11 @@ public:
       , d_stackIx( 0 )
       , d_fClosureFound( false )
       { /*DBG("");*/ Push( chStart ); }
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) override;
    };
 
-CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
-   const char ch( sr[ix_curPt_Col] );
+CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) {
+   const char ch( rl[ix_curPt_Col] );
    PCChar pA, pB;
    if( d_fFwd ) { pA = g_delims      ; pB = g_delimMirrors; }
    else         { pA = g_delimMirrors; pB = g_delims      ; }
@@ -1866,10 +1872,10 @@ class CharWalkerPMWord : public CharWalker_ {
    bool d_fPMWordSearchMeta;
 public:
    CharWalkerPMWord( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) override;
    };
 
-CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) {
    if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt->col is FIRST CHAR OF WORD
       if( !isWordChar( sr[ix_curPt_Col] ) || (ix_curPt_Col > 0 && isWordChar( sr[ix_curPt_Col-1] )) ) {
          return CONTINUE_SEARCH;
