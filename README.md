@@ -56,6 +56,7 @@ The K source code distro contains, and K uses, the following source code from ex
 
  * after cloning this repo, run `./install_build_tools_ubuntu.sh` to install the necessary packages.
     * I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it probably will not build with any lesser GCC version.
+    * Requires Boost 1.54 or newer (1.53's boost::string_ref contains (at least in CentOS 7.2.1511) a compile-breaking bug)
 
 ## To build
 
@@ -80,6 +81,7 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
 
 The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
+Update 2016/04: I havn't used K on high-res monitors much lately, but haven't experienced this problem in recent memory (on Win 7, 8.1, or 10).
 
 ## Linux key-decoding status quo
 
@@ -141,10 +143,11 @@ The following outline describes all possible argtypes.  Different `ARG::function
         * `NULLEOL`: from cursor to end of the line.
              * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` string value, truncating it at the first whitespace character or in other "magical" ways (see `FBUF::GetLineIsolateFilename()`).
         * `NULLEOW`: from cursor and including all contiguous "word characters" through end of line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`). 
-             * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position. 
+             * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position.
  * `TEXTARG`: when a string value is passed to `ARG::anyfunction()`.  Generated when: 
       * a literal string arg entered: `arg` <user types characters to create the string text> `anyfunction`
       * `arg` <horizontal cursor movement selecting a segment of the current line> `anyfunction`.  Internally, if `ARG::anyfunction()` is specified as consuming `TEXTARG` qualified with `BOXSTR`, this selected text is transformed into a `TEXTARG` (string value) which is passed to `ARG::anyfunction()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
+      * EX: `arg arg TEXTARG psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the regular expression TEXTARG.
  * `BOXARG`: if `ARG::anyfunction()` is specified as accepting `BOXARG`, the user (with the editor in boxmode, the default), to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` caveat above) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
  * `LINEARG`: if `function` is specified as accepting `LINEARG` the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
  * `STREAMARG`: this argtype is seldom used and should be considered "under development."
@@ -180,6 +183,7 @@ The editor implements a large number of functions, all of which the user can inv
     * [Exuberant Ctags](http://ctags.sourceforge.net/) `ctags.exe` is invoked to rebuild the "tags database" at the close of each successful build of K.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
+ * PCRE Regular-expression (regex) search & replace: all search and replace functions, when prefixed with `arg arg` (2-arg), operate in regex mode.
  * `psearch` (`F3`) / `msearch` (`F4`) (referred to as `xsearch` in the following text) search forward / backward from the cursor position.
     * `alt+F3` opens a buffer containing previous search keys.
     * `xsearch` (w/o arg) searches for the next match of the current search key.
@@ -187,13 +191,14 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "searchkey" `xsearch` changes the current search key to "searchkey" and searches for the next match.
     * `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
     * `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
-    * Regular-expression (PCRE) search is supported.
+    * In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression.
  * text-replace functions (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
-     * noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
-     * noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
-     * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
-     * `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple files.
-     * Regular-expression replacement is not (yet) supported.
+    * noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
+    * noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
+    * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
+    * `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple entire files.
+    * Regular-expression (PCRE) replace is supported: in regex mode (when prefixed with `arg arg`) the search string is treated as a regular expression, and replace functions support the replacement string ; insertion of regex captures in the replacement string via `\n` where `n` is the capture number.
+    * In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression, and the replacement string may reference regex captures in the replacement string via `\n` where `n` is the (single-digit) capture number.
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
 
@@ -217,7 +222,7 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
 
 # Historical Notes
 
-K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor", released as `M.EXE` for DOS, and `MEP.EXE` for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
+K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor", released as `M.EXE` for DOS, and `MEP.EXE` for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to Larry Osterman, a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
 
 > Programming editor -- what editor will we have?  Need better than a simple
 > system editor (Better than VI!) [They ended up with ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M), the "Microsoft
@@ -225,9 +230,9 @@ K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bi
 
 K development started (in spirit) in 1988 when I started writing extensions for the Microsoft [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next Microsoft C releases (6.0, 6.0a, 7.x) for DOS and OS/2, Microsoft bloated-up M into [PWB](http://www.texteditors.org/cgi-bin/wiki.pl?PWB) (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
-2014/10: an "employment transition" into an (effectively) Linux-only environment (willingly) forced me to port K to Linux; I had wanted to do this for years, but lacked the motivation: the prospect of working daily on a platform w/o K provided the needed motivation!
+2014/10: an "employment transition" into an (effectively) Linux-only environment (willingly) forced me to port K to (x64) Linux; I had wanted to do this for years, but lacked the motivation: the prospect of working daily on a platform w/o K provided the needed motivation!
 
-2014/11/23: I just discovered ["Q" Text Editor](http://www.schulenberg.com/page2.htm), another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
+2014/11: I just discovered ["Q" Text Editor](http://www.schulenberg.com/page2.htm), another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
 
 ## Toolchain notes
 
