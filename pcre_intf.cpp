@@ -145,8 +145,8 @@ RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCapture
    }
 
 CompiledRegex *Regex_Delete0( CompiledRegex *pcr ) {
-   Delete0( pcr );
-   return pcr;
+   delete pcr;
+   return nullptr;
    }
 
 CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase ) {
