@@ -1534,6 +1534,53 @@ bool ARG::execute() {
    return rv;
    }
 
+int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, const ColoredStrefs &csrs ) {
+   //-------------------------------------------------------------
+   //
+   // chGetAnyMacroPromptResponse()
+   //
+   // rtns -1 if no/wrong prompt response seen
+   // rtns 0 if neutral response
+   // rtns char if actual response
+   //
+   int chMacroPromptResponse( Interpreter::chGetAnyMacroPromptResponse() );
+   if(   (chMacroPromptResponse == Interpreter::AskUser)
+      || (chMacroPromptResponse == Interpreter::UseDflt && ((chMacroPromptResponse=chDfltMacroResponse) == 0))
+      || (strchr( szAllowedResponses, (chMacroPromptResponse=tolower( chMacroPromptResponse )) ) == nullptr)
+     ) {
+      DispDoPendingRefreshes();
+      const auto xCol( VidWrColoredStrefs( DialogLine(), 0, csrs ) );
+      CursorLocnOutsideView_Set( DialogLine(), xCol );
+      ViewCursorRestorer cr;
+      PCV;
+      const auto yStart( pcv->Origin().lin );
+      char fdbk[3] = { 0,'?',0 };
+      do {
+         VideoFlusher vf;
+         const auto pCmd( CmdFromKbdForExec() );
+         if( pCmd->IsFnCancel() ) {
+            STATIC_CONST char kszCancelled[] = "cancelled";
+            VidWrStrColor( DialogLine(), xCol, kszCancelled, KSTRLEN(kszCancelled), g_colorInfo, false );
+            0 && DBG( "%s- -1", __func__ );
+            return -1;
+            }
+         #if 1
+         if( pCmd->d_func == &ARG::arg   ) { pcv->ScrollOrigin_Y_Abs( yStart ); continue; } else
+         if( pCmd->d_func == &ARG::up    ) { pcv->ScrollOrigin_Y_Rel(   -1   ); continue; } else
+         if( pCmd->d_func == &ARG::down  ) { pcv->ScrollOrigin_Y_Rel(   +1   ); continue; } else
+         if( pCmd->d_func == &ARG::left  ) { pcv->ScrollOrigin_X_Rel(   -1   ); continue; } else
+         if( pCmd->d_func == &ARG::right ) { pcv->ScrollOrigin_X_Rel(   +1   ); continue; } else
+         #endif
+            {
+            fdbk[0] = chMacroPromptResponse = tolower( pCmd->IsFnGraphic() && isprint( pCmd->d_argData.chAscii() ) ? pCmd->d_argData.chAscii() : chDfltInteractiveResponse );
+            VidWrStrColor( DialogLine(), xCol, fdbk, sizeof(fdbk)-1, g_colorInfo, false );
+            }
+         } while( strchr( szAllowedResponses, chMacroPromptResponse ) == nullptr );
+      }
+   0 && DBG( "%s- '%c'", __func__, chMacroPromptResponse );
+   return chMacroPromptResponse;
+   }
+
 int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... )
    {
    0 && DBG( "%s+ '%s'", __func__, pszPrompt );

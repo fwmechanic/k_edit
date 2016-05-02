@@ -111,8 +111,6 @@ public:
 
 extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests );
 
-extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... ) ATTR_FORMAT(4, 5);
-
 // Display
 
 extern   void  UnhideCursor();
@@ -191,8 +189,8 @@ extern int DispScreenRedraws();
 struct DisplayDriverApi {
    void  (*DisplayNoise)( PCChar buffer );
    void  (*DisplayNoiseBlank)();
-   COL   (*VidWrStrColor      )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, int colorAttribute, bool fPadWSpcsToEol );
-   COL   (*VidWrStrColors     )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fFlushNow );
+   COL   (*VidWrStrColor    )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, int colorAttribute, bool fPadWSpcsToEol );
+   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fFlushNow );
    };
 
 extern DisplayDriverApi g_DDI;
@@ -205,6 +203,23 @@ extern void ConIO_Shutdown();
  (g_DDI.VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol ))
 #define VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fFlushNow )\
  (g_DDI.VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fFlushNow ))
+
+class ColoredStref_ {
+   const bool    d_padToEol;
+   const uint8_t d_color;
+   const stref   d_sr;
+public:
+   ColoredStref_( uint8_t color_, stref sr_, bool padToEol_=false ) : d_padToEol(padToEol_), d_color(color_), d_sr(sr_) {}
+   COL VidWr( LINE yLine, COL xCol ) const {
+      VidWrStrColor( yLine, xCol, d_sr.data(), d_sr.length(), d_color, d_padToEol );
+      return d_sr.length();
+      }
+   };
+typedef std::vector<ColoredStref_> ColoredStrefs;
+extern COL VidWrColoredStrefs( LINE yLine, COL xCol, const ColoredStrefs &csrs, bool fFlushNow=true );
+
+extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... ) ATTR_FORMAT(4, 5);
+extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, const ColoredStrefs &csrs );
 
 extern int   DispRawDialogStr( PCChar lbuf );
 extern int   VMsg( PCChar pszFormat, va_list val );

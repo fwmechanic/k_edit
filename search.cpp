@@ -313,7 +313,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
 
 GLOBAL_VAR bool g_fFastsearch = true;
 
-struct SearchSpecifier {
+class SearchSpecifier {
    std::string  d_rawStr;
 #if USE_PCRE
    bool   d_fRegexCase;   // state when last (re-)init'd
@@ -327,6 +327,7 @@ public:
    ~SearchSpecifier();
    bool   MatchNegated() const { return d_fNegateMatch; };
 #if USE_PCRE
+   CompiledRegex *re() const { return d_re; }
    bool   IsRegex()  const { return d_re != nullptr; }
    bool   HasError() const { return IsRegex() && d_reCompileErr; }
    int    MinHaystackLen() const { return IsRegex() ? 1 : d_rawStr.length(); }
@@ -666,27 +667,29 @@ class CharWalkerReplace : public CharWalker_ {
       void AddBackRef( int ix ) {
          d_replaceRefs.emplace_back( false, ix );
          }
-      replaceDope_t( stref srReplace )
+      replaceDope_t( stref srReplace, const SearchSpecifier &ss )
          : d_srRawReplace( srReplace )
          {
          stref srRaw( d_srRawReplace );
-         constexpr char chBR( '\\' );
-         sridx start( 0 );
-         for(;;) {
-            const auto ix( srRaw.find( chBR ) );
-            if( ix == eosr || ix == srRaw.length()-1 ) { break; }
-            if( srRaw[ix+1]==chBR ) {
-               AddLitRef( stref( srRaw.data(), ix+1 ) );
-               srRaw.remove_prefix( ix+2 );
-               }
-            else {
-               if( isdigit( srRaw[ix+1] ) ) {
-                  const auto brnum( srRaw[ix+1] - '0' );
-                  AddLitRef( stref( srRaw.data(), ix ) );
-                  AddBackRef( brnum );
+         if( ss.IsRegex() ) {
+            constexpr char chBR( '\\' );
+            sridx start( 0 );
+            for(;;) {
+               const auto ix( srRaw.find( chBR ) );
+               if( ix == eosr || ix == srRaw.length()-1 ) { break; }
+               if( srRaw[ix+1]==chBR ) {
+                  AddLitRef( stref( srRaw.data(), ix+1 ) );
                   srRaw.remove_prefix( ix+2 );
                   }
                else {
+                  if( isdigit( srRaw[ix+1] ) ) {
+                     const auto brnum( srRaw[ix+1] - '0' );
+                     AddLitRef( stref( srRaw.data(), ix ) );
+                     AddBackRef( brnum );
+                     srRaw.remove_prefix( ix+2 );
+                     }
+                  else {
+                     }
                   }
                }
             }
@@ -694,20 +697,35 @@ class CharWalkerReplace : public CharWalker_ {
          }
       };
    replaceDope_t d_replaceDope;
-   std::string d_replaceCache;
+   std::string   d_replaceCache;
+   ColoredStrefs d_promptCsrs;
    stref GenerateReplacement() {
+      d_promptCsrs.reserve( d_replaceDope.d_replaceRefs.size() );
+      d_promptCsrs.clear();
+      d_promptCsrs.emplace_back( g_colorStatus, "Replace this occurrence? (Yes/No/All/Quit):" );
       if( d_replaceDope.d_replaceRefs.size()==1 ) {
-         return d_replaceDope.d_replaceRefs[0].d_isLit ? d_replaceDope.d_Literal[0] : d_captures[0].value();
+         const auto isLit( d_replaceDope.d_replaceRefs[0].d_isLit );
+         const auto rv_only( isLit ? d_replaceDope.d_Literal[0] : d_captures[0].value() );
+         d_promptCsrs.emplace_back( isLit ? g_colorInfo : g_colorError, rv_only );
+         d_promptCsrs.emplace_back( g_colorStatus, "", true );
+         return rv_only;
          }
       d_replaceCache.clear();
       for( const auto &ent : d_replaceDope.d_replaceRefs ) {
+         stref sr;
          if( ent.d_isLit ) {
-            d_replaceCache.append( BSR2STR( ent.d_contentIx < d_replaceDope.d_Literal.size() ? d_replaceDope.d_Literal[ent.d_contentIx] : "" ) );
+            sr = ent.d_contentIx < d_replaceDope.d_Literal.size() ? d_replaceDope.d_Literal[ent.d_contentIx] : "";
+            d_replaceCache.append( BSR2STR( sr ) );
             }
          else {
-            d_replaceCache.append( BSR2STR( ent.d_contentIx < d_captures.size() ? d_captures[ent.d_contentIx].value() : "" ) );
+            sr = ent.d_contentIx < d_captures.size() ? d_captures[ent.d_contentIx].value() : "";
+            d_replaceCache.append( BSR2STR( sr ) );
+            }
+         if( sr.length() > 0 ) {
+            d_promptCsrs.emplace_back( ent.d_isLit ? g_colorInfo : g_colorError, sr );
             }
          }
+      d_promptCsrs.emplace_back( g_colorStatus, " ", true );
       return stref( d_replaceCache );
       }
    bool              d_fDoReplaceQuery;
@@ -723,7 +741,7 @@ public:
       , const SearchSpecifier &ss
       )
       : d_ss                ( ss )
-      , d_replaceDope       ( g_SnR_stReplacement )
+      , d_replaceDope       ( g_SnR_stReplacement, ss )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
       , d_iReplacementsPoss ( 0 )
@@ -748,7 +766,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
                       , curPt->lin, curPt->col, searchChars
                                                     , BSR(srRawSearch), BSR(haystack)
               );
-      const auto rv( Regex_Match( d_ss.d_re, d_captures, haystack, 0, curPt_at_BOL ? 0 : PCRE_NOTBOL ) );
+      const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, 0, curPt_at_BOL ? 0 : PCRE_NOTBOL ) );
       if( rv == 0 || !d_captures[0].valid() || d_captures[0].offset() > 0 ) {
          return CONTINUE_SEARCH;
          }
@@ -822,7 +840,8 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
                                        //  |       interactive dflt: cause retry by NOT matching any explicit case below
                                        //  |       |    macro dflt:
                                        //  |       |    |
-   const auto ch( chGetCmdPromptResponse( "ynaq", '?', 'a', "Replace this occurrence? (Yes/No/All/Quit): " ) );
+
+   const auto ch( chGetCmdPromptResponse( "ynaq", '?', 'a', d_promptCsrs ) );
    switch( ch ) {
       default:  Assert( 0 ); // chGetCmdPromptResponse has bug or params wrong
       case -1 :                                      //  fall thru!
@@ -1206,7 +1225,7 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
       return false;
       }
    }
-   if( !SetNewSearchSpecifierOK( g_SnR_stSearch.c_str(), arg.d_cArg >= 2 ) ) {
+   if( !SetNewSearchSpecifierOK( g_SnR_stSearch, arg.d_cArg >= 2 ) ) {
       return false;
       }
    {
@@ -1216,7 +1235,7 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
       return false;
       }
    }
-   if( fMultiFileReplace && g_SnR_stReplacement.c_str()[0] == 0 && !ConIO::Confirm( "Empty replacement string, confirm: " ) ) {
+   if( fMultiFileReplace && g_SnR_stReplacement.empty() && !ConIO::Confirm( "Empty replacement string, confirm: " ) ) {
       return false;
       }
 #if USE_PCRE
@@ -1464,7 +1483,7 @@ void FileSearcher::Dbgf() const {
 
 FileSearcherString::FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh )
    : FileSearcher( sm, ss, mh )
-   , d_searchKey( ss.d_rawStr )
+   , d_searchKey( ss.SrchStr() )
    , d_pfxStrnstr( g_fCase ? strnstr : strnstri )
    {
    }
@@ -1497,7 +1516,7 @@ stref FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_o
                DBG( "++++++" );
                DBG( "RegEx?[%d-],%s='%*.*s'", src_offset, src.length() - src_offset, src.length() - src_offset, src.data() + src_offset );
       )
-   const auto rv( Regex_Match( d_ss.d_re, d_captures, src, src_offset, pcre_exec_options ) );
+   const auto rv( Regex_Match( d_ss.re(), d_captures, src, src_offset, pcre_exec_options ) );
    VS_(
       if( rv ) {                                   DBG( "RegEx:->MATCH=(%d L %d)='%*.*s'", rv - src.data(), d_captures[0].length(), d_captures[0].length(), d_captures[0].length(), rv );
          }                                         DBG( "RegEx:->NO MATCH" );
@@ -1515,7 +1534,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
    : FileSearcher( sm, ss, mh )
    , d_pfxStrnstr( g_fCase ? strnstr : strnstri )
    {
-   stref pS( ss.d_rawStr );
+   stref pS( ss.SrchStr() );
    // BUGBUG deprecate for now 20150101 KG
    const char AltSepChar
       (

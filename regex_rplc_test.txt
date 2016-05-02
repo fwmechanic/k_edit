@@ -1,0 +1,5 @@
+
+arg arg qreplace "first([a-z0-9]+)second([a-z0-9]+)again" nl "*\1*\2*"
+arg arg replace "first([a-z0-9]+)second([a-z0-9]+)again" nl "*\1*\2*" nl <a nl
+
+firstcapt1secondcapt2again

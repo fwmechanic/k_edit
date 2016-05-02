@@ -2584,6 +2584,14 @@ void LineColors::Cat( const LineColors &rhs ) {  0 && DBG( "CAT[%3d]", cols() );
       }
    }
 
+COL VidWrColoredStrefs( LINE yLine, COL xCol, const ColoredStrefs &csrs, bool fFlushNow ) {
+   VideoFlusher vf( fFlushNow );
+   for( const auto &csr : csrs ) {
+      xCol += csr.VidWr( yLine, xCol );
+      }
+   return xCol;
+   }
+
 class ColoredLine {
    size_t      d_curLen;
    linebuf     d_charBuf;
@@ -3188,21 +3196,17 @@ bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ) {
    return fEntirelyRmvd;
    }
 
-void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset ) {
-   const auto errMsgLen( Strlen(errMsg) );
-   const auto pszSearchStrLen( Strlen(pszSearchStr) );
-   const char kszRexFail[] = "Regex err %s: %s ";
-   SprintfBuf buf( kszRexFail, errMsg, pszSearchStr );
-   0 && DBG( "%s", buf.k_str() );
-   0 && DBG( "%s, errOffset=%d", buf.k_str(), errOffset );
-   ColoredLine                           out;
-                                         out.Cat( g_colorStatus, "Regex err" );
-                                         out.Cat( g_colorError , errMsg );
-                                         out.Cat( g_colorStatus, ": " );
-   if( errOffset > 1 ) {                 out.Cat( g_colorStatus, stref( pszSearchStr            , errOffset -1 ) ); } // leading OK part of pattern
-                                         out.Cat( g_colorStatus, stref( pszSearchStr+errOffset  , 1            ) );  // err char of pattern
-   if( pszSearchStrLen > errOffset+1 ) { out.Cat( g_colorStatus, pszSearchStr+errOffset+1                        ); } // post-err part of pattern
-                                         out.VidWrLine( DialogLine() );
+void Display_hilite_regex_err( PCChar errMsg, PCChar searchStr, int errOffset ) {
+   const auto searchStrLen( Strlen(searchStr) );
+   const auto tail( searchStrLen > errOffset+1 );
+   ColoredStrefs         csrs;csrs.reserve( 6 );
+                         csrs.emplace_back( g_colorStatus, "Regex err" );
+                         csrs.emplace_back( g_colorError , errMsg );
+                         csrs.emplace_back( g_colorStatus, ": " );
+   if( errOffset > 1 ) { csrs.emplace_back( g_colorInfo  , stref( searchStr            , errOffset -1 )        ); } // leading OK part of pattern
+                         csrs.emplace_back( g_colorError , stref( searchStr+errOffset  , 1            ), !tail );   // err char of pattern
+   if( tail )          { csrs.emplace_back( g_colorInfo  , searchStr+errOffset+1                       ,  tail ); } // post-err part of pattern
+   VidWrColoredStrefs( DialogLine(), 0, csrs );
    }
 
 //
