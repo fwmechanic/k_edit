@@ -37,11 +37,12 @@ private:
       int oFirst    = -1;
       int oPastLast = -1;
       bool NoMatch() const { return oFirst == -1 && oPastLast == -1; }
-      int Len() const { return oPastLast - oFirst; }
+      int  Len()     const { return oPastLast - oFirst; }
       };
-   pcre       *d_pPcre;
-   pcre_extra *d_pPcreExtra;
-   const int   d_maxPossCaptures;
+   pcre                    *d_pPcre;
+   pcre_extra              *d_pPcreExtra;
+   const int                d_maxPossCaptures;
+   const int                d_ovecsize;
    std::vector<pcreCapture> d_pcreCapture;
 public:
    // User code SHOULD NOT call this ctor, _SHOULD_ CREATE CompiledRegex via Regex_Compile!
@@ -79,8 +80,14 @@ CompiledRegex::CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCa
    : d_pPcre(pPcre)
    , d_pPcreExtra(pPcreExtra)
    , d_maxPossCaptures(maxPossCaptures)
-   , d_pcreCapture(maxPossCaptures + ((maxPossCaptures+(CAPT_DIVISOR-1))/CAPT_DIVISOR)) // oddity: PCRE needs last third of this buffer for workspace
-   {}
+   , d_ovecsize( 3*maxPossCaptures )
+   , d_pcreCapture( d_ovecsize/2 )     //
+   {
+   CompileTimeAssert( (sizeof( d_pcreCapture[0] ) / sizeof( int )) == 2 );  // each d_pcreCapture[] contains exactly 2 ints
+   const auto ints_in_ovec( d_pcreCapture.size() * 2 );
+   0 && DBG( "%s: d_maxPossCaptures=%d, %d, %d", __func__, d_maxPossCaptures, ints_in_ovec, d_ovecsize );
+   // Assert( ints_in_ovec > d_ovecsize );
+   }
 
 CompiledRegex::~CompiledRegex() {
    (*pcre_free)( d_pPcre );
@@ -96,11 +103,24 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
          , haystack.length()
          , haystack_offset
          , pcre_exec_options
-         , &d_pcreCapture[0].oFirst
-         , d_pcreCapture.size() * 3
+   // Captured substrings are returned to the caller via a vector of integers whose address is passed in ovector.
+         , &d_pcreCapture[0].oFirst // ovector: a vector of ints; each capture consumes TWO ints
+   // The number of elements in the vector is passed in ovecsize, which must be a non-negative number.
+   // Note: this argument is NOT the size of ovector in bytes.
+   // The first two-thirds of the vector is used to pass back captured substrings, each substring using a pair
+   // of integers. The remaining third of the vector is used as workspace by pcre_exec() while matching capturing
+   // subpatterns, and is not available for passing back information. The number passed in ovecsize should always
+   // be a multiple of three. If it is not, it is rounded down.
+         , d_pcreCapture.size() * 2 // ovecsize: # of integers in *ovect
          )
       );
    0 && DBG( "CompiledRegex::Match returned %d", rc );
+   // The first pair of integers, ovector[0] and ovector[1], identify the portion of the subject string matched by
+   // the entire pattern.  The next pair is used for the first capturing subpattern, and so on.  The value returned
+   // by pcre_exec() is one more than the highest numbered pair that has been set.  For example, if two substrings
+   // have been captured, the returned value is 3.  If there are no capturing subpatterns, the return value from a
+   // successful match is 1, indicating that just the first pair of offsets has been set.
+
    captures.clear(); // before any return
    if( rc <= 0 ) {
       switch( rc ) {
