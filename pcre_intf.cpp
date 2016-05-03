@@ -82,7 +82,7 @@ CompiledRegex::CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCa
    {
    CompileTimeAssert( num_ints_in_pcreCapture == 2 );  // each d_pcreCapture[] contains exactly 2 ints
    const auto ints_in_ovec( d_pcreCapture.size() * num_ints_in_pcreCapture );
-   1 && DBG( "%s: d_maxPossCaptures=%d, %d", __func__, d_maxPossCaptures, ints_in_ovec );
+   1 && DBG( "%s: d_maxPossCaptures=%d, %" PR_SIZET, __func__, d_maxPossCaptures, ints_in_ovec );
    }
 
 CompiledRegex::~CompiledRegex() {
