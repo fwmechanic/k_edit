@@ -39,16 +39,15 @@ private:
       bool NoMatch() const { return oFirst == -1 && oPastLast == -1; }
       int  Len()     const { return oPastLast - oFirst; }
       };
+   STATIC_VAR constexpr size_t num_ints_in_pcreCapture = sizeof( pcreCapture ) / sizeof( int ); // each pcreCapture contains exactly 2 ints
    pcre                    *d_pPcre;
    pcre_extra              *d_pPcreExtra;
    const int                d_maxPossCaptures;
-   const int                d_ovecsize;
    std::vector<pcreCapture> d_pcreCapture;
 public:
    // User code SHOULD NOT call this ctor, _SHOULD_ CREATE CompiledRegex via Regex_Compile!
    CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures ); // called ONLY by Regex_Compile (when it is successful)
    ~CompiledRegex();
-   int MaxPossCaptures() const { return d_maxPossCaptures; }
    RegexMatchCaptures::size_type Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
    };
 
@@ -75,18 +74,15 @@ void PCRE_API_INIT() {
 
 //------------------------------------------------------------------------------
 
-enum { CAPT_DIVISOR = 2 };
 CompiledRegex::CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures )
    : d_pPcre(pPcre)
    , d_pPcreExtra(pPcreExtra)
    , d_maxPossCaptures(maxPossCaptures)
-   , d_ovecsize( 3*maxPossCaptures )
-   , d_pcreCapture( d_ovecsize/2 )     //
+   , d_pcreCapture( ((3*d_maxPossCaptures)+1)/2 )     // +1 to ensure /2 does not round down
    {
-   CompileTimeAssert( (sizeof( d_pcreCapture[0] ) / sizeof( int )) == 2 );  // each d_pcreCapture[] contains exactly 2 ints
-   const auto ints_in_ovec( d_pcreCapture.size() * 2 );
-   0 && DBG( "%s: d_maxPossCaptures=%d, %" PR_SIZET ", %d", __func__, d_maxPossCaptures, ints_in_ovec, d_ovecsize );
-   // Assert( ints_in_ovec > d_ovecsize );
+   CompileTimeAssert( num_ints_in_pcreCapture == 2 );  // each d_pcreCapture[] contains exactly 2 ints
+   const auto ints_in_ovec( d_pcreCapture.size() * num_ints_in_pcreCapture );
+   1 && DBG( "%s: d_maxPossCaptures=%d, %d", __func__, d_maxPossCaptures, ints_in_ovec );
    }
 
 CompiledRegex::~CompiledRegex() {
@@ -96,6 +92,7 @@ CompiledRegex::~CompiledRegex() {
 
 RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options ) {
    0 && DBG( "CompiledRegex::Match called!" );
+   // http://www.pcre.org/original/doc/html/pcreapi.html#SEC17  "MATCHING A PATTERN: THE TRADITIONAL FUNCTION" describes pcre_exec()
    const int rc( pcre_exec(
            d_pPcre
          , d_pPcreExtra
@@ -104,14 +101,14 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
          , haystack_offset
          , pcre_exec_options
    // Captured substrings are returned to the caller via a vector of integers whose address is passed in ovector.
-         , &d_pcreCapture[0].oFirst // ovector: a vector of ints; each capture consumes TWO ints
+         , &d_pcreCapture[0].oFirst // ovector: a vector of ints; each capture consumes 2 (==num_ints_in_pcreCapture) ints
    // The number of elements in the vector is passed in ovecsize, which must be a non-negative number.
    // Note: this argument is NOT the size of ovector in bytes.
    // The first two-thirds of the vector is used to pass back captured substrings, each substring using a pair
    // of integers. The remaining third of the vector is used as workspace by pcre_exec() while matching capturing
    // subpatterns, and is not available for passing back information. The number passed in ovecsize should always
    // be a multiple of three. If it is not, it is rounded down.
-         , d_pcreCapture.size() * 2 // ovecsize: # of integers in *ovect
+         , d_pcreCapture.size() * num_ints_in_pcreCapture // ovecsize: # of integers in *ovector
          )
       );
    0 && DBG( "CompiledRegex::Match returned %d", rc );
