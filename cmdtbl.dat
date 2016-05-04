@@ -45,7 +45,7 @@
   balch        balch          CURSORFUNC , Moves cursor to matching brace or paren ( {[( <-> )]} )
   balln        balln          CURSORFUNC , Moves cursor to next/prev same-scope C-preprocessor conditional
   begfile      begfile        CURSORFUNC , Move cursor to beginning of file
-  begline      begline        CURSORFUNC , Move cursor to leftmost nonblank character on line, or to column one
+  begline      begline        CURSORFUNC , Move cursor to leftmost nonblank character on line (LnBCoL), or (if meta or cursor already on LnBCoL) to column 1
   boxstream    boxstream      CURSORFUNC , Toggles between box selection mode and stream selection mode
   bp           bp                        NOARG
   cancel       cancel                    BOXARG + STREAMARG + NOARG + LINEARG + NULLARG + TEXTARG + BOXSTR , Cancels current selection, argument, or operation

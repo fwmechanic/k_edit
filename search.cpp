@@ -645,19 +645,18 @@ GLOBAL_VAR std::string g_SnR_stSearch          ;
 GLOBAL_VAR std::string g_SnR_stReplacement     ;
 
 class CharWalkerReplace : public CharWalker_ {
-   std::string        d_sbuf;
-   std::string        d_stmp;
-   const SearchSpecifier  &d_ss;  // ffffffffffff
+   std::string             d_sbuf;
+   std::string             d_stmp;
+   const SearchSpecifier  &d_ss;
    RegexMatchCaptures      d_captures;
-   struct replaceDope_t {
-      struct backref {
+   class replaceDope_t { // this is instantiated as const (only)
+      struct refSelector {
          bool d_isLit;
          int  d_contentIx;
-         backref( bool isLit, int idx ) : d_isLit( isLit ), d_contentIx( idx ) {}
+         refSelector( bool isLit, int idx ) : d_isLit( isLit ), d_contentIx( idx ) {}
          };
-      const stref d_srRawReplace;
-      std::vector<stref>   d_Literal;
-      std::vector<backref> d_replaceRefs;
+      std::vector<stref>       d_Literal;
+      std::vector<refSelector> d_replaceRefs;
       void AddLitRef( stref sr ) {
          if( sr.length() > 0 ) {
             d_Literal.emplace_back( sr );
@@ -667,66 +666,64 @@ class CharWalkerReplace : public CharWalker_ {
       void AddBackRef( int ix ) {
          d_replaceRefs.emplace_back( false, ix );
          }
-      replaceDope_t( stref srReplace, const SearchSpecifier &ss )
-         : d_srRawReplace( srReplace )
-         {
-         stref srRaw( d_srRawReplace );
+   public:
+      const std::vector<stref>       &Literal()     const { return d_Literal    ; }
+      const std::vector<refSelector> &ReplaceRefs() const { return d_replaceRefs; }
+      replaceDope_t( stref srReplace, const SearchSpecifier &ss ) {
+         stref srSrc( srReplace ); // srReplace is assumed to persist for lifetime of CharWalkerReplace object!
          if( ss.IsRegex() ) {
             constexpr char chBR( '\\' );
-            sridx start( 0 );
             for(;;) {
-               const auto ix( srRaw.find( chBR ) );
-               if( ix == eosr || ix == srRaw.length()-1 ) { break; }
-               if( srRaw[ix+1]==chBR ) {
-                  AddLitRef( stref( srRaw.data(), ix+1 ) );
-                  srRaw.remove_prefix( ix+2 );
+               const auto ix( srSrc.find( chBR ) );
+               if( ix == eosr || ix == srSrc.length()-1 ) { break; }
+               if( srSrc[ix+1]==chBR ) {
+                  AddLitRef( stref( srSrc.data(), ix+1 ) );
+                  srSrc.remove_prefix( ix+2 );
                   }
                else {
-                  if( isdigit( srRaw[ix+1] ) ) {
-                     const auto brnum( srRaw[ix+1] - '0' );
-                     AddLitRef( stref( srRaw.data(), ix ) );
-                     AddBackRef( brnum );
-                     srRaw.remove_prefix( ix+2 );
+                  if( isdigit( srSrc[ix+1] ) ) { // we only support SINGLE-DIGIT replacement-string backrefs (\0..\9)
+                     const auto bkrefNum( srSrc[ix+1] - '0' );
+                     AddLitRef( stref( srSrc.data(), ix ) );  // _must precede_ the AddBackRef within this block!
+                     AddBackRef( bkrefNum );                  // _must follow_  the AddLitRef  within this block!
+                     srSrc.remove_prefix( ix+2 );
                      }
-                  else {
+                  else { // this is inefficient (leads to multiple LitRefs describing a single srReplace substring), but ...
+                     AddLitRef( stref( srSrc.data(), ix+2 ) );
+                     srSrc.remove_prefix( ix+2 );
                      }
                   }
                }
             }
-         AddLitRef( srRaw );
+         AddLitRef( srSrc );
          }
       };
-   replaceDope_t d_replaceDope;
-   std::string   d_replaceCache;
+   const replaceDope_t d_replaceDope;
+   std::string   d_stReplace;
    ColoredStrefs d_promptCsrs;
    stref GenerateReplacement() {
-      d_promptCsrs.reserve( d_replaceDope.d_replaceRefs.size() );
+      d_promptCsrs.reserve( d_replaceDope.ReplaceRefs().size() );
       d_promptCsrs.clear();
       d_promptCsrs.emplace_back( g_colorStatus, "Replace this occurrence? (Yes/No/All/Quit):" );
-      if( d_replaceDope.d_replaceRefs.size()==1 ) {
-         const auto isLit( d_replaceDope.d_replaceRefs[0].d_isLit );
-         const auto rv_only( isLit ? d_replaceDope.d_Literal[0] : d_captures[0].value() );
+      if( d_replaceDope.ReplaceRefs().size()==1 ) {
+         const auto isLit( d_replaceDope.ReplaceRefs()[0].d_isLit );
+         const auto rv_only( isLit ? d_replaceDope.Literal()[0] : d_captures[0].value() );
          d_promptCsrs.emplace_back( isLit ? g_colorInfo : g_colorError, rv_only );
          d_promptCsrs.emplace_back( g_colorStatus, "", true );
          return rv_only;
          }
-      d_replaceCache.clear();
-      for( const auto &ent : d_replaceDope.d_replaceRefs ) {
-         stref sr;
-         if( ent.d_isLit ) {
-            sr = ent.d_contentIx < d_replaceDope.d_Literal.size() ? d_replaceDope.d_Literal[ent.d_contentIx] : "";
-            d_replaceCache.append( BSR2STR( sr ) );
-            }
-         else {
-            sr = ent.d_contentIx < d_captures.size() ? d_captures[ent.d_contentIx].value() : "";
-            d_replaceCache.append( BSR2STR( sr ) );
-            }
+      d_stReplace.clear();
+      for( const auto &ent : d_replaceDope.ReplaceRefs() ) {
+         const stref sr( ent.d_isLit
+                         ? (ent.d_contentIx < d_replaceDope.Literal().size() ? d_replaceDope.Literal()[ent.d_contentIx]         : "")
+                         : (ent.d_contentIx < d_captures             .size() ? d_captures             [ent.d_contentIx].value() : "")
+                       );
          if( sr.length() > 0 ) {
+            d_stReplace.append( BSR2STR( sr ) );
             d_promptCsrs.emplace_back( ent.d_isLit ? g_colorInfo : g_colorError, sr );
             }
          }
-      d_promptCsrs.emplace_back( g_colorStatus, " ", true );
-      return stref( d_replaceCache );
+      d_promptCsrs.emplace_back( g_colorStatus, "", true );
+      return stref( d_stReplace );
       }
    bool              d_fDoReplaceQuery;
    const pFxn_strstr d_pfxStrnstr;
@@ -796,62 +793,55 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
    const auto xMatchMin( ColOfFreeIdx( tw, rl, ixMatchMin ) );
    const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
    ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
-   stref srReplace( GenerateReplacement() );
-
-   // replace @ pMatch (in lbuf), adjust curPt->col and colLastPossibleLastMatchChar
-   auto performReplace = [&]() -> void {
-      pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-      const auto ixdestMatchMin( ColOfFreeIdx( tw, d_sbuf, xMatchMin ) );
-      const auto ixdestMatchMax( ColOfFreeIdx( tw, d_sbuf, xMatchMax ) );
-      const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
-      d_sbuf.replace( ixdestMatchMin, ixdestMatchMax - ixdestMatchMin + 1, BSR2STR(srReplace) );
-      0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
-      pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
-      ++d_iReplacementsMade;
-      // replacement done: position curPt->col for next search
-      if( destMatchChars != 0 || srReplace.length() != 0 ) {
-         curPt->col += srReplace.length() - 1;
+   stref srReplace( GenerateReplacement() ); // generates d_promptCsrs too!
+   if( d_fDoReplaceQuery ) { // interactive-replace?
+      //##### interactive-replace (mfreplace/qreplace) ONLY ...
+      const auto pView( pFBuf->PutFocusOn() );
+      pView->FreeHiLiteRects();
+      DispDoPendingRefreshesIfNotInMacro();
+      const auto matchCols( xMatchMax - xMatchMin + 1 );
+    #if 1
+      curPt->ScrollTo( matchCols );
+    #else
+      pView->MoveAndCenterCursor( *curPt, matchCols );
+    #endif
+      pView->SetMatchHiLite( *curPt, matchCols, true );
+      DispDoPendingRefreshesIfNotInMacro();
+      HiLiteFreer hf;
+                                          //  allowed responses
+                                          //  |       interactive dflt: cause retry by NOT matching any explicit case below
+                                          //  |       |    macro dflt:
+                                          //  |       |    |
+      const auto ch( chGetCmdPromptResponse( "ynaq", '?', 'a', d_promptCsrs ) );
+      switch( ch ) {
+         default:  Assert( 0 ); // chGetCmdPromptResponse has bug or params wrong
+         case -1 :                                  // fall thru!
+         case 'q': SetUserChoseEarlyCmdTerminate();
+                   return STOP_SEARCH;
+         case 'n': return CONTINUE_SEARCH;
+         case 'a': d_fDoReplaceQuery = false;       // fall thru!
+         case 'y': break;                           // perform replacement (below)
          }
-      // did colLastPossibleLastMatchChar grow or shrink?
-      colLastPossibleLastMatchChar += srReplace.length() - destMatchChars;
-      NoLessThan( &colLastPossibleLastMatchChar, 0 );
-      // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
-      // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
-      };
-
-   if( !d_fDoReplaceQuery ) { // non-interactive-replace?
-      performReplace();
-      return REREAD_LINE_CONTINUE_SEARCH;
       }
-   //##### interactive-replace (mfreplace/qreplace) ONLY ...
-   const auto pView( pFBuf->PutFocusOn() );
-   pView->FreeHiLiteRects();
-   DispDoPendingRefreshesIfNotInMacro();
-   const auto matchCols( xMatchMax - xMatchMin + 1 );
- #if 1
-   curPt->ScrollTo( matchCols );
- #else
-   pView->MoveAndCenterCursor( *curPt, matchCols );
- #endif
-   pView->SetMatchHiLite( *curPt, matchCols, true );
-   DispDoPendingRefreshesIfNotInMacro();
-   HiLiteFreer hf;
-                                       //  allowed responses
-                                       //  |       interactive dflt: cause retry by NOT matching any explicit case below
-                                       //  |       |    macro dflt:
-                                       //  |       |    |
-
-   const auto ch( chGetCmdPromptResponse( "ynaq", '?', 'a', d_promptCsrs ) );
-   switch( ch ) {
-      default:  Assert( 0 ); // chGetCmdPromptResponse has bug or params wrong
-      case -1 :                                      //  fall thru!
-      case 'q': SetUserChoseEarlyCmdTerminate();
-                return STOP_SEARCH;
-      case 'a': d_fDoReplaceQuery = false;           //  fall thru!
-      case 'y': performReplace();
-                return REREAD_LINE_CONTINUE_SEARCH;
-      case 'n': return CONTINUE_SEARCH;
+   // perform replacement
+   pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
+   const auto ixdestMatchMin( ColOfFreeIdx( tw, d_sbuf, xMatchMin ) );
+   const auto ixdestMatchMax( ColOfFreeIdx( tw, d_sbuf, xMatchMax ) );
+   const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
+   d_sbuf.replace( ixdestMatchMin, ixdestMatchMax - ixdestMatchMin + 1, BSR2STR(srReplace) );
+   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
+   pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
+   ++d_iReplacementsMade;
+   // replacement done: position curPt->col for next search
+   if( destMatchChars != 0 || srReplace.length() != 0 ) {
+      curPt->col += srReplace.length() - 1;
       }
+   // did colLastPossibleLastMatchChar grow or shrink?
+   colLastPossibleLastMatchChar += srReplace.length() - destMatchChars;
+   NoLessThan( &colLastPossibleLastMatchChar, 0 );
+   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
+   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
+   return REREAD_LINE_CONTINUE_SEARCH;
    }
 
 //

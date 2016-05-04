@@ -149,7 +149,8 @@
    noTabs:=spcs TouchAll
    noSpcs:=tabs TouchAll
 
-   col1:=meta begline begline
+   col1:=meta begline
+   colchar1 := col1 begline
    cola:=meta begline begline
 
    mv0:= begfile begline "move " arg begline ppara vrepeat ppara begline "m30"
@@ -394,7 +395,7 @@
 #   set_stream:         alt+B                       # "initial state"
    boxstream:alt+B
 
-   hoist:=cancel arg setwindow
+   hoist:=cancel colchar1 arg setwindow
    hoist:ctrl+H
 
    beta:="á"
