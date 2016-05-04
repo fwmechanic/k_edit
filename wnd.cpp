@@ -20,7 +20,7 @@
 #include "ed_main.h"
 
 class Win::impl {
-   Point     d_size_pct;
+   Point d_size_pct;
 public:
    const Point &SizePct() const { return d_size_pct; }
    void  SizePct_set( const Point &src )  { d_size_pct = src; }
@@ -103,7 +103,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
       }
    else { // multiwindow resize
       if( 1 ) {
-         #define MW_RESIZE( aaa, bbb )                                                                                      \
+        #define MW_RESIZE( aaa, bbb )                                                                                       \
             Point newNonBorderSize( newWinRgnSize );                                                                        \
                   newNonBorderSize.aaa -= BORDER_WIDTH*(g_iWindowCount()-1);                                                \
             auto curNonBorderSize( 0 ); /* excluding borders */                                                             \
@@ -135,14 +135,11 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                   const auto pW( *it );                                                                                     \
                   { Point tmp; tmp.aaa=pW->d_Size.aaa, tmp.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized( tmp ); }        \
                   }                                                                                                         \
-               }                                                                                                            \
-
+               }
          const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
          if( existingSplitVertical ) { MW_RESIZE( col, lin ) } // splitVert
          else                        { MW_RESIZE( lin, col ) } // splitHoriz
-
-         #undef MW_RESIZE
-
+        #undef MW_RESIZE
 /*
          auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
          if( 0 ) {
@@ -222,7 +219,7 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
    // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
    const auto &parent( parent_ ); // parent_ SHALL NOT be modified until this dims have been set
    Point newParentSize, newParentSizePct;
-   #define SPLIT_IT( aaa, bbb )                                                       \
+  #define SPLIT_IT( aaa, bbb )                                                        \
         this->d_Size.aaa = parent.d_Size.aaa                                        ; \
         this->d_Size.bbb = parent.d_Size.bbb - ColumnOrLineToSplitAt - 2            ; \
        newParentSize.aaa = parent.d_Size.aaa                                        ; \
@@ -238,7 +235,7 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
       newParentSizePct.aaa = parent.pimpl->SizePct().aaa                            ; \
       newParentSizePct.bbb = parent.pimpl->SizePct().bbb                              \
                            -  this->pimpl->SizePct().bbb                            ; \
-      1 && DBG( "%s: src=%d=%d%%->%d=%d%%, new=%d=%d%%", __func__,                    \
+      0 && DBG( "%s: src=%d=%d%%->%d=%d%%, new=%d=%d%%", __func__,                    \
                 parent.d_Size.bbb, parent.pimpl->SizePct().bbb                        \
               , newParentSize.bbb,        newParentSizePct.bbb                        \
               ,  this->d_Size.bbb,  this->pimpl->SizePct().bbb                        \
@@ -246,8 +243,7 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
 
    if( fSplitVertical ) {  SPLIT_IT( lin, col )  }
    else                 {  SPLIT_IT( col, lin )  }
-
-   #undef SPLIT_IT
+  #undef SPLIT_IT
 
    parent_.Event_Win_Resized( newParentSize, newParentSizePct ); // feed newParentSize back into parent
    // clone all of original window's Views in a new list bound to the new window  !BUGBUG a different approach should be created!
@@ -300,11 +296,11 @@ void SetWindow0() { // Used during ReadStateFile processing only!
    }
 
 int cmp_win( PCWin w1, PCWin w2 ) { // used by Lua: l_register_Win_object
-   if( w1->d_UpLeft.lin < w2->d_UpLeft.lin )   return -1; // w1 < w2
-   if( w1->d_UpLeft.lin > w2->d_UpLeft.lin )   return  1; // w1 > w2
-   if( w1->d_UpLeft.col < w2->d_UpLeft.col )   return -1; // w1 < w2
-   if( w1->d_UpLeft.col > w2->d_UpLeft.col )   return  1; // w1 > w2
-                                               return  0; // w1 = w2 ?
+   if( w1->d_UpLeft.lin < w2->d_UpLeft.lin ) { return -1; } // w1 < w2
+   if( w1->d_UpLeft.lin > w2->d_UpLeft.lin ) { return  1; } // w1 > w2
+   if( w1->d_UpLeft.col < w2->d_UpLeft.col ) { return -1; } // w1 < w2
+   if( w1->d_UpLeft.col > w2->d_UpLeft.col ) { return  1; } // w1 > w2
+                                               return  0;   // w1 = w2 ?
    }
 
 STATIC_FXN void SortWinArray() {
@@ -352,8 +348,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
 
 STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
    PCWin pw1( g_Win(winDex1) ), pw2( g_Win(winDex2) );
-
-   #define  MERGEABLE( aaa, bbb ) \
+  #define  MERGEABLE( aaa, bbb ) \
       ( \
          pw1->d_Size  .aaa == pw2->d_Size  .aaa \
       && pw1->d_UpLeft.aaa == pw2->d_UpLeft.aaa \
@@ -361,11 +356,9 @@ STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
          || (pw2->d_UpLeft.bbb + pw2->d_Size.bbb + BORDER_WIDTH) == pw1->d_UpLeft.bbb \
          ) \
       )
-
    return    MERGEABLE( lin, col )
           || MERGEABLE( col, lin );
-
-   #undef MERGEABLE
+  #undef MERGEABLE
    }
 
 STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %d", __func__, winToClose, wixToMergeTo, g_iWindowCount() );
@@ -518,8 +511,9 @@ bool ARG::window() {
                            return Msg( "Cannot close this window" );
                            }
                         }
-                     else
+                     else {
                         SetWindowSetValidView( (g_CurWindowIdx()+1) % g_iWindowCount() );
+                        }
                      break;
       case NULLARG:  const auto fSplitVertical( d_cArg != 1 );
                      const auto xyParam( fSplitVertical

@@ -1825,10 +1825,10 @@ CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curP
          if( shouldClose != closes ) {
             if( d_fHiliteMatch ) {
                0 && DBG( "%cbal [%d] MISMATCH is '%c' != s/b '%c' at X=%d, Y=%d"
-                     , d_fFwd ? '+' : '-'
-                            , d_stackIx      , ch        , shouldClose
-                                                                  , curPt->col+1
-                                                                        , curPt->lin+1 );
+                          , d_fFwd ? '+' : '-'
+                                 , d_stackIx      , ch        , shouldClose
+                                                                       , curPt->col+1
+                                                                             , curPt->lin+1 );
                }
             return STOP_SEARCH;
             }

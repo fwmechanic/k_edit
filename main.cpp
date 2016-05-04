@@ -654,7 +654,7 @@ STATIC_FXN ptrdiff_t memdelta() {
    return delta;
    }
 
-GLOBAL_VAR bool g_CLI_fUseRsrcFile( true );
+GLOBAL_VAR bool g_CLI_fUseRsrcFile = true;
 
 // NB: CANNOT use Main function's envp parameter to initialize g_envp: it does
 //     not point to the same environment that _environ does (the latter is the
