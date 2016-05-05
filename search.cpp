@@ -651,9 +651,9 @@ class CharWalkerReplace : public CharWalker_ {
    RegexMatchCaptures      d_captures;
    class replaceDope_t { // this is instantiated as const (only)
       struct refSelector {
-         bool d_isLit;
-         int  d_contentIx;
-         refSelector( bool isLit, int idx ) : d_isLit( isLit ), d_contentIx( idx ) {}
+         bool  d_isLit;
+         sridx d_contentIx;
+         refSelector( bool isLit, sridx idx ) : d_isLit( isLit ), d_contentIx( idx ) {}
          };
       std::vector<stref>       d_Literal;
       std::vector<refSelector> d_replaceRefs;
@@ -663,7 +663,7 @@ class CharWalkerReplace : public CharWalker_ {
             d_replaceRefs.emplace_back( true, d_Literal.size()-1 );
             }
          }
-      void AddBackRef( int ix ) {
+      void AddBackRef( sridx ix ) {
          d_replaceRefs.emplace_back( false, ix );
          }
    public:
@@ -682,7 +682,7 @@ class CharWalkerReplace : public CharWalker_ {
                   }
                else {
                   if( isdigit( srSrc[ix+1] ) ) { // we only support SINGLE-DIGIT replacement-string backrefs (\0..\9)
-                     const auto bkrefNum( srSrc[ix+1] - '0' );
+                     const sridx bkrefNum( srSrc[ix+1] - '0' );
                      AddLitRef( stref( srSrc.data(), ix ) );  // _must precede_ the AddBackRef within this block!
                      AddBackRef( bkrefNum );                  // _must follow_  the AddLitRef  within this block!
                      srSrc.remove_prefix( ix+2 );
@@ -700,29 +700,41 @@ class CharWalkerReplace : public CharWalker_ {
    const replaceDope_t d_replaceDope;
    std::string   d_stReplace;
    ColoredStrefs d_promptCsrs;
+
    stref GenerateReplacement() {
+      /* there is some inefficiency here impacting non-interactive replace
+         mode (which includes interactive in "all" mode):
+           in the non-regex case (or if regex but replacement string has no
+           backrefs) rv and d_promptCsrs are the same for all matches.
+
+           in the non-interactive case d_promptCsrs is superfluous
+
+       */
       d_promptCsrs.reserve( d_replaceDope.ReplaceRefs().size() );
       d_promptCsrs.clear();
-      d_promptCsrs.emplace_back( g_colorStatus, "Replace this occurrence? (Yes/No/All/Quit):" );
-      if( d_replaceDope.ReplaceRefs().size()==1 ) {
-         const auto isLit( d_replaceDope.ReplaceRefs()[0].d_isLit );
-         const auto rv_only( isLit ? d_replaceDope.Literal()[0] : d_captures[0].value() );
-         d_promptCsrs.emplace_back( isLit ? g_colorInfo : g_colorError, rv_only );
-         d_promptCsrs.emplace_back( g_colorStatus, "", true );
+      d_promptCsrs.emplace_back( g_colorStatus, "Replace " );
+      constexpr PCChar endq = " (Yes/No/All/Quit)? ";
+      if( d_replaceDope.ReplaceRefs().size()==1 ) { // optimize when d_stReplace is not needed
+         constexpr auto ixEnt( 0u ), ixCont( 0u );
+         const auto &ent( d_replaceDope.ReplaceRefs()[ixEnt] );
+         const auto rv_only( ent.d_isLit ? d_replaceDope.Literal()[ixCont] : (ixCont < d_captures.size() ? d_captures[ixCont].value() : "") );
+         d_promptCsrs.emplace_back( ent.d_isLit ? g_colorInfo : g_colorError, rv_only );
+         d_promptCsrs.emplace_back( g_colorStatus, endq, true );
          return rv_only;
          }
       d_stReplace.clear();
       for( const auto &ent : d_replaceDope.ReplaceRefs() ) {
-         const stref sr( ent.d_isLit
-                         ? (ent.d_contentIx < d_replaceDope.Literal().size() ? d_replaceDope.Literal()[ent.d_contentIx]         : "")
-                         : (ent.d_contentIx < d_captures             .size() ? d_captures             [ent.d_contentIx].value() : "")
+         const auto ixCont( ent.d_contentIx );
+         const stref sr(  ent.d_isLit
+                       ? (ixCont < d_replaceDope.Literal().size() ? d_replaceDope.Literal()[ixCont]         : "")
+                       : (ixCont < d_captures             .size() ? d_captures             [ixCont].value() : "")
                        );
          if( sr.length() > 0 ) {
             d_stReplace.append( BSR2STR( sr ) );
             d_promptCsrs.emplace_back( ent.d_isLit ? g_colorInfo : g_colorError, sr );
             }
          }
-      d_promptCsrs.emplace_back( g_colorStatus, "", true );
+      d_promptCsrs.emplace_back( g_colorStatus, endq, true );
       return stref( d_stReplace );
       }
    bool              d_fDoReplaceQuery;
