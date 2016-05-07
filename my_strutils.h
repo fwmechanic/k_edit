@@ -401,25 +401,20 @@ static sridx FirstDigitOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( i
 
 template <int elements> class FmtStr {
    char b[ elements ];
-
    FmtStr() = delete; // no dflt ctor
-
-   public:
-
+public:
    FmtStr( PCChar format, ... ) ATTR_FORMAT(2,3) { // this is ambiguous vs 'FixedCharArray( PCChar src )'
       va_list val;
       va_start(val, format);
       use_vsnprintf( b, sizeof(b), format, val );
       va_end(val);
       }
-
 // operator PChar()        { return b; }
    operator PCChar() const { return b; }
    int      Len()    const { return Strlen( b ); }
    PCChar   k_str()  const { return b; }
    PChar    c_str()        { return b; }
    };
-
 
 STIL void insert_hole( PChar b, size_t sizeof_b, int xCol, int insertWidth=1 )
    { // assumes that last char in b is a '\0', and preserves it
@@ -500,17 +495,13 @@ private:
 
 template <int elements>
 class StringsBuf {
-
    char  d_buf[elements];
    PChar d_nxtS;
-
 public:
    StringsBuf() {
       clear();
       }
-
    PCChar data() const { return d_buf; }
-
    bool find( stref st ) const {
       for( auto pNeedle( d_buf ) ; *pNeedle ;  ) {
          const stref needle( pNeedle );
@@ -519,14 +510,12 @@ public:
          }
       return false;
       }
-
    bool empty() const { return d_buf[0] == '\0'; }
    void clear() {
       d_buf[0] = '\0';
       d_buf[1] = '\0';  // not ABSOLUTELY necessary, but cheap insurance...
       d_nxtS = d_buf;
       }
-
    PCChar AddString( stref sr ) {
       const auto len( sr.length() );
       if( len > ((d_buf + sizeof(d_buf) - 1) - d_nxtS) - 2 ) return nullptr;
@@ -551,7 +540,6 @@ class DiceableString {
    // a heap string containing an ascizz string (an ASCII string with TWO (2) trailing NUL chars)
 protected:
    PChar d_heapString;
-
 public:
    DiceableString( stref src )
       : d_heapString( Strdup( src, 1 ) ) // tricky: d_heapString is created with 2 trailing NULs

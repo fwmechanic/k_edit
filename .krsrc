@@ -85,6 +85,9 @@
    r1e0:=cancel rt1 et0
    r1e1:=cancel rt1 et1
 
+   mfr:=cancel mfreplace
+   mfrx:=cancel arg arg mfreplace
+
    bdm4:=cancel rt0 arg "blankdispmask:4" assign
 
    unix:=cancel arg seteol

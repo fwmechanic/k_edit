@@ -57,55 +57,7 @@ PChar Strdup( stref src, size_t extra_nuls ) {
 //============================================================================================
 // ********************  consistency checking code!!!  ********************
 
-#define  DO_IDLE_FILE_VALIDATE  0
-#if      DO_IDLE_FILE_VALIDATE
-
-void LineInfo::CheckDump( PCChar msg, PFBUF pFBuf, LINE yLine ) const {
-   DBG( "%s '%s' L %d has bad len: %x, p=%p"
-      , msg
-      , pFBuf->Name()
-      , yLine
-      , GetLineLen()
-      , GetLineRdOnly()
-      );
-   }
-
-int FBUF::DbgCheck() {
-   if( !d_paLineInfo ) {
-      return 0;
-      }
-   auto errors(0);
-   auto pLi( d_paLineInfo );
-   for( auto pLiPastEnd(pLi + LineCount()) ; pLi < pLiPastEnd ; ++pLi ) {
-      if( pLi->Check( "idleCheck", this, pLi - d_paLineInfo ) ) {
-         ++errors;
-         }
-      }
-   return errors;
-   }
-
-STATIC_FXN PFBUF CheckPFBUF( PFBUF pFBuf, int *errors ) {
-   if( pFBuf ) {
-      *errors += pFBuf->DbgCheck();
-      return pFBuf->Next();
-      }
-   return nullptr;
-   }
-
-#endif// DO_IDLE_FILE_VALIDATE
-
 void IdleIntegrityCheck() {
-#if DO_IDLE_FILE_VALIDATE
-   auto errors( 0 );
-   const auto next( CheckPFBUF( g_CurFBuf(), &errors ) );
-   if( next ) {
-      CheckPFBUF( next, &errors );
-      }
-   if( errors ) {
-      DBG( "idleCheck %d ERRORS ***********************************************", errors );
-      ConIO::DbgPopf( "idleCheck detected %d ERRORS!!!", errors );
-      }
-#endif// DO_IDLE_FILE_VALIDATE
    }
 
 // 께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께�
@@ -522,7 +474,7 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
 
 PFBUF FindFBufByName( stref name ) {
 #if FBUF_TREE
-   const auto pNd( rb_find_gen( g_FBufIdx, pFullName, rb_strcmpi ) );
+   const auto pNd( rb_find_sri( g_FBufIdx, name /*, rb_strcmpi */ ) );
    return pNd ? IdxNodeToFBUF( pNd ) : nullptr;
 #else
    DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf) {

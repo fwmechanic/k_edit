@@ -695,7 +695,7 @@ bool ARG::assign() {
                  }
     case LINEARG:{int assignsDone; Point errPt;
                   if( RsrcFileLineRangeAssignFailed( "user assign LINEARG", g_CurFBuf(), d_linearg.yMin, d_linearg.yMax, &assignsDone, &errPt ) ) {
-                     errPt.ScrollTo();
+                     g_CurView()->MoveCursor( errPt );
                      Msg( "%d assign%s done; had error", assignsDone, Add_s( assignsDone ) );
                      return false;
                      }

@@ -21,6 +21,48 @@
 
 #include "attr_format.h"
 
+enum { // these are COLOR CODES!
+   fgBLK =  0x0,
+   fgBLU =  0x1,
+   fgGRN =  0x2,
+   fgCYN =  0x3,
+   fgRED =  0x4,
+   fgPNK =  0x5,
+   fgBRN =  0x6,
+   fgDGR =  0x7,
+   fgMGR =  0x8,
+   fgLBL =  0x9,
+   fgLGR =  0xA,
+   fgLCY =  0xB,
+   fgLRD =  0xC,
+   fgLPK =  0xD,
+   fgYEL =  0xE,
+   fgWHT =  0xF,
+   //------------
+   bgBLK = (fgBLK<<4),
+   bgBLU = (fgBLU<<4),
+   bgGRN = (fgGRN<<4),
+   bgCYN = (fgCYN<<4),
+   bgRED = (fgRED<<4),
+   bgPNK = (fgPNK<<4),
+   bgBRN = (fgBRN<<4),
+   bgDGR = (fgDGR<<4),
+   bgMGR = (fgMGR<<4),
+   bgLBL = (fgLBL<<4),
+   bgLGR = (fgLGR<<4),
+   bgLCY = (fgLCY<<4),
+   bgLRD = (fgLRD<<4),
+   bgLPK = (fgLPK<<4),
+   bgYEL = (fgYEL<<4),
+   bgWHT = (fgWHT<<4),
+
+   //------------ masks
+   FGmask=0x0F, BGmask=0xF0,
+   FGhi  =0x08, BGhi  =0x80,
+   FGbase=0x07, BGbase=0x70,
+   };
+
+
 struct YX_t {
    int  lin;
    int  col;

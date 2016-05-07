@@ -19,15 +19,6 @@
 
 #pragma once
 
-#ifndef USE_PCRE
-#error  USE_PCRE not defined
-#endif
-
-#if USE_PCRE
-
-#define PCRE_STATIC
-#include "pcre.h"
-
 class RegexMatchCapture {
    sridx d_ofs;
    stref d_value;
@@ -39,6 +30,11 @@ public:
    sridx offset() const { return d_ofs  ; }
    };
 typedef std::vector<RegexMatchCapture> RegexMatchCaptures;
+
+#if USE_PCRE
+
+#define PCRE_STATIC
+#include "pcre.h"
 
 class  CompiledRegex;
 extern CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase );

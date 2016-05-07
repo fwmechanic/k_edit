@@ -122,7 +122,7 @@ public:
    };
 
 bool ARG::cc() {
-   ColorChanger ccc( *g_CurView()->ColorIdx2Var( COLOR::TXT ) );
+   ColorChanger ccc( *g_CurView()->ColorIdx2Var( ColorTblIdx::TXT ) );
    return ccc.Run();
    }
 

@@ -122,7 +122,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                      }                                                                                                      \
                   const auto delta( ulc - newSize_ );                                                                       \
                   const auto iw( std::distance( g__.aWindow.begin(), it.base()) -1 );                                       \
-                  0 && DBG( "Win[%" PR_PTRDIFFT "] size_.%s %d->%d delta=%d", iw, #aaa, size_, newSize_, delta );                        \
+                  0 && DBG( "Win[%" PR_PTRDIFFT "] size_.%s %d->%d delta=%" PR_SIZET, iw, #aaa, size_, newSize_, delta );   \
                   if( 0==iw && delta > 0 ) { newSize_ += delta; }  /* 0th element and space left?  consume it! */           \
                   { Point tmp; tmp.aaa=ulc - newSize_, tmp.bbb=pW->d_UpLeft    .bbb, pW->Event_Win_Reposition( tmp ); }     \
                   { Point tmp; tmp.aaa=      newSize_, tmp.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized   ( tmp ); }     \
@@ -335,7 +335,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
    if( !fSplitVertical ) {
       g_CurView()->PokeOriginLine_HACK( g_CursorLine() ? g_CursorLine() - 1 : g_CursorLine() );
       }
-   0 && DBG( "%s+ from w%d of %d", __func__, g_CurWindowIdx(), g_iWindowCount() );
+   0 && DBG( "%s+ from w%" PR_SIZET " of %" PR_SIZET, __func__, g_CurWindowIdx(), g_iWindowCount() );
    auto newWin( SaveNewWin( new Win( *pWin, fSplitVertical, ColumnOrLineToSplitAt ) ) );
    SortWinArray();
    if( !fSplitVertical ) {
@@ -361,7 +361,7 @@ STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
   #undef MERGEABLE
    }
 
-STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %d", __func__, winToClose, wixToMergeTo, g_iWindowCount() );
+STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %" PR_SIZET, __func__, winToClose, wixToMergeTo, g_iWindowCount() );
    const auto pWinToMergeTo( g_WinWr( wixToMergeTo ) );
          auto pWinToClose  ( g_WinWr( winToClose   ) );
    {
@@ -401,7 +401,7 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
    SetWindowSetValidView( -1 );
    }
 
-STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %d", __func__, winToClose, g_iWindowCount() );
+STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %" PR_SIZET, __func__, winToClose, g_iWindowCount() );
    for( auto it( g__.aWindow.begin() ) ; it != g__.aWindow.end() ; ++it ) {
       const auto ix( std::distance( g__.aWindow.begin(), it ) );
       if( winToClose != ix && WindowsCanBeMerged( winToClose, ix ) ) {
@@ -423,7 +423,7 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
    const auto  iw( g_CurWindowIdx() );
    const auto  pWin( g_CurWin() );
          auto &vh( g_CurViewHd() );
-   DD && DBG( "%s Win[%d]", __func__, iw );
+   DD && DBG( "%s Win[%" PR_SIZET "]", __func__, iw );
    for( auto try_(0); !vh.empty(); ++try_ ) {
       const auto fb( vh.front()->FBuf() );     DD && DBG( "%s try %d=%s", __func__, try_, fb->Name() );
       if( fChangeFile( fb->Name() ) ) {  // fb->PutFocusOn() also works
@@ -432,7 +432,7 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
          return;
          }
       }
-   DD && DBG( "%s Win[%d] giving up, adding %s", __func__, iw, kszNoFile );
+   DD && DBG( "%s Win[%" PR_SIZET "] giving up, adding %s", __func__, iw, kszNoFile );
    fChangeFile( kszNoFile );
    Assert( g_CurView() != nullptr );
    }

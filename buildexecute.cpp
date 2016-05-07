@@ -119,15 +119,15 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
             }
          DispRawDialogStr( buf.k_str() );
          }
-      pcv->InsHiLiteBox( COLOR::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+      pcv->InsHiLiteBox( ColorTblIdx::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
       }
    else { // STREAM mode
       if( s_SelAnchor.lin == pt.lin ) { // 1-LINE STREAM
-         pcv->InsHiLite1Line( COLOR::SEL, s_SelAnchor.lin, s_SelAnchor.col, pt.col + ((s_SelAnchor.col < pt.col) ? -1 : 0) );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+         pcv->InsHiLite1Line( ColorTblIdx::SEL, s_SelAnchor.lin, s_SelAnchor.col, pt.col + ((s_SelAnchor.col < pt.col) ? -1 : 0) );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
          }
       else { // MULTILINE STREAM
          // redraw ANCHOR-line hilite
-         pcv->InsHiLite1Line( COLOR::SEL, s_SelAnchor.lin, s_SelAnchor.col, (s_SelAnchor.lin <= pt.lin) ? COL_MAX : 0 );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+         pcv->InsHiLite1Line( ColorTblIdx::SEL, s_SelAnchor.lin, s_SelAnchor.col, (s_SelAnchor.lin <= pt.lin) ? COL_MAX : 0 );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
          // redraw middle line(s) hilite, if any
          const auto yDelta( pt.lin - s_SelAnchor.lin );
          if( Abs(yDelta) > 1 ) {
@@ -136,13 +136,13 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
             hilite.flMax.lin = Max( s_SelAnchor.lin, pt.lin ) - 1;
             hilite.flMin.col = 0;
             hilite.flMax.col = COL_MAX;
-            pcv->InsHiLiteBox( COLOR::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+            pcv->InsHiLiteBox( ColorTblIdx::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             }
          // redraw CURSOR-line hilite
          COL xFirst, xLast;
          if( s_SelAnchor.lin > pt.lin ) { xFirst = COL_MAX;  xLast = pt.col    ; }
          else                           { xFirst = 0      ;  xLast = pt.col - 1; }
-         pcv->InsHiLite1Line( COLOR::SEL, pt.lin, xFirst, xLast );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+         pcv->InsHiLite1Line( ColorTblIdx::SEL, pt.lin, xFirst, xLast );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
          }
       }
    s_SelEnd = pt;
@@ -1033,7 +1033,7 @@ bool ARG::lastselect() {
       return Msg( "view has no previous selection" );
       }
    s_SelAnchor = pcv->d_LastSelectBegin;
-   pcv->d_LastSelectEnd.ScrollTo();
+   pcv->MoveCursor( pcv->d_LastSelectEnd );
    ++g_iArgCount;
    }
    ArgMainLoop();

@@ -535,15 +535,7 @@ void AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<st
       return;
       }
    FmtStr<50> cmdNm( "%-20s: ", Cmd.Name() );
-   const PCChar pText( Cmd.IsRealMacro() ? Cmd.MacroText() :
-#if AHELPSTRINGS
-      (Cmd.d_HelpStr && *Cmd.d_HelpStr ? Cmd.d_HelpStr
-#endif
-      : ""
-#if AHELPSTRINGS
-      )
-#endif
-      );
+   const PCChar pText( Cmd.IsRealMacro() ? Cmd.MacroText() : (Cmd.d_HelpStr && *Cmd.d_HelpStr ?  Cmd.d_HelpStr : "") );
    auto fFoundAssignment(false);
    std::string keyNm;
    coll.reserve( 4 );

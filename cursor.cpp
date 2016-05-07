@@ -86,7 +86,7 @@ bool ARG::home() { PCWrV;
          );
       }
    else {
-      pcv->Origin().ScrollTo();
+      pcv->MoveCursor( pcv->Origin() );
       }
    return cp.Moved();
    }
@@ -239,7 +239,7 @@ bool ARG::mlines() { return pmlines( -1 ); }
 void View::CapturePrevLineCount() { d_prevLineCount = CFBuf()->LineCount(); }
 
 void CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
-   for( auto ix(0), max=g_iWindowCount() ; ix < max ; ++ix ) {
+   for( size_t ix(0u), max=g_iWindowCount() ; ix < max ; ++ix ) {
       const auto pWin( g_Win(ix) );
       if( (fIncludeCurWindow || pWin != g_CurWin()) && pWin->CurView()->FBuf() == pFBuf ) {
          pWin->CurViewWr()->CapturePrevLineCount();
@@ -252,7 +252,7 @@ void CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
 bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
    enum { CURSOR_ON_LINE_AFTER_LAST = 1 }; // = 0 to have "tailing cursor" sit atop last line
    auto scrolledAny( false );
-   for( auto ix(0), max=g_iWindowCount() ; ix < max ; ++ix ) {
+   for( size_t ix(0u), max=g_iWindowCount() ; ix < max ; ++ix ) {
       const auto pWin( g_Win(ix) );
       if( (fIncludeCurWindow || pWin != g_CurWin()) && pWin->CurView()->FBuf() == pFBuf ) {
          const auto pView( pWin->CurViewWr() );

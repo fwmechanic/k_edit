@@ -336,11 +336,7 @@ void FBufRead_Assign_Switches( PFBUF pFBuf ) {
    for( const auto &Swi : s_SwiTable ) {
       linebuf lbuf; lbuf[0] = '\0';
       Swi.pfxDisp( BSOB(lbuf), PVoid(Swi.act.fval) );
-   #if AHELPSTRINGS
       pFBuf->xFmtLastLine( &xb, "%-20s: %-*s # %s", Swi.name, g_MaxKeyNameLen, lbuf, Swi.kszHelp );
-   #else
-      pFBuf->xFmtLastLine( &xb, "%-20s: %s", Swi.name, lbuf );
-   #endif//AHELPSTRINGS
       }
    }
 

@@ -105,7 +105,7 @@ terminating NUL.
   BUFBYTES number of bytes in a buffer, including space for the terminating NUL
 
 */
-constexpr COL COL_MAX  = INT_MAX-1; // -1 is a HACK to avoid integer overflow in cases like alcc->PutColor( xMin, xMax-xMin+1, COLOR::COM ); where xMin==0 and xMax==COL_MAX
+constexpr COL COL_MAX  = INT_MAX-1; // -1 is a HACK to avoid integer overflow in cases like alcc->PutColor( xMin, xMax-xMin+1, ColorTblIdx::COM ); where xMin==0 and xMax==COL_MAX
 
 constexpr COL LINELEN  = (512)+1  ;    // DEPRECATED
 constexpr COL BUFBYTES = LINELEN+1;    // DEPRECATED
@@ -121,50 +121,8 @@ typedef  FmtStr<2*BUFBYTES>  Sprintf2xBuf;
 #define  USE_CURSORLINE_HILITE       1
 #define  USE_CURSORLINE_VERT_HILITE  1
 
-//
 // Editor color table indicies
-enum { // these are COLOR CODES!
-   fgBLK =  0x0,
-   fgBLU =  0x1,
-   fgGRN =  0x2,
-   fgCYN =  0x3,
-   fgRED =  0x4,
-   fgPNK =  0x5,
-   fgBRN =  0x6,
-   fgDGR =  0x7,
-   fgMGR =  0x8,
-   fgLBL =  0x9,
-   fgLGR =  0xA,
-   fgLCY =  0xB,
-   fgLRD =  0xC,
-   fgLPK =  0xD,
-   fgYEL =  0xE,
-   fgWHT =  0xF,
-   //------------
-   bgBLK = (fgBLK<<4),
-   bgBLU = (fgBLU<<4),
-   bgGRN = (fgGRN<<4),
-   bgCYN = (fgCYN<<4),
-   bgRED = (fgRED<<4),
-   bgPNK = (fgPNK<<4),
-   bgBRN = (fgBRN<<4),
-   bgDGR = (fgDGR<<4),
-   bgMGR = (fgMGR<<4),
-   bgLBL = (fgLBL<<4),
-   bgLGR = (fgLGR<<4),
-   bgLCY = (fgLCY<<4),
-   bgLRD = (fgLRD<<4),
-   bgLPK = (fgLPK<<4),
-   bgYEL = (fgYEL<<4),
-   bgWHT = (fgWHT<<4),
-
-   //------------ masks
-   FGmask=0x0F, BGmask=0xF0,
-   FGhi  =0x08, BGhi  =0x80,
-   FGbase=0x07, BGbase=0x70,
-   };
-
-namespace COLOR { // see color2Lua
+namespace ColorTblIdx { // see color2Lua
    enum { // these are ARRAY _INDICES_!
       TXT,  // foreground (normal)
       HIL,  // highlighted region
@@ -184,7 +142,7 @@ namespace COLOR { // see color2Lua
       }; // NO MORE THAN 16 ALLOWED!
    }
 
-// CompileTimeAssert( COLOR::COLOR_COUNT <= 16 ); // all COLOR:: must fit into a nibble
+// CompileTimeAssert( ColorTblIdx::COLOR_COUNT <= 16 ); // all ColorTblIdx:: must fit into a nibble
 
 extern uint8_t g_colorInfo     ; // INF
 extern uint8_t g_colorStatus   ; // STA
@@ -200,19 +158,16 @@ struct Point {   // file location
    COL     col = 0;
    Point() {}
    Point( LINE yLine, COL xCol ) : lin(yLine), col(xCol) {}
+   Point( const YX_t &src ) : lin( src.lin ), col( src.col ) {} // conv from conio.h type
    Point( const Point  &rhs, LINE yDelta=0, COL xDelta=0 ) : lin(rhs.lin + yDelta), col(rhs.col + xDelta) {} // COPY CTOR
    void Set( LINE yLine, COL xCol ) { lin = yLine, col = xCol; }
-   void ScrollTo( COL xWidth=1 ) const;
    bool operator==( const Point &rhs ) const { return lin == rhs.lin && col == rhs.col; }
    bool operator!=( const Point &rhs ) const { return !(*this == rhs); }
    bool operator< ( const Point &rhs ) const { return lin < rhs.lin || (lin == rhs.lin && col < rhs.col); }
    bool operator> ( const Point &rhs ) const { return lin > rhs.lin || (lin == rhs.lin && col > rhs.col); }
    bool operator>=( const Point &rhs ) const { return !(*this < rhs); }
    bool operator<=( const Point &rhs ) const { return !(*this > rhs); }
-   Point( const YX_t &src ) : lin( src.lin ), col( src.col) {}
    }; // HAS CTORS, so union canNOT HAS-A one of these
-
-typedef Point *PPoint;
 
 class FBufLocn { // dflt ctor leaves locn empty; must be Set() later
    PFBUF d_pFBuf;
@@ -222,7 +177,7 @@ public:
    FBufLocn() : d_pFBuf(nullptr) {}
    FBufLocn( PFBUF pFBuf, const Point &pt ) : d_pFBuf(pFBuf), d_pt(pt) {}
    void Set( PFBUF pFBuf, Point pt, COL width=1 ) { d_pFBuf=pFBuf, d_pt=pt, d_width=width; }
-   bool ScrollToOk() const;
+   bool         ScrollToOk() const;
    bool         IsSet()     const { return d_pFBuf != nullptr; }
    bool         InCurFBuf() const;
    bool         Moved()     const;
@@ -257,9 +212,9 @@ class Xbuf {
    // ever-growing line buffer intended to be used for all lines touched over
    // the duration of a command or operation, in lieu of malloc'ing a buffer for
    // each line touched.
-   PChar                  d_buf;
-   size_t                 d_buf_bytes;
-   STATIC_VAR char        ds_empty;
+   PChar           d_buf;
+   size_t          d_buf_bytes;
+   STATIC_VAR char ds_empty;
 public:
    Xbuf()                          : d_buf (&ds_empty), d_buf_bytes( 0 ) {}
    Xbuf( size_t size )             : d_buf ( nullptr ), d_buf_bytes( 0 ) { wresize( size ); }
@@ -370,14 +325,6 @@ public:
          }
       return *this;
       }
-   void CheckDump( PCChar msg, PFBUF pFBuf, LINE yLine ) const;
-   bool Check( PCChar msg, PFBUF pFBuf, LINE yLine ) const {
-      if( !d_pLineData || d_iLineLen < 5000 ) {
-         return false;
-         }
-      CheckDump( msg, pFBuf, yLine );
-      return true;
-      }
    void   PutContent( stref src );
    void   FreeContent( const FBUF &fbuf );
    PCChar GetLineRdOnly()                        const { return d_pLineData; }
@@ -436,11 +383,6 @@ enum                      // Actually can be set in ARG::Abc?
 // note that 'mark' fxn does NOT have NUMARG set!  I guess it uses atoul()?
 #define IS_NUMARG    (d_argType == LINEARG)
 #define NUMARG_VALUE (d_linearg.yMax - d_linearg.yMin + 1)
-
-
-//
-//  Argument defininition struct+union
-//
 
 struct CMD;
 typedef       CMD *         PCMD;
@@ -554,22 +496,14 @@ typedef ARG::pfxCMD funcCmd;
 STIL funcCmd fn_runmacro()  { return &ARG::RunMacro   ; }
 STIL funcCmd fn_runLua()    { return &ARG::ExecLuaFxn ; }
 
-#define AHELPSTRINGS  1
-#if     AHELPSTRINGS
 #   define  AHELP( x )   x
 #   define _AHELP( x ) , x
-#else
-#   define  AHELP( x )
-#   define _AHELP( x )
-#endif//AHELPSTRINGS
 
 struct CMD {             // function definition entry
    PCChar   d_name;      // - pointer to name of fcn     !!! DON'T CHANGE ORDER OF FIRST 2 ELEMENTS
    funcCmd  d_func;      // - pointer to function        !!! UNLESS you change initializer of macro_graphic
    uint32_t d_argType;   // - user args allowed
-#if AHELPSTRINGS
    PCChar   d_HelpStr;   // - help string shown in <CMD-SWI-Keys>
-#endif
    union {
       EdKC_Ascii eka;
       PCChar     pszMacroDef;
@@ -671,16 +605,16 @@ public:
    void         SaveCur()     { d_saved.Set( d_current ); }
    void         SavePrevCur() { d_prev .Set( d_current ); }
    void         ScrollToPrev();
-   void         GetCursor( PPoint pPt ) const { *pPt = d_current.Cursor; }
+   Point        GetCursor() const { return d_current.Cursor; }
    void         CapturePrevLineCount();
    LINE         PrevLineCount() const { return d_prevLineCount; }
 private:
    void         MoveCursor_( LINE yLine, COL xColumn, COL xWidth, bool fUpdtWUC );
 public:
    void         MoveCursor(           LINE yLine, COL xColumn, COL xWidth=1 )   { MoveCursor_( yLine, xColumn, xWidth, true  ); }
+   void         MoveCursor( const Point &pt, COL xWidth=1 )                     { MoveCursor_( pt.lin, pt.col, xWidth, true  ); }
    void         MoveCursor_NoUpdtWUC( LINE yLine, COL xColumn, COL xWidth=1 )   { MoveCursor_( yLine, xColumn, xWidth, false ); }
-   void         MoveCursor( const Point &pt )                                   { MoveCursor( pt.lin, pt.col ); }
-   void         MoveAndCenterCursor( const Point &pt, COL width );
+   void         MoveAndCenterCursor( const Point &pt, COL xWidth );
 private:
    void         ScrollOriginAndCursor_(         LINE ulc_yLine, COL ulc_xCol, LINE cursor_yLine, COL cursor_xCol, bool fUpdtWUC );
 public:
@@ -1023,7 +957,7 @@ private:          // called by DoUserUndoOrRedo
    bool           RmvOneEdOp_fNextIsBoundary( bool fFromListHead );
    void           SetUndoStateToBoundrec();
 public:
-   bool           DoUserUndoOrRedo( bool fRedo ); // API actually called ARG::undo() & ARG::redo()
+   bool           DoUserUndoOrRedo( bool fRedo ); // called by ARG::undo() & ARG::redo()
    //************ Undo/Redo FBUF edit API
 private:
    void           UndoReplaceLineContent(  LINE lineNum  , stref newContent );
@@ -1451,8 +1385,8 @@ struct TGlobalStructs  // in a struct for easier debugger access
 
 extern TGlobalStructs g__;
 
-STIL int          g_iWindowCount() { return  g__.aWindow.size()       ; }
-STIL int          g_CurWindowIdx() { return  g__.ixCurrentWin         ; }
+STIL size_t       g_iWindowCount() { return  g__.aWindow.size()       ; }
+STIL size_t       g_CurWindowIdx() { return  g__.ixCurrentWin         ; }
 STIL PCWin        g_Win( int ix )  { return  g__.aWindow[ ix ]        ; }
 STIL PWin         g_WinWr( int ix ){ return  g__.aWindow[ ix ]        ; }
 STIL PCWin        g_CurWin()       { return  g_Win( g__.ixCurrentWin ); }
@@ -1472,16 +1406,11 @@ STIL const Point &g_Cursor()       { return  g_CurView()->Cursor(); } // NOT CAC
 STIL LINE         g_CursorLine()   { return  g_Cursor().lin       ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
 STIL COL          g_CursorCol()    { return  g_Cursor().col       ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
 
-#if 1
 // this extern decl _was_ inside each of g_CurFBuf() and g_UpdtCurFBuf()'s bodies,
 // however this led to an optimization-codegen-only Assert in PutFocusOn() !!!  20150405
 extern PFBUF s_curFBuf; // not literally static (s_), but s/b treated as such!
 STIL PFBUF        g_CurFBuf()                { return s_curFBuf; }
 STIL void         g_UpdtCurFBuf( PFBUF pfb ) {        s_curFBuf = pfb; }
-#else
-STIL PFBUF        g_CurFBuf()                { extern PFBUF s_curFBuf; return s_curFBuf; }
-STIL void         g_UpdtCurFBuf( PFBUF pfb ) { extern PFBUF s_curFBuf;        s_curFBuf = pfb; }
-#endif
 
 #define PCF        const auto pcf( g_CurFBuf() )
 #define PCFV  PCV; PCF

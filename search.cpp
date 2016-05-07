@@ -569,12 +569,12 @@ void View::SetStrHiLite( const Point &pt, COL Cols, int color ) {
    }
 
 void View::SetMatchHiLite( const Point &pt, COL Cols, bool fErrColor ) {
-   const auto colorIdx( fErrColor ? COLOR::ERRM : COLOR::SEL );
+   const auto colorIdx( fErrColor ? ColorTblIdx::ERRM : ColorTblIdx::SEL );
    const auto hiliteWidth( Cols > 0 ? Cols : 1 );
    enum { MWHOSMHL = 0 }; // -> MASK_WUC_HILITES_ON_SEARCH_MATCH_HILIT_LINE
-   if( MWHOSMHL && pt.col > 0 ) { InsHiLite1Line( COLOR::CXY, pt.lin, 0                   , pt.col               - 1 ); }
-                                  InsHiLite1Line( colorIdx  , pt.lin, pt.col              , pt.col + hiliteWidth - 1 );
-   if( MWHOSMHL               ) { InsHiLite1Line( COLOR::CXY, pt.lin, pt.col + hiliteWidth, COL_MAX                  ); }
+   if( MWHOSMHL && pt.col > 0 ) { InsHiLite1Line( ColorTblIdx::CXY, pt.lin, 0                   , pt.col               - 1 ); }
+                                  InsHiLite1Line( colorIdx        , pt.lin, pt.col              , pt.col + hiliteWidth - 1 );
+   if( MWHOSMHL               ) { InsHiLite1Line( ColorTblIdx::CXY, pt.lin, pt.col + hiliteWidth, COL_MAX                  ); }
    }
 
 class HiLiteFreer {
@@ -768,6 +768,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
    const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, colLastPossibleLastMatchChar ) );
    d_captures.clear();
    int idxOfLastCharInMatch;
+#if USE_PCRE
    if( d_ss.IsRegex() ) {
       const auto searchChars( ixLastPossibleLastMatchChar - ix_curPt_Col + 1 );
       const auto haystack( rl.substr( ix_curPt_Col, searchChars ) );
@@ -780,7 +781,9 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
          return CONTINUE_SEARCH;
          }
       }
-   else {
+   else
+#endif
+      {
       const auto haystack( rl.substr( ix_curPt_Col, srRawSearch.length() ) );
       0 && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
                       , curPt->lin, curPt->col, srRawSearch.length()
@@ -813,7 +816,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
       DispDoPendingRefreshesIfNotInMacro();
       const auto matchCols( xMatchMax - xMatchMin + 1 );
     #if 1
-      curPt->ScrollTo( matchCols );
+      pView->MoveCursor( *curPt, matchCols );
     #else
       pView->MoveAndCenterCursor( *curPt, matchCols );
     #endif
@@ -955,7 +958,7 @@ STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all dup
       pFbuf->InsLine( 0, str, tmp );
       ++mods;
       }
-   if( mods ) { DBG( "mods!" );
+   if( mods ) {
       pFbuf->UnDirty();  // cosmetic
       }
    }
@@ -1697,7 +1700,11 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to
          // prev one)
+       #if USE_PCRE
          #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? 0 : PCRE_NOTBOL)
+       #else
+         #define  SET_HaystackHas(startOfs)  (0)
+       #endif
          const auto srMatch( VFindStr_( haystack, 0, SET_HaystackHas(0) ) );
          if( !srMatch.empty() ) {
             COL goodMatchChars( srMatch.length() );
@@ -1963,13 +1970,13 @@ CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_cu
       if( !isWordChar( sr[ix_curPt_Col] ) || (ix_curPt_Col > 0 && isWordChar( sr[ix_curPt_Col-1] )) ) {
          return CONTINUE_SEARCH;
          }
-      curPt->ScrollTo();
+      g_CurView()->MoveCursor( *curPt );
       return STOP_SEARCH;
       }
    else { // rtn true iff curPt->col is LAST CHAR OF WORD
       if( curPt->col <= 0 )                   { return CONTINUE_SEARCH; }
       if( !isWordChar( sr[ix_curPt_Col-1] ) ) { return CONTINUE_SEARCH; }
-      if( !isWordChar( sr[ix_curPt_Col  ] ) ) { curPt->ScrollTo(); return STOP_SEARCH; }
+      if( !isWordChar( sr[ix_curPt_Col  ] ) ) { g_CurView()->MoveCursor( *curPt ); return STOP_SEARCH; }
       if( curPt->col != colLastPossibleLastMatchChar ) { return CONTINUE_SEARCH; }
       g_CurView()->MoveCursor( curPt->lin, curPt->col+1 );
       return STOP_SEARCH;

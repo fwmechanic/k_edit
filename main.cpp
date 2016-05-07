@@ -362,7 +362,7 @@ void WriteStateFile() {
 
 STATIC_FXN void InitFromStateFile() { enum { DD=0 };   DD && DBG( "%s+", FUNC );
    RecoverFromStateFile();
-   SetWindow0();                                       DD && DBG( "%s %d windows", FUNC, g_iWindowCount() );
+   SetWindow0();                                       DD && DBG( "%s %" PR_SIZET " windows", FUNC, g_iWindowCount() );
    if( !SwitchToNextCmdlineFile()
        && USER_INTERRUPT == ExecutionHaltRequested()
      ) {
@@ -396,13 +396,17 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    CmdIdxClose();
                                                          DV && DBG("%s CloseFTypeSettings();", __func__ );
    CloseFTypeSettings();
-                                                         DV && DBG("%s DestroyViewList(%d);", __func__, g_iWindowCount() );
+                                                         DV && DBG("%s DestroyViewList(%" PR_SIZET ");", __func__, g_iWindowCount() );
    for( auto &win : g__.aWindow ) {
       DestroyViewList( &win->ViewHd );
       }                                                  DV && DBG("%s RemoveFBufOnly();", __func__ );
+#if FBUF_TREE
+
+#else
    while( auto pFb = g_FBufHead.front() ) {
       pFb->RemoveFBufOnly();
       }
+#endif
    // finally, garbage-collect the bits and pieces:
                                                          DV && DBG("%s ConIO_Shutdown();", __func__ );
    ConIO_Shutdown();

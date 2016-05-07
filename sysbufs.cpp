@@ -162,14 +162,14 @@ bool ARG::files() {  // bound to alt+f2
    const auto fWinFiles( true );
    const auto winIdx( g_CurWindowIdx() );
    if( !g_CurFBuf()->IsFileInfoFile( winIdx ) ) {
-      return fChangeFile( fWinFiles ? FmtStr<20>("<win%d>", winIdx ) : kszFiles );
+      return fChangeFile( fWinFiles ? FmtStr<20>("<win%" PR_SIZET ">", winIdx ) : kszFiles );
       }
    //////////////////////////////////////////////////////////////////////////
    //
    // <files> or <wfiles> WAS current when the cmd was executed:
    //
    // Put the top 2 interesting files in <files> at the VERY top of the <files>
-   // stack, so that "setfile" function can can be used to swap between them
+   // stack, so that "setfile" function can can be used to toggle between them
    // directly.
    //
    //////////////////////////////////////////////////////////////////////////
@@ -314,7 +314,7 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills kszFiles
 #endif
       {
 #if FBUF_TREE
-      PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
+      auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
       if( !pFBuf->HasLines() ) {
          continue;
@@ -470,7 +470,7 @@ bool ARG::wr0() {
 #endif
       {
 #if FBUF_TREE
-      PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
+      auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
       if( pFBuf->TmLastWrToDisk() > 0 ) {
          pFBuf->Reset_TmLastWrToDisk();
@@ -491,7 +491,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
 #endif
       {
 #if FBUF_TREE
-      PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
+      auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
       if( pFBuf->TmLastWrToDisk() > 0 ) {
          ++count;
@@ -509,7 +509,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
 #endif
       {
 #if FBUF_TREE
-      PCFBUF pFBuf( IdxNodeToFBUF( pNd ) );
+      auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
       if( pFBuf->TmLastWrToDisk() > 0 ) { DB && DBG( "[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
          fbufs[ix++] = pFBuf;
