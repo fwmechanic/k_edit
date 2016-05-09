@@ -644,6 +644,26 @@ STATIC_VAR std::string g_SavedSearchString_Buf ;
 GLOBAL_VAR std::string g_SnR_stSearch          ;
 GLOBAL_VAR std::string g_SnR_stReplacement     ;
 
+/*
+   Algorithm-confluence BUG: the strategy used by CharWalkerReplace /
+   CharWalker_ is to search starting at EVERY CHARACTER of a candidate line
+   (i.e.  a candidate line of N characters will be searched N times (N different
+   candidate strings)) in the candidate region, and only process a match if the
+   search matches at the 0th CHARACTER of the candidate string.  With Regex
+   search, there are patterns which depend on visibility of previous (same-line)
+   characters in the candidate region to EXCLUDE a matching condition (EX: a
+   leading \b, e.g.  \bidentifiername\b), which, using the current strategy,
+   FAIL to EXCLUDE a matching condition (EX:
+
+   "\bidentifiername\b", line "anotheridentifiername( ... )"
+
+   by the current strategy, a search of candidate string "ridentifiername( ... )"
+   will occur, but a match starting at offset 1 will be ignored.  The next
+   search will be of candidate string "identifiername( ...  )" which will match.
+   The fact that we pass in PCRE_NOTBOL due to (curPt_at_BOL ?  0 : PCRE_NOTBOL)
+   does not help us.
+
+ */
 class CharWalkerReplace : public CharWalker_ {
    std::string             d_sbuf;
    std::string             d_stmp;
@@ -761,7 +781,7 @@ public:
    CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) override;
    };
 
-CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) {
+CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, const bool curPt_at_BOL ) {
    // replace iff string *** starting at rl[ix_curPt_Col] *** matches
    const auto srRawSearch( d_ss.SrchStr() );
    const auto tw( pFBuf->TabWidth() );
@@ -1053,9 +1073,9 @@ STATIC_FXN void GarbageCollectFBUF( PFBUF pFBuf, bool fGarbageCollect ) {
    // is driven by walking the windows' View lists).
    }
 
-STATIC_FXN void MFGrepProcessFile( PCChar filename, FileSearcher *d_fs ) {
+STATIC_FXN void MFGrepProcessFile( stref filename, FileSearcher *d_fs ) {
    const auto pFBuf( FBOP::FindOrAddFBuf( filename ) );
-   0 && DBG( "d_dhdViewsOfFBUF.IsEmpty(%s)==%c", filename, pFBuf->ViewCount()==0?'t':'f' );
+   0 && DBG( "d_dhdViewsOfFBUF.IsEmpty(%" PR_BSR ")==%c", BSR(filename), pFBuf->ViewCount()==0?'t':'f' );
    const auto fWeCanGarbageCollectFBUF( !pFBuf->HasLines() );
    if( pFBuf->RefreshFailedShowError() ) {
       return;
@@ -1103,7 +1123,7 @@ std::string DupTextMacroValue( PCChar macroName ) {
    return std::string( tokStrt, txtLen );
    }
 
-STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, size_t sizeofBuf=0 ) { enum { DB=0 };
+STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( PChar nmBuf=nullptr, size_t sizeofBuf=0 ) { enum { DB=0 };
    {
    const auto mfspec_text( DupTextMacroValue( "mffile" ) );
    if( !IsStringBlank( mfspec_text ) ) {
@@ -1147,12 +1167,12 @@ STATIC_FXN PathStrGenerator *GrepMultiFilenameGenerator( PChar nmBuf=nullptr, si
 
 #ifdef fn_mgl
 bool ARG::mgl() {
-   PathStrGenerator *pGen = GrepMultiFilenameGenerator();
+   auto pGen( MultiFileGrepFnmGenerator() );
    if( pGen ) {
       auto ix(0);
-      pathbuf pbuf;
-      while( pGen->GetNextName( BSOB(pbuf) ) ) {
-         DBG( "  [%d] = '%s'", ix++, pbuf );
+      Path::str_t pbuf;
+      while( pGen->VGetNextName( pbuf ) ) {
+         DBG( "  [%d] = '%" PR_BSR "'", ix++, BSR(pbuf) );
          }
       Delete0( pGen );
       }
@@ -1180,16 +1200,16 @@ bool ARG::mfgrep() {
       }
    mh.InitLogFile( *pSrchr );
    pathbuf gen_info;
-   auto pGen( GrepMultiFilenameGenerator( gen_info, sizeof gen_info ) );
-   if( pGen ) { 1 && DBG( "%s using %s", __PRETTY_FUNCTION__, gen_info );
+   auto pGen( MultiFileGrepFnmGenerator( gen_info, sizeof gen_info ) );
+   if( !pGen ) {
+      ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
+      }
+   else { 1 && DBG( "%s using %s", __PRETTY_FUNCTION__, gen_info );
       Path::str_t pbuf;
       while( pGen->VGetNextName( pbuf ) ) {
          MFGrepProcessFile( pbuf.c_str(), pSrchr );
          }
       Delete0( pGen );
-      }
-   else {
-      ErrorDialogBeepf( "GrepMultiFilenameGenerator -> nil" );
       }
    Delete0( pSrchr );
    mh.ShowResults();
@@ -1253,9 +1273,9 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
    CharWalkerReplace mrcw( fInteractive, arg.d_fMeta ? !g_fCase : g_fCase, *s_searchSpecifier );
    if( fMultiFileReplace ) {
       const auto startingTopFbuf( g_CurFBuf() );
-      auto pGen( GrepMultiFilenameGenerator() );
+      auto pGen( MultiFileGrepFnmGenerator() );
       if( !pGen ) {
-         ErrorDialogBeepf( "GrepMultiFilenameGenerator -> nil" );
+         ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
          }
       else {
          Path::str_t pbuf;
