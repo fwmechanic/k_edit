@@ -2678,19 +2678,18 @@ do -- see justify.cpp for missing functionality
 
       local maxLen = xMax - xMin + 1
       local lines, ob = {}, ""
-      local function prep_tok( tok ) return tok:gsub( "([.?!])$", "%1 " ) end
-
       lbuf:gsub( "%S+"
        , function(tok)
             if #ob + #tok > maxLen then
-               lines[ #lines+1 ] = util.trim( ob )
-               ob = prep_tok( tok )
+               lines[ #lines+1 ] = ob:match( "%S.+%S" )
+               ob = tok
             else
-               ob = ob.." "..prep_tok( tok )  -- why we need util.trim( ob ) elsewhere
+               local betw = string.rep( " ", ob:match( "([.?!])$" ) and tok:match( "^[A-Z]" ) and 2 or 1 )
+               ob = ob .. betw .. tok
                end
             end
          )
-      if #ob > 0 then lines[ #lines+1 ] = util.trim( ob ) end
+      if #ob > 0 then lines[ #lines+1 ] = ob:match( "%S.+%S" ) end
 
       -- for ix,tt in ipairs( lines ) do printf( "%3d: %s|", ix, tt ) end
 
