@@ -30,6 +30,7 @@ public:
    sridx offset() const { return d_ofs  ; }
    };
 typedef std::vector<RegexMatchCapture> RegexMatchCaptures;
+extern int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag );
 
 #if USE_PCRE
 

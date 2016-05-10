@@ -813,14 +813,20 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
    if( d_ss.IsRegex() ) {
       const auto searchChars( ixLastPossibleLastMatchChar - ix_curPt_Col + 1 );
       const auto haystack( rl.substr( ix_curPt_Col, searchChars ) );
-      0 && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
-                      , curPt->lin, curPt->col, searchChars
-                                                    , BSR(srRawSearch), BSR(haystack)
+      const auto pcre_exec_flags( curPt_at_BOL ? 0 : PCRE_NOTBOL );
+      0 && DBG( "%s ( %d, %d L %" PR_SIZET " %x) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
+                      , curPt->lin
+                          , curPt->col
+                               , searchChars
+                                             , pcre_exec_flags
+                                                      , BSR(srRawSearch),
+                                                                       BSR(haystack)
               );
-      const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, 0, curPt_at_BOL ? 0 : PCRE_NOTBOL ) );
-      if( rv == 0 || !d_captures[0].valid() || d_captures[0].offset() > 0 ) {
+      const auto rv( Regex_Match( d_ss.re(), d_captures, rl, ix_curPt_Col, pcre_exec_flags ) );
+      if( rv == 0 || !d_captures[0].valid() ) {
          return CONTINUE_SEARCH;
          }
+      0 && DbgDumpCaptures( d_captures, "?" );
       }
    else
 #endif
@@ -836,6 +842,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
          }
       d_captures.emplace_back( relIxMatch, haystack.substr( relIxMatch, srRawSearch.length() ) );
       }
+   // d_captures[0] describes the overall match
    const auto ixMatchMin( ix_curPt_Col + d_captures[0].offset() );
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
    if( ixMatchMax > ixLastPossibleLastMatchChar ) { // match that lies partially OUTSIDE a BOXARG: skip
@@ -850,54 +857,67 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
    const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
    ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
    stref srReplace( GenerateReplacement() ); // generates d_promptCsrs too!
+   enum { DOREPLACE, JUSTSKIP } doSomething( DOREPLACE );
    if( d_fDoReplaceQuery ) { // interactive-replace?
       //##### interactive-replace (mfreplace/qreplace) ONLY ...
       const auto pView( pFBuf->PutFocusOn() );
       pView->FreeHiLiteRects();
       DispDoPendingRefreshesIfNotInMacro();
       const auto matchCols( xMatchMax - xMatchMin + 1 );
+      Point matchBegin( curPt->lin, xMatchMin );
     #if 1
-      pView->MoveCursor( *curPt, matchCols );
+      pView->MoveCursor( matchBegin, matchCols );
     #else
-      pView->MoveAndCenterCursor( *curPt, matchCols );
+      pView->MoveAndCenterCursor( matchBegin, matchCols );
     #endif
-      pView->SetMatchHiLite( *curPt, matchCols, true );
+      pView->SetMatchHiLite( matchBegin, matchCols, true );
       DispDoPendingRefreshesIfNotInMacro();
       HiLiteFreer hf;
-                                          //  allowed responses
-                                          //  |       interactive dflt: cause retry by NOT matching any explicit case below
-                                          //  |       |    macro dflt:
-                                          //  |       |    |
-      const auto ch( chGetCmdPromptResponse( "ynaq", '?', 'a', d_promptCsrs ) );
+#if USE_PCRE
+      const auto szAllowed( d_ss.IsRegex() ? "ynsaq" : "ynaq" );
+#else
+      constexpr auto szAllowed( "ynaq" );
+#endif
+      const auto ch( chGetCmdPromptResponse
+         ( szAllowed     //  allowed responses
+         , '?'           //  interactive dflt: cause retry by NOT matching any explicit case below
+         , 'a'           //  macro dflt:
+         , d_promptCsrs  //
+         ) );
       switch( ch ) {
          default:  Assert( 0 ); // chGetCmdPromptResponse has bug or params wrong
          case -1 :                                  // fall thru!
          case 'q': SetUserChoseEarlyCmdTerminate();
                    return STOP_SEARCH;
          case 'n': return CONTINUE_SEARCH;
-         case 'a': d_fDoReplaceQuery = false;       // fall thru!
-         case 'y': break;                           // perform replacement (below)
+         case 'a': d_fDoReplaceQuery = false;  // fall thru!
+         case 'y': break;                      // perform replacement (below)
+         case 's': doSomething = JUSTSKIP ;    // perform skip (below)
+                   break;
          }
       }
-   // perform replacement
-   pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-   const auto ixdestMatchMin( CaptiveIdxOfCol( tw, d_sbuf, xMatchMin ) );
-   const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
-   const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
-   d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
-   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
-   pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
-   ++d_iReplacementsMade;
-   // replacement done: adjust end of this line search domain
-   // replacement done: position curPt->col for next search
-   const sridx advance( destMatchChars > srReplace.length()
-                      ? destMatchChars - srReplace.length()
-                      : srReplace.length() - destMatchChars
-                      );
-   colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
-   curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() - 1 );
-   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
-   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
+   if( doSomething == DOREPLACE ) {
+      // perform replacement
+      pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
+      const auto ixdestMatchMin( CaptiveIdxOfCol( tw, d_sbuf, xMatchMin ) );
+      const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
+      const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
+      d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
+      0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
+      pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
+      ++d_iReplacementsMade;
+      // replacement done: adjust end of this line search domain
+      // replacement done: position curPt->col for next search
+      const sridx advance( destMatchChars > srReplace.length()
+                         ? destMatchChars - srReplace.length()
+                         : srReplace.length() - destMatchChars
+                         );
+      colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
+      curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() - 1 );
+      // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
+      // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
+      return REREAD_LINE_CONTINUE_SEARCH;
+      }
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 

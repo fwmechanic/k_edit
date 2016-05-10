@@ -90,6 +90,14 @@ CompiledRegex::~CompiledRegex() {
    (*pcre_free)( d_pPcreExtra );
    }
 
+int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag ) {
+   auto ix(0);
+   for( const auto &el : captures ) {
+      DBG( "%s[%d] '%" PR_BSR "'", tag, ix++, BSR(el.valid() ? el.value() : stref("-1")) );
+      }
+   return 1;
+   }
+
 RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options ) {
    0 && DBG( "CompiledRegex::Match called!" );
    // http://www.pcre.org/original/doc/html/pcreapi.html#SEC17  "MATCHING A PATTERN: THE TRADITIONAL FUNCTION" describes pcre_exec()
