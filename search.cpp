@@ -646,22 +646,43 @@ GLOBAL_VAR std::string g_SnR_stReplacement     ;
 
 /*
    Algorithm-confluence BUG: the strategy used by CharWalkerReplace /
-   CharWalker_ is to search starting at EVERY CHARACTER of a candidate line
-   (i.e.  a candidate line of N characters will be searched N times (N different
-   candidate strings)) in the candidate region, and only process a match if the
-   search matches at the 0th CHARACTER of the candidate string.  With Regex
+   CharWalker_ is to search starting at EVERY character of a candidate line in
+   the candidate region, (i.e.  a candidate line of N characters will be searched
+   N times (N different candidate strings)) and only process a match if the
+   search matches at the 0th character of the candidate string.  With Regex
    search, there are patterns which depend on visibility of previous (same-line)
    characters in the candidate region to EXCLUDE a matching condition (EX: a
-   leading \b, e.g.  \bidentifiername\b), which, using the current strategy,
-   FAIL to EXCLUDE a matching condition (EX:
+   leading \b, e.g. \bidentifiername\b), which, using the current strategy, FAIL
+   to EXCLUDE a matching condition (EX:
 
    "\bidentifiername\b", line "anotheridentifiername( ... )"
 
-   by the current strategy, a search of candidate string "ridentifiername( ... )"
-   will occur, but a match starting at offset 1 will be ignored.  The next
-   search will be of candidate string "identifiername( ...  )" which will match.
-   The fact that we pass in PCRE_NOTBOL due to (curPt_at_BOL ?  0 : PCRE_NOTBOL)
-   does not help us.
+   by the current strategy, a search of candidate string "ridentifiername(...)"
+   will occur, but a match starting at offset 1 will be ignored.  The next search
+   will be of candidate string "identifiername(...)" which will match.  The fact
+   that we pass in PCRE_NOTBOL due to (curPt_at_BOL ? 0 : PCRE_NOTBOL) does not
+   help us because \b means http://perldoc.perl.org/perlre.html
+
+      A word boundary (\b) is a spot between two characters that has a \w on one
+      side of it and a \W on the other side of it (in either order), counting the
+      imaginary characters off the beginning and end of the string as matching a \W.
+
+   Idea for a fix:
+
+   today:
+     when we call Regex_Match we do so with param haystack_offset==0 always and
+     this leads to pcre_exec "believing" that (a) there is no visible character
+     which it can test for \W membership, and (b) regardless of PCRE_NOTBOL being
+     asserted, the preceding (invisible/inaccessible) char is (evidently) assumed
+     to match \b.
+
+   tomorrow:
+     call Regex_Match with param haystack containing the entire "candidate
+     line", and with haystack_offset indexing into it (due to previous
+     matche(s)(+=replacement(s)) on the line).  This seems likely to (if
+     haystack_offset > 0) give pcre_exec visibility into the preceding characters
+     in the string such that the \b-prefixed examples given above will operate
+     correctly.
 
  */
 class CharWalkerReplace : public CharWalker_ {
@@ -860,20 +881,21 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
       }
    // perform replacement
    pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-   const auto ixdestMatchMin( ColOfFreeIdx( tw, d_sbuf, xMatchMin ) );
-   const auto ixdestMatchMax( ColOfFreeIdx( tw, d_sbuf, xMatchMax ) );
+   const auto ixdestMatchMin( CaptiveIdxOfCol( tw, d_sbuf, xMatchMin ) );
+   const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
    const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
-   d_sbuf.replace( ixdestMatchMin, ixdestMatchMax - ixdestMatchMin + 1, BSR2STR(srReplace) );
+   d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
    0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
    ++d_iReplacementsMade;
+   // replacement done: adjust end of this line search domain
    // replacement done: position curPt->col for next search
-   if( destMatchChars != 0 || srReplace.length() != 0 ) {
-      curPt->col += srReplace.length() - 1;
-      }
-   // did colLastPossibleLastMatchChar grow or shrink?
-   colLastPossibleLastMatchChar += srReplace.length() - destMatchChars;
-   NoLessThan( &colLastPossibleLastMatchChar, 0 );
+   const sridx advance( destMatchChars > srReplace.length()
+                      ? destMatchChars - srReplace.length()
+                      : srReplace.length() - destMatchChars
+                      );
+   colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
+   curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() - 1 );
    // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
    // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
    return REREAD_LINE_CONTINUE_SEARCH;

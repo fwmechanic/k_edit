@@ -1,4 +1,5 @@
 
+arg arg qreplace "\bst([a-z0-9]+)se(co)nd([a-z0-9]+)again\b" nl "*\2*\1*\9*"
 arg arg qreplace "first([a-z0-9]+)se(co)nd([a-z0-9]+)again" nl "*\2*\1*\9*"
 arg arg qreplace "first([a-z0-9]+)se(co)nd([a-z0-9]+)again" nl "*\2*\1*\3*"
 arg arg "first([a-z0-9]+)second([a-z0-9]+)again" grep
@@ -6,6 +7,7 @@ arg arg qreplace "first([a-z0-9]+)second([a-z0-9]+)again" nl "*\1*\2*"
 arg arg replace "first([a-z0-9]+)second([a-z0-9]+)again" nl "*\1*\2*" nl <a nl
 
 firstcapt1secondcapt2again firstahasecondmannaagain
+stcapt1secondcapt2again firstahasecondmannaagain
 firstahasecondmannaagain
  firstahasecondmannaagain firstcapt1secondcapt2again
 firstcapt1secondcapt2again

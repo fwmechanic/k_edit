@@ -56,9 +56,8 @@ STIL int pd2Int( ptrdiff_t pd ) {
 extern   int   uint_log_10( int lmax );
 
 class BoolOneShot { // simple utility functor
-   bool first;
+   bool first = true;
 public:
-   BoolOneShot() : first(true) {}
    int operator() () { const bool rv( first ); first = false; return rv; }
    };
 
