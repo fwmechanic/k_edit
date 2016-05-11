@@ -857,7 +857,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
    const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
    ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
    stref srReplace( GenerateReplacement() ); // generates d_promptCsrs too!
-   enum { DOREPLACE, JUSTSKIP } doSomething( DOREPLACE );
+   enum { DOREPLACE, SKIP_WHOLE_MATCH } doSomething( DOREPLACE );
    if( d_fDoReplaceQuery ) { // interactive-replace?
       //##### interactive-replace (mfreplace/qreplace) ONLY ...
       const auto pView( pFBuf->PutFocusOn() );
@@ -892,33 +892,39 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
          case 'n': return CONTINUE_SEARCH;
          case 'a': d_fDoReplaceQuery = false;  // fall thru!
          case 'y': break;                      // perform replacement (below)
-         case 's': doSomething = JUSTSKIP ;    // perform skip (below)
+         case 's': doSomething = SKIP_WHOLE_MATCH ;    // perform skip (below)
                    break;
          }
       }
-   if( doSomething == DOREPLACE ) {
-      // perform replacement
-      pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-      const auto ixdestMatchMin( CaptiveIdxOfCol( tw, d_sbuf, xMatchMin ) );
-      const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
-      const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
-      d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
-      0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
-      pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
-      ++d_iReplacementsMade;
-      // replacement done: adjust end of this line search domain
-      // replacement done: position curPt->col for next search
-      const sridx advance( destMatchChars > srReplace.length()
-                         ? destMatchChars - srReplace.length()
-                         : srReplace.length() - destMatchChars
-                         );
-      colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
-      curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() - 1 );
-      // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
-      // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
-      return REREAD_LINE_CONTINUE_SEARCH;
+   // setup to perform replacement
+   pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
+   const auto ixdestMatchMin( CaptiveIdxOfCol( tw, d_sbuf, xMatchMin ) );
+   const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
+   const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
+   switch( doSomething ) {
+      default: // fall thru!
+      case SKIP_WHOLE_MATCH: { // advance cursor past entire match (dflt 'n' only advances to next char)
+         curPt->col = xMatchMax - 1; // -1 because caller advances 1 COL upon return
+         return CONTINUE_SEARCH;
+         }
+      case DOREPLACE: {
+         d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
+         0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
+         pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
+         ++d_iReplacementsMade;
+         // replacement done: adjust end of this line search domain
+         // replacement done: position curPt->col for next search
+         const sridx advance( destMatchChars > srReplace.length()
+                            ? destMatchChars - srReplace.length()
+                            : srReplace.length() - destMatchChars
+                            );
+         colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
+         curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() - 1 ); // -1 because caller advances 1 COL upon return
+         // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
+         // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
+         return REREAD_LINE_CONTINUE_SEARCH;
+         }
       }
-   return REREAD_LINE_CONTINUE_SEARCH;
    }
 
 //
