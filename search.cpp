@@ -1287,7 +1287,30 @@ STATIC_FXN void MFReplaceProcessFile( PCChar filename, CharWalkerReplace *pMrcw 
       }
    }
 
-STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFileReplace ) {
+// bool (*xform_string_fail)( std::string &inout );
+//
+// bool (*xform_string)( std::string &inout )
+// class wrap_front_back {
+//    const PCChar d_s;
+// public:
+//    wrap_front_back( PCChar ss ) : d_s( ss ) {}
+//    void operator( std::string &inout ) const {
+//       STATIC_CONST char s_b[] = "\\b";
+//       inout.insert( 0, s_b );
+//       inout.append( s_b );
+//       }
+//    };
+
+#define REPLACE_STSEARCH_XFORM_LAMBDA 0
+
+#if REPLACE_STSEARCH_XFORM_LAMBDA
+template  <typename Lambda>
+#endif
+STATIC_FXN bool GenericReplace_CollectInputs( bool fRegex, bool fInteractive, bool fMultiFileReplace
+#if REPLACE_STSEARCH_XFORM_LAMBDA
+   , Lambda transform_stSearch
+#endif
+   ) {
    STATIC_CONST char szReplace[] = "Replace string: "; // these two defined adjacently so ...
    STATIC_CONST char szSearch [] = "Search string:  "; // ... they are kept the same length
    DispDoPendingRefreshesIfNotInMacro();
@@ -1298,7 +1321,10 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
       return false;
       }
    }
-   if( !SetNewSearchSpecifierOK( g_SnR_stSearch, arg.d_cArg >= 2 ) ) {
+#if REPLACE_STSEARCH_XFORM_LAMBDA
+   transform_stSearch( g_SnR_stSearch );
+#endif
+   if( !SetNewSearchSpecifierOK( g_SnR_stSearch, fRegex ) ) {
       return false;
       }
    {
@@ -1318,6 +1344,24 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
       return ErrorDialogBeepf( "Invalid replacement pattern" );
       }
 #endif
+   return true;
+   }
+
+#if REPLACE_STSEARCH_XFORM_LAMBDA
+template <typename Lambda>
+#endif
+STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFileReplace
+#if REPLACE_STSEARCH_XFORM_LAMBDA
+   , Lambda transform_stSearch
+#endif
+   ) {
+   if( !GenericReplace_CollectInputs( arg.d_cArg >= 2, fInteractive, fMultiFileReplace
+#if REPLACE_STSEARCH_XFORM_LAMBDA
+      , transform_stSearch
+#endif
+      ) ) {
+      return false;
+      }
    CharWalkerReplace mrcw( fInteractive, arg.d_fMeta ? !g_fCase : g_fCase, *s_searchSpecifier );
    if( fMultiFileReplace ) {
       const auto startingTopFbuf( g_CurFBuf() );
@@ -1386,9 +1430,15 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
    return mrcw.d_iReplacementsMade != 0;
    }
 
+#if REPLACE_STSEARCH_XFORM_LAMBDA
+bool ARG::mfreplace() { return GenericReplace( *this, true , true , [](std::string &inout) -> void {} ); }
+bool ARG::qreplace()  { return GenericReplace( *this, true , false, [](std::string &inout) -> void {} ); }
+bool ARG::replace()   { return GenericReplace( *this, false, false, [](std::string &inout) -> void {} ); }
+#else
 bool ARG::mfreplace() { return GenericReplace( *this, true , true  ); }
 bool ARG::qreplace()  { return GenericReplace( *this, true , false ); }
 bool ARG::replace()   { return GenericReplace( *this, false, false ); }
+#endif
 
 void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, const stref &src ) {
    const auto cmpSignMul( descending ? -1 : +1 );
