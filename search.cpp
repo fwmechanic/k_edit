@@ -812,10 +812,10 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
    const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, colLastPossibleLastMatchChar ) );
    d_captures.clear();
    int idxOfLastCharInMatch;
+   sridx ixMatchMin;
 #if USE_PCRE
    if( d_ss.IsRegex() ) {
       const auto searchChars( ixLastPossibleLastMatchChar - ix_curPt_Col + 1 );
-      const auto haystack( rl.substr( ix_curPt_Col, searchChars ) );
       const auto pcre_exec_flags( curPt_at_BOL ? 0 : PCRE_NOTBOL );
       0 && DBG( "%s ( %d, %d L %" PR_SIZET " %x) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
                       , curPt->lin
@@ -823,12 +823,13 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
                                , searchChars
                                              , pcre_exec_flags
                                                       , BSR(srRawSearch),
-                                                                       BSR(haystack)
+                                                                       BSR(rl.substr( ix_curPt_Col, searchChars ))
               );
       const auto rv( Regex_Match( d_ss.re(), d_captures, rl, ix_curPt_Col, pcre_exec_flags ) );
       if( rv == 0 || !d_captures[0].valid() ) {
          return CONTINUE_SEARCH;
          }
+      ixMatchMin = d_captures[0].offset();
       0 && DbgDumpCaptures( d_captures, "?" );
       }
    else
@@ -844,9 +845,9 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
          return CONTINUE_SEARCH;
          }
       d_captures.emplace_back( relIxMatch, haystack.substr( relIxMatch, srRawSearch.length() ) );
+      ixMatchMin = ix_curPt_Col;
       }
    // d_captures[0] describes the overall match
-   const auto ixMatchMin( ix_curPt_Col + d_captures[0].offset() );
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
    if( ixMatchMax > ixLastPossibleLastMatchChar ) { // match that lies partially OUTSIDE a BOXARG: skip
       // 0 && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds"
@@ -908,7 +909,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
       default: // fall thru!
       case SKIP_WHOLE_MATCH: { // advance cursor past entire match (dflt 'n' only advances to next char)
          curPt->col = xMatchMax - 1; // -1 because caller advances 1 COL upon return
-         return CONTINUE_SEARCH;
+         return CONTINUE_SEARCH; // mfrplcword "GenericReplace" nl "foobar"
          }
       case DOREPLACE: {
          d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
