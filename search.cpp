@@ -778,6 +778,7 @@ class CharWalkerReplace : public CharWalker_ {
       d_promptCsrs.emplace_back( g_colorStatus, endq, true );
       return stref( d_stReplace );
       }
+   const bool        d_fDoAnyReplaceQueries; // only to support Interactive() method
    bool              d_fDoReplaceQuery;
    const pFxn_strstr d_pfxStrnstr;
 public:
@@ -792,6 +793,7 @@ public:
       )
       : d_ss                ( ss )
       , d_replaceDope       ( g_SnR_stReplacement, ss )
+      , d_fDoAnyReplaceQueries( fDoReplaceQuery )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
       , d_iReplacementsPoss ( 0 )
@@ -799,6 +801,7 @@ public:
       , d_iReplacementFiles ( 0 )
       , d_iReplacementFileCandidates ( 0 )
       {}
+   bool Interactive() const { return d_fDoAnyReplaceQueries; }
    CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) override;
    };
 
@@ -1346,6 +1349,33 @@ STATIC_FXN bool GenericReplace_CollectInputs( bool fRegex, bool fInteractive, bo
    return true;
    }
 
+STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
+   const auto startingTopFbuf( g_CurFBuf() );
+   auto pGen( MultiFileGrepFnmGenerator() );
+   if( !pGen ) {
+      ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
+      }
+   else {
+      Path::str_t pbuf;
+      while( pGen->VGetNextName( pbuf ) ) {
+         MFReplaceProcessFile( pbuf.c_str(), &mrcw );
+         }
+      Delete0( pGen );
+      // Lua event handler GETFOCUS is called by PutFocusOn() and
+      // l_hook_handler() calls lua_error() if ExecutionHaltRequested() is set
+      if( USER_CHOSE_EARLY_CMD_TERMINATE == ExecutionHaltRequested() ) {
+         ClrExecutionHaltRequest();
+         }
+      startingTopFbuf->PutFocusOn();
+      Msg( "%d of %d occurrences replaced in %d of %d files%s"
+            , mrcw.d_iReplacementsMade
+                  , mrcw.d_iReplacementsPoss , mrcw.d_iReplacementFiles
+                                                   , mrcw.d_iReplacementFileCandidates
+                                                           , (mrcw.Interactive() && ExecutionHaltRequested()) ? " INTERRUPTED!" : ""
+         );
+      }
+   }
+
 RSXL( template <typename Lambda> )
 STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFileReplace RSXLC( Lambda transform_stSearch ) ) {
    if( !GenericReplace_CollectInputs( arg.d_cArg >= 2, fInteractive, fMultiFileReplace RSXLC( transform_stSearch ) ) ) {
@@ -1353,30 +1383,7 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
       }
    CharWalkerReplace mrcw( fInteractive, arg.d_fMeta ? !g_fCase : g_fCase, *s_searchSpecifier );
    if( fMultiFileReplace ) {
-      const auto startingTopFbuf( g_CurFBuf() );
-      auto pGen( MultiFileGrepFnmGenerator() );
-      if( !pGen ) {
-         ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
-         }
-      else {
-         Path::str_t pbuf;
-         while( pGen->VGetNextName( pbuf ) ) {
-            MFReplaceProcessFile( pbuf.c_str(), &mrcw );
-            }
-         Delete0( pGen );
-         // Lua event handler GETFOCUS is called by PutFocusOn() and
-         // l_hook_handler() calls lua_error() if ExecutionHaltRequested() is set
-         if( USER_CHOSE_EARLY_CMD_TERMINATE == ExecutionHaltRequested() ) {
-            ClrExecutionHaltRequest();
-            }
-         startingTopFbuf->PutFocusOn();
-         Msg( "%d of %d occurrences replaced in %d of %d files%s"
-               , mrcw.d_iReplacementsMade
-                     , mrcw.d_iReplacementsPoss , mrcw.d_iReplacementFiles
-                                                      , mrcw.d_iReplacementFileCandidates
-                                                              , (fInteractive && ExecutionHaltRequested()) ? " INTERRUPTED!" : ""
-            );
-         }
+      DoMultiFileReplace( mrcw );
       }
    else {
       switch( arg.d_argType ) {
