@@ -36,5 +36,6 @@ function die { printf %s "${@+$@$'\n'}" >&2 ; exit 1; }
 
 [ -f "$pcre_src_so" ] || die "$pcre_src_so does not exist; have you run sudo yum install pcre ?"
 [ $EUID -eq 0 ] || die "$0 must be run as root"
-ln -s "$pcre_src_so" "$ubu1404_pcre_so" || die "symlink creation failed"
+echo "installing xclip" ; yum install -y xclip
+echo "creating symlink $ubu1404_pcre_so" ; ln -s "$pcre_src_so" "$ubu1404_pcre_so" || die "symlink creation failed"
 echo "ok"
