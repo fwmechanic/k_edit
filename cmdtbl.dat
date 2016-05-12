@@ -120,6 +120,7 @@ x fromxclip    fromwinclip               NOARG , X Clipboard ==> <clipboard>
   meta         meta                      KEEPMETA , Modifies the action of the function it is used with.  Refer to individual functions for specific information.  You can use the Meta and Arg function prefixes in any order
   mfgrep       mfgrep                    BOXSTR + NOARG + TEXTARG + NULLEOW , Multi-file search
   mfreplace    mfreplace      MODIFIES + NOARG + NULLARG , Interactive multi-file replace
+  mfrplcword   mfrplcword     MODIFIES + NOARG + NULLARG , Interactive multi-file replace of a word
 # mgl          mgl                       NOARG
   mks          showmarks                 NOARG+NULLARG , Switch to <marks.N>, containing a dump of the current mark-state
   mlines       mlines                    WINDOWFUNC + NOARG + NULLARG + TEXTARG
