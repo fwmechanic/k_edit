@@ -1,5 +1,6 @@
 
 arg qreplace "stcapt1secondcapt2again" nl "foo"
+arg arg qreplace "^first([a-z0-9]+)se(co)nd([a-z0-9]+)again" nl "*\2*\1*\9*"
 arg arg qreplace "first([a-z0-9]+)se(co)nd([a-z0-9]+)again" nl "*\2*\1*\9*"
 arg arg qreplace "first([a-z0-9]+)se(co)nd([a-z0-9]+)again" nl "*\2*\1*\3*"
 arg arg "first([a-z0-9]+)second([a-z0-9]+)again" grep

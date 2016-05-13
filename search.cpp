@@ -588,7 +588,7 @@ enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH
 
 class CharWalker_ {
 public:
-   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) = 0;
+   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, sridx ixBOL ) = 0;
    virtual ~CharWalker_() {};
    };
 
@@ -603,9 +603,10 @@ STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const P
               return false;                                     \
               }                                                 \
            auto rl( pFBuf->PeekRawLine( curPt.lin ) );          \
+           auto ixBOL( CaptiveIdxOfCol( tw, rl, constrainingRect.flMin.col ) ); \
            auto colLastPossibleLastMatchChar( ColOfFreeIdx( tw, rl, rl.length()-1 ) );
    #define CHECK_NEXT  {  \
-           const auto rv( walker.VCheckNext( pFBuf, rl, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleLastMatchChar, curPt.col==constrainingRect.flMin.col ) );  \
+           const auto rv( walker.VCheckNext( pFBuf, rl, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleLastMatchChar, ixBOL ) );  \
            if( STOP_SEARCH == rv ) { return true; }   \
            if( REREAD_LINE_CONTINUE_SEARCH == rv ) {  \
               rl = pFBuf->PeekRawLine( curPt.lin );   \
@@ -802,10 +803,10 @@ public:
       , d_iReplacementFileCandidates ( 0 )
       {}
    bool Interactive() const { return d_fDoAnyReplaceQueries; }
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, sridx ixBOL ) override;
    };
 
-CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, const bool curPt_at_BOL ) {
+CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, const sridx ixBOL ) {
    // replace iff string *** starting at rl[ix_curPt_Col] *** matches
    const auto srRawSearch( d_ss.SrchStr() );
    const auto tw( pFBuf->TabWidth() );
@@ -816,20 +817,24 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_c
 #if USE_PCRE
    if( d_ss.IsRegex() ) {
       const auto searchChars( ixLastPossibleLastMatchChar - ix_curPt_Col + 1 );
-      const auto pcre_exec_flags( curPt_at_BOL ? 0 : PCRE_NOTBOL );
-      0 && DBG( "%s ( %d, %d L %" PR_SIZET " %x) for '%" PR_BSR "' in '%" PR_BSR "'", __func__
+      const auto haystack( rl.substr( ixBOL, ixLastPossibleLastMatchChar + 1 - ixBOL ) ); // leading ix_curPt_Col chars will not be searched
+      const auto ixHaystackCurCol( ix_curPt_Col - ixBOL );
+   // const auto pcre_exec_flags( ixHaystackCurCol == 0 ? 0 : PCRE_NOTBOL );
+      const auto pcre_exec_flags(                         0               ); // !/PCRE_NOTBOL describes haystack[0], not to haystack[ixHaystackCurCol]
+      0 && DBG( "%s ( %d, %d L %" PR_SIZET " %x) for '%" PR_BSR "' in '%" PR_BSR "[%" PR_BSR "'", __func__
                       , curPt->lin
                           , curPt->col
                                , searchChars
                                              , pcre_exec_flags
-                                                      , BSR(srRawSearch),
-                                                                       BSR(rl.substr( ix_curPt_Col, searchChars ))
+                                                      , BSR(srRawSearch)
+                                                                       , BSR(haystack.substr(0,ixHaystackCurCol))
+                                                                                    , BSR(haystack.substr(ixHaystackCurCol))
               );
-      const auto rv( Regex_Match( d_ss.re(), d_captures, rl, ix_curPt_Col, pcre_exec_flags ) );
+      const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, ixHaystackCurCol, pcre_exec_flags ) );
       if( rv == 0 || !d_captures[0].valid() ) {
          return CONTINUE_SEARCH;
          }
-      ixMatchMin = d_captures[0].offset();
+      ixMatchMin = d_captures[0].offset() + ixBOL;
       0 && DbgDumpCaptures( d_captures, "?" );
       }
    else
@@ -1943,10 +1948,10 @@ public:
       , d_stackIx( 0 )
       , d_fClosureFound( false )
       { /*DBG("");*/ Push( chStart ); }
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, const sridx ixBOL ) override;
    };
 
-CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) {
+CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref rl, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, const sridx ixBOL ) {
    const char ch( rl[ix_curPt_Col] );
    PCChar pA, pB;
    if( d_fFwd ) { pA = g_delims      ; pB = g_delimMirrors; }
@@ -2086,10 +2091,10 @@ class CharWalkerPMWord : public CharWalker_ {
    bool d_fPMWordSearchMeta;
 public:
    CharWalkerPMWord( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, const sridx ixBOL ) override;
    };
 
-CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, bool curPt_at_BOL ) {
+CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar, const sridx ixBOL ) {
    if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt->col is FIRST CHAR OF WORD
       if( !isWordChar( sr[ix_curPt_Col] ) || (ix_curPt_Col > 0 && isWordChar( sr[ix_curPt_Col-1] )) ) {
          return CONTINUE_SEARCH;
