@@ -756,7 +756,7 @@ class CharWalkerReplace : public CharWalker_ {
        */
       d_promptCsrs.reserve( d_replaceDope.ReplaceRefs().size() );
       d_promptCsrs.clear();
-      d_promptCsrs.emplace_back( g_colorStatus, "Replace " );
+      d_promptCsrs.emplace_back( g_colorStatus, "Substitute " );
       constexpr PCChar endq = " (Yes/No/All/Quit)? ";
       if( d_replaceDope.ReplaceRefs().size()==1 ) { // optimize when d_stReplace is not needed
          constexpr auto ixEnt( 0u ), ixCont( 0u );
@@ -784,6 +784,7 @@ class CharWalkerReplace : public CharWalker_ {
    const bool        d_fDoAnyReplaceQueries; // only to support Interactive() method
    bool              d_fDoReplaceQuery;
    const pFxn_strstr d_pfxStrnstr;
+   FBufLocn          d_user_no_d; // last match to which user replied "no" to a replace query
 public:
    int               d_iReplacementsPoss;
    int               d_iReplacementsMade;
@@ -863,16 +864,19 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
       }
    const auto xMatchMin( ColOfFreeIdx( tw, rl, ixMatchMin ) );
    const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
-   ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
    stref srReplace( GenerateReplacement() ); // generates d_promptCsrs too!
    enum { DOREPLACE, SKIP_WHOLE_MATCH } doSomething( DOREPLACE );
-   if( d_fDoReplaceQuery ) { // interactive-replace?
-      //##### interactive-replace (mfreplace/qreplace) ONLY ...
+   if( d_fDoReplaceQuery ) { // interactive-replace (mfreplace/qreplace) ONLY ...
       const auto pView( pFBuf->PutFocusOn() );
-      pView->FreeHiLiteRects();
-      DispDoPendingRefreshesIfNotInMacro();
       const auto matchCols( xMatchMax - xMatchMin + 1 );
       Point matchBegin( curPt->lin, xMatchMin );
+      FBufLocn thisMatch( pFBuf, matchBegin, matchCols );
+      if( d_user_no_d == thisMatch ) { // when performing Regex relaces, multiple consecutive search iterations can produce THE SAME match
+         return CONTINUE_SEARCH;       // if the user already replied "no, do NOT replace this match", don't ask him again!
+         }
+      ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
+      pView->FreeHiLiteRects();
+      DispDoPendingRefreshesIfNotInMacro();
     #if 1
       pView->MoveCursor( matchBegin, matchCols );
     #else
@@ -897,12 +901,16 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
          case -1 :                                  // fall thru!
          case 'q': SetUserChoseEarlyCmdTerminate();
                    return STOP_SEARCH;
-         case 'n': return CONTINUE_SEARCH;
+         case 'n': d_user_no_d.Set( pFBuf, matchBegin, matchCols );
+                   return CONTINUE_SEARCH;
          case 'a': d_fDoReplaceQuery = false;  // fall thru!
          case 'y': break;                      // perform replacement (below)
          case 's': doSomething = SKIP_WHOLE_MATCH ;    // perform skip (below)
                    break;
          }
+      }
+   else {
+      ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
       }
    // setup to perform replacement
    pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );

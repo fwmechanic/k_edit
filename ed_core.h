@@ -170,12 +170,12 @@ struct Point {   // file location
    }; // HAS CTORS, so union canNOT HAS-A one of these
 
 class FBufLocn { // dflt ctor leaves locn empty; must be Set() later
-   PFBUF d_pFBuf;
+   PFBUF d_pFBuf = nullptr;
    Point d_pt;
    COL   d_width = 1;
 public:
    FBufLocn() : d_pFBuf(nullptr) {}
-   FBufLocn( PFBUF pFBuf, const Point &pt ) : d_pFBuf(pFBuf), d_pt(pt) {}
+   FBufLocn( PFBUF pFBuf, const Point &pt, COL width=1 ) : d_pFBuf(pFBuf), d_pt(pt), d_width(width) {}
    void Set( PFBUF pFBuf, Point pt, COL width=1 ) { d_pFBuf=pFBuf, d_pt=pt, d_width=width; }
    bool         ScrollToOk() const;
    bool         IsSet()     const { return d_pFBuf != nullptr; }
@@ -183,6 +183,7 @@ public:
    bool         Moved()     const;
    PFBUF        FBuf()      const { return d_pFBuf; }
    const Point &Pt()        const { return d_pt   ; }
+   bool operator==( const FBufLocn &rhs ) const { return d_pFBuf == rhs.d_pFBuf && d_pt == rhs.d_pt && d_width == rhs.d_width; }
    };
 
 class FBufLocnNow : public FBufLocn { // dflt ctor uses curfile, cursor; const instances work fine
