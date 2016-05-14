@@ -784,7 +784,7 @@ class CharWalkerReplace : public CharWalker_ {
    const bool        d_fDoAnyReplaceQueries; // only to support Interactive() method
    bool              d_fDoReplaceQuery;
    const pFxn_strstr d_pfxStrnstr;
-   FBufLocn          d_user_no_d; // last match to which user replied "no" to a replace query
+   FBufLocn          d_user_refused; // last match to which user replied "no" to a replace query
 public:
    int               d_iReplacementsPoss;
    int               d_iReplacementsMade;
@@ -865,14 +865,13 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
    const auto xMatchMin( ColOfFreeIdx( tw, rl, ixMatchMin ) );
    const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
    stref srReplace( GenerateReplacement() ); // generates d_promptCsrs too!
-   enum { DOREPLACE, SKIP_WHOLE_MATCH } doSomething( DOREPLACE );
    if( d_fDoReplaceQuery ) { // interactive-replace (mfreplace/qreplace) ONLY ...
       const auto pView( pFBuf->PutFocusOn() );
       const auto matchCols( xMatchMax - xMatchMin + 1 );
       Point matchBegin( curPt->lin, xMatchMin );
       FBufLocn thisMatch( pFBuf, matchBegin, matchCols );
-      if( d_user_no_d == thisMatch ) { // when performing Regex relaces, multiple consecutive search iterations can produce THE SAME match
-         return CONTINUE_SEARCH;       // if the user already replied "no, do NOT replace this match", don't ask him again!
+      if( d_user_refused == thisMatch ) { // when performing Regex relaces, multiple consecutive search iterations can produce
+         return CONTINUE_SEARCH;          // THE SAME match; if the user already refused to replace this match, don't ask again!
          }
       ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
       pView->FreeHiLiteRects();
@@ -901,12 +900,13 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
          case -1 :                                  // fall thru!
          case 'q': SetUserChoseEarlyCmdTerminate();
                    return STOP_SEARCH;
-         case 'n': d_user_no_d.Set( pFBuf, matchBegin, matchCols );
+         case 'n': d_user_refused = thisMatch;
                    return CONTINUE_SEARCH;
+         case 's': // advance cursor past entire match (dflt 'n' only advances to next char)
+                   curPt->col = xMatchMax - 1; // -1 because caller advances 1 COL upon return
+                   return CONTINUE_SEARCH;     // mfrplcword "GenericReplace" nl "foobar"
          case 'a': d_fDoReplaceQuery = false;  // fall thru!
          case 'y': break;                      // perform replacement (below)
-         case 's': doSomething = SKIP_WHOLE_MATCH ;    // perform skip (below)
-                   break;
          }
       }
    else {
@@ -917,30 +917,21 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
    const auto ixdestMatchMin( CaptiveIdxOfCol( tw, d_sbuf, xMatchMin ) );
    const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
    const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
-   switch( doSomething ) {
-      default: // fall thru!
-      case SKIP_WHOLE_MATCH: { // advance cursor past entire match (dflt 'n' only advances to next char)
-         curPt->col = xMatchMax - 1; // -1 because caller advances 1 COL upon return
-         return CONTINUE_SEARCH; // mfrplcword "GenericReplace" nl "foobar"
-         }
-      case DOREPLACE: {
-         d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
-         0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
-         pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
-         ++d_iReplacementsMade;
-         // replacement done: adjust end of this line search domain
-         // replacement done: position curPt->col for next search
-         const sridx advance( destMatchChars > srReplace.length()
-                            ? destMatchChars - srReplace.length()
-                            : srReplace.length() - destMatchChars
-                            );
-         colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
-         curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() - 1 ); // -1 because caller advances 1 COL upon return
-         // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
-         // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
-         return REREAD_LINE_CONTINUE_SEARCH;
-         }
-      }
+   d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
+   0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
+   pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
+   ++d_iReplacementsMade;
+   // replacement done: adjust end of this line search domain
+   // replacement done: position curPt->col for next search
+   const sridx advance( destMatchChars > srReplace.length()
+                      ? destMatchChars - srReplace.length()
+                      : srReplace.length() - destMatchChars
+                      );
+   colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
+   curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() - 1 ); // -1 because caller advances 1 COL upon return
+   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
+   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
+   return REREAD_LINE_CONTINUE_SEARCH;
    }
 
 //
