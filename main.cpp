@@ -168,6 +168,12 @@ STATIC_FXN void InitNewView_File( PChar filename ) {
       0 && DBG( "%s dropping '%s'", FUNC, filename );
       }
    else {
+     #if !defined(_WIN32)
+      stref fnm( filename );
+      if( fnm.starts_with( "/tmp/" ) && !FileAttribs( filename ).Exists() ) {
+         return;
+         }
+     #endif
       auto pView( new View( FBOP::FindOrAddFBuf( filename ), g_CurWinWr(), pNextTokenStart ) );
       auto &cvwHd( g_CurViewHd() );
       DLINK_INSERT_LAST( cvwHd, pView, dlinkViewsOfWindow ); // push_back()
