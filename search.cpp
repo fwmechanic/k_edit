@@ -58,6 +58,8 @@
 //
 //--------------------------------------------------------------
 
+GLOBAL_VAR bool g_fReplaceCase;
+
 typedef sridx (* pFxn_strstr)( stref haystack, stref needle );
                                                                 // HAYSTACK
 STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
@@ -218,7 +220,6 @@ class FindPrevNextMatchHandler : public FileSearchMatchHandler {
    NO_ASGN_OPR(FindPrevNextMatchHandler);
    const char   d_dirCh;
    const bool   d_fIsRegex;
-   const std::string d_SrchStr;
    const std::string d_SrchDispStr;
    void DrawDialog( PCChar hdr, PCChar trlr );
 protected:
@@ -234,19 +235,20 @@ GLOBAL_CONST char chRex = '/';
 void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
    const auto de_color( 0x5f );
    const auto ss_color( g_fCase ? 0x4f : 0x2f );
-   VideoFlusher vf;
-   auto               chars (  VidWrStrColor( DialogLine(), 0    , hdr                  , Strlen(hdr)            , g_colorInfo , false ) );
-   if( d_fIsRegex ) { chars += VidWrStrColor( DialogLine(), chars, &chRex               , sizeof(chRex)          , de_color    , false ); }
-                      chars += VidWrStrColor( DialogLine(), chars, d_SrchDispStr.data() , d_SrchDispStr.length() , ss_color    , false );
-   if( d_fIsRegex ) { chars += VidWrStrColor( DialogLine(), chars, &chRex               , sizeof(chRex)          , de_color    , false ); }
-                               VidWrStrColor( DialogLine(), chars, trlr                 , Strlen(trlr)           , g_colorInfo , true  );
+   ColoredStrefs csrs; csrs.reserve( d_fIsRegex ? 5 : 3 );
+   csrs.clear();
+                      csrs.emplace_back( g_colorInfo , hdr );
+   if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &chRex, sizeof(chRex) ) ); }
+                      csrs.emplace_back( ss_color    , d_SrchDispStr );
+   if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &chRex, sizeof(chRex) ) ); }
+                      csrs.emplace_back( g_colorInfo , trlr, true );
+   VidWrColoredStrefs( DialogLine(), 0, csrs );
    }
 
 FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, stref srchStr )
    : FileSearchMatchHandler( true )
    , d_dirCh(fSearchForward ? '+' : '-')
    , d_fIsRegex(fIsRegex)
-   , d_SrchStr( srchStr.data(), srchStr.length() )
    , d_SrchDispStr( FormatExpandedSeg( COL_MAX, srchStr, 0, 1, g_chTabDisp, g_chTrailSpaceDisp ) )
    {
    if( !Interpreter::Interpreting() ) {
@@ -254,7 +256,7 @@ FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fI
                    ? "+Search for "
                    : "-Search for "
                   )
-                , ""
+                , " "
                 );
       }
    }
@@ -1385,7 +1387,7 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
    if( !GenericReplace_CollectInputs( arg.d_cArg >= 2, fInteractive, fMultiFileReplace RSXLC( transform_stSearch ) ) ) {
       return false;
       }
-   CharWalkerReplace mrcw( fInteractive, arg.d_fMeta ? !g_fCase : g_fCase, *s_searchSpecifier );
+   CharWalkerReplace mrcw( fInteractive, arg.d_fMeta ? !g_fReplaceCase : g_fReplaceCase, *s_searchSpecifier );
    if( fMultiFileReplace ) {
       DoMultiFileReplace( mrcw );
       }

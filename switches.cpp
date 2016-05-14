@@ -298,6 +298,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "memusgink"      , Var2TPfx( g_fShowMemUseInK        ), swinVAR_BOOL, swidBool       _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) },
  { "msgflush"       , Var2TPfx( g_fMsgflush             ), swinVAR_BOOL, swidBool       _AHELP( "<compile> is flushed (yes) or retained (no) when a new job is started" ) },
  { "realtabs"       , Var2TPfx( g_fRealtabs             ), swinVAR_BOOL, swidBool       _AHELP( "see online help" ) },
+ { "replacecase"    , Var2TPfx( g_fReplaceCase          ), swinVAR_BOOL, swidBool       _AHELP( "replace operations are case sensitive (yes) or insensitive (no)" ) },
  { "rmargin"        , Var2TPfx( g_iRmargin              ), swinVAR_INT , swidInt        _AHELP( "see online help" ) },
  { "showfbufdetails", Var2TPfx( g_fShowFbufDetails      ), swinVAR_BOOL, swidBool       _AHELP( "show FBUF status details in <winN> sysbufs" ) },
  { "softcr"         , Var2TPfx( g_fSoftCr               ), swinVAR_BOOL, swidBool       _AHELP( "see online help" ) },

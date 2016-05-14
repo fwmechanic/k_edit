@@ -77,6 +77,7 @@ extern bool  g_fLangHilites      ;
 extern bool  g_fM4backtickquote  ;
 extern bool  g_fMsgflush         ;
 extern bool  g_fRealtabs         ;
+extern bool  g_fReplaceCase      ;
 extern bool  g_fShowFbufDetails  ;
 extern bool  g_fShowMemUseInK    ;
 extern bool  g_fSoftCr           ;

@@ -8,7 +8,8 @@
       wordwrap:     NO  # NO is default
       askexit:      NO  # YES to avoid exiting the editor by accident
       softcr:       YES # Get rid of funky CR response
-      case:         NO  # CASE INSENSITIVE searches & replaces
+      case:         NO  # CASE INSENSITIVE searches
+      replacecase:  YES # CASE   SENSITIVE replaces
       errprompt:    YES # [allow]/prevent "press any key" sequence following error
       beep:no
       memusgink:yes
