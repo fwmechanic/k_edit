@@ -597,31 +597,30 @@ public:
 
 // CharWalkRect is called by PBalFindMatching, PMword, and
 // GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
+// 20160515  this should probably be broken up into multiple special-purpose more-optimized functions
 STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fWalkFwd, CharWalker_ &walker ) {
    0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
    const auto tw( pFBuf->TabWidth() );
-   #define SETUP_LINE_TEXT                             \
-           if( ExecutionHaltRequested() ) {            \
-              FlushKeyQueuePrimeScreenRedraw();        \
-              return false;                            \
-              }                                        \
-           auto rl( pFBuf->PeekRawLine( curPt.lin ) ); \
-           auto ixBOL( CaptiveIdxOfCol( tw, rl, constrainingRect.flMin.col ) ); \
-           auto colLastPossibleLastMatchChar( ColOfFreeIdx( tw, rl, rl.length()-1 ) );
+   #define SETUP_LINE \
+           rl = pFBuf->PeekRawLine( curPt.lin ); \
+           ixBOL = CaptiveIdxOfCol( tw, rl, constrainingRect.flMin.col ); \
+           colLastPossibleLastMatchChar = Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col );
+   #define SETUP_LINE_TEXT                      \
+           if( ExecutionHaltRequested() ) {     \
+              FlushKeyQueuePrimeScreenRedraw(); \
+              return false;                     \
+              }                                 \
+           stref rl; sridx ixBOL; COL colLastPossibleLastMatchChar; \
+           SETUP_LINE;
    #define CHECK_NEXT  {  \
-           const auto rv( walker.VCheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleLastMatchChar ) );  \
-           if( STOP_SEARCH == rv ) { return true; }   \
-           if( REREAD_LINE_CONTINUE_SEARCH == rv ) {  \
-              rl = pFBuf->PeekRawLine( curPt.lin );   \
-              ixBOL = CaptiveIdxOfCol( tw, rl, constrainingRect.flMin.col ); \
-              colLastPossibleLastMatchChar = ColOfFreeIdx( tw, rl, rl.length()-1 ); \
-              }                                       \
+           const auto rv( walker.VCheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleLastMatchChar ) ); \
+           if( STOP_SEARCH == rv ) { return true; } \
+           if( REREAD_LINE_CONTINUE_SEARCH == rv ) { SETUP_LINE; } \
            }
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       Point curPt( start.lin, start.col + 1 );
       for( auto yMax(constrainingRect.flMax.lin) ; curPt.lin <= yMax ; ) {
          SETUP_LINE_TEXT;
-         NoMoreThan( &colLastPossibleLastMatchChar, constrainingRect.flMax.col );
          for(
             ; curPt.col <= colLastPossibleLastMatchChar
             ; curPt.col = ColOfNextChar( tw, rl, curPt.col )
