@@ -236,7 +236,6 @@ void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
    const auto de_color( 0x5f );
    const auto ss_color( g_fCase ? 0x4f : 0x2f );
    ColoredStrefs csrs; csrs.reserve( d_fIsRegex ? 5 : 3 );
-   csrs.clear();
                       csrs.emplace_back( g_colorInfo , hdr );
    if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &chRex, sizeof(chRex) ) ); }
                       csrs.emplace_back( ss_color    , d_SrchDispStr );
@@ -256,7 +255,7 @@ FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fI
                    ? "+Search for "
                    : "-Search for "
                   )
-                , " "
+                , ""
                 );
       }
    }
@@ -316,11 +315,13 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
 GLOBAL_VAR bool g_fFastsearch = true;
 
 class SearchSpecifier {
+#if USE_PCRE
+   const bool   d_fRegex;
+#endif
    std::string  d_rawStr;
 #if USE_PCRE
    bool   d_fRegexCase;   // state when last (re-)init'd
    CompiledRegex *d_re;
-   bool   d_reCompileErr;
 #endif
    bool   d_fNegateMatch; // same as grep's -v option
    bool   d_fCanUseFastSearch;
@@ -330,8 +331,8 @@ public:
    bool   MatchNegated() const { return d_fNegateMatch; };
 #if USE_PCRE
    CompiledRegex *re() const { return d_re; }
-   bool   IsRegex()  const { return d_re != nullptr; }
-   bool   HasError() const { return IsRegex() && d_reCompileErr; }
+   bool   IsRegex()  const { return d_fRegex; }
+   bool   HasError() const { return d_fRegex && !d_re; }
    int    MinHaystackLen() const { return IsRegex() ? 1 : d_rawStr.length(); }
 #else
    bool   IsRegex()  const { return false; }
@@ -1531,40 +1532,26 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
 
 void SearchSpecifier::CaseUpdt() {
 #if USE_PCRE
-   if( d_re && (d_fRegexCase != g_fCase) ) {
+   if( d_fRegex && (d_fRegexCase != g_fCase) ) {
       d_fRegexCase = g_fCase;
       // recompile
       d_re = Regex_Delete0( d_re );
       d_re = Regex_Compile( d_rawStr.c_str(), d_fRegexCase );
-      if( !d_re ) {
-         d_reCompileErr = true;
-         }
       }
 #endif
    }
 
-SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) {  // Assert( fRegex && rawStr ); // if fRegex true then rawStr cannot be 0
+SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex) {  // Assert( fRegex && rawStr ); // if fRegex true then rawStr cannot be 0
    d_fNegateMatch = rawSrc.starts_with( "!!" );
    if( d_fNegateMatch ) {
       rawSrc.remove_prefix( 2 );
       }
+   d_rawStr.assign( BSR2STR(rawSrc) );
+   d_fCanUseFastSearch = !fRegex && std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
 #if USE_PCRE
-   d_re = nullptr;
    d_fRegexCase = g_fCase;
-   d_reCompileErr = false;
+   d_re = fRegex ? Regex_Compile( d_rawStr.c_str(), d_fRegexCase ) : nullptr;
 #endif
-   d_rawStr.assign( rawSrc.data(), rawSrc.length() );
-#if USE_PCRE
-   if( fRegex ) {
-      d_fCanUseFastSearch = false;
-      d_re = Regex_Compile( d_rawStr.c_str(), d_fRegexCase );
-      d_reCompileErr = (d_re == nullptr);
-      }
-   else
-#endif
-      {
-      d_fCanUseFastSearch = std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
-      }
    }
 
 SearchSpecifier::~SearchSpecifier() {
@@ -1575,12 +1562,11 @@ SearchSpecifier::~SearchSpecifier() {
 
 void SearchSpecifier::Dbgf( PCChar tag ) const {
   #if 1
-   DBG( "SearchSpecifier %s: cs=%d, rex=%d, rerr=%d, raw=%" PR_BSR "'"
+   DBG( "SearchSpecifier %s: cs=%d, rex=%d, raw=%" PR_BSR "'"
       , tag
 #if USE_PCRE
       , d_fRegexCase
       , d_re != nullptr
-      , d_reCompileErr
 #else
       , g_fCase
       , false
