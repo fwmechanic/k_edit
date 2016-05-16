@@ -313,7 +313,7 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
          }
       const auto fLeadingEnvRef( pRefStart == inbuf );
       pathbuf pbuf;
-      bcpy( pbuf, PP2SR( pName, pTerm ) );
+      bcpy( pbuf, se2sr( pName, pTerm ) );
       PCChar pValue( getenv( pbuf ) );
       0 && DBG( "getenv( %s ) = %p (%s)", pbuf, pValue, pValue ? pValue : "" );
       if( !pValue && strchr( pbuf, '|' ) ) { // undefined and "name" contains '|'?
@@ -563,7 +563,7 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
          }
       CfxFilenameGenerator mfg( path, ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
-         dest.append( BSR2STR(fname) );                                               VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
+         dest.append( sr2st(fname) );                                                 VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
          }
       const auto abs_pb( Path::Absolutize( pszSrc ) );

@@ -138,8 +138,8 @@ OsEnv::OsEnv() {
       DBG( "GetModuleFileName rv (%ld) >= sizeof(pb) (%" PR_SIZET ")\n", len, sizeof(pb) );
       Win32::ExitProcess( 1 );
       }
-   d_exe_path.assign( BSR2STR( Path::RefDirnm( pb ) ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-   d_exe_name.assign( BSR2STR( Path::RefFnm  ( pb ) ) ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
+   d_exe_path.assign( sr2st( Path::RefDirnm( pb ) ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+   d_exe_name.assign( sr2st( Path::RefFnm  ( pb ) ) ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
 #else
    const auto pw( getpwuid( d_euid=geteuid() ) );
    if( pw ) { d_euname.assign( pw->pw_name ); }
@@ -175,8 +175,8 @@ OsEnv::OsEnv() {
          }
       if( r < bufbytes ) {
          linkname[r] = '\0';
-         d_exe_path.assign( BSR2STR( Path::RefDirnm( linkname ) ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-         d_exe_name.assign( BSR2STR( Path::RefFnm  ( linkname ) ) ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
+         d_exe_path.assign( sr2st( Path::RefDirnm( linkname ) ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+         d_exe_name.assign( sr2st( Path::RefFnm  ( linkname ) ) ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
          free( linkname );
          return;
          }

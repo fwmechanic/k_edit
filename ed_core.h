@@ -1023,7 +1023,7 @@ public:
    bool           FTypeEmpty()           const { return  d_ftype.empty(); }
    bool           FTypeEq( stref ft )    const { return  eq( d_ftype, ft ); }
    void           DetermineFType();
-   void           SetFType( stref ft )                {  d_ftype.assign( BSR2STR(ft) ); }
+   void           SetFType( stref ft )                {  d_ftype.assign( sr2st(ft) ); }
  #ifdef           fn_su
    bool           SilentUpdateMode()     const { return  d_fSilentUpdateMode; }
    void           SetSilentUpdateMode()               {  d_fSilentUpdateMode = true; }

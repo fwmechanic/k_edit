@@ -766,7 +766,7 @@ bool ARG::tell() {
       ? ( "  " + std::string(pCmd->Name()) + ":=" + pCmd->MacroText() )
       : ( "  (" + ArgTypeNames( pCmd->d_argType ) + ")" )
       );
-   if( d_fMeta ) { PutMacroStringIntoCurfileAtCursor( se2bsr( outbux ) ); }
+   if( d_fMeta ) { PutMacroStringIntoCurfileAtCursor( stref( outbux ) ); }
    else          { Msg( "%s", outbux.c_str() ); }
    return fn_unassigned == pCmd->d_func;
    }

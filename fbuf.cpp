@@ -982,7 +982,7 @@ void FBUF::DetermineFType() {
    }
 
 STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'"     , __func__, BSR(name), BSR(strval) );
-   const auto str( "\"" + BSR2STR(strval) + "\"" );
+   const auto str( "\"" + sr2st(strval) + "\"" );
    const auto rv( DefineMacro( name, str ) );                      0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'-> %c", __func__, BSR(name), BSR(strval), rv?'y':'n' );
    return rv;
    }

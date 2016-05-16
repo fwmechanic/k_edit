@@ -776,7 +776,7 @@ class CharWalkerReplace : public CharWalker_ {
                        : (ixCont < d_captures             .size() ? d_captures             [ixCont].value() : "")
                        );
          if( sr.length() > 0 ) {
-            d_stReplace.append( BSR2STR( sr ) );
+            d_stReplace.append( sr2st( sr ) );
             d_promptCsrs.emplace_back( ent.d_isLit ? g_colorInfo : g_colorError, sr );
             }
          }
@@ -919,18 +919,17 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
    const auto ixdestMatchMin( CaptiveIdxOfCol( tw, d_sbuf, xMatchMin ) );
    const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
    const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
-   d_sbuf.replace( ixdestMatchMin, destMatchChars, BSR2STR(srReplace) );
+   d_sbuf.replace( ixdestMatchMin, destMatchChars, sr2st(srReplace) );
    0 && DBG("DFPoR+ (%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->col, curPt->lin, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
    ++d_iReplacementsMade;
    // replacement done: adjust end of this line search domain
    // replacement done: position curPt->col for next search
-   const sridx advance( destMatchChars > srReplace.length()
-                      ? destMatchChars - srReplace.length()
-                      : srReplace.length() - destMatchChars
-                      );
+   const sridx advance( AbsDiff( destMatchChars, srReplace.length() ) );
    colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
-   curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() - 1 ); // -1 because caller advances 1 COL upon return
+   const auto curcolBefore( curPt->col );
+   curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() ) - 1; // -1 because caller advances 1 COL upon return
+   Assert( curPt->col >= curcolBefore );
    // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
    // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
    return REREAD_LINE_CONTINUE_SEARCH;
@@ -1490,11 +1489,11 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       pathbuf wcBuf, dirBuf;
       const auto pStart( Path::StrToPrevPathSepOrNull( pszWildcardString, pVbar ) );
       if( pStart ) {
-         bcpy( wcBuf , PP2SR( pStart+1         , pVbar  ) );
-         bcpy( dirBuf, PP2SR( pszWildcardString, pStart ) );
+         bcpy( wcBuf , se2sr( pStart+1         , pVbar  ) );
+         bcpy( dirBuf, se2sr( pszWildcardString, pStart ) );
          }
       else {
-         bcpy( wcBuf , PP2SR( pszWildcardString, pVbar ) );
+         bcpy( wcBuf , se2sr( pszWildcardString, pVbar ) );
          bcpy( dirBuf, ".\\" );
          }
       ED && DBG( "wcBuf='%s'" , wcBuf  );
@@ -1545,7 +1544,7 @@ SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex)
    if( d_fNegateMatch ) {
       rawSrc.remove_prefix( 2 );
       }
-   d_rawStr.assign( BSR2STR(rawSrc) );
+   d_rawStr.assign( sr2st(rawSrc) );
    d_fCanUseFastSearch = !fRegex && std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
 #if USE_PCRE
    d_fRegexCase = g_fCase;
@@ -2439,7 +2438,7 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
    if( !rl.starts_with( srgp ) )       { goto FAIL; }
    rl.remove_prefix( srgp.length() );
    if( IsStringBlank( rl ) )           { goto FAIL; }
-   dest.assign( BSR2STR(rl) );
+   dest.assign( sr2st(rl) );
    }
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {

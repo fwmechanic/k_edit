@@ -122,22 +122,19 @@ const auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::
 // http://stackoverflow.com/questions/19145951/printf-variable-string-length-specifier
 // http://stackoverflow.com/questions/8081613/using-size-t-for-specifying-the-precision-of-a-string-in-cs-printf
 // this is dangerous; hopefully really long strings will not be encountered :-(
-//      BSR2STR(stref) convert a stref to a std::string; there seems to be no added overhead if the created std::string is a temp object
-#define BSR2STR(bsr) std::string( (bsr).data(),(bsr).length() )
 //      BSR() is used to pass a stref as a single unit in a printf vararg param list (it expands to two vararg params)
 //      BSR()'s corresponding printf format string is expected to be PR_BSR (which consumes two vararg params)
 #define BSR(bsr) static_cast<int>((bsr).length()),(bsr).data()
 #define PR_BSR ".*s"
 
-#define PP2SR( p0, p1 )  stref( p0, (p1)-(p0) )
-
-STIL stref se2bsr( PCChar bos, PCChar eos ) { return stref( bos, eos - bos ); }
-STIL stref se2bsr( const std::string &str ) { return stref( str ); }
+//      sr2st(stref) convert a stref to a std::string; there seems to be no added overhead if the created std::string is a temp object
+STIL std::string sr2st( stref bsr ) { return std::string( bsr.data(), bsr.length() ); }
+// #define       sr2st(       bsr )          std::string( (bsr).data(),(bsr).length() )
+STIL stref se2sr( PCChar bos, PCChar eos ) { return stref( bos, eos - bos ); }
 
 typedef WL(__int64,off_t) filesize_t;
 
 typedef signed long FilesysTime;
-
 
 #include "attr_format.h"
 
@@ -182,18 +179,9 @@ template<typename T> class TD;
 // TD<decltype(x)> xType; // elicit errors containing
 // TD<decltype(y)> yType; // x's and y's types
 
-//
-// These macros "return" pointer to the element following the last valid element
-// in an array; a constant-ish expression commonly used for loop control
-//
-#define BEYOND_END(ary) ( (ary) + ELEMENTS(ary) )
-#define PAST_END(ary)   BEYOND_END(ary)
-
-//-----
-//
 // Since I've adopted a tactic of always including a trailing 'sizeof buffer'
 // parameter whenever specifying a PChar (destination) parameter, here is a macro
-// that will save some typing in circumstances where a buffer variable (vs.  a
+// that will save some typing in circumstances where an array variable name (vs. a
 // pointer) is passed to such a function:
 //
 // BSOB => "Buffer, SizeOf Buffer"
@@ -201,7 +189,6 @@ template<typename T> class TD;
 #define  BSOB( buffer )   buffer , sizeof(buffer)
 
 //-----
-
 // "To ensure compatibility with C code and pre-bool C++ code, implicit numeric
 // to bool conversions adhere to C's convention.  Every nonzero value is
 // implicitly converted to true in a context that requires a bool value, and a
@@ -234,7 +221,6 @@ template<typename T> class TD;
 // (otherwise, you'd have to declare an instance of struct, then sizeof(instance.member))
 #define sizeof_struct_member(type,memb)  sizeof( (*(type*)0).memb )
 
-
 // use KSTRLEN on a const char array containing ASCIIZ string ONLY!
 #define KSTRLEN( szCharArray )   (sizeof( szCharArray ) - 1)
 
@@ -264,10 +250,13 @@ namespace Path {
 
 // readability template macros
 
+template<typename T> inline T    Abs ( T t ) { return ( t < 0 ) ?  -t : +t; }
+template<typename T> inline T    Sign( T t ) { return ( t < 0 ) ?  -1 : +1; }
+
 template<typename T> inline T    Min( T t1, T t2 )    { return t1 < t2 ? t1 : t2; }
 template<typename T> inline T    Max( T t1, T t2 )    { return t1 > t2 ? t1 : t2; }
-template<typename T> inline void Max( T *v, T limit ) { if( *v < limit ) *v = limit; }
-template<typename T> inline void Min( T *v, T limit ) { if( *v > limit ) *v = limit; }
+template<typename T> inline void Max( T *v, T limit ) { if( *v < limit ) {*v = limit;} }
+template<typename T> inline void Min( T *v, T limit ) { if( *v > limit ) {*v = limit;} }
 
 // for those occasions when Min/Max aren't adequtely descriptive:
 
@@ -275,48 +264,30 @@ template<typename T> inline T    LesserOf  ( T t1, T t2 )    { return Min( t1, t
 template<typename T> inline T    SmallerOf ( T t1, T t2 )    { return Min( t1, t2 ); }
 template<typename T> inline T    LargerOf  ( T t1, T t2 )    { return Max( t1, t2 ); }
 template<typename T> inline T    GreaterOf ( T t1, T t2 )    { return Max( t1, t2 ); }
+template<typename T> inline T    AbsDiff   ( T t1, T t2 )    { return (t1 > t2) ? (t1-t2) : (t2-t1); }
 
-template<typename T> inline void NoLessThan(    T *v, T limit ) { if( *v <= limit ) *v = limit; }
-template<typename T> inline void NoSmallerThan( T *v, T limit ) { if( *v <= limit ) *v = limit; }
-template<typename T> inline void NoMoreThan(    T *v, T limit ) { if( *v >= limit ) *v = limit; }
-template<typename T> inline void NoGreaterThan( T *v, T limit ) { if( *v >= limit ) *v = limit; }
-
-template<typename T> inline T    Abs ( T t ) { return ( t < 0 ) ?  -t : +t; }
-template<typename T> inline T    Sign( T t ) { return ( t < 0 ) ?  -1 : +1; }
-
+template<typename T> inline void NoLessThan(    T *v, T limit ) { if( *v <= limit ) {*v = limit;} }
+template<typename T> inline void NoSmallerThan( T *v, T limit ) { if( *v <= limit ) {*v = limit;} }
+template<typename T> inline void NoMoreThan(    T *v, T limit ) { if( *v >= limit ) {*v = limit;} }
+template<typename T> inline void NoGreaterThan( T *v, T limit ) { if( *v >= limit ) {*v = limit;} }
 
 template<typename T>
-inline void Constrain( T loLimit, T *v, T hiLimit )
-   {
-   if( *v >= hiLimit )  *v = hiLimit;
-   if( *v <= loLimit )  *v = loLimit;
+inline void Constrain( T loLimit, T *v, T hiLimit ) {
+   if( *v >= hiLimit ) { *v = hiLimit; }
+   if( *v <= loLimit ) { *v = loLimit; }
    }
-template<typename T> inline void Bound( T loLimit, T *v, T hiLimit ) { Constrain( loLimit, v, hiLimit ); }  // an alias for Constrain
-
 
 template<typename T>
-bool WithinRangeInclusive( T nLower, T toCheck, T nUpper )
-   {
+bool WithinRangeInclusive( T nLower, T toCheck, T nUpper ) {
    return (toCheck >= nLower && toCheck <= nUpper); // ASSUMES nLower <= nUpper !!!
    }
 
-
 // for making writable copies of const char []
-
 #define  ALLOCA_STRDUP( NmOf_pDest, NmOf_strlenVar, pSrcStr, pSrcStrlen ) \
       const int NmOf_strlenVar( pSrcStrlen );                             \
       PChar NmOf_pDest = PChar( alloca( NmOf_strlenVar + 1 ) );           \
       memcpy( NmOf_pDest, pSrcStr, NmOf_strlenVar );                      \
       NmOf_pDest[ NmOf_strlenVar ] = '\0';
-
-// for strcat'ing arbitrary-length strings
-
-#define  ALLOCA_STRCAT( NmOf_pDest, NmOf_strlenVar, str1, str2 )          \
-      const int NmOf_strlenVar( Strlen(str1) + Strlen(str2) );            \
-      PChar NmOf_pDest = PChar( alloca( NmOf_strlenVar + 1 ) );           \
-      scpy( NmOf_pDest, NmOf_strlenVar+1, str1 );                   \
-      scat( NmOf_pDest, NmOf_strlenVar+1, str2 );
-
 
 #if !defined(__GNUC__)
 #define __func__  __FUNCTION__

@@ -76,9 +76,9 @@ bool ARG::nextselbuf() {
    return true;
    }
 
-STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, CPCChar *pC, CPCChar *pPastEnd ) {
-   for( ; pC < pPastEnd ; ++pC ) {
-      if( pFBuf->NameMatch( *pC ) ) {
+STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, CPCChar *pC, size_t elements ) {
+   for( decltype(elements) ix(0) ; ix < elements ; ++ix ) {
+      if( pFBuf->NameMatch( pC[ix] ) ) {
          return true;
          }
       }
@@ -115,14 +115,14 @@ bool FBUF::IsInvisibleFile( int widx ) const {
    if( widx >= 0 && IsWFilesName( Namestr() ) == widx ) {
       return true;
       }
-   return FileMatchesNameInList( this, s_InvisibleFilenames, PAST_END( s_InvisibleFilenames ) );
+   return FileMatchesNameInList( this, s_InvisibleFilenames, ELEMENTS( s_InvisibleFilenames ) );
    }
 
 bool FBUF::IsInterestingFile( int widx ) const {
    if( widx >= 0 && IsWFilesName( Namestr() ) == widx ) {
       return false;
       }
-   return !FileMatchesNameInList( this, s_UninterestingFilenames, PAST_END( s_UninterestingFilenames ) );
+   return !FileMatchesNameInList( this, s_UninterestingFilenames, ELEMENTS( s_UninterestingFilenames ) );
    }
 
 STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFBufs[], int pFBufsEls ) {

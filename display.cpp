@@ -2075,7 +2075,7 @@ struct direct_vid_seg {
    direct_vid_seg( Point origin, int colorIndex, stref sr )
      : d_origin( origin )
      , d_colorIndex( colorIndex )
-     , d_str( BSR2STR(sr) )
+     , d_str( sr2st(sr) )
      {}
    };
 
@@ -2742,7 +2742,7 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
             fChanged = true;
             }
          if( !eq( it->d_str, sr ) ) {
-            it->d_str.assign( BSR2STR(sr) ); // overwrite same-length string with new
+            it->d_str.assign( sr2st(sr) ); // overwrite same-length string with new
                            0 && DBG( "%s [%" PR_SIZET "]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
             fChanged = true;
             }
