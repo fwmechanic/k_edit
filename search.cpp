@@ -598,7 +598,7 @@ public:
 // CharWalkRect is called by PBalFindMatching, PMword, and
 // GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
 // 20160515  this should probably be broken up into multiple special-purpose more-optimized functions
-STATIC_FXN bool CharWalkRect( PFBUF pFBuf, const Rect &constrainingRect, const Point &start, bool fWalkFwd, CharWalker_ &walker ) {
+STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constrainingRect, const Point &start, CharWalker_ &walker ) {
    0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
    const auto tw( pFBuf->TabWidth() );
    #define SETUP_LINE \
@@ -834,6 +834,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
               );
       const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, ixHaystackCurCol, pcre_exec_flags ) );
       if( rv == 0 || !d_captures[0].valid() ) {
+         curPt->col = colLastPossibleLastMatchChar; // no matches this line
          return CONTINUE_SEARCH;
          }
       ixMatchMin = d_captures[0].offset() + ixBOL;
@@ -1286,7 +1287,7 @@ STATIC_FXN void MFReplaceProcessFile( PCChar filename, CharWalkerReplace *pMrcw 
    ++pMrcw->d_iReplacementFileCandidates;
    const auto oldReplacementsMade( pMrcw->d_iReplacementsMade );
    Rect rgnSearch( pFBuf );
-   CharWalkRect( pFBuf, rgnSearch, Point( rgnSearch.flMin, 0, -1 ), true, *pMrcw );
+   CharWalkRect( true, pFBuf, rgnSearch, Point( rgnSearch.flMin, 0, -1 ), *pMrcw );
    if( oldReplacementsMade == pMrcw->d_iReplacementsMade ) {
       GarbageCollectFBUF( pFBuf, fWeCanGarbageCollectFBUF );
       }
@@ -1393,27 +1394,27 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
    else {
       switch( arg.d_argType ) {
        default:
-       case NOARG:   { Rect rn( true ); CharWalkRect( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), true, mrcw ); } break;
-       case NULLARG: { Rect rn( true ); CharWalkRect( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), true, mrcw ); } break;
+       case NOARG:   { Rect rn( true ); CharWalkRect( true, g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), mrcw ); } break;
+       case NULLARG: { Rect rn( true ); CharWalkRect( true, g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), mrcw ); } break;
        case LINEARG: { Rect rn;
                        rn.flMin.lin = arg.d_linearg.yMin;  rn.flMin.col = 0;
                        rn.flMax.lin = arg.d_linearg.yMax;  rn.flMax.col = COL_MAX;
-                       CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), true, mrcw );
+                       CharWalkRect( true, g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), mrcw );
                      } break;
        case STREAMARG: if( arg.d_streamarg.flMin.lin == arg.d_streamarg.flMax.lin ) {
-                          CharWalkRect( g_CurFBuf(), arg.d_streamarg, Point( arg.d_streamarg.flMin, 0, -1 ), true, mrcw );
+                          CharWalkRect( true, g_CurFBuf(), arg.d_streamarg, Point( arg.d_streamarg.flMin, 0, -1 ), mrcw );
                           }
                        else { Rect rn;
                           rn.flMin.lin = arg.d_streamarg.flMin.lin;      rn.flMin.col = 0;
                           rn.flMax.lin = arg.d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
-                          CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin.lin, arg.d_streamarg.flMin.col - 1 ), true, mrcw );
+                          CharWalkRect( true, g_CurFBuf(), rn, Point( rn.flMin.lin, arg.d_streamarg.flMin.col - 1 ), mrcw );
                           rn.flMax.col = arg.d_streamarg.flMax.col;
                           rn.flMax.lin++;
                           rn.flMin.lin = rn.flMax.lin;
-                          CharWalkRect( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), true, mrcw );
+                          CharWalkRect( true, g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), mrcw );
                           }
                        break;
-       case BOXARG:    CharWalkRect( g_CurFBuf(), arg.d_boxarg, Point( arg.d_boxarg.flMin, 0, -1 ), true, mrcw );
+       case BOXARG:    CharWalkRect( true, g_CurFBuf(), arg.d_boxarg, Point( arg.d_boxarg.flMin, 0, -1 ), mrcw );
                        break;
        }
       Msg( "%d of %d occurrences replaced%s"
@@ -1997,7 +1998,7 @@ bool View::PBalFindMatching( bool fSetHilite, Point *pPt ) {
    else return false;
    Rect rgnSearch( fSearchFwd );
    CharWalkerPBal chSrchr( fSearchFwd, fSetHilite, startCh );
-   CharWalkRect( d_pFBuf, rgnSearch, Cursor(), fSearchFwd, chSrchr );
+   CharWalkRect( fSearchFwd, d_pFBuf, rgnSearch, Cursor(), chSrchr );
    if( chSrchr.d_fClosureFound ) {
       if( pPt )        { *pPt = chSrchr.d_closingPt;                     }
       if( fSetHilite ) { SetMatchHiLite( chSrchr.d_closingPt, 1, true ); }
@@ -2100,7 +2101,7 @@ STATIC_FXN bool PMword( bool fSearchFwd, bool fMeta ) {
    const FBufLocnNow cp;
    Rect rgnSearch( fSearchFwd );
    CharWalkerPMWord chSrchr( fMeta );
-   CharWalkRect( g_CurFBuf(), rgnSearch, g_CurView()->Cursor(), fSearchFwd, chSrchr );
+   CharWalkRect( fSearchFwd, g_CurFBuf(), rgnSearch, g_CurView()->Cursor(), chSrchr );
    return cp.Moved();
    }
 
