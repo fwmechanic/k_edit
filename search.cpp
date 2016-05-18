@@ -925,9 +925,8 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
    // replacement done: position curPt->col for next search
    const sridx advance( AbsDiff( destMatchChars, srReplace.length() ) );
    colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
-   const auto curcolBefore( curPt->col );
-   curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() ) - 1; // -1 because caller advances 1 COL upon return
-   Assert( curPt->col >= curcolBefore );
+   // note that if srReplace.length()==0 (empty replacement string), then curPt->col = (curPt->col - 1);
+   curPt->col               = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() ) - 1; // -1 because caller advances 1 COL upon return
    // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleMatchChar );
    // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleMatchChar, d_sbuf+curPt->col );
    return REREAD_LINE_CONTINUE_SEARCH;
