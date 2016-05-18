@@ -591,7 +591,7 @@ enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH
 
 class CharWalker_ {
 public:
-   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) = 0;
+   virtual CheckNextRetval VCheckNext( stref rl, sridx ix_curPt_Col, const Point &curPt, COL colLastPossibleMatchChar ) = 0;
    virtual ~CharWalker_() {};
    };
 
@@ -601,17 +601,16 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
    const auto tw( pFBuf->TabWidth() );
    #define SETUP_LINE \
            rl = pFBuf->PeekRawLine( curPt.lin ); \
-           ixBOL = CaptiveIdxOfCol( tw, rl, constrainingRect.flMin.col ); \
            colLastPossibleMatchChar = Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col );
    #define SETUP_LINE_TEXT                      \
            if( ExecutionHaltRequested() ) {     \
               FlushKeyQueuePrimeScreenRedraw(); \
               return false;                     \
               }                                 \
-           stref rl; sridx ixBOL; COL colLastPossibleMatchChar; \
+           stref rl; COL colLastPossibleMatchChar; \
            SETUP_LINE;
    #define CHECK_NEXT  {  \
-           const auto rv( walker.VCheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleMatchChar ) ); \
+           const auto rv( walker.VCheckNext( rl, CaptiveIdxOfCol( tw, rl, curPt.col ), curPt, colLastPossibleMatchChar ) ); \
            if( STOP_SEARCH == rv ) { return true; } \
            }
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
@@ -638,6 +637,7 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
          }
       }
    return false;
+  #undef SETUP_LINE
   #undef SETUP_LINE_TEXT
   #undef CHECK_NEXT
    }
@@ -805,7 +805,7 @@ public:
       , d_iReplacementFileCandidates ( 0 )
       {}
    bool Interactive() const { return d_fDoAnyReplaceQueries; }
-   CheckNextRetval CheckNext( PFBUF pFBuf, stref rl, sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar );
+   CheckNextRetval CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar );
    };
 
 CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) {
@@ -963,6 +963,7 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &constrainingRect, 
       ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
       }
    return false;
+  #undef SETUP_LINE
   #undef SETUP_LINE_TEXT
   #undef CHECK_NEXT
    }
@@ -1964,20 +1965,20 @@ public:
       , d_stackIx( 0 )
       , d_fClosureFound( false )
       { /*DBG("");*/ Push( chStart ); }
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) override;
+   CheckNextRetval VCheckNext( stref rl, const sridx ix_curPt_Col, const Point &curPt, const COL colLastPossibleMatchChar ) override;
    };
 
-CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) {
+CheckNextRetval CharWalkerPBal::VCheckNext( stref rl, const sridx ix_curPt_Col, const Point &curPt, const COL colLastPossibleMatchChar ) {
    const char ch( rl[ix_curPt_Col] );
    PCChar pA, pB;
    if( d_fFwd ) { pA = g_delims      ; pB = g_delimMirrors; }
    else         { pA = g_delimMirrors; pB = g_delims      ; }
    CPCChar pE( strchr( pA, ch ) );
    if( pE ) {
-      if( d_stackIx >= ELEMENTS(d_stack)-1 ) { 0 && DBG( "%cbal STACK OVERFLOW at X=%d, Y=%d", d_fFwd ? '+' : '-', curPt->col+1, curPt->lin+1 );
+      if( d_stackIx >= ELEMENTS(d_stack)-1 ) { 0 && DBG( "%cbal STACK OVERFLOW at X=%d, Y=%d", d_fFwd ? '+' : '-', curPt.col+1, curPt.lin+1 );
          return STOP_SEARCH;
          }
-      0 && DBG( "%cbal [%d] d_stackIx PUSH '%c' at X=%d, Y=%d", d_fFwd ? '+' : '-', d_stackIx, ch, curPt->col+1, curPt->lin+1 );
+      0 && DBG( "%cbal [%d] d_stackIx PUSH '%c' at X=%d, Y=%d", d_fFwd ? '+' : '-', d_stackIx, ch, curPt.col+1, curPt.lin+1 );
       Push( ch );
       return CONTINUE_SEARCH;
       }
@@ -1991,18 +1992,18 @@ CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref rl, const sridx i
                0 && DBG( "%cbal [%d] MISMATCH is '%c' != s/b '%c' at X=%d, Y=%d"
                           , d_fFwd ? '+' : '-'
                                  , d_stackIx      , ch        , shouldClose
-                                                                       , curPt->col+1
-                                                                             , curPt->lin+1 );
+                                                                       , curPt.col+1
+                                                                             , curPt.lin+1 );
                }
             return STOP_SEARCH;
             }
-         if( d_stackIx > 0 ) { 0 && DBG( "%cbal [%d] MATCH '%c' at X=%d, Y=%d", d_fFwd ? '+' : '-', d_stackIx, ch, curPt->col+1, curPt->lin+1 );
+         if( d_stackIx > 0 ) { 0 && DBG( "%cbal [%d] MATCH '%c' at X=%d, Y=%d", d_fFwd ? '+' : '-', d_stackIx, ch, curPt.col+1, curPt.lin+1 );
             return CONTINUE_SEARCH;
             }
-         if( d_fHiliteMatch ) { 0 && DBG( "%cbal CLOSURE at X=%d, Y=%d", d_fFwd ? '+' : '-', curPt->col+1, curPt->lin+1 );
+         if( d_fHiliteMatch ) { 0 && DBG( "%cbal CLOSURE at X=%d, Y=%d", d_fFwd ? '+' : '-', curPt.col+1, curPt.lin+1 );
             }
          d_fClosureFound = true;
-         d_closingPt     = *curPt;
+         d_closingPt     = curPt;
          return STOP_SEARCH;
          }
       }
@@ -2107,23 +2108,23 @@ class CharWalkerPMWord : public CharWalker_ {
    bool d_fPMWordSearchMeta;
 public:
    CharWalkerPMWord( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) override;
+   CheckNextRetval VCheckNext( stref rl, const sridx ix_curPt_Col, const Point &curPt, const COL colLastPossibleMatchChar ) override;
    };
 
-CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) {
-   if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt->col is FIRST CHAR OF WORD
-      if( !isWordChar( sr[ix_curPt_Col] ) || (ix_curPt_Col > 0 && isWordChar( sr[ix_curPt_Col-1] )) ) {
+CheckNextRetval CharWalkerPMWord::VCheckNext( stref rl, const sridx ix_curPt_Col, const Point &curPt, const COL colLastPossibleMatchChar ) {
+   if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt.col is FIRST CHAR OF WORD
+      if( !isWordChar( rl[ix_curPt_Col] ) || (ix_curPt_Col > 0 && isWordChar( rl[ix_curPt_Col-1] )) ) {
          return CONTINUE_SEARCH;
          }
-      g_CurView()->MoveCursor( *curPt );
+      g_CurView()->MoveCursor( curPt );
       return STOP_SEARCH;
       }
-   else { // rtn true iff curPt->col is LAST CHAR OF WORD
-      if( curPt->col <= 0 )                   { return CONTINUE_SEARCH; }
-      if( !isWordChar( sr[ix_curPt_Col-1] ) ) { return CONTINUE_SEARCH; }
-      if( !isWordChar( sr[ix_curPt_Col  ] ) ) { g_CurView()->MoveCursor( *curPt ); return STOP_SEARCH; }
-      if( curPt->col != colLastPossibleMatchChar ) { return CONTINUE_SEARCH; }
-      g_CurView()->MoveCursor( curPt->lin, curPt->col+1 );
+   else { // rtn true iff curPt.col is LAST CHAR OF WORD
+      if( curPt.col <= 0 )                    { return CONTINUE_SEARCH; }
+      if( !isWordChar( rl[ix_curPt_Col-1] ) ) { return CONTINUE_SEARCH; }
+      if( !isWordChar( rl[ix_curPt_Col  ] ) ) { g_CurView()->MoveCursor( curPt ); return STOP_SEARCH; }
+      if( curPt.col != colLastPossibleMatchChar ) { return CONTINUE_SEARCH; }
+      g_CurView()->MoveCursor( curPt.lin, curPt.col+1 );
       return STOP_SEARCH;
       }
    }
