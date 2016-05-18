@@ -805,14 +805,14 @@ public:
       , d_iReplacementFileCandidates ( 0 )
       {}
    bool Interactive() const { return d_fDoAnyReplaceQueries; }
-   CheckNextRetval CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar );
+   CheckNextRetval CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL *colLastPossibleMatchChar );
    };
 
-CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) {
+CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL *colLastPossibleMatchChar ) {
    // replace iff string *** starting at rl[ix_curPt_Col] *** matches
    const auto srRawSearch( d_ss.SrchStr() );
    const auto tw( pFBuf->TabWidth() );
-   const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, colLastPossibleMatchChar ) );
+   const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, *colLastPossibleMatchChar ) );
    d_captures.clear();
    int idxOfLastCharInMatch;
    sridx ixMatchMin;
@@ -831,7 +831,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
               );
       const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, ixHaystackCurCol, pcre_exec_flags ) );
       if( rv == 0 || !d_captures[0].valid() ) {
-         curPt->col = colLastPossibleMatchChar; // no matches this line
+         curPt->col = *colLastPossibleMatchChar; // no matches this line
          return CONTINUE_SEARCH;
          }
       ixMatchMin = d_captures[0].offset() + ixBOL;
@@ -858,7 +858,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
       // 0 && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds"
       //      , BSR(haystack)
       //      , BSR(srRawSearch)
-      //      , static_cast<int>(colLastPossibleMatchChar - ixMatchMax), rl.data()+ixMatchMin
+      //      , static_cast<int>(*colLastPossibleMatchChar - ixMatchMax), rl.data()+ixMatchMin
       //      );
       return CONTINUE_SEARCH;
       }
@@ -924,47 +924,38 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
    // replacement done: adjust end of this line search domain
    // replacement done: position curPt->col for next search
    const sridx advance( AbsDiff( destMatchChars, srReplace.length() ) );
-   colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
+   *colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
    // note that if srReplace.length()==0 (empty replacement string), then curPt->col = (curPt->col - 1);
    curPt->col               = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() ) - 1; // -1 because caller advances 1 COL upon return
-   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleMatchChar );
-   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleMatchChar, d_sbuf+curPt->col );
+   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, *colLastPossibleMatchChar );
+   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, *colLastPossibleMatchChar, d_sbuf+curPt->col );
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 
-// CharWalkRectReplace is called by GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
-STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &constrainingRect, Point start, CharWalkerReplace &walker ) {
-   0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
+STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point start, CharWalkerReplace &walker ) {
+   0 && DBG( "%s: within=LINEs(%d-%d) COLs(%d,%d)", __func__, within.flMin.lin, within.flMax.lin, within.flMin.col, within.flMax.col );
    const auto tw( pFBuf->TabWidth() );
-   #define SETUP_LINE \
-           rl = pFBuf->PeekRawLine( curPt.lin ); \
-           ixBOL = CaptiveIdxOfCol( tw, rl, constrainingRect.flMin.col ); \
-           colLastPossibleMatchChar = Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col );
-   #define SETUP_LINE_TEXT                      \
-           if( ExecutionHaltRequested() ) {     \
-              FlushKeyQueuePrimeScreenRedraw(); \
-              return false;                     \
-              }                                 \
-           stref rl; sridx ixBOL; COL colLastPossibleMatchChar; \
-           SETUP_LINE;
-   #define CHECK_NEXT  {  \
-           const auto rv( walker.CheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleMatchChar ) ); \
-           if( STOP_SEARCH == rv ) { return true; } \
-           if( REREAD_LINE_CONTINUE_SEARCH == rv ) { SETUP_LINE; } \
-           }
-   Point curPt( start.lin, start.col + 1 );
-   for( auto yMax(constrainingRect.flMax.lin) ; curPt.lin <= yMax ; ) {
-      SETUP_LINE_TEXT;
-      for(
+  #define SETUP_LINE ( rl = pFBuf->PeekRawLine( curPt.lin ), ixBOL = CaptiveIdxOfCol( tw, rl, within.flMin.col ) )
+   for( Point curPt( start.lin, start.col + 1 )
+      ;   curPt.lin <= within.flMax.lin
+      ; ++curPt.lin, curPt.col = within.flMin.col
+      ) {
+      if( ExecutionHaltRequested() ) {
+         FlushKeyQueuePrimeScreenRedraw();
+         return false;
+         }
+      stref rl; sridx ixBOL; SETUP_LINE;
+      for( auto colLastPossibleMatchChar( Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), within.flMax.col ) )
          ; curPt.col <= colLastPossibleMatchChar
          ; curPt.col = ColOfNextChar( tw, rl, curPt.col )
-         ) { CHECK_NEXT }
-      ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
+         ) {
+         const auto rv( walker.CheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, &colLastPossibleMatchChar ) );
+         if( STOP_SEARCH == rv ) { return true; }
+         if( REREAD_LINE_CONTINUE_SEARCH == rv ) { SETUP_LINE; }
+         }
       }
    return false;
   #undef SETUP_LINE
-  #undef SETUP_LINE_TEXT
-  #undef CHECK_NEXT
    }
 
 //
