@@ -591,40 +591,37 @@ enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH
 
 class CharWalker_ {
 public:
-   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) = 0;
+   virtual CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) = 0;
    virtual ~CharWalker_() {};
    };
 
-// CharWalkRect is called by PBalFindMatching, PMword, and
-// GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
-// 20160515  this should probably be broken up into multiple special-purpose more-optimized functions
+// CharWalkRect is called by PBalFindMatching & PMword
 STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constrainingRect, const Point &start, CharWalker_ &walker ) {
    0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
    const auto tw( pFBuf->TabWidth() );
    #define SETUP_LINE \
            rl = pFBuf->PeekRawLine( curPt.lin ); \
            ixBOL = CaptiveIdxOfCol( tw, rl, constrainingRect.flMin.col ); \
-           colLastPossibleLastMatchChar = Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col );
+           colLastPossibleMatchChar = Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col );
    #define SETUP_LINE_TEXT                      \
            if( ExecutionHaltRequested() ) {     \
               FlushKeyQueuePrimeScreenRedraw(); \
               return false;                     \
               }                                 \
-           stref rl; sridx ixBOL; COL colLastPossibleLastMatchChar; \
+           stref rl; sridx ixBOL; COL colLastPossibleMatchChar; \
            SETUP_LINE;
    #define CHECK_NEXT  {  \
-           const auto rv( walker.VCheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleLastMatchChar ) ); \
+           const auto rv( walker.VCheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleMatchChar ) ); \
            if( STOP_SEARCH == rv ) { return true; } \
-           if( REREAD_LINE_CONTINUE_SEARCH == rv ) { SETUP_LINE; } \
            }
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       Point curPt( start.lin, start.col + 1 );
       for( auto yMax(constrainingRect.flMax.lin) ; curPt.lin <= yMax ; ) {
          SETUP_LINE_TEXT;
          for(
-            ; curPt.col <= colLastPossibleLastMatchChar
+            ; curPt.col <= colLastPossibleMatchChar
             ; curPt.col = ColOfNextChar( tw, rl, curPt.col )
-            ) CHECK_NEXT
+            ) { CHECK_NEXT }
          ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
          }
       }
@@ -633,10 +630,10 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
       if( constrainingRect.flMin.col > curPt.col ) { --curPt.lin;  curPt.col = constrainingRect.flMax.col; }
       for( auto yMin(constrainingRect.flMin.lin) ; curPt.lin >= yMin ; ) {
          SETUP_LINE_TEXT;
-         for( curPt.col = Min( colLastPossibleLastMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
+         for( curPt.col = Min( colLastPossibleMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
             ; curPt.col >= constrainingRect.flMin.col
             ; curPt.col = ColOfPrevChar( tw, rl, curPt.col )
-            ) CHECK_NEXT
+            ) { CHECK_NEXT }
          --curPt.lin;
          }
       }
@@ -690,7 +687,7 @@ GLOBAL_VAR std::string g_SnR_stReplacement     ;
      correctly.
 
  */
-class CharWalkerReplace : public CharWalker_ {
+class CharWalkerReplace {
    std::string             d_sbuf;
    std::string             d_stmp;
    const SearchSpecifier  &d_ss;
@@ -808,14 +805,14 @@ public:
       , d_iReplacementFileCandidates ( 0 )
       {}
    bool Interactive() const { return d_fDoAnyReplaceQueries; }
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval CheckNext( PFBUF pFBuf, stref rl, sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar );
    };
 
-CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) {
    // replace iff string *** starting at rl[ix_curPt_Col] *** matches
    const auto srRawSearch( d_ss.SrchStr() );
    const auto tw( pFBuf->TabWidth() );
-   const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, colLastPossibleLastMatchChar ) );
+   const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, colLastPossibleMatchChar ) );
    d_captures.clear();
    int idxOfLastCharInMatch;
    sridx ixMatchMin;
@@ -834,7 +831,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
               );
       const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, ixHaystackCurCol, pcre_exec_flags ) );
       if( rv == 0 || !d_captures[0].valid() ) {
-         curPt->col = colLastPossibleLastMatchChar; // no matches this line
+         curPt->col = colLastPossibleMatchChar; // no matches this line
          return CONTINUE_SEARCH;
          }
       ixMatchMin = d_captures[0].offset() + ixBOL;
@@ -861,7 +858,7 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
       // 0 && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds"
       //      , BSR(haystack)
       //      , BSR(srRawSearch)
-      //      , static_cast<int>(colLastPossibleLastMatchChar - ixMatchMax), rl.data()+ixMatchMin
+      //      , static_cast<int>(colLastPossibleMatchChar - ixMatchMax), rl.data()+ixMatchMin
       //      );
       return CONTINUE_SEARCH;
       }
@@ -927,13 +924,47 @@ CheckNextRetval CharWalkerReplace::VCheckNext( PFBUF pFBuf, stref rl, const srid
    // replacement done: adjust end of this line search domain
    // replacement done: position curPt->col for next search
    const sridx advance( AbsDiff( destMatchChars, srReplace.length() ) );
-   colLastPossibleLastMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
+   colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance );
    const auto curcolBefore( curPt->col );
    curPt->col                   = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() ) - 1; // -1 because caller advances 1 COL upon return
    Assert( curPt->col >= curcolBefore );
-   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleLastMatchChar );
-   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleLastMatchChar, d_sbuf+curPt->col );
+   // 0 && DBG("DFPoR- (%d,%d) L %d", curPt->col, curPt->lin, colLastPossibleMatchChar );
+   // 0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, colLastPossibleMatchChar, d_sbuf+curPt->col );
    return REREAD_LINE_CONTINUE_SEARCH;
+   }
+
+// CharWalkRectReplace is called by GenericReplace (therefore ARG::mfreplace() ARG::qreplace() ARG::replace())
+STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &constrainingRect, Point start, CharWalkerReplace &walker ) {
+   0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
+   const auto tw( pFBuf->TabWidth() );
+   #define SETUP_LINE \
+           rl = pFBuf->PeekRawLine( curPt.lin ); \
+           ixBOL = CaptiveIdxOfCol( tw, rl, constrainingRect.flMin.col ); \
+           colLastPossibleMatchChar = Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col );
+   #define SETUP_LINE_TEXT                      \
+           if( ExecutionHaltRequested() ) {     \
+              FlushKeyQueuePrimeScreenRedraw(); \
+              return false;                     \
+              }                                 \
+           stref rl; sridx ixBOL; COL colLastPossibleMatchChar; \
+           SETUP_LINE;
+   #define CHECK_NEXT  {  \
+           const auto rv( walker.CheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, colLastPossibleMatchChar ) ); \
+           if( STOP_SEARCH == rv ) { return true; } \
+           if( REREAD_LINE_CONTINUE_SEARCH == rv ) { SETUP_LINE; } \
+           }
+   Point curPt( start.lin, start.col + 1 );
+   for( auto yMax(constrainingRect.flMax.lin) ; curPt.lin <= yMax ; ) {
+      SETUP_LINE_TEXT;
+      for(
+         ; curPt.col <= colLastPossibleMatchChar
+         ; curPt.col = ColOfNextChar( tw, rl, curPt.col )
+         ) { CHECK_NEXT }
+      ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
+      }
+   return false;
+  #undef SETUP_LINE_TEXT
+  #undef CHECK_NEXT
    }
 
 //
@@ -1287,7 +1318,7 @@ STATIC_FXN void MFReplaceProcessFile( PCChar filename, CharWalkerReplace *pMrcw 
    ++pMrcw->d_iReplacementFileCandidates;
    const auto oldReplacementsMade( pMrcw->d_iReplacementsMade );
    Rect rgnSearch( pFBuf );
-   CharWalkRect( true, pFBuf, rgnSearch, Point( rgnSearch.flMin, 0, -1 ), *pMrcw );
+   CharWalkRectReplace( pFBuf, rgnSearch, Point( rgnSearch.flMin, 0, -1 ), *pMrcw );
    if( oldReplacementsMade == pMrcw->d_iReplacementsMade ) {
       GarbageCollectFBUF( pFBuf, fWeCanGarbageCollectFBUF );
       }
@@ -1394,27 +1425,27 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
    else {
       switch( arg.d_argType ) {
        default:
-       case NOARG:   { Rect rn( true ); CharWalkRect( true, g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), mrcw ); } break;
-       case NULLARG: { Rect rn( true ); CharWalkRect( true, g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), mrcw ); } break;
+       case NOARG:   { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), mrcw ); } break;
+       case NULLARG: { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), mrcw ); } break;
        case LINEARG: { Rect rn;
                        rn.flMin.lin = arg.d_linearg.yMin;  rn.flMin.col = 0;
                        rn.flMax.lin = arg.d_linearg.yMax;  rn.flMax.col = COL_MAX;
-                       CharWalkRect( true, g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), mrcw );
+                       CharWalkRectReplace( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), mrcw );
                      } break;
        case STREAMARG: if( arg.d_streamarg.flMin.lin == arg.d_streamarg.flMax.lin ) {
-                          CharWalkRect( true, g_CurFBuf(), arg.d_streamarg, Point( arg.d_streamarg.flMin, 0, -1 ), mrcw );
+                          CharWalkRectReplace( g_CurFBuf(), arg.d_streamarg, Point( arg.d_streamarg.flMin, 0, -1 ), mrcw );
                           }
                        else { Rect rn;
                           rn.flMin.lin = arg.d_streamarg.flMin.lin;      rn.flMin.col = 0;
                           rn.flMax.lin = arg.d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
-                          CharWalkRect( true, g_CurFBuf(), rn, Point( rn.flMin.lin, arg.d_streamarg.flMin.col - 1 ), mrcw );
+                          CharWalkRectReplace( g_CurFBuf(), rn, Point( rn.flMin.lin, arg.d_streamarg.flMin.col - 1 ), mrcw );
                           rn.flMax.col = arg.d_streamarg.flMax.col;
                           rn.flMax.lin++;
                           rn.flMin.lin = rn.flMax.lin;
-                          CharWalkRect( true, g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), mrcw );
+                          CharWalkRectReplace( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), mrcw );
                           }
                        break;
-       case BOXARG:    CharWalkRect( true, g_CurFBuf(), arg.d_boxarg, Point( arg.d_boxarg.flMin, 0, -1 ), mrcw );
+       case BOXARG:    CharWalkRectReplace( g_CurFBuf(), arg.d_boxarg, Point( arg.d_boxarg.flMin, 0, -1 ), mrcw );
                        break;
        }
       Msg( "%d of %d occurrences replaced%s"
@@ -1933,10 +1964,10 @@ public:
       , d_stackIx( 0 )
       , d_fClosureFound( false )
       { /*DBG("");*/ Push( chStart ); }
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) override;
    };
 
-CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval CharWalkerPBal::VCheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) {
    const char ch( rl[ix_curPt_Col] );
    PCChar pA, pB;
    if( d_fFwd ) { pA = g_delims      ; pB = g_delimMirrors; }
@@ -2076,10 +2107,10 @@ class CharWalkerPMWord : public CharWalker_ {
    bool d_fPMWordSearchMeta;
 public:
    CharWalkerPMWord( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
-   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) override;
+   CheckNextRetval VCheckNext( PFBUF pFBuf, stref sr, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) override;
    };
 
-CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleLastMatchChar ) {
+CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL &colLastPossibleMatchChar ) {
    if( false == d_fPMWordSearchMeta ) { // rtn true iff curPt->col is FIRST CHAR OF WORD
       if( !isWordChar( sr[ix_curPt_Col] ) || (ix_curPt_Col > 0 && isWordChar( sr[ix_curPt_Col-1] )) ) {
          return CONTINUE_SEARCH;
@@ -2091,7 +2122,7 @@ CheckNextRetval CharWalkerPMWord::VCheckNext( PFBUF pFBuf, stref sr, const sridx
       if( curPt->col <= 0 )                   { return CONTINUE_SEARCH; }
       if( !isWordChar( sr[ix_curPt_Col-1] ) ) { return CONTINUE_SEARCH; }
       if( !isWordChar( sr[ix_curPt_Col  ] ) ) { g_CurView()->MoveCursor( *curPt ); return STOP_SEARCH; }
-      if( curPt->col != colLastPossibleLastMatchChar ) { return CONTINUE_SEARCH; }
+      if( curPt->col != colLastPossibleMatchChar ) { return CONTINUE_SEARCH; }
       g_CurView()->MoveCursor( curPt->lin, curPt->col+1 );
       return STOP_SEARCH;
       }
