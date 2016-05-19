@@ -818,18 +818,6 @@ STATIC_FXN stref is_content_diff( PCFBUF pFile ) {
 #undef  CMPL
    }
 
-STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
-   auto rl0( pfb->PeekRawLine( 0 ) );
-   if( !rl0.starts_with( "#!" ) ) { return ""; }
-   const auto i1( FirstBlankOrEnd( rl0, 2 ) );    // assume: no spaces in path of binary
-   rl0.remove_suffix( rl0.length() - i1 );        // strip command tail
-   const auto ls( rl0.find_last_of( "/" ) );      // assume: unix dirsep, regardless of platform
-   const auto i0( ls != stref::npos ? ls+1 : 2 ); // could be bare binary name (i.e. filetype)
-   if( i0 >= i1 ) { return ""; }                  // nothing at all?
-   const auto shebang( rl0.substr( i0, i1 - i0 ) ); 1 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
-   return shebang;
-   }
-
 /*
    20150906_110400 real WIP: need a general split stref into walkable/iterable strefs solution
                              split and match (all w/o touching heap)
@@ -839,10 +827,58 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
 */
 class stref_split_walk {
    const stref whole_thing;
+   sridx ix = 0;
 public:
    stref_split_walk( stref whole_thing_ ) : whole_thing( whole_thing_ ) {}
-   stref next();
+   stref next() {
+      if( ix == eosr ) {
+         ix = 0;
+         return "";
+         }
+      auto first( eosr );
+      for( ; ix < whole_thing.length() ; ++ix ) {
+         if( isspace( whole_thing[ix] ) ) {
+            if( first != eosr ) {
+               return whole_thing.substr( first, ix - first );
+               }
+            }
+         else {
+            if( first == eosr ) {
+               first = ix;
+               }
+            }
+         }
+      ix = eosr;
+      if( first != eosr ) {
+         return whole_thing.substr( first, whole_thing.length() - first );
+         }
+      return "";
+      }
+
    };
+
+STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
+   auto rl0( pfb->PeekRawLine( 0 ) );
+   if( !rl0.starts_with( "#!" ) ) { return ""; }
+   const auto i1( FirstBlankOrEnd( rl0, 2 ) );    // assume: no spaces in path of binary
+   rl0.remove_suffix( rl0.length() - i1 );        // strip command tail
+   const auto ls( rl0.find_last_of( "/" ) );      // assume: unix dirsep, regardless of platform
+   const auto i0( ls != stref::npos ? ls+1 : 2 ); // could be bare binary name (i.e. filetype)
+   if( i0 >= i1 ) { return ""; }                  // nothing at all?
+   const auto shebang( rl0.substr( i0, i1 - i0 ) ); 1 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
+   if( shebang == "env" ) {
+      auto rl( pfb->PeekRawLine( 0 ) ); rl.remove_prefix( i1 );
+      stref_split_walk ssw( rl );
+      stref tok;
+   // while( tok = ssw.next() , !tok.empty() ) {  1 && DBG( "tok=%" PR_BSR "'", BSR(tok) ); }
+      while( tok = ssw.next() , !tok.empty() ) {
+         if( !tok.starts_with( '-' ) ) {
+            return tok;
+            }
+         }
+      }
+   return shebang;
+   }
 
 STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software/emacs/manual/html_node/emacs/Choosing-Modes.html
 #if 0 // following WORKS, except  isolate "mode: param"  functionality has not been written (pending impl of stref_split_walk etc.)
