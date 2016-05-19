@@ -599,45 +599,38 @@ public:
 STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constrainingRect, const Point &start, CharWalker_ &walker ) {
    0 && DBG( "%s: constrainingRect=LINEs(%d-%d) COLs(%d,%d)", __func__, constrainingRect.flMin.lin, constrainingRect.flMax.lin, constrainingRect.flMin.col, constrainingRect.flMax.col );
    const auto tw( pFBuf->TabWidth() );
-   #define SETUP_LINE \
-           rl = pFBuf->PeekRawLine( curPt.lin ); \
-           colLastPossibleMatchChar = Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col );
    #define SETUP_LINE_TEXT                      \
            if( ExecutionHaltRequested() ) {     \
               FlushKeyQueuePrimeScreenRedraw(); \
               return false;                     \
               }                                 \
-           stref rl; COL colLastPossibleMatchChar; \
-           SETUP_LINE;
-   #define CHECK_NEXT  {  \
+           const auto rl( pFBuf->PeekRawLine( curPt.lin ) ); \
+           const auto colLastPossibleMatchChar( Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col ) );
+   #define CHECK_NEXT  \
            const auto rv( walker.VCheckNext( rl, CaptiveIdxOfCol( tw, rl, curPt.col ), curPt, colLastPossibleMatchChar ) ); \
-           if( STOP_SEARCH == rv ) { return true; } \
-           }
+           if( STOP_SEARCH == rv ) { return true; }
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       Point curPt( start.lin, start.col + 1 );
-      for( auto yMax(constrainingRect.flMax.lin) ; curPt.lin <= yMax ; ) {
+      for( ; curPt.lin <= constrainingRect.flMax.lin ; ++curPt.lin, curPt.col = constrainingRect.flMin.col ) {
          SETUP_LINE_TEXT;
          for(
             ; curPt.col <= colLastPossibleMatchChar
             ; curPt.col = ColOfNextChar( tw, rl, curPt.col )
             ) { CHECK_NEXT }
-         ++curPt.lin;  curPt.col = constrainingRect.flMin.col;
          }
       }
    else { // -------------------- search BACKWARD --------------------
       Point curPt( start.lin, start.col - 1 );
       if( constrainingRect.flMin.col > curPt.col ) { --curPt.lin;  curPt.col = constrainingRect.flMax.col; }
-      for( auto yMin(constrainingRect.flMin.lin) ; curPt.lin >= yMin ; ) {
+      for( ; curPt.lin >= constrainingRect.flMin.lin ; --curPt.lin ) {
          SETUP_LINE_TEXT;
          for( curPt.col = Min( colLastPossibleMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
             ; curPt.col >= constrainingRect.flMin.col
             ; curPt.col = ColOfPrevChar( tw, rl, curPt.col )
             ) { CHECK_NEXT }
-         --curPt.lin;
          }
       }
    return false;
-  #undef SETUP_LINE
   #undef SETUP_LINE_TEXT
   #undef CHECK_NEXT
    }
