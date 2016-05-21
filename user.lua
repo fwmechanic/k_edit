@@ -111,8 +111,8 @@ local ebySpecNewlyListed = "NewSort&SortOrder=d&pb=&ebaytag1=ebayreg&ht=1"
 local ebyTail1           = "&query="
 local ebyTail2           = "&ebaytag1code=0"
 
-local googl = "https://encrypted.google.com/"
-           -- "https://www.google.com/"
+local googl = "https://www.google.com/"
+           -- "https://encrypted.google.com/"
            -- "https://encrypted.google.com/"
            -- "http://www.google.com/"
 
@@ -123,7 +123,8 @@ local function goSiteSrch( site )
    end
 
 local URL_StartPage      = goUrl( "https://startpage.com/do/search?q=".. UrlSrchTag )
-local URL_Google         = goUrl( googl.."search?hl=en&as_q=" .. UrlSrchTag )
+-- local URL_Google         = goUrl( googl.."search?hl=en&as_q=" .. UrlSrchTag )
+local URL_Google         = goUrl( googl.."search?q=" .. UrlSrchTag )
 local URL_Epinions       = goSiteSrch( "www.epinions.com" )
 local URL_Bing           = goUrl( "http://www.bing.com/search?q=" .. UrlSrchTag )
 local URL_DuckDuckGo     = goUrl( "https://duckduckgo.com/" .. UrlSrchTag )
