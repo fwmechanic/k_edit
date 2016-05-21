@@ -201,6 +201,9 @@ The editor implements a large number of functions, all of which the user can inv
     * In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression, and the replacement string may reference regex captures in the replacement string via `\n` where `n` is the (single-digit) capture number.
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
+ * `websearch` (`alt+6`): perform web search on string (opens in default browser)
+     * `arg` "search string" `websearch`: perform Google web search for "search string"
+     * `arg arg` "search string" `websearch`: display menu of all available search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
 
 ### menu functions
 
@@ -216,9 +219,6 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
 ### Win32-only functions
 
  * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
- * `websearch` (`alt+6`): perform web search on string (opens in default browser)
-     * `arg` "search string" `websearch`: perform Google web search for "search string"
-     * `arg arg` "search string" `websearch`: display menu of all available search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
 
 # Historical Notes
 
