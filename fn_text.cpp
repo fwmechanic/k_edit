@@ -487,24 +487,3 @@ bool ARG::ascii2hex() {
    }
 
 #endif
-
-//=================================================================================================
-
-#if MACRO_BACKSLASH_ESCAPES
-
-void StrUnDoubleBackslashes( PChar pszString ) {
-   if( !pszString || *pszString == 0 ) {
-      return;
-      }
-   auto   pWr( pszString );
-   PCChar pRd( pszString );
-   do {
-      if( (*pWr++ = *pRd++) == '\\' && *pRd == '\\' ) {
-         ++pRd;
-         }
-      } while( *pRd != 0 );
-   }
-
-#endif
-
-//-------------------------------------------------------------------------------------------------------

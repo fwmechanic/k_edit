@@ -169,20 +169,20 @@ StrToPastPrevOrNull_def( StrToPrevOrNull_  , != ) // do NOT call this directly! 
 
 #undef StrToPastPrevOrNull_def
 
-int Dquot_strcspn( PCChar pszToSearch, PCChar pszToSearchFor ) {
+int Quot2_strcspn( PCChar pszToSearch, PCChar pszToSearchFor ) {
    const auto p0( pszToSearch );
-   auto fInDQuotedStr(false);
+   auto fInQuot2dStr(false);
    char ch;
    for( ; (ch=*pszToSearch); ++pszToSearch ) {
-      const auto isDQUOT( ch == '"' && (pszToSearch > p0) && (pszToSearch[-1] != '\\') );
-      if( fInDQuotedStr ) {
-         if( isDQUOT ) {
-            fInDQuotedStr = false;
+      const auto isQuot2( ch == chQuot2 && (pszToSearch > p0) && (pszToSearch[-1] != chESC) );
+      if( fInQuot2dStr ) {
+         if( isQuot2 ) {
+            fInQuot2dStr = false;
             }
          }
       else {
-         if( isDQUOT ) {
-            fInDQuotedStr = true;
+         if( isQuot2 ) {
+            fInQuot2dStr = true;
             }
          else {
             if( strchr( pszToSearchFor, ch ) ) {

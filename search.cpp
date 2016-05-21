@@ -750,7 +750,7 @@ class CharWalkerReplace {
       d_promptCsrs.clear();
       d_promptCsrs.emplace_back( g_colorStatus, "Substitute " );
       constexpr PCChar endq = " (Yes/No/All/Quit)? ";
-      if( d_replaceDope.ReplaceRefs().size()==1 ) { // optimize when d_stReplace is not needed
+      if( d_replaceDope.ReplaceRefs().size()==1 ) { // optimize d_stReplace-not-needed case
          constexpr auto ixEnt( 0u ), ixCont( 0u );
          const auto &ent( d_replaceDope.ReplaceRefs()[ixEnt] );
          const auto rv_only( ent.d_isLit ? d_replaceDope.Literal()[ixCont] : (ixCont < d_captures.size() ? d_captures[ixCont].value() : "") );
@@ -1093,7 +1093,7 @@ bool ARG::searchlog() {
    auto yLine(0);
    if( TEXTARG == d_argType ) {
       if(  !isdigit( d_textarg.pText[0] )
-        ||      0 != d_textarg.pText[1]
+        ||  chNUL != d_textarg.pText[1]
         ) { return Msg( "textarg of searchlog can only be single char ['1'..'9'] = line number!" ); }
       yLine = d_textarg.pText[0] - '0';
       }
@@ -1164,7 +1164,7 @@ STATIC_FXN void MFGrepProcessFile( stref filename, FileSearcher *d_fs ) {
 
 STATIC_FXN PCChar findDelim( PCChar tokStrt, PCChar delimset, PCChar macroName ) {
    const auto pastTokEnd( StrToNextOrEos( tokStrt, delimset ) );
-   if( 0 == *pastTokEnd ) {
+   if( chNUL == *pastTokEnd ) {
       ErrorDialogBeepf( "Macro '%s': value has unbalanced %s delimiter", macroName, delimset );
       return nullptr;
       }
@@ -1180,10 +1180,10 @@ std::string DupTextMacroValue( PCChar macroName ) {
    auto tokStrt( StrPastAnyBlanks( pCmd->MacroText() ) );
    0 && DBG( "%s: '%s'", __func__, tokStrt );
    switch( *tokStrt ) {
-      case 0:    pastTokEnd = nullptr;                                  break;
-      case '"':  pastTokEnd = findDelim( ++tokStrt, "\"", macroName );  break;
-      case '\'': pastTokEnd = findDelim( ++tokStrt, "'" , macroName );  break;
-      default:   pastTokEnd = StrToNextBlankOrEos( tokStrt );           break;
+      case chNUL:   pastTokEnd = nullptr;                                  break;
+      case chQuot2: pastTokEnd = findDelim( ++tokStrt, "\"", macroName );  break;
+      case chQuot1: pastTokEnd = findDelim( ++tokStrt, "'" , macroName );  break;
+      default:      pastTokEnd = StrToNextBlankOrEos( tokStrt );           break;
       }
    if( nullptr == pastTokEnd ) { // empty value or bad delim?
       return std::string( "" );
@@ -1195,44 +1195,37 @@ std::string DupTextMacroValue( PCChar macroName ) {
    return std::string( tokStrt, txtLen );
    }
 
-STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( PChar nmBuf=nullptr, size_t sizeofBuf=0 ) { enum { DB=0 };
+STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator() { enum { DB=0 };
    {
    const auto mfspec_text( DupTextMacroValue( "mffile" ) );
    if( !IsStringBlank( mfspec_text ) ) {
       DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mffile", BSR(mfspec_text) );
       const auto pFBufMfspec( FindFBufByName( mfspec_text.c_str() ) );
       if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
-         if( nmBuf && sizeofBuf ) { safeSprintf( nmBuf, sizeofBuf, "%s (buffer,*mfptr)", pFBufMfspec->Name() ); }
-         return new FilelistCfxFilenameGenerator( pFBufMfspec );
+         return new FilelistCfxFilenameGenerator( pFBufMfspec->Namestr() + " (buffer,*mfptr)", pFBufMfspec );
          }
       }
    }
    {
    const auto pFBufMfspec( FindFBufByName( "<mfspec>" ) );
    if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
-      if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "<mfspec> (buffer)" ); }
-      return new FilelistCfxFilenameGenerator( pFBufMfspec );
+      return new FilelistCfxFilenameGenerator( "<mfspec> (buffer)", pFBufMfspec );
       }
    }
    {
    const auto mfspec_text( DupTextMacroValue( "mfspec" ) );
    if( !IsStringBlank( mfspec_text ) ) {
       DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
-      if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "mfspec (macro)" ); }
-      const auto rv( new CfxFilenameGenerator( mfspec_text, ONLY_FILES ) );
-      return rv;
+      return new CfxFilenameGenerator( "mfspec (macro)", mfspec_text, ONLY_FILES );
       }
    }
    {
    const auto mfspec_text( DupTextMacroValue( "mfspec_" ) );
    if( !IsStringBlank( mfspec_text ) ) {
       DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
-      if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "mfspec_ (macro)" ); }
-      const auto rv( new CfxFilenameGenerator( mfspec_text, ONLY_FILES ) );
-      return rv;
+      return new CfxFilenameGenerator( "mfspec_ (macro)", mfspec_text, ONLY_FILES );
       }
    }
-   if( nmBuf && sizeofBuf ) { scpy( nmBuf, sizeofBuf, "no mfspec setting active" ); }
    DB && DBG( "%s: returns NULL!", __func__ );
    return nullptr;
    }
@@ -1271,12 +1264,11 @@ bool ARG::mfgrep() {
       return false;
       }
    mh.InitLogFile( *pSrchr );
-   pathbuf gen_info;
-   auto pGen( MultiFileGrepFnmGenerator( gen_info, sizeof gen_info ) );
+   auto pGen( MultiFileGrepFnmGenerator() );
    if( !pGen ) {
       ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
       }
-   else { 1 && DBG( "%s using %s", __PRETTY_FUNCTION__, gen_info );
+   else { 1 && DBG( "%s using %" PR_BSR, __PRETTY_FUNCTION__, BSR(pGen->srSrc()) );
       Path::str_t pbuf;
       while( pGen->VGetNextName( pbuf ) ) {
          MFGrepProcessFile( pbuf.c_str(), pSrchr );
@@ -1510,15 +1502,15 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
          }
       else {
          bcpy( wcBuf , se2sr( pszWildcardString, pVbar ) );
-         bcpy( dirBuf, ".\\" );
+         bcpy( dirBuf, "." PATH_SEP_STR );
          }
       ED && DBG( "wcBuf='%s'" , wcBuf  );
       ED && DBG( "dirBuf='%s'", dirBuf );
       Path::str_t pbuf, fbuf;
       DirListGenerator dlg( dirBuf );
       std::string tmp;
-      while( dlg.VGetNextName( pbuf ) ) {                          ED && DBG( "pbuf='%s'", pbuf.c_str() );
-         WildcardFilenameGenerator wcg( FmtStr<_MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf.c_str(), wcBuf ), ONLY_FILES );
+      while( dlg.VGetNextName( pbuf ) ) {                            ED && DBG( "pbuf='%s'", pbuf.c_str() );
+         WildcardFilenameGenerator wcg( __func__, FmtStr<_MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf.c_str(), wcBuf ), ONLY_FILES );
          fbuf.clear();
          while( wcg.VGetNextName( fbuf ) ) {
             InsFnm( fb, tmp, fbuf.c_str(), fSorted );
@@ -1527,7 +1519,7 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
          }
       }
    else {
-      CfxFilenameGenerator wcg( pszWildcardString, FILES_AND_DIRS );
+      CfxFilenameGenerator wcg( __func__, pszWildcardString, FILES_AND_DIRS );
       std::string tmp;
       Path::str_t fbuf;
       while( wcg.VGetNextName( fbuf ) ) {
@@ -1679,9 +1671,9 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
              || pS[1]=='|'
              || pS[1]=='.'
              )
-         ) ? pS[1] : 0
+         ) ? pS[1] : chNUL
       );
-   auto fNdAppendTrailingAltSepChar( 0 );
+   auto fNdAppendTrailingAltSepChar( false );
    if( AltSepChar ) {
       pS.remove_prefix( 2 );
       // IF ALTERNATION
@@ -1690,7 +1682,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
       // BEING USED, LAST CHAR MUST AltSepChar!
       // Append if necessary
       if( pS.back() != AltSepChar ) {
-         fNdAppendTrailingAltSepChar = 1;
+         fNdAppendTrailingAltSepChar = true;
          }
       }
    d_searchKey.assign( pS.data(), pS.length() );
@@ -1995,7 +1987,7 @@ CheckNextRetval CharWalkerPBal::VCheckNext( stref rl, const sridx ix_curPt_Col, 
 
 char CharAtCol( COL tabWidth, stref content, const COL colTgt ) {
    const auto ix( FreeIdxOfCol( tabWidth, content, colTgt ) );
-   return ix < content.length() ? content[ ix ] : 0;
+   return ix < content.length() ? content[ ix ] : chNUL;
    }
 
 char View::CharUnderCursor() {
@@ -2406,7 +2398,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
    auto pszKey( PChar( alloca( keyLen ) ) );
    auto pB( pszKey );
    *pB++ = '!';  // prepend alternation header (2 chars)
-   *pB++ = '\0'; // placeholder for keySep
+   *pB++ = chNUL; // placeholder for keySep
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
       const auto rl( curfile->PeekRawLine( line ) );
       if( rl.length() > 0 ) {
@@ -2417,7 +2409,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
    const char keySep (
       ((memchr( pszKey+2, keyLen-2, ',' ) == nullptr) ? ',' :
       ((memchr( pszKey+2, keyLen-2, '|' ) == nullptr) ? '|' :
-      ((memchr( pszKey+2, keyLen-2, '.' ) == nullptr) ? '.' : 0)))
+      ((memchr( pszKey+2, keyLen-2, '.' ) == nullptr) ? '.' : chNUL)))
       );
    if( !keySep ) {
       return Msg( "%s: cumulative key contains all possible separators [,|.]", __func__ );
@@ -2425,7 +2417,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
    DBG( "KEY=%s", pszKey );
    auto pastEnd( pszKey+keyLen );
    for( auto pC(pszKey) ; pC < pastEnd ; ++pC ) {
-      if( 0 == *pC ) {
+      if( chNUL == *pC ) {
          *pC = keySep;
          }
       }

@@ -24,21 +24,23 @@
 class PathStrGenerator {  // interface class
    NO_COPYCTOR(PathStrGenerator);
    NO_ASGN_OPR(PathStrGenerator);
-
+   std::string d_src;
 public:
-   PathStrGenerator() {}
+   PathStrGenerator( std::string &src ) : d_src( src ) {}
    virtual bool VGetNextName( Path::str_t &dest ) = 0;
+   stref srSrc() { return d_src; }
    virtual ~PathStrGenerator() {}
    };
 
 class WildcardFilenameGenerator : public PathStrGenerator {
    NO_COPYCTOR(WildcardFilenameGenerator);
    NO_ASGN_OPR(WildcardFilenameGenerator);
-
    DirMatches d_dm;
-
 public:
-   WildcardFilenameGenerator( PCChar string, WildCardMatchMode matchMode=ONLY_FILES ) : d_dm( string, nullptr, matchMode ) {}
+   WildcardFilenameGenerator( std::string &&src, PCChar string, WildCardMatchMode matchMode=ONLY_FILES )
+      : PathStrGenerator( src )
+      , d_dm( string, nullptr, matchMode )
+      {}
    // DTOR auto-generated
    bool VGetNextName( Path::str_t &dest ) override;
    };
@@ -46,20 +48,14 @@ public:
 class DirListGenerator : public PathStrGenerator {
    NO_COPYCTOR( DirListGenerator );
    NO_ASGN_OPR( DirListGenerator );
-
    StringListHead  d_input ;
    StringListHead  d_output;
-
    void AddName( stref name );
-
 public:
-
-   DirListGenerator( PCChar dirName=nullptr );
+   DirListGenerator( std::string &&src, PCChar dirName=nullptr );
    ~DirListGenerator();
-
    bool VGetNextName( Path::str_t &dest ) override;
    };
-
 
 class DicedOnDelimString : public DiceableString {
 public:
@@ -76,17 +72,13 @@ class StrSubstituterGenerator;  // "static"
 class CfxFilenameGenerator : public PathStrGenerator {
    NO_COPYCTOR(CfxFilenameGenerator);
    NO_ASGN_OPR(CfxFilenameGenerator);
-
    WildcardFilenameGenerator *d_pWcGen = nullptr;
    StrSubstituterGenerator   *d_pSSG = nullptr;
    DicedOnDelimString         d_splitLine;
    WildCardMatchMode          d_matchMode;
-
    PCChar d_pszEntrySuffix = nullptr;
-
-   public:
-
-   CfxFilenameGenerator( stref macroText, WildCardMatchMode matchMode );
+public:
+   CfxFilenameGenerator( std::string &&src, stref macroText, WildCardMatchMode matchMode );
    bool VGetNextName( Path::str_t &dest ) override;
    virtual ~CfxFilenameGenerator();
    };
@@ -96,15 +88,17 @@ class CfxFilenameGenerator : public PathStrGenerator {
 class FilelistCfxFilenameGenerator : public PathStrGenerator {
    NO_COPYCTOR( FilelistCfxFilenameGenerator );
    NO_ASGN_OPR( FilelistCfxFilenameGenerator );
-
    PFBUF                  d_pFBuf;
    LINE                   d_curLine = 0;
    CfxFilenameGenerator  *d_pCfxGen = nullptr;
    Path::str_t            d_sbuf;
-
-   public:
-
-   FilelistCfxFilenameGenerator( PFBUF pFBuf ) : d_pFBuf( pFBuf ) {}
+   std::string            d_nmBuf;
+public:
+   FilelistCfxFilenameGenerator( std::string &&src, PFBUF pFBuf )
+      : PathStrGenerator( src )
+      , d_pFBuf( pFBuf )
+      , d_nmBuf( src )
+      {}
    bool VGetNextName( Path::str_t &dest ) override;
    virtual ~FilelistCfxFilenameGenerator() { Delete0( d_pCfxGen ); }
    };

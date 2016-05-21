@@ -1152,7 +1152,7 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
       for( ; pt.col < rl.length() ; ++pt.col ) {                               \
          switch( rl[pt.col] ) {                                                \
             default:     break;                                                \
-            case '\\' :  ++pt.col; break; /* skip escaped char */              \
+            case chESC:  ++pt.col; break; /* skip escaped char */              \
             case delim:  add_litstr( start.lin, start.col, pt.lin, pt.col-1 ); \
                          ++pt.col;                                             \
                          return in_code;                                       \
@@ -1394,7 +1394,7 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
       for( ; pt.col < rl.length() ; ++pt.col ) {                               \
          switch( rl[pt.col] ) {                                                \
             default:     break;                                                \
-            case '\\' :  ++pt.col; break; /* skip escaped char */              \
+            case chESC:  ++pt.col; break; /* skip escaped char */              \
             case delim:  add_litstr( start.lin, start.col, pt.lin, pt.col-1 ); \
                          ++pt.col;                                             \
                          return in_code;                                       \
@@ -1434,7 +1434,7 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                           
       for( ; pt.col < rl.length() ; ++pt.col ) {                                                  \
          switch( rl[pt.col] ) {                                                                   \
             default:     break;                                                                   \
-            case '\\' :  if( backslash_escapes ) { ++pt.col; } /* skip escaped char */            \
+            case chESC:  if( backslash_escapes ) { ++pt.col; } /* skip escaped char */            \
                          break;                                                                   \
             case delim:  const auto first( rl[pt.col] );                                          \
                          if( SEQ3( first ) ) {                                                    \
@@ -1534,7 +1534,7 @@ class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { en
       for( ; pt.col < rl.length() ; ++pt.col ) {                                   DB && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col ); \
          switch( rl[pt.col] ) {                                                                                                                       \
             default:      break;                                                                                                                      \
-            case '\\' :   ++pt.col; /* skip escaped char */ break;                                                                                    \
+            case chESC:   ++pt.col; /* skip escaped char */ break;                                                                                    \
             case sec:     ++pt.col;                                                                                                                   \
                           find_end_ ## sec( pFile, pt, nest+1 );                   DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
                           --pt.col; /* compensate for ++pt.col in 3d for clause */                                                                    \

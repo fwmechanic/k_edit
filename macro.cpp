@@ -138,18 +138,18 @@ bool PushVariableMacro( PCChar pText ) { 0 && DBG( "%s+ '%s'", __func__, pText )
    const auto len(    Strlen( pText )  + 3 );
 #endif
    const auto pBuf( PChar( alloca( len ) ) );
-   pBuf[0] = '"';
+   pBuf[0] = chQuot2;
 #if MACRO_BACKSLASH_ESCAPES
    // NB!: escapes every backslash in pText !!!
    //      This is a kludgy fix for the annoying requirement to escape '\' with
    //      '\' in macro text strings...
    //
    const auto newlen( DoubleBackslashes( pBuf+1, len-3, pText ) );
-   pBuf[newlen  ] = '"';
+   pBuf[newlen  ] = chQuot2;
    pBuf[newlen+1] = '\0';
 #else
    memcpy( pBuf+1, pText, len-3 );
-   pBuf[len-2] = '"';
+   pBuf[len-2] = chQuot2;
    pBuf[len-1] = '\0';
 #endif
    0 && DBG( "%s- '%s'", __func__, pBuf );
@@ -260,7 +260,7 @@ namespace Interpreter {
       std::string d_macroText;
       PCChar d_pCurTxt;
       int    d_runFlags;
-      bool   d_insideDQuotedString;
+      bool   d_insideQuot2dString;
    public:
       void   clear();
       bool   ClearIsBreak();
@@ -278,9 +278,9 @@ namespace Interpreter {
       // just prior to the return.  Thus if GetNextTokenIsLiteralCh is returning the
       // last character of a literal string, d_pCurTxt will point outside that string,
       // at the next token/string in the macro stream.
-      bool   NON_ESCAPED_DQUOTE() { return '"' == d_pCurTxt[0]
+      bool   NON_ESCAPED_QUOT2() { return chQuot2 == d_pCurTxt[0]
 #if !MACRO_BACKSLASH_ESCAPES
-                                                               && '"' != d_pCurTxt[1]
+                                                                   && chQuot2 != d_pCurTxt[1]
 #endif
                                   ; }
       };
@@ -329,7 +329,7 @@ void Interpreter::MacroRuntimeStkEntry::Ctor( PCChar pszMacroString, int macroFl
    d_macroText.assign( StrPastAnyBlanks( pszMacroString ) );
    d_pCurTxt = d_macroText.c_str();
    d_runFlags = macroFlags;
-   d_insideDQuotedString = false;
+   d_insideQuot2dString = false;
    Advance();
    }
 
@@ -347,9 +347,9 @@ bool Interpreter::MacroRuntimeStkEntry::ClearIsBreak() {
    }
 
 bool Interpreter::MacroRuntimeStkEntry::Advance() {
-   if( d_insideDQuotedString ) {
-      if( NON_ESCAPED_DQUOTE() ) { 0 && DBG("-DQ  '%s'",d_pCurTxt);
-         d_insideDQuotedString = false;
+   if( d_insideQuot2dString ) {
+      if( NON_ESCAPED_QUOT2() ) { 0 && DBG("-DQ  '%s'",d_pCurTxt);
+         d_insideQuot2dString = false;
          d_pCurTxt++;
          goto TO_NXT_TOK;
          }
@@ -357,8 +357,8 @@ bool Interpreter::MacroRuntimeStkEntry::Advance() {
    else {
 TO_NXT_TOK:
       d_pCurTxt = StrPastAnyBlanks( d_pCurTxt );
-      if( '"' == d_pCurTxt[0] ) { 0 && DBG("+DQ1 '%s'",d_pCurTxt);
-         d_insideDQuotedString = true;
+      if( chQuot2 == d_pCurTxt[0] ) { 0 && DBG("+DQ1 '%s'",d_pCurTxt);
+         d_insideQuot2dString = true;
          d_pCurTxt++;
          }
       }
@@ -368,7 +368,7 @@ TO_NXT_TOK:
 int Interpreter::MacroRuntimeStkEntry::chGetAnyMacroPromptResponse() { // return int so we can return AskUser==-1
    // see: arg "Macro Prompt Directives" edhelp arg "LIMITATION" psearch
    0 && DBG("GetPrompt+ %X '%s'",d_runFlags,d_pCurTxt);
-   if( d_insideDQuotedString )   { return AskUser; }
+   if( d_insideQuot2dString )   { return AskUser; }
    if( d_pCurTxt[0] != '<' )     { return UseDflt; }
    const auto ch( d_pCurTxt[1] );
    if( '\0' == ch || ' ' == ch ) { return AskUser; }
@@ -397,10 +397,10 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( std::string &dest ) 
       return EXHAUSTED;
       }
    eGot rv;
-   if( d_insideDQuotedString ) {
+   if( d_insideQuot2dString ) {
       bool fEscaped = false;
       #if MACRO_BACKSLASH_ESCAPES
-         if( '\\' == d_pCurTxt[0] ) {
+         if( chESC == d_pCurTxt[0] ) {
             if( '\0' == d_pCurTxt[1] ) {
                return false;
                }
@@ -408,7 +408,7 @@ Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( std::string &dest ) 
             fEscaped = true;
             }
       #else
-         if( '"' == d_pCurTxt[0] && '"' == d_pCurTxt[1] ) {
+         if( chQuot2 == d_pCurTxt[0] && chQuot2 == d_pCurTxt[1] ) {
             d_pCurTxt++;     // skip escaping char
             fEscaped = true;
             }
@@ -570,9 +570,9 @@ STATIC_FXN void Interpreter::ShowStack( PFBUF pFBuf ) {
       const auto &tos( s_MacroRuntimeStack[ --nestLevel ] );
       pFBuf->FmtLastLine( "[%d]%c%c%c%c='%s'"
           , nestLevel
-          , tos.d_insideDQuotedString ? '"' : '\''
-          , tos.IsVariableMacro()     ? 'D' : 'd'
-          , tos.Breaks()              ? 'B' : 'b'
+          , tos.d_insideQuot2dString ? chQuot2 : chQuot1
+          , tos.IsVariableMacro()    ? 'D'     : 'd'
+          , tos.Breaks()             ? 'B'     : 'b'
           , tos.d_pCurTxt
          );
       }
@@ -773,7 +773,7 @@ bool ARG::tell() {
 
 GLOBAL_VAR PFBUF g_pFbufRecord;
 
-STATIC_VAR bool  s_fInRecordDQuote; // if set than output is in the middle of a '"'-delimited (literal) string
+STATIC_VAR bool  s_fInRecordDQuote; // if set than output is in the middle of a chQuot2-delimited (literal) string
 
 STIL bool RecordingInDQuote() { return s_fInRecordDQuote         ; }
 STIL void SetInRecordDQuote() {        s_fInRecordDQuote = true  ; }
@@ -787,17 +787,17 @@ STATIC_FXN int SaveCMDInMacroRecordFbuf( PCCMD pCmd ) {
       auto pNew( lbufNew );
       if( !RecordingInDQuote() ) {
          *pNew++ = ' ';
-         *pNew++ = '"';
+         *pNew++ = chQuot2;
          SetInRecordDQuote();
          }
       const auto ch( pCmd->d_argData.chAscii() );  0 && DBG( "record ascii '%c'", ch );
 #if MACRO_BACKSLASH_ESCAPES
-      if( '"' == ch || '\\' == ch ) {
-         *pNew++ = '\\'; // escape!
+      if( chQuot2 == ch || chESC == ch ) {
+         *pNew++ = chESC; // escape!
          }
 #else
-      if( '"' == ch ) {
-         *pNew++ = '"';  // double all literal '"'s!
+      if( chQuot2 == ch ) {
+         *pNew++ = chQuot2;  // double all literal chQuot2s!
          }
 #endif
       *pNew++ = ch;
@@ -999,7 +999,7 @@ stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
                                stateWhereBlankLastSeen = state;
                                ChangeState( prevCharBlank );
                                }
-                            else if( '"' == *it ) {
+                            else if( chQuot2 == *it ) {
                                ChangeState( inQuote );
                                }
                             break;
@@ -1007,7 +1007,7 @@ stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
                                stateWhereBlankLastSeen = state;
                                ChangeState( prevCharBlank );
                                }
-                            else if( '"' == *it ) {
+                            else if( chQuot2 == *it ) {
                                ChangeState( outsideQuote );
                                }
                             break;
@@ -1018,10 +1018,8 @@ stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
                                }
                             //lint -fallthrough
        case contCharSeen:   if( !fChIsBlank ) {
-                               if( '"' == *it )
-                                  ChangeState( (inQuote == stateWhereBlankLastSeen) ? outsideQuote : inQuote );
-                               else
-                                  ChangeState( stateWhereBlankLastSeen );
+                               if( chQuot2 == *it ) { ChangeState( (inQuote == stateWhereBlankLastSeen) ? outsideQuote : inQuote ); }
+                               else                 { ChangeState( stateWhereBlankLastSeen ); }
                                }
                             break;
        }

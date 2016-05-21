@@ -732,6 +732,19 @@ int DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc ) {
    return pDest - rv; // strlen of resulting string
    }
 
+void StrUnDoubleBackslashes( PChar pszString ) {
+   if( !pszString || *pszString == 0 ) {
+      return;
+      }
+   auto   pWr( pszString );
+   PCChar pRd( pszString );
+   do {
+      if( (*pWr++ = *pRd++) == '\\' && *pRd == '\\' ) {
+         ++pRd;
+         }
+      } while( *pRd != 0 );
+   }
+
 PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    const auto rv( pStr );
    for( ; *pStr ; ++pStr ) {
@@ -1188,8 +1201,8 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum { DP=0 };  DP && DBG( "
 char Path::DelimChar( PCChar fnm ) { // BUGBUG this needs to be (a) purpose-clarified, (b) made per OS (shell?)
    const stref srfnm( fnm );
    if( atEnd( srfnm, ToNextOrEnd( stref(" ,&;^"), srfnm, 0 ) ) ) { return 0; }   // no delim needed
-   if( atEnd( srfnm, ToNextOrEnd( '"'           , srfnm, 0 ) ) ) { return '"';  } // "
-   if( atEnd( srfnm, ToNextOrEnd( '\''          , srfnm, 0 ) ) ) { return '\''; } // '
+   if( atEnd( srfnm, ToNextOrEnd( chQuot2       , srfnm, 0 ) ) ) { return chQuot2; } // "
+   if( atEnd( srfnm, ToNextOrEnd( chQuot1       , srfnm, 0 ) ) ) { return chQuot1; } // '
    return '|'; // last ditch: ugly, but NEVER a valid filename char(?)
    }
 

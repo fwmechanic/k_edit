@@ -121,7 +121,7 @@ LUAFUNC_(Path_Ext     ) { const auto rv( Path::RefExt(      S_(1) ) ); R_lstr( r
 LUAFUNC_(Path_FnameExt) { const auto rv( Path::RefFnameExt( S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
 LUAFUNC_(GetChildDirs) {
    lua_newtable(L);  // result
-   DirListGenerator dlg;
+   DirListGenerator dlg( __PRETTY_FUNCTION__ );
    Path::str_t xb;
    for( int tblIdx=1 ; dlg.VGetNextName( xb ) ; ++tblIdx ) {
       lua_pushstring( L, xb.c_str() );

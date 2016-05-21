@@ -77,10 +77,10 @@ void DiceableString::DBG() const {
 //
 STATIC_FXN char IsUserFnmDelimChar( char ch ) {
    switch( ch ) {
-      default:   return 0;
-      case '"' : //fallthru
-      case '\'': //fallthru
-      case '|' : return ch;
+      default     : return 0;
+      case chQuot2: //fallthru
+      case chQuot1: //fallthru
+      case '|'    : return ch;
       }
    }
 
@@ -169,7 +169,7 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
       RTN_false_ON_BRK;
       const auto glif_rv( d_pFBuf->GetLineIsolateFilename( d_sbuf, d_curLine++, 0 ) );
       if( glif_rv < 0 ) { return false; } // no more lines
-      if( glif_rv > 0 ) { d_pCfxGen = new CfxFilenameGenerator( d_sbuf, ONLY_FILES ); }
+      if( glif_rv > 0 ) { d_pCfxGen = new CfxFilenameGenerator( __PRETTY_FUNCTION__, d_sbuf, ONLY_FILES ); }
       }
    }
 
@@ -374,7 +374,9 @@ void DirListGenerator::AddName( stref name ) {
    InsStringListEl( d_output, name );
    }
 
-DirListGenerator::DirListGenerator( PCChar dirName ) {
+DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
+   : PathStrGenerator( src )
+   {
    NewScope {
       Path::str_t pStartDir( dirName ? dirName : Path::GetCwd() );
       AddName( pStartDir );
@@ -385,7 +387,7 @@ DirListGenerator::DirListGenerator( PCChar dirName ) {
       pbuf = Path::str_t( pNxt->string ) + (PATH_SEP_STR "*");
       FreeStringListEl( pNxt );
       0 && DBG( "Looking in ='%s'", pbuf.c_str() );
-      WildcardFilenameGenerator wcg( pbuf.c_str(), ONLY_DIRS );
+      WildcardFilenameGenerator wcg( __PRETTY_FUNCTION__, pbuf.c_str(), ONLY_DIRS );
       while( wcg.VGetNextName( pbuf ) ) {
          if( !Path::IsDotOrDotDot( pbuf ) ) {
             AddName( pbuf );
@@ -425,8 +427,9 @@ bool ARG::wct() {
 
 enum { MFSPEC_D=0 };
 
-CfxFilenameGenerator::CfxFilenameGenerator( stref macroText, WildCardMatchMode matchMode )
-   : d_splitLine( macroText, Path::EnvSepStr() )
+CfxFilenameGenerator::CfxFilenameGenerator( std::string &&src, stref macroText, WildCardMatchMode matchMode )
+   : PathStrGenerator( src )
+   , d_splitLine( macroText, Path::EnvSepStr() )
    , d_matchMode( matchMode )
    {
    // d_splitLine.DBG();
@@ -454,7 +457,7 @@ NEXT_WILDCARD_MATCH:
 NEXT_SSG_COMBINATION:
       if( d_pSSG->GetNextString( dest ) ) {
          MFSPEC_D && DBG( "%s+ WcGen <= '%s'", __func__, dest.c_str() );
-         d_pWcGen = new WildcardFilenameGenerator( dest.c_str(), d_matchMode );
+         d_pWcGen = new WildcardFilenameGenerator( __PRETTY_FUNCTION__, dest.c_str(), d_matchMode );
          goto NEXT_WILDCARD_MATCH;
          }
       Delete0( d_pSSG );
@@ -561,7 +564,7 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
             path.remove_suffix( 1 );  // remove the trailing PathSepCh so CfxFilenameGenerator works
             }
          }
-      CfxFilenameGenerator mfg( path, ONLY_DIRS );
+      CfxFilenameGenerator mfg( std::string( __PRETTY_FUNCTION__ ) + " ONLY_DIRS", path, ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
          dest.append( sr2st(fname) );                                                 VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
@@ -574,7 +577,7 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
       }
    else { // normal expansion
 #if defined(_WIN32)
-      CfxFilenameGenerator mfg( pszSrc, ONLY_FILES );
+      CfxFilenameGenerator mfg( std::string( __PRETTY_FUNCTION__ ) + " ONLY_FILES", pszSrc, ONLY_FILES );
       if( mfg.VGetNextName( dest ) ) {  /* only care about FIRST match */             VERBOSE && DBG( "%s '%s' =:> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
          }

@@ -49,13 +49,15 @@ extern int   snprintf_full( char **ppBuf, size_t *pBufBytesRemaining, PCChar fmt
 
 //--------------------------------------------------------------------------------------------
 
-const char HTAB('\t');
-const char chESC('\\');
-const char chQuot1('\'');
-const char chQuot2('"' );
-const char chBackTick('`');
-const char chLSQ( '[' );
-const char chRSQ( ']' );
+constexpr char chNUL = '\0';
+constexpr char HTAB = '\t';
+constexpr char chESC = '\\';
+constexpr char chQuot1 = '\'';
+constexpr char chQuot2 = '"';
+constexpr char chBackTick = '`';
+constexpr char chLSQ = '[';
+constexpr char chRSQ = ']';
+#define        SPCTAB  " \t"
 
 enum { MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
        TICK     = 0x27,
@@ -67,8 +69,8 @@ enum { MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
 // condition with the index equivalent of the cend() iterator value:
 STIL sridx nposToEnd( const stref       &str, sridx from ) { return from == stref::npos ? str.length() : from; }
 STIL sridx nposToEnd( const std::string &str, sridx from ) { return from == stref::npos ? str.length() : from; }
-STIL bool atEnd( const stref       &str, sridx idx ) { return idx == str.length(); }
-STIL bool atEnd( const std::string &str, sridx idx ) { return idx == str.length(); }
+STIL bool  atEnd    ( const stref       &str, sridx idx  ) { return idx == str.length(); }
+STIL bool  atEnd    ( const std::string &str, sridx idx  ) { return idx == str.length(); }
 
 // INNER stringref index to OUTER stringref index
 STIL sridx isri2osri( const stref &osr, const stref &isr, sridx isri ) { return isri + (isr.data()-osr.data()); }
@@ -137,8 +139,8 @@ typename cont_inst::size_type ToNextNotOrEnd( stref key, cont_inst src, typename
    return std::distance( src.cbegin(), src.cend() );
    }
 
-STIL char isQuoteCh   ( char inCh ) { return '"'==inCh || '\''==inCh ? inCh : '\0'; }
-STIL char isQuoteEscCh( char inCh ) { return '\\'==inCh; }
+STIL char isQuoteCh   ( char inCh ) { return chQuot2==inCh || chQuot1==inCh ? inCh : '\0'; }
+STIL char isQuoteEscCh( char inCh ) { return chESC==inCh; }
 
 #define SKIP_QUOTED_STR( quoteCh, it, src, EOS_LBL )           \
    if( quoteCh=isQuoteCh( *it ) ) {                            \
@@ -315,7 +317,6 @@ STIL std::string & PadRight( std::string &inout, sridx width, char padCh=' ' ) {
 //
 //-----------------
 
-#define SPCTAB  " \t"
 extern const char szMacroTerminators[];
 extern       char g_szWordChars[];
 
@@ -356,11 +357,11 @@ extern sridx StrLastWordCh(  stref src );
 
 //-----------------
 
-extern int Dquot_strcspn( PCChar pszToSearch, PCChar pszToSearchFor );
+extern int Quot2_strcspn( PCChar pszToSearch, PCChar pszToSearchFor );
 
-TF_Ptr STIL Ptr DquotStrToNextOrEos( Ptr  pszToSearch, PCChar pszToSearchFor ) { return pszToSearch + Dquot_strcspn( pszToSearch, pszToSearchFor ); }
+TF_Ptr STIL Ptr Quot2StrToNextOrEos( Ptr  pszToSearch, PCChar pszToSearchFor ) { return pszToSearch + Quot2_strcspn( pszToSearch, pszToSearchFor ); }
 
-TF_Ptr STIL Ptr StrToNextMacroTermOrEos( Ptr pszToSearch ) { return DquotStrToNextOrEos( pszToSearch, szMacroTerminators ); }
+TF_Ptr STIL Ptr StrToNextMacroTermOrEos( Ptr pszToSearch ) { return Quot2StrToNextOrEos( pszToSearch, szMacroTerminators ); }
 
 template<typename strlval> void string_tolower( strlval &inout ) { std::transform( inout.begin(), inout.end(), inout.begin(), ::tolower ); }
 
@@ -531,7 +532,6 @@ public:
 //--------------------------------------------------------------------------------------------
 
 #define DBG_DiceableString  0
-
 #if DBG_DiceableString
 #include "my_log.h"
 #endif

@@ -40,7 +40,6 @@ extern PCChar StrToPrevOrNull_(   PCChar pBuf, PCChar pInBuf, PCChar toMatch );
 TF_Ptr STIL Ptr  StrToPrevOrNull(        Ptr pBuf, Ptr pInBuf, PCChar toMatch ) { return cast_add_const(Ptr)(StrToPrevOrNull_  ( pBuf, pInBuf, toMatch )); }
 TF_Ptr STIL Ptr  StrToPrevBlankOrNull(   Ptr pBuf, Ptr pInBuf ) { return StrToPrevOrNull  ( pBuf, pInBuf, SPCTAB ); }
 
-
 namespace Path {
    typedef std::string str_t; // Path::str_t
 
