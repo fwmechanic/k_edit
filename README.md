@@ -54,16 +54,16 @@ The K source code distro contains, and K uses, the following source code from ex
 
 ### Linux
 
-#### Ubuntu 4.04+
+#### Ubuntu >= 14.04
 
  * after cloning this repo, run `./install_build_tools_ubuntu.sh` to install the necessary packages.
     * I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it probably will not build with any lesser GCC version.
     * Requires Boost 1.54 or newer (1.53's boost::string_ref contains (at least in CentOS 7.2.1511) a compile-breaking bug (yes, in the library .h file itself))
 
-#### CentOS 7
+#### CentOS >= 7
 
  * As noted above, building K requires Boost 1.54 or newer, and CentOS 7 (at least CentOS 7.2.1511) contains an older, build-breaking version.
- * I have devised a special-case workaround for my unique circumstance: I build K on Ubuntu in my NFS homedir which is visible to the CentOS 7 hosts I also use, and, on such a CentOS 7 host, I run (once) `centos7_hack_run_ubuntu-K.bash` which creates one symlink to a pcre .so (necessary since CentOS and Ubuntu seem to have divergent .so naming conventions?).  With this change, the K binary built on Ubuntu will run on CentOS 7.
+    * I have devised a special-case workaround for my unique circumstance: I build K on Ubuntu in my NFS homedir which is visible to the CentOS 7 hosts I also use, and, on such a CentOS 7 host, I run (once) `centos7_hack_run_ubuntu-K.bash` which creates one symlink to a pcre .so (necessary since CentOS and Ubuntu seem to have divergent .so naming conventions?).  With this change, the K binary built on Ubuntu will run on CentOS 7.
 
 ## To build
 
