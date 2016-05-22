@@ -528,8 +528,8 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    if( !IsDir( appdataVal ) )            { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
    s_EditorStateDir.assign( appdataVal );                    0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
    s_EditorStateDir.append( PATH_SEP_STR HOME_SUBDIR_NM );   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
-#undef   HOME_ENVVAR_NM
-#undef   HOME_SUBDIR_NM
+   #undef   HOME_ENVVAR_NM
+   #undef   HOME_SUBDIR_NM
 #else
    //
    // ifdef XDG_CACHE_HOME
@@ -557,8 +557,8 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
       mkdir_stf();
       }
    s_EditorStateDir.append( HOME_SUBDIR_NM );   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
-#undef   HOME_ENVVAR_NM
-#undef   HOME_SUBDIR_NM
+   #undef   HOME_ENVVAR_NM
+   #undef   HOME_SUBDIR_NM
 #endif
    mkdir_stf();
   #if !defined(_WIN32)

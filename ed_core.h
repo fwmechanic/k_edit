@@ -774,7 +774,7 @@ struct FileStat {
    filesize_t     d_Filesize   = 0;
    int            d_mode       = 0;
    bool Refresh( int fd );
-   bool none() const { return d_ModifyTime == 0 && d_Filesize == 0; }
+   bool none() const { return d_ModifyTime == 0 && d_Filesize == 0 && d_mode == 0; }
    };
 STIL bool operator==(const FileStat& a, const FileStat& b) {
    return a.d_ModifyTime == b.d_ModifyTime
