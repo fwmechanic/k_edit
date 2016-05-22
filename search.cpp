@@ -631,8 +631,8 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
          }
       }
    return false;
-  #undef SETUP_LINE_TEXT
-  #undef CHECK_NEXT
+   #undef SETUP_LINE_TEXT
+   #undef CHECK_NEXT
    }
 
 STATIC_VAR std::string g_SavedSearchString_Buf ;
@@ -707,6 +707,7 @@ class CharWalkerReplace {
       const std::vector<refSelector> &ReplaceRefs() const { return d_replaceRefs; }
       replaceDope_t( stref srReplace, const SearchSpecifier &ss ) {
          stref srSrc( srReplace ); // srReplace is assumed to persist for lifetime of CharWalkerReplace object!
+#if USE_PCRE
          if( ss.IsRegex() ) {
             constexpr char chBR( '\\' );
             for(;;) {
@@ -730,6 +731,7 @@ class CharWalkerReplace {
                   }
                }
             }
+#endif
          AddLitRef( srSrc );
          }
       };
@@ -928,7 +930,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
 STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point start, CharWalkerReplace &walker ) {
    0 && DBG( "%s: within=LINEs(%d-%d) COLs(%d,%d)", __func__, within.flMin.lin, within.flMax.lin, within.flMin.col, within.flMax.col );
    const auto tw( pFBuf->TabWidth() );
-  #define SETUP_LINE ( rl = pFBuf->PeekRawLine( curPt.lin ), ixBOL = CaptiveIdxOfCol( tw, rl, within.flMin.col ) )
+   #define SETUP_LINE ( rl = pFBuf->PeekRawLine( curPt.lin ), ixBOL = CaptiveIdxOfCol( tw, rl, within.flMin.col ) )
    for( Point curPt( start.lin, start.col + 1 )
       ;   curPt.lin <= within.flMax.lin
       ; ++curPt.lin, curPt.col = within.flMin.col
@@ -948,7 +950,7 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
          }
       }
    return false;
-  #undef SETUP_LINE
+   #undef SETUP_LINE
    }
 
 //
@@ -989,7 +991,6 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
 //  False: Operation not initiated
 //
 #ifdef fn_waitcompiledone
-
 bool ARG::waitcompiledone() {
    const auto tov( IS_NUMARG ? (NUMARG_VALUE * 1000) : 20000 );
    Msg( "%s waiting %d mS", __func__, tov );
@@ -997,7 +998,6 @@ bool ARG::waitcompiledone() {
    Msg( "%s %s", __func__, rv ? "OK" : "timed out!" );
    return rv;
    }
-
 #endif
 
 int FBUF::SyncWriteIfDirty_Wrote() {
@@ -1057,7 +1057,7 @@ STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all dup
 
 GLOBAL_VAR PFBUF g_pFBufTextargStack;
 
-void AddToTextargStack( stref str ) { // 0 && DBG( "%s: '%s'", __func__, str );
+void AddToTextargStack( stref str ) {  0 && DBG( "%s: '%" PR_BSR "'", __func__, BSR(str) );
    AddLineToLogStack( g_pFBufTextargStack, str );
    }
 
@@ -1198,8 +1198,7 @@ std::string DupTextMacroValue( PCChar macroName ) {
 STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator() { enum { DB=0 };
    {
    const auto mfspec_text( DupTextMacroValue( "mffile" ) );
-   if( !IsStringBlank( mfspec_text ) ) {
-      DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mffile", BSR(mfspec_text) );
+   if( !IsStringBlank( mfspec_text ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mffile", BSR(mfspec_text) );
       const auto pFBufMfspec( FindFBufByName( mfspec_text.c_str() ) );
       if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
          return new FilelistCfxFilenameGenerator( pFBufMfspec->Namestr() + " (buffer,*mfptr)", pFBufMfspec );
@@ -1214,19 +1213,16 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator() { enum { DB=0 };
    }
    {
    const auto mfspec_text( DupTextMacroValue( "mfspec" ) );
-   if( !IsStringBlank( mfspec_text ) ) {
-      DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
+   if( !IsStringBlank( mfspec_text ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
       return new CfxFilenameGenerator( "mfspec (macro)", mfspec_text, ONLY_FILES );
       }
    }
    {
    const auto mfspec_text( DupTextMacroValue( "mfspec_" ) );
-   if( !IsStringBlank( mfspec_text ) ) {
-      DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
+   if( !IsStringBlank( mfspec_text ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
       return new CfxFilenameGenerator( "mfspec_ (macro)", mfspec_text, ONLY_FILES );
       }
-   }
-   DB && DBG( "%s: returns NULL!", __func__ );
+   }                                                                                 DB && DBG( "%s: returns NULL!", __func__ );
    return nullptr;
    }
 
@@ -1626,16 +1622,11 @@ stref FileSearcherString::VFindStr_( stref src, sridx src_offset, int pcre_exec_
 //===============================================
 
 #if USE_PCRE
-
 FileSearcherRegex::FileSearcherRegex( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh )
    : FileSearcher( sm, ss, mh )
    {
    Assert( d_ss.IsRegex() );
    }
-
-#endif
-
-#if USE_PCRE
 
 stref FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
    VS_(
@@ -1651,7 +1642,6 @@ stref FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_o
       )
    return rv > 0 && d_captures[0].valid() ? d_captures[0].value() : stref();
    }
-
 #endif
 
 //===============================================
@@ -2349,9 +2339,9 @@ bool ARG::grep() { enum { ED=0 };
    }
 
 bool ARG::fg() { enum { ED=0 }; // fgrep
-   PFBUF   srchfile;
-   auto    metaLines( 0 ); // params that govern how...
-   auto    curfile( g_CurFBuf() );
+   PFBUF srchfile;
+   auto  metaLines( 0 ); // params that govern how...
+   auto  curfile( g_CurFBuf() );
    if( TEXTARG == d_argType ) {
       srchfile = curfile;
       Path::str_t keysFnm( ("$FGS" PATH_SEP_STR) + std::string( d_textarg.pText ) );
@@ -2440,8 +2430,7 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
       return nullptr;
       }
    {
-   STATIC_CONST char grep_prefix[] = "*GREP* ";
-   const stref srgp( grep_prefix );
+   const stref srgp( "*GREP* " );
    auto rl( fb->PeekRawLine( 0 ) );
    if( !rl.starts_with( srgp ) )       { goto FAIL; }
    rl.remove_prefix( srgp.length() );
@@ -2450,9 +2439,8 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
    }
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {
-      STATIC_CONST char grep_fnm[] = "<grep.";
       auto rl( fb->PeekRawLine( iy ) );                    0 && DBG("[%d] %s' line=%" PR_BSR "'",iy, fb->Name(), BSR(rl) );
-      if( !rl.starts_with( grep_fnm ) )       { break; }
+      if( !rl.starts_with( "<grep." ) ) { break; }
       }                                                    0 && DBG( "%s: %s final=[%d] '%s'", __func__, fb->Name(), iy, dest.c_str() );
    *pGrepHdrLines = iy;
    return dest.c_str();
@@ -2477,14 +2465,12 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
    if(    !FBOP::IsGrepBuf( srcSrchFnm , & srcHdrLines,  src )
        || !FBOP::IsGrepBuf( destSrchFnm, &destHdrLines,  dest)
        || !Path::eq( srcSrchFnm, destSrchFnm )
-     ) { return false; }
-   0 && DBG( "%s: %s copy [1..%d]", __func__, src->Name(), srcHdrLines );
+     ) { return false; }                                                 0 && DBG( "%s: %s copy [1..%d]", __func__, src->Name(), srcHdrLines );
    std::string tmp;
    // insert/copy all src metalines (except 0) to dest
    for( auto iy(1) ; iy < srcHdrLines ; ++iy ) {
       dest->InsLine( destHdrLines++, src->PeekRawLine( iy ), tmp );
-      }
-   0 && DBG( "%s: %s merg [%d..%d]", __func__, src->Name(), srcHdrLines, src->LineCount()-1 );
+      }                                                                  0 && DBG( "%s: %s merg [%d..%d]", __func__, src->Name(), srcHdrLines, src->LineCount()-1 );
    // merge (copy while sorting) all match lines
    for( auto iy(srcHdrLines) ; iy < src->LineCount() ; ++iy ) {
       FBOP::InsLineSortedAscending( dest, tmp, destHdrLines, src->PeekRawLine( iy ) );
@@ -2502,9 +2488,7 @@ bool ARG::gmg() { // arg "gmg" edhelp  # for docmentation
       }
    else {
       srchFilename = g_CurFBuf()->Namestr();
-      }
-   0 && DBG( "%s: will look for all greps of (%s)", __func__, srchFilename.c_str() );
-
+      }                                                                  0 && DBG( "%s: will look for all greps of (%s)", __func__, srchFilename.c_str() );
    auto merges(0);
    PView pv(nullptr);
    while( (pv=FindClosestGrepBufForCurfile( pv, srchFilename.c_str() )) ) {
