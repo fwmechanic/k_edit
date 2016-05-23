@@ -177,47 +177,52 @@ STATIC_FXN PCChar FindStr_( PCChar pszToSearch, PCChar pszToSearchFor, int *matc
    return Eos( pszToSearch );
    }
 
-// BUGBUG - if SPLIT_RTNS_TABLE == 0, lua_split_ could return a potentially
-//          unlimited number of values (on the stack), and Lua has a fixed stack
-//          size which we can overflow!!!
+// why these functions exist: the ONLY Lua std string library search function
+// that takes a non-pattern search key string is string.find, and that only if a
+// trailing bool param is passed as true. string.find is quite clumsy (basically,
+// character-indexed operations, same as we're doing below), leading to creation
+// of intermediate tables in many cases, so we just do the simple stuff here in
+// C with maximum efficiency, and plain-string search key strings lead to more
+// readable Lua code.
 //
-#define  SPLIT_RTNS_TABLE  0
+// NB: lua_split_rtn_mult can return a potentially unlimited number of values
+//     on the lua_State stack which is a fixed size which we can overflow!!!
 
 STATIC_FXN int lua_split_rtn_mult( lua_State *L, TLuaSplitFxn sf ) {
    auto strToSplit = S_(1);
    auto sep = S_(2);
-   int    i   = 1;
+   auto ix  = 1;
    // repeat for each separator
    PCChar pastEnd;
    int sepLen(0);
    while( *(pastEnd=sf( strToSplit, sep, &sepLen )) != '\0' ) {
       lua_pushlstring( L, strToSplit, pastEnd - strToSplit );  // push substring
-      ++i;
+      ++ix;
       strToSplit = pastEnd + sepLen;  // skip separator
       }
    // push last substring
    lua_pushstring( L, strToSplit );
-   0 && DBG( "%s rtns %d", __func__, i );
-   return i;  // return number of strings pushed
+   0 && DBG( "%s rtns %d", __func__, ix );
+   return ix;  // return number of strings pushed
    }
 
 STATIC_FXN int lua_split_rtn_tbl( lua_State *L, TLuaSplitFxn sf ) {
    auto strToSplit = S_(1);
    auto sep = S_(2);
-   auto i   = 1;
+   auto ix  = 1;
    lua_newtable(L);  // result
    // repeat for each separator
    PCChar pastEnd;
    int sepLen(0);
    while( *(pastEnd=sf( strToSplit, sep, &sepLen )) != '\0' ) {
       lua_pushlstring( L, strToSplit, pastEnd - strToSplit );  // push substring
-      lua_rawseti( L, -2, i );
-      ++i;
+      lua_rawseti( L, -2, ix );
+      ++ix;
       strToSplit = pastEnd + sepLen;  // skip separator
       }
    // push last substring
    lua_pushstring( L, strToSplit );
-   lua_rawseti( L, -2, i );
+   lua_rawseti( L, -2, ix );
    return 1;  // return the table
    }
 

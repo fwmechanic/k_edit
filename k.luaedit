@@ -78,6 +78,13 @@ Max = math.max
 
 local logf = FBUF.log()
 
+function string:ary_matchseqs( classmembs )
+   local classmembs, rv = classmembs or "^\t ", {}
+   local pattern = "([" .. classmembs .. "]+)"
+   self:gsub( pattern, function(st) rv[1+#rv] = st end )
+   return rv
+   end
+
 --[[ 20070807 kgoodwin BUGBUG
 
    a strangely complex topic: doing a "printf" to a FBUF: the concern is that

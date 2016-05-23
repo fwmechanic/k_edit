@@ -182,8 +182,8 @@ do
         title = "Web Search"
       , choices = {
           default = 1
-        , { "StartPage"         , URL_StartPage     }
         , { "Google"            , URL_Google        }
+        , { "StartPage"         , URL_StartPage     }
         , { "DuckDuckGo"        , URL_DuckDuckGo    }
         , { "s=epinions"        , URL_Epinions      }
         , { "bobistheoilguy"    , URL_GoogBobOil    }
