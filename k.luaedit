@@ -65,7 +65,7 @@ require "show"
 
 ----------------------------------------------------------------------------------------------------
 
-function fmt(...) return string.format(...) end
+fmt = string.format
 
 local dirsep_os        = _dir.dirsep_os()
 local dirsep_preferred = _dir.dirsep_preferred()
@@ -140,10 +140,10 @@ function string.ends(String,End)
    return End=='' or string.sub(String,-string.len(End))==End
    end
 
-function int( x )         return math.floor( x )              end  -- it's UN-BE-LEEEEEEEEEV-ABLE that this is not builtin!
+int = math.floor  -- it's UN-BE-LEEEEEEEEEV-ABLE that this is not builtin!
 
 function logBaseN(x,N)    return math.log(x)/math.log(N)      end
-function log10(x)         return math.log10(x)                end
+log10 = math.log10
 
 function widthBaseN(x,N)  return 1 + int( logBaseN( x, N ) )  end
 function widthDecimal(x)  return widthBaseN(x,10)             end
@@ -2095,7 +2095,7 @@ do
       emsg, fnm, line  = lbuf:match( "(%S.*)%sat (%S.*)%sline%s(%d+)%." )
       if line and GotoFileYX_Msg( fnm, line, 1, emsg, "Perl" ) then return fnm end
 
-      -- GCC
+      -- GCC fbuf.cpp:1629:28: error: no match for 'operator*' (operand type is 'Path::str_t {aka std::basic_string<char>}')
       fnm, line, emsg = lbuf:match( "^([^ :]+):(%d+): (.+)$" )
       if not emsg then
          fnm, line, emsg = lbuf:match( "^(.+):(%d+):(%d+): (error: .+)$" )
@@ -2108,7 +2108,7 @@ do
          end
       if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "gcc" ) then return fnm end
 
-      -- GCC w/o emsg
+      -- GCC w/o emsg fbuf.cpp:1629
       fnm, line = lbuf:match( "^([^ :]+):(%d+)" )
       if line and GotoFileYX_Msg( fnm, line, 1, "", "gcc w/o emsg" ) then return fnm end
 
@@ -2147,7 +2147,7 @@ do
       end
 
       -- Borland TASM
-      do               local pat_flx =                                        " ([^(]+)%((%d+)%) (.*)$"
+      do               local pat_flx =                      " ([^(]+)%((%d+)%) (.*)$"
                        emsg, fnm, line, extra = lbuf:match( "^(%*%*Error%*%*)"..pat_flx )
       if not emsg then emsg, fnm, line, extra = lbuf:match( "^(%*Warning%*)"  ..pat_flx ) end
       if emsg and GotoFileYX_Msg( fnm, line, 1, string.gsub( emsg..": "..extra, "%*", "", "Borland TASM" ) ) then return fnm end
