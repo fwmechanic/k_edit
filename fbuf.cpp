@@ -1626,13 +1626,13 @@ bool FBUF::SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation ) {
    if( pszNewName[0] == '\0' ) {
       return Msg( "new filename is empty?" );
       }
-   const auto filenameBuf( CompletelyExpandFName_wEnvVars( pszNewName ) );
+   const auto expandedFnm( CompletelyExpandFName_wEnvVars( pszNewName ) );
    {
-   auto pDupFBuf( FindFBufByName( filenameBuf ) );
+   auto pDupFBuf( FindFBufByName( expandedFnm ) );
    if( pDupFBuf && pDupFBuf == this ) {
       return Msg( "current filename and new filename are same; nothing done" );
       }
-   if( fNeedUserConfirmation && !ConIO::Confirm( Sprintf2xBuf( "Do you want to save this file as %s ?", filenameBuf.c_str() ) ) ) {
+   if( fNeedUserConfirmation && !ConIO::Confirm( Sprintf2xBuf( "Do you want to save this file as %s ?", expandedFnm.c_str() ) ) ) {
       FlushKeyQueuePrimeScreenRedraw();
       return false;
       }
@@ -1643,11 +1643,11 @@ bool FBUF::SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation ) {
       pDupFBuf = pDupFBuf->ForciblyRemoveFBuf();
       }
    }
-   if( !WriteToDisk( filenameBuf.c_str() ) ) { DBG( "%s: WriteToDisk( '%s' -> '%s' ) FAILED?", __func__, Name(), filenameBuf.c_str() );
+   if( !WriteToDisk( expandedFnm.c_str() ) ) { DBG( "%s: WriteToDisk( '%s' -> '%s' ) FAILED?", __func__, Name(), expandedFnm.c_str() );
       return false;
       }
    SetRememberAfterExit();
-   0 && DBG( "%s: wrote( '%s' -> '%s' ) OK", __func__, Name(), filenameBuf.c_str() );
+   0 && DBG( "%s: wrote( '%s' -> '%s' ) OK", __func__, Name(), expandedFnm.c_str() );
    return true;
    }
 
