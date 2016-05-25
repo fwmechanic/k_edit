@@ -42,44 +42,47 @@ The K source code distro contains, and K uses, the following source code from ex
 
 # Building
 
-## External build dependencies
+## External Build Dependencies
 
-### Windows
+ * `GCC` >= 4.8: I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it may will not build with any lesser GCC version.
+ * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below)
+ * `PCRE`
+ * `ctags` ([Exuberant Ctags](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K.
+ * Linux-only: `ncurses`, `pthread`
+ * Windows-only: `7zip.exe` is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
 
-* GCC from the [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html).  The downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
+### Windows-specific Build-Prep Instructions
+
+* The [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html) provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
      * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
      * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
- * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K, and must be in `PATH`.
- * `7z.exe` ([7zip](http://www.7-zip.org/)) is invoked when building the `rls` `make` target, and must be in `PATH`.
+ * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) must be manually installed (and in `PATH`).
 
-### Linux
+ * Aside: [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html) which it assumes is already present on any Windows PC.
+
+### Linux-specific Build-Prep Instructions
 
 #### Ubuntu >= 14.04
 
  * after cloning this repo, run `./install_build_tools_ubuntu.sh` to install the necessary packages.
-    * I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it probably will not build with any lesser GCC version.
-    * Requires Boost 1.54 or newer (1.53's boost::string_ref contains (at least in CentOS 7.2.1511) a compile-breaking bug (yes, in the library .h file itself))
 
 #### CentOS >= 7
 
- * As noted above, building K requires Boost 1.54 or newer, and CentOS 7 (at least CentOS 7.2.1511) contains an older, build-breaking version.
-    * However: K built on Ubuntu 14.04 will copy-and-run on CentOS 7 (at least CentOS 7.2.1511) hosts I use with no special prep.
+ * K build fails on CentOS 7.2.1511 because its default Boost version is 1.53, whose boost::string_ref contains a compile-breaking bug (yes, in the library .h file itself).
+ * _Hacky workaround_: K built on Ubuntu 14.04 will run on CentOS 7.2.1511 hosts I use with no additional prep.
 
 ## To build
 
     make clean
     make -j     # the build is parallel-make-safe
 
-To clean a repo sufficient to switch between 32-bit and 64-bit toolchains:
+To clean a workspace sufficient to switch between 32-bit and 64-bit toolchains:
 
-    make zap    # clean plus nuke all lua.exe related
-
-Note that [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html)
-which it assumes is already present on any Windows PC.
+    make zap    # clean K build products plus nuke all Lua related
 
 ## Create Release files
 
-A release file is a 7zip (Linux: tgz) archive containing the minimum fileset needed to use the editor.  On Windows two (2) variants of the release file are created by `make rls`: `k_rls.7z` and `k_rls.exe` (a self-extracting-console archive).
+A release file is a Windows=7z/Linux=tgz archive containing the minimum fileset needed to use the editor.  On Windows two (2) variants of the release file are created by `make rls`: `k_rls.7z` and `k_rls.exe` (a self-extracting-console archive).
 
 Use: decompress the release file in an empty directory and run `k.exe` (Linux: `k`).  K was designed to be "copy and run" (a "release") anywhere.  I have successfully run it from network/NFS shares and "thumb drives".
 
@@ -179,15 +182,16 @@ The editor implements a large number of functions, all of which the user can inv
     * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
     * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
     * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
+    * SPECIAL FEATURE: if the file to be opened is a URI, it is passed to the ShellExecute Win32API or Linux `xdg-open` program for opening in an external program (almost always: web browser).
  * `ctrl+c` and `ctrl+v` xfr text between the Win32 (Windows) or X (Linux) Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
     * The Linux implementation depends on [`xclip`](http://sourceforge.net/projects/xclip/) being installed; `sudo apt-get install xclip` FTW!
  * `ctrl+q`,`alt+F2` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
  * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers via <clipboard>.
  * `execute` (`ctrl+x`):
     * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
-    * `arg arg` "CMD.exe shell command string" `execute` executes a CMD.exe shell (a.k.a. DOS) command string with stdout and stderr captured to an editor buffer.
- * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) and "hyperlinks" to it.  If >1 definition is found, a menu of the choices is offered.
-    * [Exuberant Ctags](http://ctags.sourceforge.net/) `ctags.exe` is invoked to rebuild the "tags database" at the close of each successful build of K.
+    * `arg arg` "OS shell command string" `execute` executes "OS shell command string" in an operating system shell (Windows: `CMD.exe` (a.k.a. DOS) shell; Linux: system() -> bash) with stdout and stderr captured to an editor buffer.  Note that in Windows, data files such as .pdf are "executable" (executing them opens their default app (e.g. PDF Reader GUI App).
+ * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) in the current "tags database" and "hyperlinks" to it.  If >1 definition is found, a menu of the available choices is offered.
+    * Aside: [Exuberant Ctags](http://ctags.sourceforge.net/) `ctags` is invoked to rebuild the "K tags database" at the end of each successful build of K, to facilitate development of K.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
  * PCRE Regular-expression (regex) search & replace: all search and replace functions, when prefixed with `arg arg` (2-arg), operate in regex mode.
@@ -211,12 +215,14 @@ The editor implements a large number of functions, all of which the user can inv
  * `websearch` (`alt+6`): perform web search on string (opens in default browser)
      * `arg` "search string" `websearch`: perform Google web search for "search string"
      * `arg arg` "search string" `websearch`: display menu of all available search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
+     * The Linux implementation depends on `xdg-open` being installed; this seems to be part of any "Linux Desktop" OS install.
 
 ### menu functions
 
 K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a number of editor functions which generate a list of chioces to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is `arg` "fxnm" `ctrl+x`
 
  * `mom` "menu of menus": menu of Lua-based editor menu functions
+ * `ff` "favorite files": menu of favorite files or websites (local or on www)
  * `sb` "system buffers"
  * `dp` "dirs of parent" all parent dirs
  * `dc` "dirs child" all child dirs
