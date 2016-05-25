@@ -146,6 +146,9 @@ endif
 
 LUA_DIR=lua-5.1/src
 
+# wrap -llib refs to make them link statically
+LINK_LIB_STATIC = -Wl,-Bstatic $1 -Wl,-Bdynamic
+
 CC_OUTPUT := # --save-temp
 # -fstack-protector    gens link error
 # -fsanitize=undefined gens link errors (is supposed to work on Linux x64 w/GCC 4.9.2 only)
@@ -241,7 +244,7 @@ PLAT_OBJS := \
 #   library, it stops.  And if only one version is present, it uses that one,
 #   regardless.
 #
-BOOST_LIBS := -Wl,-Bstatic -lboost_filesystem -lboost_system -Wl,-Bdynamic
+BOOST_LIBS := $(call LINK_LIB_STATIC,-lboost_filesystem -lboost_system)
 
 endif
 
@@ -249,7 +252,7 @@ USE_PCRE := 1
 export USE_PCRE
 ifneq "0" "$(USE_PCRE)"
 PCRE_OBJ := pcre_intf.o
-PCRE_LIB := -lpcre
+PCRE_LIB := $(call LINK_LIB_STATIC,-lpcre)
 else
 PCRE_OBJ :=
 PCRE_LIB :=
