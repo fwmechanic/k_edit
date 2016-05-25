@@ -44,10 +44,10 @@ The K source code distro contains, and K uses, the following source code from ex
 
 ## External Build Dependencies
 
- * `GCC` >= 4.8: I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it may will not build with any lesser GCC version.
+ * `GCC` >= 4.8: I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it might not build with any lesser GCC version.
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below)
- * `PCRE`
- * `ctags` ([Exuberant Ctags](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K.
+ * (`PCRE`[http://www.pcre.org/] 8.x) "Perl Compatible Regular Expressions" used in search/replace editor functions.
+ * ([Exuberant `Ctags`](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread`
  * Windows-only: `7zip.exe` is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
 
@@ -62,14 +62,9 @@ The K source code distro contains, and K uses, the following source code from ex
 
 ### Linux-specific Build-Prep Instructions
 
-#### Ubuntu >= 14.04
+#### *Ubuntu >= 14.04 (and presumably any contemporary Debian release)
 
  * after cloning this repo, run `./install_build_tools_ubuntu.sh` to install the necessary packages.
-
-#### CentOS >= 7
-
- * K build fails on CentOS 7.2.1511 because its default Boost version is 1.53, whose boost::string_ref contains a compile-breaking bug (yes, in the library .h file itself).
- * _Hacky workaround_: K built on Ubuntu 14.04 will run on CentOS 7.2.1511 hosts I use with no additional prep.
 
 ## To build
 
@@ -87,6 +82,13 @@ A release file is a Windows=7z/Linux=tgz archive containing the minimum fileset 
 Use: decompress the release file in an empty directory and run `k.exe` (Linux: `k`).  K was designed to be "copy and run" (a "release") anywhere.  I have successfully run it from network/NFS shares and "thumb drives".
 
 ## Stability notes
+
+### CentOS >= 7
+
+ * K build fails on CentOS 7.2.1511 because its default Boost version is 1.53, whose boost::string_ref contains a compile-breaking bug (yes, in the library .h file itself).
+ * _Hacky workaround_: K built on Ubuntu 14.04 will run on CentOS 7.2.1511 hosts I use with no additional prep.
+
+### Windows
 
 The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
 
