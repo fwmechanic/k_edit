@@ -63,7 +63,7 @@ The K source code distro contains, and K uses, the following source code from ex
 #### CentOS >= 7
 
  * As noted above, building K requires Boost 1.54 or newer, and CentOS 7 (at least CentOS 7.2.1511) contains an older, build-breaking version.
-    * I have devised a special-case workaround for my unique circumstance: I build K on Ubuntu in my NFS homedir which is visible to the CentOS 7 hosts I also use, and, on such a CentOS 7 host, I run (once) `centos7_hack_run_ubuntu-K.bash` which creates one symlink to a pcre .so (necessary since CentOS and Ubuntu seem to have divergent .so naming conventions?).  With this change, the K binary built on Ubuntu will run on CentOS 7.
+    * However: K built on Ubuntu 14.04 will copy-and-run on CentOS 7 (at least CentOS 7.2.1511) hosts I use with no special prep.
 
 ## To build
 
