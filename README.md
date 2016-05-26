@@ -47,7 +47,7 @@ The K source code distro contains, and K uses, the following source code from ex
  * `GCC` >= 4.8: I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; it might not build with any lesser GCC version.
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
      * `boost::string_ref`: used pervasively; superseded by C++14's `std::string_view` (but we may never abandon {GCC 4.8+Boost 1.54})
-         * this appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree, but so far have successfully resisted the idea.
+         * `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
      * `boost::filesystem`: a small subset only
  * [`PCRE`](http://www.pcre.org/) "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor functions and occasionally internally.
  * [Exuberant `Ctags`](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
@@ -86,14 +86,15 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 
 ## Platform-specific Notes
 
-### CentOS >= 7
+### CentOS 7
 
  * K build fails on CentOS 7.2.1511 because its default Boost version is 1.53, whose boost::string_ref contains a compile-breaking bug (yes, in the library .h file itself).
-    * _Hacky workaround_: in my experience, K built on Ubuntu 14.04 will run on CentOS 7.2.1511 (on any Linux system, the non-static-linked K prerequisites (ncurses*, pcre) have inevitably already been installed).
+    * _Hacky workaround_: in my experience, K built on Ubuntu 14.04 runs flawlessly on CentOS 7.2.1511
+       * the non-static-linked K prerequisites (`ncurses*`, `pthread`, `pcre`) having inevitably already been installed on any Linux system.
 
 ### Windows
 
-  * The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
+  * The last [nuwen.net MinGW release](http://nuwen.net/mingw.html) (w/GCC 4.8.1) that builds 32-bit targets, 10.4 released 2013/08/01, is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
   * The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
     * Update 2016/05: I haven't used K on high-res (WQHD or greater) monitors much lately, but haven't experienced this problem in recent memory (on Win 7, 8.1, or 10).
 
@@ -245,7 +246,7 @@ K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bi
 > system editor (Better than VI!) [They ended up with ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M), the "Microsoft
 > Editor" which was a derivative of the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html)].
 
-K development started (in spirit) in 1988 when I started writing extensions for the Microsoft [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next Microsoft C releases (6.0, 6.0a, 7.x) for DOS and OS/2, Microsoft bloated-up M into [PWB](http://www.texteditors.org/cgi-bin/wiki.pl?PWB) (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
+K development started (in spirit) in 1988 when I started writing (in C) loadable extension modules (the immediate forerunner of DLL's) for the DOS version of the Microsoft [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next Microsoft C releases (6.0, 6.0a, 7.x) for DOS and OS/2, Microsoft bloated-up M into [PWB](http://www.texteditors.org/cgi-bin/wiki.pl?PWB) (v1.0, 1.1, 2.0; see MSDN.News.200107.PWB.Article.pdf) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
 2014/10: an "employment transition" into an (effectively) Linux-only environment (willingly) forced me to port K to (x64) Linux; I had wanted to do this for years, but lacked the motivation: the prospect of working daily on a platform w/o K provided the needed motivation!
 
