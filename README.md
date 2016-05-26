@@ -44,10 +44,13 @@ The K source code distro contains, and K uses, the following source code from ex
 
 ## External Build Dependencies
 
- * `GCC` >= 4.8: I first built (and _still_ build 32-bit Windows) K with GCC using GCC 4.8; it might not build with any lesser GCC version.
- * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below)
- * (`PCRE`[http://www.pcre.org/] 8.x) "Perl Compatible Regular Expressions" used in search/replace editor functions.
- * ([Exuberant `Ctags`](http://ctags.sourceforge.net/)) is invoked to rebuild the "tags database" at the close of each successful build of K.
+ * `GCC` >= 4.8: I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; it might not build with any lesser GCC version.
+ * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
+     * `boost::string_ref`: used pervasively; superseded by C++14's `std::string_view` (but we may never abandon {GCC 4.8+Boost 1.54})
+         * this appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree, but so far have successfully resisted the idea.
+     * `boost::filesystem`: a small subset only
+ * [`PCRE`](http://www.pcre.org/) "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor functions and occasionally internally.
+ * [Exuberant `Ctags`](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread`
  * Windows-only: `7zip.exe` is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
 
@@ -58,13 +61,13 @@ The K source code distro contains, and K uses, the following source code from ex
      * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
  * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) must be manually installed (and in `PATH`).
 
- * Aside: [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html) which it assumes is already present on any Windows PC.
+ * FYI: [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html) which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
 
 ### Linux-specific Build-Prep Instructions
 
 #### *Ubuntu >= 14.04 (and presumably any contemporary Debian release)
 
- * after cloning this repo, run `./install_build_tools_ubuntu.sh` to install the necessary packages.
+ * after cloning this repo, run `sudo ./install_build_tools_ubuntu.sh` to install the necessary packages.
 
 ## To build
 
@@ -81,19 +84,18 @@ A release file is a Windows=7z/Linux=tgz archive containing the minimum fileset 
 
 Use: decompress the release file in an empty directory and run `k.exe` (Linux: `k`).  K was designed to be "copy and run" (a "release") anywhere.  I have successfully run it from network/NFS shares and "thumb drives".
 
-## Stability notes
+## Platform-specific Notes
 
 ### CentOS >= 7
 
  * K build fails on CentOS 7.2.1511 because its default Boost version is 1.53, whose boost::string_ref contains a compile-breaking bug (yes, in the library .h file itself).
- * _Hacky workaround_: K built on Ubuntu 14.04 will run on CentOS 7.2.1511 hosts I use with no additional prep.
+    * _Hacky workaround_: in my experience, K built on Ubuntu 14.04 will run on CentOS 7.2.1511 (on any Linux system, the non-static-linked K prerequisites (ncurses*, pcre) have inevitably already been installed).
 
 ### Windows
 
-The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
-
-The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
-Update 2016/04: I havn't used K on high-res monitors much lately, but haven't experienced this problem in recent memory (on Win 7, 8.1, or 10).
+  * The last nuwen.net MinGW release (w/GCC 4.8.1) that builds 32-bit targets is 10.4, released 2013/08/01, and no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
+  * The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
+    * Update 2016/05: I haven't used K on high-res (WQHD or greater) monitors much lately, but haven't experienced this problem in recent memory (on Win 7, 8.1, or 10).
 
 ## Linux key-decoding status quo
 
