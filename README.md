@@ -106,12 +106,19 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
     * common: with `TERM=xterm`, _after_ you disable various terminal-menu/-command key-modulation (e.g. `alt+`) hooks, default terminfo for xterm correctly decodes a substantial proportion of the Windows-supported key combinations that K uses.
     * Lubuntu Desktop (`lxterminal` nee `x-terminal-emulator`): mouse scroll wheel does not work.
     * I think I've exhausted the possibilities here
-  * PuTTY (also PuTTYtray) (to Ubuntu 14.04+)
-    * _must_ configure PuTTY to set `TERM=putty` (or `TERM=putty-256color`) because the default (`TERM=xterm`) is remarkably broken.
-       * even using these two terminal types, only unmodulated function keys are correctly decoded; shift+, ctrl+, shift+ctrl+, and alt+ modulated function keys map to the corresponding unmodulated function keys.
-    * better (but with a caveat): `TERM=putty-sco` adds support for shift+, ctrl+, and shift+ctrl+, but _NOT_ alt+ function keys.
-       * **caveat**: `TERM=putty-sco` **requires nondefault PuTTY config**: Terminal / Keyboard / the function keys and keypad : select `SCO`.
-    * to make these terminal types available on Debian-based (i.e. *ubuntu) Linux, package `ncurses-term` _may_ need to be installed.
+  * PuTTY 0.67 (released 2016-03-05) to Lubuntu 14.04+
+    * Be sure to use [the most recent release](http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html) of [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html).
+    * To set PuTTY's
+       * `keyboard setting`: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `the function keys and keypad` : <choose one radio-button>
+       * exported `TERM` value: PuTTY `Menu` / `Change Settings` / `Connection` / `Data` / `Terminal details` / `terminal-type string` : <enter the desired TERM value here>
+          * this menu is only available if PuTTY is not connected to a remote server.
+          * to support alternative `TERM` on Debian-based (i.e. *ubuntu) Linux, package `ncurses-term` _may_ need to be installed.
+    * Recommendation
+       * Use `TERM=putty` or `TERM=putty-256color` with `keyboard setting` = `Xterm R6`.
+          * unfortunately only **unmodulated** function keys are correctly decoded; `shift+`, `ctrl+`, `shift+ctrl+`, and `alt+` modulated function keys map to the corresponding unmodulated function keys.
+       * Runner-up: `TERM=putty-sco` with `keyboard setting` = `SCO`
+          * adds support for `shift+`, `ctrl+`, and `shift+ctrl+`, but _NOT_ `alt+`, modulated function keys.
+          * unfortunately the `center` (arg) key collides with `PgDn`, otherwise this setup would be amazingly close to "complete".
     * [emacswiki/emacs/PuTTY](http://emacswiki.org/emacs/PuTTY) seems a good resource regarding PuTTY keyboard peculiarities.
   * tmux (1.8 - 2.0) (`TERM=screen`)
     * most `ctrl+` and `alt+` function and keypad modulations do not work.
