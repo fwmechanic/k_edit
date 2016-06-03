@@ -770,6 +770,206 @@ bool ARG::lua() {
    return false;
    }
 
+#define  VARIADIC_TEMPLT  1
+
+#if VARIADIC_TEMPLT
+
+// 20160601 replace C varargs with typesafe variadic template approach (cost: build/link time)
+
+int pushLuaStack_( lua_State *L, const std::string &in ) { lua_pushlstring(  L, in.data(), in.length() ); return 1; }
+int pushLuaStack_( lua_State *L, PFBUF  in ) { l_construct_FBUF( L, in ); return 1; }
+int pushLuaStack_( lua_State *L, PView  in ) { l_construct_View( L, in ); return 1; }
+int pushLuaStack_( lua_State *L, double in ) { lua_pushnumber(   L, in ); return 1; }
+int pushLuaStack_( lua_State *L, int    in ) { lua_pushinteger(  L, in ); return 1; }
+int pushLuaStack_( lua_State *L, PCChar in ) { lua_pushstring(   L, in ); return 1; }
+int pushLuaStack_( lua_State *L, bool   in ) { lua_pushboolean(  L, in != 0 ); return 1; }
+
+template<typename HEAD>
+int pushLuaStack( lua_State *L, HEAD v ) { return pushLuaStack_( L, v ); }
+template<typename HEAD, typename... TAIL>
+int pushLuaStack( lua_State *L, HEAD head, TAIL... tail ) {
+   const auto r1( pushLuaStack( L, head ) );  // force order of eval HEAD -> ... TAIL
+   return r1 + pushLuaStack( L, tail... );
+   }
+
+int popLuaStack_( lua_State *L, int ix,  bool   &out ) { out = 0 != lua_toboolean( L, ix ); return 1; }
+int popLuaStack_( lua_State *L, int ix,  int    &out ) { out =      lua_tointeger( L, ix ); return 1; }
+int popLuaStack_( lua_State *L, int ix,  double &out ) { out =      lua_tonumber ( L, ix ); return 1; }
+int popLuaStack_( lua_State *L, int ix,  std::string &out ) {
+   size_t srcBytes;
+   auto pSrc( lua_tolstring(L, ix, &srcBytes) );
+   out.assign( pSrc, srcBytes );
+   return 1;
+   }
+template<typename HEAD>
+int popLuaStack( lua_State *L, HEAD v ) { return popLuaStack_( L, -1, v ); }
+template<typename HEAD, typename... TAIL>
+int popLuaStack( lua_State *L, HEAD head, TAIL... tail ) {
+   const auto rt( popLuaStack( L, tail... ) );  // force order of eval TAIL -> ... HEAD
+   return rt +    popLuaStack( L, head    )  ;
+   }
+
+bool PushLuaFunctionFailed( lua_State *L, const char *szFuncnm ) {
+   if( lh_getglobal_failed( L, szFuncnm ) ) {
+      return Msg( "%s: Lua symbol '%s' is NOT A global", __func__, szFuncnm );
+      }
+   if( !lua_isfunction( L, -1 ) ) {
+      return Msg( "%s: Lua symbol '%s' is NOT A FUNCTION", __func__, szFuncnm );
+      }
+   return false;
+   }
+
+bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute ) {
+   auto L( L_edit );
+   if( !L ) { return false; }
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( PushLuaFunctionFailed( L, "ExecutedURL" ) ) {
+      return false;
+      }
+   if( docall_known_nres( L, pushLuaStack( L, strToExecute ), 1 ) != 0 ) {  // do the call
+      l_handle_pcall_error( L );
+      return false;
+      }
+   bool didit;
+   popLuaStack( L, didit );
+   return didit;
+   }
+
+// intf into Lua locn-list subsys
+void LuaCtxt_Edit::LocnListInsertCursor() {
+   auto L( L_edit );
+   if( !L ) { return; }
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( PushLuaFunctionFailed( L, "LocnListInsertCursor" ) ) {
+      return;
+      }
+   if( docall_known_nres( L, 0, 0 ) != 0 ) {  // do the call
+      l_handle_pcall_error( L );
+      }
+   }
+
+bool LuaCtxt_Edit::nextmsg_setbufnm     ( PCChar src )  {
+   auto L( L_edit );
+   if( !L ) { return false; }
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( PushLuaFunctionFailed( L, "nextmsg_setbufnm_FROM_C" ) ) {
+      return false;
+      }
+   if( docall_known_nres( L, pushLuaStack( L, src ), 0 ) != 0 ) {  // do the call
+      l_handle_pcall_error( L );
+      return false;
+      }
+   return true;
+   }
+
+bool LuaCtxt_Edit::nextmsg_newsection_ok( PCChar src )  {
+   auto L( L_edit );
+   if( !L ) { return false; }
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( PushLuaFunctionFailed( L, "nextmsg_newsection_FROM_C" ) ) {
+      return false;
+      }
+   if( docall_known_nres( L, pushLuaStack( L, src ), 0 ) != 0 ) {  // do the call
+      l_handle_pcall_error( L );
+      return false;
+      }
+   return true;
+   }
+
+bool Lua_ConfirmYes( PCChar prompt ) {
+   auto L( L_edit );
+   if( !L ) { return false; }
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( PushLuaFunctionFailed( L, "MenuConfirm" ) ) {
+      return false;
+      }
+   if( docall_known_nres( L, pushLuaStack( L, prompt ), 1 ) != 0 ) {  // do the call
+      l_handle_pcall_error( L );
+      return false;
+      }
+   bool confirmed;
+   popLuaStack( L, confirmed );
+   return confirmed;
+   }
+
+void FBOP::LuaSortLineRange( PFBUF fb, LINE y0, LINE y1, COL xLeft, COL xRight, bool fCaseIgnored, bool fOrdrAscending, bool fDupsKeep ) {
+   // SW_BP;
+   // callLuaOk( L_edit, "SortLineRange_from_C"
+   //    , "Fiiiibbb>"
+   //    , fb
+   //    , y0 - 1
+   //    , y1 - 1
+   //    , xLeft
+   //    , xRight
+   //    , fCaseIgnored
+   //    , fOrdrAscending
+   //    , fDupsKeep
+   //    );
+   }
+
+COL FBOP::GetSoftcrIndentLua( PFBUF fb, LINE yLine ) {
+   auto L( L_edit );
+   if( !L ) { return false; }
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( PushLuaFunctionFailed( L, "Softcr_col_from_C" ) ) {
+      return -1;
+      }
+   if( docall_known_nres( L, pushLuaStack( L, fb, yLine ), 1 ) != 0 ) {  // do the call
+      l_handle_pcall_error( L );
+      return -1;
+      }
+   COL rv;
+   popLuaStack( L, rv );
+   return rv - 1;
+   }
+
+STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout ) { DBG( "%s: %s %p=%p=%s", __func__, functionName, &inout, inout.c_str(), inout.c_str() );
+   if( !L ) { return false; }
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( PushLuaFunctionFailed( L, functionName ) ) {
+      inout.clear();
+      return false;
+      }
+   if( docall_known_nres( L, pushLuaStack( L, inout ), 1 ) != 0 ) {  // do the call
+      l_handle_pcall_error( L );
+      inout.clear();
+      return false;
+      }
+   popLuaStack( L, -1, inout );
+   return true;
+   }
+bool LuaCtxt_Edit::ReadPseudoFileOk( PFBUF src, LUA_BOOL *pRvBool ) {
+   *pRvBool = false;
+   auto L( L_edit );
+   if( !L ) { return false; }
+   lua_settop( L, 0 );      // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( PushLuaFunctionFailed( L, "ReadPseudoFileOk_FROM_C" ) ) {
+      return false;
+      }
+   if( docall_known_nres( L, pushLuaStack( L, src ), 1 ) != 0 ) {  // do the call
+      l_handle_pcall_error( L );
+      return false;
+      }
+   // bool tramp( false );
+   bool tramp;
+   popLuaStack( L, tramp );
+   *pRvBool = tramp != 0;
+   return true;
+   }
+
+
+#else
+
+// straight from PIL2e (call_va), a _REALLY DANGEROUS_ interface
+
 struct StrDest {
    PChar  d_pBuf;
    size_t d_bytes;
@@ -782,19 +982,20 @@ struct StrDest {
       }
    };
 
-// straight from PIL2e (call_va), a _REALLY DANGEROUS_ interface
-
-STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, va_list vl=0 ) { enum { DB=0 };
+STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, va_list vl ) { enum { DB=1 };
    if( !L ) { return false; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
                                                                           DB && DBG( "%s->%s() [%d] ========================", __func__, szFuncnm, lua_gettop(L) );
-   if( lh_getglobal_failed( L, szFuncnm ) || !lua_isfunction( L, -1 ) ) {
+   if( lh_getglobal_failed( L, szFuncnm ) ) {
+      return Msg( "%s: Lua symbol '%s' is NOT A global", __func__, szFuncnm );
+      }                                                                   DB && DBG( "%s->%s() [%d] ========================", __func__, szFuncnm, lua_gettop(L) );
+   if( !lua_isfunction( L, -1 ) ) {
       return Msg( "%s: Lua symbol '%s' is NOT A FUNCTION", __func__, szFuncnm );
       }
    // push arguments
-   auto pszSigStart( szSig );
-   for( ; *szSig && *szSig != '>' ; ++szSig ) {
+   auto pszSigStart( szSig );                                             DB && DBG( "%s->%s() [%s]", __func__, szFuncnm, szSig );
+   for( ; *szSig && *szSig != '>' ; ++szSig ) {                           DB && DBG( "%s->%s() [%c] ========================", __func__, szFuncnm, *szSig );
       switch( *szSig ) {
        default:   return Msg( "%s: invalid param-type[%" PR_SIZET "] (%c)", szFuncnm, (szSig - pszSigStart), szSig[0] );
        case 'F':  l_construct_FBUF( L, va_arg(vl, PFBUF )                 );  break;
@@ -803,7 +1004,10 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
        case 'i':  lua_pushinteger(  L, va_arg(vl, int   )                 );  break;
        case 'b':  lua_pushboolean(  L, va_arg(vl, LUA_BOOL) != 0          );  break; // NB: Lua boolean is int-sized!  *******************************************************************
        case 's':  lua_pushstring(   L, va_arg(vl, PCChar)                 );  break;
-       case 'S': {const std::string &sr( *(va_arg(vl, std::string * )) );
+       case 'S': {const auto sp( va_arg(vl, std::string * ) );            DB && DBG( "%s->%s() [%p] ========================", __func__, szFuncnm, sp );
+                                                                          DB && DBG( "%s->%s() [%p] ========================", __func__, szFuncnm, sp->c_str() );
+                                                                          DB && DBG( "%s->%s() [%s] ========================", __func__, szFuncnm, sp->c_str() );
+                  const auto &sr( *sp );                                  DB && DBG( "%s->%s() [%s] ========================", __func__, szFuncnm, sr.c_str() );
                   lua_pushlstring(  L, sr.data(), sr.length() );
                  }break;
        }
@@ -812,6 +1016,7 @@ STATIC_FXN bool vcallLuaOk( lua_State *L, const char *szFuncnm, const char *szSi
    const auto narg( szSig - pszSigStart );  // number of args pushed
    if( *szSig=='>' ) { ++szSig; }
    const auto nres_( Strlen( szSig ) );      // number of results expected
+                                                                          DB && DBG( "%s->%s() [%" PR_PTRDIFFT ":%d] ========================", __func__, szFuncnm, narg, nres_ );
    if( docall_known_nres( L, narg, nres_ ) != 0 ) {  // do the call
       l_handle_pcall_error( L );
       }                                                                   DB && DBG( "%s->%s() [%d/%d]", __func__, szFuncnm, nres_, lua_gettop(L) );
@@ -853,13 +1058,25 @@ WRONG_RESULT_TYPE:
    return Msg( "%s: wrong result-type[%d] (expected '%c')", __func__, nres_, szSig[0] );
    }
 
-STATIC_FXN bool callLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, ... ) {
-   va_list  vl;
-   va_start(vl, szSig);
-   const auto ok( vcallLuaOk( L, szFuncnm, szSig, vl ) );
-   va_end( vl );
+STATIC_FXN bool callLuaOk( lua_State *L, const char *szFuncnm, const char *szSig, ... ) { DBG( "1" );
+   va_list  vl;                                                                           DBG( "2" );
+   va_start(vl, szSig);                                                                   DBG( "3" );
+   const auto ok( vcallLuaOk( L, szFuncnm, szSig, vl ) );                                 DBG( "4" );
+   va_end( vl );                                                                          DBG( "5" );
    return ok;
    }
+
+//
+// String transformation functions have standard signature:
+//
+// These can behave as either:
+//
+// src==0: single buffer (dest is input and output)
+// src!=0: double buffer
+//
+// there is no efficiency difference, since the Lua result has to be copied into
+// dest regardless.
+//
 
 bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute ) {
    LUA_BOOL didit;
@@ -871,17 +1088,10 @@ void LuaCtxt_Edit::LocnListInsertCursor()               {        callLuaOk( L_ed
 
 bool LuaCtxt_Edit::nextmsg_setbufnm     ( PCChar src )  { return callLuaOk( L_edit, "nextmsg_setbufnm_FROM_C"  , "s>" , src ); }
 bool LuaCtxt_Edit::nextmsg_newsection_ok( PCChar src )  { return callLuaOk( L_edit, "nextmsg_newsection_FROM_C", "s>" , src ); }
-bool LuaCtxt_Edit::ReadPseudoFileOk     ( PFBUF src, LUA_BOOL *pRvBool )  { *pRvBool = false;
-                                                          return callLuaOk( L_edit, "ReadPseudoFileOk_FROM_C"  , "F>b", src, pRvBool ); }
 
 bool Lua_ConfirmYes( PCChar prompt ) {
    LUA_BOOL rv;
    return callLuaOk( L_edit, "MenuConfirm", "s>b", prompt, &rv ) ? rv : false;
-   }
-
-COL FBOP::GetSoftcrIndentLua( PFBUF fb, LINE yLine ) {
-   COL rv;
-   return callLuaOk( L_edit, "Softcr_col_from_C", "Fi>i", fb, yLine, &rv ) ? rv-1 : -1;
    }
 
 void FBOP::LuaSortLineRange( PFBUF fb, LINE y0, LINE y1, COL xLeft, COL xRight, bool fCaseIgnored, bool fOrdrAscending, bool fDupsKeep ) {
@@ -898,27 +1108,17 @@ void FBOP::LuaSortLineRange( PFBUF fb, LINE y0, LINE y1, COL xLeft, COL xRight, 
       , fDupsKeep
       );
    }
+COL FBOP::GetSoftcrIndentLua( PFBUF fb, LINE yLine ) {
+   COL rv;
+   return callLuaOk( L_edit, "Softcr_col_from_C", "Fi>i", fb, yLine, &rv ) ? rv-1 : -1;
+   }
 
-//
-// String transformation functions have standard signature:
-//
-// These can behave as either:
-//
-// src==0: single buffer (dest is input and output)
-// src!=0: double buffer
-//
-// there is no efficiency difference, since the Lua result has to be copied into
-// dest regardless.
-//
-STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout ) {
+STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout ) { DBG( "%s: %s %p=%p=%s", __func__, functionName, &inout, inout.c_str(), inout.c_str() );
    return callLuaOk( L, functionName, "S>S", &inout, &inout );
    }
-
-STATIC_FXN PChar Lua_s2h( lua_State *L, PCChar functionName, PCChar src ) {
-   StrDest sbDest( 0, 0 );
-   const auto ok( callLuaOk( L, functionName, "s>h", src, &sbDest ) );
-   return ok ? sbDest.d_pBuf : Strdup( src ); // on failure, copy input to output
-   }
+bool LuaCtxt_Edit::ReadPseudoFileOk     ( PFBUF src, LUA_BOOL *pRvBool )  { *pRvBool = false;
+                                                          return callLuaOk( L_edit, "ReadPseudoFileOk_FROM_C"  , "F>b", src, pRvBool ); }
+#endif
 
 bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( Path::str_t &st ) { return Lua_S2S( L_edit, "StrExpandEnvVars"  , st  ); }
 bool  LuaCtxt_Edit::from_C_lookup_glock( std::string &st ) { return Lua_S2S( L_edit, "Lua_from_C_lookup_glock" , st ); }
