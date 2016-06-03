@@ -109,14 +109,16 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
   * PuTTY 0.67 (released 2016-03-05) to Lubuntu 14.04+
     * Be sure to use [the most recent release](http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html) of [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html).
     * To set PuTTY's
-       * `keyboard setting`: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `the function keys and keypad` : <choose one radio-button>
-       * exported `TERM` value: PuTTY `Menu` / `Change Settings` / `Connection` / `Data` / `Terminal details` / `terminal-type string` : <enter the desired TERM value here>
+       * **keyboard setting**: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `the function keys and keypad` : <choose one radio-button>
+       * **export `TERM` value**: PuTTY `Menu` / `Change Settings` / `Connection` / `Data` / `Terminal details` / `terminal-type string` : <enter the desired TERM value here>
           * this menu is only available if PuTTY is not connected to a remote server.
           * to support alternative `TERM` on Debian-based (i.e. *ubuntu) Linux, package `ncurses-term` _may_ need to be installed.
+       * **keypad cursor keys**: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of cursor keys:` : <choose>Normal or Application
+       * **keypad numeric keypad**: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of numeric keypad:` : <choose>Normal or Application
     * Recommendation
-       * Use `TERM=putty` or `TERM=putty-256color` with `keyboard setting` = `Xterm R6`.
-          * unfortunately only **unmodulated** function keys are correctly decoded; `shift+`, `ctrl+`, `shift+ctrl+`, and `alt+` modulated function keys map to the corresponding unmodulated function keys.
-       * Runner-up: `TERM=putty-sco` with `keyboard setting` = `SCO`
+       * export `TERM=putty` or `TERM=putty-256color` with **`keyboard setting`**=`Xterm R6` and **keypad cursor keys=Application** and **keypad numeric keypad=Application**.
+          * unfortunately only **unmodulated** function keys are correctly decoded; `shift+`, `ctrl+`, `shift+ctrl+`, and `alt+`-modulation of function keys is ignored.
+       * Runner-up: export `TERM=putty-sco` with **`keyboard setting`**=`SCO` and **keypad cursor keys=Normal** and **keypad numeric keypad=Normal**.
           * adds support for `shift+`, `ctrl+`, and `shift+ctrl+`, but _NOT_ `alt+`, modulated function keys.
           * unfortunately the `center` (arg) key collides with `PgDn`, otherwise this setup would be amazingly close to "complete".
     * [emacswiki/emacs/PuTTY](http://emacswiki.org/emacs/PuTTY) seems a good resource regarding PuTTY keyboard peculiarities.
