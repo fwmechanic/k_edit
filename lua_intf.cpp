@@ -51,7 +51,7 @@ STATIC_FXN bool lh_getglobal_failed( lua_State* L, PCChar name ) {
    return lua_pcall(L, 1, 1, 0) != 0;  // true == error
    }
 
-bool PushLuaFunctionFailed( lua_State *L, const char *szFuncnm ) {
+bool lh_push_global_function( lua_State *L, const char *szFuncnm ) {
    if( lh_getglobal_failed( L, szFuncnm ) ) {
       return !Msg( "%s: Lua symbol '%s' is NOT A global", __func__, szFuncnm );
       }
@@ -63,38 +63,38 @@ bool PushLuaFunctionFailed( lua_State *L, const char *szFuncnm ) {
 
 // 20160601 replace C varargs with typesafe variadic template approach (cost: build/link time)
 
-int pushLuaStack_( lua_State *L, stref  in ) { lua_pushlstring(  L, in.data(), in.length() ); return 1; }
-int pushLuaStack_( lua_State *L, PFBUF  in ) { l_construct_FBUF( L, in );      return 1; }
-int pushLuaStack_( lua_State *L, PView  in ) { l_construct_View( L, in );      return 1; }
-int pushLuaStack_( lua_State *L, double in ) { lua_pushnumber(   L, in );      return 1; }
-int pushLuaStack_( lua_State *L, int    in ) { lua_pushinteger(  L, in );      return 1; }
-int pushLuaStack_( lua_State *L, PCChar in ) { lua_pushstring(   L, in );      return 1; }
-int pushLuaStack_( lua_State *L, bool   in ) { lua_pushboolean(  L, in != 0 ); return 1; }
+STATIC_FXN int lh_push_( lua_State *L, stref  in ) { lua_pushlstring(  L, in.data(), in.length() ); return 1; }
+STATIC_FXN int lh_push_( lua_State *L, PFBUF  in ) { l_construct_FBUF( L, in );      return 1; }
+STATIC_FXN int lh_push_( lua_State *L, PView  in ) { l_construct_View( L, in );      return 1; }
+STATIC_FXN int lh_push_( lua_State *L, double in ) { lua_pushnumber(   L, in );      return 1; }
+STATIC_FXN int lh_push_( lua_State *L, int    in ) { lua_pushinteger(  L, in );      return 1; }
+STATIC_FXN int lh_push_( lua_State *L, PCChar in ) { lua_pushstring(   L, in );      return 1; }
+STATIC_FXN int lh_push_( lua_State *L, bool   in ) { lua_pushboolean(  L, in != 0 ); return 1; }
 
 template<typename HEAD>
-int pushLuaStack( lua_State *L, HEAD v ) { return pushLuaStack_( L, v ); }
+int lh_push( lua_State *L, HEAD v ) { return lh_push_( L, v ); }
 template<typename HEAD, typename... TAIL>
-int pushLuaStack( lua_State *L, HEAD head, TAIL... tail ) {
-   const auto r1( pushLuaStack( L, head ) );  // force order of eval HEAD -> ... TAIL
-   return r1 + pushLuaStack( L, tail... );
+int lh_push( lua_State *L, HEAD head, TAIL... tail ) {
+   const auto r1( lh_push( L, head ) );  // force order of eval HEAD -> ... TAIL
+   return r1 + lh_push( L, tail... );
    }
 
-bool popLuaStackBool( lua_State *L ) { return 0 != lua_toboolean( L, -1 ); }
-int popLuaStack_( lua_State *L, int ix, bool        &out ) { out = 0 != lua_toboolean( L, ix ); return 1; }
-int popLuaStack_( lua_State *L, int ix, int         &out ) { out =      lua_tointeger( L, ix ); return 1; }
-int popLuaStack_( lua_State *L, int ix, double      &out ) { out =      lua_tonumber ( L, ix ); return 1; }
-int popLuaStack_( lua_State *L, int ix, std::string &out ) {
+STATIC_FXN bool lh_pop_bool( lua_State *L ) { return 0 != lua_toboolean( L, -1 ); }
+STATIC_FXN int lh_pop_( lua_State *L, int ix, bool        &out ) { out = 0 != lua_toboolean( L, ix ); return 1; }
+STATIC_FXN int lh_pop_( lua_State *L, int ix, int         &out ) { out =      lua_tointeger( L, ix ); return 1; }
+STATIC_FXN int lh_pop_( lua_State *L, int ix, double      &out ) { out =      lua_tonumber ( L, ix ); return 1; }
+STATIC_FXN int lh_pop_( lua_State *L, int ix, std::string &out ) {
    size_t srcBytes; auto pSrc( lua_tolstring(L, ix, &srcBytes) );
    out.assign( pSrc, srcBytes );
    return 1;
    }
 
 template<typename HEAD>
-int popLuaStack( lua_State *L, HEAD v ) { return popLuaStack_( L, -1, v ); }
+int lh_pop( lua_State *L, HEAD v ) { return lh_pop_( L, -1, v ); }
 template<typename HEAD, typename... TAIL>
-int popLuaStack( lua_State *L, HEAD head, TAIL... tail ) {
-   const auto rt( popLuaStack( L, tail... ) );  // force order of eval TAIL -> ... HEAD
-   return rt +    popLuaStack( L, head    )  ;
+int lh_pop( lua_State *L, HEAD head, TAIL... tail ) {
+   const auto rt( lh_pop( L, tail... ) );  // force order of eval TAIL -> ... HEAD
+   return rt +    lh_pop( L, head    )  ;
    }
 
 STATIC_VAR lua_State* L_edit;
@@ -376,6 +376,9 @@ STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar 
    return dest;
    }
 
+// returns empty string if any errors
+PChar LuaCtxt_Edit::Tbl2S( PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ) { return LuaTbl2S( L_edit, dest, sizeof_dest, tableDescr, pszDflt ); }
+
 STATIC_FXN int lua_atpanic_handler( lua_State *L ) {
    linebuf msg;
    CopyLuaString( BSOB(msg), L, -1 );
@@ -415,27 +418,27 @@ STATIC_FXN int traceback (lua_State *L) {
 }
 
 // stolen from lua-5.1/src/lua.c, except nres param to lua_pcall is passed directly
-STATIC_FXN int docall_known_nres (lua_State *L, int narg, int nres) { enum { DB=0 };
+STATIC_FXN int lh_pcall_inout (lua_State *L, int narg, int nres) { enum { DB=0 };
   const auto top( lua_gettop(L) );  /* function index */
   const auto base( top - narg );  /* function index */
-                                                                  DB && DBG( "lua_pcall(%d/%d,%d,%d)", narg, top, nres, base );
-                                                                  DB && LDS( "+ docall_known_nres:pre-ins-traceback-fxn", L );
+                                                                  DB && DBG(   "lh_pcall_inout(%d/%d,%d,%d)", narg, top, nres, base );
+                                                                  DB && LDS( "+ lh_pcall_inout:pre-ins-traceback-fxn", L );
   lua_pushcfunction(L, traceback);  /* push traceback function */
   lua_insert(L, base);  /* put it under chunk and args */
 //signal(SIGINT, laction);
-                                                                  DB && LDS( "+ docall_known_nres:lua_pcall", L );
-  const auto status( lua_pcall(L, narg, nres, base) );            DB && LDS( "- docall_known_nres:lua_pcall", L );
+                                                                  DB && LDS( "+ lh_pcall_inout:lua_pcall", L );
+  const auto pcall_rv( lua_pcall(L, narg, nres, base) );          DB && LDS( "- lh_pcall_inout:lua_pcall", L );
 
 //signal(SIGINT, SIG_DFL);
-  lua_remove(L, base);  /* remove traceback function */           DB && LDS( "+ docall_known_nres:post-rmv-traceback-fxn", L );
+  lua_remove(L, base);  /* remove traceback function */           DB && LDS( "+ lh_pcall_inout:post-rmv-traceback-fxn", L );
   /* force a complete garbage collection in case of errors */
-  if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
-  return status;
+  if (pcall_rv != 0) { lua_gc(L, LUA_GCCOLLECT, 0); }
+  return pcall_rv;
 }
 
 STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L)=nullptr, void (*openlibs)(lua_State *L)=nullptr ); // forward
 
-STATIC_FXN void l_handle_pcall_error( lua_State *L, bool fCompileErr=false ) { // c:\klg\sn\k\util.lua:107: variable 'at' is not declared
+STATIC_FXN void lh_handle_pcall_err( lua_State *L, bool fCompileErr=false ) { // c:\klg\sn\k\util.lua:107: variable 'at' is not declared
    linebuf msg;
    CopyLuaString( BSOB(msg), L, -1 );
    // if( fCompileErr )
@@ -511,13 +514,13 @@ STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) { enum { DB=
    DBG_LUA_ALLOC && DBG( "%s: heapChange ...", __func__ );
    const size_t s_LuaHeapBytesAtStart( LuaHeapSize() );
    LuaCallCleanup( L );
-   if( PushLuaFunctionFailed( L, "CallEventHandlers" ) ) {
+   if( lh_push_global_function( L, "CallEventHandlers" ) ) {
       return;
       }
-   const auto failed( docall_known_nres( L, pushLuaStack( L, eventName ), 0 ) );  DB && DBG( "C calling CallEventHandlers(%s)", eventName );
+   const auto failed( lh_pcall_inout( L, lh_push( L, eventName ), 0 ) );  DB && DBG( "C calling CallEventHandlers(%s)", eventName );
    if( failed ) {
       LREGI_set_EvtHandlerEnabled( L, 0 );         // don't want avalanche of errors
-      l_handle_pcall_error( L );
+      lh_handle_pcall_err( L );
       }
    }
 
@@ -542,11 +545,11 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
    // table=GetEdFxn_FROM_C(cmdName)    -- 20110216 kgoodwin replaced old scheme which wrote all cmd tables into k.lua._G (!!!)
    // GetEdFxn_FROM_C is implemented in k.luaedit
    STATIC_CONST auto s_edfx_lookup = "GetEdFxn_FROM_C";
-   if( PushLuaFunctionFailed( L, s_edfx_lookup ) ) {
+   if( lh_push_global_function( L, s_edfx_lookup ) ) {
       return false;
       }
    {
-   const auto failed( docall_known_nres( L, pushLuaStack( L, cmdName ), 1 ) );
+   const auto failed( lh_pcall_inout( L, lh_push( L, cmdName ), 1 ) );
    if( failed ) {                                                                DB && DBG( "%s: docall GetEdFxn_FROM_C(%s) failed", __func__, cmdName );
       return Msg( "docall GetEdFxn_FROM_C(%s) failed", cmdName );
       }
@@ -610,10 +613,10 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
    l_construct_FBUF( L, g_CurFBuf() );  lua_setfield( L, -2, "fbuf" );
    l_View_function_cur( L );            lua_setfield( L, -2, "view" );
    lua_pushboolean( L, d_fMeta );       lua_setfield( L, -2, "fMeta" );          DB && DBG( ".%s = %s", "fMeta", d_fMeta?"true":"false" );
-   const auto failed( docall_known_nres( L, 1, 1 ) );
+   const auto failed( lh_pcall_inout( L, 1, 1 ) );
    if( failed ) {
       UnhideCursor();
-      l_handle_pcall_error( L );
+      lh_handle_pcall_err( L );
       return false;
       }
    return lua_toboolean( L, -1 );
@@ -684,26 +687,26 @@ STATIC_FXN bool loadLuaFileFailed( lua_State **pL, PCChar fnm ) {
    const auto luaRC( luaL_loadfile( *pL, fnm ) );
    FDBG && DBG( "%s+2 L=%p luaRC=%u",  __func__, *pL, luaRC );
    switch( luaRC ) {
-      case LUA_ERRFILE:    DBG( "LUA_ERRFILE"   ); l_handle_pcall_error( *pL, true ); break;
-      case LUA_ERRSYNTAX:  DBG( "LUA_ERRSYNTAX" ); l_handle_pcall_error( *pL, true ); break;
+      case LUA_ERRFILE:    DBG( "LUA_ERRFILE"   ); lh_handle_pcall_err( *pL, true ); break;
+      case LUA_ERRSYNTAX:  DBG( "LUA_ERRSYNTAX" ); lh_handle_pcall_err( *pL, true ); break;
       case LUA_ERRMEM:     Msg( "Lua memory error while loading '%s'"     , fnm );  break;
       default:             Msg( "Unknown Lua error %d loading '%s'", luaRC, fnm );  break;
       case 0:
            FDBG && LDS( "LoadLuaFileFailed post-load/pre-pcall", *pL );
            {
-           const auto failed( docall_known_nres( *pL, 0, 0 ) );
+           const auto failed( lh_pcall_inout( *pL, 0, 0 ) );
            if( failed ) {
               FDBG && DBG( "%s L=%p docall() Failed",  __func__, *pL );
               //
               // NB!  The above docall() runtime includes the COMPILE phase
               //      of any modules require()'d by 'fnm'.  As such, even if
               //      we get here, we could be facing a compile error, so we call
-              //      l_handle_pcall_error( , true ) so the L gets shut down
+              //      lh_handle_pcall_err( , true ) so the L gets shut down
               //      ASAP, preventing a double fault which causes a Lua panic.
               //
               //      20060922 klg
               //
-              l_handle_pcall_error( *pL, true );
+              lh_handle_pcall_err( *pL, true );
               }
            else {
            #if 0
@@ -770,13 +773,16 @@ STATIC_FXN void L_edit_post_load( lua_State *L ) { // Lua environment-loaded hoo
    LREGI_set_EvtHandlerEnabled( L, 1 );
    Reread_FTypeSettings();
    }
+
 STATIC_FXN void L_edit_openlibs( lua_State *L ) {
    l_OpenStdLibs( L );
    l_register_EdLib( L );
    }
+
 STATIC_FXN void L_edit_cleanup( lua_State *L ) {
    DeleteAllLuaCmds();
    }
+
 STATIC_VAR PChar psrc_LuaCtxt_Edit;
 bool LuaCtxt_Edit::InitOk( PCChar filename ) {
    return LuaCtxt_InitOk(
@@ -814,14 +820,14 @@ bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute ) {
    auto L( L_edit ); if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
-   if( PushLuaFunctionFailed( L, "ExecutedURL" ) ) {
+   if( lh_push_global_function( L, "ExecutedURL" ) ) {
       return rv_fail;
       }
-   if( docall_known_nres( L, pushLuaStack( L, strToExecute ), 1 ) != 0 ) {  // do the call
-      l_handle_pcall_error( L );
+   if( lh_pcall_inout( L, lh_push( L, strToExecute ), 1 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
       return rv_fail;
       }
-   return popLuaStackBool( L );
+   return lh_pop_bool( L );
    }
 
 // intf into Lua locn-list subsys
@@ -829,11 +835,11 @@ void LuaCtxt_Edit::LocnListInsertCursor() {
    auto L( L_edit ); if( !L ) { return; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
-   if( PushLuaFunctionFailed( L, "LocnListInsertCursor" ) ) {
+   if( lh_push_global_function( L, "LocnListInsertCursor" ) ) {
       return;
       }
-   if( docall_known_nres( L, 0, 0 ) != 0 ) {  // do the call
-      l_handle_pcall_error( L );
+   if( lh_pcall_inout( L, 0, 0 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
       }
    }
 
@@ -842,11 +848,11 @@ bool LuaCtxt_Edit::nextmsg_setbufnm     ( PCChar src )  {
    auto L( L_edit ); if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
-   if( PushLuaFunctionFailed( L, "nextmsg_setbufnm_FROM_C" ) ) {
+   if( lh_push_global_function( L, "nextmsg_setbufnm_FROM_C" ) ) {
       return rv_fail;
       }
-   if( docall_known_nres( L, pushLuaStack( L, src ), 0 ) != 0 ) {  // do the call
-      l_handle_pcall_error( L );
+   if( lh_pcall_inout( L, lh_push( L, src ), 0 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
       return rv_fail;
       }
    return true;
@@ -858,11 +864,11 @@ bool LuaCtxt_Edit::nextmsg_newsection_ok( PCChar src )  {
    if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
-   if( PushLuaFunctionFailed( L, "nextmsg_newsection_FROM_C" ) ) {
+   if( lh_push_global_function( L, "nextmsg_newsection_FROM_C" ) ) {
       return rv_fail;
       }
-   if( docall_known_nres( L, pushLuaStack( L, src ), 0 ) != 0 ) {  // do the call
-      l_handle_pcall_error( L );
+   if( lh_pcall_inout( L, lh_push( L, src ), 0 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
       return rv_fail;
       }
    return true;
@@ -873,14 +879,14 @@ bool Lua_ConfirmYes( PCChar prompt ) {
    auto L( L_edit ); if( !L ) { return rv_fail; }
    lua_settop( L, 0 );  // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
-   if( PushLuaFunctionFailed( L, "MenuConfirm" ) ) {
+   if( lh_push_global_function( L, "MenuConfirm" ) ) {
       return rv_fail;
       }
-   if( docall_known_nres( L, pushLuaStack( L, prompt ), 1 ) != 0 ) {  // do the call
-      l_handle_pcall_error( L );
+   if( lh_pcall_inout( L, lh_push( L, prompt ), 1 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
       return rv_fail;
       }
-   return popLuaStackBool( L );
+   return lh_pop_bool( L );
    }
 
 void FBOP::LuaSortLineRange( PFBUF fb, LINE y0, LINE y1, COL xLeft, COL xRight, bool fCaseIgnored, bool fOrdrAscending, bool fDupsKeep ) {
@@ -903,15 +909,15 @@ COL FBOP::GetSoftcrIndentLua( PFBUF fb, LINE yLine ) {
    auto L( L_edit ); if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
-   if( PushLuaFunctionFailed( L, "Softcr_col_from_C" ) ) {
+   if( lh_push_global_function( L, "Softcr_col_from_C" ) ) {
       return rv_fail;
       }
-   if( docall_known_nres( L, pushLuaStack( L, fb, yLine ), 1 ) != 0 ) {  // do the call
-      l_handle_pcall_error( L );
+   if( lh_pcall_inout( L, lh_push( L, fb, yLine ), 1 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
       return rv_fail;
       }
    COL rv;
-   popLuaStack( L, rv );
+   lh_pop( L, rv );
    return rv - 1;
    }
 
@@ -920,62 +926,36 @@ STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout ) { DBG
    if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
-   if( PushLuaFunctionFailed( L, functionName ) ) {
+   if( lh_push_global_function( L, functionName ) ) {
       inout.clear();
       return rv_fail;
       }
-   if( docall_known_nres( L, pushLuaStack( L, inout ), 1 ) != 0 ) {  // do the call
-      l_handle_pcall_error( L );
+   if( lh_pcall_inout( L, lh_push( L, inout ), 1 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
       inout.clear();
       return rv_fail;
       }
-   popLuaStack( L, -1, inout );
+   lh_pop( L, -1, inout );
    return true;
    }
+
 bool LuaCtxt_Edit::ReadPseudoFileOk( PFBUF src ) {
    constexpr bool rv_fail = false;
    auto L( L_edit ); if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
-   if( PushLuaFunctionFailed( L, "ReadPseudoFileOk_FROM_C" ) ) {
+   if( lh_push_global_function( L, "ReadPseudoFileOk_FROM_C" ) ) {
       return rv_fail;
       }
-   if( docall_known_nres( L, pushLuaStack( L, src ), 1 ) != 0 ) {  // do the call
-      l_handle_pcall_error( L );
+   if( lh_pcall_inout( L, lh_push( L, src ), 1 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
       return rv_fail;
       }
-   return popLuaStackBool( L );
+   return lh_pop_bool( L );
    }
 
 bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( Path::str_t &st ) { return Lua_S2S( L_edit, "StrExpandEnvVars"        , st ); }
 bool  LuaCtxt_Edit::from_C_lookup_glock( std::string &st ) { return Lua_S2S( L_edit, "Lua_from_C_lookup_glock" , st ); }
-
-// use THIS fxn to Strdup Lua strings: _NOT_ fail-safe!
-PChar DupLuaString( lua_State *L, int stackLevel ) { // converts number to string!
-   const auto pSrc( lua_tostring( L, -1 ) );
-   return pSrc ? Strdup( pSrc ) : nullptr;
-   }
-
-// returns empty string if any errors
-PChar LuaCtxt_Edit::Tbl2S( PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ) { return LuaTbl2S( L_edit, dest, sizeof_dest, tableDescr, pszDflt ); }
-
-// returns nullptr if any errors
-STATIC_FXN PChar LuaTbl2DupS0( lua_State *L, PCChar tableDescr ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
-   if( !L ) { return nullptr; }
-   LuaCallCleanup( L );
-   return gotTblVal( L, tableDescr ) ? DupLuaString( L, -1 ) : nullptr;
-   }
-
-STATIC_FXN PChar LuaTbl2DupS( lua_State *L, PCChar tableDescr, PCChar pszDflt ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
-   auto rv( LuaTbl2DupS0( L, tableDescr ) );
-   if( !rv && pszDflt ) {
-      rv = Strdup( pszDflt );
-      }                                                                      0 && DBG( "-%s '%s' -> '%s'", __func__ , tableDescr, rv );
-   return rv;
-   }
-
-// returns dup of pszDflt or nullptr if any errors
-PChar LuaCtxt_Edit::Tbl2DupS0( PCChar tableDescr, PCChar pszDflt ) { return LuaTbl2DupS( L_edit, tableDescr, pszDflt ); }
 
 // returns dfltVal if any errors
 STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) { enum { DB=0 };

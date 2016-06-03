@@ -501,7 +501,6 @@ namespace LuaCtxt_Edit {
 
    // table readers
    extern PChar Tbl2S(   PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ); // if any errors, return pszDflt or empty string
-   extern PChar Tbl2DupS0( PCChar tableDescr, PCChar pszDflt=nullptr );             // returns dup of pszDflt or nullptr if any errors
    extern int   Tbl2Int( PCChar tableDescr, int dfltVal );                  // if any errors, returns dfltVal
    }
 
