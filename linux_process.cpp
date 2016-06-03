@@ -382,12 +382,19 @@ STATIC_FXN PCChar DestNm() { return "X"; }
 
 #endif
 
-void StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile ) {
-   std::string cli( "</dev/null >/dev/null 2>/dev/null xdg-open " );
+STATIC_FXN int system_detached( PCChar pFullCmdLn ) {
+   std::string cli( "</dev/null >/dev/null 2>/dev/null " );
                cli.append( pFullCmdLn );
                cli.append( " &" );
-   int lunacy __attribute__((unused));
-   lunacy = system( cli.c_str() );
+   return system( cli.c_str() );
+   }
+
+void StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile ) {
+   std::string cli( "xdg-open " );
+               cli.append( pFullCmdLn );
+   // int lunacy __attribute__((unused));
+   // lunacy = system( cli.c_str() );
+   system_detached( cli.c_str() );
    }
 
 //#################################################################################################################################
