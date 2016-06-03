@@ -608,7 +608,7 @@
    # Windows OEM charset:
    # 0xF9 (centered dot, strong)
    # 0xFA (centered dot, faint)
-   trailspace:yes
+   trailspace:no
    traildisp: 0xFA
    tabdisp: ^
    tabdisp: 0xF9
@@ -623,7 +623,7 @@
    # arg:tab   # this breaks Linux/X paste which types literal chars into the editor
 
 [os.linux]
-   trailspace:yes
+   trailspace:no
    traildisp: ?
    tabdisp: <
 
