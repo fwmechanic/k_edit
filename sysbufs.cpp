@@ -575,13 +575,9 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, 
       edits be unrecoverably wiped out
 
     */
-
-   {
-   int luaReadOk( false );
-   if( LuaCtxt_Edit::ReadPseudoFileOk( pFBuf, &luaReadOk ) && luaReadOk ) {  DB && DBG( "%s %s' Lua read it", FUNC, pFBuf->Name() );
+   if( LuaCtxt_Edit::ReadPseudoFileOk( pFBuf ) ) {  DB && DBG( "%s %s' Lua read it", FUNC, pFBuf->Name() );
       return true;
       }
-   }
    STATIC_CONST struct {
       PCChar         name;
       FbufReaderFxn  readerFxn;

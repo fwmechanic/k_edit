@@ -457,8 +457,6 @@ extern  void   WinClipGetFirstLine( std::string &xb );
 //
 // Lua functions callable from C++:
 //
-typedef int    LUA_BOOL; // NB: Lua boolean is int-sized!  *******************************************************************
-
 extern bool    Lua_ConfirmYes( PCChar prompt );
 
 extern size_t  LuaHeapSize();
@@ -495,7 +493,7 @@ namespace LuaCtxt_Edit {
 
    extern bool  nextmsg_setbufnm     ( PCChar src );  // for mfgrep
    extern bool  nextmsg_newsection_ok( PCChar src );  // for mfgrep
-   extern bool  ReadPseudoFileOk     ( PFBUF src, LUA_BOOL *pRvBool );
+   extern bool  ReadPseudoFileOk     ( PFBUF src );
 
    //###                 ###
    //###   DATA ACCESS   ###
