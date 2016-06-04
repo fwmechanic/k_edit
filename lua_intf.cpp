@@ -79,23 +79,32 @@ int lh_push( lua_State *L, HEAD head, TAIL... tail ) {
    return r1 + lh_push( L, tail... );
    }
 
-STATIC_FXN bool lh_pop_bool( lua_State *L ) { return 0 != lua_toboolean( L, -1 ); }
-STATIC_FXN int lh_pop_( lua_State *L, int ix, bool        &out ) { out = 0 != lua_toboolean( L, ix ); return 1; }
-STATIC_FXN int lh_pop_( lua_State *L, int ix, int         &out ) { out =      lua_tointeger( L, ix ); return 1; }
-STATIC_FXN int lh_pop_( lua_State *L, int ix, double      &out ) { out =      lua_tonumber ( L, ix ); return 1; }
-STATIC_FXN int lh_pop_( lua_State *L, int ix, std::string &out ) {
-   size_t srcBytes; auto pSrc( lua_tolstring(L, ix, &srcBytes) );
-   out.assign( pSrc, srcBytes );
-   return 1;
+#define LUA_TOBOOLEAN(L, ix) ToBOOL( lua_toboolean( L, ix ) )
+
+STATIC_FXN void lua_assigncppstring( lua_State *L, int ix, std::string &out ) {
+   size_t srcBytes; auto pSrc( lua_tolstring(L, ix, &srcBytes) );  0 && DBG( "%s raw='%" PR_BSR "'", __func__, (int)srcBytes, pSrc );
+   out.assign( pSrc, srcBytes );                                   1 && DBG( "%s cst='%s'", __func__, out.c_str() );
    }
 
+#if 0
+STATIC_FXN bool lh_pop_bool( lua_State *L ) { return 0 != lua_toboolean( L, -1 ); }
+STATIC_FXN void lh_pop_( lua_State *L, int ix, bool        &out ) { out = 0 != lua_toboolean( L, ix ); }
+STATIC_FXN void lh_pop_( lua_State *L, int ix, int         &out ) { out =      lua_tointeger( L, ix ); DBG("%s =%d", __func__, out ); }
+STATIC_FXN void lh_pop_( lua_State *L, int ix, double      &out ) { out =      lua_tonumber ( L, ix ); }
+STATIC_FXN void lh_pop_( lua_State *L, int ix, std::string &out ) {
+   size_t srcBytes; auto pSrc( lua_tolstring(L, ix, &srcBytes) );  0 && DBG( "%s raw='%" PR_BSR "'", __func__, (int)srcBytes, pSrc );
+   out.assign( pSrc, srcBytes );                                   1 && DBG( "%s cst='%s'", __func__, out.c_str() );
+   }
+
+// does NOT work as intended (in all cases, v is a reference, and the referent is NOT updated
 template<typename HEAD>
-int lh_pop( lua_State *L, HEAD v ) { return lh_pop_( L, -1, v ); }
+int lh_pop( lua_State *L, HEAD v ) { lh_pop_( L, -1, v ); return 1; }
 template<typename HEAD, typename... TAIL>
 int lh_pop( lua_State *L, HEAD head, TAIL... tail ) {
    const auto rt( lh_pop( L, tail... ) );  // force order of eval TAIL -> ... HEAD
    return rt +    lh_pop( L, head    )  ;
    }
+#endif
 
 STATIC_VAR lua_State* L_edit;
 STATIC_VAR lua_State* L_restore_save;
@@ -622,7 +631,7 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
       lh_handle_pcall_err( L );
       return false;
       }
-   return lua_toboolean( L, -1 );
+   return LUA_TOBOOLEAN( L, -1 );
    }
 
 //######################################################################################################################
@@ -830,7 +839,7 @@ bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute ) {
       lh_handle_pcall_err( L );
       return rv_fail;
       }
-   return lh_pop_bool( L );
+   return LUA_TOBOOLEAN( L, -1 );
    }
 
 // intf into Lua locn-list subsys
@@ -889,7 +898,7 @@ bool Lua_ConfirmYes( PCChar prompt ) {
       lh_handle_pcall_err( L );
       return rv_fail;
       }
-   return lh_pop_bool( L );
+   return LUA_TOBOOLEAN( L, -1 );
    }
 
 void FBOP::LuaSortLineRange( PFBUF fb, LINE y0, LINE y1, COL xLeft, COL xRight, bool fCaseIgnored, bool fOrdrAscending, bool fDupsKeep ) {
@@ -919,26 +928,25 @@ COL FBOP::GetSoftcrIndentLua( PFBUF fb, LINE yLine ) {
       lh_handle_pcall_err( L );
       return rv_fail;
       }
-   COL rv;
-   lh_pop( L, rv );
+   COL rv( lua_tointeger( L, -1 ) ); 0 && DBG( "%s =%d", __func__, rv-1 );
    return rv - 1;
    }
 
-STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout ) { DBG( "%s: %s %p=%p=%s", __func__, functionName, &inout, inout.c_str(), inout.c_str() );
-   constexpr bool rv_fail = false;
+STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout ) { enum { DB=0 };
+   constexpr bool rv_fail = false;                                           DB && DBG( "%s+ %s %s", __func__, functionName, inout.c_str() );
    if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
    if( lh_push_global_function( L, functionName ) ) {
-      inout.clear();
+      inout.clear();                                                         DB && DBG( "%s- %s FAIL-findfxn %s", __func__, functionName, inout.c_str() );
       return rv_fail;
       }
    if( lh_pcall_inout( L, lh_push( L, inout ), 1 ) != 0 ) {  // do the call
       lh_handle_pcall_err( L );
-      inout.clear();
+      inout.clear();                                                         DB && DBG( "%s- %s FAIL-pcall %s", __func__, functionName, inout.c_str() );
       return rv_fail;
       }
-   lh_pop( L, -1, inout );
+   lua_assigncppstring( L, -1, inout );                                      DB && DBG( "%s- %s %s", __func__, functionName, inout.c_str() );
    return true;
    }
 
@@ -954,7 +962,7 @@ bool LuaCtxt_Edit::ReadPseudoFileOk( PFBUF src ) {
       lh_handle_pcall_err( L );
       return rv_fail;
       }
-   return lh_pop_bool( L );
+   return LUA_TOBOOLEAN( L, -1 );
    }
 
 bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( Path::str_t &st ) { return Lua_S2S( L_edit, "StrExpandEnvVars"        , st ); }

@@ -534,7 +534,9 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) { // cursor has NOT been moved
    if( !g_fSoftCr )  { return 0; }
    const auto yStart( g_CursorLine() );
    const auto luaVal( GetSoftcrIndentLua( fb, yStart ) );
-   if( luaVal >= 0 ) { return luaVal; }
+   if( luaVal >= 0 ) { 0 && DBG( "%s luaVal=%d", __func__, luaVal );
+      return luaVal;
+      }
    const auto tw( fb->TabWidth() );
    COL rv;
    {

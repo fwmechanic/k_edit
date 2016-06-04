@@ -2157,12 +2157,12 @@ LINE CGrepper::WriteOutput
    ( PCChar thisMetaLine // MetaLine (string) to be concatenated for this search
    , PCChar origSrchfnm  // if file searched THIS TIME is not file which line#s refer to
    )
-   {
+   { enum { DB=0 };
    std::string sbuf( d_SrchFile->Namestr() );
-   0 && DBG( " ->%s|", sbuf.c_str() );
+   DB && DBG( " ->%s|", sbuf.c_str() );
    if( LuaCtxt_Edit::from_C_lookup_glock( sbuf ) && !sbuf.empty() ) {
       const auto gbnm( sbuf.c_str() );
-      0 && DBG( "LuaCtxt_Edit::from_C_lookup_glock ->%s|", gbnm );
+      DB && DBG( "LuaCtxt_Edit::from_C_lookup_glock ->%s|", gbnm );
       const auto outfile( OpenFileNotDir_NoCreate( gbnm ) );
       if( !outfile )                                                    { Msg(    "nonexistent buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
       Path::str_t GrepFBufname; int grepHdrLines;
