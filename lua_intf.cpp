@@ -26,7 +26,7 @@
 
 int LDS( PCChar tag, lua_State *L ) {
    const auto top( lua_gettop(L) );
-   DBG( "+luaStack, %d els @ '%s'", top, tag );
+   DBG( "+luaStack.bottom, %d els @ '%s'", top, tag );
    for( auto ix(1); ix <= top; ++ix ) {
       const auto type( lua_type( L, ix ) );
       switch( type ) {
@@ -36,7 +36,7 @@ int LDS( PCChar tag, lua_State *L ) {
          default:           DBG( " [%d]={%s}"  , ix, lua_typename( L, type ) ); break;
          }
       }
-   0 && DBG( "-luaStack Dump @ '%s'", tag );
+   0 && DBG( "-luaStack.top Dump @ '%s'", tag );
    return 1;
    }
 
@@ -344,12 +344,13 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
    return getTblVal( L, name[ix], ix ); // *** caller is responsible for converting TOS to appropriate C value ***
    }
 
-// use THIS fxn to copy Lua strings: fail-safe!
-STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, int stackLevel ) { // converts number to string!
-   dest[0] = '\0';
-   const auto pSrc( lua_tostring( L, -1 ) );
-   if( pSrc ) {
-      scpy( dest, sizeof_dest, pSrc );
+STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, int stackLevel ) {
+   if( sizeof_dest > 0 ) {
+      dest[0] = '\0';
+      const auto pSrc( lua_tostring( L, -1 ) ); // converts number to string!
+      if( pSrc ) {
+         scpy( dest, sizeof_dest, pSrc );
+         }
       }
    return dest;
    }
@@ -366,11 +367,13 @@ STATIC_FXN PChar LuaTbl2S0( lua_State *L, PChar dest, size_t sizeof_dest, PCChar
 STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
    auto rv( LuaTbl2S0( L, dest, sizeof_dest, tableDescr ) );
    if( !rv ) {
-      if( pszDflt ) {
-         scpy( dest, sizeof_dest, pszDflt );
-         }
-      else {
-         dest[0] = '\0';
+      if( sizeof_dest > 0 ) {
+         if( pszDflt ) {
+            scpy( dest, sizeof_dest, pszDflt );
+            }
+         else {
+            dest[0] = '\0';
+            }
          }
       }                                                                      0 && DBG( "-%s '%s' -> '%s'", __func__ , tableDescr, dest );
    return dest;
