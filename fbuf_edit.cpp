@@ -917,28 +917,28 @@ bool ARG::xquote() { // Xquote
 
 bool ARG::graphic() { enum { DB=0 };
    const char usrChar( d_pCmd->d_argData.chAscii() );
+   // <000612> klg Finally did this!  Been needing it for YEARS!
+   // g_delims, g_delimMirrors
+   //                                                m4 `quoting'
+   //                                                |
+   STATIC_CONST char chOpeningDelim[]    = "_%'\"(<{[`";
+   STATIC_CONST char chClosingDelim[]    = "_%'\")>}]`";
+   STATIC_CONST char chClosingDelim_m4[] = "_%'\")>}]'";
+   const auto ixMatch( stref(chOpeningDelim).find( usrChar ) );
+   const char chClosing( ixMatch==stref::npos ? '\0' : (g_fM4backtickquote ? chClosingDelim_m4 : chClosingDelim)[ ixMatch ] );
+   std::string tmp1, tmp2;
    if( d_argType == BOXARG ) {
       if( usrChar == ' ' ) { // insert spaces
          linsert();
          return true;
          }
-      // <000612> klg Finally did this!  Been needing it for YEARS!
-      // g_delims, g_delimMirrors
-      //                                                m4 `quoting'
-      //                                                |
-      STATIC_CONST char chOpeningDelim[]    = "_%'\"(<{[`";
-      STATIC_CONST char chClosingDelim[]    = "_%'\")>}]`";
-      STATIC_CONST char chClosingDelim_m4[] = "_%'\")>}]'";
-      const auto pMatch( strchr( chOpeningDelim, usrChar ) );
-      if( pMatch ) {
-         const char chClosing( (g_fM4backtickquote?chClosingDelim_m4:chClosingDelim)[ pMatch - chOpeningDelim ] );
+      if( chClosing ) {
          const auto fConformRight( (d_cArg > 1 || (usrChar == chQuot2 || usrChar == chQuot1 || usrChar == chBackTick)) ); // word-conforming bracketing of a BOXARG?
          // if certain chars are hit when a BOX selection is current, surround the
          // selected text with matching delimiters (depending on the char hit)
          //
          const auto pf( g_CurFBuf() );
          const auto tw( pf->TabWidth() );
-         std::string tmp1, tmp2;
          for( auto curLine( d_boxarg.flMin.lin ); curLine <= d_boxarg.flMax.lin ; ++curLine ) {
             auto xMax( d_boxarg.flMax.col+1 );
             if( fConformRight ) {
@@ -960,12 +960,17 @@ bool ARG::graphic() { enum { DB=0 };
          // TBD: loop looking for spacey regions, replacing first char of each spacey region with a comma
          }
       }
-
+   else if( d_argType == STREAMARG ) {
+      if( chClosing ) {
+         const auto pf( g_CurFBuf() );
+         FBOP::InsertChar( pf, d_streamarg.flMax.lin, d_streamarg.flMax.col, chClosing, tmp1, tmp2 );
+         FBOP::InsertChar( pf, d_streamarg.flMin.lin, d_streamarg.flMin.col, usrChar  , tmp1, tmp2 );
+         return true;
+         }
+      }
    DelArgRegion();
-   std::string tmp1, tmp2;
    return PutCharIntoCurfileAtCursor( usrChar, tmp1, tmp2 );
    }
-
 
 bool ARG::insert() {
    switch( d_argType ) {
