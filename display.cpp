@@ -1229,12 +1229,13 @@ HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt
             case chQuot1: ++pt.col;  return in_1Qstr;
             case chQuot2: ++pt.col;  return in_2Qstr;
             case chLSQ: { const auto long_level( Lua_long_level( rl, pt.col+1 ) );
-                          if( long_level >= 0 ) {
+                          if( long_level >= 0 ) { // Lua long string
                              d_long_comment = false;
                              d_long_level = long_level; // may == 0
                              if( pt.col+1+d_long_level+2 < rl.length() ) {
-                                d_start_C.Set( pt.lin, pt.col );
-                                pt.col += (1+d_long_level+2) + 1;
+                                const auto lenSkip( d_long_level+2 );
+                                d_start_C.Set( pt.lin, pt.col+lenSkip );
+                                pt.col += (1+lenSkip) + 1;
                                 }
                              else { // Lua long string opening delim immed followed by \n discards this initial \n
                                 pt.lin++;
