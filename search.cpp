@@ -768,7 +768,6 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
    const auto tw( pFBuf->TabWidth() );
    const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, *colLastPossibleMatchChar ) );
    d_captures.clear();
-   int idxOfLastCharInMatch;
    sridx ixMatchMin;
 #if USE_PCRE
    if( d_ss.IsRegex() ) {
@@ -800,7 +799,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
                                                     , BSR(srRawSearch), BSR(haystack)
               );
       const auto relIxMatch( d_pfxStrnstr( haystack, srRawSearch ) );
-      if( relIxMatch != 0 ) {
+      if( relIxMatch == stref::npos ) {
          return CONTINUE_SEARCH;
          }
       d_captures.emplace_back( relIxMatch, haystack.substr( relIxMatch, srRawSearch.length() ) );
