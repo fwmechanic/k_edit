@@ -59,8 +59,8 @@ print "hello 4"
 
 local darkColors = {
    txt = bfg(   Black  ,   White ),
-   txt = bfg(   Black  ,   Green ),
    txt = bfg(   Black  , hiGreen ),
+   txt = bfg(   Black  ,   Green ),
    cxy = bfg(   Blue   , hiYellow ),
    cpp = bfg(   Red    , hiWhite  ),
    hil = bfg(   Cyan   , hiWhite  ),

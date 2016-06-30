@@ -237,7 +237,7 @@
    #
    # ARG & BLOCK><Clipboard functions
    #
-   meta :num/
+   arg :num/
   #tag:shift+center
 
    ta :=arg "<textargs>" setfile
