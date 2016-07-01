@@ -2194,7 +2194,7 @@ LINE CGrepper::WriteOutput
    const auto PerfCnt( d_pc.Capture() );
    auto outfile( PseudoBuf( GREP_BUF, true ) );
    outfile->MakeEmpty();
-   outfile->SetTabWidthOk( d_SrchFile->TabWidth() ); // inherit tabwidth from searched file
+   outfile->SetTabWidth( d_SrchFile->TabWidth() ); // inherit tabwidth from searched file
    ED && DBG( "WriteOutput: thisMetaLine='%s', origSrchfnm='%s' => '%s'", thisMetaLine, origSrchfnm?origSrchfnm:"", outfile->Name() );
    //
    // data BUFFER SIZE CALC phase

@@ -51,10 +51,10 @@ PCChar swixTabwidth( stref param ) { enum { DB=1 }; DB && DBG( "%s+ %" PR_BSR "'
    return inRange ? nullptr : "tabwidth: Value must be between 1 and 8";
    }
 
-void FBUF::SetTabWidthOk( COL NewTabWidth ) {
-   const auto inRange( NewTabWidth >= 1 && NewTabWidth <= MAX_TAB_WIDTH );
+void FBUF::SetTabWidth_( COL newTabWidth, PCChar funcnm_ ) { enum { DB=1 }; DB && DBG( "%s:%s %d <- %s", __func__, Name(), newTabWidth, funcnm_ );
+   const auto inRange( newTabWidth >= 1 && newTabWidth <= MAX_TAB_WIDTH );
    if( inRange ) {
-      d_TabWidth = NewTabWidth;
+      d_TabWidth = newTabWidth;
       }
    }
 

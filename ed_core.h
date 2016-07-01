@@ -1081,7 +1081,8 @@ public:
    char           TrailDispChar() const { return g_chTrailSpaceDisp; }
    //************ tab-width-dependent line-content-related calcs
    int            TabWidth() const { return d_TabWidth; }
-   void           SetTabWidthOk( COL NewTabWidth ); // NOT CONST!!!
+   #define SetTabWidth( newTabWidth )  SetTabWidth_( newTabWidth, __func__ )
+   void           SetTabWidth_( COL newTabWidth, PCChar funcnm_ ); // NOT CONST!!!
    void           FreezeTabSettings()       { d_fTabSettingsFrozen = true; }
    bool           TabSettingsFrozen() const { return d_fTabSettingsFrozen; }
    //************ file-type checkers

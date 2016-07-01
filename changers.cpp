@@ -198,13 +198,13 @@ class TabWidthChanger : public KeyChanger
    NO_ASGN_OPR(TabWidthChanger);
    const int  d_origTabWidth;
    const bool d_orig_BADSA;
-   void IncDecTabWidth( int incr ) { g_CurFBuf()->SetTabWidthOk( g_CurFBuf()->TabWidth() + incr ); }
+   void IncDecTabWidth( int incr ) { g_CurFBuf()->SetTabWidth( g_CurFBuf()->TabWidth() + incr ); }
 public:
    TabWidthChanger() : d_origTabWidth(  g_CurFBuf()->TabWidth() )
                      , d_orig_BADSA( g_CurFBuf()->BlankAnnoDispSrcAsserted( BlankDispSrc_USER_ALWAYS ) )
                      {}
    void updtMsg    () { d_msgbuf.Sprintf( "tabwidth=%d, arrows change: LEFT--, RIGHT++, UP:keep visible DOWN:hide", g_CurFBuf()->TabWidth() ); }
-   void actionEsc  () { g_CurFBuf()->SetTabWidthOk( d_origTabWidth );
+   void actionEsc  () { g_CurFBuf()->SetTabWidth( d_origTabWidth );
                         g_CurFBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_USER_ALWAYS, d_orig_BADSA );
                       }
    void actionDown () { g_CurFBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_USER_ALWAYS, false ); }
