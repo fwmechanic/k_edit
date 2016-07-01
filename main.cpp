@@ -290,6 +290,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
    ViewHead tmpVHd;
    ViewHead &cvh( g_CurViewHd() );
    DLINK_MOVE_HD( tmpVHd, cvh );
+   // recover Views from ifh (state file)
    auto winCnt(0);
    while( winCnt <= 1 && fgotline( &xb, ifh ) ) {
       const auto buf( xb.wbuf() );

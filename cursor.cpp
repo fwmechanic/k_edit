@@ -35,8 +35,8 @@ bool swixVscroll( stref param ) {
    }
 
 STIL bool CursorCannotBeInTabFill() { return g_fRealtabs && g_fTabAlign; }
-STIL COL TabAlignCursorPolicy( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos; }
-STIL COL ConstrainCursorX_1  ( PFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  ColOfNextChar( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos + 1; }
+STIL COL TabAlignCursorPolicy( PCFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos; }
+STIL COL ConstrainCursorX_1  ( PCFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  ColOfNextChar( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos + 1; }
 
 STATIC_FXN bool CurView_MoveCursor_fMoved( LINE yLine, COL xColumn ) {
    const FBufLocnNow cp;
@@ -117,7 +117,7 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL visibleCharsAtCursor, boo
    NoLessThan( &xCursor, COL (0) );
    NoLessThan( &yCursor, LINE(0) );
    Constrain( COL(1), &visibleCharsAtCursor, winSize.col ); // ensure visibleCharsAtCursor request is satisfiable
-   xCursor = TabAlignCursorPolicy( d_pFBuf, yCursor, xCursor );
+   xCursor = TabAlignCursorPolicy( CFBuf(), yCursor, xCursor );
    // HORIZONTAL WINDOW SCROLL HANDLING
    //
    // hscroll: The number of columns that the editor scrolls the text left or

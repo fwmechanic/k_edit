@@ -1953,7 +1953,7 @@ bool View::PBalFindMatching( bool fSetHilite, Point *pPt ) {
    else return false;
    Rect rgnSearch( fSearchFwd );
    CharWalkerPBal chSrchr( fSearchFwd, fSetHilite, startCh );
-   CharWalkRect( fSearchFwd, d_pFBuf, rgnSearch, Cursor(), chSrchr );
+   CharWalkRect( fSearchFwd, FBuf(), rgnSearch, Cursor(), chSrchr );
    if( chSrchr.d_fClosureFound ) {
       if( pPt )        { *pPt = chSrchr.d_closingPt;                     }
       if( fSetHilite ) { SetMatchHiLite( chSrchr.d_closingPt, 1, true ); }

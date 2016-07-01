@@ -563,23 +563,23 @@ class View { // View View View View View View View View View View View View View
 public:
    DLinkEntry<View> dlinkViewsOfWindow;
    DLinkEntry<View> dlinkViewsOfFBUF;
-                View( const View & );
                 View( const View &, PWin pWin );
                 View( PFBUF pFBuf , PWin pWin, PCChar szViewOrdinates=nullptr );
                 ~View();
    void         Write( FILE *fout ) const;
 private:
-                View() = delete; // NO dflt CTOR !
-   const PWin   d_pWin;     // back pointer, needed cuz our owning Win knows things we don't, but need
-   const PFBUF  d_pFBuf;    // back pointer
+                View( const View & ) = delete; // NO copy CTOR !
+                View()               = delete; // NO dflt CTOR !
+   const PWin   d_pWin;      // back pointer, needed cuz our owning Win knows things we don't, but need
+   const PFBUF  d_vwToPFBuf; // back pointer; DO NOT REFERENCE DIRECTLY!!! USE CFBuf() && FBuf() !!!
    ViewHiLites *d_pHiLites = nullptr; // we own this!
    void         CommonInit();
    time_t       d_tmFocusedOn = 0; // http://en.wikipedia.org/wiki/Year_2038_problem
 public:
    void         PutFocusOn();
    time_t       TmFocusedOn() const { return d_tmFocusedOn; }
-   PCFBUF       CFBuf()  const { return d_pFBuf; }
-   PFBUF        FBuf()   const { return d_pFBuf; }
+   PCFBUF       CFBuf()  const { return d_vwToPFBuf; }
+   PFBUF        FBuf()   const { return d_vwToPFBuf; }
    PCWin        Win()    const { return d_pWin ; }
    PWin         wr_Win() const { return d_pWin ; }
    bool         ActiveInWin();
@@ -1234,7 +1234,7 @@ STIL PFBUF AddFBuf( stref pBufferName, PFBUF *ppGlobalPtr=nullptr ) {
 
 inline bool LineInfo::fCanFree_pLineData( const FBUF &fbuf ) const { return !fbuf.PtrWithinOrigFileImage( d_pLineData ); }
 
-inline bool View::LineCompileOk() const { return d_LineCompile_isValid && d_LineCompile >= 0 && d_LineCompile < d_pFBuf->LineCount(); }
+inline bool View::LineCompileOk() const { return d_LineCompile_isValid && d_LineCompile >= 0 && d_LineCompile < CFBuf()->LineCount(); }
 
 //************ Format for display
 extern void        FormatExpandedSeg // more efficient version: recycles (but clear()s) dest, should hit the heap less frequently

@@ -46,7 +46,7 @@ bool Win::GetCursorForDisplay( Point *pt ) const {
    return true; // used to chain (with CursorLocnOutsideView_Get)
    }
 
-void View::Event_Win_Resized( const Point &newSize ) { 0 && DBG( "%s %s", __func__, d_pFBuf->Name() );
+void View::Event_Win_Resized( const Point &newSize ) { 0 && DBG( "%s %s", __func__, CFBuf()->Name() );
    HiliteAddin_Event_WinResized();
    }
 

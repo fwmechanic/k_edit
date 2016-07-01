@@ -350,9 +350,9 @@ static_assert( ELEMENTS(g_colorVars) == (ColorTblIdx::COLOR_COUNT - ColorTblIdx:
 PCChar View::szFTypeSetting() const { return d_pFTS ? d_pFTS->d_key.c_str() : "?"; }
 
 FTypeSetting *View::GetFTypeSettings() {
-   if( !d_pFTS ) {                 0 && DBG( "%s+ ---------------------------------------------- %s", __func__, d_pFBuf->Name() );
-      d_pFBuf->DetermineFType();
-      d_pFTS = ::Get_FTypeSetting( d_pFBuf->FType() );
+   if( !d_pFTS ) {                 0 && DBG( "%s+ ---------------------------------------------- %s", __func__, CFBuf()->Name() );
+      FBuf()->DetermineFType();
+      d_pFTS = ::Get_FTypeSetting( CFBuf()->FType() );
       } 0 && Show_FTypeSettings();
    return d_pFTS;
    }
@@ -1704,7 +1704,7 @@ class ViewHiLites {
    HiLiteHead        d_HiLiteList;
    void        UpdtSpeedTbl( HiLiteRec *pThis );
    const HiLiteRec *FindFirstEntryAffectingOrAfterLine( LINE yLine ) const;
-   ViewHiLites( PFBUF pFBuf );
+   ViewHiLites( PCFBUF pFBuf );
    int  SpeedTableIndex( LINE yLine ) const { return Min( ::SpeedTableIndex( yLine ), d_SpdTblEls-1 ); }
    void vhInsHiLiteBox(   int newColorIdx, Rect newRgn );
    void PrimeRedraw() const;
@@ -1713,7 +1713,7 @@ public:
    ~ViewHiLites(); // the ONLY public member, and it's only needed because View::FreeHiLiteRects calls Delete0 (an STIL utility fxn)
    };
 
-ViewHiLites::ViewHiLites( PFBUF pFBuf )
+ViewHiLites::ViewHiLites( PCFBUF pFBuf )
    : d_FBuf(*pFBuf)
    , d_SpdTblEls( 1 + ::SpeedTableIndex( d_FBuf.LineCount() ) )
    , d_SpeedTable( new HiLiteSpeedTable [ d_SpdTblEls ] )
@@ -1831,7 +1831,7 @@ void ViewHiLites::vhInsHiLiteBox( int newColorIdx, Rect newRgn ) {
 
 void View::InsHiLiteBox( int newColorIdx, Rect newRgn ) {
    if( !d_pHiLites ) {
-        d_pHiLites = new ViewHiLites( d_pFBuf );
+        d_pHiLites = new ViewHiLites( CFBuf() );
         }
    d_pHiLites->vhInsHiLiteBox( newColorIdx, newRgn );
    }
@@ -1944,7 +1944,7 @@ void FBUF::LinkView( PView pv ) {
    }
 
 void View::CommonInit() {
-   d_pFBuf->LinkView( this );
+   FBuf()->LinkView( this );
    }
 
 void FBUF::Push_yChangedMin() {
@@ -1975,10 +1975,10 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
 GLOBAL_VAR bool g_fLangHilites = true;
 
 void View::HiliteAddins_Init() {
-   DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
+   DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , CFBuf()->HasLines() ? "has" : "no", CFBuf()->Name() );
    if( g_fLangHilites && d_addins.empty() &&
-       (d_pFBuf->HasLines() || d_pFBuf->FnmIsPseudo())
-     ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, d_pFBuf->FType().c_str() );
+       (CFBuf()->HasLines() || CFBuf()->FnmIsPseudo())
+     ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, CFBuf()->FType().c_str() );
       const auto pFTS( GetFTypeSettings() );
      #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
              /* ALWAYS */              IAL( HiliteAddin_Pbal            );
@@ -2001,14 +2001,14 @@ void View::HiliteAddins_Init() {
       /* later IAL's have "last say" and therefore take precedence.  Because I want
          HiliteAddin_CursorLine, to be visible in all cases, it's IAL'd last */
                                         { IAL( HiliteAddin_CursorLine      ); }
-      DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , d_pFBuf->HasLines() ? "has" : "no", d_pFBuf->Name() );
+      DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , CFBuf()->HasLines() ? "has" : "no", CFBuf()->Name() );
      #undef IAL
       }
    }
 
 View::View( const View &src, PWin pWin )
    : d_pWin              ( pWin )
-   , d_pFBuf             ( src.d_pFBuf              )
+   , d_vwToPFBuf         ( src.FBuf()               )
    , d_current           ( src.d_current            )
    , d_prev              ( src.d_prev               )
    , d_saved             ( src.d_saved              )
@@ -2028,7 +2028,7 @@ View::View( const View &src, PWin pWin )
 
 View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
    : d_pWin ( pWin_  )
-   , d_pFBuf( pFBuf_ )
+   , d_vwToPFBuf( pFBuf_ )
    , d_LastSelect_isValid( false )
    {
    d_current.Cursor.Set( 0, 0 );
@@ -2042,7 +2042,7 @@ View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
          , &d_current.Cursor.lin
          , &temptv
          );
-      d_pFBuf->Set_TmLastWrToDisk( temptv );
+      FBuf()->Set_TmLastWrToDisk( temptv );
       }
    d_prev = d_saved = d_current;
    CommonInit();
@@ -2810,7 +2810,7 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
       , d_current.Origin.lin, d_current.Origin.col, d_current.Cursor.lin, d_current.Cursor.col
       , yOrigin, xOrigin, yCursor, xCursor, fUpdtWUC?'t':'f'
       );
-   SHOWDBG && DBG( "lastline=%d, winsize=%d, vscroll=%d, 1/3=%d", d_pFBuf->LastLine(), d_pWin->d_Size.lin, g_iVscroll, (d_pWin->d_Size.lin/3) ); // max 1/3 of window contains past-EOF
+   SHOWDBG && DBG( "lastline=%d, winsize=%d, vscroll=%d, 1/3=%d", CFBuf()->LastLine(), d_pWin->d_Size.lin, g_iVscroll, (d_pWin->d_Size.lin/3) ); // max 1/3 of window contains past-EOF
    NewScope { // constrain x
       Constrain( COL(0), &xCursor, COL_MAX );                 SHOWDBG && DBG( "xCursor = %d", xCursor );
       Assert( COL_MAX > d_pWin->d_Size.col );
@@ -2818,7 +2818,7 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
       Constrain( COL(0), &xOrigin, xOriginMax );
       }
    NewScope { // constrain yOrigin
-      const auto yOriginMax( d_pFBuf->LastLine() // d_pWin value defines the bottom scroll limit
+      const auto yOriginMax( CFBuf()->LastLine() // d_pWin value defines the bottom scroll limit
          #if 1
             - d_pWin->d_Size.lin + g_iVscroll + (d_pWin->d_Size.lin/3) // max 1/3 of window contains past-EOF
          #elif 0
@@ -2881,8 +2881,8 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
          // in primary window/View _AND_ in search-results FBUF which is
          // probably being viewed in another window
          //
-         FBOP::PrimeRedrawLineRangeAllWin( d_pFBuf, yCursorInitial      , yCursorInitial       );
-         FBOP::PrimeRedrawLineRangeAllWin( d_pFBuf, d_current.Cursor.lin, d_current.Cursor.lin );
+         FBOP::PrimeRedrawLineRangeAllWin( FBuf(), yCursorInitial      , yCursorInitial       );
+         FBOP::PrimeRedrawLineRangeAllWin( FBuf(), d_current.Cursor.lin, d_current.Cursor.lin );
          }
       if( fUpdtWUC && (fVertCursorMove || fHorzCursorMove) ) {
          d_fUpdtWUC_pending = true;
@@ -3054,27 +3054,27 @@ void View::GetLineForDisplay
    ) const {
    const auto isActiveLine( isActiveWindow && g_CursorLine() == yLineOfFile );
    dest.replace( xLeft, xWidth, xWidth, ' ' ); // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
-   if( yLineOfFile > d_pFBuf->LastLine() ) {
+   if( yLineOfFile > CFBuf()->LastLine() ) {
       alcc.PutColorRaw( Origin().col, xWidth, 0x07 );
       dest[xLeft] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
       }
    else {
       alcc.PutColor( Origin().col, xWidth, ColorTblIdx::TXT );
-      const auto showBlanks( d_pFBuf->RevealBlanks() || isActiveLine );
-      PrettifyMemcpy( dest, xLeft, xWidth, d_pFBuf->PeekRawLine( yLineOfFile ), Origin().col
-         ,              d_pFBuf->TabWidth()
-         , showBlanks ? d_pFBuf->TabDispChar()   : ' '
-         , showBlanks ? d_pFBuf->TrailDispChar() : 0
+      const auto showBlanks( CFBuf()->RevealBlanks() || isActiveLine );
+      PrettifyMemcpy( dest, xLeft, xWidth, CFBuf()->PeekRawLine( yLineOfFile ), Origin().col
+         ,              CFBuf()->TabWidth()
+         , showBlanks ? CFBuf()->TabDispChar()   : ' '
+         , showBlanks ? CFBuf()->TrailDispChar() : 0
          );
       enum { PCT_WIDTH=7 };
       if( DrawVerticalCursorHilite() && (xWidth > PCT_WIDTH) && isActiveLine ) {
-         const auto percent( static_cast<UI>((100.0 * yLineOfFile) / d_pFBuf->LastLine()) );
+         const auto percent( static_cast<UI>((100.0 * yLineOfFile) / CFBuf()->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
          stref pct( pctst.k_str() );
          dest.replace( xLeft + xWidth - pct.length(), pct.length(), pct.data() );
          }
       }
-   InsertHiLitesOfLineSeg(  // patch in any hilites [which MAY be present when yLineOfFile > d_pFBuf->LastLine(); think "cursorline highlight" or selecting beyond EOF]
+   InsertHiLitesOfLineSeg(  // patch in any hilites [which MAY be present when yLineOfFile > CFBuf()->LastLine(); think "cursorline highlight" or selecting beyond EOF]
         yLineOfFile
       , Origin().col
       , Origin().col + xWidth - 1
