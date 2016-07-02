@@ -55,12 +55,6 @@ STIL int pd2Int( ptrdiff_t pd ) {
 
 extern   int   uint_log_10( int lmax );
 
-class BoolOneShot { // simple utility functor
-   bool first = true;
-public:
-   int operator() () { const bool rv( first ); first = false; return rv; }
-   };
-
                     enum ePseudoBufType { GREP_BUF, SEL_BUF, };
 extern PFBUF  PseudoBuf( ePseudoBufType PseudoBufType, int fNew );
 

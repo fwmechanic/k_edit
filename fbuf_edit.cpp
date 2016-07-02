@@ -52,7 +52,6 @@ PCChar swixTabwidth( stref param ) { enum { DB=0 }; DB && DBG( "%s+ %" PR_BSR "'
    }
 
 void FBUF::SetTabWidth_( COL newTabWidth, PCChar funcnm_ ) { enum { DB=0 }; DB && DBG( "%s:%s %d <- %s", __func__, Name(), newTabWidth, funcnm_ );
-   d_fTabWidthSet = true;
    const auto inRange( newTabWidth >= MIN_TAB_WIDTH && newTabWidth <= MAX_TAB_WIDTH );
    if( inRange ) {
       d_TabWidth = newTabWidth;

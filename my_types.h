@@ -282,6 +282,12 @@ bool WithinRangeInclusive( T nLower, T toCheck, T nUpper ) {
    return (toCheck >= nLower && toCheck <= nUpper); // ASSUMES nLower <= nUpper !!!
    }
 
+class BoolOneShot { // simple utility functor
+   bool first = true;
+public:
+   int operator() () { const bool rv( first ); first = false; return rv; }
+   };
+
 // for making writable copies of const char []
 #define  ALLOCA_STRDUP( NmOf_pDest, NmOf_strlenVar, pSrcStr, pSrcStrlen ) \
       const int NmOf_strlenVar( pSrcStrlen );                             \

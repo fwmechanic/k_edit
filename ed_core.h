@@ -1014,7 +1014,7 @@ private:
    bool           d_fPreserveTrailSpc  ;
    bool           d_fTabSettingsFrozen = false ; // file's tab settings should not be auto-changed
    int8_t         d_TabWidth = MIN_TAB_WIDTH;
-   bool           d_fTabWidthSet = false;
+   BoolOneShot    d_fNeverReceivedFocus;
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
