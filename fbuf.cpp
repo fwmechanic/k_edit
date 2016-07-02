@@ -69,7 +69,6 @@ FBUF::FBUF( stref filename, PPFBUF ppGlobalPtr )
    : d_fPreserveTrailSpc  ( g_fTrailSpace )
    {
    ChangeName( filename );
-   SetTabWidth( 1 ); // DBG displays name, so this must occur after ChangeName
    SetGlobalPtr( ppGlobalPtr );
    InitUndoInfo();
    }
@@ -458,11 +457,11 @@ PView FBUF::PutFocusOn() { enum { DB=0 }; DB && DBG( "%s+ %s", __func__, this->N
    g_UpdtCurFBuf( this ); //##########################################################################
    // Assert( this == g_CurFBuf() );
    FBOP::CurFBuf_AssignMacros_RsrcLd(); // note that some assignments map to g_CurFBuf() so g_UpdtCurFBuf( this ) above is an absolute prerequisite
+   if( !d_fTabWidthSet ) {
+      SetTabWidth( g_iTabWidth );
+      }
    if( fContentChanged ) {
       CalcIndent();
-      if( TabWidth() < 2 ) {
-         SetTabWidth( g_iTabWidth );
-         }
       }
    }
    const auto pCurView( this->PutFocusOnView() );

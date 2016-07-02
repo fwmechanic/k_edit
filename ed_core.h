@@ -1013,7 +1013,8 @@ private:
    bool           d_fNoEdit = false    ; // file may not be edited
    bool           d_fPreserveTrailSpc  ;
    bool           d_fTabSettingsFrozen = false ; // file's tab settings should not be auto-changed
-   int8_t         d_TabWidth;
+   int8_t         d_TabWidth = MIN_TAB_WIDTH;
+   bool           d_fTabWidthSet = false;
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;

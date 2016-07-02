@@ -59,7 +59,8 @@ constexpr char chLSQ = '[';
 constexpr char chRSQ = ']';
 #define        SPCTAB  " \t"
 
-enum { MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
+enum { MIN_TAB_WIDTH = 1,
+       MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
        TICK     = 0x27,
        BACKTICK = 0x60,
    };

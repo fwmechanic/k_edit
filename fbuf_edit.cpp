@@ -41,7 +41,7 @@ void swidTabwidth( PChar dest, size_t sizeofDest, void *src ) {
    scpy( dest, sizeofDest, "status ln's \"e?\"" );
    }
 
-PCChar swixTabwidth( stref param ) { enum { DB=1 }; DB && DBG( "%s+ %" PR_BSR "'", __func__, BSR(param) );
+PCChar swixTabwidth( stref param ) { enum { DB=0 }; DB && DBG( "%s+ %" PR_BSR "'", __func__, BSR(param) );
    const auto val( StrToInt_variable_base( param, 10 ) );
    const auto inRange( val >= 1 && val <= MAX_TAB_WIDTH );
    if( inRange ) {
@@ -51,8 +51,9 @@ PCChar swixTabwidth( stref param ) { enum { DB=1 }; DB && DBG( "%s+ %" PR_BSR "'
    return inRange ? nullptr : "tabwidth: Value must be between 1 and 8";
    }
 
-void FBUF::SetTabWidth_( COL newTabWidth, PCChar funcnm_ ) { enum { DB=1 }; DB && DBG( "%s:%s %d <- %s", __func__, Name(), newTabWidth, funcnm_ );
-   const auto inRange( newTabWidth >= 1 && newTabWidth <= MAX_TAB_WIDTH );
+void FBUF::SetTabWidth_( COL newTabWidth, PCChar funcnm_ ) { enum { DB=0 }; DB && DBG( "%s:%s %d <- %s", __func__, Name(), newTabWidth, funcnm_ );
+   d_fTabWidthSet = true;
+   const auto inRange( newTabWidth >= MIN_TAB_WIDTH && newTabWidth <= MAX_TAB_WIDTH );
    if( inRange ) {
       d_TabWidth = newTabWidth;
       }
