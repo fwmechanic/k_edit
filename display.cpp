@@ -583,6 +583,20 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    return "";
    }
 
+std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, Point *cursor ) {
+   /*
+    search upstream for a ["quote-word boundary]; if found, search downstream
+    for a [word-quote boundary"]; it might straddle a line-break; return the
+    space-normalized contatenation of the text between these two boundaries.
+
+    Predicates:
+    upstream:   if( (ixC > 0)              && isWordChar( rl[ixC] ) && ('"'==rl[ixC-1]) ) { return ixC; }
+    downstream: if( (ixC < rl.length()-1 ) && isWordChar( rl[ixC] ) && ('"'==rl[ixC+1]) ) { return ixC; }
+
+    */
+   return "";
+   }
+
 void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
    if( d_view.GetBOXSTR_Selection( d_stCandidate ) && !IsStringBlank( d_stCandidate ) ) {
       if( d_stSel != d_stCandidate ) {
