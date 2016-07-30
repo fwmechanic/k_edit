@@ -626,6 +626,8 @@
    trailspace:no
    traildisp: ?
    tabdisp: <
+   cmdn:=arg arg "^cmd\d" grep
+   grepm4:=arg "./test/_m4ex:" grep
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
