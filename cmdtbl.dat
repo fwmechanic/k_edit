@@ -75,6 +75,7 @@ w ctwk         ctwk                      NOARG , console tweaks
 # dif          dif                       BOXSTR + NOARG + TEXTARG + NULLARG + NULLEOW
   dirty        dirty                     KEEPMETA+NOARG , Returns true if current file is dirty
 # dispmstk     dispmstk       CURSORFUNC
+  dquc         dquc                      NOARG, Double quoted string under cursor
   down         down           CURSORFUNC , Move cursor down one line
 w dvlog        dvlog                     TEXTARG , write string to DbgView using Win32's OutputDebugString
   eds          eds            CURSORFUNC , Show internal undo/redo details

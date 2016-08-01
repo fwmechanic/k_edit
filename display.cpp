@@ -583,19 +583,81 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    return "";
    }
 
-std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, Point *cursor ) {
+std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
    /*
     search upstream for a ["quote-word boundary]; if found, search downstream
     for a [word-quote boundary"]; it might straddle a line-break; return the
     space-normalized contatenation of the text between these two boundaries.
-
-    Predicates:
-    upstream:   if( (ixC > 0)              && isWordChar( rl[ixC] ) && ('"'==rl[ixC-1]) ) { return ixC; }
-    downstream: if( (ixC < rl.length()-1 ) && isWordChar( rl[ixC] ) && ('"'==rl[ixC+1]) ) { return ixC; }
-
+    NB: The DQuotedString can span NO MORE THAN TWO (adjacent) LINES
     */
-   return "";
+   std::string rv;
+   const auto yCursor( cursor.lin );
+   const auto xCursor( cursor.col );
+   const auto rlpt( pFBuf->PeekRawLine( yCursor ) );
+   if( !rlpt.empty() ) { 0 && DBG( "newln=%" PR_BSR, BSR(rlpt) );
+      const auto tw( pFBuf->TabWidth() );                             // abc   abc
+      const auto ixPt( CaptiveIdxOfCol( tw, rlpt, xCursor ) );
+      auto cat_rv = [&]( stref st ) {
+         DBG( "cat_rv=%" PR_BSR "'", BSR(st) );
+         for( auto ix(0) ; ix<st.length() ; ++ix ) {
+            const auto ch( st[ix] );
+            if( isspace( ch ) && (rv.length() == 0 || isspace(rv.back())) ) {
+               }
+            else {
+               rv.push_back( ch );
+               }
+            }
+         };
+      {
+      auto ixUpstream = [&]( stref rl, const COL ixC ) {
+         for( auto ix(ixC) ; ix > 0 ; --ix ) {
+            if( !isspace( rl[ix] ) && ('"'==rl[ix-1]) ) {
+               const auto rlUp( rl.substr( ix, ixC-ix+1 ) );   DBG( "up=%" PR_BSR "'", BSR(rlUp) );
+               cat_rv( rlUp );
+               return true;
+               }
+            }
+         return false;
+         };
+      if( !ixUpstream( rlpt, ixPt ) && yCursor > 0 ) {
+         const auto rlp( pFBuf->PeekRawLine( yCursor-1 ) );
+         ixUpstream( rlp, rlp.length()-1 );
+         cat_rv( " " );
+         cat_rv( rlpt.substr(0,ixPt) );
+         }
+      if( rv.empty() ) { return ""; } // ********** upstream done
+      }
+            /*
+            "hello
+               there"
+             */
+      {
+      auto ixDnstream = [&]( stref rl, const COL ixC ) {          0&&DBG( "dn0 %d [%" PR_BSR "]", ixC, BSR(rl) );
+         for( auto ix(ixC) ; ix < rl.length()-1 ; ++ix ) {  0&&DBG( "dn[%d]>%c", ixC, rl[ixC] );
+            if( !isspace( rl[ix] ) && ('"'==rl[ix+1]) ) {
+               const auto rlDn( rl.substr(ixC,ix-ixC+1) );     DBG( "dn=%" PR_BSR "'", BSR(rlDn) );
+               cat_rv( rlDn );
+               return true;
+               }
+            }
+         return false;
+         };
+      if( !ixDnstream( rlpt, ixPt+1 ) ) {
+         cat_rv( " " );
+         ixDnstream( pFBuf->PeekRawLine( yCursor+1 ), 0 );
+         }
+      }
+      }
+   return rv;
    }
+
+#ifdef fn_dquc
+bool ARG::dquc() {
+   const auto st( GetDQuotedStringUnderPoint( g_CurFBuf(), g_Cursor() ) );
+   Msg( "%" PR_BSR "'", BSR(st) );
+   return true;
+   }
+#endif
 
 void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
    if( d_view.GetBOXSTR_Selection( d_stCandidate ) && !IsStringBlank( d_stCandidate ) ) {
