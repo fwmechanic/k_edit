@@ -626,6 +626,8 @@
    trailspace:no
    traildisp: ?
    tabdisp: <
+   cmdn:=arg arg "^cmd\d" grep
+   grepm4:=arg "./test/_m4ex:" grep
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
@@ -761,6 +763,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:diff]
 
 [ftype:clang]
+   dquc:alt+4
    wordchars:d
    wucminlen:1
    mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"
