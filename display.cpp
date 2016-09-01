@@ -2361,7 +2361,7 @@ STATIC_FXN void RedrawScreen() {
    const auto yTop(0), yBottom( EditScreenLines() );
    ShowDraws( DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom ); )
    const HiLiteRec *pFirstPossibleHiLite(nullptr);
-   auto dvsit( s_direct_vid_segs.begin() );
+   auto dvsit( s_direct_vid_segs.cbegin() );
    for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) { ShowDraws( char ch = ' '; )
       if( s_paScreenLineNeedsRedraw->IsBitSet( yLine ) ) {
          ShowDraws( ch = '0' + (yLine % 10); )
@@ -2373,11 +2373,22 @@ STATIC_FXN void RedrawScreen() {
             g_Win(ix)->GetLineForDisplay( ix, buf, alc, pFirstPossibleHiLite, yLine );
             }
          }
-         for( ; dvsit != s_direct_vid_segs.end() && dvsit->d_origin.lin < yLine ; ++dvsit ) {
+         for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin < yLine ; ++dvsit ) {
             }
-         for( ; dvsit != s_direct_vid_segs.end() && yLine == dvsit->d_origin.lin ; ++dvsit ) {
+         for( ; dvsit != s_direct_vid_segs.cend() && yLine == dvsit->d_origin.lin ; ++dvsit ) {
+           #if 1
             buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
             alc.PutColor( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorIndex );
+           #else
+            const auto ix( dvsit->d_origin.col );
+            (ix < 0) && DBG( "IX NEGATIVE! %d", ix );
+            if( ix >= 0 && ix < scrnCols ) {
+               const auto maxXwr( ix + dvsit->d_str.length() - 1 );
+               const auto len( maxXwr > scrnCols ? dvsit->d_str.length() - (maxXwr - scrnCols) : dvsit->d_str.length() );
+               buf.replace ( ix, len, dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
+               alc.PutColor( ix, len, dvsit->d_colorIndex );
+               }
+           #endif
             }
          (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
          VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, false );
@@ -2733,6 +2744,16 @@ void DirectVidClear() {
    }
 
 void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) {
+   if( !(yLine >= 0 && yLine < ScreenLines()) ) { return; }
+   if( xCol < 0 ) {
+      sr.remove_prefix( -xCol );
+      xCol = 0;
+      }
+   if( sr.empty() ) { return; }
+   if( xCol + sr.length() > ScreenCols() ) {
+      sr.remove_suffix( (xCol + sr.length()) - ScreenCols() );
+      }
+   if( sr.empty() ) { return; }
    const Point tgt( yLine, xCol );
    auto it( s_direct_vid_segs.begin() );
    for( ; it != s_direct_vid_segs.end() ; ++it ) {
