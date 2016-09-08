@@ -871,7 +871,7 @@ public:
 
    };
 
-STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
+STATIC_FXN stref extract_shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    auto rl0( pfb->PeekRawLine( 0 ) );
    if( !rl0.starts_with( "#!" ) ) { return ""; }
    const auto i1( FirstBlankOrEnd( rl0, 2 ) );    // assume: no spaces in path of binary
@@ -892,6 +892,24 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
          }
       }
    return shebang;
+   }
+
+STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
+   const auto rv( extract_shebang_binary_name( pfb ) );
+   if( !rv.empty() ) {
+      STATIC_CONST struct {
+         PCChar from;
+         PCChar to;
+         } map[] = {
+         { "python3" , "python" },
+         };
+      for( const auto &entry : map ) {
+         if( eq( rv, entry.from ) ) {
+            return entry.to;
+            }
+         }
+      }
+   return rv;
    }
 
 STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software/emacs/manual/html_node/emacs/Choosing-Modes.html
