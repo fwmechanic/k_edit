@@ -708,7 +708,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    #graphic:tab # using GNU make, we need ability to insert literal tabs
    tabwidth:8
    entab:leading  # ...  whitespace converted to tabs
-   wordchars: .
+#  wordchars: .
    mfspec_:="*.mak;*.mik"
 
 [.cod]
@@ -754,8 +754,11 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [.xml .html .htm .dtd .vpj .vpw]
    delims: <
 
-[.py .cs]
+[ftype:python]
    wucminlen:1
+
+[.py .python3]
+   ftype:python
 
 [.c .cpp .cc .cs .m .cxx 32.kc .h .hpp .hxx 32.kh]
    ftype:clang

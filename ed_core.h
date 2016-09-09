@@ -697,7 +697,7 @@ private:
    FTypeSetting *d_pFTS = nullptr;
 public:
    PCChar        szFTypeSetting() const;
-   FTypeSetting *GetFTypeSettings();
+   const FTypeSetting *GetFTypeSettings();
    int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
 
@@ -817,6 +817,7 @@ public:
    void           RemoveFBufOnly();  // ONLY USE THIS AT SHUTDOWN TIME, or within private_RemovedFBuf()!
    //************ FBUF name
 private:
+   Path::str_t    d_RsrcExt; // on heap
    Path::str_t    d_filename; // on heap
    bool           d_fFnmDiskWritable;
    void           ChangeName( stref newName );  // THE ONLY PLACE WHERE AN FBUF's NAME MAY BE SET!!!
@@ -833,6 +834,8 @@ public:
    bool           NameMatch( stref name ) const { return Path::eq( d_filename, name ); }
    STATIC_FXN bool FnmIsPseudo( PCChar name )   { return  name[0] == '<'; }
    bool            FnmIsPseudo()          const { return  FnmIsPseudo( Name() ); }
+   stref           GetRsrcExt()           const { return  d_RsrcExt; }
+   void            SetRsrcExt();
    //***********  membership in list of all FBUFs
  #if              FBUF_TREE
 private:
@@ -1098,6 +1101,7 @@ private:
    enum DiskFileVsFbufStatus { DISKFILE_NO_EXIST, DISKFILE_NEWERTHAN_FBUF, DISKFILE_SAME_AS_FBUF, DISKFILE_OLDERTHAN_FBUF };
    DiskFileVsFbufStatus checkDiskFileStatus() const;
    PView          PutFocusOnView();
+   bool           FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ); // called ONLY by FBufReadOk!
    bool           FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently );
    bool           ReadDiskFileFailed( int hFile );
    bool           UpdateFromDisk( bool fPromptBeforeRefreshing );

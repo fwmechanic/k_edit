@@ -871,7 +871,7 @@ public:
 
    };
 
-STATIC_FXN stref extract_shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
+STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    auto rl0( pfb->PeekRawLine( 0 ) );
    if( !rl0.starts_with( "#!" ) ) { return ""; }
    const auto i1( FirstBlankOrEnd( rl0, 2 ) );    // assume: no spaces in path of binary
@@ -892,24 +892,6 @@ STATIC_FXN stref extract_shebang_binary_name( PCFBUF pfb ) { // should be simple
          }
       }
    return shebang;
-   }
-
-STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
-   const auto rv( extract_shebang_binary_name( pfb ) );
-   if( !rv.empty() ) {
-      STATIC_CONST struct {
-         PCChar from;
-         PCChar to;
-         } map[] = {
-         { "python3" , "python" },
-         };
-      for( const auto &entry : map ) {
-         if( eq( rv, entry.from ) ) {
-            return entry.to;
-            }
-         }
-      }
-   return rv;
    }
 
 STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software/emacs/manual/html_node/emacs/Choosing-Modes.html
@@ -1009,43 +991,45 @@ STATIC_FXN bool RsrcFileLdSectionFtype( stref ftype ) {
 PCChar LastRsrcFileLdSectionFtypeNm       () { return s_cur_FtypeSectionNm+KSTRLEN(s_sftype_prefix); }
 PCChar LastRsrcFileLdSectionFtypeSectionNm() { return s_cur_FtypeSectionNm; }
 
-#define  EXT_NO_EXT    "."
-#define  EXT_WILDCARD  ".*"
-#define  EXT_PSEUDO    ".<>"
-
-STATIC_FXN stref GetRsrcExt( PCFBUF fb ) { // all rv's shall have leading '.'
+STATIC_FXN stref SetRsrcExt_( PCFBUF fb ) { // all rv's shall NOT have leading '.'
    stref rv;
    if( FnmIsLogicalWildcard( fb->Namestr() ) ) {
-      rv = EXT_WILDCARD;
+      rv = "*";
       }
    else if( fb->FnmIsPseudo() || !fb->FnmIsDiskWritable() ) {
-      rv = EXT_PSEUDO;
+      rv = "<>";
       }
    else {
-      rv = Path::RefExt( fb->Namestr() );
+      rv = content_to_ftype( fb );
       if( rv.empty() ) {
-         rv = EXT_NO_EXT;
+         rv = Path::RefExt( fb->Namestr() );
+         if( !rv.empty() ) {
+            rv.remove_prefix( 1 ); // Path::RefExt() preserves the leading '.' that defines the start of the file extension; remove it
+            }
+         if( rv.empty() ) {
+            rv = fnm_to_ftype( fb );
+            }
          }
       }
-   0 && DBG( "%s '%" PR_BSR "'", __func__, BSR(rv) );
+   1 && DBG( "%s '%" PR_BSR "'", __func__, BSR(rv) );
    return rv;
+   }
+
+void FBUF::SetRsrcExt() {
+   const stref srDot( "." );
+   const auto ext( ::SetRsrcExt_( this ) );
+   d_RsrcExt.reserve( srDot.length() + ext.length() );
+   d_RsrcExt.assign( sr2st( srDot ) + sr2st( ext ) ); // d_RsrcExt shall have leading '.'
    }
 
 void FBUF::DetermineFType() {
    if( FTypeEmpty() ) {
-      auto ftype( content_to_ftype( this ) );  0 && DBG( "%s ?%" PR_BSR "'", __func__, BSR(ftype) );
-      if( ftype.empty() ) {
-         const auto ext( GetRsrcExt( this ) );
-         if( eq( ext, EXT_NO_EXT ) && !(ftype=fnm_to_ftype( this )).empty() ) {
-            }
-         else {
-            s_cur_Ftype_assigned = false;
-            ftype = (RsrcFileLdAllNamedSections( ext ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "";
-            }
-         }
+      const auto rsrcExt( GetRsrcExt() );    1 && DBG( "%s ?%" PR_BSR "'", __func__, BSR(rsrcExt) );
+      s_cur_Ftype_assigned = false;
+      const stref ftype( (RsrcFileLdAllNamedSections( rsrcExt ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "" );
       Set_s_cur_Ftype( ftype );
       SetFType( ftype );
-      0 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), Name() );
+      1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), Name() );
       }
    }
 
@@ -1068,12 +1052,17 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
   #endif
    DefineStrMacro( "curfilename", Path::RefFnm  ( fb->Namestr() ) );
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
-   const auto ext( GetRsrcExt( fb ) );
+   const auto ext( fb->GetRsrcExt() );
    DefineStrMacro( "curfileext", ext );
    // call RsrcFileLdAllNamedSections( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
    if( fb->IsRsrcLdBlocked() ) {
       }
    else {
+      //
+      // BUGBUG this (DetermineFType() interaction with
+      // CurFBuf_AssignMacros_RsrcLd) needs to be clarified: it doesn't seem
+      // correct for DetermineFType() to be calling RsrcFileLdAllNamedSections( rsrcExt ) iff FTypeEmpty()
+      //
       fb->DetermineFType();
       const auto ftype( fb->FType() );
       if( !ftype.empty() ) {
@@ -1320,7 +1309,7 @@ STIL void wrNoiseRenm () { DisplayNoise( "                Renm " ); }
 
 const Eol_t platform_eol = WL( EolCRLF, EolLF );
 
-bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
+bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    VR_( DBG( "FRd+ %s", Name() ); )
 // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
       {
@@ -1425,6 +1414,12 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    SetLastFileStatFromDisk();
    VR_( DBG( "FRd- OK" ); )
    return true;
+   }
+
+bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
+   const auto rv( FBufReadOk_( fAllowDiskFileCreate, fCreateSilently ) );
+   SetRsrcExt();
+   return rv;
    }
 
 bool FBUF::ReadOtherDiskFileNoCreateFailed( PCChar pszName ) {
