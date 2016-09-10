@@ -2742,7 +2742,14 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).k_str() );
-   cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR ":%s:%s]", BSR(g_CurView()->CFBuf()->GetRsrcExt()), g_CurView()->szFTypeSetting(), LastRsrcFileLdSectionFtypeNm() ).k_str() );
+   { const auto ftypset( g_CurView()->szFTypeSetting() ); const auto lastrsrcftypset( LastRsrcFileLdSectionFtypeNm() );
+   if( eq( ftypset, lastrsrcftypset ) ) { // avoid redundant status display
+      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR ":%s]", BSR(g_CurView()->CFBuf()->GetRsrcExt()), ftypset ).k_str() );
+      }
+   else {
+      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR ":ft=%s:ldd=%s]", BSR(g_CurView()->CFBuf()->GetRsrcExt()), ftypset, lastrsrcftypset ).k_str() );
+      }
+   }
 // cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).k_str() );
 // cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).k_str() );
    cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).k_str() );
