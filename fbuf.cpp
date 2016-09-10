@@ -964,15 +964,19 @@ void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
    scpy( dest, sizeofDest, s_cur_Ftype );
    }
 
+STATIC_FXN stref Get_s_cur_Ftype() {
+   return s_cur_Ftype;
+   }
+
 STATIC_FXN void Set_s_cur_Ftype( stref ftype ) {
    bcpy( s_cur_Ftype, ftype );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
    }
 
 PCChar swixFtype( stref param ) {
    Set_s_cur_Ftype( param );
-   s_cur_Ftype_assigned = true;
    return nullptr;
    }
+
 
 STATIC_FXN void FtypeRestoreDefaults() {
    swixDelims( "{[(" );
@@ -1022,15 +1026,19 @@ void FBUF::SetRsrcExt() {
    d_RsrcExt.assign( sr2st( srDot ) + sr2st( ext ) ); // d_RsrcExt shall have leading '.'
    }
 
-void FBUF::DetermineFType() {
-   if( FTypeEmpty() ) {
-      const auto rsrcExt( GetRsrcExt() );    1 && DBG( "%s ?%" PR_BSR "'", __func__, BSR(rsrcExt) );
-      s_cur_Ftype_assigned = false;
-      const stref ftype( (RsrcFileLdAllNamedSections( rsrcExt ) && s_cur_Ftype_assigned) ? s_cur_Ftype : "" );
-      Set_s_cur_Ftype( ftype );
-      SetFType( ftype );
-      1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), Name() );
-      }
+stref RsrcFileLdAllRsrcExtSections_SetFType( PFBUF fb, stref rsrcExt ) {
+   // weirdness: ftype is a switch setting which (among other things) guides
+   // content-sensitive display hiliting the ftype setting is cached by the
+   // FBuf.  This is ASSUMED to be set in rsrcExt sections.  Since switch values
+   // are currently stored in global (boo!) variables, we snoop the rsrcExt
+   // section assignment process ...
+   swixFtype( "unknown" ); // default
+   RsrcFileLdAllNamedSections( rsrcExt );
+   const auto ftype( Get_s_cur_Ftype() );
+   1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), fb->Name() );
+   fb->SetFType( ftype );
+   RsrcFileLdSectionFtype( ftype );
+   return ftype;
    }
 
 STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'"     , __func__, BSR(name), BSR(strval) );
@@ -1052,23 +1060,13 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
   #endif
    DefineStrMacro( "curfilename", Path::RefFnm  ( fb->Namestr() ) );
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
-   const auto ext( fb->GetRsrcExt() );
-   DefineStrMacro( "curfileext", ext );
-   // call RsrcFileLdAllNamedSections( ext.c_str() ) only after curfile, curfilepath, curfilename, curfileext assigned
+   const auto rsrcExt( fb->GetRsrcExt() );
+   DefineStrMacro( "curfileext", rsrcExt );
+   // call RsrcFileLdAllRsrcExtSections_SetFType() only after curfile, curfilepath, curfilename, curfileext assigned
    if( fb->IsRsrcLdBlocked() ) {
       }
    else {
-      //
-      // BUGBUG this (DetermineFType() interaction with
-      // CurFBuf_AssignMacros_RsrcLd) needs to be clarified: it doesn't seem
-      // correct for DetermineFType() to be calling RsrcFileLdAllNamedSections( rsrcExt ) iff FTypeEmpty()
-      //
-      fb->DetermineFType();
-      const auto ftype( fb->FType() );
-      if( !ftype.empty() ) {
-         RsrcFileLdSectionFtype( ftype );
-         }
-      1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), fb->Name() );
+      RsrcFileLdAllRsrcExtSections_SetFType( fb, rsrcExt );
       }
    }
 

@@ -693,11 +693,9 @@ public:
    Point        d_LastSelectBegin, d_LastSelectEnd;
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
-private:
-   FTypeSetting *d_pFTS = nullptr;
 public:
    PCChar        szFTypeSetting() const;
-   const FTypeSetting *GetFTypeSettings();
+   const FTypeSetting *GetFTypeSettings() const;
    int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
 
@@ -1026,7 +1024,6 @@ public:
    const std::string &FType()            const { return  d_ftype; }
    bool           FTypeEmpty()           const { return  d_ftype.empty(); }
    bool           FTypeEq( stref ft )    const { return  eq( d_ftype, ft ); }
-   void           DetermineFType();
    void           SetFType( stref ft )                {  d_ftype.assign( sr2st(ft) ); }
  #ifdef           fn_su
    bool           SilentUpdateMode()     const { return  d_fSilentUpdateMode; }

@@ -347,23 +347,23 @@ GLOBAL_CONST unsigned char *g_colorVars[] = {
 
 static_assert( ELEMENTS(g_colorVars) == (ColorTblIdx::COLOR_COUNT - ColorTblIdx::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == ColorTblIdx::COLOR_COUNT" );
 
-PCChar View::szFTypeSetting() const { return d_pFTS ? d_pFTS->d_key.c_str() : "?"; }
+const FTypeSetting *View::GetFTypeSettings() const { return ::Get_FTypeSetting( CFBuf()->FType() ); }
 
-const FTypeSetting *View::GetFTypeSettings() {
-   if( !d_pFTS ) {                 0 && DBG( "%s+ ---------------------------------------------- %s", __func__, CFBuf()->Name() );
-      FBuf()->DetermineFType();
-      d_pFTS = ::Get_FTypeSetting( CFBuf()->FType() );
-      } 0 && Show_FTypeSettings();
-   return d_pFTS;
+PCChar View::szFTypeSetting() const {
+   const auto pFTS( GetFTypeSettings() );
+   return pFTS ? pFTS->d_key.c_str() : "?";
    }
 
 int View::ColorIdx2Attr( int colorIdx ) const {
-   if( colorIdx < ColorTblIdx::VIEW_COLOR_COUNT ) { return  d_pFTS
-                                                   ?  d_pFTS->d_colors[ colorIdx ]
-                                                   : *g_colorVars[ ColorTblIdx::ERRM - ColorTblIdx::VIEW_COLOR_COUNT ];
-                                                  }
-   if( colorIdx < ColorTblIdx::COLOR_COUNT )      { return *g_colorVars[ colorIdx    - ColorTblIdx::VIEW_COLOR_COUNT ]; }
-                                                    return *g_colorVars[ ColorTblIdx::ERRM - ColorTblIdx::VIEW_COLOR_COUNT ];
+   if( colorIdx < ColorTblIdx::VIEW_COLOR_COUNT ) {
+      const auto pFTS( GetFTypeSettings() );
+      return  pFTS ? pFTS->d_colors[ colorIdx ] :
+             *g_colorVars[ ColorTblIdx::ERRM - ColorTblIdx::VIEW_COLOR_COUNT ];
+      }
+   if( colorIdx < ColorTblIdx::COLOR_COUNT ) {
+      return *g_colorVars[ colorIdx          - ColorTblIdx::VIEW_COLOR_COUNT ];
+      }
+   return    *g_colorVars[ ColorTblIdx::ERRM - ColorTblIdx::VIEW_COLOR_COUNT ];
    }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -995,7 +995,7 @@ class HiliteAddin_EolComment : public HiliteAddin {
 public:
    HiliteAddin_EolComment( PView pView )
    : HiliteAddin( pView )
-   , d_eolCommentDelim( d_view.GetFTypeSettings()->d_eolCommentDelim )
+   , d_eolCommentDelim( d_view.GetFTypeSettings() ? d_view.GetFTypeSettings()->d_eolCommentDelim : "?" )
       { /* 20140630
         all the following annoying hackiness is to allow detection of EOL
         comments occurring at EOL, in the case where the d_eolCommentDelim has
@@ -2052,8 +2052,11 @@ GLOBAL_VAR bool g_fLangHilites = true;
 
 void View::HiliteAddins_Init() {
    DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , CFBuf()->HasLines() ? "has" : "no", CFBuf()->Name() );
-   if( g_fLangHilites && d_addins.empty() &&
-       (CFBuf()->HasLines() || CFBuf()->FnmIsPseudo())
+   if(   g_fLangHilites
+      && d_addins.empty()
+      && (CFBuf()->HasLines() || CFBuf()->FnmIsPseudo())
+      && !CFBuf()->FType().empty()
+      && GetFTypeSettings()
      ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, CFBuf()->FType().c_str() );
       const auto pFTS( GetFTypeSettings() );
      #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
@@ -2742,12 +2745,12 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).k_str() );
-   { const auto ftypset( g_CurView()->szFTypeSetting() ); const auto lastrsrcftypset( LastRsrcFileLdSectionFtypeNm() );
+   { const auto ftypset( pfh->FType().c_str() ); const auto lastrsrcftypset( LastRsrcFileLdSectionFtypeNm() );
    if( eq( ftypset, lastrsrcftypset ) ) { // avoid redundant status display
-      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR ":%s]", BSR(g_CurView()->CFBuf()->GetRsrcExt()), ftypset ).k_str() );
+      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR ":%s]", BSR(pfh->GetRsrcExt()), ftypset ).k_str() );
       }
    else {
-      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR ":ft=%s:ldd=%s]", BSR(g_CurView()->CFBuf()->GetRsrcExt()), ftypset, lastrsrcftypset ).k_str() );
+      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR ":ft=%s:ldd=%s]", BSR(pfh->GetRsrcExt()), ftypset, lastrsrcftypset ).k_str() );
       }
    }
 // cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).k_str() );
