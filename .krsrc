@@ -1,3 +1,5 @@
+#!k-editor-rsrc dummy tag
+
 [@startup] #*****************************       === GLOBAL LOAD ===   *****************************
 
    # === SWITCHES ===
@@ -642,6 +644,8 @@ ux_1:="*" curfileext
 ux_2:=""ux_1""
 ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
+[.k-editor-rsrc]
+   ftype:perl
 
 [ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    mfspec_:="*.*"
@@ -770,6 +774,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:clang
 
 [ftype:diff]
+[.diff]
+   ftype:diff
 
 [ftype:clang]
    dquc:alt+4

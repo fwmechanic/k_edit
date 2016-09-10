@@ -879,13 +879,12 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    const auto ls( rl0.find_last_of( "/" ) );      // assume: unix dirsep, regardless of platform
    const auto i0( ls != stref::npos ? ls+1 : 2 ); // could be bare binary name (i.e. filetype)
    if( i0 >= i1 ) { return ""; }                  // nothing at all?
-   const auto shebang( rl0.substr( i0, i1 - i0 ) ); 1 && DBG( "shebang=%" PR_BSR "'", BSR(shebang) );
+   const auto shebang( rl0.substr( i0, i1 - i0 ) ); 0 && DBG( "%" PR_BSR "<=shebang", BSR(shebang) );
    if( shebang == "env" ) {
       auto rl( pfb->PeekRawLine( 0 ) ); rl.remove_prefix( i1 );
       stref_split_walk ssw( rl );
       stref tok;
-   // while( tok = ssw.next() , !tok.empty() ) {  1 && DBG( "tok=%" PR_BSR "'", BSR(tok) ); }
-      while( tok = ssw.next() , !tok.empty() ) {
+      while( tok = ssw.next() , !tok.empty() ) {  0 && DBG( "tok=%" PR_BSR "'", BSR(tok) );
          if( !tok.starts_with( '-' ) ) {
             return tok;
             }
