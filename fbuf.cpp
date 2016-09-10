@@ -1026,7 +1026,7 @@ void FBUF::SetRsrcExt() {
    d_RsrcExt.assign( sr2st( srDot ) + sr2st( ext ) ); // d_RsrcExt shall have leading '.'
    }
 
-stref RsrcFileLdAllRsrcExtSections_SetFType( PFBUF fb, stref rsrcExt ) {
+STATIC_FXN stref RsrcFileLdAllRsrcExtSections_SetFType( PFBUF fb, stref rsrcExt ) {
    // weirdness: ftype is a switch setting which (among other things) guides
    // content-sensitive display hiliting the ftype setting is cached by the
    // FBuf.  This is ASSUMED to be set in rsrcExt sections.  Since switch values
@@ -1035,8 +1035,7 @@ stref RsrcFileLdAllRsrcExtSections_SetFType( PFBUF fb, stref rsrcExt ) {
    swixFtype( "unknown" ); // default
    RsrcFileLdAllNamedSections( rsrcExt );
    const auto ftype( Get_s_cur_Ftype() );
-   1 && DBG( "%s '%" PR_BSR "' '%s' ================================================================", __func__, BSR(ftype), fb->Name() );
-   fb->SetFType( ftype );
+   fb->SetFType( ftype );                                          0 && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
    RsrcFileLdSectionFtype( ftype );
    return ftype;
    }
@@ -1062,10 +1061,9 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
    const auto rsrcExt( fb->GetRsrcExt() );
    DefineStrMacro( "curfileext", rsrcExt );
-   // call RsrcFileLdAllRsrcExtSections_SetFType() only after curfile, curfilepath, curfilename, curfileext assigned
    if( fb->IsRsrcLdBlocked() ) {
       }
-   else {
+   else { // call RsrcFileLdAllRsrcExtSections_SetFType() ONLY AFTER curfile, curfilepath, curfilename, curfileext assigned
       RsrcFileLdAllRsrcExtSections_SetFType( fb, rsrcExt );
       }
    }

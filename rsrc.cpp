@@ -33,7 +33,7 @@ STATIC_FXN bool OpenRsrcFileFailed() {
    return s_pFBufRsrc->ReadDiskFileNoCreateFailed();
    }
 
-stref IsolateTagStr( stref src ) {
+STATIC_FXN stref IsolateTagStr( stref src ) {
    const auto ixLSQ( src.find_first_not_of( SPCTAB ) );
    if( stref::npos==ixLSQ || src[ixLSQ] != chLSQ ) {
       return stref();
@@ -135,9 +135,9 @@ bool ARG::ext() {
       }
    }
 
-bool RsrcFileLdAllNamedSections( stref pszSectionName, int *pAssignCountAccumulator ) {
-   if( pszSectionName.length() == 0 ) { return false; }
-   RsrcSectionWalker rsw( pszSectionName );
+bool RsrcFileLdAllNamedSections( stref srSectionName, int *pAssignCountAccumulator ) {
+   if( srSectionName.empty() ) { return false; }
+   RsrcSectionWalker rsw( srSectionName );
    FmtStr<90> tag( "LoadRsrcSection [%" PR_BSR "]", BSR(rsw.SectionName()) );
    AssignLogTag( tag.k_str() );
    auto fFound(false);
@@ -153,7 +153,7 @@ bool RsrcFileLdAllNamedSections( stref pszSectionName, int *pAssignCountAccumula
    if( pAssignCountAccumulator ) {
       *pAssignCountAccumulator += totalAssignsDone;
       }
-   0 && DBG( "%s %+d for [%" PR_BSR "]", FUNC, fFound ? totalAssignsDone : -1, BSR(pszSectionName) );
+   0 && DBG( "%s %+d for [%" PR_BSR "]", FUNC, fFound ? totalAssignsDone : -1, BSR(srSectionName) );
    return fFound;
    }
 
