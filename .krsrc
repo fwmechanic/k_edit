@@ -262,7 +262,7 @@
    cq:= "    " justify left left left ">> " delete delete delete arg arg  \
         left left left meta ppara up vrepeat
 
-   xbak := arg "\.kbackup\" strip  arg "\Backup\" strip  arg "\.hg\" strip  arg "\.git\" strip  arg "\.svn\" strip
+   # xbak := arg "\.kbackup\" strip  arg "\Backup\" strip  arg "\.hg\" strip  arg "\.git\" strip  arg "\.svn\" strip
 
    unsigned:= replace "unsigned char"  nl "uint8_t"  nl  \
               replace "unsigned short" nl "uint16_t" nl  \
@@ -674,11 +674,19 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    mfspec_:="*.lua"
    rmargin:80
 
-[.pl .pm]
+[ftype:bash]
+
+[.bash]
+   ftype:bash
+
+[.perl .pl .pm]
    ftype:perl
 
 [ftype:expect]
    wordchars:
+
+[.expect]
+   ftype:expect
 
 [ftype:perl]
    wordchars:@$%
@@ -741,8 +749,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [.asm .s .inc]
    ftype:asm
 
-[ftype:bash]
-
 [ftype:asm]
    mfspec_:="*.inc;*.asm;*.map"
    call:=savecur arg "call" searchall restcur
@@ -757,7 +763,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:python]
    wucminlen:1
 
-[.py .python3]
+[.python .python3 .py]
    ftype:python
 
 [.c .cpp .cc .cs .m .cxx 32.kc .h .hpp .hxx 32.kh]
@@ -829,7 +835,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [.!!!]
    mfspec_:="*.!!!"
 
-[.awk .twk .twl .kxt .kxl]
+[.awk .gawk .twk .twl .kxt .kxl]
    ftype:awk
 
 [ftype:awk]
