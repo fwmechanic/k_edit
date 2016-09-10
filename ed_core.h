@@ -694,8 +694,6 @@ public:
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
 public:
-   PCChar        szFTypeSetting() const;
-   const FTypeSetting *GetFTypeSettings() const;
    int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
 
@@ -1020,11 +1018,13 @@ private:
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
    std::string    d_ftype;
+   const FTypeSetting *d_ftypeStruct = nullptr;
 public:
    const std::string &FType()            const { return  d_ftype; }
    bool           FTypeEmpty()           const { return  d_ftype.empty(); }
    bool           FTypeEq( stref ft )    const { return  eq( d_ftype, ft ); }
-   void           SetFType( stref ft )                {  d_ftype.assign( sr2st(ft) ); }
+   void           SetFType( stref ft );
+   const FTypeSetting *GetFTypeSettings() const { return d_ftypeStruct; }
  #ifdef           fn_su
    bool           SilentUpdateMode()     const { return  d_fSilentUpdateMode; }
    void           SetSilentUpdateMode()               {  d_fSilentUpdateMode = true; }

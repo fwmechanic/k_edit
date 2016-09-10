@@ -253,7 +253,7 @@ struct FTypeSetting {
 
    void  Update();
 
-   FTypeSetting( Path::str_t ext ) : d_key( ext ) {                          0 && DBG( "%s CTOR: '%s' ----------------------------------------------", __func__, d_key.c_str() );
+   FTypeSetting( stref ext ) : d_key( sr2st(ext) ) {                         0 && DBG( "%s CTOR: '%" PR_BSR "' ----------------------------------------------", __func__, BSR(d_key) );
       Update();
       }
    ~FTypeSetting() {}
@@ -320,13 +320,13 @@ void CloseFTypeSettings() {
    rb_dealloc_treev( s_FTS_idx, nullptr, DeleteFTS );
    }
 
-STATIC_FXN FTypeSetting *Get_FTypeSetting( const Path::str_t &ftype ) { FTypeSetting::DB && DBG( "%s+ ---------------------------------------------- PROBING [%s]", __func__, ftype.c_str() );
+STATIC_FXN FTypeSetting *Get_FTypeSetting( stref ftype ) {              FTypeSetting::DB && DBG( "%s+ ---------------------------------------------- PROBING [%" PR_BSR "]", __func__, BSR(ftype) );
    int equal;
    auto pNd( rb_find_gte_sri( &equal, s_FTS_idx, ftype ) );
-   if( equal ) {                                                        FTypeSetting::DB && DBG( "%s FOUND [%s]", __func__, ftype.c_str() );
+   if( equal ) {                                                        FTypeSetting::DB && DBG( "%s FOUND [%" PR_BSR "]", __func__, BSR(ftype) );
       return IdxNodeToFTS( pNd );
       }
-   auto pNew( new FTypeSetting( ftype ) );                              FTypeSetting::DB && DBG( "%s CREATING [%s]", __func__, ftype.c_str() );
+   auto pNew( new FTypeSetting( ftype ) );                              FTypeSetting::DB && DBG( "%s CREATING [%" PR_BSR "]", __func__, BSR(ftype) );
    rb_insert_before( s_FTS_idx, pNd, pNew->d_key.c_str(), pNew );
    return pNew;
    }
@@ -347,16 +347,16 @@ GLOBAL_CONST unsigned char *g_colorVars[] = {
 
 static_assert( ELEMENTS(g_colorVars) == (ColorTblIdx::COLOR_COUNT - ColorTblIdx::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == ColorTblIdx::COLOR_COUNT" );
 
-const FTypeSetting *View::GetFTypeSettings() const { return ::Get_FTypeSetting( CFBuf()->FType() ); }
-
-PCChar View::szFTypeSetting() const {
-   const auto pFTS( GetFTypeSettings() );
-   return pFTS ? pFTS->d_key.c_str() : "?";
+void FBUF::SetFType( stref ft ) {
+   if( !eqi( ft, d_ftype ) ) {
+      d_ftype.assign( sr2st(ft) );
+      d_ftypeStruct = ::Get_FTypeSetting( ft );
+      }
    }
 
 int View::ColorIdx2Attr( int colorIdx ) const {
    if( colorIdx < ColorTblIdx::VIEW_COLOR_COUNT ) {
-      const auto pFTS( GetFTypeSettings() );
+      const auto pFTS( CFBuf()->GetFTypeSettings() );
       return  pFTS ? pFTS->d_colors[ colorIdx ] :
              *g_colorVars[ ColorTblIdx::ERRM - ColorTblIdx::VIEW_COLOR_COUNT ];
       }
@@ -985,7 +985,7 @@ bool HiliteAddin_CompileLine::VHilitLine( LINE yLine, COL xIndent, LineColorsCli
 
 //=============================================================================
 
-// HiliteAddin_EolComment REQUIRES existence of d_view.GetFTypeSettings()->d_eolCommentDelim
+// HiliteAddin_EolComment REQUIRES existence of d_view.CFBuf()->GetFTypeSettings()->d_eolCommentDelim
 // HiliteAddin_EolComment & HiliteAddin_StreamParse are mutually exclusive; see HiliteAddins_Init()
 
 class HiliteAddin_EolComment : public HiliteAddin {
@@ -995,7 +995,7 @@ class HiliteAddin_EolComment : public HiliteAddin {
 public:
    HiliteAddin_EolComment( PView pView )
    : HiliteAddin( pView )
-   , d_eolCommentDelim( d_view.GetFTypeSettings() ? d_view.GetFTypeSettings()->d_eolCommentDelim : "?" )
+   , d_eolCommentDelim( d_view.CFBuf()->GetFTypeSettings() ? d_view.CFBuf()->GetFTypeSettings()->d_eolCommentDelim : "?" )
       { /* 20140630
         all the following annoying hackiness is to allow detection of EOL
         comments occurring at EOL, in the case where the d_eolCommentDelim has
@@ -2056,9 +2056,9 @@ void View::HiliteAddins_Init() {
       && d_addins.empty()
       && (CFBuf()->HasLines() || CFBuf()->FnmIsPseudo())
       && !CFBuf()->FType().empty()
-      && GetFTypeSettings()
+      && CFBuf()->GetFTypeSettings()
      ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, CFBuf()->FType().c_str() );
-      const auto pFTS( GetFTypeSettings() );
+      const auto pFTS( CFBuf()->GetFTypeSettings() );
      #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
              /* ALWAYS */              IAL( HiliteAddin_Pbal            );
       switch( pFTS->d_hl_id ) {
