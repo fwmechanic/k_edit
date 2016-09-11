@@ -954,7 +954,6 @@ STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
    }
 
 STATIC_CONST char s_sftype_prefix[] = "ftype:";
-STATIC_VAR bool s_cur_Ftype_assigned; // hacky!
 enum { SIZEOF_MAX_FTYPE=51 };
 STATIC_VAR char s_cur_Ftype         [ SIZEOF_MAX_FTYPE ];
 STATIC_VAR char s_cur_FtypeSectionNm[ SIZEOF_MAX_FTYPE + KSTRLEN(s_sftype_prefix) ];

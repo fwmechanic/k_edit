@@ -993,9 +993,9 @@ class HiliteAddin_EolComment : public HiliteAddin {
    std::string       d_eolCommentDelim;
    stref d_eolCommentDelimWOTrailSpcs;
 public:
-   HiliteAddin_EolComment( PView pView )
+   HiliteAddin_EolComment( PView pView, PCChar eolCommentDelim )
    : HiliteAddin( pView )
-   , d_eolCommentDelim( d_view.CFBuf()->GetFTypeSettings() ? d_view.CFBuf()->GetFTypeSettings()->d_eolCommentDelim : "?" )
+   , d_eolCommentDelim( eolCommentDelim )
       { /* 20140630
         all the following annoying hackiness is to allow detection of EOL
         comments occurring at EOL, in the case where the d_eolCommentDelim has
@@ -2071,7 +2071,7 @@ void View::HiliteAddins_Init() {
          case FTypeSetting::HL_BASH  : IAL( HiliteAddin_python          );  break;
          case FTypeSetting::HL_DIFF  : IAL( HiliteAddin_Diff            );  break;
          default: if( pFTS->d_eolCommentDelim[0] ) {
-                     IAL( HiliteAddin_EolComment );
+                     InsertAddinLast( new HiliteAddin_EolComment( this, pFTS->d_eolCommentDelim ) );
                      }
                   break;
          }
