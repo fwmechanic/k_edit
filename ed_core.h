@@ -1017,12 +1017,12 @@ private:
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
-   std::string    d_ftype;
+   std::string    d_ftype; // since d_ftype is now mostly a content-based auto-detected property (therefore of the file itself), it is a FBUF (not View) property
    const FTypeSetting *d_ftypeStruct = nullptr;
 public:
    const std::string &FType()            const { return  d_ftype; }
    bool           FTypeEmpty()           const { return  d_ftype.empty(); }
-   bool           FTypeEq( stref ft )    const { return  eq( d_ftype, ft ); }
+   bool           FTypeEq( stref ft )    const { return  eqi( d_ftype, ft ); } // case-insensitive!
    void           SetFType( stref ft );
    const FTypeSetting *GetFTypeSettings() const { return d_ftypeStruct; }
  #ifdef           fn_su

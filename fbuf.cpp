@@ -1012,8 +1012,7 @@ STATIC_FXN stref SetRsrcExt_( PCFBUF fb ) { // all rv's shall NOT have leading '
             rv = fnm_to_ftype( fb );
             }
          }
-      }
-   1 && DBG( "%s '%" PR_BSR "'", __func__, BSR(rv) );
+      }                                                            1 && DBG( "%s %s -> '%" PR_BSR "'", __func__, fb->Name(), BSR(rv) );
    return rv;
    }
 
@@ -1024,20 +1023,6 @@ void FBUF::SetRsrcExt() {
    d_RsrcExt.assign( sr2st( srDot ) + sr2st( ext ) ); // d_RsrcExt shall have leading '.'
    }
 
-STATIC_FXN stref RsrcFileLdAllRsrcExtSections_SetFType( PFBUF fb, stref rsrcExt ) {
-   // weirdness: ftype is a switch setting which (among other things) guides
-   // content-sensitive display hiliting the ftype setting is cached by the
-   // FBuf.  This is ASSUMED to be set in rsrcExt sections.  Since switch values
-   // are currently stored in global (boo!) variables, we snoop the rsrcExt
-   // section assignment process ...
-   swixFtype( "unknown" ); // default
-   RsrcFileLdAllNamedSections( rsrcExt );
-   const auto ftype( Get_s_cur_Ftype() );
-   fb->SetFType( ftype );                                          0 && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
-   RsrcFileLdSectionFtype( ftype );
-   return ftype;
-   }
-
 STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'"     , __func__, BSR(name), BSR(strval) );
    const auto str( "\"" + sr2st(strval) + "\"" );
    const auto rv( DefineMacro( name, str ) );                      0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'-> %c", __func__, BSR(name), BSR(strval), rv?'y':'n' );
@@ -1045,6 +1030,7 @@ STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s
    }
 
 void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && DBG( "%s '%s'", __func__, fb->Name() );
+   if( g_pFBufAssignLog ) { g_pFBufAssignLog->FmtLastLine( "##### %s -> %s", __func__, fb->Name() ); }
    // 1. assigns "curfile..." macros based on g_CurFBuf()->Namestr()
    // 2. loads rsrc file section for [extension and] ftype of g_CurFBuf()
   #if MACRO_BACKSLASH_ESCAPES
@@ -1059,10 +1045,17 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
    const auto rsrcExt( fb->GetRsrcExt() );
    DefineStrMacro( "curfileext", rsrcExt );
-   if( fb->IsRsrcLdBlocked() ) {
-      }
-   else { // call RsrcFileLdAllRsrcExtSections_SetFType() ONLY AFTER curfile, curfilepath, curfilename, curfileext assigned
-      RsrcFileLdAllRsrcExtSections_SetFType( fb, rsrcExt );
+   if( !fb->IsRsrcLdBlocked() ) { // ONLY AFTER curfile, curfilepath, curfilename, curfileext assigned:
+      // weirdness: ftype is a switch setting which (among other things) guides
+      // content-sensitive display hiliting the ftype setting is cached by the
+      // FBuf.  This is ASSUMED to be set in rsrcExt sections.  Since switch values
+      // are currently stored in global (boo!) variables, we snoop the rsrcExt
+      // section assignment process ...
+      swixFtype( "unknown" ); // default
+      RsrcFileLdAllNamedSections( rsrcExt );
+      const auto ftype( Get_s_cur_Ftype() );
+      fb->SetFType( ftype );                                          0 && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
+      RsrcFileLdSectionFtype( ftype );
       }
    }
 
@@ -1097,19 +1090,19 @@ PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heav
    if( !pFBuf ) {
       if( !FBUF::FnmIsPseudo( pFnm ) ) {
          FileAttribs fa( pFnm );
-         if( !fa.Exists() ) {
-            if( fCreateOk ) {
-               goto ADD_FBUF;
-               }                                                 DP && DBG( "OFND! NoD '%s'", pFnm );
-            Msg( "File '%s' does not exist", pFnm );
-            return nullptr;
+         if( fa.Exists() ) {
+            if( fa.IsDir() ) {                                      DP && DBG( "OFND! isD '%s'", pFnm );
+               Msg( "%s does not open directories like %s", __func__, pFnm );
+               return nullptr;
+               }
             }
-         if( fa.IsDir() ) {                                      DP && DBG( "OFND! isD '%s'", pFnm );
-            Msg( "%s does not open directories like %s", __func__, pFnm );
-            return nullptr;
+         else {
+            if( !fCreateOk ) {
+               Msg( "File '%s' does not exist", pFnm );             DP && DBG( "OFND! NoD '%s'", pFnm );
+               return nullptr;
+               }
             }
          }
-ADD_FBUF:
       pFBuf = AddFBuf( pFnm );
       }
    if( !pFBuf->HasLines() && pFBuf->ReadDiskFileAllowCreateFailed( fCreateOk ) ) {
@@ -1325,7 +1318,7 @@ bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    // user edits file in K, then later renames it, changing only case of name
    // user opens in K, retrieves old-cased nm from state file, edits and saves, writing to old-cased name :-(
    const auto canonFnm( Path::CanonizeCase( Name() ) );
-   if( cmp( canonFnm, Namestr() ) ) { // NB: CASE-SENSITIVE compare intended here!
+   if( !eq( canonFnm, Namestr() ) ) { // NB: CASE-SENSITIVE equality-check intended here!
        ChangeName( canonFnm.c_str() );
        }
   #else

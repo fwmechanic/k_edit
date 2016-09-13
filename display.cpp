@@ -348,7 +348,7 @@ GLOBAL_CONST unsigned char *g_colorVars[] = {
 static_assert( ELEMENTS(g_colorVars) == (ColorTblIdx::COLOR_COUNT - ColorTblIdx::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == ColorTblIdx::COLOR_COUNT" );
 
 void FBUF::SetFType( stref ft ) {
-   if( !eqi( ft, d_ftype ) ) {
+   if( !FTypeEq( ft ) ) {
       d_ftype.assign( sr2st(ft) );
       d_ftypeStruct = ::Get_FTypeSetting( ft );
       }
