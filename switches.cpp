@@ -276,6 +276,9 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "colorinf"       , Var2TPfx( g_colorInfo             ), swinCOLOR   , swidColorvarx  _AHELP( "the color of informative text" ) },
  { "colorsta"       , Var2TPfx( g_colorStatus           ), swinCOLOR   , swidColorvarx  _AHELP( "the color of most status-bar information" ) },
  { "colorwbc"       , Var2TPfx( g_colorWndBorder        ), swinCOLOR   , swidColorvarx  _AHELP( "the color of window borders" ) },
+#if !defined(_WIN32)
+ { "conin_tmout"    , Var2TPfx( g_iConin_nonblk_rd_tmout), swinVAR_INT , swidInt        _AHELP( "value passed to ncurses::timeout( value ) when nonblocking ncurses::getch() is configured" ) },
+#endif
  { "cursorsize"     , Fxn2TPfx( swixCursorsize          ), swinFXN_STR , swidCursorsize _AHELP( "0:small, 1:large" ) },
  { "delims"         , Fxn2TPfx( swixDelims              ), swinFXN_BOOL, swidDelims     _AHELP( "string containing delimiters" ) },
  { "dialogtop"      , Var2TPfx( g_fDialogTop            ), swinVAR_BOOL, swidBool       _AHELP( "dialog & status lines placed at top (yes) or bottom (no) of screen" ) },

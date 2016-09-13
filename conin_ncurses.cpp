@@ -120,8 +120,9 @@ STATIC_FXN void keypad_mode_disable() { keypad(stdscr, 0); s_keypad_mode = false
 STATIC_FXN void keypad_mode_enable()  { keypad(stdscr, 1); s_keypad_mode = true ; }
 
 STATIC_VAR bool s_conin_blocking_read;
-STATIC_FXN void conin_nonblocking_read() { timeout(10); s_conin_blocking_read = false; } // getCh blocks for 10 milliseconds, and returns ERR if there is still no input
-STATIC_FXN void conin_blocking_read()    { timeout(-1); s_conin_blocking_read = true;  } // getCh blocks waiting for next char
+GLOBAL_VAR int  g_iConin_nonblk_rd_tmout = 10;
+STATIC_FXN void conin_nonblocking_read() { timeout(g_iConin_nonblk_rd_tmout); s_conin_blocking_read = false; } // getCh blocks for (10) milliseconds, returns ERR if there is still no input
+STATIC_FXN void conin_blocking_read()    { timeout(  -1                    ); s_conin_blocking_read = true;  } // getCh blocks waiting for next char
 
 void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    noecho();              // we do not change

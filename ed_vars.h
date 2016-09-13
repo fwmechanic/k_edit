@@ -92,6 +92,9 @@ extern bool  g_fWordwrap         ;
 
 extern int   g_iBackupMode       ;
 extern int   g_iBlankAnnoDispSrcMask;
+#if !defined(_WIN32)
+extern int   g_iConin_nonblk_rd_tmout;
+#endif
 extern int   g_iCursorSize       ;
 extern int   g_iHike             ;
 extern int   g_iHscroll          ;
