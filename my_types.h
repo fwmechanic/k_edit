@@ -285,7 +285,7 @@ bool WithinRangeInclusive( T nLower, T toCheck, T nUpper ) {
 class BoolOneShot { // simple utility functor
    bool first = true;
 public:
-   int operator() () { const bool rv( first ); first = false; return rv; }
+   operator bool()   { const auto rv( first ); first = false; return rv; }
    };
 
 // for making writable copies of const char []

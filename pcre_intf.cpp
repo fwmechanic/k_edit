@@ -62,7 +62,7 @@ PCRE_EXP_DECL void   pcre_free_( void *p ) {
 
 void PCRE_API_INIT() {
    STATIC_VAR BoolOneShot first;
-   if( first() ) {
+   if( first ) {
       0 && DBG( "PCRE version '%s'", pcre_version() );
       // Msg( "loaded PCRE %s", version() ); if last saved SRCH was regex, this
       //    will crash because screen-geom vars are not initialized until after the

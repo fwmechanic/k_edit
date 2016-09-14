@@ -434,7 +434,7 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
       auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
       if( pFBuf->IsDirty() && pFBuf->FnmIsDiskWritable() ) {
-         if( NeedToQueryUser() ) {
+         if( NeedToQueryUser ) {
             auto numDirtyFiles(0);
 #if FBUF_TREE
             rb_traverse( pNd2, g_FBufIdx )

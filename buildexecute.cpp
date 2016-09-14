@@ -220,7 +220,7 @@ std::string ArgTypeNames( int argval ) {
    BoolOneShot first;
    for( const auto &te : tbl ) {
       if( te.mask & argval ) {
-         if( !first() ) { rv.append( "+" ); }
+         if( !first ) { rv.append( "+" ); }
          rv.append( te.name );
          }
       }

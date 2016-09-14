@@ -359,7 +359,7 @@ void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
    lineIterator li( pszNewLineData );
    while( !li.empty() ) {
       auto ln( li.next() );
-      if( first() && !ln.empty() ) {
+      if( first && !ln.empty() ) {
          const auto rl( PeekRawLine( LastLine() ) );
          std::string lbuf; lbuf.reserve( rl.length() + ln.length() );
          lbuf.assign( rl.data(), rl.length() );

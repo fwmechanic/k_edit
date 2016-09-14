@@ -521,7 +521,7 @@ std::string KeyNmAssignedToCmd_all( PCCMD pCmdToFind, PCChar nmSep ) {
    BoolOneShot first;
    for( const auto &pCmd : s_Key2CmdTbl ) {
       if( pCmd == pCmdToFind ) {
-         if( !first() ) {
+         if( !first ) {
             dest.append( nmSep );
             }
          dest.append( KeyNmOfEdkc( kyNm, &pCmd - s_Key2CmdTbl ) );
