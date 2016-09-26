@@ -208,27 +208,6 @@ STATIC_FXN char GenAltHiliteColor( const char color ) {
    else                             { return ( color ^ BGhi ); }
    }
 
-STATIC_CONST struct {  // contents init'd from $KINIT:k.filesettings
-   PCChar   pLuaName;
-   size_t   ofs;
-   int      dflt;
-   } s_color2Lua[] = {
-#define SINIT( nm, idx, dflt )  { #nm, idx, dflt }
-   SINIT( txt , ColorTblIdx::TXT , 0x1E ),
-   SINIT( hil , ColorTblIdx::HIL , 0x3F ),
-   SINIT( sel , ColorTblIdx::SEL , 0x2F ),
-   SINIT( wuc , ColorTblIdx::WUC , 0xF2 ),
-   SINIT( cxy , ColorTblIdx::CXY , 0x4F ),
-   SINIT( str , ColorTblIdx::STR , 0x16 ),
-   SINIT( cpp , ColorTblIdx::CPP , 0x06 ),
-   SINIT( com , ColorTblIdx::COM , 0x08 ),
-#undef SINIT
-   };
-
-typedef uint8_t ViewColors[ ColorTblIdx::VIEW_COLOR_COUNT ];
-
-static_assert( ELEMENTS( s_color2Lua ) == sizeof( ViewColors ), "ELEMENTS( s_color2Lua ) != ELEMENTS( ViewColors )" );
-
 //--------------------------------------------------------------------------------------------------------------------------
 STATIC_VAR RbTree *s_FTS_idx;
 
@@ -247,7 +226,8 @@ struct FTypeSetting {
         };
 
    Path::str_t d_key;  // rbtree key
-   ViewColors  d_colors;
+   uint8_t     d_colors[ ColorTblIdx::VIEW_COLOR_COUNT ];
+   constexpr static int d_colors_ELEMENTS() { return ELEMENTS(d_colors); }
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
    HL_ID       d_hl_id;
 
@@ -298,6 +278,23 @@ void FTypeSetting::Update() {
          }
       }
    }
+   STATIC_CONST struct {  // contents init'd from $KINIT:k.filesettings
+      PCChar   pLuaName;
+      size_t   ofs;
+      int      dflt;
+      } s_color2Lua[] = {
+   #define SINIT( nm, idx, dflt )  { #nm, idx, dflt }
+      SINIT( txt , ColorTblIdx::TXT , 0x1E ),
+      SINIT( hil , ColorTblIdx::HIL , 0x3F ),
+      SINIT( sel , ColorTblIdx::SEL , 0x2F ),
+      SINIT( wuc , ColorTblIdx::WUC , 0xF2 ),
+      SINIT( cxy , ColorTblIdx::CXY , 0x4F ),
+      SINIT( cpp , ColorTblIdx::CPP , 0x06 ),
+      SINIT( com , ColorTblIdx::COM , 0x08 ),
+      SINIT( str , ColorTblIdx::STR , 0x16 ),
+   #undef SINIT
+      };
+   static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
    snprintf_full( &pbuf, &kybufBytes, "colors." );
    for( const auto &c2L : s_color2Lua ) {
       scpy( pbuf, kybufBytes, c2L.pLuaName );
@@ -338,32 +335,34 @@ void Reread_FTypeSettings() {                                           FTypeSet
       }                                                                 FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
-GLOBAL_CONST unsigned char *g_colorVars[] = {
+GLOBAL_CONST uint8_t *g_colorVars[] = {
    &g_colorInfo      ,
    &g_colorStatus    ,
    &g_colorWndBorder ,
    &g_colorError     ,
    };
+static_assert( ELEMENTS(g_colorVars) == (ColorTblIdx::COLOR_COUNT - FTypeSetting::d_colors_ELEMENTS()), "ELEMENTS(g_colorVars) == ColorTblIdx::COLOR_COUNT" );
 
-static_assert( ELEMENTS(g_colorVars) == (ColorTblIdx::COLOR_COUNT - ColorTblIdx::VIEW_COLOR_COUNT), "ELEMENTS(g_colorVars) == ColorTblIdx::COLOR_COUNT" );
+int View::ColorIdx2Attr( int colorIdx ) const {
+   if( colorIdx >= 0 ) {
+      if( colorIdx < FTypeSetting::d_colors_ELEMENTS() ) {
+         const auto pFTS( CFBuf()->GetFTypeSettings() );
+         return  pFTS ? pFTS->d_colors[ colorIdx ] :
+                *g_colorVars[ ColorTblIdx::ERRM - FTypeSetting::d_colors_ELEMENTS() ];
+         }
+      colorIdx -= FTypeSetting::d_colors_ELEMENTS();
+      if( colorIdx < ELEMENTS(g_colorVars) ) {
+         return *g_colorVars[ colorIdx ];
+         }
+      }
+   return    *g_colorVars[ ColorTblIdx::ERRM - FTypeSetting::d_colors_ELEMENTS() ];
+   }
 
 void FBUF::SetFType( stref ft ) {
    if( !FTypeEq( ft ) ) {
       d_ftype.assign( sr2st(ft) );
       d_ftypeStruct = ::Get_FTypeSetting( ft );
       }
-   }
-
-int View::ColorIdx2Attr( int colorIdx ) const {
-   if( colorIdx < ColorTblIdx::VIEW_COLOR_COUNT ) {
-      const auto pFTS( CFBuf()->GetFTypeSettings() );
-      return  pFTS ? pFTS->d_colors[ colorIdx ] :
-             *g_colorVars[ ColorTblIdx::ERRM - ColorTblIdx::VIEW_COLOR_COUNT ];
-      }
-   if( colorIdx < ColorTblIdx::COLOR_COUNT ) {
-      return *g_colorVars[ colorIdx          - ColorTblIdx::VIEW_COLOR_COUNT ];
-      }
-   return    *g_colorVars[ ColorTblIdx::ERRM - ColorTblIdx::VIEW_COLOR_COUNT ];
    }
 
 //-----------------------------------------------------------------------------------------------------------
