@@ -107,8 +107,8 @@ class ColorChanger : public KeyChanger
    const uint8_t  d_origColor;
    void SetColor( int val ) { d_colorVar = val; }
    void IncDecColor( bool fg, int incr ) {
-      const int mask ( fg ? 0xF0 : 0x0F );
-      const int shift( fg ?    4 :    0 );
+      const int mask ( fg ? BGmask : FGmask );
+      const int shift( fg ?      4 :      0 );
       d_colorVar = (((((d_colorVar & mask) >> shift) + incr) << shift) & mask) | (d_colorVar & ~mask);
       }
 public:

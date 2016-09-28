@@ -234,7 +234,7 @@ GLOBAL_CONST char chRex = '/';
 
 void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
    const auto de_color( 0x5f );
-   const auto ss_color( g_fCase ? 0x4f : 0x2f );
+   const auto ss_color( g_fCase ? (bgRED|fgWHT) : (bgGRN|fgWHT) );
    ColoredStrefs csrs; csrs.reserve( d_fIsRegex ? 5 : 3 );
                       csrs.emplace_back( g_colorInfo , hdr );
    if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &chRex, sizeof(chRex) ) ); }

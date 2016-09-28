@@ -374,15 +374,11 @@ STATIC_FXN PChar LuaTbl2S0( lua_State *L, PChar dest, size_t sizeof_dest, PCChar
 
 // returns empty string if any errors
 STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
-   auto rv( LuaTbl2S0( L, dest, sizeof_dest, tableDescr ) );
-   if( !rv ) {
-      if( sizeof_dest > 0 ) {
-         if( pszDflt ) {
-            scpy( dest, sizeof_dest, pszDflt );
-            }
-         else {
-            dest[0] = '\0';
-            }
+   if( sizeof_dest > 0 ) {
+      dest[0] = '\0';
+      auto rv( LuaTbl2S0( L, dest, sizeof_dest, tableDescr ) );
+      if( !rv && pszDflt ) {
+         scpy( dest, sizeof_dest, pszDflt );
          }
       }                                                                      0 && DBG( "-%s '%s' -> '%s'", __func__ , tableDescr, dest );
    return dest;

@@ -209,7 +209,6 @@ STATIC_FXN char GenAltHiliteColor( const char color ) {
    }
 
 //--------------------------------------------------------------------------------------------------------------------------
-STATIC_VAR RbTree *s_FTS_idx;
 
 STATIC_FXN inline FTypeSetting *IdxNodeToFTS( RbNode *pNd ) { return static_cast<FTypeSetting *>( rb_val(pNd) ); }  // type-safe conversion function
 
@@ -224,45 +223,44 @@ struct FTypeSetting {
           HL_BASH   ,
           HL_DIFF   ,
         };
-
    Path::str_t d_key;  // rbtree key
-   uint8_t     d_colors[ ColorTblIdx::VIEW_COLOR_COUNT ];
+   colorval_t  d_colors[ ColorTblIdx::VIEW_COLOR_COUNT ];
    constexpr static int d_colors_ELEMENTS() { return ELEMENTS(d_colors); }
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
    HL_ID       d_hl_id;
-
    void  Update();
-
-   FTypeSetting( stref ext ) : d_key( sr2st(ext) ) {                         0 && DBG( "%s CTOR: '%" PR_BSR "' ----------------------------------------------", __func__, BSR(d_key) );
+   FTypeSetting( stref ext )
+      : d_key( sr2st(ext) )
+      {                            0 && DBG( "%s CTOR: '%" PR_BSR "' ----------------------------------------------", __func__, BSR(d_key) );
       Update();
       }
    ~FTypeSetting() {}
-
    };
 
-STATIC_FXN int Show_FTypeSettings() {                                        FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
-   rb_traverse( pNd, s_FTS_idx ) {
-      const auto pFTS( IdxNodeToFTS( pNd ) );
-      FTypeSetting::DB && DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
-      }                                                                      FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
+STATIC_VAR RbTree *s_FTS_idx;
+STATIC_FXN int Show_FTypeSettings() {
+   if( FTypeSetting::DB ) {
+      DBG( "%s+ ----------------------------------------------", __func__ );
+      rb_traverse( pNd, s_FTS_idx ) {
+         const auto pFTS( IdxNodeToFTS( pNd ) );
+         DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
+         }
+      DBG( "%s- ----------------------------------------------", __func__ );
+      }
    return 1;
    }
 
 void FTypeSetting::Update() {
-   linebuf kybuf; auto pbuf( kybuf ); auto kybufBytes( sizeof kybuf );
-   snprintf_full( &pbuf, &kybufBytes, "filesettings.ftype_map.%s.", d_key.c_str() );
-   d_eolCommentDelim[0] = '\0';
-   scpy( pbuf, kybufBytes, "eolCommentDelim" );
-   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
+   linebuf kybuf; auto kybufTail( kybuf ); auto kybufTailSize( sizeof kybuf );
+   snprintf_full( &kybufTail, &kybufTailSize, "filesettings.ftype_map.%s.", d_key.c_str() );
+   scpy( kybufTail, kybufTailSize, "eolCommentDelim" );
+   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );     DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
    {
-   scpy( pbuf, kybufBytes, "hilite" );
+   scpy( kybufTail, kybufTailSize, "hilite" );
    char hiliteNmBuf[21];
    LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
    stref key( hiliteNmBuf );
-   STATIC_CONST struct {
-      PCChar   nm;
-      HL_ID    enumval;
-      } hlnms[] = {
+   STATIC_CONST struct { PCChar nm; HL_ID enumval; } hlnms[] = {
       { "c"      , HL_C      },
       { "make"   , HL_MAKE   },
       { "lua"    , HL_LUA    },
@@ -278,28 +276,25 @@ void FTypeSetting::Update() {
          }
       }
    }
-   STATIC_CONST struct {  // contents init'd from $KINIT:k.filesettings
-      PCChar   pLuaName;
-      size_t   ofs;
-      int      dflt;
-      } s_color2Lua[] = {
+   {
+   STATIC_CONST struct { PCChar pLuaName; size_t ofs; int dflt; } s_color2Lua[] = { // contents init'd from $KINIT:k.filesettings
    #define SINIT( nm, idx, dflt )  { #nm, idx, dflt }
-      SINIT( txt , ColorTblIdx::TXT , 0x1E ),
-      SINIT( hil , ColorTblIdx::HIL , 0x3F ),
-      SINIT( sel , ColorTblIdx::SEL , 0x2F ),
-      SINIT( wuc , ColorTblIdx::WUC , 0xF2 ),
-      SINIT( cxy , ColorTblIdx::CXY , 0x4F ),
-      SINIT( cpp , ColorTblIdx::CPP , 0x06 ),
-      SINIT( com , ColorTblIdx::COM , 0x08 ),
-      SINIT( str , ColorTblIdx::STR , 0x16 ),
+      SINIT( txt , ColorTblIdx::TXT , bgBLU|fgYEL ),
+      SINIT( hil , ColorTblIdx::HIL , bgCYN|fgWHT ),
+      SINIT( sel , ColorTblIdx::SEL , bgGRN|fgWHT ),
+      SINIT( wuc , ColorTblIdx::WUC , bgWHT|fgGRN ),
+      SINIT( cxy , ColorTblIdx::CXY , bgRED|fgWHT ),
+      SINIT( cpp , ColorTblIdx::CPP , bgBLK|fgBRN ),
+      SINIT( com , ColorTblIdx::COM , bgBLK|fgMGR ),
+      SINIT( str , ColorTblIdx::STR , bgBLU|fgBRN ),
    #undef SINIT
-      };
-   static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
-   snprintf_full( &pbuf, &kybufBytes, "colors." );
+      }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
+   snprintf_full( &kybufTail, &kybufTailSize, "colors." );
    for( const auto &c2L : s_color2Lua ) {
-      scpy( pbuf, kybufBytes, c2L.pLuaName );
+      scpy( kybufTail, kybufTailSize, c2L.pLuaName );
       d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf, c2L.dflt );   DB && DBG( "%s: %s = 0x%02X", __func__, kybuf, d_colors[ c2L.ofs ] );
       }
+   }
 // d_colors[ ColorTblIdx::CXY ] = GenAltHiliteColor( d_colors[ ColorTblIdx::TXT ] );
    }
 
@@ -335,27 +330,25 @@ void Reread_FTypeSettings() {                                           FTypeSet
       }                                                                 FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
-GLOBAL_CONST uint8_t *g_colorVars[] = {
-   &g_colorInfo      ,
-   &g_colorStatus    ,
-   &g_colorWndBorder ,
-   &g_colorError     ,
-   };
-static_assert( ELEMENTS(g_colorVars) == (ColorTblIdx::COLOR_COUNT - FTypeSetting::d_colors_ELEMENTS()), "ELEMENTS(g_colorVars) == ColorTblIdx::COLOR_COUNT" );
-
 int View::ColorIdx2Attr( int colorIdx ) const {
+   const auto unknownColor( bgRED|fgRED|FGhi );
    if( colorIdx >= 0 ) {
       if( colorIdx < FTypeSetting::d_colors_ELEMENTS() ) {
          const auto pFTS( CFBuf()->GetFTypeSettings() );
-         return  pFTS ? pFTS->d_colors[ colorIdx ] :
-                *g_colorVars[ ColorTblIdx::ERRM - FTypeSetting::d_colors_ELEMENTS() ];
+         return pFTS ? pFTS->d_colors[ colorIdx ] : unknownColor;
          }
+      STATIC_CONST colorval_t *s_colorVars[] = {
+         &g_colorInfo      ,
+         &g_colorStatus    ,
+         &g_colorWndBorder ,
+         &g_colorError     ,
+         }; static_assert( ELEMENTS(s_colorVars) == (ColorTblIdx::COLOR_COUNT - FTypeSetting::d_colors_ELEMENTS()), "ELEMENTS(s_colorVars) == ColorTblIdx::COLOR_COUNT" );
       colorIdx -= FTypeSetting::d_colors_ELEMENTS();
-      if( colorIdx < ELEMENTS(g_colorVars) ) {
-         return *g_colorVars[ colorIdx ];
+      if( colorIdx < ELEMENTS(s_colorVars) ) {
+         return *s_colorVars[ colorIdx ];
          }
       }
-   return    *g_colorVars[ ColorTblIdx::ERRM - FTypeSetting::d_colors_ELEMENTS() ];
+   return unknownColor;
    }
 
 void FBUF::SetFType( stref ft ) {
@@ -385,7 +378,7 @@ void FBUF::SetFType( stref ft ) {
           parsing (to the statement/block/keyword level) remains unlikely; I just
           wanted very reliable _low-lighting_ of comments to facilitate reading
           "enterprise" codebases which often contain vast amounts of gratuitous
-          boilerplate comments (e.g.  AutoDuck function comment headers).
+          boilerplate comments (e.g.  AutoDuck/Doxygen function comment headers).
           A more likely future development is a search mode that ignores
           comments as parsed herein.
 
@@ -1978,11 +1971,10 @@ public:
 
 bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    // handle cursor-line and cursor-column hiliting
-   const auto cxy( ColorIdx2Attr( ColorTblIdx::CXY ) );
-   const auto fg ( ColorIdx2Attr( ColorTblIdx::TXT ) );
    const auto isActiveWindow_( isActiveWindow() );
    const auto isCursorLine( isActiveWindow_ && g_CursorLine() == yLine );
    if( isCursorLine ) {
+      const auto cxy( ColorIdx2Attr( ColorTblIdx::CXY ) );
       alcc.   PutColorRaw( 0            , COL_MAX, cxy );
       if( DrawVerticalCursorHilite() ) {
          return true;
@@ -1990,6 +1982,8 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
       }
    else {
       if( isActiveWindow_ && DrawVerticalCursorHilite() ) {
+         const auto fg ( ColorIdx2Attr( ColorTblIdx::TXT ) );
+         const auto cxy( ColorIdx2Attr( ColorTblIdx::CXY ) );
          alcc.PutColorRaw( 0            , COL_MAX, fg  );
          alcc.PutColorRaw( g_CursorCol(),       1, cxy );
          return true;
@@ -2659,8 +2653,7 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
    return xCol;
    }
 
-// STATIC_CONST char EntabDispChar[] = "nyY";
-// static_assert( KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID, "KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID" );
+// STATIC_CONST char EntabDispChar[] = "nyY"; static_assert( KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID, "KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID" );
 
 void LineColors::Cat( const LineColors &rhs ) {  0 && DBG( "CAT[%3d]", cols() );
    auto iy(0);
@@ -3161,7 +3154,7 @@ void View::GetLineForDisplay
    const auto isActiveLine( isActiveWindow && g_CursorLine() == yLineOfFile );
    dest.replace( xLeft, xWidth, xWidth, ' ' ); // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
    if( yLineOfFile > CFBuf()->LastLine() ) {
-      alcc.PutColorRaw( Origin().col, xWidth, 0x07 );
+      alcc.PutColorRaw( Origin().col, xWidth, bgBLK|fgDGR );
       dest[xLeft] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
       }
    else {

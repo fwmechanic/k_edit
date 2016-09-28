@@ -62,6 +62,7 @@ enum { // these are COLOR CODES!
    FGbase=0x07, BGbase=0x70,
    };
 
+typedef uint8_t colorval_t;
 
 struct YX_t {
    int  lin;
