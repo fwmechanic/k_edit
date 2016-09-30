@@ -36,7 +36,10 @@ The K source code distro contains, and K uses, the following source code from ex
 
 # Limitations
 
- * K is a Win32 Console or Linux ncurses app with no mouse support (aside from "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors) (update: the "Windows 10 Anniv Update" broke this functionality).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+ * K is a Win32 Console or Linux ncurses app with no mouse support (aside from "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+     * update 2016/09: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled (unchecked: K scroll-wheel feature works) to enabled (checked: K scroll-wheel feature disabled/broken).
+         * to access this setting (which may be host-global!): right click on the icon in the console window title bar and select Properties, then the Options tab
+         * "relaunch" seems to mean closing and reopening the console window (not rebooting the OS).
  * K has no "virtual memory" mechanism (as M did); files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process (now that all OS's default-deploy their x64 variant (and K is buildable as an x64 app) this is practically never a concern).
  * K operates on ASCII files; is has no support for Unicode/UTF-8/MBCS/etc. content (it's a text-editor, not a word processor).  I am increasingly entertaining the possibility of adding UTF-8 support.
 
@@ -56,7 +59,7 @@ The K source code distro contains, and K uses, the following source code from ex
 
 ### Windows-specific Build-Prep Instructions
 
-* The [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html) provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
+ * The [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html) provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
      * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
      * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
  * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) must be manually installed (and in `PATH`).
