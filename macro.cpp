@@ -240,7 +240,7 @@ bool ARG::cur_y4  () { return PushStrftimeMacro( "%Y" ); }
 namespace Interpreter {
    enum { MAX_MACRO_NESTING = 32 };  // allowing infinite nesting is not a service to the programmer...
    class MacroRuntimeStkEntry {
-      std::string d_macroText;
+      std::string d_macroText; // a _copy_ since it's possible for the macro value to be changed while the macro is running...
       PCChar d_pCurTxt;
       int    d_runFlags;
       bool   d_insideQuot2dString;
@@ -951,8 +951,8 @@ bool ARG::record() {
 
 stref ExtractAssignableText( stref src, bool &continues ) {
    enum states { outsideQuote, inQuote, prevCharBlank, contCharSeen };
-   states stateWhereBlankLastSeen( outsideQuote );
-   states state( outsideQuote );
+   auto stateWhereBlankLastSeen( outsideQuote );
+   auto state( outsideQuote );
    auto fChIsBlank( true );
    #if 0
    auto showStChange = []( int line, states statevar, states newval, PCChar pC, PCChar pC_start ) {
