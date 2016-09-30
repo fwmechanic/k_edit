@@ -54,21 +54,21 @@ void AssignLogTag( PCChar tag ) {
        }
    }
 
-bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=0}; DB && DBG( "%s 0(%" PR_BSR ")", __function__, BSR(src) );
-   src.remove_prefix( FirstNonBlankOrEnd( src ) );              DB && DBG( "%s 1(%" PR_BSR ")", __function__, BSR(src) );
+bool AssignStrOk_( stref src, CPCChar caller ) { enum {DB=0};   DB && DBG( "%s 0(%" PR_BSR ")", caller, BSR(src) );
+   src.remove_prefix( FirstNonBlankOrEnd( src ) );              DB && DBG( "%s 1(%" PR_BSR ")", caller, BSR(src) );
    if( src.length() == 0 ) {
-      return Msg( "(from %s) entirely blank", __function__ );
+      return Msg( "(from %s) entirely blank", caller );
       }
    const auto ixColon( src.find( ':' ) );
    if( stref::npos == ixColon ) {
-      return Msg( "(from %s) missing ':' in %" PR_BSR, __function__, BSR(src) );
+      return Msg( "(from %s) missing ':' in %" PR_BSR, caller, BSR(src) );
       }
-   auto name( src.substr( 0, ixColon ) );                  0 && DB && DBG( "%s 2 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
-   rmv_trail_blanks( name );                               0 && DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
-   src.remove_prefix( FirstNonBlankOrEnd( src, ixColon+1 ) );   DB && DBG( "%s 4 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
-   rmv_trail_blanks( src );                                     DB && DBG( "%s 5 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+   auto name( src.substr( 0, ixColon ) );                  0 && DB && DBG( "%s 2 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
+   rmv_trail_blanks( name );                               0 && DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
+   src.remove_prefix( FirstNonBlankOrEnd( src, ixColon+1 ) );   DB && DBG( "%s 4 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
+   rmv_trail_blanks( src );                                     DB && DBG( "%s 5 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
    if( '=' == src[0] ) {
-      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        DB && DBG( "%s 6 %" PR_BSR "->%" PR_BSR "'", __function__, BSR(name), BSR(src) );
+      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        DB && DBG( "%s 6 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
       const auto rv( DefineMacro( name, src ) );                DB && DBG( "DefineMacro(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
       return rv;
       }
@@ -78,7 +78,7 @@ bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=0}; DB && DBG( "
       }
    const auto BK_rv( BindKeyToCMD( name, src ) );
    switch( BK_rv ) {
-      case SetKeyRV_OK    : DB && DBG( "key %" PR_BSR " ->CMD %" PR_BSR, BSR(src), BSR(name) );
+      case SetKeyRV_OK    :                                     DB && DBG( "key %" PR_BSR " ->CMD %" PR_BSR, BSR(src), BSR(name) );
                             return true;
       case SetKeyRV_BADKEY: return Msg( "%" PR_BSR " is an unknown key", BSR(src) );
       case SetKeyRV_BADCMD: return Msg( "%" PR_BSR " is an unknown CMD", BSR(name) );
@@ -86,29 +86,12 @@ bool AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=0}; DB && DBG( "
       }
    }
 
-// note that RSRCFILE_COMMENT_DELIM is allowed within a macro identifier (i.e.
-// 'my#foobar' is a valid macro identifier), which this code handles, making it
-// non-generic
-STATIC_FXN sridx ToAssignCommentDelimOrEndSkipQuoted( stref src, sridx start ) {
-   if( start < src.length() ) {
-      char quoteCh( '\0' );
-      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         if( RSRCFILE_COMMENT_DELIM == *it && (it == src.cbegin() || isblank( *(it-1) )) ) {
-            return std::distance( src.cbegin(), it );
-            }
-         SKIP_QUOTED_STR( quoteCh, it, src, NO_MATCH )
-         }
-      }
-NO_MATCH:
-   return std::distance( src.cbegin(), src.cend() );
-   }
-
-bool TruncComment_AssignStrOk_( stref src, CPCChar __function__ ) { enum {DB=1};
-   const auto ixCD( ToAssignCommentDelimOrEndSkipQuoted( src, 0 ) );
-   if( !atEnd( src, ixCD ) ) {
-      src.remove_suffix( src.length() - ixCD );
-      }
-   return AssignStrOk_( src, __function__ );
+bool TruncComment_AssignStrOk_( stref src, CPCChar caller ) {
+   auto continues( false ); const auto parsed( ExtractAssignableText( src, continues ) );
+   if( parsed.empty() )                  { return Msg( "nothing to assign" ); }
+   if( continues )                       { return Msg( "source text ends with line continuation" ); }
+   if( !AssignStrOk_( parsed, caller ) ) { return Msg( "assignment error" ); }
+   return true;
    }
 
 void CMD::RedefMacro( stref newDefn ) {
@@ -685,14 +668,8 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
 bool ARG::assign() {
    switch( d_argType ) {
     default:      return BadArg();
-    case NOARG:  {const auto ok( TruncComment_AssignStrOk( g_CurFBuf()->PeekRawLine( d_noarg.cursor.lin ) ) );
-                  if( !ok ) { ErrorDialogBeepf( "assign failed" ); }
-                  return ok;
-                 }
-    case TEXTARG:{const auto ok( TruncComment_AssignStrOk( d_textarg.pText ) );
-                  if( !ok ) { ErrorDialogBeepf( "assign failed" ); }
-                  return ok;
-                 }
+    case NOARG:   return TruncComment_AssignStrOk( g_CurFBuf()->PeekRawLine( d_noarg.cursor.lin ) );
+    case TEXTARG: return TruncComment_AssignStrOk( d_textarg.pText );
     case LINEARG:{int assignsDone; Point errPt;
                   if( RsrcFileLineRangeAssignFailed( "user assign LINEARG", g_CurFBuf(), d_linearg.yMin, d_linearg.yMax, &assignsDone, &errPt ) ) {
                      g_CurView()->MoveCursor( errPt );
@@ -972,7 +949,7 @@ bool ARG::record() {
    return IsMacroRecordingActive();
    }
 
-stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
+stref ExtractAssignableText( stref src, bool &continues ) {
    enum states { outsideQuote, inQuote, prevCharBlank, contCharSeen };
    states stateWhereBlankLastSeen( outsideQuote );
    states state( outsideQuote );
@@ -981,9 +958,9 @@ stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
    auto showStChange = []( int line, states statevar, states newval, PCChar pC, PCChar pC_start ) {
       DBG( "[%3d] %c: St %d -> %d L%d", pC - pC_start, *pC, statevar, newval, line );
       };
-   #define  ChangeState( newval )  ( state = newval, showStChange( __LINE__, state, newval, pDest, pHeapBuf ) )
+   #define  ChangeState( newval )  ( state = (newval), showStChange( __LINE__, state, (newval), pDest, pHeapBuf ) )
    #else
-   #define  ChangeState( newval )  ( state = newval )
+   #define  ChangeState( newval )  ( state = (newval) )
    #endif
    auto itEarlyTerm       ( src.cend() );
    auto itContinuationChar( src.cend() );
@@ -1029,7 +1006,8 @@ stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues ) {
    if( continues && itEarlyTerm == src.cend() ) {
       itEarlyTerm = itContinuationChar - 1; // the continuation char is always preceded by a space which is NOT included in the macro text
       }
-   const auto rv( src.substr( 0, std::distance( src.cbegin(), itEarlyTerm ) ) );
+   auto rv( src.substr( 0, std::distance( src.cbegin(), itEarlyTerm ) ) );
+   if( IsStringBlank( rv ) ) { rv.clear(); }
    0 && DBG( "--> %" PR_BSR "|", BSR(rv) );
    return rv;
    }

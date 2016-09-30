@@ -264,7 +264,8 @@
    cq:= "    " justify left left left ">> " delete delete delete arg arg  \
         left left left meta ppara up vrepeat
 
-   # xbak := arg "\.kbackup\" strip  arg "\Backup\" strip  arg "\.hg\" strip  arg "\.git\" strip  arg "\.svn\" strip
+   # xbak := arg "\.kbackup" strip  arg "\Backup\" strip  arg "\.hg\" strip  arg "\.git\" strip  arg "\.svn\" strip
+   xbak := arg ds ".kbackup" ds strip  arg ds "Backup" ds strip  arg ds ".hg" ds strip  arg ds ".git" ds strip
 
    unsigned:= replace "unsigned char"  nl "uint8_t"  nl  \
               replace "unsigned short" nl "uint16_t" nl  \
@@ -623,8 +624,10 @@
    resize:alt+w
    usemouse:yes
    # arg:tab   # this breaks Linux/X paste which types literal chars into the editor
+   ds:="\"
 
 [os.linux]
+   ds:="/"
    trailspace:no
    traildisp: ?
    tabdisp: <

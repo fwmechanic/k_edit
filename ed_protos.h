@@ -314,7 +314,7 @@ enum { RSRCFILE_COMMENT_DELIM = '#' };
 #define        AssignStrOk( str )   AssignStrOk_( str, __FUNCTION__ )
 extern   bool  AssignStrOk_( stref src, CPCChar __function__ );
 #define        TruncComment_AssignStrOk( str )  TruncComment_AssignStrOk_( str, __FUNCTION__ )
-extern   bool  TruncComment_AssignStrOk_( stref src, CPCChar __function__ );
+extern   bool  TruncComment_AssignStrOk_( stref src, CPCChar caller );
 extern   bool  DefineMacro( stref pszMacroName, stref pszMacroCode );
 extern   void  FreeAllMacroDefs();
 enum { SetKeyRV_OK, SetKeyRV_BADKEY, SetKeyRV_BADCMD };
@@ -353,7 +353,7 @@ extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );
 extern   bool  fExecuteSafe( PCChar str );
 extern   bool  PushVariableMacro( PCChar strToExecute );
 extern   std::string DupTextMacroValue( PCChar macroName );
-extern   stref ParseRawMacroText_ContinuesNextLine( stref src, bool &continues );
+extern   stref ExtractAssignableText( stref src, bool &continues );
 extern   void  CleanupAnyExecutionHaltRequest(); // must NOT be declared _within_ Main, where it would get a DLLX attribute
 
 //------------ FTypeSettings

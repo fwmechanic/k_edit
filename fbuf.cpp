@@ -1042,20 +1042,23 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
    DefineStrMacro( "curfile", fb->Namestr() );
   #endif
    DefineStrMacro( "curfilename", Path::RefFnm  ( fb->Namestr() ) );
+   DefineStrMacro( "curfileext" , Path::RefExt  ( fb->Namestr() ) );
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
-   const auto rsrcExt( fb->GetRsrcExt() );
-   DefineStrMacro( "curfileext", rsrcExt );
    if( !fb->IsRsrcLdBlocked() ) { // ONLY AFTER curfile, curfilepath, curfilename, curfileext assigned:
+      const auto rsrcExt( fb->GetRsrcExt() );
       // weirdness: ftype is a switch setting which (among other things) guides
-      // content-sensitive display hiliting the ftype setting is cached by the
+      // content-sensitive display hiliting.  The ftype setting is cached by the
       // FBuf.  This is ASSUMED to be set in rsrcExt sections.  Since switch values
       // are currently stored in global (boo!) variables, we snoop the rsrcExt
       // section assignment process ...
       swixFtype( "unknown" ); // default
       RsrcFileLdAllNamedSections( rsrcExt );
-      const auto ftype( Get_s_cur_Ftype() );
+      const auto ftype( Get_s_cur_Ftype() );  // snoop ftype
       fb->SetFType( ftype );                                          0 && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
       RsrcFileLdSectionFtype( ftype );
+      }
+   else {
+      fb->SetFType( Get_s_cur_Ftype() );
       }
    }
 
@@ -1405,7 +1408,9 @@ bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
 
 bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    const auto rv( FBufReadOk_( fAllowDiskFileCreate, fCreateSilently ) );
-   SetRsrcExt();
+   if( !IsRsrcLdBlocked() ) {
+      SetRsrcExt();
+      }
    return rv;
    }
 
