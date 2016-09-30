@@ -36,8 +36,8 @@ The K source code distro contains, and K uses, the following source code from ex
 
 # Limitations
 
- * K is a Win32 Console or Linux ncurses app with no mouse support (aside from "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
-     * update 2016/09: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled (unchecked: K scroll-wheel feature works) to enabled (checked: K scroll-wheel feature disabled/broken).
+ * K is a Win32 Console or Linux ncurses app with no mouse support (aside from (trackpad gestures which mimic) "scroll wheel" behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+     * *Update 2016/09*: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled (unchecked: K scroll-wheel feature works) to enabled (checked: K scroll-wheel feature disabled/broken).
          * to access this setting (which may be host-global!): right click on the icon in the console window title bar and select Properties, then the Options tab
          * "relaunch" seems to mean closing and reopening the console window (not rebooting the OS).
  * K has no "virtual memory" mechanism (as M did); files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process (now that all OS's default-deploy their x64 variant (and K is buildable as an x64 app) this is practically never a concern).
@@ -99,7 +99,7 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 
   * The last [nuwen.net MinGW release](http://nuwen.net/mingw.html) (w/GCC 4.8.1) that builds 32-bit targets, 10.4 released 2013/08/01, is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
   * The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
-    * Update 2016/05: I haven't used K on high-res (WQHD or greater) monitors much lately, but haven't experienced this problem in recent memory (on Win 7, 8.1, or 10).
+    * *Update 2016/05*: I haven't used Win32-K on high-res (WQHD or greater) monitors much lately, but haven't experienced this problem in recent memory (on Win 7, 8.1, or 10).
 
 ## Linux key-decoding status quo
 
@@ -107,7 +107,7 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
 
   * Ubuntu 14.04+ Desktop
     * common: with `TERM=xterm`, _after_ you disable various terminal-menu/-command key-modulation (e.g. `alt+`) hooks, default terminfo for xterm correctly decodes a substantial proportion of the Windows-supported key combinations that K uses.
-    * Lubuntu Desktop (`lxterminal` nee `x-terminal-emulator`): mouse scroll wheel does not work.
+    * Lubuntu/LXDE Desktop (`lxterminal` nee `x-terminal-emulator`) running as VirtualBox guest: mouse scroll wheel _does_ work.
     * I think I've exhausted the possibilities here
   * PuTTY 0.67 (released 2016-03-05) to Lubuntu 14.04+
     * Be sure to use [the most recent release](http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html) of [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html).

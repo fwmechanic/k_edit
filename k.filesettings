@@ -109,7 +109,7 @@ ftype_map = {  -- ref'd from C, key source: arg "DetermineFType" tags
    sh           = ushell_settings                      ,
    bash         = ushell_settings                      ,
    pseudo       = text_settings                        ,
-   unknown      = ushell_settings                      ,
+   unknown      = text_settings                        ,
    wildcard     = ushell_settings                      ,
    diff         = diff_settings                        ,
    [""]         = { colors = stdColors }               ,
