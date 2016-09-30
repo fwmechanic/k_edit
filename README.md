@@ -36,7 +36,7 @@ The K source code distro contains, and K uses, the following source code from ex
 
 # Limitations
 
- * K is a Win32 Console or Linux ncurses app with no mouse support (aside from "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors)).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+ * K is a Win32 Console or Linux ncurses app with no mouse support (aside from "scroll wheel" (or trackpad gestures which mimic scroll-wheel behaviors) (update: the "Windows 10 Anniv Update" broke this functionality).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
  * K has no "virtual memory" mechanism (as M did); files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process (now that all OS's default-deploy their x64 variant (and K is buildable as an x64 app) this is practically never a concern).
  * K operates on ASCII files; is has no support for Unicode/UTF-8/MBCS/etc. content (it's a text-editor, not a word processor).  I am increasingly entertaining the possibility of adding UTF-8 support.
 

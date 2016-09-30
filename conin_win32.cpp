@@ -545,6 +545,26 @@ public:
 GLOBAL_VAR bool g_fUseMouse;
 
 class TMouseEvent {
+   // 20160929 (I now realize that) some weeks/months ago (specifically, after the monster "Windows 10 Anniv Update"), mouse-wheel scrolling stopped working in Windows 10.
+   //   the related code (here) has not changed in YEARS, so I suspect MS has broken this functionality...
+   //   and I'm not the only one to notice...
+   //   http://stackoverflow.com/questions/38887457/how-to-capture-mouse-wheeled-event
+   //   https://github.com/Maximus5/ConEmu/issues/216
+   //   and from https://forum.farmanager.com/viewtopic.php?t=10401
+   //   -----
+   //   I can confirm that mouse wheel stopped working in Windows 10 Anniv Update
+   //   -----
+   //   > BTW "[x] Use legacy console" in console properties resolves the issue.
+   //   Yes it does
+   //   -----
+   //   "Console host doesn't send mouse wheel events to applications anymore.
+   //   Instead wheel simply scrolls the screen bufffer (if it's bigger than the
+   //   window area) or does nothing at all (if it's the same).[YYY]
+   //
+   //   "We CAN NOT fix this on our side."
+   //
+   // [YYY] this is exactly the behavior I observe.
+   //
    Win32::MOUSE_EVENT_RECORD d_MouseEv;
    Point                     d_mousePosition;
    bool LeftButtonDown()  const { return ToBOOL( d_MouseEv.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED ); }
