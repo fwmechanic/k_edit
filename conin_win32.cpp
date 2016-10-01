@@ -700,8 +700,8 @@ void TMouseEvent::Process() { // usemouse:yes
       s_fInserting_EDCMDVK_HELP = false;
 #endif
       }
-#endif
    }
+#endif
 
 bool KbHit() { // BUGBUG does this actually WORK? 20081215 kgoodwin NO it doesn't because s_Conin is not being filled unless there were leftovers from the last ReadConsoleInput call
    AutoMutex mtx( s_Conin.mutex );
