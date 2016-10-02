@@ -707,8 +707,9 @@ bool KbHit() { // BUGBUG does this actually WORK? 20081215 kgoodwin NO it doesn'
    AutoMutex mtx( s_Conin.mutex );
    if( s_Conin.CIB_IdxRead < s_Conin.CIB_ValidElements ) {
       auto &inrec( s_Conin.vINPUT_RECORD[ s_Conin.CIB_IdxRead ] );
-      if( inrec.EventType == KEY_EVENT && inrec.Event.KeyEvent.bKeyDown )
+      if( inrec.EventType == KEY_EVENT && inrec.Event.KeyEvent.bKeyDown ) {
          return true;
+         }
       }
    return false;
    }
@@ -1330,17 +1331,14 @@ bool ARG::kbfast() {
    if( getKbSpeedDelayFailed( &kbSpeedWas, &kbDelayWas ) ) return  Msg( "KbSpeedDelay read failed" );
    if( kbSpeedSB==kbSpeedWas && kbDelaySB==kbDelayWas    ) return !Msg( "KbSpeedDelay already set->(%d,%d)", kbSpeedWas,kbDelayWas );
    0 && DBG( "KbSpeedDelay now (%X,%X) setting (%X,%X)", kbSpeedWas,kbDelayWas , kbSpeedSB,kbDelaySB );
-
    if( !setKbSpeedDelayFailed( kbSpeedSB, kbDelaySB ) ) {
       API_UINT kbSpeedIs(invalid_kbval), kbDelayIs(invalid_kbval);
       if( !getKbSpeedDelayFailed( &kbSpeedIs, &kbDelayIs ) ) {
          return !Msg( "KbSpeedDelay set (%d,%d)->(%d,%d)", kbSpeedWas,kbDelayWas , kbSpeedIs,kbDelayIs );
          }
       }
-
    return Msg( "KbSpeedDelay write failed" );
    }
-
 
 #else // !USE_OLD_KBFAST
 

@@ -351,9 +351,8 @@ STATIC_FXN bool SameIndentRange( PCFBUF fb, LINE *yMin, LINE *yMax, LINE start )
 STATIC_FXN bool cursorToBoundOfIndentBlock( int bottom ) {
    LINE yMin, yMax;
    const auto rv( SameIndentRange( g_CurFBuf(), &yMin, &yMax, g_CursorLine() ) );
-   if( !rv ) { return false; }
-   g_CurView()->MoveCursor_NoUpdtWUC( (bottom>0)?yMax:yMin, g_CursorCol() );
-   return true;
+   if( rv ) { g_CurView()->MoveCursor_NoUpdtWUC( (bottom > 0) ? yMax : yMin, g_CursorCol() ); }
+   return rv;
    }
 
 bool ARG::mib() { return cursorToBoundOfIndentBlock( -1 ); }
