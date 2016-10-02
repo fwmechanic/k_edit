@@ -889,7 +889,7 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
    0 && DBG( "%s: within=LINEs(%d-%d) COLs(%d,%d)", __func__, within.flMin.lin, within.flMax.lin, within.flMin.col, within.flMax.col );
    const auto tw( pFBuf->TabWidth() );
    #define SETUP_LINE ( rl = pFBuf->PeekRawLine( curPt.lin ), ixBOL = CaptiveIdxOfCol( tw, rl, within.flMin.col ) )
-   for( Point curPt( start.lin, start.col + 1 )
+   for( Point curPt( start )
       ;   curPt.lin <= within.flMax.lin
       ; ++curPt.lin, curPt.col = within.flMin.col
       ) {
@@ -1248,7 +1248,7 @@ STATIC_FXN void MFReplaceProcessFile( PCChar filename, CharWalkerReplace *pMrcw 
    ++pMrcw->d_iReplacementFileCandidates;
    const auto oldReplacementsMade( pMrcw->d_iReplacementsMade );
    Rect rgnSearch( pFBuf );
-   CharWalkRectReplace( pFBuf, rgnSearch, Point( rgnSearch.flMin, 0, -1 ), *pMrcw );
+   CharWalkRectReplace( pFBuf, rgnSearch, rgnSearch.flMin, *pMrcw );
    if( oldReplacementsMade == pMrcw->d_iReplacementsMade ) {
       GarbageCollectFBUF( pFBuf, fWeCanGarbageCollectFBUF );
       }
@@ -1355,27 +1355,27 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
    else {
       switch( arg.d_argType ) {
        default:
-       case NOARG:   { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), mrcw ); } break;
-       case NULLARG: { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, Point( g_Cursor(), 0, -1 ), mrcw ); } break;
+       case NOARG:   { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, g_Cursor(), mrcw ); } break;
+       case NULLARG: { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, g_Cursor(), mrcw ); } break;
        case LINEARG: { Rect rn;
                        rn.flMin.lin = arg.d_linearg.yMin;  rn.flMin.col = 0;
                        rn.flMax.lin = arg.d_linearg.yMax;  rn.flMax.col = COL_MAX;
-                       CharWalkRectReplace( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), mrcw );
+                       CharWalkRectReplace( g_CurFBuf(), rn, rn.flMin, mrcw );
                      } break;
        case STREAMARG: if( arg.d_streamarg.flMin.lin == arg.d_streamarg.flMax.lin ) {
-                          CharWalkRectReplace( g_CurFBuf(), arg.d_streamarg, Point( arg.d_streamarg.flMin, 0, -1 ), mrcw );
+                          CharWalkRectReplace( g_CurFBuf(), arg.d_streamarg, arg.d_streamarg.flMin, mrcw );
                           }
                        else { Rect rn;
                           rn.flMin.lin = arg.d_streamarg.flMin.lin;      rn.flMin.col = 0;
                           rn.flMax.lin = arg.d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
-                          CharWalkRectReplace( g_CurFBuf(), rn, Point( rn.flMin.lin, arg.d_streamarg.flMin.col - 1 ), mrcw );
+                          CharWalkRectReplace( g_CurFBuf(), rn, arg.d_streamarg.flMin, mrcw );
                           rn.flMax.col = arg.d_streamarg.flMax.col;
                           rn.flMax.lin++;
                           rn.flMin.lin = rn.flMax.lin;
-                          CharWalkRectReplace( g_CurFBuf(), rn, Point( rn.flMin, 0, -1 ), mrcw );
+                          CharWalkRectReplace( g_CurFBuf(), rn, rn.flMin, mrcw );
                           }
                        break;
-       case BOXARG:    CharWalkRectReplace( g_CurFBuf(), arg.d_boxarg, Point( arg.d_boxarg.flMin, 0, -1 ), mrcw );
+       case BOXARG:    CharWalkRectReplace( g_CurFBuf(), arg.d_boxarg, arg.d_boxarg.flMin, mrcw );
                        break;
        }
       Msg( "%d of %d occurrences replaced%s"
