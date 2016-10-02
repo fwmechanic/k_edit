@@ -530,7 +530,7 @@ bool ARG::stream() {  // test for StreamArgToString
 STATIC_FXN bool ConsumeMeta() {
    const auto fMetaWas( g_fMeta );
                         g_fMeta = false;
-   if( fMetaWas ) { DispNeedsRedrawStatLn(); }
+   if( fMetaWas != g_fMeta ) { DispNeedsRedrawStatLn(); }
    return fMetaWas;
    }
 

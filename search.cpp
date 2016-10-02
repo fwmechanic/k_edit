@@ -33,9 +33,6 @@
 #  define  VS_( x )
 #endif
 
-
-//****************************
-
 //
 // NEW FASTER GREP SEARCHER!!!
 //
@@ -56,9 +53,6 @@
 // Last remaining optimization that I can think of is to flatten the code
 // (remove subrtne calls) by making fewer bigger functions...
 //
-//--------------------------------------------------------------
-
-GLOBAL_VAR bool g_fReplaceCase;
 
 typedef sridx (* pFxn_strstr)( stref haystack, stref needle );
                                                                 // HAYSTACK
@@ -103,26 +97,21 @@ struct SearchScanMode {
 STATIC_CONST SearchScanMode smFwd    = { true  };
 STATIC_CONST SearchScanMode smBackwd = { false };
 
-//****************************
-
-class SearchStats { // found only in FileSearchMatchHandler
-   int d_matchCount;  // FOR both SEARCH AND REPLACE, any match is a match.
-   int d_actionCount; // FOR SEARCH, an action is a match; FOR REPLACE, it's a replace actually being performed
-public:
-   SearchStats() { Reset(); }
-   void Reset() {
-      d_matchCount  = 0;
-      d_actionCount = 0;
-      }
-   void IncMatch()       { ++d_matchCount ; }
-   void IncMatchAction() { ++d_actionCount; }
-   int  GetMatches()      const { return d_matchCount ; }
-   int  GetMatchActions() const { return d_actionCount; }
-   };
-
-//****************************
-
 class FileSearchMatchHandler {
+   class SearchStats {
+      int d_matchCount;  // FOR both SEARCH AND REPLACE, any match is a match.
+      int d_actionCount; // FOR SEARCH, an action is a match; FOR REPLACE, it's a replace actually being performed
+   public:
+      SearchStats() { Reset(); }
+      void Reset() {
+         d_matchCount  = 0;
+         d_actionCount = 0;
+         }
+      void IncMatch()       { ++d_matchCount ; }
+      void IncMatchAction() { ++d_actionCount; }
+      int  GetMatches()      const { return d_matchCount ; }
+      int  GetMatchActions() const { return d_actionCount; }
+      };
 protected:
    int         d_lifetimeFileCount;
    int         d_lifetimeFileCountMatch      ;
@@ -1348,6 +1337,7 @@ STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
       }
    }
 
+GLOBAL_VAR bool g_fReplaceCase;
 RSXL( template <typename Lambda> )
 STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFileReplace RSXLC( Lambda transform_stSearch ) ) {
    if( !GenericReplace_CollectInputs( arg.d_cArg >= 2, fInteractive, fMultiFileReplace RSXLC( transform_stSearch ) ) ) {
@@ -2453,7 +2443,7 @@ bool ARG::gmg() { // arg "gmg" edhelp  # for docmentation
       srchFilename = g_CurFBuf()->Namestr();
       }                                                                  0 && DBG( "%s: will look for all greps of (%s)", __func__, srchFilename.c_str() );
    auto merges(0);
-   PView pv(nullptr);
+   PView pv(nullptr); // cannot auto in while()
    while( (pv=FindClosestGrepBufForCurfile( pv, srchFilename.c_str() )) ) {
       const auto src( pv->FBuf() );
       if( !dest ) {
