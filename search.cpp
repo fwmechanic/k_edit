@@ -640,8 +640,8 @@ GLOBAL_VAR std::string g_SnR_stSearch          ;
 GLOBAL_VAR std::string g_SnR_stReplacement     ;
 
 class CharWalkerReplace {
-   std::string             d_sbuf;
-   std::string             d_stmp;
+   std::string             d_sbuf; // replace-action getLine... tmp
+   std::string             d_stmp; // replace-action PutLine tmp
    const SearchSpecifier  &d_ss;
    RegexMatchCaptures      d_captures;
    class replaceDope_t { // this is instantiated as const (only)
@@ -875,19 +875,18 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
    const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
    const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
    d_sbuf.replace( ixdestMatchMin, destMatchChars, sr2st(srReplace) );
-   0 && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
+                                                       0 && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
    ++d_iReplacementsMade;
    // replacement done: adjust end of this line search domain
    // replacement done: position curPt->col for next search
-   const sridx advance( AbsDiff( destMatchChars, srReplace.length() ) );
-   if(      destMatchChars > srReplace.length() ) { *colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar - advance ); }
-   else if( destMatchChars < srReplace.length() ) { *colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + advance ); }
-   0 && DBG("DFPoR- %" PR_BSRSIZET "u = AbsDiff( %" PR_BSRSIZET "u %" PR_BSRSIZET "u )", advance, destMatchChars, srReplace.length() );
+   const ptrdiff_t lendiff( srReplace.length() - destMatchChars );
+                                                       0 && DBG("DFPoR- %" PR_BSRSIZET "u = lendiff(%" PR_BSRSIZET "u,%" PR_BSRSIZET "u)", lendiff, destMatchChars, srReplace.length() );
+   *colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + lendiff );
    // note that if srReplace.length()==0 (empty replacement string), then curPt->col = (curPt->col - 1);
-   curPt->col                = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() ) - 1; // -1 because caller advances 1 COL upon return
-   0 && DBG("DFPoR- y/x=%d/%d,%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
-   // 1 && DBG("DFPoR- L=%d '%*s'", curPt->lin, *colLastPossibleMatchChar, d_sbuf+curPt->col );
+   curPt->col = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() ) - 1; // -1 because caller lendiffs 1 COL upon return
+                                                       0 && DBG("DFPoR- y/x=%d/%d,%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
+                                                       0 && DBG("DFPoR- L=%d '%*s'", curPt->lin, *colLastPossibleMatchChar, d_sbuf.c_str()+curPt->col );
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 
