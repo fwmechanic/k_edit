@@ -1,3 +1,4 @@
+#!make
 #
 # Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #

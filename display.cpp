@@ -572,7 +572,7 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
             }
          }
       }
-   return "";
+   return stref();
    }
 
 std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
