@@ -35,16 +35,14 @@ GLOBAL_VAR bool  g_fWordwrap                   ;
 GLOBAL_VAR bool  g_fFuncRetVal                 ;
 GLOBAL_VAR bool  g_fMeta                       ;
 GLOBAL_VAR bool  g_fMsgflush                   ;
+GLOBAL_VAR bool  g_fSelKeymapEnabled;
 GLOBAL_VAR int   g_ClipboardType               ; // 0 == EMPTY
 GLOBAL_VAR int   g_iTabWidth          =       8;
 GLOBAL_VAR int   g_iHike              =      25;
 GLOBAL_VAR int   g_iHscroll           =      10;
 GLOBAL_VAR int   g_iRmargin           =      80;
-GLOBAL_VAR int   g_iMaxfilehist       =       0; // Keep info on last 'maxfilehist' files edited (0=never ends)
 GLOBAL_VAR int   g_iMaxUndo           =  100000;
 GLOBAL_VAR int   g_iVscroll           =       1;
-
-GLOBAL_VAR bool  g_fSelKeymapEnabled;
 
 GLOBAL_VAR PFBUF g_pFbufClipboard          ;
 GLOBAL_VAR PFBUF g_pFBufCmdlineFiles       ;

@@ -100,7 +100,6 @@ extern int   g_iHike             ;
 extern int   g_iHscroll          ;
 extern int   g_iLuaGcStep        ;
 extern int   g_iMaxUndo          ;
-extern int   g_iMaxfilehist      ;
 extern int   g_iRmargin          ;
 extern int   g_iTabWidth         ;
 extern int   g_iVscroll          ;
