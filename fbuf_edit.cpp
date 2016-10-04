@@ -29,9 +29,9 @@ GLOBAL_VAR bool g_fM4backtickquote;
 
 class Tabber {
    const int d_tabWidth;
+   int  FillCountToNextTabStop ( int col ) const { return d_tabWidth - (col % d_tabWidth) ; }
 public:
    Tabber( int tabWidth ) : d_tabWidth(tabWidth) {}
-   int  FillCountToNextTabStop ( int col ) const { return d_tabWidth - (col % d_tabWidth) ; }
    int  ColOfNextTabStop       ( int col ) const { return col + FillCountToNextTabStop( col ); }
    int  ColOfPrevTabStop       ( int col ) const { return col - (1 + ((col - 1) % d_tabWidth)); }
    bool ColAtTabStop           ( int col ) const { return (col % d_tabWidth) == 0; }

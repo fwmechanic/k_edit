@@ -1137,7 +1137,7 @@ STATIC_FXN PCChar findDelim( PCChar tokStrt, PCChar delimset, PCChar macroName )
 std::string DupTextMacroValue( PCChar macroName ) {
    const auto pCmd( CmdFromName( macroName ) );
    if( !pCmd || !pCmd->IsRealMacro() ) {
-      return std::string( "" );
+      return std::string();
       }
    decltype(macroName) pastTokEnd;
    auto tokStrt( StrPastAnyBlanks( pCmd->MacroText() ) );
@@ -1149,11 +1149,11 @@ std::string DupTextMacroValue( PCChar macroName ) {
       default:      pastTokEnd = StrToNextBlankOrEos( tokStrt );           break;
       }
    if( nullptr == pastTokEnd ) { // empty value or bad delim?
-      return std::string( "" );
+      return std::string();
       }
    const auto txtLen( pastTokEnd - tokStrt );
    if( 0 == txtLen ) { // empty value?
-      return std::string( "" );
+      return std::string();
       }
    return std::string( tokStrt, txtLen );
    }
