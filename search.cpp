@@ -17,11 +17,6 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-//   TO GET RID OF
-//
-// s_fSearchNReplaceUsingRegExp
-// s_pSandR_CompiledSearchPattern
-
 #include "ed_main.h"
 #include "ed_search.h"
 #include "fname_gen.h"
@@ -515,13 +510,6 @@ public:
 #endif
 
 //*****************************************************************************************************
-
- #if USE_PCRE
-
-STATIC_VAR bool             s_fSearchNReplaceUsingRegExp;
-STATIC_VAR CompiledRegex *  s_pSandR_CompiledSearchRegex;
-
- #endif
 
 Rect::Rect( PFBUF pFBuf ) {
    flMin.col = 0;
@@ -1229,6 +1217,7 @@ bool ARG::mfgrep() {
    }
 
 #if USE_PCRE
+STATIC_VAR CompiledRegex *  s_pSandR_CompiledSearchRegex;
 STIL bool CheckRegExpReplacementString( CompiledRegex *, PCChar ) { return true; }
 #endif
 
