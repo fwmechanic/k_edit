@@ -1,15 +1,20 @@
-coverity_version="cov-analysis-linux64-7.7.0.4"
-PATH="$PATH:$HOME/coverity/${coverity_version}/bin"
+# after "installing" (untarring) the coverity tool (which creates directory $coverity_version/), need to create a symlink:
+# ln -s $HOME/coverity/$coverity_version $HOME/coverity/cov
+cov_bin="$HOME/coverity/cov"     ; [ -L "$cov_bin" ] || { printf "symlink $cov_bin does not exist" ; exit 1 ; }
+cov_bin="$HOME/coverity/cov/bin" ; [ -d "$cov_bin" ] || { printf "dir $cov_bin does not exist" ; exit 1 ; }
+PATH="$PATH:$cov_bin"
+cov_bin="$cov_bin/cov-build"     ; [ -x "$cov_bin" ] || { printf "$cov_bin is not executable" ; exit 1 ; }
+
 # apparently the tarball filename MUST BE same as the Coverity Project Name?
 my_cov_projnm=k_edit
 tarball=${my_cov_projnm}.tgz
-cov_dir=cov-int
+cov_output_dir=cov-int
 k_make_cmd="make -j 6"
 
-   rm -rf $cov_dir \
+   rm -rf $cov_output_dir \
 && rm -f $tarball \
-&& mkdir -p $cov_dir \
+&& mkdir -p $cov_output_dir \
 && make clean \
-&& cov-build --dir $cov_dir $k_make_cmd \
-&& tar czvf $tarball $cov_dir \
+&& cov-build --dir $cov_output_dir $k_make_cmd \
+&& tar czvf $tarball $cov_output_dir \
 && printf "%s/$tarball\nis ready to submit to\nhttps://scan.coverity.com/projects/fwmechanic-k_edit\n" `pwd`
