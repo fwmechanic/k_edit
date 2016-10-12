@@ -144,16 +144,41 @@ Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
    return rv;
    }
 
+STATIC_VAR struct {
+   Path::str_t d_nm = Path::GetCwd_();
+   bool        d_nm_needs_ps_append = false;
+   bool SetCwdOk( PCChar dnm ) {
+      bool cd_ok( !( WL( _chdir, chdir )( dnm ) == -1) );
+      if( cd_ok ) {
+         d_nm = Path::GetCwd_();
+         if( d_nm.empty() ) {
+            cd_ok = false;
+            d_nm_needs_ps_append = false;
+            }
+         else {
+            d_nm_needs_ps_append = !Path::IsPathSepCh( d_nm.back() );
+            }
+         }
+      return cd_ok;
+      }
+   Path::str_t GetCwd() const {
+      return d_nm;
+      }
+   Path::str_t GetCwd_ps() const {
+      return d_nm_needs_ps_append ? d_nm + PATH_SEP_STR : d_nm ;
+      }
+   } s_cwd_cache;
+
 bool Path::SetCwdOk( PCChar dnm ) {
-   return !( WL( _chdir, chdir )( dnm ) == -1);
+   return s_cwd_cache.SetCwdOk( dnm );
+   }
+
+Path::str_t Path::GetCwd() {
+   return s_cwd_cache.GetCwd();
    }
 
 Path::str_t Path::GetCwd_ps() {
-   auto rv( Path::GetCwd() );
-   if( rv.length() > 0 ) {
-      rv += PATH_SEP_STR;
-      }
-   return rv;
+   return s_cwd_cache.GetCwd_ps();
    }
 
 bool Path::IsLegalFnm( stref name ) {

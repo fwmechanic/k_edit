@@ -98,7 +98,9 @@ STATIC_FXN void LowerDriveLetter( PChar pbuf ) {
        }
    }
 
-Path::str_t Path::GetCwd() {
+Path::str_t Path::GetCwd_() {
+   // called ONLY by Path::SetCwd() (which caches retval)...
+   // ...and will, if necessary, synchronize access to said cache.
    pathbuf pbuf;
    if( !_getcwd( BSOB( pbuf ) ) ) {
       pbuf[0] = '\0';

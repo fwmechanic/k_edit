@@ -25,14 +25,24 @@ void AssertDialog_( PCChar function, int line ) {
    abort();
    }
 
-Path::str_t Path::GetCwd() { // quick and dirty AND relies on GLIBC getcwd( nullptr, 0 ) semantics which are NONPORTABLE
-   PChar mallocd_cwd = getcwd( nullptr, 0 );
-   if( !mallocd_cwd ) {
-      return "libc incompat: getcwd( nullptr, 0 ) returns nullptr?";
+Path::str_t Path::GetCwd_() {
+   // called ONLY by Path::SetCwd() (which caches retval)...
+   // ...and will, if necessary, synchronize access to said cache.
+   // Needed because many underlying APIs are shared-buffer based, with NO clear
+   // definition regarding max buffer size.  Here we have a loop that searches on
+   // the requisite buffer size (by retrying the call to getcwd() with
+   // successively larger buffer until it succeeds).  Win32 impl may be similar.
+   STATIC_VAR Path::str_t s_cwdbuf; // dedicated static-dynamic buffer avoids per-call buffer malloc
+   // bizarrely, the capacity() of a default-contructed std::string is "an unspecified value" http://stackoverflow.com/a/17738729
+   constexpr size_t BUFINCR( 512 );
+   if( 0 == s_cwdbuf.size() ) {    // first call?  size() _is 0_, capacity() is "an unspecified value"
+      s_cwdbuf.reserve( BUFINCR ); // define capacity()
       }
-   Path::str_t rv( mallocd_cwd );
-   free( mallocd_cwd );                    0 && DBG( "%s=%s'", __func__, rv.c_str() );
-   return rv;
+   PChar gcrv;
+   while( !(gcrv=getcwd( &s_cwdbuf[0], s_cwdbuf.capacity()) ) ) {
+      s_cwdbuf.reserve( BUFINCR + s_cwdbuf.capacity() );
+      }
+   return s_cwdbuf;
    }
 
 PCChar OsVerStr() { return "Linux"; }

@@ -62,6 +62,7 @@ namespace Path {
    extern bool  IsDotOrDotDot( stref str );
 
    extern bool  SetCwdOk        ( PCChar dnm );
+   extern str_t GetCwd_   (); // raw OS intf
    extern str_t GetCwd    ();
    extern str_t GetCwd_ps (); // w/trailing pathsep to make it comparable with CpyDirnm() retval
 
