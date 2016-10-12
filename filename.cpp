@@ -108,7 +108,7 @@ Path::str_t::size_type Path::CommonPrefixLen( stref s1, stref s2 ) {
    s_t oPathSep( 0 );
    for( s_t ix( 0 ); ix < past_end_ix ; ++ix ) {
       if( !PathChEq( s1[ix], s2[ix] ) ) { break;             }
-      if( IsPathSepCh( s1[ix] ) )       { oPathSep = ix + 1; }
+      if( IsDirSepCh( s1[ix] ) )       { oPathSep = ix + 1; }
       }
    return oPathSep;
    }
@@ -156,7 +156,7 @@ STATIC_VAR struct {
             d_nm_needs_ps_append = false;
             }
          else {
-            d_nm_needs_ps_append = !Path::IsPathSepCh( d_nm.back() );
+            d_nm_needs_ps_append = !Path::IsDirSepCh( d_nm.back() );
             }
          }
       return cd_ok;

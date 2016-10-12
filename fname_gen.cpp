@@ -560,7 +560,7 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
 #endif
          }
       else {
-         if( path.length() > WL( 3, 1 ) && Path::IsPathSepCh( path.back() ) ) {
+         if( path.length() > WL( 3, 1 ) && Path::IsDirSepCh( path.back() ) ) {
             path.remove_suffix( 1 );  // remove the trailing PathSepCh so CfxFilenameGenerator works
             }
          }

@@ -280,7 +280,7 @@ Path::str_t Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 
    if( hasDriveLetter ) {
       pNxtComponent += 2;
       }
-   while( Path::IsPathSepCh( *pNxtComponent ) ) {
+   while( Path::IsDirSepCh( *pNxtComponent ) ) {
       pNxtComponent++;
       }
    Path::str_t pbs( fnmBuf, pNxtComponent-fnmBuf ); // since path may grow due to (8.3-equivalent) -> longname expansion, we accumulate in pb

@@ -48,9 +48,9 @@ namespace Path {
 
    enum chars : char { chEnvSep = ';', chDirSepMS = '\\', chDirSepPosix = '/' };
 #if defined(_WIN32)
-   bool   STIL  IsPathSepCh( int ch ) { return ch == chDirSepMS || ch == chDirSepPosix; }
+   bool   STIL  IsDirSepCh( int ch )  { return ch == chDirSepMS || ch == chDirSepPosix; }
 #else
-   bool   STIL  IsPathSepCh( int ch ) { return ch == chDirSepPosix; }
+   bool   STIL  IsDirSepCh( int ch )  { return ch == chDirSepPosix; }
 #endif
 
    PCChar STIL  InvalidFnmChars()     { return "<>|*?"; }
