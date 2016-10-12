@@ -105,7 +105,10 @@ inline void AllocBytesZ( Ptr &rv, size_t bytes, PCChar msg="" ) {
    }
 
 STIL size_t CHK_PRODUCT( size_t nelems, size_t elsize, PCChar msg="" ) {
-   if( (SIZE_MAX / elsize) < nelems ) {
+   const auto rv( nelems * elsize );
+   const auto min( nelems < elsize?nelems:elsize );
+   const auto max( nelems > elsize?nelems:elsize );
+   if( min > 1 && rv <= max ) {
       MemErrFatal( __func__, SIZE_MAX, msg );
       }
    return nelems * elsize;
