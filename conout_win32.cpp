@@ -604,7 +604,7 @@ void Win32ConsoleFontChanger::SetFont( Win32::DWORD idx ) {
       }
    }
 
-void ConOut::BufferFlushToScreen() { if( s_EditorScreen ) s_EditorScreen->FlushConsoleBufferToScreen(); }
+void ConOut::BufferFlushToScreen() { if( s_EditorScreen ) { s_EditorScreen->FlushConsoleBufferToScreen(); } }
 
 GLOBAL_VAR int g_WriteConsoleOutputCalls;
 GLOBAL_VAR int g_WriteConsoleOutputLines;
@@ -1186,6 +1186,8 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
       }                                                                                    CON_DBG&&DBG( "%s 40", __PRETTY_FUNCTION__ );
    s_EditorScreen = new TConsoleOutputControl( initialWinSize.lin, initialWinSize.col );   CON_DBG&&DBG( "%s 50", __PRETTY_FUNCTION__ );
    Conin_Init();                                                                           CON_DBG&&DBG( "%s 60", __PRETTY_FUNCTION__ );
+   UpdateConsoleTitle_Init();
+   UpdateConsoleTitle();
    DBG( "%s-", __PRETTY_FUNCTION__ );
    return true;
    }

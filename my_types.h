@@ -40,6 +40,7 @@
 
 #define  STIL  static inline
 #define  STATIC_VAR  static
+#define  COMPLEX_STATIC_VAR  STATIC_VAR
 #define  STATIC_FXN  static
 #define  GLOBAL_VAR
 #define  GLOBAL_CONST        const

@@ -561,28 +561,6 @@ bool ARG::compile() {
       }
    }
 
-STATIC_FXN bool EditorFilesystemNoneDirty() {
-   auto dirtyFBufs(0);
-   auto openFBufs (0);
-  #if FBUF_TREE
-   rb_traverse( pNd, g_FBufIdx )
-  #else
-   DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
-  #endif
-      {
-  #if FBUF_TREE
-      PCFBUF pFBuf = IdxNodeToFBUF( pNd );
-  #endif
-      if( pFBuf->HasLines() && pFBuf->FnmIsDiskWritable() ) {
-         ++openFBufs;
-         if( pFBuf->IsDirty() ) {
-            ++dirtyFBufs;
-            }
-         }
-      }
-   return dirtyFBufs == 0;
-   }
-
 STATIC_VAR bool g_fSystemShutdownOrLogoffRequested = false;
 
 STATIC_FXN void IdleThread() {

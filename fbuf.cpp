@@ -654,6 +654,27 @@ bool ARG::saveall() {
    return true;
    }
 
+EditorFilesStatus_t EditorFilesStatus() {
+   EditorFilesStatus_t rv;
+  #if FBUF_TREE
+   rb_traverse( pNd, g_FBufIdx )
+  #else
+   DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
+  #endif
+      {
+  #if FBUF_TREE
+      PCFBUF pFBuf = IdxNodeToFBUF( pNd );
+  #endif
+      if( pFBuf->HasLines() && pFBuf->FnmIsDiskWritable() ) {
+         ++rv.openFBufs;
+         if( pFBuf->IsDirty() ) {
+            ++rv.dirtyFBufs;
+            }
+         }
+      }
+   return rv;
+   }
+
 STATIC_FXN bool RmvFileByName( stref filename ) {
    const auto pfToRm( FindFBufByName( filename ) );
    if( !pfToRm ) {
@@ -1138,9 +1159,6 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
       Msg( "cwd unchanged" );
       }
    else {
-     #if defined(_WIN32)
-      EventCwdChanged( cwdAfter.c_str() );
-     #endif
       Msg( "Changed directory to %s", cwdAfter.c_str() );
       if( fSave ) {
          std::string tmp;

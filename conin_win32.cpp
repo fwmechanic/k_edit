@@ -37,8 +37,8 @@ struct conin_statics {
    void ClearBuf() { CIB_IdxRead = CIB_ValidElements = 0; }
    bool ScanConinBufForKeyDowns();
 private:
-   conin_statics( const conin_statics & src );
-   conin_statics & operator=( const conin_statics & rhs );
+   NO_COPYCTOR(conin_statics);
+   NO_ASGN_OPR(conin_statics);
    };
 
 STATIC_VAR conin_statics s_Conin;

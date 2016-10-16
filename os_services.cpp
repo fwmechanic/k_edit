@@ -186,7 +186,7 @@ OsEnv::OsEnv() {
 #endif
    }
 
-STATIC_VAR OsEnv *g_Process;
+COMPLEX_STATIC_VAR OsEnv *g_Process;
 
 void ThisProcessInfo::Init() {
    g_Process = new OsEnv();

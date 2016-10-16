@@ -63,126 +63,73 @@ bool EditorLoadCountChanged() {
    return fChanged;
    }
 
-#define TBC_Virtual
+#define TBC_Virtual virtual
 
 class TitleBarContributor {
 protected:
    TitleBarContributor() {}
 public:
-   TBC_Virtual bool   Changed() ;
-   TBC_Virtual PCChar Str()     ;
+   TBC_Virtual bool   Changed() = 0;
+   TBC_Virtual PCChar Str()     = 0;
    };
-
 //------------------------------------------------------------------------------
-
-class EditorFilesStatus : public TitleBarContributor {
-   int  d_DirtyFBufs;
-   int  d_OpenFBufs;
+class EdFilesStatus : public TitleBarContributor {
+   EditorFilesStatus_t d_efs;
    char d_buf[40];
 public:
    TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str();
-   bool    NoneDirty() { return d_DirtyFBufs == 0; }
+   TBC_Virtual PCChar Str() { return d_buf; }
    };
-
-bool EditorFilesStatus::Changed() {
-   auto dirtyFBufs(0);
-   auto openFBufs (0);
-#if FBUF_TREE
-   rb_traverse( pNd, g_FBufIdx )
-#else
-   DLINKC_FIRST_TO_LASTA(g_FBufHead, dlinkAllFBufs, pFBuf)
-#endif
-      {
-#if FBUF_TREE
-      PCFBUF pFBuf = IdxNodeToFBUF( pNd );
-#endif
-      if( pFBuf->HasLines() && pFBuf->FnmIsDiskWritable() ) {
-         ++openFBufs;
-         if( pFBuf->IsDirty() ) {
-            ++dirtyFBufs;
-            }
-         }
+bool EdFilesStatus::Changed() { // BUGBUG this is near-identical to EditorFilesystemNoneDirty()
+   const auto now( EditorFilesStatus() );
+   if( d_efs != now ) {
+      d_efs = now;
+      safeSprintf( BSOB(d_buf), "%" PR_SIZET "/%" PR_SIZET "", d_efs.dirtyFBufs, d_efs.openFBufs );
+      return true;
       }
-   const auto rv(  d_DirtyFBufs != dirtyFBufs
-                || d_OpenFBufs  != openFBufs
-                );
-   d_DirtyFBufs = dirtyFBufs;
-   d_OpenFBufs  = openFBufs ;
-   return rv;
+   return false;
    }
-
-PCChar EditorFilesStatus::Str() {
-   return safeSprintf( BSOB(d_buf), "%i/%i", d_DirtyFBufs, d_OpenFBufs );
-   }
-
-STATIC_VAR EditorFilesStatus s_edfs;
-
 //------------------------------------------------------------------------------
-
-// notification architecture (vs.  polling cwd every n mS) avoids needless
-// Win32 API hammering, but not as clean
-//
 class CwdStatus : public TitleBarContributor {
-   bool  d_fChanged;
-   Path::str_t d_buf;
+   Path::str_t d_last;
 public:
-   CwdStatus()
-      : d_fChanged( true )
-      , d_buf( Path::GetCwd() )
-      {}
-   void SetChanged( PCChar newName ) {
-      d_fChanged = true;
-      d_buf = newName;
-      }
+   CwdStatus() {}
    TBC_Virtual bool Changed() {
-      const auto rv( d_fChanged );
-      d_fChanged = false;
-      return rv;
+      Path::str_t now( Path::GetCwd() );
+      const auto changed( now != d_last );
+      if( changed ) {
+         d_last = now;
+         }
+      return changed;
       }
-   TBC_Virtual PCChar Str() { return d_buf.c_str(); }
+   TBC_Virtual PCChar Str() { return d_last.c_str(); }
    };
-
-STATIC_VAR CwdStatus s_cwds;
-void EventCwdChanged( PCChar newName ) { s_cwds.SetChanged( newName ); }
-
 //------------------------------------------------------------------------------
-
 class BatteryStatus : public TitleBarContributor {
    Mutex d_mtx;
    bool  d_fChanged;
    int   d_BatteryLifePercent;
    char  d_buf[40];
-
 public:
-
    BatteryStatus();
-
    TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str();
-
+   TBC_Virtual PCChar Str() { return d_buf; }
 private:
    STATIC_FXN int GetBatteryLifePercent();
    void BatteryStatusMonitorThread();
-
    STATIC_FXN Win32::DWORD K_STDCALL StartThread( Win32::LPVOID pThreadParam );
    };
-
 typedef BatteryStatus *PBatteryStatus;
-
 int BatteryStatus::GetBatteryLifePercent() {
    Win32::SYSTEM_POWER_STATUS sps; // the other fields in this struct are either...
    GetSystemPowerStatus( &sps );   // ...invalid (on my laptop) or of no interest
    return sps.BatteryLifePercent;
    }
-
 void BatteryStatus::BatteryStatusMonitorThread() {
    DBG( "*** %s STARTING***", __func__ );
    while( 1 ) {
       const int newVal( GetBatteryLifePercent() );
-
       0 && DBG( "BatteryLifePercent now=%d%%", newVal );
-
       {
       AutoMutex am( d_mtx );
       if( d_BatteryLifePercent != newVal ) {
@@ -191,22 +138,18 @@ void BatteryStatus::BatteryStatusMonitorThread() {
           0 && DBG( "BatteryLifePercent changed, now=%d%%", d_BatteryLifePercent );
           }
       }
-
       SleepMs( 2500 );
       }
    }
-
 Win32::DWORD BatteryStatus::StartThread( Win32::LPVOID pThreadParam ) {
    PBatteryStatus(pThreadParam)->BatteryStatusMonitorThread();
    return 0; // equivalent to ExitThread( 0 );
    }
-
 BatteryStatus::BatteryStatus() {
    d_buf[0]   = '\0';
    d_fChanged = false;
    const auto blp( GetBatteryLifePercent() );
    d_BatteryLifePercent = blp+100; // make sure first pass thru BatteryStatusMonitorThread() (if any) asserts fChanged
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
    if(  !(blp > 100)  // only start the monitoring thread if there's something _to_ monitor
@@ -216,7 +159,6 @@ BatteryStatus::BatteryStatus() {
       DBG( "%s Win32::CreateThread FAILED!", __func__ );
       }
    }
-
 bool BatteryStatus::Changed() {
    bool fChanged;
    auto newVal(-1); // init to rmv warning
@@ -229,31 +171,23 @@ bool BatteryStatus::Changed() {
       }
    }
    if( fChanged ) {
-      safeSprintf( BSOB(d_buf), "    Battery=%d%%", newVal );
+      safeSprintf( BSOB(d_buf), "--- Battery=%d%%", newVal );
       }
    return fChanged;
    }
-
-PCChar BatteryStatus::Str() { return d_buf; }
-
-STATIC_VAR BatteryStatus s_bats;
-
 //------------------------------------------------------------------------------
-
 class MemStatus : public TitleBarContributor {
    typedef char dbuf[27];
    dbuf d_buf;
 public:
    TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str();
+   TBC_Virtual PCChar Str() { return d_buf; }
    };
-
 size_t GetProcessMem() {
    Win32::PSAPI::PROCESS_MEMORY_COUNTERS pmc;
    Win32::PSAPI::GetProcessMemoryInfo( g_hCurProc, &pmc, sizeof pmc );
    return pmc.WorkingSetSize;
    }
-
 bool MemStatus::Changed() {
    dbuf dbnew;
    const auto showSize( GetProcessMem() / (1024*(g_fShowMemUseInK ? 1 : 1024)) );
@@ -264,20 +198,14 @@ bool MemStatus::Changed() {
       }
    return false;
    }
-
-PCChar MemStatus::Str() { return d_buf; }
-
-STATIC_VAR MemStatus s_mems;
-
 //------------------------------------------------------------------------------
 class LuaMemStatus : public TitleBarContributor {
    int  d_Size;
    char d_buf[25];
 public:
    TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str();
+   TBC_Virtual PCChar Str() { return d_buf; }
    };
-
 bool LuaMemStatus::Changed() {
    const auto newSize( LuaHeapSize() );
    const auto rv( d_Size != newSize );
@@ -285,7 +213,7 @@ bool LuaMemStatus::Changed() {
    if( rv ) {
       const auto lheapsz( d_Size / 1024 );
       if( d_Size ) {
-         safeSprintf( BSOB(d_buf), ", LuaHeap=%iKi", lheapsz );
+         safeSprintf( BSOB(d_buf), "LuaHeap=%iKi", lheapsz );
          }
       else {
          d_buf[0] = '\0';
@@ -293,22 +221,14 @@ bool LuaMemStatus::Changed() {
       }
    return rv;
    }
-
-PCChar LuaMemStatus::Str() { return d_buf; }
-
-STATIC_VAR LuaMemStatus s_luam;
-
 #if     DISP_LL_STATS
-//------------------------------------------------------------------------------
 class CursMoves : public TitleBarContributor {
    int  d_prev;
    char d_buf[25];
-
 public:
    TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str();
+   TBC_Virtual PCChar Str() { return d_buf; }
    };
-
 bool CursMoves::Changed() {
    const auto newVal( DispCursorMoves() );
    const auto rv( d_prev != newVal );
@@ -316,19 +236,14 @@ bool CursMoves::Changed() {
    if( rv ) { safeSprintf( BSOB(d_buf), ", CursMv=%d", newVal ); }
    return rv;
    }
-
-PCChar CursMoves::Str() { return d_buf; }
-STATIC_VAR CursMoves s_curw;
 //------------------------------------------------------------------------------
 class StatLnUpdts : public TitleBarContributor {
    int  d_prev;
    char d_buf[25];
-
 public:
    TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str();
+   TBC_Virtual PCChar Str() { return d_buf; }
    };
-
 bool StatLnUpdts::Changed() {
    const auto newVal( DispStatLnUpdates() );
    const auto rv( d_prev != newVal );
@@ -336,19 +251,14 @@ bool StatLnUpdts::Changed() {
    if( rv ) { safeSprintf( BSOB(d_buf), ", StLnW=%d", newVal ); }
    return rv;
    }
-
-PCChar StatLnUpdts::Str() { return d_buf; }
-STATIC_VAR StatLnUpdts s_stlw;
 //------------------------------------------------------------------------------
 class ScreenRefreshes : public TitleBarContributor {
    int  d_prev;
    char d_buf[25];
-
 public:
    TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str();
+   TBC_Virtual PCChar Str() { return d_buf; }
    };
-
 bool ScreenRefreshes::Changed() {
    const auto newVal( g_WriteConsoleOutputLines );
    const auto rv( d_prev != newVal );
@@ -356,44 +266,35 @@ bool ScreenRefreshes::Changed() {
    if( rv ) { safeSprintf( BSOB(d_buf), ", ScrLnW=%d:%d", g_WriteConsoleOutputCalls, g_WriteConsoleOutputLines ); }
    return rv;
    }
-
-PCChar ScreenRefreshes::Str() { return d_buf; }
-STATIC_VAR ScreenRefreshes s_scrw;
-//------------------------------------------------------------------------------
 #endif//DISP_LL_STATS
 
-void UpdateConsoleTitle() {
-   if(  s_edfs.Changed()  // using '+' to AVOID ||-short-circuiting
-      + s_cwds.Changed()  // (we want ALL changed "stati" to be shown as soon as changed)
-      + s_mems.Changed()  // NB: only Changed() methods recalc Str()
-      + s_luam.Changed()
+STATIC_VAR std::vector<TitleBarContributor *> s_tbcs;
+
+void UpdateConsoleTitle_Init() {
+   s_tbcs.push_back( new EdFilesStatus()   );
+   s_tbcs.push_back( new CwdStatus()       );
+   s_tbcs.push_back( new MemStatus()       );
+   s_tbcs.push_back( new LuaMemStatus()    );
 #if     DISP_LL_STATS
-      + s_curw.Changed()
-      + s_stlw.Changed()
-      + s_scrw.Changed()
+   s_tbcs.push_back( new CursMoves()       );
+   s_tbcs.push_back( new StatLnUpdts()     );
+   s_tbcs.push_back( new ScreenRefreshes() );
 #endif//DISP_LL_STATS
-      + s_bats.Changed()
-     ) {
-      Win32::SetConsoleTitle(
-         Sprintf2xBuf
-            ( "%s %s %s%s"
-#if     DISP_LL_STATS
-              "%s%s%s"
-#endif//DISP_LL_STATS
-              "%s"
-            , s_edfs.Str()
-            , s_cwds.Str()
-            , s_mems.Str()
-            , s_luam.Str()
-#if     DISP_LL_STATS
-            , s_curw.Str()
-            , s_stlw.Str()
-            , s_scrw.Str()
-#endif//DISP_LL_STATS
-            , s_bats.Str()
-            )
-         );
-      }
+   s_tbcs.push_back( new BatteryStatus()   );
    }
 
-bool EditorFilesystemNoneDirty() { return s_edfs.NoneDirty(); }
+void UpdateConsoleTitle() {
+   auto changed( 0 );
+   for( auto tbc : s_tbcs ) {
+      changed += tbc->Changed();
+      }
+   if( changed ) {
+      std::string buf;
+      BoolOneShot first;
+      for( auto tbc : s_tbcs ) {
+         if( !first ) { buf += " "; }
+         buf += tbc->Str();
+         }
+      Win32::SetConsoleTitle( buf.c_str() );
+      }
+   }

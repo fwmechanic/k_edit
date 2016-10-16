@@ -60,6 +60,15 @@ extern PFBUF  PseudoBuf( ePseudoBufType PseudoBufType, int fNew );
 
 extern bool merge_grep_buf( PFBUF dest, PFBUF src );
 
+struct EditorFilesStatus_t {
+   size_t dirtyFBufs = 0;
+   size_t openFBufs  = 0;
+   bool operator==( const EditorFilesStatus_t &rhs ) const { return dirtyFBufs == rhs.dirtyFBufs && openFBufs == rhs.openFBufs; }
+   bool operator!=( const EditorFilesStatus_t &rhs ) const { return !(*this == rhs); }
+   };
+extern EditorFilesStatus_t EditorFilesStatus();
+STIL bool EditorFilesystemNoneDirty() { return EditorFilesStatus().dirtyFBufs == 0; }
+
 extern PCChar ProgramVersion();
 extern PCChar ExecutableFormat();
 
@@ -430,7 +439,6 @@ extern  bool   PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std:
 extern  void   SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard=false );
 extern  Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc );
 extern  FileStat GetFileStat( PCChar fname );
-extern  void   EventCwdChanged( PCChar newName ); // (Win32-only ATM) contit hook
 
 // call around FBUF::PutLastLine() calls to effect (smart) cursor-tailing
 extern  void   CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );

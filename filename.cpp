@@ -144,7 +144,7 @@ Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
    return rv;
    }
 
-STATIC_VAR struct {
+COMPLEX_STATIC_VAR struct {
    Path::str_t d_nm = Path::GetCwd_();
    bool        d_nm_needs_ps_append = false;
    bool SetCwdOk( PCChar dnm ) {
