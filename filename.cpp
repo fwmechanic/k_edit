@@ -144,19 +144,15 @@ Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
    return rv;
    }
 
-COMPLEX_STATIC_VAR struct {
+COMPLEX_STATIC_VAR class {
    Path::str_t d_nm = Path::GetCwd_();
-   bool        d_nm_needs_ps_append = false;
+public:
    bool SetCwdOk( PCChar dnm ) {
       bool cd_ok( !( WL( _chdir, chdir )( dnm ) == -1) );
       if( cd_ok ) {
          d_nm = Path::GetCwd_();
          if( d_nm.empty() ) {
             cd_ok = false;
-            d_nm_needs_ps_append = false;
-            }
-         else {
-            d_nm_needs_ps_append = !Path::IsDirSepCh( d_nm.back() );
             }
          }
       return cd_ok;
@@ -165,7 +161,7 @@ COMPLEX_STATIC_VAR struct {
       return d_nm;
       }
    Path::str_t GetCwd_ps() const {
-      return d_nm_needs_ps_append ? d_nm + PATH_SEP_STR : d_nm ;
+      return Path::IsDirSepCh( d_nm.back() ) ? d_nm : (d_nm + PATH_SEP_STR) ;
       }
    } s_cwd_cache;
 
