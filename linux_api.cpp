@@ -42,7 +42,10 @@ Path::str_t Path::GetCwd_() {
    while( !(gcrv=getcwd( &s_cwdbuf[0], s_cwdbuf.capacity()) ) ) {
       s_cwdbuf.reserve( BUFINCR + s_cwdbuf.capacity() );
       }
-   return s_cwdbuf;
+   DBG( "%s -> %s", __func__, s_cwdbuf.c_str() );
+ //return s_cwdbuf;                 works on Win32.x64, Win32.i386; BROKEN on ubuntu 16.04.1
+ //return Path::str_t( s_cwdbuf );                                  BROKEN on ubuntu 16.04.1
+   return s_cwdbuf.c_str();                                         works  on ubuntu 16.04.1
    }
 
 PCChar OsVerStr() { return "Linux"; }
