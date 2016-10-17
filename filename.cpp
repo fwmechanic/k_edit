@@ -148,7 +148,7 @@ COMPLEX_STATIC_VAR class {
    Path::str_t d_nm = Path::GetCwd_();
 public:
    bool SetCwdOk( PCChar dnm ) {
-      bool cd_ok( !( WL( _chdir, chdir )( dnm ) == -1) );
+      bool cd_ok( !( WL( _chdir, chdir )( dnm ) == -1) );                        0 && DBG( "%s cd_ok=%c %s", __func__, cd_ok?'t':'f', dnm );
       if( cd_ok ) {
          d_nm = Path::GetCwd_();
          if( d_nm.empty() ) {
@@ -157,11 +157,14 @@ public:
          }
       return cd_ok;
       }
-   Path::str_t GetCwd() const {
+   Path::str_t GetCwd() {
+      /* if( d_nm.empty() ) { d_nm = Path::GetCwd_(); } */                       0 && DBG( "%s nm %s", __func__, d_nm.c_str() );
       return d_nm;
       }
-   Path::str_t GetCwd_ps() const {
-      return Path::IsDirSepCh( d_nm.back() ) ? d_nm : (d_nm + PATH_SEP_STR) ;
+   Path::str_t GetCwd_ps() {
+      /* if( d_nm.empty() ) { d_nm = Path::GetCwd_(); } */                       0 && DBG( "%s nm %s", __func__, d_nm.c_str() );
+      auto rv( Path::IsDirSepCh( d_nm.back() ) ? d_nm : (d_nm + PATH_SEP_STR) ); 0 && DBG( "%s == %s", __func__, rv.c_str() );
+      return rv;
       }
    } s_cwd_cache;
 
