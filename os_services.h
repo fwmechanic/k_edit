@@ -300,7 +300,7 @@ class DirMatches {
 #else
    std::vector<std::string>::const_iterator d_globsIt;
    std::vector<std::string>                 d_globs;
-   struct stat                              d_sbuf;
+   struct stat                              d_sbuf = { 0 };
 #endif
 
    bool FoundNext();
