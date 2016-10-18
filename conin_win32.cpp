@@ -25,6 +25,7 @@
 // see for good explanations:
 // http://www.adrianxw.dk/SoftwareSite/Consoles/Consoles5.html
 
+STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER );
 struct conin_statics {
    enum { CIB_DFLT_ELEMENTS = 32, CIB_MIN_ELEMENTS = 64 };
    Win32::HANDLE         hStdin;
@@ -32,27 +33,25 @@ struct conin_statics {
    Win32::DWORD          CIB_ValidElements;
    Win32::DWORD          CIB_IdxRead;
    Mutex                 mutex;
-   std::vector<Win32::INPUT_RECORD> vINPUT_RECORD;
+   std::vector<Win32::INPUT_RECORD> CIB;
    conin_statics() : mutex() {};
    void ClearBuf() { CIB_IdxRead = CIB_ValidElements = 0; }
-   bool ScanConinBufForKeyDowns();
+   bool ScanConinBufForKeyDowns() {
+      for( auto ix(CIB_IdxRead); ix < CIB_ValidElements; ++ix ) {
+         const auto pIR( &CIB[ix] );
+         0 && DBG( "ConinEv=%d", pIR->EventType );
+         if( (KEY_EVENT == pIR->EventType) && IsInterestingKeyEvent( pIR->Event.KeyEvent ) ) {
+            return true;
+            }
+         }
+      return false;
+      }
 private:
    NO_COPYCTOR(conin_statics);
    NO_ASGN_OPR(conin_statics);
    };
 
 STATIC_VAR conin_statics s_Conin;
-STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER );
-
-bool conin_statics::ScanConinBufForKeyDowns() {
-   for( auto ix(CIB_IdxRead); ix < CIB_ValidElements; ++ix ) {
-      const auto pIR( &vINPUT_RECORD[ix] );
-      0 && DBG( "ConinEv=%d", pIR->EventType );
-      if( (KEY_EVENT == pIR->EventType) && IsInterestingKeyEvent( pIR->Event.KeyEvent ) )
-          return true;
-      }
-   return false;
-   }
 
 bool ConIn::FlushKeyQueueAnythingFlushed() {
    AutoMutex mtx( s_Conin.mutex );
@@ -65,7 +64,7 @@ bool ConIn::FlushKeyQueueAnythingFlushed() {
       return rv;
       }
    0 && DBG( "NumberOfConsoleEventsPending = %ld", NumberOfConsoleEventsPending );
-   const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, &s_Conin.vINPUT_RECORD[0], s_Conin.vINPUT_RECORD.size(), &s_Conin.CIB_ValidElements ) );
+   const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, &s_Conin.CIB[0], s_Conin.CIB.size(), &s_Conin.CIB_ValidElements ) );
    0 && DBG( "s_Conin.CIB_ValidElements = %ld", s_Conin.CIB_ValidElements );
    if( !ok ) {
       linebuf oseb;
@@ -170,7 +169,7 @@ void Conin_Init() {
    DBG( "INITIAL s_Conin.hStdin=%p", s_Conin.hStdin );
    s_Conin.CIB_ValidElements = 0;
    s_Conin.CIB_IdxRead       = 0;
-   s_Conin.vINPUT_RECORD.resize( conin_statics::CIB_DFLT_ELEMENTS );
+   s_Conin.CIB.resize( conin_statics::CIB_DFLT_ELEMENTS );
    s_Conin.InitialConsoleInputMode = GetConsoleInputMode();
    ConsoleInputAcquire();
    }
@@ -198,7 +197,6 @@ void ConsoleInputAcquire() {
    // SetConsoleInputMode( s_Conin.InitialConsoleInputMode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT) | ENABLE_MOUSE_INPUT );
    // Win32::SetConsoleCtrlHandler( 0, 0 );  // contrary to documentation, this seems to have any effect on Ctrl+C reception
    // Win32::SetConsoleCtrlHandler( 0, 1 );  // contrary to documentation, this seems to have any effect on Ctrl+C reception
-
    Win32::SetConsoleCtrlHandler( CtrlBreakHandler, 1 );
    ApiFlushConsoleInputBuffer();
    SetConsoleInputMode( CIM_USE_MOUSE ); // absence of ENABLE_PROCESSED_INPUT BLOCKS CTRL+C from invoking CtrlBreakHandler
@@ -237,10 +235,10 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
       return nullptr;
       }
    if( 0 == s_Conin.CIB_ValidElements ) {
-      if( s_Conin.vINPUT_RECORD.size() > conin_statics::CIB_MIN_ELEMENTS ) {
-         0 && DBG( "s_Conin.vINPUT_RECORD.size() was %" PR_SIZET ", now %d", s_Conin.vINPUT_RECORD.size(), conin_statics::CIB_MIN_ELEMENTS );
+      if( s_Conin.CIB.size() > conin_statics::CIB_MIN_ELEMENTS ) {
+         0 && DBG( "s_Conin.CIB.size() was %" PR_SIZET ", now %d", s_Conin.CIB.size(), conin_statics::CIB_MIN_ELEMENTS );
          auto dummy(false);  GotHereDialog( &dummy );  // it's doubtful this is ever executed?
-         s_Conin.vINPUT_RECORD.resize( conin_statics::CIB_MIN_ELEMENTS );
+         s_Conin.CIB.resize( conin_statics::CIB_MIN_ELEMENTS );
          }
       fWaitingOnInput = true;
       mtx.Release(); //#########################################################
@@ -287,7 +285,7 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
       //
       // NB: s_Conin.hStdin != GetStdHandle.Stdin  !!!!!!
       0 && DBG( "%s s_Conin.hStdin=%p, GetStdHandle.Stdin=%p", __func__, s_Conin.hStdin, Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
-      const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, &s_Conin.vINPUT_RECORD[0], s_Conin.vINPUT_RECORD.size(), &s_Conin.CIB_ValidElements ) );
+      const auto ok( Win32::ReadConsoleInputA( s_Conin.hStdin, &s_Conin.CIB[0], s_Conin.CIB.size(), &s_Conin.CIB_ValidElements ) );
       if( !ok ) {
          1 && DBG( "%s s_Conin.hStdin=%p, GetStdHandle.Stdin=%p", __func__, s_Conin.hStdin, Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
          linebuf oseb;
@@ -298,7 +296,7 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
       fWaitingOnInput = false;
       s_Conin.CIB_IdxRead = 0;
       }
-   const auto rv ( &s_Conin.vINPUT_RECORD[ s_Conin.CIB_IdxRead ] );
+   const auto rv ( &s_Conin.CIB[ s_Conin.CIB_IdxRead ] );
    --s_Conin.CIB_ValidElements;
    ++s_Conin.CIB_IdxRead;
    return rv;
@@ -480,11 +478,11 @@ struct EdInputEvent {
 STATIC_FXN void InsertConinRecord( const Win32::INPUT_RECORD &ir ) {
    AutoMutex mtx( s_Conin.mutex );
    if( s_Conin.CIB_IdxRead == 0 ) { // trying to insert w/no leading gap?
-      s_Conin.vINPUT_RECORD.insert( s_Conin.vINPUT_RECORD.begin(), ir );
+      s_Conin.CIB.insert( s_Conin.CIB.begin(), ir );
       s_Conin.CIB_IdxRead++;
       }
    else {
-      s_Conin.vINPUT_RECORD[--s_Conin.CIB_IdxRead] = ir;
+      s_Conin.CIB[--s_Conin.CIB_IdxRead] = ir;
       }
    ++s_Conin.CIB_ValidElements;
    }
@@ -706,7 +704,7 @@ void TMouseEvent::Process() { // usemouse:yes
 bool KbHit() { // BUGBUG does this actually WORK? 20081215 kgoodwin NO it doesn't because s_Conin is not being filled unless there were leftovers from the last ReadConsoleInput call
    AutoMutex mtx( s_Conin.mutex );
    if( s_Conin.CIB_IdxRead < s_Conin.CIB_ValidElements ) {
-      auto &inrec( s_Conin.vINPUT_RECORD[ s_Conin.CIB_IdxRead ] );
+      auto &inrec( s_Conin.CIB[ s_Conin.CIB_IdxRead ] );
       if( inrec.EventType == KEY_EVENT && inrec.Event.KeyEvent.bKeyDown ) {
          return true;
          }
@@ -777,7 +775,7 @@ STATIC_FXN EdInputEvent ReadInputEventPrimitive() {
           return rv;
           }
       auto pIR( ReadNextUsefulConsoleInputRecord() );
-      if( pIR ) { // pIR is within s_Conin.vINPUT_RECORD[]?
+      if( pIR ) { // pIR is within s_Conin.CIB[]?
          switch( pIR->EventType ) {
             default:  DBG( "*** InputEvent %d ??? ***", pIR->EventType );  break;
             case KEY_EVENT:
