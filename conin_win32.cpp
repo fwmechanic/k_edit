@@ -241,7 +241,7 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
          s_Conin.CIB.resize( conin_statics::CIB_MIN_ELEMENTS );
          }
       fWaitingOnInput = true;
-      mtx.Release(); //#########################################################
+      mtx.unlock(); //#########################################################
 
       // Win32::ReadConsoleInput does not return until at least one input record has been read.
 
@@ -292,7 +292,7 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
          DBG( "Win32::ReadConsoleInputA failed: %s", OsErrStr( BSOB(oseb) ) );
          Assert( ok );
          }
-      mtx.Acquire(); //#########################################################
+      mtx.lock(); //#########################################################
       fWaitingOnInput = false;
       s_Conin.CIB_IdxRead = 0;
       }

@@ -51,8 +51,8 @@ const Win32::DWORD mainThreadId( Win32::GetCurrentThreadId() );
 
 
 STATIC_VAR AcquiredMutex s_GlobalVariableLock;
-#define GiveUpGlobalVariableLock()  ( /* DBG( "rls baton" ), */ s_GlobalVariableLock.Release() )
-#define WaitForGlobalVariableLock() (                           s_GlobalVariableLock.Acquire() /* , DBG( "got baton" ) */ )
+#define GiveUpGlobalVariableLock()  ( /* DBG( "rls baton" ), */ s_GlobalVariableLock.unlock() )
+#define WaitForGlobalVariableLock() (                           s_GlobalVariableLock.lock() /* , DBG( "got baton" ) */ )
 
 WhileHoldingGlobalVariableLock::WhileHoldingGlobalVariableLock()  { WaitForGlobalVariableLock(); }
 WhileHoldingGlobalVariableLock::~WhileHoldingGlobalVariableLock() { GiveUpGlobalVariableLock();  }

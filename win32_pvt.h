@@ -123,8 +123,8 @@ class Mutex {
 public:
    Mutex()        { InitializeCriticalSection( &d_critsec ); }
    ~Mutex()       { DeleteCriticalSection( &d_critsec ); }
-   void Acquire() { EnterCriticalSection( &d_critsec ); }
-   void Release() { LeaveCriticalSection( &d_critsec ); }
+   void lock()    { EnterCriticalSection( &d_critsec ); }
+   void unlock()  { LeaveCriticalSection( &d_critsec ); }
 private:
    NO_COPYCTOR(Mutex);
    NO_ASGN_OPR(Mutex);
@@ -132,7 +132,7 @@ private:
 
 class AcquiredMutex : public Mutex {
 public:
-   AcquiredMutex() { Acquire(); }
+   AcquiredMutex() { lock(); }
 private:
    NO_COPYCTOR(AcquiredMutex);
    NO_ASGN_OPR(AcquiredMutex);
@@ -141,11 +141,11 @@ private:
 template<class T> class AutoSync {
    T & d_syncObj;
 public:
-   AutoSync( T & m ) : d_syncObj(m) { d_syncObj.Acquire(); }
-   ~AutoSync()                      { d_syncObj.Release(); }
+   AutoSync( T & m ) : d_syncObj(m) { d_syncObj.lock(); }
+   ~AutoSync()                      { d_syncObj.unlock(); }
    // for those cases where the mutex needs toggling within it's scope
-   void Acquire()                   { d_syncObj.Acquire(); }
-   void Release()                   { d_syncObj.Release(); }
+   void lock()                      { d_syncObj.lock(); }
+   void unlock()                    { d_syncObj.unlock(); }
 private:
    // NON-supported
    AutoSync();
