@@ -38,13 +38,11 @@ Path::str_t Path::GetCwd_() {
    if( 0 == s_cwdbuf.size() ) {    // first call?  size() _is 0_, capacity() is "an unspecified value"
       s_cwdbuf.reserve( BUFINCR ); // define capacity()
       }
-   PChar gcrv;
-   while( !(gcrv=getcwd( &s_cwdbuf[0], s_cwdbuf.capacity()) ) ) {
+   while( !getcwd( &s_cwdbuf[0], s_cwdbuf.capacity() ) ) {
       s_cwdbuf.reserve( BUFINCR + s_cwdbuf.capacity() );
-      }
-   DBG( "%s -> %s", __func__, s_cwdbuf.c_str() );
- //return s_cwdbuf;                // BROKEN on ubuntu 16.04.1
- //return Path::str_t( s_cwdbuf ); // BROKEN on ubuntu 16.04.1
+      }                                           0 && DBG( "%s -> %s", __func__, s_cwdbuf.c_str() );
+ //return s_cwdbuf;                // BROKEN (rtns empty string) on ubuntu 16.04.1
+ //return Path::str_t( s_cwdbuf ); // BROKEN (rtns empty string) on ubuntu 16.04.1
    return s_cwdbuf.c_str();        // works  on ubuntu 16.04.1
    }
 
