@@ -107,12 +107,14 @@ void PrettifyWriter
    COL xCol( 0 ); COL dix( 0 );
    const auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; ++dix; } };
    const Tabber tabr( tabWidth );
-   const stref srTabExpand( // ultimately, srTabExpand could be passed in (replacing chTabExpand)...
-      chTabExpand == '\xF9' ? stref( "\xF9\xFA" ) : // but mind the chTabExpand == '\0' case below!
-      chTabExpand == '^'    ? stref( "^`"       ) :
-      chTabExpand == '-'    ? stref( "-->"      ) :
-      chTabExpand == '<'    ? stref( "<->"      ) :
-                              stref( &chTabExpand, sizeof(chTabExpand) )
+   // certain chTabExpand values have magical side-effects:
+   STATIC_CONST char bsbullet[] = { BIG_BULLET, SMALL_BULLET, '\0' };
+   const stref srTabExpand( // srTabExpand (instead of chTabExpand) could be passed in, but mind the chTabExpand == '\0' case below!
+      chTabExpand == BIG_BULLET ? stref( bsbullet   ) :
+      chTabExpand == '^'        ? stref( "^`"       ) :
+      chTabExpand == '-'        ? stref( "-->"      ) :
+      chTabExpand == '<'        ? stref( "<->"      ) :
+                                  stref( &chTabExpand, sizeof(chTabExpand) )
       );
    const auto chLast( srTabExpand[ srTabExpand.length() > 2 ? 2 : 0 ] );
    const auto chFill( srTabExpand[ srTabExpand.length() > 1 ? 1 : 0 ] );

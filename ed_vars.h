@@ -54,9 +54,11 @@ extern PFBUF s_pFbufLuaLog       ;
 //############  SWITCH VALUE VARIABLES
 
 #ifdef _WIN32
-enum { BIG_BULLET = 249, SMALL_BULLET = 250 };
+constexpr char BIG_BULLET   = {249};
+constexpr char SMALL_BULLET = {250};
 #else
-enum { BIG_BULLET = '^', SMALL_BULLET = '`' };
+constexpr char BIG_BULLET   = {'^'};
+constexpr char SMALL_BULLET = {'`'};
 #endif
 
 extern char  g_chTabDisp         ;
