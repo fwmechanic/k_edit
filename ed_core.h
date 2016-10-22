@@ -702,6 +702,7 @@ struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win 
    Point     d_Size;   // public: exposed
    Point     d_UpLeft; // public: exposed
    int       d_wnum = 0;  // will be set correctly if/when this is sorted into correct place
+   Point     d_size_pct;
 public:
              Win();
              Win( PCChar pC );
@@ -720,9 +721,8 @@ public:
    bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
    bool      GetCursorForDisplay( Point *pt ) const;
    void      GetLineForDisplay( int winNum, std::string &dest, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
-public: // std pimpl implemenations declare it as private, but we have "special needs"
-   class impl;
-   std::unique_ptr<impl> pimpl;
+   const Point &SizePct() const { return d_size_pct; }
+   void      SizePct_set( const Point &src )  { d_size_pct = src; }
    }; // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
 
 inline bool View::ActiveInWin() { return d_pWin->CurView() == this; }
