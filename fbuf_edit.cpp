@@ -983,7 +983,7 @@ bool ARG::insert() {
    }
 
 bool ARG::emacsnewl() {
-   if( ArgCount() != 0 ) {
+   if( Get_g_ArgCount() > 0 ) {
       return newline();
       }
    const auto pfb( g_CurFBuf() );

@@ -47,18 +47,20 @@
 STATIC_VAR Point s_SelAnchor;
 STATIC_VAR Point s_SelEnd;
 
-GLOBAL_VAR int g_iArgCount; // write here, read everywhere
+GLOBAL_VAR int g_iArgCount; // write ONLY via Clr_g_ArgCount(), Inc_g_ArgCount(); read ONLY via Get_g_ArgCount()
+STIL int  Inc_g_ArgCount() { return ++g_iArgCount; }
+STIL void Clr_g_ArgCount() {          g_iArgCount = 0; }
 
 void ClearArgAndSelection() { PCV;
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
    pcv->FreeHiLiteRects();
    s_SelEnd.lin = -1;
-   if( g_iArgCount ) {
+   if( Get_g_ArgCount() > 0 ) {
       0 && DBG( "%s+", __func__ );
    //      MoveCursor
       pcv->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );
       0 && DBG( "%s-", __func__ );
-      g_iArgCount = 0;
+      Clr_g_ArgCount();
       }
    }
 
@@ -100,7 +102,7 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
          FixedCharArray<100> buf;
          if( fLinesel ) {
             buf.Sprintf( "Arg [%d]  %d lines [%d..%d]"
-               , ArgCount()
+               , Get_g_ArgCount()
                , hilite.Height()
                , hilite.flMin.lin + 1
                , hilite.flMax.lin + 1
@@ -108,7 +110,7 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
             }
          else {
             buf.Sprintf( "Arg [%d]  %dw x %dh box (%d,%d) (%d,%d)"
-               , ArgCount()
+               , Get_g_ArgCount()
                , hilite.Width()
                , hilite.Height()
                , hilite.flMin.lin + 1
@@ -151,7 +153,7 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
 //--------------------------------------------------------------
 
 STATIC_FXN void IncArgCnt() {
-   if( ++g_iArgCount == 1 ) { // was 0, now 1?
+   if( Inc_g_ArgCount() == 1 ) { // was 0, now 1?
       PCV;
       ExtendSelectionHilite( Point( (s_SelAnchor=pcv->Cursor()), 0, 1 ) );
       }
@@ -318,7 +320,7 @@ STATIC_FXN void TermNulleow( std::string &st ) {
 
 bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { // intended use: selection-smart CURSORFUNC's
    const auto Cursor( g_CurView()->Cursor() );
-   if( g_iArgCount ) {
+   if( Get_g_ArgCount() > 0 ) {
       *yMin = Min( s_SelAnchor.lin, Cursor.lin );
       *yMax = Max( s_SelAnchor.lin, Cursor.lin );
       *xMin = Min( s_SelAnchor.col, Cursor.col );
@@ -337,7 +339,7 @@ bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { 
 bool View::GetBOXSTR_Selection( std::string &st ) {
    if( this == g_CurView() ) {
       const auto cursor( Cursor() );
-      if( g_iArgCount /* && s_SelAnchor.lin == cursor.lin */ ) {
+      if( Get_g_ArgCount() > 0 /* && s_SelAnchor.lin == cursor.lin */ ) {
          0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
          const auto xMin( Min( s_SelAnchor.col, cursor.col ) );
          const auto xMax( Max( s_SelAnchor.col, cursor.col ) );
@@ -363,10 +365,11 @@ bool ARG::BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax ) {
 
 STATIC_VAR bool s_fHaveLiteralTextarg;
 
+// consumes g_ArgCount, s_fHaveLiteralTextarg
 bool ARG::FillArgStructFailed() { enum {DB=0};                                                            DB && DBG( "%s+", __func__ );
    // capture some global values into locals:
    const auto fHaveLiteralTextarg( s_fHaveLiteralTextarg );  s_fHaveLiteralTextarg = false;
-   d_cArg = g_iArgCount;                                     g_iArgCount           = 0;
+   d_cArg = Get_g_ArgCount();                                Clr_g_ArgCount();
    d_pFBuf = g_CurFBuf();
    const auto Cursor( g_CurView()->Cursor() );
    if( d_cArg == 0 ) {
@@ -547,7 +550,7 @@ bool ARG::InitOk( PCCMD pCmd ) {
    d_argType      = NOARG;
    d_noarg.cursor = g_CurView()->Cursor();
    if( d_pCmd->d_argType & TAKES_ARG ) {
-      if( FillArgStructFailed() ) { // consumes ArgCount()
+      if( FillArgStructFailed() ) {
          ClearArgAndSelection();
          return ErrorDialogBeepf( "Bad argument: '%s' requires %s", CmdName(), ArgTypeNames( d_pCmd->d_argType ).c_str() );
          }
@@ -853,8 +856,8 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          }
       else if( func == fn_arg ) {
          if( 0 && xCursor >= stb.length() ) {  // experimental: allow arg to (in specific circumstances) increase the arg count
-            ++g_iArgCount;          // hack a: works but prompt for this fxn is not updated, so not visible to the user
-            break;                  // hack b: return PCMD==arg does NOT work; hit Assert( ArgCount() == 0 ); below
+            Inc_g_ArgCount();       // hack a: works but prompt for this fxn is not updated, so not visible to the user
+            break;                  // hack b: return PCMD==arg does NOT work; hit Assert( Get_g_ArgCount() == 0 ); below
             }
          else {
             if( xCursor < stb.length() ) {
@@ -953,7 +956,7 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 GLOBAL_VAR bool s_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
 STATIC_FXN bool ArgMainLoop() {
-   // Called on first invocation (ie.  when g_iArgCount==0) of ARG::arg or
+   // Called on first invocation (ie.  when Get_g_ArgCount()==0) of ARG::arg or
    // ARG::Lastselect.  Subsequent invocations of ARG::arg are handled
    // inline...
    ExtendSelectionHilite( g_Cursor() );
@@ -965,7 +968,7 @@ STATIC_FXN bool ArgMainLoop() {
          }
       if( pCmd->d_func == fn_arg ) {
          // ARG::arg _IS NOT CALLED_: instead inline-execute here:
-         ++g_iArgCount;
+         Inc_g_ArgCount();
          ExtendSelectionHilite( g_Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
          continue; //================================================================
          }
@@ -990,7 +993,7 @@ STATIC_FXN bool ArgMainLoop() {
          // execute returned CMD (unless canceled).
          TextArgBuffer().clear();
          bool fGotAnyInputFromKbd;
-         pCmd = GetTextargString( TextArgBuffer(), FmtStr<20>( "Arg [%d]? ", ArgCount() ), 0, pCmd, 0, &fGotAnyInputFromKbd );
+         pCmd = GetTextargString( TextArgBuffer(), FmtStr<20>( "Arg [%d]? ", Get_g_ArgCount() ), 0, pCmd, 0, &fGotAnyInputFromKbd );
          if( !pCmd ) { // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
             return false; //*********************************************************
             }
@@ -1014,28 +1017,26 @@ STATIC_FXN bool ArgMainLoop() {
 
 bool ARG::arg() {
    // ArgMainLoop internally processes arg's rx'd, so there is no need for the
-   // ArgCount() checking code found in lastselect()
+   // Get_g_ArgCount() checking code found in lastselect()
    //
-   // corollary: ARG::arg() can only be called when ArgCount() == 0
+   // corollary: ARG::arg() can only be called when Get_g_ArgCount() == 0
    //
-   Assert( ArgCount() == 0 );
+   Assert( Get_g_ArgCount() == 0 );
    IncArgCnt();
    return ArgMainLoop();
    }
 
 bool ARG::lastselect() {
-   if( ArgCount() != 0 ) {
+   if( Get_g_ArgCount() > 0 ) {
       return false;
       }
-   {
    PCV;
    if( !pcv->d_LastSelect_isValid ) {
       return Msg( "view has no previous selection" );
       }
    s_SelAnchor = pcv->d_LastSelectBegin;
    pcv->MoveCursor( pcv->d_LastSelectEnd );
-   ++g_iArgCount;
-   }
+   Inc_g_ArgCount();
    ArgMainLoop();
    return true;
    }
@@ -1071,7 +1072,7 @@ STATIC_FXN bool GetTextargStringNXeq( std::string &str, int cArg, COL xCursor ) 
       IncArgCnt();
       }
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( str, FmtStr<25>( "Arg [%d]: ", ArgCount() ), xCursor, nullptr, gts_DfltResponse, &fGotAnyInputFromKbd ) );
+   const auto pCmd( GetTextargString( str, FmtStr<25>( "Arg [%d]: ", Get_g_ArgCount() ), xCursor, nullptr, gts_DfltResponse, &fGotAnyInputFromKbd ) );
    if( !pCmd ) { // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
       return false;
       }
@@ -1348,7 +1349,7 @@ bool ARG::unassigned() {
 
 bool ARG::boxstream() {
    g_fBoxMode = !g_fBoxMode;
-   if( ArgCount() > 0 ) {
+   if( Get_g_ArgCount() > 0 ) {
       ExtendSelectionHilite( g_CurView()->Cursor() );
       }
    return g_fBoxMode;

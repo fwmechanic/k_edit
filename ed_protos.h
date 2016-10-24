@@ -75,7 +75,7 @@ extern PCChar ExecutableFormat();
 //----------- Arg and Selection
 
 STIL     bool IsSelectionActive()         { extern bool s_fSelectionActive; return s_fSelectionActive; }
-STIL     int  ArgCount()                  { extern int  g_iArgCount;        return g_iArgCount; }
+STIL     int  Get_g_ArgCount()            { extern int  g_iArgCount       ; return g_iArgCount; }
 STIL     bool IsMacroRecordingActive()    { extern bool g_fMacroRecordingActive; return g_fMacroRecordingActive; }
 STIL     bool IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedByRecord; return g_fCmdXeqInhibitedByRecord; }
 

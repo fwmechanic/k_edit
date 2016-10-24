@@ -189,7 +189,7 @@ bool ARG::savecur() { PCV;  // left here for macro programming
    }
 
 bool ARG::restcur() { PCV;
-   if( ArgCount() > 0 ) {
+   if( Get_g_ArgCount() > 0 ) {
       if( !pcv->RestCur() ) {
          return fnMsg( "no cursor location saved" );
          }
@@ -290,7 +290,7 @@ bool ARG::ppara() {
    if( pFBuf->LineCount() <= g_CursorLine() ) {
       return false;
       }
-   if( ArgCount() > 0 ) { d_fMeta = !d_fMeta; } // makes this fn more useful for selection purposes
+   if( Get_g_ArgCount() > 0 ) { d_fMeta = !d_fMeta; } // makes this fn more useful for selection purposes
    auto yLine( g_CursorLine() + 1 );
    for( ; yLine < pFBuf->LineCount(); ++yLine ) {
       if( d_fMeta ? LastLineOfPara( pFBuf, yLine ) : FirstLineOfPara( pFBuf, yLine ) ) {
@@ -306,7 +306,7 @@ bool ARG::mpara() {
    if( g_CursorLine() == 0 ) {
       return false;
       }
-   // if( ArgCount() > 0 ) { d_fMeta = !d_fMeta; } // makes this fn more useful for selection purposes
+   // if( Get_g_ArgCount() > 0 ) { d_fMeta = !d_fMeta; } // makes this fn more useful for selection purposes
    auto yLine( g_CursorLine() - 1 );
    const auto pFBuf( g_CurFBuf() );
    for( ; yLine; --yLine ) {

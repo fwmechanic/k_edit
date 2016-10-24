@@ -2044,8 +2044,8 @@ STATIC_FXN bool PMword( bool fSearchFwd, bool fMeta ) {
    return cp.Moved();
    }
 
-bool ARG::pword() { return PMword( true , (ArgCount() > 0) ? !d_fMeta : d_fMeta ); }
-bool ARG::mword() { return PMword( false,                               d_fMeta ); }
+bool ARG::pword() { return PMword( true , (Get_g_ArgCount() > 0) ? !d_fMeta : d_fMeta ); }
+bool ARG::mword() { return PMword( false,                                     d_fMeta ); }
 
 //********************************************************************************************
 //
