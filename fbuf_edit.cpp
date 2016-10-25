@@ -694,6 +694,15 @@ void PCFV_delete_BOXARG( ARG::BOXARG_t const &d_boxarg, bool copyToClipboard, bo
    pcv->MoveCursor( d_boxarg.flMin.lin, d_boxarg.flMin.col );
    }
 
+STATIC_FXN void DelArgRegion( const ARG &arg ) {
+   switch( arg.d_argType ) {
+    case LINEARG:   PCFV_delete_LINEARG  ( arg.d_linearg  , false );  break;
+    case BOXARG:    PCFV_delete_BOXARG   ( arg.d_boxarg   , false );  break;
+    case STREAMARG: PCFV_delete_STREAMARG( arg.d_streamarg, false );  break;
+    default:        break;
+    }
+   }
+
 void PCFV_delete_ToEOL( Point const &curpos, bool copyToClipboard ) { PCFV;
    auto xMax( FBOP::LineCols( pcf, curpos.lin ) );
    decltype(xMax) xLeft ;
@@ -970,7 +979,7 @@ bool ARG::graphic() { enum { DB=0 };
          return true;
          }
       }
-   DelArgRegion();
+   ::DelArgRegion( *this );
    return PutCharIntoCurfileAtCursor( usrChar, tmp1, tmp2 );
    }
 
@@ -1021,7 +1030,7 @@ bool ARG::paste() {
     default:        break;
     case STREAMARG: //-lint fallthrough
     case BOXARG:    //-lint fallthrough
-    case LINEARG:   DelArgRegion(); // Replace the selected text with the contents of <clipboard>
+    case LINEARG:   ::DelArgRegion( *this ); // Replace the selected text with the contents of <clipboard>
                     break;
     case TEXTARG:   {
                     g_pFbufClipboard->MakeEmpty();

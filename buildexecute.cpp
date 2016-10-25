@@ -1357,15 +1357,6 @@ bool ARG::boxstream() {
 
 //#############################################################################
 
-void ARG::DelArgRegion() const {
-   switch( d_argType ) {
-    case LINEARG:   PCFV_delete_LINEARG  ( d_linearg  , false );  break;
-    case BOXARG:    PCFV_delete_BOXARG   ( d_boxarg   , false );  break;
-    case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, false );  break;
-    default:        break;
-    }
-   }
-
 int ARG::GetLineRange( LINE *pyMin, LINE *pyMax ) const {
    switch( d_argType ) {
       default:        return 1; // NOT OK

@@ -375,7 +375,8 @@ enum               // Actually can be set in ARG::Abc?
    bpMACROFUNC  ,  //   nests/pushes literal text from which the command stream is generated.  Conflicts with all flags except KEEPMETA.
    };
 
-#define DEFINE_ARGTYPE( argnm )  constexpr uint32_t argnm = BIT( bp##argnm )
+typedef uint32_t ArgType_t;
+#define DEFINE_ARGTYPE( argnm )  constexpr ArgType_t argnm = BIT( bp##argnm )
                               // Actually can be set in ARG::Abc?
                               // |
 DEFINE_ARGTYPE( NOARG      ); // * no argument specified
@@ -398,10 +399,10 @@ DEFINE_ARGTYPE( MACROFUNC  ); //   nests/pushes literal text from which the comm
 #undef DEFINE_ARGTYPE
 
 // only ONE among ACTUAL_ARGS may be set in ARG::d_argType when a ARG::Xyz is Invoke()'ed
-constexpr uint32_t ACTUAL_ARGS = NOARG | TEXTARG | NULLARG | LINEARG | BOXARG | STREAMARG;
+constexpr ArgType_t ACTUAL_ARGS = NOARG | TEXTARG | NULLARG | LINEARG | BOXARG | STREAMARG;
 
 // CMD's w/ANY of these SET need additional ARG processing when Invoke()'ed
-constexpr uint32_t TAKES_ARG   = ACTUAL_ARGS | NOARGWUC | NULLEOW | NULLEOL | NUMARG;
+constexpr ArgType_t TAKES_ARG   = ACTUAL_ARGS | NOARGWUC | NULLEOW | NULLEOL | NUMARG;
 
 // note that 'mark' fxn does NOT have NUMARG set!
 #define IS_NUMARG    (d_argType == LINEARG)
@@ -413,7 +414,7 @@ typedef CMD const *        PCCMD;
 typedef CMD const * const CPCCMD;
 
 struct ARG {
-   uint32_t d_argType;
+   ArgType_t d_argType;
    int      d_cArg;    // count of <arg>s pressed: 0 for NOARG
    struct {            // no argument specified
       Point cursor;    // - cursor
@@ -435,7 +436,6 @@ struct ARG {
    PCCMD    d_pCmd;
    PFBUF    d_pFBuf;
    //*******  END OF DATA
-   void     DelArgRegion() const;
    void     BeginPt( Point *pPt ) const;
    void     EndPt( Point *pPt ) const;
    bool     Within( const Point &pt, COL len=-1 ) const;
@@ -458,7 +458,7 @@ public:
    PCChar   ArgTypeName() const;
    void     ConvertStreamargToLineargOrBoxarg();
    void     ConvertLineOrBoxArgToStreamArg();
-   uint32_t ActualArgType() const { return d_argType & ACTUAL_ARGS; }
+   ArgType_t ActualArgType() const { return d_argType & ACTUAL_ARGS; }
 private:
    bool   pmlines( int direction ); // factored from mlines and plines
 public:
@@ -521,11 +521,11 @@ STIL funcCmd fn_runLua()    { return &ARG::ExecLuaFxn ; }
 #   define  AHELP( x )   x
 #   define _AHELP( x ) , x
 
-struct CMD {             // function definition entry
-   PCChar   d_name;      // - pointer to name of fcn     !!! DON'T CHANGE ORDER OF FIRST 2 ELEMENTS
-   funcCmd  d_func;      // - pointer to function        !!! UNLESS you change initializer of macro_graphic
-   uint32_t d_argType;   // - user args allowed
-   PCChar   d_HelpStr;   // - help string shown in <CMD-SWI-Keys>
+struct CMD {              // function definition entry
+   PCChar    d_name;      // - pointer to name of fcn     !!! DON'T CHANGE ORDER OF FIRST 2 ELEMENTS
+   funcCmd   d_func;      // - pointer to function        !!! UNLESS you change initializer of macro_graphic
+   ArgType_t d_argType;   // - user args allowed
+   PCChar    d_HelpStr;   // - help string shown in <CMD-SWI-Keys>
    union {
       EdKC_Ascii eka;
       PCChar     pszMacroDef;
