@@ -354,34 +354,56 @@ struct SearchScanMode; // forward
 // 2) In ARG::d_argType (a dynamic object), specifies the processed arg type
 //    being supplied to CMD.func in this invocation.
 //
-enum                      // Actually can be set in ARG::Abc?
-   {                      // |
-   NOARG      = BIT( 0),  // * no argument specified
-     NOARGWUC = BIT( 1),  //   no arg => word under cursor (converts to TEXTARG, which must also be set)
-   NULLARG    = BIT( 2),  // * arg + no cursor movement
-   TEXTARG    = BIT( 3),  // * text specified (NULLEOL, NULLEOW and BOXSTR convert to this)
-   LINEARG    = BIT( 4),  // * contiguous range of entire lines
-   BOXARG     = BIT( 5),  // * box delimited by arg, cursor
-   STREAMARG  = BIT( 6),  // * from low-to-high, viewed 1-D
-     NULLEOL  = BIT( 7),  //   null arg => text from arg->eol (converts to TEXTARG, which must also be set)
-     NULLEOW  = BIT( 8),  //   null arg => text from arg->end of word (converts to TEXTARG, which must also be set)
-     BOXSTR   = BIT( 9),  //   single-line box selection converts to TEXTARG, which must also be set
-   NUMARG     = BIT(10),  //   text => delta to y position (converts to LINEARG, which must also be set)
-   MARKARG    = BIT(11),  //   text => mark at end of arg
-   MODIFIES   = BIT(12),  //   modifies current file (if > granularity is needed, DON'T specify MODIFIES; call FBUF::CantModify() in code paths which MODIFY.
-   KEEPMETA   = BIT(13),  //   do not consume meta flag
-   WINDOWFUNC = BIT(14),  //   do not cancel highlight resulting from a previous command, such as psearch.
-   CURSORFUNC = BIT(15),  //   do not recognize or cancel Arg prefix.  Conflicts with all flags except MODIFIES and KEEPMETA.
-   MACROFUNC  = BIT(16),  //   nests/pushes literal text from which the command stream is generated.  Conflicts with all flags except KEEPMETA.
-
-   // only ONE among ACTUAL_ARGS may be set in ARG::d_argType when a ARG::Xyz is Invoke()'ed
-   ACTUAL_ARGS = NOARG | TEXTARG | NULLARG | LINEARG | BOXARG | STREAMARG,
-
-   // CMD's w/ANY of these SET need additional ARG processing when Invoke()'ed
-   TAKES_ARG   = ACTUAL_ARGS | NOARGWUC | NULLEOW | NULLEOL | NUMARG,
+enum               // Actually can be set in ARG::Abc?
+   {               // |
+   bpNOARG      ,  // * no argument specified
+     bpNOARGWUC ,  //   no arg => word under cursor (converts to TEXTARG, which must also be set)
+   bpNULLARG    ,  // * arg + no cursor movement
+   bpTEXTARG    ,  // * text specified (NULLEOL, NULLEOW and BOXSTR convert to this)
+   bpLINEARG    ,  // * contiguous range of entire lines
+   bpBOXARG     ,  // * box delimited by arg, cursor
+   bpSTREAMARG  ,  // * from low-to-high, viewed 1-D
+     bpNULLEOL  ,  //   null arg => text from arg->eol (converts to TEXTARG, which must also be set)
+     bpNULLEOW  ,  //   null arg => text from arg->end of word (converts to TEXTARG, which must also be set)
+     bpBOXSTR   ,  //   single-line box selection converts to TEXTARG, which must also be set
+   bpNUMARG     ,  //   text => delta to y position (converts to LINEARG, which must also be set)
+   bpMARKARG    ,  //   text => mark at end of arg
+   bpMODIFIES   ,  //   modifies current file (if > granularity is needed, DON'T specify MODIFIES; call FBUF::CantModify() in code paths which MODIFY.
+   bpKEEPMETA   ,  //   do not consume meta flag
+   bpWINDOWFUNC ,  //   do not cancel highlight resulting from a previous command, such as psearch.
+   bpCURSORFUNC ,  //   do not recognize or cancel Arg prefix.  Conflicts with all flags except MODIFIES and KEEPMETA.
+   bpMACROFUNC  ,  //   nests/pushes literal text from which the command stream is generated.  Conflicts with all flags except KEEPMETA.
    };
 
-// note that 'mark' fxn does NOT have NUMARG set!  I guess it uses atoul()?
+#define DEFINE_ARGTYPE( argnm )  constexpr uint32_t argnm = BIT( bp##argnm )
+                              // Actually can be set in ARG::Abc?
+                              // |
+DEFINE_ARGTYPE( NOARG      ); // * no argument specified
+DEFINE_ARGTYPE(   NOARGWUC ); //   no arg => word under cursor (converts to TEXTARG, which must also be set)
+DEFINE_ARGTYPE( NULLARG    ); // * arg + no cursor movement
+DEFINE_ARGTYPE( TEXTARG    ); // * text specified (NULLEOL, NULLEOW and BOXSTR convert to this)
+DEFINE_ARGTYPE( LINEARG    ); // * contiguous range of entire lines
+DEFINE_ARGTYPE( BOXARG     ); // * box delimited by arg, cursor
+DEFINE_ARGTYPE( STREAMARG  ); // * from low-to-high, viewed 1-D
+DEFINE_ARGTYPE(   NULLEOL  ); //   null arg => text from arg->eol (converts to TEXTARG, which must also be set)
+DEFINE_ARGTYPE(   NULLEOW  ); //   null arg => text from arg->end of word (converts to TEXTARG, which must also be set)
+DEFINE_ARGTYPE(   BOXSTR   ); //   single-line box selection converts to TEXTARG, which must also be set
+DEFINE_ARGTYPE( NUMARG     ); //   text => delta to y position (converts to LINEARG, which must also be set)
+DEFINE_ARGTYPE( MARKARG    ); //   text => mark at end of arg
+DEFINE_ARGTYPE( MODIFIES   ); //   modifies current file (if finer granularity is needed, DON'T specify MODIFIES; call FBUF::CantModify() in code paths which MODIFY.
+DEFINE_ARGTYPE( KEEPMETA   ); //   do not consume meta flag
+DEFINE_ARGTYPE( WINDOWFUNC ); //   do not cancel highlight resulting from a previous command, such as psearch.
+DEFINE_ARGTYPE( CURSORFUNC ); //   do not recognize or cancel Arg prefix.  Conflicts with all flags except MODIFIES and KEEPMETA.
+DEFINE_ARGTYPE( MACROFUNC  ); //   nests/pushes literal text from which the command stream is generated.  Conflicts with all flags except KEEPMETA.
+#undef DEFINE_ARGTYPE
+
+// only ONE among ACTUAL_ARGS may be set in ARG::d_argType when a ARG::Xyz is Invoke()'ed
+constexpr uint32_t ACTUAL_ARGS = NOARG | TEXTARG | NULLARG | LINEARG | BOXARG | STREAMARG;
+
+// CMD's w/ANY of these SET need additional ARG processing when Invoke()'ed
+constexpr uint32_t TAKES_ARG   = ACTUAL_ARGS | NOARGWUC | NULLEOW | NULLEOL | NUMARG;
+
+// note that 'mark' fxn does NOT have NUMARG set!
 #define IS_NUMARG    (d_argType == LINEARG)
 #define NUMARG_VALUE (d_linearg.yMax - d_linearg.yMin + 1)
 
@@ -409,22 +431,22 @@ struct ARG {
       } d_linearg;
    typedef Rect STREAMARG_t;  STREAMARG_t d_streamarg; // stream argument specified  (char at 'd_streamarg.flMax' is NOT INCLUDED in the selection)
    typedef Rect BOXARG_t;     BOXARG_t    d_boxarg;    // box argument specified
-   bool   d_fMeta;
-   PCCMD  d_pCmd;
-   PFBUF  d_pFBuf;
-   //*********  END OF DATA
-   void   DelArgRegion() const;
-   void   BeginPt( Point *pPt ) const;
-   void   EndPt( Point *pPt ) const;
-   bool   Within( const Point &pt, COL len=-1 ) const;
-   bool   Beyond( const Point &pt ) const;
-   COL    GetLine( std::string &st, LINE yLine ) const;
-   void   ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const;
-   void   GetColumnRange( COL *pxMin, COL *pxMax ) const;
-   int    GetLineRange( LINE *yTop, LINE *yBottom ) const;
+   bool     d_fMeta;
+   PCCMD    d_pCmd;
+   PFBUF    d_pFBuf;
+   //*******  END OF DATA
+   void     DelArgRegion() const;
+   void     BeginPt( Point *pPt ) const;
+   void     EndPt( Point *pPt ) const;
+   bool     Within( const Point &pt, COL len=-1 ) const;
+   bool     Beyond( const Point &pt ) const;
+   COL      GetLine( std::string &st, LINE yLine ) const;
+   void     ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const;
+   void     GetColumnRange( COL *pxMin, COL *pxMax ) const;
+   int      GetLineRange( LINE *yTop, LINE *yBottom ) const;
 private:
-   bool   FillArgStructFailed();
-   bool   BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
+   bool     FillArgStructFailed();
+   bool     BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
 public:
    bool     InitOk( PCCMD pCmd );
    void     SaveForRepeat() const;
@@ -442,7 +464,6 @@ private:
 public:
    // EDITOR_FXNs start here!!!
    typedef bool (ARG::*pfxCMD)(); // declare type of pointer to class method
-   bool nextmsg_engine( const bool fFwd );
    bool RunMacro();
    bool ExecLuaFxn();
 // bool _spushArg();
