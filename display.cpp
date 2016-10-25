@@ -1755,25 +1755,23 @@ struct HiLiteSpeedTable {
    const HiLiteRec *pHL = nullptr;  // references, does NOT own!
    };
 
-enum { HILITE_SPEEDTABLE_LINE_INCR = 16 * 1024 };
-STIL int SpeedTableIndex( LINE yLine ) {
-   const int idx( yLine / HILITE_SPEEDTABLE_LINE_INCR );
-   0 && DBG( "SpeedIdx  ==============> %d -> %d", yLine, idx );
+enum { HILITE_SPEEDTABLE_LINE_INCR = 1 * 1024 };
+STIL size_t SpeedTableIndex( LINE yLine ) {
+   const size_t idx( yLine / HILITE_SPEEDTABLE_LINE_INCR );                     0 && DBG( "SpeedIdx  ==============> %d -> %d", yLine, idx );
    return idx;
    }
 
-STIL int SpeedTableIndexFirstLine( int idx )  { return idx * HILITE_SPEEDTABLE_LINE_INCR; }
+STIL size_t SpeedTableIndexFirstLine( size_t idx )  { return idx * HILITE_SPEEDTABLE_LINE_INCR; }
 
 class ViewHiLites {
    friend class View;
    const FBUF       &d_FBuf;
-   const int         d_SpdTblEls;
-   HiLiteSpeedTable *d_SpeedTable;
+   std::vector<HiLiteSpeedTable> d_SpeedTable;
    HiLiteHead        d_HiLiteList;
-   void        UpdtSpeedTbl( HiLiteRec *pThis );
-   const HiLiteRec *FindFirstEntryAffectingOrAfterLine( LINE yLine ) const;
+   void              UpdtSpeedTbl( HiLiteRec *pThis );
+   const HiLiteRec  *FindFirstEntryAffectingOrAfterLine( LINE yLine ) const;
    ViewHiLites( PCFBUF pFBuf );
-   int  SpeedTableIndex( LINE yLine ) const { return Min( ::SpeedTableIndex( yLine ), d_SpdTblEls-1 ); }
+   int  SpeedTableIndex( LINE yLine ) const { return Min( ::SpeedTableIndex( yLine ), d_SpeedTable.size()-1 ); }
    void vhInsHiLiteBox(   int newColorIdx, Rect newRgn );
    void PrimeRedraw() const;
    int  InsertHiLitesOfLineSeg( LINE yLine, COL Indent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const;
@@ -1783,16 +1781,14 @@ public:
 
 ViewHiLites::ViewHiLites( PCFBUF pFBuf )
    : d_FBuf(*pFBuf)
-   , d_SpdTblEls( 1 + ::SpeedTableIndex( d_FBuf.LineCount() ) )
-   , d_SpeedTable( new HiLiteSpeedTable [ d_SpdTblEls ] )
-   { 0 && DBG( ">>>>>>>>>>> new ViewHiLites[ %d ]", d_SpdTblEls );
+   , d_SpeedTable( 1 + ::SpeedTableIndex( d_FBuf.LineCount() ) )
+   {
    }
 
 //-----------------------------------------------------------------------------
 
 ViewHiLites::~ViewHiLites() {
    PrimeRedraw();
-   delete [] d_SpeedTable;  d_SpeedTable = nullptr;  // cannot use Delete0 due to []
    while( auto pEl=d_HiLiteList.front() ) { // zap d_HiLiteList list
       DLINK_REMOVE_FIRST( d_HiLiteList, pEl, dlink );
       delete pEl;
@@ -1815,7 +1811,7 @@ STIL void ShowHilite( const HiLiteRec &hl, PCChar str ) {
 
 const HiLiteRec *ViewHiLites::FindFirstEntryAffectingOrAfterLine( LINE yLine ) const {
    0 && DBG( "FFEAoAL+ %d", yLine );
-   for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpdTblEls ; ++idx ) {
+   for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpeedTable.size() ; ++idx ) {
       if( d_SpeedTable[ idx ].pHL ) {
          0 && DBG( "1NZ=%d", idx );
          for( auto pHL=d_SpeedTable[ idx ].pHL; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
