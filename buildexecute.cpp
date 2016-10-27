@@ -693,9 +693,198 @@ STATIC_FXN void Bell_FlushKeyQueue_WaitForKey() {
    WaitForKey( 1 );
    }
 
-//--------------------------------------------------------------
-// pCmd  if valid (currently only when we're called by ArgMainLoop) will be
-//       ARG::graphic, the first char of a typed arg.
+struct GetTextargStringProcessCMD_context {
+   std::string   &pbTabxBase_  ;
+   DirMatches *  &pDirContent_ ;
+   int           &xCursor_     ;
+   bool          &fBellAndFreezeKbInput_ ;
+   std::string   &stb_         ;
+   int           &textargStackPos_;
+   //-------------------------------- ref/value boundary
+   const PCCMD    pCmd_        ; // if valid (currently only when we're called by ArgMainLoop) will be ARG::graphic, the first char of a typed arg.
+   const COL      xColInFile_  ;
+   const int      flags_       ;
+   const bool     fInitialStringSelected_;
+   };
+
+STATIC_FXN bool GetTextargStringProcessCMD( GetTextargStringProcessCMD_context &&C_ ) {
+   // RETURN VALUE
+   //   true:  input stream processing should stop: pCmd_ was not acted upon here, should be executed (or error)
+   //   false: pCmd_ was executed successfully (continue by reading and processing next pCmd)
+   const auto cmdFunc( C_.pCmd_->d_func );
+   //##############  Begin TabX  ##############
+   if( C_.pCmd_->d_argData.eka.EdKcEnum != EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
+      Delete0( C_.pDirContent_ );
+      C_.pbTabxBase_.clear(); // forget prev used WC
+      }
+   if( C_.pCmd_->d_argData.eka.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
+      if( !C_.pDirContent_ ) {
+         if( C_.pbTabxBase_.empty() ) { // no prev'ly used WC?
+            C_.pbTabxBase_ = C_.stb_;   // create based on curr content
+            }
+         C_.pDirContent_ = new DirMatches( C_.pbTabxBase_.c_str(), HasWildcard( C_.pbTabxBase_ ) ? nullptr : "*", FILES_AND_DIRS, false );
+         }
+      Path::str_t nxt;
+      do {
+         nxt = C_.pDirContent_->GetNext();
+         } while( Path::IsDotOrDotDot( nxt ) );
+      if( !nxt.empty() ) {
+         C_.stb_ = nxt;
+         C_.xCursor_ = C_.stb_.length();  // past end
+         }
+      else {
+         Delete0( C_.pDirContent_ );
+         C_.stb_ = C_.pbTabxBase_;
+         C_.xCursor_ = ixFirstWildcardOrEos( C_.stb_ ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
+         C_.fBellAndFreezeKbInput_ = true;
+         }
+      }
+      //##############  End   TabX  ##############
+#ifdef fn_dispmstk
+   else if( cmdFunc == fn_dispmstk ) {
+      noargNoMeta.dispmstk();
+      }
+#endif
+   else if( cmdFunc == fn_newline || cmdFunc == fn_emacsnewl ) {
+      if( C_.flags_ & gts_OnlyNewlAffirms ) {
+         return true;
+         }
+      ConOut::Bell();
+      }
+   else if( cmdFunc == fn_graphic ) {
+      if( C_.fInitialStringSelected_ ) {
+         C_.xCursor_ = 0;
+         if( C_.xCursor_ < C_.stb_.length() ) {
+            C_.stb_.erase( C_.xCursor_ );
+            }
+         }
+      0 && DBG( "graphic @ x=%d (stlen=%" PR_SIZET ")", C_.xCursor_, C_.stb_.length() );
+      if( C_.xCursor_ > C_.stb_.length() ) { 0 && DBG( "append %" PR_SIZET " spaces", C_.xCursor_ - C_.stb_.length() );
+         C_.stb_.append( C_.xCursor_ - C_.stb_.length(), ' ' );
+         }
+      const auto ch( C_.pCmd_->d_argData.chAscii() );
+      C_.stb_.insert( C_.xCursor_++, 1, ch );
+      }
+   else if( cmdFunc == fn_cdelete || cmdFunc == fn_emacscdel ) {
+      if( C_.xCursor_ > 0 ) {
+         --C_.xCursor_;
+         if( C_.xCursor_ < C_.stb_.length() ) {
+            C_.stb_.erase( C_.xCursor_, 1 );
+            }
+         }
+      }
+   else if( cmdFunc == fn_delete || cmdFunc == fn_sdelete ) {
+      if( C_.xCursor_ < C_.stb_.length() ) {
+         C_.stb_.erase( C_.xCursor_, 1 );
+         }
+      }
+   else if( cmdFunc == fn_insert || cmdFunc == fn_sinsert ) {
+      C_.stb_.insert( C_.xCursor_, 1, ' ' );
+      }
+   else if( cmdFunc == fn_up ) { //======================================================
+      if( C_.textargStackPos_ < 0 ) {
+         AddToTextargStack( C_.stb_ );
+         C_.textargStackPos_ = 0;
+         }
+      if( C_.textargStackPos_ < g_pFBufTextargStack->LastLine() ) {
+         g_pFBufTextargStack->DupRawLine( C_.stb_, ++C_.textargStackPos_ );
+         C_.xCursor_ = C_.stb_.length();
+         }
+      }
+   else if( cmdFunc == fn_down ) {
+      if( C_.textargStackPos_ > 0 ) {
+         g_pFBufTextargStack->DupRawLine( C_.stb_, --C_.textargStackPos_ );
+         C_.xCursor_ = C_.stb_.length();
+         }
+      }                       //======================================================
+   else if( cmdFunc == fn_meta ) {
+      noargNoMeta.meta();
+      }
+   else if( cmdFunc == fn_left  ) {
+      if( C_.xCursor_ > 0 ) {
+         --C_.xCursor_;
+         }
+      }
+   else if( cmdFunc == fn_right ) {                                      0 && DBG( "right: %d, %" PR_SIZET, C_.xCursor_, C_.stb_.length() );
+      if( g_CurFBuf() && C_.stb_.length() == C_.xCursor_ ) {
+         const auto xx( C_.xColInFile_ + C_.xCursor_ );
+         std::string stTmp;
+         g_CurFBuf()->DupLineSeg( stTmp, g_CursorLine(), xx, xx );    0 && DBG( "%d='%" PR_BSR "'", xx, BSR(stTmp) );
+         if( !stTmp.empty() ) {
+            C_.stb_.push_back( stTmp[0] );
+            }
+         }
+      ++C_.xCursor_;
+      }
+   else if( cmdFunc == fn_begline || cmdFunc == fn_home ) {
+      C_.xCursor_ = 0;
+      }
+   else if( cmdFunc == fn_endline ) {
+      C_.xCursor_ = C_.stb_.length();  // past end
+      }
+   else if( cmdFunc == fn_arg ) {
+      if( 0 && C_.xCursor_ >= C_.stb_.length() ) {  // experimental: allow arg to (in specific circumstances) increase the arg count
+         Inc_g_ArgCount();       // hack a: works but prompt for this fxn is not updated, so not visible to the user
+         return true;            // hack b: return PCMD==arg does NOT work; hit Assert( Get_g_ArgCount() == 0 ); below
+         }
+      else {
+         if( C_.xCursor_ < C_.stb_.length() ) {
+            C_.stb_.erase( C_.xCursor_ );    // center=arg: delete all chars at or following (under or to the right of) the cursor
+            }
+         }
+      }
+   else if( cmdFunc == fn_restcur ) {     // alt+center=alg+arg: does the converse of arg:
+      if( C_.xCursor_ < C_.stb_.length() ) {
+         C_.stb_.erase( 0, C_.xCursor_ ); // delete all chars preceding (to the left of) the cursor
+         C_.xCursor_ = 0;
+         }
+      }
+   else if( cmdFunc == fn_pword ) {
+      const auto pb( C_.stb_.c_str() ); const auto len( C_.stb_.length() );
+      while( C_.xCursor_ < len ) {
+         ++C_.xCursor_;
+         if( !isWordChar( pb[C_.xCursor_] ) && isWordChar( pb[C_.xCursor_+1] ) ) {
+            ++C_.xCursor_;
+            break;
+            }
+         }
+      }
+   else if( cmdFunc == fn_mword ) {
+      const auto pb( C_.stb_.c_str() ); const auto len( C_.stb_.length() );
+      if( C_.xCursor_ >= len ) { C_.xCursor_ = len - 1; }
+      while( C_.xCursor_ > 0 ) {
+         if( --C_.xCursor_ == 0 ) {
+            break;
+            }
+         if( !isWordChar( pb[C_.xCursor_-1] ) && isWordChar( pb[C_.xCursor_] ) ) {
+            break;
+            }
+         }
+      }
+   else if( cmdFunc == fn_flipcase ) {
+      if( C_.xCursor_ < C_.stb_.length() ) {
+         C_.stb_[ C_.xCursor_ ] = FlipCase( C_.stb_[ C_.xCursor_ ] );
+         }
+      }
+   else if( C_.pCmd_->NameMatch( "swapchar" ) ) {
+      if( C_.xCursor_+1 < C_.stb_.length() ) {
+         std::swap( C_.stb_[C_.xCursor_+0], C_.stb_[C_.xCursor_+1] );
+         }
+      }
+   else if( C_.pCmd_->d_argType & CURSORFUNC ) {
+      ConOut::Bell(); // unsupported CURSORFUNC?
+      }
+   else if( cmdFunc == fn_cancel ) {
+      return true;
+      }
+   else if( !(C_.flags_ & gts_OnlyNewlAffirms) ) { // any function (not immediate-executed above) _except_ *newl confirms
+      return true;
+      }
+   else {
+      ConOut::Bell();
+      }
+   return false;
+   }
 
 STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
    enum { DBG_GTA=1 };
@@ -706,14 +895,13 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
       , flags
       , pszPrompt?pszPrompt:""
       );
+   const auto fSavedMeta( g_fMeta );      0 && DBG( "%s+ g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
    const auto xColInFile( pCmd ? s_SelAnchor.col : g_CursorCol() );   0 && DBG( "%s+ xColInFile=%d (%d : %d)", __func__, xColInFile, s_SelAnchor.col, g_CursorCol() );
    auto fBellAndFreezeKbInput( false );
-   const auto fSavedMeta( g_fMeta );      0 && DBG( "%s+ g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
    *pfGotAnyInputFromKbd = false;
    auto textargStackPos(-1);
    std::string pbTabxBase;
    DirMatches *pDirContent(nullptr);
-   std::string stTmp;
    while(1) { //******************************************************************
       // BUGBUG GetTextargString_CMD_reader may prevent the following
       // fBellAndFreezeKbInput code from achieving it's intended task
@@ -744,181 +932,26 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
             }
          }
       //=============== switch( pCmd->d_func ) ===============
-      const funcCmd func( pCmd->d_func );
-      //##############  Begin TabX  ##############
-      if( pCmd->d_argData.eka.EdKcEnum != EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
-         Delete0( pDirContent );
-         pbTabxBase.clear(); // forget prev used WC
-         }
-      if( pCmd->d_argData.eka.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
-         if( !pDirContent ) {
-            if( pbTabxBase.empty() ) { // no prev'ly used WC?
-               pbTabxBase = stb;       // create based on curr content
-               }
-            pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
-            }
-         Path::str_t nxt;
-         do {
-            nxt = pDirContent->GetNext();
-            } while( Path::IsDotOrDotDot( nxt ) );
-         if( !nxt.empty() ) {
-            stb = nxt;
-            xCursor = stb.length();  // past end
-            }
-         else {
-            Delete0( pDirContent );
-            stb = pbTabxBase;
-            xCursor = ixFirstWildcardOrEos( stb ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
-            fBellAndFreezeKbInput = true;
-            }
-         }
-         //##############  End   TabX  ##############
-   #ifdef fn_dispmstk
-      else if( func == fn_dispmstk ) {
-         noargNoMeta.dispmstk();
-         }
-   #endif
-      else if( func == fn_newline || func == fn_emacsnewl ) {
-         if( flags & gts_OnlyNewlAffirms ) {
-            break;
-            }
-         ConOut::Bell();
-         }
-      else if( func == fn_graphic ) {
-         if( fInitialStringSelected ) {
-            xCursor = 0;
-            if( xCursor < stb.length() ) {
-               stb.erase( xCursor );
-               }
-            }
-         0 && DBG( "graphic @ x=%d (stlen=%" PR_SIZET ")", xCursor, stb.length() );
-         if( xCursor > stb.length() ) { 0 && DBG( "append %" PR_SIZET " spaces", xCursor - stb.length() );
-            stb.append( xCursor - stb.length(), ' ' );
-            }
-         const auto ch( pCmd->d_argData.chAscii() );
-         stb.insert( xCursor++, 1, ch );
-         }
-      else if( func == fn_cdelete || func == fn_emacscdel ) {
-         if( xCursor > 0 ) {
-            --xCursor;
-            if( xCursor < stb.length() ) {
-               stb.erase( xCursor, 1 );
-               }
-            }
-         }
-      else if( func == fn_delete || func == fn_sdelete ) {
-         if( xCursor < stb.length() ) {
-            stb.erase( xCursor, 1 );
-            }
-         }
-      else if( func == fn_insert || func == fn_sinsert ) {
-         stb.insert( xCursor, 1, ' ' );
-         }
-      else if( func == fn_up ) { //======================================================
-         if( textargStackPos < 0 ) {
-            AddToTextargStack( stb );
-            textargStackPos = 0;
-            }
-         if( textargStackPos < g_pFBufTextargStack->LastLine() ) {
-            g_pFBufTextargStack->DupRawLine( stb, ++textargStackPos );
-            xCursor = stb.length();
-            }
-         }
-      else if( func == fn_down ) {
-         if( textargStackPos > 0 ) {
-            g_pFBufTextargStack->DupRawLine( stb, --textargStackPos );
-            xCursor = stb.length();
-            }
-         }                       //======================================================
-      else if( func == fn_meta ) {
-         noargNoMeta.meta();
-         }
-      else if( func == fn_left  ) {
-         if( xCursor > 0 ) {
-            --xCursor;
-            }
-         }
-      else if( func == fn_right ) {                                      0 && DBG( "right: %d, %" PR_SIZET, xCursor, stb.length() );
-         if( g_CurFBuf() && stb.length() == xCursor ) {
-            const auto xx( xColInFile + xCursor );
-            g_CurFBuf()->DupLineSeg( stTmp, g_CursorLine(), xx, xx );    0 && DBG( "%d='%" PR_BSR "'", xx, BSR(stTmp) );
-            if( !stTmp.empty() ) {
-               stb.push_back( stTmp[0] );
-               }
-            }
-         ++xCursor;
-         }
-      else if( func == fn_begline || func == fn_home ) {
-         xCursor = 0;
-         }
-      else if( func == fn_endline ) {
-         xCursor = stb.length();  // past end
-         }
-      else if( func == fn_arg ) {
-         if( 0 && xCursor >= stb.length() ) {  // experimental: allow arg to (in specific circumstances) increase the arg count
-            Inc_g_ArgCount();       // hack a: works but prompt for this fxn is not updated, so not visible to the user
-            break;                  // hack b: return PCMD==arg does NOT work; hit Assert( Get_g_ArgCount() == 0 ); below
-            }
-         else {
-            if( xCursor < stb.length() ) {
-               stb.erase( xCursor );    // center=arg: delete all chars at or following (under or to the right of) the cursor
-               }
-            }
-         }
-      else if( func == fn_restcur ) {     // alt+center=alg+arg: does the converse of arg:
-         if( xCursor < stb.length() ) {
-            stb.erase( 0, xCursor ); // delete all chars preceding (to the left of) the cursor
-            xCursor = 0;
-            }
-         }
-      else if( func == fn_pword ) {
-         const auto pb( stb.c_str() ); const auto len( stb.length() );
-         while( xCursor < len ) {
-            ++xCursor;
-            if( !isWordChar( pb[xCursor] ) && isWordChar( pb[xCursor+1] ) ) {
-               ++xCursor;
-               break;
-               }
-            }
-         }
-      else if( func == fn_mword ) {
-         const auto pb( stb.c_str() ); const auto len( stb.length() );
-         if( xCursor >= len ) { xCursor = len - 1; }
-         while( xCursor > 0 ) {
-            if( --xCursor == 0 ) {
-               break;
-               }
-            if( !isWordChar( pb[xCursor-1] ) && isWordChar( pb[xCursor] ) ) {
-               break;
-               }
-            }
-         }
-      else if( func == fn_flipcase ) {
-         if( xCursor < stb.length() ) {
-            stb[ xCursor ] = FlipCase( stb[ xCursor ] );
-            }
-         }
-      else if( pCmd->NameMatch( "swapchar" ) ) {
-         if( xCursor+1 < stb.length() ) {
-            std::swap( stb[xCursor+0], stb[xCursor+1] );
-            }
-         }
-      else if( pCmd->d_argType & CURSORFUNC ) {
-         ConOut::Bell(); // unsupported CURSORFUNC?
-         }
-      else if( func == fn_cancel ) {
+      if( GetTextargStringProcessCMD( {
+                 .pbTabxBase_             = pbTabxBase  ,
+                 .pDirContent_            = pDirContent ,
+                 .xCursor_                = xCursor     ,
+                 .fBellAndFreezeKbInput_  = fBellAndFreezeKbInput ,
+                 .stb_                    = stb         ,
+                 .textargStackPos_        = textargStackPos,
+                 //-------------------------------- ref/value boundary
+                 .pCmd_                   = pCmd         ,
+                 .xColInFile_             = xColInFile   ,
+                 .flags_                  = flags        ,
+                 .fInitialStringSelected_ = fInitialStringSelected,
+               } ) ) {
          break;
-         }
-      else if( !(flags & gts_OnlyNewlAffirms) ) { // any function (not immediate-executed above) _except_ *newl confirms
-         break;
-         }
-      else {
-         ConOut::Bell();
          }
       //====== Some editing or cursor movement was done and we will be continuing to edit.
       //====== Consume meta + pCmd
-      if( !(pCmd->d_argType & KEEPMETA) )
+      if( !(pCmd->d_argType & KEEPMETA) ) {
          g_fMeta = false;
+         }
       pCmd = nullptr;
       flags &= ~gts_DfltResponse;
       } //*************************** while **********************************
@@ -981,7 +1014,7 @@ STATIC_FXN bool ArgMainLoop() {
       // We HAVE a valid CMD that is not arg, meta, or a CURSORFUNC
       // We SHALL call pCmd->BuildExecute() and return from this function
       s_fSelectionActive = false; // this fn is consuming the selection
-      if(   pCmd->IsFnGraphic()           // user typed a literal char?
+      if(   pCmd->IsFnGraphic()        // user typed a literal char?
          && g_Cursor() == s_SelAnchor  // no selection in effect?
         ) {
          if( SEL_KEYMAP && pCmd->d_argData.chAscii() == ' ' ) {
