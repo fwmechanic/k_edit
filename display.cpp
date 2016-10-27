@@ -1755,7 +1755,7 @@ struct HiLiteSpeedTable {
    const HiLiteRec *pHL = nullptr;  // references, does NOT own!
    };
 
-enum { HILITE_SPEEDTABLE_LINE_INCR = 1 * 1024 };
+enum { HILITE_SPEEDTABLE_LINE_INCR = 16 * 1024 };
 STIL size_t SpeedTableIndex( LINE yLine ) {
    const size_t idx( yLine / HILITE_SPEEDTABLE_LINE_INCR );                     0 && DBG( "SpeedIdx  ==============> %d -> %" PR_SIZET "", yLine, idx );
    return idx;
