@@ -518,12 +518,33 @@ typedef ARG::pfxCMD funcCmd;
 STIL funcCmd fn_runmacro()  { return &ARG::RunMacro   ; }
 STIL funcCmd fn_runLua()    { return &ARG::ExecLuaFxn ; }
 
+struct GTS {
+   enum eRV { KEEP_GOING, DONE };
+   int           &xCursor_     ;
+   std::string   &stb_         ;
+   int           &textargStackPos_;
+   //-------------------------------- ref/value boundary
+   const PCCMD    pCmd_        ; // if valid (currently only when we're called by ArgMainLoop) will be ARG::graphic, the first char of a typed arg.
+   const COL      xColInFile_  ;
+   const int      flags_       ;
+   const bool     fInitialStringSelected_;
+
+   // methods start here!!!
+   typedef eRV (GTS::*pfxGTS)(); // declare type of pointer to class method
+   #define CMDTBL_H_GTS_METHODS
+   #include "cmdtbl.h"
+   #undef  CMDTBL_H_GTS_METHODS
+   };
+
+typedef GTS::pfxGTS pfxGTS;
+
 #   define  AHELP( x )   x
 #   define _AHELP( x ) , x
 
 struct CMD {              // function definition entry
    PCChar    d_name;      // - pointer to name of fcn     !!! DON'T CHANGE ORDER OF FIRST 2 ELEMENTS
    funcCmd   d_func;      // - pointer to function        !!! UNLESS you change initializer of macro_graphic
+   pfxGTS    d_GTS_fxn;   // - pointer to function
    ArgType_t d_argType;   // - user args allowed
    PCChar    d_HelpStr;   // - help string shown in <CMD-SWI-Keys>
    union {

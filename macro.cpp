@@ -500,7 +500,7 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
          return CleanupPendingMacroStream();
          }
       if( MacroRuntimeStkEntry::GotLitCh==got ) { 0 && DBG( "%s LIT '%c'", __func__, token[0] );
-         STATIC_VAR CMD macro_graphic = { .d_name="macro_graphic", .d_func=&ARG::graphic };
+         STATIC_VAR CMD macro_graphic = { .d_name="macro_graphic", .d_func=&ARG::graphic, .d_GTS_fxn=&GTS::graphic };
          macro_graphic.d_argData.eka.Ascii    = token[0];
          macro_graphic.d_argData.eka.EdKcEnum = token[0];
          return &macro_graphic;
