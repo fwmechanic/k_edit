@@ -2081,8 +2081,8 @@ View::View( const View &src, PWin pWin )
    , d_prev              ( src.d_prev               )
    , d_saved             ( src.d_saved              )
    , d_LastSelect_isValid( src.d_LastSelect_isValid )
-   , d_LastSelectBegin   ( src.d_LastSelectBegin    )
-   , d_LastSelectEnd     ( src.d_LastSelectEnd      )
+   , d_LastSelectAnchor  ( src.d_LastSelectAnchor   )
+   , d_LastSelectCursor  ( src.d_LastSelectCursor   )
    {
    CommonInit();
    }

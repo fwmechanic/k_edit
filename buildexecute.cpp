@@ -38,18 +38,18 @@
 
 #if SINGLE_TextArgBuffer
    STATIC_VAR std::string  s_textArgBuffer;
-   STIL       std::string &TextArgBuffer() { return s_textArgBuffer; }
+   STATIC_FXN std::string &TextArgBuffer() { return s_textArgBuffer; }
 #else
    STATIC_VAR std::string  s_macroTextArgBuffer, s_userTextArgBuffer;
-   STIL       std::string &TextArgBuffer() { return Interpreter::Interpreting() ? s_macroTextArgBuffer : s_userTextArgBuffer; }
+   STATIC_FXN std::string &TextArgBuffer() { return Interpreter::Interpreting() ? s_macroTextArgBuffer : s_userTextArgBuffer; }
 #endif
 
 STATIC_VAR Point s_SelAnchor;
 STATIC_VAR Point s_SelEnd;
 
-GLOBAL_VAR int g_iArgCount; // write ONLY via Clr_g_ArgCount(), Inc_g_ArgCount(); read ONLY via Get_g_ArgCount()
-STIL int  Inc_g_ArgCount() { return ++g_iArgCount; }
-STIL void Clr_g_ArgCount() {          g_iArgCount = 0; }
+GLOBAL_VAR int      g_iArgCount; // write ONLY via Clr_g_ArgCount(), Inc_g_ArgCount(); read ONLY via Get_g_ArgCount()
+STATIC_FXN int  Inc_g_ArgCount() { return ++g_iArgCount; }
+STATIC_FXN void Clr_g_ArgCount() {          g_iArgCount = 0; }
 
 void ClearArgAndSelection() { PCV;
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
@@ -151,13 +151,6 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
    }
 
 //--------------------------------------------------------------
-
-STATIC_FXN void IncArgCnt() {
-   if( Inc_g_ArgCount() == 1 ) { // was 0, now 1?
-      PCV;
-      ExtendSelectionHilite( Point( (s_SelAnchor=pcv->Cursor()), 0, 1 ) );
-      }
-   }
 
 bool ARG::bp() {
    int *pcrash( nullptr );
@@ -821,14 +814,8 @@ GTS::eRV GTS::meta() {
    return KEEP_GOING;
    }
 GTS::eRV GTS::arg() {
-   if( 0 && xCursor_ >= stb_.length() ) {  // experimental: allow arg to (in specific circumstances) increase the arg count
-      Inc_g_ArgCount();       // hack a: works but prompt for this fxn is not updated, so not visible to the user
-      return DONE;            // hack b: return PCMD==arg does NOT work; hit Assert( Get_g_ArgCount() == 0 ); below
-      }
-   else {
-      if( xCursor_ < stb_.length() ) {
-         stb_.erase( xCursor_ );    // center=arg: delete all chars at or following (under or to the right of) the cursor
-         }
+   if( xCursor_ < stb_.length() ) {
+      stb_.erase( xCursor_ );  // delete all chars at or following (under or to the right of) the cursor
       }
    return KEEP_GOING;
    }
@@ -1016,14 +1003,14 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 
 //--------------------------------------------------------------
 
-GLOBAL_VAR bool s_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
+GLOBAL_VAR bool g_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
 STATIC_FXN bool ArgMainLoop() {
    // Called on first invocation (ie.  when Get_g_ArgCount()==0) of ARG::arg or
    // ARG::Lastselect.  Subsequent invocations of ARG::arg are handled
    // inline...
-   ExtendSelectionHilite( g_Cursor() );
-   s_fSelectionActive = true;
+   ExtendSelectionHilite( g_Cursor() ); // candidate for removal: IncArgCnt_DropAnchor() (called by ARG::arg()) already does this?
+   g_fSelectionActive = true;           // move to IncArgCnt_DropAnchor()?
    while(1) {
       auto pCmd( CMD_reader().GetNextCMD() );
       if( !pCmd ) {
@@ -1043,7 +1030,7 @@ STATIC_FXN bool ArgMainLoop() {
          }
       // We HAVE a valid CMD that is not arg, meta, or a CURSORFUNC
       // We SHALL call pCmd->BuildExecute() and return from this function
-      s_fSelectionActive = false; // this fn is consuming the selection
+      g_fSelectionActive = false; // this fn is consuming the selection
       if(   pCmd->IsFnGraphic()        // user typed a literal char?
          && g_Cursor() == s_SelAnchor  // no selection in effect?
         ) {
@@ -1069,12 +1056,19 @@ STATIC_FXN bool ArgMainLoop() {
          }
       else {
          PCV;
-         pcv->d_LastSelectBegin = s_SelAnchor;
-         pcv->d_LastSelectEnd   = pcv->Cursor();
+         pcv->d_LastSelectAnchor   = s_SelAnchor;
+         pcv->d_LastSelectCursor   = g_Cursor();
          pcv->d_LastSelect_isValid = true;
          }
       const auto rv( pCmd->BuildExecute() ); //************************************************
       return rv;
+      }
+   }
+
+STATIC_FXN void IncArgCnt_DropAnchor() {
+   if( Inc_g_ArgCount() == 1 ) { // was 0, now 1?
+      s_SelAnchor = g_Cursor();
+      ExtendSelectionHilite( Point( s_SelAnchor, 0, 1 ) );
       }
    }
 
@@ -1085,7 +1079,7 @@ bool ARG::arg() {
    // corollary: ARG::arg() can only be called when Get_g_ArgCount() == 0
    //
    Assert( Get_g_ArgCount() == 0 );
-   IncArgCnt();
+   IncArgCnt_DropAnchor();
    return ArgMainLoop();
    }
 
@@ -1097,8 +1091,8 @@ bool ARG::lastselect() {
    if( !pcv->d_LastSelect_isValid ) {
       return Msg( "view has no previous selection" );
       }
-   s_SelAnchor = pcv->d_LastSelectBegin;
-   pcv->MoveCursor( pcv->d_LastSelectEnd );
+   s_SelAnchor = pcv->d_LastSelectAnchor;
+   pcv->MoveCursor( pcv->d_LastSelectCursor );
    Inc_g_ArgCount();
    ArgMainLoop();
    return true;
@@ -1131,8 +1125,8 @@ bool fExecute( PCChar strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%s'", 
    }
 
 STATIC_FXN bool GetTextargStringNXeq( std::string &str, int cArg, COL xCursor ) {
-   while( cArg-- ) {
-      IncArgCnt();
+   for( auto ix(0) ; ix < cArg ; ++ix ) {
+      IncArgCnt_DropAnchor();
       }
    bool fGotAnyInputFromKbd;
    const auto pCmd( GetTextargString( str, FmtStr<25>( "Arg [%d]: ", Get_g_ArgCount() ), xCursor, nullptr, gts_DfltResponse, &fGotAnyInputFromKbd ) );
@@ -1151,10 +1145,9 @@ STATIC_FXN bool GetTextargStringNXeq( std::string &str, int cArg, COL xCursor ) 
 bool ARG::cliptext() { // patterned after lasttext
    auto cArg(0);
    switch( d_argType ) {
-      default:      return BadArg();
-      case NULLARG: cArg = d_cArg;  //lint -fallthrough
-      case NOARG:   cArg++;
-                    break;
+      default:        return BadArg();
+      case NULLARG:   cArg = 1 + d_cArg;  break;
+      case NOARG:     cArg = 1;           break;
       }
    WinClipGetFirstLine( TextArgBuffer() );
    return GetTextargStringNXeq( TextArgBuffer(), cArg, 0 );
@@ -1166,30 +1159,26 @@ bool ARG::lasttext() {
    auto cArg(0);
    switch( d_argType ) {
       default:        return BadArg();
-      case NULLARG:   cArg = d_cArg;  //lint -fallthrough
-      case NOARG:     cArg++;
+      case NULLARG:   cArg = 1 + d_cArg;  break;
+      case NOARG:     cArg = 1;           break;
+      case LINEARG:   cArg = d_cArg; g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_linearg.yMin, 0, COL_MAX );
                       break;
-      case LINEARG:   g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_linearg.yMin, 0, COL_MAX );
-                      cArg = d_cArg;
+      case BOXARG:    cArg = d_cArg; g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col );
                       break;
-      case STREAMARG: TextArgBuffer() = StreamArgToString( g_CurFBuf(), d_streamarg );
-                      cArg = d_cArg;
-                      break;
-      case BOXARG:    g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col );
-                      cArg = d_cArg;
+      case STREAMARG: cArg = d_cArg; TextArgBuffer() = StreamArgToString( g_CurFBuf(), d_streamarg );
                       break;
       }
    return GetTextargStringNXeq( TextArgBuffer(), cArg, TextArgBuffer().length() );
    }
 
 bool ARG::prompt() {
-   if( TEXTARG != d_argType ) {
-      return BadArg();
+   switch( d_argType ) {
+      default:        return BadArg();
+      case TEXTARG:   break;
       }
    std::string src( d_textarg.pText );
-   auto cArg( d_cArg );
-   while( cArg-- ) {
-      IncArgCnt();
+   for( auto ix(0) ; ix < d_cArg ; ++ix ) {
+      IncArgCnt_DropAnchor();
       }
    TextArgBuffer().clear();
    bool fGotAnyInputFromKbd;

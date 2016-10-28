@@ -732,7 +732,7 @@ public:
    bool         PBalFindMatching( bool fSetHilite, Point *pPt );
    bool         GetBOXSTR_Selection( std::string &st );
    bool         d_LastSelect_isValid;
-   Point        d_LastSelectBegin, d_LastSelectEnd;
+   Point        d_LastSelectAnchor, d_LastSelectCursor;
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
 public:
