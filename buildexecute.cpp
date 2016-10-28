@@ -690,94 +690,8 @@ GTS::eRV GTS::begline() {
    xCursor_ = 0;
    return KEEP_GOING;
    }
-GTS::eRV GTS::down() {
-   if( textargStackPos_ > 0 ) {
-      g_pFBufTextargStack->DupRawLine( stb_, --textargStackPos_ );
-      xCursor_ = stb_.length();
-      }
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::emacscdel() { // dup of cdelete, NOT a CURSORFUNC
-   if( xCursor_ > 0 ) {
-      --xCursor_;
-      if( xCursor_ < stb_.length() ) {
-         stb_.erase( xCursor_, 1 );
-         }
-      }
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::cdelete() {   // dup of emacscdel
-   return emacscdel();
-   }
-GTS::eRV GTS::emacsnewl() { // dup of newline
-   if( flags_ & gts_OnlyNewlAffirms ) {
-      return DONE;
-      }
-   ConOut::Bell();
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::newline() { // dup of emacsnewl
-   return emacsnewl();
-   }
-GTS::eRV GTS::endline() {
-   xCursor_ = stb_.length();  // past end
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::home() {
-   xCursor_ = 0;
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::left() {
-   if( xCursor_ > 0 ) {
-      --xCursor_;
-      }
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::mword() {
-   const auto pb( stb_.c_str() ); const auto len( stb_.length() );
-   if( xCursor_ >= len ) { xCursor_ = len - 1; }
-   while( xCursor_ > 0 ) {
-      if( --xCursor_ == 0 ) {
-         break;
-         }
-      if( !isWordChar( pb[xCursor_-1] ) && isWordChar( pb[xCursor_] ) ) {
-         break;
-         }
-      }
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::pword() {
-   const auto pb( stb_.c_str() ); const auto len( stb_.length() );
-   while( xCursor_ < len ) {
-      ++xCursor_;
-      if( !isWordChar( pb[xCursor_] ) && isWordChar( pb[xCursor_+1] ) ) {
-         ++xCursor_;
-         break;
-         }
-      }
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::restcur() {
-   // alt+center=alg+arg: does the converse of arg:
-   if( xCursor_ < stb_.length() ) {
-      stb_.erase( 0, xCursor_ ); // delete all chars preceding (to the left of) the cursor
-      xCursor_ = 0;
-      }
-   return KEEP_GOING;
-   }
-GTS::eRV GTS::right() {
-   0 && DBG( "right: %d, %" PR_SIZET, xCursor_, stb_.length() );
-   if( g_CurFBuf() && stb_.length() == xCursor_ ) {
-      const auto xx( xColInFile_ + xCursor_ );
-      std::string stTmp;
-      g_CurFBuf()->DupLineSeg( stTmp, g_CursorLine(), xx, xx );    0 && DBG( "%d='%" PR_BSR "'", xx, BSR(stTmp) );
-      if( !stTmp.empty() ) {
-         stb_.push_back( stTmp[0] );
-         }
-      }
-   ++xCursor_;
-   return KEEP_GOING;
-   }
+GTS::eRV GTS::home() { return begline(); }
+
 GTS::eRV GTS::up() {
    if( textargStackPos_ < 0 ) {
       AddToTextargStack( stb_ );
@@ -789,46 +703,133 @@ GTS::eRV GTS::up() {
       }
    return KEEP_GOING;
    }
-GTS::eRV GTS::delete_() {
-   if( xCursor_ < stb_.length() ) {
-      stb_.erase( xCursor_, 1 );
+GTS::eRV GTS::down() {
+   if( textargStackPos_ > 0 ) {
+      g_pFBufTextargStack->DupRawLine( stb_, --textargStackPos_ );
+      xCursor_ = stb_.length();
       }
    return KEEP_GOING;
    }
-GTS::eRV GTS::sdelete() {
-   if( xCursor_ < stb_.length() ) {
-      stb_.erase( xCursor_, 1 );
+
+GTS::eRV GTS::emacscdel() { // dup of cdelete, NOT a CURSORFUNC
+   if( xCursor_ > 0 ) {
+      --xCursor_;
+      if( xCursor_ < stb_.length() ) {
+         stb_.erase( xCursor_, 1 );
+         }
       }
    return KEEP_GOING;
    }
-GTS::eRV GTS::insert() {
-   stb_.insert( xCursor_, 1, ' ' );
+GTS::eRV GTS::cdelete() { return emacscdel(); }
+
+GTS::eRV GTS::emacsnewl() { // dup of newline
+   if( flags_ & gts_OnlyNewlAffirms ) {
+      return DONE;
+      }
+   ConOut::Bell();
    return KEEP_GOING;
    }
-GTS::eRV GTS::sinsert() {
-   stb_.insert( xCursor_, 1, ' ' );
+GTS::eRV GTS::newline() { return emacsnewl(); }
+
+GTS::eRV GTS::endline() {
+   xCursor_ = stb_.length();  // past end
    return KEEP_GOING;
    }
-GTS::eRV GTS::meta() {
-   noargNoMeta.meta();
+GTS::eRV GTS::left() {
+   if( xCursor_ > 0 ) {
+      --xCursor_;
+      }
    return KEEP_GOING;
    }
+
+GTS::eRV GTS::mword() {
+   const auto pb( stb_.c_str() ); const auto len( stb_.length() );
+   if( xCursor_ >= len ) {
+      xCursor_ = len - 1;
+      }
+   while( xCursor_ > 0 ) {
+      if( --xCursor_ == 0 ) {
+         break;
+         }
+      if( !isWordChar( pb[xCursor_-1] ) && isWordChar( pb[xCursor_] ) ) {
+         break;
+         }
+      }
+   return KEEP_GOING;
+   }
+
+GTS::eRV GTS::pword() {
+   const auto pb( stb_.c_str() ); const auto len( stb_.length() );
+   while( xCursor_ < len ) {
+      ++xCursor_;
+      if( !isWordChar( pb[xCursor_] ) && isWordChar( pb[xCursor_+1] ) ) {
+         ++xCursor_;
+         break;
+         }
+      }
+   return KEEP_GOING;
+   }
+
 GTS::eRV GTS::arg() {
    if( xCursor_ < stb_.length() ) {
       stb_.erase( xCursor_ );  // delete all chars at or following (under or to the right of) the cursor
       }
    return KEEP_GOING;
    }
+
+GTS::eRV GTS::restcur() {
+   // alt+center=alg+arg: does the converse of arg:
+   if( xCursor_ < stb_.length() ) {
+      stb_.erase( 0, xCursor_ ); // delete all chars preceding (to the left of) the cursor
+      xCursor_ = 0;
+      }
+   return KEEP_GOING;
+   }
+
+GTS::eRV GTS::right() {  0 && DBG( "%s: %d, %" PR_SIZET, __func__, xCursor_, stb_.length() );
+   if( g_CurFBuf() && stb_.length() == xCursor_ ) {
+      const auto xx( xColInFile_ + xCursor_ );
+      std::string stTmp;
+      g_CurFBuf()->DupLineSeg( stTmp, g_CursorLine(), xx, xx );    0 && DBG( "%d='%" PR_BSR "'", xx, BSR(stTmp) );
+      if( !stTmp.empty() ) {
+         stb_.push_back( stTmp[0] );
+         }
+      }
+   ++xCursor_;
+   return KEEP_GOING;
+   }
+
+GTS::eRV GTS::delete_() {
+   if( xCursor_ < stb_.length() ) {
+      stb_.erase( xCursor_, 1 );
+      }
+   return KEEP_GOING;
+   }
+GTS::eRV GTS::sdelete() { return delete_(); }
+
+GTS::eRV GTS::insert() {
+   stb_.insert( xCursor_, 1, ' ' );
+   return KEEP_GOING;
+   }
+GTS::eRV GTS::sinsert() { return insert(); }
+
 GTS::eRV GTS::flipcase() {
    if( xCursor_ < stb_.length() ) {
       stb_[ xCursor_ ] = FlipCase( stb_[ xCursor_ ] );
       }
    return KEEP_GOING;
    }
+
+GTS::eRV GTS::meta() {
+   noargNoMeta.meta();
+   return KEEP_GOING;
+   }
+
 GTS::eRV GTS::cancel() {
    return DONE;
    }
-GTS::eRV GTS::graphic() {
+
+GTS::eRV GTS::graphic() { // !!! called by macro_graphic !!!
    if( fInitialStringSelected_ ) {
       xCursor_ = 0;
       if( xCursor_ < stb_.length() ) {
