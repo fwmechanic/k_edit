@@ -711,7 +711,7 @@ GTS::eRV GTS::down() {
    return KEEP_GOING;
    }
 
-GTS::eRV GTS::emacscdel() { // dup of cdelete, NOT a CURSORFUNC
+GTS::eRV GTS::emacscdel() { // dup of cdelete
    if( xCursor_ > 0 ) {
       --xCursor_;
       if( xCursor_ < stb_.length() ) {
@@ -864,7 +864,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
    enum { DBG_GTA=1 };
    DBG_GTA && DBG( "+%s CMD='%s' dest='%s' flags=%X prompt='%s'"
       , __func__
-      , pCmd?pCmd->Name():""
+      , pCmd?pCmd->Name():"(none)" // if valid (currently only when we're called by ArgMainLoop) will be ARG::graphic, the first char of a typed arg.
       , stb.c_str()
       , flags
       , pszPrompt?pszPrompt:""
@@ -873,9 +873,9 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
    const auto xColInFile( pCmd ? s_SelAnchor.col : g_CursorCol() );   0 && DBG( "%s+ xColInFile=%d (%d : %d)", __func__, xColInFile, s_SelAnchor.col, g_CursorCol() );
    auto fBellAndFreezeKbInput( false );
    *pfGotAnyInputFromKbd = false;
-   auto textargStackPos(-1);
+   auto textargStackPos( -1 );
    std::string pbTabxBase;
-   DirMatches *pDirContent(nullptr);
+   DirMatches *pDirContent( nullptr );
    while(1) { //******************************************************************
       // BUGBUG GetTextargString_CMD_reader may prevent the following
       // fBellAndFreezeKbInput code from achieving it's intended task
@@ -913,11 +913,7 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          //=============== switch( pCmd->d_func ) ===============
          if( !pCmd->d_GTS_fxn ) {
             if( !pCmd->isCursorFunc() && !(flags & gts_OnlyNewlAffirms) ) { // any function (not immediate-executed above) _except_ *newl confirms
-               DBG_GTA && DBG( "+%s break with CMD='%s' dest='%s'"
-                  , __func__
-                  , pCmd?pCmd->Name():""
-                  , stb.c_str()
-                  );
+               DBG_GTA && DBG( "+%s break with CMD='%s' dest='%s'", __func__, pCmd->Name(), stb.c_str() );
                break;
                }
             else {
