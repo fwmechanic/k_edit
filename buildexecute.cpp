@@ -860,23 +860,42 @@ GTS::eRV GTS::dispmstk() {
 //       return KEEP_GOING;
 //       }
 
-STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
-   enum { DBG_GTA=1 };
-   DBG_GTA && DBG( "+%s CMD='%s' dest='%s' flags=%X prompt='%s'"
-      , __func__
-      , pCmd?pCmd->Name():"(none)" // if valid (currently only when we're called by ArgMainLoop) will be ARG::graphic, the first char of a typed arg.
-      , stb.c_str()
-      , flags
-      , pszPrompt?pszPrompt:""
-      );
-   const auto fSavedMeta( g_fMeta );      0 && DBG( "%s+ g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
-   const auto xColInFile( pCmd ? s_SelAnchor.col : g_CursorCol() );   0 && DBG( "%s+ xColInFile=%d (%d : %d)", __func__, xColInFile, s_SelAnchor.col, g_CursorCol() );
-   auto fBellAndFreezeKbInput( false );
-   *pfGotAnyInputFromKbd = false;
-   auto textargStackPos( -1 );
+class TabCompletion_filesystem {
+   bool        fBellAndFreezeKbInput = false;
+   DirMatches *pDirContent = nullptr;
    std::string pbTabxBase;
-   DirMatches *pDirContent( nullptr );
-   while(1) { //******************************************************************
+public:
+   TabCompletion_filesystem() {}
+   ~TabCompletion_filesystem() {
+      Delete0( pDirContent );
+      }
+   void Deactivate() {
+      Delete0( pDirContent );
+      pbTabxBase.clear(); // forget prev used WC
+      }
+   void GetNext( std::string &stb, COL &xCursor ) {
+      if( !pDirContent ) {
+         if( pbTabxBase.empty() ) { // no prev'ly used WC?
+            pbTabxBase = stb;   // create based on curr content
+            }
+         pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
+         }
+      Path::str_t nxt;
+      do {
+         nxt = pDirContent->GetNext();
+         } while( Path::IsDotOrDotDot( nxt ) );
+      if( !nxt.empty() ) {
+         stb = nxt;
+         xCursor = stb.length();  // past end
+         }
+      else {
+         Delete0( pDirContent );
+         stb = pbTabxBase;
+         xCursor = ixFirstWildcardOrEos( stb ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
+         fBellAndFreezeKbInput = true;
+         }
+      }
+   void BellAndFreezeKbInputIfExhausted() {
       // BUGBUG GetTextargString_CMD_reader may prevent the following
       // fBellAndFreezeKbInput code from achieving it's intended task
       //
@@ -893,6 +912,19 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
          fBellAndFreezeKbInput = false;
          Bell_FlushKeyQueue_WaitForKey();
          }
+      }
+   };
+
+STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCursor, PCCMD pCmd, int flags, bool *pfGotAnyInputFromKbd ) {
+   // pCmd if valid (currently only when we're called by ArgMainLoop) will be ARG::graphic, the first char of a typed arg.
+   enum { DBG_GTA=1 };                                                DBG_GTA && DBG( "+%s CMD='%s' dest='%s' flags=%X prompt='%s'", __func__, pCmd?pCmd->Name():"(none)", stb.c_str(), flags, pszPrompt?pszPrompt:"" );
+   const auto fSavedMeta( g_fMeta );                                  0 && DBG( "%s+ g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
+   const auto xColInFile( pCmd ? s_SelAnchor.col : g_CursorCol() );   0 && DBG( "%s+ xColInFile=%d (%d : %d)", __func__, xColInFile, s_SelAnchor.col, g_CursorCol() );
+   *pfGotAnyInputFromKbd = false;
+   auto textargStackPos( -1 );
+   TabCompletion_filesystem tcf;
+   while(1) { //******************************************************************
+      tcf.BellAndFreezeKbInputIfExhausted();
       const auto fInitialStringSelected( ToBOOL(flags & gts_DfltResponse) );
       if( !pCmd ) {
          EditPrompt ep( pszPrompt, stb.c_str(), fInitialStringSelected ? g_colorError : g_colorInfo, xCursor );
@@ -905,27 +937,18 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
             *pfGotAnyInputFromKbd = true;
             }
          }
-
-      //##############  Begin TabX  ##############
-      if( pCmd->d_argData.eka.EdKcEnum != EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
-         Delete0( pDirContent );
-         pbTabxBase.clear(); // forget prev used WC
-         //=============== switch( pCmd->d_func ) ===============
-         if( !pCmd->d_GTS_fxn ) {
-            if( !pCmd->isCursorFunc() && !(flags & gts_OnlyNewlAffirms) ) { // any function (not immediate-executed above) _except_ *newl confirms
-               DBG_GTA && DBG( "+%s break with CMD='%s' dest='%s'", __func__, pCmd->Name(), stb.c_str() );
-               break;
-               }
-            else {
-               ConOut::Bell();
-               }
-            }
-         else {
+      // process pCmd
+      if( pCmd->d_argData.eka.EdKcEnum == EdKC_tab ) { // 20100222 hack: look at EdKcEnum since new tab key assignment is to a Lua function
+         tcf.GetNext( stb, xCursor );  // tab-handling
+         }
+      else {
+         tcf.Deactivate();
+         if( pCmd->d_GTS_fxn ) {
             GTS gts = { // yes, this statement relies on GCC-only features <sigh>
                .xCursor_                = xCursor     ,
                .stb_                    = stb         ,
                .textargStackPos_        = textargStackPos,
-               //-------------------------------- ref/value boundary
+               //-------------------------------- ref/const-value boundary
                .pCmd_                   = pCmd         ,
                .xColInFile_             = xColInFile   ,
                .flags_                  = flags        ,
@@ -936,50 +959,25 @@ STATIC_FXN PCCMD GetTextargString_( std::string &stb, PCChar pszPrompt, int xCur
                break;
                }
             }
-         }
-      else { // tab-handling
-         if( !pDirContent ) {
-            if( pbTabxBase.empty() ) { // no prev'ly used WC?
-               pbTabxBase = stb;   // create based on curr content
-               }
-            pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
-            }
-         Path::str_t nxt;
-         do {
-            nxt = pDirContent->GetNext();
-            } while( Path::IsDotOrDotDot( nxt ) );
-         if( !nxt.empty() ) {
-            stb = nxt;
-            xCursor = stb.length();  // past end
-            }
          else {
-            Delete0( pDirContent );
-            stb = pbTabxBase;
-            xCursor = ixFirstWildcardOrEos( stb ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
-            fBellAndFreezeKbInput = true;
+            if( !pCmd->isCursorFunc() && !(flags & gts_OnlyNewlAffirms) ) {
+               break;
+               }
+            ConOut::Bell();
             }
          }
-      //##############  End   TabX  ##############
-
-      //====== Some editing or cursor movement was done and we will be continuing to edit.
-      //====== Consume meta + pCmd
+      // Some editing or cursor movement was done and we will be continuing to edit.
+      // Consume meta + pCmd
       if( !(pCmd->d_argType & KEEPMETA) ) {
          g_fMeta = false;
          }
       pCmd = nullptr;
       flags &= ~gts_DfltResponse;
-      } //*************************** while **********************************
-   Delete0( pDirContent );
-   DBG_GTA && DBG( "-%s CMD='%s' arg='%s'"
-      , __func__
-      , pCmd?pCmd->Name():""
-      , stb.c_str()
-      );
+      } /*** while ***/                                               DBG_GTA && DBG( "-%s CMD='%s' arg='%s'" , __func__ , pCmd?pCmd->Name():"" , stb.c_str() );
    g_fMeta = fSavedMeta;
    if( *pfGotAnyInputFromKbd ) {
       ViewCursorRestorer cr;
-      }
-   0 && DBG( "%s- g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
+      }                                                               0 && DBG( "%s- g_fMeta=%d, fSavedMeta=%d", __func__, g_fMeta, fSavedMeta );
    return pCmd;
    }
 
