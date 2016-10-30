@@ -1001,18 +1001,11 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 GLOBAL_VAR bool g_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
 STATIC_FXN bool ArgMainLoop() {
-   // Called on first invocation (ie.  when Get_g_ArgCount()==0) of ARG::arg or
-   // ARG::Lastselect.  Subsequent invocations of ARG::arg are handled
-   // inline...
+   // Called on first invocation (i.e. when Get_g_ArgCount()==0) of ARG::arg or ARG::Lastselect.
    ExtendSelectionHilite( g_Cursor() ); // candidate for removal: IncArgCnt_DropAnchor() (called by ARG::arg()) already does this?
    g_fSelectionActive = true;           // move to IncArgCnt_DropAnchor()?
-   while(1) {
-      auto pCmd( CMD_reader().GetNextCMD() );
-      if( !pCmd ) {
-         return false; //************************************************************
-         }
-      if( pCmd->d_func == fn_arg ) {
-         // ARG::arg _IS NOT CALLED_: instead inline-execute here:
+   while( auto pCmd = CMD_reader().GetNextCMD() ) {
+      if( pCmd->d_func == fn_arg ) { // ARG::arg _IS NOT CALLED_: instead inline-execute here:
          Inc_g_ArgCount();
          ExtendSelectionHilite( g_Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
          continue; //================================================================
@@ -1026,31 +1019,30 @@ STATIC_FXN bool ArgMainLoop() {
       // We HAVE a valid CMD that is not arg, meta, or a CURSORFUNC
       // We SHALL call pCmd->BuildExecute() and return from this function
       g_fSelectionActive = false; // this fn is consuming the selection
-      if(   pCmd->IsFnGraphic()        // user typed a literal char?
-         && g_Cursor() == s_SelAnchor  // no selection in effect?
-        ) {
-         if( SEL_KEYMAP && pCmd->d_argData.chAscii() == ' ' ) {
-            SelKeymapEnable();
-            Msg( "Selection keymap enabled" );
-            continue; //=============================================================
+      if( g_Cursor() == s_SelAnchor ) { // no selection in effect? (i.e. is NULLARG)
+         if( pCmd->IsFnGraphic() ) {    // user typed a literal char?
+            if( SEL_KEYMAP && pCmd->d_argData.chAscii() == ' ' ) {
+               SelKeymapEnable();
+               Msg( "Selection keymap enabled" );
+               continue; //=============================================================
+               }
+            // Feed this literal char (via pCmd) into GetTextargString,
+            // execute returned CMD (unless canceled).
+            TextArgBuffer().clear();
+            bool fGotAnyInputFromKbd;
+            pCmd = GetTextargString( TextArgBuffer(), FmtStr<20>( "Arg [%d]? ", Get_g_ArgCount() ), 0, pCmd, 0, &fGotAnyInputFromKbd );
+            if( !pCmd ) { // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
+               return false; //*********************************************************
+               }
+            s_fHaveLiteralTextarg = true;
+            if( fGotAnyInputFromKbd ) {
+               AddToTextargStack( TextArgBuffer() );
+               }
+            // a valid pCmd was invoked by user to exit GetTextargString; execute it
+            // (FillArgStructFailed() grabs TEXTARG string from TextArgBuffer() if s_fHaveLiteralTextarg).
             }
-         // Feed this literal char (via pCmd) into GetTextargString,
-         // execute returned CMD (unless canceled).
-         TextArgBuffer().clear();
-         bool fGotAnyInputFromKbd;
-         pCmd = GetTextargString( TextArgBuffer(), FmtStr<20>( "Arg [%d]? ", Get_g_ArgCount() ), 0, pCmd, 0, &fGotAnyInputFromKbd );
-         if( !pCmd ) { // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
-            return false; //*********************************************************
-            }
-         s_fHaveLiteralTextarg = true;
-         if( fGotAnyInputFromKbd ) {
-            AddToTextargStack( TextArgBuffer() );
-            }
-         // a valid pCmd was invoked by user to exit GetTextargString; execute it
-         // (BuildExecute() grabs from TextArgBuffer()()).
          }
-      else {
-         PCV;
+      else { PCV;
          pcv->d_LastSelectAnchor   = s_SelAnchor;
          pcv->d_LastSelectCursor   = g_Cursor();
          pcv->d_LastSelect_isValid = true;
@@ -1058,6 +1050,7 @@ STATIC_FXN bool ArgMainLoop() {
       const auto rv( pCmd->BuildExecute() ); //************************************************
       return rv;
       }
+   return false;
    }
 
 STATIC_FXN void IncArgCnt_DropAnchor() {
@@ -1099,7 +1092,7 @@ bool ARG::lastselect() {
 //             an error occurs).
 //
 //  *** IF strToExecute is modified by the execution of this macro (say, it's a
-//  *** static buffer like TextArgBuffer()()), BAD THINGS _WILL_ HAPPEN!
+//  *** static buffer like TextArgBuffer()), BAD THINGS _WILL_ HAPPEN!
 //
 //  strToExecute can contain various types of arguments, macros, and editor
 //  functions.  If text arguments are included in strToExecute, they must be
