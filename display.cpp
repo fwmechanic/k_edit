@@ -2873,7 +2873,8 @@ STATIC_FXN bool swixChardisp( stref param, char &charVar ) {
    return true;
    }
 
-GLOBAL_VAR char g_chTabDisp  = BIG_BULLET; // g_chTabDisp == BIG_BULLET has special (cool!) behavior
+GLOBAL_VAR char g_chTabDisp = DFLT_G_CHTABDISP;
+
 bool swixTabdisp(   stref param ) { return swixChardisp( param, g_chTabDisp        ); }
 void swidTabdisp( PChar dest, size_t sizeofDest, void *src ) {
    swid_ch( dest, sizeofDest, static_cast<int>(g_chTabDisp) );

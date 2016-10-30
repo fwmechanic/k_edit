@@ -54,11 +54,12 @@ extern PFBUF s_pFbufLuaLog       ;
 //############  SWITCH VALUE VARIABLES
 
 #ifdef _WIN32
-constexpr char BIG_BULLET   = {249};
-constexpr char SMALL_BULLET = {250};
+// the chars are only valid for Win32::GetOEMCP() == 437
+#define BIG_BULLET   '\xF9'
+#define SMALL_BULLET '\xFA'
+#define DFLT_G_CHTABDISP BIG_BULLET
 #else
-constexpr char BIG_BULLET   = {'^'};
-constexpr char SMALL_BULLET = {'`'};
+#define DFLT_G_CHTABDISP '>'
 #endif
 
 extern char  g_chTabDisp         ;

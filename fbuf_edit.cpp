@@ -108,12 +108,16 @@ void PrettifyWriter
    const auto wr_char = [&]( char ch ) { if( xCol++ >= src_xMin ) { *dit++ = ch; ++dix; } };
    const Tabber tabr( tabWidth );
    // certain chTabExpand values have magical side-effects:
+  #if defined(BIG_BULLET)
    STATIC_CONST char bsbullet[] = { BIG_BULLET, SMALL_BULLET, '\0' };
+  #endif
    const stref srTabExpand( // srTabExpand (instead of chTabExpand) could be passed in, but mind the chTabExpand == '\0' case below!
+  #if defined(BIG_BULLET)
       chTabExpand == BIG_BULLET ? stref( bsbullet   ) :
-      chTabExpand == '^'        ? stref( "^`"       ) :
+  #endif
       chTabExpand == '-'        ? stref( "-->"      ) :
       chTabExpand == '<'        ? stref( "<->"      ) :
+      chTabExpand == '^'        ? stref( "^`"       ) :
                                   stref( &chTabExpand, sizeof(chTabExpand) )
       );
    const auto chLast( srTabExpand[ srTabExpand.length() > 2 ? 2 : 0 ] );
@@ -1251,7 +1255,7 @@ bool ARG::rawline() {
    switch( d_argType ) {
     default:      return BadArg(); // arg "rawline:alt+r" assign
     case BOXARG: {const auto rls( g_CurFBuf()->PeekRawLineSeg( d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col ) );
-                  const auto disp( FormatExpandedSeg( COL_MAX, rls, 0, g_CurFBuf()->TabWidth(), BIG_BULLET, SMALL_BULLET ) );
+                  const auto disp( FormatExpandedSeg( COL_MAX, rls, 0, g_CurFBuf()->TabWidth(), chExpandTabs, ' ' ) );
                   Msg( "PeekRawLineSeg '%" PR_BSR "'", BSR(disp) );
                   return !rls.empty();
                  }
