@@ -103,16 +103,16 @@ s graphic      graphic        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG  #
 s home         home           CURSORFUNC , Moves cursor to window's Upper-Left corner.  META: Moves cursor to window's Lower-Right corner
 # in           in                        NOARG
   initialize   initialize                NOARG + BOXSTR + NULLEOW + TEXTARG , Discards all current settings, then reads the statements from the main ([K]) section of .krsrc.
-s insert       insert         MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , NOARG: Inserts a space character at cursor, independent of insert/overtype mode.  NULARG: breaks line at cursor.  SELARG: Inserts space chars into selected area
+s insert       insert         MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , NOARG: Inserts a space character at cursor, independent of insert/overtype mode.  NULLARG: breaks line at cursor.  SELARG: Inserts space chars into selected area
 # justify      justify        MODIFIES + NOARG+BOXARG+LINEARG+TEXTARG+NULLARG , Justifies paragraph
 # kbfast       kbfast                    NOARG , Set keyboard repeat delay and rate at fastest universally supported speed
 # killall      killall                   NOARG , kill all pty child processes
   lastselect   lastselect                NOARG + KEEPMETA , Duplicates the last selection.  The Arg count and Meta state that were previously in effect are not duplicatedÄÄonly the selection.  The new Arg count is one.
   lasttext     lasttext                  BOXARG+STREAMARG+NOARG+LINEARG+NULLARG+KEEPMETA,Displays last TEXTARG: you can edit the text and execute any function that accepts a TEXTARG, or, if you cancel an edited TEXTARG, the editor retains the edited text.  If you execute Lasttext again, the edited text appears.
 # lblankdel    lblankdel      MODIFIES + BOXARG+LINEARG , Delete lines or part of lines, based on whether segments of lines are blank or not. META: delete only those lines which DO contain something in the box; if 2 args, delete only from [char to right of box..EOL]
-  ldelete      ldelete        MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Deletes line at cursor -> <clipboard>.  META: <clipboard> not altered. NULARG: text from cursor to EOL -> <clipboard>.  BOX/LINEARG del'd -> <clipboard>
+  ldelete      ldelete        MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Deletes line at cursor -> <clipboard>.  META: <clipboard> not altered. NULLARG: text from cursor to EOL -> <clipboard>.  BOX/LINEARG del'd -> <clipboard>
 s left         left           CURSORFUNC , Moves cursor one character to left.  META: Moves cursor to first column in window
-  linsert      linsert        MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , NOARG: Inserts one blank line above current line.  NULARG: Inserts or deletes blanks at beginning of line to move first nonblank character to cursor.
+  linsert      linsert        MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , NOARG: Inserts one blank line above current line.  NULLARG: Inserts or deletes blanks at beginning of line to move first nonblank character to cursor.
   longline     longline       CURSORFUNC , Moves cursor to longest line in selection range or current file
   lua          lua                       NOARG + NULLARG , Compile and execute the primary Lua editor source file, k.lua
   makebox      makebox        MODIFIES + NOARG+BOXARG , Draw box using OEM box-/line-draw charset (specific chars selected interactively)

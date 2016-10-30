@@ -53,7 +53,7 @@
 //
 // Deciding when to enter sel-mode was a bit more of a challenge: I foolishly
 // thought that engaging sel-mode when argCount > 0 would be sufficient: this
-// doesn't work: one case I forgot about is NULARG graphic (literal arg), which
+// doesn't work: one case I forgot about is NULLARG graphic (literal arg), which
 // should engage GetTextargString with the graphic's value.  Since in SEL_KEYMAP
 // compiled code some graphic keys are reassigned to cursor movement functions,
 // (1) the trigger to enter GTA mode does not occur when reassigned keys are
