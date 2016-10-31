@@ -657,8 +657,9 @@ void TMouseEvent::Process() { // usemouse:yes
          }
       else if( yLine-1 < yMax ) {
          pcv->MoveCursor( pcv->Origin().lin + yLine - 1, pcv->Origin().col + xCol - 1 );
-         if( IsSelectionActive() )
+         if( IsSelectionActive() ) {
             ExtendSelectionHilite( pcv->Cursor() );
+            }
          }
       }
    else if( RightButtonDown() ) {
