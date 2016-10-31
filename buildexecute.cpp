@@ -55,11 +55,9 @@ void ClearArgAndSelection() { PCV;
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
    pcv->FreeHiLiteRects();
    s_SelEnd.lin = -1;
-   if( Get_g_ArgCount() > 0 ) {
-      0 && DBG( "%s+", __func__ );
+   if( Get_g_ArgCount() > 0 ) {                                       0 && DBG( "%s+", __func__ );
    //      MoveCursor
-      pcv->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );
-      0 && DBG( "%s-", __func__ );
+      pcv->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );  0 && DBG( "%s-", __func__ );
       Clr_g_ArgCount();
       }
    }
@@ -359,7 +357,7 @@ bool ARG::BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax ) {
 STATIC_VAR bool s_fHaveLiteralTextarg;
 
 // consumes g_ArgCount, s_fHaveLiteralTextarg
-bool ARG::FillArgStructFailed() { enum {DB=0};                                                            DB && DBG( "%s+", __func__ );
+bool ARG::IngestArgTextAndSelection() { enum {DB=0};                                                          DB && DBG( "%s+", __func__ );
    // capture some global values into locals:
    const auto fHaveLiteralTextarg( s_fHaveLiteralTextarg );  s_fHaveLiteralTextarg = false;
    d_cArg = Get_g_ArgCount();                                Clr_g_ArgCount();
@@ -542,8 +540,8 @@ bool ARG::InitOk( PCCMD pCmd ) {
    d_cArg  = 0;
    d_argType      = NOARG;
    d_noarg.cursor = g_CurView()->Cursor();
-   if( d_pCmd->d_argType & TAKES_ARG ) {
-      if( FillArgStructFailed() ) {
+   if( d_pCmd->d_argType & TAKES_ARG ) { // arg, meta, CURSORFUNC's will FAIL this test
+      if( IngestArgTextAndSelection() ) {
          ClearArgAndSelection();
          return ErrorDialogBeepf( "Bad argument: '%s' requires %s", CmdName(), ArgTypeNames( d_pCmd->d_argType ).c_str() );
          }
@@ -1000,8 +998,7 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 
 GLOBAL_VAR bool g_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
-STATIC_FXN bool ArgMainLoop() {
-   // Called on first invocation (i.e. when Get_g_ArgCount()==0) of ARG::arg or ARG::Lastselect.
+STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation (i.e. when Get_g_ArgCount()==0) of ARG::arg or ARG::Lastselect.
    ExtendSelectionHilite( g_Cursor() ); // candidate for removal: IncArgCnt_DropAnchor() (called by ARG::arg()) already does this?
    g_fSelectionActive = true;           // move to IncArgCnt_DropAnchor()?
    while( auto pCmd = CMD_reader().GetNextCMD() ) {
@@ -1026,9 +1023,8 @@ STATIC_FXN bool ArgMainLoop() {
                Msg( "Selection keymap enabled" );
                continue; //=============================================================
                }
-            // Feed this literal char (via pCmd) into GetTextargString,
-            // execute returned CMD (unless canceled).
-            TextArgBuffer().clear();
+            // Feed literal char embedded in CMD["graphic"] (pCmd) into GetTextargString
+            TextArgBuffer().clear(); // arg NULLARG graphic starts with an empty TEXTARG buffer
             bool fGotAnyInputFromKbd;
             pCmd = GetTextargString( TextArgBuffer(), FmtStr<20>( "Arg [%d]? ", Get_g_ArgCount() ), 0, pCmd, 0, &fGotAnyInputFromKbd );
             if( !pCmd ) { // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
@@ -1038,17 +1034,16 @@ STATIC_FXN bool ArgMainLoop() {
             if( fGotAnyInputFromKbd ) {
                AddToTextargStack( TextArgBuffer() );
                }
-            // a valid pCmd was invoked by user to exit GetTextargString; execute it
-            // (FillArgStructFailed() grabs TEXTARG string from TextArgBuffer() if s_fHaveLiteralTextarg).
+            // a valid CMD[?] (pCmd) was invoked by user to exit GetTextargString; execute it on TEXTARG
+            // (IngestArgTextAndSelection() grabs TEXTARG string from TextArgBuffer() if s_fHaveLiteralTextarg).
             }
          }
-      else { PCV;
+      else { PCV; // about to invoke pCmd on "selection in effect"; save the latter for ARG::lastselect()
          pcv->d_LastSelectAnchor   = s_SelAnchor;
          pcv->d_LastSelectCursor   = g_Cursor();
          pcv->d_LastSelect_isValid = true;
          }
-      const auto rv( pCmd->BuildExecute() ); //************************************************
-      return rv;
+      return pCmd->BuildExecute(); //************************************************
       }
    return false;
    }
@@ -1060,15 +1055,10 @@ STATIC_FXN void IncArgCnt_DropAnchor() {
       }
    }
 
-bool ARG::arg() {
-   // ArgMainLoop internally processes arg's rx'd, so there is no need for the
-   // Get_g_ArgCount() checking code found in lastselect()
-   //
-   // corollary: ARG::arg() can only be called when Get_g_ArgCount() == 0
-   //
+bool ARG::arg() { // can only be called with ...
    Assert( Get_g_ArgCount() == 0 );
    IncArgCnt_DropAnchor();
-   return ArgMainLoop();
+   return CollectTextOrSelectArg_Execute();
    }
 
 bool ARG::lastselect() {
@@ -1082,7 +1072,7 @@ bool ARG::lastselect() {
    s_SelAnchor = pcv->d_LastSelectAnchor;
    pcv->MoveCursor( pcv->d_LastSelectCursor );
    Inc_g_ArgCount();
-   ArgMainLoop();
+   CollectTextOrSelectArg_Execute();
    return true;
    }
 

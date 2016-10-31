@@ -445,7 +445,7 @@ struct ARG {
    void     GetColumnRange( COL *pxMin, COL *pxMax ) const;
    int      GetLineRange( LINE *yTop, LINE *yBottom ) const;
 private:
-   bool     FillArgStructFailed();
+   bool     IngestArgTextAndSelection();
    bool     BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
 public:
    bool     InitOk( PCCMD pCmd );
