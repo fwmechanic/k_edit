@@ -1018,11 +1018,6 @@ STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation
       g_fSelectionActive = false; // this fn is consuming the selection
       if( g_Cursor() == s_SelAnchor ) { // no selection in effect? (i.e. is NULLARG)
          if( pCmd->IsFnGraphic() ) {    // user typed a literal char?
-            if( SEL_KEYMAP && pCmd->d_argData.chAscii() == ' ' ) {
-               SelKeymapEnable();
-               Msg( "Selection keymap enabled" );
-               continue; //=============================================================
-               }
             // Feed literal char embedded in CMD["graphic"] (pCmd) into GetTextargString
             TextArgBuffer().clear(); // arg NULLARG graphic starts with an empty TEXTARG buffer
             bool fGotAnyInputFromKbd;
@@ -1060,6 +1055,13 @@ bool ARG::arg() { // can only be called with ...
    IncArgCnt_DropAnchor();
    return CollectTextOrSelectArg_Execute();
    }
+
+#ifdef fn_argselkeymap
+bool ARG::argselkeymap() {
+   SelKeymapEnable();
+   return arg();
+   }
+#endif
 
 bool ARG::lastselect() {
    if( Get_g_ArgCount() > 0 ) {

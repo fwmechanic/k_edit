@@ -40,6 +40,7 @@
 # |            |              |                                      |
   !a           assignlog                 NOARG
 s arg          arg                       KEEPMETA                    , Begins an argument to a function or begins a selection
+  argselkeymap argselkeymap              KEEPMETA                    , Begins an argument to a function or begins a selection, switches keyboard to "selkeymap" (ASCII chars mapped to CURSORFUNCs)
   ascii2hex    ascii2hex                 BOXSTR + TEXTARG            , selected text converted to hex -> <clipboard>
   assign       assign                    BOXARG + MARKARG + NUMARG + NULLEOL + NOARG + LINEARG + BOXSTR + TEXTARG , bind "funcnm:keynm", set switch "swinm:swival", define macro "funcnm:=macdef"
   backtab      backtab        CURSORFUNC

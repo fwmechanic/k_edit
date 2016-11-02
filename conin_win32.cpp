@@ -461,8 +461,7 @@ struct RawWinKeydown {
    };
 
 struct EdInputEvent {
-   enum { evt_KEY, evt_MOUSE, evt_FOCUS } // evt
-        ;
+   enum { evt_KEY, evt_MOUSE, evt_FOCUS }; // evt
    bool           fIsEdKC_EVENT;
    union {
       RawWinKeydown rawkey;
@@ -1167,15 +1166,16 @@ STATIC_FXN KeyData_EdKC GetInputEvent() {
       if( numlockon ) {
          allShifts |= KEY_DATA::FLAG_NUMLOCK;
          const auto numlockVK( XlatKeysWhenNumlockOn( valVK ) );
-         if( numlockVK >= 0 )  edKC = VK_shift_to_EdKC( numLockXlatTbl, numlockVK, effectiveShiftIdx );
-         else                  edKC = VK_shift_to_EdKC( normalXlatTbl , valVK    , effectiveShiftIdx );
+         if( numlockVK >= 0 ) { edKC = VK_shift_to_EdKC( numLockXlatTbl, numlockVK, effectiveShiftIdx ); }
+         else                 { edKC = VK_shift_to_EdKC( normalXlatTbl , valVK    , effectiveShiftIdx ); }
          }
-      else                     edKC = VK_shift_to_EdKC( normalXlatTbl , valVK    , effectiveShiftIdx );
+      else                    { edKC = VK_shift_to_EdKC( normalXlatTbl , valVK    , effectiveShiftIdx ); }
       }
-   if( edKC == 0 )
+   if( edKC == 0 ) {
        edKC = valAscii;
-  #if SEL_KEYMAP
-   if( SEL_KEYMAP && SelKeymapEnabled() ) { 0 && DBG( "-> %03X", edKC );
+       }
+  #ifdef fn_argselkeymap
+   if( SelKeymapEnabled() ) { 0 && DBG( "-> %03X", edKC );
       if( edKC >= EdKC_a && edKC <= EdKC_z ) { // map to EdKC_sela..EdKC_selz
          edKC += EdKC_sela - EdKC_a;  0 && DBG( "-> EdKC_sela" );
          }

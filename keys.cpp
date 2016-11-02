@@ -19,16 +19,13 @@
 
 #include "ed_main.h"
 
-
 struct TKyCd2KyNameTbl {
    EdKC   EdKC_;
    PCChar name;
    };
 
-// typedef const TKyCd2KyNameTbl *PKKyCd2KyNameTbl;
-
 STATIC_CONST TKyCd2KyNameTbl KyCd2KyNameTbl[] = {
-#if SEL_KEYMAP
+#ifdef fn_argselkeymap
       { EdKC_sela            , "sel_a"          },
       { EdKC_selb            , "sel_b"          },
       { EdKC_selc            , "sel_c"          },
@@ -81,7 +78,7 @@ STATIC_CONST TKyCd2KyNameTbl KyCd2KyNameTbl[] = {
       { EdKC_selX            , "shift+sel_x"    },
       { EdKC_selY            , "shift+sel_y"    },
       { EdKC_selZ            , "shift+sel_z"    },
-#endif // SEL_KEYMAP
+#endif // #ifdef fn_argselkeymap
       { EdKC_f1              , "f1"             },
       { EdKC_f2              , "f2"             },
       { EdKC_f3              , "f3"             },

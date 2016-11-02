@@ -20,7 +20,7 @@
 typedef uint16_t EdKC;
 
 enum { EdKC_Count = 256+272+91
-#if SEL_KEYMAP
+#ifdef fn_argselkeymap
                               +(26*2)
 #endif
    };
@@ -32,7 +32,7 @@ enum EdKeyCodes
    , EdKC_z    = 'z'
    , EdKC_A    = 'A'
    , EdKC_Z    = 'Z'
-#if SEL_KEYMAP
+#ifdef fn_argselkeymap
    , EdKC_sela = 0x100
    , EdKC_selb
    , EdKC_selc
@@ -86,9 +86,9 @@ enum EdKeyCodes
    , EdKC_selY
    , EdKC_selZ
    , EdKC_f1
-#else
+#else  // #ifdef fn_argselkeymap
    , EdKC_f1   = 0x100
-#endif // SEL_KEYMAP
+#endif
    , EdKC_f2
    , EdKC_f3
    , EdKC_f4
@@ -458,7 +458,7 @@ enum EdKeyCodes
    };
 
 enum { correct_edKC_f1_val =  0x100
-#if SEL_KEYMAP
+#ifdef fn_argselkeymap
      + (26*2)
 #endif
    };

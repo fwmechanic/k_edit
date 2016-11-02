@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -27,7 +27,7 @@
 
 //-----------------------------------------------------------------------------
 //
-// SEL_KEYMAP - what's going on here:
+// defined(fn_argselkeymap) - what's going on here:
 //
 // When I use a laptop PC, the numeric keypad I rely on for easy/speedy cursor
 // movement isn't there, at best replaced by an annoying ersatz replacement.
@@ -54,7 +54,7 @@
 // Deciding when to enter sel-mode was a bit more of a challenge: I foolishly
 // thought that engaging sel-mode when argCount > 0 would be sufficient: this
 // doesn't work: one case I forgot about is NULLARG graphic (literal arg), which
-// should engage GetTextargString with the graphic's value.  Since in SEL_KEYMAP
+// should engage GetTextargString with the graphic's value.  Since in defined(fn_argselkeymap)
 // compiled code some graphic keys are reassigned to cursor movement functions,
 // (1) the trigger to enter GTA mode does not occur when reassigned keys are
 // hit, and (2) GetTextargString does not (yet) map alpha keys back to
@@ -69,6 +69,8 @@
 //
 // I chose option (b) using the space key.
 //
+// 20161102 switching to option (a) using ctrl+a
+//
 // Regarding actual key assignments once in sel-mode, there are (at least) two
 // choices: the aforementioned vi cursor movement keys, and those of Wordstar
 // (also used by early Borland products).
@@ -77,7 +79,7 @@
 //
 #define   SEL_KEYMAP  0
 
-#if SEL_KEYMAP
+#ifdef fn_argselkeymap
    STIL bool SelKeymapEnabled() { extern bool g_fSelKeymapEnabled; return g_fSelKeymapEnabled; }
    STIL void SelKeymapEnable()  { extern bool g_fSelKeymapEnabled; g_fSelKeymapEnabled = true ; }
    STIL void SelKeymapDisable() { extern bool g_fSelKeymapEnabled; g_fSelKeymapEnabled = false; }

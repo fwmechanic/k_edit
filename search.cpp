@@ -286,7 +286,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCo
    const auto rl( pFBuf->PeekRawLine( cur.lin ) );
    d_sb.assign( pFBuf->Namestr() );
    d_sb.append( FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).k_str() );
-   d_sb.append( rl.data(), rl.length() );
+   d_sb.append( sr2st( rl ) );
    d_pOutputFile->PutLastLine( d_sb, d_stmp );
    }
    MoveCursorToEofAllWindows( d_pOutputFile );
@@ -965,7 +965,7 @@ STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
       {
       Delete0( s_searchSpecifier );
       s_searchSpecifier = ssNew;
-      g_SavedSearchString_Buf.assign( src.data(), src.length() );  // HACK to let ARG::grep inherit prev search strings
+      g_SavedSearchString_Buf.assign( sr2st( src ) );  // HACK to let ARG::grep inherit prev search strings
       }
    VS_( s_searchSpecifier->Dbgf( "after" ); )
    return
@@ -1617,7 +1617,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
          fNdAppendTrailingAltSepChar = true;
          }
       }
-   d_searchKey.assign( pS.data(), pS.length() );
+   d_searchKey.assign( sr2st( pS ) );
    if( fNdAppendTrailingAltSepChar ) {
       d_searchKey += AltSepChar;
       }
@@ -2167,7 +2167,7 @@ LINE CGrepper::WriteOutput
          if( d_MatchingLines[iy] ) {
             sbuf.assign( FmtStr<20>( "%*d  ", lwidth, iy + 1 ) );
             const auto rl( d_SrchFile->PeekRawLine( iy ) );
-            sbuf.append( rl.data(), rl.length() );
+            sbuf.append( sr2st( rl ) );
             FBOP::InsLineSortedAscending( outfile, tmp, grepHdrLines, sbuf );
             }
          }

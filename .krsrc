@@ -136,7 +136,7 @@
    #csort:alt+8
    xm := arg mfspec_ cancel
 
-   quik:ctrl+a
+   # quik:ctrl+a
 
    lua:alt+L
    # killall:pause
@@ -391,7 +391,7 @@
    noundel_on:= cancel arg "backup: none"  asnMsg arg "noundel_off:alt+q" assign
    noundel_off:=cancel arg "backup: undel" asnMsg arg "noundel_on :alt+q" assign
    noundel_on:alt+q
-   arg:alt+q   # laptop
+   argselkeymap:ctrl+a   # laptop
 
 #   box   :=boxstream +>nxt boxstream  :>nxt Arg "ldelete:Num-" Assign
 #   stream:=boxstream ->nxt boxstream  :>nxt Arg "sdelete:Num-" Assign

@@ -65,7 +65,7 @@ STATIC_VAR PCMD s_Key2CmdTbl[] = // use this so assert @ end of initializer will
 
    #undef  gfc
 
-#if SEL_KEYMAP
+#ifdef fn_argselkeymap
    , IDX_EQ( EdKC_sela         )  pCMD_graphic   // a
    , IDX_EQ( EdKC_selb         )  pCMD_graphic   // b
    , IDX_EQ( EdKC_selc         )  pCMD_graphic   // c
@@ -118,7 +118,7 @@ STATIC_VAR PCMD s_Key2CmdTbl[] = // use this so assert @ end of initializer will
    , IDX_EQ( EdKC_selX         )  pCMD_graphic   // X
    , IDX_EQ( EdKC_selY         )  pCMD_graphic   // Y
    , IDX_EQ( EdKC_selZ         )  pCMD_graphic   // Z
-#endif // SEL_KEYMAP
+#endif // #ifdef fn_argselkeymap
 
    , IDX_EQ( EdKC_f1           )  pCMD_unassigned
    , IDX_EQ( EdKC_f2           )  pCMD_setfile
