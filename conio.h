@@ -73,9 +73,10 @@ struct YX_t {
    bool operator!=( const YX_t &rhs ) const { return !(*this == rhs); }
    };
 
+typedef unsigned short EdKc_t;
 struct EdKC_Ascii {
-   unsigned short EdKcEnum;
-            char  Ascii;       // exists because NUMLOCK-masked EdKC values != correct number key ascii values
+   EdKc_t EdKcEnum;
+   char   Ascii;       // exists because NUMLOCK-masked EdKC values != correct number key ascii values
    };
 
    enum ConfirmResponse { crYES, crNO, crCANCEL };

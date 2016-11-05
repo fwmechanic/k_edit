@@ -77,7 +77,6 @@
 //
 // 20051008 klg turned this off as my fingers' "muscle memory" precludes it being useful
 //
-#define   SEL_KEYMAP  0
 
 #ifdef fn_argselkeymap
    STIL bool SelKeymapEnabled() { extern bool g_fSelKeymapEnabled; return g_fSelKeymapEnabled; }

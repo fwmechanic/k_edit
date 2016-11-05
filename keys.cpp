@@ -512,6 +512,20 @@ public:
       }
    };
 
+EdKc_t ModalKeyRemap( EdKc_t edKC ) {
+  #ifdef fn_argselkeymap
+   if( SelKeymapEnabled() ) { 0 && DBG( "-> %03X", edKC );
+      if( edKC >= EdKC_a && edKC <= EdKC_z ) { // map to EdKC_sela..EdKC_selz
+         edKC += EdKC_sela - EdKC_a;  0 && DBG( "-> EdKC_sela" );
+         }
+      if( edKC >= EdKC_A && edKC <= EdKC_Z ) { // map to EdKC_selA..EdKC_selZ
+         edKC += EdKC_selA - EdKC_A;  0 && DBG( "-> EdKC_selA" );
+         }
+      }
+  #endif
+   return edKC;
+   }
+
 void WaitForKey( int secondsToWait ) {
 // if( Interpreter::Interpreting() )
 //    return;

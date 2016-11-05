@@ -340,6 +340,7 @@ extern   int          EdkcOfKeyNm( stref keyNm );
 extern   std::string  KeyNmOfEdkc(                    int edKC );
 extern   std::string &KeyNmOfEdkc( std::string &dest, int edKC );
 
+extern  EdKc_t ModalKeyRemap( EdKc_t edKC );
 extern  PCCMD  CmdFromKbdForExec();
 extern  PCCMD  CmdFromKbdForInfo( std::string &dest );
 extern   char  CharAsciiFromKybd();
