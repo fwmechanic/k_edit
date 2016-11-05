@@ -78,6 +78,48 @@ STATIC_CONST TKyCd2KyNameTbl KyCd2KyNameTbl[] = {
       { EdKC_selX            , "shift+sel_x"    },
       { EdKC_selY            , "shift+sel_y"    },
       { EdKC_selZ            , "shift+sel_z"    },
+      { EdKC_sel0            , "sel_0"          },
+      { EdKC_sel1            , "sel_1"          },
+      { EdKC_sel2            , "sel_2"          },
+      { EdKC_sel3            , "sel_3"          },
+      { EdKC_sel4            , "sel_4"          },
+      { EdKC_sel5            , "sel_5"          },
+      { EdKC_sel6            , "sel_6"          },
+      { EdKC_sel7            , "sel_7"          },
+      { EdKC_sel8            , "sel_8"          },
+      { EdKC_sel9            , "sel_9"          },
+      { EdKC_selSPACE        , "sel_space"      },
+      { EdKC_selLPAREN       , "sel_("          },
+      { EdKC_selRPAREN       , "sel_)"          },
+      { EdKC_selLCURLY       , "sel_{"          },
+      { EdKC_selRCURLY       , "sel_}"          },
+      { EdKC_selLEFT_SQ      , "sel_["          },
+      { EdKC_selRIGHT_SQ     , "sel_]"          },
+      { EdKC_selLT           , "sel_<"          },
+      { EdKC_selGT           , "sel_>"          },
+      { EdKC_selPIPE         , "sel_|"          },
+      { EdKC_selBACKSLASH    , "sel_\\"         },
+      { EdKC_selSLASH        , "sel_/"          },
+      { EdKC_selQMARK        , "sel_?"          },
+      { EdKC_selEQUAL        , "sel_="          },
+      { EdKC_selPLUS         , "sel_+"          },
+      { EdKC_selMINUS        , "sel_-"          },
+      { EdKC_selUNDERSCORE   , "sel__"          },
+      { EdKC_selSEMICOLON    , "sel_;"          },
+      { EdKC_selCOLON        , "sel_:"          },
+      { EdKC_selCOMMA        , "sel_,"          },
+      { EdKC_selDOT          , "sel_."          },
+      { EdKC_selBACKTICK     , "sel_`"          },
+      { EdKC_selTILDE        , "sel_~"          },
+      { EdKC_selEX           , "sel_!"          },
+      { EdKC_selAT           , "sel_@"          },
+      { EdKC_selPOUND        , "sel_#"          },
+      { EdKC_selDOLLAR       , "sel_$"          },
+      { EdKC_selPERCENT      , "sel_%"          },
+      { EdKC_selCARET        , "sel_^"          },
+      { EdKC_selAND          , "sel_&"          },
+      { EdKC_selSTAR         , "sel_*"          },
+      { EdKC_selDQUOTE       , "sel_\""         },
 #endif // #ifdef fn_argselkeymap
       { EdKC_f1              , "f1"             },
       { EdKC_f2              , "f2"             },
@@ -514,13 +556,112 @@ public:
 
 EdKc_t ModalKeyRemap( EdKc_t edKC ) {
   #ifdef fn_argselkeymap
-   if( SelKeymapEnabled() ) { 0 && DBG( "-> %03X", edKC );
-      if( edKC >= EdKC_a && edKC <= EdKC_z ) { // map to EdKC_sela..EdKC_selz
-         edKC += EdKC_sela - EdKC_a;  0 && DBG( "-> EdKC_sela" );
-         }
-      if( edKC >= EdKC_A && edKC <= EdKC_Z ) { // map to EdKC_selA..EdKC_selZ
-         edKC += EdKC_selA - EdKC_A;  0 && DBG( "-> EdKC_selA" );
-         }
+   STATIC_VAR int s_KC2selKC[EdKC_f1];
+   if( !s_KC2selKC['0'] ) {
+      // attempts to do this in the s_KC2selKC initializer, e.g. "['0'] = EdKC_sel0," yielded
+      // 'sorry, unimplemented: non-trivial designated initializers not supported'
+      // yet s_Key2CmdTbl[] works; the difference is that s_Key2CmdTbl[] initialized every array
+      // slot (and probably in numeric order), while here we are intending to perform sparse init,
+      // per https://gcc.gnu.org/onlinedocs/gcc/Designated-Inits.html (but apparently GCC impl
+      // this differently for C vs. C++) also not caring about order.
+      s_KC2selKC['0'] = EdKC_sel0           ;
+      s_KC2selKC['1'] = EdKC_sel1           ;
+      s_KC2selKC['2'] = EdKC_sel2           ;
+      s_KC2selKC['3'] = EdKC_sel3           ;
+      s_KC2selKC['4'] = EdKC_sel4           ;
+      s_KC2selKC['5'] = EdKC_sel5           ;
+      s_KC2selKC['6'] = EdKC_sel6           ;
+      s_KC2selKC['7'] = EdKC_sel7           ;
+      s_KC2selKC['8'] = EdKC_sel8           ;
+      s_KC2selKC['9'] = EdKC_sel9           ;
+      s_KC2selKC['A'] = EdKC_selA           ;
+      s_KC2selKC['B'] = EdKC_selB           ;
+      s_KC2selKC['C'] = EdKC_selC           ;
+      s_KC2selKC['D'] = EdKC_selD           ;
+      s_KC2selKC['E'] = EdKC_selE           ;
+      s_KC2selKC['F'] = EdKC_selF           ;
+      s_KC2selKC['G'] = EdKC_selG           ;
+      s_KC2selKC['H'] = EdKC_selH           ;
+      s_KC2selKC['I'] = EdKC_selI           ;
+      s_KC2selKC['J'] = EdKC_selJ           ;
+      s_KC2selKC['K'] = EdKC_selK           ;
+      s_KC2selKC['L'] = EdKC_selL           ;
+      s_KC2selKC['M'] = EdKC_selM           ;
+      s_KC2selKC['N'] = EdKC_selN           ;
+      s_KC2selKC['O'] = EdKC_selO           ;
+      s_KC2selKC['P'] = EdKC_selP           ;
+      s_KC2selKC['Q'] = EdKC_selQ           ;
+      s_KC2selKC['R'] = EdKC_selR           ;
+      s_KC2selKC['S'] = EdKC_selS           ;
+      s_KC2selKC['T'] = EdKC_selT           ;
+      s_KC2selKC['U'] = EdKC_selU           ;
+      s_KC2selKC['V'] = EdKC_selV           ;
+      s_KC2selKC['W'] = EdKC_selW           ;
+      s_KC2selKC['X'] = EdKC_selX           ;
+      s_KC2selKC['Y'] = EdKC_selY           ;
+      s_KC2selKC['Z'] = EdKC_selZ           ;
+      s_KC2selKC['a'] = EdKC_sela           ;
+      s_KC2selKC['b'] = EdKC_selb           ;
+      s_KC2selKC['c'] = EdKC_selc           ;
+      s_KC2selKC['d'] = EdKC_seld           ;
+      s_KC2selKC['e'] = EdKC_sele           ;
+      s_KC2selKC['f'] = EdKC_self           ;
+      s_KC2selKC['g'] = EdKC_selg           ;
+      s_KC2selKC['h'] = EdKC_selh           ;
+      s_KC2selKC['i'] = EdKC_seli           ;
+      s_KC2selKC['j'] = EdKC_selj           ;
+      s_KC2selKC['k'] = EdKC_selk           ;
+      s_KC2selKC['l'] = EdKC_sell           ;
+      s_KC2selKC['m'] = EdKC_selm           ;
+      s_KC2selKC['n'] = EdKC_seln           ;
+      s_KC2selKC['o'] = EdKC_selo           ;
+      s_KC2selKC['p'] = EdKC_selp           ;
+      s_KC2selKC['q'] = EdKC_selq           ;
+      s_KC2selKC['r'] = EdKC_selr           ;
+      s_KC2selKC['s'] = EdKC_sels           ;
+      s_KC2selKC['t'] = EdKC_selt           ;
+      s_KC2selKC['u'] = EdKC_selu           ;
+      s_KC2selKC['v'] = EdKC_selv           ;
+      s_KC2selKC['w'] = EdKC_selw           ;
+      s_KC2selKC['x'] = EdKC_selx           ;
+      s_KC2selKC['y'] = EdKC_sely           ;
+      s_KC2selKC['z'] = EdKC_selz           ;
+      s_KC2selKC[' '] = EdKC_selSPACE       ;
+      s_KC2selKC['('] = EdKC_selLPAREN      ;
+      s_KC2selKC[')'] = EdKC_selRPAREN      ;
+      s_KC2selKC['{'] = EdKC_selLCURLY      ;
+      s_KC2selKC['}'] = EdKC_selRCURLY      ;
+      s_KC2selKC['['] = EdKC_selLEFT_SQ     ;
+      s_KC2selKC[']'] = EdKC_selRIGHT_SQ    ;
+      s_KC2selKC['<'] = EdKC_selLT          ;
+      s_KC2selKC['>'] = EdKC_selGT          ;
+      s_KC2selKC['|'] = EdKC_selPIPE        ;
+      s_KC2selKC['\\']= EdKC_selBACKSLASH   ;
+      s_KC2selKC['/'] = EdKC_selSLASH       ;
+      s_KC2selKC['?'] = EdKC_selQMARK       ;
+      s_KC2selKC['='] = EdKC_selEQUAL       ;
+      s_KC2selKC['+'] = EdKC_selPLUS        ;
+      s_KC2selKC['-'] = EdKC_selMINUS       ;
+      s_KC2selKC['_'] = EdKC_selUNDERSCORE  ;
+      s_KC2selKC[';'] = EdKC_selSEMICOLON   ;
+      s_KC2selKC[':'] = EdKC_selCOLON       ;
+      s_KC2selKC[','] = EdKC_selCOMMA       ;
+      s_KC2selKC['.'] = EdKC_selDOT         ;
+      s_KC2selKC['`'] = EdKC_selBACKTICK    ;
+      s_KC2selKC['~'] = EdKC_selTILDE       ;
+      s_KC2selKC['!'] = EdKC_selEX          ;
+      s_KC2selKC['@'] = EdKC_selAT          ;
+      s_KC2selKC['#'] = EdKC_selPOUND       ;
+      s_KC2selKC['$'] = EdKC_selDOLLAR      ;
+      s_KC2selKC['%'] = EdKC_selPERCENT     ;
+      s_KC2selKC['^'] = EdKC_selCARET       ;
+      s_KC2selKC['&'] = EdKC_selAND         ;
+      s_KC2selKC['*'] = EdKC_selSTAR        ;
+      s_KC2selKC['"'] = EdKC_selDQUOTE      ;
+      s_KC2selKC['\'']= EdKC_selSLASH       ;
+      }
+   if( SelKeymapEnabled() && edKC < ELEMENTS(s_KC2selKC) && s_KC2selKC[edKC] ) {
+      return s_KC2selKC[edKC];
       }
   #endif
    return edKC;

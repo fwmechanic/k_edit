@@ -28,9 +28,10 @@ GLOBAL_VAR CMD g_CmdTable[] = { // *** THIS IS GLOBAL, NOT STATIC, BECAUSE #defi
 //-----------------------------------
    };
 
-#ifdef GCC
+#ifdef __GNUC__
 #define  IDX_EQ( idx_val )  [ idx_val ] =
 #else
+#error
 #define  IDX_EQ( idx_val )
 #endif
 
@@ -66,7 +67,7 @@ STATIC_VAR PCMD s_Key2CmdTbl[] = // use this so assert @ end of initializer will
    #undef  gfc
 
 #ifdef fn_argselkeymap
-   , IDX_EQ( EdKC_sela         )  pCMD_graphic   // a
+   , IDX_EQ( EdKC_sela         )  pCMD_selkeymaptogl // a
    , IDX_EQ( EdKC_selb         )  pCMD_graphic   // b
    , IDX_EQ( EdKC_selc         )  pCMD_graphic   // c
    , IDX_EQ( EdKC_seld         )  pCMD_graphic   // d
@@ -118,6 +119,49 @@ STATIC_VAR PCMD s_Key2CmdTbl[] = // use this so assert @ end of initializer will
    , IDX_EQ( EdKC_selX         )  pCMD_graphic   // X
    , IDX_EQ( EdKC_selY         )  pCMD_graphic   // Y
    , IDX_EQ( EdKC_selZ         )  pCMD_graphic   // Z
+   , IDX_EQ( EdKC_sel0         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel1         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel2         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel3         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel4         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel5         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel6         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel7         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel8         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_sel9         )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selSPACE     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selLPAREN    )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selRPAREN    )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selLCURLY    )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selRCURLY    )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selLEFT_SQ   )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selRIGHT_SQ  )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selLT        )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selGT        )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selPIPE      )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selBACKSLASH )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selSLASH     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selQMARK     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selEQUAL     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selPLUS      )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selMINUS     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selUNDERSCORE)  pCMD_graphic   //
+   , IDX_EQ( EdKC_selSEMICOLON )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selCOLON     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selCOMMA     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selDOT       )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selBACKTICK  )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selTILDE     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selEX        )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selAT        )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selPOUND     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selDOLLAR    )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selPERCENT   )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selCARET     )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selAND       )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selSTAR      )  pCMD_graphic   //
+   , IDX_EQ( EdKC_selDQUOTE    )  pCMD_graphic   //
+
 #endif // #ifdef fn_argselkeymap
 
    , IDX_EQ( EdKC_f1           )  pCMD_unassigned

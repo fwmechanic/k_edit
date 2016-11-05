@@ -998,11 +998,22 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 
 GLOBAL_VAR bool g_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
+
+#ifdef fn_selkeymaptogl
+bool ARG::selkeymaptogl() {
+   return SelKeymapToggle();
+   }
+#endif
+
 STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation (i.e. when Get_g_ArgCount()==0) of ARG::arg or ARG::Lastselect.
    ExtendSelectionHilite( g_Cursor() ); // candidate for removal: IncArgCnt_DropAnchor() (called by ARG::arg()) already does this?
    g_fSelectionActive = true;           // move to IncArgCnt_DropAnchor()?
    while( auto pCmd = CMD_reader().GetNextCMD() ) {
-      if( pCmd->d_func == fn_arg ) { // ARG::arg _IS NOT CALLED_: instead inline-execute here:
+      if(   pCmd->d_func == fn_arg
+       #ifdef fn_argselkeymap
+         || pCmd->d_func == fn_argselkeymap
+       #endif
+        ) { // ARG::arg* _IS NOT CALLED_: instead inline-execute here:
          Inc_g_ArgCount();
          ExtendSelectionHilite( g_Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
          continue; //================================================================

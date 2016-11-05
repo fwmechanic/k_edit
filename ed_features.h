@@ -81,10 +81,12 @@
 #ifdef fn_argselkeymap
    STIL bool SelKeymapEnabled() { extern bool g_fSelKeymapEnabled; return g_fSelKeymapEnabled; }
    STIL void SelKeymapEnable()  { extern bool g_fSelKeymapEnabled; g_fSelKeymapEnabled = true ; }
+   STIL bool SelKeymapToggle()  { extern bool g_fSelKeymapEnabled; return (g_fSelKeymapEnabled = !g_fSelKeymapEnabled) ; }
    STIL void SelKeymapDisable() { extern bool g_fSelKeymapEnabled; g_fSelKeymapEnabled = false; }
 #else
    #define   SelKeymapEnabled()  (false)
    #define   SelKeymapEnable()
+   #define   SelKeymapToggle()   (false)
    #define   SelKeymapDisable()
 #endif
 

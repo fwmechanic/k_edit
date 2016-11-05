@@ -21,19 +21,16 @@ typedef uint16_t EdKC;
 
 enum { EdKC_Count = 256+272+91
 #ifdef fn_argselkeymap
-                              +(26*2)
+                              + (26*2)
+                              + 42
 #endif
    };
 
 enum EdKeyCodes
    {
    // first 256 [0x00..0xFF] are for ASCII codes
-     EdKC_a    = 'a'
-   , EdKC_z    = 'z'
-   , EdKC_A    = 'A'
-   , EdKC_Z    = 'Z'
 #ifdef fn_argselkeymap
-   , EdKC_sela = 0x100
+     EdKC_sela = 0x100
    , EdKC_selb
    , EdKC_selc
    , EdKC_seld
@@ -85,9 +82,52 @@ enum EdKeyCodes
    , EdKC_selX
    , EdKC_selY
    , EdKC_selZ
-   , EdKC_f1
+   , EdKC_sel0
+   , EdKC_sel1
+   , EdKC_sel2
+   , EdKC_sel3
+   , EdKC_sel4
+   , EdKC_sel5
+   , EdKC_sel6
+   , EdKC_sel7
+   , EdKC_sel8
+   , EdKC_sel9
+   , EdKC_selSPACE
+   , EdKC_selLPAREN
+   , EdKC_selRPAREN
+   , EdKC_selLCURLY
+   , EdKC_selRCURLY
+   , EdKC_selLEFT_SQ
+   , EdKC_selRIGHT_SQ
+   , EdKC_selLT
+   , EdKC_selGT
+   , EdKC_selPIPE
+   , EdKC_selBACKSLASH
+   , EdKC_selSLASH
+   , EdKC_selQMARK
+   , EdKC_selEQUAL
+   , EdKC_selPLUS
+   , EdKC_selMINUS
+   , EdKC_selUNDERSCORE
+   , EdKC_selSEMICOLON
+   , EdKC_selCOLON
+   , EdKC_selCOMMA
+   , EdKC_selDOT
+   , EdKC_selBACKTICK
+   , EdKC_selTILDE
+   , EdKC_selEX
+   , EdKC_selAT
+   , EdKC_selPOUND
+   , EdKC_selDOLLAR
+   , EdKC_selPERCENT
+   , EdKC_selCARET
+   , EdKC_selAND
+   , EdKC_selSTAR
+   , EdKC_selDQUOTE
+
+   , EdKC_f1                // NB this is used to size s_KC2selKC !!!
 #else  // #ifdef fn_argselkeymap
-   , EdKC_f1   = 0x100
+     EdKC_f1   = 0x100
 #endif
    , EdKC_f2
    , EdKC_f3
@@ -460,6 +500,7 @@ enum EdKeyCodes
 enum { correct_edKC_f1_val =  0x100
 #ifdef fn_argselkeymap
      + (26*2)
+     + 42
 #endif
    };
 
