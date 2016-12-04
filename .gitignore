@@ -53,6 +53,7 @@ warnings
 whole_run.out
 .hgdif
 link.errs
+link.unref
 mkabat.bat
 *.testout
 
