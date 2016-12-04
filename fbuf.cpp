@@ -141,7 +141,7 @@ void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf ) {
       const auto pWin( g_Win( wix ) );
       DLINKC_FIRST_TO_LASTA( pWin->ViewHd, dlinkViewsOfWindow, pv ) {
          if( pv->FBuf() == pFBuf ) {
-            if( pv->Get_LineCompile() >= 0 ) {
+            if( pv->LineCompile_Valid() ) {
                 pv->Set_LineCompile( 0 );
                 }
             }

@@ -408,7 +408,7 @@ public:
    DLinkEntry <HiliteAddin> dlinkAddins;
 protected:
          PCFBUF CFBuf()               const { return d_view.CFBuf(); }
-         LINE   Get_LineCompile()     const { return d_view.Get_LineCompile(); }
+         bool   LineIs_LineCompile( LINE yLine ) const { return d_view.LineCompile_Valid() && yLine == d_view.Get_LineCompile(); }
    const Point &Cursor()              const { return d_view.Cursor(); }
    const Point &Origin()              const { return d_view.Origin(); }
          LINE   ViewLines()           const { return d_view.Win()->d_Size.lin ; }
@@ -968,7 +968,7 @@ public:
    PCChar Name() const override { return "CompileLine"; }
    };
 bool HiliteAddin_CompileLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
-   if( d_view.Get_LineCompile() == yLine ) {
+   if( LineIs_LineCompile( yLine ) ) {
       alcc.PutColor( 0, COL_MAX, ColorTblIdx::CXY );
       }
    return false;
@@ -1984,7 +1984,7 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          alcc.PutColorRaw( g_CursorCol(),       1, cxy );
          return true;
          }
-      if( !USE_HiliteAddin_CompileLine && Get_LineCompile() == yLine ) {
+      if( !USE_HiliteAddin_CompileLine && LineIs_LineCompile( yLine ) ) {
          alcc.PutColor(    0            , COL_MAX, ColorTblIdx::STS );
          }
       }
