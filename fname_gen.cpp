@@ -78,8 +78,8 @@ void DiceableString::DBG() const {
 STATIC_FXN char IsUserFnmDelimChar( char ch ) {
    switch( ch ) {
       default     : return 0;
-      case chQuot2: //fallthru
-      case chQuot1: //fallthru
+      case chQuot2: return ch;
+      case chQuot1: return ch;
       case '|'    : return ch;
       }
    }
@@ -87,20 +87,19 @@ STATIC_FXN char IsUserFnmDelimChar( char ch ) {
 STATIC_FXN bool IsolateFilename( sridx *pMin, sridx *pMax, stref rl ) {
    // could add: lots and lots o special per-FileType code to extract
    //    filenames from various language-specific include statements
-   sridx ixStart(0);
-   sridx ixEnd;
-   if(   IsUserFnmDelimChar( rl[ixStart] )
+   sridx ixStart, ixEnd;
+   if(   IsUserFnmDelimChar( rl[0] )
          // Next match of rl[0] is assumed to be closing one; since WE
          // (in <files>, etc.) _generate_ the delim, and in so doing
          // choose a delim which isn't found in the filename itself,
          // it's a reasonable assumption to make.
          //
-      && ((ixEnd=ToNextOrEnd( rl[0], rl, 1 )), atEnd( rl, ixEnd ))
+      && ((ixEnd=ToNextOrEnd( rl[0], rl, 1 )), rl[0]==rl[ixEnd])
      ) {
-      ++ixStart; // ixEnd is set correctly
+      ixStart = 1;
       }
    else {
-      ixStart = FirstNonBlankOrEnd( rl, ixStart   );
+      ixStart = FirstNonBlankOrEnd( rl, 0         );
       ixEnd   = FirstBlankOrEnd   ( rl, ixStart+1 );
       }
    if( ixStart >= ixEnd ) { return false; }
@@ -113,7 +112,7 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
    if( yLine > LastLine() ) {
       return -1;
       }
-   auto rl( PeekRawLine( yLine ) ); PCChar bos( rl.data() ); PCChar eos( rl.data()+rl.length() );
+   auto rl( PeekRawLine( yLine ) );
    const auto ixCol( CaptiveIdxOfCol( g_CurFBuf()->TabWidth(), rl, xCol ) );
    rl.remove_prefix( ixCol );
    sridx oMin, oMax;

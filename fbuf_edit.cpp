@@ -709,19 +709,9 @@ STATIC_FXN void DelArgRegion( const ARG &arg ) {
 
 void PCFV_delete_ToEOL( Point const &curpos, bool copyToClipboard ) { PCFV;
    auto xMax( FBOP::LineCols( pcf, curpos.lin ) );
-   decltype(xMax) xLeft ;
-   decltype(xMax) xRight;
-   if( curpos.col <= xMax ) {
-      xLeft  = curpos.col;
-      xRight = xMax;
+   if( xMax >= curpos.col ) {
+      PCFV_delete_BOXARG( {curpos.lin, curpos.col, curpos.lin, xMax }, copyToClipboard );
       }
-   else {
-      xLeft  = xMax;
-      xRight = curpos.col;
-      }
-   --xRight;
-   0 && DBG( "%s: xRight=%d", __func__, xRight );
-   PCFV_delete_BOXARG( {curpos.lin, xLeft, curpos.lin, xRight }, copyToClipboard );
    }
 
 bool ARG::sdelete() { PCFV;
