@@ -1711,7 +1711,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
    if( d_sm.d_fSearchForward ) {         VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
-         auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
+         const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
          const IdxCol pcc( tw, rl );
          const auto lnCols( pcc.cols() );
          auto iC( pcc.c2i( curPt.col ) );
@@ -1741,7 +1741,7 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
          if( curPt.col < 0 ) {
             continue;
             }
-         auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
+         const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
          const IdxCol pcc( tw, rl );
          auto iC( pcc.c2i( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, rl.length(), BSR(rl) ); )
          if( iC < rl.length() ) { // if curPt.col is in middle of line...
