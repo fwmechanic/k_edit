@@ -367,7 +367,6 @@ protected:
    const SearchScanMode   &d_sm;
    const SearchSpecifier  &d_ss;
 public:
-   std::string             d_sbuf;
    FileSearchMatchHandler &d_mh;
    Point                   d_start;
    Point                   d_end;
@@ -1712,8 +1711,8 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
    if( d_sm.d_fSearchForward ) {         VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
-         d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
-         const IdxCol pcc( tw, d_sbuf );
+         auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
+         const IdxCol pcc( tw, rl );
          const auto lnCols( pcc.cols() );
          auto iC( pcc.c2i( curPt.col ) );
          if( pcc.i2c( iC ) != curPt.col ) { // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) pC is pointing at a char outside the replace region[1]
@@ -1724,13 +1723,13 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
             ; xCol <= lnCols // <= so empty line can match Regex
             ; iC   = pcc.c2i( curPt.col ) + 1, xCol = pcc.i2c( iC )
             ) {
-            const auto srMatch( VFindStr_( d_sbuf, iC, 0 ) );
+            const auto srMatch( VFindStr_( rl, iC, 0 ) );
             if( srMatch.empty() ) {
                break; // no matches on this line!
                }
             //*****  HOUSTON, WE HAVE A MATCH  *****
-            curPt.col  =          pcc.i2c( (srMatch.data() - d_sbuf.data())                    )              ;
-            const auto matchCols( pcc.i2c( (srMatch.data() - d_sbuf.data()) + srMatch.length() ) - curPt.col );
+            curPt.col  =          pcc.i2c( (srMatch.data() - rl.data())                    )              ;
+            const auto matchCols( pcc.i2c( (srMatch.data() - rl.data()) + srMatch.length() ) - curPt.col );
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) { // NB: curPt can be modified here!
                return;
                }
@@ -1742,19 +1741,19 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
          if( curPt.col < 0 ) {
             continue;
             }
-         d_pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt.lin );
-         const IdxCol pcc( tw, d_sbuf );
-         auto iC( pcc.c2i( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, d_sbuf.length(), BSR(d_sbuf) ); )
-         if( iC < d_sbuf.length() ) { // if curPt.col is in middle of line...
+         auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
+         const IdxCol pcc( tw, rl );
+         auto iC( pcc.c2i( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, rl.length(), BSR(rl) ); )
+         if( iC < rl.length() ) { // if curPt.col is in middle of line...
             ++iC;                     // ... nd to incr to get correct maxCharsToSearch
             }
-         const auto maxCharsToSearch( Min( iC, d_sbuf.length() ) );
-         const stref haystack( d_sbuf.c_str(), maxCharsToSearch ); VS_( DBG( "-search: HAYSTACK='%" PR_BSR "'", BSR(haystack) ); )
+         const auto maxCharsToSearch( Min( iC, rl.length() ) );
+         const stref haystack( rl.data(), maxCharsToSearch ); VS_( DBG( "-search: HAYSTACK='%" PR_BSR "'", BSR(haystack) ); )
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to
          // prev one)
        #if USE_PCRE
-         #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == d_sbuf.length() ? 0 : PCRE_NOTBOL)
+         #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == rl.length() ? 0 : PCRE_NOTBOL)
        #else
          #define  SET_HaystackHas(startOfs)  (0)
        #endif
