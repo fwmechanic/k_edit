@@ -373,7 +373,18 @@ public:
    PFBUF                   d_pFBuf;
    RegexMatchCaptures      d_captures;
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   virtual stref VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) = 0; // rv.empty() if no match found
+   class FindStrRslt { // must distinguish match (including 0-length match) and no match
+      static const char chNoMatch;
+      const stref d_sr;
+   public:
+      FindStrRslt( PCChar data, size_t length ) : d_sr( data, length ) {}
+      FindStrRslt( stref sr_ ) : d_sr( sr_ ) {}
+      FindStrRslt( int ) : d_sr( &chNoMatch, 0 ) {} // chNoMatch
+      FindStrRslt() : d_sr() {}
+      stref sr() const { return d_sr; }
+      bool noMatch() const { return &chNoMatch == d_sr.data(); }
+      };
+   virtual FindStrRslt VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) = 0; // rv.empty() if no match found
 public:
    enum StringSearchVariant {
       fsTABSAFE_STRING ,  // FileSearcherString also bidirectional
@@ -399,6 +410,7 @@ public:
 protected:
    void ResolveDfltBounds();
    };
+const char FileSearcher::FindStrRslt::chNoMatch = '\0';
 
 STATIC_CONST auto s_PtInvalid = Point( -1, -1 );
 
@@ -480,7 +492,7 @@ class  FileSearcherString : public FileSearcher {
 public:
    FileSearcherString( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    ~FileSearcherString() {}
-   stref VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
+   FindStrRslt VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
    };
 
 class  FileSearcherFast : public FileSearcher {  // ONLY SEARCHES FORWARD!!!
@@ -493,7 +505,7 @@ public:
    FileSearcherFast( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    virtual ~FileSearcherFast() {}
    void   VFindMatches_() override;
-   stref  VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
+   FindStrRslt  VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
    };
 
 #if USE_PCRE
@@ -503,7 +515,7 @@ class  FileSearcherRegex : public FileSearcher {
    NO_ASGN_OPR(FileSearcherRegex);
 public:
    FileSearcherRegex( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
-   stref VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
+   FindStrRslt VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) override;
    };
 
 #endif
@@ -1551,11 +1563,11 @@ FileSearcherString::FileSearcherString( const SearchScanMode &sm, const SearchSp
    {
    }
 
-stref FileSearcherString::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
+FileSearcher::FindStrRslt FileSearcherString::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
    stref offset_eaten( src ); offset_eaten.remove_prefix( src_offset );
    const auto ixMatch( d_pfxStrnstr( offset_eaten, d_searchKey ) );
    if( ixMatch == stref::npos ) {
-      return stref();
+      return 0;
       }
    return offset_eaten.substr( ixMatch, d_searchKey.length() ); // MATCH!
    }
@@ -1569,19 +1581,17 @@ FileSearcherRegex::FileSearcherRegex( const SearchScanMode &sm, const SearchSpec
    Assert( d_ss.IsRegex() );
    }
 
-stref FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
+FileSearcher::FindStrRslt FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
    VS_(
                DBG( "++++++" );
                DBG( "RegEx?[%d-],%s='%*.*s'", src_offset, src.length() - src_offset, src.length() - src_offset, src.data() + src_offset );
       )
    const auto rv( Regex_Match( d_ss.re(), d_captures, src, src_offset, pcre_exec_options ) );
-   VS_(
-      if( rv ) {                                   DBG( "RegEx:->MATCH=(%d L %d)='%*.*s'", rv - src.data(), d_captures[0].length(), d_captures[0].length(), d_captures[0].length(), rv );
-         }                                         DBG( "RegEx:->NO MATCH" );
-      else {
-         }                                         DBG( "------" );
-      )
-   return rv > 0 && d_captures[0].valid() ? d_captures[0].value() : stref();
+   if( rv > 0 && d_captures[0].valid() ) {
+      const auto srMatch( d_captures[0].value() );  DBG( "RegEx:->MATCH=(%d L %d)='%" PR_BSR "'", srMatch.data() - src.data(), srMatch.length(), BSR(srMatch) );
+      return srMatch;
+      }                                             DBG( "RegEx:->NO MATCH" );
+   return FileSearcher::FindStrRslt( 0 );
    }
 #endif
 
@@ -1702,7 +1712,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
 // FileSearcherFast::VFindMatches_ REPLACES FileSearcher::VFindMatches_, and
 // FileSearcherFast::VFindMatches_ DOES NOT CALL OTHER CLASS METHODS
 //
-stref  FileSearcherFast::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) { Assert( 0 != 0 ); return stref(); }
+FileSearcher::FindStrRslt  FileSearcherFast::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) { Assert( 0 != 0 ); return 0; }
 
 //===============================================
 
@@ -1713,23 +1723,20 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
          //***** Search A LINE:
          const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
          const IdxCol pcc( tw, rl );
-         const auto lnCols( pcc.cols() );
          auto iC( pcc.c2i( curPt.col ) );
-         if( pcc.i2c( iC ) != curPt.col ) { // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) pC is pointing at a char outside the replace region[1]
-            ++iC;                           // move pC to point to first char in replace region  [1] but BUGBUG this fxn is not used by replace!
+         if( pcc.i2c( iC ) != curPt.col ) { // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) iC indexes a char outside (to the left of) the replace region[1]
+            ++iC;                           // make iC index the first char in replace region  [1] but BUGBUG this fxn is not used by replace!
             }
          // find all matches on this line
-         for( auto xCol(curPt.col)
-            ; xCol <= lnCols // <= so empty line can match Regex
-            ; iC   = pcc.c2i( curPt.col ) + 1, xCol = pcc.i2c( iC )
-            ) {
+         for( ; iC <= rl.length() /* <= so empty line can match Regex */ ; ++iC ) {
             const auto srMatch( VFindStr_( rl, iC, 0 ) );
-            if( srMatch.empty() ) {
+            if( srMatch.noMatch() ) {
                break; // no matches on this line!
                }
             //*****  HOUSTON, WE HAVE A MATCH  *****
-            curPt.col  =          pcc.i2c( (srMatch.data() - rl.data())                    )              ;
-            const auto matchCols( pcc.i2c( (srMatch.data() - rl.data()) + srMatch.length() ) - curPt.col );
+            const auto matchSr( srMatch.sr() );
+            curPt.col  =          pcc.i2c( (matchSr.data() - rl.data())                    )              ;
+            const auto matchCols( pcc.i2c( (matchSr.data() - rl.data()) + matchSr.length() ) - curPt.col );
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) { // NB: curPt can be modified here!
                return;
                }
@@ -1758,19 +1765,19 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
          #define  SET_HaystackHas(startOfs)  (0)
        #endif
          const auto srMatch( VFindStr_( haystack, 0, SET_HaystackHas(0) ) );
-         if( !srMatch.empty() ) {
-            COL goodMatchChars( srMatch.length() );
-            auto iGoodMatch( srMatch.data() - haystack.data() );
+         if( !srMatch.noMatch() ) {
+            COL goodMatchChars( srMatch.sr().length() );
+            auto iGoodMatch( srMatch.sr().data() - haystack.data() );
             /* line contains _A_ match? */  VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
             // find the rightmost match by repeatedly searching (left->right) until search fails, using the last good match
             while( iGoodMatch < maxCharsToSearch ) {
                const auto startIdx( iGoodMatch + 1 );   VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "-search: iAYSTACK=%" PR_SIZET " '%" PR_BSR "'", startIdx, BSR(newHaystack) ); } )
                const auto srNextMatch( VFindStr_( haystack, startIdx, SET_HaystackHas(startIdx) ) );
-               if( srNextMatch.empty() ) {
+               if( srNextMatch.noMatch() ) {
                   break;
                   }
-               const auto iNextMatch( srNextMatch.data() - haystack.data() );
-               COL nextMatchChars( srNextMatch.length() );
+               const auto iNextMatch( srNextMatch.sr().data() - haystack.data() );
+               COL nextMatchChars( srNextMatch.sr().length() );
                iGoodMatch     = iNextMatch;
                goodMatchChars = nextMatchChars;         VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: +MATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
                }
