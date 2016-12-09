@@ -102,12 +102,12 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
    0 && DBG( "CompiledRegex::Match called!" );
    // http://www.pcre.org/original/doc/html/pcreapi.html#SEC17  "MATCHING A PATTERN: THE TRADITIONAL FUNCTION" describes pcre_exec()
    const int rc( pcre_exec(
-           d_pPcre
-         , d_pPcreExtra
-         , haystack.data()
-         , haystack.length()
-         , haystack_offset
-         , pcre_exec_options
+           d_pPcre             // code
+         , d_pPcreExtra        // extra
+         , haystack.data() ? haystack.data() : "" // subject: empty stref can contain .data()==NULL; pcre_exec w/subject==NULL (even if length == 0) returns PCRE_ERROR_NULL
+         , haystack.length()   // length
+         , haystack_offset     // startoffset
+         , pcre_exec_options   // options
    // Captured substrings are returned to the caller via a vector of integers whose address is passed in ovector.
          , &d_pcreCapture[0].oFirst // ovector: a vector of ints; each capture consumes 2 (==num_ints_in_pcreCapture) ints
    // The number of elements in the vector is passed in ovecsize, which must be a non-negative number.
