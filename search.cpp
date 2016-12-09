@@ -1588,7 +1588,7 @@ FileSearcher::FindStrRslt FileSearcherRegex::VFindStr_( stref src, sridx src_off
       )
    const auto rv( Regex_Match( d_ss.re(), d_captures, src, src_offset, pcre_exec_options ) );
    if( rv > 0 && d_captures[0].valid() ) {
-      const auto srMatch( d_captures[0].value() );  DBG( "RegEx:->MATCH=(%d L %d)='%" PR_BSR "'", srMatch.data() - src.data(), srMatch.length(), BSR(srMatch) );
+      const auto srMatch( d_captures[0].value() );  DBG( "RegEx:->MATCH=(%" PR_PTRDIFFT " L %" PR_SIZET ")='%" PR_BSR "'", srMatch.data() - src.data(), srMatch.length(), BSR(srMatch) );
       return srMatch;
       }                                             DBG( "RegEx:->NO MATCH" );
    return FileSearcher::FindStrRslt( 0 );
