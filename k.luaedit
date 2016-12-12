@@ -380,11 +380,30 @@ do
                        "%${"  ..EnvNamePat.. "}"  ,
                        }
 
+   -- print( "dirsep_preferred=" .. (dirsep_os or "nil") )
+   local dosDirOfThisFilePat = dirsep_os == "\\" and "^%%~dp0"
+   -- print( "dosDirOfThisFilePat=" .. (dosDirOfThisFilePat or "nil") )
+   local winStrExpandEnvVars = dosDirOfThisFilePat and
+      function( str )
+         if str:match( dosDirOfThisFilePat ) then
+            local curfn = GetCurrentFilename()
+            if curfn and #curfn > 0 then
+               local curfpath = PathOf( curfn )
+               if curfpath and #curfpath > 0 and IsDir(curfpath) then
+                  str = str:gsub( dosDirOfThisFilePat, curfpath )
+                  end
+               end
+            end
+         return str
+         end
+   or function( str ) return str end
+
    function StrExpandEnvVars( str ) -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
       -- print( "StrExpandEnvVars+("..str..")" )
       for _, pat in ipairs(EnvSpecPats) do
          str = str:gsub( pat, envReplacer )
          end
+      str = winStrExpandEnvVars( str )
       -- print( "StrExpandEnvVars-("..str..")" )
       return str
       end
