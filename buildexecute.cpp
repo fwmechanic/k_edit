@@ -489,7 +489,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
          }
       };
    if( stream.flMin.lin == yMax ) {
-      append_dest( pfb->PeekRawLineSeg( stream.flMin.lin, stream.flMin.col, stream.flMax.col ) );
+      append_dest( pfb->PeekRawLineSeg( stream.flMin.lin, stream.flMin.col, stream.flMax.col-1 ) );
       }
    else {
       auto yLine( stream.flMin.lin );
