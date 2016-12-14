@@ -372,21 +372,25 @@ do
    -- [^|;] since "filename grammar" is overloaded to allow "Literal lists of
    -- path components separated by VBARs ('|')"
    --
-   local EnvNamePat  = "([^|;]-)"
-   local EnvSpecPats = {        -- note that '%', not '\', is the Lua-pattern metachar escaper!
-                       "%$"   ..EnvNamePat.. ":"  ,
-                       "%$%(" ..EnvNamePat.. "%)" ,
-                       "%%"   ..EnvNamePat.. "%%" ,
-                       "%${"  ..EnvNamePat.. "}"  ,
-                       }
+   local envNamePat = "([^|;]-)"
+   local function envExpanderGen( pat )
+      return function( st ) return st:gsub( pat, envReplacer ) end
+      end
+   local envExpanders = {        -- note that '%', not '\', is the Lua-pattern metachar escaper!
+      envExpanderGen( "%$"   ..envNamePat.. ":" ),
+      envExpanderGen( "%$"   ..envNamePat.. ":" ),
+      envExpanderGen( "%$%(" ..envNamePat.. "%)"),
+      envExpanderGen( "%%"   ..envNamePat.. "%%"),
+      envExpanderGen( "%${"  ..envNamePat.. "}" ),
+      }
 
    -- print( "dirsep_preferred=" .. (dirsep_os or "nil") )
    local dosDirOfThisFilePat = dirsep_os == "\\" and "^%%~dp0"
    -- print( "dosDirOfThisFilePat=" .. (dosDirOfThisFilePat or "nil") )
-   local winStrExpandEnvVars = dosDirOfThisFilePat and
-      function( str )
+   envExpanders[1+#envExpanders] = dosDirOfThisFilePat and
+      function( str ) -- in the elegant cmd.exe (batch) language, %~dp0 expands to "path of current batch file[name] (%0 e.g. argv[0])"
          if str:match( dosDirOfThisFilePat ) then
-            local curfn = GetCurrentFilename()
+            local curfn = GetCurrentFilename()  -- ASSUMPTION: current file is source of str!
             if curfn and #curfn > 0 then
                local curfpath = PathOf( curfn )
                if curfpath and #curfpath > 0 and IsDir(curfpath) then
@@ -396,14 +400,12 @@ do
             end
          return str
          end
-   or function( str ) return str end
 
    function StrExpandEnvVars( str ) -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
       -- print( "StrExpandEnvVars+("..str..")" )
-      for _, pat in ipairs(EnvSpecPats) do
-         str = str:gsub( pat, envReplacer )
+      for _, fxn in ipairs(envExpanders) do
+         str = fxn( str )
          end
-      str = winStrExpandEnvVars( str )
       -- print( "StrExpandEnvVars-("..str..")" )
       return str
       end
