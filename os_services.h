@@ -274,6 +274,7 @@ void STIL SetCmdAbend()                   { SetUserInterrupt_( CMD_ABEND ); }
 // called as needed (rarely)
 void STIL SetUserChoseEarlyCmdTerminate() { SetUserInterrupt_( USER_CHOSE_EARLY_CMD_TERMINATE ); }
 
+STIL   PCChar OsName()    { return WL( "win32", "linux" ); }
 extern PCChar OsVerStr();
 
 //--------------------------------------------------------------------------------

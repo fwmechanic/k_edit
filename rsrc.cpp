@@ -169,8 +169,6 @@ STIL PCChar GetDisplayName() {
           ;
    }
 
-STIL PCChar GetOsName() { return WL( "os.win32", "os.linux" ); }
-
 int ReinitializeMacros( bool fEraseExistingMacros ) {
    if( fEraseExistingMacros ) {
       UnbindMacrosFromKeys();
@@ -183,9 +181,18 @@ int ReinitializeMacros( bool fEraseExistingMacros ) {
    auto assignDone(0);
    if( g_CLI_fUseRsrcFile ) {
       RsrcFileLdAllNamedSections( "@startup"      , &assignDone ); // [@startup]
-      RsrcFileLdAllNamedSections( GetOsName()     , &assignDone ); // [osname]
-      RsrcFileLdAllNamedSections( OsVerStr()      , &assignDone ); // [osver]
+      std::string key( "os." );
+                  key.append( OsName() );
+      RsrcFileLdAllNamedSections( key   , &assignDone ); // [os.osname]
+     #if 0
+      const stref verval( OsVerStr() );
+      if( !verval.empty() ) {
+                  key.append( "." );
+                  key.append( verval );
+         RsrcFileLdAllNamedSections( key          , &assignDone ); // [os.osname.osver]
+         }
       RsrcFileLdAllNamedSections( GetDisplayName(), &assignDone ); // [vidname]
+     #endif
       }
    if( g_CurFBuf() ) {
       FBOP::CurFBuf_AssignMacros_RsrcLd();

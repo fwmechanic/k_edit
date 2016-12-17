@@ -19,16 +19,22 @@
 
 #pragma once
 
-#define  DEBUG_LOGGING  1
-#define  OLDGREP  0
-
+#if !defined(WL)
+// porting abbreviation tool
 #if defined(_WIN32)
-   #define  MOUSE_SUPPORT  1
+#   define WL(ww,ll)  ww
 #else
-   #define  MOUSE_SUPPORT  0
+#   define WL(ww,ll)  ll
+#endif
 #endif
 
-#define USE_STAT64 0
+#define  DEBUG_LOGGING  1
+#define  OLDGREP  0
+#define  DBGHILITE  0
+#define  MOUSE_SUPPORT  WL(1,0)
+#define  VARIABLE_WINBORDER  WL(1,0)
+
+#define  USE_STAT64 0
 
 
 #if defined(_WIN32)
@@ -92,7 +98,6 @@ extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list va
 #undef  CMDTBL_H_CMD_TBL_PTR_MACROS
 //---------------------------------
 
-#include "ed_features.h"
 #include "ed_vars.h"
 #include "ed_edkc.h"
 #include "ed_protos.h"

@@ -46,7 +46,7 @@ Path::str_t Path::GetCwd_() {
    return s_cwdbuf.c_str();        // works  on ubuntu 16.04.1
    }
 
-PCChar OsVerStr() { return "Linux"; }
+PCChar OsVerStr()  { return ""; }
 
 Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
    // first approximation based on

@@ -23,22 +23,23 @@
 
 #pragma once
 
+#if !defined(WL)
 // porting abbreviation tool
 #if defined(_WIN32)
 #   define WL(ww,ll)  ww
 #else
 #   define WL(ww,ll)  ll
 #endif
-
-// VC7.1: default storage class for inline is static, so defining STIL as 'STIL' was redundant
-// (other compilers may vary)
-//
-#define STIL  static inline
+#endif
 
 // I've been getting auto-happy lately, but in some cases we don't want (or can't use) auto; annotate these with NOAUTO
 #define  NOAUTO
 
+// VC7.1: default storage class for inline is static, so defining STIL as 'STIL' was redundant
+// (other compilers may vary)
+//
 #define  STIL  static inline
+
 #define  STATIC_VAR  static
 #define  COMPLEX_STATIC_VAR  STATIC_VAR
 #define  STATIC_FXN  static

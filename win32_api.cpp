@@ -21,17 +21,17 @@
 
 #include "win32_pvt.h"
 
-// OsVerStr WinXP Pro = "W.5.1"
-// OsVerStr Win7      = "W.6.1"
-// OsVerStr Win8      = "W.6.2"
-// OsVerStr Win8.1    = "W.6.2"
+// OsVerStr WinXP Pro = "5.1"
+// OsVerStr Win7      = "6.1"
+// OsVerStr Win8      = "6.2"
+// OsVerStr Win8.1    = "6.2"
 
 PCChar OsVerStr() {
-   STATIC_VAR char dest[32];
+   STATIC_VAR char dest[2*11];
    if( 0==dest[0] ) {
       Win32::OSVERSIONINFO osvi = { sizeof osvi };
       Win32::GetVersionEx(&osvi);
-      _snprintf( dest, sizeof dest, "W.%u.%u", osvi.dwMajorVersion, osvi.dwMinorVersion );
+      _snprintf( dest, sizeof dest, "%u.%u", osvi.dwMajorVersion, osvi.dwMinorVersion );
       }
    return dest;
    }
