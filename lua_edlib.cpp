@@ -56,6 +56,7 @@ LUAFUNC_(StartShellExecuteProcess) { StartShellExecuteProcess( S_(1), So0_(2) );
 LUAFUNC_(StartConProcess)    {    R_int( StartConProcess( S_(1) ) ); }
 LUAFUNC_(StartGuiProcess)    {    R_int( StartGuiProcess( S_(1) ) ); }
 LUAFUNC_(OsErrStr)           { linebuf lb; OsErrStr( BSOB(lb) ); R_str( lb ); }
+LUAFUNC_(OsName)             { R_str( OsName() ); }
 LUAFUNC_(OsVer)              { R_str( OsVerStr() ); }
 LUAFUNC_(rmargin)            { R_int( g_iRmargin ); }
 
@@ -678,6 +679,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        { "ModifyTimeOfDiskFile"        , ModifyTimeOfDiskFile        },
        { "Msg"                         , Msg                         },
        { "OsErrStr"                    , OsErrStr                    },
+       { "OsName"                      , OsName                      },
        { "OsVer"                       , OsVer                       },
        { "Path_Dirnm"                  , Path_Dirnm                  },
        { "Path_Fnm"                    , Path_Fnm                    },

@@ -3956,7 +3956,15 @@ printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )
 
 --########################################################################################################################################
 -- DO NOT DELETE NEXT LINE!  (the global variable) filesettings IS READ BY C++ CODE!!!
-filesettings = load_env( RsrcFilename( "filesettings" ), { print=print, NameExtOf=NameExtOf, ExtOf=ExtOf, DeepCopy=DeepCopy, setmetatable=setmetatable } )
+filesettings = load_env( RsrcFilename( "filesettings" ), {
+     print         = print         ,
+     NameExtOf     = NameExtOf     ,
+     ExtOf         = ExtOf         ,
+     DeepCopy      = DeepCopy      ,
+     setmetatable  = setmetatable  ,
+     OsName        = OsName        ,
+     }
+  )
 print( "filesettings is a "..type(filesettings) )
 --########################################################################################################################################
 
