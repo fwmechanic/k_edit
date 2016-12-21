@@ -42,10 +42,18 @@ local plat_pat = "^" .. assert( plat_pats[platform_arg], platform_arg.." is unkn
 
 -- io.write( "w_only = '", w_only,"'","\n" )  os.exit(1)
 
-local maxAttrWidth  = 0
-local maxfnmWidth   = 0
-local maxNameWidth  = 0
-local maxMNameWidth = 0
+local function maxAccumr()
+   local max = 0
+   return function( len )
+      if len==nil then return max end  -- read mode: updt nil, return max
+      if max < len then max = len end  -- updt mode: updt max, return nil
+      end
+   end
+
+local maxAttrWidth  = maxAccumr()
+local maxfnmWidth   = maxAccumr()
+local maxNameWidth  = maxAccumr()
+local maxMNameWidth = maxAccumr()
 local tbl = {}
 
 for line in io.lines() do
@@ -78,10 +86,10 @@ for line in io.lines() do
          , has_gts = plat_mat == "s"
          }
 
-      if maxNameWidth  < #name      then maxNameWidth  = #name      end
-      if maxMNameWidth < #mname     then maxMNameWidth = #mname     end
-      if maxAttrWidth  < #attr_expr then maxAttrWidth  = #attr_expr end
-      if maxfnmWidth   < #fxn       then maxfnmWidth   = #fxn       end
+      maxNameWidth ( #name      )
+      maxMNameWidth( #mname     )
+      maxAttrWidth ( #attr_expr )
+      maxfnmWidth  ( #fxn       )
       end
    end
 
@@ -96,7 +104,7 @@ local gfh = { "#elif defined(CMDTBL_H_GTS_METHODS)\n\n" }
 local hfh = { "#elif defined(CMDTBL_H_CMD_TBL_PTR_MACROS)\n\n" }
 local cfh = { "#elif defined(CMDTBL_H_CMD_TBL_INITIALIZERS)\n\n" }
 
-local hoist1 = "#define  " .. rpad( "", 4+maxMNameWidth + 30 ) .. "   fn_"  -- const expr optzn
+local hoist1 = "#define  " .. rpad( "", 4+maxMNameWidth() + 30 ) .. "   fn_"  -- const expr optzn
 local idx = 0;
 for ix, tb in tu.PairsBySortedKeys( tbl ) do  -- print( "-> \"" .. ix, tb.fxn .. "\"" )
 
@@ -107,17 +115,17 @@ for ix, tb in tu.PairsBySortedKeys( tbl ) do  -- print( "-> \"" .. ix, tb.fxn ..
       gfh[1+#gfh] = table.concat{ "   eRV ", tb.fxn, "();\n" }
       end
 
-   hfh[1+#hfh] = table.concat{ "#define  pCMD_", rpad( tb.mname, maxNameWidth  ), "  (g_CmdTable + ", tostring(idx),")\n"
-            , hoist1          , rpad( tb.mname, maxMNameWidth ), "  (pCMD_", tb.mname,"->d_func)\n"
+   hfh[1+#hfh] = table.concat{ "#define  pCMD_", rpad( tb.mname, maxNameWidth() ), "  (g_CmdTable + ", tostring(idx),")\n"
+            , hoist1          , rpad( tb.mname, maxMNameWidth() ), "  (pCMD_", tb.mname,"->d_func)\n"
             }
 
-   local fnmrpad = rpad( tb.fxn, maxfnmWidth )
+   local fnmrpad = rpad( tb.fxn, maxfnmWidth() )
    local gtspfx = "&GTS::"
    cfh[1+#cfh] = table.concat{ "   { "
-            , rpad( '"' .. ix .. '"', 2+maxNameWidth )
+            , rpad( '"' .. ix .. '"', 2+maxNameWidth() )
             , ", ", "&ARG::"..fnmrpad
-            , ", ", hasGTSfunc and (gtspfx..fnmrpad) or rpad( " nullptr", maxfnmWidth+#gtspfx )
-            , ", ", rpad( tb.attr, maxAttrWidth )
+            , ", ", hasGTSfunc and (gtspfx..fnmrpad) or rpad( " nullptr", maxfnmWidth()+#gtspfx )
+            , ", ", rpad( tb.attr, maxAttrWidth() )
             , " _AHELP( ", fmt( "%q", tb.help )," ) }, // CMD_", ix,"\n"
             }
 
