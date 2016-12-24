@@ -39,7 +39,7 @@ local hiPink   = INTENSE + Purple
 local hiYellow = INTENSE + Yellow
 local hiWhite  = INTENSE + White
 
--- on the Windows PC's I use, non-INTENSE colors (EX: Green) tend to be too dark, -> barely visible
+-- hack: on the Windows PC's I use, non-INTENSE colors (EX: Green) tend to be too dark, -> barely visible
 local intifwin = OsName()=="win32" and function( color ) return INTENSE + (color % INTENSE) end or function( color ) return color end
 
 print "hello 3"
@@ -84,6 +84,7 @@ print "hello 5"
 
 local text_settings  = { colors = darkColors }
 local krsrc_settings = { colors = darkColors, eolCommentDelim = "#" }
+local sprintascii_settings = { colors = darkColors, eolCommentDelim = ";;" }  -- hack: eolCommentDelim is valid only at start of line
 local diff_settings  = { colors = stdColors, hilite = "diff" }
 
 local bat_settings   = { colors = stdColors, eolCommentDelim = "rem " }
@@ -115,6 +116,7 @@ ftype_map = {  -- ref'd from C, key source: arg "DetermineFType" tags
    unknown      = text_settings                        ,
    wildcard     = ushell_settings                      ,
    diff         = diff_settings                        ,
+   sprintascii  = sprintascii_settings                 ,
    [""]         = { colors = stdColors }               ,
    }
 
