@@ -28,15 +28,6 @@
 #endif
 #endif
 
-#define  DEBUG_LOGGING  1
-#define  OLDGREP  0
-#define  DBGHILITE  0
-#define  MOUSE_SUPPORT  WL(1,0)
-#define  VARIABLE_WINBORDER  WL(1,0)
-
-#define  USE_STAT64 0
-
-
 #if defined(_WIN32)
    // in order to use _stat64
    // http://stackoverflow.com/questions/12539488/determine-64-bit-file-size-in-c-on-mingw-32-bit
@@ -53,21 +44,32 @@
 #include <cctype>
 #include <ctime>
 #include <climits>
+// standard-ish C headers
+#include <malloc.h>    // for alloca()
+#include <sys/stat.h>  // for struct _stat
+#if !defined(_WIN32)
+   // Linux-specific string fxns: strcasecmp, strncasecmp, etc.
+   #include "strings.h"
+#endif
 
 // std C++ headers
 #include <memory>
 #include <utility>  // for std::move,std::swap
 #include <algorithm>
 #include <string>
-#if !defined(_WIN32)
-   // Linux-specific string fxns: strcasecmp, strncasecmp, etc.
-   #include "strings.h"
-#endif
 #include <vector>
 
-// standard-ish C headers
-#include <malloc.h>    // for alloca()
-#include <sys/stat.h>  // for struct _stat
+//*****************                                 *****************
+//*****************  begin project-header includes  *****************
+//*****************                                 *****************
+
+// "feature-flags" for project-header includes
+#define  DEBUG_LOGGING  1
+#define  OLDGREP  0
+#define  DBGHILITE  0
+#define  MOUSE_SUPPORT  WL(1,0)
+#define  VARIABLE_WINBORDER  WL(1,0)
+#define  USE_STAT64 0
 
 #if defined(_WIN32)
 #else
@@ -76,20 +78,12 @@
 
 #include "my_types.h"
 #include "ed_mem.h"
-
-// for my_strutils.h:
-extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val );
-#define   use_vsnprintf  chkdVsnprintf
-
 #include "my_strutils.h"
 #include "filename.h"
 #include "dlink.h"
 #include "stringlist.h"
-
 #include "krbtree.h"
-
 #include "ed_core.h"
-
 #include "ed_os_generic.h"
 
 //---------------------------------
@@ -101,5 +95,4 @@ extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list va
 #include "ed_vars.h"
 #include "ed_edkc.h"
 #include "ed_protos.h"
-
 #include "my_log.h"

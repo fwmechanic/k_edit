@@ -24,6 +24,9 @@
 #include "my_types.h"
 #include "ed_mem.h" // for Strdup()
 
+extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val );
+#define   use_vsnprintf  chkdVsnprintf
+
 #ifndef WL
    // porting abbreviation tool
    #if defined(_WIN32)
