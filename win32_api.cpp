@@ -31,7 +31,7 @@ PCChar OsVerStr() {
    if( 0==dest[0] ) {
       Win32::OSVERSIONINFO osvi = { sizeof osvi };
       Win32::GetVersionEx(&osvi);
-      _snprintf( dest, sizeof dest, "%u.%u", osvi.dwMajorVersion, osvi.dwMinorVersion );
+      _snprintf( dest, sizeof dest, "%lu.%lu", osvi.dwMajorVersion, osvi.dwMinorVersion );
       }
    return dest;
    }
