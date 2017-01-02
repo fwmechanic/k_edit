@@ -191,7 +191,7 @@ enum WinBorderChars
 
 #endif
 
-enum { DBG_HL_EVENT = 0 };
+constexpr auto DBG_HL_EVENT( false );
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -482,7 +482,7 @@ private:
    COL          d_xWuc = -1;
    };
 
-void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) { enum { DBG_HL_EVENT=0 };
+void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
    d_stSel.clear();
    if( d_yWuc == lin && d_sb.find( src ) ) { /* assume transitivity */                                          DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
       if( d_xWuc != col ) {
@@ -1260,7 +1260,6 @@ void HiliteAddin_clang::scan_pass( LINE yMaxScan ) {
 
 class HiliteAddin_lua : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
-
    enum scan_rv { atEOF, in_code, in_1Qstr, in_2Qstr, in_long };
    // scan_pass() methods; all must have same proto as called via pfx
    scan_rv find_end_code    ( PCFBUF pFile, Point &pt ) ;
@@ -1755,7 +1754,7 @@ struct HiLiteSpeedTable {
    const HiLiteRec *pHL = nullptr;  // references, does NOT own!
    };
 
-enum { HILITE_SPEEDTABLE_LINE_INCR = 16 * 1024 };
+constexpr auto HILITE_SPEEDTABLE_LINE_INCR( 16 * 1024 );
 STIL size_t SpeedTableIndex( LINE yLine ) {
    const size_t idx( yLine / HILITE_SPEEDTABLE_LINE_INCR );                     0 && DBG( "SpeedIdx  ==============> %d -> %" PR_SIZET "", yLine, idx );
    return idx;
@@ -2024,7 +2023,7 @@ void FBUF::Push_yChangedMin() {
    d_yChangedMin = yMax+1;
    }
 
-enum { DBADIN=0 };
+constexpr auto DBADIN( false );
 
 bool View::InsertAddinLast( HiliteAddin *pAddin ) {
    const auto nm( pAddin->Name() );                   DBADIN && DBG( "%s %s", __PRETTY_FUNCTION__, nm );
@@ -3106,7 +3105,7 @@ void View::InsertHiLitesOfLineSeg
    , const bool                isActiveWindow
    , const bool                isCursorLine
    ) const {
-   enum { EXCLUSIVE_VIEWHILITES = 0 };
+   constexpr auto EXCLUSIVE_VIEWHILITES( false );
    if( EXCLUSIVE_VIEWHILITES && d_pHiLites ) {
       const int hls( d_pHiLites->InsertHiLitesOfLineSeg( yLine, xIndent, xMax, alcc, pFirstPossibleHiLite ) );  0 && DBG( "%d hls=%d", yLine, hls );
       // if( hls > 0 ) return;
@@ -3162,7 +3161,7 @@ void View::GetLineForDisplay
          , showBlanks ? CFBuf()->TabDispChar()   : ' '
          , showBlanks ? CFBuf()->TrailDispChar() : 0
          );
-      enum { PCT_WIDTH=7 };
+      constexpr decltype(xWidth) PCT_WIDTH( 7 );
       if( DrawVerticalCursorHilite() && (xWidth > PCT_WIDTH) && isActiveLine ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / CFBuf()->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
