@@ -385,7 +385,7 @@ do
       }
 
    -- print( "dirsep_preferred=" .. (dirsep_os or "nil") )
-   local dosDirOfThisFilePat = dirsep_os == "\\" and "^%%~dp0"
+   local dosDirOfThisFilePat = dirsep_os == "\\" and "^%%~dp0" or nil
    -- print( "dosDirOfThisFilePat=" .. (dosDirOfThisFilePat or "nil") )
    envExpanders[1+#envExpanders] = dosDirOfThisFilePat and
       function( str ) -- in the elegant cmd.exe (batch) language, %~dp0 expands to "path of current batch file[name] (%0 e.g. argv[0])"
