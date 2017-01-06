@@ -1575,7 +1575,7 @@ class HiliteAddin_bash : public HiliteAddin_StreamParse {
 public:
    HiliteAddin_bash( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
    ~HiliteAddin_bash() {}
-   PCChar Name() const override { return "Python_Comment"; }
+   PCChar Name() const override { return "Bash_Comment"; }
    };
 
 HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };
@@ -1658,8 +1658,11 @@ public:
 bool HiliteAddin_Diff::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    const auto rl( CFBuf()->PeekRawLine( yLine ) );
    if( !rl.empty() ) {
-           if( '+' == rl[0] ) { alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgGRN|FGhi ); /*DBG( "+" );*/ }
-      else if( '-' == rl[0] ) { alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgRED|FGhi ); /*DBG( "-" );*/ }
+      switch( rl[0] ) {
+         case '+': alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgGRN|FGhi ); /*DBG( "+" );*/ break;
+         case '-': alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgRED|FGhi ); /*DBG( "-" );*/ break;
+         default: break;
+         }
       }
    return false;
    }
@@ -1841,14 +1844,6 @@ void View::RedrawHiLiteRects() {
 
 //-----------------------------------------------------------------------------
 
-STATIC_FXN bool Rect1ContainsRect2( const Rect &r1, const Rect &r2 ) {
-   return (r1.flMin.lin <= r2.flMin.lin)
-       && (r1.flMax.lin >= r2.flMax.lin)
-       && (r1.flMin.col <= r2.flMin.col)
-       && (r1.flMax.col >= r2.flMax.col)
-       ;
-   }
-
 void ViewHiLites::UpdtSpeedTbl( HiLiteRec *pThis ) {
    const auto idx( SpeedTableIndex( pThis->rect.flMax.lin ) );
    auto &stEntry( d_SpeedTable[ idx ].pHL );
@@ -1867,13 +1862,13 @@ void ViewHiLites::vhInsHiLiteBox( int newColorIdx, Rect newRgn ) {
    DLINKC_LAST_TO_FIRST( Head, dlink, pThis ) {
       auto &thisRn( pThis->rect );  0 && DBG( "Rn[%d]=%p [%d-%d] [%d-%d]", ++ix, pThis, thisRn.flMin.lin, thisRn.flMax.lin, thisRn.flMin.col, thisRn.flMax.col );
       if( newColorIdx == pThis->colorIndex ) {
-         if( Rect1ContainsRect2( newRgn, thisRn ) ) {
+         if( newRgn.contains( thisRn ) ) {
             thisRn = newRgn;  // expand
             UpdtSpeedTbl( pThis );
             DbgHilite( '-' );
             return;
             }
-         if( Rect1ContainsRect2( thisRn, newRgn ) ) { // already exists: do nothing
+         if( thisRn.contains( newRgn ) ) { // already exists: do nothing
             DbgHilite( '-' );
             return;
             }
@@ -2048,16 +2043,16 @@ void View::HiliteAddins_Init() {
      ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, CFBuf()->FType().c_str() );
       const auto pFTS( CFBuf()->GetFTypeSettings() );
      #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
-             /* ALWAYS */              IAL( HiliteAddin_Pbal            );
+             /* ALWAYS */              IAL( HiliteAddin_Pbal       );
       switch( pFTS->d_hl_id ) {
-         case FTypeSetting::HL_C     : IAL( HiliteAddin_cond_CPP        );
-                                       IAL( HiliteAddin_clang           );  break;
-         case FTypeSetting::HL_MAKE  : IAL( HiliteAddin_cond_gmake      );
-                                       IAL( HiliteAddin_python          );  break;
-         case FTypeSetting::HL_LUA   : IAL( HiliteAddin_lua             );  break;
-         case FTypeSetting::HL_PYTHON: IAL( HiliteAddin_python          );  break;
-         case FTypeSetting::HL_BASH  : IAL( HiliteAddin_python          );  break;
-         case FTypeSetting::HL_DIFF  : IAL( HiliteAddin_Diff            );  break;
+         case FTypeSetting::HL_C     : IAL( HiliteAddin_cond_CPP   );
+                                       IAL( HiliteAddin_clang      );  break;
+         case FTypeSetting::HL_MAKE  : IAL( HiliteAddin_cond_gmake );
+                                       IAL( HiliteAddin_python     );  break;
+         case FTypeSetting::HL_LUA   : IAL( HiliteAddin_lua        );  break;
+         case FTypeSetting::HL_PYTHON: IAL( HiliteAddin_python     );  break;
+         case FTypeSetting::HL_BASH  : IAL( HiliteAddin_python     );  break;
+         case FTypeSetting::HL_DIFF  : IAL( HiliteAddin_Diff       );  break;
          default: if( pFTS->d_eolCommentDelim[0] ) {
                      InsertAddinLast( new HiliteAddin_EolComment( this, pFTS->d_eolCommentDelim ) );
                      }

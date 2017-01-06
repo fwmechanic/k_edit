@@ -199,12 +199,19 @@ struct Rect {
    Rect( LINE yUlc, COL xUlc, LINE yLrc, COL xLrc ) : flMin(yUlc, xUlc), flMax(yLrc, xLrc) {}
    Rect( PFBUF pFBuf );
    Rect( bool fSearchFwd );
-   COL  Width()  const { return flMax.col - flMin.col + 1; }
-   COL  Height() const { return flMax.lin - flMin.lin + 1; }
+   COL  width()  const { return flMax.col - flMin.col + 1; }
+   COL  height() const { return flMax.lin - flMin.lin + 1; }
    int  cmp_line( LINE yLine ) const { // IGNORES EFFECT OF COLUMNS!
-      if( yLine < flMin.lin ) { return -1; }
-      if( yLine > flMax.lin ) { return +1; }
+      if( yLine < this->flMin.lin ) { return -1; }
+      if( yLine > this->flMax.lin ) { return +1; }
       return 0;
+      }
+   bool contains( const Rect &r2 ) const {
+      return (this->flMin.lin <= r2.flMin.lin)
+          && (this->flMax.lin >= r2.flMax.lin)
+          && (this->flMin.col <= r2.flMin.col)
+          && (this->flMax.col >= r2.flMax.col)
+          ;
       }
    };
 

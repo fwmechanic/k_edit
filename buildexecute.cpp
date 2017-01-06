@@ -101,7 +101,7 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
          if( fLinesel ) {
             buf.Sprintf( "Arg [%d]  %d lines [%d..%d]"
                , Get_g_ArgCount()
-               , hilite.Height()
+               , hilite.height()
                , hilite.flMin.lin + 1
                , hilite.flMax.lin + 1
                );
@@ -109,8 +109,8 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
          else {
             buf.Sprintf( "Arg [%d]  %dw x %dh box (%d,%d) (%d,%d)"
                , Get_g_ArgCount()
-               , hilite.Width()
-               , hilite.Height()
+               , hilite.width()
+               , hilite.height()
                , hilite.flMin.lin + 1
                , hilite.flMin.col + 1
                , hilite.flMax.lin + 1
