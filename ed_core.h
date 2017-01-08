@@ -608,12 +608,22 @@ extern void DestroyViewList( ViewHead *pViewHd );
 
 struct FTypeSetting;
 
+// used to receive data decoded from state-save file string written by View::Write()
+struct ViewPersistent {
+   PChar  filename;
+   Point  origin;
+   Point  cursor;
+   time_t temptv;
+   };
+extern bool ViewPersistentInitOk( ViewPersistent &vp, const PChar viewSaveRec );
+
 class View { // View View View View View View View View View View View View View View View View View View View View View View View View
 public:
    DLinkEntry<View> dlinkViewsOfWindow;
    DLinkEntry<View> dlinkViewsOfFBUF;
                 View( const View &, PWin pWin );
-                View( PFBUF pFBuf , PWin pWin, PCChar szViewOrdinates=nullptr );
+                View( PFBUF pFBuf , PWin pWin, const ViewPersistent &vp );
+                View( PFBUF pFBuf , PWin pWin );
                 ~View();
    void         Write( FILE *fout ) const;
 private:

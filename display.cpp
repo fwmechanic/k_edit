@@ -2088,24 +2088,25 @@ View::View( const View &src, PWin pWin )
     #define PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH PR_TIMET
 #endif
 
-View::View( PFBUF pFBuf_, PWin pWin_, PCChar szViewOrdinates )
+View::View( PFBUF pFBuf_, PWin pWin_, const ViewPersistent &vp )
+   : d_pWin ( pWin_  )
+   , d_vwToPFBuf( pFBuf_ )
+   , d_LastSelect_isValid( false )
+   {
+   d_current.Cursor.Set( vp.cursor.lin, vp.cursor.col );
+   d_current.Origin.Set( vp.origin.lin, vp.origin.col );
+   FBuf()->Set_TmLastWrToDisk( vp.temptv );
+   d_prev = d_saved = d_current;
+   CommonInit();
+   }
+
+View::View( PFBUF pFBuf_, PWin pWin_ )
    : d_pWin ( pWin_  )
    , d_vwToPFBuf( pFBuf_ )
    , d_LastSelect_isValid( false )
    {
    d_current.Cursor.Set( 0, 0 );
    d_current.Origin.Set( 0, 0 );
-   if( szViewOrdinates ) {
-      time_t temptv( 0 );
-      sscanf( szViewOrdinates, " %d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d"
-         , &d_current.Origin.col
-         , &d_current.Origin.lin
-         , &d_current.Cursor.col
-         , &d_current.Cursor.lin
-         , &temptv
-         );
-      FBuf()->Set_TmLastWrToDisk( temptv );
-      }
    d_prev = d_saved = d_current;
    CommonInit();
    }
@@ -2129,6 +2130,40 @@ void View::Write( FILE *fout ) const {
        , Cursor().col, Cursor().lin
        , FBuf()->TmLastWrToDisk()
        );
+   }
+
+bool ViewPersistentInitOk( ViewPersistent &vp, const PChar viewSaveRec ) {
+   // vp
+   //    destination: filename field will point into (modified) viewSaveRec
+   //
+   // viewPersistentText
+   //    points into a WRITABLE buffer containing a record written to the tmp
+   //    file by View::Write() (with the single leading ' ' skipped)
+   //    *** THIS BUFFER IS NORMALLY WRITTEN TO *** by replacing the filename
+   //    end marker '|' with a NUL (in order for the filename to be ASCIZ) to
+   //    avoid an extra heap buffer alloc and associated filename strcpy.
+   //
+   const PChar filenameEnd( strchr( viewSaveRec, '|' ) );
+   if( !filenameEnd ) {
+      DBG( "bogus viewSaveRec fnm decode: '%s'\n", viewSaveRec );
+      return false; // invalid input: ignore
+      }
+   *filenameEnd = '\0'; // filename now ASCIZ as filename APIs mostly require ASCIZ (OS ABI defines filename strings thus)
+   const auto viewSaveRecTail( filenameEnd + 1 );
+   const auto scnt( sscanf( viewSaveRecTail, " %d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d"
+      , &vp.origin.col
+      , &vp.origin.lin
+      , &vp.cursor.col
+      , &vp.cursor.lin
+      , &vp.temptv
+      ) );
+   if( 5 != scnt ) {
+      DBG( "bogus viewSaveRecTail decode: '%s'\n", viewSaveRecTail );
+      return false;
+      }
+   vp.filename = viewSaveRec;
+   0 && DBG( " %s|%d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d\n", vp.filename, vp.origin.col, vp.origin.lin, vp.cursor.col, vp.cursor.lin, vp.temptv );
+   return true;
    }
 
 struct direct_vid_seg {

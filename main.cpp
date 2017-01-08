@@ -129,53 +129,45 @@ STATIC_FXN bool fgotline( Xbuf *xb, FILE *f ) {
       }
    }
 
-STATIC_FXN void StrStartOfNext2Tokens( PChar pszStringToSplit, PPChar pchTokenStart, PPChar pchNextTokenStart ) {
-   *pchTokenStart = StrPastAnyBlanks( pszStringToSplit );
-   auto pC( StrToNextBlankOrEos( *pchTokenStart ) );
-   if( *pC ) {
-      *pC++ = '\0';
-      pC = StrPastAnyBlanks( pC );
-      }
-   *pchNextTokenStart = pC;
-   }
-
 STATIC_VAR struct {
    bool  fDoIt;
    PFBUF logfb;
    } s_ForgetAbsentFiles;  // in lieu of passing params thru the depths
 
-STATIC_FXN void InitNewView_File( PChar filename ) {
-   const PChar filenameEnd( strchr( filename, '|' ) );
-   PChar pNextTokenStart;
-   if( filenameEnd ) {
-      *filenameEnd = '\0'; // filename becomes ASCIZ as filename APIs mostly require ASCIZ (OS ABI defines filename strings thus)
-      pNextTokenStart = filenameEnd + 1;
-      }
-   else {
-      StrStartOfNext2Tokens( filename, &filename, &pNextTokenStart );
-      }
-   if( s_ForgetAbsentFiles.fDoIt && !FileAttribs( filename ).Exists() ) {
+STATIC_FXN void InitNewView_File( const PChar viewPersistentText ) {
+   // Conditionally construct a View from the contents of viewPersistentText
+   // viewPersistentText
+   //    points into a WRITABLE buffer containing a record written to the tmp
+   //    file by View::Write() (with the single leading ' ' skipped)
+   //
+   // To implement s_ForgetAbsentFiles mode, we construct the View iff the named
+   // file exists.  In order to perform this file-exists test, a ViewPersistent
+   // instance (which will be used to construct the View if this is done) is
+   // "constructed" from the viewPersistentText buffer, a process that MODIFIES
+   // the viewPersistentText buffer.  See ViewPersistentInitOk...
+   //
+   ViewPersistent vp;
+   if( !ViewPersistentInitOk( vp, viewPersistentText ) ) { return; }
+   // viewPersistentText HAS BEEN MODIFIED!!!
+   if( s_ForgetAbsentFiles.fDoIt && !FileAttribs( vp.filename ).Exists() ) {
       // garbage-discard mode: don't create Views for nonexistent files
       if( !s_ForgetAbsentFiles.logfb ) {
          FBOP::FindOrAddFBuf( "<forgotten-files>", &s_ForgetAbsentFiles.logfb );
          s_ForgetAbsentFiles.logfb->PutFocusOn();
          }
-      s_ForgetAbsentFiles.logfb->PutLastLine( filename );
+      s_ForgetAbsentFiles.logfb->PutLastLine( vp.filename );
       DispDoPendingRefreshes();
-      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      0 && DBG( "%s dropping '%s'", FUNC, filename );
       }
    else {
      #if !defined(_WIN32)
-      stref fnm( filename );
-      if( fnm.starts_with( "/tmp/" ) && !FileAttribs( filename ).Exists() ) {
+      stref fnm( vp.filename );
+      if( fnm.starts_with( "/tmp/" ) && !FileAttribs( vp.filename ).Exists() ) {
          return;
          }
      #endif
-      auto pView( new View( FBOP::FindOrAddFBuf( filename ), g_CurWinWr(), pNextTokenStart ) );
+      auto pView( new View( FBOP::FindOrAddFBuf( vp.filename ), g_CurWinWr(), vp ) );
       auto &cvwHd( g_CurViewHd() );
       DLINK_INSERT_LAST( cvwHd, pView, dlinkViewsOfWindow ); // push_back()
-      0 && DBG( "%p %s %s", pView, filename, pNextTokenStart );
       }
    }
 
