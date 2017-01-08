@@ -75,11 +75,6 @@ typedef const void *        PCVoid;
 // x64 Linux   LP64  I32LP64   16  32    64         64          64
 // 32  <both>   ??     ??      16  32    32         32?         32
 
-// I     For signed integer types, causes printf to expect ptrdiff_t-sized integer argument; for unsigned integer types, causes printf to expect size_t-sized integer argument. Commonly found in Win32/Win64 platforms.
-// I32   For integer types, causes printf to expect a 32-bit (double word) integer argument. Commonly found in Win32/Win64 platforms.
-// I64   For integer types, causes printf to expect a 64-bit (quad word) integer argument. Commonly found in Win32/Win64 platforms.
-
-// Check GCC
 #if defined(__GNUC__)
     #define PR__i64       "ll"
     #define PR__i64d      PR__i64 "d"
