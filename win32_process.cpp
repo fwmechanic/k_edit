@@ -942,7 +942,7 @@ NEXT_OUTBUF:
       ++s_nxt_shelljob_output_FBUF_num;
       }
    char fnm[30];
-   auto pFB( FBOP::FindOrAddFBuf( safeSprintf( BSOB(fnm), "<shell_output-%03Iu>", s_nxt_shelljob_output_FBUF_num ) ) );
+   auto pFB( FBOP::FindOrAddFBuf( safeSprintf( BSOB(fnm), "<shell_output-%03" PR_SIZET ">", s_nxt_shelljob_output_FBUF_num ) ) );
    if( pFB ) {
       if( pFB->d_pInternalShellJobExecutor ) goto NEXT_OUTBUF; // don't want to append to an FBUF currently in use by a d_pInternalShellJobExecutor
       pFB->PutFocusOn();

@@ -1178,10 +1178,10 @@ sridx FreeIdxOfCol( const COL tabWidth, stref content, const COL colTgt ) {
 STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
    const stref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
-      // printf( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
+      // printf( "%s( %s, %d ) -> %" PR_BSRSIZET "\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
       // above generates a warning: format '%u' expects argument of type 'unsigned int' while
       // passing the identical format string to FmtStr does not elicit such a warning
-      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) ).k_str() );
+      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) ).k_str() );
       }
    printf( "\n" );
    }
@@ -1190,7 +1190,7 @@ STATIC_FXN void sweep_FreeIdxOfCol( COL tw, PCChar content ) {
    const stref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
       // see above for why we're using FmtStr here... bizarre!
-      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "u\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) ).k_str() );
+      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) ).k_str() );
       }
    printf( "\n" );
    }
@@ -1401,11 +1401,11 @@ void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, st
       }
    else { // segment ins/overwrite case
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
-      const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "u/%" PR_BSRSIZET "u]", __func__, xLeftIncl, holewidth, inslen );
+      const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "/%" PR_BSRSIZET "]", __func__, xLeftIncl, holewidth, inslen );
       DupLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );
       const auto tw( TabWidth() );
       const auto lcols( StrCols( tw, dest ) );
-      const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "u/%d maxCol=%" PR_BSRSIZET "u", __func__, dest.length(), lcols, maxCol );
+      const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "/%d maxCol=%" PR_BSRSIZET, __func__, dest.length(), lcols, maxCol );
       const auto ixLeftIncl( FreeIdxOfCol( tw, dest, xLeftIncl ) );
       Assert( lcols >= xLeftIncl );
       // dest contains:

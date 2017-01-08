@@ -81,12 +81,12 @@ typedef const void *        PCVoid;
 
 // Check GCC
 #if defined(__GNUC__)
-    #define PR__i64       WL("I64","ll")
+    #define PR__i64       "ll"
     #define PR__i64d      PR__i64 "d"
-    #define PR_SIZET      WL("Iu","zu")
-    #define PR_PTRDIFFT   WL("Id","td")
-    #define PR_BSRSIZET   WL("I","l")
-    #define PR_FILESIZE_T WL(PR__i64d,"ld")
+    #define PR_SIZET      "zu"
+    #define PR_PTRDIFFT   "td"
+    #define PR_BSRSIZET   WL(PR_SIZET,"lu")
+    #define PR_FILESIZET  WL(PR__i64d,"ld")
     #if defined(__x86_64__) || defined(__ppc64__)
         // #define ENVIRONMENT64
         #if defined(_WIN32)

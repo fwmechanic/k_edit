@@ -43,6 +43,8 @@ extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list va
    // use safeSprintf instead of sprintf, _snprintf or snprintf!
    // #define  snprintf   _snprintf
    // #define  vsnprintf  _vsnprintf
+   // NB: the above (MSVC RTL *printf fxns) use DIFFERENT format specifiers than MinGW in gnu_printf format mode; see attr_format.h
+   //     therefore restoring support for building with MSVC will 100% run afoul of current code using incompatible format specifiers
 #endif
 
 // snprintf_full: use to write multiple formatted strings to a fixed-len buffer

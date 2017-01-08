@@ -318,7 +318,7 @@ FileStat GetFileStat( PCChar pszFilename ) { enum { DB=0 };
       const auto fbytes( fio::SeekEoF( fh ) );
       rv.Refresh( fh );
       fio::Close( fh );
-      DB&&DBG("%s: %" WL( PR__i64 "u", "ld" ) " bytes", pszFilename, fbytes );
+      DB&&DBG("%s: %" WL( PR__i64 "u", "lld" ) " bytes", pszFilename, fbytes );
       }
    return rv;
    }

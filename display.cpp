@@ -2081,13 +2081,6 @@ View::View( const View &src, PWin pWin )
    CommonInit();
    }
 
-// pardon me while I go insane  20160428 still a problem
-#if (defined(__x86_64__) || defined(__ppc64__)) && defined(_WIN32)
-    #define PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "ll"
-#else
-    #define PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH PR_TIMET
-#endif
-
 View::View( PFBUF pFBuf_, PWin pWin_, const ViewPersistent &vp )
    : d_pWin ( pWin_  )
    , d_vwToPFBuf( pFBuf_ )
@@ -2124,7 +2117,7 @@ View::~View() {
    }
 
 void View::Write( FILE *fout ) const {
-   fprintf( fout, " %s|%d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d\n"
+   fprintf( fout, " %s|%d %d %d %d %" PR_TIMET "d\n"
        , FBuf()->Name()
        , Origin().col, Origin().lin
        , Cursor().col, Cursor().lin
@@ -2150,7 +2143,7 @@ bool ViewPersistentInitOk( ViewPersistent &vp, const PChar viewSaveRec ) {
       }
    *filenameEnd = '\0'; // filename now ASCIZ as filename APIs mostly require ASCIZ (OS ABI defines filename strings thus)
    const auto viewSaveRecTail( filenameEnd + 1 );
-   const auto scnt( sscanf( viewSaveRecTail, " %d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d"
+   const auto scnt( sscanf( viewSaveRecTail, " %d %d %d %d %" PR_TIMET "d"
       , &vp.origin.col
       , &vp.origin.lin
       , &vp.cursor.col
@@ -2162,7 +2155,7 @@ bool ViewPersistentInitOk( ViewPersistent &vp, const PChar viewSaveRec ) {
       return false;
       }
    vp.filename = viewSaveRec;
-   0 && DBG( " %s|%d %d %d %d %" PR_TIMET_FOR_THIS_MODULE_ONLY_ARRRRGH "d\n", vp.filename, vp.origin.col, vp.origin.lin, vp.cursor.col, vp.cursor.lin, vp.temptv );
+   0 && DBG( " %s|%d %d %d %d %" PR_TIMET "d\n", vp.filename, vp.origin.col, vp.origin.lin, vp.cursor.col, vp.cursor.lin, vp.temptv );
    return true;
    }
 

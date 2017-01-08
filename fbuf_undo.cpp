@@ -446,7 +446,7 @@ EdOpBoundary::EdOpBoundary( PFBUF pFBuf, int only ) // ONLY to be used when assi
    }
 
 void EdOpBoundary::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const {
-   snprintf_full( ppBuf, pBufBytes, DBG_EDOP( "%03X " ) "%s {%s} [%cts=%08lX,%09" PR_FILESIZE_T " org=(%d,%d) cur=(%d,%d)" DBG_EDOP( " %s" ) "]"
+   snprintf_full( ppBuf, pBufBytes, DBG_EDOP( "%03X " ) "%s {%s} [%cts=%08lX,%09" PR_FILESIZET " org=(%d,%d) cur=(%d,%d)" DBG_EDOP( " %s" ) "]"
 #if USE_DBGF_EDOPS
       , d_SerNum
 #endif

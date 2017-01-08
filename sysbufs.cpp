@@ -260,9 +260,9 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
       char entabStr[] = { 'e', char( '0' + pFBuf->Entab() ), 0 };
       pFout->FmtLastLine(
 #if defined(_WIN32)
-         "%-*s %c%*d L %*" PR_FILESIZE_T " %d%s {%s%s%s%s%s%s}"
+         "%-*s %c%*d L %*" PR_FILESIZET " %d%s {%s%s%s%s%s%s}"
 #else
-         "%-*s %c%*d L %*" PR_FILESIZE_T " %d%s {%s%s%s%s%s}"
+         "%-*s %c%*d L %*" PR_FILESIZET " %d%s {%s%s%s%s%s}"
 #endif
             , max.nmLen, pFBuf->UserName().c_str()
                , pFBuf->IsDirty()         ? '*'       : ' '

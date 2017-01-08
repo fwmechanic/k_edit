@@ -294,10 +294,10 @@ public:
    PCChar vFmtStr( PCChar format, va_list val ) {
       va_list  val_copy;        // http://stackoverflow.com/questions/9937505/va-list-misbehavior-on-linux
       va_copy( val_copy, val ); // http://julipedia.meroh.net/2011/09/using-vacopy-to-safely-pass-ap.html
-      const auto olen( 1+WL(_vsnprintf,vsnprintf)( nullptr, 0   , format, val_copy ) );
+      const auto olen( 1+vsnprintf( nullptr, 0   , format, val_copy ) );
       va_end( val_copy );
       const auto rv( wresize( olen ) );
-                         WL(_vsnprintf,vsnprintf)( rv     , olen, format, val );
+                         vsnprintf( rv     , olen, format, val );
       return rv;
       }
    PCChar FmtStr( PCChar format, ... ) ATTR_FORMAT(2, 3) {

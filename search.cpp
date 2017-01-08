@@ -869,7 +869,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
    // replacement done: adjust end of this line search domain
    // replacement done: position curPt->col for next search
    const ptrdiff_t lendiff( srReplace.length() - destMatchChars );
-                                                       0 && DBG("DFPoR- %" PR_BSRSIZET "u = lendiff(%" PR_BSRSIZET "u,%" PR_BSRSIZET "u)", lendiff, destMatchChars, srReplace.length() );
+                                                       0 && DBG("DFPoR- %" PR_BSRSIZET " = lendiff(%" PR_BSRSIZET ",%" PR_BSRSIZET ")", lendiff, destMatchChars, srReplace.length() );
    *colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + lendiff );
    // note that if srReplace.length()==0 (empty replacement string), then curPt->col = (curPt->col - 1);
    curPt->col = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() ) - 1; // -1 because caller lendiffs 1 COL upon return
@@ -1633,7 +1633,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
    // gateway to alternation (logical OR) in grep/TEXTARG: "^![,.|]"
    // replace the user's chosen separator with the separator that
    // FileSearcherFast::FindMatches requires
-   0 && DBG( "srchStrLen=%" PR_BSRSIZET "u: '%" PR_BSR "'", d_searchKey.length(), BSR(d_searchKey) );
+   0 && DBG( "srchStrLen=%" PR_BSRSIZET ": '%" PR_BSR "'", d_searchKey.length(), BSR(d_searchKey) );
    {
    auto ix(0);
    stref rk( d_searchKey );
@@ -1647,7 +1647,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
           }
       }
    d_pNeedles.emplace_back( pStart, std::distance( pStart, it ) );
-   0 && DBG( "needleCount=%" PR_BSRSIZET "u", d_pNeedles.size() );
+   0 && DBG( "needleCount=%" PR_BSRSIZET, d_pNeedles.size() );
    }
    // for( int ix(0) ; ix < d_needleCount ; ++ix ) {
    //    DBG( "NeedleLen[%d]=%d", ix, d_pNeedleLens[ ix ] );
@@ -1685,7 +1685,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
                const auto relIxMatch( d_pfxStrnstr( stref( rl.data() + curPt.col, rl.length() - curPt.col ), needleSr ) );
                if( relIxMatch != stref::npos ) {
                   const auto ixMatch( curPt.col + relIxMatch );
-                  0 && DBG( "%s L=%d Needle[%d]=%" PR_BSR " ixM=%" PR_BSRSIZET "u", d_pFBuf->Name(), curPt.lin, lix, BSR(needleSr), ixMatch ); ++lix;
+                  0 && DBG( "%s L=%d Needle[%d]=%" PR_BSR " ixM=%" PR_BSRSIZET, d_pFBuf->Name(), curPt.lin, lix, BSR(needleSr), ixMatch ); ++lix;
                   // To prevent the highlight from being misaligned,
                   // FoundMatchContinueSearching needs to be given a tab-corrected
                   // colMatchStart value.  d_searchKey.length() is perfectly
