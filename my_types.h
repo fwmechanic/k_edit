@@ -90,13 +90,13 @@ typedef const void *        PCVoid;
     #if defined(__x86_64__) || defined(__ppc64__)
         // #define ENVIRONMENT64
         #if defined(_WIN32)
-        #   define PR_TIMET PR__i64
+        #   define PR_TIMET PR__i64d
         #else
-        #   define PR_TIMET "l"
+        #   define PR_TIMET "ld"
         #endif
     #else
         // #   define ENVIRONMENT32
-        #   define PR_TIMET "l"
+        #   define PR_TIMET "ld"
     #endif
 #else
     #error only GCC supported!

@@ -2117,7 +2117,7 @@ View::~View() {
    }
 
 void View::Write( FILE *fout ) const {
-   fprintf( fout, " %s|%d %d %d %d %" PR_TIMET "d\n"
+   fprintf( fout, " %s|%d %d %d %d %" PR_TIMET "\n"
        , FBuf()->Name()
        , Origin().col, Origin().lin
        , Cursor().col, Cursor().lin
@@ -2143,7 +2143,7 @@ bool ViewPersistentInitOk( ViewPersistent &vp, const PChar viewSaveRec ) {
       }
    *filenameEnd = '\0'; // filename now ASCIZ as filename APIs mostly require ASCIZ (OS ABI defines filename strings thus)
    const auto viewSaveRecTail( filenameEnd + 1 );
-   const auto scnt( sscanf( viewSaveRecTail, " %d %d %d %d %" PR_TIMET "d"
+   const auto scnt( sscanf( viewSaveRecTail, " %d %d %d %d %" PR_TIMET
       , &vp.origin.col
       , &vp.origin.lin
       , &vp.cursor.col
@@ -2155,7 +2155,7 @@ bool ViewPersistentInitOk( ViewPersistent &vp, const PChar viewSaveRec ) {
       return false;
       }
    vp.filename = viewSaveRec;
-   0 && DBG( " %s|%d %d %d %d %" PR_TIMET "d\n", vp.filename, vp.origin.col, vp.origin.lin, vp.cursor.col, vp.cursor.lin, vp.temptv );
+   0 && DBG( " %s|%d %d %d %d %" PR_TIMET "\n", vp.filename, vp.origin.col, vp.origin.lin, vp.cursor.col, vp.cursor.lin, vp.temptv );
    return true;
    }
 

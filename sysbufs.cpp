@@ -457,7 +457,7 @@ STATIC_FXN int CDECL__ qsort_cmp_fbuf_wrtime( PCVoid pA, PCVoid pB ) {
    const auto pFA( *static_cast<CPPFBUF>(pA) ); const auto tA( pFA->TmLastWrToDisk() );
    const auto pFB( *static_cast<CPPFBUF>(pB) ); const auto tB( pFB->TmLastWrToDisk() );
    const auto rv( tA==tB ? 0 : tA>tB ? -1 : 1 ); // descending sort: greatest first/top
-   0 && DBG( "%s %" PR_TIMET "d, %s %" PR_TIMET "d = %d", pFA->Name(), tA, pFB->Name(), tB, rv );
+   0 && DBG( "%s %" PR_TIMET ", %s %" PR_TIMET " = %d", pFA->Name(), tA, pFB->Name(), tB, rv );
    return rv;
    }
 
@@ -511,7 +511,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
 #if FBUF_TREE
       auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      if( pFBuf->TmLastWrToDisk() > 0 ) { DB && DBG( "[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+      if( pFBuf->TmLastWrToDisk() > 0 ) { DB && DBG( "[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
          fbufs[ix++] = pFBuf;
          }
       }
@@ -519,7 +519,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
    qsort( fbufs, count, sizeof(*fbufs), qsort_cmp_fbuf_wrtime );
    for( ix=0u ; ix < count ; ++ix ) {
       PCFBUF pFBuf( fbufs[ix] );
-      dest->PutLastLine( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET "d", ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+      dest->PutLastLine( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
       }
    Free0( fbufs );
    Msg( "%u files have been written to disk", count );

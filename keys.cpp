@@ -683,7 +683,7 @@ void WaitForKey( int secondsToWait ) {
       SleepMs( 50 );
       timeNow = time( nullptr );
       const auto spinner( sc.next() );
-      FmtStr<71> msg( " You have %c%2" PR_TIMET "d%c seconds to press any key ", spinner, (timeEnd - timeNow), spinner );
+      FmtStr<71> msg( " You have %c%2" PR_TIMET "%c seconds to press any key ", spinner, (timeEnd - timeNow), spinner );
       const auto mlen( msg.Len() );
       NoLessThan( &maxWidth, mlen );
       VidWrStrColorFlush( DialogLine(), EditScreenCols() - mlen, msg.k_str(), mlen, g_colorError, true );
