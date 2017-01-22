@@ -159,7 +159,7 @@
    colchar1 := col1 begline
    cola:=meta begline begline
 
-   mv0:= begfile begline "mv " arg begline ppara vrepeat ppara begline "m30"
+   mv0:= begfile begline "mv -n " arg begline ppara vrepeat ppara begline "m30"
 
    ? :=->false arg "True" message => :>false arg "False" message
    ! := Meta Message
