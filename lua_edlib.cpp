@@ -35,131 +35,129 @@ STATIC_FXN int lh_rtnStr( lua_State *L, PCChar src ) {
    return 1;
    }
 
-// exported functions
-
-#define  FBUF_(API_name)  LUAFUNC_(l_FBUF_method_ ## API_name)
-
-LUAFUNC_(HideCursor)   { HideCursor()  ; RZ; }
-LUAFUNC_(UnhideCursor) { UnhideCursor(); RZ; }
-LUAFUNC_(DispRefreshWholeScreenNow) { DispRefreshWholeScreenNow(); RZ; }
-LUAFUNC_(GetKey)     {
-   std::string keyNm;
-   while(1) {
-      const PCCMD pCmd( CmdFromKbdForInfo( keyNm ) );
-      if( pCmd && !keyNm.empty() ) {
-         R_str( keyNm.c_str() );
+namespace LExFx { // exported functions
+   STATIC_FXN int HideCursor( lua_State *L )   { ::HideCursor()  ; RZ; }
+   STATIC_FXN int UnhideCursor( lua_State *L ) { ::UnhideCursor(); RZ; }
+   STATIC_FXN int DispRefreshWholeScreenNow( lua_State *L ) { ::DispRefreshWholeScreenNow(); RZ; }
+   STATIC_FXN int GetKey( lua_State *L )       {
+      std::string keyNm;
+      while(1) {
+         const PCCMD pCmd( CmdFromKbdForInfo( keyNm ) );
+         if( pCmd && !keyNm.empty() ) {
+            R_str( keyNm.c_str() );
+            }
          }
       }
-   }
 
-LUAFUNC_(StartShellExecuteProcess) { StartShellExecuteProcess( S_(1), So0_(2) ); RZ; }
-LUAFUNC_(StartConProcess)    {    R_int( StartConProcess( S_(1) ) ); }
-LUAFUNC_(StartGuiProcess)    {    R_int( StartGuiProcess( S_(1) ) ); }
-LUAFUNC_(OsErrStr)           { linebuf lb; OsErrStr( BSOB(lb) ); R_str( lb ); }
-LUAFUNC_(OsName)             { R_str( OsName() ); }
-LUAFUNC_(OsVer)              { R_str( OsVerStr() ); }
-LUAFUNC_(rmargin)            { R_int( g_iRmargin ); }
+   STATIC_FXN int StartShellExecuteProcess( lua_State *L ) { ::StartShellExecuteProcess( S_(1), So0_(2) ); RZ; }
+   STATIC_FXN int StartConProcess( lua_State *L )    {    R_int( ::StartConProcess( S_(1) ) ); }
+   STATIC_FXN int StartGuiProcess( lua_State *L )    {    R_int( ::StartGuiProcess( S_(1) ) ); }
+   STATIC_FXN int OsErrStr( lua_State *L )           { linebuf lb; ::OsErrStr( BSOB(lb) ); R_str( lb ); }
+   STATIC_FXN int OsName( lua_State *L )             { R_str( ::OsName() ); }
+   STATIC_FXN int OsVer( lua_State *L )              { R_str( ::OsVerStr() ); }
+   STATIC_FXN int rmargin( lua_State *L )            { R_int( g_iRmargin ); }
 
-LUAFUNC_(RsrcFilename)  { R_str( RsrcFilename ( S_(1) ).c_str() ); }
-LUAFUNC_(StateFilename) { R_str( StateFilename( S_(1) ).c_str() ); }
+   STATIC_FXN int RsrcFilename( lua_State *L )  { R_str( ::RsrcFilename ( S_(1) ).c_str() ); }
+   STATIC_FXN int StateFilename( lua_State *L ) { R_str( ::StateFilename( S_(1) ).c_str() ); }
 
-LUAFUNC_(Bell) { ConOut::Bell(); RZ; }
-LUAFUNC_(ScreenLines) { R_int( ScreenLines() ); }
-LUAFUNC_(ScreenCols ) { R_int( ScreenCols () ); }
-LUAFUNC_(DirectVidClear) { DirectVidClear(); RZ; }
-LUAFUNC_(DirectVidWrStrColorFlush) { 0 && DBG("%s: %d, %d", __func__, I_(1), I_(2) );
-   DirectVidWrStrColorFlush( I_(1), I_(2), S_(3), I_(4) );
-   RZ;
-   }
-LUAFUNC_(Path_CommonPrefixLen) { R_int( Path::CommonPrefixLen( S_(1), S_(2) ) ); }
-
-LUAFUNC_(AddToSearchLog)     { AddToSearchLog( S_(1) ); RZ; }
-LUAFUNC_(l_AssignStrOk)      { R_bool( AssignStrOk( S_(1) ) ); }
-LUAFUNC_(PushVariableMacro)  { R_bool( PushVariableMacro( S_(1) ) ); }
-LUAFUNC_(CmdIdxAddLuaFunc)   { CmdIdxAddLuaFunc( S_(1), fn_runLua(), I_(2)  _AHELP( S_(3) ) ); RZ; }
-LUAFUNC_(BindKeyToCMD)       { R_bool( BindKeyToCMD( S_(1), S_(2) ) ); }
-LUAFUNC_(fExecute)           { R_bool( fExecute( S_(1) ) ); }
-LUAFUNC_(fChangeFile)        { R_bool( fChangeFile( S_(1), true ) ); }
-LUAFUNC_(DBG)                { DBG( "%s", S_(1) ); RZ; }
-LUAFUNC_(Msg)         {
-   const auto p1( S_(1) );
-   s_pFbufLuaLog->FmtLastLine( "*** %s", p1 );
-   Msg( "%s", p1 );
-   RZ;
-   }
-
-STATIC_FXN void push_mac_def( lua_State *L, PCChar macroName ) {
-   std::string val( std::string(macroName) + ":=" + DupTextMacroValue( macroName ) );
-   lua_pushlstring( L, val.data(), val.length() );
-   }
-
-LUAFUNC_(GetDynMacros) {
-   lua_newtable(L);  // result
-   auto tblIdx( 0u );
-   push_mac_def( L, "curfile"     );                      lua_rawseti( L, -2, ++tblIdx );
-   push_mac_def( L, "curfileext"  );                      lua_rawseti( L, -2, ++tblIdx );
-   push_mac_def( L, "curfilename" );                      lua_rawseti( L, -2, ++tblIdx );
-   push_mac_def( L, "curfilepath" );                      lua_rawseti( L, -2, ++tblIdx );
-   lua_pushstring( L, "------------------------------" ); lua_rawseti( L, -2, ++tblIdx );
-   push_mac_def( L, "mffile"  );                          lua_rawseti( L, -2, ++tblIdx );
-   push_mac_def( L, "mfspec"  );                          lua_rawseti( L, -2, ++tblIdx );
-   push_mac_def( L, "mfspec_" );                          lua_rawseti( L, -2, ++tblIdx );
-   std::string val( "<mfspec>" );
-   const auto fb( FindFBufByName( val.c_str() ) );
-   if( fb ) {
-       if( FBOP::IsBlank( fb ) ) { val.append( " exists but empty" ); }
-       else                      { val.append( FmtStr<31>( " %d lines", fb->LineCount() ) ); }
-       }
-   else                          { val.append( " does not exist" ); }
-   lua_pushlstring( L, val.data(), val.length() );        lua_rawseti( L, -2, ++tblIdx );
-   return 1;  // return the table
-   }
-
-LUAFUNC_(GetCwd)        { R_str( Path::GetCwd_ps().c_str() ); }
-LUAFUNC_(Path_Dirnm   ) { const auto rv( Path::RefDirnm(    S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
-LUAFUNC_(Path_Fnm     ) { const auto rv( Path::RefFnm(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
-LUAFUNC_(Path_Ext     ) { const auto rv( Path::RefExt(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
-LUAFUNC_(Path_FnameExt) { const auto rv( Path::RefFnameExt( S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
-LUAFUNC_(GetChildDirs) {
-   lua_newtable(L);  // result
-   DirListGenerator dlg( __PRETTY_FUNCTION__ );
-   Path::str_t xb;
-   for( int tblIdx=1 ; dlg.VGetNextName( xb ) ; ++tblIdx ) {
-      lua_pushstring( L, xb.c_str() );
-      lua_rawseti( L, -2, tblIdx );
+   STATIC_FXN int Bell( lua_State *L ) { ConOut::Bell(); RZ; }
+   STATIC_FXN int ScreenLines( lua_State *L ) { R_int( ::ScreenLines() ); }
+   STATIC_FXN int ScreenCols( lua_State *L ) { R_int( ::ScreenCols () ); }
+   STATIC_FXN int DirectVidClear( lua_State *L ) { ::DirectVidClear(); RZ; }
+   STATIC_FXN int DirectVidWrStrColorFlush( lua_State *L ) { 0 && DBG("%s: %d, %d", __func__, I_(1), I_(2) );
+      ::DirectVidWrStrColorFlush( I_(1), I_(2), S_(3), I_(4) );
+      RZ;
       }
-   return 1;  // return the table
-   }
+   STATIC_FXN int Path_CommonPrefixLen( lua_State *L ) { R_int( Path::CommonPrefixLen( S_(1), S_(2) ) ); }
 
-LUAFUNC_(Get_SearchCaseSensitive)      { R_bool( g_fCase ); }
-LUAFUNC_(Getenv)      { return lh_rtnStr(      L, getenv( S_(1) ) ); }
-LUAFUNC_(GetenvOrNil) { return lh_rtnStrOrNil( L, getenv( S_(1) ) ); }
-LUAFUNC_(Putenv)      {
-   const auto    param1( S_(1) );
-   const auto    param2( So0_(2) );
-   if( param2 )  PutEnvOk( param1, param2 );
-   else          PutEnvOk( param1 );
-   RZ;
-   }
-LUAFUNC_(Clipboard_PutText_) { Clipboard_PutText( S_(1) ); RZ; }
-LUAFUNC_(MarkDefineAtCurPos)       { MarkDefineAtCurPos( S_(1) ); RZ; }
-LUAFUNC_(MarkGoto)                 { R_bool( MarkGoto( S_(1) ) ); }
-LUAFUNC_(ModifyTimeOfDiskFile)     {
-   const auto fstat_( GetFileStat( S_(1) ) );
-   R_lstr( PCChar(&fstat_), sizeof(fstat_) );
-   }
+   STATIC_FXN int AddToSearchLog( lua_State *L )     { ::AddToSearchLog( S_(1) ); RZ; }
+   STATIC_FXN int l_AssignStrOk( lua_State *L )      { R_bool( ::AssignStrOk( S_(1) ) ); }
+   STATIC_FXN int PushVariableMacro( lua_State *L )  { R_bool( ::PushVariableMacro( S_(1) ) ); }
+   STATIC_FXN int CmdIdxAddLuaFunc( lua_State *L )   { ::CmdIdxAddLuaFunc( S_(1), fn_runLua(), I_(2)  _AHELP( S_(3) ) ); RZ; }
+   STATIC_FXN int BindKeyToCMD( lua_State *L )       { R_bool( ::BindKeyToCMD( S_(1), S_(2) ) ); }
+   STATIC_FXN int fExecute( lua_State *L )           { R_bool( ::fExecute( S_(1) ) ); }
+   STATIC_FXN int fChangeFile( lua_State *L )        { R_bool( ::fChangeFile( S_(1), true ) ); }
+   STATIC_FXN int DBG( lua_State *L )                { ::DBG( "%s", S_(1) ); RZ; }
+   STATIC_FXN int Msg( lua_State *L )         {
+      const auto p1( S_(1) );
+      s_pFbufLuaLog->FmtLastLine( "*** %s", p1 );
+      ::Msg( "%s", p1 );
+      RZ;
+      }
 
-LUAFUNC_(valueof)     {  0 && DBG( "%s: '%s'", __func__, S_(1) );
-   lua_getglobal( L, S_(1) ); // returns Nil if nosuch variable (how to discriminate vs. undefined variable?  I think we can't)
-   return 1;
-   }
+   STATIC_FXN void push_mac_def( lua_State *L, PCChar macroName ) {
+      std::string val( std::string(macroName) + ":=" + DupTextMacroValue( macroName ) );
+      lua_pushlstring( L, val.data(), val.length() );
+      }
 
-#define  ROUNDUP_TO_NEXT_POWER2( val, pow2 )  ((val + ((pow2)-1)) & ~((pow2)-1))
+   STATIC_FXN int GetDynMacros( lua_State *L ) {
+      lua_newtable(L);  // result
+      auto tblIdx( 0u );
+      push_mac_def( L, "curfile"     );                      lua_rawseti( L, -2, ++tblIdx );
+      push_mac_def( L, "curfileext"  );                      lua_rawseti( L, -2, ++tblIdx );
+      push_mac_def( L, "curfilename" );                      lua_rawseti( L, -2, ++tblIdx );
+      push_mac_def( L, "curfilepath" );                      lua_rawseti( L, -2, ++tblIdx );
+      lua_pushstring( L, "------------------------------" ); lua_rawseti( L, -2, ++tblIdx );
+      push_mac_def( L, "mffile"  );                          lua_rawseti( L, -2, ++tblIdx );
+      push_mac_def( L, "mfspec"  );                          lua_rawseti( L, -2, ++tblIdx );
+      push_mac_def( L, "mfspec_" );                          lua_rawseti( L, -2, ++tblIdx );
+      std::string val( "<mfspec>" );
+      const auto fb( FindFBufByName( val.c_str() ) );
+      if( fb ) {
+          if( FBOP::IsBlank( fb ) ) { val.append( " exists but empty" ); }
+          else                      { val.append( FmtStr<31>( " %d lines", fb->LineCount() ) ); }
+          }
+      else                          { val.append( " does not exist" ); }
+      lua_pushlstring( L, val.data(), val.length() );        lua_rawseti( L, -2, ++tblIdx );
+      return 1;  // return the table
+      }
 
-LUAFUNC_(IsFile)  { R_bool( IsFile( S_(1) ) ); }
-LUAFUNC_(IsDir)   { R_bool( IsDir(  S_(1) ) ); }
+   STATIC_FXN int GetCwd( lua_State *L )        { R_str( Path::GetCwd_ps().c_str() ); }
+   STATIC_FXN int Path_Dirnm( lua_State *L ) { const auto rv( Path::RefDirnm(    S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+   STATIC_FXN int Path_Fnm( lua_State *L ) { const auto rv( Path::RefFnm(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+   STATIC_FXN int Path_Ext( lua_State *L ) { const auto rv( Path::RefExt(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+   STATIC_FXN int Path_FnameExt( lua_State *L ) { const auto rv( Path::RefFnameExt( S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+   STATIC_FXN int GetChildDirs( lua_State *L ) {
+      lua_newtable(L);  // result
+      DirListGenerator dlg( __PRETTY_FUNCTION__ );
+      Path::str_t xb;
+      for( int tblIdx=1 ; dlg.VGetNextName( xb ) ; ++tblIdx ) {
+         lua_pushstring( L, xb.c_str() );
+         lua_rawseti( L, -2, tblIdx );
+         }
+      return 1;  // return the table
+      }
 
-LUAFUNC_(SleepMs)   { SleepMs( U_(1) ); RZ; }
+   STATIC_FXN int Get_SearchCaseSensitive( lua_State *L )      { R_bool( g_fCase ); }
+   STATIC_FXN int Getenv( lua_State *L )      { return lh_rtnStr(      L, getenv( S_(1) ) ); }
+   STATIC_FXN int GetenvOrNil( lua_State *L ) { return lh_rtnStrOrNil( L, getenv( S_(1) ) ); }
+   STATIC_FXN int Putenv( lua_State *L )      {
+      const auto    param1( S_(1) );
+      const auto    param2( So0_(2) );
+      if( param2 )  PutEnvOk( param1, param2 );
+      else          PutEnvOk( param1 );
+      RZ;
+      }
+   STATIC_FXN int Clipboard_PutText( lua_State *L ) { ::Clipboard_PutText( S_(1) ); RZ; }
+   STATIC_FXN int MarkDefineAtCurPos( lua_State *L )       { ::MarkDefineAtCurPos( S_(1) ); RZ; }
+   STATIC_FXN int MarkGoto( lua_State *L )                 { R_bool( ::MarkGoto( S_(1) ) ); }
+   STATIC_FXN int ModifyTimeOfDiskFile( lua_State *L )     {
+      const auto fstat_( GetFileStat( S_(1) ) );
+      R_lstr( PCChar(&fstat_), sizeof(fstat_) );
+      }
+
+   STATIC_FXN int valueof( lua_State *L )     {  0 && ::DBG( "%s: '%s'", __func__, S_(1) );
+      lua_getglobal( L, S_(1) ); // returns Nil if nosuch variable (how to discriminate vs. undefined variable?  I think we can't)
+      return 1;
+      }
+
+   #define  ROUNDUP_TO_NEXT_POWER2( val, pow2 )  ((val + ((pow2)-1)) & ~((pow2)-1))
+
+   STATIC_FXN int IsFile( lua_State *L )  { R_bool( ::IsFile( S_(1) ) ); }
+   STATIC_FXN int IsDir( lua_State *L )   { R_bool( ::IsDir(  S_(1) ) ); }
+
+   STATIC_FXN int SleepMs( lua_State *L )   { ::SleepMs( U_(1) ); RZ; }
+   } // namespace LExFx
 
 //------------------------------------------------------------------------------
 typedef PCChar (*TLuaSplitFxn)( PCChar pszToSearch, PCChar pszToSearchFor, int *matchLen );
@@ -227,78 +225,80 @@ STATIC_FXN int lua_split_rtn_tbl( lua_State *L, TLuaSplitFxn sf ) {
    return 1;  // return the table
    }
 
-LUAFUNC_(split_ch)      { return lua_split_rtn_mult( L, StrToNextOrEos_ ); }
-LUAFUNC_(split_ch_tbl)  { return lua_split_rtn_tbl(  L, StrToNextOrEos_ ); }
-LUAFUNC_(split_str)     { return lua_split_rtn_mult( L, FindStr_ );        }
-LUAFUNC_(split_str_tbl) { return lua_split_rtn_tbl(  L, FindStr_ );        }
+namespace LExFx {
+   STATIC_FXN int split_ch( lua_State *L )      { return lua_split_rtn_mult( L, StrToNextOrEos_ ); }
+   STATIC_FXN int split_ch_tbl( lua_State *L )  { return lua_split_rtn_tbl(  L, StrToNextOrEos_ ); }
+   STATIC_FXN int split_str( lua_State *L )     { return lua_split_rtn_mult( L, FindStr_ );        }
+   STATIC_FXN int split_str_tbl( lua_State *L ) { return lua_split_rtn_tbl(  L, FindStr_ );        }
 
-STATIC_FXN PChar nib2bitstr_( PChar p5, int nib ) {
-   p5[4] = '\0';
-   for( int ix=3; ix>=0; --ix ) {
-      p5[ix] = (nib & 1) ? '1' : '0';
-      nib >>= 1;
-      }
-   return p5;
-   }
-
-LUAFUNC_(hexstr2bitstr) {
-   auto inst = S_(1);
-   if( inst[0] == '0' && tolower(inst[1]) == 'x' ) { inst += 2; } // skip redundant "hex prefix"
-   const int xdigits( consec_xdigits( inst ) );
-   if( 0 == xdigits ) { luaL_error(L, "string '%s' contains no leading hexits", inst); }
-   luaL_Buffer lb; luaL_buffinit(L, &lb);
-   for( int ix=0; ix < xdigits; ++ix ) {
-      const uint8_t ch( tolower( inst[ix] ) );
-      const int val( ch - (ch < 'a' ? '0' : 'a' - 10) );  0 && DBG( ":: %X", val );
-      char buf5[5];
-      luaL_addstring( &lb, nib2bitstr_( buf5, val ) );    0 && DBG( ":: %s L %d", buf5, Strlen(buf5) );
-      }
-   luaL_pushresult( &lb );
-   return 1;
-   }
-
-STATIC_CONST char b2x[] = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
-
-LUAFUNC_(bitstr2hexstr) {
-   auto inst = S_(1);
-   luaL_Buffer b; luaL_buffinit(L, &b);
-   if( inst[0] == '0' && tolower(inst[1]) == 'b' ) { inst += 2; } // skip redundant "bin prefix"
-   const auto bdigits( consec_bdigits( inst ) );
-   const auto outchars( (bdigits / 4) + ((bdigits % 4) != 0) );
-   const PChar outbuf = PChar( alloca( outchars+1 ) );
-   outbuf[outchars] = '\0';
-   auto pb = outbuf + outchars;
-   auto pc = inst + bdigits;
-   auto bits = 0;
-   auto bbuf = 0;
-   for( auto ix(0); ix<bdigits; ++ix ) {
-      auto val( *(--pc) - '0' ); 0 && DBG( "val = %X", val );
-      bbuf |= (val <<= bits);
-      if( ++bits == 4 ) {
-         *(--pb) = b2x[bbuf];
-         bits = bbuf = 0;
+   STATIC_FXN PChar nib2bitstr_( PChar p5, int nib ) {
+      p5[4] = '\0';
+      for( int ix=3; ix>=0; --ix ) {
+         p5[ix] = (nib & 1) ? '1' : '0';
+         nib >>= 1;
          }
+      return p5;
       }
-   if( bits > 0 ) {
-      *(--pb) = b2x[bbuf];
-      }
-   Assert( pb >= outbuf );
-   R_str( outbuf );
-   }
 
-LUAFUNC_(enqueue_compile_jobs) {
-   luaL_checktype(L, 1, LUA_TTABLE); // 1st argument must be a table (t)
-   StringList sl;
-   const auto jobs( luaL_getn(L, 1) );
-   for( auto ix(1) ; ix <= jobs ; ++ix ) {
-      lua_rawgeti(L, 1, ix);  // push t[ix]
-      PCChar pCmd = luaL_checkstring(L, -1);
-      0 && DBG( "%s", pCmd );
-      sl.push_front( pCmd );
+   STATIC_FXN int hexstr2bitstr( lua_State *L ) {
+      auto inst = S_(1);
+      if( inst[0] == '0' && tolower(inst[1]) == 'x' ) { inst += 2; } // skip redundant "hex prefix"
+      const int xdigits( consec_xdigits( inst ) );
+      if( 0 == xdigits ) { luaL_error(L, "string '%s' contains no leading hexits", inst); }
+      luaL_Buffer lb; luaL_buffinit(L, &lb);
+      for( int ix=0; ix < xdigits; ++ix ) {
+         const uint8_t ch( tolower( inst[ix] ) );
+         const int val( ch - (ch < 'a' ? '0' : 'a' - 10) );  0 && ::DBG( ":: %X", val );
+         char buf5[5];
+         luaL_addstring( &lb, nib2bitstr_( buf5, val ) );    0 && ::DBG( ":: %s L %d", buf5, Strlen(buf5) );
+         }
+      luaL_pushresult( &lb );
+      return 1;
       }
-   CompilePty_CmdsAsyncExec( sl, true );
-   RZ;
-   }
+
+   STATIC_CONST char b2x[] = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
+
+   STATIC_FXN int bitstr2hexstr( lua_State *L ) {
+      auto inst = S_(1);
+      luaL_Buffer b; luaL_buffinit(L, &b);
+      if( inst[0] == '0' && tolower(inst[1]) == 'b' ) { inst += 2; } // skip redundant "bin prefix"
+      const auto bdigits( consec_bdigits( inst ) );
+      const auto outchars( (bdigits / 4) + ((bdigits % 4) != 0) );
+      const PChar outbuf = PChar( alloca( outchars+1 ) );
+      outbuf[outchars] = '\0';
+      auto pb = outbuf + outchars;
+      auto pc = inst + bdigits;
+      auto bits = 0;
+      auto bbuf = 0;
+      for( auto ix(0); ix<bdigits; ++ix ) {
+         auto val( *(--pc) - '0' ); 0 && ::DBG( "val = %X", val );
+         bbuf |= (val <<= bits);
+         if( ++bits == 4 ) {
+            *(--pb) = b2x[bbuf];
+            bits = bbuf = 0;
+            }
+         }
+      if( bits > 0 ) {
+         *(--pb) = b2x[bbuf];
+         }
+      Assert( pb >= outbuf );
+      R_str( outbuf );
+      }
+
+   STATIC_FXN int enqueue_compile_jobs( lua_State *L ) {
+      luaL_checktype(L, 1, LUA_TTABLE); // 1st argument must be a table (t)
+      StringList sl;
+      const auto jobs( luaL_getn(L, 1) );
+      for( auto ix(1) ; ix <= jobs ; ++ix ) {
+         lua_rawgeti(L, 1, ix);  // push t[ix]
+         PCChar pCmd = luaL_checkstring(L, -1);
+         0 && ::DBG( "%s", pCmd );
+         sl.push_front( pCmd );
+         }
+      CompilePty_CmdsAsyncExec( sl, true );
+      RZ;
+      }
+   } // namespace LExFx
 
 STATIC_CONST char KevinsMetatable_FBUF[] = "KevinsMetatable.FBUF";
 struct lua_FBUF { PFBUF pFBuf; };
@@ -352,129 +352,130 @@ STATIC_FXN PFBUF l_Get_FBUF( lua_State *L, int stacklvl=1 ) {
 #define  thisPF()   l_Get_FBUF( L )
 #define  PFBUF_(n)  l_Get_FBUF( L, n )
 
-FBUF_(__tostring)               { R_strf( "FBUF(\"%s\")", thisPF()->Name() ); }
-FBUF_(Next)                     { return l_construct_FBUF( L, thisPF()->Next()     ); }
+namespace LFBUF {
+   STATIC_FXN int __tostring( lua_State *L )               { R_strf( "FBUF(\"%s\")", thisPF()->Name() ); }
+   STATIC_FXN int Next( lua_State *L )                     { return l_construct_FBUF( L, thisPF()->Next()     ); }
 
-FBUF_(ClearUndo)                { thisPF()->ClearUndo()                                              ; RZ; }
-FBUF_(ClrNoEdit)                { thisPF()->ClrNoEdit()                                              ; RZ; }
-FBUF_(CopyLines)                { FBOP::CopyLines( thisPF(), I_(2)-1, PFBUF_(3), I_(4)-1, I_(5)-1 )  ; RZ; }
-FBUF_(DiscardTrailSpcs)         { thisPF()->DiscardTrailSpcs()                                       ; RZ; }
-FBUF_(InsBlankLinesBefore)      { thisPF()->InsBlankLinesBefore( I_(2)-1, Io_( 3, 1 ) )              ; RZ; }
-FBUF_(InsLine)                  { std::string tmp; thisPF()->InsLine( I_(2)-1, S_(3), tmp )          ; RZ; }
-FBUF_(InsLineSortedAscending)   { std::string tmp;
-                                  const PCChar st = S_(2);
-                                  FBOP::InsLineSortedAscending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
-                                }
-FBUF_(InsLineSortedDescending)  { std::string tmp;
-                                  const PCChar st = S_(2);
-                                  FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
-                                }
-FBUF_(IsGrepBuf)                { Path::str_t searchedFnm; int metaLines;
-                                  if( FBOP::IsGrepBuf( searchedFnm, &metaLines, thisPF() ) ) {
-                                     P_str(searchedFnm.c_str()) ; P_int(metaLines) ; return 2;
-                                     }
-                                  RZ;
-                                }
-FBUF_(KeepTrailSpcs)            { thisPF()->KeepTrailSpcs()                                    ; RZ; }
-FBUF_(MakeEmpty)                { thisPF()->MakeEmpty()                                        ; RZ; }
-FBUF_(PutLastLine)              { thisPF()->PutLastLine( S_(2) )                               ; RZ; }
-FBUF_(PutLine)                  { std::string tmp; thisPF()->PutLine( I_(2)-1, S_(3), tmp )    ; RZ; }
-FBUF_(MoveCursorToBofAllViews)  { thisPF()->MoveCursorToBofAllViews()                          ; RZ; }
-FBUF_(SetAutoRead)              { thisPF()->SetAutoRead()                                      ; RZ; }
-FBUF_(SetBackupMode_Bak)        { thisPF()->SetBackupMode(bkup_BAK)                            ; RZ; }
-FBUF_(SetBackupMode_None)       { thisPF()->SetBackupMode(bkup_NONE)                           ; RZ; }
-FBUF_(SetBackupMode_Undel)      { thisPF()->SetBackupMode(bkup_UNDEL)                          ; RZ; }
-FBUF_(SetBlockRsrcLd)           { thisPF()->SetBlockRsrcLd()                                   ; RZ; }
-FBUF_(SetForgetOnExit)          { thisPF()->SetForgetOnExit()                                  ; RZ; }
-FBUF_(SetNoEdit)                { thisPF()->SetNoEdit()                                        ; RZ; }
-FBUF_(SetRememberAfterExit)     { thisPF()->SetRememberAfterExit()                             ; RZ; }
-#ifdef fn_su
-FBUF_(SetSilentUpdateMode)      { thisPF()->SetSilentUpdateMode()                              ; RZ; }
-#endif
-FBUF_(ToglNoEdit)               { thisPF()->ToglNoEdit()                                       ; RZ; }
-FBUF_(UnDirty)                  { thisPF()->UnDirty()                                          ; RZ; }
-FBUF_(WriteToDisk)              { thisPF()->WriteToDisk( So0_(2) )                             ; RZ; }
-FBUF_(cat)                      { thisPF()->cat( S_(2) )                                       ; RZ; }
-FBUF_(SetEntabOk)               { R_bool(      thisPF()->SetEntabOk( I_(2) )         ); }
-FBUF_(RefreshFailedShowError)   { R_bool( 0 != thisPF()->RefreshFailedShowError()    ); }
-FBUF_(IsAutoRead)               { R_bool( 0 != thisPF()->IsAutoRead()                ); }
-FBUF_(RefreshFailed)            { R_bool( 0 != thisPF()->RefreshFailed()             ); }
-FBUF_(IsDirty)                  { R_bool( 0 != thisPF()->IsDirty()                   ); }
-#ifdef fn_su
-FBUF_(SilentUpdateMode)         { R_bool( 0 != thisPF()->SilentUpdateMode()          ); }
-#endif
-#if defined(_WIN32)
-FBUF_(IsDiskRO)                 { R_bool( 0 != thisPF()->IsDiskRO()                  ); }
-#else
-FBUF_(IsDiskRO)                 { R_bool( false ); }
-#endif
-FBUF_(ToForgetOnExit)           { R_bool( 0 != thisPF()->ToForgetOnExit()            ); }
-FBUF_(IsPseudo)                 { R_bool( 0 != thisPF()->FnmIsPseudo()               ); }
-FBUF_(IsSysPseudo)              { R_bool( 0 != thisPF()->IsSysPseudo()               ); }
-FBUF_(IsRsrcLdBlocked)          { R_bool( 0 != thisPF()->IsRsrcLdBlocked()           ); }
-FBUF_(IsNoEdit)                 { R_bool( 0 != thisPF()->IsNoEdit()                  ); }
-#if defined(_WIN32)
-FBUF_(MakeDiskFileWritable)     { R_bool( 0 != thisPF()->MakeDiskFileWritable()      ); }
-#else
-FBUF_(MakeDiskFileWritable)     { R_bool( false ); }
-#endif
-FBUF_(TrailSpcsKept)            { R_bool( 0 != thisPF()->TrailSpcsKept()             ); }
-FBUF_(CantModify)               { R_bool( 0 != thisPF()->CantModify()                ); }
-FBUF_(LineCount)                { R_int(       thisPF()->LineCount()                 ); }
-FBUF_(LastLine)                 { R_int(       thisPF()->LastLine()+1                ); }
-FBUF_(TabWidth)                 { R_int(       thisPF()->TabWidth()                  ); }
-FBUF_(ModifyTimeOfDiskFile)     {
-                                  const auto fstat_( thisPF()->GetLastFileStat() );
-                                  R_lstr( PCChar(&fstat_), sizeof(fstat_) );
-                                }
-FBUF_(Name)                     { R_str(       thisPF()->Name()                      ); }
-FBUF_(DelLine)                  { const LINE L1( I_(2)-1 ); thisPF()->DelLines( L1, Io_( 3, L1+1)-1 ); RZ; }
+   STATIC_FXN int ClearUndo( lua_State *L )                { thisPF()->ClearUndo()                                              ; RZ; }
+   STATIC_FXN int ClrNoEdit( lua_State *L )                { thisPF()->ClrNoEdit()                                              ; RZ; }
+   STATIC_FXN int CopyLines( lua_State *L )                { FBOP::CopyLines( thisPF(), I_(2)-1, PFBUF_(3), I_(4)-1, I_(5)-1 )  ; RZ; }
+   STATIC_FXN int DiscardTrailSpcs( lua_State *L )         { thisPF()->DiscardTrailSpcs()                                       ; RZ; }
+   STATIC_FXN int InsBlankLinesBefore( lua_State *L )      { thisPF()->InsBlankLinesBefore( I_(2)-1, Io_( 3, 1 ) )              ; RZ; }
+   STATIC_FXN int InsLine( lua_State *L )                  { std::string tmp; thisPF()->InsLine( I_(2)-1, S_(3), tmp )          ; RZ; }
+   STATIC_FXN int InsLineSortedAscending( lua_State *L )   { std::string tmp;
+                                     const PCChar st = S_(2);
+                                     FBOP::InsLineSortedAscending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
+                                   }
+   STATIC_FXN int InsLineSortedDescending( lua_State *L )  { std::string tmp;
+                                     const PCChar st = S_(2);
+                                     FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
+                                   }
+   STATIC_FXN int IsGrepBuf( lua_State *L )                { Path::str_t searchedFnm; int metaLines;
+                                     if( FBOP::IsGrepBuf( searchedFnm, &metaLines, thisPF() ) ) {
+                                        P_str(searchedFnm.c_str()) ; P_int(metaLines) ; return 2;
+                                        }
+                                     RZ;
+                                   }
+   STATIC_FXN int KeepTrailSpcs( lua_State *L )            { thisPF()->KeepTrailSpcs()                                    ; RZ; }
+   STATIC_FXN int MakeEmpty( lua_State *L )                { thisPF()->MakeEmpty()                                        ; RZ; }
+   STATIC_FXN int PutLastLine( lua_State *L )              { thisPF()->PutLastLine( S_(2) )                               ; RZ; }
+   STATIC_FXN int PutLine( lua_State *L )                  { std::string tmp; thisPF()->PutLine( I_(2)-1, S_(3), tmp )    ; RZ; }
+   STATIC_FXN int MoveCursorToBofAllViews( lua_State *L )  { thisPF()->MoveCursorToBofAllViews()                          ; RZ; }
+   STATIC_FXN int SetAutoRead( lua_State *L )              { thisPF()->SetAutoRead()                                      ; RZ; }
+   STATIC_FXN int SetBackupMode_Bak( lua_State *L )        { thisPF()->SetBackupMode(bkup_BAK)                            ; RZ; }
+   STATIC_FXN int SetBackupMode_None( lua_State *L )       { thisPF()->SetBackupMode(bkup_NONE)                           ; RZ; }
+   STATIC_FXN int SetBackupMode_Undel( lua_State *L )      { thisPF()->SetBackupMode(bkup_UNDEL)                          ; RZ; }
+   STATIC_FXN int SetBlockRsrcLd( lua_State *L )           { thisPF()->SetBlockRsrcLd()                                   ; RZ; }
+   STATIC_FXN int SetForgetOnExit( lua_State *L )          { thisPF()->SetForgetOnExit()                                  ; RZ; }
+   STATIC_FXN int SetNoEdit( lua_State *L )                { thisPF()->SetNoEdit()                                        ; RZ; }
+   STATIC_FXN int SetRememberAfterExit( lua_State *L )     { thisPF()->SetRememberAfterExit()                             ; RZ; }
+   #ifdef fn_su
+   STATIC_FXN int SetSilentUpdateMode( lua_State *L )      { thisPF()->SetSilentUpdateMode()                              ; RZ; }
+   #endif
+   STATIC_FXN int ToglNoEdit( lua_State *L )               { thisPF()->ToglNoEdit()                                       ; RZ; }
+   STATIC_FXN int UnDirty( lua_State *L )                  { thisPF()->UnDirty()                                          ; RZ; }
+   STATIC_FXN int WriteToDisk( lua_State *L )              { thisPF()->WriteToDisk( So0_(2) )                             ; RZ; }
+   STATIC_FXN int cat( lua_State *L )                      { thisPF()->cat( S_(2) )                                       ; RZ; }
+   STATIC_FXN int SetEntabOk( lua_State *L )               { R_bool(      thisPF()->SetEntabOk( I_(2) )         ); }
+   STATIC_FXN int RefreshFailedShowError( lua_State *L )   { R_bool( 0 != thisPF()->RefreshFailedShowError()    ); }
+   STATIC_FXN int IsAutoRead( lua_State *L )               { R_bool( 0 != thisPF()->IsAutoRead()                ); }
+   STATIC_FXN int RefreshFailed( lua_State *L )            { R_bool( 0 != thisPF()->RefreshFailed()             ); }
+   STATIC_FXN int IsDirty( lua_State *L )                  { R_bool( 0 != thisPF()->IsDirty()                   ); }
+   #ifdef fn_su
+   STATIC_FXN int SilentUpdateMode( lua_State *L )         { R_bool( 0 != thisPF()->SilentUpdateMode()          ); }
+   #endif
+   #if defined(_WIN32)
+   STATIC_FXN int IsDiskRO( lua_State *L )                 { R_bool( 0 != thisPF()->IsDiskRO()                  ); }
+   #else
+   STATIC_FXN int IsDiskRO( lua_State *L )                 { R_bool( false ); }
+   #endif
+   STATIC_FXN int ToForgetOnExit( lua_State *L )           { R_bool( 0 != thisPF()->ToForgetOnExit()            ); }
+   STATIC_FXN int IsPseudo( lua_State *L )                 { R_bool( 0 != thisPF()->FnmIsPseudo()               ); }
+   STATIC_FXN int IsSysPseudo( lua_State *L )              { R_bool( 0 != thisPF()->IsSysPseudo()               ); }
+   STATIC_FXN int IsRsrcLdBlocked( lua_State *L )          { R_bool( 0 != thisPF()->IsRsrcLdBlocked()           ); }
+   STATIC_FXN int IsNoEdit( lua_State *L )                 { R_bool( 0 != thisPF()->IsNoEdit()                  ); }
+   #if defined(_WIN32)
+   STATIC_FXN int MakeDiskFileWritable( lua_State *L )     { R_bool( 0 != thisPF()->MakeDiskFileWritable()      ); }
+   #else
+   STATIC_FXN int MakeDiskFileWritable( lua_State *L )     { R_bool( false ); }
+   #endif
+   STATIC_FXN int TrailSpcsKept( lua_State *L )            { R_bool( 0 != thisPF()->TrailSpcsKept()             ); }
+   STATIC_FXN int CantModify( lua_State *L )               { R_bool( 0 != thisPF()->CantModify()                ); }
+   STATIC_FXN int LineCount( lua_State *L )                { R_int(       thisPF()->LineCount()                 ); }
+   STATIC_FXN int LastLine( lua_State *L )                 { R_int(       thisPF()->LastLine()+1                ); }
+   STATIC_FXN int TabWidth( lua_State *L )                 { R_int(       thisPF()->TabWidth()                  ); }
+   STATIC_FXN int ModifyTimeOfDiskFile( lua_State *L )     {
+                                     const auto fstat_( thisPF()->GetLastFileStat() );
+                                     R_lstr( PCChar(&fstat_), sizeof(fstat_) );
+                                   }
+   STATIC_FXN int Name( lua_State *L )                     { R_str(       thisPF()->Name()                      ); }
+   STATIC_FXN int DelLine( lua_State *L )                  { const LINE L1( I_(2)-1 ); thisPF()->DelLines( L1, Io_( 3, L1+1)-1 ); RZ; }
 
-STIL bool isValidLineNum( PFBUF fb, LINE lnum )  { return lnum >= 0 && lnum <= fb->LastLine(); }
+   STIL bool isValidLineNum( PFBUF fb, LINE lnum )  { return lnum >= 0 && lnum <= fb->LastLine(); }
 
-FBUF_(GetLine) {
-   const auto pf( thisPF() );
-   const auto lnum( I_(2) - 1 );
-   if( isValidLineNum( pf, lnum ) ) {
-      std::string tmp;
-      pf->DupLineLua( tmp, lnum );
-      R_lstr( tmp.c_str(), tmp.length() );
+   STATIC_FXN int GetLine( lua_State *L ) {
+      const auto pf( thisPF() );
+      const auto lnum( I_(2) - 1 );
+      if( isValidLineNum( pf, lnum ) ) {
+         std::string tmp;
+         pf->DupLineLua( tmp, lnum );
+         R_lstr( tmp.c_str(), tmp.length() );
+         }
+      R_nil();
       }
-   R_nil();
-   }
 
-FBUF_(GetLineRaw) {
-   const auto pf( thisPF() );
-   const int lnum( I_(2) - 1 );
-   if( isValidLineNum( pf, lnum ) ) {
-      const auto rl( pf->PeekRawLine( lnum ) );
-      R_lstr( rl.data(), rl.length() );
+   STATIC_FXN int GetLineRaw( lua_State *L ) {
+      const auto pf( thisPF() );
+      const int lnum( I_(2) - 1 );
+      if( isValidLineNum( pf, lnum ) ) {
+         const auto rl( pf->PeekRawLine( lnum ) );
+         R_lstr( rl.data(), rl.length() );
+         }
+      R_nil();
       }
-   R_nil();
-   }
 
-FBUF_(FTypeEq) { R_bool( thisPF()->FTypeEq( S_(2) ) ); }
+   STATIC_FXN int FTypeEq( lua_State *L ) { R_bool( thisPF()->FTypeEq( S_(2) ) ); }
 
-FBUF_(GetLineSeg) {
-   const auto pf( thisPF() );
-   const auto lnum( I_(2) - 1 );
-   if( isValidLineNum( pf, lnum ) ) {
-      const auto xLeftIncl ( I_(3) - 1 );
-      const auto xRightIncl( I_(4) - 1 );
-      const auto rl( pf->PeekRawLineSeg( lnum, xLeftIncl, xRightIncl ) );
-      R_lstr( rl.data(), rl.length() );
+   STATIC_FXN int GetLineSeg( lua_State *L ) {
+      const auto pf( thisPF() );
+      const auto lnum( I_(2) - 1 );
+      if( isValidLineNum( pf, lnum ) ) {
+         const auto xLeftIncl ( I_(3) - 1 );
+         const auto xRightIncl( I_(4) - 1 );
+         const auto rl( pf->PeekRawLineSeg( lnum, xLeftIncl, xRightIncl ) );
+         R_lstr( rl.data(), rl.length() );
+         }
+      R_nil();
       }
-   R_nil();
-   }
 
-FBUF_(PutLineSeg) { std::string t0,t1; thisPF()->PutLineSeg( I_(2)-1, Sr_(L,3), t0,t1, I_(4)-1, I_(5)-1, LuaBool(6) ); RZ; }
+   STATIC_FXN int PutLineSeg( lua_State *L ) { std::string t0,t1; thisPF()->PutLineSeg( I_(2)-1, Sr_(L,3), t0,t1, I_(4)-1, I_(5)-1, LuaBool(6) ); RZ; }
 
-FBUF_(ExpandWildcardSorted  ) { FBOP::ExpandWildcardSorted  ( thisPF(), S_(2) ); RZ; }
-FBUF_(ExpandWildcardUnsorted) { FBOP::ExpandWildcardUnsorted( thisPF(), S_(2) ); RZ; }
+   STATIC_FXN int ExpandWildcardSorted( lua_State *L ) { FBOP::ExpandWildcardSorted  ( thisPF(), S_(2) ); RZ; }
+   STATIC_FXN int ExpandWildcardUnsorted( lua_State *L ) { FBOP::ExpandWildcardUnsorted( thisPF(), S_(2) ); RZ; }
+   } // namespace LFBUF
 
 //------------------------------------------------------------------------------
 
-#define  Win_( API_name )  STATIC_FXN int l_Win_method_ ## API_name ( lua_State *L )
 
 STATIC_CONST char KevinsMetatable_Win[] = "KevinsMetatable.Win";
 struct lua_Win { PWin pWin; };
@@ -520,7 +521,6 @@ STATIC_FXN int l_Win_mmethod__gt ( lua_State *L ) { R_bool( l_cmp_Win_1_2( L ) >
 STATIC_FXN int l_Win_mmethod__ge ( lua_State *L ) { R_bool( l_cmp_Win_1_2( L ) >= 0 ); }
 //---------------------------
 
-
 STATIC_FXN int l_Win_function_cur ( lua_State *L ) { return l_construct_Win( L, g_CurWinWr() ); }
 STATIC_FXN int l_Win_function_getn( lua_State *L ) { return l_construct_Win( L, I_(1)-1      ); }
 
@@ -534,32 +534,33 @@ STATIC_FXN int l_Win_function_by_filename( lua_State *L ) { // Beware!  There MA
    R_nil();
    }
 
-LUAFUNC_(SplitCurWnd) {
-   const auto fSplitVertical = ToBOOL(I_(1));
-         auto splitAt        = I_(2);    // this is a PERCENTAGE
-   const auto pWin( g_CurWin() );
-   const auto size   = fSplitVertical ? pWin->d_Size.col : pWin->d_Size.lin;
-   const int  minwin = fSplitVertical ? MIN_WIN_WIDTH    : MIN_WIN_HEIGHT  ;
-   if( size > (2*minwin)+1 ) { // +1 for border
-      splitAt = (size * splitAt) / 100;
-      NoLessThan( &splitAt, minwin );
-      auto rv = SplitCurWnd( fSplitVertical, splitAt );
-      if( rv ) {
-         DispRefreshWholeScreenNow();
-         return l_construct_Win( L, rv );
+namespace LExFx {
+   STATIC_FXN int SplitCurWnd( lua_State *L ) {
+      const auto fSplitVertical = ToBOOL(I_(1));
+            auto splitAt        = I_(2);    // this is a PERCENTAGE
+      const auto pWin( g_CurWin() );
+      const auto size   = fSplitVertical ? pWin->d_Size.col : pWin->d_Size.lin;
+      const int  minwin = fSplitVertical ? MIN_WIN_WIDTH    : MIN_WIN_HEIGHT  ;
+      if( size > (2*minwin)+1 ) { // +1 for border
+         splitAt = (size * splitAt) / 100;
+         NoLessThan( &splitAt, minwin );
+         auto rv = ::SplitCurWnd( fSplitVertical, splitAt );
+         if( rv ) {
+            ::DispRefreshWholeScreenNow();
+            return l_construct_Win( L, rv );
+            }
          }
+      R_nil();
       }
-   R_nil();
    }
 
-Win_(CurFBUF)    { return l_construct_FBUF( L, thisWin()->ViewHd.front()->FBuf() ); }
-Win_(Height)     { R_int( thisWin()->d_Size.lin ); }
-Win_(MakeCurrent){ SetWindowSetValidView_( thisWin() ); R_nil(); }
-
+namespace LWin {
+   STATIC_FXN int CurFBUF( lua_State *L )    { return l_construct_FBUF( L, thisWin()->ViewHd.front()->FBuf() ); }
+   STATIC_FXN int Height( lua_State *L )     { R_int( thisWin()->d_Size.lin ); }
+   STATIC_FXN int MakeCurrent( lua_State *L ){ SetWindowSetValidView_( thisWin() ); R_nil(); }
+   }
 
 //------------------------------------------------------------------------------
-
-#define  View_( API_name )  STATIC_FXN int l_View_method_ ## API_name ( lua_State *L )
 
 STATIC_CONST char KevinsMetatable_View[] = "KevinsMetatable.View";
 struct lua_View { PView pView; };
@@ -586,38 +587,41 @@ int l_construct_View( lua_State *L, PView pView ) {
    return 1;
    }
 
-Win_(CurView)      { return l_construct_View( L, thisWin()->ViewHd.front() ); }  // Note that View ctor is a Win _method_
-FBUF_(PutFocusOn)  { return l_construct_View( L, thisPF()->PutFocusOn() ); }     // Note that View ctor is a FBUF _method_
-
-int l_View_function_cur( lua_State *L ) { return l_construct_View( L, g_CurView() ); }
-View_(Next)                             { return l_construct_View( L, DLINK_NEXT( thisVw(), dlinkViewsOfWindow ) ); }
-
-View_(__tostring)  { auto pView = thisVw(); lua_pushfstring( L, "View(%p=\"%s\")", pView, pView->FBuf()->Name() ); return 1; }
-View_(MoveCursor)  { thisVw()->MoveCursor( I_(2)-1, I_(3)-1 ); RZ; }
-View_(GetCursorYX) {
-   auto pView = thisVw();
-   lua_pushinteger( L, pView->Cursor().lin+1 );
-   lua_pushinteger( L, pView->Cursor().col+1 );
-   lua_pushinteger( L, pView->Origin().lin+1 );
-   lua_pushinteger( L, pView->Origin().col+1 );
-   return 4;
+namespace LWin {
+   STATIC_FXN int CurView( lua_State *L )    { return l_construct_View( L, thisWin()->ViewHd.front() ); }  // Note that View ctor is a Win _method_
    }
 
-View_(FBuf)   { return l_construct_FBUF( L, thisVw()->FBuf() ); }
-View_(FName)  { R_str( thisVw()->FBuf()->Name() ); }
+namespace LFBUF {
+   STATIC_FXN int PutFocusOn( lua_State *L ) { return l_construct_View( L, thisPF()->PutFocusOn() ); }     // Note that View ctor is a FBUF _method_
+   }
 
-View_(Get_LineCompile)  { R_int( thisVw()->Get_LineCompile()+1 );          }
-View_(Set_LineCompile)  { thisVw()->Set_LineCompile( I_(2)-1 ); RZ; }
-
-View_(HiliteMatch) { // params: int line, int col, int MatchCols
-   const auto pv    ( thisVw() );
-   const auto yLine ( I_(2)-1 );
-   const auto xStart( I_(3)-1 );
-   const auto Cols  ( I_(4)   );
-   0 && DBG( "%s (%d,%d) L %d", __func__, yLine, xStart, Cols );
-   const Point pt( yLine, xStart ); // NB: Lua uses 1-based line and column numbers!!!
-   pv->SetMatchHiLite( pt, Cols, false );
-   RZ;
+int l_View_function_cur( lua_State *L ) { return l_construct_View( L, g_CurView() ); }
+namespace LView {
+   STATIC_FXN int Next( lua_State *L )     { return l_construct_View( L, DLINK_NEXT( thisVw(), dlinkViewsOfWindow ) ); }
+   STATIC_FXN int __tostring( lua_State *L )  { auto pView = thisVw(); lua_pushfstring( L, "View(%p=\"%s\")", pView, pView->FBuf()->Name() ); return 1; }
+   STATIC_FXN int MoveCursor( lua_State *L )  { thisVw()->MoveCursor( I_(2)-1, I_(3)-1 ); RZ; }
+   STATIC_FXN int GetCursorYX( lua_State *L ) {
+      auto pView = thisVw();
+      lua_pushinteger( L, pView->Cursor().lin+1 );
+      lua_pushinteger( L, pView->Cursor().col+1 );
+      lua_pushinteger( L, pView->Origin().lin+1 );
+      lua_pushinteger( L, pView->Origin().col+1 );
+      return 4;
+      }
+   STATIC_FXN int FBuf( lua_State *L )   { return l_construct_FBUF( L, thisVw()->FBuf() ); }
+   STATIC_FXN int FName( lua_State *L )  { R_str( thisVw()->FBuf()->Name() ); }
+   STATIC_FXN int Get_LineCompile( lua_State *L )  { R_int( thisVw()->Get_LineCompile()+1 );          }
+   STATIC_FXN int Set_LineCompile( lua_State *L )  { thisVw()->Set_LineCompile( I_(2)-1 ); RZ; }
+   STATIC_FXN int HiliteMatch( lua_State *L ) { // params: int line, int col, int MatchCols
+      const auto pv    ( thisVw() );
+      const auto yLine ( I_(2)-1 );
+      const auto xStart( I_(3)-1 );
+      const auto Cols  ( I_(4)   );
+      0 && DBG( "%s (%d,%d) L %d", __func__, yLine, xStart, Cols );
+      const Point pt( yLine, xStart ); // NB: Lua uses 1-based line and column numbers!!!
+      pv->SetMatchHiLite( pt, Cols, false );
+      RZ;
+      }
    }
 
 //------------------------------------------------------------------------------
@@ -655,77 +659,74 @@ void l_OpenStdLibs( lua_State *L ) {
 
 void l_RegisterEditorFuncs( lua_State *L ) {
    STATIC_CONST luaL_reg myLuaFuncs[] = {
-      //#define  LUA_FUNC_I( func )   { #func, l_edfunc_##func },
+      #define  LUA_FUNC_I( func )   { #func, LExFx::func },
 #ifdef use_AddEdFxn
-       { "AddEdFxn"                    , AddEdFxn                    },
+       LUA_FUNC_I(AddEdFxn)
 #endif
-       { "AddToSearchLog"              , AddToSearchLog              },
-       { "AssignStrOk"                 , l_AssignStrOk               },
-       { "PushVariableMacro"           , PushVariableMacro           },
-       { "Clipboard_PutText"           , Clipboard_PutText_          },
-       { "CmdIdxAddLuaFunc"            , CmdIdxAddLuaFunc            },
-       { "SetKeyOk"                    , BindKeyToCMD                },
-       { "DBG"                         , DBG                         },
-       { "Path_CommonPrefixLen"        , Path_CommonPrefixLen        },
-       { "MarkDefineAtCurPos"          , MarkDefineAtCurPos          },
-       { "MarkGoto"                    , MarkGoto                    },
-       { "GetChildDirs"                , GetChildDirs                },
-       { "GetDynMacros"                , GetDynMacros                },
-       { "GetCwd"                      , GetCwd                      },
-       { "Getenv"                      , Getenv                      },
-       { "GetenvOrNil"                 , GetenvOrNil                 },
-       { "Get_SearchCaseSensitive"     , Get_SearchCaseSensitive     },
-       { "Putenv"                      , Putenv                      },
-       { "ModifyTimeOfDiskFile"        , ModifyTimeOfDiskFile        },
-       { "Msg"                         , Msg                         },
-       { "OsErrStr"                    , OsErrStr                    },
-       { "OsName"                      , OsName                      },
-       { "OsVer"                       , OsVer                       },
-       { "Path_Dirnm"                  , Path_Dirnm                  },
-       { "Path_Fnm"                    , Path_Fnm                    },
-       { "Path_Ext"                    , Path_Ext                    },
-       { "Path_FnameExt"               , Path_FnameExt               },
-       { "RsrcFilename"                , RsrcFilename                },
-       { "StateFilename"               , StateFilename               },
-       { "StartConProcess"             , StartConProcess             },
-       { "StartGuiProcess"             , StartGuiProcess             },
-       { "StartShellExecuteProcess"    , StartShellExecuteProcess    },
-       { "Bell"                        , Bell                        },
-       { "GetKey"                      , GetKey                      },
-       { "SplitCurWnd"                 , SplitCurWnd                 },
-       { "ScreenLines"                 , ScreenLines                 },
-       { "ScreenCols"                  , ScreenCols                  },
-       { "HideCursor"                  , HideCursor                  },
-       { "UnhideCursor"                , UnhideCursor                },
-       { "DispRefreshWholeScreenNow"   , DispRefreshWholeScreenNow   },
-       { "DirectVidClear"              , DirectVidClear              },
-       { "DirectVidWrStrColorFlush"    , DirectVidWrStrColorFlush    },
-       { "fExecute"                    , fExecute                    },
-       { "fChangeFile"                 , fChangeFile                 },
-       { "IsFile"                      , IsFile                      },
-       { "IsDir"                       , IsDir                       },
-       { "SleepMs"                     , SleepMs                     },
-       { "rmargin"                     , rmargin                     },
-       { "valueof"                     , valueof                     },  // my Lua language extension
-
-       { "split_ch"                    , split_ch                    }, //    Lua language extension (from PIL)
-       { "split_str"                   , split_str                   }, //    Lua language extension (from PIL)
-       { "split_ch_tbl"                , split_ch_tbl                },
-       { "split_str_tbl"               , split_str_tbl               },
-       { "enqueue_compile_jobs"        , enqueue_compile_jobs        },
-       { "hexstr2bitstr"               , hexstr2bitstr               },
-       { "bitstr2hexstr"               , bitstr2hexstr               },
-
+       LUA_FUNC_I(AddToSearchLog)
+       { "AssignStrOk"                 , LExFx::l_AssignStrOk },
+       LUA_FUNC_I(PushVariableMacro)
+       LUA_FUNC_I(Clipboard_PutText)
+       LUA_FUNC_I(CmdIdxAddLuaFunc)
+       { "SetKeyOk"                    , LExFx::BindKeyToCMD  },
+       LUA_FUNC_I(DBG)
+       LUA_FUNC_I(Path_CommonPrefixLen)
+       LUA_FUNC_I(MarkDefineAtCurPos)
+       LUA_FUNC_I(MarkGoto)
+       LUA_FUNC_I(GetChildDirs)
+       LUA_FUNC_I(GetDynMacros)
+       LUA_FUNC_I(GetCwd)
+       LUA_FUNC_I(Getenv)
+       LUA_FUNC_I(GetenvOrNil)
+       LUA_FUNC_I(Get_SearchCaseSensitive)
+       LUA_FUNC_I(Putenv)
+       LUA_FUNC_I(ModifyTimeOfDiskFile)
+       LUA_FUNC_I(Msg)
+       LUA_FUNC_I(OsErrStr)
+       LUA_FUNC_I(OsName)
+       LUA_FUNC_I(OsVer)
+       LUA_FUNC_I(Path_Dirnm)
+       LUA_FUNC_I(Path_Fnm)
+       LUA_FUNC_I(Path_Ext)
+       LUA_FUNC_I(Path_FnameExt)
+       LUA_FUNC_I(RsrcFilename)
+       LUA_FUNC_I(StateFilename)
+       LUA_FUNC_I(StartConProcess)
+       LUA_FUNC_I(StartGuiProcess)
+       LUA_FUNC_I(StartShellExecuteProcess)
+       LUA_FUNC_I(Bell)
+       LUA_FUNC_I(GetKey)
+       LUA_FUNC_I(SplitCurWnd)
+       LUA_FUNC_I(ScreenLines)
+       LUA_FUNC_I(ScreenCols)
+       LUA_FUNC_I(HideCursor)
+       LUA_FUNC_I(UnhideCursor)
+       LUA_FUNC_I(DispRefreshWholeScreenNow)
+       LUA_FUNC_I(DirectVidClear)
+       LUA_FUNC_I(DirectVidWrStrColorFlush)
+       LUA_FUNC_I(fExecute)
+       LUA_FUNC_I(fChangeFile)
+       LUA_FUNC_I(IsFile)
+       LUA_FUNC_I(IsDir)
+       LUA_FUNC_I(SleepMs)
+       LUA_FUNC_I(rmargin)
+       LUA_FUNC_I(valueof)                      // my Lua language extension
+       LUA_FUNC_I(split_ch)                     //    Lua language extension (from PIL)
+       LUA_FUNC_I(split_str)                    //    Lua language extension (from PIL)
+       LUA_FUNC_I(split_ch_tbl)
+       LUA_FUNC_I(split_str_tbl)
+       LUA_FUNC_I(enqueue_compile_jobs)
+       LUA_FUNC_I(hexstr2bitstr)
+       LUA_FUNC_I(bitstr2hexstr)
       #undef   LUA_FUNC_I
       };
 
    for( const auto &lib : myLuaFuncs ) {
-      DBG_LUA && DBG( "%s --- registering %s ---", __func__, lib.name );
+      DBG_LUA && ::DBG( "%s --- registering %s ---", __func__, lib.name );
       lua_register( L, lib.name, lib.func );
-      DBG_LUA && DBG( "%s --- registered  %s ---", __func__, lib.name );
+      DBG_LUA && ::DBG( "%s --- registered  %s ---", __func__, lib.name );
       }
    }
-
 
 void l_SetEditorGlobalsInts( lua_State *L ) {
    struct nm2int { PCChar name; int value; };
@@ -798,7 +799,7 @@ STATIC_FXN void l_register_Win_object( lua_State *L ) {
       { 0 , 0 }
       };
    STATIC_CONST luaL_reg methods[] = {
-      #define  LUA_FUNC_I( func )   { #func, l_Win_method_##func },
+      #define  LUA_FUNC_I( func )   { #func, LWin::func },
       LUA_FUNC_I(CurFBUF)
       LUA_FUNC_I(CurView)
       LUA_FUNC_I(Height)
@@ -818,7 +819,7 @@ STATIC_FXN void l_register_Win_object( lua_State *L ) {
 
 STATIC_FXN void l_register_View_object( lua_State *L ) {
    STATIC_CONST luaL_reg methods[] = {
-      #define  LUA_FUNC_I( func )   { #func, l_View_method_##func },
+      #define  LUA_FUNC_I( func )   { #func, LView::func },
       LUA_FUNC_I(__tostring)
       LUA_FUNC_I(MoveCursor)
       LUA_FUNC_I(GetCursorYX)
@@ -841,7 +842,7 @@ STATIC_FXN void l_register_View_object( lua_State *L ) {
 
 STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
    STATIC_CONST luaL_reg methods[] = {
-      #define  LUA_FUNC_I( func )   { #func, l_FBUF_method_##func },
+      #define  LUA_FUNC_I( func )   { #func, LFBUF::func },
       LUA_FUNC_I(__tostring)
       LUA_FUNC_I(CantModify)
       LUA_FUNC_I(CopyLines)
