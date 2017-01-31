@@ -41,7 +41,7 @@ The K source code distro contains, and K uses, the following source code from ex
          * to access this setting (which may be host-global!): right click on the icon in the console window title bar and select Properties, then the Options tab
          * "relaunch" seems to mean closing and reopening the console window (not rebooting the OS).
  * K has no "virtual memory" mechanism (as M did); files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process (now that all OS's default-deploy their x64 variant (and K is buildable as an x64 app) this is practically never a concern).
- * K operates on ASCII files; is has no support for Unicode/UTF-8/MBCS/etc. content (it's a text-editor, not a word processor).  I am increasingly entertaining the possibility of adding UTF-8 support.
+ * K operates on ASCII files; it has no support for Unicode/UTF-8/MBCS/etc. content (it's a text-editor, not a word processor).  I am increasingly entertaining the possibility of adding UTF-8 support.
 
 # Building
 
@@ -68,7 +68,7 @@ The K source code distro contains, and K uses, the following source code from ex
 
 ### Linux-specific Build-Prep Instructions
 
-#### *Ubuntu >= 14.04 (and presumably any contemporary Debian release)
+#### *ubuntu >= 14.04 (and presumably any contemporary Debian release)
 
  * after cloning this repo, run `sudo ./install_build_tools_ubuntu.sh` to install the necessary packages.
 

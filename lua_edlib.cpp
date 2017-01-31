@@ -49,21 +49,21 @@ namespace LExFx { // exported functions
          }
       }
 
-   STATIC_FXN int StartShellExecuteProcess( lua_State *L ) { ::StartShellExecuteProcess( S_(1), So0_(2) ); RZ; }
-   STATIC_FXN int StartConProcess( lua_State *L )    {    R_int( ::StartConProcess( S_(1) ) ); }
-   STATIC_FXN int StartGuiProcess( lua_State *L )    {    R_int( ::StartGuiProcess( S_(1) ) ); }
+   STATIC_FXN int StartShellExecuteProcess( lua_State *L ) {  ::StartShellExecuteProcess( S_(1), So0_(2) ); RZ; }
+   STATIC_FXN int StartConProcess( lua_State *L )    { R_int( ::StartConProcess( S_(1) ) ); }
+   STATIC_FXN int StartGuiProcess( lua_State *L )    { R_int( ::StartGuiProcess( S_(1) ) ); }
    STATIC_FXN int OsErrStr( lua_State *L )           { linebuf lb; ::OsErrStr( BSOB(lb) ); R_str( lb ); }
    STATIC_FXN int OsName( lua_State *L )             { R_str( ::OsName() ); }
    STATIC_FXN int OsVer( lua_State *L )              { R_str( ::OsVerStr() ); }
    STATIC_FXN int rmargin( lua_State *L )            { R_int( g_iRmargin ); }
 
-   STATIC_FXN int RsrcFilename( lua_State *L )  { R_str( ::RsrcFilename ( S_(1) ).c_str() ); }
-   STATIC_FXN int StateFilename( lua_State *L ) { R_str( ::StateFilename( S_(1) ).c_str() ); }
+   STATIC_FXN int RsrcFilename( lua_State *L )       { R_str( ::RsrcFilename ( S_(1) ).c_str() ); }
+   STATIC_FXN int StateFilename( lua_State *L )      { R_str( ::StateFilename( S_(1) ).c_str() ); }
 
-   STATIC_FXN int Bell( lua_State *L ) { ConOut::Bell(); RZ; }
-   STATIC_FXN int ScreenLines( lua_State *L ) { R_int( ::ScreenLines() ); }
-   STATIC_FXN int ScreenCols( lua_State *L ) { R_int( ::ScreenCols () ); }
-   STATIC_FXN int DirectVidClear( lua_State *L ) { ::DirectVidClear(); RZ; }
+   STATIC_FXN int Bell( lua_State *L )               { ConOut::Bell(); RZ; }
+   STATIC_FXN int ScreenLines( lua_State *L )        { R_int( ::ScreenLines() ); }
+   STATIC_FXN int ScreenCols( lua_State *L )         { R_int( ::ScreenCols () ); }
+   STATIC_FXN int DirectVidClear( lua_State *L )     { ::DirectVidClear(); RZ; }
    STATIC_FXN int DirectVidWrStrColorFlush( lua_State *L ) { 0 && DBG("%s: %d, %d", __func__, I_(1), I_(2) );
       ::DirectVidWrStrColorFlush( I_(1), I_(2), S_(3), I_(4) );
       RZ;
@@ -104,18 +104,18 @@ namespace LExFx { // exported functions
       std::string val( "<mfspec>" );
       const auto fb( FindFBufByName( val.c_str() ) );
       if( fb ) {
-          if( FBOP::IsBlank( fb ) ) { val.append( " exists but empty" ); }
-          else                      { val.append( FmtStr<31>( " %d lines", fb->LineCount() ) ); }
-          }
-      else                          { val.append( " does not exist" ); }
+         if( FBOP::IsBlank( fb ) ) { val.append( " exists but empty" ); }
+         else                      { val.append( FmtStr<31>( " %d lines", fb->LineCount() ) ); }
+         }
+      else                         { val.append( " does not exist" ); }
       lua_pushlstring( L, val.data(), val.length() );        lua_rawseti( L, -2, ++tblIdx );
       return 1;  // return the table
       }
 
-   STATIC_FXN int GetCwd( lua_State *L )        { R_str( Path::GetCwd_ps().c_str() ); }
+   STATIC_FXN int GetCwd( lua_State *L )     { R_str( Path::GetCwd_ps().c_str() ); }
    STATIC_FXN int Path_Dirnm( lua_State *L ) { const auto rv( Path::RefDirnm(    S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
-   STATIC_FXN int Path_Fnm( lua_State *L ) { const auto rv( Path::RefFnm(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
-   STATIC_FXN int Path_Ext( lua_State *L ) { const auto rv( Path::RefExt(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+   STATIC_FXN int Path_Fnm( lua_State *L )   { const auto rv( Path::RefFnm(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
+   STATIC_FXN int Path_Ext( lua_State *L )   { const auto rv( Path::RefExt(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
    STATIC_FXN int Path_FnameExt( lua_State *L ) { const auto rv( Path::RefFnameExt( S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
    STATIC_FXN int GetChildDirs( lua_State *L ) {
       lua_newtable(L);  // result
@@ -138,10 +138,10 @@ namespace LExFx { // exported functions
       else          PutEnvOk( param1 );
       RZ;
       }
-   STATIC_FXN int Clipboard_PutText( lua_State *L ) { ::Clipboard_PutText( S_(1) ); RZ; }
-   STATIC_FXN int MarkDefineAtCurPos( lua_State *L )       { ::MarkDefineAtCurPos( S_(1) ); RZ; }
-   STATIC_FXN int MarkGoto( lua_State *L )                 { R_bool( ::MarkGoto( S_(1) ) ); }
-   STATIC_FXN int ModifyTimeOfDiskFile( lua_State *L )     {
+   STATIC_FXN int Clipboard_PutText( lua_State *L )     { ::Clipboard_PutText( S_(1) ); RZ; }
+   STATIC_FXN int MarkDefineAtCurPos( lua_State *L )    { ::MarkDefineAtCurPos( S_(1) ); RZ; }
+   STATIC_FXN int MarkGoto( lua_State *L )              { R_bool( ::MarkGoto( S_(1) ) ); }
+   STATIC_FXN int ModifyTimeOfDiskFile( lua_State *L )  {
       const auto fstat_( GetFileStat( S_(1) ) );
       R_lstr( PCChar(&fstat_), sizeof(fstat_) );
       }
@@ -363,19 +363,19 @@ namespace LFBUF {
    STATIC_FXN int InsBlankLinesBefore( lua_State *L )      { thisPF()->InsBlankLinesBefore( I_(2)-1, Io_( 3, 1 ) )              ; RZ; }
    STATIC_FXN int InsLine( lua_State *L )                  { std::string tmp; thisPF()->InsLine( I_(2)-1, S_(3), tmp )          ; RZ; }
    STATIC_FXN int InsLineSortedAscending( lua_State *L )   { std::string tmp;
-                                     const PCChar st = S_(2);
-                                     FBOP::InsLineSortedAscending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
-                                   }
+                                                             const PCChar st = S_(2);
+                                                             FBOP::InsLineSortedAscending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
+                                                           }
    STATIC_FXN int InsLineSortedDescending( lua_State *L )  { std::string tmp;
-                                     const PCChar st = S_(2);
-                                     FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
-                                   }
+                                                             const PCChar st = S_(2);
+                                                             FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
+                                                           }
    STATIC_FXN int IsGrepBuf( lua_State *L )                { Path::str_t searchedFnm; int metaLines;
-                                     if( FBOP::IsGrepBuf( searchedFnm, &metaLines, thisPF() ) ) {
-                                        P_str(searchedFnm.c_str()) ; P_int(metaLines) ; return 2;
-                                        }
-                                     RZ;
-                                   }
+                                                             if( FBOP::IsGrepBuf( searchedFnm, &metaLines, thisPF() ) ) {
+                                                                P_str(searchedFnm.c_str()) ; P_int(metaLines) ; return 2;
+                                                                }
+                                                             RZ;
+                                                           }
    STATIC_FXN int KeepTrailSpcs( lua_State *L )            { thisPF()->KeepTrailSpcs()                                    ; RZ; }
    STATIC_FXN int MakeEmpty( lua_State *L )                { thisPF()->MakeEmpty()                                        ; RZ; }
    STATIC_FXN int PutLastLine( lua_State *L )              { thisPF()->PutLastLine( S_(2) )                               ; RZ; }
@@ -504,26 +504,16 @@ int l_construct_Win( lua_State *L, PWin pWin ) {
 int l_construct_Win( lua_State *L, int winIdx ) {
    return l_construct_Win( L, winIdx >= 0 && winIdx < g_iWindowCount() ? g_WinWr( winIdx ) : 0 );
    }
-
-// FBUF_(PutFocusOn)  // Note that Win ctor is a FBUF _method_
-//    {
-//    return l_construct_Win( L, thisPF()->PutFocusOn() );
-//    }
-
 //---------------------------
 STATIC_FXN int l_Win_mmethod__eq ( lua_State *L ) { R_bool( l_Get_Win( L, 1 ) == l_Get_Win( L, 2 ) ); }
-
 STATIC_FXN int l_cmp_Win_1_2 ( lua_State *L ) { return cmp_win( l_Get_Win( L, 1 ), l_Get_Win( L, 2 ) ); }
-
 STATIC_FXN int l_Win_mmethod__lt ( lua_State *L ) { R_bool( l_cmp_Win_1_2( L ) <  0 ); }
 STATIC_FXN int l_Win_mmethod__le ( lua_State *L ) { R_bool( l_cmp_Win_1_2( L ) <= 0 ); }
 STATIC_FXN int l_Win_mmethod__gt ( lua_State *L ) { R_bool( l_cmp_Win_1_2( L ) >  0 ); }
 STATIC_FXN int l_Win_mmethod__ge ( lua_State *L ) { R_bool( l_cmp_Win_1_2( L ) >= 0 ); }
 //---------------------------
-
 STATIC_FXN int l_Win_function_cur ( lua_State *L ) { return l_construct_Win( L, g_CurWinWr() ); }
 STATIC_FXN int l_Win_function_getn( lua_State *L ) { return l_construct_Win( L, I_(1)-1      ); }
-
 STATIC_FXN int l_Win_function_by_filename( lua_State *L ) { // Beware!  There MAY BE more than one window onto a given file
    auto pFnm = S_(1);
    for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
@@ -623,8 +613,6 @@ namespace LView {
       RZ;
       }
    }
-
-//------------------------------------------------------------------------------
 
 #pragma GCC diagnostic pop
 
@@ -778,10 +766,9 @@ void l_register_class( lua_State *L
    luaL_newmetatable( L, kszMetatable_magic_string );
    lua_pushvalue(     L, -1 );  // DUP metatable
    lua_setfield(      L, -2, "__index" );  // metatable.__index = metatable; leaves TOS=metatable
-
-   if( metamethods )
+   if( metamethods ) {
       luaL_register( L, 0, metamethods );    // leaves TOS=metatable
-
+      }
    luaL_register( L, 0, methods );           // leaves TOS=metatable
    luaL_register( L, szObjName, functions ); // leaves TOS=metatable
    0 && LDS( __func__, L );
@@ -809,9 +796,9 @@ STATIC_FXN void l_register_Win_object( lua_State *L ) {
       };
    STATIC_CONST luaL_reg functions[] = {
       { "getmetatable" , l_Win_function_getmetatable },
-      { "cur"          , l_Win_function_cur         },
-      { "getn"         , l_Win_function_getn        },
-      { "by_filename"  , l_Win_function_by_filename },
+      { "cur"          , l_Win_function_cur          },
+      { "getn"         , l_Win_function_getn         },
+      { "by_filename"  , l_Win_function_by_filename  },
       { 0 , 0 }
       };
    l_register_class( L, "Win", KevinsMetatable_Win, metamethods, functions, methods );
@@ -907,12 +894,12 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       { 0 , 0 }
       };
    STATIC_CONST luaL_reg functions[] = {
-      { "getmetatable"    , l_FBUF_function_getmetatable },
-      { "new"             , l_FBUF_function_new     },
+      { "getmetatable"    , l_FBUF_function_getmetatable   },
+      { "new"             , l_FBUF_function_new            },
       { "new_may_create"  , l_FBUF_function_new_may_create },
-      { "CurView"         , l_FBUF_function_curview },
-      { "first"           , l_FBUF_function_first   },
-      { "log"             , l_FBUF_function_getlog  },
+      { "CurView"         , l_FBUF_function_curview        },
+      { "first"           , l_FBUF_function_first          },
+      { "log"             , l_FBUF_function_getlog         },
       { 0 , 0 }
       };
    l_register_class( L, "FBUF", KevinsMetatable_FBUF, 0, functions, methods );
