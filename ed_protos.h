@@ -53,7 +53,7 @@ STIL int pd2Int( ptrdiff_t pd ) {
    }
 #endif
 
-extern   int   uint_log_10( int lmax );
+extern unsigned uint_log_10( unsigned lmax );
 
                     enum ePseudoBufType { GREP_BUF, SEL_BUF, };
 extern PFBUF  PseudoBuf( ePseudoBufType PseudoBufType, int fNew );

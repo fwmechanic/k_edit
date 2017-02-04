@@ -337,11 +337,10 @@ bool ARG::makebox() {
 
 // "library" function
 
-int uint_log_10( int num ) {
-   Assert( num >= 0 );
+unsigned uint_log_10( unsigned num ) {
    // figure out min width of fixed-width field needed to hold line #
    //    poor-man's log10 function:  28-Mar-2001 klg
-   auto rv( 1 );
+   auto rv( 1u );
 #if 0
    while( num >= 10 ) {
       num /= 10;
@@ -364,43 +363,55 @@ int uint_log_10( int num ) {
 
 typedef int rtl_errno_t;
 
-STATIC_FXN int32_t strtol_er( rtl_errno_t &conv_errno, char const *nptr, char *&endptr, int base ) {
+// http://stackoverflow.com/a/34774296  "How do you implement strtol under const-correctness?"
+STATIC_FXN int32_t strtol_er( rtl_errno_t &conv_errno, PCChar nptr, PCChar &endptr, int base ) {
    errno = 0;
-   const auto rv( strtol( nptr, &endptr, base ) );
+   const auto rv( strtol( nptr, &CAST_AWAY_CONST(PChar &)(endptr), base ) );
    conv_errno = errno;
    errno = 0;
    return rv;
    }
 
-bool ARG::vrepeat() {
+bool ARG::vrepeat() { enum {DB=0};
    auto lx( d_boxarg.flMin.lin );
-   std::string st; g_CurFBuf()->DupLineSeg( st, lx++, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
+   std::string st; g_CurFBuf()->DupLineSeg( st, lx, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
    CPCChar inbuf( st.c_str() );
-   1 && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
+   DB && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
    const auto fInsertArg( d_cArg < 2 );
    std::string t0,t1;
    if( !d_fMeta ) {
-      for( ; lx <= d_boxarg.flMax.lin; ++lx ) { // each line in boxarg
+      for( ++lx ; lx <= d_boxarg.flMax.lin; ++lx ) { // each line in boxarg
          g_CurFBuf()->PutLineSeg( lx, inbuf, t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col, fInsertArg );
          }
       }
    else { // insert incrementing sequence of numbers, with initial value given in top line of BOXARG
-      PChar pe; rtl_errno_t conv_errno;
+      PCChar pe; rtl_errno_t conv_errno;
       int val( strtol_er( conv_errno, st.c_str(), pe, 0 ) );
       if( conv_errno /* || *pe != 0 */ ) {
          return Msg( "%s could not convert first-line content '%s' to int", __func__, st.c_str() );
          }
-      const auto ixMaxDigit( pe - st.c_str() );
+      const auto ixMaxDigit( pe - st.c_str() - 1 ); // pe points at char AFTER digits
       const auto ixMinDigit( FirstDigitOrEnd( st ) ); if( atEnd( st, ixMinDigit ) ) { return Msg( "internal error, no first digit?" ); }
       enum { MAX_INT_PRINT_CHARS = 9 };
       const auto fLead0( '0' == st[ixMinDigit] );
-      const auto width( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  DBG( "width=%d", width );
+      const auto width_DueToArgHeight( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  DB && DBG( "width_DueToArgHeight=%d", width_DueToArgHeight );
+      const auto width_DueToArgWidth( st.length() );  DB && DBG( "width_DueToArgWidth=%d", width_DueToArgWidth );
+      const auto width( Max( width_DueToArgHeight, width_DueToArgWidth ) );
       if( width > MAX_INT_PRINT_CHARS ) { return Msg( "internal error, width %d > %d", width, MAX_INT_PRINT_CHARS ); }
-      FmtStr<7>fmts( "%%%s%dd", fLead0 ? "0":"", width ); const auto fmt( fmts.k_str() );   DBG( "fmt='%s'", fmt );
-      FmtStr<1+MAX_INT_PRINT_CHARS> st0( fmt, val ); auto ps0 = st0.k_str();  DBG( "st0='%s'", ps0 );
-      g_CurFBuf()->PutLineSeg( lx-1, ps0, t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col-1, false );
+
+      FmtStr<7>fmts( "%%%s%dd", fLead0 ? "0":"", width ); const auto fmt( fmts.k_str() );   DB && DBG( "fmt='%s'", fmt );
+      FmtStr<1+MAX_INT_PRINT_CHARS> st0( fmt, val ); auto ps0 = st0.k_str();  DB && DBG( "st0='%s'", ps0 );
       const auto xMax( d_boxarg.flMin.col+width-1 );
-      for( ; lx <= d_boxarg.flMax.lin; ++lx ) {                     // each line in boxarg
+      bool ins;
+      if( xMax == d_boxarg.flMax.col ) {
+         ins = false;
+         }
+      else {
+         g_CurFBuf()->DelBox( d_boxarg.flMin.col, lx, d_boxarg.flMax.col, lx );
+         ins = true;
+         }
+      g_CurFBuf()->PutLineSeg( lx, FmtStr<1+MAX_INT_PRINT_CHARS>( fmt, val ).k_str(), t0,t1, d_boxarg.flMin.col, xMax, ins );
+      for( ++lx ; lx <= d_boxarg.flMax.lin; ++lx ) { // each line in boxarg
          g_CurFBuf()->PutLineSeg( lx, FmtStr<1+MAX_INT_PRINT_CHARS>( fmt, ++val ).k_str(), t0,t1, d_boxarg.flMin.col, xMax, true );
          }
       }
