@@ -157,7 +157,7 @@ CC_OUTPUT := # --save-temp
 TRAPV := -ftrapv
 
 #  -Weffc++  -Wpedantic  -Wcast-qual
-CWARN := -Wall -Wextra -W \
+CWARN := -Wall -Werror -Wextra -W \
 -Wcast-align \
 -Wdouble-promotion \
 -Wfloat-equal \
