@@ -126,7 +126,8 @@ public:
                                              );
                                 }
    YX_t  BufferSize()     const { return YX_t( d_csbi.dwSize          .Y  , d_csbi.dwSize          .X   ); }
-   YX_t  MaxBufSize()     const { return YX_t( d_maxSize              .Y-1, d_maxSize              .X-1 ); } // -1 because the MAX is sometimes too big (goes off screen) because of window border thickness
+// YX_t  MaxBufSize()     const { return YX_t( d_maxSize              .Y-1, d_maxSize              .X-1 ); } // -1 because the MAX is sometimes too big (goes off screen) because of window border thickness
+   YX_t  MaxBufSize()     const { return YX_t( d_maxSize              .Y  , d_maxSize              .X   ); }
    YX_t  CursorPosition() const { return YX_t( d_csbi.dwCursorPosition.Y  , d_csbi.dwCursorPosition.X   ); }
    int   Attribute()      const { return d_csbi.wAttributes; }
    };
@@ -372,7 +373,7 @@ STATIC_FXN bool SetConsoleWindowSizeOk( const Win32::HANDLE d_hConsoleScreenBuff
    return true;
    }
 
-// Reposition the window to keep it on-screen, or at a specific location.
+// Reposition the window to keep it entirely on-screen (insofar as possible).
 // 20090613 kgoodwin based on win_pos in cs.c.txt from http://www.geocities.com/jadoxa/misc/cs.c.txt
 // This isn't perfect since the GetLargestConsoleWindowSize values, which govern
 // how big a window we'll try to create, do not include border size, while the
@@ -381,38 +382,36 @@ STATIC_FXN bool SetConsoleWindowSizeOk( const Win32::HANDLE d_hConsoleScreenBuff
 // should be, resulting in the right border (and part of the right console
 // character column) being off the right edge of the screen.  Likewise at the
 // bottom...
+// 20170214 see AdjustWindowRectEx for an(other) attempt to migitate this.
 
-void win_fully_on_desktop() {
-   enum { SHOWDBG = 0 };
+void win_fully_on_desktop() { enum { SHOWDBG = 1 };
+// SHOWDBG && DBG( "SM_CXSIZEFRAME =%4d,%4d", Win32::GetSystemMetrics( SM_CXSIZEFRAME  ), Win32::GetSystemMetrics( SM_CYSIZEFRAME  ) );
+// SHOWDBG && DBG( "SM_CXEDGE      =%4d,%4d", Win32::GetSystemMetrics( SM_CXEDGE       ), Win32::GetSystemMetrics( SM_CYEDGE       ) );
+// SHOWDBG && DBG( "SM_CXFIXEDFRAME=%4d,%4d", Win32::GetSystemMetrics( SM_CXFIXEDFRAME ), Win32::GetSystemMetrics( SM_CYFIXEDFRAME ) );
+// SHOWDBG && DBG( "SM_CXBORDER    =%4d,%4d", Win32::GetSystemMetrics( SM_CXBORDER     ), Win32::GetSystemMetrics( SM_CYBORDER     ) );
    const auto hwnd( Win32::GetConsoleWindow() );
-   Win32::UpdateWindow( hwnd ); // seems necessary to get correct win_now values post-TConsoleOutputControl::SetConsoleSizeOk
-   Win32::RECT desktop, workarea, win_now;
-   Win32::GetWindowRect( hwnd                     , &win_now     );
-   Win32::GetWindowRect( Win32::GetDesktopWindow(), &desktop     ); // rect includes taskbar
-   Win32::SystemParametersInfo( SPI_GETWORKAREA, 0, &workarea, 0 ); // rect EXcludes taskbar
-   const auto padx(0); // Win32::GetSystemMetrics( SM_CXBORDER );
-   const auto pady(0); // Win32::GetSystemMetrics( SM_CYBORDER );
-   auto moved(false);
-   auto win_new(win_now);
-   if( win_new.right +padx > workarea.right  ) { moved = true; win_new.left -= win_new.right  - (workarea.right +(2*padx)); }
-   if( win_new.bottom+pady > workarea.bottom ) { moved = true; win_new.top  -= win_new.bottom - (workarea.bottom+(2*pady)); }
-   // !!! next 2 lines must be AFTER prev 2 lines
-   if( win_new.left  -padx < workarea.left   ) { moved = true; win_new.left  = workarea.left+padx; }
-   if( win_new.top   -pady < workarea.top    ) { moved = true; win_new.top   = workarea.top +pady; }
-   if( moved ) {
-   // SHOWDBG && DBG( "SM_CXSIZEFRAME =%4d,%4d", Win32::GetSystemMetrics( SM_CXSIZEFRAME  ), Win32::GetSystemMetrics( SM_CXSIZEFRAME  ) );
-   // SHOWDBG && DBG( "SM_CXEDGE      =%4d,%4d", Win32::GetSystemMetrics( SM_CXEDGE       ), Win32::GetSystemMetrics( SM_CYEDGE       ) );
-   // SHOWDBG && DBG( "SM_CXFIXEDFRAME=%4d,%4d", Win32::GetSystemMetrics( SM_CXFIXEDFRAME ), Win32::GetSystemMetrics( SM_CYFIXEDFRAME ) );
-   // SHOWDBG && DBG( "SM_CXBORDER    =%4d,%4d", Win32::GetSystemMetrics( SM_CXBORDER     ), Win32::GetSystemMetrics( SM_CYBORDER     ) );
-   // SHOWDBG && DBG( "padx=%4d  pady=%4d", padx, pady );
-      SHOWDBG && DBG( "desktop  X=[%4ld,%4ld], Y=[%4ld,%4ld]", desktop.left , desktop.right , desktop.top , desktop.bottom  );
-      SHOWDBG && DBG( "workarea X=[%4ld,%4ld], Y=[%4ld,%4ld]", workarea.left, workarea.right, workarea.top, workarea.bottom );
-      SHOWDBG && DBG( "win      X=[%4ld,%4ld], Y=[%4ld,%4ld] width=%4ld, height=%4ld", win_now.left , win_now.right , win_now.top , win_now.bottom
-                    , win_now.right  - win_now.left + 1
-                    , win_now.bottom - win_now.top  + 1
+   Win32::UpdateWindow( hwnd ); // seems necessary to get correct rcWinNow values post-TConsoleOutputControl::SetConsoleSizeOk
+// Win32::RECT rcDesktop; Win32::GetWindowRect( Win32::GetDesktopWindow(), &rcDesktop   ); /* rect includes taskbar */ SHOWDBG && DBG( "dsktop X=[%4ld,%4ld], Y=[%4ld,%4ld]", rcDesktop.left, rcDesktop.right, rcDesktop.top, rcDesktop.bottom  );
+   Win32::RECT rcWinNow; Win32::GetWindowRect( hwnd, &rcWinNow ); SHOWDBG && DBG( "window X=[%4ld,%4ld], Y=[%4ld,%4ld]", rcWinNow.left, rcWinNow.right, rcWinNow.top, rcWinNow.bottom  );
+   Win32::RECT bszs = {0};  // bordersizes
+   if( false ) { // input (0-sized) rect to AdjustWindowRectEx; output rect contains border sizes/widths http://stackoverflow.com/a/13749190
+      Win32::WINDOWINFO wi = { sizeof(wi) }; Win32::GetWindowInfo( hwnd, &wi );
+      Win32::AdjustWindowRectEx( &bszs, wi.dwStyle, 0, wi.dwExStyle ); SHOWDBG && DBG( "adjwre X=[%4ld,%4ld], Y=[%4ld,%4ld]", bszs.left, bszs.right, bszs.top, bszs.bottom );
+      }
+   Win32::RECT workarea; Win32::SystemParametersInfo( SPI_GETWORKAREA, 0, &workarea, 0 ); /*workarea EXcludes taskbar*/ SHOWDBG && DBG( "wkarea X=[%4ld,%4ld], Y=[%4ld,%4ld]", workarea.left, workarea.right, workarea.top, workarea.bottom );
+   auto moved(false); auto rcWinNew(rcWinNow);
+   if( (rcWinNew.right -bszs.right ) > workarea.right  ) { moved = true; rcWinNew.left -= (rcWinNew.right -bszs.right ) - workarea.right ; }
+   if( (rcWinNew.bottom-bszs.bottom) > workarea.bottom ) { moved = true; rcWinNew.top  -= (rcWinNew.bottom-bszs.bottom) - workarea.bottom; }
+   // !!! next 2 lines must be AFTER prev 2 lines  NB: bszs.left and bszs.top are (from AdjustWindowRectEx) _negative_!
+   if( (rcWinNew.left  -bszs.left  ) < workarea.left   ) { moved = true; rcWinNew.left  = workarea.left; }
+   if( (rcWinNew.top   -bszs.top   ) < workarea.top    ) { moved = true; rcWinNew.top   = workarea.top ; }
+   if( moved ) { // NB: only rcWinNew.left and rcWinNew.top are relevant (the new ulc of the window)
+      SHOWDBG && DBG( "winold X=[%4ld,%4ld], Y=[%4ld,%4ld] width=%4ld, height=%4ld", rcWinNow.left , rcWinNow.right , rcWinNow.top , rcWinNow.bottom
+                    , rcWinNow.right  - rcWinNow.left + 1
+                    , rcWinNow.bottom - rcWinNow.top  + 1
                     );
-      SHOWDBG && DBG( "win'     X=[%4ld,....], Y=[%4ld,....]", win_new.left , win_new.top );
-      if( !Win32::SetWindowPos( hwnd, nullptr, win_new.left, win_new.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER ) ) {
+      SHOWDBG && DBG( "winnew X=[%4ld,....], Y=[%4ld,....]", rcWinNew.left , rcWinNew.top );
+      if( !Win32::SetWindowPos( hwnd, nullptr, rcWinNew.left, rcWinNew.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER ) ) {
          linebuf oseb;
          DBG( "%s: Win32::SetWindowPos FAILED: %s", __func__, OsErrStr( BSOB(oseb) ) );
          }
