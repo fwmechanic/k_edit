@@ -735,7 +735,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    tabwidth:8
    mfspec_:="*.cmd"
 
-[.mak .mik]
+[.make .mak .mik]
    ftype:make
 
 [.conf]
