@@ -661,7 +661,8 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
    -- Read Exuberant Tags output file
    -- My canonical Exuberant Tags command-line is:
    -- tagcr.bat:
-   -- ctags --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -R
+   -- ctags --totals=yes --excmd=number --c-types=cdefgmnstuv --python-kinds=-i --fields=+K --file-tags=yes -R
+   -- http://www.held.org.il/blog/2011/02/configuring-ctags-for-python-and-vim/
    --
    local function read_tags_file()
       local tagF, tagDirnm
@@ -864,6 +865,9 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       s_prevTagLookedUp = tagStr
       local tagEntryNum = 1
       local a_taginfo = ExpandTags( tagStr )
+      if #a_taginfo == 0 and GetCurrentFBUF():FTypeEq("python")  then
+         a_taginfo = ExpandTags( tagStr .. ".py" )  -- cheap hack: python module name maps to file "${modnn}.py"; give it a try
+         end
       if #a_taginfo > 1 then
          local ttWMax, lnumWMax, fnames = 0,0,{}
          for _, tv in ipairs( a_taginfo ) do  -- dope loop
