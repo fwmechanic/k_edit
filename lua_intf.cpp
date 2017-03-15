@@ -604,7 +604,7 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
                        setfield( L, "minX", 1+d_boxarg.flMin.col );
                        setfield( L, "maxX", 1+d_boxarg.flMax.col );
                        break;
-      case TEXTARG   : setfield( L, "text"   , d_textarg.pText ); //lint -fallthrough
+      case TEXTARG   : setfield( L, "text"   , d_textarg.pText ); /*lint -fallthrough*/ DB && DBG( "TEXTARG = %s", d_textarg.pText );
       case NOARG     :                                            //lint -fallthrough
       case NULLARG   :{const int xAll( 1+g_CursorCol () );
                        const int yAll( 1+g_CursorLine() );

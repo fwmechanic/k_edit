@@ -601,8 +601,8 @@
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
    ftab:ctrl+tab
-   cd2file:=arg meta curfilepath setfile  # set cwd to dir of current file
-   cd:=cd2file setfile meta tags
+   cd2file:=cancel arg meta curfilepath setfile  # set cwd to dir of current file
+   cd:=cd2file setfile readtagsfile
 
    eth:= cancel arg "http://www.speedtest.net/" setfile \
          cancel Arg myscripts "etheric.kdb" setfile endfile emacsnewl begline cur_yyyymmdd "_" cur_hhmmss " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Ubiquiti WLAN)"

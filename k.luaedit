@@ -927,9 +927,12 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       return true
       end
 
+   AddEdFxn{ name = "readtagsfile", help = "(re-)read tags data file", attr = NOARG
+      , NOARG   = function(arg)  read_tags_file() end
+      }
+
    AddEdFxn{ name = "tags", help = "Lua tags function", attr = NOARG+NOARGWUC+TEXTARG+BOXSTR, key = "alt+u"
-      , NOARG   = function(arg)  if arg.fMeta then return read_tags_file() end
-                                 return GotoTag( s_prevTagLookedUp )  end
+      , NOARG   = function(arg)  return GotoTag( s_prevTagLookedUp )  end
       , TEXTARG = function(arg)  return GotoTag( arg.text )           end
    --  NULLARG+   , NULLARG = function(arg)  return s_tagsFilename and SwitchToFile( s_tagsFilename ) end
       }

@@ -606,12 +606,12 @@ STIL void RecordCmd( PCCMD pCmd ) {
 
 void  CMD_reader::VWritePrompt() {}
 void  CMD_reader::VUnWritePrompt() {}
-PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 0 && DBG( "+%s", __func__ );
+PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { enum{DB=0}; DB && DBG( "+%s", __func__ );
    while(1) {
-      if( fRtnNullOnMacroRtn && s_fRtndFrom_fExecuted_macro ) { 0 && DBG( "-%s 0", __func__ );
+      if( fRtnNullOnMacroRtn && s_fRtndFrom_fExecuted_macro ) { DB && DBG( "-%s 0", __func__ );
          return nullptr;
          }
-      0 && DBG( ":%s %s", __func__, Interpreter::Interpreting() ? "MACRO?" : "KB?" );
+      DB && DBG( ":%s %s", __func__, Interpreter::Interpreting() ? "MACRO?" : "KB?" );
       // much of the complexity that follows is due to the difficulty of
       // deciding which CMD's need to be recorded-to-macro, or not
       // (see "How we record a command stream into a macro" above)
@@ -646,7 +646,7 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { 
             if( !fInterpreting_VariableMacro ) { // we DON'T want to record the expansion of VariableMacros ...
                RecordCmd( pCmd );                // as these are typically situation-(time-)dependent
                }
-            0 && DBG( "-%s %s", __func__, pCmd->Name() );
+            DB && DBG( "-%s %s", __func__, pCmd->Name() );
             return pCmd;                       // caller will execute
             }
          if( !pCmd->IsRealMacro() && !fInterpreting_VariableMacro ) {
