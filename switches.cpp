@@ -111,7 +111,7 @@ STATIC_CONST char s_dfltWordChars[] = "_0123456789abcdefghijlkmnopqrstuvwxyzABCD
 
 void swidWordchars( PChar dest, size_t sizeofDest, void *src ) {
    const PCChar p0( dest );
-   for( auto ix(1) ; ix < 256 && (dest - p0 - 1) < sizeofDest ; ++ix ) {
+   for( auto ix(1) ; ix < ELEMENTS(s_isWordChar_) && (dest - p0 - 1) < sizeofDest ; ++ix ) {
       if( s_isWordChar_[ix] && !strchr( s_dfltWordChars, ix ) ) {
          *dest++ = ix;
          }

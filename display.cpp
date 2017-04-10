@@ -591,8 +591,7 @@ std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
       const auto ixPt( CaptiveIdxOfCol( tw, rlpt, xCursor ) );
       auto cat_rv = [&]( stref st ) {
          DBG( "cat_rv=%" PR_BSR "'", BSR(st) );
-         for( auto ix(0) ; ix<st.length() ; ++ix ) {
-            const auto ch( st[ix] );
+         for( const auto ch : st ) {
             if( isspace( ch ) && (rv.length() == 0 || isspace(rv.back())) ) {
                }
             else {
