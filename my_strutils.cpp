@@ -42,13 +42,11 @@ void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
       }
    }
 
-STATIC_FXN void StrTruncd_( PCChar fxnm, int truncd, PCChar src, PCChar dst ) {
-   STATIC_CONST char fmt[] = "%s: STRING TRUNCATED by %d chars\nsrc: '%s'\ndst: '%s'";
-// STATIC_VAR bool alerted;    BUGBUG fix this
-// if( !alerted )  ConIO::DbgPopf( fmt, fxnm, truncd, src, dst );
-// else
-                   DBG(     fmt, fxnm, truncd, src, dst );
-// alerted = true;
+STATIC_FXN void StrTruncd_( PCChar fxnm, int truncd, stref src, stref dst ) {
+   STATIC_CONST char fmt[] = "%s: STRING TRUNCATED by %d chars\nsrc: '%%" PR_BSR "'\ndst: '%%" PR_BSR "'";
+   DBG( "%s: STR-TRUNC by %d chars..."   , fxnm, truncd );
+   DBG( "%s: STR-TRUNC src '%" PR_BSR "'", fxnm, BSR(src) );
+   DBG( "%s: STR-TRUNC dst '%" PR_BSR "'", fxnm, BSR(dst) );
    }
 
 #define  StrTruncd( truncd, src, dst )  StrTruncd_( __func__, truncd, src, dest );
@@ -83,17 +81,21 @@ stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
 
 stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
    auto truncd( 0 );
-   auto srcLen( src.length() );
-   if( srcLen >= sizeof_dest ) {
-       truncd = srcLen - (sizeof_dest - 1);
-       srcLen = sizeof_dest - 1;
-       }
-   memcpy( dest, src.data(), srcLen );
-   dest[ srcLen ] = '\0';
-   if( truncd ) {
+   const auto fullCpyChars( src.length()+1 );
+   const auto destCharsToWr( Min( sizeof_dest, fullCpyChars ) );
+   if( fullCpyChars > destCharsToWr ) {
+      truncd = fullCpyChars - destCharsToWr;
+      }
+   if( destCharsToWr > 1 ) {
+      memcpy( dest, src.data(), destCharsToWr-1 );
+      }
+   if( destCharsToWr > 0 ) {
+      dest[ destCharsToWr-1 ] = '\0';
+      }
+   if( truncd > 0 ) {
       StrTruncd_( __func__, truncd, src.data(), dest );
       }
-   return stref( dest, srcLen );
+   return stref( dest, destCharsToWr > 0 ? destCharsToWr-1 : 0 );
    }
 
 //----- no-longer-used begin
