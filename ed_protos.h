@@ -102,8 +102,8 @@ extern   PCCMD GetTextargString( std::string &xb, PCChar pszPrompt, int xCursor,
 class CMD_reader {
 protected:
    bool d_fAnyInputFromKbd;
-   virtual void  VWritePrompt();
-   virtual void  VUnWritePrompt();
+   virtual void  VWritePrompt()   {}
+   virtual void  VUnWritePrompt() {}
            PCCMD GetNextCMD_ExpandAnyMacros( bool fRtnOnMacroHalt );
 public:
    CMD_reader() : d_fAnyInputFromKbd( false ) {}
