@@ -873,7 +873,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
    // replacement done: adjust starting point for next iteration
    const ptrdiff_t lendiff( srReplace.length() - destMatchChars );
                                                        DB && DBG("DFPoR- %" PR_BSRSIZET " = lendiff(%" PR_BSRSIZET ",%" PR_BSRSIZET ")", lendiff, destMatchChars, srReplace.length() );
-                                                       DB && DBG("DFPoR- ix_curPt_Col=%d", ix_curPt_Col );
+                                                       DB && DBG("DFPoR- ix_curPt_Col=%" PR_SIZET, ix_curPt_Col );
    *colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + lendiff );
    curPt->col                = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() );
                                                        DB && DBG("DFPoR- y/x=%d/%d,%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );

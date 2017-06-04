@@ -67,10 +67,10 @@ SHELL=cmd
 export SHELL # inherited by child (recursive) makes such as that which builds $(LUA_T)
 UNCOND_CMD_SEP := &
 
-# rm is not part of Nuwen MinGW package
-# RM= rm -f
 # `del /F /Q` fails if any named parameter does not exist; add '-' prefix to ignore this error
 RM= -del /F /Q
+# rm is not part of Nuwen MinGW package
+RM= rm -f
 export RM
 MV = move
 export MV
