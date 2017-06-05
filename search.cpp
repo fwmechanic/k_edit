@@ -844,8 +844,9 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
       }
    // setup to perform replacement
    pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-   const auto ixdestMatchMin( CaptiveIdxOfCol( tw, d_sbuf, xMatchMin ) );
-   const auto ixdestMatchMax( CaptiveIdxOfCol( tw, d_sbuf, xMatchMax ) );
+   IdxCol conv( tw, d_sbuf );
+   const auto ixdestMatchMin( conv.c2i( xMatchMin ) );
+   const auto ixdestMatchMax( conv.c2i( xMatchMax ) );
    const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
    d_sbuf.replace( ixdestMatchMin, destMatchChars, sr2st(srReplace) );
                                                        DB && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
@@ -855,32 +856,33 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
    const ptrdiff_t lendiff( srReplace.length() - destMatchChars );
                                                        DB && DBG("DFPoR- %" PR_BSRSIZET " = lendiff(%" PR_BSRSIZET ",%" PR_BSRSIZET ")", lendiff, destMatchChars, srReplace.length() );
                                                        DB && DBG("DFPoR- ix_curPt_Col=%" PR_SIZET, ix_curPt_Col );
-   *colLastPossibleMatchChar = ColOfFreeIdx( tw, d_sbuf, ixLastPossibleLastMatchChar + lendiff );
-   curPt->col                = ColOfFreeIdx( tw, d_sbuf, ix_curPt_Col + srReplace.length() );
+   *colLastPossibleMatchChar = conv.i2c( ixLastPossibleLastMatchChar + lendiff );
+   curPt->col                = conv.i2c( ix_curPt_Col + srReplace.length() );
                                                        DB && DBG("DFPoR- y/x=%d/%d,%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
                                                        DB && DBG("DFPoR- L=%d '%*s'", curPt->lin, *colLastPossibleMatchChar, d_sbuf.c_str()+curPt->col );
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 
-STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point start, CharWalkerReplace &walker ) {
-   0 && DBG( "%s: within=LINEs(%d-%d) COLs(%d,%d)", __func__, within.flMin.lin, within.flMax.lin, within.flMin.col, within.flMax.col );
+STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point start, CharWalkerReplace &walker ) { enum { DB=0 };
+   DB && DBG( "%s: within=LINEs(%d-%d) COLs(%d,%d)", __func__, within.flMin.lin, within.flMax.lin, within.flMin.col, within.flMax.col );
    const auto tw( pFBuf->TabWidth() );
-   for( Point curPt( start )
-      ;   curPt.lin <= within.flMax.lin
-      ; ++curPt.lin, curPt.col = within.flMin.col
-      ) {
+   for( Point curPt( start ) ; curPt.lin <= within.flMax.lin ; ++curPt.lin, curPt.col = within.flMin.col ) {
       if( ExecutionHaltRequested() ) {
          FlushKeyQueuePrimeScreenRedraw();
          return false;
          }
-   #define SETUP_LINE ( rl = pFBuf->PeekRawLine( curPt.lin ), ixBOL = CaptiveIdxOfCol( tw, rl, within.flMin.col ) )
-      stref rl; sridx ixBOL; SETUP_LINE; auto colLastPossibleMatchChar( Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), within.flMax.col ) );
-      while( ( 0 && DBG( "%d vs %d", curPt.col, colLastPossibleMatchChar ), curPt.col <= colLastPossibleMatchChar ) ) {
+      stref rl; sridx ixBOL;
+      auto setup_line = [&]() {
+         rl = pFBuf->PeekRawLine( curPt.lin );
+         ixBOL = CaptiveIdxOfCol( tw, rl, within.flMin.col );
+         };
+      setup_line();
+      auto colLastPossibleMatchChar( Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), within.flMax.col ) );
+      while( ( DB && DBG( "%d vs %d", curPt.col, colLastPossibleMatchChar ), curPt.col <= colLastPossibleMatchChar ) ) {
          const auto rv( walker.CheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, &colLastPossibleMatchChar ) );
          if( STOP_SEARCH == rv ) { return true; }
-         if( REREAD_LINE_CONTINUE_SEARCH == rv ) { SETUP_LINE; }
+         if( REREAD_LINE_CONTINUE_SEARCH == rv ) { setup_line(); }
          }
-   #undef SETUP_LINE
       }
    return false;
    }
