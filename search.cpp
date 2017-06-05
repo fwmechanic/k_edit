@@ -760,21 +760,14 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
    const auto srRawSearch( d_ss.SrchStr() );
    const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, *colLastPossibleMatchChar ) );
    d_captures.clear();
-   sridx ixMatchMin;
-   stref haystack;
+   stref haystack; sridx ixMatchMin;
 #if USE_PCRE
    if( d_ss.IsRegex() ) {
       haystack = rl.substr( ixBOL, ixLastPossibleLastMatchChar + 1 - ixBOL ); // leading ix_curPt_Col chars will not be searched
       const auto ixHaystackCurCol( ix_curPt_Col - ixBOL );
    // const auto pcre_exec_flags( ixHaystackCurCol == 0 ? 0 : PCRE_NOTBOL );
       const auto pcre_exec_flags(                         0               ); // !/PCRE_NOTBOL describes haystack[0], not to haystack[ixHaystackCurCol]
-      DB && DBG( "%s (%d,%d) for '%" PR_BSR "' in '%" PR_BSR "[%" PR_BSR "'", __PRETTY_FUNCTION__
-                      , curPt->lin
-                         , curPt->col
-                                  , BSR(srRawSearch)
-                                                   , BSR(haystack.substr(0,ixHaystackCurCol))
-                                                               , BSR(haystack.substr(ixHaystackCurCol))
-               );
+                                             DB && DBG( "%s (%d,%d) for '%" PR_BSR "' in '%" PR_BSR "[%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, BSR(srRawSearch), BSR(haystack.substr(0,ixHaystackCurCol)), BSR(haystack.substr(ixHaystackCurCol)) );
       const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, ixHaystackCurCol, pcre_exec_flags ) );
       if( rv == 0 || !d_captures[0].valid() ) {
          curPt->col = *colLastPossibleMatchChar; // no matches this line
@@ -785,16 +778,9 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
       }
    else
 #endif
-      {
-      DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__
-                       , curPt->lin, curPt->col, srRawSearch.length()
-                                                     , BSR(srRawSearch), BSR(rl)
-               );
+      {                                      DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rl) );
       haystack = rl.substr( ix_curPt_Col, srRawSearch.length() );
-      DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__
-                       , curPt->lin, curPt->col, srRawSearch.length()
-                                                     , BSR(srRawSearch), BSR(haystack)
-               );
+                                             DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(haystack) );
       const auto relIxMatch( d_pfxStrnstr( haystack, srRawSearch ) );
       if( relIxMatch == stref::npos ) {
          return adv_continue();
@@ -804,13 +790,8 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
       }
    // d_captures[0] describes the overall match
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
-   if( ixMatchMax > ixLastPossibleLastMatchChar ) { // match that lies partially OUTSIDE a BOXARG: skip
-      DB && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds"
-               , BSR(haystack)
-               , BSR(srRawSearch)
-               , static_cast<int>(*colLastPossibleMatchChar - ixMatchMax), rl.data()+ixMatchMin
-               );
-      return adv_continue();
+   if( ixMatchMax > ixLastPossibleLastMatchChar ) { DB && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds", BSR(haystack), BSR(srRawSearch), static_cast<int>(*colLastPossibleMatchChar - ixMatchMax), rl.data()+ixMatchMin );
+      return adv_continue(); // match lies partially OUTSIDE a BOXARG: skip
       }
    const auto xMatchMin( ColOfFreeIdx( tw, rl, ixMatchMin ) );
    const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
