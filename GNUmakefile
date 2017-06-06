@@ -43,7 +43,13 @@ $(info make $(MAKE_VERSION))
 # APP_IN_DLL = 1
 
 # 'ifdef ComSpec' -> 'if building on Windows'
-ifdef ComSpec
+# https://stackoverflow.com/a/6019523
+ifneq "$(strip $(ComSpec) $(COMSPEC) $(comspec) $(windir) $(WINDIR) $(LOCALAPPDATA))" ""
+K_WINDOWS := 1
+endif
+
+
+ifdef K_WINDOWS
 PLAT = mingw
 export PLAT
 
@@ -66,6 +72,13 @@ export PLAT
 SHELL=cmd
 export SHELL # inherited by child (recursive) makes such as that which builds $(LUA_T)
 UNCOND_CMD_SEP := &
+
+#######################################################################################
+# patch GNU make 4.0 (or nuwen GCC 11.6+ distro) bug by replacing dflt .c compile rule
+CC = gcc
+export CC
+# end patch
+#######################################################################################
 
 # `del /F /Q` fails if any named parameter does not exist; add '-' prefix to ignore this error
 RM= -del /F /Q
@@ -203,7 +216,7 @@ ifdef DBG_BUILD
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
 else
 
-  ifdef ComSpec
+  ifdef K_WINDOWS
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_) -Wl,--dynamicbase
   else
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
@@ -217,7 +230,7 @@ LINK= gcc
 KEEPASM := -save-temps -fverbose-asm  # to get .S files
 KEEPASM :=
 
-ifdef ComSpec
+ifdef K_WINDOWS
 
 PLAT_OBJS := \
  conin_win32.o    \
@@ -380,7 +393,7 @@ clean:
 zap: cleanliblua
 	$(RM) $(ZAP_ARGS) $(CLEAN_ARGS)
 
-ifdef ComSpec
+ifdef K_WINDOWS
 WINDRES=$(TGT)_res.o
 
 $(WINDRES): $(TGT).rc  # http://sourceware.org/binutils/docs/binutils/windres.html
@@ -395,7 +408,7 @@ RLS_PKG_FILES = $(TGT)_rls.7z $(TGT)_rls.exe
 
 .PHONY: rls
 rls: $(RLS_FILES)
-ifdef ComSpec
+ifdef K_WINDOWS
 	7z a      $(TGT)_rls.7z  $(RLS_FILES)
 	7z a -sfx $(TGT)_rls.exe $(RLS_FILES)
 else
@@ -434,19 +447,6 @@ $(TGT)$(EXE_EXT): $(OBJS) $(LIBLUA) $(WINDRES)
 	@$(SHOW_BINARY)
 
 endif
-
-#######################################################################################
-# patch GNU make 4.0 (or nuwen GCC 11.6 distro) bug by replacing dflt .c compile rule
-
-ifeq "$(PLAT)" "mingw"
-
-CC = gcc
-export CC
-
-endif
-
-# end patch
-#######################################################################################
 
 ifeq "" ""
 BLD_CXX = @echo COMPILE.cpp $<&&$(COMPILE.cpp) $(OUTPUT_OPTION) $<
