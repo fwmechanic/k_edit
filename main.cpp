@@ -448,7 +448,7 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
                }
             }
          switch( chGetCmdPromptResponse( "yna", -1, -1, "%s has changed!  Save changes (Y/N/A)? ", pFBuf->Name() ) ) {
-            default:   Assert( 0 );            // chGetCmdPromptResponse bug or params out of sync
+            default:   Assert( 0 );            return rvUSER_ESCAPED;  // chGetCmdPromptResponse bug or params out of sync
             case -1:                           return rvUSER_ESCAPED;
             case 'a':  WriteAllDirtyFBufs();   return rvWILL_EXIT;
             case 'y':  pFBuf->WriteToDisk();   break; // SAVE

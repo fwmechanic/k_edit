@@ -324,7 +324,7 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
       const auto pFBuf( pv->FBuf() );
       if( pFBuf->IsDirty() && pFBuf->FnmIsDiskWritable() && pFBuf->ViewCount() == 1 ) {
          switch( chGetCmdPromptResponse( "yn", -1, -1, "%s has changed!  Save changes (Y/N)? ", pFBuf->Name() ) ) {
-            default:   Assert( 0 );            // chGetCmdPromptResponse bug or params out of sync
+            default:   Assert( 0 );            break; // chGetCmdPromptResponse bug or params out of sync
             case 'y':  pFBuf->WriteToDisk();   break; // SAVE
             case 'n':                          break; // NO SAVE
             case -1:                           break; // NO SAVE

@@ -19,10 +19,22 @@
 
 #pragma once
 
+// https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
+#define GCC_VERSION (  __GNUC__           * 10000 \
+                     + __GNUC_MINOR__     * 100 \
+                     + __GNUC_PATCHLEVEL__          )
+// Test for GCC > 7.1.0 #if GCC_VERSION > 70100
+
 #ifndef ATTR_FORMAT
 #ifdef __GNUC__
 #define ATTR_FORMAT(xx,yy) __attribute__ ((format (gnu_printf, xx, yy)))
 #else
 #define ATTR_FORMAT(xx,yy)
 #endif
+#endif
+
+#if defined(__GNUC__) && (GCC_VERSION > 70000)
+#define ATTR_FALLTHRU __attribute__ ((fallthrough))
+#else
+#define ATTR_FALLTHRU
 #endif

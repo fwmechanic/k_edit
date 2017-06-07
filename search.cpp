@@ -827,8 +827,9 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
          , d_promptCsrs  //
          ) );
       switch( ch ) {
-         default:  Assert( 0 ); // chGetCmdPromptResponse has bug or params wrong
-         case -1 :                                  // fall thru!
+         default:  Assert( 0 );        // chGetCmdPromptResponse has bug or params wrong
+                   return STOP_SEARCH;
+         case -1 : ATTR_FALLTHRU;
          case 'q': SetUserChoseEarlyCmdTerminate();
                    return STOP_SEARCH;
          case 'n': d_user_refused = thisMatch;

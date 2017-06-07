@@ -1873,9 +1873,9 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
             pLi = d_paLineInfo + curLineNum;
             }
          switch( *pCurImageBuf ) {
-            case HTAB: ++tabStats.lead_Tab_Lines;
-            case ' ' : ++tabStats.leadBlankLines; //lint -fallthrough
-            default  : break;                     //lint -fallthrough
+            case HTAB: ++tabStats.lead_Tab_Lines; ATTR_FALLTHRU; // a lead_Tab ISA leadBlank
+            case ' ' : ++tabStats.leadBlankLines; break;
+            default  : break;
             }
          const auto pLineStart( pCurImageBuf );
          SetLineCount( curLineNum + 1 );

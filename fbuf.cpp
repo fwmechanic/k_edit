@@ -1505,7 +1505,7 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                         default:                   return Msg( "unknown SFMG error %d", rc );
                         }
                      }
-                     //-lint fallthrough
+                     ATTR_FALLTHRU;
     case bkup_NONE:  // No backup: the editor overwrites the file.
                      // here we delete the file to be overwritten
                      VERBOSE_WRITE && DBG( "FWr: bkup_NONE" );
