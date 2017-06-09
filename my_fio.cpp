@@ -50,7 +50,7 @@ bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int crea
    if( fh == -1 ) {
       return true;
       }
-   1 && DBG( "%s [%d] %c mode=%03o '%s'", __func__, fh, fWrAccess?'W':'w', create_mode, pszFileName );
+   0 && DBG( "%s [%d] %c mode=%03o '%s'", __func__, fh, fWrAccess?'W':'w', create_mode, pszFileName );
    struct_stat stat;
    if( func_fstat( fh, &stat ) == 0 && 0 == (stat.st_mode & WL( _S_IFREG, S_IFREG ) ) ) {
       WL( _close, close )( fh );
