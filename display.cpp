@@ -2358,15 +2358,19 @@ bool ARG::message() {
 STATIC_VAR int s_dispNoiseMaxLen;
 
 STATIC_FXN void conDisplayNoise( PCChar buffer ) {
-   const auto len( Strlen( buffer ) );
-   NoLessThan( &s_dispNoiseMaxLen, len );
-   VidWrStrColorFlush( StatusLine(), EditScreenCols() - len, buffer, len, g_colorError, true );
+   if( show_noise() ) {
+      const auto len( Strlen( buffer ) );
+      NoLessThan( &s_dispNoiseMaxLen, len );
+      VidWrStrColorFlush( StatusLine(), EditScreenCols() - len, buffer, len, g_colorError, true );
+      }
    }
 
 STATIC_FXN void conDisplayNoiseBlank() {
-   if( s_dispNoiseMaxLen && EditScreenCols() > s_dispNoiseMaxLen ) {
-      VidWrStrColorFlush( StatusLine(), EditScreenCols() - s_dispNoiseMaxLen, "", 0, g_colorInfo, true );
-      s_dispNoiseMaxLen = 0;
+   if( show_noise() ) {
+      if( s_dispNoiseMaxLen && EditScreenCols() > s_dispNoiseMaxLen ) {
+         VidWrStrColorFlush( StatusLine(), EditScreenCols() - s_dispNoiseMaxLen, "", 0, g_colorInfo, true );
+         s_dispNoiseMaxLen = 0;
+         }
       }
    }
 

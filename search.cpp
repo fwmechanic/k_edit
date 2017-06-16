@@ -1080,11 +1080,18 @@ STATIC_FXN void GarbageCollectFBUF( PFBUF pFBuf, bool fGarbageCollect ) {
    // is driven by walking the windows' View lists).
    }
 
+STATIC_FXN bool mf_RefreshFailedShowError( PFBUF pFBuf ) {
+   g_fMfgrepRunning = true;
+   const auto rv( pFBuf->RefreshFailedShowError() );
+   g_fMfgrepRunning = false;
+   return rv;
+   }
+
 STATIC_FXN void MFGrepProcessFile( stref filename, FileSearcher *d_fs ) {
    const auto pFBuf( FBOP::FindOrAddFBuf( filename ) );
    0 && DBG( "d_dhdViewsOfFBUF.IsEmpty(%" PR_BSR ")==%c", BSR(filename), pFBuf->ViewCount()==0?'t':'f' );
    const auto fWeCanGarbageCollectFBUF( !pFBuf->HasLines() );
-   if( pFBuf->RefreshFailedShowError() ) {
+   if( mf_RefreshFailedShowError( pFBuf ) ) {
       return;
       }
    d_fs->SetInputFile( pFBuf );
@@ -1220,7 +1227,7 @@ STATIC_FXN void MFReplaceProcessFile( PCChar filename, CharWalkerReplace *pMrcw 
    const auto pFBuf( FBOP::FindOrAddFBuf( filename ) );
    0 && DBG( "d_dhdViewsOfFBUF.IsEmpty(%s)==%c", filename, pFBuf->ViewCount()==0?'t':'f' );
    const auto fWeCanGarbageCollectFBUF( !pFBuf->HasLines() );
-   if( pFBuf->RefreshFailedShowError() ) {
+   if( mf_RefreshFailedShowError( pFBuf ) ) {
       return;
       }
    ++pMrcw->d_iReplacementFileCandidates;

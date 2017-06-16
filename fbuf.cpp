@@ -1290,8 +1290,17 @@ STATIC_FXN bool FBufRead_Wildcard( PFBUF pFBuf ) {
    }
 
 // keep the following msg strings in sync!
-STIL void DialogLdFile ( PCChar name )                 { Msg( "Next file is %s", name ); }
-STIL void DialogLddFile( PCChar name, unsigned bytes ) { Msg( "Next file is %s: %u bytes", name, bytes ); }
+STIL void DialogLdFile ( PCChar name ) {
+   if( show_noise() ) {
+      Msg( "Next file is %s", name );
+      }
+   }
+
+STIL void DialogLddFile( PCChar name, unsigned bytes ) {
+   if( show_noise() ) {
+      Msg( "Next file is %s: %u bytes", name, bytes );
+      }
+   }
 
 STIL void rdNoiseOpen() { DisplayNoise( kszRdNoiseOpen ); }
 

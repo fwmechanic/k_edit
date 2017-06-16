@@ -298,6 +298,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "m4backtickquote", Var2TPfx( g_fM4backtickquote      ), swinVAR_BOOL, swidBool       _AHELP( "spanning backtick quoting right ends with ' (yes) or ` (no)" ) },
  { "maxundo"        , Var2TPfx( g_iMaxUndo              ), swinVAR_INT , swidInt        _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) },
  { "memusgink"      , Var2TPfx( g_fShowMemUseInK        ), swinVAR_BOOL, swidBool       _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) },
+ { "mfgrepnoise"    , Var2TPfx( g_fMfgrepNoise          ), swinVAR_BOOL, swidBool       _AHELP( "during mfgrep and mfreplace execution: display (yes) or hide (no) each filename & fio-phase display" ) },
  { "msgflush"       , Var2TPfx( g_fMsgflush             ), swinVAR_BOOL, swidBool       _AHELP( "<compile> is flushed (yes) or retained (no) when a new job is started" ) },
  { "realtabs"       , Var2TPfx( g_fRealtabs             ), swinVAR_BOOL, swidBool       _AHELP( "see online help" ) },
  { "replacecase"    , Var2TPfx( g_fReplaceCase          ), swinVAR_BOOL, swidBool       _AHELP( "replace operations are case sensitive (yes) or insensitive (no)" ) },
