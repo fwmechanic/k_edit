@@ -569,6 +569,8 @@
    #endRecording:=record 1window arg "recbegin:alt+r" assign
    #recbegin:alt+r
 
+   zkeys:=arg "z_key_assignments" initialize
+
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
    cp_to_mf := cancel begfile arg endfile copy mf endfile paste
@@ -647,6 +649,68 @@
    tabdisp: <
    cmdn:=arg arg "^cmd\d" grep
    grepm4:=arg "./test/_m4ex:" grep
+
+[z_key_assignments] # base on historical_scans_fair_use\Z-cleaned.TXT
+   arg: ctrl+x
+   assign: ctrl+6
+   backtab: shift+tab
+   begline: end
+   cancel: ctrl+c
+   cdelete: bksp
+   cdelete: ctrl+h
+   compile: ctrl+u
+   curdate:  alt+d
+   # curday:   unassigned
+   # curfileext: unassigned
+   # curfilenam: unassigned
+   curtime:  alt+t
+   # curuser:  unassigned
+   down: down
+   emacscdel: ctrl+bksp
+   # emacsnewl: unassigned
+   endline: pgdn
+   exit: f9
+   files: f1                # Z name: information
+   home: home
+   initialize: f2
+   # insertmode: ctrl+n
+   ldelete: ctrl+f
+   left: left
+   linsert: ctrl+d
+   mark: ctrl+p
+   meta: esc
+   mlines: ctrl+w
+   mpage: ctrl+q
+   mpara: ctrl+pgup
+   msearch: ctrl+e
+   # mword: unassigned
+   newline: enter
+   newline: ctrl+m
+   pbal: ctrl+v
+   copy: ctrl+k             # Z name: pick
+   plines: ctrl+t
+   ppage: ctrl+l
+   ppara: ctrl+pgdn
+   psearch: ctrl+r
+   # push: ctrl+z           # Z: run command text in shell
+   paste: ctrl+g            # Z name put
+   # pword: unassigned
+   qreplace: ctrl+enter
+   qreplace: ctrl+j
+   # quote: unassigned
+   refresh: f10
+   replace: ctrl+o
+   # restcur: unassigned
+   right: right
+   # savecur: unassigned    # Z name savecurs
+   sdelete: ctrl+s
+   setfile: ctrl+b
+   setwindow: ctrl+]
+   sinsert: ctrl+a
+   tab: tab
+   tab: ctrl+i
+   up: up
+   window: ctrl+y
 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
