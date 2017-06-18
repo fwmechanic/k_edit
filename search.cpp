@@ -159,7 +159,7 @@ protected:
    // SUBCLASS Event Hooks
       // called by FoundMatchContinueSearching
       virtual bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ) { return true; }; // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
-      virtual bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &captures ); // cur MAY BE MODIFIED!!!
+      virtual bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures );
       virtual bool VContinueSearching() { return true; }
       // called by ShowResults
       virtual void VShowResultsNoMacs() {}
@@ -186,7 +186,7 @@ bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, Point &cu
    return VContinueSearching();
    }
 
-bool FileSearchMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &captures ) {
+bool FileSearchMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) {
    PCV;
    if( pcv->FBuf() == pFBuf ) {
       pcv->SetMatchHiLite( cur, MatchCols, g_fCase );
@@ -265,7 +265,7 @@ class MFGrepMatchHandler : public FileSearchMatchHandler {
    std::string  d_sb;
    std::string  d_stmp;
 protected:
-   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &captures ) override;
+   bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) override;
    void VShowResultsNoMacs() override;
 public:
    MFGrepMatchHandler( PFBUF pOutputFile )
@@ -277,7 +277,7 @@ public:
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
 
-bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &captures ) {
+bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) {
    if( 0 == GetLifetimeMatchCount() ) {
       LuaCtxt_Edit::LocnListInsertCursor(); // do this IFF a match was found
       }
@@ -1707,9 +1707,9 @@ FileSearcher::FindStrRslt  FileSearcherFast::VFindStr_( stref src, sridx src_off
 
 //===============================================
 
-void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d", d_sm.d_fSearchForward?'+':'-', d_start.lin, d_start.col ); )
+void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START  y=%d, x=%d", d_sm.d_fSearchForward?'+':'-', d_start.lin, d_start.col ); )
    const auto tw( d_pFBuf->TabWidth() );
-   if( d_sm.d_fSearchForward ) {         VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
+   if( d_sm.d_fSearchForward ) {                     VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
          const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
@@ -1725,12 +1725,13 @@ void FileSearcher::VFindMatches_() {     VS_( DBG( "%csearch: START  y=%d, x=%d"
                break; // no matches on this line!
                }
             //*****  HOUSTON, WE HAVE A MATCH  *****
-            const auto matchSr( srMatch.sr() );
-            curPt.col  =          pcc.i2c( (matchSr.data() - rl.data())                    )              ;
+            const auto matchSr( srMatch.sr() );                                                               DB && DBG( "curPt.col0=%d", curPt.col );
+            curPt.col  =          pcc.i2c( (matchSr.data() - rl.data())                    )              ;   DB && DBG( "curPt.col1=%d", curPt.col );
             const auto matchCols( pcc.i2c( (matchSr.data() - rl.data()) + matchSr.length() ) - curPt.col );
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) { // NB: curPt can be modified here!
                return;
                }
+            iC = pcc.c2i( curPt.col );
             }
          }
       }
@@ -2112,11 +2113,11 @@ class CGrepperMatchHandler : public FileSearchMatchHandler {
    CGrepper &d_cg;
 public:
    CGrepperMatchHandler( CGrepper &cg ) : d_cg( cg ) {}
-   bool VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &captures ) override;
+   bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) override;
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
 
-bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &captures ) {
+bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) {
    d_cg.LineMatches( cur.lin );
    return true;  // "action" taken!
    }
