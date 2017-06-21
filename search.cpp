@@ -124,19 +124,15 @@ public:
       , d_lifetimeFileCountMatchAction(0)
       , d_fScrollToFirstMatch(fScrollToFirstMatch)
       { g_CurView()->FreeHiLiteRects(); }
-
    virtual ~FileSearchMatchHandler() {}
-
    // External Event Hooks
    virtual void VEnteringFile( PFBUF pFBuf ) { // could add a file skip retval here
                 ++d_lifetimeFileCount;
                 if( d_curFileStats.GetMatches()      ) { ++d_lifetimeFileCountMatch;       }
                 if( d_curFileStats.GetMatchActions() ) { ++d_lifetimeFileCountMatchAction; }
-
                 d_curFileStats.Reset();
                 }
-
-           bool FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &captures );
+           bool FoundMatchContinueSearching( PFBUF pFBuf, const Point &cur, COL MatchCols, RegexMatchCaptures &captures );
            bool VCanForgetCurFile() {
                 0 && DBG( "%5d all %5d:%5d cur %5d:%5d"
                         , d_lifetimeFileCount
@@ -145,20 +141,17 @@ public:
                         );
                 return d_curFileStats.GetMatchActions() == 0;
                 }
-
    virtual void VLeavingFile( PFBUF pFBuf ) {}           // could merge this with VCanForgetCurFile() ?
            void ShowResults() {
                 ScrollToFLOk();
              // if( !Interpreter::Interpreting() )  // user who invokes this fxn w/in a macro still wants to see the stats
                    VShowResultsNoMacs();
                 }
-
    virtual bool VOverallRetval() { return d_lifetimeStats.GetMatchActions() > 0; } // retval for ARG:ffXxxx
-
 protected:
    // SUBCLASS Event Hooks
       // called by FoundMatchContinueSearching
-      virtual bool VMatchWithinColumnBounds( PFBUF pFBuf, Point &cur, COL MatchCols ) { return true; }; // cur MAY BE MODIFIED IFF returned false, to mv next srch to next inbounds rgn!!!
+      virtual bool VMatchWithinColumnBounds( PFBUF pFBuf, const Point &cur, COL MatchCols ) { return true; };
       virtual bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures );
       virtual bool VContinueSearching() { return true; }
       // called by ShowResults
@@ -171,7 +164,7 @@ protected:
    int GetLifetimeFileCountMatchAction()  const { return d_lifetimeFileCountMatchAction   ; }
    };
 
-bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, Point &cur, COL MatchCols, RegexMatchCaptures &captures ) {
+bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, const Point &cur, COL MatchCols, RegexMatchCaptures &captures ) {
    if( VMatchWithinColumnBounds( pFBuf, cur, MatchCols ) ) { // it IS a MATCH?
       if( d_fScrollToFirstMatch && !d_flToScroll.IsSet() ) {
          d_flToScroll.Set( pFBuf, cur, MatchCols );
@@ -255,7 +248,6 @@ void FindPrevNextMatchHandler::VShowResultsNoMacs() {
       }
    }
 
-//****************************
 //****************************
 
 class FileSearcher;
@@ -1728,7 +1720,7 @@ void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START 
             const auto matchSr( srMatch.sr() );                                                               DB && DBG( "curPt.col0=%d", curPt.col );
             curPt.col  =          pcc.i2c( (matchSr.data() - rl.data())                    )              ;   DB && DBG( "curPt.col1=%d", curPt.col );
             const auto matchCols( pcc.i2c( (matchSr.data() - rl.data()) + matchSr.length() ) - curPt.col );
-            if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) { // NB: curPt can be modified here!
+            if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) {
                return;
                }
             iC = pcc.c2i( curPt.col );
