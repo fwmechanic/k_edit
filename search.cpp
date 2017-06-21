@@ -1846,32 +1846,35 @@ bool ARG::psearch()   { return GenericSearch( *this, smFwd    ); }
 
 //-------------------------- pbal
 
-struct CharWalkerPBal : public CharWalker_ {
+class CharWalkerPBal : public CharWalker_ {
    const bool d_fFwd;
    const bool d_fHiliteMatch;
-   linebuf    d_stack;
+   const stref d_opens, d_closes;
+   char       d_stack[100];
    int        d_stackIx;
-   bool       d_fClosureFound;
+   bool       d_fClosingMatchFound;
    Point      d_closingPt;
-   void Push( char ch ) { /*DBG("Push[%3d]'%c'",d_stackIx,ch);*/ d_stack[ d_stackIx++ ] = ch;   }
-   char Pop()           { const char rv(d_stack[ --d_stackIx ]); /*DBG("Pop [%3d]'%c'",d_stackIx,rv);*/ return rv; }
+   void Push( char ch ) { 0 && DBG("Push[%3d]'%c'",d_stackIx,ch);
+                          d_stack[ d_stackIx++ ] = ch; }
+   char Pop()           { const char rv(d_stack[ --d_stackIx ]); 0 && DBG("Pop [%3d]'%c'",d_stackIx,rv); return rv; }
 public:
    CharWalkerPBal( bool fFwd, bool fHiliteMatch, char chStart )
       : d_fFwd( fFwd )
       , d_fHiliteMatch( fHiliteMatch )
+      , d_opens ( fFwd ? g_delims : g_delimMirrors )
+      , d_closes( fFwd ? g_delimMirrors: g_delims  )
       , d_stackIx( 0 )
-      , d_fClosureFound( false )
+      , d_fClosingMatchFound( false )
       { /*DBG("");*/ Push( chStart ); }
    CheckNextRetval VCheckNext( stref rl, const sridx ix_curPt_Col, const Point &curPt, const COL colLastPossibleMatchChar ) override;
+   bool  ClosingMatchFound() const { return d_fClosingMatchFound; }
+   Point ClosingPt()         const { return d_closingPt;     }
    };
 
 CheckNextRetval CharWalkerPBal::VCheckNext( stref rl, const sridx ix_curPt_Col, const Point &curPt, const COL colLastPossibleMatchChar ) {
-   const char ch( rl[ix_curPt_Col] );
-   PCChar pA, pB;
-   if( d_fFwd ) { pA = g_delims      ; pB = g_delimMirrors; }
-   else         { pA = g_delimMirrors; pB = g_delims      ; }
-   CPCChar pE( strchr( pA, ch ) );
-   if( pE ) {
+   const auto ch( rl[ix_curPt_Col] );
+   const auto iOpens( d_opens.find( ch ) );
+   if( iOpens != eosr ) {
       if( d_stackIx >= ELEMENTS(d_stack)-1 ) { 0 && DBG( "%cbal STACK OVERFLOW at X=%d, Y=%d", d_fFwd ? '+' : '-', curPt.col+1, curPt.lin+1 );
          return STOP_SEARCH;
          }
@@ -1879,30 +1882,21 @@ CheckNextRetval CharWalkerPBal::VCheckNext( stref rl, const sridx ix_curPt_Col, 
       Push( ch );
       return CONTINUE_SEARCH;
       }
-   else {
-      CPCChar p3( strchr( pB, ch ) );
-      if( p3 ) {
-         const auto closes( pA[p3-pB] );
-         const auto shouldClose( Pop() );
-         if( shouldClose != closes ) {
-            if( d_fHiliteMatch ) {
-               0 && DBG( "%cbal [%d] MISMATCH is '%c' != s/b '%c' at X=%d, Y=%d"
-                          , d_fFwd ? '+' : '-'
-                                 , d_stackIx      , ch        , shouldClose
-                                                                       , curPt.col+1
-                                                                             , curPt.lin+1 );
-               }
-            return STOP_SEARCH;
-            }
-         if( d_stackIx > 0 ) { 0 && DBG( "%cbal [%d] MATCH '%c' at X=%d, Y=%d", d_fFwd ? '+' : '-', d_stackIx, ch, curPt.col+1, curPt.lin+1 );
-            return CONTINUE_SEARCH;
-            }
-         if( d_fHiliteMatch ) { 0 && DBG( "%cbal CLOSURE at X=%d, Y=%d", d_fFwd ? '+' : '-', curPt.col+1, curPt.lin+1 );
-            }
-         d_fClosureFound = true;
-         d_closingPt     = curPt;
+   const auto iCloses( d_closes.find( ch ) );
+   if( iCloses != eosr ) {
+      const auto closes( d_opens[iCloses] );
+      const auto shouldClose( Pop() );
+      if( shouldClose != closes ) {
+         if( d_fHiliteMatch ) { 0 && DBG( "%cbal [%d] MISMATCH is '%c' != s/b '%c' at X=%d, Y=%d", d_fFwd ? '+' : '-', d_stackIx, ch, shouldClose, curPt.col+1, curPt.lin+1 ); }
          return STOP_SEARCH;
          }
+      if( d_stackIx > 0 ) { 0 && DBG( "%cbal [%d] MATCH '%c' at X=%d, Y=%d", d_fFwd ? '+' : '-', d_stackIx, ch, curPt.col+1, curPt.lin+1 );
+         return CONTINUE_SEARCH;
+         }
+      if( d_fHiliteMatch ) { 0 && DBG( "%cbal CLOSURE at X=%d, Y=%d", d_fFwd ? '+' : '-', curPt.col+1, curPt.lin+1 ); }
+      d_fClosingMatchFound = true;
+      d_closingPt     = curPt;
+      return STOP_SEARCH;
       }
    return CONTINUE_SEARCH;
    }
@@ -1928,11 +1922,11 @@ bool View::PBalFindMatching( bool fSetHilite, Point *pPt ) {
    Rect rgnSearch( fSearchFwd );
    CharWalkerPBal chSrchr( fSearchFwd, fSetHilite, startCh );
    CharWalkRect( fSearchFwd, FBuf(), rgnSearch, Cursor(), chSrchr );
-   if( chSrchr.d_fClosureFound ) {
-      if( pPt )        { *pPt = chSrchr.d_closingPt;                     }
-      if( fSetHilite ) { SetMatchHiLite( chSrchr.d_closingPt, 1, true ); }
+   if( chSrchr.ClosingMatchFound() ) {
+      if( pPt )        { *pPt = chSrchr.ClosingPt();                     }
+      if( fSetHilite ) { SetMatchHiLite( chSrchr.ClosingPt(), 1, true ); }
       }
-   return chSrchr.d_fClosureFound;
+   return chSrchr.ClosingMatchFound();
    }
 
 bool ARG::balch() {
