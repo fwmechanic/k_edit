@@ -1333,30 +1333,6 @@ STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, stref content, const COL colTgt )
 STIL   COL     TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
                   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) );
                   }
-struct rlc1 {
-   stref ln;
-   sridx ix0;
-   rlc1( PFBUF pfb, LINE yy, COL x0 )
-      : ln( pfb->PeekRawLine( yy ) )
-      , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, x0 ) )
-      {}
-   bool beyond()           const { return ix0 >= ln.length(); }
-   bool beyond( sridx ix ) const { return ix  >= ln.length(); }
-   char ch0()              const { return ln[ix0]; }
-   };
-struct rlc2 {
-   stref ln;
-   sridx ix0;
-   sridx ix1;
-   rlc2( PFBUF pfb, LINE yy, COL x0, COL x1 )    // middle() ASSUMES x0 <= x1 !!!
-      : ln( pfb->PeekRawLine( yy ) )
-      , ix0( CaptiveIdxOfCol( pfb->TabWidth(), ln, x0 ) )
-      , ix1( CaptiveIdxOfCol( pfb->TabWidth(), ln, x1 ) )
-      {}
-   bool beyond()                                  const { return ix0 >= ln.length(); }
-   bool beyond( sridx ix ) const { return ix  >= ln.length(); }
-   stref middle() const { return ln.substr( ix0, ix1-ix0 ); }
-   };
 class IdxCol {
    const COL    d_tw;
    const stref  d_sr;
