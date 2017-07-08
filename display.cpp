@@ -478,25 +478,19 @@ private:
    void   SetNewWuc( stref src, LINE lin, COL col );
    std::string  d_stCandidate;
    std::string  d_stSel;     // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
-   LINE         d_yWuc = -1; // BUGBUG if edits occur, need to set d_yWuc = -1 (or d_wucbuf[0] = 0)
-   COL          d_xWuc = -1;
    };
 
 void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
    d_stSel.clear();
-   if( d_yWuc == lin && d_sb.find( src ) ) { /* assume transitivity */                                          DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
-      if( d_xWuc != col ) {
-          d_xWuc  = col;
-          DispNeedsRedrawAllLines();
-          }
-      return;
+   if( d_sb.find( src ) ) { /* assume transitivity */                                                           DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
+      DispNeedsRedrawAllLines();   // we're setting the same WUC: redraw in case cursor was off-any-WUC (all WUC's HL'd) and is now
+      return;                      // over a WUC (in which case WUC-UC (under-cursor) is now HL'd, and needs to become un-HL'd)
       }
    clear(); // aaa aaa aaa aaa
    stref wuc( AddKey( src ) );
    if( !wuc.data() ) {                                                                                          DBG_HL_EVENT && DBG( "%s toolong", __func__);
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
-   d_yWuc = lin; d_xWuc = col;
    if( lin >= 0 ) {                                                                                                                             auto keynum( 1 );
       if( !wuc.starts_with( "$" )) { // experimental
          char scratch[81]; PCChar key;
@@ -656,8 +650,6 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
          d_stSel = d_stCandidate;
          d_stSel.push_back( 0 );  // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
          0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
-         d_yWuc = -1;
-         d_xWuc = -1;
          clear();
          DispNeedsRedrawAllLines();
          }
@@ -671,9 +663,9 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
             SetNewWuc( wuc, start.lin, start.col );
             }
          }
-      else { // NOT ON A WORD
-         if( !d_sb.empty() && yCursor == d_yWuc ) {
-            DispNeedsRedrawAllLines(); // BUGBUG s/b optimized
+      else { // not on a word...
+         if( !d_sb.empty() ) {          // ...but we are highlighting a non-sel WUC, so must redraw in case cursor...
+            DispNeedsRedrawAllLines();  // ...just departed the WUC (must transition from not- to highlighted)
             }
          }
       }
@@ -702,7 +694,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                }
             if( ixBest == stref::npos ) { break; }
             const auto xFound( ColOfFreeIdx( tw, rl, ixBest ) );
-            if(   -1 == d_yWuc // is a selection pseudo-WUC?
+            if(   d_stSel.c_str() == keyStart // is a selection pseudo-WUC?
                || // or a true WUC
                  (  (ixBest == 0 || !isWordChar( rl[ixBest-1] )) && (ixBest+mlen >= rl.length() || !isWordChar( rl[ixBest+mlen] )) // only match _whole words_ matching d_wucbuf
                  && (yLine != Cursor().lin || Cursor().col < xFound || Cursor().col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
