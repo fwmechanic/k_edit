@@ -425,7 +425,7 @@ protected:
 
 class HiliteAddin_Pbal : public HiliteAddin {
    void VCursorMoved( bool fUpdtWUC ) override;
-   bool VHilitLineSegs( LINE yLine,              LineColorsClipped &alcc ) override;
+   bool VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) override;
 public:
    HiliteAddin_Pbal( PView pView )
       : HiliteAddin( pView )
@@ -463,21 +463,18 @@ bool HiliteAddin_Pbal::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
 class HiliteAddin_WordUnderCursor : public HiliteAddin {
    void VCursorMoved( bool fUpdtWUC ) override;
 // void VFbufLinesChanged( LINE yMin, LINE yMax )  { /* d_wucbuf[0] = '\0'; */ }
-   bool VHilitLineSegs( LINE yLine,              LineColorsClipped &alcc ) override;
+   bool VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) override;
 public:
    HiliteAddin_WordUnderCursor( PView pView )
-      : HiliteAddin( pView ) {
-      clear();
-      }
+      : HiliteAddin( pView )
+      {}
    ~HiliteAddin_WordUnderCursor() {}
    PCChar Name() const override { return "WUC"; }
 private:
    StringsBuf<BUFBYTES> d_sb;
-   void   clear()               {        d_sb.clear();         }
-   PCChar AddKey( stref sr )    { return d_sb.AddString( sr ); }
-   void   SetNewWuc( stref src, LINE lin, COL col );
    std::string  d_stCandidate;
    std::string  d_stSel;     // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
+   void SetNewWuc( stref src, LINE lin, COL col );
    };
 
 void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
@@ -486,29 +483,30 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
       DispNeedsRedrawAllLines();   // we're setting the same WUC: redraw in case cursor was off-any-WUC (all WUC's HL'd) and is now
       return;                      // over a WUC (in which case WUC-UC (under-cursor) is now HL'd, and needs to become un-HL'd)
       }
-   clear(); // aaa aaa aaa aaa
-   stref wuc( AddKey( src ) );
+   d_sb.clear(); // aaa aaa aaa aaa
+   stref wuc( d_sb.AddString( src ) );
    if( !wuc.data() ) {                                                                                          DBG_HL_EVENT && DBG( "%s toolong", __func__);
+      DispNeedsRedrawAllLines();
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
-   if( lin >= 0 ) {                                                                                                                             auto keynum( 1 );
+   if( lin >= 0 ) {                                       auto keynum( 1 );
       if( !wuc.starts_with( "$" )) { // experimental
          char scratch[81]; PCChar key;
-               bcat( bcpy( scratch, "$"  ).length(), scratch, wuc );                          key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-         bcat( bcat( bcpy( scratch, "$(" ).length(), scratch, wuc ).length(), scratch, ")" ); key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-         bcat( bcat( bcpy( scratch, "${" ).length(), scratch, wuc ).length(), scratch, "}" ); key = AddKey( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+               bcat( bcpy( scratch, "$"  ).length(), scratch, wuc );                          key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+         bcat( bcat( bcpy( scratch, "$(" ).length(), scratch, wuc ).length(), scratch, ")" ); key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+         bcat( bcat( bcpy( scratch, "${" ).length(), scratch, wuc ).length(), scratch, "}" ); key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
          }
       if(0) { // GCCARM variations: funcname -> __funcname_veneer
          STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
          STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
          const auto vnr_fx_len( KSTRLEN(vnr_pfx)+KSTRLEN(vnr_sfx) );
          if( (wuc.length() > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx ) ) {
-            PCChar key( AddKey( wuc.substr( KSTRLEN(vnr_pfx), wuc.length() - vnr_fx_len ) ) );                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            PCChar key( d_sb.AddString( wuc.substr( KSTRLEN(vnr_pfx), wuc.length() - vnr_fx_len ) ) );          DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
             }
          else {
             char scratch[61];
             if( (wuc.length() > 1) && (wuc.length() < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
-               PCChar key( AddKey( bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx ) ) );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+               PCChar key( d_sb.AddString( bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx ) ) );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }
          }
@@ -517,16 +515,16 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
             auto hex( wuc ); hex.remove_prefix( 2 );
             const int xrun( consec_xdigits( hex ) );                                                            DBG_HL_EVENT && DBG( "xrun=%d",xrun );
             if( (8==hex.length()) && (8==xrun) ) {                                                              DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, hex.data() );
-               PCChar key( AddKey( hex ) );                                                                     DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+               PCChar key( d_sb.AddString( hex ) );                                                             DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             else if( (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
                char kb[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };               DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, kb );
-               PCChar key( AddKey( kb ) );                                                                      DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+               PCChar key( d_sb.AddString( kb ) );                                                              DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
                }
             }
          else if( (8==wuc.length()) && (8==consec_xdigits( wuc )) ) {       //                                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, wuc+2 );
             char kb[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], wuc[4], wuc[5], wuc[6], wuc[7], 0, 0 };
-            stref key( AddKey( kb ) );                                                                          DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key.data() );   ++keynum;
+            stref key( d_sb.AddString( kb ) );                                                                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key.data() );   ++keynum;
             auto ix( 6 );
             kb[ix++] = '_';
             kb[ix++] = wuc[4];
@@ -534,7 +532,7 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
             kb[ix++] = wuc[6];
             kb[ix++] = wuc[7];
             kb[ix++] = 0;
-            key = AddKey( kb );                                                                                 DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key.data() );   ++keynum;
+            key = d_sb.AddString( kb );                                                                         DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key.data() );   ++keynum;
             }
          }
       }
@@ -548,18 +546,18 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto xCursor( cursor->col );
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
    if( !rl.empty() ) { 0 && DBG( "newln=%" PR_BSR, BSR(rl) );
-      const auto tw( pFBuf->TabWidth() );                             // abc   abc
-      if( xCursor < ColOfFreeIdx( tw, rl, rl.length() ) ) {
-         const auto ixC( CaptiveIdxOfCol( tw, rl, xCursor ) );
+      IdxCol conv( pFBuf->TabWidth(), rl );                           // abc   abc
+      if( xCursor < conv.cols() ) {
+         const auto ixC( conv.c2i( xCursor ) );
          if( isWordChar( rl[ixC] ) ) {
-            const auto ixFirst   ( IdxFirstWordCh   ( rl, ixC   ) );
-            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC   ) );  0 && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
-            const auto xMin( ColOfFreeIdx( tw, rl, ixFirst      ) );
-            const auto xMax( ColOfFreeIdx( tw, rl, ixPastLast-1 ) );  0 && DBG( "x[%d..%d]", xMin, xMax );
+            const auto ixFirst   ( IdxFirstWordCh   ( rl, ixC ) );
+            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  0 && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
+            const auto xMin( conv.c2i( ixFirst      ) );
+            const auto xMax( conv.c2i( ixPastLast-1 ) );  0 && DBG( "x[%" PR_SIZET "..%" PR_SIZET "]", xMin, xMax );
             const auto wordCols ( xMax - xMin + 1 );
             const auto wordChars( ixPastLast - ixFirst );
             // this degree of paranoia only matters if the definition of a WORD includes a tab
-            if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars ); }
+            if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%" PR_SIZET " != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars ); }
             // return everything
             cursor->col = xMin;
             return stref( rl.data() + ixFirst, wordChars );
@@ -650,7 +648,7 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
          d_stSel = d_stCandidate;
          d_stSel.push_back( 0 );  // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
          0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
-         clear();
+         d_sb.clear();
          DispNeedsRedrawAllLines();
          }
       }
@@ -829,10 +827,11 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
       auto &line( d_PerViewableLine[ iy ].line );
       const auto yFile( Origin().lin + iy );
       const auto rl( fb->PeekRawLine( yFile ) );
-      line.xMax = ColOfFreeIdx( tw, rl, rl.length() );
+      IdxCol conv( tw, rl );
+      line.xMax = conv.i2c( rl.length() );
       line.acppc = IsCppConditional( rl, &line.xPound );
       if( cppcNone != line.acppc ) {
-         line.xPound = ColOfFreeIdx( tw, rl, line.xPound );
+         line.xPound = conv.i2c( line.xPound );
          switch( line.acppc ) {
             default:       break;
             case cppcIf  : --upDowns;
@@ -1012,9 +1011,9 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
             }
          }
       if( ixTgt != stref::npos ) {
-         const auto tw( CFBuf()->TabWidth() );
-         const auto xC  ( ColOfFreeIdx( tw, rl, ixTgt                        ) );
-         const auto xPWS( ColOfFreeIdx( tw, rl, rl.find_last_not_of( SPCTAB ) ) );
+         IdxCol conv( CFBuf()->TabWidth(), rl );
+         const auto xC  ( conv.i2c( ixTgt                         ) );
+         const auto xPWS( conv.i2c( rl.find_last_not_of( SPCTAB ) ) );
          alcc.PutColor( xC, xPWS - xC + 1, ColorTblIdx::COM ); // len extends 1 char into dead space beyond line text: is cosmetically appealing
          }
       }
@@ -1091,12 +1090,12 @@ bool HiliteAddin_StreamParse::VHilitLine( const LINE yLine, const COL xIndent, L
       const auto pFile( CFBuf() );
       const auto rl( pFile->PeekRawLine( yLine ) );
       if( !IsStringBlank( rl ) ) {
-         const auto tw( pFile->TabWidth() );
-         const auto xMaxOfLine( ColOfFreeIdx( tw, rl, rl.length() - 1 ) );
+         IdxCol conv( pFile->TabWidth(), rl );
+         const auto xMaxOfLine( conv.i2c( rl.length() - 1 ) );
          for( ; ix < d_hl_rgns.size() && 0==d_hl_rgns[ix].rgn.cmp_line( yLine ) ; ++ix ) {
             const auto &hl( d_hl_rgns[ix] );
-            const auto xMin( hl.rgn.flMin.lin == yLine ? ColOfFreeIdx( tw, rl, hl.rgn.flMin.col ) :          0 );
-            const auto xMax( hl.rgn.flMax.lin == yLine ? ColOfFreeIdx( tw, rl, hl.rgn.flMax.col ) : xMaxOfLine );
+            const auto xMin( hl.rgn.flMin.lin == yLine ? conv.i2c( hl.rgn.flMin.col ) :          0 );
+            const auto xMax( hl.rgn.flMax.lin == yLine ? conv.i2c( hl.rgn.flMax.col ) : xMaxOfLine );
             0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
             alcc.PutColor( xMin, xMax-xMin+1, hl.color );
             }
