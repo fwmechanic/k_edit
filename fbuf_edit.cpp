@@ -723,9 +723,9 @@ bool ARG::sdelete() { PCFV;
                     // from the starting point of the selection to the cursor and copies
                     // it to the clipboard.  This always deletes a stream of text,
                     // regardless of the current selection mode.
-                    //lint -fallthrough
+                    ATTR_FALLTHRU;
     case LINEARG:   ConvertLineOrBoxArgToStreamArg();
-                    //lint -fallthrough
+                    ATTR_FALLTHRU;
     case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, !d_fMeta ); break;
     }
    return true;
@@ -760,7 +760,7 @@ bool ARG::udelete() { // "user interface" delete; does not convert BOX/LINE/STRE
 bool ARG::delete_() {  // BUGBUG make this NOT save to clipboard!!! (current workaround: del key assigned to "meta delete")
    switch( d_argType ) {
       default:      sdelete();  return true;
-      case LINEARG: //lint -fallthrough
+      case LINEARG: ATTR_FALLTHRU;
       case BOXARG:  ldelete();  return true;
       }
    }
@@ -781,9 +781,9 @@ bool ARG::sinsert() { PCF;
                          , 0                   , d_nullarg.cursor.lin + 1
                          );
                       return true;
-    case BOXARG:      //lint -fallthrough
+    case BOXARG:      ATTR_FALLTHRU;
     case LINEARG:     ConvertLineOrBoxArgToStreamArg();
-                      //lint -fallthrough
+                      ATTR_FALLTHRU;
     case STREAMARG:   FBOP::CopyStream( pcf,
                            d_streamarg.flMin.col, d_streamarg.flMin.lin
                          , nullptr

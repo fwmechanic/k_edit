@@ -355,7 +355,7 @@ bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff 
     case DISKFILE_NO_EXIST:       return Msg( "File has been deleted" );
 
     case DISKFILE_OLDERTHAN_FBUF: why = "older"; // EX: did a 'ct unco', restoring an old file version underneath us
-                                  //lint -fallthrough
+                                  ATTR_FALLTHRU;
     case DISKFILE_NEWERTHAN_FBUF:
                                   0 && DBG( "trying update" );
                                   if(    fPromptBeforeRefreshing
@@ -724,7 +724,7 @@ bool ARG::refresh() {
                    RefreshCurFileIfMatchesPseudoName( kszFiles );
                    return rv;
                    }
-    case BOXARG:   //lint -fallthrough
+    case BOXARG:   ATTR_FALLTHRU;
     case LINEARG:  {
                    auto attemptCount( 0 );
                    auto rmvCount( 0 );

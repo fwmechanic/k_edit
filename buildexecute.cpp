@@ -1372,8 +1372,8 @@ bool ARG::selcmd() { // selcmd:alt+0
       //
       switch( d_argType ) {
          default:         return fnMsg( "bad arg for '%s'", newCmd->Name() );
-         case BOXARG:     //lint -fallthrough
-         case LINEARG:    //lint -fallthrough
+         case BOXARG:     ATTR_FALLTHRU;
+         case LINEARG:    ATTR_FALLTHRU;
          case STREAMARG:  return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), 0 );
          case TEXTARG:    return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), d_textarg.pText );
          }
@@ -1406,8 +1406,8 @@ int ARG::GetLineRange( LINE *pyMin, LINE *pyMax ) const {
       case NOARG:     *pyMin = d_noarg.cursor.lin;
                       *pyMax = d_noarg.cursor.lin;
                       return 0; // OK
-      case NULLARG:   //lint -fallthrough
-      case NULLEOL:   //lint -fallthrough
+      case NULLARG:   ATTR_FALLTHRU;
+      case NULLEOL:   ATTR_FALLTHRU;
       case NULLEOW:   *pyMin = d_nullarg.cursor.lin;
                       *pyMax = d_nullarg.cursor.lin;
                       return 0; // OK
@@ -1536,7 +1536,7 @@ bool ARG::execute() {
                     #endif
                       }
                    break;
-    case BOXARG:   //lint -fallthrough
+    case BOXARG:   ATTR_FALLTHRU;
     case LINEARG:  0 && DBG( "%s: d_cArg=%d", __func__ , d_cArg );
                    if( d_cArg == 1 ) {
                       std::string dest;

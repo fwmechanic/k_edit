@@ -1144,7 +1144,7 @@ bool ARG::shell() {
    switch( d_argType ) {
       case NOARG  : rv = RunChildSpawnOrSystem( "" );               break;
       case TEXTARG: rv = RunChildSpawnOrSystem( d_textarg.pText );  break;
-      case LINEARG: //lint -fallthrough
+      case LINEARG: ATTR_FALLTHRU;
       case BOXARG : for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                        if( aw.GetLine() ) {
                           if( !RunChildSpawnOrSystem( aw.c_str() ) ) {

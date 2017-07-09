@@ -141,7 +141,8 @@ ConfirmResponse Win32::Confirm_MsgBox( int MBox_uType, PCChar prompt ) {
       );
    switch( mboxrv ) {
       case IDYES:    return crYES;
-      default:       DBG( "unknown MessageBox rv!!!" ); //lint -fallthrough
+      default:       DBG( "unknown MessageBox rv!!!" );
+                     ATTR_FALLTHRU;
       case IDNO:     return crNO;
       case IDCANCEL: return crCANCEL;
       }

@@ -840,7 +840,7 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
             case cppcEnd : ++upDowns; maxUnIfdEnds = Max( maxUnIfdEnds, upDowns );
                            ++not_elses;
                            break;
-            case cppcElif:
+            case cppcElif: ATTR_FALLTHRU;
             case cppcElse: ++elses;
                            break;
             }
@@ -1419,7 +1419,7 @@ HiliteAddin_python::scan_rv HiliteAddin_python::find_end_code( PCFBUF pFile, Poi
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:      break;
-            case chQuot1: //lint -fallthrough
+            case chQuot1: ATTR_FALLTHRU;
             case chQuot2: {
                           const auto qch( rl[pt.col] );
                           const auto raw( pt.col>0 && 'r'==tolower( rl[pt.col-1] ) );

@@ -989,7 +989,7 @@ stref ExtractAssignableText( stref src, bool &continues ) {
                                itContinuationChar = it;
                                break;
                                }
-                            //lint -fallthrough
+                            ATTR_FALLTHRU;
        case contCharSeen:   if( !fChIsBlank ) {
                                if( chQuot2 == *it ) { ChangeState( (inQuote == stateWhereBlankLastSeen) ? outsideQuote : inQuote ); }
                                else                 { ChangeState( stateWhereBlankLastSeen ); }

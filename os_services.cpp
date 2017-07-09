@@ -92,7 +92,7 @@ bool ARG::setenv() {
    switch( d_argType ) {
       default:      return BadArg();
       case TEXTARG: return PutEnvChkOk( d_textarg.pText );
-      case LINEARG: //lint -fallthrough
+      case LINEARG: ATTR_FALLTHRU;
       case BOXARG:  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
                        if( aw.GetLine() && !PutEnvChkOk( aw.c_str() ) ) {
                           return false;

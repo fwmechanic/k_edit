@@ -1938,7 +1938,7 @@ bool View::next_balln( LINE yStart, bool fStopOnElse ) {
       switch( FBOP::IsCppConditional( pFbuf, iy ) ) {
          case cppcNone : break;
          case cppcIf   : ++nest; break;
-         case cppcElif : //lint -fallthrough
+         case cppcElif : ATTR_FALLTHRU;
          case cppcElse : if( 0 == nest   && fStopOnElse ) { fStop = true; } break;
          case cppcEnd  : if( 0 == nest-- )                { fStop = true; } break;
          }
@@ -1958,7 +1958,7 @@ bool View::prev_balln( LINE yStart, bool fStopOnElse ) {
       switch( FBOP::IsCppConditional( pFbuf, iy ) ) {
          case cppcNone : break;
          case cppcEnd  : ++nest; break;
-         case cppcElif : //lint -fallthrough
+         case cppcElif : ATTR_FALLTHRU;
          case cppcElse : if( 0 == nest   && fStopOnElse ) { fStop = true; } break;
          case cppcIf   : if( 0 == nest-- )                { fStop = true; } break;
          }
@@ -1976,8 +1976,8 @@ bool ARG::balln() {
    const auto pFbuf( g_CurFBuf() );
    switch( FBOP::IsCppConditional( pFbuf, d_noarg.cursor.lin ) ) {
       case cppcNone : pcv->prev_balln( d_noarg.cursor.lin, true  ); break;
-      case cppcIf   : //lint -fallthrough
-      case cppcElif : //lint -fallthrough
+      case cppcIf   : ATTR_FALLTHRU;
+      case cppcElif : ATTR_FALLTHRU;
       case cppcElse : pcv->next_balln( d_noarg.cursor.lin, true  ); break;
       case cppcEnd  : pcv->prev_balln( d_noarg.cursor.lin, false ); break;
       }

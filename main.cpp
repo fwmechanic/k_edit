@@ -709,7 +709,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
                  break;
        case 'e': PutEnvChkOk( opt.optarg() );
                  break;
-       case '?': //lint -fallthrough
+       case '?': ATTR_FALLTHRU;
        case 'h': opt.VErrorOut( nullptr );
                  break;
        case 'n': fForceNewConsole = true;
