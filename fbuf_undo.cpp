@@ -131,7 +131,7 @@ public:
    virtual bool VUpdtFromBoundary()     { return false; } // rtn true (and updated PFBUF from content) iff isA EdOpBoundary
    // for UndoReplaceLineContent
    //
-   virtual bool VPrevWasSaveOnSameLine( LINE lineNum ) { return false; }
+   virtual bool VIsAltContentOfLine( LINE lineNum ) { return false; }
 protected:
    NO_COPYCTOR(EditRec);
    NO_ASGN_OPR(EditRec);
@@ -174,71 +174,40 @@ EditRec::EditRec( PFBUF pFBuf )
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-class EdOpSaveLineContent : public EditRec {
-   const LINE     d_fileLength; // length of file beforehand
-   const LINE     d_lineNum;    // number of line that was operated on
-         LineInfo d_li;
+class EdOpAltLineContent : public EditRec {
+   const LINE     d_lineNum;   // number of line that was operated on
+         LINE     d_fbufLines; // length of file beforehand
+         LineInfo d_li;        // the lineContent
    IF_UNDO_REDO_MARKS( NamedPointHead d_MarkListHd; )
-
+   void swapContent() {
+      Assert( d_pFBuf->d_LineCount == d_fbufLines ); // UPDT: this HAS blown!
+      d_pFBuf->FBufEvent_LineInsDel( d_lineNum, 0 );
+      std::swap( d_pFBuf->d_paLineInfo[ d_lineNum ], d_li );
+      std::swap( d_pFBuf->d_LineCount, d_fbufLines ); // this seems redundant, but IS NOT in edge cases!
+      }
 public:
-
-   EdOpSaveLineContent( PFBUF pFBuf, LINE lineNum, LineInfo *pLineInfo );
-   ~EdOpSaveLineContent();
-
-   void VUndo() override;
-   void VRedo() override;
-   void VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const override;
-   bool VPrevWasSaveOnSameLine( LINE lineNum ) override;
+   EdOpAltLineContent( PFBUF pFBuf, LINE lineNum, LineInfo *pLineInfo )
+      : EditRec    (      pFBuf         )
+      , d_lineNum  ( lineNum            )
+      , d_fbufLines( pFBuf->LineCount() )
+      , d_li       ( std::move( *pLineInfo ) ) // after this, *pLineInfo contains empty value!  Somebody'd better be OVERWRITING *pLineInfo (which is intended to lie within FBUF::d_paLineInfo[]) with a non-empty value before it's dereferenced again!
+      {
+      IF_UNDO_REDO_MARKS( d_MarkListHd = updateMarksForLineDeletion_DupMarks( pFBuf, lineNum, lineNum ); )
+      }
+   ~EdOpAltLineContent() { d_li.FreeContent( *d_pFBuf ); }
+   void VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const override {
+      snprintf_full(  ppBuf, pBufBytes, DBG_EDOP( "%03X " ) "Replace Line %3d      "
+   #if USE_DBGF_EDOPS
+         , d_SerNum
+   #endif
+         , d_lineNum + 1
+         );
+      getLineInfoStr( ppBuf, pBufBytes, d_li );
+      }
+   void VUndo()                             override { swapContent(); }
+   void VRedo()                             override { swapContent(); }
+   bool VIsAltContentOfLine( LINE lineNum ) override { return d_lineNum == lineNum; }
    };
-
-EdOpSaveLineContent::EdOpSaveLineContent( PFBUF pFBuf, LINE lineNum, LineInfo *pLineInfo )
-   : EditRec     (      pFBuf         )
-   , d_fileLength( pFBuf->LineCount() )
-   , d_lineNum   ( lineNum            )
-   , d_li        ( std::move( *pLineInfo ) ) // after this, *pLineInfo contains empty value!  Somebody'd better be OVERWRITING *pLineInfo (which is intended to lie within FBUF::d_paLineInfo[]) with a non-empty value before it's dereferenced again!
-   {
-   IF_UNDO_REDO_MARKS( d_MarkListHd = updateMarksForLineDeletion_DupMarks( pFBuf, lineNum, lineNum ); )
-   }
-
-EdOpSaveLineContent::~EdOpSaveLineContent() {
-   d_li.FreeContent( *d_pFBuf );
-   }
-
-void EdOpSaveLineContent::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const {
-   snprintf_full(  ppBuf, pBufBytes, DBG_EDOP( "%03X " ) "Replace Line %3d      "
-#if USE_DBGF_EDOPS
-      , d_SerNum
-#endif
-      , d_lineNum + 1
-   // , d_fileLength
-      );
-   getLineInfoStr( ppBuf, pBufBytes, d_li );
-   }
-
-void EdOpSaveLineContent::VUndo() {
-   d_pFBuf->FBufEvent_LineInsDel( d_lineNum, 0 );
-   std::swap( d_pFBuf->d_paLineInfo[ d_lineNum ], d_li );
-   // this seems redundant: EdOpSaveLineContent does not change the file's line count
-   // Assert( d_pFBuf->LineCount() == fileLength ); // UPDT: this HAS blown!
-   d_pFBuf->SetLineCount( d_fileLength ); // but shouldn't this be std::swap( d_pFBuf->LineCount(), d_fileLength ); ????????
-   IF_UNDO_REDO_MARKS( copyUndoMarks( d_pFBuf, d_MarkListHd, d_lineNum ); )
-   }
-
-void EdOpSaveLineContent::VRedo() {
-   d_pFBuf->FBufEvent_LineInsDel( d_lineNum, 0 );
-   std::swap( d_pFBuf->d_paLineInfo[ d_lineNum ], d_li );
-   d_pFBuf->SetLineCount( d_fileLength ); // this seems redundant, but IS NOT in edge cases!
-   }
-
-bool EdOpSaveLineContent::VPrevWasSaveOnSameLine( LINE lineNum ) {
-   // SPECIAL CASE: multiple sequential edits on the same line are coalesced
-   //               into single/reused EditRec containing the oldest pLineData
-   //               (those *pLineInfo in between are freed)
-   //
-   // return true if line being edited now was most also recently edited.
-   //
-   return d_lineNum == lineNum;
-   }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -321,13 +290,13 @@ EdOpLineRangeDelete::~EdOpLineRangeDelete() {
    // LEADS TO A CRASH when you paste a line past eof, then delete it, then undo
    // everything and type a graphic (to trigger undo-list garbage collection).
    //
-   // The issue: there can be an EdOpSaveLineContent instance which, when in
+   // The issue: there can be an EdOpAltLineContent instance which, when in
    // undone state, contains a LineInfo which is also in a later (orig xeq time)
    // EdOpLineRangeDelete.d_paLi.  When, after undo'ing some/all, we execute a
    // modifying CMD, the "undone side" of the EditRec list is destroyed (using
    // RmvOneEdOp_fNextIsBoundary in d_pFBuf->AddNewEditOpToListHead( this )
    // within EditRec(pFBuf)).  In this case the EdOpLineRangeDelete is destroyed
-   // first; when the EdOpSaveLineContent is destroyed, a double free occurs.
+   // first; when the EdOpAltLineContent is destroyed, a double free occurs.
    //
    // The current solution is to NOT FREE paLi in ~EdOpLineRangeDelete().  But
    // in the normal case this causes a MEMORY LEAK.
@@ -597,19 +566,15 @@ void FBUF::UndoReplaceLineContent( LINE lineNum, stref newContent ) {
       InitUndoInfo();
       }
    const auto pLineInfo( d_paLineInfo + lineNum );
-   if( d_pNewestEdit->VPrevWasSaveOnSameLine( lineNum ) ) {
-      // Multiple sequential edits on the same line result in a single/reused
-      // EditRec containing the line content at the beginning of the edit sequence.
-      //
-      // Free (and therefore eternally forget) intermediate-edit *pLineInfo (line content)
-      //
-      pLineInfo->FreeContent( *this );
+   if( d_pNewestEdit->VIsAltContentOfLine( lineNum ) ) {
+      // multiple sequential edits on the same line are effectively coalesced into an EditRec containing the oldest pLineData
+      pLineInfo->FreeContent( *this );  // free (and therefore eternally forget) intermediate-edit *pLineInfo (line content)
       }
    else {
       // this is the first sequential edit on this line: MOVE current *pLineInfo
       // (line content) in undo system:
       //
-      new EdOpSaveLineContent( this, lineNum, pLineInfo );
+      new EdOpAltLineContent( this, lineNum, pLineInfo );
       }
    pLineInfo->PutContent( newContent );
    Set_yChangedMin( lineNum );

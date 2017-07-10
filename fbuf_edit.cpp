@@ -1458,8 +1458,6 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
    if( fSaveUndoInfo ) {
       UndoInsertLineRangeHole( yInsAt, lineInsertCount );  // generate a undo record
       }
-   // 20091218 kgoodwin this version, in the event we have to realloc d_paLineInfo[], saves a redundant hole-opening MoveArray which is now done as part of copying
-   // was: InsertLineInfo( yInsAt, lineInsertCount );  // make sure there's a place to open a hole into
    if( lineInsertCount > 0 ) {
       const auto linesNeeded( LineCount() + lineInsertCount );
       if( !d_paLineInfo ) {

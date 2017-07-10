@@ -991,7 +991,7 @@ public:
    //************ Undo/Redo storage
    friend class   EditRec;
    friend class   EdOpBoundary;
-   friend class   EdOpSaveLineContent;
+   friend class   EdOpAltLineContent;
    friend class   EdOpLineRangeInsert;
    friend class   EdOpLineRangeDelete;
 private:
