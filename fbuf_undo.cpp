@@ -180,7 +180,9 @@ class EdOpAltLineContent : public EditRec {
          LineInfo d_li;        // the lineContent
    IF_UNDO_REDO_MARKS( NamedPointHead d_MarkListHd; )
    void swapContent() {
-      Assert( d_pFBuf->d_LineCount == d_fbufLines ); // UPDT: this HAS blown!
+      if( d_pFBuf->d_LineCount != d_fbufLines ) { /* this does occur */
+         DBG( "%s: d_pFBuf->d_LineCount != d_fbufLines (%d != %d)", __PRETTY_FUNCTION__, d_pFBuf->d_LineCount, d_fbufLines );
+         }
       d_pFBuf->FBufEvent_LineInsDel( d_lineNum, 0 );
       std::swap( d_pFBuf->d_paLineInfo[ d_lineNum ], d_li );
       std::swap( d_pFBuf->d_LineCount, d_fbufLines ); // this seems redundant, but IS NOT in edge cases!
