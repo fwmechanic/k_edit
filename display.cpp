@@ -550,7 +550,7 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
       if( xCursor < conv.cols() ) {
          const auto ixC( conv.c2i( xCursor ) );
          if( isWordChar( rl[ixC] ) ) {
-            const auto ixFirst   ( IdxFirstWordCh   ( rl, ixC ) );
+            const auto ixFirst   ( IdxFirstHJCh     ( rl, ixC ) );
             const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  0 && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
             const auto xMin( conv.c2i( ixFirst      ) );
             const auto xMax( conv.c2i( ixPastLast-1 ) );  0 && DBG( "x[%" PR_SIZET "..%" PR_SIZET "]", xMin, xMax );

@@ -104,36 +104,39 @@ bool swixDelims( stref param ) {
 
 //--------------------------------------------------------------
 
-GLOBAL_VAR char g_szWordChars[257];
-GLOBAL_VAR bool s_isWordChar_[256];
+GLOBAL_VAR CharMap g_WordChars;
+GLOBAL_VAR CharMap g_HLJChars;
 
 STATIC_CONST char s_dfltWordChars[] = "_0123456789abcdefghijlkmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ";
 
-void swidWordchars( PChar dest, size_t sizeofDest, void *src ) {
+STATIC_FXN void swidCharMap( PChar dest, size_t sizeofDest, const CharMap &chMap ) {
    const PCChar p0( dest );
-   for( auto ix(1) ; ix < ELEMENTS(s_isWordChar_) && (dest - p0 - 1) < sizeofDest ; ++ix ) {
-      if( s_isWordChar_[ix] && !strchr( s_dfltWordChars, ix ) ) {
+   for( auto ix(1) ; ix < ELEMENTS(chMap.is) && (dest - p0 - 1) < sizeofDest ; ++ix ) {
+      if( chMap.is[ix] && !strchr( s_dfltWordChars, ix ) ) {
          *dest++ = ix;
          }
       }
    *dest = '\0';
    }
 
-bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
+STATIC_FXN void swidWordchars  ( PChar dest, size_t sizeofDest, void *src ) { swidCharMap( dest, sizeofDest, g_WordChars ); }
+STATIC_FXN void swidHLJoinchars( PChar dest, size_t sizeofDest, void *src ) { swidCharMap( dest, sizeofDest, g_HLJChars  ); }
+
+STATIC_FXN bool swixSetChars( CharMap &chMap, stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    if( 0==cmpi( "nonwhite", pS ) ) {
-      for( auto &ch : s_isWordChar_ ) { ch = true; }
-      s_isWordChar_[            0 ] = false;
-      s_isWordChar_[unsigned(' ') ] = false;
-      s_isWordChar_[unsigned(HTAB)] = false;
-      bcpy( g_szWordChars, "nonwhite" );
+      for( auto &ch : chMap.is ) { ch = true; }
+      chMap.is[            0 ] = false;
+      chMap.is[unsigned(' ') ] = false;
+      chMap.is[unsigned(HTAB)] = false;
+      bcpy( chMap.disp, "nonwhite" );
       }
    else {
-      for( auto &ch : s_isWordChar_ ) { ch = false; }
-      for( auto  ch : s_dfltWordChars ) { s_isWordChar_[ UI(ch) ] = true; }
-      if( !pS.empty() ) for( auto pC(pS.cbegin()); pC != pS.cend() ; ++pC ) { s_isWordChar_[ UI(*pC) ] = true; }
-      auto pWc( g_szWordChars );
+      for( auto &ch : chMap.is ) { ch = false; }
+      for( auto  ch : s_dfltWordChars ) { chMap.is[ UI(ch) ] = true; }
+      if( !pS.empty() ) for( auto pC(pS.cbegin()); pC != pS.cend() ; ++pC ) { chMap.is[ UI(*pC) ] = true; }
+      auto pWc( chMap.disp );
       for( auto ix(1) ; ix < 256 ; ++ix ) {
-         if( s_isWordChar_[ix] ) {
+         if( chMap.is[ix] ) {
             *pWc++ = ix;
             }
          }
@@ -143,16 +146,40 @@ bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    return true;
    }
 
+STATIC_FXN bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
+   return swixSetChars( g_WordChars, pS );
+   }
+
+STATIC_FXN bool swixHLJoinchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
+   return swixSetChars( g_HLJChars, pS );
+   }
+
 int isWordChar( int ch ) {
-   if( !s_isWordChar_['a'] ) {
+   if( !g_WordChars.is['a'] ) {
       swixWordchars( "" );
       }
-// return s_isWordChar_[                      ch ];
-   return s_isWordChar_[static_cast<unsigned>(ch)];
+// return g_WordChars.is[                      ch ];
+   return g_WordChars.is[static_cast<unsigned>(ch)];
+   }
+
+int isHJChar( int ch ) {
+   if( !g_HLJChars.is['a'] ) {
+      swixWordchars( "" );
+      }
+// return g_HLJChars.is[                      ch ];
+   return g_HLJChars.is[static_cast<unsigned>(ch)];
    }
 
 sridx FirstNonWordOrEnd( stref src, sridx start ) {
    return ToNextOrEnd( notWordChar, src, start );
+   }
+
+sridx IdxFirstHJCh( stref src, sridx start ) {
+   if( start >= src.length() ) { return stref::npos; }
+   for( auto it( src.crbegin() + (src.length() - start - 1) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
+      if( !isWordChar(*it) && !isHJChar(*it) )  { return src.length() - std::distance( src.crbegin(), it ); }
+      }
+   return 0;
    }
 
 sridx IdxFirstWordCh( stref src, sridx start ) {
@@ -292,6 +319,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "forceplateol"   , Var2TPfx( g_fForcePlatformEol     ), swinVAR_BOOL, swidBool       _AHELP(  kszHelpPlatEoL ) },
  { "ftype"          , Fxn2TPfx( swixFtype               ), swinFXN_STR , swidFtype      _AHELP( "set ftype" ) },
  { "hike"           , Var2TPfx( g_iHike                 ), swinVAR_INT , swidInt        _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) },
+ { "hljoinchars"    , {         swixHLJoinchars         }, swinFXN_BOOL, swidHLJoinchars _AHELP( "Hierarchial Left Join chars: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes" ) },
  { "hscroll"        , {         swixHscroll             }, swinFXN_BOOL, swidHscroll    _AHELP( "the number of columns that the editor scrolls the text left or right when you move the cursor out of the window" ) },
  { "langhilites"    , Var2TPfx( g_fLangHilites          ), swinVAR_BOOL, swidBool       _AHELP( "enable (yes) partial language-aware hilighting" ) },
  { "luagcstep"      , Var2TPfx( g_iLuaGcStep            ), swinVAR_INT , swidInt        _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) },

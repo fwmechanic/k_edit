@@ -214,6 +214,8 @@ extern   void  StrUnDoubleBackslashes( PChar pszString );
 STIL   int   notBlank    ( int ch ) { return !isblank( ch ); }
 extern int   isWordChar  ( int ch );
 STIL   int   notWordChar ( int ch ) { return !isWordChar( ch ); }
+extern int   isHJChar    ( int ch );
+STIL   int   notHJChar   ( int ch ) { return !isHJChar( ch ); }
 STIL   int   isbdigit    ( int ch ) { return ch == '0' || ch == '1'; }
 
 STIL   bool  StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
@@ -323,8 +325,15 @@ STIL std::string & PadRight( std::string &inout, sridx width, char padCh=' ' ) {
 //
 //-----------------
 
+struct CharMap {
+   char disp[257];
+   bool is  [256];
+   };
+
+extern CharMap g_WordChars;
+extern CharMap g_HLJChars;
+
 extern const char szMacroTerminators[];
-extern       char g_szWordChars[];
 
 STIL PCChar Strchr( PCChar psz, int ch ) { return       strchr( psz, ch ); }
 STIL PChar  Strchr( PChar  psz, int ch ) { return PChar(strchr( psz, ch )); }
@@ -359,6 +368,7 @@ extern sridx FirstBlankOrEnd   ( stref src, sridx start=0 );
 
 extern sridx FirstNonWordOrEnd( stref src, sridx start=0 );
 extern sridx IdxFirstWordCh( stref src, sridx start=0 );
+extern sridx IdxFirstHJCh  ( stref src, sridx start=0 );
 extern sridx StrLastWordCh(  stref src );
 
 //-----------------

@@ -765,12 +765,14 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:lua]
    wordchars:
+   hljoinchars: :.
    mfspec_:="*.lua"
    rmargin:80
 
 [ftype:bash]
 [.bash .sh .ksh .zsh .csh .tcsh .fish]
    ftype:bash
+   wordchars: .
 
 [.perl .pl .pm]
    ftype:perl
@@ -783,6 +785,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:perl]
    wordchars:@$%
+   hljoinchars: .->
    mfspec_:="*.pl;*.pm"
    rmargin:80
 
@@ -828,6 +831,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [.pas .dpr]
    ftype:pascal
+   hljoinchars: .
 
 [ftype:pascal]
    mfspec_:="*.pas;*.dpr"
@@ -838,6 +842,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:modula2]
    mfspec_:="*.def;*.mod"
+   hljoinchars: .
 
 [.asm .s .inc]
    ftype:asm
@@ -855,6 +860,7 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:python]
    wucminlen:1
+   hljoinchars: .
 
 [.python .python3 .py]
    ftype:python
@@ -868,7 +874,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:clang]
    dquc:alt+4
-   wordchars:d
+   wordchars: d
+   hljoinchars: .->
    wucminlen:1
    mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"
    # mfspec_:="%TAGZ%\<*.h;*.hpp;*.hxx;*.kh;*.c;*.cpp;*.cc;*.cxx;*.kc>"
