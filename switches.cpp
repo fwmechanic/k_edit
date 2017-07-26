@@ -319,7 +319,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "forceplateol"   , Var2TPfx( g_fForcePlatformEol     ), swinVAR_BOOL, swidBool       _AHELP(  kszHelpPlatEoL ) },
  { "ftype"          , Fxn2TPfx( swixFtype               ), swinFXN_STR , swidFtype      _AHELP( "set ftype" ) },
  { "hike"           , Var2TPfx( g_iHike                 ), swinVAR_INT , swidInt        _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) },
- { "hljoinchars"    , {         swixHLJoinchars         }, swinFXN_BOOL, swidHLJoinchars _AHELP( "Hierarchial Left Join chars: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes" ) },
+ { "hljoinchars"    , {         swixHLJoinchars         }, swinFXN_BOOL, swidHLJoinchars _AHELP( "Hierarchial Left Join charset: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes; [_a-zA-Z0-9] are always members" ) },
  { "hscroll"        , {         swixHscroll             }, swinFXN_BOOL, swidHscroll    _AHELP( "the number of columns that the editor scrolls the text left or right when you move the cursor out of the window" ) },
  { "langhilites"    , Var2TPfx( g_fLangHilites          ), swinVAR_BOOL, swidBool       _AHELP( "enable (yes) partial language-aware hilighting" ) },
  { "luagcstep"      , Var2TPfx( g_iLuaGcStep            ), swinVAR_INT , swidInt        _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) },

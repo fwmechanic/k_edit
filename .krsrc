@@ -726,13 +726,20 @@ ux_2:=""ux_1""
 ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [ftype:krsrc]
+   wordchars:_
+   hljoinchars: :.
+
 [.krsrc]
    ftype:krsrc
 
 [ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
+   wordchars:_
+   hljoinchars:_
    mfspec_:="*.*"
 
 [ftype:sprintascii]
+   wordchars:_
+   hljoinchars: :.
 
 [.ps1]         # powershell
    ftype:bash  # 1st pass: bash-like
@@ -740,16 +747,30 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [.spa]
    ftype:sprintascii
 
+[ftype:msbatch]
+   wordchars:$_
+   hljoinchars: :.
+   tabwidth:8
+
 [.bat]
    ftype:msbatch
-   wordchars:$_
+   mfspec_:="*.bat"
+
+[.cmd]
+   ftype:msbatch
+   mfspec_:="*.cmd"
 
 [ftype:wildcard]  # wildcard expansion
+   wordchars:_
+   hljoinchars:_
+   wucminlen:2
 
 [.*]  # wildcard expansion
    ftype:wildcard
 
 [ftype:pseudo]  # wildcard expansion
+   wordchars:_
+   hljoinchars:_
 
 [.<>]  # PSEUDOFILE
    ftype:pseudo
@@ -760,25 +781,28 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [.~dat] # qq --filter output file
    rm:= "rm " mword arg arg execute setfile
 
-[.lua .luaedit]
-   ftype:lua
-
 [ftype:lua]
-   wordchars:
+   wordchars:_
    hljoinchars: :.
    mfspec_:="*.lua"
    rmargin:80
 
+[.lua .luaedit]
+   ftype:lua
+
 [ftype:bash]
+   wordchars:_
+   hljoinchars: .
+
 [.bash .sh .ksh .zsh .csh .tcsh .fish]
    ftype:bash
-   wordchars: .
 
 [.perl .pl .pm]
    ftype:perl
 
 [ftype:expect]
-   wordchars:
+   wordchars:_
+   hljoinchars: .
 
 [.expect]
    ftype:expect
@@ -797,11 +821,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    mfspec_:="$TAGZ:*.tcl"
    rmargin:80
 
-[.cmd]
-   ftype:msbatch
-   tabwidth:8
-   mfspec_:="*.cmd"
-
 [.make .mak .mik]
    ftype:make
 
@@ -809,14 +828,15 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:make
 
 [ftype:make]
+   wordchars:_
+   hljoinchars:_
    #graphic:tab # using GNU make, we need ability to insert literal tabs
    tabwidth:8
    entab:leading  # ...  whitespace converted to tabs
-#  wordchars: .
    mfspec_:="*.mak;*.mik"
 
 [.cod]
-   # wordchars:@$?
+   wordchars:_
    tabwidth:8
    mfspec_:="*.cod"
    hl:=arg arg "(?-i)^\s+(if|else|for|while|do).*$" searchall
@@ -834,6 +854,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    hljoinchars: .
 
 [ftype:pascal]
+   wordchars:_
+   hljoinchars: .^
    mfspec_:="*.pas;*.dpr"
    rmargin:100
 
@@ -841,13 +863,16 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:modula2
 
 [ftype:modula2]
-   mfspec_:="*.def;*.mod"
+   wordchars:_
    hljoinchars: .
+   mfspec_:="*.def;*.mod"
 
 [.asm .s .inc]
    ftype:asm
 
 [ftype:asm]
+   wordchars:_
+   hljoinchars: .
    mfspec_:="*.inc;*.asm;*.map"
    call:=savecur arg "call" searchall restcur
    rmargin:100
@@ -859,8 +884,9 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    delims: <
 
 [ftype:python]
-   wucminlen:1
+   wordchars:_
    hljoinchars: .
+   wucminlen:1
 
 [.python .python3 .py]
    ftype:python
@@ -869,14 +895,17 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:clang
 
 [ftype:diff]
+   wordchars:_
+   hljoinchars:_
+
 [.diff]
    ftype:diff
 
 [ftype:clang]
-   dquc:alt+4
-   wordchars: d
+   wordchars:_
    hljoinchars: .->
    wucminlen:1
+   dquc:alt+4
    mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"
    # mfspec_:="%TAGZ%\<*.h;*.hpp;*.hxx;*.kh;*.c;*.cpp;*.cc;*.cxx;*.kc>"
    # mfspec_:= "%TAGZ%\*.h;%TAGZ%\*.hpp;$(TAGZ)\*.hxx;$TAGZ:\*.kh;$(TAGZ)\*.c;$TAGZ:\*.cpp;$TAGZ:\*.cc;$TAGZ:\*.cxx;$TAGZ:\*.kc"
@@ -941,6 +970,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    ftype:awk
 
 [ftype:awk]
+   wordchars:_
+   hljoinchars:_
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
    mfspec_:="%TAGZ%\<*.twk;*.twl;*.awk;*.kxt;*.kxl>"
    rmargin:100
