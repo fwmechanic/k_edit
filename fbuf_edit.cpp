@@ -479,10 +479,25 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ) {
       }
    }
 
+template <typename Iter>
+void PutLine( PFBUF pf, LINE yLine, Iter first, Iter last, std::string &stbuf0, std::string &stbuf1 ) {
+   stbuf0.clear();
+   for( ; first != last; ++first ) {
+      stbuf0.append( sr2st( *first ) );
+      }
+   pf->PutLine( yLine, stbuf0, stbuf1 );
+   }
+
+STATIC_FXN void test_PutLine_template( PFBUF pf ) {
+   std::string stbuf0; std::string stbuf1;
+   std::array<stref,4> srFrags = { kszCompileHdr, " ", "mfgrep::regex", " " };
+   PutLine( pf, 1+pf->LastLine(), srFrags.cbegin(), srFrags.cend(), stbuf0, stbuf1 );
+   }
+
 void FBUF::PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 ) {
    stbuf0.clear();
    for( const auto &sr : vsrSrc ) {
-      stbuf0.append( sr.data(), sr.length() );
+      stbuf0.append( sr2st( sr ) );
       }
    PutLine( yLine, stbuf0, stbuf1 );
    }
