@@ -82,7 +82,7 @@ class LineColors {
 public:
    bool    inRange( int ix ) const { return ix < ELEMENTS(b); }
    uint8_t colorAt( int ix ) const { return b[ ix ]; }
-   int  cols()            const { return Strlen( PCChar(&b[0]) ); }  // BUGBUG assumes END_MARKER == 0 !
+   int     cols()            const { return Strlen( PCChar(&b[0]) ); }  // BUGBUG assumes END_MARKER == 0 !
    LineColors( uint8_t initcolor=END_MARKER ) {
       for( auto &ch : b ) { ch = initcolor; }
       b[ ELEMENTS_ ] = END_MARKER;
@@ -104,30 +104,26 @@ public:
    };
 
 class LineColorsClipped {
-   const View &d_view ;
-         LineColors &d_alc;
-   const int d_idxWinLeft ;  // LineColors ix of leftmost visible char
-   const int d_colWinLeft ;
-   const int d_width      ;
+   const View       &d_view       ;
+         LineColors &d_alc        ;
+   const int         d_idxWinLeft ;  // LineColors ix of leftmost visible char
+   const int         d_colWinLeft ;
+   const int         d_width      ;
 public:
    LineColorsClipped( const View &view, LineColors &alc, int idxWinLeft, int colWinLeft, int width )
-      : d_view        ( view )
-      , d_alc         ( alc         )
-      , d_idxWinLeft  ( idxWinLeft  )
-      , d_colWinLeft  ( colWinLeft  )
-      , d_width       ( width       )
-      {
-      0 && DBG( "%s iWL=%d cWL=%d width=%d", __func__, idxWinLeft, colWinLeft, width );
+      : d_view       ( view       )
+      , d_alc        ( alc        )
+      , d_idxWinLeft ( idxWinLeft )
+      , d_colWinLeft ( colWinLeft )
+      , d_width      ( width      )
+      {                                                              0 && DBG( "%s iWL=%d cWL=%d width=%d", __func__, idxWinLeft, colWinLeft, width );
       }
-   void PutColorRaw( int col, int len, int color ) {
-      0 && DBG( "%s a: %3d L %3d", __func__, col, len );
+   void PutColorRaw( int col, int len, int color ) {                 0 && DBG( "%s a: %3d L %3d", __func__, col, len );
       if( col > d_colWinLeft+d_width || col + len < d_colWinLeft ) { return; }
-      0 && DBG( "%s b: %3d L %3d", __func__, col, len );
-      const auto colMin( Max( col      , d_colWinLeft           ) );
+      const auto colMin( Max( col      , d_colWinLeft           ) ); 0 && DBG( "%s b: %3d L %3d", __func__, col, len );
       const auto colMax( Min( col+len-1, d_colWinLeft+d_width-1 ) );
       const auto ixMin( colMin - d_colWinLeft + d_idxWinLeft );
-      const auto ixMax( colMax - d_colWinLeft + d_idxWinLeft );
-      0 && DBG( "%s c: %3d L %3d", __func__, ixMin, ixMax );
+      const auto ixMax( colMax - d_colWinLeft + d_idxWinLeft );      0 && DBG( "%s c: %3d L %3d", __func__, ixMin, ixMax );
       d_alc.PutColor( ixMin, ixMax - ixMin+1, color );
       }
    void PutColor( int col, int len, int colorIdx ) { PutColorRaw( col, len, d_view.ColorIdx2Attr( colorIdx ) ); }
@@ -239,13 +235,10 @@ struct FTypeSetting {
 
 STATIC_VAR RbTree *s_FTS_idx;
 STATIC_FXN int Show_FTypeSettings() {
-   if( FTypeSetting::DB ) {
-      DBG( "%s+ ----------------------------------------------", __func__ );
+   if( FTypeSetting::DB ) {                      DBG( "%s+ ----------------------------------------------", __func__ );
       rb_traverse( pNd, s_FTS_idx ) {
-         const auto pFTS( IdxNodeToFTS( pNd ) );
-         DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
-         }
-      DBG( "%s- ----------------------------------------------", __func__ );
+         const auto pFTS( IdxNodeToFTS( pNd ) ); DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
+         }                                       DBG( "%s- ----------------------------------------------", __func__ );
       }
    return 1;
    }
@@ -472,8 +465,8 @@ public:
    PCChar Name() const override { return "WUC"; }
 private:
    StringsBuf<BUFBYTES> d_sb;
-   std::string  d_stCandidate;
-   std::string  d_stSel;     // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
+   std::string          d_stCandidate;
+   std::string          d_stSel;     // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
    void SetNewWuc( stref src, LINE lin, COL col );
    };
 
@@ -545,7 +538,7 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto yCursor( cursor->lin );
    const auto xCursor( cursor->col );
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
-   if( !rl.empty() ) { 0 && DBG( "newln=%" PR_BSR, BSR(rl) );
+   if( !rl.empty() ) {                                              0 && DBG( "newln=%" PR_BSR, BSR(rl) );
       IdxCol conv( pFBuf->TabWidth(), rl );                           // abc   abc
       if( xCursor < conv.cols() ) {
          const auto ixC( conv.c2i( xCursor ) );
@@ -553,11 +546,10 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
             const auto ixFirst   ( IdxFirstHJCh     ( rl, ixC ) );
             const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  0 && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
             const auto xMin( conv.c2i( ixFirst      ) );
-            const auto xMax( conv.c2i( ixPastLast-1 ) );  0 && DBG( "x[%" PR_SIZET "..%" PR_SIZET "]", xMin, xMax );
+            const auto xMax( conv.c2i( ixPastLast-1 ) );            0 && DBG( "x[%" PR_SIZET "..%" PR_SIZET "]", xMin, xMax );
             const auto wordCols ( xMax - xMin + 1 );
-            const auto wordChars( ixPastLast - ixFirst );
             // this degree of paranoia only matters if the definition of a WORD includes a tab
-            if( 0 && wordCols != wordChars ) { DBG( "%s wordCols=%" PR_SIZET " != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars ); }
+            const auto wordChars( ixPastLast - ixFirst );           0 && wordCols != wordChars && DBG( "%s wordCols=%" PR_SIZET " != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars );
             // return everything
             cursor->col = xMin;
             return stref( rl.data() + ixFirst, wordChars );
@@ -578,11 +570,10 @@ std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
    const auto yCursor( cursor.lin );
    const auto xCursor( cursor.col );
    const auto rlpt( pFBuf->PeekRawLine( yCursor ) );
-   if( !rlpt.empty() ) { 0 && DBG( "newln=%" PR_BSR, BSR(rlpt) );
+   if( !rlpt.empty() ) {                                            0 && DBG( "newln=%" PR_BSR, BSR(rlpt) );
       const auto tw( pFBuf->TabWidth() );                             // abc   abc
       const auto ixPt( CaptiveIdxOfCol( tw, rlpt, xCursor ) );
-      auto cat_rv = [&]( stref st ) {
-         DBG( "cat_rv=%" PR_BSR "'", BSR(st) );
+      auto cat_rv = [&]( stref st ) {                                    DBG( "cat_rv=%" PR_BSR "'", BSR(st) );
          for( const auto ch : st ) {
             if( isspace( ch ) && (rv.length() == 0 || isspace(rv.back())) ) {
                }
@@ -595,7 +586,7 @@ std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
       auto ixUpstream = [&]( stref rl, const COL ixC ) {
          for( auto ix(ixC) ; ix > 0 ; --ix ) {
             if( !isspace( rl[ix] ) && ('"'==rl[ix-1]) ) {
-               const auto rlUp( rl.substr( ix, ixC-ix+1 ) );   DBG( "up=%" PR_BSR "'", BSR(rlUp) );
+               const auto rlUp( rl.substr( ix, ixC-ix+1 ) );             DBG( "up=%" PR_BSR "'", BSR(rlUp) );
                cat_rv( rlUp );
                return true;
                }
@@ -615,7 +606,7 @@ std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
                there"
              */
       {
-      auto ixDnstream = [&]( stref rl, const COL ixC ) {          0&&DBG( "dn0 %d [%" PR_BSR "]", ixC, BSR(rl) );
+      auto ixDnstream = [&]( stref rl, const COL ixC ) {    0&&DBG( "dn0 %d [%" PR_BSR "]", ixC, BSR(rl) );
          for( auto ix(ixC) ; ix < rl.length()-1 ; ++ix ) {  0&&DBG( "dn[%d]>%c", ixC, rl[ixC] );
             if( !isspace( rl[ix] ) && ('"'==rl[ix+1]) ) {
                const auto rlDn( rl.substr(ixC,ix-ixC+1) );     DBG( "dn=%" PR_BSR "'", BSR(rlDn) );
@@ -647,7 +638,7 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
       if( d_stSel != d_stCandidate ) {
          d_stSel = d_stCandidate;
          d_stSel.push_back( 0 );  // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
-         0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
+                                                            0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
          d_sb.clear();
          DispNeedsRedrawAllLines();
          }
@@ -1059,7 +1050,7 @@ class HiliteAddin_StreamParse : public HiliteAddin {
       if( d_counting ) {
          ++d_num_hl_rgns_found;
          }
-      else { 0 && DBG( "%02X: %d,%d-%d,%d", color, yulc, xulc, ylrc, xlrc );
+      else {                                                       0 && DBG( "%02X: %d,%d-%d,%d", color, yulc, xulc, ylrc, xlrc );
          d_hl_rgns.emplace_back( color, yulc, xulc, ylrc, xlrc );
          }
       }
@@ -1095,8 +1086,7 @@ bool HiliteAddin_StreamParse::VHilitLine( const LINE yLine, const COL xIndent, L
          for( ; ix < d_hl_rgns.size() && 0==d_hl_rgns[ix].rgn.cmp_line( yLine ) ; ++ix ) {
             const auto &hl( d_hl_rgns[ix] );
             const auto xMin( hl.rgn.flMin.lin == yLine ? conv.i2c( hl.rgn.flMin.col ) :          0 );
-            const auto xMax( hl.rgn.flMax.lin == yLine ? conv.i2c( hl.rgn.flMax.col ) : xMaxOfLine );
-            0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
+            const auto xMax( hl.rgn.flMax.lin == yLine ? conv.i2c( hl.rgn.flMax.col ) : xMaxOfLine );  0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
             alcc.PutColor( xMin, xMax-xMin+1, hl.color );
             }
          }
