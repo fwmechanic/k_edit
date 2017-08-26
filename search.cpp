@@ -265,7 +265,7 @@ public:
       {
       Msg( "searching cache" );  // rewrite the dialog line so user doesn't think we've hung
       }
-   void InitLogFile( const FileSearcher &FSearcher );
+   void InitLogFile( const FileSearcher &FSearcher, stref src );
    STATIC_CONST SearchScanMode &sm() { return smFwd; }
    };
 
@@ -457,21 +457,15 @@ FileSearcher::~FileSearcher() {
 
 GLOBAL_CONST char kszCompileHdr[] = "+^-^+";
 
-void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher ) { // digression!
-#if 1
+void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher, stref src ) { // digression!
    LuaCtxt_Edit::nextmsg_setbufnm( kszSearchRslts );
-   LuaCtxt_Edit::nextmsg_newsection_ok( SprintfBuf( "mfgrep::%s %" PR_BSR, FSearcher.IsRegex() ? "regex" : "str", BSR( FSearcher.SrchStr() ) ) );
-#else
-   if( d_pOutputFile->LineCount() > 0 ) {
-       d_pOutputFile->PutLastLine( "" );
-       }
-   {
-   CPCChar frags[] = { kszCompileHdr, " ", FSearcher.IsRegex() ? "mfgrep::regex" : "mfgrep::str", " ", FSearcher.SrchStr() };
-   d_pOutputFile->PutLastLine( frags, ELEMENTS(frags) );
-   }
-   d_pOutputFile->PutLastLine( "" );
-   d_pOutputFile->Set_LineCompile( d_pOutputFile->LastLine() );
-#endif
+   std::string sbuf;
+   sbuf.append( "mfgrep::" );
+   sbuf.append( FSearcher.IsRegex() ? "regex " : "str " );
+   sbuf.append( sr2st( FSearcher.SrchStr() ) );
+   sbuf.append( " " );
+   sbuf.append( sr2st( src ) );                                 DBG( "%s: '%" PR_BSR "'", __func__, BSR(src) );
+   LuaCtxt_Edit::nextmsg_newsection_ok( sbuf.c_str() );
    }
 
 STATIC_FXN FileSearcher *NewFileSearcher( FileSearcher::StringSearchVariant type, const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
@@ -1131,32 +1125,31 @@ std::string DupTextMacroValue( PCChar macroName ) {
 
 STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator() { enum { DB=0 };
    {
-   const auto mfspec_text( DupTextMacroValue( "mffile" ) );
-   if( !IsStringBlank( mfspec_text ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mffile", BSR(mfspec_text) );
-      const auto pFBufMfspec( FindFBufByName( mfspec_text.c_str() ) );
+   const auto srcNm("mffile");
+   const auto macroVal( DupTextMacroValue( srcNm ) );
+   if( !IsStringBlank( macroVal ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
+      const auto pFBufMfspec( FindFBufByName( macroVal.c_str() ) );
       if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
-         return new FilelistCfxFilenameGenerator( pFBufMfspec->Namestr() + " (buffer,*mfptr)", pFBufMfspec );
+         return new FilelistCfxFilenameGenerator( std::string(srcNm) + "=" + pFBufMfspec->Namestr(), pFBufMfspec );
          }
       }
    }
    {
-   const auto pFBufMfspec( FindFBufByName( "<mfspec>" ) );
+   const auto srcNm("<mfspec>");
+   const auto pFBufMfspec( FindFBufByName( srcNm ) );
    if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
-      return new FilelistCfxFilenameGenerator( "<mfspec> (buffer)", pFBufMfspec );
+      return new FilelistCfxFilenameGenerator( std::string(srcNm) + " (buffer)", pFBufMfspec );
       }
    }
-   {
-   const auto mfspec_text( DupTextMacroValue( "mfspec" ) );
-   if( !IsStringBlank( mfspec_text ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec", BSR(mfspec_text) );
-      return new CfxFilenameGenerator( "mfspec (macro)", mfspec_text, ONLY_FILES );
-      }
-   }
-   {
-   const auto mfspec_text( DupTextMacroValue( "mfspec_" ) );
-   if( !IsStringBlank( mfspec_text ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, "mfspec_", BSR(mfspec_text) );
-      return new CfxFilenameGenerator( "mfspec_ (macro)", mfspec_text, ONLY_FILES );
-      }
-   }                                                                                 DB && DBG( "%s: returns NULL!", __func__ );
+   auto txtMacro2CFG = [&] ( PCChar srcNm ) -> PathStrGenerator * {
+      const auto macroVal( DupTextMacroValue( srcNm ) );
+      if( !IsStringBlank( macroVal ) ) {                                          DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
+         return new CfxFilenameGenerator( std::string(srcNm) + " (macro) = " + macroVal, macroVal, ONLY_FILES );
+         }
+      return nullptr;
+      };
+   { const auto rv( txtMacro2CFG("mfspec"  ) ); if( rv ) { return rv; } }
+   { const auto rv( txtMacro2CFG("mfspec_" ) ); if( rv ) { return rv; } }
    return nullptr;
    }
 
@@ -1193,12 +1186,12 @@ bool ARG::mfgrep() {
    if( !pSrchr ) {
       return false;
       }
-   mh.InitLogFile( *pSrchr );
    auto pGen( MultiFileGrepFnmGenerator() );
    if( !pGen ) {
       ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
       }
    else {                         0 && DBG( "%s using %" PR_BSR, __PRETTY_FUNCTION__, BSR(pGen->srSrc()) );
+      mh.InitLogFile( *pSrchr, pGen->srSrc() );
       Path::str_t pbuf;
       while( pGen->VGetNextName( pbuf ) ) {
          MFGrepProcessFile( pbuf.c_str(), pSrchr );
