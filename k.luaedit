@@ -833,16 +833,18 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       return tv
       end
 
-   local function DefinedTag( tag ) return s_tags[ tag ] and tag  end
-
+   local function DefinedTag( tag ) return tag and s_tags[ tag ] and tag  end
+   local function identity( tag ) return tag end
+   local function rightident( tag ) return tag:match("(%a[-_%w]+)$") end
    local function fs( s )  return function(tag) return fmt( s, tag ) end end
    local tag_variants = {
         fs "%s_Vect"       -- SNDK-Firmware-specific !!!
-      , fs "%s"            -- *** IDENTITY ***  those before supercede, those after are used iff identity is not in s_tags
+      ,    identity        -- *** IDENTITY ***  variants before supercede identity; tag_variants after tried iff DefinedTag(identity(tag)) fails
+      ,    rightident      -- 'NOARG tags' defaults to WUC which today can yield 'x.y.z' (vs legacy 'z'); if DefinedTag('x.y.z') fails, try DefinedTag('z') here
       , fs "%s.py"         -- python module name maps to file "${modnn}.py"
       , fs "l_edfunc_%s"   -- lua fxn wr in C?  (hardly works since macros mask true fxn names)
       ,    string.lower    -- might have typed the wrong case of a function name or, in windoze a filename
-      , fs "_%s"
+      , fs "_%s"           -- C identifier might be defined in asm source (with leading '_')
       }
    local function ExistingTagVariant( tagstr )
       for _,fxn in ipairs(tag_variants) do

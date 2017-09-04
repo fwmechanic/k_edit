@@ -16,7 +16,7 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
  * **M**: Edit undo/redo limited only by available memory (effectively infinite).
  * **M**: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` of being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; **use DVCS**!
  * **K**: highlighting
-     * "word-under-cursor"
+     * ["word-under-cursor"](docs/wuc.md)
      * comments
      * literal strings/characters
      * conditional regions: C/C++ preprocessor, GNU make
