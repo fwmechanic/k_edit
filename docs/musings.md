@@ -19,65 +19,71 @@ my career.
 
 Various peer engineers early in my career (starting in 1990 on the MS-DOS
 platform, before open source was _a thing_) chose to commit to closed-source
-_commercial_ programmers' text editors: Brief (DOS) was the big name in the early
-90's; most chose to leave Brief when Win16 came on the scene; since a Windows
-version of Brief was not created, this meant switching to another editor; most
-chose to adopt Codewright (Win16, Win32).  Others (many fewer) adopted Slickedit
-(Win32), but eventually all of these either perished from the face of the earth
-(Brief, Codewright) or (Slickedit) got swallowed by a software holding company
-whose sole purpose was to extract the maximum penance ($$$) from those who had
-the poor judgement to choose them).  I dallied briefly with Codewright (tried to
-write a CW extension DLL that allowed CW to mimic K's "reverse-polish" UI, to no
-avail (and my heart wasn't in it anyway, since the unwise aspect of becoming
-dependent on a closed-source/commercial tool was long since obvious)), but
-otherwise did not even dream of heading this direction (also, CodeWright and
-Slickedit resembled and had many of the (for me) negative attributes of IDEs
-anyway, so they did not appeal on that basis either).
+_commercial_ programmers' text editors:
+[Brief](https://en.wikipedia.org/wiki/Brief_(text_editor) ) (DOS) was the big
+name in the early 90's; most chose to leave Brief when Win16 came on the
+scene; since a Windows version of Brief was not available (the web claims a
+Windows version of Brief existed, but it was so late arriving as to be
+nonexistent) most Brief users chose to adopt Codewright (Win16, Win32).
+Others (many fewer) adopted Slickedit (Win32), but eventually all of these
+_commercial_ programmers' text editors either de facto perished from the face
+of the earth (Brief, Codewright) or (Slickedit) got swallowed by a software
+holding company whose sole purpose was/is to extract the maximum penance
+($$$) from those who had the poor judgement to choose the product).  I
+dallied briefly with Codewright (tried to write a Codewright extension DLL
+that allowed it to mimic K's "reverse-polish" UI, to no avail (and my heart
+wasn't in it anyway, since the unwise aspect of becoming dependent on a
+closed-source/commercial tool was long since obvious)), but otherwise did not
+even dream of heading this direction.  Also, CodeWright and Slickedit
+resembled and had many of the (for me) negative attributes of IDEs anyway
+(huge install, GUI-access-only features, source-text language-custom
+features), so their appeal to me was further diminished on that basis also.
 
 At no time has it been viable for me to switch away from K to a mainstream
 open-source competitor (if I wanted to choose a "fringe open-source
 competitor"... well, that's K!):
 
-I've been forced to use vi/vim (due to it being the default `$EDITOR` for at
+* I've been forced to use vi/vim (due to it being the default `$EDITOR` for at
 least various unices and Linuxes I've encountered over the decades), but (in a
 __Windows__ environment, as noted elsewhere being the vast-majority OS choice of
 the employers I've had in my career) vi/vim __alone__ (w/o the remainder of the
 unix/linux toolset and shell) was (to me) an appallingly bad editing environment
 that I could not migrate to w/o taking a massive productivity hit.
-
-Emacs ... well let's just say "complexity of key
+* Emacs ... well let's just say "complexity of key
 sequences for (what I considered to be) basic operations" presented me with too
 steep a learning curve, and w/o a clear payoff/benefit (capability that clearly
 exceeded that of K), I was simply never positively motivated to leave K.  The one
 aspect of emacs that I wish I hadn't missed out on is emacs' org mode.  But you
 can't take the good w/o taking that bad, so I'm fated to miss out on org mode.
 I'll live.
-
-The only other open-source editor I entertained using was [FTE](http://fte.sourceforge.net/ ).
+* The only other open-source editor I entertained using was [FTE](http://fte.sourceforge.net/ ).
 Anyway, I didn't see in FTE anything profoundly superior to K, and it seemed to die (as an actively maintained project) anyway, so...
 There seems to be a [recently maintained fork eFTE](https://github.com/lanurmi/efte ), but that occurred years after I was paying serious attention to FTE.
 
-IDE's: have never interested me whatsoever.  I like doing things my own way, and
-(Java-coded) behemoths created and maintained by "communities", reliant on
-"project files" and other opaque near-magical figments causing mysterious
-behaviors, interest(ed) me not one iota.  JVM-based apps may be a lot more
-performance-palatable in 2017 due to broad increases in PC performance, but _IDE
-performance_ was a lower-tier objection I had to the genre anyway.  IMO a text
-editor should be a text editor, not a real-time language parser for the
-programming language source code of the text being edited.  This last is valuable
-for some (majority) of programmers, but not for me (and was not a feature I ever
-considered implementing in K).  I want as little as possible between me and my
-toolchain.  And I want to be able to understand it all; not have vast bucketloads
-of complexity aimed at "trying to make the programmers' life easier by hiding
-things from them".  This attitude has been a problem for me, when various actors
-have requested that I "support Eclipse (etc)" for my users.  IMO it's
-antithetical (and I foot-dragged, never doing it); programmers worth their salt
-should be able to independently setup their own preferred development
-environment.  Programmers who __don't care about their development environment__
-to the extent that they don't care what text editor they use, and rely on a
-stranger/colleague to provide it all for them, to have imposed (and accept) a
-strangers' preference, are (I don't have anything good to say, so I won't say any
-more about it).
+IDE's: have never interested me whatsoever.  I like doing things my own way,
+and (Java-coded) behemoths created and maintained by "communities" ruled by
+management hierarchies, reliant on "project files" and other opaque
+near-magical figments causing mysterious behaviors, interest(ed) me not one
+iota.  JVM-based apps may be a lot more performance-palatable in 2017 due to
+broad increases in PC performance, but _performance_ was a lower-tier
+objection I had to the IDE genre anyway.  IMO a text editor should be a _text
+editor_, not a real-time language parser for the programming language source
+code of the text being edited, that knows how to build the associated
+"project".  This last is valuable for some (majority?) of programmers, but
+not for me (and was not a feature I ever considered implementing in K).  I
+want as little as possible between me and my toolchain, and I don't want some
+monolithic tool to take opaque ownership of any more scope than necessary.
+And I want to be able to understand it all; not have vast bucketloads of
+complexity aimed at "trying to make the programmers' life easier by hiding
+things from them".  This attitude has been a problem for me, when various
+actors have requested that I "support Eclipse (etc)" for my users.  IMO it's
+antithetical (and I foot-dragged, never doing it); programmers worth their
+salt should be able to independently setup their own preferred development
+environment.  Programmers who __don't care about their development
+environment__ to the extent that they don't care what text editor they use,
+and rely on a stranger/colleague to provide it all for them, to have imposed
+(and accept) a strangers' preference, are (I don't have anything good to say,
+so I won't say any more about it).
 
 Yes, it has been a huge amount of work (a multi-decade, near-lifetime project)
 to create and maintain K.  Obviously.  But it's a labor of love, and a long-term
