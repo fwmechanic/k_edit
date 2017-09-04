@@ -737,6 +737,12 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    hljoinchars:_
    mfspec_:="*.*"
 
+[ftype:markdown]
+   wordchars:_-/.:
+
+[.md]
+   ftype:markdown
+
 [ftype:sprintascii]
    wordchars:_
    hljoinchars: :.
