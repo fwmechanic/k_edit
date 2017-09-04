@@ -264,6 +264,8 @@ K development started (in spirit) in 1988 when I started [writing (in C) loadabl
 
 2014/11: I just discovered ["Q" Text Editor](http://www.schulenberg.com/page2.htm), another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
 
+2017/09: See [Musings](docs/musings.md).
+
 ## Toolchain notes
 
 Until 2012/06, I compiled K using the free "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  While I used these MS build tools, I used [WinDbg](http://en.wikipedia.org/wiki/WinDbg) to debug crashes.
