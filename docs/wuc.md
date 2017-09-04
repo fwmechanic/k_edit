@@ -30,7 +30,7 @@ syntactically different.  Examples:
 
 Variant-WUC highlighting will highlight-match any variant.  These capabilities
 are hard-coded in K's C++ code ; see `HiliteAddin_WordUnderCursor::SetNewWuc()`
-(and are sufficiently non-intersecting or benign that they are enabled always.
+and are sufficiently non-intersecting or benign that they are enabled always.
 
 ### Evolution: class/struct name hierarchial-join
 
@@ -46,12 +46,22 @@ in such code, existing K WUC highlighting will not distinguish between
 value in highlighting only instances of `self.deduct` or only instances of
 `deduct` (the coincidence of variable and member names cannot be relied upon the
 confer an actual relationship (worth highlighting) between the two).  To
-accomplish this is a (mostly-)language-independent manner, a switch `hljoinchars`
+accomplish this in a (mostly-)language-independent manner, a switch `hljoinchars`
 was created, and when looking for the left end of the WUC, the set of chars from
 the union of hljoinchars and wordchars is used to define the set chars that
 comprise the WUC.
 
-Implementation defect: some languages use a multicharacter "hierarchial-join
+### More heuristic exploration
+
+I'm finding that `self.deduct` is an interesting WUC whereas `self.deduct()` is
+less so (especially if `deduct()` is a mutator).  Meaning I might be more
+interested in _all_ occurrences of `deduct()` being called rather than only calls
+to `deduct()` on `self`.  But there isn't a clear winner here; it's very
+situational.
+
+### Implementation shortcomings
+
+Some languages use a multicharacter "hierarchial-join
 phrase" (`->`) which does not align correctly with a simpleminded character-set
 implementation. `hljoinchars: .->` might be set for such languages, and would
 see all of `yourval-myval` as a WUC when a char of `myval` is under the cursor
@@ -59,12 +69,6 @@ see all of `yourval-myval` as a WUC when a char of `myval` is under the cursor
 write `yourval - myval` (spaces surrounding `-`).  But for code I didn't write,
 this will likely be a problem (and demand switching the WUC parsing
 implementation `GetWordUnderPoint()` from charset-based to regex-based).
-
-More heuristic gaming.  I'm finding that `self.deduct` is an interesting WUC
-whereas `self.deduct()` is less so (especially if `deduct()` is a mutator).
-Meaning I might be more interested in _all_ occurrences of `deduct()` being
-called rather than only calls to `deduct()` on `self`.  But there isn't a clear
-winner here; it's very situational.
 
 The interesting part of the implementation is that `GetWordUnderPoint()`
 searches forward __and backward__ from the cursor location.  I'm unsure whether
