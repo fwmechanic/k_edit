@@ -21,23 +21,24 @@ Various peer engineers early in my career (starting in 1990 on the MS-DOS
 platform, before open source was _a thing_) chose to commit to closed-source
 _commercial_ programmers' text editors:
 [Brief](https://en.wikipedia.org/wiki/Brief_(text_editor) ) (DOS) was the big
-name in the early 90's; most chose to leave Brief when Win16 came on the
-scene; since a Windows version of Brief was not available (the web claims a
-Windows version of Brief existed, but it was so late arriving as to be
-nonexistent) most Brief users chose to adopt Codewright (Win16, Win32).
-Others (many fewer) adopted Slickedit (Win32), but eventually all of these
-_commercial_ programmers' text editors either de facto perished from the face
-of the earth (Brief, Codewright) or (Slickedit) got swallowed by a software
-holding company whose sole purpose was/is to extract the maximum penance
-($$$) from those who had the poor judgement to choose the product).  I
-dallied briefly with Codewright (tried to write a Codewright extension DLL
-that allowed it to mimic K's "reverse-polish" UI, to no avail (and my heart
-wasn't in it anyway, since the unwise aspect of becoming dependent on a
-closed-source/commercial tool was long since obvious)), but otherwise did not
-even dream of heading this direction.  Also, CodeWright and Slickedit
-resembled and had many of the (for me) negative attributes of IDEs anyway
-(huge install, GUI-access-only features, source-text language-custom
-features), so their appeal to me was further diminished on that basis also.
+name in the early 90's; as Windows (and in particular Win32) gained critical
+mass, most of my Brief-using peers switched to Codewright (Win16, Win32) or
+(many fewer) to Slickedit (Win32), but eventually all of these _commercial_
+programmers' text editors were either EOL'd (Brief, Codewright) or were
+acquired by a software holding company whose sole purpose was/is to extract
+the maximum penance ($$$) from those who had the questionable judgement to
+continue using the product (Slickedit).
+
+While I conducted competitive research on Brief, and dallied briefly with
+Codewright (tried to write an extension DLL that allowed CW to mimic K's
+"reverse-polish" UI), my heart wasn't in it; the unwise aspect of becoming
+dependent on a closed-source/commercial tool was already obvious.
+
+Also, CodeWright and Slickedit closely resembled IDEs anyway (huge install,
+GUI-access-only features, source-text language-custom features, opaque
+project files), further diminished their appeal to me.
+
+#### Open Source Alternatives
 
 At no time has it been viable for me to switch away from K to a mainstream
 open-source competitor (if I wanted to choose a "fringe open-source
@@ -60,7 +61,9 @@ I'll live.
 Anyway, I didn't see in FTE anything profoundly superior to K, and it seemed to die (as an actively maintained project) anyway, so...
 There seems to be a [recently maintained fork eFTE](https://github.com/lanurmi/efte ), but that occurred years after I was paying serious attention to FTE.
 
-IDE's: have never interested me whatsoever.  I like doing things my own way,
+##### IDE's
+
+IDE's (EX: Eclipse) have _never_ interested me.  I like doing things my own way,
 and (Java-coded) behemoths created and maintained by "communities" ruled by
 management hierarchies, reliant on "project files" and other opaque
 near-magical figments causing mysterious behaviors, interest(ed) me not one
@@ -71,29 +74,21 @@ editor_, not a real-time language parser for the programming language source
 code of the text being edited, that knows how to build the associated
 "project".  This last is valuable for some (majority?) of programmers, but
 not for me (and was not a feature I ever considered implementing in K).  I
-want as little as possible between me and my toolchain, and I don't want some
-monolithic tool to take opaque ownership of any more scope than necessary.
-And I want to be able to understand it all; not have vast bucketloads of
-complexity aimed at "trying to make the programmers' life easier by hiding
-things from them".  This attitude has been a problem for me, when various
-actors have requested that I "support Eclipse (etc)" for my users.  IMO it's
-antithetical (and I foot-dragged, never doing it); programmers worth their
-salt should be able to independently setup their own preferred development
-environment.  Programmers who __don't care about their development
-environment__ to the extent that they don't care what text editor they use,
-and rely on a stranger/colleague to provide it all for them, to have imposed
-(and accept) a strangers' preference, are (I don't have anything good to say,
-so I won't say any more about it).
+want as few abstractions as possible between me and my toolchain; I don't
+want some monolithic tool containing multiple opaque layers of abstractions
+taking ownership of any more scope than necessary.  I want to be able to
+understand it all...
 
-Yes, it has been a huge amount of work (a multi-decade, near-lifetime project)
-to create and maintain K.  Obviously.  But it's a labor of love, and a long-term
-investment that has paid off for me.  And the long term investment has been
-secured by some major achievements I've made comparatively recently:
-
-1. Switch to compile for Windows using GCC.  This was (is still) enabled by the Nuwen MinGW -x64 GCC package which I discovered some years ago (thanks STL!!!).  Once this was accomplished, it set the stage for
-1. Ability to build K as a Linux ncurses app (on Ubuntu Linux).  The ability to build K on the two most dominant OS platforms of the day (and with the number of these declining rathe than increasing) means I (or anyone who might choose) will be able to continue to use K for as long as either platform and the GCC implementation of the C++ language continue to be mainstream platforms.
-
-Does this mean I can "rest on my laurels"?  Well, the only "laurel" is having K available to me, but: YES.
+This attitude has been a problem for me, when various actors have requested
+that I "provide an Eclipse (etc) environment" for "my" users.  IMO it's
+antithetical (and I resisted doing it); programmers "worth their salt" should
+be able to independently setup their own development environment (according
+to their own preference, as long as the "interface" between their environment
+and their work product meets uniformity requirements). __Programmers who
+don't care about their development environment or its customization__ and
+rely on others to provide same for them, such that they will accept and align
+with a strangers' preference, are [I don't have anything good to say, so I
+won't say any more about it].
 
 ##### Cons
 
@@ -147,3 +142,15 @@ to corporate IT who may govern my reality?  I have no idea what their policy
 might be now, nor what it might become later when they decide to change it.  It
 won't have my interests first and foremost anyway, and will be subject to change
 at any time w/o notice, so why should I even bother?
+
+### Summary
+
+Yes, it has been a huge amount of work (a multi-decade, near-lifetime project)
+to create and maintain K.  Obviously.  But it's a labor of love, and a long-term
+investment that has paid off for me.  And the long term investment has been
+secured by some major achievements I've made comparatively recently:
+
+1. Switch to compile for Windows using GCC.  This was (is still) enabled by the Nuwen MinGW -x64 GCC package which I discovered some years ago (thanks STL!!!).  Once this was accomplished, it set the stage for
+1. Ability to build K as a Linux ncurses app (on Ubuntu Linux).  The ability to build K on the two most dominant OS platforms of the day (and with the number of these declining rathe than increasing) means I (or anyone who might choose) will be able to continue to use K for as long as either platform and the GCC implementation of the C++ language continue to be mainstream platforms.
+
+Does this mean I can "rest on my laurels"?  Well, the only "laurel" is having K available to me, but: YES.
