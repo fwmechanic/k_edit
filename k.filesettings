@@ -47,6 +47,7 @@ print "hello 3"
 local stdColors = {
    txt = bfg(   Blue   , hiYellow ),
    cxy = bfg(   Purple , hiYellow ),
+   cxy = bfg(   Cyan   , hiYellow ),
    cpp = bfg(   Gray   , hiWhite  ),
    hil = bfg(   Cyan   , hiWhite  ),
    sel = bfg(   Green  , hiWhite  ),

@@ -306,7 +306,7 @@ STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
 // reliable reading of Lua global variables (including '.'-separated table expressions) from C
 //
 STIL bool getTblVal( lua_State *L, PCChar key, int ix ) { 0 && DBG( "%s indexing '%s'", __func__, key );
-//                                                             [-o, +p, x]
+//                                                        [-o, +p, x]
 //      o: how many elements the function pops from the stack
 //      p: how many elements the function pushes onto the stack
 //      x: tells whether the function may throw errors:
@@ -316,12 +316,7 @@ STIL bool getTblVal( lua_State *L, PCChar key, int ix ) { 0 && DBG( "%s indexing
 //         'v' means the function may throw an error on purpose
 //
 
-  #if 1
-   lua_getfield( L, ix==0?LUA_GLOBALSINDEX:-1, key );  // this CRASHES (Lua panics)  [-0, +1, e]   if field key is not defined
-  #else
-   lua_pushstring (L, key);                            //                            [-0, +1, m]
-   lua_rawget (L, ix==0?LUA_GLOBALSINDEX:-1);          // does not crash             [-1, +1, -]
-  #endif
+   lua_getfield( L, ix==0?LUA_GLOBALSINDEX:-1, key );  // [-0, +1, e]   if field key is not defined
    return true;
    }
 
@@ -364,6 +359,14 @@ STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, in
    return dest;
    }
 
+// returns false if any errors
+STATIC_FXN bool LuaTblKeyExists( lua_State *L, PCChar tableDescr ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
+   if( !L ) { return false; }
+   LuaCallCleanup( L );
+   const auto rv( gotTblVal( L, tableDescr ) && !lua_isnil(L,-1) );  0 && DBG( "-%s '%s' %c", __func__ , tableDescr, rv?'t':'f' );
+   return rv;
+   }
+
 // returns nullptr if any errors
 STATIC_FXN PChar LuaTbl2S0( lua_State *L, PChar dest, size_t sizeof_dest, PCChar tableDescr ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
    if( !L ) { return nullptr; }
@@ -372,15 +375,24 @@ STATIC_FXN PChar LuaTbl2S0( lua_State *L, PChar dest, size_t sizeof_dest, PCChar
    return CopyLuaString( dest, sizeof_dest, L, -1 );
    }
 
+enum { DBLUATBRD=0 };
 // returns empty string if any errors
-STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
+STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ) {
    if( sizeof_dest > 0 ) {
       dest[0] = '\0';
       auto rv( LuaTbl2S0( L, dest, sizeof_dest, tableDescr ) );
-      if( !rv && pszDflt ) {
-         scpy( dest, sizeof_dest, pszDflt );
+      if( !rv ) {
+         if( pszDflt ) {
+            scpy( dest, sizeof_dest, pszDflt );                   DBLUATBRD && DBG( "%s   '%s' -> '%s' (dflt)"     , __func__ , tableDescr, dest );
+            }
+         else {                                                   DBLUATBRD && DBG( "%s   '%s' -> '%s' (no-dflt)"  , __func__ , tableDescr, dest );
+            }
          }
-      }                                                                      0 && DBG( "-%s '%s' -> '%s'", __func__ , tableDescr, dest );
+      else {                                                      DBLUATBRD && DBG( "%s   '%s' -> '%s' (from Lua)" , __func__ , tableDescr, dest );
+         }
+      }
+   else {                                                         DBLUATBRD && DBG( "%s   '%s' -> '' (empty-dest)" , __func__ , tableDescr );
+      }
    return dest;
    }
 
@@ -966,22 +978,24 @@ bool  LuaCtxt_Edit::ExpandEnvVarsOk    ( Path::str_t &st ) { return Lua_S2S( L_e
 bool  LuaCtxt_Edit::from_C_lookup_glock( std::string &st ) { return Lua_S2S( L_edit, "Lua_from_C_lookup_glock" , st ); }
 
 // returns dfltVal if any errors
-STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) { enum { DB=0 };
-   if( !L ) { return dfltVal; }
+STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) {
+   if( !L ) {                          DBLUATBRD && DBG( "%s '%s' 0x%02X=%3d (dflt; no Lua ctxt)", __func__, tableDescr, dfltVal, dfltVal );
+      return dfltVal;
+      }
    LuaCallCleanup( L );
    auto rv(dfltVal);
-   if( gotTblVal( L, tableDescr ) ) {
-      if( !lua_isnumber( L, -1 ) ) {                                         DB && DBG( "%s '%s' is not a number", __func__, tableDescr );
-         }
-      else {
-         rv = lua_tointeger( L, -1 );
-         }
+   if(    gotTblVal( L, tableDescr )
+       && (lua_isnumber( L, -1 ) || (( DBLUATBRD && DBG( "%s '%s' is not a number"       , __func__, tableDescr )), false ))
+     ) {
+      rv = lua_tointeger( L, -1 );     DBLUATBRD && DBG( "%s '%s' 0x%02X=%3d (from Lua)" , __func__, tableDescr, rv, rv );
       }
-                                                                             DB && DBG( "%s '%s' (%d) -> %d", __func__, tableDescr, dfltVal, rv );
+   else {                              DBLUATBRD && DBG( "%s '%s' 0x%02X=%3d (dflt)"     , __func__, tableDescr, rv, rv );
+      }
    return rv;
    }
 
 // returns dfltVal if any errors
 int LuaCtxt_Edit::Tbl2Int( PCChar tableDescr, int dfltVal ) { return LuaTbl2Int( L_edit, tableDescr, dfltVal ); }
+bool LuaCtxt_Edit::TblKeyExists( PCChar tableDescr ) { return LuaTblKeyExists( L_edit, tableDescr ); }
 
 #pragma GCC diagnostic pop

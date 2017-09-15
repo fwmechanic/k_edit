@@ -244,14 +244,20 @@ STATIC_FXN int Show_FTypeSettings() {
    }
 
 void FTypeSetting::Update() {
-   linebuf kybuf; auto kybufTail( kybuf ); auto kybufTailSize( sizeof kybuf );
-   snprintf_full( &kybufTail, &kybufTailSize, "filesettings.ftype_map.%s.", d_key.c_str() );
-   scpy( kybufTail, kybufTailSize, "eolCommentDelim" );
-   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf, "" );     DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
+   std::string kybuf; kybuf.reserve( 120 );
+   kybuf.assign( "filesettings.ftype_map." + d_key );
+   if( !LuaCtxt_Edit::TblKeyExists( kybuf.c_str() ) ) {
+      kybuf.assign( "filesettings.ftype_map.unknown" );
+      }
+   kybuf.append( ".eolCommentDelim" );
+   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf.c_str(), "" );     DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
+   auto get_oDot = [&] () { return kybuf.rfind( '.' ) + 1; };
+   auto oDot( get_oDot() );
+   auto newKey = [&] ( PCChar key ) { kybuf.replace( oDot, kybuf.length() - oDot, key ); };
    {
-   scpy( kybufTail, kybufTailSize, "hilite" );
+   newKey( "hilite" );
    char hiliteNmBuf[21];
-   LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf, "" );           DB && DBG( "%s: %s = %s", __func__, kybuf, d_eolCommentDelim );
+   LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf.c_str(), "" );           DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
    stref key( hiliteNmBuf );
    STATIC_CONST struct { PCChar nm; HL_ID enumval; } hlnms[] = {
       { "c"      , HL_C      },
@@ -282,10 +288,10 @@ void FTypeSetting::Update() {
       SINIT( str , ColorTblIdx::STR , bgBLU|fgBRN ),
    #undef SINIT
       }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
-   snprintf_full( &kybufTail, &kybufTailSize, "colors." );
+   newKey( "colors." ); oDot = get_oDot();
    for( const auto &c2L : s_color2Lua ) {
-      scpy( kybufTail, kybufTailSize, c2L.pLuaName );
-      d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf, c2L.dflt );   DB && DBG( "%s: %s = 0x%02X", __func__, kybuf, d_colors[ c2L.ofs ] );
+      newKey( c2L.pLuaName );
+      d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf.c_str(), c2L.dflt );   DB && DBG( "%s: %s = 0x%02X%s", __func__, kybuf.c_str(), d_colors[ c2L.ofs ], d_colors[ c2L.ofs ]==c2L.dflt?" (C++dflt)":"" );
       }
    }
 // d_colors[ ColorTblIdx::CXY ] = GenAltHiliteColor( d_colors[ ColorTblIdx::TXT ] );
