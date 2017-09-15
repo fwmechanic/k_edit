@@ -54,12 +54,7 @@ bool IsWin7OrLater() {
 
 PChar GetCPName( PChar buf, size_t sizeofBuf, Win32::UINT cp ) {
    Win32::CPINFOEX cpix;
-   if( Win32::GetCPInfoEx( cp, 0, &cpix ) ) {
-      scpy( buf, sizeofBuf, cpix.CodePageName );
-      }
-   else {
-      scpy( buf, sizeofBuf, "?" );
-      }
+   scpy( buf, sizeofBuf, Win32::GetCPInfoEx( cp, 0, &cpix ) ? cpix.CodePageName : "?" );
    return buf;
    }
 
