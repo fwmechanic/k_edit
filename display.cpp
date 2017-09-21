@@ -1392,13 +1392,9 @@ class HiliteAddin_python : public HiliteAddin_StreamParse {
    // scan_pass() methods; all must have same proto as called via pfx
    scan_rv find_end_code    ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt ) ;
-   scan_rv find_end_1Qrstr  ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_1Q3str  ( PCFBUF pFile, Point &pt ) ;
-   scan_rv find_end_1Q3rstr ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_2Q3str  ( PCFBUF pFile, Point &pt ) ;
-   scan_rv find_end_2Qrstr  ( PCFBUF pFile, Point &pt ) ;
-   scan_rv find_end_2Q3rstr ( PCFBUF pFile, Point &pt ) ;
    Point    d_start_C; // where last /* comment started
    bool     d_in_3str = false;
 public:
@@ -1458,38 +1454,18 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    return atEOF;                                                               \
    }
 
-#define find_end_Qstr1r( class, nm, delim )                                    \
-class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
-   const auto start( pt );                                                     \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
-      for( ; pt.col < rl.length() ; ++pt.col ) {                               \
-         switch( rl[pt.col] ) {                                                \
-            default:     break;                                                \
-            case delim:  add_litstr( start.lin, start.col, pt.lin, pt.col-1 ); \
-                         ++pt.col;                                             \
-                         return in_code;                                       \
-            }                                                                  \
-         }                                                                     \
-      }                                                                        \
-   return atEOF;                                                               \
-   }
-
 find_end_Qstr1e( HiliteAddin_python, find_end_1Qstr , chQuot1 )
 find_end_Qstr1e( HiliteAddin_python, find_end_2Qstr , chQuot2 )
-find_end_Qstr1r( HiliteAddin_python, find_end_1Qrstr, chQuot1 )
-find_end_Qstr1r( HiliteAddin_python, find_end_2Qrstr, chQuot2 )
 
 #undef find_end_Qstr1e
-#undef find_end_Qstr1r
 
-#define find_end_Qstr3e( class, nm, delim, backslash_escapes )                                    \
+#define find_end_Qstr3e( class, nm, delim )                                                       \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                                             \
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()                     \
       for( ; pt.col < rl.length() ; ++pt.col ) {                                                  \
          switch( rl[pt.col] ) {                                                                   \
             default:     break;                                                                   \
-            case chESC:  if( backslash_escapes ) { ++pt.col; } /* skip escaped char */            \
-                         break;                                                                   \
+            case chESC:  ++pt.col; break; /* skip escaped char */                                 \
             case delim:  const auto first( rl[pt.col] );                                          \
                          if( SEQ3( first ) ) {                                                    \
                             add_litstr( d_start_C.lin, d_start_C.col, pt.lin, pt.col-1 );         \
@@ -1504,10 +1480,9 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                           
    return atEOF;                                                                                  \
    }
 
-       find_end_Qstr3e( HiliteAddin_python, find_end_1Q3str , chQuot1, true  );
-       find_end_Qstr3e( HiliteAddin_python, find_end_2Q3str , chQuot2, true  );
-       find_end_Qstr3e( HiliteAddin_python, find_end_1Q3rstr, chQuot1, false );
-       find_end_Qstr3e( HiliteAddin_python, find_end_2Q3rstr, chQuot2, false );
+       find_end_Qstr3e( HiliteAddin_python, find_end_1Q3str , chQuot1 );
+       find_end_Qstr3e( HiliteAddin_python, find_end_2Q3str , chQuot2 );
+
 #undef find_end_Qstr3e
 
 void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
@@ -1524,13 +1499,13 @@ void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
       switch( ret ) { default : DBG("internal error unknwn ret" )                   ; return;
          case in_code    : findnext = &HiliteAddin_python::find_end_code    ; break;
          case in_1Qstr   : findnext = &HiliteAddin_python::find_end_1Qstr   ; break;
-         case in_1Qrstr  : findnext = &HiliteAddin_python::find_end_1Qrstr  ; break;
+         case in_1Qrstr  : findnext = &HiliteAddin_python::find_end_1Qstr   ; break;
          case in_1Q3str  : findnext = &HiliteAddin_python::find_end_1Q3str  ; break;
-         case in_1Q3rstr : findnext = &HiliteAddin_python::find_end_1Q3rstr ; break;
+         case in_1Q3rstr : findnext = &HiliteAddin_python::find_end_1Q3str  ; break;
          case in_2Qstr   : findnext = &HiliteAddin_python::find_end_2Qstr   ; break;
-         case in_2Qrstr  : findnext = &HiliteAddin_python::find_end_2Qrstr  ; break;
+         case in_2Qrstr  : findnext = &HiliteAddin_python::find_end_2Qstr   ; break;
          case in_2Q3str  : findnext = &HiliteAddin_python::find_end_2Q3str  ; break;
-         case in_2Q3rstr : findnext = &HiliteAddin_python::find_end_2Q3rstr ; break;
+         case in_2Q3rstr : findnext = &HiliteAddin_python::find_end_2Q3str  ; break;
          case atEOF      : if( d_in_3str ) { 0 && DBG( "atEOF+d_in_3str @y=%d x=%d", pt.lin, pt.col );
                               add_litstr( d_start_C.lin, d_start_C.col, pt.lin, 0 );
                               }
