@@ -1381,13 +1381,9 @@ class HiliteAddin_python : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
    enum scan_rv { atEOF, in_code,
       in_1Qstr    , // https://docs.python.org/2/reference/lexical_analysis.html#string-literals
-      in_1Qrstr   ,
       in_1Q3str   ,
-      in_1Q3rstr  ,
       in_2Qstr    ,
-      in_2Qrstr   ,
       in_2Q3str   ,
-      in_2Q3rstr  ,
    };
    // scan_pass() methods; all must have same proto as called via pfx
    scan_rv find_end_code    ( PCFBUF pFile, Point &pt ) ;
@@ -1414,17 +1410,16 @@ HiliteAddin_python::scan_rv HiliteAddin_python::find_end_code( PCFBUF pFile, Poi
             case chQuot1: ATTR_FALLTHRU;
             case chQuot2: {
                           const auto qch( rl[pt.col] );
-                          const auto raw( pt.col>0 && 'r'==tolower( rl[pt.col-1] ) );
                           const auto nquotes( SEQ3( qch ) ? 3 : 1 );
                           pt.col += nquotes;
                           if( 1==nquotes ) {
-                             if( chQuot1==qch ) { return raw ? in_1Qrstr  : in_1Qstr  ; }
-                             else               { return raw ? in_2Qrstr  : in_2Qstr  ; }
+                             if( chQuot1==qch ) { return in_1Qstr  ; }
+                             else               { return in_2Qstr  ; }
                              }
                           else {
                              d_start_C.Set( pt.lin, pt.col ); d_in_3str = true;
-                             if( chQuot1==qch ) { return raw ? in_1Q3rstr : in_1Q3str ; }
-                             else               { return raw ? in_2Q3rstr : in_2Q3str ; }
+                             if( chQuot1==qch ) { return in_1Q3str ; }
+                             else               { return in_2Q3str ; }
                              }
                           }
                           break;
@@ -1499,13 +1494,9 @@ void HiliteAddin_python::scan_pass( LINE yMaxScan ) {
       switch( ret ) { default : DBG("internal error unknwn ret" )                   ; return;
          case in_code    : findnext = &HiliteAddin_python::find_end_code    ; break;
          case in_1Qstr   : findnext = &HiliteAddin_python::find_end_1Qstr   ; break;
-         case in_1Qrstr  : findnext = &HiliteAddin_python::find_end_1Qstr   ; break;
          case in_1Q3str  : findnext = &HiliteAddin_python::find_end_1Q3str  ; break;
-         case in_1Q3rstr : findnext = &HiliteAddin_python::find_end_1Q3str  ; break;
          case in_2Qstr   : findnext = &HiliteAddin_python::find_end_2Qstr   ; break;
-         case in_2Qrstr  : findnext = &HiliteAddin_python::find_end_2Qstr   ; break;
          case in_2Q3str  : findnext = &HiliteAddin_python::find_end_2Q3str  ; break;
-         case in_2Q3rstr : findnext = &HiliteAddin_python::find_end_2Q3str  ; break;
          case atEOF      : if( d_in_3str ) { 0 && DBG( "atEOF+d_in_3str @y=%d x=%d", pt.lin, pt.col );
                               add_litstr( d_start_C.lin, d_start_C.col, pt.lin, 0 );
                               }
