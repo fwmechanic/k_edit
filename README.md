@@ -97,9 +97,9 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 
 ### Windows
 
-  * The last [nuwen.net MinGW release](http://nuwen.net/mingw.html) (w/GCC 4.8.1) that builds 32-bit targets, 10.4 released 2013/08/01, is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
-  * The 64-bit build of K is relatively recent (first release 2014/02/09) but it's *mostly* working fine so far (updt: on Win7 (targeting a WQXGA (2560x1600) monitor), I get an assertion failure related to console reads (these never occur with the 32-bit K); also these never occur with the x64 K running in Win 8.x (but targeting HD+ (1600x900) resolution); the only time I use Win7 is at work (I am one of seemingly few people who can look past the "Metro" UI of Win 8.x and find a core OS that is superior to Win7).
-    * *Update 2016/05*: I haven't used Win32-K on high-res (WQHD or greater) monitors much lately, but haven't experienced this problem in recent memory (on Win 7, 8.1, or 10).
+  * both i386 and x64 are in active use on Win 7, Win 8.1, and Win 10.
+  * i386 K for Windows: The last [nuwen.net MinGW release](http://nuwen.net/mingw.html) (w/GCC 4.8.1) that builds 32-bit targets, 10.4 released 2013/08/01, is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
+  * x64 K for Windows: first released 2014/02/09:
 
 ## Linux key-decoding status quo
 
@@ -228,17 +228,18 @@ The editor implements a large number of functions, all of which the user can inv
     * Regular-expression (PCRE) replace is supported: in regex mode (when prefixed with `arg arg`) the search string is treated as a regular expression, and replace functions support the replacement string ; insertion of regex captures in the replacement string via `\n` where `n` is the capture number.
     * In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression, and the replacement string may reference regex captures in the replacement string via `\n` where `n` is the (single-digit) capture number.
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
- * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either (user provides BOXARG) substring of each line, or (user provides LINEARG) entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates).
+ * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either BOXARG-selected substring of each line, or (if LINEARG) each entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates.
  * `websearch` (`alt+6`): perform web search on string (opens in default browser)
      * `arg` "search string" `websearch`: perform Google web search for "search string"
-     * `arg arg` "search string" `websearch`: display menu of all available search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
+     * `arg arg` "search string" `websearch`: display menu of all configured search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
      * The Linux implementation depends on `xdg-open` being installed; this seems to be part of any "Linux Desktop" OS install.
 
 ### menu functions
 
-K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a number of editor functions which generate a list of chioces to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is `arg` "fxnm" `ctrl+x`
+K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a number of editor functions which generate a list of choices to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is via `arg` "fxnm" `ctrl+x`
 
  * `mom` "menu of menus": menu of Lua-based editor menu functions
+ * `mvf` "most visited files": menu of files sorted upon # of visits this session
  * `ff` "favorite files": menu of favorite files or websites (local or on www)
  * `sb` "system buffers"
  * `dp` "dirs of parent" all parent dirs
@@ -248,7 +249,7 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
 
 ### Win32-only functions
 
- * `resize` (`alt+w`) allows you to interactively resize the screen and change the console font using the numpad cursor keys and those nearby.
+ * `resize` (`alt+w`) allows you to interactively resize the enclosing Win32 console and also to change the console font (size, face) using the numpad cursor keys and those nearby.
 
 # Historical Notes
 
