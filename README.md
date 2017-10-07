@@ -1,6 +1,6 @@
 K is my personal programmer's text editor, whose design is derived from Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor") which was itself derived from the [Z](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
-K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is writen in C++ with Lua 5.1 embedded.
+K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is writen in C++ with [Lua 5.1](http://www.lua.org/versions.html#5.1) embedded.
 
 [![Coverity Scan Build Status](https://img.shields.io/coverity/scan/5869.svg)](https://scan.coverity.com/projects/5869)
 
@@ -8,8 +8,8 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
 
 # Features
 
- * **Z**: "Reverse-polish" function-execution mode wherein the user creates the function-argument ("xxxARG") using various selection or data-entry modes or argtypes, before the function is invoked; the function's execution behavior adapts to the actual argtype it receives.
-     * This allows each editor function (one bound to each key) to potentially perform many different operations, minimizing consumption of the "keyboard namespace".  EX: `setfile` (described below).
+ * **Z**: "Reverse-polish" editor-function execution mode wherein the user creates the editor-function argument ("xxxARG") using various selection or data-entry modes or argtypes, before the editor-function is invoked; the editor-function's execution behavior adapts to the actual argtype it receives.
+     * This allows each editor-function (one bound to each key) to potentially perform different operations depending on argument-type, minimizing consumption of the "keyboard namespace".  EX: `setfile` (described below).
  * **Z**: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
  * **M**: No installation: copy and run, delete when done. Run from removable storage.
  * **M**: Easily accessible history of recent files visited, strings searched for and replaced, stored in files in user's homedir.
@@ -21,9 +21,9 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
      * literal strings/characters
      * conditional regions: C/C++ preprocessor, GNU make
  * **K**: Powerful file/source-code navigation
-     * K is integrated with [Exuberant Ctags](http://ctags.sourceforge.net/), enabling a hypertext-linking experience navigating amongst tagged items in your programming project.
-     * K can perform multi-file-greps and -replaces targeting sets of files enumerated in any editor buffer.
-     * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing only the names of all of the files of interest to you, and have the multi-file-aware functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
+     * K is comprehends [Exuberant Ctags](http://ctags.sourceforge.net/) tagfile format, enabling a hyperlinking experience navigating amongst tagged items in your programming project.
+     * K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
+     * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing only the names of all of the files of interest to you, and have the multi-file-aware editor-functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
 # Licensing
 
@@ -32,11 +32,11 @@ K itself is released under the [GPLv3 license](http://opensource.org/licenses/GP
 The K source code distro contains, and K uses, the following source code from external sources:
 
  * [Lua 5.1](http://www.lua.org/versions.html#5.1) from 2005, licensed under the [MIT License](http://opensource.org/licenses/mit-license.html)
- * [James S. Plank's Red-Black Tree library](http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html) from 2000 (substantially modified), licensed under [LGPL](http://opensource.org/licenses/LGPL-2.1)
+ * [James S. Plank's Red-Black Tree C library](http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html) from 2000 (substantially modified), licensed under [LGPL](http://opensource.org/licenses/LGPL-2.1)
 
 # Limitations
 
- * K is a Win32 Console or Linux ncurses app with no mouse support (aside from (trackpad gestures which mimic) "scroll wheel" behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-function basis.
+ * K is a Win32 Console or Linux ncurses app with no mouse support (aside from (trackpad gestures which mimic) "scroll wheel" behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-editor-function basis.
      * *Update 2016/09*: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled (unchecked: K scroll-wheel feature works) to enabled (checked: K scroll-wheel feature disabled/broken).
          * to access this setting (which may be host-global!): right click on the icon in the console window title bar and select Properties, then the Options tab
          * "relaunch" seems to mean closing and reopening the console window (not rebooting the OS).
@@ -49,10 +49,10 @@ The K source code distro contains, and K uses, the following source code from ex
 
  * `GCC` >= 4.8: I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; it might not build with any lesser GCC version.
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
-     * `boost::string_ref`: used pervasively; superseded by C++14's `std::string_view` (but we may never abandon {GCC 4.8+Boost 1.54})
+     * `boost::string_ref`, superseded by C++14's `std::string_view` is used pervasively (but we may never abandon {GCC 4.8+Boost 1.54})
          * `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
      * `boost::filesystem`: a small subset only
- * [`PCRE`](http://www.pcre.org/) "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor functions and occasionally internally.
+ * [`PCRE`](http://www.pcre.org/) "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
  * [Exuberant `Ctags`](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread`
  * Windows-only: `7zip.exe` is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
@@ -98,7 +98,7 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 ### Windows
 
   * both i386 and x64 are in active use on Win 7, Win 8.1, and Win 10.
-  * i386 K for Windows: The last [nuwen.net MinGW release](http://nuwen.net/mingw.html) (w/GCC 4.8.1) that builds 32-bit targets, 10.4 released 2013/08/01, is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
+  * i386 K for Windows: The last [nuwen.net MinGW release](http://nuwen.net/mingw.html) (w/GCC 4.8.1) that builds 32-bit targets, 10.4, was released 2013/08/01 and is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
   * x64 K for Windows: first released 2014/02/09:
 
 ## Linux key-decoding status quo
@@ -131,7 +131,7 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
 
 # Debug/Development
 
-I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from the DBG macros which are sprinkled liberally throughout the source code.
+I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from the DBG macros which are sprinkled liberally throughout the source code.  I am grateful for GCC's printf format-string+argument-type checking which makes saves _a lot_ of crash-debugging.
 
 The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable (e.g. when nuwen.net MinGW distros omitted `gdb`) I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
@@ -148,7 +148,7 @@ Information stored in state files includes:
 
  *  recent files edited (including window/cursor position)
  *  recent search-key and replace-string values
- *  function-invocation-count accumulators (for fact-driven key assignment choices)
+ *  editor-function invocation-count accumulators (to enable fact-based key assignments)
 
 # Tutorial
 
@@ -160,7 +160,7 @@ Information stored in state files includes:
 
 ## Argtypes
 
-Legend: `function` is the editor function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.  
+Legend: `function` is the editor-function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.
 
 The following outline describes all possible argtypes.  Different `ARG::function()`s (and therefore `function`s) are specified as accepting particular argtypes (one or more), and the editor command invocation processing code (see `buildexecute.cpp`) which calls `ARG::function()`s will present the user's arg value to the invoked `ARG::function()` differently depending on these specifications.  The association of `function` name to `ARG::function()`, its acceptable argtypes, and its help-text is sourced from `cmdtbl.dat` which is preprocessed by `cmdtbl.lua` into `cmdtbl.h` at build time:
 
@@ -181,17 +181,17 @@ The following outline describes all possible argtypes.  Different `ARG::function
 
 ## Essential Functions
 
-The editor implements a large number of functions, all of which the user can invoke by name using the `execute` or `selcmd` functions, or bind to any key. Every key has one function bound to it (and the user is completely free to change these bindings).  The current key bindings can be viewed by executing function `newhelp` bound to `alt+h`. Functions can also be invoked by/within macros.  Following are some of the most commonly used functions:
+K implements a large number of editor-functions, all of which the user can invoke by name using the `execute` or `selcmd` functions, or bind to any key. Every key has one function bound to it (and the user is completely free to change these bindings).  The current key bindings can be viewed by executing function `newhelp` bound to `alt+h`. Functions can also be invoked by/within macros.  Following are some of the most commonly used functions:
 
  * `exit` (`ctrl+4`, `alt+F4`) exits the editor; the user is prompted to save any dirty files (one by one, or all remaining).
  * `undo` (`ctrl+e`,`alt+backspace`) undo the most recent editing operation.  Repeatedly invoking `undo` will successively undo all editing operations.
  * `redo` (`ctrl+r`,`ctrl+backspace`) redo the most recently `undo`ne editing operation.  Repeatedly invoking `redo` will successively redo all `undo`ne editing operations.
  * `arg` (`center`: numeric keypad 5 key with numlock off (the state I always use)).  Used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this may (depending on the editor function implementation) serve to modify the behavior of `anyfunction` (see `setfile`)
- * `alt+h` opens a buffer named <CMD-SWI-Keys> containing the runtime settings of the editor:
+ * `alt+h` opens a buffer named &lt;CMD-SWI-Keys> containing the runtime settings of the editor:
     * switches with current values (and comments regarding effect).
     * functions with current key assignment (and comments regarding effect).
     * macros with current definition
- * `setfile` (`F2`) function is very powerful:
+ * `setfile` (`F2`) is very powerful:
     * `setfile` (w/o `arg`) switches between two most recently viewed files/buffers.
     * `arg setfile` opens the "openable thing" (see below) whose name starts at the cursor.
     * `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
@@ -269,7 +269,7 @@ K development started (in spirit) in 1988 when I started [writing (in C) loadabl
 
 ## Toolchain notes
 
-Until 2012/06, I compiled K using the free "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  While I used these MS build tools, I used [WinDbg](http://en.wikipedia.org/wiki/WinDbg) to debug crashes.
+Until 2012/06, I compiled K using the free, copy and run (no installer needed) "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  During the time when I used these MS build tools, I used [WinDbg](http://en.wikipedia.org/wiki/WinDbg) to debug crashes.
 
 I have no fondness for massive IDE's (e.g. Visual Studio), nor for installers, so when I finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
