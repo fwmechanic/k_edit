@@ -2204,9 +2204,9 @@ do
       if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "SNDK-instrumenter" ) then return fnm end
       end
 
-      -- generic: "c:\klg\sn\k\k.lua 870 10L7"
+      -- generic: "c:\klg\s n\k\k.lua 870 10L7"
       do local col, wid
-      fnm, line, col, wid, emsg = lbuf:match( "^(%S+)%s+(%d+)%s(%d+)L(%d+):%s+(.+)" )
+      fnm, line, col, wid, emsg = lbuf:match( "^(.+)%s+(%d+)%s(%d+)L(%d+):%s+(.+)" )
       if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "K internal, Y,X", wid ) then return fnm end
       end
 
