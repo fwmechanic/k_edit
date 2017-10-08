@@ -2204,9 +2204,12 @@ do
       if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "SNDK-instrumenter" ) then return fnm end
       end
 
-      -- generic: "c:\klg\s n\k\k.lua 870 10L7"
-      do local col, wid
-      fnm, line, col, wid, emsg = lbuf:match( "^(.+)%s+(%d+)%s(%d+)L(%d+):%s+(.+)" )
+      -- generic: "c:\klg\s n\k\k.lua 870 10L7"  -- for now mfgrep does NOT quote fnms containing spaces
+      do local col, wid                          -- assumption: fnm must begin and end with non-space (%S)
+      local mfgrep_pat_tail = "%s+(%d+)%s(%d+)L(%d+):%s+(.+)"
+      fnm, line, col, wid, emsg = lbuf:match( "^(%S.*%S)" .. mfgrep_pat_tail )  -- if begin and end chars are different
+      if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "K internal, Y,X", wid ) then return fnm end
+      fnm, line, col, wid, emsg = lbuf:match( "^(%S)" .. mfgrep_pat_tail )      -- if begin and end chars are same (single-char abs fnm is impossible AFAIK but let's be paranoid)
       if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "K internal, Y,X", wid ) then return fnm end
       end
 
