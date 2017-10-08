@@ -357,7 +357,7 @@
    lblankdel:alt+o
    topOfSearchlog:=arg "1" searchlog
    topOfSearchlog:alt+F3
-   swapchar:ctrl+s
+   reverse:ctrl+s
    swapline:alt+z
    vrepeat:alt+v
    MakeBox:alt+Num/

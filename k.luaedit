@@ -1903,39 +1903,15 @@ do
       }
 end
 
-do -- BUGBUG for some reason if you put '|' in sep_chs, string.a_gmatches has no matches
-   local sep_chs = "%s,.;:+-"
-         a_sep_ch = "["..sep_chs.."]"
-         series_of_non_sep_chs = "[^"..sep_chs.."]+"  -- "[^%s,.;:+-|]+"
-end
-
-AddEdFxn{ name = "swapchar", help = "Chars at cursor and to right of cursor are swapped", attr = MODIFIES+NOARG+BOXARG, key = "ctrl+s"
+AddEdFxn{ name = "reverse", help = "NOARG: chars at cursor and to right of cursor are swapped; BOXSTR: selected string is reversed", attr = MODIFIES+NOARG+BOXARG, key = "ctrl+s"
    , NOARG   = function( arg )
       local seg = arg.fbuf:GetLineSeg( arg.cursorY, arg.cursorX, arg.cursorX+1 )
       arg.fbuf:PutLineSeg( arg.cursorY, string.char( seg:byte(2) or 0x20, seg:byte(1) or 0x20 ), arg.cursorX, arg.cursorX+1, false )
       end
    , BOXARG  = function( arg )
-      if arg.minY ~= arg.maxY then return Msg( "only single-line BOXARG supported" ) end
-      local seg = arg.fbuf:GetLineSeg( arg.minY, arg.minX, arg.maxX )
-
-      -- alternative #1: sepstr <= ", "
-
-      -- alternative #2: sepstr <= the most frequently occurring nonwhite sep, followed by optional space
-      local seps = {}
-      for sep in seg:gmatch( a_sep_ch )  do seps[ sep ] = (seps[ sep ] or 0) + 1  end
-      local sepstr
-      for sep,cnt in tu.pairsBySortedValues( seps, tu.descending ) do
-         if sep ~= " " then sepstr = sep  break  end
-         end
-
-      if sepstr and seps[" "] then sepstr = sepstr .. " " end    -- a, b, c, d, e, f
-      sepstr = sepstr or " "                                     -- 1+2+3*4, 7
-
-      -- alternative #3: save all sep strs in their own array, reverse it and feed it back into the reversed list of non-sep tokens
-
-      printf( "'%s', '%s', '%s'", a_sep_ch, series_of_non_sep_chs, sepstr )
-      seg = table.concat( tu.a_reverse( string.a_gmatches( seg, series_of_non_sep_chs ) ), sepstr )
-      arg.fbuf:PutLineSeg( arg.minY, seg, arg.minX, arg.maxX, false )
+      if arg.minY ~= arg.maxY  then return Msg( "only single-line BOXARG supported" ) end
+      local oldSeg = arg.fbuf:GetLineSeg( arg.minY, arg.minX, arg.maxX )
+      arg.fbuf:PutLineSeg( arg.minY, oldSeg:reverse(), arg.minX, arg.maxX, false )
       end
    }
 
