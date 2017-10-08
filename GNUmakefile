@@ -80,11 +80,6 @@ export CC
 # end patch
 #######################################################################################
 
-# `del /F /Q` fails if any named parameter does not exist; add '-' prefix to ignore this error
-RM= -del /F /Q
-# rm is not part of Nuwen MinGW package
-RM= rm -f
-export RM
 MV = move
 export MV
 EXE_EXT := .exe
@@ -94,8 +89,19 @@ OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:"
 OS_LIBS := -lpsapi
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
 # LS_L_TAIL is from http://ss64.com/nt/dir.html (MS BATch programming and cmdline utils suck SO BAD!)
+ifeq "$(strip $(SHELL) )" ""
 LS_L := dir
 LS_L_TAIL := | FIND "/"
+# `del /F /Q` fails if any named parameter does not exist; add '-' prefix to ignore this error
+RM= -del /F /Q
+else
+# bash in Windows (Git For Windows bash)
+LS_L := ls -l
+LS_L_TAIL :=
+# rm is not part of Nuwen MinGW package
+RM= rm -f
+endif
+
 # MinGW _mostly_ works OK using / as dirsep, HOWEVER when specifying a path prefix to argv[0], cmd _requires_ DIRSEP==\ (fails if DIRSEP==/)
 DIRSEP := \\
 CPPFLAGS += -DWINVER=0x0501
@@ -108,7 +114,6 @@ UNCOND_CMD_SEP := ;
 MV = mv
 export MV
 RM= rm -f
-export RM
 EXE_EXT :=
 DLL_EXT := .so
 OBJDUMP_BINARY = echo "objdumping $@" && objdump -p $@ > $@.exp && readelf -d $@ | grep NEEDED | grep -Fvf std.dynlib.linux
@@ -121,6 +126,9 @@ LS_L_TAIL :=
 DIRSEP := /
 
 endif
+
+# needed by Lua make:
+export RM
 
 # generally I don't use a debugger, but when crashes occur, obtaining a stack
 # trace is VERY helpful.  I use DrMinGW  https://github.com/jrfonseca/drmingw/releases
