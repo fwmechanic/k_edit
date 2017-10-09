@@ -1,6 +1,6 @@
 K is my personal programmer's text editor, whose design is derived from Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor") which was itself derived from the [Z](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
-K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is writen in C++ with [Lua 5.1](http://www.lua.org/versions.html#5.1) embedded.
+K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is writen in C++11 with [Lua 5.1](http://www.lua.org/versions.html#5.1) embedded.
 
 [![Coverity Scan Build Status](https://img.shields.io/coverity/scan/5869.svg)](https://scan.coverity.com/projects/5869)
 
@@ -14,22 +14,22 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
  * **M**: No installation: copy and run, delete when done. Run from removable storage.
  * **M**: Easily accessible history of recent files visited, strings searched for and replaced, stored in files in user's homedir.
  * **M**: Edit undo/redo limited only by available memory (effectively infinite).
- * **M**: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` of being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; **use DVCS**!
+ * **M**: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; **use DVCS**!
+ * **K**: Powerful file/source-code navigation
+     * K is comprehends [Exuberant Ctags](http://ctags.sourceforge.net/) tagfile format, enabling a hyperlinking experience navigating amongst tagged items in your programming project.
+     * K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
+     * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing only the names of all of the files of interest to you, and have the multi-file-aware editor-functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
  * **K**: highlighting
      * ["word-under-cursor"](docs/wuc.md)
      * comments
      * literal strings/characters
      * conditional regions: C/C++ preprocessor, GNU make
- * **K**: Powerful file/source-code navigation
-     * K is comprehends [Exuberant Ctags](http://ctags.sourceforge.net/) tagfile format, enabling a hyperlinking experience navigating amongst tagged items in your programming project.
-     * K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
-     * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing only the names of all of the files of interest to you, and have the multi-file-aware editor-functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
 
 # Licensing
 
 K itself is released under the [GPLv3 license](http://opensource.org/licenses/GPL-3.0).  See file COPYING.
 
-The K source code distro contains, and K uses, the following source code from external sources:
+The K source code distro contains, and K incorporates, by building and static linking, the following open source libraries:
 
  * [Lua 5.1](http://www.lua.org/versions.html#5.1) from 2005, licensed under the [MIT License](http://opensource.org/licenses/mit-license.html)
  * [James S. Plank's Red-Black Tree C library](http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html) from 2000 (substantially modified), licensed under [LGPL](http://opensource.org/licenses/LGPL-2.1)
@@ -47,7 +47,7 @@ The K source code distro contains, and K uses, the following source code from ex
 
 ## External Build Dependencies
 
- * `GCC` >= 4.8: I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; it might not build with any lesser GCC version.
+ * `GCC` >= 4.8 (`GCC` versions thru 7.2 have been and are being used): I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; K might not build with any lesser GCC version.
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
      * `boost::string_ref`, superseded by C++14's `std::string_view` is used pervasively (but we may never abandon {GCC 4.8+Boost 1.54})
          * `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
@@ -62,7 +62,7 @@ The K source code distro contains, and K uses, the following source code from ex
  * The [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html) provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
      * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
      * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
- * `ctags.exe` ([Exuberant Ctags](http://ctags.sourceforge.net/)) must be manually installed (and in `PATH`).
+ * `ctags.exe` [Exuberant Ctags](http://ctags.sourceforge.net/ ) or its descendant [Universal Ctags](http://ctags.sourceforge.net/ )) must be manually installed (and in `PATH`).
 
  * FYI: [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html) which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
 
@@ -207,8 +207,8 @@ K implements a large number of editor-functions, all of which the user can invok
  * `execute` (`ctrl+x`):
     * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
     * `arg arg` "OS shell command string" `execute` executes "OS shell command string" in an operating system shell (Windows: `CMD.exe` (a.k.a. DOS) shell; Linux: system() -> bash) with stdout and stderr captured to an editor buffer.  Note that in Windows, data files such as .pdf are "executable" (executing them opens their default app (e.g. PDF Reader GUI App).
- * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) in the current "tags database" and "hyperlinks" to it.  If >1 definition is found, a menu of the available choices is offered.
-    * Aside: [Exuberant Ctags](http://ctags.sourceforge.net/) `ctags` is invoked to rebuild the "K tags database" at the end of each successful build of K, to facilitate development of K.
+ * `ctags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) in the current "tags database" and "hyperlinks" to it.  If >1 definition is found, a menu of the available choices is offered.
+    * Aside: `tags` ([Exuberant Ctags](http://ctags.sourceforge.net/ ) or its descendant [Universal Ctags](http://ctags.sourceforge.net/ ))) is invoked to rebuild the "K tags database" at the end of each successful build of K, to facilitate development of K.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
  * PCRE Regular-expression (regex) search & replace: all search and replace functions, when prefixed with `arg arg` (2-arg), operate in regex mode.
