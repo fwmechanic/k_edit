@@ -907,6 +907,9 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [.diff]
    ftype:diff
 
+[.groovy]
+   ftype:clang  # odd as it seems, this works pretty well; even for """triple double quoted strings"""!
+
 [ftype:clang]
    wordchars:_
    hljoinchars: .->
