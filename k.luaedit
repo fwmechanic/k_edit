@@ -368,20 +368,28 @@ do
       return rv
       end
 
-   -- patEnvName excludes '|' and ';' since "filename grammar" patterns include
-   -- [^|;] since "filename grammar" is overloaded to allow "Literal lists of
-   -- path components separated by VBARs ('|')"
+   -- envNamePat, which is ONLY used with indefinite (open-ended) syntaxes
+   -- ($varname and %varname), excludes '|' and ';' since "filename grammar"
+   -- patterns include [^=|;] since "filename grammar" is overloaded to allow
+   -- "Literal lists of path components separated by VBARs ('|')"
    --
-   local envNamePat = "([^|;]-)"
+   -- note that technically, https://stackoverflow.com/a/2821183 says a
+   -- (Env)variable name may contain ANY character except '=' or NUL, however we
+   -- are being more restrictive (excluding dirsep and pathsep ([:;]) and VBAR)
+   -- since actual variables a user might referencec essentially NEVER have these
+   -- chars in their names.
+
+   local envNamePat = "("..new_non_dirsep_class("=|:;").."+)"  -- print( "envNamePat=".. envNamePat )
    local function envExpanderGen( pat )
       return function( st ) return st:gsub( pat, envReplacer ) end
       end
-   local envExpanders = {        -- note that '%', not '\', is the Lua-pattern metachar escaper!
-      envExpanderGen( "%$"   ..envNamePat.. ":" ),
-      envExpanderGen( "%$"   ..envNamePat.. ":" ),
-      envExpanderGen( "%$%(" ..envNamePat.. "%)"),
-      envExpanderGen( "%%"   ..envNamePat.. "%%"),
-      envExpanderGen( "%${"  ..envNamePat.. "}" ),
+   local envExpanders = { -- note that '%', not '\', is the Lua-pattern metachar escaper!
+      envExpanderGen( "%%"   .."([^%%]-)".. "%%"),   -- arg "%USERPROFILE%" setfile
+      envExpanderGen( "%$"   .."([^:]-)" .. ":" ),   -- arg "$USERPROFILE:" setfile
+      envExpanderGen( "%${"  .."([^}]-)" .. "}" ),   -- arg "${USERPROFILE}" setfile
+      envExpanderGen( "%$%(" .."([^)]-)" .. "%)"),   -- arg "$(USERPROFILE)" setfile
+      envExpanderGen( "%$"   ..envNamePat       ),   -- arg "$USERPROFILE" setfile
+      envExpanderGen( "%%"   ..envNamePat       ),   -- arg "%USERPROFILE" setfile
       }
 
    -- print( "dirsep_preferred=" .. (dirsep_os or "nil") )
@@ -403,6 +411,8 @@ do
 
    function StrExpandEnvVars( str ) -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
       -- print( "StrExpandEnvVars+("..str..")" )
+      -- tilde expansion: http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_01
+      -- Windows: USERPROFILE
       for _, fxn in ipairs(envExpanders) do
          str = fxn( str )
          end
