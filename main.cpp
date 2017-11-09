@@ -361,15 +361,15 @@ void WriteStateFile() {
 
 STATIC_FXN void InitFromStateFile() { enum { DD=0 };   DD && DBG( "%s+", FUNC );
    RecoverFromStateFile();
-   SetWindow0();                                       DD && DBG( "%s %" PR_SIZET " windows", FUNC, g_iWindowCount() );
+   SetWindow0();                                       DD && DBG( "%s %" PR_SIZET " windows", FUNC, g_WindowCount() );
    if( !SwitchToNextCmdlineFile()
        && USER_INTERRUPT == ExecutionHaltRequested()
      ) {
       EditorExit( 1, false );
       }
-   for( auto iw(0) ; iw < g_iWindowCount() ; ++iw ) {  DD && DBG( "%s Win[%d]", FUNC, iw );
+   for( auto iw(0) ; iw < g_WindowCount() ; ++iw ) {  DD && DBG( "%s Win[%d]", FUNC, iw );
       SetWindowSetValidView( iw );
-      }                                                DD && DBG( "%s back to Win[0]", FUNC );
+      }                                               DD && DBG( "%s back to Win[0]", FUNC );
    SetWindowSetValidView( 0 );  // so global ops work on this window's View list
    DD && DBG( "%s-", FUNC );
    }
@@ -395,7 +395,7 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    CmdIdxClose();
                                                          DV && DBG("%s CloseFTypeSettings();", __func__ );
    CloseFTypeSettings();
-                                                         DV && DBG("%s DestroyViewList(%" PR_SIZET ");", __func__, g_iWindowCount() );
+                                                         DV && DBG("%s DestroyViewList(%" PR_SIZET ");", __func__, g_WindowCount() );
    for( auto &win : g__.aWindow ) {
       DestroyViewList( &win->ViewHd );
       }                                                  DV && DBG("%s RemoveFBufOnly();", __func__ );

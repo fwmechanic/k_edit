@@ -144,10 +144,10 @@ namespace ColorTblIdx { // see color2Lua
 
 // CompileTimeAssert( ColorTblIdx::COLOR_COUNT <= 16 ); // all ColorTblIdx:: must fit into a nibble
 
-extern uint8_t g_colorInfo     ; // INF
-extern uint8_t g_colorStatus   ; // STA
-extern uint8_t g_colorWndBorder; // WND
-extern uint8_t g_colorError    ; // ERR
+GLOBAL_VAR extern uint8_t g_colorInfo     ; // INF
+GLOBAL_VAR extern uint8_t g_colorStatus   ; // STA
+GLOBAL_VAR extern uint8_t g_colorWndBorder; // WND
+GLOBAL_VAR extern uint8_t g_colorError    ; // ERR
 
 #define  HILITE_CPP_CONDITIONALS  1
 
@@ -795,9 +795,9 @@ extern bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ); // a very friendly (with FBUF
 
 extern void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf );
 
-extern bool g_fRealtabs;         // some inline code below references
-extern char g_chTabDisp;         // some inline code below references
-extern char g_chTrailSpaceDisp;  // some inline code below references
+GLOBAL_VAR extern bool g_fRealtabs;         // some inline code below references
+GLOBAL_VAR extern char g_chTabDisp;         // some inline code below references
+GLOBAL_VAR extern char g_chTrailSpaceDisp;  // some inline code below references
 
 typedef bool (*ForFBufCallbackDone)( const FBUF &fbuf, void *pContext );
 enum eEntabModes { ENTAB_0_NO_CONV, ENTAB_1_LEADING_SPCS_TO_TABS, ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS, ENTAB_3_ALL_SPC_TO_TABS, MAX_ENTAB_INVALID };
@@ -848,7 +848,7 @@ STIL int cmp( const FileStat &a, const FileStat &b ) {
    }
 
 enum Eol_t { EolLF, EolCRLF };
-extern const Eol_t platform_eol;
+extern GLOBAL_CONST Eol_t platform_eol;
 extern PCChar EolName( Eol_t );
 
 class FBUF { // FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
@@ -1422,16 +1422,16 @@ struct TGlobalStructs  // in a struct for easier debugger access
    int   ixCurrentWin;
    };
 
-extern TGlobalStructs g__;
+GLOBAL_VAR extern TGlobalStructs g__;
 
-STIL size_t       g_iWindowCount() { return  g__.aWindow.size()       ; }
+STIL size_t       g_WindowCount()  { return  g__.aWindow.size()       ; }
 STIL size_t       g_CurWindowIdx() { return  g__.ixCurrentWin         ; }
 STIL PCWin        g_Win( int ix )  { return  g__.aWindow[ ix ]        ; }
 STIL PWin         g_WinWr( int ix ){ return  g__.aWindow[ ix ]        ; }
-STIL PCWin        g_CurWin()       { return  g_Win( g__.ixCurrentWin ); }
-STIL PWin         g_CurWinWr()     { return  g_WinWr( g__.ixCurrentWin ); }
-STIL ViewHead    &g_CurViewHd()    { return *(&g_CurWinWr()->ViewHd)  ; } // directly dependent on s_CurWindowIdx
-STIL PView        g_CurView()      { return  g_CurViewHd().front()  ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
+STIL PCWin        g_CurWin()       { return  g_Win(   g_CurWindowIdx() ); }
+STIL PWin         g_CurWinWr()     { return  g_WinWr( g_CurWindowIdx() ); }
+STIL ViewHead    &g_CurViewHd()    { return *(&g_CurWinWr()->ViewHd)  ; } // directly dependent on g__.ixCurrentWin
+STIL PView        g_CurView()      { return  g_CurViewHd().front()  ; } // NOT CACHED since can change independent of g__.ixCurrentWin changing
 
 // *** I'm not totally sure I like these, but it beats repeating g_CurWin() and g_CurView() multiple times in the code
 
@@ -1441,13 +1441,13 @@ STIL PView        g_CurView()      { return  g_CurViewHd().front()  ; } // NOT C
 #define PCWV  PCW; const auto pcv( pcw->ViewHd.front() )
 #define PCWrV PCWr;const auto pcv( pcw->ViewHd.front() )
 
-STIL const Point &g_Cursor()       { return  g_CurView()->Cursor(); } // NOT CACHED since can change independent of s_CurWindowIdx changing
-STIL LINE         g_CursorLine()   { return  g_Cursor().lin       ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
-STIL COL          g_CursorCol()    { return  g_Cursor().col       ; } // NOT CACHED since can change independent of s_CurWindowIdx changing
+STIL const Point &g_Cursor()       { return  g_CurView()->Cursor(); } // NOT CACHED since can change independent of g__.ixCurrentWin changing
+STIL LINE         g_CursorLine()   { return  g_Cursor().lin       ; } // NOT CACHED since can change independent of g__.ixCurrentWin changing
+STIL COL          g_CursorCol()    { return  g_Cursor().col       ; } // NOT CACHED since can change independent of g__.ixCurrentWin changing
 
 // this extern decl _was_ inside each of g_CurFBuf() and g_UpdtCurFBuf()'s bodies,
 // however this led to an optimization-codegen-only Assert in PutFocusOn() !!!  20150405
-extern PFBUF s_curFBuf; // not literally static (s_), but s/b treated as such!
+GLOBAL_VAR extern PFBUF s_curFBuf; // not literally static (s_), but s/b treated as such!
 STIL PFBUF        g_CurFBuf()                { return s_curFBuf; }
 STIL void         g_UpdtCurFBuf( PFBUF pfb ) {        s_curFBuf = pfb; }
 

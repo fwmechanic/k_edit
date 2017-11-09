@@ -502,7 +502,7 @@ int l_construct_Win( lua_State *L, PWin pWin ) {
    }
 
 int l_construct_Win( lua_State *L, int winIdx ) {
-   return l_construct_Win( L, winIdx >= 0 && winIdx < g_iWindowCount() ? g_WinWr( winIdx ) : 0 );
+   return l_construct_Win( L, winIdx >= 0 && winIdx < g_WindowCount() ? g_WinWr( winIdx ) : 0 );
    }
 //---------------------------
 STATIC_FXN int l_Win_mmethod__eq ( lua_State *L ) { R_bool( l_Get_Win( L, 1 ) == l_Get_Win( L, 2 ) ); }
@@ -516,7 +516,7 @@ STATIC_FXN int l_Win_function_cur ( lua_State *L ) { return l_construct_Win( L, 
 STATIC_FXN int l_Win_function_getn( lua_State *L ) { return l_construct_Win( L, I_(1)-1      ); }
 STATIC_FXN int l_Win_function_by_filename( lua_State *L ) { // Beware!  There MAY BE more than one window onto a given file
    auto pFnm = S_(1);
-   for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
+   for( auto ix(0) ; ix < g_WindowCount(); ++ix ) {
       if( g_Win( ix )->ViewHd.front()->FBuf()->NameMatch( pFnm ) ) {
          return l_construct_Win( L, ix );
          }

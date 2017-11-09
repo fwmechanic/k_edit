@@ -634,7 +634,7 @@ void TMouseEvent::Process() { // usemouse:yes
       }
    }
    WhileHoldingGlobalVariableLock gvlock;
-   if( g_iWindowCount() > 1 && !SwitchToWinContainingPointOk( Point( d_mousePosition.lin-1, d_mousePosition.col-1 ) ) ) {
+   if( g_WindowCount() > 1 && !SwitchToWinContainingPointOk( Point( d_mousePosition.lin-1, d_mousePosition.col-1 ) ) ) {
       return;
       }
    // was: MouseMovedCmdExec( d_mousePosition.lin - g_CurWin()->UpLeft.lin, d_mousePosition.col - g_CurWin()->UpLeft.col, d_flags );

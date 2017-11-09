@@ -137,7 +137,7 @@ bool FBUF::CantModify() const {
 
 // BUGBUG this should really be a AllViewsOntoFbuf event dispatcher
 void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf ) {
-   for( auto wix(0) ; wix < g_iWindowCount(); ++wix ) {
+   for( auto wix(0) ; wix < g_WindowCount(); ++wix ) {
       const auto pWin( g_Win( wix ) );
       DLINKC_FIRST_TO_LASTA( pWin->ViewHd, dlinkViewsOfWindow, pv ) {
          if( pv->FBuf() == pFBuf ) {

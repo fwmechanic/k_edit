@@ -28,9 +28,9 @@ GLOBAL_VAR PFBUF s_curFBuf;       // not literally static (s_), but s/b treated 
 enum { BORDER_WIDTH =  1 };
 enum { MAX_WINDOWS  = 10 };
 
-STIL bool CanCreateWin()  { return g_iWindowCount() < MAX_WINDOWS; }
+STIL bool CanCreateWin()  { return g_WindowCount() < MAX_WINDOWS; }
 
-#define  AssertWidx( widx )   Assert( widx >= 0 && widx < g_iWindowCount() );
+#define  AssertWidx( widx )   Assert( widx >= 0 && widx < g_WindowCount() );
 
 bool Win::GetCursorForDisplay( Point *pt ) const {
    const auto pcv( ViewHd.front() );
@@ -71,17 +71,17 @@ STATIC_FXN int NonWinDisplayLines() { return ScreenLines() - EditScreenLines(); 
 STATIC_FXN int NonWinDisplayCols()  { return 0; }
 
 bool Wins_CanResizeContent( const Point &newSize ) {
-   const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
+   const auto existingSplitVertical( g_WindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
    auto min_size_x( NonWinDisplayCols() ); auto min_size_y( NonWinDisplayLines() );
    if( existingSplitVertical ) {
-      min_size_x += (MIN_WIN_WIDTH  * g_iWindowCount()) + (BORDER_WIDTH * (g_iWindowCount() - 1));
+      min_size_x += (MIN_WIN_WIDTH  * g_WindowCount()) + (BORDER_WIDTH * (g_WindowCount() - 1));
       min_size_y +=  MIN_WIN_HEIGHT;
       }
    else {
       min_size_x +=  MIN_WIN_WIDTH;
-      min_size_y += (MIN_WIN_HEIGHT * g_iWindowCount()) + (BORDER_WIDTH * (g_iWindowCount() - 1));
+      min_size_y += (MIN_WIN_HEIGHT * g_WindowCount()) + (BORDER_WIDTH * (g_WindowCount() - 1));
       }
-   const auto rv(// g_iWindowCount() == 1 &&
+   const auto rv(// g_WindowCount() == 1 &&
                     newSize.col >= min_size_x
                  && newSize.lin >= min_size_y
                 );
@@ -91,20 +91,20 @@ bool Wins_CanResizeContent( const Point &newSize ) {
 
 void Wins_ScreenSizeChanged( const Point &newSize ) {
    const Point newWinRgnSize( newSize, -NonWinDisplayLines(), -NonWinDisplayCols() );
-   if( g_iWindowCount() == 1 ) {
+   if( g_WindowCount() == 1 ) {
       g_CurWinWr()->Event_Win_Resized( newWinRgnSize );
       }
    else { // multiwindow resize
      #define MW_RESIZE( aaa, bbb )                                                                                       \
          Point newNonBorderSize( newWinRgnSize );                                                                        \
-               newNonBorderSize.aaa -= BORDER_WIDTH*(g_iWindowCount()-1);                                                \
+               newNonBorderSize.aaa -= BORDER_WIDTH*(g_WindowCount()-1);                                                 \
          auto curNonBorderSize( 0 ); /* excluding borders */                                                             \
          for( const auto &pWin : g__.aWindow ) {                                                                         \
             curNonBorderSize += pWin->d_Size.aaa;                                                                        \
             }                                                                                                            \
          if( newNonBorderSize.aaa != curNonBorderSize ) { /* grow/shrink all windows proportional to their d_size_pct */ \
             0 && DBG( "%s %s:%d->%d", __func__, #aaa, curNonBorderSize, newNonBorderSize.aaa );                          \
-            auto ulc( newNonBorderSize.aaa + (BORDER_WIDTH*(g_iWindowCount()-1)) );                                      \
+            auto ulc( newNonBorderSize.aaa + (BORDER_WIDTH*(g_WindowCount()-1)) );                                       \
             for( auto it( g__.aWindow.rbegin() ); it != g__.aWindow.rend(); ++it ) {                                     \
                const auto pW( *it );                                                                                     \
                const auto size_( pW->d_Size.aaa );                                                                       \
@@ -128,7 +128,7 @@ void Wins_ScreenSizeChanged( const Point &newSize ) {
                { Point tmp; tmp.aaa=pW->d_Size.aaa, tmp.bbb=newNonBorderSize.bbb, pW->Event_Win_Resized( tmp ); }        \
                }                                                                                                         \
             }
-      const auto existingSplitVertical( g_iWindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
+      const auto existingSplitVertical( g_WindowCount() > 1 && g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
       if( existingSplitVertical ) { MW_RESIZE( col, lin ) } // splitVert
       else                        { MW_RESIZE( lin, col ) } // splitHoriz
      #undef MW_RESIZE
@@ -234,7 +234,7 @@ STATIC_FXN void SetWindowIdx( int widx ) {
 void InitNewWin( PCChar pC ) { // Used during ReadStateFile processing only!
    if( CanCreateWin() ) {
       SaveNewWin( new Win(pC) );
-      SetWindowIdx( g_iWindowCount()-1 );
+      SetWindowIdx( g_WindowCount()-1 );
       }
    }
 
@@ -243,7 +243,7 @@ void CreateWindow0() { // Used before ReadStateFile processing only!
    }
 
 void SetWindow0() { // Used during ReadStateFile processing only!
-   switch( g_iWindowCount() ) {
+   switch( g_WindowCount() ) {
    // case 0: SaveNewWin( new Win )      ; break; // state file had NO windows?
       case 1: g__.aWindow[0]->Maximize() ; break; // state file had one window, but its size may not equal the size of the console
       }
@@ -270,7 +270,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
       Msg( "Too many windows" );
       return nullptr;
       }
-   if( g_iWindowCount() > 1 ) {
+   if( g_WindowCount() > 1 ) {
       const auto existingSplitVertical( g_Win(0)->d_UpLeft.lin == g_Win(1)->d_UpLeft.lin );
       if( existingSplitVertical != fSplitVertical ) {
          Msg( "cannot split %s when previous splits %s", fSplitVertical?"Vertical":"Horizontal", existingSplitVertical?"Vertical":"Horizontal" );
@@ -290,7 +290,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
    if( !fSplitVertical ) {
       g_CurView()->PokeOriginLine_HACK( g_CursorLine() ? g_CursorLine() - 1 : g_CursorLine() );
       }
-   0 && DBG( "%s+ from w%" PR_SIZET " of %" PR_SIZET, __func__, g_CurWindowIdx(), g_iWindowCount() );
+   0 && DBG( "%s+ from w%" PR_SIZET " of %" PR_SIZET, __func__, g_CurWindowIdx(), g_WindowCount() );
    auto newWin( SaveNewWin( new Win( *pWin, fSplitVertical, ColumnOrLineToSplitAt ) ) );
    SortWinArray();
    if( !fSplitVertical ) {
@@ -316,7 +316,7 @@ STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
   #undef MERGEABLE
    }
 
-STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %" PR_SIZET, __func__, winToClose, wixToMergeTo, g_iWindowCount() );
+STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %" PR_SIZET, __func__, winToClose, wixToMergeTo, g_WindowCount() );
    const auto pWinToMergeTo( g_WinWr( wixToMergeTo ) );
          auto pWinToClose  ( g_WinWr( winToClose   ) );
    {
@@ -356,7 +356,7 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
    SetWindowSetValidView( -1 );
    }
 
-STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %" PR_SIZET, __func__, winToClose, g_iWindowCount() );
+STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %" PR_SIZET, __func__, winToClose, g_WindowCount() );
    for( auto it( g__.aWindow.begin() ) ; it != g__.aWindow.end() ; ++it ) {
       const auto ix( std::distance( g__.aWindow.begin(), it ) );
       if( winToClose != ix && WindowsCanBeMerged( winToClose, ix ) ) {
@@ -399,7 +399,7 @@ void SetWindowSetValidView_( PWin pWin ) {
 #if MOUSE_SUPPORT
 
 bool SwitchToWinContainingPointOk( const Point &pt ) {
-   for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
+   for( auto ix(0) ; ix < g_WindowCount(); ++ix ) {
       const auto pWin( g_Win( ix ) );
       if(  pt.lin >= pWin->d_UpLeft.lin && pt.lin < pWin->d_UpLeft.lin + pWin->d_Size.lin
         && pt.col >= pWin->d_UpLeft.col && pt.col < pWin->d_UpLeft.col + pWin->d_Size.col
@@ -457,7 +457,7 @@ bool ARG::window() {
    auto rv( true );
    switch( d_argType ) {
       default:       return false;
-      case NOARG:    if( g_iWindowCount() == 1 ) {
+      case NOARG:    if( g_WindowCount() == 1 ) {
                         rv = false;
                         break;
                         }
@@ -467,7 +467,7 @@ bool ARG::window() {
                            }
                         }
                      else {
-                        SetWindowSetValidView( (g_CurWindowIdx()+1) % g_iWindowCount() );
+                        SetWindowSetValidView( (g_CurWindowIdx()+1) % g_WindowCount() );
                         }
                      break;
       case NULLARG:  const auto fSplitVertical( d_cArg != 1 );

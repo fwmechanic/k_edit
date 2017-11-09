@@ -2351,7 +2351,7 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
    }
 
 PView FindClosestGrepBufForCurfile( PView pv, PCChar srchFilename ) {
-   if( !pv ) pv = g_CurViewHd().front();
+   if( !pv ) { pv = g_CurView(); }
    pv = DLINK_NEXT( pv, dlinkViewsOfWindow );
    while( pv ) {
       Path::str_t srchFnm; int dummy;

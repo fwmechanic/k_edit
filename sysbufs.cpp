@@ -96,7 +96,7 @@ STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"
          }
       }
    const auto wnum( StrToInt_variable_base( numst, 10 ) );
-   if( !(wnum < g_iWindowCount()) ) {
+   if( !(wnum < g_WindowCount()) ) {
       return -2;
       }
    return wnum;
@@ -158,7 +158,7 @@ STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFB
    }
 
 bool ARG::files() {  // bound to alt+f2
-// const auto fWinFiles( (g_iWindowCount() > 1) != (d_cArg > 0) );
+// const auto fWinFiles( (g_WindowCount() > 1) != (d_cArg > 0) );
    const auto fWinFiles( true );
    const auto winIdx( g_CurWindowIdx() );
    if( !g_CurFBuf()->IsFileInfoFile( winIdx ) ) {

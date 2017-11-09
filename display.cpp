@@ -2415,7 +2415,7 @@ STATIC_FXN void RedrawScreen() {
          { FULL_DB && DBG( "%s y=%d", FUNC, yLine );
          buf.assign( scrnCols, H__ ); //***** initial assumption: this line is a horizontal border ('Í')
          alc.PutColor( 0, scrnCols, g_colorWndBorder );
-         for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
+         for( auto ix(0) ; ix < g_WindowCount(); ++ix ) {
             g_Win(ix)->GetLineForDisplay( ix, buf, alc, pFirstPossibleHiLite, yLine );
             }
          }
@@ -2452,7 +2452,7 @@ void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // fo
       std::swap( yMin, yMax );
       }
    FULL_DB && DBG( "Prime FL [%d..%d]", yMin, yMax );
-   for( int ix=0 ; ix < g_iWindowCount() ; ++ix ) {
+   for( int ix=0 ; ix < g_WindowCount() ; ++ix ) {
       const auto pWin ( g_Win(ix)         );
       const auto pView( pWin->CurViewWr() );
       if( pView && pView->FBuf() == fb ) {
@@ -2556,7 +2556,7 @@ STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to comp
       DispNeedsRedrawAllLinesCurWin();
       fScreenRedrawPending = true;
       }
-   for( auto ix(0) ; ix < g_iWindowCount(); ++ix ) {
+   for( auto ix(0) ; ix < g_WindowCount(); ++ix ) {
       g_Win(ix)->CurView()->FBuf()->Push_yChangedMin(); // used by HiliteAddin methods
       }
    if( fScreenRedrawPending ) {
