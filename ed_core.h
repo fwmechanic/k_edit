@@ -765,7 +765,7 @@ struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win 
 public:
              Win();
              Win( PCChar pC );
-             Win( Win &rhs, bool fSplitVertical, int ColumnOrLineToSplitAt );
+             Win( Win &rhs, bool fSplitVertical, int columnOrLineToSplitAt );
              ~Win();
    void      Maximize();
    bool      operator< ( const Win &rhs ) const { return d_UpLeft < rhs.d_UpLeft; }

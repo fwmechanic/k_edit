@@ -29,8 +29,9 @@ enum { BORDER_WIDTH =  1 };
 enum { MAX_WINDOWS  = 10 };
 
 STIL bool CanCreateWin()  { return g_WindowCount() < MAX_WINDOWS; }
+STIL bool WidxInRange( int widx )  {  return widx >= 0 && widx < g_WindowCount(); }
 
-#define  AssertWidx( widx )   Assert( widx >= 0 && widx < g_WindowCount() );
+#define  AssertWidx( widx )   Assert( WidxInRange( widx ) );
 
 bool Win::GetCursorForDisplay( Point *pt ) const {
    const auto pcv( ViewHd.front() );
@@ -169,7 +170,7 @@ Win::Win()
    Maximize();
    }
 
-Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
+Win::Win( Win &parent_, bool fSplitVertical, int columnOrLineToSplitAt )
    { // ! parent_ is a reference since this is a COPY CTOR
    parent_.DispNeedsRedrawAllLines(); // in the horizontal-split case this is somewhat overkill...
    // CAREFUL HERE!  Order is important because parent.d_Size.lin/col IS MODIFIED _AND USED_ herein!
@@ -177,7 +178,7 @@ Win::Win( Win &parent_, bool fSplitVertical, int ColumnOrLineToSplitAt )
    Point newParentSize, newParentSizePct;
   #define SPLIT_IT( aaa, bbb )                                                        \
         this->d_Size.aaa = parent.d_Size.aaa                                        ; \
-        this->d_Size.bbb = parent.d_Size.bbb - ColumnOrLineToSplitAt - 2            ; \
+        this->d_Size.bbb = parent.d_Size.bbb - columnOrLineToSplitAt - 2            ; \
        newParentSize.aaa = parent.d_Size.aaa                                        ; \
        newParentSize.bbb = parent.d_Size.bbb -   (this->d_Size.bbb  + BORDER_WIDTH) ; \
       this->d_UpLeft.aaa = parent.d_UpLeft.aaa                                      ; \
@@ -261,11 +262,13 @@ int cmp_win( PCWin w1, PCWin w2 ) { // used by Lua: l_register_Win_object
 STATIC_FXN void SortWinArray() {
    const auto tmpCurWin( g_CurWin() );  // needed to update g_CurWin()
    std::sort( g__.aWindow.begin(), g__.aWindow.end(), []( PCWin w1, PCWin w2 ) { return w1->d_UpLeft < w2->d_UpLeft; } );
-   for( auto it( g__.aWindow.begin() ) ; it != g__.aWindow.end() ; ++it ) { (*it)->d_wnum = std::distance( g__.aWindow.begin(), it ); }
-   SetWindowIdx( PWinToWidx( tmpCurWin ) );  // update g_CurWin()
+   for( auto it( g__.aWindow.begin() ) ; it != g__.aWindow.end() ; ++it ) {
+      (*it)->d_wnum = std::distance( g__.aWindow.begin(), it );
+      }
+   SetWindowIdx( tmpCurWin->d_wnum );  // update g_CurWin()
    }
 
-PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
+PWin SplitCurWnd( bool fSplitVertical, int columnOrLineToSplitAt ) {
    if( !CanCreateWin() ) {
       Msg( "Too many windows" );
       return nullptr;
@@ -278,8 +281,8 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
          }
       }
    const auto pWin( g_CurWinWr() );
-   if(   ( fSplitVertical && (ColumnOrLineToSplitAt < MIN_WIN_WIDTH  || pWin->d_Size.col - ColumnOrLineToSplitAt < MIN_WIN_WIDTH ))
-      || (!fSplitVertical && (ColumnOrLineToSplitAt < MIN_WIN_HEIGHT || pWin->d_Size.lin - ColumnOrLineToSplitAt < MIN_WIN_HEIGHT))
+   if(   ( fSplitVertical && (columnOrLineToSplitAt < MIN_WIN_WIDTH  || pWin->d_Size.col - columnOrLineToSplitAt < MIN_WIN_WIDTH ))
+      || (!fSplitVertical && (columnOrLineToSplitAt < MIN_WIN_HEIGHT || pWin->d_Size.lin - columnOrLineToSplitAt < MIN_WIN_HEIGHT))
      ) {
       Msg( "Window too small to split" );
       return nullptr;
@@ -291,7 +294,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
       g_CurView()->PokeOriginLine_HACK( g_CursorLine() ? g_CursorLine() - 1 : g_CursorLine() );
       }
    0 && DBG( "%s+ from w%" PR_SIZET " of %" PR_SIZET, __func__, g_CurWindowIdx(), g_WindowCount() );
-   auto newWin( SaveNewWin( new Win( *pWin, fSplitVertical, ColumnOrLineToSplitAt ) ) );
+   auto newWin( SaveNewWin( new Win( *pWin, fSplitVertical, columnOrLineToSplitAt ) ) );
    SortWinArray();
    if( !fSplitVertical ) {
       g_CurView()->PokeOriginLine_HACK( svUlcLine );
@@ -301,8 +304,7 @@ PWin SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt ) {
    return newWin;
    }
 
-STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
-   PCWin pw1( g_Win(winDex1) ), pw2( g_Win(winDex2) );
+STATIC_FXN bool WindowsCanBeMerged( PCWin pw1, PCWin pw2 ) {
   #define  MERGEABLE( aaa, bbb ) \
       ( \
          pw1->d_Size  .aaa == pw2->d_Size  .aaa \
@@ -316,9 +318,9 @@ STATIC_FXN bool WindowsCanBeMerged( int winDex1, int winDex2 ) {
   #undef MERGEABLE
    }
 
-STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s merge %d to %d of %" PR_SIZET, __func__, winToClose, wixToMergeTo, g_WindowCount() );
-   const auto pWinToMergeTo( g_WinWr( wixToMergeTo ) );
-         auto pWinToClose  ( g_WinWr( winToClose   ) );
+STATIC_FXN void CloseWindow_( PWin pWinToClose, PWin pWinToMergeTo ) {
+         auto wixToMergeTo( pWinToMergeTo->d_wnum );
+   const auto wixToClose(   pWinToClose->d_wnum );    1 && DBG( "%s merge %d to %d of %" PR_SIZET, __func__, wixToClose, wixToMergeTo, g_WindowCount() );
    {
    DLINKC_FIRST_TO_LASTA( pWinToClose->ViewHd, dlinkViewsOfWindow, pv ) {
       const auto pFBuf( pv->FBuf() );
@@ -333,6 +335,7 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
       }
    }
    DestroyViewList( &pWinToClose->ViewHd );
+
    Point newSizePct( pWinToMergeTo->SizePct()  );
    Point newSize(    pWinToMergeTo->d_Size     );
    Point newUlc (    pWinToMergeTo->d_UpLeft   );
@@ -344,11 +347,12 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
    if( fSplitVertical ) { WIN_SIZE_MERGE( col ) }
    else                 { WIN_SIZE_MERGE( lin ) }
    #undef  WIN_SIZE_MERGE
+
    Delete0( pWinToClose ); //----------------------------------------------------------------------
    pWinToMergeTo->Event_Win_Reposition( newUlc ); // before sorting
    pWinToMergeTo->Event_Win_Resized( newSize, newSizePct );
-   g__.aWindow.erase( g__.aWindow.begin() + winToClose );
-   if( winToClose < wixToMergeTo ) {
+   g__.aWindow.erase( g__.aWindow.begin() + wixToClose );
+   if( wixToClose < wixToMergeTo ) {
       --wixToMergeTo;
       }
    SetWindowIdx( wixToMergeTo );
@@ -356,11 +360,10 @@ STATIC_FXN void CloseWindow_( int winToClose, int wixToMergeTo ) { 1 && DBG( "%s
    SetWindowSetValidView( -1 );
    }
 
-STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %" PR_SIZET, __func__, winToClose, g_WindowCount() );
-   for( auto it( g__.aWindow.begin() ) ; it != g__.aWindow.end() ; ++it ) {
-      const auto ix( std::distance( g__.aWindow.begin(), it ) );
-      if( winToClose != ix && WindowsCanBeMerged( winToClose, ix ) ) {
-         CloseWindow_( winToClose, ix );
+STATIC_FXN bool CloseWnd( PWin pWinToClose ) { 0 && DBG( "%s+ %d of %" PR_SIZET, __func__, pWinToClose->d_wnum, g_WindowCount() );
+   for( auto pWin : g__.aWindow ) {
+      if( pWinToClose != pWin && WindowsCanBeMerged( pWinToClose, pWin ) ) {
+         CloseWindow_( pWinToClose, pWin );
          return true;
          }
       }
@@ -372,7 +375,7 @@ STATIC_FXN bool CloseWnd( int winToClose ) { 0 && DBG( "%s+ %d of %" PR_SIZET, _
 // well as when switching between windows post-startup
 //
 void SetWindowSetValidView( int widx ) { enum { DD=0 };
-   if( widx >= 0 ) {
+   if( WidxInRange( widx ) ) {
       SetWindowIdx( widx );
       }
    const auto  iw( g_CurWindowIdx() );
@@ -399,12 +402,12 @@ void SetWindowSetValidView_( PWin pWin ) {
 #if MOUSE_SUPPORT
 
 bool SwitchToWinContainingPointOk( const Point &pt ) {
-   for( auto ix(0) ; ix < g_WindowCount(); ++ix ) {
-      const auto pWin( g_Win( ix ) );
+   for( auto it( g__.aWindow.cbegin() ) ; it != g__.aWindow.cend() ; ++it ) {
+      const auto pWin( *it );
       if(  pt.lin >= pWin->d_UpLeft.lin && pt.lin < pWin->d_UpLeft.lin + pWin->d_Size.lin
         && pt.col >= pWin->d_UpLeft.col && pt.col < pWin->d_UpLeft.col + pWin->d_Size.col
         ) {
-         SetWindowSetValidView( ix );
+         SetWindowSetValidView( std::distance( g__.aWindow.cbegin(), it ) );
          return true;
          }
       }
@@ -462,7 +465,7 @@ bool ARG::window() {
                         break;
                         }
                      if( d_fMeta ) {
-                        if( !CloseWnd( g_CurWindowIdx() ) ) {
+                        if( !CloseWnd( g_CurWinWr() ) ) {
                            return Msg( "Cannot close this window" );
                            }
                         }

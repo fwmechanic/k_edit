@@ -282,7 +282,7 @@ extern   void  SetWindow0();
 enum { MIN_WIN_WIDTH = 10, MIN_WIN_HEIGHT = 10 };
 extern   int   cmp_win( PCWin pw1, PCWin pw2 );
 
-extern   PWin  SplitCurWnd( bool fSplitVertical, int ColumnOrLineToSplitAt );
+extern   PWin  SplitCurWnd( bool fSplitVertical, int columnOrLineToSplitAt );
 extern   void  SetWindowSetValidView( int widx );
 extern   void  SetWindowSetValidView_( PWin pWin );
 
