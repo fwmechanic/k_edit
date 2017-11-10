@@ -824,7 +824,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    rmargin:77
 
 [.tcl]
-   mfspec_:="$TAGZ:*.tcl"
    rmargin:80
 
 [.make .mak .mik]
@@ -915,9 +914,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    hljoinchars: .->
    wucminlen:1
    dquc:alt+4
-   mfspec_:="%TAGZ%\$(*.h|*.hpp|*.hxx|*.kh|*.c|*.cpp|*.cc|*.cxx|*.kc)"
-   # mfspec_:="%TAGZ%\<*.h;*.hpp;*.hxx;*.kh;*.c;*.cpp;*.cc;*.cxx;*.kc>"
-   # mfspec_:= "%TAGZ%\*.h;%TAGZ%\*.hpp;$(TAGZ)\*.hxx;$TAGZ:\*.kh;$(TAGZ)\*.c;$TAGZ:\*.cpp;$TAGZ:\*.cc;$TAGZ:\*.cxx;$TAGZ:\*.kc"
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
    #tabwidth:3
     tabwidth:4
@@ -982,7 +978,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    wordchars:_
    hljoinchars:_
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
-   mfspec_:="%TAGZ%\<*.twk;*.twl;*.awk;*.kxt;*.kxl>"
    rmargin:100
 
 [.fclog]

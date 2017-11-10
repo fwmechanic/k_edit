@@ -675,11 +675,10 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
    -- http://www.held.org.il/blog/2011/02/configuring-ctags-for-python-and-vim/
    --
    local function read_tags_file()
-      local tagF, tagDirnm
+      local tagF
       for dir in CwdToRoot() do
          local fn = dir .. "tags"
          if IsFile( fn ) then
-            tagDirnm = dir
             -- tagF = io.open( fn, "rt" )
             tagF = FBUF.new( fn )
             tagF:SetNoEdit()
@@ -736,7 +735,13 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
 
          local tfnm = line:match( '^[^\t]+\t([^\t]+)\t1;"\tfile$' )
          if tfnm then
-            tfbuf:InsLineSortedAscending( tfnm:gsub( '^%.\\', tagDirnm ) )
+            local absfnm = tfnm:gsub( "\\\\", "\\" )
+            if tfnm:match( "^%a:"..dirsep_class )
+            or tfnm:match( "^"..dirsep_class ) then
+            else
+               absfnm = s_tagsFilepath..absfnm
+               end
+            tfbuf:InsLineSortedAscending( absfnm )
             isFnm = true
             end
          ll = lnum
