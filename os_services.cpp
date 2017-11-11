@@ -263,6 +263,11 @@ void MainThreadPerfCounter::ResumeAll() {
 
 #if defined(_WIN32)
 
+// on windows, run DbgView and configure
+// Include: "K! *"
+// Exclude: (empty)
+// Menu / Capture / [x] "Capture Win32"
+
 void DBG_init() {
    DBG( "DBGVIEWCLEAR" );    // clear DbgView buffer
    Win32::SetFileApisToOEM();
