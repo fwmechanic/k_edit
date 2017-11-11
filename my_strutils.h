@@ -438,7 +438,7 @@ STIL void insert_hole( PChar b, size_t sizeof_b, int xCol, int insertWidth=1 )
    memmove( b+xCol+insertWidth, b+xCol, (sizeof_b-1) - (xCol+insertWidth) );
    }
 
-template <int elements>
+template <size_t elements>
 class FixedCharArray {
    char d_buf[ elements ];
 public:
@@ -467,6 +467,40 @@ public:
       }
 private:
    // NO_ASGN_OPR(FixedCharArray);
+   };
+
+template <sridx elements>
+class Catbuf { // purpose: allocate automatic (on-stack) buffers that are safely and efficiently cat- and re-copy-able
+   char d_buf[ elements ];
+public:
+   class wref { // writeable reference to a trailing segment of d_buf
+      PChar d_bp;
+      sridx d_len;
+   public:
+      // these are FOR INTERNAL (Catbuf implementation) USE ONLY
+      PCChar bp() const { return d_bp; }  // ONLY for stref sr( const wref& wr )
+      wref( PChar bp_, sridx len ) : d_bp( bp_ ), d_len( len ) {}
+      // only public interface: copy stref into trailing segment of d_buf
+      wref cpy( stref src ) const {
+         const auto srWr( scpy( d_bp, d_len, src ) );
+         const auto ix( (d_bp - srWr.data()) + srWr.length() ); // index of first un-scpy-written char in d_buf
+         if( ix < d_len ) {
+            return wref{ d_bp + ix, ix - (d_len - 1) };
+            }
+         return wref{ d_bp, 0 };
+         }
+      };
+   Catbuf() { d_buf[0] = '\0'; } // paranoia
+   wref Wref() { return wref{ d_buf, elements }; }
+   stref sr( const wref& wr ) const { return stref( d_buf, (wr.bp() - d_buf) ); }
+   stref sr()                 const { return stref( d_buf, Min( elements-1, Strlen( d_buf ) ) ); }
+   PCChar k_str() const { return d_buf; }
+   PChar  c_str()       { return d_buf; }
+   // Test code:
+   // Catbuf<5> tbuf;
+   // auto t0( tbuf.Wref() );
+   // const auto t1( t0.cpy( "filesettings.ftype_map." ) );                  DBG( "%s: t0 = '%s' t1='%" PR_BSR "'", __func__, tbuf.c_str(), BSR(tbuf.sr(t1)) );
+   //       auto t2( t1.cpy( stref(d_key) ) );                               DBG( "%s: t1 = '%s' t2='%" PR_BSR "'", __func__, tbuf.c_str(), BSR(tbuf.sr(t2)) );
    };
 
 #include "filename.h"

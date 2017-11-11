@@ -244,18 +244,17 @@ STATIC_FXN int Show_FTypeSettings() {
    }
 
 void FTypeSetting::Update() {
-   std::string kybuf; kybuf.reserve( 120 );
-   kybuf.assign( "filesettings.ftype_map." + d_key );
+   Catbuf<120> kybuf;
+   const auto w0( kybuf.Wref() );
+   const auto w1( w0.cpy( "filesettings.ftype_map." ) );
+         auto w2( w1.cpy( stref(d_key) ) );
    if( !LuaCtxt_Edit::TblKeyExists( kybuf.c_str() ) ) {
-      kybuf.assign( "filesettings.ftype_map.unknown" );
+      w2 = w1.cpy( "unknown" );
       }
-   kybuf.append( ".eolCommentDelim" );
+   w2.cpy( ".eolCommentDelim" );
    LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf.c_str(), "" );     DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
-   auto get_oDot = [&] () { return kybuf.rfind( '.' ) + 1; };
-   auto oDot( get_oDot() );
-   auto newKey = [&] ( PCChar key ) { kybuf.replace( oDot, kybuf.length() - oDot, key ); };
    {
-   newKey( "hilite" );
+   w2.cpy( ".hilite" );
    char hiliteNmBuf[21];
    LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf.c_str(), "" );           DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
    stref key( hiliteNmBuf );
@@ -288,9 +287,9 @@ void FTypeSetting::Update() {
       SINIT( str , ColorTblIdx::STR , bgBLU|fgBRN ),
    #undef SINIT
       }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
-   newKey( "colors." ); oDot = get_oDot();
+   const auto w3( w2.cpy( ".colors." ) );
    for( const auto &c2L : s_color2Lua ) {
-      newKey( c2L.pLuaName );
+      w3.cpy( c2L.pLuaName );
       d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf.c_str(), c2L.dflt );   DB && DBG( "%s: %s = 0x%02X%s", __func__, kybuf.c_str(), d_colors[ c2L.ofs ], d_colors[ c2L.ofs ]==c2L.dflt?" (C++dflt)":"" );
       }
    }
