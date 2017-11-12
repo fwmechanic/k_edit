@@ -942,6 +942,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       return true
       end
 
+   -- edfxn readtagsfile is CALLED FROM C++ core!
    AddEdFxn{ name = "readtagsfile", help = "(re-)read tags data file", attr = NOARG
       , NOARG   = function(arg)  read_tags_file() end
       }
@@ -1421,6 +1422,7 @@ local dynamic_fbufs = -- bugbug this s/b automated
    "<env>"           ,
    "<env_>"          ,
    "<files>"         ,
+   "<tagged-files>"  ,
    "<most_recently_written_files>" ,
    "<macdefs>"       ,
    "<usage>"         ,

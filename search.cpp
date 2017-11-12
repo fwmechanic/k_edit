@@ -1123,7 +1123,7 @@ std::string DupTextMacroValue( PCChar macroName ) {
    return std::string( tokStrt, txtLen );
    }
 
-STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator() { enum { DB=0 };
+STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
    {
    const auto srcNm("mffile");
    const auto macroVal( DupTextMacroValue( srcNm ) );
@@ -1151,6 +1151,15 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator() { enum { DB=0 };
    { const auto rv( txtMacro2CFG("mfspec"  ) ); if( rv ) { return rv; } }
    { const auto rv( txtMacro2CFG("mfspec_" ) ); if( rv ) { return rv; } }
    return nullptr;
+   }
+
+STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( bool readtagsfile_retry=false ) { enum { DB=0 };
+   auto rv( MultiFileGrepFnmGenerator_() );
+   if( !rv && readtagsfile_retry ) {  // only do retry after reading tags in mfgrep; mfreplace requires pre-run w/mfgrep or explicit fileset setup
+      fExecute( "readtagsfile", true );
+      rv = MultiFileGrepFnmGenerator_();
+      }
+   return rv;
    }
 
 #ifdef fn_mgl
@@ -1186,9 +1195,9 @@ bool ARG::mfgrep() {
    if( !pSrchr ) {
       return false;
       }
-   auto pGen( MultiFileGrepFnmGenerator() );
+   auto pGen( MultiFileGrepFnmGenerator( true ) );
    if( !pGen ) {
-      ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
+      ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil && no tags" );
       }
    else {                         0 && DBG( "%s using %" PR_BSR, __PRETTY_FUNCTION__, BSR(pGen->srSrc()) );
       mh.InitLogFile( *pSrchr, pGen->srSrc() );

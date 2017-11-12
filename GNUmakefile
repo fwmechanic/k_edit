@@ -374,8 +374,9 @@ printvars:
 	)
 
 
-TAGS_CMDLN = ctags$(EXE_EXT) --totals=yes --excmd=number --c-types=cdefgmnstuv --fields=+K --file-tags=yes -R
+TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=+K --file-tags=yes --recurse
 
+.PHONY: tags
 tags : $(EXE_TGTS)
 	$(TAGS_CMDLN)
 
