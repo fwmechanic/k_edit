@@ -134,7 +134,6 @@
    anno  := arg "EMBSHELL> svn annotate $%" runchild
    shenv := arg "EMBSHELL> set" runchild
    #csort:alt+8
-   xm := arg mfspec_ cancel
 
    # quik:ctrl+a
 
@@ -175,7 +174,6 @@
 
    tell_loop:= :>again tell =>again
 
-   mg:=arg "mfspec" tell
    selcmd:alt+0
 
 # selkeymap
@@ -263,7 +261,7 @@
    ta :=arg "<textargs>" setfile
    mfs:=arg "<mfspec>"   setfile
    mf :=mfs
-   mfx:=arg "mffile:=" curfile assign arg "mffile updated" message
+   mfx:=cancel arg "mffile:=" curfile assign arg "mffile updated" message
    mfx:alt+m
 
    del_no_clip:=delete
@@ -615,7 +613,6 @@
    # initfilemenu:Alt+1
    # systemfilemenu:Alt+2
 
-
 [menu]
    menu:alt+m                    # allframes = MACRO> arg arg "[0-9][0-9][0-9][rt]x" grep
    listmenu:=arg "Lists/Logs" menu
@@ -721,10 +718,6 @@
    #Ы       DGr:8 LBl:9 LGr:A LCy:B LRd:C LPk:D Yel:E Wht:F (BRIGHT if bkgnd)Ы
    #ЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫ
 
-ux_1:="*" curfileext
-ux_2:=""ux_1""
-ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
-
 [ftype:krsrc]
    wordchars:_
    hljoinchars: :.
@@ -735,7 +728,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    wordchars:_
    hljoinchars:_
-   mfspec_:="*.*"
 
 [ftype:markdown]
    wordchars:_-/.:
@@ -760,11 +752,9 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 
 [.bat]
    ftype:msbatch
-   mfspec_:="*.bat"
 
 [.cmd]
    ftype:msbatch
-   mfspec_:="*.cmd"
 
 [ftype:wildcard]  # wildcard expansion
    wordchars:_
@@ -790,7 +780,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:lua]
    wordchars:_
    hljoinchars: :.
-   mfspec_:="*.lua"
    rmargin:80
 
 [.lua .luaedit]
@@ -816,7 +805,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:perl]
    wordchars:@$%
    hljoinchars: .->
-   mfspec_:="*.pl;*.pm"
    rmargin:80
 
 [.spa]
@@ -838,19 +826,15 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    #graphic:tab # using GNU make, we need ability to insert literal tabs
    tabwidth:8
    entab:leading  # ...  whitespace converted to tabs
-   mfspec_:="*.mak;*.mik"
 
 [.cod]
    wordchars:_
    tabwidth:8
-   mfspec_:="*.cod"
    hl:=arg arg "(?-i)^\s+(if|else|for|while|do).*$" searchall
 
 [.list]
-   mfspec_:="*.list" # need "%Fd" which inserts path of file from which this command is executed
 
 [.journl]
-   mfspec_:="*.list" # need "%Fd" which inserts path of file from which this command is executed
    jentry:=endfile begline cur_yymmdd " " cur_hhmmss " "
    jentry:alt+j
 
@@ -861,7 +845,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:pascal]
    wordchars:_
    hljoinchars: .^
-   mfspec_:="*.pas;*.dpr"
    rmargin:100
 
 [.mod .def]
@@ -870,7 +853,6 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:modula2]
    wordchars:_
    hljoinchars: .
-   mfspec_:="*.def;*.mod"
 
 [.asm .s .inc]
    ftype:asm
@@ -878,12 +860,8 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
 [ftype:asm]
    wordchars:_
    hljoinchars: .
-   mfspec_:="*.inc;*.asm;*.map"
    call:=savecur arg "call" searchall restcur
    rmargin:100
-
-[.fclog]
-   mfspec_:="*.fclog"
 
 [.xml .html .htm .dtd .vpj .vpw]
    delims: <
@@ -952,24 +930,15 @@ ux:= arg "mfspec:=""*" curfileext """" assign  arg arg "mfspec" tell
    nofor:=cancel replace "’" nl "'" nl    replace "“" nl """ nl  replace "”" nl """ nl
 
    rmargin:80
-   mfspec_:="*.txt"
-   mfspec_:="*" curfileext
    join:= begline endline arg delete
    join:num*
    nxtspceol:=arg arg "\s$" psearch
    nxtspceol:num/
    joinallspeceol:= :>again nxtspceol -> join =>again
 
-[.e]
-   mfspec_:="*.e"
-
 [.kdb]
-   mfspec_:="*.kdb"
    rmargin:80
    mfspec_:= curfilepath "*" curfileext
-
-[.!!!]
-   mfspec_:="*.!!!"
 
 [.awk .gawk .twk .twl .kxt .kxl]
    ftype:awk
