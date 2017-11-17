@@ -706,7 +706,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       local isFnm
 
       local function addtidx( tag, min, max )
-         s_tags[tag] = {min, max}  -- HUGE amounts of RAM are taken up by THIS TABLE [s_tags] (and it's index-data, presumably)
+         s_tags[tag] = min  -- HUGE amounts of RAM are taken up by THIS TABLE [s_tags] (and it's index-data, presumably)
          if isFnm then isFnm = nil
             local lcfnm = tag:lower()
             -- print( "file tag:"..tag.."->"..lcfnm )
@@ -769,12 +769,13 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       tagF:SetNoEdit()
       print( "ExpandTags( "..tagStr.." )" )
       local expanded = {}
-      for lnum = s_tags[tagStr][1],s_tags[tagStr][2] do
+      for lnum = s_tags[tagStr],math.huge do
          local line = tagF:GetLineRaw( lnum )
          local tfl,ttype = split_str( line, ';"\t' )  -- tfl = tag + filename + lineNum, ttype = attributes
          assert( ttype )  -- DBG( "Line "..lnum.." tfl='"..tfl.."' attributes='"..ttype.."'" )
          if not ignored_ttype[ttype] then
             local tag,fname,lineNum = split_ch( tfl, "\t" )
+            if tag ~= tagStr then break end
             assert( lineNum )
          -- printf( "Line %d tag='%s' file='%s' lineNum='%s' attributes='%s'", lnum, tag, fname, lineNum, ttype )
 
