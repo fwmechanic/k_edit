@@ -1,6 +1,6 @@
 #!make
 #
-# Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -375,6 +375,7 @@ printvars:
 
 
 TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=+K --file-tags=yes --recurse
+# !!! SEE ALSO ctags.d/*.ctags
 
 .PHONY: tags
 tags : $(EXE_TGTS)

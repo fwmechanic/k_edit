@@ -1,0 +1,35 @@
+#!bash
+#
+# Copyright 2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+#
+# This file is part of K.
+#
+# K is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# K is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along
+# with K.  If not, see <http:#www.gnu.org/licenses/>.
+#
+
+# project-level options for https://github.com/universal-ctags/ctags
+
+# K drops backup files into child dir .kbackup of the dir of the file
+# being backed up, which means .kbackup dirs may be encountered anywhere.
+# While these backup files have an extension .yyyyMMdd_hhmmss which
+# prevents ctags operating in file-extension pattern-matching mode from
+# seeing them, if ctags is operated in --guess-language-eagerly mode
+# the peculiar extension of backup files does not inhibit ctags from
+# scanning these files.
+#
+# To make this option, which prevents backup files from being tagged,
+# globally effective, this file should be copied to one of:
+#  $HOME/.ctags.d/*.ctags
+#  $HOMEDRIVE$HOMEPATH/ctags.d/*.ctags (on MSWindows only)
+--exclude=.kbackup
