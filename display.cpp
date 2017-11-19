@@ -673,7 +673,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    if( !rl.empty() ) {
       const auto keyStart( !d_sb.empty() ? d_sb.data() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
       if( keyStart ) {
-         auto maxNeedleLen( 0u );
+         decltype( rl.length() ) maxNeedleLen( 0 );
          {
          for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
             const stref needle( pNeedle );
@@ -684,6 +684,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
          const auto xMinToDisp( alcc.GetMinColInDisp() );
          const auto xMaxToDisp( alcc.GetMaxColInDisp() );
          const auto tw( fb->TabWidth() );
+         COL lastCOFIx(0); sridx lastCOFIix(0);
          for( size_t ofs( xMinToDisp > maxNeedleLen ? xMinToDisp - maxNeedleLen : 0u ) ; ofs < rl.length() ; ) {
             auto ixBest( stref::npos ); auto mlen( 0u );
             auto haystack( rl ); haystack.remove_prefix( ofs );
@@ -699,8 +700,9 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                pNeedle += needle.length() + 1;
                }
             if( ixBest == stref::npos ) { break; }
-            const auto xFound( ColOfFreeIdx( tw, rl, ixBest ) );
+            const auto xFound( ColOfFreeIdx( tw, rl, ixBest, lastCOFIix, lastCOFIx ) );
             if( xFound > xMaxToDisp ) { break; }
+            lastCOFIx = xFound; lastCOFIix = ixBest; // update cache
             if(   d_stSel.c_str() == keyStart // is a selection pseudo-WUC?
                || // or a true WUC
                  (  (ixBest == 0 || !isWordChar( rl[ixBest-1] )) && (ixBest+mlen >= rl.length() || !isWordChar( rl[ixBest+mlen] )) // only match _whole words_ matching d_wucbuf

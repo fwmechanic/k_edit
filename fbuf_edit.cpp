@@ -509,14 +509,21 @@ void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
    PutLine( yLine, sbuf, tmp );
    }
 
-COL ColOfFreeIdx( COL tabWidth, stref content, sridx offset ) {
+COL ColOfFreeIdx( COL tabWidth, stref content, sridx offset, sridx startIx, COL colOfStartIx ) {
    const Tabber tabr( tabWidth );
-   auto xCol( 0 );
-   for( auto it( content.cbegin() ) ; it != content.cend() ; ++it ) {
-      if( std::distance( content.cbegin(), it ) == offset ) {
+   COL xCol;
+   if( startIx > offset ) {
+      startIx = 0;
+      xCol = 0;
+      }
+   else {
+      xCol = colOfStartIx;
+      }
+   for( decltype( content.length() ) ix( startIx ) ; ix < content.length() ; ++ix ) {
+      if( ix == offset ) {
          return xCol;
          }
-      switch( *it ) {
+      switch( content[ix] ) {
          default  : ++xCol;                                break;
          case HTAB: xCol = tabr.ColOfNextTabStop( xCol );  break;
          }
