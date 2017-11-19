@@ -1930,22 +1930,19 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
    const auto isActiveWindow_( isActiveWindow() );
    const auto isCursorLine( isActiveWindow_ && g_CursorLine() == yLine );
    if( isCursorLine ) {
-      const auto cxy( ColorIdx2Attr( ColorTblIdx::CXY ) );
-      alcc.   PutColorRaw( 0            , COL_MAX, cxy );
+      alcc.PutColor( 0            , COL_MAX, ColorTblIdx::CXY );
       if( DrawVerticalCursorHilite() ) {
          return true;
          }
       }
    else {
       if( isActiveWindow_ && DrawVerticalCursorHilite() ) {
-         const auto fg ( ColorIdx2Attr( ColorTblIdx::TXT ) );
-         const auto cxy( ColorIdx2Attr( ColorTblIdx::CXY ) );
-         alcc.PutColorRaw( 0            , COL_MAX, fg  );
-         alcc.PutColorRaw( g_CursorCol(),       1, cxy );
+         alcc.PutColor( 0            , COL_MAX, ColorTblIdx::TXT  );
+         alcc.PutColor( g_CursorCol(),       1, ColorTblIdx::CXY );
          return true;
          }
       if( !USE_HiliteAddin_CompileLine && LineIs_LineCompile( yLine ) ) {
-         alcc.PutColor(    0            , COL_MAX, ColorTblIdx::STS );
+         alcc.PutColor( 0            , COL_MAX, ColorTblIdx::STS );
          }
       }
    return false;
