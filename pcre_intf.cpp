@@ -51,8 +51,7 @@ public:
    RegexMatchCaptures::size_type Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
    };
 
-PCRE_EXP_DECL void * pcre_malloc_( size_t bytes ) {
-   0 && DBG( "%s: %" PR_SIZET " bytes", __func__, bytes );
+PCRE_EXP_DECL void * pcre_malloc_( size_t bytes ) {  0 && DBG( "%s: %" PR_SIZET " bytes", __func__, bytes );
    return AllocNZ_( bytes );
    }
 
@@ -62,8 +61,7 @@ PCRE_EXP_DECL void   pcre_free_( void *p ) {
 
 void PCRE_API_INIT() {
    STATIC_VAR BoolOneShot first;
-   if( first ) {
-      0 && DBG( "PCRE version '%s'", pcre_version() );
+   if( first ) {                                     0 && DBG( "PCRE version '%s'", pcre_version() );
       // Msg( "loaded PCRE %s", version() ); if last saved SRCH was regex, this
       //    will crash because screen-geom vars are not initialized until after the
       //    saved search strings are loaded
@@ -118,8 +116,7 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
    // be a multiple of three. If it is not, it is rounded down.
          , d_pcreCapture.size() * num_ints_in_pcreCapture // ovecsize: # of integers in *ovector
          )
-      );
-   0 && DBG( "CompiledRegex::Match returned %d", rc );
+      );                                                   0 && DBG( "CompiledRegex::Match returned %d", rc );
    // The first pair of integers, ovector[0] and ovector[1], identify the portion of the subject string matched by
    // the entire pattern.  The next pair is used for the first capturing subpattern, and so on.  The value returned
    // by pcre_exec() is one more than the highest numbered pair that has been set.  For example, if two substrings
@@ -142,8 +139,7 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
    if( rc > d_maxPossCaptures ) {
       ErrorDialogBeepf( "PCRE: rc(%d) > d_maxPossCaptures(%d)", rc, d_maxPossCaptures );
       return 0;
-      }
-   0 && DBG( "CompiledRegex::Match count=%d", rc );
+      }                                                    0 && DBG( "CompiledRegex::Match count=%d", rc );
    if( rc > 0 ) {
       captures.reserve( rc );
       for( auto ix(0); ix < rc; ++ix ) {
@@ -174,9 +170,8 @@ CompiledRegex *Regex_Delete0( CompiledRegex *pcr ) {
    return nullptr;
    }
 
-CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase ) {
+CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase ) {  0 && DBG( "Regex_Compile! %s", pszSearchStr );
    PCRE_API_INIT();
-   0 && DBG( "Regex_Compile! %s", pszSearchStr );
    const int options( fCase ? 0 : PCRE_CASELESS );
    PCChar errMsg;
    int errOffset;

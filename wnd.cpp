@@ -210,16 +210,13 @@ Win::Win( Win &parent_, bool fSplitVertical, int columnOrLineToSplitAt )
       }
    }
 
-Win::Win( PCChar pC ) // Used during ReadStateFile processing ONLY!
-   {
-   0 && DBG( "RdSF: WIN-GEOM '%s'", pC );
-   sscanf( pC, " %d %d %d %d "
+Win::Win( PCChar pC ) { 0 && DBG( "RdSF: WIN-GEOM '%s'", pC );
+   sscanf( pC, " %d %d %d %d "  // Used during ReadStateFile processing ONLY!
       , &d_UpLeft.col
       , &d_UpLeft.lin
       , &d_Size.col
       , &d_Size.lin
-      );
-   0 && DBG( "RdSF: WIN-GEOM %d %d %d %d", d_UpLeft.col, d_UpLeft.lin, d_Size.col, d_Size.lin );
+      );                0 && DBG( "RdSF: WIN-GEOM %d %d %d %d", d_UpLeft.col, d_UpLeft.lin, d_Size.col, d_Size.lin );
    }
 
 STATIC_FXN PWin SaveNewWin( PWin newWin ) {
@@ -292,8 +289,7 @@ PWin SplitCurWnd( bool fSplitVertical, int columnOrLineToSplitAt ) {
    // top of new window is at cursor's line
    if( !fSplitVertical ) {
       g_CurView()->PokeOriginLine_HACK( g_CursorLine() ? g_CursorLine() - 1 : g_CursorLine() );
-      }
-   0 && DBG( "%s+ from w%" PR_SIZET " of %" PR_SIZET, __func__, g_CurWindowIdx(), g_WindowCount() );
+      }                                  0 && DBG( "%s+ from w%" PR_SIZET " of %" PR_SIZET, __func__, g_CurWindowIdx(), g_WindowCount() );
    auto newWin( SaveNewWin( new Win( *pWin, fSplitVertical, columnOrLineToSplitAt ) ) );
    SortWinArray();
    if( !fSplitVertical ) {
@@ -380,17 +376,14 @@ void SetWindowSetValidView( int widx ) { enum { DD=0 };
       }
    const auto  iw( g_CurWindowIdx() );
    const auto  pWin( g_CurWin() );
-         auto &vh( g_CurViewHd() );
-   DD && DBG( "%s Win[%" PR_SIZET "]", __func__, iw );
+         auto &vh( g_CurViewHd() );            DD && DBG( "%s Win[%" PR_SIZET "]", __func__, iw );
    for( auto try_(0); !vh.empty(); ++try_ ) {
       const auto fb( vh.front()->FBuf() );     DD && DBG( "%s try %d=%s", __func__, try_, fb->Name() );
-      if( fChangeFile( fb->Name() ) ) {  // fb->PutFocusOn() also works
-         DD && DBG( "%s try %d successful!", __func__, try_ );
+      if( fChangeFile( fb->Name() ) ) {        DD && DBG( "%s try %d successful!", __func__, try_ );  // fb->PutFocusOn() also works
          Assert( g_CurView() != nullptr );
          return;
          }
-      }
-   DD && DBG( "%s Win[%" PR_SIZET "] giving up, adding %s", __func__, iw, kszNoFile );
+      }                                        DD && DBG( "%s Win[%" PR_SIZET "] giving up, adding %s", __func__, iw, kszNoFile );
    fChangeFile( kszNoFile );
    Assert( g_CurView() != nullptr );
    }
@@ -508,8 +501,7 @@ void RefreshCheckAllWindowsFBufs() {
    for( auto &pf : pfbufs ) {
       if( !pf ) {
          break;
-         }
-      0 && DBG( "REFRESH-CHK '%s'", pf->Name() );
+         }                                    0 && DBG( "REFRESH-CHK '%s'", pf->Name() );
       updates += pf->SyncNoWrite();
       }
    DispDoPendingRefreshes(); // BUGBUG leaving this work to the IdleThread can cause a CRASH
@@ -606,15 +598,14 @@ void Wins_WriteStateFile( FILE *ofh ) {
       not_anon best;
       for( auto ix(0) ; ix < hdsMax; ++ix ) {
          hds[ix].ToSaveCand();
-         if( hds[ix].View() ) { DV && DBG("hds[%d] %8" PR_TIMET " %s", ix, hds[ix].View()->TmFocusedOn(), hds[ix].View()->FBuf()->Name() );
+         if( hds[ix].View() ) {          DV && DBG("hds[%d] %8" PR_TIMET " %s", ix, hds[ix].View()->TmFocusedOn(), hds[ix].View()->FBuf()->Name() );
             best.cmp( ix, hds[ix].View()->TmFocusedOn() );
             }
          }
       if( best.is_empty() ) { break; /*################################################*/ }
       // we have an entry to write to the statefile
       auto &hd( hds[ best.get_idx() ] );
-      const auto pv( hd.View() );
-      DV && DBG("hds[%d] %8" PR_TIMET " %s  *** SAVING ***", best.get_idx(), pv->TmFocusedOn(), pv->FBuf()->Name() );
+      const auto pv( hd.View() );        DV && DBG("hds[%d] %8" PR_TIMET " %s  *** SAVING ***", best.get_idx(), pv->TmFocusedOn(), pv->FBuf()->Name() );
       pv->Write( ofh );  ++iFilesSaved;
       pv->FBuf()->SetSavedToStateFile(); // prevent saving state for this file again
       hd.Next();

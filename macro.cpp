@@ -47,8 +47,7 @@ bool ARG::assignlog() { // toggle function
    return true;
    }
 
-void AssignLogTag( PCChar tag ) {
-   0 && DBG( "===== %s ====================", tag );
+void AssignLogTag( PCChar tag ) {   0 && DBG( "===== %s ====================", tag );
    if( g_pFBufAssignLog ) {
        g_pFBufAssignLog->FmtLastLine( "===== %s ====================", tag );
        }
@@ -302,8 +301,8 @@ bool Interpreter::Interpreting_VariableMacro() { return Interpreting() && TOS().
 bool Interpreter::PushMacroStringOk( PCChar pszMacroString, int macroFlags ) {
    if( ELEMENTS(s_MacroRuntimeStack) == ixPastTOS() ) {
       return ErrorDialogBeepf( "Macros nested too deep (%" PR_SIZET " levels)! recursive macro defn?", ELEMENTS(s_MacroRuntimeStack) );
-      }
-   0 && DBG( "PushMacStr[%d] '%s'", ixPastTOS(), pszMacroString );
+      }                                            0 && DBG( "PushMacStr[%d] '%s'", ixPastTOS(), pszMacroString );
+
    s_MacroRuntimeStack[ s_ixPastTOS++ ].Ctor( pszMacroString, macroFlags );
    return true;
    }
@@ -316,8 +315,7 @@ void Interpreter::MacroRuntimeStkEntry::Ctor( PCChar pszMacroString, int macroFl
    Advance();
    }
 
-void Interpreter::MacroRuntimeStkEntry::clear() {
-   0 && DBG( "Clear[%d]=%s|", s_ixPastTOS-1, d_macroText.c_str() );
+void Interpreter::MacroRuntimeStkEntry::clear() {  0 && DBG( "Clear[%d]=%s|", s_ixPastTOS-1, d_macroText.c_str() );
    d_macroText.clear();
    d_pCurTxt = nullptr;
    d_runFlags = 0;
@@ -331,7 +329,7 @@ bool Interpreter::MacroRuntimeStkEntry::ClearIsBreak() {
 
 bool Interpreter::MacroRuntimeStkEntry::Advance() {
    if( d_insideQuot2dString ) {
-      if( NON_ESCAPED_QUOT2() ) { 0 && DBG("-DQ  '%s'",d_pCurTxt);
+      if( NON_ESCAPED_QUOT2() ) {                  0 && DBG("-DQ  '%s'",d_pCurTxt);
          d_insideQuot2dString = false;
          d_pCurTxt++;
          goto TO_NXT_TOK;
@@ -340,7 +338,7 @@ bool Interpreter::MacroRuntimeStkEntry::Advance() {
    else {
 TO_NXT_TOK:
       d_pCurTxt = StrPastAnyBlanks( d_pCurTxt );
-      if( chQuot2 == d_pCurTxt[0] ) { 0 && DBG("+DQ1 '%s'",d_pCurTxt);
+      if( chQuot2 == d_pCurTxt[0] ) {              0 && DBG("+DQ1 '%s'",d_pCurTxt);
          d_insideQuot2dString = true;
          d_pCurTxt++;
          }
@@ -375,7 +373,7 @@ bool Interpreter::MacroRuntimeStkEntry::BranchToLabel( stref pszBranchToken ) {
 
 Interpreter::MacroRuntimeStkEntry::eGot
 Interpreter::MacroRuntimeStkEntry::GetNextTokenIsLiteralCh( std::string &dest ) {
-                             0 && DBG("GetNxtTok+    %X '%s'",d_runFlags,d_pCurTxt);
+                                0 && DBG("GetNxtTok+    %X '%s'",d_runFlags,d_pCurTxt);
    if( '\0' == d_pCurTxt[0] ) { 0 && DBG("GetNxtTok-    %X EXHAUSTED",d_runFlags);
       return EXHAUSTED;
       }
@@ -505,9 +503,9 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
          macro_graphic.d_argData.eka.EdKcEnum = token[0];
          return &macro_graphic;
          }
-      { 0 && DBG( "%s non-LIT '%s'", __func__, token.c_str() );
+      {                                           0 && DBG( "%s non-LIT '%s'", __func__, token.c_str() );
       const auto pCmd( CmdFromName( token ) );
-      if( pCmd ) { 0 && DBG( "%s CMD '%s'", __func__, pCmd->Name() );
+      if( pCmd ) {                                0 && DBG( "%s CMD '%s'", __func__, pCmd->Name() );
          return pCmd;
          }
       }
@@ -903,7 +901,7 @@ bool ARG::record() {
          }
       Msg( "%d assign%s done", assignsDone, Add_s( assignsDone ) );
       }
-   else { 0 && DBG( "###########  %s w/!fMacroRecordingActive, %s", __func__, ArgTypeName() );
+   else {                           0 && DBG( "###########  %s w/!fMacroRecordingActive, %s", __func__, ArgTypeName() );
       STATIC_VAR PCMD s_pCmdRecordMacro;
       PCChar pMacroName;
       if( TEXTARG == d_argType ) {

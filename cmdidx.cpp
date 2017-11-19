@@ -642,14 +642,13 @@ PCCMD CmdFromKbdForExec() {
    if( 0 == cmddata.EdKcEnum && ExecutionHaltRequested() ) { 0 && DBG( "CmdFromKbdForExec sending pCMD_cancel" );
       return pCMD_cancel;
       }
-   if( cmddata.EdKcEnum >= EdKC_Count ) { DBG( "!!! KC=0x%X", cmddata.EdKcEnum );
+   if( cmddata.EdKcEnum >= EdKC_Count ) {                    DBG( "!!! KC=0x%X", cmddata.EdKcEnum );
       return pCMD_unassigned;
       }
 #if 0 // to get every (valid) keystroke to display
    else {
       char kystr[50];
-      KeyNmOfEdkc( BSOB(kystr), cmddata.EdKcEnum );
-      DBG( "EdKc=%s", kystr );
+      KeyNmOfEdkc( BSOB(kystr), cmddata.EdKcEnum );          DBG( "EdKc=%s", kystr );
       }
 #endif
    const auto pCmd( s_Key2CmdTbl[ cmddata.EdKcEnum ] );
@@ -685,7 +684,7 @@ STATIC_FXN void CMD_PlacementFree_SameName( PCMD pCmd ) {
    }
 
 STATIC_FXN void DeleteCMD( void *pData, void *pExtra ) {
-   auto pCmd( static_cast<PCMD>(pData) );  0 && pCmd->IsRealMacro() && DBG( "%s MACRO %s", __func__, pCmd->d_name );
+   auto pCmd( static_cast<PCMD>(pData) );                0 && pCmd->IsRealMacro() && DBG( "%s MACRO %s", __func__, pCmd->d_name );
    CMD_PlacementFree_SameName( pCmd );
    Free0( pCmd->d_name );
    Free0( pCmd );
@@ -694,10 +693,8 @@ STATIC_FXN void DeleteCMD( void *pData, void *pExtra ) {
 void CmdIdxInit() {  s_CmdIdxAddins = rb_alloc_tree( &s_CmdIdxRbCtrl ); }
 void CmdIdxClose() { rb_dealloc_treev( s_CmdIdxAddins, nullptr, DeleteCMD ); }
 
-STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
-   0 && DBG( "%" PR_BSR "?", BSR(src) );
+STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {    0 && DBG( "%" PR_BSR "?", BSR(src) );
    // binary search
-   //
    size_t yMin( 0 );
    auto   yMax( ELEMENTS( g_CmdTable ) - 1 );
    while( yMin <= yMax ) {
@@ -705,7 +702,7 @@ STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
       const auto &cand( g_CmdTable[ cmpLine ] );
       const auto rslt( cmpi( src, cand.Name() ) );
-      if( rslt == 0 ) { 0 && DBG( "%s=[%" PR_SIZET "]: %" PR_BSR "|", __func__, cmpLine, BSR(src) );
+      if( rslt == 0 ) {                                  0 && DBG( "%s=[%" PR_SIZET "]: %" PR_BSR "|", __func__, cmpLine, BSR(src) );
          return CAST_AWAY_CONST(PCMD)( &cand );
          }
       if( rslt <  0 ) { /* handle unsigned underflow/wraparound */
@@ -714,10 +711,8 @@ STATIC_FXN PCMD CmdFromNameBuiltinOnly( stref src ) {
             }
          yMax = cmpLine - 1;
          }
-      if( rslt >  0 ) { yMin = cmpLine + 1; }
-      0 && DBG( "%s=[%" PR_SIZET ",%" PR_SIZET "]: %" PR_BSR "|", __func__, yMin, yMax, BSR(src) );
-      }
-   0 && DBG( "%s:[-1]: %" PR_BSR "|", __func__, BSR(src) );
+      if( rslt >  0 ) { yMin = cmpLine + 1; }            0 && DBG( "%s=[%" PR_SIZET ",%" PR_SIZET "]: %" PR_BSR "|", __func__, yMin, yMax, BSR(src) );
+      }                                                  0 && DBG( "%s:[-1]: %" PR_BSR "|", __func__, BSR(src) );
    return nullptr;
    }
 
@@ -843,26 +838,22 @@ STATIC_FXN void sv_idx( PCCMD pCmd, void *pCtxt ) {
    }
 
 void cmdusage_updt() {
-   enum { SHOWDBG = 0 };
-   SHOWDBG && DBG( "%s+", __func__ );
+   enum { DB = 0 };                                                            DB && DBG( "%s+", __func__ );
    auto origfnm( StateFilename( "cmdusg" ) );
    const auto ifh( fopen( origfnm.c_str(), "rt" ) );
    const auto fOrigFExists( ifh != nullptr );
-   if( ifh ) {
-      SHOWDBG && DBG( "%s: opened ifh = '%s'", __func__, origfnm.c_str() );
+   if( ifh ) {                                                                 DB && DBG( "%s: opened ifh = '%s'", __func__, origfnm.c_str() );
       auto entries(0);
       for(;;) {
          char buf[300];
          auto p( fgets( BSOB(buf), ifh ) );
          if( !p ) {
             break;
-            }
-         //DBG( "%s: '%s'", __func__, p );
+            }                                                                  DB && DBG( "%s: '%s'", __func__, p );
          pathbuf  savedCmdnm;
          unsigned savedCount;
          if( (2 == sscanf( p, "%u %s", &savedCount, savedCmdnm )) && *savedCmdnm ) {
-            ++entries;
-            //DBG( "%s:>%u '%s'", __func__, savedCount, savedCmdnm );
+            ++entries;                                                         DB && DBG( "%s:>%u '%s'", __func__, savedCount, savedCmdnm );
             const PCCMD pCmd( CmdFromName( savedCmdnm ) );
             if( pCmd ) {
                pCmd->d_gCallCount = savedCount + pCmd->d_callCount;
@@ -870,23 +861,16 @@ void cmdusage_updt() {
                }
             }
          }
-      fclose( ifh );
-      SHOWDBG && DBG( "%s: closed ifh = '%s'; read %d entries", __func__, origfnm.c_str(), entries );
+      fclose( ifh );                                                           DB && DBG( "%s: closed ifh = '%s'; read %d entries", __func__, origfnm.c_str(), entries );
       }
-
-   auto tmpfnm( StateFilename( "cmdusg_" ) );
-   //DBG( "%s:%s", __func__, tmpfnm.c_str() );
+   auto tmpfnm( StateFilename( "cmdusg_" ) );                                  DB && DBG( "%s:%s", __func__, tmpfnm.c_str() );
    const auto ofh = fopen( tmpfnm.c_str(), "wt" );
-   if( ofh ) {
-      SHOWDBG && DBG( "%s: opened ofh = '%s'", __func__, tmpfnm.c_str() );
+   if( ofh ) {                                                                 DB && DBG( "%s: opened ofh = '%s'", __func__, tmpfnm.c_str() );
       WalkAllCMDs( ofh, sv_idx );
-      fclose( ofh );
-      SHOWDBG && DBG( "%s: closed ofh = '%s'", __func__, tmpfnm.c_str() );
+      fclose( ofh );                                                           DB && DBG( "%s: closed ofh = '%s'", __func__, tmpfnm.c_str() );
       const auto doRename( !fOrigFExists || unlinkOk( origfnm.c_str() ) );
       if( doRename ) {
-         const auto renmOk( rename( tmpfnm.c_str(), origfnm.c_str() ) == 0 );
-         SHOWDBG && DBG( "%s: did rename, %s", __func__, renmOk ? "ok" : "FAILED" );
+         const auto renmOk( rename( tmpfnm.c_str(), origfnm.c_str() ) == 0 );  DB && DBG( "%s: did rename, %s", __func__, renmOk ? "ok" : "FAILED" );
          }
-      }
-   SHOWDBG && DBG( "%s-", __func__ );
+      }                                                                        DB && DBG( "%s-", __func__ );
    }

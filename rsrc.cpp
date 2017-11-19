@@ -27,8 +27,7 @@ STATIC_FXN bool OpenRsrcFileFailed() {
    if( s_pszRsrcFilename.empty() ) {
       s_pszRsrcFilename = ThisProcessInfo::ExePath() + static_cast<Path::str_t>(".krsrc");
       SearchEnvDirListForFile( s_pszRsrcFilename );
-      }
-   0 && DBG( "%s opens Rsrc file '%s'", FUNC, s_pszRsrcFilename.c_str() );
+      }                                                          0 && DBG( "%s opens Rsrc file '%s'", FUNC, s_pszRsrcFilename.c_str() );
    FBOP::FindOrAddFBuf( s_pszRsrcFilename, &s_pFBufRsrc );
    return s_pFBufRsrc->ReadDiskFileNoCreateFailed();
    }
@@ -47,25 +46,23 @@ STATIC_FXN stref IsolateTagStr( stref src ) {
    }
 
 STATIC_FXN LINE FindRsrcTag( stref srKey, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) { enum { DB=0 };
-   DB && DBG( "FindRsrcTag: '%" PR_BSR "'", BSR(srKey) );
+                                                                 DB && DBG( "FindRsrcTag: '%" PR_BSR "'", BSR(srKey) );
    for( auto yLine(startLine) ; yLine <= pFBuf->LastLine(); ++yLine ) {
       const auto rl( pFBuf->PeekRawLine( yLine ) );
       const stref tag( IsolateTagStr( rl ) );
-      if( !tag.empty() ) { DB && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
+      if( !tag.empty() ) {                                       DB && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
          for( sridx ix( 0 ); ix < tag.length() ; ) {
             const auto ix0( FirstNonBlankOrEnd( tag, ix  ) );
             const auto ix1( FirstBlankOrEnd   ( tag, ix0 ) );
             const auto taglen( ix1 - ix0 );
-            const auto atag( tag.substr( ix0, taglen ) );  DB && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
+            const auto atag( tag.substr( ix0, taglen ) );        DB && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
             if( 0==cmpi( atag, srKey ) ) {
                if( fHiLiteTag ) {
                   const auto pView( pFBuf->PutFocusOn() );
-                  const auto iox0( isri2osri( rl, tag, ix0 ) );
-                  DB && DBG( "%s! tagging y=%d x=%" PR_SIZET " L %" PR_SIZET "u", __func__, yLine, iox0, taglen );
+                  const auto iox0( isri2osri( rl, tag, ix0 ) );  DB && DBG( "%s! tagging y=%d x=%" PR_SIZET " L %" PR_SIZET "u", __func__, yLine, iox0, taglen );
                   pView->SetMatchHiLite( Point(yLine,iox0), taglen, true );
                   }
-               const auto rv( yLine + 1 );
-               DB && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
+               const auto rv( yLine + 1 );                       DB && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
                return rv;
                }
             ix = ix1;
@@ -152,8 +149,7 @@ bool RsrcFileLdAllNamedSections( stref srSectionName, int *pAssignCountAccumulat
       }
    if( pAssignCountAccumulator ) {
       *pAssignCountAccumulator += totalAssignsDone;
-      }
-   0 && DBG( "%s %+d for [%" PR_BSR "]", FUNC, fFound ? totalAssignsDone : -1, BSR(srSectionName) );
+      }                                     0 && DBG( "%s %+d for [%" PR_BSR "]", FUNC, fFound ? totalAssignsDone : -1, BSR(srSectionName) );
    return fFound;
    }
 
@@ -266,7 +262,7 @@ bool ARG::initialize() {
    }
 
 bool RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd, int *pAssignsDone, Point *pErrorPt ) { enum {DBGEN=0};
-   DBGEN && DBG( "%s: {%s} L [%d..%d]", __func__, title, yStart, yEnd );
+                                                              DBGEN && DBG( "%s: {%s} L [%d..%d]", __func__, title, yStart, yEnd );
    if( yEnd < 0 || yEnd > pFBuf->LastLine() ) {
       yEnd = pFBuf->LastLine();
       }
@@ -277,33 +273,30 @@ bool RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE
    auto AccumAssignableEntity = [&]() -> AL2MSS  {
       for( ; yCur <= yEnd ; ++yCur ) {
          const auto rl( pFBuf->PeekRawLine( yCur ) );
-         if( !IsolateTagStr( rl ).empty() ) { DBGEN && DBG( "L %d TAG VIOLATION", yCur );
+         if( !IsolateTagStr( rl ).empty() ) {                 DBGEN && DBG( "L %d TAG VIOLATION", yCur );
             return FOUND_TAG;
             }
          auto continues( false );
          const auto parsed( ExtractAssignableText( rl, continues ) );
-         srcAccum.append( sr2st( parsed ) );  DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(srcAccum) );
-         if( !continues && !srcAccum.empty() ) {
-            DBGEN && DBG( "RTN HvContent" );
+         srcAccum.append( sr2st( parsed ) );                  DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(srcAccum) );
+         if( !continues && !srcAccum.empty() ) {              DBGEN && DBG( "RTN HvContent" );
             return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
             }
-         }
-      DBGEN && DBG( "RTN ?" ); //
+         }                                                    DBGEN && DBG( "RTN ?" ); //
       return srcAccum.empty() ? BLANK_LINE : HAVE_CONTENT;
       };
    auto fContinueScan( true ); auto fAssignError( false ); auto assignsDone( 0 );
-   for( ; fContinueScan && yCur <= yEnd ; ++yCur ) {  DBGEN && DBG( "%s L %d", __func__, yCur );
-      const auto rslt( AccumAssignableEntity() );
-      DBGEN && DBG( "%s L %d rslt=%d", __func__, yCur, rslt );
+   for( ; fContinueScan && yCur <= yEnd ; ++yCur ) {          DBGEN && DBG( "%s L %d", __func__, yCur );
+      const auto rslt( AccumAssignableEntity() );             DBGEN && DBG( "%s L %d rslt=%d", __func__, yCur, rslt );
       switch( rslt ) {
-       case HAVE_CONTENT :  DBGEN && DBG( "assigning --- |%s|", srcAccum.c_str() );
-                            if( !AssignStrOk( srcAccum ) ) {         DBGEN && DBG( "%s atom failed '%s'", __func__, srcAccum.c_str() );
+       case HAVE_CONTENT :                                    DBGEN && DBG( "assigning --- |%s|", srcAccum.c_str() );
+                            if( !AssignStrOk( srcAccum ) ) {  DBGEN && DBG( "%s atom failed '%s'", __func__, srcAccum.c_str() );
                                if( pErrorPt ) {
                                   pErrorPt->Set( yCur, 0 );
                                   }
                                fAssignError = true;
                                }
-                            else {                                   DBGEN && DBG( "%s atom OKOKOK '%s'", __func__, srcAccum.c_str() );
+                            else {                            DBGEN && DBG( "%s atom OKOKOK '%s'", __func__, srcAccum.c_str() );
                                ++assignsDone;
                                }
                             srcAccum.clear();
@@ -312,8 +305,7 @@ bool RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE
        case FOUND_TAG    :  fContinueScan = false;  break;
        default           :  fContinueScan = false;  break;
        }
-      }
-   DBGEN && DBG( "%s: {%s} L [%d..%d/%d] = %d", __func__, title, yStart, yCur, yEnd, assignsDone );
+      }                                                       DBGEN && DBG( "%s: {%s} L [%d..%d/%d] = %d", __func__, title, yStart, yCur, yEnd, assignsDone );
    if( pAssignsDone ) { *pAssignsDone = assignsDone; }
    return fAssignError;
    }

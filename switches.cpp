@@ -122,7 +122,7 @@ STATIC_FXN void swidCharMap( PChar dest, size_t sizeofDest, const CharMap &chMap
 STATIC_FXN void swidWordchars  ( PChar dest, size_t sizeofDest, void *src ) { swidCharMap( dest, sizeofDest, g_WordChars ); }
 STATIC_FXN void swidHLJoinchars( PChar dest, size_t sizeofDest, void *src ) { swidCharMap( dest, sizeofDest, g_HLJChars  ); }
 
-STATIC_FXN bool swixSetChars( CharMap &chMap, stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
+STATIC_FXN bool swixSetChars( CharMap &chMap, stref pS ) { 0 && DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    if( 0==cmpi( "nonwhite", pS ) ) {
       for( auto &ch : chMap.is ) { ch = true; }
       chMap.is[            0 ] = false;
@@ -141,16 +141,15 @@ STATIC_FXN bool swixSetChars( CharMap &chMap, stref pS ) { 0&&DBG("%s+ %" PR_BSR
             }
          }
       *pWc = '\0';
-      }
-   0&&DBG( "%s-", __func__ );
+      }                                       0 && DBG( "%s-", __func__ );
    return true;
    }
 
-STATIC_FXN bool swixWordchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
+STATIC_FXN bool swixWordchars( stref pS ) {   0 && DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    return swixSetChars( g_WordChars, pS );
    }
 
-STATIC_FXN bool swixHLJoinchars( stref pS ) { 0&&DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
+STATIC_FXN bool swixHLJoinchars( stref pS ) { 0 && DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    return swixSetChars( g_HLJChars, pS );
    }
 

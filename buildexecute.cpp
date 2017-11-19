@@ -157,8 +157,7 @@ bool ARG::bp() {
    return true;
    }
 
-bool ARG::cancel() {
-   0 && DBG( "%s+", __func__ );
+bool ARG::cancel() {               0 && DBG( "%s+", __func__ );
    switch( d_argType ) {
       case NOARG: MsgClr();
                   break;
@@ -330,12 +329,10 @@ bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { 
 bool View::GetBOXSTR_Selection( std::string &st ) {
    if( this == g_CurView() ) {
       const auto cursor( Cursor() );
-      if( Get_g_ArgCount() > 0 /* && s_SelAnchor.lin == cursor.lin */ ) {
-         0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
+      if( Get_g_ArgCount() > 0 /* && s_SelAnchor.lin == cursor.lin */ ) {   0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
          const auto xMin( Min( s_SelAnchor.col, cursor.col ) );
          const auto xMax( Max( s_SelAnchor.col, cursor.col ) );
-         auto sr( FBuf()->PeekRawLineSeg( cursor.lin, xMin, xMax-1 ) );
-         0 && DBG("x:%d,%d '%" PR_BSR "'", xMin, xMax-1, BSR(sr) );
+         auto sr( FBuf()->PeekRawLineSeg( cursor.lin, xMin, xMax-1 ) );     0 && DBG("x:%d,%d '%" PR_BSR "'", xMin, xMax-1, BSR(sr) );
          trim( sr );
          st.assign( sr.data(), sr.length() );
          return true;
@@ -349,15 +346,14 @@ bool ARG::BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax ) {
    d_argType         = TEXTARG;
    d_textarg.ulc.col = xMin;
    d_textarg.ulc.lin = yOnly;
-   d_textarg.pText   = TextArgBuffer().c_str();
-   0 && DBG( "BOXSTR='%s'", d_textarg.pText );
+   d_textarg.pText   = TextArgBuffer().c_str();                             0 && DBG( "BOXSTR='%s'", d_textarg.pText );
    return false;
    }
 
 STATIC_VAR bool s_fHaveLiteralTextarg;
 
 // consumes g_ArgCount, s_fHaveLiteralTextarg
-bool ARG::IngestArgTextAndSelection() { enum {DB=0};                                                          DB && DBG( "%s+", __func__ );
+bool ARG::IngestArgTextAndSelection() { enum {DB=0};                                          DB && DBG( "%s+", __func__ );
    // capture some global values into locals:
    const auto fHaveLiteralTextarg( s_fHaveLiteralTextarg );  s_fHaveLiteralTextarg = false;
    d_cArg = Get_g_ArgCount();                                Clr_g_ArgCount();
@@ -371,16 +367,16 @@ bool ARG::IngestArgTextAndSelection() { enum {DB=0};                            
             d_argType       = TEXTARG;
             d_textarg.ulc   = Cursor;
             TextArgBuffer().assign( wuc.data(), wuc.length() );
-            d_textarg.pText = TextArgBuffer().c_str();                                                    DB && DBG( "NOARGWUC='%s'", d_textarg.pText );
-            return false; //==============================================================================
+            d_textarg.pText = TextArgBuffer().c_str();                                        DB && DBG( "NOARGWUC='%s'", d_textarg.pText );
+            return false; //==================================================================
             }
          }
       if( d_pCmd->d_argType & NOARG ) {
          d_argType      = NOARG;
-         d_noarg.cursor = Cursor;                                                                         DB && DBG( "%s NOARG", __func__ );
-         return false; //=================================================================================
-         }                                                                                                DB && DBG( "%s !NOARG", __func__ );
-      return true; //=====================================================================================
+         d_noarg.cursor = Cursor;                                                             DB && DBG( "%s NOARG", __func__ );
+         return false; //=====================================================================
+         }                                                                                    DB && DBG( "%s !NOARG", __func__ );
+      return true; //=========================================================================
       }
    g_CurView()->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );
    auto NumArg_value(0);
@@ -393,16 +389,16 @@ bool ARG::IngestArgTextAndSelection() { enum {DB=0};                            
       else {
          FBufLocn locn;
          if( (d_pCmd->d_argType & MARKARG) && d_pFBuf->FindMark( TextArgBuffer().c_str(), &locn ) ) {
-            s_SelAnchor = locn.Pt();                                                                      DB && DBG( "FillArgStruct MarkFound '%s'", TextArgBuffer().c_str() );
+            s_SelAnchor = locn.Pt();                                                          DB && DBG( "FillArgStruct MarkFound '%s'", TextArgBuffer().c_str() );
             }
          else { // enum { DB=1 };
             if( d_pCmd->d_argType & TEXTARG ) {
                d_argType       = TEXTARG;
                d_textarg.ulc   = Cursor;
-               d_textarg.pText = TextArgBuffer().c_str();                                                 DB && DBG( "TEXTARG='%s'", d_textarg.pText );
-               return false; //===========================================================================
-               }                                                                                          DB && DBG( "%s !TEXTARG", __func__ );
-            return true; //===============================================================================
+               d_textarg.pText = TextArgBuffer().c_str();                                     DB && DBG( "TEXTARG='%s'", d_textarg.pText );
+               return false; //===============================================================
+               }                                                                              DB && DBG( "%s !TEXTARG", __func__ );
+            return true; //===================================================================
             }
          }
       }
@@ -412,39 +408,39 @@ bool ARG::IngestArgTextAndSelection() { enum {DB=0};                            
          if( d_pCmd->d_argType & NULLEOW ) { TermNulleow( TextArgBuffer() ); }
          d_argType       = TEXTARG;
          d_textarg.ulc   = Cursor;
-         d_textarg.pText = TextArgBuffer().c_str();                                                       DB && DBG( "NULLEO%c='%s'", (d_pCmd->d_argType & NULLEOW)?'W':'C', d_textarg.pText );
-         return false; //=================================================================================
+         d_textarg.pText = TextArgBuffer().c_str();                                           DB && DBG( "NULLEO%c='%s'", (d_pCmd->d_argType & NULLEOW)?'W':'C', d_textarg.pText );
+         return false; //=====================================================================
          }
       if( d_pCmd->d_argType & NULLARG ) {
          d_argType        = NULLARG;
-         d_nullarg.cursor = Cursor;                                                                       DB && DBG( "NULLARG" );
-         return false; //=================================================================================
-         }                                                                                                DB && DBG( "%s !NULLARG", __func__ );
-      return true; //=====================================================================================
+         d_nullarg.cursor = Cursor;                                                           DB && DBG( "NULLARG" );
+         return false; //=====================================================================
+         }                                                                                    DB && DBG( "%s !NULLARG", __func__ );
+      return true; //=========================================================================
       }
    const auto xMin( Min( s_SelAnchor.col, Cursor.col ) );
    const auto xMax( Max( s_SelAnchor.col, Cursor.col ) );
    const auto yMin( Min( s_SelAnchor.lin, Cursor.lin ) );
    const auto yMax( Max( s_SelAnchor.lin, Cursor.lin ) );
-   if( (d_pCmd->d_argType & BOXSTR) && s_SelAnchor.lin == Cursor.lin ) {                                  DB && DBG( "%s BOXSTR_to_TEXTARG", __func__ );
-      return BOXSTR_to_TEXTARG( Cursor.lin, xMin, xMax ); //==============================================
+   if( (d_pCmd->d_argType & BOXSTR) && s_SelAnchor.lin == Cursor.lin ) {                      DB && DBG( "%s BOXSTR_to_TEXTARG", __func__ );
+      return BOXSTR_to_TEXTARG( Cursor.lin, xMin, xMax ); //==================================
       }
    if( g_fBoxMode ) {
       if( (d_pCmd->d_argType & LINEARG) && s_SelAnchor.col == Cursor.col ) { // no movement in X (COL) direction
          d_argType      = LINEARG;
          d_linearg.yMin = yMin;
-         d_linearg.yMax = yMax;                                                                           DB && DBG( "LINEARG [%d..%d]", d_linearg.yMin, d_linearg.yMax );
-         return false; //=================================================================================
+         d_linearg.yMax = yMax;                                                               DB && DBG( "LINEARG [%d..%d]", d_linearg.yMin, d_linearg.yMax );
+         return false; //=====================================================================
          }
       if( (d_pCmd->d_argType & BOXARG) && s_SelAnchor.col != Cursor.col ) {
          d_argType          = BOXARG;
          d_boxarg.flMin.col = xMin;
          d_boxarg.flMin.lin = yMin;
          d_boxarg.flMax.col = xMax - 1; // subtract out the offset that's used to differentiate a BOXARG from a LINEARG
-         d_boxarg.flMax.lin = yMax;                                                                       DB && DBG( "BOXARG ulc=(%d,%d) lrc=(%d,%d)", d_boxarg.flMin.col, d_boxarg.flMin.lin, d_boxarg.flMax.col, d_boxarg.flMax.lin );
-         return false; //=================================================================================
-         }                                                                                                DB && DBG( "%s !SELARG: argType=%08X", __func__, d_pCmd->d_argType );
-      return true; //=====================================================================================
+         d_boxarg.flMax.lin = yMax;                                                           DB && DBG( "BOXARG ulc=(%d,%d) lrc=(%d,%d)", d_boxarg.flMin.col, d_boxarg.flMin.lin, d_boxarg.flMax.col, d_boxarg.flMax.lin );
+         return false; //=====================================================================
+         }                                                                                    DB && DBG( "%s !SELARG: argType=%08X", __func__, d_pCmd->d_argType );
+      return true; //=========================================================================
       }
 
    if( d_pCmd->d_argType & STREAMARG ) {
@@ -467,10 +463,10 @@ bool ARG::IngestArgTextAndSelection() { enum {DB=0};                            
       else {
          d_streamarg.flMin = Cursor     ;
          d_streamarg.flMax = s_SelAnchor;
-         }                                                                                                DB && DBG( "stream (%d,%d), (%d,%d)", d_streamarg.flMin.lin, d_streamarg.flMin.col, d_streamarg.flMax.lin, d_streamarg.flMax.col );
-      return false; //====================================================================================
-      }                                                                                                   DB && DBG( "%s !ARG match", __func__ );
-   return true; //========================================================================================
+         }                                                                                    DB && DBG( "stream (%d,%d), (%d,%d)", d_streamarg.flMin.lin, d_streamarg.flMin.col, d_streamarg.flMax.lin, d_streamarg.flMax.col );
+      return false; //========================================================================
+      }                                                                                       DB && DBG( "%s !ARG match", __func__ );
+   return true; //============================================================================
    }
 
 // trims leading and trailing blanks of each contributing line, ensures lines' contrib sare joined by ONE blank
@@ -562,8 +558,7 @@ bool ARG::Invoke() { 0 && DBG( "%s %s", FUNC, CmdName() );
    if( 0 && g_fDvlogcmds && !d_pCmd->isCursorOrWindowFunc() && ixEos < sizeof(linebuf)-1 ) {
       linebuf lbuf;
       for( auto ix=0 ; ix < ixEos ; ++ix ) { lbuf[ix] = '>'; }
-      lbuf[ ixEos ] = '\0';
-      DBG( "%s %-15s", lbuf, CmdName() );
+      lbuf[ ixEos ] = '\0';                 DBG( "%s %-15s", lbuf, CmdName() );
       }
 #endif
    g_CurFBuf()->UndoInsertCmdAnnotation( d_pCmd );
@@ -833,8 +828,7 @@ GTS::eRV GTS::graphic() { // !!! called by macro_graphic !!!
       if( xCursor_ < stb_.length() ) {
          stb_.erase( xCursor_ );
          }
-      }
-   0 && DBG( "graphic @ x=%d (stlen=%" PR_SIZET ")", xCursor_, stb_.length() );
+      }                                                            0 && DBG( "graphic @ x=%d (stlen=%" PR_SIZET ")", xCursor_, stb_.length() );
    if( xCursor_ > stb_.length() ) { 0 && DBG( "append %" PR_SIZET " spaces", xCursor_ - stb_.length() );
       stb_.append( xCursor_ - stb_.length(), ' ' );
       }
@@ -1429,8 +1423,7 @@ void ARG::BeginPt( Point *pPt ) const {
     case BOXARG:    pPt->Set( d_boxarg.flMin.lin   , d_boxarg.flMin.col    ); break;
     case STREAMARG: pPt->Set( d_streamarg.flMin.lin, d_streamarg.flMin.col ); break;
     default:        pPt->Set( g_CursorLine()       , g_CursorCol()         ); break;
-    }
-   0 && DBG( "%s=(%d,%d)", __func__, pPt->lin, pPt->col );
+    }               0 && DBG( "%s=(%d,%d)", __func__, pPt->lin, pPt->col );
    }
 
 void ARG::EndPt( Point *pPt ) const {
@@ -1439,8 +1432,7 @@ void ARG::EndPt( Point *pPt ) const {
     case BOXARG:    pPt->Set( d_boxarg.flMax.lin   , d_boxarg.flMax.col    ); break;
     case STREAMARG: pPt->Set( d_streamarg.flMax.lin, d_streamarg.flMax.col ); break;
     default:        pPt->Set( g_CursorLine()       , g_CursorCol()         ); break;
-    }
-   0 && DBG( "%s=(%d,%d)", __func__, pPt->lin, pPt->col );
+    }               0 && DBG( "%s=(%d,%d)", __func__, pPt->lin, pPt->col );
    }
 
 bool ARG::Beyond( const Point &pt ) const { // Beyond() DOES NOT pay attention to the x dimension (COLumn), while Within() DOES
@@ -1555,8 +1547,7 @@ bool ARG::execute() {
                    else {
                       auto pSL( new StringList() );
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
-                         if( aw.GetLine() ) {
-                            1 && DBG( "--- '%" PR_BSR "'", BSR( aw.lineref() ) );
+                         if( aw.GetLine() ) {                                                    1 && DBG( "--- '%" PR_BSR "'", BSR( aw.lineref() ) );
                             pSL->push_front( aw.lineref() );
                             }
                          }
@@ -1611,14 +1602,12 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
             VidWrStrColor( DialogLine(), xCol, fdbk, sizeof(fdbk)-1, g_colorInfo, false );
             }
          } while( strchr( szAllowedResponses, chMacroPromptResponse ) == nullptr );
-      }
-   0 && DBG( "%s- '%c'", __func__, chMacroPromptResponse );
+      }                                                       0 && DBG( "%s- '%c'", __func__, chMacroPromptResponse );
    return chMacroPromptResponse;
    }
 
 int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... )
-   {
-   0 && DBG( "%s+ '%s'", __func__, pszPrompt );
+   {  0 && DBG( "%s+ '%s'", __func__, pszPrompt );
    //-------------------------------------------------------------
    //
    // chGetAnyMacroPromptResponse()
@@ -1666,7 +1655,6 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
             VidWrStrColor( DialogLine(), xCol, fdbk, sizeof(fdbk)-1, g_colorInfo, false );
             }
          } while( strchr( szAllowedResponses, chMacroPromptResponse ) == nullptr );
-      }
-   0 && DBG( "%s- '%c'", __func__, chMacroPromptResponse );
+      }              0 && DBG( "%s- '%c'", __func__, chMacroPromptResponse );
    return chMacroPromptResponse;
    }

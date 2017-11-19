@@ -351,8 +351,7 @@ public:
             || (d_remainder[0] == '\r' && d_remainder[1] == '\n')
            ) { ++toRmv; }
          d_remainder.remove_prefix( toRmv ); // skip logical newline (may be one or two characters)
-         }
-      DV&&DBG( "next: '%" PR_BSR "'", BSR(rv) );
+         }                                              DV&&DBG( "next: '%" PR_BSR "'", BSR(rv) );
       return rv;
       }
    };
@@ -441,7 +440,7 @@ void FBUF::FmtLastLine( PCChar format, ...  ) {
    }
 
 void FBUF::PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ) {
-   // if( IsNoEdit() ) { DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() ); }
+   0 && IsNoEdit() && DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() );
    BadParamIf( , IsNoEdit() );
    if( ENTAB_0_NO_CONV != Entab() ) {
       tmpbuf.clear();
@@ -578,8 +577,7 @@ STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE y
 void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollapse ) {
    if( xRight < xLeft ) {
       return;
-      }
-   0 && DBG( "%s Y:[%d,%d] X:[%d,%d]", __func__, yTop, yBottom, xLeft, xRight );
+      }                      0 && DBG( "%s Y:[%d,%d] X:[%d,%d]", __func__, yTop, yBottom, xLeft, xRight );
    AdjMarksForBoxDeletion( this, xLeft, yTop, xRight, yBottom );
    const auto boxWidth( xRight - xLeft + 1 );
    std::string src; std::string stmp;
@@ -1515,8 +1513,7 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
 // DelLine NEVER calls with (fSaveUndoInfo == false), so the memory
 // leak which is noted below actually "can't happen"
 //
-void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) {
-   0 && DBG("%s [%d..%d]", __func__, firstLine, lastLine );
+void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) { 0 && DBG("%s [%d..%d]", __func__, firstLine, lastLine );
    if( firstLine > LastLine() ) { // if user is deleting lines that are displayed, but not actually present in the file
       return;
       }
@@ -1755,8 +1752,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    rdNoiseSeek();
    auto MBCS_skip( 0 );
    {
-   auto fileBytes( fio::SeekEoF( hFile ) );
-   0 && DBG( "fio::SeekEoF returns %8" WL( PR__i64 "u", "ld" ), fileBytes );
+   auto fileBytes( fio::SeekEoF( hFile ) );         0 && DBG( "fio::SeekEoF returns %8" WL( PR__i64 "u", "ld" ), fileBytes );
    Assert( fileBytes >= 0 );
    fio::SeekBoF( hFile );
    if( fileBytes > UINT_MAX ) {
@@ -1939,8 +1935,7 @@ IS_EOL:
             return true;
             }
          pLi->d_pLineData = pLineStart;
-         pLi->d_iLineLen = (pCurImageBuf - pLineStart) - cbEOL;
-         0 && DBG( "ReadDiskFile %s: L %d = %p L %d", Name(), curLineNum, pLi->d_pLineData, pLi->d_iLineLen );
+         pLi->d_iLineLen = (pCurImageBuf - pLineStart) - cbEOL;    0 && DBG( "ReadDiskFile %s: L %d = %p L %d", Name(), curLineNum, pLi->d_pLineData, pLi->d_iLineLen );
          ++pLi;
          ++curLineNum;
          } // while( pCurImageBuf < pPastImageBufEnd )
@@ -1991,9 +1986,8 @@ IS_EOL:
 
 // these are new work based on ReadDiskFile 15/16-Mar-2003 klg
 
-void FBUF::ImgBufAlloc( size_t bufBytes, int PreallocLines ) {
+void FBUF::ImgBufAlloc( size_t bufBytes, int PreallocLines ) {  0 && DBG( "ImgBufAlloc Bytes=%" PR_SIZET ", Lines=%d", bufBytes, PreallocLines );
    d_ImgBufBytesWritten = 0;
-   0 && DBG( "ImgBufAlloc Bytes=%" PR_SIZET ", Lines=%d", bufBytes, PreallocLines );
    d_cbOrigFileImage = bufBytes;
    AllocArrayNZ( d_pOrigFileImage, bufBytes, __func__ );
    SetLineCount( 0 );
@@ -2017,9 +2011,8 @@ LineInfo & FBUF::ImgBufNextLineInfo() {
 
 void FBUF::ImgBufAppendLine( stref src ) {
    auto &newLI( ImgBufNextLineInfo() );
-   newLI.d_iLineLen = src.length();
+   newLI.d_iLineLen = src.length();                             0 && DBG( "ImgBufAppendLine Bytes=%d", newLI.d_iLineLen );
    memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData), src.data(), newLI.d_iLineLen );
-   0 && DBG( "ImgBufAppendLine Bytes=%d", newLI.d_iLineLen );
    d_ImgBufBytesWritten += newLI.d_iLineLen;
    }
 
@@ -2031,7 +2024,6 @@ void FBUF::ImgBufAppendLine( PFBUF pFBufSrc, int srcLineNum, PCChar prefix ) {
       }
    auto &srcLI( pFBufSrc->d_paLineInfo[srcLineNum] );
    memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData)+preLen, srcLI.d_pLineData, srcLI.d_iLineLen );
-   newLI.d_iLineLen = srcLI.d_iLineLen + preLen;
-   0 && DBG( "FBUF::ImgBufAppendPFLine Bytes=%d", newLI.d_iLineLen );
+   newLI.d_iLineLen = srcLI.d_iLineLen + preLen;     0 && DBG( "FBUF::ImgBufAppendPFLine Bytes=%d", newLI.d_iLineLen );
    d_ImgBufBytesWritten += newLI.d_iLineLen;
    }
