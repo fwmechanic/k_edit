@@ -107,7 +107,7 @@ class LineColorsClipped {
    const View       &d_view       ;
          LineColors &d_alc        ;
    const int         d_idxWinLeft ;  // LineColors ix of leftmost visible char
-   const int         d_colWinLeft ;
+   const COL         d_colWinLeft ;
    const int         d_width      ;
 public:
    LineColorsClipped( const View &view, LineColors &alc, int idxWinLeft, int colWinLeft, int width )
@@ -118,10 +118,12 @@ public:
       , d_width      ( width      )
       {                                                              0 && DBG( "%s iWL=%d cWL=%d width=%d", __func__, idxWinLeft, colWinLeft, width );
       }
+   COL GetMinColInDisp() const { return d_colWinLeft; }
+   COL GetMaxColInDisp() const { return d_colWinLeft+d_width-1; }
    void PutColorRaw( int col, int len, int color ) {                 0 && DBG( "%s a: %3d L %3d", __func__, col, len );
       if( col > d_colWinLeft+d_width || col + len < d_colWinLeft ) { return; }
       const auto colMin( Max( col      , d_colWinLeft           ) ); 0 && DBG( "%s b: %3d L %3d", __func__, col, len );
-      const auto colMax( Min( col+len-1, d_colWinLeft+d_width-1 ) );
+      const auto colMax( Min( col+len-1, GetMaxColInDisp() ) );
       const auto ixMin( colMin - d_colWinLeft + d_idxWinLeft );
       const auto ixMax( colMax - d_colWinLeft + d_idxWinLeft );      0 && DBG( "%s c: %3d L %3d", __func__, ixMin, ixMax );
       d_alc.PutColor( ixMin, ixMax - ixMin+1, color );
@@ -671,8 +673,18 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
    if( !rl.empty() ) {
       const auto keyStart( !d_sb.empty() ? d_sb.data() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
       if( keyStart ) {
+         auto maxNeedleLen( 0u );
+         {
+         for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
+            const stref needle( pNeedle );
+            maxNeedleLen = Max( maxNeedleLen, needle.length() );
+            pNeedle += needle.length() + 1;
+            }
+         }
+         const auto xMinToDisp( alcc.GetMinColInDisp() );
+         const auto xMaxToDisp( alcc.GetMaxColInDisp() );
          const auto tw( fb->TabWidth() );
-         for( size_t ofs( 0 ) ; ofs < rl.length() ; ) {
+         for( size_t ofs( xMinToDisp > maxNeedleLen ? xMinToDisp - maxNeedleLen : 0u ) ; ofs < rl.length() ; ) {
             auto ixBest( stref::npos ); auto mlen( 0u );
             auto haystack( rl ); haystack.remove_prefix( ofs );
             for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
@@ -688,6 +700,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                }
             if( ixBest == stref::npos ) { break; }
             const auto xFound( ColOfFreeIdx( tw, rl, ixBest ) );
+            if( xFound > xMaxToDisp ) { break; }
             if(   d_stSel.c_str() == keyStart // is a selection pseudo-WUC?
                || // or a true WUC
                  (  (ixBest == 0 || !isWordChar( rl[ixBest-1] )) && (ixBest+mlen >= rl.length() || !isWordChar( rl[ixBest+mlen] )) // only match _whole words_ matching d_wucbuf
