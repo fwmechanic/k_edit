@@ -680,43 +680,45 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
             decltype( rlAll.length() ) maxNeedleLen( 0 );
             {
             for( auto pNeedle(keyStart) ; *pNeedle ; ) {
-               const stref needle( pNeedle );
+               const stref needle( pNeedle );                          0 && DBG( "needle %" PR_BSR "'", BSR(needle) );
                maxNeedleLen = Max( maxNeedleLen, needle.length() );
                pNeedle += needle.length() + 1;
                }
             }
             const auto xMaxToDisp( alcc.GetMaxColInDisp() );
             const auto maxIxClip( FreeIdxOfCol( tw, rlAll, xMaxToDisp ) + (maxNeedleLen-1) );
-            const auto maxIx( Min( rlAll.length(), maxIxClip ) );
-            const stref rl( rlAll.data(), maxIx+1 ); // +1 to conv ix to length
+            const auto maxLen( Min( rlAll.length(), maxIxClip+1 ) ); // +1 to conv ix to length
+            const stref rl( rlAll.data(), maxLen );
             COL lastCOFIx(0); sridx lastCOFIix(0);
-            for( size_t ofs( xMinToDisp > (maxNeedleLen-1) ? xMinToDisp - (maxNeedleLen-1) : 0u ) ; ofs < maxIx ; ) {
-               auto ixBest( stref::npos ); auto mlen( 0u );
-               auto haystack( rl ); haystack.remove_prefix( ofs );
+            for( size_t ixStart( xMinToDisp > (maxNeedleLen-1) ? xMinToDisp - (maxNeedleLen-1) : 0u ) ; ixStart < rl.length() ; ) {
+               auto ixFirstMatch( stref::npos ); auto mlen( 0u );
+               auto haystack( rl ); haystack.remove_prefix( ixStart );
                for( auto pNeedle(keyStart) ; *pNeedle ; ) {
                   const stref needle( pNeedle );
                   auto ixFind( haystack.find( needle ) );
                   if( ixFind != stref::npos ) {
-                     ixFind += ofs;
-                     if( ixBest == stref::npos || ixFind < ixBest ) {
-                        ixBest = ixFind; mlen = needle.length();
+                     ixFind += ixStart;
+                     if( ixFirstMatch == stref::npos || ixFind < ixFirstMatch ) {
+                        ixFirstMatch = ixFind; mlen = needle.length();
                         }
                      } // xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX
                   pNeedle += needle.length() + 1;
                   }
-               if( ixBest == stref::npos ) { break; }
-               const auto xFound( ColOfFreeIdx( tw, rl, ixBest, lastCOFIix, lastCOFIx ) );
-               if( xFound > xMaxToDisp ) { break; }
-               lastCOFIx = xFound; lastCOFIix = ixBest; // update cache
+               if( ixFirstMatch == stref::npos ) { break; }
+               const auto xFound( ColOfFreeIdx( tw, rl, ixFirstMatch, lastCOFIix, lastCOFIx ) );
+                               0 && (xFound > xMaxToDisp) && DBG( "xFound > xMaxToDisp (%d > %d) maxNeedleLen=%" PR_BSRSIZET "", xFound, xMaxToDisp, maxNeedleLen );
+               if( xFound > xMaxToDisp ) { break; } // hit if undisplayable match found in xMaxToDisp + (maxNeedleLen-1) zone; maxNeedleLen may be longer than you think...
+               lastCOFIx = xFound; lastCOFIix = ixFirstMatch; // update cache
                if(   d_stSel.c_str() == keyStart // is a selection pseudo-WUC?
-                  || // or a true WUC
-                    (  (ixBest == 0 || !isWordChar( rl[ixBest-1] )) && (ixBest+mlen >= rl.length() || !isWordChar( rl[ixBest+mlen] )) // only match _whole words_ matching d_wucbuf
+                  || // or a true WUC (only match _whole words_ matching d_wucbuf)
+                    (  (ixFirstMatch      == 0           || !isWordChar( rl[ixFirstMatch-1] ))    // char to left  of match is non-word
+                    && (ixFirstMatch+mlen == rl.length() || !isWordChar( rl[ixFirstMatch+mlen] )) // char to right of match is non-word
                     && (yLine != Cursor().lin || Cursor().col < xFound || Cursor().col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
                     )
                  ) {
                   alcc.PutColor( xFound, mlen, ColorTblIdx::WUC );
                   }
-               ofs = ixBest + mlen;   // xWUCXxWUCXxWUCXxWUCX
+               ixStart = ixFirstMatch + mlen;   // xWUCXxWUCXxWUCXxWUCX
                }
             }
          }
