@@ -668,50 +668,56 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
    }
 
 bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
-   auto fb( CFBuf() );
-   const auto rl( fb->PeekRawLine( yLine ) );
-   if( !rl.empty() ) {
-      const auto keyStart( !d_sb.empty() ? d_sb.data() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
-      if( keyStart ) {
-         decltype( rl.length() ) maxNeedleLen( 0 );
-         {
-         for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
-            const stref needle( pNeedle );
-            maxNeedleLen = Max( maxNeedleLen, needle.length() );
-            pNeedle += needle.length() + 1;
-            }
-         }
+   const auto keyStart( !d_sb.empty() ? d_sb.data() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
+   if( keyStart ) {
+      auto fb( CFBuf() );
+      const auto rlAll( fb->PeekRawLine( yLine ) );
+      if( !rlAll.empty() ) {
          const auto xMinToDisp( alcc.GetMinColInDisp() );
-         const auto xMaxToDisp( alcc.GetMaxColInDisp() );
          const auto tw( fb->TabWidth() );
-         COL lastCOFIx(0); sridx lastCOFIix(0);
-         for( size_t ofs( xMinToDisp > maxNeedleLen ? xMinToDisp - maxNeedleLen : 0u ) ; ofs < rl.length() ; ) {
-            auto ixBest( stref::npos ); auto mlen( 0u );
-            auto haystack( rl ); haystack.remove_prefix( ofs );
-            for( auto pNeedle(keyStart) ; *pNeedle ;  ) {
+         const auto minIxClip( FreeIdxOfCol( tw, rlAll, xMinToDisp ) );
+         if( minIxClip < rlAll.length() ) {
+            decltype( rlAll.length() ) maxNeedleLen( 0 );
+            {
+            for( auto pNeedle(keyStart) ; *pNeedle ; ) {
                const stref needle( pNeedle );
-               auto ixFind( haystack.find( needle ) );
-               if( ixFind != stref::npos ) {
-                  ixFind += ofs;
-                  if( ixBest == stref::npos || ixFind < ixBest ) {
-                     ixBest = ixFind; mlen = needle.length();
-                     }
-                  } // xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX
+               maxNeedleLen = Max( maxNeedleLen, needle.length() );
                pNeedle += needle.length() + 1;
                }
-            if( ixBest == stref::npos ) { break; }
-            const auto xFound( ColOfFreeIdx( tw, rl, ixBest, lastCOFIix, lastCOFIx ) );
-            if( xFound > xMaxToDisp ) { break; }
-            lastCOFIx = xFound; lastCOFIix = ixBest; // update cache
-            if(   d_stSel.c_str() == keyStart // is a selection pseudo-WUC?
-               || // or a true WUC
-                 (  (ixBest == 0 || !isWordChar( rl[ixBest-1] )) && (ixBest+mlen >= rl.length() || !isWordChar( rl[ixBest+mlen] )) // only match _whole words_ matching d_wucbuf
-                 && (yLine != Cursor().lin || Cursor().col < xFound || Cursor().col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
-                 )
-              ) {
-               alcc.PutColor( xFound, mlen, ColorTblIdx::WUC );
+            }
+            const auto xMaxToDisp( alcc.GetMaxColInDisp() );
+            const auto maxIxClip( FreeIdxOfCol( tw, rlAll, xMaxToDisp ) + (maxNeedleLen-1) );
+            const auto maxIx( Min( rlAll.length(), maxIxClip ) );
+            const stref rl( rlAll.data(), maxIx+1 ); // +1 to conv ix to length
+            COL lastCOFIx(0); sridx lastCOFIix(0);
+            for( size_t ofs( xMinToDisp > (maxNeedleLen-1) ? xMinToDisp - (maxNeedleLen-1) : 0u ) ; ofs < maxIx ; ) {
+               auto ixBest( stref::npos ); auto mlen( 0u );
+               auto haystack( rl ); haystack.remove_prefix( ofs );
+               for( auto pNeedle(keyStart) ; *pNeedle ; ) {
+                  const stref needle( pNeedle );
+                  auto ixFind( haystack.find( needle ) );
+                  if( ixFind != stref::npos ) {
+                     ixFind += ofs;
+                     if( ixBest == stref::npos || ixFind < ixBest ) {
+                        ixBest = ixFind; mlen = needle.length();
+                        }
+                     } // xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX
+                  pNeedle += needle.length() + 1;
+                  }
+               if( ixBest == stref::npos ) { break; }
+               const auto xFound( ColOfFreeIdx( tw, rl, ixBest, lastCOFIix, lastCOFIx ) );
+               if( xFound > xMaxToDisp ) { break; }
+               lastCOFIx = xFound; lastCOFIix = ixBest; // update cache
+               if(   d_stSel.c_str() == keyStart // is a selection pseudo-WUC?
+                  || // or a true WUC
+                    (  (ixBest == 0 || !isWordChar( rl[ixBest-1] )) && (ixBest+mlen >= rl.length() || !isWordChar( rl[ixBest+mlen] )) // only match _whole words_ matching d_wucbuf
+                    && (yLine != Cursor().lin || Cursor().col < xFound || Cursor().col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
+                    )
+                 ) {
+                  alcc.PutColor( xFound, mlen, ColorTblIdx::WUC );
+                  }
+               ofs = ixBest + mlen;   // xWUCXxWUCXxWUCXxWUCX
                }
-            ofs = ixBest + mlen;   // xWUCXxWUCXxWUCXxWUCX
             }
          }
       }
