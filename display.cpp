@@ -673,9 +673,8 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
       auto fb( CFBuf() );
       const auto rlAll( fb->PeekRawLine( yLine ) );
       if( !rlAll.empty() ) {
-         const auto xMinToDisp( alcc.GetMinColInDisp() );
          const auto tw( fb->TabWidth() );
-         const auto minIxClip( FreeIdxOfCol( tw, rlAll, xMinToDisp ) );
+         const auto minIxClip( FreeIdxOfCol( tw, rlAll, alcc.GetMinColInDisp() ) );
          if( minIxClip < rlAll.length() ) {
             decltype( rlAll.length() ) maxNeedleLen( 0 );
             {
@@ -690,7 +689,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
             const auto maxLen( Min( rlAll.length(), maxIxClip+1 ) ); // +1 to conv ix to length
             const stref rl( rlAll.data(), maxLen );
             COL lastCOFIx(0); sridx lastCOFIix(0);
-            for( size_t ixStart( xMinToDisp > (maxNeedleLen-1) ? xMinToDisp - (maxNeedleLen-1) : 0u ) ; ixStart < rl.length() ; ) {
+            for( size_t ixStart( minIxClip > (maxNeedleLen-1) ? minIxClip - (maxNeedleLen-1) : 0 ) ; ixStart < rl.length() ; ) {
                auto ixFirstMatch( stref::npos ); auto mlen( 0u );
                auto haystack( rl ); haystack.remove_prefix( ixStart );
                for( auto pNeedle(keyStart) ; *pNeedle ; ) {
@@ -706,8 +705,8 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                   }
                if( ixFirstMatch == stref::npos ) { break; }
                const auto xFound( ColOfFreeIdx( tw, rl, ixFirstMatch, lastCOFIix, lastCOFIx ) );
-                               0 && (xFound > xMaxToDisp) && DBG( "xFound > xMaxToDisp (%d > %d) maxNeedleLen=%" PR_BSRSIZET "", xFound, xMaxToDisp, maxNeedleLen );
-               if( xFound > xMaxToDisp ) { break; } // hit if undisplayable match found in xMaxToDisp + (maxNeedleLen-1) zone; maxNeedleLen may be longer than you think...
+               0&&(xFound > xMaxToDisp) && DBG( "xFound > xMaxToDisp (%d > %d) maxNeedleLen=%" PR_BSRSIZET "", xFound, xMaxToDisp, maxNeedleLen );
+               if( xFound > xMaxToDisp ) { break; } // hit if undisplayable match found in (xMaxToDisp..xMaxToDisp+(maxNeedleLen-1)] (maxNeedleLen may be longer than you think)
                lastCOFIx = xFound; lastCOFIix = ixFirstMatch; // update cache
                if(   d_stSel.c_str() == keyStart // is a selection pseudo-WUC?
                   || // or a true WUC (only match _whole words_ matching d_wucbuf)
