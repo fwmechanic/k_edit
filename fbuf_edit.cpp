@@ -968,12 +968,13 @@ bool ARG::graphic() { enum { DB=0 };
             auto xMax( d_boxarg.flMax.col+1 );
             if( fConformRight ) {
                const auto rl( pf->PeekRawLine( curLine ) );                       DB && DBG( "rl='%" PR_BSR "'", BSR(rl) );
-               const auto ixMin( FreeIdxOfCol( tw, rl, d_boxarg.flMin.col ) );
+               IdxCol_cached conv( tw, rl );
+               const auto ixMin( conv.c2fi( d_boxarg.flMin.col ) );
                if( ixMin < rl.length() ) {
-                  const auto ixMax( FreeIdxOfCol( tw, rl, xMax ) );
+                  const auto ixMax( conv.c2fi( xMax ) );
                   auto rlSeg( rl.substr( ixMin, ixMax-ixMin ) );                  DB && DBG( "rlSeg='%" PR_BSR "'", BSR(rlSeg) );
                   rmv_trail_blanks( rlSeg );                                      DB && DBG( "rlSeg='%" PR_BSR "'", BSR(rlSeg) );
-                  xMax = ColOfFreeIdx( tw, rl, ixMin + rlSeg.length() );
+                  xMax = conv.i2c( ixMin + rlSeg.length() );
                   }
                }
             FBOP::InsertChar( pf, curLine, xMax              , chClosing, tmp1, tmp2 );

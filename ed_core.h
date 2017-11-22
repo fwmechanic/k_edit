@@ -1350,18 +1350,25 @@ public:
    };
 
 class IdxCol_cached { // optimal when performing multiple conversions that sweep incrementing ix/col of long d_sr
-   const COL    d_tw;
-   const stref  d_sr;
-   sridx        d_lastCOFIix  = 0;
-   COL          d_lastCOFIx   = 0;
-   COL          d_lastFIOCcol = 0;
-   sridx        d_lastFIOCix  = 0;
+   const COL d_tw;
+   stref     d_sr;
+   sridx     d_lastCOFIix  = 0;
+   COL       d_lastCOFIx   = 0;
+   COL       d_lastFIOCcol = 0;
+   sridx     d_lastFIOCix  = 0;
 
 public:
    IdxCol_cached( const COL tw, stref sr_ )
-      : d_tw    ( tw )
-      , d_sr    ( sr_ )
+      : d_tw( tw )
+      , d_sr( sr_ )
       {}
+   void reset( stref sr_ ) {
+      d_sr = sr_ ;
+      d_lastCOFIix  = 0;
+      d_lastCOFIx   = 0;
+      d_lastFIOCcol = 0;
+      d_lastFIOCix  = 0;
+      }
    stref  sr() const { return d_sr; }
    COL    i2c ( sridx iC   )       {
       const auto rv( ColOfFreeIdx( d_tw, d_sr, iC, d_lastCOFIix, d_lastCOFIx ) );
@@ -1372,6 +1379,9 @@ public:
    //                        beyond the last char of content elicit the index of the last char
    sridx  c2ci( COL   xCol )       { return Min( FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ), d_sr.length()-1 ); }
    sridx  c2fi( COL   xCol )       { return      FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ); }
+
+   COL    NextCol( COL xCol )      { return i2c( c2fi( xCol ) + 1 ); } // a.k.a. ColOfNextChar
+
    COL    cols(            ) const { return StrCols( d_tw, d_sr ); }
    };
 

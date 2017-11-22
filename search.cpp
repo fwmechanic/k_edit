@@ -733,23 +733,23 @@ public:
       , d_iReplacementFileCandidates ( 0 )
       {}
    bool Interactive() const { return d_fDoAnyReplaceQueries; }
-   CheckNextRetval CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, sridx ix_curPt_Col, Point *curPt, COL *colLastPossibleMatchChar );
+   CheckNextRetval CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar );
    };
 
-CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx ixBOL, const sridx ix_curPt_Col, Point *curPt, COL *colLastPossibleMatchChar ) { enum { DB=0 };
+CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar ) { enum { DB=0 };
    // replace iff string *** starting at rl[ix_curPt_Col] *** matches
-   const auto tw( pFBuf->TabWidth() );
    auto adv_continue = [&]() {
-      curPt->col = ColOfNextChar( tw, rl, curPt->col );
+      curPt->col = rlc.NextCol( curPt->col );
       return CONTINUE_SEARCH;
       };
+   const sridx ix_curPt_Col( rlc.c2ci( curPt->col ) );
    const auto srRawSearch( d_ss.SrchStr() );
-   const auto ixLastPossibleLastMatchChar( CaptiveIdxOfCol( tw, rl, *colLastPossibleMatchChar ) );
+   const auto ixLastPossibleLastMatchChar( rlc.c2ci( *colLastPossibleMatchChar ) );
    d_captures.clear();
    stref haystack; sridx ixMatchMin;
 #if USE_PCRE
    if( d_ss.IsRegex() ) {
-      haystack = rl.substr( ixBOL, ixLastPossibleLastMatchChar + 1 - ixBOL ); // leading ix_curPt_Col chars will not be searched
+      haystack = rlc.sr().substr( ixBOL, ixLastPossibleLastMatchChar + 1 - ixBOL ); // leading ix_curPt_Col chars will not be searched
       const auto ixHaystackCurCol( ix_curPt_Col - ixBOL );
    // const auto pcre_exec_flags( ixHaystackCurCol == 0 ? 0 : PCRE_NOTBOL );
       const auto pcre_exec_flags(                         0               ); // !/PCRE_NOTBOL describes haystack[0], not to haystack[ixHaystackCurCol]
@@ -764,8 +764,8 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
       }
    else
 #endif
-      {                                      DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rl) );
-      haystack = rl.substr( ix_curPt_Col, srRawSearch.length() );
+      {                                      DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rlc.sr()) );
+      haystack = rlc.sr().substr( ix_curPt_Col, srRawSearch.length() );
                                              DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(haystack) );
       const auto relIxMatch( d_pfxStrnstr( haystack, srRawSearch ) );
       if( relIxMatch == stref::npos ) {
@@ -776,11 +776,11 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
       }
    // d_captures[0] describes the overall match
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
-   if( ixMatchMax > ixLastPossibleLastMatchChar ) { DB && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds", BSR(haystack), BSR(srRawSearch), static_cast<int>(*colLastPossibleMatchChar - ixMatchMax), rl.data()+ixMatchMin );
+   if( ixMatchMax > ixLastPossibleLastMatchChar ) { DB && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds", BSR(haystack), BSR(srRawSearch), static_cast<int>(*colLastPossibleMatchChar - ixMatchMax), rlc.sr().data()+ixMatchMin );
       return adv_continue(); // match lies partially OUTSIDE a BOXARG: skip
       }
-   const auto xMatchMin( ColOfFreeIdx( tw, rl, ixMatchMin ) );
-   const auto xMatchMax( ColOfFreeIdx( tw, rl, ixMatchMax ) );
+   const auto xMatchMin( rlc.i2c( ixMatchMin ) );
+   const auto xMatchMax( rlc.i2c( ixMatchMax ) );
    stref srReplace( GenerateReplacement() ); // generates d_promptCsrs too!
    if( d_fDoReplaceQuery ) { // interactive-replace (mfreplace/qreplace) ONLY ...
       const auto pView( pFBuf->PutFocusOn() );
@@ -833,7 +833,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, stref rl, const sridx
       }
    // setup to perform replacement
    pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-   IdxCol conv( tw, d_sbuf );
+   IdxCol conv( pFBuf->TabWidth(), d_sbuf );
    const auto ixdestMatchMin( conv.c2i( xMatchMin ) );
    const auto ixdestMatchMax( conv.c2i( xMatchMax ) );
    const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
@@ -860,17 +860,16 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
          FlushKeyQueuePrimeScreenRedraw();
          return false;
          }
-      stref rl; sridx ixBOL;
-      auto setup_line = [&]() {
-         rl = pFBuf->PeekRawLine( curPt.lin );
-         ixBOL = CaptiveIdxOfCol( tw, rl, within.flMin.col );
-         };
-      setup_line();
-      auto colLastPossibleMatchChar( Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), within.flMax.col ) );
+      IdxCol_cached rlc( tw, pFBuf->PeekRawLine( curPt.lin ) );
+      auto ixBOL( rlc.c2ci( within.flMin.col ) );
+      auto colLastPossibleMatchChar( Min( rlc.i2c( rlc.sr().length()-1 ), within.flMax.col ) );
       while( ( DB && DBG( "%d vs %d", curPt.col, colLastPossibleMatchChar ), curPt.col <= colLastPossibleMatchChar ) ) {
-         const auto rv( walker.CheckNext( pFBuf, rl, ixBOL, CaptiveIdxOfCol( tw, rl, curPt.col ), &curPt, &colLastPossibleMatchChar ) );
+         const auto rv( walker.CheckNext( pFBuf, rlc, ixBOL, &curPt, &colLastPossibleMatchChar ) );
          if( STOP_SEARCH == rv ) { return true; }
-         if( REREAD_LINE_CONTINUE_SEARCH == rv ) { setup_line(); }
+         if( REREAD_LINE_CONTINUE_SEARCH == rv ) {
+            rlc.reset( pFBuf->PeekRawLine( curPt.lin ) );
+            ixBOL = rlc.c2ci( within.flMin.col );
+            }
          }
       }
    return false;
