@@ -1311,8 +1311,11 @@ extern void    PrettifyMemcpy( std::string &dest, COL xLeft, size_t maxCharsToWr
 
 //************ tabWidth-dependent string fxns
 //---          FreeIdxOfCol returns index that MAY be > max indexable char in content; used to see whether col maps to content, or is beyond it, and for cursor movement
-extern sridx   FreeIdxOfCol ( COL tabWidth, stref content, COL   colTgt );
-extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset, sridx startIx=0, COL colOfStartIx=0 );
+// extern sridx   FreeIdxOfCol ( COL tabWidth, stref content, COL   colTgt, COL   startCol=0, sridx ixOfStartCol=0 );
+extern sridx   FreeIdxOfCol ( COL tabWidth, stref content, COL colTgt );
+extern sridx   FreeIdxOfCol ( COL tabWidth, stref content, COL colTgt, COL &startCol, sridx &ixOfStartCol );
+
+extern COL     ColOfFreeIdx ( COL tabWidth, stref content, sridx offset, sridx startIx=0 , COL   colOfStartIx=0 );
 //---          tabWidth-dependent col-of-ptr/ptr-of-col xlators
 STIL   COL     ColOfNextChar( COL tabWidth, stref rl, COL xCol ) {
                   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) + 1 );
@@ -1345,6 +1348,33 @@ public:
    sridx  c2i ( COL   xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
    COL    cols(            ) const { return StrCols( d_tw, d_sr ); }
    };
+
+class IdxCol_cached { // optimal when performing multiple conversions that sweep incrementing ix/col of long d_sr
+   const COL    d_tw;
+   const stref  d_sr;
+   sridx        d_lastCOFIix  = 0;
+   COL          d_lastCOFIx   = 0;
+   COL          d_lastFIOCcol = 0;
+   sridx        d_lastFIOCix  = 0;
+
+public:
+   IdxCol_cached( const COL tw, stref sr_ )
+      : d_tw    ( tw )
+      , d_sr    ( sr_ )
+      {}
+   stref  sr() const { return d_sr; }
+   COL    i2c ( sridx iC   )       {
+      const auto rv( ColOfFreeIdx( d_tw, d_sr, iC, d_lastCOFIix, d_lastCOFIx ) );
+      d_lastCOFIx = rv; d_lastCOFIix = iC;
+      return rv;
+      }
+   // c2ci = CaptiveIdxOfCol content[c2ci(colTgt)] is always valid; colTgt values which map
+   //                        beyond the last char of content elicit the index of the last char
+   sridx  c2ci( COL   xCol )       { return Min( FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ), d_sr.length()-1 ); }
+   sridx  c2fi( COL   xCol )       { return      FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ); }
+   COL    cols(            ) const { return StrCols( d_tw, d_sr ); }
+   };
+
 
 namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Prefer non-member non-friend functions to member functions."
 

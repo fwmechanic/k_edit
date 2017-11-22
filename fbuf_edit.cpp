@@ -1179,6 +1179,26 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
    return true;
    }
 
+sridx FreeIdxOfCol( COL tabWidth, stref content, COL colTgt, COL &startCol, sridx &ixOfStartCol ) {
+   if( colTgt <= 0 ) {
+      return 0;
+      }
+   const Tabber tabr( tabWidth );
+   sridx ix; decltype( colTgt ) col;
+   if( startCol > colTgt ) { col = 0       ; ix = 0           ; }
+   else                    { col = startCol; ix = ixOfStartCol; }
+   for( ; ix < content.length() ; ++ix ) {
+      const decltype( col ) colOfNxtIx( content[ix] == HTAB ? tabr.ColOfNextTabStop( col ) : col + 1 );
+      if( colOfNxtIx > colTgt ) {
+         startCol = col; ixOfStartCol = ix;
+         return ix;
+         }
+      col = colOfNxtIx;
+      }
+   startCol = col; ixOfStartCol = content.length();
+   return content.length() + (colTgt - col);
+   }
+
 sridx FreeIdxOfCol( const COL tabWidth, stref content, const COL colTgt ) {
    if( colTgt <= 0 ) {
       return 0;
