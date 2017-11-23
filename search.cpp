@@ -1739,7 +1739,7 @@ void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START 
             continue;
             }
          const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
-         const IdxCol conv( tw, rl );
+         const IdxCol_nocache conv( tw, rl );
          auto iC( conv.c2ci( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, rl.length(), BSR(rl) ); )
          if( iC < rl.length() ) { // if curPt.col is in middle of line...
             ++iC;                     // ... nd to incr to get correct maxCharsToSearch

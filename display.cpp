@@ -845,7 +845,7 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
       auto &line( d_PerViewableLine[ iy ].line );
       const auto yFile( Origin().lin + iy );
       const auto rl( fb->PeekRawLine( yFile ) );
-      IdxCol conv( tw, rl );
+      IdxCol_nocache conv( tw, rl );
       line.xMax = conv.i2c( rl.length() );
       line.acppc = IsCppConditional( rl, &line.xPound );
       if( cppcNone != line.acppc ) {

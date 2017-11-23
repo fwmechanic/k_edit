@@ -1336,11 +1336,12 @@ STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, stref content, const COL colTgt )
 STIL   COL     TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
                   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) );
                   }
-class IdxCol {
+
+class IdxCol_nocache {
    const COL    d_tw;
    const stref  d_sr;
 public:
-   IdxCol( const COL tw, stref sr )
+   IdxCol_nocache( const COL tw, stref sr )
       : d_tw    ( tw )
       , d_sr    ( sr )
       {}
