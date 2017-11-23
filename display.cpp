@@ -552,11 +552,11 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
          if( isWordChar( rl[ixC] ) ) {
             const auto ixFirst   ( IdxFirstHJCh     ( rl, ixC ) );
             const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  0 && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
-            const auto xMin( conv.c2ci( ixFirst      ) );
-            const auto xMax( conv.c2ci( ixPastLast-1 ) );           0 && DBG( "x[%" PR_SIZET "..%" PR_SIZET "]", xMin, xMax );
+            const auto xMin( conv.i2c( ixFirst      ) );
+            const auto xMax( conv.i2c( ixPastLast-1 ) );            0 && DBG( "x[%d..%d]", xMin, xMax );
             const auto wordCols ( xMax - xMin + 1 );
             // this degree of paranoia only matters if the definition of a WORD includes a tab
-            const auto wordChars( ixPastLast - ixFirst );           0 && wordCols != wordChars && DBG( "%s wordCols=%" PR_SIZET " != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars );
+            const auto wordChars( ixPastLast - ixFirst );           0 && wordCols != wordChars && DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars );
             // return everything
             cursor->col = xMin;
             return stref( rl.data() + ixFirst, wordChars );
