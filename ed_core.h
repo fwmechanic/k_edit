@@ -1345,7 +1345,7 @@ public:
       , d_sr    ( sr )
       {}
    COL    i2c ( sridx iC   ) const { return ColOfFreeIdx( d_tw, d_sr, iC ); }
-   sridx  c2i ( COL   xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
+   sridx  c2ci( COL   xCol ) const { return CaptiveIdxOfCol( d_tw, d_sr, xCol ); }
    COL    cols(            ) const { return StrCols( d_tw, d_sr ); }
    };
 
@@ -1377,12 +1377,12 @@ public:
       }
    // c2ci = CaptiveIdxOfCol content[c2ci(colTgt)] is always valid; colTgt values which map
    //                        beyond the last char of content elicit the index of the last char
-   sridx  c2ci( COL   xCol )       { return Min( FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ), d_sr.length()-1 ); }
-   sridx  c2fi( COL   xCol )       { return      FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ); }
+   sridx  c2ci( COL xCol )       { return Min( FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ), d_sr.length()-1 ); }
+   sridx  c2fi( COL xCol )       { return      FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ); }
 
-   COL    NextCol( COL xCol )      { return i2c( c2fi( xCol ) + 1 ); } // a.k.a. ColOfNextChar
+   COL    ColOfNextChar( COL xCol ) { return i2c( c2fi( xCol ) + 1 ); }
 
-   COL    cols(            ) const { return StrCols( d_tw, d_sr ); }
+   COL    cols(          ) const { return StrCols( d_tw, d_sr ); }
    };
 
 

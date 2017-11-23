@@ -587,7 +587,7 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
          IdxCol_cached conv( tw, rl );
          for(
             ; curPt.col <= colLastPossibleMatchChar
-            ; curPt.col = conv.NextCol( curPt.col )
+            ; curPt.col = conv.ColOfNextChar( curPt.col )
             ) {
             const auto rv( walker.VCheckNext( rl, conv.c2ci( curPt.col ), curPt, colLastPossibleMatchChar ) );
             if( STOP_SEARCH == rv ) { return true; }
@@ -742,7 +742,7 @@ public:
 CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar ) { enum { DB=0 };
    // replace iff string *** starting at rl[ix_curPt_Col] *** matches
    auto adv_continue = [&]() {
-      curPt->col = rlc.NextCol( curPt->col );
+      curPt->col = rlc.ColOfNextChar( curPt->col );
       return CONTINUE_SEARCH;
       };
    const sridx ix_curPt_Col( rlc.c2ci( curPt->col ) );
@@ -836,21 +836,26 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, c
       }
    // setup to perform replacement
    pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-   IdxCol conv( pFBuf->TabWidth(), d_sbuf );
-   const auto ixdestMatchMin( conv.c2i( xMatchMin ) );
-   const auto ixdestMatchMax( conv.c2i( xMatchMax ) );
-   const auto destMatchChars( ixdestMatchMax - ixdestMatchMin + 1 );
-   d_sbuf.replace( ixdestMatchMin, destMatchChars, sr2st(srReplace) );
+   decltype( static_cast<IdxCol_cached*>(nullptr)->c2ci( xMatchMin ) ) destMatchChars; // https://stackoverflow.com/a/5580411
+   {
+   IdxCol_cached conv( pFBuf->TabWidth(), d_sbuf );
+   const auto ixdestMatchMin( conv.c2ci( xMatchMin ) );
+   const auto ixdestMatchMax( conv.c2ci( xMatchMax ) );
+   destMatchChars = ixdestMatchMax - ixdestMatchMin + 1;
+   d_sbuf.replace( ixdestMatchMin, destMatchChars, sr2st(srReplace) ); // invalidates conv !!!
                                                        DB && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
+   }
    pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
    ++d_iReplacementsMade;
    // replacement done: adjust starting point for next iteration
    const ptrdiff_t lendiff( srReplace.length() - destMatchChars );
                                                        DB && DBG("DFPoR- %" PR_BSRSIZET " = lendiff(%" PR_BSRSIZET ",%" PR_BSRSIZET ")", lendiff, destMatchChars, srReplace.length() );
                                                        DB && DBG("DFPoR- ix_curPt_Col=%" PR_SIZET, ix_curPt_Col );
-   *colLastPossibleMatchChar = conv.i2c( ixLastPossibleLastMatchChar + lendiff );
+   {
+   IdxCol_cached conv( pFBuf->TabWidth(), d_sbuf );
    curPt->col                = conv.i2c( ix_curPt_Col + srReplace.length() );
-                                                       DB && DBG("DFPoR- y/x=%d/%d,%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
+   *colLastPossibleMatchChar = conv.i2c( ixLastPossibleLastMatchChar + lendiff );
+   }                                                   DB && DBG("DFPoR- y/x=%d/%d,%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
                                                        DB && DBG("DFPoR- L=%d '%*s'", curPt->lin, *colLastPossibleMatchChar, d_sbuf.c_str()+curPt->col );
    return REREAD_LINE_CONTINUE_SEARCH;
    }
@@ -1706,10 +1711,10 @@ void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START 
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
          const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
-         const IdxCol pcc( tw, rl );
-         auto iC( pcc.c2i( curPt.col ) );
-         if( pcc.i2c( iC ) != curPt.col ) { // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) iC indexes a char outside (to the left of) the replace region[1]
-            ++iC;                           // make iC index the first char in replace region  [1] but BUGBUG this fxn is not used by replace!
+         IdxCol_cached conv( tw, rl );
+         auto iC( conv.c2ci( curPt.col ) );
+         if( conv.i2c( iC ) != curPt.col ) { // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) iC indexes a char outside (to the left of) the replace region[1]
+            ++iC;                            // make iC index the first char in replace region  [1] but BUGBUG this fxn is not used by replace!
             }
          // find all matches on this line
          for( ; iC <= rl.length() /* <= so empty line can match Regex */ ; ++iC ) {
@@ -1719,12 +1724,12 @@ void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START 
                }
             //*****  HOUSTON, WE HAVE A MATCH  *****
             const auto matchSr( srMatch.sr() );                                                               DB && DBG( "curPt.col0=%d", curPt.col );
-            curPt.col  =          pcc.i2c( (matchSr.data() - rl.data())                    )              ;   DB && DBG( "curPt.col1=%d", curPt.col );
-            const auto matchCols( pcc.i2c( (matchSr.data() - rl.data()) + matchSr.length() ) - curPt.col );
+            curPt.col  =          conv.i2c( (matchSr.data() - rl.data())                    )              ;  DB && DBG( "curPt.col1=%d", curPt.col );
+            const auto matchCols( conv.i2c( (matchSr.data() - rl.data()) + matchSr.length() ) - curPt.col );
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) {
                return;
                }
-            iC = pcc.c2i( curPt.col );
+            iC = conv.c2ci( curPt.col );
             }
          }
       }
@@ -1734,8 +1739,8 @@ void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START 
             continue;
             }
          const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
-         const IdxCol pcc( tw, rl );
-         auto iC( pcc.c2i( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, rl.length(), BSR(rl) ); )
+         const IdxCol conv( tw, rl );
+         auto iC( conv.c2ci( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, rl.length(), BSR(rl) ); )
          if( iC < rl.length() ) { // if curPt.col is in middle of line...
             ++iC;                     // ... nd to incr to get correct maxCharsToSearch
             }
@@ -1766,8 +1771,8 @@ void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START 
                iGoodMatch     = iNextMatch;
                goodMatchChars = nextMatchChars;         VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: +MATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
                }
-            curPt.col  =          pcc.i2c( iGoodMatch                            )              ;
-            const auto matchCols( pcc.i2c( goodMatchChars + pcc.c2i( curPt.col ) ) - curPt.col );
+            curPt.col  =          conv.i2c( iGoodMatch                              )              ;
+            const auto matchCols( conv.i2c( goodMatchChars + conv.c2ci( curPt.col ) ) - curPt.col );
                                                         VS_( DBG( "-search: #MATCH y=%d (%d L %d)=>COL(%d L %d)", curPt.lin, iGoodMatch, goodMatchChars, curPt.col, matchCols ); )
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) {
                return;

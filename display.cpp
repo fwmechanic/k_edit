@@ -548,12 +548,12 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    if( !rl.empty() ) {                                              0 && DBG( "newln=%" PR_BSR, BSR(rl) );
       IdxCol conv( pFBuf->TabWidth(), rl );                           // abc   abc
       if( xCursor < conv.cols() ) {
-         const auto ixC( conv.c2i( xCursor ) );
+         const auto ixC( conv.c2ci( xCursor ) );
          if( isWordChar( rl[ixC] ) ) {
             const auto ixFirst   ( IdxFirstHJCh     ( rl, ixC ) );
             const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  0 && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
-            const auto xMin( conv.c2i( ixFirst      ) );
-            const auto xMax( conv.c2i( ixPastLast-1 ) );            0 && DBG( "x[%" PR_SIZET "..%" PR_SIZET "]", xMin, xMax );
+            const auto xMin( conv.c2ci( ixFirst      ) );
+            const auto xMax( conv.c2ci( ixPastLast-1 ) );           0 && DBG( "x[%" PR_SIZET "..%" PR_SIZET "]", xMin, xMax );
             const auto wordCols ( xMax - xMin + 1 );
             // this degree of paranoia only matters if the definition of a WORD includes a tab
             const auto wordChars( ixPastLast - ixFirst );           0 && wordCols != wordChars && DBG( "%s wordCols=%" PR_SIZET " != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars );
