@@ -546,7 +546,7 @@ stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
    const auto xCursor( cursor->col );
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
    if( !rl.empty() ) {                                              0 && DBG( "newln=%" PR_BSR, BSR(rl) );
-      IdxCol conv( pFBuf->TabWidth(), rl );                           // abc   abc
+      IdxCol_cached conv( pFBuf->TabWidth(), rl );   // abc   abc
       if( xCursor < conv.cols() ) {
          const auto ixC( conv.c2ci( xCursor ) );
          if( isWordChar( rl[ixC] ) ) {
@@ -1029,7 +1029,7 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
             }
          }
       if( ixTgt != stref::npos ) {
-         IdxCol conv( CFBuf()->TabWidth(), rl );
+         IdxCol_cached conv( CFBuf()->TabWidth(), rl );
          const auto xC  ( conv.i2c( ixTgt                         ) );
          const auto xPWS( conv.i2c( rl.find_last_not_of( SPCTAB ) ) );
          alcc.PutColor( xC, xPWS - xC + 1, ColorTblIdx::COM ); // len extends 1 char into dead space beyond line text: is cosmetically appealing
@@ -1108,7 +1108,7 @@ bool HiliteAddin_StreamParse::VHilitLine( const LINE yLine, const COL xIndent, L
       const auto pFile( CFBuf() );
       const auto rl( pFile->PeekRawLine( yLine ) );
       if( !IsStringBlank( rl ) ) {
-         IdxCol conv( pFile->TabWidth(), rl );
+         IdxCol_cached conv( pFile->TabWidth(), rl );
          const auto xMaxOfLine( conv.i2c( rl.length() - 1 ) );
          for( ; ix < d_hl_rgns.size() && 0==d_hl_rgns[ix].rgn.cmp_line( yLine ) ; ++ix ) {
             const auto &hl( d_hl_rgns[ix] );
