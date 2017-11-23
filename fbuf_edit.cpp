@@ -562,16 +562,17 @@ STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE y
    if( xEolNul <= xLeft ) { 0 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
       return;
       }
-   const auto ixLeft( CaptiveIdxOfCol( tw, dest, xLeft ) );
+   IdxCol_cached conv( tw, dest );
+   const auto ixLeft( conv.c2ci( xLeft ) );
    const auto xRight( xLeft + boxWidth ); // dest[xRight] will be 0th char of kept 2nd segment
    if( xRight >= xEolNul ) { // trailing segment of line is being deleted?
       0 && DBG( "%s trim, %u <= %d '%c'", __func__, xEolNul, xRight, dest[ixLeft] );
       dest.resize( ixLeft ); // the first (leftmost) char in the selected box
       return;
       }
-   const auto ixRight( CaptiveIdxOfCol( tw, dest, xRight ) );
-   const auto charsInGap( ixRight - ixLeft );
-   if( charsInGap > 0 ) {
+   const auto ixRight( conv.c2ci( xRight ) );
+   if( ixRight > ixLeft ) {
+      const auto charsInGap( ixRight - ixLeft );
       if( fCollapse ) { /* Collapse */     0 && DBG( "b4:%s'", dest.c_str() );
          dest.erase( ixLeft, charsInGap ); 0 && DBG( "af:%s'", dest.c_str() );
          }
@@ -1273,11 +1274,12 @@ void test_CaptiveIdxOfCol() {
 stref FBUF::PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
    auto rl( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
-   const auto ixMinIncl( FreeIdxOfCol( tw, rl, xMinIncl ) );
+   IdxCol_cached conv( tw, rl );
+   const auto ixMinIncl( conv.c2fi( xMinIncl ) );
    if( ixMinIncl >= rl.length() ) { return stref(); }
-   const auto ixMaxIncl( CaptiveIdxOfCol( tw, rl, xMaxIncl ) ); 0 && DBG( "%d[%d/%" PR_SIZET ",%d/%" PR_SIZET "]=%" PR_SIZET "=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
+   const auto ixMaxIncl( conv.c2ci( xMaxIncl ) );      0 && DBG( "%d[%d/%" PR_SIZET ",%d/%" PR_SIZET "]=%" PR_SIZET "=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
    rl.remove_suffix( (rl.length()-1) - ixMaxIncl );
-   rl.remove_prefix( ixMinIncl );                               0 && DBG( "%d[%d/%" PR_SIZET ",%d/%" PR_SIZET "]=%" PR_SIZET "=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
+   rl.remove_prefix( ixMinIncl );                      0 && DBG( "%d[%d/%" PR_SIZET ",%d/%" PR_SIZET "]=%" PR_SIZET "=%" PR_BSR "'", yLine, xMinIncl, ixMinIncl, xMaxIncl, ixMaxIncl, rl.length(), BSR(rl) );
    return rl;
    }
 
@@ -1747,8 +1749,9 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
       FBdest->DupLineForInsert( stDst, yDst, xDst, boxWidth );
       if( FBsrc ) {
          FBsrc->DupLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
-         const auto ixLeft ( CaptiveIdxOfCol( tws, stSrc, xSrcLeft  ) );
-         const auto ixRight( CaptiveIdxOfCol( tws, stSrc, xSrcRight ) );
+         IdxCol_cached conv( tws, stSrc );
+         const auto ixLeft ( conv.c2fi( xSrcLeft  ) );
+         const auto ixRight( conv.c2fi( xSrcRight ) );
          stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, ixLeft, ixRight - ixLeft + 1 );
          }
       FBdest->PutLine( yDst, stDst, stSrc );

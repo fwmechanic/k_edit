@@ -580,17 +580,18 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
               }                                 \
            const auto rl( pFBuf->PeekRawLine( curPt.lin ) ); \
            const auto colLastPossibleMatchChar( Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col ) );
-   #define CHECK_NEXT  \
-           const auto rv( walker.VCheckNext( rl, CaptiveIdxOfCol( tw, rl, curPt.col ), curPt, colLastPossibleMatchChar ) ); \
-           if( STOP_SEARCH == rv ) { return true; }
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       Point curPt( start.lin, start.col + 1 );
       for( ; curPt.lin <= constrainingRect.flMax.lin ; ++curPt.lin, curPt.col = constrainingRect.flMin.col ) {
          SETUP_LINE_TEXT;
+         IdxCol_cached conv( tw, rl );
          for(
             ; curPt.col <= colLastPossibleMatchChar
-            ; curPt.col = ColOfNextChar( tw, rl, curPt.col )
-            ) { CHECK_NEXT }
+            ; curPt.col = conv.NextCol( curPt.col )
+            ) {
+            const auto rv( walker.VCheckNext( rl, conv.c2ci( curPt.col ), curPt, colLastPossibleMatchChar ) );
+            if( STOP_SEARCH == rv ) { return true; }
+            }
          }
       }
    else { // -------------------- search BACKWARD --------------------
@@ -601,12 +602,14 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
          for( curPt.col = Min( colLastPossibleMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
             ; curPt.col >= constrainingRect.flMin.col
             ; curPt.col = ColOfPrevChar( tw, rl, curPt.col )
-            ) { CHECK_NEXT }
+            ) {
+            const auto rv( walker.VCheckNext( rl, CaptiveIdxOfCol( tw, rl, curPt.col ), curPt, colLastPossibleMatchChar ) );
+            if( STOP_SEARCH == rv ) { return true; }
+            }
          }
       }
    return false;
    #undef SETUP_LINE_TEXT
-   #undef CHECK_NEXT
    }
 
 STATIC_VAR std::string g_SavedSearchString_Buf ;
