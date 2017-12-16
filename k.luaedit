@@ -411,8 +411,12 @@ do
 
    function StrExpandEnvVars( str ) -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
       -- print( "StrExpandEnvVars+("..str..")" )
-      -- tilde expansion: http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_01
-      -- Windows: USERPROFILE
+      if str:match( "^~/" ) then
+         local up = GetenvOrNil( "USERPROFILE" ) or GetenvOrNil( "HOME" )
+         if up then   -- ~/.gitconfig
+            str = str:gsub( "^~/", up..dirsep_os )
+            end
+         end
       for _, fxn in ipairs(envExpanders) do
          str = fxn( str )
          end
