@@ -384,6 +384,24 @@ do
       return function( st ) return st:gsub( pat, envReplacer ) end
       end
    local envExpanders = { -- note that '%', not '\', is the Lua-pattern metachar escaper!
+      function(str)
+         if str:match( "^~/" ) then
+            local up = GetenvOrNil( "USERPROFILE" ) or GetenvOrNil( "HOME" )
+            if up then   -- ~/.gitconfig
+               str = str:gsub( "^~/", up..dirsep_os )
+               end
+            end
+         return str
+         end,
+      function(str) -- on MS OS, xlat "/p/dir/to/something" to "p:\dir\to\something"
+         if dirsep_os=="\\" then
+            local drvletter = str:match( "^/([a-zA-Z])/" )
+            if drvletter and not IsDir(str:sub(2)) then
+               str = drvletter .. ":" .. str:sub(3):gsub("/",dirsep_os)
+               end
+            end
+         return str
+         end,
       envExpanderGen( "%%"   .."([^%%]-)".. "%%"),   -- arg "%USERPROFILE%" setfile
       envExpanderGen( "%$"   .."([^:]-)" .. ":" ),   -- arg "$USERPROFILE:" setfile
       envExpanderGen( "%${"  .."([^}]-)" .. "}" ),   -- arg "${USERPROFILE}" setfile
@@ -411,12 +429,6 @@ do
 
    function StrExpandEnvVars( str ) -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
       -- print( "StrExpandEnvVars+("..str..")" )
-      if str:match( "^~/" ) then
-         local up = GetenvOrNil( "USERPROFILE" ) or GetenvOrNil( "HOME" )
-         if up then   -- ~/.gitconfig
-            str = str:gsub( "^~/", up..dirsep_os )
-            end
-         end
       for _, fxn in ipairs(envExpanders) do
          str = fxn( str )
          end
