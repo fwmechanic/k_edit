@@ -890,11 +890,12 @@ public:
 STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    auto rl0( pfb->PeekRawLine( 0 ) );
    if( !rl0.starts_with( "#!" ) ) { return ""; }
-   const auto i1( FirstBlankOrEnd( rl0, 2 ) );    // assume: no spaces in path of binary
-   rl0.remove_suffix( rl0.length() - i1 );        // strip command tail
-   const auto ls( rl0.find_last_of( "/" ) );      // assume: unix dirsep, regardless of platform
-   const auto i0( ls != stref::npos ? ls+1 : 2 ); // could be bare binary name (i.e. filetype)
-   if( i0 >= i1 ) { return ""; }                  // nothing at all?
+   const auto ib( FirstNonBlankOrEnd( rl0, 2 ) );  // space may follow #!
+   const auto i1( FirstBlankOrEnd( rl0, ib ) );    // assume: no spaces in path of binary
+   rl0.remove_suffix( rl0.length() - i1 );         // strip command tail
+   const auto ls( rl0.find_last_of( "/" ) );       // assume: unix dirsep, regardless of platform
+   const auto i0( ls != stref::npos ? ls+1 : ib ); // could be bare binary name (i.e. filetype)
+   if( i0 >= i1 ) { return ""; }                   // nothing at all?
    const auto shebang( rl0.substr( i0, i1 - i0 ) );    0 && DBG( "%" PR_BSR "<=shebang", BSR(shebang) );
    if( shebang == "env" ) {
       auto rl( pfb->PeekRawLine( 0 ) ); rl.remove_prefix( i1 );
