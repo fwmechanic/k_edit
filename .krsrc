@@ -739,9 +739,6 @@
    wordchars:_
    hljoinchars: :.
 
-[.ps1]         # powershell
-   ftype:bash  # 1st pass: bash-like
-
 [.spa]
    ftype:sprintascii
 
@@ -886,6 +883,11 @@
 
 [.groovy]
    ftype:clang  # odd as it seems, this works pretty well; even for """triple double quoted strings"""!
+
+[ftype:pwrshell]
+
+[.ps1 .psm1 .psd1]  # https://stackoverflow.com/a/12108746
+   ftype:pwrshell
 
 [ftype:clang]
    wordchars:_

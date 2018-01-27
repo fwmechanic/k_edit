@@ -219,6 +219,7 @@ struct FTypeSetting {
           HL_LUA    ,
           HL_PYTHON ,
           HL_BASH   ,
+          HL_PWRSHL ,
           HL_DIFF   ,
         };
    Path::str_t d_key;  // rbtree key
@@ -239,7 +240,7 @@ STATIC_VAR RbTree *s_FTS_idx;
 STATIC_FXN int Show_FTypeSettings() {
    if( FTypeSetting::DB ) {                      DBG( "%s+ ----------------------------------------------", __func__ );
       rb_traverse( pNd, s_FTS_idx ) {
-         const auto pFTS( IdxNodeToFTS( pNd ) ); DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
+         const auto pFTS( IdxNodeToFTS( pNd ) ); DBG( "%s  %d=[%s] ", __func__, pFTS->d_hl_id, pFTS->d_key.c_str() );
          }                                       DBG( "%s- ----------------------------------------------", __func__ );
       }
    return 1;
@@ -260,17 +261,18 @@ void FTypeSetting::Update() {
    char hiliteNmBuf[21];
    LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf.c_str(), "" );           DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
    stref key( hiliteNmBuf );
-   STATIC_CONST struct { PCChar nm; HL_ID enumval; } hlnms[] = {
-      { "c"      , HL_C      },
-      { "make"   , HL_MAKE   },
-      { "lua"    , HL_LUA    },
-      { "python" , HL_PYTHON },
-      { "bash"   , HL_BASH   },
-      { "diff"   , HL_DIFF   },
+   STATIC_CONST struct { stref nm; HL_ID enumval; } hlnms[] = {
+      { "c"          , HL_C      },
+      { "make"       , HL_MAKE   },
+      { "lua"        , HL_LUA    },
+      { "python"     , HL_PYTHON },
+      { "bash"       , HL_BASH   },
+      { "diff"       , HL_DIFF   },
+      { "pwrshell"   , HL_PWRSHL },
       };
    d_hl_id = HL_none;
    for( const auto &cc : hlnms ) {
-      if( eq( key, cc.nm ) ) {
+      if( eq( key, cc.nm ) ) {                                            DB && DBG( "%s.extmatch: %" PR_BSR " = %" PR_BSR "", __func__, BSR(key), BSR(cc.nm) );
          d_hl_id = cc.enumval;
          break;
          }
@@ -1154,6 +1156,118 @@ void HiliteAddin_StreamParse::VFbufLinesChanged( LINE yMin, LINE yMax ) {
 
 //=============================================================================
 
+class HiliteAddin_powershell : public HiliteAddin_StreamParse {
+   void scan_pass( LINE yMaxScan ) override;
+   enum scan_rv { atEOF, in_code, in_1Qstr, in_2Qstr, in_comment };
+   // scan_pass() methods; all must have same proto as called via pfx
+   scan_rv find_end_code    ( PCFBUF pFile, Point &pt ) ;
+   scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt ) ;
+   scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt ) ;
+   scan_rv find_end_comment ( PCFBUF pFile, Point &pt ) ;
+   Point d_start_C; // where last /* comment started
+public:
+   HiliteAddin_powershell( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
+   ~HiliteAddin_powershell() {}
+   PCChar Name() const override { return "Powershell_Comment"; }
+   };
+
+#define START_LINE_X()  const auto rl( pFile->PeekRawLine( pt.lin ) );
+
+HiliteAddin_powershell::scan_rv HiliteAddin_powershell::find_end_code( PCFBUF pFile, Point &pt ) {
+/* some */0 && DBG(/* tests */"FNNC @y=%d x=%d", pt.lin, pt.col );/* here */
+   0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+      for( ; pt.col < rl.length() ; ++pt.col ) {
+         switch( rl[pt.col] ) {
+            default:      break;
+            case chQuot1: ++pt.col; return in_1Qstr;
+            case chQuot2: ++pt.col; return in_2Qstr;
+            case '`':     ++pt.col; break; /* skip escaped char */
+            case '#':     add_comment( pt.lin, pt.col, pt.lin, rl.length() ); // start of to-EOL comment?
+                          goto NEXT_LINE;
+            case '<':     if( pt.col+1 < rl.length() ) switch( rl[pt.col+1] ) { default: break;
+                             case '#': { // start of non-EOL comment?
+                                d_start_C.Set( pt.lin, pt.col );
+                                pt.col += 2;
+                                return in_comment;
+                                }
+                             }
+                          break;
+            }
+         }
+NEXT_LINE: ;
+      }
+   return atEOF;
+   }
+
+HiliteAddin_powershell::scan_rv HiliteAddin_powershell::find_end_comment( PCFBUF pFile, Point &pt ) {
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+      for( ; pt.col < rl.length() ; ++pt.col ) {
+         switch( rl[pt.col] ) {
+            default:   break;
+            case '#':  if( pt.col+1 < rl.length() ) switch( rl[pt.col+1] ) { default: break;
+                          case '>': { // end of non-EOL comment?
+                             pt.col += 2;
+                             add_comment( d_start_C.lin, d_start_C.col, pt.lin, pt.col-1 );
+                             return in_code;
+                             }
+                          }
+                       break;
+            }
+         }
+      }
+   return atEOF;
+   }
+
+// although C/C++ requirements for single and double quoted literals are different,
+// they are similar enough that identical parsing code can be used for both:
+#define find_end_Qstr( class, nm, delim )                                      \
+class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
+   const auto start( pt );                                                     \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
+      for( ; pt.col < rl.length() ; ++pt.col ) {                               \
+         switch( rl[pt.col] ) {                                                \
+            default:     break;                                                \
+            case '`'  :  ++pt.col; break; /* skip escaped char */              \
+            case delim:  add_litstr( start.lin, start.col, pt.lin, pt.col-1 ); \
+                         ++pt.col;                                             \
+                         return in_code;                                       \
+            }                                                                  \
+         }                                                                     \
+      }                                                                        \
+   return atEOF;                                                               \
+   }
+       find_end_Qstr( HiliteAddin_powershell, find_end_1Qstr, chQuot1 )
+       find_end_Qstr( HiliteAddin_powershell, find_end_2Qstr, chQuot2 )
+
+#undef find_end_Qstr
+
+void HiliteAddin_powershell::scan_pass( LINE yMaxScan ) {
+   auto fb( CFBuf() );
+   Point pt( 0, 0 );  // start @ top of file
+   typedef scan_rv (HiliteAddin_powershell::*pfx_findnext)( PCFBUF pFile, Point &pt );
+   pfx_findnext findnext = &HiliteAddin_powershell::find_end_code;
+   scan_rv prevret = in_code;
+   while( pt.lin <= yMaxScan ) {
+      const auto ret( CALL_METHOD( *this, findnext )( fb, pt ) );
+      0 && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
+      if( prevret == ret ) {    DBG("internal error seql==rv" )            ; return; }
+      switch( ret ) { default : DBG("internal error unknwn ret" )          ; return;
+         case in_code    : findnext = &HiliteAddin_powershell::find_end_code    ; break;
+         case in_1Qstr   : findnext = &HiliteAddin_powershell::find_end_1Qstr   ; break;
+         case in_2Qstr   : findnext = &HiliteAddin_powershell::find_end_2Qstr   ; break;
+         case in_comment : findnext = &HiliteAddin_powershell::find_end_comment ; break;
+         case atEOF      : if( in_comment==prevret ) { 0 && DBG( "atEOF+in_comment @y=%d x=%d", pt.lin, pt.col );
+                              add_comment( d_start_C.lin, d_start_C.col, pt.lin, 0 );
+                              }
+                           return;
+         }
+      prevret = ret;
+      }
+   }
+
+//=============================================================================
+
 class HiliteAddin_clang : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
    enum scan_rv { atEOF, in_code, in_1Qstr, in_2Qstr, in_comment };
@@ -1470,8 +1584,8 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    return atEOF;                                                               \
    }
 
-find_end_Qstr1e( HiliteAddin_python, find_end_1Qstr , chQuot1 )
-find_end_Qstr1e( HiliteAddin_python, find_end_2Qstr , chQuot2 )
+       find_end_Qstr1e( HiliteAddin_python, find_end_1Qstr , chQuot1 )
+       find_end_Qstr1e( HiliteAddin_python, find_end_2Qstr , chQuot2 )
 
 #undef find_end_Qstr1e
 
@@ -2010,8 +2124,8 @@ void View::HiliteAddins_Init() {
       && (CFBuf()->HasLines() || CFBuf()->FnmIsPseudo())
       && !CFBuf()->FType().empty()
       && CFBuf()->GetFTypeSettings()
-     ) { DBADIN && DBG( "%s [%s] ================================================================", __func__, CFBuf()->FType().c_str() );
-      const auto pFTS( CFBuf()->GetFTypeSettings() );
+     ) {                                               DBADIN && Show_FTypeSettings();
+      const auto pFTS( CFBuf()->GetFTypeSettings() );  DBADIN && DBG( "%s [%s] HL_ID=%d HL_PS=%d ================================================================", __func__, CFBuf()->FType().c_str(), pFTS->d_hl_id, FTypeSetting::HL_PWRSHL );
      #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
              /* ALWAYS */              IAL( HiliteAddin_Pbal       );
       switch( pFTS->d_hl_id ) {
@@ -2023,6 +2137,7 @@ void View::HiliteAddins_Init() {
          case FTypeSetting::HL_PYTHON: IAL( HiliteAddin_python     );  break;
          case FTypeSetting::HL_BASH  : IAL( HiliteAddin_python     );  break;
          case FTypeSetting::HL_DIFF  : IAL( HiliteAddin_Diff       );  break;
+         case FTypeSetting::HL_PWRSHL: IAL( HiliteAddin_powershell );  break;
          default: if( pFTS->d_eolCommentDelim[0] ) {
                      InsertAddinLast( new HiliteAddin_EolComment( this, pFTS->d_eolCommentDelim ) );
                      }

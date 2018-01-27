@@ -98,8 +98,9 @@ local python_settings  = { colors = stdColors, hilite = "python" }
 local perl_settings  = { colors = darkColors, hilite = "python" }
 local make_settings  = { colors = proto( darkColors, { txt = bfg( Black, White ), } ), hilite = "make" }
 local ushell_settings= { colors = darkColors, hilite = "bash" }
+local pwrshell_settings= { colors = darkColors, hilite = "pwrshell" }
 
-ftype_map = {  -- ref'd from C, key source: arg "DetermineFType" tags
+ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    clang        = clang_settings                       ,
    awk          = clang_settings                       ,
    msbatch      = bat_settings                         ,
@@ -113,6 +114,7 @@ ftype_map = {  -- ref'd from C, key source: arg "DetermineFType" tags
    text         = text_settings                        ,
    sh           = ushell_settings                      ,
    bash         = ushell_settings                      ,
+   pwrshell     = pwrshell_settings                    ,
    pseudo       = text_settings                        ,
    unknown      = text_settings                        ,
    wildcard     = ushell_settings                      ,
