@@ -476,11 +476,6 @@ STATIC_FXN void PutLastLogLine( PFBUF d_pfLogBuf, PCChar msg ) {
    MoveCursorToEofAllWindows( d_pfLogBuf, true );
    }
 
-STATIC_FXN PCChar getComspec() {
-   CPCChar comspec( getenv( "COMSPEC" ) );
-   return  comspec ? comspec : "CMD.EXE";
-   }
-
 enum CP_PIPED_RC {
    CP_PIPED_RC_OK = 0,
    CP_PIPED_RC_EPIPE,
@@ -496,13 +491,22 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    , int cmdFlags
    , PXbuf CommandLine
    , PXbuf xb
-   ) {
-   const auto shell( !(cmdFlags & NOSHELL) );
-   const auto comspec( getComspec() );
-   STATIC_CONST char comspecTransient[] = " /c ";
-   CommandLine->FmtStr( "-%s%s%s", shell?comspec:"", shell?comspecTransient:"", pS ); // leading '-' is (at most) for PutLastLogLine _only_
+   ) { // arg arg 'echo "hello"' execute   arg "hello ""world" message
+   const auto useShell( !(cmdFlags & NOSHELL) ); // { echo "hello worlds in $(pwd)" ; }
+   PCChar shell, shellopt, clDelim;
+   auto getShellDope = [useShell, &shell, &shellopt, &clDelim]() {
+      auto envIsFile = []( PCChar envNm ) -> PCChar {
+         const auto val( getenv( envNm ) );
+         return val && IsFile( val ) ? val : nullptr;
+         };
+      if( !useShell )                                       { shell = ""  ; shellopt = ""    ; clDelim = ""  ; return; }
+      { const auto env( envIsFile( "SHELL"   ) ); if( env ) { shell = env ; shellopt = " -c "; clDelim = "\""; return; } }
+      { const auto env( envIsFile( "COMSPEC" ) ); if( env ) { shell = env ; shellopt = " /c "; clDelim = ""  ; return; } }
+                                                         shell = "CMD.EXE"; shellopt = " /c "; clDelim = ""  ; return;
+      }; getShellDope();
+   CommandLine->FmtStr( "-%s%s%s%s%s", shell, shellopt, clDelim, pS, clDelim ); // leading '-' is (at most) for PutLastLogLine _only_
    0 && DBG( "%s: CommandLine='%s'", __func__, CommandLine->c_str() );
-   const auto pXeq(      CommandLine->wbuf() + 1 );  // skip the '-' always (stupid Win32::CreateProcessA takes PChar cmdline param)
+   const auto pXeq(      CommandLine->wbuf()  + 1 );  // skip the '-' always (stupid Win32::CreateProcessA takes PChar cmdline param)
    const auto pXeqConst( CommandLine->c_str() + 1 );  // skip the '-' always (for internal use)
    if( !(cmdFlags & NO_ECHO_CMDLN) ) {
       PutLastLogLine( pfLogBuf, CommandLine->c_str() + ((cmdFlags & IGNORE_ERROR) ? 0 : 1 ) );
