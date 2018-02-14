@@ -281,7 +281,7 @@ PCRE_OBJ :=
 PCRE_LIB :=
 endif
 
-# 20140821 this flag needs to be used when _compiling_ .cpp files as well as when (w/gcc 4.9.1) using gcc to generate .d
+# 20140821 this flag needs to be used when _compiling_ .cpp files as well as when (w/gcc 4.9.1) using gcc to generate .makedeps
 CXX_D_FLAGS = -std=gnu++11 -DUSE_PCRE=$(USE_PCRE) $(APP_IN_DLL_CPP)
 
 #####################################################################################################################
@@ -356,7 +356,7 @@ THISDIR := .$(DIRSEP)
 # !!! in Lua-5.1/src/Makefile, PLAT=mingw, LUA_T=lua (not lua.exe)
 LUA_T=$(THISDIR)lua$(EXE_EXT)
 
-CLEAN_ARGS = $(OBJS) *.d *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLS_PKG_FILES) *_unittest *_unittest.o
+CLEAN_ARGS = $(OBJS) *.makedeps *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLS_PKG_FILES) *_unittest *_unittest.o
 
 ZAP_ARGS := $(EXE_TGTS) $(LUA_T)
 
@@ -477,13 +477,13 @@ endif
 BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) $(CPPFLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $(basename $<).o
 BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) $(CPPFLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $*.o
 
-%.d: %.cpp $(CMDTBL_OUTPUTS)
-	@echo generating $*.d&&$(BLD_CPP_to_D)
+%.makedeps: %.cpp $(CMDTBL_OUTPUTS)
+	@echo generating $*.makedeps&&$(BLD_CPP_to_D)
 
 ifneq "$(MAKECMDGOALS)" "zap"
 ifneq "$(MAKECMDGOALS)" "clean"
 
-  -include $(patsubst %.o,%.d,$(OBJS))
+  -include $(patsubst %.o,%.makedeps,$(OBJS))
 
 endif
 endif

@@ -9,7 +9,7 @@ bkz/
 *_unittest
 *.k?
 *.args
-*.d
+*.makedeps
 *.o
 *.obj
 *.cod
