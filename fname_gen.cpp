@@ -150,9 +150,9 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
 // ...Generator object
 //
 
-bool WildcardFilenameGenerator::VGetNextName( Path::str_t &dest ) {
+bool WildcardFilenameGenerator::VGetNextName( Path::str_t &dest ) { enum { DB=0 };
    RTN_false_ON_BRK;
-   dest = d_dm.GetNext();
+   dest = d_dm.GetNext();  DB && DBG( "%s '%s'", __PRETTY_FUNCTION__, dest.c_str() );
    return !dest.empty();
    }
 
@@ -375,22 +375,23 @@ void DirListGenerator::AddName( stref name ) {
 
 DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
    : PathStrGenerator( src )
-   {
-   NewScope {
-      Path::str_t pStartDir( dirName ? dirName : Path::GetCwd() );
-      AddName( pStartDir );
-      }
+   { enum { DB=0 };
+   const Path::str_t pStartDir( dirName ? dirName : Path::GetCwd() );
+   AddName( pStartDir );  DB && DBG( "%s StartDir ='%s'", __PRETTY_FUNCTION__, pStartDir.c_str() );
    Path::str_t pbuf;
    while( auto pNxt=d_input.front() ) {
       DLINK_REMOVE_FIRST( d_input, pNxt, dlink );
       pbuf = Path::str_t( pNxt->string ) + (PATH_SEP_STR "*");
       FreeStringListEl( pNxt );
-      0 && DBG( "Looking in ='%s'", pbuf.c_str() );
+      DB && DBG( "%s Looking in ='%s'", __PRETTY_FUNCTION__, pbuf.c_str() );
       WildcardFilenameGenerator wcg( __PRETTY_FUNCTION__, pbuf.c_str(), ONLY_DIRS );
       while( wcg.VGetNextName( pbuf ) ) {
-         if( !Path::IsDotOrDotDot( pbuf ) ) {
+         if( !(  Path::IsDotOrDotDot( pbuf )
+              || (!g_fWcShowDotDir && Path::str_t::npos != pbuf.find( PATH_SEP_STR ".", pStartDir.length() ))
+              )
+           ) {
             AddName( pbuf );
-            }                                                    0 && DBG( "   PBUF='%s' DBUF='%" PR_BSR "'", pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
+            }                                                    DB && DBG( "%s   PBUF='%s' DBUF='%" PR_BSR "'", __PRETTY_FUNCTION__, pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
          }
       }
    }
@@ -424,7 +425,7 @@ bool ARG::wct() {
    }
 #endif
 
-enum { MFSPEC_D=0 };
+enum { MFSPEC_D=1 };
 
 CfxFilenameGenerator::CfxFilenameGenerator( std::string &&src, stref macroText, WildCardMatchMode matchMode )
    : PathStrGenerator( src )
@@ -595,7 +596,7 @@ void SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard ) {
    SearchEnvDirListForFile( st, tmp, fKeepNameWildcard );
    }
 
-Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=1 };
+Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
    if( FBUF::FnmIsPseudo( pszSrc ) ) {                               DB && DBG( "%s- (FnmIsPseudo) '%s'", __func__, pszSrc );
       return Path::str_t( pszSrc );
       }

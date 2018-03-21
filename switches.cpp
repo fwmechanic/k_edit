@@ -350,6 +350,7 @@ STATIC_CONST SWI s_SwiTable[] = {
  { "wordchars"      , {         swixWordchars           }, swinFXN_BOOL, swidWordchars  _AHELP( "the set of valid word-component characters; [_a-zA-Z0-9] are always members" ) },
  { "wordwrap"       , Var2TPfx( g_fWordwrap             ), swinVAR_BOOL, swidBool       _AHELP( "the editor performs automatic word-wrapping as you type past rmargin" ) },
  { "wucminlen"      , Var2TPfx( g_iWucMinLen            ), swinVAR_INT , swidInt        _AHELP( "minimum length of a word for it to qualify for 'word under the cursor' status" ) },
+ { "wcshowdotdir"   , Var2TPfx( g_fWcShowDotDir         ), swinVAR_BOOL, swidBool       _AHELP( "in recursive wildcard buffers show (yes) or hide (NO) dir (subtrees) whose names start with '.'" ) },
  };
 
 STATIC_FXN const SWI *FindSwitch( stref pszSwiName ) {

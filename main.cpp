@@ -32,6 +32,7 @@ GLOBAL_VAR bool  g_fSoftCr            =    true;
 GLOBAL_VAR bool  g_fTabAlign                   ;
 GLOBAL_VAR bool  g_fViewOnly                   ;
 GLOBAL_VAR bool  g_fWordwrap                   ;
+GLOBAL_VAR bool  g_fWcShowDotDir               ;
 GLOBAL_VAR bool  g_fFuncRetVal                 ;
 GLOBAL_VAR bool  g_fMeta                       ;
 GLOBAL_VAR bool  g_fMfgrepNoise                ;

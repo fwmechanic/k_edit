@@ -94,6 +94,8 @@ extern bool  g_fUseMouse         ;
 #endif
 extern bool  g_fViewOnly         ;
 extern bool  g_fWordwrap         ;
+extern bool  g_fWcShowDotDir     ;
+
 
 extern int   g_iBackupMode       ;
 extern int   g_iBlankAnnoDispSrcMask;
