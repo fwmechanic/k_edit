@@ -8,7 +8,7 @@ OK, so I've been maintaining and evolving K, __while continuously using it DAILY
 
 It's hard to second guess.
 
-##### Pros
+#### Pros
 
 Having TOTAL CONTROL of my text editing environment has been an enormous boon.
 It's impossible to overstate this.  It has been my primary motivation from the
@@ -37,6 +37,8 @@ dependent on a closed-source/commercial tool was already obvious.
 Also, CodeWright and Slickedit closely resembled IDEs anyway (huge install,
 GUI-access-only features, source-text language-custom features, opaque
 project files), further diminished their appeal to me.
+
+##### Case in point: File Open operation
 
 Something I realize was a rudimentary yet key factor in preventing me from
 adopting ANY native Windows GUI text editor (e.g.  Codewright, Slickedit) was
@@ -72,7 +74,7 @@ the project file, where they are subject to rot and irrelevance vs. the cwd
 filesystem content which is the "single source of truth" regarding the
 "project").
 
-#### Open Source Alternatives
+##### Open Source Alternatives
 
 At no time has it been viable for me to switch away from K to a mainstream
 open-source competitor (if I wanted to choose a "fringe open-source
@@ -95,7 +97,7 @@ I'll live.
 Anyway, I didn't see in FTE anything profoundly superior to K, and it seemed to die (as an actively maintained project) anyway, so...
 There seems to be a [recently maintained fork eFTE](https://github.com/lanurmi/efte ), but that occurred years after I was paying serious attention to FTE.
 
-##### IDE's
+###### IDE's
 
 IDE's (EX: Eclipse) have _never_ interested me.  I like doing things my own way,
 and (Java-coded) behemoths created and maintained by "communities" ruled by
@@ -124,15 +126,16 @@ rely on others to provide same for them, such that they will accept and align
 with a strangers' preference, are [I don't have anything good to say, so I
 won't say any more about it].
 
-##### Cons
+#### Cons
 
 The only real problem remaining is whether I'll be able to continue use K in my
 professional environment "going forward".
 
-Lately I'm really feeling the pressure of authoritative corporate IT policies
-that are being allowed to penetrate the operations of the Product Development
-Engineering Organizations (PDEO) within which I've always worked (the vast
-majority of which have been _Windows-based_ (yes, this _sucks_)).
+Lately I'm really feeling the pressure of increasingly authoritarian
+corporate IT security policies that are penetrating the internal operations
+of the Product Development Engineering Organizations (PDEO) within which I've
+always worked (the vast majority of which have been _Windows-based_ (yes,
+this _sucks_)).
 
 IT orgs have a strong tendency toward rigidity: "here is our solution; we won't
 change it.  You need to align your problem with our solution."  In the past, PDEO
