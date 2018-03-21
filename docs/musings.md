@@ -38,6 +38,40 @@ Also, CodeWright and Slickedit closely resembled IDEs anyway (huge install,
 GUI-access-only features, source-text language-custom features, opaque
 project files), further diminished their appeal to me.
 
+Something I realize was a rudimentary yet key factor in preventing me from
+adopting ANY native Windows GUI text editor (e.g.  Codewright, Slickedit) was
+their unilateral use (as required by the Microsoft Rules for any Windows GUI
+app) of the Windows (OS) "File Open" dialog box ("control"?) to ... select a
+file to open.  This "control" is anathema to me: in most cases, it (a)
+involves using the mouse; (b) opens with the wrong directory current,
+requiring the user to navigate an unknown # of dir levels merely to be in the
+correct starting location; thereafter, selecting a particular file is a
+process consisting of a "visual search" process (complete with mouse
+scrolling hither and yon) followed by clicking on the discovered target.
+Altogether an entirely repellant process to someone who has a much simpler
+and more productive facility at hand (in K).
+
+Also, most such Windows apps, being opened from a "user-friendly" desktop
+icon or start menu, have no concept of (or default to a useless) cwd, which
+contributes to their tendency to open a File Open control in a completely
+unsuitable directory; this nature also drives users into the figurative arms
+of editor-specific "project files" in which the concepts of project cwd are
+stored (unnecessarily, IMO).
+
+Whereas K is trivially started from any shell and inherits that shell's
+process cwd as its own (this being the basis for all non-absolute
+file-read/-write ops) and with its ability to generate "wildcard buffers"
+(containing absolute-named files, one per line) which can be searched/grepped
+using editor string search functions, opening files whose names appear in
+such (or any other) buffers via the `arg setfile` editor command is trivial.
+
+Rephrase: the K philosophy is that the editor cwd is the basis from which
+entities which users might expect to be found within a "project file" are
+easily/trivially derived dynamically (rather than being statically stored in
+the project file, where they are subject to rot and irrelevance vs. the cwd
+filesystem content which is the "single source of truth" regarding the
+"project").
+
 #### Open Source Alternatives
 
 At no time has it been viable for me to switch away from K to a mainstream
