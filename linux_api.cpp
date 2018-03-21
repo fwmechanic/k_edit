@@ -145,7 +145,7 @@ const Path::str_t DirMatches::GetNext() {
       }
    d_buf = *d_globsIt++;
    // if( ToBOOL(d_sbuf.st_mode & S_IFDIR) ) // GLOB_MARK does this for us
-   //    d_buf.append( PATH_SEP_STR );
+   //    d_buf.append( DIRSEP_STR );
    0 && DBG( "DirMatches::GetNext: '%s' (%X)", d_buf.c_str(), d_sbuf.st_mode );
    return d_buf;
    }

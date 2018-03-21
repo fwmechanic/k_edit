@@ -381,13 +381,13 @@ DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
    Path::str_t pbuf;
    while( auto pNxt=d_input.front() ) {
       DLINK_REMOVE_FIRST( d_input, pNxt, dlink );
-      pbuf = Path::str_t( pNxt->string ) + (PATH_SEP_STR "*");
+      pbuf = Path::str_t( pNxt->string ) + (DIRSEP_STR "*");
       FreeStringListEl( pNxt );
       DB && DBG( "%s Looking in ='%s'", __PRETTY_FUNCTION__, pbuf.c_str() );
       WildcardFilenameGenerator wcg( __PRETTY_FUNCTION__, pbuf.c_str(), ONLY_DIRS );
       while( wcg.VGetNextName( pbuf ) ) {
          if( !(  Path::IsDotOrDotDot( pbuf )
-              || (!g_fWcShowDotDir && Path::str_t::npos != pbuf.find( PATH_SEP_STR ".", pStartDir.length() ))
+              || (!g_fWcShowDotDir && Path::str_t::npos != pbuf.find( DIRSEP_STR ".", pStartDir.length() ))
               )
            ) {
             AddName( pbuf );
@@ -415,7 +415,7 @@ bool ARG::wct() {
    while( dirs.VGetNextName( BSOB(pbuf) ) ) {
       // if( !Path::IsDotOrDotDot( pbuf.c_str() ) )
       //    pF->FmtLastLine( pbuf );
-      WildcardFilenameGenerator wcg( FmtStr<MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf, searchSpec ), ONLY_FILES );
+      WildcardFilenameGenerator wcg( FmtStr<MAX_PATH>( "%s" DIRSEP_STR "%s", pbuf, searchSpec ), ONLY_FILES );
       pathbuf fbuf;
       while( wcg.VGetNextName( BSOB(fbuf) ) ) {
          pF->FmtLastLine( fbuf );

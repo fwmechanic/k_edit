@@ -1072,7 +1072,7 @@ bool ARG::paste() {
                        auto pSrcFnm( StrPastAnyBlanks( d_textarg.pText ) ); // arg arg "!dir" paste
                        if( *pSrcFnm == '!' ) {
                           NOAUTO CPCChar pszCmd( pSrcFnm + 1 );
-                          const auto tmpx( CompletelyExpandFName_wEnvVars( "$TMP:" PATH_SEP_STR "paste.$k$" ) );
+                          const auto tmpx( CompletelyExpandFName_wEnvVars( "$TMP:" DIRSEP_STR "paste.$k$" ) );
                           bcpy( tmpfilenamebuf, tmpx.c_str() );
                           0 && DBG( "tmp '%s'", tmpfilenamebuf );
                           pSrcFnm = tmpfilenamebuf;

@@ -574,7 +574,7 @@ LUAFUNC_(current) {
    // convention in _dir module is that returned directories have trailing sep
    luaL_addstring( &buf, mallocd_cwd );
    free( mallocd_cwd );
-   luaL_addchar( &buf, '/' ); // no choice about pathsep in linux
+   luaL_addchar( &buf, '/' ); // no choice about dirsep in linux
    luaL_pushresult( &buf );
    return 1;
 #endif

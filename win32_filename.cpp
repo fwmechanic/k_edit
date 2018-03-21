@@ -38,7 +38,7 @@ bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
      ) {
       pDestBuf[0] = pSrcFullname[0];
       pDestBuf[1] = ':';
-      pDestBuf[2] = Path::PATH_SEP_CH;
+      pDestBuf[2] = Path::DIRSEP_CH;
       DBG( "%s '%s' -> '%s'", __func__, pSrcFullname, pDestBuf );
       return true;
       }
@@ -51,7 +51,7 @@ bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
       const auto ps3( Path::StrToNextPathSepOrEos( ps2 ) ); // "\\...\...\..."
       const auto len( scpy( pDestBuf, sizeofDest, pSrcFullname, ps3 - pSrcFullname ) );
       if( !*ps3 ) {
-         scat( pDestBuf, sizeofDest, len, PATH_SEP_STR, Strlen( PATH_SEP_STR ) );
+         scat( pDestBuf, sizeofDest, len, DIRSEP_STR, Strlen( DIRSEP_STR ) );
          }
       DBG( "%s '%s' -> '%s'", __func__, pSrcFullname, pDestBuf );
       return true;
@@ -219,7 +219,7 @@ const Path::str_t DirMatches::GetNext() {
       }
    d_buf.replace( d_ixDest, std::string::npos, d_Win32_FindData.cFileName );
    if( ToBOOL(d_Win32_FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !Path::IsDotOrDotDot( d_buf.c_str() ) ) {
-      d_buf.append( PATH_SEP_STR );
+      d_buf.append( DIRSEP_STR );
       }
    0 && DBG( "DirMatches::GetNext: '%s' (%lX)", d_buf.c_str(), d_Win32_FindData.dwFileAttributes );
    return d_buf;
@@ -310,7 +310,7 @@ Path::str_t Path::CanonizeCase( const PCChar fnmBuf ) { enum { DBG_ABS_PATH = 0 
       if( fLastComponent ) {
          break;
          }
-      pbs += PATH_SEP_STR;                                             DBG_ABS_PATH && DBG( "%s :::: '%s'", __func__, pbs.c_str() );
+      pbs += DIRSEP_STR;                                               DBG_ABS_PATH && DBG( "%s :::: '%s'", __func__, pbs.c_str() );
       pNxtComponent = pNxtComponentEnd + 1;
       }
                                                                        DBG_ABS_PATH && DBG( "%s- rv='%s'", __func__, pbs.c_str() );

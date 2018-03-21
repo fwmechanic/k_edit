@@ -1442,7 +1442,7 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
          }
       else {
          bcpy( wcBuf , se2sr( pszWildcardString, pVbar ) );
-         bcpy( dirBuf, "." PATH_SEP_STR );
+         bcpy( dirBuf, "." DIRSEP_STR );
          }
                                                                      ED && DBG( "wcBuf='%s'" , wcBuf  );
                                                                      ED && DBG( "dirBuf='%s'", dirBuf );
@@ -1450,7 +1450,7 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       DirListGenerator dlg( dirBuf );
       std::string tmp;
       while( dlg.VGetNextName( pbuf ) ) {                            ED && DBG( "pbuf='%s'", pbuf.c_str() );
-         WildcardFilenameGenerator wcg( __func__, FmtStr<_MAX_PATH>( "%s" PATH_SEP_STR "%s", pbuf.c_str(), wcBuf ), ONLY_FILES );
+         WildcardFilenameGenerator wcg( __func__, FmtStr<_MAX_PATH>( "%s" DIRSEP_STR "%s", pbuf.c_str(), wcBuf ), ONLY_FILES );
          fbuf.clear();
          while( wcg.VGetNextName( fbuf ) ) {
             InsFnm( fb, tmp, fbuf.c_str(), fSorted );
@@ -2264,7 +2264,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
    auto  curfile( g_CurFBuf() );
    if( TEXTARG == d_argType ) {
       srchfile = curfile;
-      Path::str_t keysFnm( ("$FGS" PATH_SEP_STR) + std::string( d_textarg.pText ) );
+      Path::str_t keysFnm( ("$FGS" DIRSEP_STR) + std::string( d_textarg.pText ) );
       curfile = OpenFileNotDir_NoCreate( keysFnm.c_str() );
       if( !curfile ) {
          return Msg( "Couldn't open '%s' [1]", keysFnm.c_str() );

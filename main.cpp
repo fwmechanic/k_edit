@@ -512,7 +512,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
                          exit( 1 );
             }
          }
-      s_EditorStateDir.append( PATH_SEP_STR );  0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
+      s_EditorStateDir.append( DIRSEP_STR );  0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
       };
 #if defined(_WIN32)
    #define  HOME_ENVVAR_NM  "APPDATA"
@@ -521,7 +521,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    if( !(appdataVal && appdataVal[0]) )  { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
    if( !IsDir( appdataVal ) )            { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
    s_EditorStateDir.assign( appdataVal );                    0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
-   s_EditorStateDir.append( PATH_SEP_STR HOME_SUBDIR_NM );   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
+   s_EditorStateDir.append( DIRSEP_STR HOME_SUBDIR_NM );     0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
    #undef   HOME_ENVVAR_NM
    #undef   HOME_SUBDIR_NM
 #else
@@ -547,7 +547,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
       // fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", baseVarVal );
       if( !IsDir( baseVarVal ) )           { fprintf( stderr, "dir $" HOME_ENVVAR_NM " %s does not exist???\n", baseVarVal ); exit( 1 ); }
       s_EditorStateDir.assign( baseVarVal );    //       fprintf( stderr, "$" HOME_ENVVAR_NM " %s\n", s_EditorStateDir.c_str() );
-      s_EditorStateDir.append( PATH_SEP_STR HOME_ENVVAR_SUFFIXNM ); // fprintf( stderr, "$" HOME_ENVVAR_NM "/" HOME_ENVVAR_SUFFIXNM " %s\n", s_EditorStateDir.c_str() );
+      s_EditorStateDir.append( DIRSEP_STR HOME_ENVVAR_SUFFIXNM ); // fprintf( stderr, "$" HOME_ENVVAR_NM "/" HOME_ENVVAR_SUFFIXNM " %s\n", s_EditorStateDir.c_str() );
       mkdir_stf();
       }
    s_EditorStateDir.append( HOME_SUBDIR_NM );   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );

@@ -24,7 +24,7 @@
 #include "ed_main.h"
 
 STATIC_FXN sridx DirnmLen( stref pPath ) { // a.k.a. IdxOfFnm()
-   const auto rv( pPath.find_last_of( PATH_SEP_SRCH_STR ":" ) );
+   const auto rv( pPath.find_last_of( DIRSEP_SRCH_STR ":" ) );
    if( stref::npos == rv ) {
       return 0;
       }
@@ -61,15 +61,15 @@ stref Path::RefExt( stref src ) { // a.k.a. IdxOfFnm()
 
 bool Path::IsDot( stref str ) { // truly useless!
    return str ==                      "."
-       || str.ends_with( PATH_SEP_STR "."               )
-       || str.ends_with( PATH_SEP_STR "."  PATH_SEP_STR )
+       || str.ends_with( DIRSEP_STR "."             )
+       || str.ends_with( DIRSEP_STR "."  DIRSEP_STR )
        ;
    }
 
 bool Path::IsDotDot( stref str ) {
    return str ==                      ".."
-       || str.ends_with( PATH_SEP_STR ".."              )
-       || str.ends_with( PATH_SEP_STR ".." PATH_SEP_STR )
+       || str.ends_with( DIRSEP_STR ".."            )
+       || str.ends_with( DIRSEP_STR ".." DIRSEP_STR )
        ;
    }
 
@@ -163,7 +163,7 @@ public:
       }
    Path::str_t GetCwd_ps() {
       /* if( d_nm.empty() ) { d_nm = Path::GetCwd_(); } */                       0 && DBG( "%s nm %s", __func__, d_nm.c_str() );
-      auto rv( Path::IsDirSepCh( d_nm.back() ) ? d_nm : (d_nm + PATH_SEP_STR) ); 0 && DBG( "%s == %s", __func__, rv.c_str() );
+      auto rv( Path::IsDirSepCh( d_nm.back() ) ? d_nm : (d_nm + DIRSEP_STR) );   0 && DBG( "%s == %s", __func__, rv.c_str() );
       return rv;
       }
    } s_cwd_cache;

@@ -24,14 +24,23 @@
  */
 
 #if defined(_WIN32)
-  #define  PATH_SEP_CH        '\\'
-  #define  PATH_SEP_STR       "\\"
-  #define  PATH_SEP_SRCH_STR "/\\"
+  #define  DIRSEP_CH        '\\'
+  #define  DIRSEP_STR       "\\"
+  #define  DIRSEP_SRCH_STR  "/\\"
 #else
-  #define  PATH_SEP_CH        '/'
-  #define  PATH_SEP_STR       "/"
-  #define  PATH_SEP_SRCH_STR  PATH_SEP_STR
+  #define  DIRSEP_CH        '/'
+  #define  DIRSEP_STR       "/"
+  #define  DIRSEP_SRCH_STR  DIRSEP_STR
 #endif
+
+#if defined(_WIN32)
+  #define  PATH_SEP_CH        ';'
+  #define  PATH_SEP_STR       ";"
+#else
+  #define  PATH_SEP_CH        ':'
+  #define  PATH_SEP_STR       ":"
+#endif
+  #define  PATH_SEP_SRCH_STR  PATH_SEP_STR
 
 #include "my_types.h"
 
@@ -43,8 +52,8 @@ TF_Ptr STIL Ptr  StrToPrevBlankOrNull(   Ptr pBuf, Ptr pInBuf ) { return StrToPr
 namespace Path {
    typedef std::string str_t; // Path::str_t
 
-   template<typename CharPtr> STIL CharPtr StrToNextPathSepOrEos(  CharPtr pszToSearch          ) { return StrToNextOrEos ( pszToSearch , PATH_SEP_SRCH_STR ); }
-   template<typename CharPtr> STIL CharPtr StrToPrevPathSepOrNull( CharPtr pBuf, CharPtr pInBuf ) { return StrToPrevOrNull( pBuf, pInBuf, PATH_SEP_SRCH_STR ); }
+   template<typename CharPtr> STIL CharPtr StrToNextPathSepOrEos(  CharPtr pszToSearch          ) { return StrToNextOrEos ( pszToSearch , DIRSEP_SRCH_STR ); }
+   template<typename CharPtr> STIL CharPtr StrToPrevPathSepOrNull( CharPtr pBuf, CharPtr pInBuf ) { return StrToPrevOrNull( pBuf, pInBuf, DIRSEP_SRCH_STR ); }
 
    enum chars : char { chEnvSep = ';', chDirSepMS = '\\', chDirSepPosix = '/' };
 #if defined(_WIN32)
