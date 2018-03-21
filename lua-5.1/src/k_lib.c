@@ -583,6 +583,7 @@ LUAFUNC_(current) {
 LUAFUNC_(dirsep_class)     { R_str( WL( "[\\/]", "[/]" ) ); }
 LUAFUNC_(dirsep_os)        { R_str( WL( "\\", "/" ) ); }
 LUAFUNC_(dirsep_preferred) { R_str(           "/"   ); }
+LUAFUNC_(pathsep_os)       { R_str( WL( ";", ":" ) ); }
 
 LUAFUNC_(name_isfile) {
    const char *nm = S_(1);
@@ -630,6 +631,7 @@ static void register__dir( lua_State *L ) {
       LUA_FUNC_I( dirsep_class     )
       LUA_FUNC_I( dirsep_os        )
       LUA_FUNC_I( dirsep_preferred )
+      LUA_FUNC_I( pathsep_os    )
       LUA_FUNC_I( rmdir         ) // os.remove will not remove directories on Win32; this does!
       { 0, 0 }
       };
