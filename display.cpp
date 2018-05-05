@@ -712,14 +712,17 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                if( xFound > xMaxToDisp ) { break; } // hit if undisplayable match found in (xMaxToDisp..xMaxToDisp+(maxNeedleLen-1)] (maxNeedleLen may be longer than you think)
                if(   d_stSel.c_str() == keyStart // is a selection pseudo-WUC?
                   || // or a true WUC (only match _whole words_ matching d_wucbuf)
-                    (  (ixFirstMatch      == 0           || !isWordChar( rl[ixFirstMatch-1] ))    // char to left  of match is non-word
-                    && (ixFirstMatch+mlen == rl.length() || !isWordChar( rl[ixFirstMatch+mlen] )) // char to right of match is non-word
+                    (  (ixFirstMatch      == 0           || !isWordChar(rl[ixFirstMatch       ]) || !isWordChar(rl[ixFirstMatch-1   ])) // char to left  of match is non-word
+                    && (ixFirstMatch+mlen == rl.length() || !isWordChar(rl[ixFirstMatch+mlen-1]) || !isWordChar(rl[ixFirstMatch+mlen])) // char to right of match is non-word
                     && (yLine != Cursor().lin || Cursor().col < xFound || Cursor().col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
                     )
                  ) {
                   alcc.PutColor( xFound, mlen, ColorTblIdx::WUC );
+                  ixStart = ixFirstMatch + mlen;   // xWUCXxWUCXxWUCXxWUCX
                   }
-               ixStart = ixFirstMatch + mlen;   // xWUCXxWUCXxWUCXxWUCX
+               else {
+                  ixStart = ixFirstMatch + 1; // since "true WUC" check above prevented a WUC from being hilited, resume search just after start of this non-hilited "match"
+                  }
                }
             }
          }
