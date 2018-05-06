@@ -69,14 +69,15 @@ local darkColors = {
    cpp = bfg(   Red    , hiWhite  ),
    hil = bfg(   Cyan   , hiWhite  ),
    sel = bfg(   Green  , hiWhite  ),
-   wuc = bfg(  Cyan  ,     White  ),
    wuc = bfg(  Cyan  ,     Black  ),
+   wuc = bfg(  Cyan  ,     White  ),
    com = bfg(   Black  ,   Green  ),
-   com = bfg(   Black  ,   Yellow  ),
+   com = bfg(   Black  ,  Yellow  ),
+   com = bfg(   Black  ,   White  ),
    str = bfg(  Gray  ,    Black  ),
    str = bfg(  Black  ,   Red     ),
-   str = bfg(   Black  , hiRed    ),
    str = bfg(   Black  , hiCyan   ),
+   str = bfg(   Black  , hiRed    ),
    }
 
 print "hello 5"
