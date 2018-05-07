@@ -1,6 +1,6 @@
 K is my personal programmer's text editor, whose design is derived from Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor") which was itself derived from the [Z](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
 
-K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is writen in C++11 with [Lua 5.1](http://www.lua.org/versions.html#5.1) embedded.
+K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is written in C++11 with [Lua 5.1](http://www.lua.org/versions.html#5.1) embedded.
 
 [![Coverity Scan Build Status](https://img.shields.io/coverity/scan/5869.svg)](https://scan.coverity.com/projects/5869)
 
@@ -16,9 +16,9 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
  * **M**: Edit undo/redo limited only by available memory (effectively infinite).
  * **M**: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; **use DVCS**!
  * **K**: Powerful file/source-code navigation
-     * K is comprehends [Exuberant Ctags](http://ctags.sourceforge.net/) tagfile format, enabling a hyperlinking experience navigating amongst tagged items in your programming project.
+     * K comprehends [Exuberant Ctags](http://ctags.sourceforge.net/) tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
      * K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
-     * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing only the names of all of the files of interest to you, and have the multi-file-aware editor-functions reference this buffer.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
+     * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing the names of all of the files of interest to you, and have the multi-file-aware editor-functions use this buffer as its source of names of files to examine.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
  * **K**: highlighting
      * ["word-under-cursor"](docs/wuc.md)
      * comments
