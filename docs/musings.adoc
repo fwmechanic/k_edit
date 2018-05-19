@@ -1,14 +1,19 @@
-## Musings / Ramblings
+:toc: macro
+:toc-title:
+:toclevels: 99
+toc::[]
+
+# Musings / Ramblings
 
 OK, so I've been maintaining and evolving K, __while continuously using it DAILY__, 99.95% on my own in one form or another, for __decades__.
 
-### If I had it to do over again, would I?
+## If I had it to do over again, would I?
 
-#### 2017/09
+### 2017/09
 
 It's hard to second guess.
 
-#### Pros
+### Pros
 
 Having TOTAL CONTROL of my text editing environment has been an enormous boon.
 It's impossible to overstate this.  It has been my primary motivation from the
@@ -20,7 +25,7 @@ my career.
 Various peer engineers early in my career (starting in 1990 on the MS-DOS
 platform, before open source was _a thing_) chose to commit to closed-source
 _commercial_ programmers' text editors:
-[Brief](https://en.wikipedia.org/wiki/Brief_(text_editor) ) (DOS) was the big
+https://en.wikipedia.org/wiki/Brief_(text_editor)[Brief] (DOS) was the big
 name in the early 90's; as Windows (and in particular Win32) gained critical
 mass, most of my Brief-using peers switched to Codewright (Win16, Win32) or
 (many fewer) to Slickedit (Win32), but eventually all of these _commercial_
@@ -38,7 +43,7 @@ Also, CodeWright and Slickedit closely resembled IDEs anyway (huge install,
 GUI-access-only features, source-text language-custom features, opaque
 project files), further diminished their appeal to me.
 
-##### Case in point: File Open operation
+#### Case in point: File Open operation
 
 Something I realize was a rudimentary yet key factor in preventing me from
 adopting ANY native Windows GUI text editor (e.g.  Codewright, Slickedit) was
@@ -74,7 +79,7 @@ the project file, where they are subject to rot and irrelevance vs. the cwd
 filesystem content which is the "single source of truth" regarding the
 "project").
 
-##### Open Source Alternatives
+#### Open Source Alternatives
 
 At no time has it been viable for me to switch away from K to a mainstream
 open-source competitor (if I wanted to choose a "fringe open-source
@@ -93,11 +98,11 @@ exceeded that of K), I was simply never positively motivated to leave K.  The on
 aspect of emacs that I wish I hadn't missed out on is emacs' org mode.  But you
 can't take the good w/o taking that bad, so I'm fated to miss out on org mode.
 I'll live.
-* The only other open-source editor I entertained using was [FTE](http://fte.sourceforge.net/ ).
+* The only other open-source editor I entertained using was http://fte.sourceforge.net/[FTE].
 Anyway, I didn't see in FTE anything profoundly superior to K, and it seemed to die (as an actively maintained project) anyway, so...
-There seems to be a [recently maintained fork eFTE](https://github.com/lanurmi/efte ), but that occurred years after I was paying serious attention to FTE.
+There seems to be a https://github.com/lanurmi/efte[recently maintained fork eFTE], but that occurred years after I was paying serious attention to FTE.
 
-###### IDE's
+##### IDE's
 
 IDE's (EX: Eclipse) have _never_ interested me.  I like doing things my own way,
 and (Java-coded) behemoths created and maintained by "communities" ruled by
@@ -126,7 +131,7 @@ rely on others to provide same for them, such that they will accept and align
 with a strangers' preference, are [I don't have anything good to say, so I
 won't say any more about it].
 
-#### Cons
+### Cons
 
 The only real problem remaining is whether I'll be able to continue use K in my
 professional environment "going forward".
@@ -144,9 +149,10 @@ the need to do so), but what I'm seeing lately is that aggressive pursuit of
 operating efficiencies and PDEO management that (amazingly enough) has minimal
 appreciation of computing environment nuances and their impact on PDEO
 efficiencies, are increasingly willing to kowtow blindly to the corporate IT
-party line.  And corporate IT has demonstrated a willingness to follow [the lead
-of Rahm Emmanuel in the Obama
-administration](https://en.wikiquote.org/wiki/Rahm_Emanuel ):
+party line.  And corporate IT has demonstrated a willingness to follow
+https://en.wikiquote.org/wiki/Rahm_Emanuel[the lead of Rahm Emmanuel, White
+House Chief of Staff to President Barack Obama]:
+
 
 > You never want a serious crisis to go to waste. ... This crisis provides the opportunity for us to do things that you could not before.
 
@@ -180,14 +186,14 @@ might be now, nor what it might become later when they decide to change it.  It
 won't have my interests first and foremost anyway, and will be subject to change
 at any time w/o notice, so why should I even bother?
 
-### Summary
+## Summary
 
 Yes, it has been a huge amount of work (a multi-decade, near-lifetime project)
 to create and maintain K.  Obviously.  But it's a labor of love, and a long-term
 investment that has paid off for me.  And the long term investment has been
 secured by some major achievements I've made comparatively recently:
 
-1. Switch to compile for Windows using GCC.  This was (is still) enabled by the Nuwen MinGW -x64 GCC package which I discovered some years ago (thanks STL!!!).  Once this was accomplished, it set the stage for
-1. Ability to build K as a Linux ncurses app (on Ubuntu Linux).  The ability to build K on the two most dominant OS platforms of the day (and with the number of these declining rathe than increasing) means I (or anyone who might choose) will be able to continue to use K for as long as either platform and the GCC implementation of the C++ language continue to be mainstream platforms.
+1. Switch to compile for Windows using GCC.  This was (is still) enabled by the Nuwen MinGW GCC package which I discovered some years ago (thanks STL!!!).  Once this was accomplished, it set the stage for...
+1. Ability to build K as a Linux ncurses app (on Ubuntu Linux).  The ability to build K on the two most dominant OS platforms of the day (and with the number of these declining rather than increasing) means I (or anyone who might choose) will be able to continue to use K for as long as either platform and the GCC implementation of the C++ language continue to be mainstream platforms.
 
 Does this mean I can "rest on my laurels"?  Well, the only "laurel" is having K available to me, but: YES.

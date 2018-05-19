@@ -1,40 +1,47 @@
-K is my personal programmer's text editor, whose design is derived from Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor") which was itself derived from the [Z](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html).
+:toc: macro
+:toc-title:
+:toclevels: 99
+toc::[]
 
-K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is written in C++11 with [Lua 5.1](http://www.lua.org/versions.html#5.1) embedded.
+# k_edit (K): my personal programmer's text editor
 
-[![Coverity Scan Build Status](https://img.shields.io/coverity/scan/5869.svg)](https://scan.coverity.com/projects/5869)
+## Introduction
 
-[unlike BitBucket, Github has no markdown TOC feature; Please fix this!](https://github.com/isaacs/github/issues/215)
+K is my personal programmer's text editor, whose design is derived from Microsoft's http://www.texteditors.org/cgi-bin/wiki.pl?M[M editor] (a.k.a. "Microsoft Editor") which was itself derived from the http://www.texteditors.org/cgi-bin/wiki.pl?Z[Z] http://www.applios.com/z/z.html[editor].
 
-# Features
+K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is written in C++11 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
 
- * **Z**: "Reverse-polish" editor-function execution mode wherein the user creates the editor-function argument ("xxxARG") using various selection or data-entry modes or argtypes, before the editor-function is invoked; the editor-function's execution behavior adapts to the actual argtype it receives.
+image:https://img.shields.io/coverity/scan/5869.svg["Coverity Scan Build Status", link="https://scan.coverity.com/projects/5869"]
+
+## Features
+
+ * *Z*: "Reverse-polish" editor-function execution mode wherein the user creates the editor-function argument ("xxxARG") using various selection or data-entry modes or argtypes, before the editor-function is invoked; the editor-function's execution behavior adapts to the actual argtype it receives.
      * This allows each editor-function (one bound to each key) to potentially perform different operations depending on argument-type, minimizing consumption of the "keyboard namespace".  EX: `setfile` (described below).
- * **Z**: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
- * **M**: No installation: copy and run, delete when done. Run from removable storage.
- * **M**: Easily accessible history of recent files visited, strings searched for and replaced, stored in files in user's homedir.
- * **M**: Edit undo/redo limited only by available memory (effectively infinite).
- * **M**: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; **use DVCS**!
- * **K**: Powerful file/source-code navigation
-     * K comprehends [Exuberant Ctags](http://ctags.sourceforge.net/) tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
+ * *Z*: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
+ * *M*: No installation: copy and run, delete when done. Run from removable storage.
+ * *M*: Easily accessible history of recent files visited, strings searched for and replaced, stored in files in user's homedir.
+ * *M*: Edit undo/redo limited only by available memory (effectively infinite).
+ * *M*: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; *use DVCS*!
+ * *K*: Powerful file/source-code navigation
+     * K comprehends http://ctags.sourceforge.net/[Exuberant Ctags] (or its descendant http://ctags.sourceforge.net/[Universal Ctags]) tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
      * K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
      * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing the names of all of the files of interest to you, and have the multi-file-aware editor-functions use this buffer as its source of names of files to examine.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
- * **K**: highlighting
-     * ["word-under-cursor"](docs/wuc.md)
+ * *K*: highlighting
+     * link:docs/wuc.md["word-under-cursor"]
      * comments
      * literal strings/characters
      * conditional regions: C/C++ preprocessor, GNU make
 
-# Licensing
+## Licensing
 
-K itself is released under the [GPLv3 license](http://opensource.org/licenses/GPL-3.0).  See file COPYING.
+K itself is released under the http://opensource.org/licenses/GPL-3.0[GPLv3 license].  See file COPYING.
 
 The K source code distro contains, and K incorporates, by building and static linking, the following open source libraries:
 
- * [Lua 5.1](http://www.lua.org/versions.html#5.1) from 2005, licensed under the [MIT License](http://opensource.org/licenses/mit-license.html)
- * [James S. Plank's Red-Black Tree C library](http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html) from 2000 (substantially modified), licensed under [LGPL](http://opensource.org/licenses/LGPL-2.1)
+ * http://www.lua.org/versions.html#5.1[Lua 5.1] from 2005, licensed under the http://opensource.org/licenses/mit-license.html[MIT License]
+ * http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html[James S. Plank's Red-Black Tree C library] from 2000 (substantially modified), licensed under http://opensource.org/licenses/LGPL-2.1[LGPL]
 
-# Limitations
+## Limitations
 
  * K is a Win32 Console or Linux ncurses app with no mouse support (aside from (trackpad gestures which mimic) "scroll wheel" behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-editor-function basis.
      * *Update 2016/09*: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled (unchecked: K scroll-wheel feature works) to enabled (checked: K scroll-wheel feature disabled/broken).
@@ -43,36 +50,36 @@ The K source code distro contains, and K incorporates, by building and static li
  * K has no "virtual memory" mechanism (as M did); files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process (now that all OS's default-deploy their x64 variant (and K is buildable as an x64 app) this is practically never a concern).
  * K operates on ASCII files; it has no support for Unicode/UTF-8/MBCS/etc. content (it's a text-editor, not a word processor).  I am increasingly entertaining the possibility of adding UTF-8 support.
 
-# Building
+## Building
 
-## External Build Dependencies
+### External Build Dependencies
 
- * `GCC` >= 4.8 (`GCC` versions thru 7.2 have been and are being used): I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; K might not build with any lesser GCC version.
+ * `GCC` >= 4.8 (`GCC` versions thru 7.3 have been and are being used): I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; K might not build with any lesser GCC version.
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
      * `boost::string_ref`, superseded by C++14's `std::string_view` is used pervasively (but we may never abandon {GCC 4.8+Boost 1.54})
          * `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
      * `boost::filesystem`: a small subset only
- * [`PCRE`](http://www.pcre.org/) "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
- * [Exuberant `Ctags`](http://ctags.sourceforge.net/) is invoked to rebuild the "tags database" at the close of each successful build of K.
+ * http://www.pcre.org/[`PCRE`] "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
+ * http://ctags.sourceforge.net/[Exuberant `Ctags`] is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread`
  * Windows-only: `7zip.exe` is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
 
-### Windows-specific Build-Prep Instructions
+#### Windows-specific Build-Prep Instructions
 
- * The [nuwen.net distribution of MinGW](http://nuwen.net/mingw.html) provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
+ * The http://nuwen.net/mingw.html[nuwen.net distribution of MinGW] provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
      * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
      * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
- * `ctags.exe` [Exuberant Ctags](http://ctags.sourceforge.net/ ) or its descendant [Universal Ctags](http://ctags.sourceforge.net/ )) must be manually installed (and in `PATH`).
+ * `ctags.exe` http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags] must be manually installed (and in `PATH`).
 
- * FYI: [MinGW gcc non-optionally dyn-links to MSVCRT.DLL](http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html) which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
+ * FYI: http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html[MinGW gcc non-optionally dyn-links to MSVCRT.DLL] which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
 
-### Linux-specific Build-Prep Instructions
+#### Linux-specific Build-Prep Instructions
 
-#### *ubuntu >= 14.04 (and presumably any contemporary Debian release)
+##### *ubuntu >= 14.04 (and presumably any contemporary Debian release)
 
  * after cloning this repo, run `sudo ./install_build_tools_ubuntu.sh` to install the necessary packages.
 
-## To build
+### To build
 
     make clean
     make -j     # the build is parallel-make-safe
@@ -81,27 +88,27 @@ To clean a workspace sufficient to switch between 32-bit and 64-bit toolchains:
 
     make zap    # clean K build products plus nuke all Lua related
 
-## Create Release files
+### Create Release files
 
 A release file is a Windows=7z/Linux=tgz archive containing the minimum fileset needed to use the editor.  On Windows two (2) variants of the release file are created by `make rls`: `k_rls.7z` and `k_rls.exe` (a self-extracting-console archive).
 
 Use: decompress the release file in an empty directory and run `k.exe` (Linux: `k`).  K was designed to be "copy and run" (a "release") anywhere.  I have successfully run it from network/NFS shares and "thumb drives".
 
-## Platform-specific Notes
+### Platform-specific Notes
 
-### CentOS 7
+#### CentOS 7
 
  * K build fails on CentOS 7.2.1511 because its default Boost version is 1.53, whose boost::string_ref contains a compile-breaking bug (yes, in the library .h file itself).
     * _Hacky workaround_: in my experience, K built on Ubuntu 14.04 runs flawlessly on CentOS 7.2.1511
        * the non-static-linked K prerequisites (`ncurses*`, `pthread`, `pcre`) having inevitably already been installed on any Linux system.
 
-### Windows
+#### Windows
 
   * both i386 and x64 are in active use on Win 7, Win 8.1, and Win 10.
-  * i386 K for Windows: The last [nuwen.net MinGW release](http://nuwen.net/mingw.html) (w/GCC 4.8.1) that builds 32-bit targets, 10.4, was released 2013/08/01 and is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
+  * i386 K for Windows: The last http://nuwen.net/mingw.html[nuwen.net MinGW release] (w/GCC 4.8.1) that builds 32-bit targets, 10.4, was released 2013/08/01 and is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
   * x64 K for Windows: first released 2014/02/09:
 
-## Linux key-decoding status quo
+### Linux key-decoding status quo
 
 The default (Windows-originated) K key mappings make extensive use of `ctrl+` and `alt+` modulated function and keypad keys.  Getting such key combinations to decode correctly on Linux/ncurses has been by far the most time-consuming and code-churning part of the port to Ubuntu Linux 14.04+ (see file conin_ncurses.md for the current state of this activity).  The status quo:
 
@@ -110,32 +117,32 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
     * Lubuntu/LXDE Desktop (`lxterminal` nee `x-terminal-emulator`) running as VirtualBox guest: mouse scroll wheel _does_ work.
     * I think I've exhausted the possibilities here
   * PuTTY 0.67 (released 2016-03-05) to Lubuntu 14.04+
-    * Be sure to use [the most recent release](http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html) of [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html).
+    * Be sure to use http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html[the most recent release] of http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html[PuTTY].
     * To set PuTTY's
-       * **keyboard setting**: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `the function keys and keypad` : <choose one radio-button>
-       * **export `TERM` value**: PuTTY `Menu` / `Change Settings` / `Connection` / `Data` / `Terminal details` / `terminal-type string` : <enter the desired TERM value here>
+       * *keyboard setting*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `the function keys and keypad` : <choose one radio-button>
+       * *export `TERM` value*: PuTTY `Menu` / `Change Settings` / `Connection` / `Data` / `Terminal details` / `terminal-type string` : <enter the desired TERM value here>
           * this menu is only available if PuTTY is not connected to a remote server.
           * to support alternative `TERM` on Debian-based (i.e. *ubuntu) Linux, package `ncurses-term` _may_ need to be installed.
-       * **keypad cursor keys**: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of cursor keys:` : <choose>Normal or Application
-       * **keypad numeric keypad**: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of numeric keypad:` : <choose>Normal or Application
+       * *keypad cursor keys*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of cursor keys:` : <choose>Normal or Application
+       * *keypad numeric keypad*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of numeric keypad:` : <choose>Normal or Application
     * Recommendation
-       * export `TERM=putty` or `TERM=putty-256color` with **`keyboard setting`**=`Xterm R6` and **keypad cursor keys=Application** and **keypad numeric keypad=Application**.
-          * unfortunately only **unmodulated** function keys are correctly decoded; `shift+`, `ctrl+`, `shift+ctrl+`, and `alt+`-modulation of function keys is ignored.
-       * Runner-up: export `TERM=putty-sco` with **`keyboard setting`**=`SCO` and **keypad cursor keys=Normal** and **keypad numeric keypad=Normal**.
+       * export `TERM=putty` or `TERM=putty-256color` with *`keyboard setting`*=`Xterm R6` and *keypad cursor keys=Application* and *keypad numeric keypad=Application*.
+          * unfortunately only *unmodulated* function keys are correctly decoded; `shift+`, `ctrl+`, `shift+ctrl+`, and `alt+`-modulation of function keys is ignored.
+       * Runner-up: export `TERM=putty-sco` with *`keyboard setting`*=`SCO` and *keypad cursor keys=Normal* and *keypad numeric keypad=Normal*.
           * adds support for `shift+`, `ctrl+`, and `shift+ctrl+`, but _NOT_ `alt+`, modulated function keys.
           * unfortunately the `center` (arg) key collides with `PgDn`, otherwise this setup would be amazingly close to "complete".
-    * [emacswiki/emacs/PuTTY](http://emacswiki.org/emacs/PuTTY) seems a good resource regarding PuTTY keyboard peculiarities.
+    * http://emacswiki.org/emacs/PuTTY[emacswiki/emacs/PuTTY] seems a good resource regarding PuTTY keyboard peculiarities.
   * tmux (1.8 - 2.0) (`TERM=screen`)
     * most `ctrl+` and `alt+` function and keypad modulations do not work.
     * I've not begun investigating the possibilities here.
 
-# Debug/Development
+## Debug/Development
 
-I use [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx) to capture the output from the DBG macros which are sprinkled liberally throughout the source code.  I am grateful for GCC's printf format-string+argument-type checking which makes saves _a lot_ of crash-debugging.
+I use http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx[DebugView] to capture the output from the DBG macros which are sprinkled liberally throughout the source code.  I am grateful for GCC's printf format-string+argument-type checking which makes saves _a lot_ of crash-debugging.
 
-The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable (e.g. when nuwen.net MinGW distros omitted `gdb`) I use [DrMinGW](https://github.com/jrfonseca/drmingw) as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
+The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable (e.g. when nuwen.net MinGW distros omitted `gdb`) I use https://github.com/jrfonseca/drmingw[DrMinGW] as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
-# Editor State/History Persistence
+## Editor State/History Persistence
 
 K persists information between sessions in state files written to
 
@@ -150,15 +157,15 @@ Information stored in state files includes:
  *  recent search-key and replace-string values
  *  editor-function invocation-count accumulators (to enable fact-based key assignments)
 
-# Tutorial
+## Tutorial
 
-## Command line invocation
+### Command line invocation
 
  * to edit the previously edited file, run `k`
  * to edit file `filename`, run `k filename`
  * run `k -h` to display full cmdline invocation help.
 
-## Argtypes
+### Argtypes
 
 Legend: `function` is the editor-function (embodied in the editor C++ source code as `ARG::function()`) consuming the xxxARG.
 
@@ -179,7 +186,7 @@ The following outline describes all possible argtypes.  Different `ARG::function
  * `LINEARG`: if `function` is specified as accepting `LINEARG` the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
  * `STREAMARG`: this argtype is seldom used and should be considered "under development."
 
-## Essential Functions
+### Essential Functions
 
 K implements a large number of editor-functions, all of which the user can invoke by name using the `execute` or `selcmd` functions, or bind to any key. Every key has one function bound to it (and the user is completely free to change these bindings).  The current key bindings can be viewed by executing function `newhelp` bound to `alt+h`. Functions can also be invoked by/within macros.  Following are some of the most commonly used functions:
 
@@ -201,14 +208,14 @@ K implements a large number of editor-functions, all of which the user can invok
     * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
     * SPECIAL FEATURE: if the file to be opened is a URI, it is passed to the ShellExecute Win32API or Linux `xdg-open` program for opening in an external program (almost always: web browser).
  * `ctrl+c` and `ctrl+v` xfr text between the Win32 (Windows) or X (Linux) Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
-    * The Linux implementation depends on [`xclip`](http://sourceforge.net/projects/xclip/) being installed; `sudo apt-get install xclip` FTW!
+    * The Linux implementation depends on http://sourceforge.net/projects/xclip/[`xclip`] being installed; `sudo apt-get install xclip` FTW!
  * `ctrl+q`,`alt+F2` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
  * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers via <clipboard>.
  * `execute` (`ctrl+x`):
     * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
     * `arg arg` "OS shell command string" `execute` executes "OS shell command string" in an operating system shell (Windows: `CMD.exe` (a.k.a. DOS) shell; Linux: system() -> bash) with stdout and stderr captured to an editor buffer.  Note that in Windows, data files such as .pdf are "executable" (executing them opens their default app (e.g. PDF Reader GUI App).
- * `ctags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) in the current "tags database" and "hyperlinks" to it.  If >1 definition is found, a menu of the available choices is offered.
-    * Aside: `tags` ([Exuberant Ctags](http://ctags.sourceforge.net/ ) or its descendant [Universal Ctags](http://ctags.sourceforge.net/ ))) is invoked to rebuild the "K tags database" at the end of each successful build of K, to facilitate development of K.
+ * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) in the current "tags database" and "hyperlinks" to it.  If >1 definition is found, a menu of the available choices is offered.
+    * Aside: `tags` (http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags])) is invoked to rebuild the "K tags database" at the end of each successful build of K, to facilitate development of K.
     * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
     * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
  * PCRE Regular-expression (regex) search & replace: all search and replace functions, when prefixed with `arg arg` (2-arg), operate in regex mode.
@@ -234,7 +241,7 @@ K implements a large number of editor-functions, all of which the user can invok
      * `arg arg` "search string" `websearch`: display menu of all configured search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
      * The Linux implementation depends on `xdg-open` being installed; this seems to be part of any "Linux Desktop" OS install.
 
-### menu functions
+#### Menu Editor Functions
 
 K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a number of editor functions which generate a list of choices to a menu, allowing the user to pick one.  These functions are given short mnemonic names as the intended invocation is via `arg` "fxnm" `ctrl+x`
 
@@ -247,34 +254,34 @@ K has a rudimentary TUI "pop-up menu system" (written largely in Lua), and a num
  * `gm` "grep-related commands"
  * `cur` "inert menu displaying dynamic macro definitions"
 
-### Win32-only functions
+#### Win32-only Editor Functions
 
  * `resize` (`alt+w`) allows you to interactively resize the enclosing Win32 console and also to change the console font (size, face) using the numpad cursor keys and those nearby.
 
-# Historical Notes
+## Historical Notes
 
-K is heavily based upon Microsoft's [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) (a.k.a. "Microsoft Editor", released as `M.EXE` for DOS, and `MEP.EXE` for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  [According to Larry Osterman, a member of the 1990 Windows "NT OS/2" development team](http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx):
+K is heavily based upon Microsoft's http://www.texteditors.org/cgi-bin/wiki.pl?M[M editor] (a.k.a. "Microsoft Editor", released as `M.EXE` for DOS, and `MEP.EXE` for OS/2 and Windows NT), which was first released, and which I first started using, in 1988.  http://blogs.msdn.com/b/larryosterman/archive/2009/08/21/nineteen-years-ago-today-1990.aspx[According to Larry Osterman, a member of the 1990 Windows "NT OS/2" development team]:
 
 > Programming editor -- what editor will we have?  Need better than a simple
-> system editor (Better than VI!) [They ended up with ["M"](http://www.texteditors.org/cgi-bin/wiki.pl?M), the "Microsoft
-> Editor" which was a derivative of the ["Z"](http://www.texteditors.org/cgi-bin/wiki.pl?Z) [editor](http://www.applios.com/z/z.html)].
+> system editor (Better than VI!) [They ended up with http://www.texteditors.org/cgi-bin/wiki.pl?M["M"], the "Microsoft
+> Editor" which was a derivative of the http://www.texteditors.org/cgi-bin/wiki.pl?Z["Z"] http://www.applios.com/z/z.html[editor]].
 
-K development started (in spirit) in 1988 when I started [writing (in C) loadable extension modules (the immediate forerunner of DLL's)](historical_scans_fair_use/1988.09-MS.Journal-Notenboom-Customizing.M.Editor.pdf) for the DOS version of the Microsoft [M editor](http://www.texteditors.org/cgi-bin/wiki.pl?M) which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next Microsoft C releases (6.0, 6.0a, 7.x) for DOS and OS/2, Microsoft bloated-up M into [PWB](http://www.texteditors.org/cgi-bin/wiki.pl?PWB) (v1.0, 1.1, 2.0; see [MSDN News article from 2001](historical_scans_fair_use/2001.07-MSDN.News-Michell-PWB.pdf)) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
+K development started (in spirit) in 1988 when I started link:historical_scans_fair_use/1988.09-MS.Journal-Notenboom-Customizing.M.Editor.pdf[writing (in C) loadable extension modules (the immediate forerunner of DLL's)] for the DOS version of the Microsoft http://www.texteditors.org/cgi-bin/wiki.pl?M[M editor] which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next Microsoft C releases (6.0, 6.0a, 7.x) for DOS and OS/2, Microsoft bloated-up M into http://www.texteditors.org/cgi-bin/wiki.pl?PWB[PWB] (v1.0, 1.1, 2.0; see link:historical_scans_fair_use/2001.07-MSDN.News-Michell-PWB.pdf[MSDN News article from 2001]) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
 2014/10: an "employment transition" into an (effectively) Linux-only environment (willingly) forced me to port K to (x64) Linux; I had wanted to do this for years, but lacked the motivation: the prospect of working daily on a platform w/o K provided the needed motivation!
 
-2014/11: I just discovered ["Q" Text Editor](http://www.schulenberg.com/page2.htm), another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
+2014/11: I just discovered http://www.schulenberg.com/page2.htm["Q" Text Editor], another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
 
-2017/09: See [Musings](docs/musings.md).
+2017/09: See link:docs/musings.adoc[Musings]
 
-## Toolchain notes
+### Toolchain notes
 
-Until 2012/06, I compiled K using the free, copy and run (no installer needed) "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  During the time when I used these MS build tools, I used [WinDbg](http://en.wikipedia.org/wiki/WinDbg) to debug crashes.
+Until 2012/06, I compiled K using the free, copy and run (no installer needed) "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  During the time when I used these MS build tools, I used http://en.wikipedia.org/wiki/WinDbg[WinDbg] to debug crashes.
 
-I have no fondness for massive IDE's (e.g. Visual Studio), nor for installers, so when I finally found [a reliable way to obtain MinGW](http://news.ycombinator.com/item?id=4112374)
+I have no fondness for massive IDE's (e.g. Visual Studio), nor for installers, so when I finally found http://news.ycombinator.com/item?id=4112374[a reliable way to obtain MinGW]
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
 advantage of the major generic features of C++11; consequently K no longer compiles with MSVC++ 7.1.
 
-Per [Visual-Studio-Why-is-there-No-64-bit-Version](http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx) the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and 64-bit Linux K has no known anomalies).
+Per http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx[Visual-Studio-Why-is-there-No-64-bit-Version] the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and 64-bit Linux K has no known anomalies).
 
-[README Markdown Syntax Reference](https://confluence.atlassian.com/display/STASH/Markdown+syntax+guide)
+https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#lists[AsciiDoc Quick Reference]
