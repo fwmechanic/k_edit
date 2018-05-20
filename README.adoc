@@ -1,9 +1,10 @@
 :toc: macro
 :toc-title:
 :toclevels: 99
-toc::[]
 
-# k_edit (K): my personal programmer's text editor
+# k_edit (K): My personal programmer's text editor
+
+toc::[]
 
 ## Introduction
 
