@@ -4,6 +4,8 @@
 
 # k_edit (K): My personal programmer's text editor
 
+image:https://img.shields.io/coverity/scan/5869.svg["Coverity Scan Build Status", link="https://scan.coverity.com/projects/5869"]
+
 toc::[]
 
 ## Introduction
@@ -11,8 +13,6 @@ toc::[]
 K is my personal programmer's text editor, whose design is derived from Microsoft's http://www.texteditors.org/cgi-bin/wiki.pl?M[M editor] (a.k.a. "Microsoft Editor") which was itself derived from the http://www.texteditors.org/cgi-bin/wiki.pl?Z[Z] http://www.applios.com/z/z.html[editor].
 
 K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is written in C++11 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
-
-image:https://img.shields.io/coverity/scan/5869.svg["Coverity Scan Build Status", link="https://scan.coverity.com/projects/5869"]
 
 ## Features
 
