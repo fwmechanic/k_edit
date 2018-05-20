@@ -23,14 +23,14 @@ image:https://img.shields.io/coverity/scan/5869.svg["Coverity Scan Build Status"
  * *M*: Edit undo/redo limited only by available memory (effectively infinite).
  * *M*: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; *use DVCS*!
  * *K*: Powerful file/source-code navigation
-     * K comprehends http://ctags.sourceforge.net/[Exuberant Ctags] (or its descendant http://ctags.sourceforge.net/[Universal Ctags]) tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
-     * K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
-     * K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing the names of all of the files of interest to you, and have the multi-file-aware editor-functions use this buffer as its source of names of files to examine.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
+ ** K comprehends http://ctags.sourceforge.net/[Exuberant Ctags] (or its descendant http://ctags.sourceforge.net/[Universal Ctags]) tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
+ ** K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
+ ** K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing the names of all of the files of interest to you, and have the multi-file-aware editor-functions use this buffer as its source of names of files to examine.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
  * *K*: highlighting
-     * link:docs/wuc.md["word-under-cursor"]
-     * comments
-     * literal strings/characters
-     * conditional regions: C/C++ preprocessor, GNU make
+ ** link:docs/wuc.md["word-under-cursor"]
+ ** comments
+ ** literal strings/characters
+ ** conditional regions: C/C++ preprocessor, GNU make
 
 ## Licensing
 
@@ -44,9 +44,9 @@ The K source code distro contains, and K incorporates, by building and static li
 ## Limitations
 
  * K is a Win32 Console or Linux ncurses app with no mouse support (aside from (trackpad gestures which mimic) "scroll wheel" behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-editor-function basis.
-     * *Update 2016/09*: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled (unchecked: K scroll-wheel feature works) to enabled (checked: K scroll-wheel feature disabled/broken).
-         * to access this setting (which may be host-global!): right click on the icon in the console window title bar and select Properties, then the Options tab
-         * "relaunch" seems to mean closing and reopening the console window (not rebooting the OS).
+ ** *Update 2016/09*: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled (unchecked: K scroll-wheel feature works) to enabled (checked: K scroll-wheel feature disabled/broken).
+ *** to access this setting (which may be host-global!): right click on the icon in the console window title bar and select Properties, then the Options tab
+ *** "relaunch" seems to mean closing and reopening the console window (not rebooting the OS).
  * K has no "virtual memory" mechanism (as M did); files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process (now that all OS's default-deploy their x64 variant (and K is buildable as an x64 app) this is practically never a concern).
  * K operates on ASCII files; it has no support for Unicode/UTF-8/MBCS/etc. content (it's a text-editor, not a word processor).  I am increasingly entertaining the possibility of adding UTF-8 support.
 
@@ -56,9 +56,9 @@ The K source code distro contains, and K incorporates, by building and static li
 
  * `GCC` >= 4.8 (`GCC` versions thru 7.3 have been and are being used): I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; K might not build with any lesser GCC version.
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
-     * `boost::string_ref`, superseded by C++14's `std::string_view` is used pervasively (but we may never abandon {GCC 4.8+Boost 1.54})
-         * `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
-     * `boost::filesystem`: a small subset only
+ ** `boost::string_ref`, superseded by C++14's `std::string_view` is used pervasively (but we may never abandon {GCC 4.8+Boost 1.54})
+ *** `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
+ ** `boost::filesystem`: a small subset only
  * http://www.pcre.org/[`PCRE`] "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
  * http://ctags.sourceforge.net/[Exuberant `Ctags`] is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread`
@@ -67,8 +67,8 @@ The K source code distro contains, and K incorporates, by building and static li
 #### Windows-specific Build-Prep Instructions
 
  * The http://nuwen.net/mingw.html[nuwen.net distribution of MinGW] provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
-     * `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
-     * `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
+ ** `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
+ ** `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
  * `ctags.exe` http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags] must be manually installed (and in `PATH`).
 
  * FYI: http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html[MinGW gcc non-optionally dyn-links to MSVCRT.DLL] which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
@@ -99,42 +99,42 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 #### CentOS 7
 
  * K build fails on CentOS 7.2.1511 because its default Boost version is 1.53, whose boost::string_ref contains a compile-breaking bug (yes, in the library .h file itself).
-    * _Hacky workaround_: in my experience, K built on Ubuntu 14.04 runs flawlessly on CentOS 7.2.1511
-       * the non-static-linked K prerequisites (`ncurses*`, `pthread`, `pcre`) having inevitably already been installed on any Linux system.
+ ** _Hacky workaround_: in my experience, K built on Ubuntu 14.04 runs flawlessly on CentOS 7.2.1511
+ *** the non-static-linked K prerequisites (`ncurses*`, `pthread`, `pcre`) having inevitably already been installed on any Linux system.
 
 #### Windows
 
-  * both i386 and x64 are in active use on Win 7, Win 8.1, and Win 10.
-  * i386 K for Windows: The last http://nuwen.net/mingw.html[nuwen.net MinGW release] (w/GCC 4.8.1) that builds 32-bit targets, 10.4, was released 2013/08/01 and is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
-  * x64 K for Windows: first released 2014/02/09:
+ * both i386 and x64 are in active use on Win 7, Win 8.1, and Win 10.
+ * i386 K for Windows: The last http://nuwen.net/mingw.html[nuwen.net MinGW release] (w/GCC 4.8.1) that builds 32-bit targets, 10.4, was released 2013/08/01 and is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
+ * x64 K for Windows: first released 2014/02/09:
 
 ### Linux key-decoding status quo
 
 The default (Windows-originated) K key mappings make extensive use of `ctrl+` and `alt+` modulated function and keypad keys.  Getting such key combinations to decode correctly on Linux/ncurses has been by far the most time-consuming and code-churning part of the port to Ubuntu Linux 14.04+ (see file conin_ncurses.md for the current state of this activity).  The status quo:
 
-  * Ubuntu 14.04+ Desktop
-    * common: with `TERM=xterm`, _after_ you disable various terminal-menu/-command key-modulation (e.g. `alt+`) hooks, default terminfo for xterm correctly decodes a substantial proportion of the Windows-supported key combinations that K uses.
-    * Lubuntu/LXDE Desktop (`lxterminal` nee `x-terminal-emulator`) running as VirtualBox guest: mouse scroll wheel _does_ work.
-    * I think I've exhausted the possibilities here
-  * PuTTY 0.67 (released 2016-03-05) to Lubuntu 14.04+
-    * Be sure to use http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html[the most recent release] of http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html[PuTTY].
-    * To set PuTTY's
-       * *keyboard setting*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `the function keys and keypad` : <choose one radio-button>
-       * *export `TERM` value*: PuTTY `Menu` / `Change Settings` / `Connection` / `Data` / `Terminal details` / `terminal-type string` : <enter the desired TERM value here>
-          * this menu is only available if PuTTY is not connected to a remote server.
-          * to support alternative `TERM` on Debian-based (i.e. *ubuntu) Linux, package `ncurses-term` _may_ need to be installed.
-       * *keypad cursor keys*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of cursor keys:` : <choose>Normal or Application
-       * *keypad numeric keypad*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of numeric keypad:` : <choose>Normal or Application
-    * Recommendation
-       * export `TERM=putty` or `TERM=putty-256color` with *`keyboard setting`*=`Xterm R6` and *keypad cursor keys=Application* and *keypad numeric keypad=Application*.
-          * unfortunately only *unmodulated* function keys are correctly decoded; `shift+`, `ctrl+`, `shift+ctrl+`, and `alt+`-modulation of function keys is ignored.
-       * Runner-up: export `TERM=putty-sco` with *`keyboard setting`*=`SCO` and *keypad cursor keys=Normal* and *keypad numeric keypad=Normal*.
-          * adds support for `shift+`, `ctrl+`, and `shift+ctrl+`, but _NOT_ `alt+`, modulated function keys.
-          * unfortunately the `center` (arg) key collides with `PgDn`, otherwise this setup would be amazingly close to "complete".
-    * http://emacswiki.org/emacs/PuTTY[emacswiki/emacs/PuTTY] seems a good resource regarding PuTTY keyboard peculiarities.
-  * tmux (1.8 - 2.0) (`TERM=screen`)
-    * most `ctrl+` and `alt+` function and keypad modulations do not work.
-    * I've not begun investigating the possibilities here.
+ * Ubuntu 14.04+ Desktop
+ ** common: with `TERM=xterm`, _after_ you disable various terminal-menu/-command key-modulation (e.g. `alt+`) hooks, default terminfo for xterm correctly decodes a substantial proportion of the Windows-supported key combinations that K uses.
+ ** Lubuntu/LXDE Desktop (`lxterminal` nee `x-terminal-emulator`) running as VirtualBox guest: mouse scroll wheel _does_ work.
+ ** I think I've exhausted the possibilities here
+ * PuTTY 0.67 (released 2016-03-05) to Lubuntu 14.04+
+ ** Be sure to use http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html[the most recent release] of http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html[PuTTY].
+ ** To set PuTTY's
+ *** *keyboard setting*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `the function keys and keypad` : <choose one radio-button>
+ *** *export `TERM` value*: PuTTY `Menu` / `Change Settings` / `Connection` / `Data` / `Terminal details` / `terminal-type string` : <enter the desired TERM value here>
+ **** this menu is only available if PuTTY is not connected to a remote server.
+ **** to support alternative `TERM` on Debian-based (i.e. *ubuntu) Linux, package `ncurses-term` _may_ need to be installed.
+ *** *keypad cursor keys*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of cursor keys:` : <choose>Normal or Application
+ *** *keypad numeric keypad*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `Application keypad settings:` / `Initial state of numeric keypad:` : <choose>Normal or Application
+ ** Recommendation
+ *** export `TERM=putty` or `TERM=putty-256color` with *`keyboard setting`*=`Xterm R6` and *keypad cursor keys=Application* and *keypad numeric keypad=Application*.
+ **** unfortunately only *unmodulated* function keys are correctly decoded; `shift+`, `ctrl+`, `shift+ctrl+`, and `alt+`-modulation of function keys is ignored.
+ *** Runner-up: export `TERM=putty-sco` with *`keyboard setting`*=`SCO` and *keypad cursor keys=Normal* and *keypad numeric keypad=Normal*.
+ **** adds support for `shift+`, `ctrl+`, and `shift+ctrl+`, but _NOT_ `alt+`, modulated function keys.
+ **** unfortunately the `center` (arg) key collides with `PgDn`, otherwise this setup would be amazingly close to "complete".
+ ** http://emacswiki.org/emacs/PuTTY[emacswiki/emacs/PuTTY] seems a good resource regarding PuTTY keyboard peculiarities.
+ * tmux (1.8 - 2.0) (`TERM=screen`)
+ ** most `ctrl+` and `alt+` function and keypad modulations do not work.
+ ** I've not begun investigating the possibilities here.
 
 ## Debug/Development
 
@@ -147,15 +147,15 @@ The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used 
 K persists information between sessions in state files written to
 
  * Windows: `%APPDATA%\Kevins Editor\*`
-    * K ignores the Windows Registry.
+ ** K ignores the Windows Registry.
  * Linux: `${XDG_CACHE_HOME:-$HOME/.cache}/kedit/$(hostname)/`
-    * `$(hostname)` is added since it is not unusual for a user's $HOME to be located on a shared filesystem (e.g. NFS).
+ ** `$(hostname)` is added since it is not unusual for a user's $HOME to be located on a shared filesystem (e.g. NFS).
 
 Information stored in state files includes:
 
- *  recent files edited (including window/cursor position)
- *  recent search-key and replace-string values
- *  editor-function invocation-count accumulators (to enable fact-based key assignments)
+ * recent files edited (including window/cursor position)
+ * recent search-key and replace-string values
+ * editor-function invocation-count accumulators (to enable fact-based key assignments)
 
 ## Tutorial
 
@@ -173,15 +173,15 @@ The following outline describes all possible argtypes.  Different `ARG::function
 
  * `NOARG`: if `function` is invoked with no arg prefix active.  Only the cursor position is passed to `ARG::function()`.
  * `NULLARG`: if `function` is invoked with an `arg` prefix active but without intervening cursor movement or entry of literal characters.  The actual argtype received by `ARG::function()` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
-     * if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`), `ARG::function()` receives a `TEXTARG` (string value) containing a string value read from buffer text content:
-        * `NULLEOL`: from cursor to end of the line.
-             * EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` string value, truncating it at the first whitespace character or in other "magical" ways (see `FBUF::GetLineIsolateFilename()`).
-        * `NULLEOW`: from cursor and including all contiguous "word characters" through end of line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`). 
-             * EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position.
+ ** if the `function`s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`), `ARG::function()` receives a `TEXTARG` (string value) containing a string value read from buffer text content:
+ *** `NULLEOL`: from cursor to end of the line.
+ **** EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` string value, truncating it at the first whitespace character or in other "magical" ways (see `FBUF::GetLineIsolateFilename()`).
+ *** `NULLEOW`: from cursor and including all contiguous "word characters" through end of line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to `ARG::function()`).
+ **** EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position.
  * `TEXTARG`: when a string value is passed to `ARG::anyfunction()`.  Generated when: 
-      * a literal string arg entered: `arg` <user types characters to create the string text> `anyfunction`
-      * `arg` <horizontal cursor movement selecting a segment of the current line> `anyfunction`.  Internally, if `ARG::anyfunction()` is specified as consuming `TEXTARG` qualified with `BOXSTR`, this selected text is transformed into a `TEXTARG` (string value) which is passed to `ARG::anyfunction()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
-      * EX: `arg arg TEXTARG psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the regular expression TEXTARG.
+ ** a literal string arg entered: `arg` <user types characters to create the string text> `anyfunction`
+ ** `arg` <horizontal cursor movement selecting a segment of the current line> `anyfunction`.  Internally, if `ARG::anyfunction()` is specified as consuming `TEXTARG` qualified with `BOXSTR`, this selected text is transformed into a `TEXTARG` (string value) which is passed to `ARG::anyfunction()`.  The `TEXTARG` + `BOXSTR` argtype + qualifier combination prevents single-line `BOXARG`s from being passed to `ARG::function()` (since these are transformed into `TEXTARG`).
+ ** EX: `arg arg TEXTARG psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the regular expression TEXTARG.
  * `BOXARG`: if `ARG::anyfunction()` is specified as accepting `BOXARG`, the user (with the editor in boxmode, the default), to provide this arg type, invokes `arg`, moves the cursor to a different column, either on the same (note `BOXSTR` caveat above) or a different line.  A pair of Point coordinates (ulc, lrc) are passed to `ARG::function()`.
  * `LINEARG`: if `function` is specified as accepting `LINEARG` the user (with the editor in boxmode, the default), the user invokes `arg`, moves the cursor to a different line (while not moving the cursor to a different column) and invokes `function`.  A pair line numbers (yMin, yMax) are passed to `ARG::function()`.
  * `STREAMARG`: this argtype is seldom used and should be considered "under development."
@@ -195,51 +195,51 @@ K implements a large number of editor-functions, all of which the user can invok
  * `redo` (`ctrl+r`,`ctrl+backspace`) redo the most recently `undo`ne editing operation.  Repeatedly invoking `redo` will successively redo all `undo`ne editing operations.
  * `arg` (`center`: numeric keypad 5 key with numlock off (the state I always use)).  Used to introduce arguments to other editor functions. `arg` can be invoked multiple times prior to invoking `anyfunction`; this may (depending on the editor function implementation) serve to modify the behavior of `anyfunction` (see `setfile`)
  * `alt+h` opens a buffer named &lt;CMD-SWI-Keys> containing the runtime settings of the editor:
-    * switches with current values (and comments regarding effect).
-    * functions with current key assignment (and comments regarding effect).
-    * macros with current definition
+ ** switches with current values (and comments regarding effect).
+ ** functions with current key assignment (and comments regarding effect).
+ ** macros with current definition
  * `setfile` (`F2`) is very powerful:
-    * `setfile` (w/o `arg`) switches between two most recently viewed files/buffers.
-    * `arg setfile` opens the "openable thing" (see below) whose name starts at the cursor.
-    * `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
-    * `arg arg arg setfile` saves all dirty buffers to disk
-    * `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
-    * `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
-    * `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
-    * SPECIAL FEATURE: if the file to be opened is a URI, it is passed to the ShellExecute Win32API or Linux `xdg-open` program for opening in an external program (almost always: web browser).
+ ** `setfile` (w/o `arg`) switches between two most recently viewed files/buffers.
+ ** `arg setfile` opens the "openable thing" (see below) whose name starts at the cursor.
+ ** `arg arg setfile` saves the current buffer (if dirty) to its corresponding disk file (if one exists)
+ ** `arg arg arg setfile` saves all dirty buffers to disk
+ ** `arg` "name of thing to open" `setfile` opens the "thing"; an "openable thing" is either a filename, a pseudofile name (pseudofile is another name for temporary editor buffer; these typically have <names> containing characters which cannot legally be present in filenames), or a URL (latter is opened in dflt browser).
+ ** `arg` "text containing wildcard" `setfile` will open a new "wildcard buffer" containing the names of all files matching the wildcard pattern.  If the "text containing wildcard" ends with a '|' character, the wildcard expansion is recursive.  EX: `arg "*.cpp|" setfile` opens a new buffer containing the names of all the .cpp files found in the cwd and its child trees.
+ ** `arg arg` "name of file" `setfile` saves the current buffer to the file named "name of file" (and gives the buffer this name henceforth).
+ ** SPECIAL FEATURE: if the file to be opened is a URI, it is passed to the ShellExecute Win32API or Linux `xdg-open` program for opening in an external program (almost always: web browser).
  * `ctrl+c` and `ctrl+v` xfr text between the Win32 (Windows) or X (Linux) Clipboard and the editor's <clipboard> buffer in (hopefully) intuitive ways.
-    * The Linux implementation depends on http://sourceforge.net/projects/xclip/[`xclip`] being installed; `sudo apt-get install xclip` FTW!
+ ** The Linux implementation depends on http://sourceforge.net/projects/xclip/[`xclip`] being installed; `sudo apt-get install xclip` FTW!
  * `ctrl+q`,`alt+F2` opens visited-file history buffer; from most- to least-recently visited.  Use cursor movement functions and `arg setfile` to switch among them.
  * `num++` (copy selection into <clipboard>), `num+-` (cut selection into <clipboard>) and `ins` (paste text from <clipboard>) keys on the numpad are used to move text between locations in buffers via <clipboard>.
  * `execute` (`ctrl+x`):
-    * `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
-    * `arg arg` "OS shell command string" `execute` executes "OS shell command string" in an operating system shell (Windows: `CMD.exe` (a.k.a. DOS) shell; Linux: system() -> bash) with stdout and stderr captured to an editor buffer.  Note that in Windows, data files such as .pdf are "executable" (executing them opens their default app (e.g. PDF Reader GUI App).
+ ** `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
+ ** `arg arg` "OS shell command string" `execute` executes "OS shell command string" in an operating system shell (Windows: `CMD.exe` (a.k.a. DOS) shell; Linux: system() -> bash) with stdout and stderr captured to an editor buffer.  Note that in Windows, data files such as .pdf are "executable" (executing them opens their default app (e.g. PDF Reader GUI App).
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) in the current "tags database" and "hyperlinks" to it.  If >1 definition is found, a menu of the available choices is offered.
-    * Aside: `tags` (http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags])) is invoked to rebuild the "K tags database" at the end of each successful build of K, to facilitate development of K.
-    * the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
-    * those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
+ ** Aside: `tags` (http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags])) is invoked to rebuild the "K tags database" at the end of each successful build of K, to facilitate development of K.
+ ** the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
+ ** those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
  * PCRE Regular-expression (regex) search & replace: all search and replace functions, when prefixed with `arg arg` (2-arg), operate in regex mode.
  * `psearch` (`F3`) / `msearch` (`F4`) (referred to as `xsearch` in the following text) search forward / backward from the cursor position.
-    * `alt+F3` opens a buffer containing previous search keys.
-    * `xsearch` (w/o arg) searches for the next match of the current search key.
-    * `arg xsearch` changes the current search key to the word in the buffer starting at the cursor and searches for the next match.
-    * `arg` "searchkey" `xsearch` changes the current search key to "searchkey" and searches for the next match.
-    * `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
-    * `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
-    * In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression.
+ ** `alt+F3` opens a buffer containing previous search keys.
+ ** `xsearch` (w/o arg) searches for the next match of the current search key.
+ ** `arg xsearch` changes the current search key to the word in the buffer starting at the cursor and searches for the next match.
+ ** `arg` "searchkey" `xsearch` changes the current search key to "searchkey" and searches for the next match.
+ ** `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
+ ** `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
+ ** In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression.
  * text-replace functions (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
-    * noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
-    * noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
-    * if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
-    * `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple entire files.
-    * Regular-expression (PCRE) replace is supported: in regex mode (when prefixed with `arg arg`) the search string is treated as a regular expression, and replace functions support the replacement string ; insertion of regex captures in the replacement string via `\n` where `n` is the capture number.
-    * In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression, and the replacement string may reference regex captures in the replacement string via `\n` where `n` is the (single-digit) capture number.
+ ** noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
+ ** noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
+ ** if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
+ ** `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple entire files.
+ ** Regular-expression (PCRE) replace is supported: in regex mode (when prefixed with `arg arg`) the search string is treated as a regular expression, and replace functions support the replacement string ; insertion of regex captures in the replacement string via `\n` where `n` is the capture number.
+ ** In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression, and the replacement string may reference regex captures in the replacement string via `\n` where `n` is the (single-digit) capture number.
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either BOXARG-selected substring of each line, or (if LINEARG) each entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates.
  * `websearch` (`alt+6`): perform web search on string (opens in default browser)
-     * `arg` "search string" `websearch`: perform Google web search for "search string"
-     * `arg arg` "search string" `websearch`: display menu of all configured search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
-     * The Linux implementation depends on `xdg-open` being installed; this seems to be part of any "Linux Desktop" OS install.
+ ** `arg` "search string" `websearch`: perform Google web search for "search string"
+ ** `arg arg` "search string" `websearch`: display menu of all configured search engines (see `user.lua`) and perform a web search for "search string" using the chosen search engine.
+ ** The Linux implementation depends on `xdg-open` being installed; this seems to be part of any "Linux Desktop" OS install.
 
 #### Menu Editor Functions
 
