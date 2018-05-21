@@ -16,8 +16,8 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
 
 ## Features
 
- * *Z*: "Reverse-polish" editor-function execution mode wherein the user creates the editor-function argument ("xxxARG") using various selection or data-entry modes or argtypes, before the editor-function is invoked; the editor-function's execution behavior adapts to the actual argtype it receives.
-     * This allows each editor-function (one bound to each key) to potentially perform different operations depending on argument-type, minimizing consumption of the "keyboard namespace".  EX: `setfile` (described below).
+ * *Z*: "Reverse-polish" editor-function execution mode wherein the user creates an editor-function argument ("xARG") using various selection or data-entry modes or argtypes, _prior to_ invoking the editor-function; the editor-function's execution behavior adapts to the actual argtype it receives.
+ ** This allows each editor-function (one bound to each key) to potentially perform related but different operations depending on argument-type, minimizing consumption of the "keyboard namespace".  EX: `setfile` (described below).
  * *Z*: Can switch between line and box (column) selection mode simply by varying the shape of the selection.
  * *M*: No installation: copy and run, delete when done. Run from removable storage.
  * *M*: Easily accessible history of recent files visited, strings searched for and replaced, stored in files in user's homedir.
@@ -37,7 +37,7 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
 
 K itself is released under the http://opensource.org/licenses/GPL-3.0[GPLv3 license].  See file COPYING.
 
-The K source code distro contains, and K incorporates, by building and static linking, the following open source libraries:
+The K source code distro contains, and K incorporates, by building and static linking, _modified_ versions of the following open source libraries:
 
  * http://www.lua.org/versions.html#5.1[Lua 5.1] from 2005, licensed under the http://opensource.org/licenses/mit-license.html[MIT License]
  * http://web.eecs.utk.edu/~plank/plank/rbtree/rbtree.html[James S. Plank's Red-Black Tree C library] from 2000 (substantially modified), licensed under http://opensource.org/licenses/LGPL-2.1[LGPL]
@@ -45,7 +45,7 @@ The K source code distro contains, and K incorporates, by building and static li
 ## Limitations
 
  * K is a Win32 Console or Linux ncurses app with no mouse support (aside from (trackpad gestures which mimic) "scroll wheel" behaviors).  The UI is fairly minimal: there are no "pulldown menus" though primitive "pop-up menus" are used on a per-editor-function basis.
- ** *Update 2016/09*: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled (unchecked: K scroll-wheel feature works) to enabled (checked: K scroll-wheel feature disabled/broken).
+ ** *Update 2016/09*: the "Windows 10 Anniversary Update" broke the "scroll wheel" functionality, apparently by changing the default value of the console properties "Use legacy console (requires relaunch)" setting from disabled/unchecked (K scroll-wheel feature works) to enabled/checked (K scroll-wheel feature disabled/broken).
  *** to access this setting (which may be host-global!): right click on the icon in the console window title bar and select Properties, then the Options tab
  *** "relaunch" seems to mean closing and reopening the console window (not rebooting the OS).
  * K has no "virtual memory" mechanism (as M did); files are loaded in toto into RAM; K WILL CRASH if you attempt to open a file that is larger than the biggest malloc'able block available to the K process (now that all OS's default-deploy their x64 variant (and K is buildable as an x64 app) this is practically never a concern).
@@ -55,22 +55,22 @@ The K source code distro contains, and K incorporates, by building and static li
 
 ### External Build Dependencies
 
- * `GCC` >= 4.8 (`GCC` versions thru 7.3 have been and are being used): I first built (and _still_ build 32-bit Windows) K with GCC (`g++`) using GCC 4.8; K might not build with any lesser GCC version.
+ * `GCC` >= 4.8 (`GCC` versions thru 7.3 have been and are being used): I first built (and _still_ build 32-bit Windows) K using GCC 4.8; K might not build with any lesser GCC version.
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
- ** `boost::string_ref`, superseded by C++14's `std::string_view`, is used pervasively (but we may never abandon {GCC 4.8+Boost 1.54})
- *** `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
  ** `boost::filesystem`: a small subset only
+ ** `boost::string_ref`: this is used pervasively (C++14 adopted `boost::string_ref` as `std::string_view` but we'll continue to use `boost::string_ref` until we abandon GCC 4.8 (32-bit Windows) builds.
+ *** `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
  * http://www.pcre.org/[`PCRE`] "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
- * http://ctags.sourceforge.net/[Exuberant `Ctags`] is invoked to rebuild the "tags database" at the close of each successful build of K.
- * Linux-only: `ncurses`, `pthread`
- * Windows-only: `7zip.exe` is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
+ * `ctags` (either http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags]) is invoked to rebuild the "tags database" at the close of each successful build of K.
+ * Linux-only: `ncurses`, `pthread` libraries
+ * Windows-only: https://www.7-zip.org/download.html[`7zip.exe`] is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
 
 #### Windows-specific Build-Prep Instructions
 
  * The http://nuwen.net/mingw.html[nuwen.net distribution of MinGW] provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
  ** `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
  ** `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
- * `ctags.exe` http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags] must be manually installed (and in `PATH`).
+ * `ctags.exe` from http://ctags.sourceforge.net/[Universal Ctags] must be manually installed (I successfully use https://github.com/universal-ctags/ctags-win32/releases[the newest CI build]) (and in `PATH`).
 
  * FYI: http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html[MinGW gcc non-optionally dyn-links to MSVCRT.DLL] which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
 
@@ -168,7 +168,7 @@ Information stored in state files includes:
 
 ### Argtypes
 
-Legend: `function` is the editor-function (embodied in the editor C++ source code as ``ARG::function()``) consuming the xxxARG.
+Legend: `function` is the editor-function (embodied in the editor C++ source code as ``ARG::function()``) consuming the xARG.
 
 The following outline describes all possible argtypes.  Different ``ARG::function()``s (and therefore ``function``s) are specified as accepting particular argtypes (one or more), and the editor command invocation processing code (see `buildexecute.cpp`) which calls ``ARG::function()``s will present the user's arg value to the invoked ``ARG::function()`` differently depending on these specifications.  The association of `function` name to ``ARG::function()``, its acceptable argtypes, and its help-text is sourced from `cmdtbl.dat` which is preprocessed by `cmdtbl.lua` into `cmdtbl.h` at build time:
 
