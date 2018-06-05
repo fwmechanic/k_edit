@@ -277,11 +277,11 @@ K development started (in spirit) in 1988 when I started link:historical_scans_f
 
 ### Toolchain notes
 
-Until 2012/06, I compiled K using the free, copy and run (no installer needed) "Microsoft Visual C++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  During the time when I used these MS build tools, I used http://en.wikipedia.org/wiki/WinDbg[WinDbg] to debug crashes.
+Until 2012/06, I compiled K using the free, copy and run (no installer needed) "Microsoft Visual C\++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  During the time when I used these MS build tools, I used http://en.wikipedia.org/wiki/WinDbg[WinDbg] to debug crashes.
 
-I have no fondness for massive IDE's (e.g. Visual Studio), nor for installers, so when I finally found http://news.ycombinator.com/item?id=4112374[a reliable way to obtain MinGW]
+I have no fondness for massive IDE's (e.g.  Visual Studio), nor for installers, so when I finally found http://news.ycombinator.com/item?id=4112374[a reliable way to obtain MinGW]
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
-advantage of the major generic features of C++11; consequently K no longer compiles with MSVC++ 7.1.
+advantage of the major generic features of C\+++11; consequently K no longer compiles with MSVC+++ 7.1.
 
 Per http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx[Visual-Studio-Why-is-there-No-64-bit-Version] the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and 64-bit Linux K has no known anomalies).
 
