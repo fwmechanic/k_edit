@@ -22,6 +22,7 @@ bool ARG::towinclip() {
    PChar           bufptr; // this WILL TRAVERSE a buffer
    std::string     stbuf;
    if(  d_argType == NOARG
+     || d_argType == NULLARG
      || d_argType == LINEARG
      || d_argType == BOXARG
      ) {
@@ -38,6 +39,17 @@ bool ARG::towinclip() {
          yMin  = 0;
          yMax  = pFBuf->LastLine();
          srcNm = "<clipboard>";
+         }
+      else if( d_argType == NULLARG ) {
+         if( d_cArg > 1 ) {
+            yMin = 0;
+            yMax = pFBuf->LastLine();
+            }
+         else { // d_cArg == 1: NULLEOW
+            pFBuf->DupLineSeg( stbuf, d_nullarg.cursor.lin, d_nullarg.cursor.col, COL_MAX );
+            TermNulleow( stbuf );
+            goto SINGLE_LINE; // HACK O'RAMA!
+            }
          }
       else if( d_argType == LINEARG ) {
          yMin  = d_linearg.yMin;

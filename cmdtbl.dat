@@ -178,8 +178,8 @@ s sinsert      sinsert        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + 
   sync         sync                      NOARG , For each opened file, if the disk file is newer, re-read the file
   tab          tab            CURSORFUNC
   tell         tell                      BOXSTR + NOARG + TEXTARG, Describe a key assignment or macro
-w towinclip    towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+NULLEOW , <clipboard> ==> Windows Clipboard
-x toxclip      towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+NULLEOW , <clipboard> ==> X Clipboard
+w towinclip    towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+NULLARG , <clipboard> ==> Windows Clipboard
+x toxclip      towinclip                 NOARG+BOXARG+STREAMARG+LINEARG+TEXTARG+NULLARG , <clipboard> ==> X Clipboard
   true         true_                     BOXARG + STREAMARG + NOARG + LINEARG
   udelete      udelete        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + NULLARG , user interface delete; works intuitively in both stream and box modes
   unassigned   unassigned                BOXARG + STREAMARG + NOARG + LINEARG + NULLARG + TEXTARG  # this help will not show

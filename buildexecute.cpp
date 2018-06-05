@@ -298,7 +298,7 @@ void ARG::ConvertStreamargToLineargOrBoxarg() {
       }
    }
 
-STATIC_FXN void TermNulleow( std::string &st ) {
+void TermNulleow( std::string &st ) {
    for( auto it=st.begin()+1 ; it < st.end(); ++it ) {
       if( !isWordChar( *it ) ) {
          const auto idx( std::distance( st.begin(), it ) );

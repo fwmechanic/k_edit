@@ -82,6 +82,7 @@ STIL     bool IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedByReco
 extern   void ClearArgAndSelection();
 extern   void ExtendSelectionHilite( const Point &pt );
 extern   bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax );
+extern   void TermNulleow( std::string &st );
 
          // GetTextargString flags bits
          enum { gts_fKbInputOnly      = BIT(0)
