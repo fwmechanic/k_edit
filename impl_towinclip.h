@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -31,24 +31,24 @@ bool ARG::towinclip() {
       PFBUF pFBuf(g_CurFBuf());
       PCChar srcNm(nullptr);
       if( d_argType == NOARG ) {
-         0 && DBG( "NOARG->%sClip", DestNm() );
-         if( g_pFbufClipboard->LineCount() == 0 ) {
+         pFBuf = g_pFbufClipboard;
+         if( pFBuf->LineCount() == 0 ) {
             return ErrPause( "<clipboard> is empty!" );
             }
-         pFBuf = g_pFbufClipboard;
          yMin  = 0;
          yMax  = pFBuf->LastLine();
-         srcNm = "<clipboard>";
+         srcNm = pFBuf->Name();
          }
       else if( d_argType == NULLARG ) {
-         if( d_cArg > 1 ) {
-            yMin = 0;
-            yMax = pFBuf->LastLine();
-            }
-         else { // d_cArg == 1: NULLEOW
+         if( d_cArg == 1 ) { // NULLEOW
             pFBuf->DupLineSeg( stbuf, d_nullarg.cursor.lin, d_nullarg.cursor.col, COL_MAX );
             TermNulleow( stbuf );
             goto SINGLE_LINE; // HACK O'RAMA!
+            }
+         else { // d_cArg > 1
+            yMin = 0;
+            yMax = pFBuf->LastLine();
+            srcNm = "this file";
             }
          }
       else if( d_argType == LINEARG ) {
@@ -61,7 +61,6 @@ bool ARG::towinclip() {
          yMin   = d_boxarg.flMin.lin;
          yMax   = d_boxarg.flMax.lin;
          }
-      Msg( "%s->%sClip %d lines", srcNm ? srcNm : ArgTypeName(), DestNm(), (yMax - yMin)+1 );
       if( yMax == yMin ) {
          pFBuf->DupLineSeg( stbuf, yMin, xLeft, xRight ); // read line into our buffer
          goto SINGLE_LINE; // HACK O'RAMA!
@@ -72,6 +71,7 @@ bool ARG::towinclip() {
          pFBuf->DupLineSeg( stbuf, lineNum, xLeft, xRight );
          size += stbuf.length() + sizeof_eol();
          }
+      Msg( "%s (%d lines, %ld bytes)->%sClip", srcNm ? srcNm : ArgTypeName(), (yMax - yMin)+1, size, DestNm() );
       if( nullptr == (bufptr=PrepClip( 1+size, hglbCopy )) ) { // ++ for trailing '\0'
          return false;
          }
@@ -104,9 +104,9 @@ SINGLE_LINE: // HACK O'RAMA!
    else {
       return BadArg();
       }
-   const auto errmsg( WrToClipEMsg( hglbCopy ) );
+   const auto errmsg( WrToClipEMsg( hglbCopy ) ); // MUST be called to free e.g. bufptr=PrepClip
    if( errmsg ) {
       return ErrPause( "%s", errmsg );
       }
-   return nullptr == errmsg;
+   return true;
    }
