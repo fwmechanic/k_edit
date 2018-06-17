@@ -2361,9 +2361,9 @@ do
       ftp   = true,
       }
 
-   local function HasUrlPrefix( str )
+   local function supportedUriScheme( str )
       local url = str:match( "^(%a+)://" )
-      return url ~= nil and urls[ url ] ~= nil
+      return url ~= nil and urls[ url ] and url
       end
 
    local exts = {
@@ -2372,23 +2372,23 @@ do
    -- m3u = true,
       }
 
-   local work_org = "nowhere"
-
-   function ExecutedURL( strToExecute )
+   function ExecutedURL( strToExecute, fNullarg )
       if strToExecute:match( '%*' ) then return false end -- some URL's have '?' () not sure about '*'
 
       -- If you want browser to open your URL in a NEW window (or tab), change the
-      -- browser settings (Options|Advanced ...  in FireFox)
+      -- browser settings (FireFox: Options|Advanced ...)
 
       local ext = strToExecute:match( "%.([^.]+)$" )
-      if (ext and exts[ ext:lower() ]) or HasUrlPrefix( strToExecute ) then
-         if strToExecute:match( "://[^/]+%."..work_org.."%.com/" )
-         or strToExecute:match( "^https://"..work_org.."%.webex%.com/" )
-            then     -- work-internal websites are unpredictably nonfunctional when viewed with Firefox, so with this hack we force use of MSIE in this special case
-            StartShellExecuteProcess( strToExecute, "iexplore.exe" ) -- http://stackoverflow.com/questions/8180661/force-opening-a-webpage-with-internet-explorer
-         else
-            StartShellExecuteProcess( strToExecute )
-            end
+      if ext and exts[ ext:lower() ] then
+         StartShellExecuteProcess( strToExecute )
+         return true
+         end
+      local scheme = supportedUriScheme( strToExecute )
+      if scheme then
+         if fNullarg and scheme:match( "^http" ) then
+            strToExecute = strToExecute:match( "^[^([%])]+" )  -- truncate so NULLARG works with markdown- and AsciiDoc-delimited URLs
+            end   -- (https://tools.ietf.org/html/rfc3986#page-17)  https://tools.ietf.org/html/rfc3986#page-17[rfc3986 link]
+         StartShellExecuteProcess( strToExecute )
          return true
          end
 

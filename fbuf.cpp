@@ -1964,7 +1964,7 @@ bool ARG::setfile() {
                   break; //-------------------------------------------------------
     }                    0 && DBG( "%s: %s", __func__, fnm.c_str() );
    if( d_argType != NOARG ) { // for NOARG we HAVE a definitive name, skip the following reinterpretations
-      if( LuaCtxt_Edit::ExecutedURL( fnm.c_str() ) ) { // WINDOWS-ONLY HOOK
+      if( LuaCtxt_Edit::ExecutedURL( fnm.c_str(), d_argType == NULLARG ) ) {
          return true;
          }
       LuaCtxt_Edit::ExpandEnvVarsOk( fnm );

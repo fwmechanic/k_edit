@@ -836,7 +836,7 @@ bool ARG::lua() {
    return false;
    }
 
-bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute ) {
+bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute, bool fNullarg ) {
    constexpr bool rv_fail = false;
    auto L( L_edit ); if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
@@ -844,7 +844,7 @@ bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute ) {
    if( lh_push_global_function( L, "ExecutedURL" ) ) {
       return rv_fail;
       }
-   if( lh_pcall_inout( L, lh_push( L, strToExecute ), 1 ) != 0 ) {  // do the call
+   if( lh_pcall_inout( L, lh_push( L, strToExecute ) + lh_push( L, fNullarg ), 1 ) != 0 ) {  // do the call
       lh_handle_pcall_err( L );
       return rv_fail;
       }
