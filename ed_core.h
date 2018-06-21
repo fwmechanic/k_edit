@@ -985,9 +985,8 @@ private:
    int            d_ImgBufBytesWritten = 0;
    LineInfo      &ImgBufNextLineInfo();
 public:
-   void           ImgBufAlloc(      size_t bufBytes, int PreallocLines=400 );
-   void           ImgBufAppendLine( stref src );
-   void           ImgBufAppendLine( PFBUF pFBufSrc, int srcLineNum, PCChar prefix=nullptr );
+   void           ImgBufAlloc(      size_t bufBytes, LINE PreallocLines=400 );
+   void           ImgBufAppendLine( stref st0, stref st1="" );
    //************ Undo/Redo storage
    friend class   EditRec;
    friend class   EdOpBoundary;

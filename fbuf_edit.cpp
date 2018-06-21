@@ -1181,12 +1181,12 @@ bool PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std::string &t
    return true;
    }
 
-sridx FreeIdxOfCol( COL tabWidth, stref content, COL colTgt, COL &startCol, sridx &ixOfStartCol ) {
+sridx FreeIdxOfCol( const COL tabWidth, stref content, const COL colTgt, COL &startCol, sridx &ixOfStartCol ) {
    if( colTgt <= 0 ) {
       return 0;
       }
    const Tabber tabr( tabWidth );
-   sridx ix; decltype( colTgt ) col;
+   sridx ix; COL col;
    if( startCol > colTgt ) { col = 0       ; ix = 0           ; }
    else                    { col = startCol; ix = ixOfStartCol; }
    for( ; ix < content.length() ; ++ix ) {
@@ -2017,10 +2017,10 @@ IS_EOL:
 
 // these are new work based on ReadDiskFile 15/16-Mar-2003 klg
 
-void FBUF::ImgBufAlloc( size_t bufBytes, int PreallocLines ) {  0 && DBG( "ImgBufAlloc Bytes=%" PR_SIZET ", Lines=%d", bufBytes, PreallocLines );
+void FBUF::ImgBufAlloc( size_t bufBytes, LINE PreallocLines ) {  0 && DBG( "%s Bytes=%" PR_SIZET ", Lines=%d", __PRETTY_FUNCTION__, bufBytes, PreallocLines );
    d_ImgBufBytesWritten = 0;
    d_cbOrigFileImage = bufBytes;
-   AllocArrayNZ( d_pOrigFileImage, bufBytes, __func__ );
+   AllocArrayNZ( d_pOrigFileImage, bufBytes, __PRETTY_FUNCTION__ );
    SetLineCount( 0 );
    SetLineInfoCount( PreallocLines );
    }
@@ -2040,21 +2040,10 @@ LineInfo & FBUF::ImgBufNextLineInfo() {
    return newLI;
    }
 
-void FBUF::ImgBufAppendLine( stref src ) {
+void FBUF::ImgBufAppendLine( stref st0, stref st1 ) {
    auto &newLI( ImgBufNextLineInfo() );
-   newLI.d_iLineLen = src.length();                             0 && DBG( "ImgBufAppendLine Bytes=%d", newLI.d_iLineLen );
-   memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData), src.data(), newLI.d_iLineLen );
-   d_ImgBufBytesWritten += newLI.d_iLineLen;
-   }
-
-void FBUF::ImgBufAppendLine( PFBUF pFBufSrc, int srcLineNum, PCChar prefix ) {
-   auto &newLI( ImgBufNextLineInfo() );
-   auto preLen(0);
-   if( prefix ) {
-      memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData), prefix, (preLen = Strlen( prefix )) );
-      }
-   auto &srcLI( pFBufSrc->d_paLineInfo[srcLineNum] );
-   memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData)+preLen, srcLI.d_pLineData, srcLI.d_iLineLen );
-   newLI.d_iLineLen = srcLI.d_iLineLen + preLen;     0 && DBG( "FBUF::ImgBufAppendPFLine Bytes=%d", newLI.d_iLineLen );
+   memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData)               , st0.data(), st0.length() );
+   memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData) + st0.length(), st1.data(), st1.length() );
+   newLI.d_iLineLen = st0.length() + st1.length();     0 && DBG( "%s Bytes=%d", __PRETTY_FUNCTION__, newLI.d_iLineLen );
    d_ImgBufBytesWritten += newLI.d_iLineLen;
    }
