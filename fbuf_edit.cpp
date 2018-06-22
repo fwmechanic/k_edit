@@ -2015,35 +2015,33 @@ IS_EOL:
    return false;
    }
 
-// these are new work based on ReadDiskFile 15/16-Mar-2003 klg
+// these are new work based on ReadDiskFileFailed 15/16-Mar-2003 klg
 
 void FBUF::ImgBufAlloc( size_t bufBytes, LINE PreallocLines ) {  0 && DBG( "%s Bytes=%" PR_SIZET ", Lines=%d", __PRETTY_FUNCTION__, bufBytes, PreallocLines );
-   d_ImgBufBytesWritten = 0;
    d_cbOrigFileImage = bufBytes;
    AllocArrayNZ( d_pOrigFileImage, bufBytes, __PRETTY_FUNCTION__ );
    SetLineCount( 0 );
    SetLineInfoCount( PreallocLines );
    }
 
-LineInfo & FBUF::ImgBufNextLineInfo() {
-   // LineCount is the NUMBER of the NEW LINE!
-   SetLineInfoCount( LineCount()+1 );
-   auto &newLI( d_paLineInfo[ LineCount() ] );
-   if( LineCount() == 0 ) {
-      newLI.d_pLineData = d_pOrigFileImage;
-      }
-   else {
-      auto &preLI( d_paLineInfo[ LastLine() ] );
-      newLI.d_pLineData = preLI.d_pLineData + preLI.d_iLineLen;
-      }
-   IncLineCount( 1 );  // LineCount() NOT CHANGED UNTIL HERE
-   return newLI;
-   }
-
 void FBUF::ImgBufAppendLine( stref st0, stref st1 ) {
-   auto &newLI( ImgBufNextLineInfo() );
+   auto &newLI(
+      [this] () -> LineInfo & {
+         // LineCount is the NUMBER of the NEW LINE!
+         SetLineInfoCount( LineCount()+1 );
+         auto &rv( d_paLineInfo[ LineCount() ] );
+         if( LineCount() == 0 ) {
+            rv.d_pLineData = d_pOrigFileImage;
+            }
+         else {
+            auto &preLI( d_paLineInfo[ LastLine() ] );
+            rv.d_pLineData = preLI.d_pLineData + preLI.d_iLineLen;
+            }
+         IncLineCount( 1 );  // LineCount() NOT CHANGED UNTIL HERE
+         return rv;
+         }()
+      );
    memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData)               , st0.data(), st0.length() );
    memcpy( CAST_AWAY_CONST(PChar)(newLI.d_pLineData) + st0.length(), st1.data(), st1.length() );
    newLI.d_iLineLen = st0.length() + st1.length();     0 && DBG( "%s Bytes=%d", __PRETTY_FUNCTION__, newLI.d_iLineLen );
-   d_ImgBufBytesWritten += newLI.d_iLineLen;
    }

@@ -2164,7 +2164,7 @@ LINE CGrepper::WriteOutput
    //
    // data BUFFER SIZE CALC phase
    //
-   auto imgBufBytes(0);
+   size_t imgBufBytes(0);
    const auto fFirstGen( 0 == d_MetaLineCount );
    auto MetaLinesToCopy(0);
    if( d_MetaLineCount > 0 ) {

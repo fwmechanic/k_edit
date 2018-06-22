@@ -81,30 +81,20 @@ struct OutputWriter {
 struct FbufWriter : public OutputWriter {
    PFBUF d_pFBuf;
    FbufWriter( PFBUF pFBuf ) : d_pFBuf(pFBuf) {}
-   virtual void VWriteLn( PCChar string ) const { d_pFBuf->PutLastLine( string ); }
+   void VWriteLn( PCChar string ) const override { d_pFBuf->PutLastLine( string ); }
    };
 
 struct DBGWriter : public OutputWriter {
-   virtual void VWriteLn( PCChar string ) const;
+   void VWriteLn( PCChar string ) const override { DBG( "%s", string ); }
    };
 
 struct DBGFbufWriter : public OutputWriter {
    PFBUF d_pFBuf;
    DBGFbufWriter( PFBUF pFBuf ) : d_pFBuf(pFBuf) {}
-   virtual void VWriteLn( PCChar string ) const;
+   void VWriteLn( PCChar string ) const override { DBG( "%s", string ); d_pFBuf->PutLastLine( string ); }
    };
 //
 //---------------------------------------------------------------------------------------------------------------------
-
-void DBGWriter::VWriteLn( PCChar string ) const { DBG( "%s", string ); }
-
-void DBGFbufWriter::VWriteLn( PCChar string ) const {
-   DBG( "%s", string );
-   d_pFBuf->PutLastLine( string );
-   }
-
-//----------------------------------------------------------------------------
-
 
 class EditRec { // abstract base class   public EditRec
 protected:
@@ -426,10 +416,8 @@ void EdOpBoundary::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufByte
       , d_fDirty ? '*' : ' '
       , d_LastFileStat.d_ModifyTime   // Date/Time of last modify
       , d_LastFileStat.d_Filesize     // Date/Time of last modify
-      , d_ViewOrigin.col
-      , d_ViewOrigin.lin
-      , d_ViewCursor.col
-      , d_ViewCursor.lin
+      , d_ViewOrigin.col, d_ViewOrigin.lin
+      , d_ViewCursor.col, d_ViewCursor.lin
 #if USE_DBGF_EDOPS
       , d_pFBuf->Name()
 #endif
@@ -561,8 +549,7 @@ void FBUF::AddNewEditOpToListHead( EditRec *pEr ) {
    d_pCurrentEdit = pEr;
    }
 
-void FBUF::UndoReplaceLineContent( LINE lineNum, stref newContent ) {
-   0 && DBG( "%s+ L%d %s", __func__, lineNum, Name() );
+void FBUF::UndoReplaceLineContent( LINE lineNum, stref newContent ) {  0 && DBG( "%s+ L%d %s", __func__, lineNum, Name() );
    BadParamIf( , IsNoEdit() );
    if( d_pNewestEdit == nullptr ) {
       InitUndoInfo();
@@ -579,8 +566,7 @@ void FBUF::UndoReplaceLineContent( LINE lineNum, stref newContent ) {
       new EdOpAltLineContent( this, lineNum, pLineInfo );
       }
    pLineInfo->PutContent( newContent );
-   Set_yChangedMin( lineNum );
-   0 && DBG( "%s- L%d %s", __func__, lineNum, Name() );
+   Set_yChangedMin( lineNum );                       0 && DBG( "%s- L%d %s", __func__, lineNum, Name() );
    }
 
 void FBUF::UndoInsertLineRangeHole( LINE firstLine, int lineCount ) {
@@ -595,11 +581,9 @@ void FBUF::UndoSaveLineRange( LINE firstLine, LINE lastLine ) {
 
 void FBUF::PutUndoBoundary() {
    if( IsNoEdit() ) { return; }
-   if( d_pCurrentEdit->VUpdtBoundary() ) {
-      0 && DBG( "PUB: updt" );
+   if( d_pCurrentEdit->VUpdtBoundary() ) {           0 && DBG( "PUB: updt" );
       }
-   else {
-      0 && DBG( "PUB: new" );
+   else {                                            0 && DBG( "PUB: new" );
       // add a new BoundaryRec based on current state
       new EdOpBoundary( this );
       ++d_UndoCount;

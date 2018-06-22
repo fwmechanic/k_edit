@@ -981,9 +981,6 @@ public:
    bool           PtrWithinOrigFileImage( PCChar pc ) const { return pc >= d_pOrigFileImage && pc < (d_pOrigFileImage + d_cbOrigFileImage); }
    filesize_t     cbOrigFileImage() const { return d_cbOrigFileImage; }
    //************ ImgBuf manipulators (currently used only in CGrepper::WriteOutput)
-private:
-   int            d_ImgBufBytesWritten = 0;
-   LineInfo      &ImgBufNextLineInfo();
 public:
    void           ImgBufAlloc(      size_t bufBytes, LINE PreallocLines=400 );
    void           ImgBufAppendLine( stref st0, stref st1="" );
