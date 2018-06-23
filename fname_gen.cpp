@@ -113,7 +113,11 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
       return -1;
       }
    auto rl( PeekRawLine( yLine ) );
-   const auto ixCol( CaptiveIdxOfCol( g_CurFBuf()->TabWidth(), rl, xCol ) );
+   const auto ixCol( FreeIdxOfCol( g_CurFBuf()->TabWidth(), rl, xCol ) );
+   if( ixCol > rl.length()-1 ) {
+      st.clear();
+      return -1;
+      }
    rl.remove_prefix( ixCol );
    sridx oMin, oMax;
    if( !IsolateFilename( &oMin, &oMax, rl ) ) { return 0; }
