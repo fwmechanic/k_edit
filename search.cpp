@@ -2209,7 +2209,7 @@ LINE CGrepper::WriteOutput
          if( fFirstGen ) { // this is a 1st-generation search: include line # right justified w/in fixed-width field
             prefix.Sprintf( "%*d  ", lwidth, iy + 1 );
             }
-         outfile->ImgBufAppendLine( fFirstGen ? prefix.k_str() : nullptr, d_SrchFile->PeekRawLine( iy ) );
+         outfile->ImgBufAppendLine( prefix.k_str(), d_SrchFile->PeekRawLine( iy ) );
          }
       }
    outfile->ClearUndo();

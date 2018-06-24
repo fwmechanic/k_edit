@@ -115,7 +115,6 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
    auto rl( PeekRawLine( yLine ) );
    const auto ixCol( FreeIdxOfCol( g_CurFBuf()->TabWidth(), rl, xCol ) );
    if( ixCol > rl.length()-1 ) {
-      st.clear();
       return -1;
       }
    rl.remove_prefix( ixCol );

@@ -615,7 +615,7 @@ struct ViewPersistent {
    Point  cursor;
    time_t temptv;
    };
-extern bool ViewPersistentInitOk( ViewPersistent &vp, const PChar viewSaveRec );
+extern bool ViewPersistentInitOk( ViewPersistent &vp, PChar viewSaveRec );
 
 class View { // View View View View View View View View View View View View View View View View View View View View View View View View
 public:

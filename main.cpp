@@ -137,7 +137,7 @@ STATIC_VAR struct {
    PFBUF logfb;
    } s_ForgetAbsentFiles;  // in lieu of passing params thru the depths
 
-STATIC_FXN void InitNewView_File( const PChar viewPersistentText ) {
+STATIC_FXN void InitNewView_File( PChar viewPersistentText ) {
    // Conditionally construct a View from the contents of viewPersistentText
    // viewPersistentText
    //    points into a WRITABLE buffer containing a record written to the tmp

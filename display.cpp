@@ -2213,16 +2213,17 @@ void View::Write( FILE *fout ) const {
        );
    }
 
-bool ViewPersistentInitOk( ViewPersistent &vp, const PChar viewSaveRec ) {
+bool ViewPersistentInitOk( ViewPersistent &vp, PChar viewSaveRec ) {
    // vp
    //    destination: filename field will point into (modified) viewSaveRec
    //
-   // viewPersistentText
+   // viewSaveRec
    //    points into a WRITABLE buffer containing a record written to the tmp
    //    file by View::Write() (with the single leading ' ' skipped)
    //    *** THIS BUFFER IS NORMALLY WRITTEN TO *** by replacing the filename
-   //    end marker '|' with a NUL (in order for the filename to be ASCIZ) to
-   //    avoid an extra heap buffer alloc and associated filename strcpy.
+   //    end marker '|' with a NUL (in order for vp.filename to be ASCIZ) to
+   //    avoid an extra heap buffer alloc and associated strcpy.  vp.filename
+   //    needs to be ASCIZ to be passed directly to downstream OS file APIs.
    //
    const PChar filenameEnd( strchr( viewSaveRec, '|' ) );
    if( !filenameEnd ) {
