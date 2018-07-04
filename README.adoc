@@ -106,7 +106,7 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 #### Windows
 
  * both i386 and x64 are in active use on Win 7, Win 8.1, and Win 10.
- * i386 K for Windows: The last http://nuwen.net/mingw.html[nuwen.net MinGW release] (w/GCC 4.8.1) that builds 32-bit targets, 10.4, was released 2013/08/01 and is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
+ * i386 K for Windows: The last http://nuwen.net/mingw.html[nuwen.net MinGW release] that builds 32-bit targets, 10.4 (w/https://gcc.gnu.org/projects/cxx-status.html#cxx11[GCC 4.8.1, having full C++11 support]), was released 2013/08/01 and is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
  * x64 K for Windows: first released 2014/02/09:
 
 ### Linux key-decoding status quo
