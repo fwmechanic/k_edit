@@ -1722,7 +1722,7 @@ namespace BufdWr { // BufdWr "mini module"
 
    STATIC_FXN bool WrFailed( int hFile, PCChar pSrcData, size_t byteCount ) {
       for( size_t bytesLeft=byteCount ; bytesLeft ;  ) {
-         const size_t cpyBytes( SmallerOf( bytesLeft, sizeof(s_Buf.WriteBuffer) - s_Buf.bytesToWriteThisTime ) );
+         const size_t cpyBytes( std::min( bytesLeft, sizeof(s_Buf.WriteBuffer) - s_Buf.bytesToWriteThisTime ) );
          memcpy( s_Buf.pWriteBufferCurrent, pSrcData, cpyBytes );
          s_Buf.pWriteBufferCurrent  += cpyBytes;
          s_Buf.bytesToWriteThisTime += cpyBytes;

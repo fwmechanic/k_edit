@@ -396,7 +396,7 @@ bool ARG::vrepeat() { enum {DB=0};
       const auto fLead0( '0' == st[ixMinDigit] );
       const auto width_DueToArgWidth( st.length() );  DB && DBG( "width_DueToArgWidth=%" PR_SIZET, width_DueToArgWidth );
       decltype(width_DueToArgWidth) width_DueToArgHeight( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  DB && DBG( "width_DueToArgHeight=%" PR_SIZET, width_DueToArgHeight );
-      const auto width( Max( width_DueToArgHeight, width_DueToArgWidth ) );
+      const auto width( std::max( width_DueToArgHeight, width_DueToArgWidth ) );
       if( width > MAX_INT_PRINT_CHARS ) { return Msg( "internal error, width %" PR_SIZET " > %d", width, MAX_INT_PRINT_CHARS ); }
 
       FmtStr<7>fmts( "%%%s%" PR_SIZET "d", fLead0 ? "0":"", width ); const auto fmt( fmts.k_str() );   DB && DBG( "fmt='%s'", fmt );

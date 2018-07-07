@@ -1037,7 +1037,7 @@ public:
 private:
    unsigned       d_contentRevision = 1; // used to passively detect FBUF content change; each change incrs this value; init value 1 allows others who maintain copied to init these to 0
    LINE           d_yChangedMin = -1; // Views displaying lines >= d_yChangedMin must update from d_yChangedMin to end of display
-   void           Set_yChangedMin( LINE yChangedMin ) { Min( &d_yChangedMin, yChangedMin ); ++d_contentRevision; }
+   void           Set_yChangedMin( LINE yChangedMin ) { d_yChangedMin = std::min( d_yChangedMin, yChangedMin ); ++d_contentRevision; }
 public:
    void           Push_yChangedMin();
    unsigned       CurrContentRevision() const { return d_contentRevision; }
@@ -1327,7 +1327,7 @@ extern char    CharAtCol     ( COL tabWidth, stref content, const COL colTgt ); 
 //             CaptiveIdxOfCol content[CaptiveIdxOfCol(colTgt)] is always valid; colTgt values which
 //                             map beyond the last char of content elicit the index of the last char
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, stref content, const COL colTgt ) {
-                  return Min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length()-1 );
+                  return std::min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length()-1 );
                   }
 STIL   COL     TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
                   return ColOfFreeIdx( tabWidth, rl, FreeIdxOfCol( tabWidth, rl, xCol ) );
@@ -1374,8 +1374,8 @@ public:
       }
    // c2ci = CaptiveIdxOfCol content[c2ci(colTgt)] is always valid; colTgt values which map
    //                        beyond the last char of content elicit the index of the last char
-   sridx  c2ci( COL xCol )       { return Min( FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ), d_sr.length()-1 ); }
-   sridx  c2fi( COL xCol )       { return      FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ); }
+   sridx  c2ci( COL xCol )       { return std::min( FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ), d_sr.length()-1 ); }
+   sridx  c2fi( COL xCol )       { return           FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ); }
 
    COL    ColOfNextChar( COL xCol ) { return i2c( c2fi( xCol ) + 1 ); }
 

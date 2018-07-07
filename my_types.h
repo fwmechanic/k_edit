@@ -250,23 +250,10 @@ namespace Path {
 template<typename T> inline T    Abs ( T t ) { return ( t < 0 ) ?  -t : +t; }
 template<typename T> inline T    Sign( T t ) { return ( t < 0 ) ?  -1 : +1; }
 
-template<typename T> inline T    Min( T t1, T t2 )    { return t1 < t2 ? t1 : t2; }
-template<typename T> inline T    Max( T t1, T t2 )    { return t1 > t2 ? t1 : t2; }
-template<typename T> inline void Max( T *v, T limit ) { if( *v < limit ) {*v = limit;} }
-template<typename T> inline void Min( T *v, T limit ) { if( *v > limit ) {*v = limit;} }
-
-// for those occasions when Min/Max aren't adequtely descriptive:
-
-template<typename T> inline T    LesserOf  ( T t1, T t2 )    { return Min( t1, t2 ); }
-template<typename T> inline T    SmallerOf ( T t1, T t2 )    { return Min( t1, t2 ); }
-template<typename T> inline T    LargerOf  ( T t1, T t2 )    { return Max( t1, t2 ); }
-template<typename T> inline T    GreaterOf ( T t1, T t2 )    { return Max( t1, t2 ); }
 template<typename T> inline T    AbsDiff   ( T t1, T t2 )    { return (t1 > t2) ? (t1-t2) : (t2-t1); }
 
-template<typename T> inline void NoLessThan(    T *v, T limit ) { if( *v <= limit ) {*v = limit;} }
-template<typename T> inline void NoSmallerThan( T *v, T limit ) { if( *v <= limit ) {*v = limit;} }
-template<typename T> inline void NoMoreThan(    T *v, T limit ) { if( *v >= limit ) {*v = limit;} }
-template<typename T> inline void NoGreaterThan( T *v, T limit ) { if( *v >= limit ) {*v = limit;} }
+template<typename T> inline void NoLessThan( T *v, T limit ) { if( *v <= limit ) {*v = limit;} }
+template<typename T> inline void NoMoreThan( T *v, T limit ) { if( *v >= limit ) {*v = limit;} }
 
 template<typename T>
 inline void Constrain( T loLimit, T *v, T hiLimit ) {

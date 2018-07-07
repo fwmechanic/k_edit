@@ -82,7 +82,7 @@ stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
 stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
    auto truncd( 0 );
    const auto fullCpyChars( src.length()+1 );
-   const auto destCharsToWr( Min( sizeof_dest, fullCpyChars ) );
+   const auto destCharsToWr( std::min( sizeof_dest, fullCpyChars ) );
    if( fullCpyChars > destCharsToWr ) {
       truncd = fullCpyChars - destCharsToWr;
       }
@@ -107,7 +107,7 @@ extern int  strcmp_eos ( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 );
 int fxnm( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 ) { \
    const auto l1( eos1-s1 );                                 \
    const auto l2( eos2-s2 );                                 \
-   const auto rv( CMPFX ( s1, s2, Min( l1,l2 ) ) );          \
+   const auto rv( CMPFX ( s1, s2, std::min( l1,l2 ) ) );     \
    if( l1==l2 || rv != 0 ) { return rv; }                    \
    return (l1 > l2) ? +1 : -1;                               \
    }
@@ -119,14 +119,14 @@ strcmp_eos_def( strcmp_eos , memcmp   )
 
 //----- no-longer-used end
 typedef int slen_t; // should be size_t or sridx
-int strnicmp_LenOfFirstStr( stref s1, stref s2 )                   { return Strnicmp( s1.data(), s2.data(), s1.length()    ); }
-int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, slen_t s2chars ) { return Strnicmp( s1, s2, Min( Strlen( s1 ), s2chars ) ); }
-int strncmp_LenOfFirstStr ( stref s1, stref s2 )                   { return strncmp ( s1.data(), s2.data(), s1.length()    ); }
-int strncmp_LenOfFirstStr ( PCChar s1, PCChar s2, slen_t s2chars ) { return strncmp ( s1, s2, Min( Strlen( s1 ), s2chars ) ); }
+int strnicmp_LenOfFirstStr( stref s1, stref s2 )                   { return Strnicmp( s1.data(), s2.data(), s1.length()         ); }
+int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, slen_t s2chars ) { return Strnicmp( s1, s2, std::min( Strlen( s1 ), s2chars ) ); }
+int strncmp_LenOfFirstStr ( stref s1, stref s2 )                   { return strncmp ( s1.data(), s2.data(), s1.length()         ); }
+int strncmp_LenOfFirstStr ( PCChar s1, PCChar s2, slen_t s2chars ) { return strncmp ( s1, s2, std::min( Strlen( s1 ), s2chars ) ); }
 
 bool streq_LenOfFirstStr( PCChar s1, slen_t s1chars, PCChar s2, slen_t s2chars ) {
    if( s2chars == 0 ) { return s1chars==0; }
-   return 0==Strnicmp( s1, s2, Min( s1chars, s2chars ) );
+   return 0==Strnicmp( s1, s2, std::min( s1chars, s2chars ) );
    }
 
 #define Strnspn_def( fxnm, EQ_OP )                           \

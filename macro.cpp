@@ -806,7 +806,7 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
    auto pMacroTextChunk( pCmd->MacroText() );
    while( 1 ) {
       g_pFbufRecord->DupRawLine( sbuf, g_pFbufRecord->LastLine() );
-      auto pC( pMacroTextChunk + Min( g_iRmargin - sbuf.length() + int(ELEMENTS(kszContinuation)), static_cast<sridx>(Strlen( pMacroTextChunk )) ) );
+      auto pC( pMacroTextChunk + std::min( g_iRmargin - sbuf.length() + int(ELEMENTS(kszContinuation)), static_cast<sridx>(Strlen( pMacroTextChunk )) ) );
       for( ; pC > pMacroTextChunk; --pC ) {
          if( 0 == *pC || ' ' == *pC || HTAB == *pC ) {
             break;

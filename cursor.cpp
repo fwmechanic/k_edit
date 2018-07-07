@@ -126,7 +126,7 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL visibleCharsAtCursor, boo
    // the window size.
    //
    // Text is never scrolled in increments greater than the size of the window.
-   const auto hscroll( Max( COL(1), (g_iHscroll * winSize.col) / EditScreenCols() ) );
+   const auto hscroll( std::max( COL(1), (g_iHscroll * winSize.col) / EditScreenCols() ) );
          auto xOrigin( Origin().col );
    const auto xWinCursor( xCursor - xOrigin );
    if     ( xWinCursor <  COL(0)      ) { xOrigin -= hscroll;  if( xWinCursor < -hscroll               ) { xOrigin += xWinCursor + 1          ; } } // hscroll left?
@@ -143,7 +143,7 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL visibleCharsAtCursor, boo
    // scrolled is in proportion to the window size.
    //
    // Text is never scrolled in increments greater than the size of the window.
-   const auto vscroll( Max( COL(1), (g_iVscroll * winSize.lin) / EditScreenLines() ) );
+   const auto vscroll( std::max( COL(1), (g_iVscroll * winSize.lin) / EditScreenLines() ) );
          auto yOrigin( Origin().lin );
    const auto yWinCursor( yCursor - yOrigin );
    if( (yWinCursor >= -vscroll) && (yWinCursor < winSize.lin + vscroll) ) { // within one vscroll of the window boundaries?
@@ -156,7 +156,7 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL visibleCharsAtCursor, boo
       //  lines specified by vscroll, specified in percent of window size
       //
       Constrain( LINE(1), &g_iHike, 99 );
-      const auto yHikeLines( Max( LINE(1), (winSize.lin * g_iHike) / 100 ) );
+      const auto yHikeLines( std::max( LINE(1), (winSize.lin * g_iHike) / 100 ) );
       yOrigin = yCursor - yHikeLines;
       }
    ScrollOriginAndCursor_( yOrigin, xOrigin, yCursor, xCursor, fUpdtWUC );
@@ -221,7 +221,7 @@ bool ARG::pmlines( int direction ) { PCWrV;
     case NULLARG: pcv->ScrollOrigin_Y_Abs( direction > 0 ? g_CursorLine() : g_CursorLine() - pcw->d_Size.lin + 1 );
                   return true;
     case NOARG:   {
-                  const LINE scroll( Max( LINE(1), (pcw->d_Size.lin * g_iVscroll) / EditScreenLines() ) );
+                  const LINE scroll( std::max( LINE(1), (pcw->d_Size.lin * g_iVscroll) / EditScreenLines() ) );
                   pcv->ScrollOrigin_Y_Rel( direction * scroll );
                   return true;
                   }
@@ -258,7 +258,7 @@ bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
          const auto pView( pWin->CurViewWr() );
          if( pView->Cursor().lin >= pView->PrevLineCount() ) { // "smart tailing": if the user has moved the cursor above the tail line, don't molest the cursor
             const auto yCursor( pFBuf->LastLine() + CURSOR_ON_LINE_AFTER_LAST );
-            const auto yOrigin( Max( yCursor - pWin->d_Size.lin + 1, 0 ) );
+            const auto yOrigin( std::max( yCursor - pWin->d_Size.lin + 1, 0 ) );
             if(   0 != pView->Cursor().col || yCursor != pView->Cursor().lin
                || 0 != pView->Origin().col || yOrigin != pView->Origin().lin
               ) {

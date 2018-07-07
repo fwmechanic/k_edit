@@ -546,7 +546,7 @@ STATIC_FXN bool DeletePrevChar( const bool fEmacsmode ) { PCFV;
       }
    const auto x0( pcv->Cursor().col );
    const auto colsDeld( FBOP::DelChar( pcf, yLine, x0 - 1 ) );
-   pcv->MoveCursor( yLine, x0 - Max( colsDeld, 1 ) );
+   pcv->MoveCursor( yLine, x0 - std::max( colsDeld, 1 ) );
    return true;
    }
 
@@ -1444,7 +1444,7 @@ void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, st
       }
    else { // segment ins/overwrite case
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
-      const auto inslen( Min( ins.length(), holewidth ) );                     DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "/%" PR_BSRSIZET "]", __func__, xLeftIncl, holewidth, inslen );
+      const auto inslen( std::min( ins.length(), holewidth ) );                DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "/%" PR_BSRSIZET "]", __func__, xLeftIncl, holewidth, inslen );
       DupLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );
       const auto tw( TabWidth() );
       const auto lcols( StrCols( tw, dest ) );
@@ -1550,7 +1550,7 @@ void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) { 
    BadParamIf( , (firstLine > lastLine) );
    FBOP::PrimeRedrawLineRangeAllWin( this, firstLine, LineCount() );
    DirtyFBufAndDisplay();
-   Min( &lastLine, LastLine() );
+   lastLine = std::min( lastLine, LastLine() );
    if( fSaveUndoInfo ) {
       UndoSaveLineRange( firstLine, lastLine );
       }
@@ -1888,10 +1888,10 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
             // this is a little obscure, since for brevity I'm using 'curLineNum' as an alias
             // for 'LineCount()'; these are equivalent since 'curLineNum' hasn't been stored yet.
             const auto abpl_scale( 1.025 );
-            const double avgBytesPerLine( Max( abpl_scale, static_cast<double>(pCurImageBuf - d_pOrigFileImage) / curLineNum ) );
+            const double avgBytesPerLine( std::max( abpl_scale, static_cast<double>(pCurImageBuf - d_pOrigFileImage) / curLineNum ) );
                   double dNewLineCntEstimate( (d_cbOrigFileImage / avgBytesPerLine) * abpl_scale );
             if( dNewLineCntEstimate <= d_naLineInfoElements ) {
-                dNewLineCntEstimate = Max( static_cast<double>(d_naLineInfoElements * 1.125)
+                dNewLineCntEstimate = std::max( static_cast<double>(d_naLineInfoElements * 1.125)
                                          , static_cast<double>(d_naLineInfoElements + FileReadLineHeadSpace)
                                          );
                }
@@ -1903,7 +1903,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                   , avgBytesPerLine
                   );
                )
-            d_naLineInfoElements = Min( INT_MAX, newLineCntEstimate );
+            d_naLineInfoElements = std::min( INT_MAX, newLineCntEstimate );
             //------------------------------------------------------------------------------------
             LineInfo *pNewLi;
             AllocArrayNZ( pNewLi, d_naLineInfoElements, "revised d_paLineInfo" );

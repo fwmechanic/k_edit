@@ -122,8 +122,8 @@ public:
    COL GetMaxColInDisp() const { return d_colWinLeft+d_width-1; }
    void PutColorRaw( int col, int len, int color ) {                 0 && DBG( "%s a: %3d L %3d", __func__, col, len );
       if( col > d_colWinLeft+d_width || col + len < d_colWinLeft ) { return; }
-      const auto colMin( Max( col      , d_colWinLeft           ) ); 0 && DBG( "%s b: %3d L %3d", __func__, col, len );
-      const auto colMax( Min( col+len-1, GetMaxColInDisp() ) );
+      const auto colMin( std::max( col      , d_colWinLeft      ) ); 0 && DBG( "%s b: %3d L %3d", __func__, col, len );
+      const auto colMax( std::min( col+len-1, GetMaxColInDisp() ) );
       const auto ixMin( colMin - d_colWinLeft + d_idxWinLeft );
       const auto ixMax( colMax - d_colWinLeft + d_idxWinLeft );      0 && DBG( "%s c: %3d L %3d", __func__, ixMin, ixMax );
       d_alc.PutColor( ixMin, ixMax - ixMin+1, color );
@@ -683,13 +683,13 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
             {
             for( auto pNeedle(keyStart) ; *pNeedle ; ) {
                const stref needle( pNeedle );                          0 && DBG( "needle %" PR_BSR "'", BSR(needle) );
-               maxNeedleLen = Max( maxNeedleLen, needle.length() );
+               maxNeedleLen = std::max( maxNeedleLen, needle.length() );
                pNeedle += needle.length() + 1;
                }
             }
             const auto xMaxToDisp( alcc.GetMaxColInDisp() );
             const auto maxIxClip( convAll.c2fi( xMaxToDisp ) + (maxNeedleLen-1) );
-            const auto maxLen( Min( rlAll.length(), maxIxClip+1 ) ); // +1 to conv ix to length
+            const auto maxLen( std::min( rlAll.length(), maxIxClip+1 ) ); // +1 to conv ix to length
             const stref rl( rlAll.data(), maxLen );
             IdxCol_cached conv( tw, rl );
             for( size_t ixStart( minIxClip > (maxNeedleLen-1) ? minIxClip - (maxNeedleLen-1) : 0 ) ; ixStart < rl.length() ; ) {
@@ -860,7 +860,7 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
             case cppcIf  : --upDowns;
                            ++not_elses;
                            break;
-            case cppcEnd : ++upDowns; maxUnIfdEnds = Max( maxUnIfdEnds, upDowns );
+            case cppcEnd : ++upDowns; maxUnIfdEnds = std::max( maxUnIfdEnds, upDowns );
                            ++not_elses;
                            break;
             case cppcElif: ATTR_FALLTHRU;
@@ -1863,7 +1863,7 @@ class ViewHiLites {
    void              UpdtSpeedTbl( HiLiteRec *pThis );
    const HiLiteRec  *FindFirstEntryAffectingOrAfterLine( LINE yLine ) const;
    ViewHiLites( PCFBUF pFBuf );
-   int  SpeedTableIndex( LINE yLine ) const { return Min( ::SpeedTableIndex( yLine ), d_SpeedTable.size()-1 ); }
+   int  SpeedTableIndex( LINE yLine ) const { return std::min( ::SpeedTableIndex( yLine ), d_SpeedTable.size()-1 ); }
    void vhInsHiLiteBox(   int newColorIdx, Rect newRgn );
    void PrimeRedraw() const;
    int  InsertHiLitesOfLineSeg( LINE yLine, COL Indent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const;
@@ -2019,8 +2019,8 @@ int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, Lin
          }
       if( !(xIndent > rn_xMax || xMax < rn_xMin) ) {
          // be VERY careful when trying to optimize/clarify the xLeft and Len calcs
-               auto xLeft( Max( xIndent, rn_xMin )          );
-         const auto Len  ( Min( xMax, rn_xMax ) - xLeft + 1 );
+               auto xLeft( std::max( xIndent, rn_xMin )          );
+         const auto Len  ( std::min( xMax, rn_xMax ) - xLeft + 1 );
                     xLeft -= xIndent;
          0 && DBG( "HL C! %d L %d ci=%02X", xLeft, Len, pHL->colorIndex );
          alcc.PutColor( xLeft+xIndent, Len, pHL->colorIndex );
@@ -2077,8 +2077,8 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
 
 void View::MoveAndCenterCursor( const Point &pt, COL xWidth ) {
    ScrollOriginAndCursor_(
-        Max( 0, pt.lin - (d_pWin->d_Size.lin/2)             )
-      , Max( 0, pt.col - (d_pWin->d_Size.col/2) + (xWidth/2) )
+        std::max( 0, pt.lin - (d_pWin->d_Size.lin/2)             )
+      , std::max( 0, pt.col - (d_pWin->d_Size.col/2) + (xWidth/2) )
       ,         pt.lin
       ,         pt.col
       , true
@@ -2398,7 +2398,7 @@ bool ErrorDialogBeepf( PCChar format, ... ) {
    }
 
 int DispRawDialogStr( PCChar st ) {
-   const auto showCols( Min( Strlen( st ), EditScreenCols() ) );
+   const auto showCols( std::min( Strlen( st ), EditScreenCols() ) );
    VidWrStrColorFlush( DialogLine(), 0, st, showCols, g_colorInfo, true );
    return showCols;
    }
@@ -2600,8 +2600,8 @@ void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // fo
                }
             }
          FULL_DB && DBG( "Prime win%d [%d..%d]", ix, yMin, yMax );
-         for( auto wyMin( pWin->d_UpLeft.lin + LargerOf(                     0, yMin - pView->Origin().lin ) ),
-                   wyMax( pWin->d_UpLeft.lin + SmallerOf( pWin->d_Size.lin - 1, yMax - pView->Origin().lin ) )
+         for( auto wyMin( pWin->d_UpLeft.lin + std::max(                    0, yMin - pView->Origin().lin ) ),
+                   wyMax( pWin->d_UpLeft.lin + std::min( pWin->d_Size.lin - 1, yMax - pView->Origin().lin ) )
             ; wyMin <= wyMax
             ; ++wyMin
             ) {
@@ -2750,7 +2750,7 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
    auto lastColor(0);
    for( auto ix(0) ; maxCharsToDisp > 0 && alc->inRange( ix ) ; ) {
       lastColor = alc->colorAt( ix );
-      const auto segLen( Min( alc->runLength( ix ), maxCharsToDisp ) );
+      const auto segLen( std::min( alc->runLength( ix ), maxCharsToDisp ) );
       FULL_DB && DBG( "%s Len=%d", __func__, segLen );
       VidWrStrColor( yLine, xCol, pszStringToDisp, segLen, lastColor, 0 );
       ix              += segLen;
@@ -2799,7 +2799,7 @@ public:
 
 void ColoredLine::Cat( int ColorIdx, stref src ) {
    const auto attr( g_CurView()->ColorIdx2Attr( ColorIdx ) );
-   const auto cpyLen( SmallerOf( src.length(), (int(sizeof(d_charBuf))-1) - d_curLen) );
+   const auto cpyLen( std::min( src.length(), (int(sizeof(d_charBuf))-1) - d_curLen) );
    if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3" PR_SIZET "..%3" PR_SIZET "] %02X %" PR_BSR "", d_curLen, d_curLen+cpyLen-1, attr, BSR(src) );
       d_alc.PutColor( d_curLen, cpyLen, attr );
       memcpy( d_charBuf + d_curLen, src.data(), cpyLen );

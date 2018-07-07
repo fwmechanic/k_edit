@@ -579,7 +579,7 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
               return false;                     \
               }                                 \
            const auto rl( pFBuf->PeekRawLine( curPt.lin ) ); \
-           const auto colLastPossibleMatchChar( Min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col ) );
+           const auto colLastPossibleMatchChar( std::min( ColOfFreeIdx( tw, rl, rl.length()-1 ), constrainingRect.flMax.col ) );
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       Point curPt( start.lin, start.col + 1 );
       for( ; curPt.lin <= constrainingRect.flMax.lin ; ++curPt.lin, curPt.col = constrainingRect.flMin.col ) {
@@ -599,7 +599,7 @@ STATIC_FXN bool CharWalkRect( bool fWalkFwd, PFBUF pFBuf, const Rect &constraini
       if( constrainingRect.flMin.col > curPt.col ) { --curPt.lin;  curPt.col = constrainingRect.flMax.col; }
       for( ; curPt.lin >= constrainingRect.flMin.lin ; --curPt.lin ) {
          SETUP_LINE_TEXT;
-         for( curPt.col = Min( colLastPossibleMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
+         for( curPt.col = std::min( colLastPossibleMatchChar, (curPt.col >= 0) ? curPt.col : constrainingRect.flMax.col )
             ; curPt.col >= constrainingRect.flMin.col
             ; curPt.col = ColOfPrevChar( tw, rl, curPt.col )
             ) {
@@ -870,7 +870,7 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
          }
       IdxCol_cached rlc( tw, pFBuf->PeekRawLine( curPt.lin ) );
       auto ixBOL( rlc.c2ci( within.flMin.col ) );
-      auto colLastPossibleMatchChar( Min( rlc.i2c( rlc.sr().length()-1 ), within.flMax.col ) );
+      auto colLastPossibleMatchChar( std::min( rlc.i2c( rlc.sr().length()-1 ), within.flMax.col ) );
       while( ( DB && DBG( "%d vs %d", curPt.col, colLastPossibleMatchChar ), curPt.col <= colLastPossibleMatchChar ) ) {
          const auto rv( walker.CheckNext( pFBuf, rlc, ixBOL, &curPt, &colLastPossibleMatchChar ) );
          if( STOP_SEARCH == rv ) { return true; }
@@ -1744,7 +1744,7 @@ void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START 
          if( iC < rl.length() ) { // if curPt.col is in middle of line...
             ++iC;                     // ... nd to incr to get correct maxCharsToSearch
             }
-         const auto maxCharsToSearch( Min( iC, rl.length() ) );
+         const auto maxCharsToSearch( std::min( iC, rl.length() ) );
          const stref haystack( rl.data(), maxCharsToSearch );   VS_( DBG( "-search: HAYSTACK='%" PR_BSR "'", BSR(haystack) ); )
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to

@@ -679,12 +679,12 @@ void TMouseEvent::Process() { // usemouse:yes
       STATIC_VAR UI minPosSpin = UINT_MAX, maxPosSpin = 0;
       STATIC_VAR UI minNegSpin = UINT_MAX, maxNegSpin = 0;
       if( Sign(wheelspin) > 0 ) {
-         minPosSpin = SmallerOf( minPosSpin, abs_spin );
-         maxPosSpin = LargerOf ( maxPosSpin, abs_spin );
+         minPosSpin = std::min( minPosSpin, abs_spin );
+         maxPosSpin = std::max( maxPosSpin, abs_spin );
          }
       else {
-         minNegSpin = SmallerOf( minNegSpin, abs_spin );
-         maxNegSpin = LargerOf ( maxNegSpin, abs_spin );
+         minNegSpin = std::min( minNegSpin, abs_spin );
+         maxNegSpin = std::max( maxNegSpin, abs_spin );
          }
       DBG( "+spin-range: (%5d,%5d)  -spin-range: (%5d,%5d)", minPosSpin, maxPosSpin, minNegSpin, maxNegSpin );
     #endif

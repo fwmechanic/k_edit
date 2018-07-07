@@ -252,7 +252,7 @@ STIL int cmpi( int c1, int c2 ) { // impl w/highly ASCII-centric optzn taken fro
    }
 
 STIL int cmp( const stref &s1, const stref &s2 ) {
-   const auto cmplen( Min( s1.length(), s2.length() ) );
+   const auto cmplen( std::min( s1.length(), s2.length() ) );
    for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
       const auto rv( cmp( s1[ix], s2[ix] ) );
       if( rv != 0 ) {
@@ -264,7 +264,7 @@ STIL int cmp( const stref &s1, const stref &s2 ) {
    }
 
 STIL int cmpi( const stref &s1, const stref &s2 ) {
-   const auto cmplen( Min( s1.length(), s2.length() ) );
+   const auto cmplen( std::min( s1.length(), s2.length() ) );
    for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
       const auto rv( cmpi( s1[ix], s2[ix] ) );
       if( rv != 0 ) {
@@ -444,7 +444,7 @@ class FixedCharArray {
 public:
    FixedCharArray() { d_buf[0] = '\0'; }
    FixedCharArray( stref src ) { bcpy( d_buf, src ); }
-   stref  sr()    const { return stref( d_buf, Min( elements-1, Strlen( d_buf ) ) ); }
+   stref  sr()    const { return stref( d_buf, std::min( elements-1, Strlen( d_buf ) ) ); }
    PCChar k_str() const { return d_buf; }
    PChar  c_str()       { return d_buf; }
    void Vsprintf( PCChar format, va_list val ) { // yes, part of the PUBLIC interface!
@@ -493,7 +493,7 @@ public:
    Catbuf() { d_buf[0] = '\0'; } // paranoia
    wref Wref() { return wref{ d_buf, elements }; }
    stref sr( const wref& wr ) const { return stref( d_buf, (wr.bp() - d_buf) ); }
-   stref sr()                 const { return stref( d_buf, Min( elements-1, Strlen( d_buf ) ) ); }
+   stref sr()                 const { return stref( d_buf, std::min( elements-1, Strlen( d_buf ) ) ); }
    PCChar k_str() const { return d_buf; }
    PChar  c_str()       { return d_buf; }
    // Test code:

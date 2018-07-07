@@ -670,7 +670,7 @@ EdKc_t ModalKeyRemap( EdKc_t edKC ) {
 void WaitForKey( int secondsToWait ) {
 // if( Interpreter::Interpreting() )
 //    return;
-   secondsToWait = Min( secondsToWait, 1 );
+   secondsToWait = std::min( secondsToWait, 1 );
    ConIn::FlushKeyQueueAnythingFlushed();
    SpinChar sc;
    auto timeNow( time( nullptr ) );

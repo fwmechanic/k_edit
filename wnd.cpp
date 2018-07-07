@@ -338,7 +338,7 @@ STATIC_FXN void CloseWindow_( PWin pWinToClose, PWin pWinToMergeTo ) {
    #define  WIN_SIZE_MERGE( aaa )                                   \
          newSize   .aaa += pWinToClose->d_Size.aaa + BORDER_WIDTH ; \
          newSizePct.aaa += pWinToClose->SizePct().aaa ;             \
-         NoGreaterThan( &newUlc.aaa, pWinToClose->d_UpLeft.aaa )  ;
+         NoMoreThan( &newUlc.aaa, pWinToClose->d_UpLeft.aaa )  ;
    const auto fSplitVertical( pWinToMergeTo->d_UpLeft.lin == pWinToClose->d_UpLeft.lin );
    if( fSplitVertical ) { WIN_SIZE_MERGE( col ) }
    else                 { WIN_SIZE_MERGE( lin ) }

@@ -350,7 +350,7 @@ STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsRealMacro() ) {
-         Max( &nmLen, Strlen( pCmd->Name() ) );
+         nmLen = std::max( nmLen, Strlen( pCmd->Name() ) );
          }
       }
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) { // sorted traversal

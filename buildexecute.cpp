@@ -69,8 +69,8 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
    pcv->FreeHiLiteRects();  // ###############################################################
    if( g_fBoxMode ) {
       Rect hilite;
-      hilite.flMin.lin = Min( s_SelAnchor.lin, pt.lin );
-      hilite.flMax.lin = Max( s_SelAnchor.lin, pt.lin );
+      hilite.flMin.lin = std::min( s_SelAnchor.lin, pt.lin );
+      hilite.flMax.lin = std::max( s_SelAnchor.lin, pt.lin );
       auto fLinesel( false );
       if( pt.col > s_SelAnchor.col ) {
          hilite.flMin.col = s_SelAnchor.col;
@@ -132,8 +132,8 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
          const auto yDelta( pt.lin - s_SelAnchor.lin );
          if( Abs(yDelta) > 1 ) {
             Rect hilite;
-            hilite.flMin.lin = Min( s_SelAnchor.lin, pt.lin ) + 1;
-            hilite.flMax.lin = Max( s_SelAnchor.lin, pt.lin ) - 1;
+            hilite.flMin.lin = std::min( s_SelAnchor.lin, pt.lin ) + 1;
+            hilite.flMax.lin = std::max( s_SelAnchor.lin, pt.lin ) - 1;
             hilite.flMin.col = 0;
             hilite.flMax.col = COL_MAX;
             pcv->InsHiLiteBox( ColorTblIdx::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -311,10 +311,10 @@ void TermNulleow( std::string &st ) {
 bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { // intended use: selection-smart CURSORFUNC's
    const auto Cursor( g_CurView()->Cursor() );
    if( Get_g_ArgCount() > 0 ) {
-      *yMin = Min( s_SelAnchor.lin, Cursor.lin );
-      *yMax = Max( s_SelAnchor.lin, Cursor.lin );
-      *xMin = Min( s_SelAnchor.col, Cursor.col );
-      *xMax = Max( s_SelAnchor.col, Cursor.col );
+      *yMin = std::min( s_SelAnchor.lin, Cursor.lin );
+      *yMax = std::max( s_SelAnchor.lin, Cursor.lin );
+      *xMin = std::min( s_SelAnchor.col, Cursor.col );
+      *xMax = std::max( s_SelAnchor.col, Cursor.col );
       return true;
       }
    else {
@@ -330,8 +330,8 @@ bool View::GetBOXSTR_Selection( std::string &st ) {
    if( this == g_CurView() ) {
       const auto cursor( Cursor() );
       if( Get_g_ArgCount() > 0 /* && s_SelAnchor.lin == cursor.lin */ ) {   0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
-         const auto xMin( Min( s_SelAnchor.col, cursor.col ) );
-         const auto xMax( Max( s_SelAnchor.col, cursor.col ) );
+         const auto xMin( std::min( s_SelAnchor.col, cursor.col ) );
+         const auto xMax( std::max( s_SelAnchor.col, cursor.col ) );
          auto sr( FBuf()->PeekRawLineSeg( cursor.lin, xMin, xMax-1 ) );     0 && DBG("x:%d,%d '%" PR_BSR "'", xMin, xMax-1, BSR(sr) );
          trim( sr );
          st.assign( sr.data(), sr.length() );
@@ -383,7 +383,7 @@ bool ARG::IngestArgTextAndSelection() { enum {DB=0};                            
    if( fHaveLiteralTextarg ) {
       if( (d_pCmd->d_argType & NUMARG) && StrSpnSignedInt( TextArgBuffer().c_str() ) ) {
          if( (NumArg_value = atoi( TextArgBuffer().c_str() )) ) {
-            s_SelAnchor.lin = Max( 0, s_SelAnchor.lin + NumArg_value + (NumArg_value > 0) ? (-1) : (+1) );
+            s_SelAnchor.lin = std::max( 0, s_SelAnchor.lin + NumArg_value + (NumArg_value > 0) ? (-1) : (+1) );
             }
          }
       else {
@@ -418,10 +418,10 @@ bool ARG::IngestArgTextAndSelection() { enum {DB=0};                            
          }                                                                                    DB && DBG( "%s !NULLARG", __func__ );
       return true; //=========================================================================
       }
-   const auto xMin( Min( s_SelAnchor.col, Cursor.col ) );
-   const auto xMax( Max( s_SelAnchor.col, Cursor.col ) );
-   const auto yMin( Min( s_SelAnchor.lin, Cursor.lin ) );
-   const auto yMax( Max( s_SelAnchor.lin, Cursor.lin ) );
+   const auto xMin( std::min( s_SelAnchor.col, Cursor.col ) );
+   const auto xMax( std::max( s_SelAnchor.col, Cursor.col ) );
+   const auto yMin( std::min( s_SelAnchor.lin, Cursor.lin ) );
+   const auto yMax( std::max( s_SelAnchor.lin, Cursor.lin ) );
    if( (d_pCmd->d_argType & BOXSTR) && s_SelAnchor.lin == Cursor.lin ) {                      DB && DBG( "%s BOXSTR_to_TEXTARG", __func__ );
       return BOXSTR_to_TEXTARG( Cursor.lin, xMin, xMax ); //==================================
       }
@@ -472,7 +472,7 @@ bool ARG::IngestArgTextAndSelection() { enum {DB=0};                            
 // trims leading and trailing blanks of each contributing line, ensures lines' contrib sare joined by ONE blank
 std::string StreamArgToString( PFBUF pfb, Rect stream ) {
    std::string dest;
-   const auto yMax( Min( pfb->LastLine(), stream.flMax.lin ) );
+   const auto yMax( std::min( pfb->LastLine(), stream.flMax.lin ) );
    if( stream.flMin.lin > yMax ) {
       return dest;
       }
@@ -628,7 +628,7 @@ public:
 
 void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszPrompt );
    const auto promptLen( Strlen( d_pszPrompt ) );
-   auto oEditText( Max( 0, d_xCursor - EditScreenCols() + promptLen + 1 ) );
+   auto oEditText( std::max( 0, d_xCursor - EditScreenCols() + promptLen + 1 ) );
    auto editTextLen( Strlen( d_pszEditText ) );
    if( oEditText > 0 ) {
       oEditText   -= oEditText % g_iHscroll;
@@ -636,7 +636,7 @@ void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszP
       editTextLen -= oEditText;
       }
    {
-   const auto editTextShown( Min( EditScreenCols() - promptLen, editTextLen ) );
+   const auto editTextShown( std::min( EditScreenCols() - promptLen, editTextLen ) );
    VideoFlusher vf;
    VidWrStrColor( DialogLine(), 0        , d_pszPrompt            , promptLen    , d_colorAttribute, false );
    VidWrStrColor( DialogLine(), promptLen, d_pszEditText+oEditText, editTextShown, g_colorStatus   , false );
@@ -1295,7 +1295,7 @@ STATIC_FXN bool BuildXeqArgCmdStr( bool fMeta, int cArg, PCChar cmdName, PCChar 
       snprintf_full( &pLbuf, &lbufBytes, "lastselect " );
       --cArg;
       }
-   NoGreaterThan( &cArg, 9 );
+   NoMoreThan( &cArg, 9 );
    for( auto ix(0); ix < cArg ; ++ix ) { snprintf_full( &pLbuf, &lbufBytes, "arg " );              }
    if( fMeta )                         { snprintf_full( &pLbuf, &lbufBytes, "meta " );             }
    if( pTextarg )                      { snprintf_full( &pLbuf, &lbufBytes, "\"%s\" ", pTextarg ); }
@@ -1456,7 +1456,7 @@ void ARG::GetColumnRange( COL *pxMin, COL *pxMax ) const {
    }
 
 bool ARG::Within( const Point &pt, COL len ) const { // Within() pays attention to the x dimension (COLumn), while Beyond() DOES NOT
-   const auto xLast( pt.col + Max( len-1, 0 ) );
+   const auto xLast( pt.col + std::max( len-1, 0 ) );
    switch( d_argType ) {
     case LINEARG:   return WithinRangeInclusive( d_linearg.yMin, pt.lin, d_linearg.yMax   );
     case BOXARG:    return WithinRangeInclusive( d_boxarg.flMin.lin, pt.lin, d_boxarg.flMax.lin )

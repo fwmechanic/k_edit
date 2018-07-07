@@ -86,7 +86,7 @@ STATIC_FXN int delimMirror( int ch ) {
 typedef int (*chXlat)( int ch );
 
 void xlatStr( PChar dest, size_t sizeofDest, PCChar src, chXlat fxn ) {
-   const auto len( Min( sizeofDest - 1, size_t( Strlen(src) )) );
+   const auto len( std::min( sizeofDest - 1, size_t( Strlen(src) )) );
    const auto end( src + len );
    while( src < end ) {
       *dest++ = fxn( *src++ );

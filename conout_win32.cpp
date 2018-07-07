@@ -45,12 +45,12 @@ class TConsoleOutputControl {
    public:
       bool fLineDirty() const { return d_xMinDirty <= d_xMaxDirty; }
       void ColUpdated( int col ) {
-         Min( &d_xMinDirty, col );
-         Max( &d_xMaxDirty, col );
+         d_xMinDirty = std::min( d_xMinDirty, col );
+         d_xMaxDirty = std::max( d_xMaxDirty, col );
          }
       void BoundValidColumns( COL *minColUpdated, COL *maxColUpdated ) const {
-         Min( minColUpdated, d_xMinDirty );
-         Max( maxColUpdated, d_xMaxDirty );
+         *minColUpdated = std::min( *minColUpdated, d_xMinDirty );
+         *maxColUpdated = std::max( *maxColUpdated, d_xMaxDirty );
          }
       ScreenCell *BufPtrOfCol( int col ) const {
          return d_paCHAR_INFO_BufStart + col;
@@ -318,7 +318,7 @@ COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars
       return 0;
       }
    const auto maxConChars( d_xyState.size.col - xConsole );
-   Min( &srcChars, maxConChars );
+   srcChars = std::min( srcChars, maxConChars );
    const auto padLen( fPadWSpcs ? maxConChars - srcChars : 0 );
    auto updtdCells(0);
    auto &lc( d_vLineControl[ yConsole ] );
@@ -493,7 +493,7 @@ bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
          // height of the (screen buffer's) WINDOW.  The specified dimensions also
          // cannot be less than the minimum size allowed by the system."
          //
-         if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, Min( int(bufSize.lin), newSize.lin ), Min( int(bufSize.col), newSize.col ) ) ) {
+         if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, std::min( int(bufSize.lin), newSize.lin ), std::min( int(bufSize.col), newSize.col ) ) ) {
             DBG( "%s shrinking SetConsoleWindowInfo FAILED!", trying.k_str() );
             break;
             }
