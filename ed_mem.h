@@ -77,14 +77,14 @@ inline void FreeUp( Ptr &ptr, Ptr newp=nullptr ) {
 
 template<typename type>
 inline void MoveArray( type * dest, const type * src, size_t elements=1 ) {
-   memmove( dest, src, elements * sizeof(*src) );
+   memmove( static_cast<void*>(dest), src, elements * sizeof(*src) );
    }
 
 template<typename type>
 inline type * DupArray( const type *pSrc, size_t elements=1 ) {
    type *rv;
    AllocArrayNZ( rv, elements );
-   memcpy( rv, pSrc, elements * sizeof(*rv) );
+   memcpy( static_cast<void*>(rv), pSrc, elements * sizeof(*rv) );
    return rv;
    }
 

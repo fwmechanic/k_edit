@@ -19,6 +19,11 @@
 
 #include "ed_main.h"
 
+// Disable a picky gcc-8 compiler warning
+#if defined(__GNUC__) && (__GNUC__ >= 8)
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
 //
 //  Switch definition table defintions
 //

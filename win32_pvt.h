@@ -86,12 +86,21 @@ namespace Win32 {
    #define K_STDCALL
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
 // see http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
 template<typename pfn_t>
 inline bool LoadFuncOk( pfn_t &fn, Win32::HMODULE hmod, const char *name) {
-   fn = (pfn_t)Win32::GetProcAddress(hmod, name);
+   fn = reinterpret_cast<pfn_t>(Win32::GetProcAddress(hmod, name));
    return fn != nullptr;
    }
+
+#if defined(__GNUC__) && (__GNUC__ >= 8)
+#pragma GCC diagnostic pop
+#endif
 
 struct WhileHoldingGlobalVariableLock
    {
