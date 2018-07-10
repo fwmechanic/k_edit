@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -18,21 +18,6 @@
 //
 
 #include "ed_main.h"
-
-void swidHscroll( PChar dest, size_t sizeofDest, void *src ) { swid_int( dest, sizeofDest, g_iHscroll ); }
-void swidVscroll( PChar dest, size_t sizeofDest, void *src ) { swid_int( dest, sizeofDest, g_iVscroll ); }
-
-bool swixHscroll( stref param ) {
-   g_iHscroll = StrToInt_variable_base( param, 10 );
-   Constrain( COL(1), &g_iHscroll, EditScreenCols() - 1 );
-   return true;
-   }
-
-bool swixVscroll( stref param ) {
-   g_iVscroll = StrToInt_variable_base( param, 10 );
-   Constrain( LINE(1), &g_iVscroll, EditScreenLines() - 1 );
-   return true;
-   }
 
 STIL bool CursorCannotBeInTabFill() { return g_fRealtabs && g_fTabAlign; }
 STIL COL TabAlignCursorPolicy( PCFBUF pFBuf, LINE yPos, COL xPos ) { return CursorCannotBeInTabFill() ?  TabAlignedCol( pFBuf->TabWidth(), pFBuf->PeekRawLine( yPos ), xPos ) : xPos; }

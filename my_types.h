@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -182,8 +182,9 @@ template<typename T> class TD;
 // pointer) is passed to such a function:
 //
 // BSOB => "Buffer, SizeOf Buffer"
-//
+// AEOA => "Array , ElementsOf Array"
 #define  BSOB( buffer )   buffer , sizeof(buffer)
+#define  AEOA( array )    array , ELEMENTS(array)
 
 //-----
 // "To ensure compatibility with C code and pre-bool C++ code, implicit numeric

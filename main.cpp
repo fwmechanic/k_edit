@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -686,6 +686,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
    AssignLogTag( "InitEnvRelatedSettings" );
    InitEnvRelatedSettings();
    CmdIdxInit();
+   SwitblInit();
    InitFTypeSettings();
 #if FBUF_TREE
    FBufIdxInit();

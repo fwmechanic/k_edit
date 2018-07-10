@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -544,7 +544,7 @@ NEXT_SSG_COMBINATION:
 // parameter into
 //
 
-STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc, bool fKeepNameWildcard ) { enum { VERBOSE=1 };
+STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc, bool fKeepNameWildcard ) { enum { VERBOSE=0 };
 #if defined(_WIN32)
    if( fKeepNameWildcard ) {
       if(  ToBOOL( strchr( pszSrc, Path::chEnvSep ) )  // presence of Path::chEnvSep overrides fKeepNameWildcard (since what

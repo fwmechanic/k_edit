@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -89,7 +89,7 @@ bool TruncComment_AssignStrOk_( stref src, CPCChar caller ) {
    auto continues( false ); const auto parsed( ExtractAssignableText( src, continues ) );
    if( parsed.empty() )                  { return Msg( "nothing to assign" ); }
    if( continues )                       { return Msg( "source text ends with line continuation" ); }
-   if( !AssignStrOk_( parsed, caller ) ) { return Msg( "assignment error" ); }
+   if( !AssignStrOk_( parsed, caller ) ) { return false ; }  // AssignStrOk_ calls Msg(errmsg) internally on err
    return true;
    }
 

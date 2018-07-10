@@ -30,7 +30,7 @@
       hscroll:20
       vscroll:10
 
-      cursorsize:1
+      cursorsize:large
 
    #  luagcstep:10
 
@@ -626,10 +626,10 @@
    # 0xFA (centered dot, faint)
    trailspace:no
    traildisp: 0xFA
-   tabdisp: ^
-   tabdisp: 0xF9
-   tabdisp: >
-   tabdisp: -
+   # tabdisp: ^
+   # tabdisp: 0xF9
+   # tabdisp: >
+   # tabdisp: -
    tabdisp: <
 
    savescreen:ctrl+k

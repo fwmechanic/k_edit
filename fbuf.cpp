@@ -1,5 +1,5 @@
 // -*- c is foobar -*-
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -975,26 +975,16 @@ enum { SIZEOF_MAX_FTYPE=51 };
 STATIC_VAR char s_cur_Ftype         [ SIZEOF_MAX_FTYPE ];
 STATIC_VAR char s_cur_FtypeSectionNm[ SIZEOF_MAX_FTYPE + KSTRLEN(s_sftype_prefix) ];
 
-void swidFtype( PChar dest, size_t sizeofDest, void *src ) {
-   scpy( dest, sizeofDest, s_cur_Ftype );
-   }
-
-STATIC_FXN stref Get_s_cur_Ftype() {
+stref GetCurFtype() {
    return s_cur_Ftype;
    }
 
-STATIC_FXN void Set_s_cur_Ftype( stref ftype ) {
+void SetCurFtype( stref ftype ) {
    bcpy( s_cur_Ftype, ftype );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
    }
 
-PCChar swixFtype( stref param ) {
-   Set_s_cur_Ftype( param );
-   return nullptr;
-   }
-
-
 STATIC_FXN void FtypeRestoreDefaults() {
-   swixDelims( "{[(" );
+   SetCurDelims( "{[(" );
    }
 
 STATIC_FXN bool RsrcFileLdSectionFtype( stref ftype ) {
@@ -1068,14 +1058,14 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
       // FBuf.  This is ASSUMED to be set in rsrcExt sections.  Since switch values
       // are currently stored in global (boo!) variables, we snoop the rsrcExt
       // section assignment process ...
-      swixFtype( "unknown" ); // default
+      SetCurFtype( "unknown" ); // default
       RsrcFileLdAllNamedSections( rsrcExt );
-      const auto ftype( Get_s_cur_Ftype() );  // snoop ftype
+      const auto ftype( GetCurFtype() );  // snoop ftype
       fb->SetFType( ftype );                                     0 && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
       RsrcFileLdSectionFtype( ftype );
       }
    else {
-      fb->SetFType( Get_s_cur_Ftype() );
+      fb->SetFType( GetCurFtype() );
       }
    }
 
@@ -1457,18 +1447,6 @@ STATIC_FXN PCChar kszBackupMode( int backupMode ) {
       case bkup_BAK  : return "bak"  ;
       case bkup_UNDEL: return "undel";
       }
-   }
-
-void swidBackup( PChar dest, size_t sizeofDest, void *src ) {
-   scpy( dest, sizeofDest, kszBackupMode( g_iBackupMode ) );
-   }
-
-PCChar swixBackup( stref param ) {
-   if(      0==cmpi( param, "bak"   ) )  { g_iBackupMode = bkup_BAK   ; } // backup:none
-   else if( 0==cmpi( param, "undel" ) )  { g_iBackupMode = bkup_UNDEL ; } // backup:bak
-   else if( 0==cmpi( param, "none"  ) )  { g_iBackupMode = bkup_NONE  ; } // backup:undel
-   else {  return SwiErrBuf.Sprintf( "'%s' value must be one of 'undel', 'bak' or 'none'", kszBackup ); }
-   return nullptr;
    }
 
 enum { VERBOSE_WRITE = 1 };

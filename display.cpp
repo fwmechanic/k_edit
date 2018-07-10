@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -2406,7 +2406,7 @@ int DispRawDialogStr( PCChar st ) {
 int VMsg( PCChar pszFormat, va_list val ) {
    if( !pszFormat ) { pszFormat = ""; }
    Xbuf xb; xb.vFmtStr( pszFormat, val );
-   WL(0,1) && DBG( "*** '%s'", xb.c_str() );  // <-- enable this for more UI visibility
+   WL(1,1) && DBG( "*** '%s'", xb.c_str() );  // <-- enable this for more UI visibility
    return DispRawDialogStr( xb.c_str() );
    }
 
@@ -2974,38 +2974,9 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
    }
 //--------------------------------------------------------------------------------------
 
-void swid_ch( PChar dest, size_t sizeofDest, char ch ) {
-   safeSprintf( dest, sizeofDest, "0x%02X (%c)", ch, ch );
-   }
-
-STATIC_FXN bool swixChardisp( stref param, char &charVar ) {
-   DBG( "%s: param=%" PR_BSR "'", __PRETTY_FUNCTION__, BSR( param ) );
-   charVar = char(StrToInt_variable_base( param, 10 ));
-   if( char(-1) == charVar ) {
-      charVar = param.length() == 1 ? param[0] : ' ';
-      }
-   DispNeedsRedrawAllLinesAllWindows();
-   return true;
-   }
-
 GLOBAL_VAR char g_chTabDisp = DFLT_G_CHTABDISP;
-
-bool swixTabdisp(   stref param ) { return swixChardisp( param, g_chTabDisp        ); }
-void swidTabdisp( PChar dest, size_t sizeofDest, void *src ) {
-   swid_ch( dest, sizeofDest, static_cast<int>(g_chTabDisp) );
-   }
-
 GLOBAL_VAR char g_chTrailSpaceDisp = ' ';
-bool swixTraildisp( stref param ) { return swixChardisp( param, g_chTrailSpaceDisp ); }
-void swidTraildisp( PChar dest, size_t sizeofDest, void *src ) {
-   swid_ch( dest, sizeofDest, static_cast<int>(g_chTrailSpaceDisp) );
-   }
-
 GLOBAL_VAR char g_chTrailLineDisp = '~';
-bool swixTrailLinedisp( stref param ) { return swixChardisp( param, g_chTrailLineDisp ); }
-void swidTrailLinedisp( PChar dest, size_t sizeofDest, void *src ) {
-   swid_ch( dest, sizeofDest, static_cast<int>(g_chTrailLineDisp) );
-   }
 
 //--------------------------------------------------------------------------------------
 
@@ -3197,20 +3168,7 @@ void DispNeedsRedrawCursorMoved() { if( g_CurView() ) { g_CurView()->ForceCursor
 void UnhideCursor()  { if( ConOut::SetCursorVisibilityChanged( true  ) ) { DispNeedsRedrawCursorMoved(); } }
 void HideCursor()    { if( ConOut::SetCursorVisibilityChanged( false ) ) { DispNeedsRedrawCursorMoved(); } }
 
-GLOBAL_VAR int g_iCursorSize = 1;
-
-void swidCursorsize( PChar dest, size_t sizeofDest, void *src ) {
-   swid_int( dest, sizeofDest, g_iCursorSize );
-   }
-
-PCChar swixCursorsize( stref param ) {
-   if( param.length() != 1 ) { return "CursorSize: Value must be 0 or 1 (!len)"; }
-   switch( param[0] ) {
-      default:  return "CursorSize: Value must be 0 or 1";
-      case '0': g_iCursorSize = false; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); return nullptr;
-      case '1': g_iCursorSize = true ; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); return nullptr;
-      }
-   }
+GLOBAL_VAR int g_iCursorSize = -1;
 
 void View::InsertHiLitesOfLineSeg
    ( const LINE                yLine

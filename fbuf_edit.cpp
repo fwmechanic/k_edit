@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -36,20 +36,6 @@ public:
    int  ColOfPrevTabStop       ( int col ) const { return col - (1 + ((col - 1) % d_tabWidth)); }
    bool ColAtTabStop           ( int col ) const { return (col % d_tabWidth) == 0; }
    };
-
-void swidTabwidth( PChar dest, size_t sizeofDest, void *src ) {
-   scpy( dest, sizeofDest, "status ln's \"e?\"" );
-   }
-
-PCChar swixTabwidth( stref param ) { enum { DB=0 }; DB && DBG( "%s+ %" PR_BSR "'", __func__, BSR(param) );
-   const auto val( StrToInt_variable_base( param, 10 ) );
-   const auto inRange( val >= 1 && val <= MAX_TAB_WIDTH );
-   if( inRange ) {
-      g_iTabWidth = val;
-      DispNeedsRedrawAllLinesAllWindows();
-      }
-   return inRange ? nullptr : "tabwidth: Value must be between 1 and 8";
-   }
 
 void FBUF::SetTabWidth_( COL newTabWidth, PCChar funcnm_ ) { enum { DB=0 }; DB && DBG( "%s:%s %d <- %s", __func__, Name(), newTabWidth, funcnm_ );
    const auto inRange( newTabWidth >= MIN_TAB_WIDTH && newTabWidth <= MAX_TAB_WIDTH );

@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -296,28 +296,14 @@ extern   void  Wins_WriteStateFile( FILE *ofh );
 
 //------------ Assign
 
+extern   void  SwitblInit();
 extern   bool  SetSwitch( stref pszSwitchName, stref pszNewValue );
 
 extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
-extern  void   swid_int( PChar dest, size_t sizeofDest, int val );
-extern  void   swid_ch(  PChar dest, size_t sizeofDest, char ch );
 
-#define EXT_SWID(nm)  extern void swid##nm( PChar dest, size_t sizeofDest, void *src )
-#define EXT_SWI_FX_BOOL(nm)  extern bool   swix##nm ( stref param );  EXT_SWID(nm);
-#define EXT_SWI_FX_STR(nm)   extern PCChar swix##nm ( stref param );  EXT_SWID(nm);
-
-EXT_SWI_FX_STR(  Cursorsize    )
-EXT_SWI_FX_STR(  Backup        )
-EXT_SWI_FX_STR(  Tabwidth      )
-EXT_SWI_FX_STR(  Entab         )
-EXT_SWI_FX_STR(  Ftype         )
-EXT_SWI_FX_BOOL( Hscroll       )
-EXT_SWI_FX_BOOL( Vscroll       )
-EXT_SWI_FX_BOOL( Tabdisp       )
-EXT_SWI_FX_BOOL( Traildisp     )
-EXT_SWI_FX_BOOL( TrailLinedisp )
-EXT_SWI_FX_BOOL( WordChars     )
-EXT_SWI_FX_BOOL( Delims        )
+extern void  SetCurDelims( stref param );
+extern stref GetCurFtype();
+extern void  SetCurFtype( stref ftype );
 
 extern   void  AssignLogTag( PCChar tag );
 enum { RSRCFILE_COMMENT_DELIM = '#' };

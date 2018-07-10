@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -64,8 +64,10 @@ constexpr char chLSQ = '[';
 constexpr char chRSQ = ']';
 #define        SPCTAB  " \t"
 
-enum { MIN_TAB_WIDTH = 1,
-       MAX_TAB_WIDTH = 8, // we don't support > MAX_TAB_WIDTH cols per tab!
+constexpr int MIN_TAB_WIDTH = 1;
+constexpr int MAX_TAB_WIDTH = 8;  // we don't support > MAX_TAB_WIDTH cols per tab!
+
+enum {
        TICK     = 0x27,
        BACKTICK = 0x60,
    };

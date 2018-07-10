@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -277,6 +277,7 @@ int consec_xdigits( stref sr ) { return consec_is_its( isxdigit, sr ); }
 int consec_bdigits( stref sr ) { return consec_is_its( isbdigit, sr ); }
 
 int StrToInt_variable_base( stref pszParam, int numberBase ) {
+   // rv is nonnegative int or -1 if conv error
    if( (10 == numberBase || 16 == numberBase)
       && '0' == pszParam[0]
       && ('x' == pszParam[1] || 'X' == pszParam[1])
