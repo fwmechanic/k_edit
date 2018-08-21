@@ -742,6 +742,11 @@
 [.spa]
    ftype:sprintascii
 
+[ftype:sql]
+
+[.sql .psql]
+   ftype:sql
+
 [ftype:msbatch]
    wordchars:$_
    hljoinchars: :.

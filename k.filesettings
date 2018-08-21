@@ -99,6 +99,7 @@ local python_settings  = { colors = stdColors, hilite = "python" }
 local perl_settings  = { colors = darkColors, hilite = "python" }
 local make_settings  = { colors = proto( darkColors, { txt = bfg( Black, White ), } ), hilite = "make" }
 local ushell_settings= { colors = darkColors, hilite = "bash" }
+local sql_settings   = { colors = darkColors, hilite = "sql" }
 local pwrshell_settings= { colors = darkColors, hilite = "pwrshell" }
 
 ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
@@ -115,6 +116,7 @@ ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    text         = text_settings                        ,
    sh           = ushell_settings                      ,
    bash         = ushell_settings                      ,
+   sql          = sql_settings                         ,
    pwrshell     = pwrshell_settings                    ,
    pseudo       = text_settings                        ,
    unknown      = text_settings                        ,
