@@ -1176,12 +1176,11 @@ public:
    PCChar Name() const override { return "Powershell_Comment"; }
    };
 
-#define START_LINE_X()  const auto rl( pFile->PeekRawLine( pt.lin ) );
-
 HiliteAddin_powershell::scan_rv HiliteAddin_powershell::find_end_code( PCFBUF pFile, Point &pt ) {
 /* some */0 && DBG(/* tests */"FNNC @y=%d x=%d", pt.lin, pt.col );/* here */
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:      break;
@@ -1206,7 +1205,8 @@ NEXT_LINE: ;
    }
 
 HiliteAddin_powershell::scan_rv HiliteAddin_powershell::find_end_comment( PCFBUF pFile, Point &pt ) {
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:   break;
@@ -1229,7 +1229,8 @@ HiliteAddin_powershell::scan_rv HiliteAddin_powershell::find_end_comment( PCFBUF
 #define find_end_Qstr( class, nm, delim )                                      \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {                 \
+      const auto rl( pFile->PeekRawLine( pt.lin ) );                           \
       for( ; pt.col < rl.length() ; ++pt.col ) {                               \
          switch( rl[pt.col] ) {                                                \
             default:     break;                                                \
@@ -1244,7 +1245,6 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    }
        find_end_Qstr( HiliteAddin_powershell, find_end_1Qstr, chQuot1 )
        find_end_Qstr( HiliteAddin_powershell, find_end_2Qstr, chQuot2 )
-
 #undef find_end_Qstr
 
 void HiliteAddin_powershell::scan_pass( LINE yMaxScan ) {
@@ -1288,12 +1288,11 @@ public:
    PCChar Name() const override { return "C_Comment"; }
    };
 
-#define START_LINE_X()  const auto rl( pFile->PeekRawLine( pt.lin ) );
-
 HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_code( PCFBUF pFile, Point &pt ) {
 /* some */0 && DBG(/* tests */"FNNC @y=%d x=%d", pt.lin, pt.col );/* here */
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:      break;
@@ -1319,7 +1318,8 @@ NEXT_LINE: ;
    }
 
 HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_comment( PCFBUF pFile, Point &pt ) {
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:   break;
@@ -1342,7 +1342,8 @@ HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_comment( PCFBUF pFile, Po
 #define find_end_Qstr( class, nm, delim )                                      \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {                 \
+      const auto rl( pFile->PeekRawLine( pt.lin ) );                           \
       for( ; pt.col < rl.length() ; ++pt.col ) {                               \
          switch( rl[pt.col] ) {                                                \
             default:     break;                                                \
@@ -1357,6 +1358,7 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    }
        find_end_Qstr( HiliteAddin_clang, find_end_1Qstr, chQuot1 )
        find_end_Qstr( HiliteAddin_clang, find_end_2Qstr, chQuot2 )
+#undef find_end_Qstr
 
 void HiliteAddin_clang::scan_pass( LINE yMaxScan ) {
    auto fb( CFBuf() );
@@ -1399,12 +1401,11 @@ public:
    PCChar Name() const override { return "SQL_Comment"; }
    };
 
-#define START_LINE_X()  const auto rl( pFile->PeekRawLine( pt.lin ) );
-
 HiliteAddin_sql::scan_rv HiliteAddin_sql::find_end_code( PCFBUF pFile, Point &pt ) {
 /* some */0 && DBG(/* tests */"FNNC @y=%d x=%d", pt.lin, pt.col );/* here */
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:      break;
@@ -1433,7 +1434,8 @@ NEXT_LINE: ;
    }
 
 HiliteAddin_sql::scan_rv HiliteAddin_sql::find_end_comment( PCFBUF pFile, Point &pt ) {
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:   break;
@@ -1456,7 +1458,8 @@ HiliteAddin_sql::scan_rv HiliteAddin_sql::find_end_comment( PCFBUF pFile, Point 
 #define find_end_Qstr( class, nm, delim )                                      \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {                 \
+      const auto rl( pFile->PeekRawLine( pt.lin ) );                           \
       for( ; pt.col < rl.length() ; ++pt.col ) {                               \
          switch( rl[pt.col] ) {                                                \
             default:     break;                                                \
@@ -1529,7 +1532,8 @@ STATIC_FXN int Lua_long_level( stref rl, sridx ix ) { // ix indexes PAST first L
 
 HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:     break;
@@ -1576,7 +1580,8 @@ NEXT_LINE: ;
    }
 
 HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_long( PCFBUF pFile, Point &pt ) {
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:     break;
@@ -1603,7 +1608,6 @@ HiliteAddin_lua::scan_rv HiliteAddin_lua::find_end_long( PCFBUF pFile, Point &pt
 
        find_end_Qstr( HiliteAddin_lua, find_end_1Qstr, chQuot1 )
        find_end_Qstr( HiliteAddin_lua, find_end_2Qstr, chQuot2 )
-
 #undef find_end_Qstr
 
 void HiliteAddin_lua::scan_pass( LINE yMaxScan ) {
@@ -1657,7 +1661,8 @@ public:
 
 HiliteAddin_python::scan_rv HiliteAddin_python::find_end_code( PCFBUF pFile, Point &pt ) {
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
             default:      break;
@@ -1689,7 +1694,8 @@ NEXT_LINE: ;
 #define find_end_Qstr1e( class, nm, delim )                                    \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    const auto start( pt );                                                     \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()  \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {                 \
+      const auto rl( pFile->PeekRawLine( pt.lin ) );                           \
       for( ; pt.col < rl.length() ; ++pt.col ) {                               \
          switch( rl[pt.col] ) {                                                \
             default:     break;                                                \
@@ -1710,7 +1716,8 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
 
 #define find_end_Qstr3e( class, nm, delim )                                                       \
 class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                                             \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()                     \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {                                    \
+      const auto rl( pFile->PeekRawLine( pt.lin ) );                                              \
       for( ; pt.col < rl.length() ; ++pt.col ) {                                                  \
          switch( rl[pt.col] ) {                                                                   \
             default:     break;                                                                   \
@@ -1786,7 +1793,8 @@ public:
 
 HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      const auto rl( pFile->PeekRawLine( pt.lin ) );
       for( ; pt.col < rl.length() ; ++pt.col ) {                                   DB && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col );
          switch( rl[pt.col] ) {
             default:      break;
@@ -1804,7 +1812,8 @@ NEXT_LINE: ;
 #define def_find_end_str_nest( class, pri, sec ) \
 class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };                                                     \
    const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) { START_LINE_X()                                                                         \
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {                                                                                        \
+      const auto rl( pFile->PeekRawLine( pt.lin ) );                                                                                                  \
       for( ; pt.col < rl.length() ; ++pt.col ) {                                   DB && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col ); \
          switch( rl[pt.col] ) {                                                                                                                       \
             default:      break;                                                                                                                      \
