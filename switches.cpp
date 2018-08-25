@@ -473,7 +473,7 @@ void SwitblInit() {
    addswi( "errprompt"      , new SWIi_bv( g_fErrPrompt        ) _AHELP( "error message display pauses with \"Press any key...\" prompt" ) );
    addswi( "fastsearch"     , new SWIi_bv( g_fFastsearch       ) _AHELP( "use fast search algorithm (when key contains no spaces)" ) );
    addswi( "forceplateol"   , new SWIi_bv( g_fForcePlatformEol ) _AHELP(  kszHelpPlatEoL ) );
-   addswi( "ftype"          , new SWIs( GetCurFtype, [](stref v_){ SetCurFtype( v_ ); return stref(""); } )  _AHELP( "set ftype" ) );
+   addswi( "ftype"          , new SWIs( GetCurFtype, [](stref v_){ SetCurFtype( v_ ); return stref(""); } )  _AHELP( "set ftype, the index into k.filesettings:ftype_map" ) );
    addswi( "hike"           , new SWIi_iv( g_iHike                  ) _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) );
    addswi( "hljoinchars"    , new SWIsb( swidHLJoinchars, swixHLJoinchars )  _AHELP( "Hierarchial Left Join charset: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes; [_a-zA-Z0-9] are always members" ) );
    addswi( "hscroll"        , new SWIi_ci( [](){ return g_iHscroll  ; }, [](int v_){ g_iHscroll   = v_; }, [](){ return 1; }, [](){ return EditScreenCols ()-1; }, false ) _AHELP( "the number of columns that the editor scrolls the text left or right when you move the cursor out of the window" ) );
