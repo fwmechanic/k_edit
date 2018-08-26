@@ -327,6 +327,7 @@ OBJS := \
  search.o       \
  stringlist.o   \
  switches.o     \
+ switch_impl.o  \
  sysbufs.o      \
  $(PLAT_OBJS)   \
  wnd.o

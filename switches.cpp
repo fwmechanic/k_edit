@@ -19,262 +19,44 @@
 
 #include "ed_main.h"
 
-// Disable a picky gcc-8 compiler warning
-#if defined(__GNUC__) && (__GNUC__ >= 8)
-#pragma GCC diagnostic ignored "-Wcast-function-type"
+#include "switch_impl.h"
+
+//----------- SWIX's  extern decls put here so there's no doubt that these shouldn't be called except via s_SwiTable
+
+#if    defined(_WIN32)
+#define kszHelpPlatEoL "always save modified files to disk w/CRLF (\"DOS\") line endings"
+#else
+#define kszHelpPlatEoL "always save modified files to disk w/LF (\"Unix\") line endings"
 #endif
 
-//
-//  Switch definition table defintions
-//
-
-class SWI_intf {
- public:
-   SWI_intf() {}
-   virtual std::string defn( stref newValue ) = 0; // { return "not implemented!"; }
-   virtual std::string disp()                 = 0; // { return "not implemented!"; }
-   virtual ~SWI_intf() {}
-
-   // toolbox:
-   static std::string dispBool( bool val ) { return val ? "yes" : "   no"; }
-   static std::string defnBool( bool &fChanged, bool &val, stref newValue ) {
-      const auto oldVal( val );
-      if(   0==cmpi( "no", newValue ) || ("0" == newValue ) ) {
-         val = false;
-         fChanged = val!=oldVal;
-         return "";
-         }
-      if(   0==cmpi( "yes", newValue ) || ("1" == newValue) ) {
-         val = true;
-         fChanged = val!=oldVal;
-         return "";
-         }
-      if(   0==cmpi( "invert", newValue ) || ("-" == newValue) ) {
-         val = !val;
-         fChanged = val!=oldVal;
-         return "";
-         }
-      return FmtStr<200>( "Boolean switch needs 'yes', 'no', or 'invert' (0/1/-) value, not '%" PR_BSR "'", BSR(newValue) ).k_str();
-      }
-
-   static std::string dispInt( int val ) { return FmtStr<20>( "%d", val ).k_str(); }
-   static std::string defnInt( stref newValue, bool &fChanged, int &val, int min=INT_MIN, int max=INT_MAX, bool fUseConstrained=true ) {
-      const auto newVal( StrToInt_variable_base( newValue, 10 ) );
-      if( newVal == -1 ) {
-         return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).k_str();
-         }
-      auto constrVal( newVal );
-      Constrain( min, &constrVal, max );
-      if( !fUseConstrained && constrVal != newVal ) {
-         return FmtStr<50>( "%" PR_BSR " (%d) not within [%d..%d]", BSR(newValue), newVal, min, max ).k_str();
-         }
-      fChanged = constrVal != val;
-      if( fChanged ) {
-         val = constrVal;
-         }
-      return "";
-      }
-
+const enum_nm bkup_enums[] = {
+   { bkup_BAK  , "bak"   },
+   { bkup_UNDEL, "undel" },
+   { bkup_NONE , "none"  },
    };
 
-class SWIs : public SWI_intf {
-   stref (* const d_get)();
-   stref (* const d_set)( stref );
- public:
-   SWIs( stref (* get_)(), stref (* set_)( stref ) )
-      : d_get(get_)
-      , d_set(set_)
-      {}
-   std::string defn( stref newValue ) override { return sr2st( d_set( newValue ) ); }
-   std::string disp() override { return sr2st( d_get() ); }
+const enum_nm entab_enums[] = {
+   { ENTAB_0_NO_CONV                   , "none"     },
+   { ENTAB_1_LEADING_SPCS_TO_TABS      , "leading"  },
+   { ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS , "exoquote" },
+   { ENTAB_3_ALL_SPC_TO_TABS           , "all"      },
    };
 
-class SWIsb : public SWI_intf {
-   void  (* const d_dsp)( PChar dest, size_t sizeofDest );
-   void  (* const d_set)( stref );
- public:
-   SWIsb( void (*dsp_)( PChar dest, size_t sizeofDest ), void (* set_)( stref ) )
-      : d_dsp(dsp_)
-      , d_set(set_)
-      {}
-   std::string defn( stref newValue ) override { d_set( newValue ); return ""; }
-   std::string disp() override {
-      linebuf lbuf; lbuf[0] = '\0';
-      d_dsp( BSOB(lbuf) );
-      return lbuf;
-      }
+const enum_nm cursorsize_enums[] = {
+   { 0, "small" },
+   { 1, "large" },
    };
 
-class SWIi_bv : public SWI_intf {
-   bool &d_var;
- public:
-   SWIi_bv( bool &var_ ) : SWI_intf(), d_var(var_) {}
-   SWIi_bv(SWIi_bv&& mE) = default;
-   std::string defn( stref newValue ) override {
-      bool fChanged;
-      const auto rv( defnBool( fChanged, d_var, newValue ) );
-      return rv;
-      }
-   std::string disp() override {
-      return dispBool( d_var );
-      }
-   };
+GLOBAL_CONST char kszBackup[] = "backup";
 
-class SWIi_iv : public SWI_intf {
-   int &d_var;
- public:
-   SWIi_iv( int &var_ ) : d_var(var_) {}
-   SWIi_iv(SWIi_iv&& mE) = default;
-   std::string defn( stref newValue ) override {
-      bool fChanged;
-      const auto rv( defnInt( newValue, fChanged, d_var ) );
-      return rv;
-      }
-   std::string disp() override {
-      return dispInt( d_var );
-      }
-   };
+GLOBAL_VAR Linebuf SwiErrBuf; // shared buffer used to format err msg strings returned by swix functions
 
-class SWIi_ci : public SWI_intf {
- protected:
-   int   (* const d_get)();
-   void  (* const d_set)(int);
-   int   (* const d_min)();
-   int   (* const d_max)();
-   const bool d_fUseConstrained;
- public:
-   SWIi_ci( int (*get_)(), void (*set_)(int), int (*min_)(), int (*max_)(), bool fUseConstrained_=true )
-      : d_get(get_)
-      , d_set(set_)
-      , d_min(min_)
-      , d_max(max_)
-      , d_fUseConstrained(fUseConstrained_)
-      {}
-   SWIi_ci(SWIi_ci&& mE) = default;
-   std::string defn( stref newValue ) override {
-      bool fChanged;
-      int val = d_get();
-      const auto rv( defnInt( newValue, fChanged, val, d_min(), d_max(), d_fUseConstrained ) );
-      if( fChanged ) {
-         d_set( val );
-         }
-      return rv;
-      }
-   std::string disp() override {
-      return dispInt( d_get() );
-      }
-   };
-
-class SWI_color : public SWI_intf {
-   uint8_t &d_var;
- public:
-   SWI_color( uint8_t &var_ ) : d_var(var_) {}
-   std::string defn( stref newValue ) override {
-      const auto newVal( StrToInt_variable_base( newValue, 16 ) );
-      if( newVal == -1  ) {
-         return FmtStr<200>( "could not convert %" PR_BSR "", BSR(newValue) ).k_str();
-         }
-      if( newVal > 0xFF ) {
-         return FmtStr<200>( "bad value 0x%X", newVal ).k_str();
-         }
-      if( d_var != newVal ) {
-         d_var = newVal;
-         DispNeedsRedrawTotal();  // if color is changed interactively or in a startup macro the change did not affect all lines w/o this change
-         }
-      return "";
-      }
-   std::string disp() override {
-      return FmtStr<20>( "%02X", d_var ).k_str();
-      }
-   };
-
-class SWI_chdisp : public SWI_intf {
-   char &d_var;
- public:
-   SWI_chdisp( char &var_ ) : d_var(var_) {}
-   std::string defn( stref newValue ) override {
-      d_var = char(StrToInt_variable_base( newValue, 10 ));
-      if( char(-1) == d_var ) {
-         d_var = newValue.length() == 1 ? newValue[0] : ' ';
-         }
-      DispNeedsRedrawAllLinesAllWindows();
-      return "";
-      }
-   std::string disp() override {
-      return FmtStr<20>( "0x%02X (%c)", d_var, d_var ).k_str();
-      }
-   };
-
-class SWI_intf_base {
-   const stref  d_name;
-   AHELP( const stref d_help; )
-   std::unique_ptr<SWI_intf> d_intf;
- public:
-   enum { DB=0 };
-   SWI_intf_base( PCChar name_, SWI_intf * intf_ _AHELP( PCChar help_ ) ) : d_name( name_ ) _AHELP( d_help( help_ ) ), d_intf(intf_) {}
-   SWI_intf_base(const SWI_intf_base&  mE) = default;
-   SWI_intf_base(      SWI_intf_base&& mE) = default;
-   SWI_intf_base& operator=(const SWI_intf_base&  mE) = default;
-   SWI_intf_base& operator=(      SWI_intf_base&& mE) = default;
-   ~SWI_intf_base() {}
-          stref name() const { return d_name; }
-   AHELP( stref help() const { return d_help; } )
-   bool NameMatch( stref str ) const { return cmpi( str, d_name ) == 0; }
-   std::string defn( stref newValue ) { return d_intf->defn( newValue ); }
-   std::string disp()                 { return d_intf->disp()          ; }
-   };
-
-struct enum_nm { int val; PCChar name; };
-class SWI_enum : public SWI_intf {
-   int   (* const d_get)();
-   void  (* const d_set)(int);
-   const enum_nm *d_enums;
-   const size_t   d_num_enums;
-   std::string    d_str_allowed_names;
- public:
-   SWI_enum( int (*get_)(), void (*set_)(int), const enum_nm *enums_, size_t num_enums_ )
-      : d_get(get_)
-      , d_set(set_)
-      , d_enums(enums_)
-      , d_num_enums(num_enums_)
-      {
-      d_str_allowed_names = "{ ";
-      for( auto ix(0) ; ix < d_num_enums ; ++ix ) {
-         d_str_allowed_names += d_enums[ix].name;
-         d_str_allowed_names += ", ";
-         }
-      if( d_str_allowed_names.length() > 2 ) {
-         d_str_allowed_names[d_str_allowed_names.length()-2] = ' ';
-         d_str_allowed_names[d_str_allowed_names.length()-1] = '}';
-         }
-      }
-   std::string defn( stref newValue ) override {
-      for( auto ix(0) ; ix < d_num_enums ; ++ix ) {
-         if( 0==cmpi( newValue, d_enums[ix].name ) ) {
-            if( d_get() != d_enums[ix].val ) {
-               d_set( d_enums[ix].val );
-               }
-            return "";
-            }
-         }
-      return FmtStr<200>( "value %" PR_BSR " not in %" PR_BSR "", BSR(newValue), BSR(d_str_allowed_names) ).k_str();
-      }
-   std::string disp() override {
-      const auto val( d_get() );
-      for( auto ix(0) ; ix < d_num_enums ; ++ix ) {
-         if( 0==cmpi( val, d_enums[ix].val ) ) {
-            return d_enums[ix].name;
-            }
-         }
-      return "?";
-      }
-   };
-
-typedef std::vector< SWI_intf_base > SWI_vector;
-SWI_vector s_switbl;
-static void addswi( PCChar name_, SWI_intf *intf_ _AHELP( PCChar help_ ) ) {
-   s_switbl.emplace_back( name_, intf_ _AHELP( help_ ) );
-   }
+GLOBAL_VAR uint8_t g_colorInfo      = 0x1e;
+GLOBAL_VAR uint8_t g_colorStatus    = 0x1e;
+GLOBAL_VAR uint8_t g_colorWndBorder = 0xa0;
+                                   // 0x6c;
+GLOBAL_VAR uint8_t g_colorError     = 0x1e;
+GLOBAL_VAR bool    g_fBpEnabled;
 
 //--------------------------------------------------------------
 
@@ -409,106 +191,96 @@ sridx StrLastWordCh( stref src ) {
    return src.length() - 1;
    }
 
+
 //--------------------------------------------------------------
 
-GLOBAL_VAR Linebuf SwiErrBuf; // shared buffer used to format err msg strings returned by swix functions
-
-GLOBAL_VAR uint8_t g_colorInfo      = 0x1e;
-GLOBAL_VAR uint8_t g_colorStatus    = 0x1e;
-GLOBAL_VAR uint8_t g_colorWndBorder = 0xa0;
-                                   // 0x6c;
-GLOBAL_VAR uint8_t g_colorError     = 0x1e;
-GLOBAL_VAR bool    g_fBpEnabled;
-
-//----------- SWIX's  extern decls put here so there's no doubt that these shouldn't be called except via s_SwiTable
-
-#if    defined(_WIN32)
-#define kszHelpPlatEoL "always save modified files to disk w/CRLF (\"DOS\") line endings"
-#else
-#define kszHelpPlatEoL "always save modified files to disk w/LF (\"Unix\") line endings"
-#endif
-
-const enum_nm bkup_enums[] = {
-   { bkup_BAK  , "bak"   },
-   { bkup_UNDEL, "undel" },
-   { bkup_NONE , "none"  },
+class SWI_intf_base {
+   const stref  d_name;
+   AHELP( const stref d_help; )
+   std::unique_ptr<SWI_intf> d_intf;
+ public:
+   enum { DB=0 };
+   SWI_intf_base( PCChar name_, SWI_intf * intf_ _AHELP( PCChar help_ ) ) : d_name( name_ ) _AHELP( d_help( help_ ) ), d_intf(intf_) {}
+   SWI_intf_base(const SWI_intf_base&  mE) = default;
+   SWI_intf_base(      SWI_intf_base&& mE) = default;
+   SWI_intf_base& operator=(const SWI_intf_base&  mE) = default;
+   SWI_intf_base& operator=(      SWI_intf_base&& mE) = default;
+   ~SWI_intf_base() {}
+          stref name() const { return d_name; }
+   AHELP( stref help() const { return d_help; } )
+   bool NameMatch( stref str ) const { return cmpi( str, d_name ) == 0; }
+   std::string defn( stref newValue ) { return d_intf->defn( newValue ); }
+   std::string disp()                 { return d_intf->disp()          ; }
    };
 
-const enum_nm entab_enums[] = {
-   { ENTAB_0_NO_CONV                   , "none"     },
-   { ENTAB_1_LEADING_SPCS_TO_TABS      , "leading"  },
-   { ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS , "exoquote" },
-   { ENTAB_3_ALL_SPC_TO_TABS           , "all"      },
-   };
-
-const enum_nm cursorsize_enums[] = {
-   { 0, "small" },
-   { 1, "large" },
-   };
-
-GLOBAL_CONST char kszBackup[] = "backup";
+typedef std::vector< SWI_intf_base > SWI_vector;
+SWI_vector s_switbl;
+static void addswi( PCChar name_, SWI_intf *intf_ _AHELP( PCChar help_ ) ) {
+   s_switbl.emplace_back( name_, intf_ _AHELP( help_ ) );
+   }
 
 void SwitblInit() {
-   addswi( "askexit"        , new SWIi_bv( g_fAskExit          ) _AHELP( "enable last-chance prompt before terminating the editor session" ) );
-   addswi( "beep"           , new SWIi_bv( g_fAllowBeep        ) _AHELP( "beeping allowed (yes) or not (no)" ) );
-   addswi( "blankdispmask"  , new SWIi_iv( g_iBlankAnnoDispSrcMask  ) _AHELP( "bitmask: tabdisp, traildisp honored only when 1 (dirty) | 2 (arg-selecting) | 4 (all files)" ) );
-   addswi( "boxmode"        , new SWIi_bv( g_fBoxMode          ) _AHELP( "selects BOXARGs (yes) or STREAMARGs (no)" ) );
-   addswi( "bpen"           , new SWIi_bv( g_fBpEnabled        ) _AHELP( "enables conditional breakpoints" ) );
-   addswi( "case"           , new SWIi_bv( g_fCase             ) _AHELP( "searches are case sensitive (yes) or insensitive (no)" ) );
-   addswi( "colorerr"       , new SWI_color( g_colorError     )  _AHELP( "the color of error messages" )              );
-   addswi( "colorinf"       , new SWI_color( g_colorInfo      )  _AHELP( "the color of informative text" )            );
-   addswi( "colorsta"       , new SWI_color( g_colorStatus    )  _AHELP( "the color of most status-bar information" ) );
-   addswi( "colorwbc"       , new SWI_color( g_colorWndBorder )  _AHELP( "the color of window borders" )              );
+   SWI_impl_factory fc;
+   addswi( "askexit"        , fc.SWIi_bv( g_fAskExit          ) _AHELP( "enable last-chance prompt before terminating the editor session" ) );
+   addswi( "beep"           , fc.SWIi_bv( g_fAllowBeep        ) _AHELP( "beeping allowed (yes) or not (no)" ) );
+   addswi( "blankdispmask"  , fc.SWIi_iv( g_iBlankAnnoDispSrcMask  ) _AHELP( "bitmask: tabdisp, traildisp honored only when 1 (dirty) | 2 (arg-selecting) | 4 (all files)" ) );
+   addswi( "boxmode"        , fc.SWIi_bv( g_fBoxMode          ) _AHELP( "selects BOXARGs (yes) or STREAMARGs (no)" ) );
+   addswi( "bpen"           , fc.SWIi_bv( g_fBpEnabled        ) _AHELP( "enables conditional breakpoints" ) );
+   addswi( "case"           , fc.SWIi_bv( g_fCase             ) _AHELP( "searches are case sensitive (yes) or insensitive (no)" ) );
+   addswi( "colorerr"       , fc.SWI_color( g_colorError     )  _AHELP( "the color of error messages" )              );
+   addswi( "colorinf"       , fc.SWI_color( g_colorInfo      )  _AHELP( "the color of informative text" )            );
+   addswi( "colorsta"       , fc.SWI_color( g_colorStatus    )  _AHELP( "the color of most status-bar information" ) );
+   addswi( "colorwbc"       , fc.SWI_color( g_colorWndBorder )  _AHELP( "the color of window borders" )              );
 #if !defined(_WIN32)
-   addswi( "conin_tmout"    , new SWIi_iv( g_iConin_nonblk_rd_tmout ) _AHELP( "value passed to ncurses::timeout( value ) when nonblocking ncurses::getch() is configured" ) );
+   addswi( "conin_tmout"    , fc.SWIi_iv( g_iConin_nonblk_rd_tmout ) _AHELP( "value passed to ncurses::timeout( value ) when nonblocking ncurses::getch() is configured" ) );
 #endif
-   addswi( "cursorsize"     , new SWI_enum( [](){ return g_iCursorSize ; }, [](int v_){ g_iCursorSize = v_; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); }, AEOA(cursorsize_enums) ) _AHELP( "small, large" ) );
-   addswi( "delims"         , new SWIsb( swidDelims     , SetCurDelims    )  _AHELP( "string containing delimiters" ) );
-   addswi( "dialogtop"      , new SWIi_bv( g_fDialogTop        ) _AHELP( "dialog & status lines placed at top (yes) or bottom (no) of screen" ) );
+   addswi( "cursorsize"     , fc.SWI_enum( [](){ return g_iCursorSize ; }, [](int v_){ g_iCursorSize = v_; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); }, AEOA(cursorsize_enums) ) _AHELP( "small, large" ) );
+   addswi( "delims"         , fc.SWIsb( swidDelims     , SetCurDelims    )  _AHELP( "string containing delimiters" ) );
+   addswi( "dialogtop"      , fc.SWIi_bv( g_fDialogTop        ) _AHELP( "dialog & status lines placed at top (yes) or bottom (no) of screen" ) );
 #if defined(_WIN32)
-   addswi( "dvlogcmds"      , new SWIi_bv( g_fDvlogcmds        ) _AHELP( "log non-cursor-movement cmds to DbgView using Windows' OutputDebugString()" ) );
+   addswi( "dvlogcmds"      , fc.SWIi_bv( g_fDvlogcmds        ) _AHELP( "log non-cursor-movement cmds to DbgView using Windows' OutputDebugString()" ) );
 #endif
-   addswi( "editreadonly"   , new SWIi_bv( g_fEditReadonly     ) _AHELP( "allow (yes) or prevent (no) editing of files which are not writable on disk" ) );
-   addswi( "entab"          , new SWI_enum( []()->int { return g_CurFBuf()->Entab(); }, [](int v_){ g_CurFBuf()->SetEntabOk( v_ ); }, AEOA(entab_enums) )     _AHELP( "when lines are modified, convert 0/none,1/leading,2/exoquote,3/all spaces to tabs" ) );
-   addswi( "errprompt"      , new SWIi_bv( g_fErrPrompt        ) _AHELP( "error message display pauses with \"Press any key...\" prompt" ) );
-   addswi( "fastsearch"     , new SWIi_bv( g_fFastsearch       ) _AHELP( "use fast search algorithm (when key contains no spaces)" ) );
-   addswi( "forceplateol"   , new SWIi_bv( g_fForcePlatformEol ) _AHELP(  kszHelpPlatEoL ) );
-   addswi( "ftype"          , new SWIs( GetCurFtype, [](stref v_){ SetCurFtype( v_ ); return stref(""); } )  _AHELP( "set ftype, the index into k.filesettings:ftype_map" ) );
-   addswi( "hike"           , new SWIi_iv( g_iHike                  ) _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) );
-   addswi( "hljoinchars"    , new SWIsb( swidHLJoinchars, swixHLJoinchars )  _AHELP( "Hierarchial Left Join charset: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes; [_a-zA-Z0-9] are always members" ) );
-   addswi( "hscroll"        , new SWIi_ci( [](){ return g_iHscroll  ; }, [](int v_){ g_iHscroll   = v_; }, [](){ return 1; }, [](){ return EditScreenCols ()-1; }, false ) _AHELP( "the number of columns that the editor scrolls the text left or right when you move the cursor out of the window" ) );
-   addswi(  kszBackup       , new SWI_enum( [](){ return g_iBackupMode ; }, [](int v_){ g_iBackupMode = v_; }, AEOA(bkup_enums)  )     _AHELP( "choices are 'undel', 'bak' or 'none'; see online help for details" ) );
-   addswi( "langhilites"    , new SWIi_bv( g_fLangHilites      ) _AHELP( "enable (yes) partial language-aware hilighting" ) );
-   addswi( "luagcstep"      , new SWIi_iv( g_iLuaGcStep             ) _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) );
-   addswi( "m4backtickquote", new SWIi_bv( g_fM4backtickquote  ) _AHELP( "spanning backtick quoting right ends with ' (yes) or ` (no)" ) );
-   addswi( "maxundo"        , new SWIi_iv( g_iMaxUndo               ) _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) );
-   addswi( "memusgink"      , new SWIi_bv( g_fShowMemUseInK    ) _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) );
-   addswi( "mfgrepnoise"    , new SWIi_bv( g_fMfgrepNoise      ) _AHELP( "during mfgrep and mfreplace execution: display (yes) or hide (no) each filename & fio-phase display" ) );
-   addswi( "msgflush"       , new SWIi_bv( g_fMsgflush         ) _AHELP( "<compile> is flushed (yes) or retained (no) when a new job is started" ) );
-   addswi( "realtabs"       , new SWIi_bv( g_fRealtabs         ) _AHELP( "see online help" ) );
-   addswi( "replacecase"    , new SWIi_bv( g_fReplaceCase      ) _AHELP( "replace operations are case sensitive (yes) or insensitive (no)" ) );
-   addswi( "rmargin"        , new SWIi_iv( g_iRmargin               ) _AHELP( "see online help" ) );
-   addswi( "showfbufdetails", new SWIi_bv( g_fShowFbufDetails  ) _AHELP( "show FBUF status details in <winN> sysbufs" ) );
-   addswi( "softcr"         , new SWIi_bv( g_fSoftCr           ) _AHELP( "see online help" ) );
-   addswi( "tabalign"       , new SWIi_bv( g_fTabAlign         ) _AHELP( "within tab fields, cursor can be positioned (yes) only on tab char (no) in any column" ) );
-   addswi( "tabdisp"        , new SWI_chdisp( g_chTabDisp        ) _AHELP( "the numeric ASCII code of the character used to display tab characters; if 0, the space character is used" ) );
-   addswi( "tabwidth"       , new SWIi_ci( [](){ return g_iTabWidth ; }, [](int v_){ g_iTabWidth  = v_; DispNeedsRedrawAllLinesAllWindows(); }, [](){ return 1; }, [](){ return MAX_TAB_WIDTH; }, false ) _AHELP( "the width of a 'tab-column'; set PER FILE" ) );
-   addswi( "traildisp"      , new SWI_chdisp( g_chTrailSpaceDisp ) _AHELP( "the numeric ASCII code of the character used to display trailing spaces on a line; if 0, the space character is used" ) );
-   addswi( "traillinedisp"  , new SWI_chdisp( g_chTrailLineDisp  ) _AHELP( "the numeric ASCII code of the character used to display trailing lines at the end of file; if 0, the space character is used" ) );
-   addswi( "traillinewrite" , new SWIi_bv( g_fTrailLineWrite   ) _AHELP( "write to disk file (yes) or discard (no) trailing empty lines" ) );
-   addswi( "trailspace"     , new SWIi_bv( g_fTrailSpace       ) _AHELP( "preserve (yes) or remove (no) trailing spaces on lines that are modified" ) );
+   addswi( "editreadonly"   , fc.SWIi_bv( g_fEditReadonly     ) _AHELP( "allow (yes) or prevent (no) editing of files which are not writable on disk" ) );
+   addswi( "entab"          , fc.SWI_enum( []()->int { return g_CurFBuf()->Entab(); }, [](int v_){ g_CurFBuf()->SetEntabOk( v_ ); }, AEOA(entab_enums) )     _AHELP( "when lines are modified, convert 0/none,1/leading,2/exoquote,3/all spaces to tabs" ) );
+   addswi( "errprompt"      , fc.SWIi_bv( g_fErrPrompt        ) _AHELP( "error message display pauses with \"Press any key...\" prompt" ) );
+   addswi( "fastsearch"     , fc.SWIi_bv( g_fFastsearch       ) _AHELP( "use fast search algorithm (when key contains no spaces)" ) );
+   addswi( "forceplateol"   , fc.SWIi_bv( g_fForcePlatformEol ) _AHELP(  kszHelpPlatEoL ) );
+   addswi( "ftype"          , fc.SWIs( GetCurFtype, [](stref v_){ SetCurFtype( v_ ); return stref(""); } )  _AHELP( "set ftype, the index into k.filesettings:ftype_map" ) );
+   addswi( "hike"           , fc.SWIi_iv( g_iHike                  ) _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) );
+   addswi( "hljoinchars"    , fc.SWIsb( swidHLJoinchars, swixHLJoinchars )  _AHELP( "Hierarchial Left Join charset: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes; [_a-zA-Z0-9] are always members" ) );
+   addswi( "hscroll"        , fc.SWIi_ci( [](){ return g_iHscroll  ; }, [](int v_){ g_iHscroll   = v_; }, [](){ return 1; }, [](){ return EditScreenCols ()-1; }, false ) _AHELP( "the number of columns that the editor scrolls the text left or right when you move the cursor out of the window" ) );
+   addswi(  kszBackup       , fc.SWI_enum( [](){ return g_iBackupMode ; }, [](int v_){ g_iBackupMode = v_; }, AEOA(bkup_enums)  )     _AHELP( "choices are 'undel', 'bak' or 'none'; see online help for details" ) );
+   addswi( "langhilites"    , fc.SWIi_bv( g_fLangHilites      ) _AHELP( "enable (yes) partial language-aware hilighting" ) );
+   addswi( "luagcstep"      , fc.SWIi_iv( g_iLuaGcStep             ) _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) );
+   addswi( "m4backtickquote", fc.SWIi_bv( g_fM4backtickquote  ) _AHELP( "spanning backtick quoting right ends with ' (yes) or ` (no)" ) );
+   addswi( "maxundo"        , fc.SWIi_iv( g_iMaxUndo               ) _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) );
+   addswi( "memusgink"      , fc.SWIi_bv( g_fShowMemUseInK    ) _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) );
+   addswi( "mfgrepnoise"    , fc.SWIi_bv( g_fMfgrepNoise      ) _AHELP( "during mfgrep and mfreplace execution: display (yes) or hide (no) each filename & fio-phase display" ) );
+   addswi( "msgflush"       , fc.SWIi_bv( g_fMsgflush         ) _AHELP( "<compile> is flushed (yes) or retained (no) when a new job is started" ) );
+   addswi( "realtabs"       , fc.SWIi_bv( g_fRealtabs         ) _AHELP( "see online help" ) );
+   addswi( "replacecase"    , fc.SWIi_bv( g_fReplaceCase      ) _AHELP( "replace operations are case sensitive (yes) or insensitive (no)" ) );
+   addswi( "rmargin"        , fc.SWIi_iv( g_iRmargin               ) _AHELP( "see online help" ) );
+   addswi( "showfbufdetails", fc.SWIi_bv( g_fShowFbufDetails  ) _AHELP( "show FBUF status details in <winN> sysbufs" ) );
+   addswi( "softcr"         , fc.SWIi_bv( g_fSoftCr           ) _AHELP( "see online help" ) );
+   addswi( "tabalign"       , fc.SWIi_bv( g_fTabAlign         ) _AHELP( "within tab fields, cursor can be positioned (yes) only on tab char (no) in any column" ) );
+   addswi( "tabdisp"        , fc.SWI_chdisp( g_chTabDisp        ) _AHELP( "the numeric ASCII code of the character used to display tab characters; if 0, the space character is used" ) );
+   addswi( "tabwidth"       , fc.SWIi_ci( [](){ return g_iTabWidth ; }, [](int v_){ g_iTabWidth  = v_; DispNeedsRedrawAllLinesAllWindows(); }, [](){ return 1; }, [](){ return MAX_TAB_WIDTH; }, false ) _AHELP( "the width of a 'tab-column'; set PER FILE" ) );
+   addswi( "traildisp"      , fc.SWI_chdisp( g_chTrailSpaceDisp ) _AHELP( "the numeric ASCII code of the character used to display trailing spaces on a line; if 0, the space character is used" ) );
+   addswi( "traillinedisp"  , fc.SWI_chdisp( g_chTrailLineDisp  ) _AHELP( "the numeric ASCII code of the character used to display trailing lines at the end of file; if 0, the space character is used" ) );
+   addswi( "traillinewrite" , fc.SWIi_bv( g_fTrailLineWrite   ) _AHELP( "write to disk file (yes) or discard (no) trailing empty lines" ) );
+   addswi( "trailspace"     , fc.SWIi_bv( g_fTrailSpace       ) _AHELP( "preserve (yes) or remove (no) trailing spaces on lines that are modified" ) );
  #if MOUSE_SUPPORT
-   addswi( "usemouse"       , new SWIi_bv( g_fUseMouse         ) _AHELP( "accept (yes) or ignore (no) mouse input" ) );
+   addswi( "usemouse"       , fc.SWIi_bv( g_fUseMouse         ) _AHELP( "accept (yes) or ignore (no) mouse input" ) );
  #endif
-   addswi( "viewonly"       , new SWIi_bv( g_fViewOnly         ) _AHELP( "files subsequently opened will be editable (no) or no-edit (yes)" ) );
-   addswi( "vscroll"        , new SWIi_ci( [](){ return g_iVscroll  ; }, [](int v_){ g_iVscroll   = v_; }, [](){ return 1; }, [](){ return EditScreenLines()-1; }, false ) _AHELP( "the number of lines scrolled when the mlines and plines functions move the cursor out of the window" ) );
+   addswi( "viewonly"       , fc.SWIi_bv( g_fViewOnly         ) _AHELP( "files subsequently opened will be editable (no) or no-edit (yes)" ) );
+   addswi( "vscroll"        , fc.SWIi_ci( [](){ return g_iVscroll  ; }, [](int v_){ g_iVscroll   = v_; }, [](){ return 1; }, [](){ return EditScreenLines()-1; }, false ) _AHELP( "the number of lines scrolled when the mlines and plines functions move the cursor out of the window" ) );
 #if VARIABLE_WINBORDER
-   addswi( "wbcidx"         , new SWIi_ci( [](){ return g_swiWBCidx ; }, [](int v_){ g_swiWBCidx  = v_; DispNeedsRedrawTotal(); }, [](){ return 0; }, [](){ return Max_wbc_idx(); } ) _AHELP( "select window border charset (0..7)" ) );
+   addswi( "wbcidx"         , fc.SWIi_ci( [](){ return g_swiWBCidx ; }, [](int v_){ g_swiWBCidx  = v_; DispNeedsRedrawTotal(); }, [](){ return 0; }, [](){ return Max_wbc_idx(); } ) _AHELP( "select window border charset (0..7)" ) );
 #endif
-   addswi( "wcshowdotdir"   , new SWIi_bv( g_fWcShowDotDir     ) _AHELP( "in recursive wildcard buffers show (yes) or hide (NO) dir (subtrees) whose names start with '.'" ) );
-   addswi( "wordchars"      , new SWIsb( swidWordchars  , swixWordchars   )  _AHELP( "the set of valid word-component characters; [_a-zA-Z0-9] are always members" ) );
-   addswi( "wordwrap"       , new SWIi_bv( g_fWordwrap         ) _AHELP( "the editor performs automatic word-wrapping as you type past rmargin" ) );
-   addswi( "wucminlen"      , new SWIi_ci( [](){ return g_iWucMinLen; }, [](int v_){ g_iWucMinLen = v_; }, [](){ return 1; }, [](){ return 32                 ; }, false ) _AHELP( "minimum length of a word for it to qualify for 'word under the cursor' status" ) );
+   addswi( "wcshowdotdir"   , fc.SWIi_bv( g_fWcShowDotDir     ) _AHELP( "in recursive wildcard buffers show (yes) or hide (NO) dir (subtrees) whose names start with '.'" ) );
+   addswi( "wordchars"      , fc.SWIsb( swidWordchars  , swixWordchars   )  _AHELP( "the set of valid word-component characters; [_a-zA-Z0-9] are always members" ) );
+   addswi( "wordwrap"       , fc.SWIi_bv( g_fWordwrap         ) _AHELP( "the editor performs automatic word-wrapping as you type past rmargin" ) );
+   addswi( "wucminlen"      , fc.SWIi_ci( [](){ return g_iWucMinLen; }, [](int v_){ g_iWucMinLen = v_; }, [](){ return 1; }, [](){ return 32                 ; }, false ) _AHELP( "minimum length of a word for it to qualify for 'word under the cursor' status" ) );
    }
 
 void FBufRead_Assign_Switches( PFBUF pFBuf ) {
