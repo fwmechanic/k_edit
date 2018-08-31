@@ -129,6 +129,7 @@ s meta         meta                      KEEPMETA , Modifies the action of the f
   mpage        mpage          CURSORFUNC , scroll cursor up one page
   mpara        mpara          CURSORFUNC , scroll cursor up one paragraph
   mib          mib            CURSORFUNC , scroll cursor to top of current indent block
+  nonseq_gap nonseq_gap MODIFIES + NOARG+BOXARG+LINEARG , insert blank lines between lines whose numeric content is nonsequential
   pib          pib            CURSORFUNC , scroll cursor up bottom of current indent block
   msearch      msearch                   BOXSTR + NOARG + TEXTARG + NULLEOW , Backward search
 s mword        mword          CURSORFUNC , Moves cursor to first char of prev word.  META: Moves cursor to first char following prev word

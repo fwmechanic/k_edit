@@ -1397,8 +1397,8 @@ bool ARG::boxstream() {
 int ARG::GetLineRange( LINE *pyMin, LINE *pyMax ) const {
    switch( d_argType ) {
       default:        return 1; // NOT OK
-      case NOARG:     *pyMin = d_noarg.cursor.lin;
-                      *pyMax = d_noarg.cursor.lin;
+      case NOARG:     *pyMin = 0;
+                      *pyMax = g_CurFBuf()->LastLine();
                       return 0; // OK
       case NULLARG:   ATTR_FALLTHRU;
       case NULLEOL:   ATTR_FALLTHRU;
