@@ -417,45 +417,53 @@ bool ARG::mergefilenames() {
 
 #ifdef fn_nonseq_gap
 
+unsigned long long conv( int &errno_, stref sr, int base=10 ) { enum { DB=0 };
+   stref v2v( "0123456789abcdefghijklmnopqrstuvwxyz" );
+   if( base > v2v.length() ) { // unsupported base value?
+FAIL:
+      errno_ = 1;              // error
+      return 0;
+      }
+   sridx oFirst( stref::npos );
+   sridx oLast( stref::npos );
+   for( auto it( sr.cbegin() ) ; it != sr.cend() ; ++it ) {
+      if( isblank(*it) ) { continue; }
+      const auto chVal( v2v.find( tolower(*it) ) );
+      if( chVal == stref::npos || chVal > base-1 ) { // not blank and not valid char in base
+         if( oFirst == stref::npos ) { // seen NO valid chars in base?
+            goto FAIL;                 // error
+            }
+         oLast = std::distance( sr.cbegin(), it ) - 1; // seen some valid chars in base?
+         break;
+         }
+      if( oFirst == stref::npos ) {
+         oFirst = std::distance( sr.cbegin(), it );
+         }
+      }
+   if( oFirst == stref::npos ) { // no valid chars in base in sr
+      goto FAIL;                 // error
+      }
+   if( oLast == stref::npos ) {  // sr ends w/valid chars in base
+      oLast = sr.length()-1;     // last is last valid
+      }
+   stref numst( sr.data() + oFirst, oLast - oFirst + 1 ); DB && DBG( "numst: '%" PR_BSR "'", BSR(numst) );
+   unsigned long long rv( 0 );
+   for( auto it( numst.cbegin() ) ; it != numst.cend() ; ++it ) {
+      const auto rv0( rv );
+      rv = rv * base + v2v.find( tolower(*it) );
+      if( rv0 > rv ) { // overflow?
+         goto FAIL;
+         }
+      }                                                   DB && DBG( "numst: '%" PR_BSR "'=%llu", BSR(numst), rv );
+   return rv;
+   };
+
 STATIC_FXN bool strs_diff_by_1( stref s1, stref s2, int base=10 ) { enum { DB=0 };
-   bool noNum( false );
-   auto conv = [&noNum, base]( stref sr ) -> unsigned long long {
-      stref v2v( "0123456789abcdefghijklmnopqrstuvwxyz" );
-      sridx oFirst( stref::npos );
-      sridx oLast( stref::npos );
-      for( auto it( sr.cbegin() ) ; it != sr.cend() ; ++it ) {
-         if( isblank(*it) ) { continue; }
-         const auto chVal( v2v.find( *it ) );
-         if( chVal == stref::npos || chVal > base-1 ) { // not blank and not valid char in base
-            if( oFirst == stref::npos ) { // seen NO valid chars in base?
-               noNum = true;              // error
-               return 0;                  // done
-               }
-            oLast = std::distance( sr.cbegin(), it ) - 1; // seen some valid chars in base?
-            break;
-            }
-         if( oFirst == stref::npos ) {
-            oFirst = std::distance( sr.cbegin(), it );
-            }
-         }
-      if( oFirst == stref::npos ) { // no valid chars in base in sr
-         noNum = true;              // error
-         return 0;                  // done
-         }
-      if( oLast == stref::npos ) {  // sr ends w/valid chars in base
-         oLast = sr.length()-1;     // last is last valid
-         }
-      stref numst( sr.data() + oFirst, oLast - oFirst + 1 ); DB && DBG( "numst: '%" PR_BSR "'", BSR(numst) );
-      unsigned long long rv( 0 );
-      for( auto it( numst.cbegin() ) ; it != numst.cend() ; ++it ) {
-         rv = rv * base + v2v.find( *it );
-         }                                                   DB && DBG( "numst: '%" PR_BSR "'=%llu", BSR(numst), rv );
-      return rv;
-      };
-   const auto dv1( conv( s1 ) );
-   const auto dv2( conv( s2 ) );
+   int errno_( 0 );
+   const auto dv1( conv( errno_, s1, base ) );
+   const auto dv2( conv( errno_, s2, base ) );
    DB && DBG( "IN: '%" PR_BSR "'=%llu vs '%" PR_BSR "'=%llu", BSR(s1), dv1, BSR(s2), dv2 );
-   return noNum ? false : ((dv1+1 == dv2) || (dv1 == dv2+1));
+   return errno_ ? false : ((dv1+1 == dv2) || (dv1 == dv2+1));
    }
 
 bool ARG::nonseq_gap() {
