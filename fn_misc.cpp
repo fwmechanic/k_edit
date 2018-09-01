@@ -417,22 +417,40 @@ bool ARG::mergefilenames() {
 
 #ifdef fn_nonseq_gap
 
-STATIC_FXN bool strs_diff_by_1( stref s1, stref s2 ) { enum { DB=0 };
+STATIC_FXN bool strs_diff_by_1( stref s1, stref s2, int base=10 ) { enum { DB=0 };
    bool noNum( false );
-   auto conv = [&noNum]( stref sr ) -> unsigned long long {
-      const auto minD( FirstDigitOrEnd( sr ) );
-      if( atEnd( sr, minD ) ) {
-         noNum = true;
-         return 0;
-         }
-      else {
-         errno = 0;
-         const auto rv( strtoull( &sr[minD], nullptr, 0 ) );
-         if( errno ) {
-            noNum = true;
+   auto conv = [&noNum, base]( stref sr ) -> unsigned long long {
+      stref v2v( "0123456789abcdefghijklmnopqrstuvwxyz" );
+      sridx oFirst( stref::npos );
+      sridx oLast( stref::npos );
+      for( auto it( sr.cbegin() ) ; it != sr.cend() ; ++it ) {
+         if( isblank(*it) ) { continue; }
+         const auto chVal( v2v.find( *it ) );
+         if( chVal == stref::npos || chVal > base-1 ) { // not blank and not valid char in base
+            if( oFirst == stref::npos ) { // seen NO valid chars in base?
+               noNum = true;              // error
+               return 0;                  // done
+               }
+            oLast = std::distance( sr.cbegin(), it ) - 1; // seen some valid chars in base?
+            break;
             }
-         return rv;
+         if( oFirst == stref::npos ) {
+            oFirst = std::distance( sr.cbegin(), it );
+            }
          }
+      if( oFirst == stref::npos ) { // no valid chars in base in sr
+         noNum = true;              // error
+         return 0;                  // done
+         }
+      if( oLast == stref::npos ) {  // sr ends w/valid chars in base
+         oLast = sr.length()-1;     // last is last valid
+         }
+      stref numst( sr.data() + oFirst, oLast - oFirst + 1 ); DB && DBG( "numst: '%" PR_BSR "'", BSR(numst) );
+      unsigned long long rv( 0 );
+      for( auto it( numst.cbegin() ) ; it != numst.cend() ; ++it ) {
+         rv = rv * base + v2v.find( *it );
+         }                                                   DB && DBG( "numst: '%" PR_BSR "'=%llu", BSR(numst), rv );
+      return rv;
       };
    const auto dv1( conv( s1 ) );
    const auto dv2( conv( s2 ) );
@@ -445,13 +463,12 @@ bool ARG::nonseq_gap() {
    COL  xMin, xMax;  GetColumnRange( &xMin, &xMax );
    const auto possible(yMax - yMin);
    auto num_diff(0);
-   std::string s1, s2; // :-( required because strtoull does not take a strlen param, reads beyond stref end
    for( auto iy(yMin) ; iy < yMax; ++iy ) {
-      s1 = sr2st( g_CurFBuf()->PeekRawLineSeg( iy  , xMin, xMax ) );
-      s2 = sr2st( g_CurFBuf()->PeekRawLineSeg( iy+1, xMin, xMax ) );
-      if(  !IsStringBlank( s1 )
-        && !IsStringBlank( s2 )
-        && !strs_diff_by_1( s1, s2 )
+      const auto sr1( g_CurFBuf()->PeekRawLineSeg( iy  , xMin, xMax ) );
+      const auto sr2( g_CurFBuf()->PeekRawLineSeg( iy+1, xMin, xMax ) );
+      if(  !IsStringBlank( sr1 )
+        && !IsStringBlank( sr2 )
+        && !strs_diff_by_1( sr1, sr2 )
         ) {
          g_CurFBuf()->InsBlankLinesBefore( iy+1 );
          ++iy, ++yMax, ++num_diff;
