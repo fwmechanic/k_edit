@@ -45,14 +45,44 @@ STATIC_FXN std::string defnBool( bool &fChanged, bool &val, stref newValue ) {
 
 STATIC_FXN std::string dispInt( int val ) { return FmtStr<20>( "%d", val ).k_str(); }
 STATIC_FXN std::string defnInt( stref newValue, bool &fChanged, int &val, int min=INT_MIN, int max=INT_MAX, bool fUseConstrained=true ) {
-   const auto newVal( StrToInt_variable_base( newValue, 10 ) );
-   if( newVal == -1 ) {
-      return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).k_str();
+   int errno_; uintmax_t numVal_ull; stref txtConvd; UI bs; std::tie( errno_, numVal_ull, txtConvd, bs ) = conv_u( newValue, 10 );
+   if( errno_ || numVal_ull > INT_MAX ) {
+      if( txtConvd == newValue ) {
+         return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).k_str();
+         }
+      else {
+         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(txtConvd), BSR(newValue) ).k_str();
+         }
       }
-   auto constrVal( newVal );
+   int numVal_int( numVal_ull );
+   int constrVal( numVal_int );
    Constrain( min, &constrVal, max );
-   if( !fUseConstrained && constrVal != newVal ) {
-      return FmtStr<50>( "%" PR_BSR " (%d) not within [%d..%d]", BSR(newValue), newVal, min, max ).k_str();
+   if( !fUseConstrained && constrVal != numVal_int ) {
+      return FmtStr<50>( "%" PR_BSR " (%d) not within [%d..%d]", BSR(newValue), numVal_int, min, max ).k_str();
+      }
+   fChanged = constrVal != val;
+   if( fChanged ) {
+      val = constrVal;
+      }
+   return "";
+   }
+
+STATIC_FXN std::string dispUInt( int val ) { return FmtStr<20>( "%d", val ).k_str(); }
+STATIC_FXN std::string defnUInt( stref newValue, bool &fChanged, UI &val, UI min=0, UI max=INT_MAX, bool fUseConstrained=true ) {
+   int errno_; uintmax_t numVal_ull; stref txtConvd; UI bs; std::tie( errno_, numVal_ull, txtConvd, bs ) = conv_u( newValue, 10 );
+   if( errno_ || numVal_ull > UINT_MAX ) {
+      if( txtConvd == newValue ) {
+         return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).k_str();
+         }
+      else {
+         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(txtConvd), BSR(newValue) ).k_str();
+         }
+      }
+   UI numVal_uint( numVal_ull );
+   UI constrVal( numVal_uint );
+   Constrain( min, &constrVal, max );
+   if( !fUseConstrained && constrVal != numVal_uint ) {
+      return FmtStr<50>( "%" PR_BSR " (%u) not within [%u..%u]", BSR(newValue), numVal_uint, min, max ).k_str();
       }
    fChanged = constrVal != val;
    if( fChanged ) {
@@ -155,12 +185,12 @@ class SWI_color : public SWI_intf {
  public:
    SWI_color( uint8_t &var_ ) : d_var(var_) {}
    std::string defn( stref newValue ) override {
-      const auto newVal( StrToInt_variable_base( newValue, 16 ) );
-      if( newVal == -1  ) {
+      int errno_; uintmax_t newVal; stref txtConvd; UI bs; std::tie( errno_, newVal, txtConvd, bs ) = conv_u( newValue, 16 );
+      if( errno_ ) {
          return FmtStr<200>( "could not convert %" PR_BSR "", BSR(newValue) ).k_str();
          }
-      if( newVal > 0xFF ) {
-         return FmtStr<200>( "bad value 0x%X", newVal ).k_str();
+      if( newVal > UCHAR_MAX ) {
+         return FmtStr<200>( "value 0x%llX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).k_str();
          }
       if( d_var != newVal ) {
          d_var = newVal;
@@ -178,9 +208,15 @@ class SWI_chdisp : public SWI_intf {
  public:
    SWI_chdisp( char &var_ ) : d_var(var_) {}
    std::string defn( stref newValue ) override {
-      d_var = char(StrToInt_variable_base( newValue, 10 ));
-      if( char(-1) == d_var ) {
+      int errno_; uintmax_t newVal; stref txtConvd; UI bs; std::tie( errno_, newVal, txtConvd, bs ) = conv_u( newValue, 10 );
+      if( errno_ ) {
          d_var = newValue.length() == 1 ? newValue[0] : ' ';
+         }
+      else {
+         if( newVal > UCHAR_MAX ) {
+            return FmtStr<200>( "value 0x%llX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).k_str();
+            }
+         d_var = newVal;
          }
       DispNeedsRedrawAllLinesAllWindows();
       return "";

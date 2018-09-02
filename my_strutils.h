@@ -21,6 +21,8 @@
 
 #include <cstdarg>
 #include <cstring>
+#include <tuple>
+
 #include "my_types.h"
 #include "ed_mem.h" // for Strdup()
 
@@ -202,9 +204,10 @@ extern int  strncmp_LenOfFirstStr( stref s1, stref s2 );
 extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
 extern bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars );
 
-extern   int    StrToInt_variable_base( stref pszParam, int numberBase );
 // extern   stref  StrSpnSignedInt( stref src );
 extern   bool   StrSpnSignedInt( PCChar pszString );
+extern   std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase=10 );
+
 extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
 extern   int   FlipCase( int ch );

@@ -42,6 +42,17 @@ const enum_nm entab_enums[] = {
    { ENTAB_3_ALL_SPC_TO_TABS           , "all"      },
    };
 
+bool FBUF::SetEntabOk( int newEntab ) {
+   for( const auto &sr : entab_enums ) {
+      if( newEntab == sr.val ) {
+         d_Entab = eEntabModes(newEntab);
+         Msg( "%s entab set to %s (%d)", Name(), sr.name, d_Entab );
+         return true;
+         }
+      }
+   return false;
+   }
+
 const enum_nm cursorsize_enums[] = {
    { 0, "small" },
    { 1, "large" },

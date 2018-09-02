@@ -95,7 +95,10 @@ STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"
          return -1;
          }
       }
-   const auto wnum( StrToInt_variable_base( numst, 10 ) );
+   int errno_; uintmax_t wnum; stref txtConvd; UI bs; std::tie( errno_, wnum, txtConvd, bs ) = conv_u( numst, 10 );
+   if( errno_ ) {
+      return -1;
+      }
    if( !(wnum < g_WindowCount()) ) {
       return -2;
       }

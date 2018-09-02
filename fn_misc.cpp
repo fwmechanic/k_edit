@@ -417,53 +417,12 @@ bool ARG::mergefilenames() {
 
 #ifdef fn_nonseq_gap
 
-unsigned long long conv( int &errno_, stref sr, int base=10 ) { enum { DB=0 };
-   stref v2v( "0123456789abcdefghijklmnopqrstuvwxyz" );
-   if( base > v2v.length() ) { // unsupported base value?
-FAIL:
-      errno_ = 1;              // error
-      return 0;
-      }
-   sridx oFirst( stref::npos );
-   sridx oLast( stref::npos );
-   for( auto it( sr.cbegin() ) ; it != sr.cend() ; ++it ) {
-      if( isblank(*it) ) { continue; }
-      const auto chVal( v2v.find( tolower(*it) ) );
-      if( chVal == stref::npos || chVal > base-1 ) { // not blank and not valid char in base
-         if( oFirst == stref::npos ) { // seen NO valid chars in base?
-            goto FAIL;                 // error
-            }
-         oLast = std::distance( sr.cbegin(), it ) - 1; // seen some valid chars in base?
-         break;
-         }
-      if( oFirst == stref::npos ) {
-         oFirst = std::distance( sr.cbegin(), it );
-         }
-      }
-   if( oFirst == stref::npos ) { // no valid chars in base in sr
-      goto FAIL;                 // error
-      }
-   if( oLast == stref::npos ) {  // sr ends w/valid chars in base
-      oLast = sr.length()-1;     // last is last valid
-      }
-   stref numst( sr.data() + oFirst, oLast - oFirst + 1 ); DB && DBG( "numst: '%" PR_BSR "'", BSR(numst) );
-   unsigned long long rv( 0 );
-   for( auto it( numst.cbegin() ) ; it != numst.cend() ; ++it ) {
-      const auto rv0( rv );
-      rv = rv * base + v2v.find( tolower(*it) );
-      if( rv0 > rv ) { // overflow?
-         goto FAIL;
-         }
-      }                                                   DB && DBG( "numst: '%" PR_BSR "'=%llu", BSR(numst), rv );
+STATIC_FXN bool strs_diff_by_1( stref s1, stref s2, UI base=10 ) { enum { DB=1 };
+   int e1; uintmax_t v1; stref a1; UI b1; std::tie( e1, v1, a1, b1 ) = conv_u( s1, base );
+   int e2; uintmax_t v2; stref a2; UI b2; std::tie( e2, v2, a2, b2 ) = conv_u( s2, base );
+   const bool rv( e1 || e2 ? false : ((v1+1 == v2) || (v1 == v2+1)) );
+   DB && DBG( "%s: %d '%" PR_BSR "'!'%" PR_BSR "'=%llu;%d vs '%" PR_BSR "'!'%" PR_BSR "'=%llu;%d", __func__, rv, BSR(s1), BSR(a1), v1, e1, BSR(s2), BSR(a2), v2, e2 );
    return rv;
-   };
-
-STATIC_FXN bool strs_diff_by_1( stref s1, stref s2, int base=10 ) { enum { DB=0 };
-   int errno_( 0 );
-   const auto dv1( conv( errno_, s1, base ) );
-   const auto dv2( conv( errno_, s2, base ) );
-   DB && DBG( "IN: '%" PR_BSR "'=%llu vs '%" PR_BSR "'=%llu", BSR(s1), dv1, BSR(s2), dv2 );
-   return errno_ ? false : ((dv1+1 == dv2) || (dv1 == dv2+1));
    }
 
 bool ARG::nonseq_gap() {

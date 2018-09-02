@@ -276,33 +276,73 @@ STATIC_FXN int consec_is_its( isfxn ifx, stref sr ) {
 int consec_xdigits( stref sr ) { return consec_is_its( isxdigit, sr ); }
 int consec_bdigits( stref sr ) { return consec_is_its( isbdigit, sr ); }
 
-int StrToInt_variable_base( stref pszParam, int numberBase ) {
-   // rv is nonnegative int or -1 if conv error
-   if( (10 == numberBase || 16 == numberBase)
-      && '0' == pszParam[0]
-      && ('x' == pszParam[1] || 'X' == pszParam[1])
-     ) {
-      pszParam.remove_prefix( 2 );
-      numberBase = 16;
+STATIC_FXN stref conv_u_( int &errno_, uintmax_t &rv, stref sr, UI &numberBase ) {
+   stref v2v( "0123456789abcdefghijklmnopqrstuvwxyz" );
+   rv = 0;
+   if( numberBase < 2 || numberBase > v2v.length() ) { // unsupported numberBase value?
+ERR_NOTHING:
+      errno_ = EDOM; // "Mathematics argument out of domain of function."  http://pubs.opengroup.org/onlinepubs/000095399/basedefs/errno.h.html
+      return stref( sr.data(), 0 );
       }
-   if( numberBase < 2 || numberBase > 36 ) {
-      return -1;
-      }
-   auto accum(0);
-   auto pC( pszParam.cbegin() );
-   for( ; pC != pszParam.cend() ; ++pC ) {
-      auto ch( *pC ); // cannot auto: *pC => const char, we need ch to be non-const
-      if( isdigit( ch ) )               { ch -= '0'     ; }
-      else if( ch >= 'a' && ch <= 'z' ) { ch -= 'a' - 10; }
-      else if( ch >= 'A' && ch <= 'Z' ) { ch -= 'A' - 10; }
-      else                              { break;          }
-      if( ch >= numberBase ) {
+   auto isBasePrefix = [&numberBase]( UI bs, char xfix, typeof(sr.cbegin()) &it, typeof(sr.cbegin()) itend ) {
+      if( (  10 == numberBase  // default?
+          || bs == numberBase  // explicit bs?
+          ) && (*it=='0')
+        ) {
+         const auto it1( it + 1 );
+         if( it1 != itend && (*it1==tolower(xfix)||*it1==toupper(xfix)) ) {
+            numberBase = bs;
+            it = it1;
+            return true;
+            }
+         }
+      return false;
+      };
+
+   sridx oFirst( stref::npos ), oLast( stref::npos );
+   for( auto it( sr.cbegin() ) ; it != sr.cend() ; ++it ) {
+      if( oFirst == stref::npos ) { // leading ...
+         if( isblank(*it) ) { // ? skip
+            continue;
+            }
+         if(  isBasePrefix( 16, 'x', it, sr.cend() )
+           || isBasePrefix(  2, 'b', it, sr.cend() )
+           ) {
+            oFirst = std::distance( sr.cbegin(), it + 1 ); // nb: if found, it has been advanced; we advance further
+            continue;
+            }
+         }
+      const auto chVal( v2v.find( tolower(*it) ) );
+      if( chVal == stref::npos || chVal > numberBase-1 ) { // not blank and not valid char in numberBase
+         if( oFirst == stref::npos ) { // seen NO valid chars in numberBase?
+            goto ERR_NOTHING;
+            }
          break;
          }
-      accum = (accum * numberBase) + ch;
+      // *it (chVal) is valid in numberBase
+      oLast = std::distance( sr.cbegin(), it );
+      if( oFirst == stref::npos ) {
+         oFirst = oLast;
+         }
+      const auto rv0( rv );
+      rv = (rv * numberBase) + chVal;
+      if( rv0 > rv ) { // result overflows ull
+         errno_ = ERANGE; // EOVERFLOW while defined is not mandatory so ERANGE used
+         goto SOMETHING;
+         }
       }
-   const auto rv( std::distance( pszParam.cbegin(), pC ) ? accum : -1 );
-   return rv;
+   if( oFirst == stref::npos ) { // no valid chars in numberBase in sr (prior to an INvalid char)
+      goto ERR_NOTHING;
+      }
+SOMETHING: // not necessarily an error
+   return stref( sr.data() + oFirst, oLast - oFirst + 1 );
+   }
+
+std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase ) { enum { DB=0 }; // DBG wrapper
+   auto errno_( 0 ); uintmax_t rslt( 0 ); auto baseActual( numberBase );
+   const auto srused( conv_u_( errno_, rslt, sr, baseActual ) );
+   DB && DBG( "conv_u: '%" PR_BSR "': e=%d '%" PR_BSR "' rv=%llu ", BSR(sr), errno_, BSR(srused), rslt );
+   return std::make_tuple( errno_, rslt, srused, baseActual );
    }
 
 // from http://www.stereopsis.com/strcmp4humans.html
