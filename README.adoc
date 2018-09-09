@@ -24,7 +24,7 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
  * *M*: Edit undo/redo limited only by available memory (effectively infinite).
  * *M*: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; *use DVCS*!
  * *K*: Powerful file/source-code navigation
- ** K comprehends http://ctags.sourceforge.net/[Exuberant Ctags] (or its descendant http://ctags.sourceforge.net/[Universal Ctags]) tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
+ ** K comprehends http://ctags.sourceforge.net/[Exuberant Ctags] (or its descendant https://ctags.io/[Universal Ctags]) tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
  ** K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
  ** K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing the names of all of the files of interest to you, and have the multi-file-aware editor-functions use this buffer as its source of names of files to examine.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
  * *K*: highlighting
@@ -61,7 +61,7 @@ The K source code distro contains, and K incorporates, by building and static li
  ** `boost::string_ref`: this is used pervasively (C++14 adopted `boost::string_ref` as `std::string_view` but we'll continue to use `boost::string_ref` until we abandon GCC 4.8 (32-bit Windows) builds.
  *** `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
  * http://www.pcre.org/[`PCRE`] "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
- * `ctags` (either http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags]) is invoked to rebuild the "tags database" at the close of each successful build of K.
+ * `ctags` (either http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant https://ctags.io/[Universal Ctags]) is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread` libraries
  * Windows-only: https://www.7-zip.org/download.html[`7zip.exe`] is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
 
@@ -70,7 +70,7 @@ The K source code distro contains, and K incorporates, by building and static li
  * The http://nuwen.net/mingw.html[nuwen.net distribution of MinGW] provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
  ** `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
  ** `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
- * `ctags.exe` from http://ctags.sourceforge.net/[Universal Ctags] must be manually installed (I successfully use https://github.com/universal-ctags/ctags-win32/releases[the newest CI build]) (and in `PATH`).
+ * `ctags.exe` from https://github.com/universal-ctags/ctags[Universal Ctags] must be deployed in `PATH` separately (I successfully use https://github.com/universal-ctags/ctags-win32/releases[the newest CI build]).
 
  * FYI: http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html[MinGW gcc non-optionally dyn-links to MSVCRT.DLL] which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
 
@@ -216,7 +216,7 @@ K implements a large number of editor-functions, all of which the user can invok
  ** `arg` "editor command string" `execute` executes an editor function sequence (a.k.a. macro) string.
  ** `arg arg` "OS shell command string" `execute` executes "OS shell command string" in an operating system shell (Windows: `CMD.exe` (a.k.a. DOS) shell; Linux: system() -> bash) with stdout and stderr captured to an editor buffer.  Note that in Windows, data files such as .pdf are "executable" (executing them opens their default app (e.g. PDF Reader GUI App).
  * `tags` (`alt+u`): looks up the identifier under the cursor (or arg-provided if any) in the current "tags database" and "hyperlinks" to it.  If >1 definition is found, a menu of the available choices is offered.
- ** Aside: `tags` (http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant http://ctags.sourceforge.net/[Universal Ctags])) is invoked to rebuild the "K tags database" at the end of each successful build of K, to facilitate development of K.
+ ** Aside: at the end of each successful build of K, to facilitate development of K, `ctags` is invoked to rebuild the "K tags database".
  ** the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
  ** those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
  * PCRE Regular-expression (regex) search & replace: all search and replace functions, when prefixed with `arg arg` (2-arg), operate in regex mode.

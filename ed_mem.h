@@ -90,7 +90,7 @@ inline type * DupArray( const type *pSrc, size_t elements=1 ) {
 
 template<typename Ptr>
 inline void AllocBytesNZ( Ptr &rv, size_t bytes, PCChar msg="" ) {
-   rv = Ptr ( AllocNZ( bytes ) );
+   rv = static_cast<Ptr>( AllocNZ( bytes ) );
    if( rv == nullptr ) {
       MemErrFatal( __func__, bytes, msg );
       }
