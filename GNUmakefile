@@ -375,7 +375,7 @@ printvars:
 	)
 
 
-TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=+K --file-tags=yes --recurse
+TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=+K --extras=+f --recurse
 # !!! SEE ALSO ctags.d/*.ctags
 
 .PHONY: tags
