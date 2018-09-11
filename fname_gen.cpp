@@ -428,7 +428,7 @@ bool ARG::wct() {
    }
 #endif
 
-enum { MFSPEC_D=1 };
+enum { MFSPEC_D=0 };
 
 CfxFilenameGenerator::CfxFilenameGenerator( std::string &&src, stref macroText, WildCardMatchMode matchMode )
    : PathStrGenerator( src )
