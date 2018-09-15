@@ -329,6 +329,7 @@ OBJS := \
  switches.o     \
  switch_impl.o  \
  sysbufs.o      \
+ tagfind.o      \
  $(PLAT_OBJS)   \
  wnd.o
 
@@ -531,4 +532,11 @@ krbtree_unittest$(EXE_EXT): krbtree_unittest.o
 krbtree_unittest.o: CPPFLAGS += -DUNIT_TEST_KRBTREE
 krbtree_unittest.o: CXXFLAGS += -Werror
 krbtree_unittest.o: krbtree.cpp
+	$(BLD_CXX)
+
+unittest_tagfind$(EXE_EXT): unittest_tagfind.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+unittest_tagfind.o: CPPFLAGS += -DUNITTEST
+unittest_tagfind.o: tagfind.cpp
 	$(BLD_CXX)

@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -24,6 +24,13 @@
                      + __GNUC_MINOR__     * 100 \
                      + __GNUC_PATCHLEVEL__          )
 // Test for GCC > 7.1.0 #if GCC_VERSION > 70100
+
+// NOTE!  Applying ATTR_FORMAT to printf-like function extern declarations
+//        DOES NOT GUARANTEE that said function will honor 'gnu_printf' style
+//        format strings e.g.  PR_SIZET!!!
+//   e.g. MinGW GCC 4.8.1 (last 32-bit Nuwen MinGW GCC release):
+//           vfprintf DOES NOT honor 'gnu_printf', while
+//           vsnprintf DOES honor 'gnu_printf'
 
 #ifndef ATTR_FORMAT
 #ifdef __GNUC__

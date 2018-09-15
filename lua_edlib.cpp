@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -157,6 +157,7 @@ namespace LExFx { // exported functions
    STATIC_FXN int IsDir( lua_State *L )   { R_bool( ::IsDir(  S_(1) ) ); }
 
    STATIC_FXN int SleepMs( lua_State *L )   { ::SleepMs( U_(1) ); RZ; }
+
    } // namespace LExFx
 
 //------------------------------------------------------------------------------
@@ -646,7 +647,9 @@ void l_OpenStdLibs( lua_State *L ) {
    }
 
 void l_RegisterEditorFuncs( lua_State *L ) {
+   extern int FindMatchingTagsLines( lua_State *L );
    STATIC_CONST luaL_reg myLuaFuncs[] = {
+      #define  LUA_FUNC_GLOBAL( func )   { #func, func },
       #define  LUA_FUNC_I( func )   { #func, LExFx::func },
 #ifdef use_AddEdFxn
        LUA_FUNC_I(AddEdFxn)
@@ -706,6 +709,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        LUA_FUNC_I(enqueue_compile_jobs)
        LUA_FUNC_I(hexstr2bitstr)
        LUA_FUNC_I(bitstr2hexstr)
+       LUA_FUNC_GLOBAL(FindMatchingTagsLines)
       #undef   LUA_FUNC_I
       };
 

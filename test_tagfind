@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+#
+# Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+#
+# This file is part of K.
+#
+# K is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# K is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along
+# with K.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+die() { printf %s "${@+$@$'\n'}" 1>&2 ; exit 1 ; }
+
+tagfnm=tags
+tgtexe=unittest_tagfind.exe
+
+chk() {
+   local ans ; ans="$(grep -P '^'"$1\t" "$tagfnm" | wc -l)"
+   # echo "$1: expect $ans"
+   local lc ; lc="$(./"$tgtexe" "$1" | wc -l)" ; ((lc==$ans)) || die "FAIL: for T=$1, expected $ans, got $lc"
+   }
+
+make "$tgtexe" || die
+
+chk "d_buf"
+chk "DB"
+chk "DBG"
+chk "DD"
+chk "ED"
+chk "VidWrStrColors"
+chk "NotATag"
+chk "val"
+chk "ThereIsNoTag"
+chk "CouldThereBeATagNo"
+chk "DIAGNOSTICS"
+chk "!_TAG_FILE_FORMAT"
+chk "!_TAG_PROGRAM_VERSION"
+chk "~Xbuf"
+chk "~zee_last_tag_nonexistent"
+chk "~kpto_er"
