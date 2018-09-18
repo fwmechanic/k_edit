@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -33,6 +33,12 @@
    // http://stackoverflow.com/questions/12539488/determine-64-bit-file-size-in-c-on-mingw-32-bit
    // MUST be defined before any MINGW .h file is #included
    #define  __MSVCRT_VERSION__ 0x0601
+#endif
+
+#if defined(_WIN32)
+// see https://sourceforge.net/p/mingw-w64/wiki2/gnu%20printf/
+// must define __USE_MINGW_ANSI_STDIO before ANY toolchain #includes
+#define __USE_MINGW_ANSI_STDIO 1
 #endif
 
 // std C/C++ headers

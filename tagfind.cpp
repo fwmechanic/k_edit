@@ -245,13 +245,7 @@ void DBG_init() {
 
 int DBG( char const *kszFormat, ... ) {
    va_list args;  va_start(args, kszFormat);
- #if 0
-   vfprintf( stderr, kszFormat, args );  // vfprintf DOES NOT HONOR ATTR_FORMAT(xx,yy) __attribute__ format gnu_printf
- #else
-   char szBuffer[257];
-   vsnprintf(szBuffer, (sizeof(szBuffer)-1), kszFormat, args); // vfprintf DOES HONOR ATTR_FORMAT(xx,yy) __attribute__ format gnu_printf
-   fputs(szBuffer, stderr);
- #endif
+   vfprintf( stderr, kszFormat, args );
    fputc( '\n', stderr );
    va_end(args);
    return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))

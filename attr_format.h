@@ -31,6 +31,11 @@
 //   e.g. MinGW GCC 4.8.1 (last 32-bit Nuwen MinGW GCC release):
 //           vfprintf DOES NOT honor 'gnu_printf', while
 //           vsnprintf DOES honor 'gnu_printf'
+//        UNLESS: must
+//           #define __USE_MINGW_ANSI_STDIO 1
+//        before
+//           #include'ing any stdlib h files
+//        this is (now) done in ed_main.h
 
 #ifndef ATTR_FORMAT
 #ifdef __GNUC__
