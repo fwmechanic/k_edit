@@ -225,8 +225,8 @@ class SWI_intf_base {
    };
 
 typedef std::vector< SWI_intf_base > SWI_vector;
-SWI_vector s_switbl;
-static void addswi( PCChar name_, SWI_intf *intf_ _AHELP( PCChar help_ ) ) {
+STATIC_VAR SWI_vector s_switbl;
+STATIC_FXN void addswi( PCChar name_, SWI_intf *intf_ _AHELP( PCChar help_ ) ) {
    s_switbl.emplace_back( name_, intf_ _AHELP( help_ ) );
    }
 

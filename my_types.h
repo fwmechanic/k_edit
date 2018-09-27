@@ -17,10 +17,6 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-//
-//  Any customizations that are NOT application specific belong here!
-//
-
 #pragma once
 
 #if !defined(WL)
@@ -32,14 +28,14 @@
 #endif
 #endif
 
-// I've been getting auto-happy lately, but in some cases we don't want (or can't use) auto; annotate these with NOAUTO
+// I've been getting auto-happy lately, but in some cases we don't want (or can't use) auto;
+// to avoid wasting time re-learning why that this cannot be done in those cases, annotate them with
 #define  NOAUTO
 
-// VC7.1: default storage class for inline is static, so defining STIL as 'STIL' was redundant
-// (other compilers may vary)
+//
+// NB: macros that expand to 'static' should have a '-I macnm=static' entry in %~dp0ctags.d\k-src.ctags
 //
 #define  STIL  static inline
-
 #define  STATIC_VAR  static
 #define  COMPLEX_STATIC_VAR  STATIC_VAR
 #define  STATIC_FXN  static

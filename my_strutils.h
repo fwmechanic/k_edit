@@ -85,7 +85,7 @@ STIL bool  atEnd    ( const std::string &str, sridx idx  ) { return idx == str.l
 // INNER stringref index to OUTER stringref index
 STIL sridx isri2osri( const stref &osr, const stref &isr, sridx isri ) { return isri + (isr.data()-osr.data()); }
 
-static sridx find( stref this_, stref key, sridx start=0 ) {
+STIL sridx find( stref this_, stref key, sridx start=0 ) {
    this_.remove_prefix( start );
    const auto rv( this_.find( key ) );
    return rv == eosr ? eosr : rv + start ;
@@ -416,8 +416,8 @@ STIL void rmv_trail_blanks( stref &inout ) {
    inout.remove_suffix( trailSpcs );
    }
 
-static sridx FirstAlphaOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isalpha, src, start ); }
-static sridx FirstDigitOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isdigit, src, start ); }
+STIL sridx FirstAlphaOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isalpha, src, start ); }
+STIL sridx FirstDigitOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isdigit, src, start ); }
 
 //#######################################################################################
 

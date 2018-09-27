@@ -1,6 +1,6 @@
 #!bash
 #
-# Copyright 2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -22,3 +22,10 @@
 
 # the two K Lua source files that don't have .lua extension:
 --langmap=Lua:+(k.luaedit)(k.filesettings)
+
+# K uses several macros that hide (expand to) 'static'.  This inhibits
+# generation of "file:" tag fields, so we unhide them for u-ctags thus:
+-I STATIC_FXN=static
+-I STATIC_VAR=static
+-I STATIC_CONST=static
+-I STIL=static

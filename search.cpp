@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -366,7 +366,7 @@ public:
    RegexMatchCaptures      d_captures;
    FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
    class FindStrRslt { // must distinguish match (including 0-length match) and no match
-      static const char chNoMatch;
+      STATIC_VAR const char chNoMatch;
       const stref d_sr;
    public:
       FindStrRslt( PCChar data, size_t length ) : d_sr( data, length ) {}

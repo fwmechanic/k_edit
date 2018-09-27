@@ -225,7 +225,7 @@ struct FTypeSetting {
         };
    Path::str_t d_key;  // rbtree key
    colorval_t  d_colors[ ColorTblIdx::VIEW_COLOR_COUNT ];
-   constexpr static int d_colors_ELEMENTS() { return ELEMENTS(d_colors); }
+   constexpr STATIC_FXN int d_colors_ELEMENTS() { return ELEMENTS(d_colors); }
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
    HL_ID       d_hl_id;
    void  Update();
@@ -2385,7 +2385,7 @@ struct direct_vid_seg {
      {}
    };
 
-static std::vector<direct_vid_seg> s_direct_vid_segs;
+STATIC_VAR std::vector<direct_vid_seg> s_direct_vid_segs;
 
 STATIC_FXN bool AddLineDelta( LINE &yLineVar, LINE yLine, LINE lineDelta ) {
    const auto fAffected( yLine <= yLineVar );
