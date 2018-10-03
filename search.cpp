@@ -944,17 +944,13 @@ GLOBAL_CONST char kszCompile[] = "<compile>";
 
 STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
    VS_( if( s_searchSpecifier ) { s_searchSpecifier->Dbgf( "befor" ); } )
-   auto ssNew( new SearchSpecifier( src, fRegex ) );
+   std::unique_ptr<SearchSpecifier> ssNew( new SearchSpecifier( src, fRegex ) );
 #if USE_PCRE
    const auto err( ssNew->HasError() );
-   if( err ) {
-      Delete0( ssNew );
-      }
-   else
+   if( !err )
 #endif
       {
-      Delete0( s_searchSpecifier );
-      s_searchSpecifier = ssNew;
+      DeleteUp( s_searchSpecifier, ssNew.release() );
       g_SavedSearchString_Buf.assign( sr2st( src ) );  // HACK to let ARG::grep inherit prev search strings
       }
    VS_( s_searchSpecifier->Dbgf( "after" ); )
@@ -1137,7 +1133,16 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
    if( !IsStringBlank( macroVal ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
       const auto pFBufMfspec( FindFBufByName( macroVal.c_str() ) );
       if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
-         return new FilelistCfxFilenameGenerator( std::string(srcNm) + "=" + pFBufMfspec->Namestr(), pFBufMfspec );
+         if( FBOP::IsBlank( pFBufMfspec ) ) {
+            STATIC_CONST auto tagged_files_bufnm( "<tagged-files>" );
+            if( 0 == cmp( pFBufMfspec->Name(), tagged_files_bufnm ) ) {
+               // Msg( "mffile:=\"%s\" but it's empty", tagged_files_bufnm );
+               return nullptr;
+               }
+            }
+         else {
+            return new FilelistCfxFilenameGenerator( std::string(srcNm) + "=" + pFBufMfspec->Namestr(), pFBufMfspec );
+            }
          }
       }
    }
@@ -1171,14 +1176,13 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( bool readtagsfile_retry=
 
 #ifdef fn_mgl
 bool ARG::mgl() {
-   auto pGen( MultiFileGrepFnmGenerator() );
+   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator() );
    if( pGen ) {
       auto ix(0);
       Path::str_t pbuf;
-      while( pGen->VGetNextName( pbuf ) ) {
+      while( pGen.get()->VGetNextName( pbuf ) ) {
          DBG( "  [%d] = '%" PR_BSR "'", ix++, BSR(pbuf) );
          }
-      Delete0( pGen );
       }
    return true;
    }
@@ -1193,7 +1197,7 @@ bool ARG::mfgrep() {
       return false;
       }
    MFGrepMatchHandler mh( g_pFBufSearchRslts );
-   auto pSrchr( NewFileSearcher
+   std::unique_ptr<FileSearcher> pSrchr( NewFileSearcher
       ( s_searchSpecifier->CanUseFastSearch() ? FileSearcher::fsFAST_STRING : FileSearcher::fsTABSAFE_STRING
       , mh.sm()
       , *s_searchSpecifier
@@ -1202,19 +1206,18 @@ bool ARG::mfgrep() {
    if( !pSrchr ) {
       return false;
       }
-   auto pGen( MultiFileGrepFnmGenerator( true ) );
+   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator( true ) );
    if( !pGen ) {
-      ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil && no tags" );
+      // ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil && no tags" );
+      return false;
       }
-   else {                         0 && DBG( "%s using %" PR_BSR, __PRETTY_FUNCTION__, BSR(pGen->srSrc()) );
-      mh.InitLogFile( *pSrchr, pGen->srSrc() );
+   else {                         0 && DBG( "%s using %" PR_BSR, __PRETTY_FUNCTION__, BSR(pGen.get()->srSrc()) );
+      mh.InitLogFile( *(pSrchr.get()), pGen.get()->srSrc() );
       Path::str_t pbuf;
-      while( pGen->VGetNextName( pbuf ) ) {
-         MFGrepProcessFile( pbuf.c_str(), pSrchr );
+      while( pGen.get()->VGetNextName( pbuf ) ) {
+         MFGrepProcessFile( pbuf.c_str(), pSrchr.get() );
          }
-      Delete0( pGen );
       }
-   Delete0( pSrchr );
    mh.ShowResults();
    return mh.VOverallRetval();
    }
@@ -1303,7 +1306,7 @@ STATIC_FXN bool GenericReplace_CollectInputs( bool fRegex, bool fInteractive, bo
 
 STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
    const auto startingTopFbuf( g_CurFBuf() );
-   auto pGen( MultiFileGrepFnmGenerator() );
+   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator() );
    if( !pGen ) {
       ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
       }
@@ -1312,7 +1315,6 @@ STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
       while( pGen->VGetNextName( pbuf ) ) {
          MFReplaceProcessFile( pbuf.c_str(), &mrcw );
          }
-      Delete0( pGen );
       // Lua event handler GETFOCUS is called by PutFocusOn() and
       // l_hook_handler() calls lua_error() if ExecutionHaltRequested() is set
       if( USER_CHOSE_EARLY_CMD_TERMINATE == ExecutionHaltRequested() ) {
@@ -1826,19 +1828,16 @@ STATIC_FXN bool GenericSearch( const ARG &arg, const SearchScanMode &sm ) {
    if(      &smBackwd == &sm ) { curPt = Point( g_CurView()->Cursor(), 0, -1 ); }
    else if( &smFwd    == &sm ) { curPt = Point( g_CurView()->Cursor(), 0, +1 ); }
    else /*suppress warning*/   { curPt = Point(0,0);  Assert( !"invalid sm value" ); }
-   auto mh( new FindPrevNextMatchHandler( sm.d_fSearchForward, s_searchSpecifier->IsRegex(), s_searchSpecifier->SrchStr() ) );
-   auto pSrchr( NewFileSearcher( FileSearcher::fsTABSAFE_STRING, sm, *s_searchSpecifier, *mh ) );
+   std::unique_ptr<FindPrevNextMatchHandler> mh( new FindPrevNextMatchHandler( sm.d_fSearchForward, s_searchSpecifier->IsRegex(), s_searchSpecifier->SrchStr() ) );
+   std::unique_ptr<FileSearcher> pSrchr( NewFileSearcher( FileSearcher::fsTABSAFE_STRING, sm, *s_searchSpecifier, *mh ) );
    if( !pSrchr ) {
-      Delete0( mh );
       return false;
       }
    pSrchr->SetInputFile();
    pSrchr->SetBoundsToEnd( curPt );
    pSrchr->FindMatches();
-   Delete0( pSrchr );
    mh->ShowResults();
    const auto rv( mh->VOverallRetval() );
-   Delete0( mh );
    return rv;
    }
 
@@ -2110,12 +2109,11 @@ bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL
 
 void CGrepper::FindAllMatches() {
    CGrepperMatchHandler mh( *this );
-   auto pSrchr( NewFileSearcher( FileSearcher::fsFAST_STRING, mh.sm(), *s_searchSpecifier, mh ) );
+   std::unique_ptr<FileSearcher> pSrchr( NewFileSearcher( FileSearcher::fsFAST_STRING, mh.sm(), *s_searchSpecifier, mh ) );
    if( pSrchr ) {
        pSrchr->SetInputFile( d_SrchFile );
        pSrchr->SetBoundsToEnd( Point( d_MetaLineCount, 0 ) );
        pSrchr->FindMatches();
-       Delete0( pSrchr );
        }
    }
 

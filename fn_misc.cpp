@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -365,11 +365,10 @@ bool ARG::deltalogtm() {
       return false;
       }
    FcLogTmMatchHandler mh( *this );
-   FileSearcher *pSrchr = new FileSearcherRegex( mh.sm(), ss, mh, false );
+   std::unique_ptr<FileSearcher>pSrchr = new FileSearcherRegex( mh.sm(), ss, mh, false );
    pSrchr->SetInputFile();
    pSrchr->SetBounds( *this );
    pSrchr->FindMatches();
-   Delete0( pSrchr );
    return true;
    }
 
