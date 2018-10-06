@@ -140,7 +140,7 @@
    lua:alt+L
    # killall:pause
 
-   sysscripts:=arg "$K_SCRIPTS:/_system/$COMPUTERNAME:*.*" setfile
+   sysscripts:=arg "${K_SCRIPTS}/_system/${COMPUTERNAME}*.*" setfile
 
    # cursor move to end (top/bottom) of current-indent zone (ctrl+shift+up/down)
    mib:ctrl+shift+up
@@ -532,8 +532,7 @@
    edf:=arg curfile endline
    edf:Alt+3
 
-   myscripts:="%USERPROFILE%\klg\pers\"
-
+   myscripts:="${HOME:-${USERPROFILE}}\klg\pers\"
 
    #
    # Alt+4  worklog file
@@ -548,7 +547,9 @@
    worklog:= meta arg cur_y4 "_wk" cur_woy ".log" SetFile -> tslog
    worklog:Alt+4
 
-   daily:=cancel Arg myscripts "daily_notes.kdb" SetFile tslog
+   daily:=cancel Arg "${K_DIARY_FILE:-${HOME:-${USERPROFILE}}\klg\pers\daily_notes.kdb}" SetFile -> tslog
+   daily:=cancel Arg "${K_DIARY_FILE:-${HOME:-${USERPROFILE}}\klg\pers\daily_notes.kdb}" SetFile -> tslog
+   daily:=cancel Arg "${K_DIARY_FILE:-${K_NOTES_DIR:-${HOME:-${USERPROFILE}}\klg\pers\daily_notes.kdb}}${K_NOTES_DIR:+/daily_notes.kdb}" SetFile -> tslog
    daily:Alt+5
 
    exts :=arg "%.[^.\\]+$" matches
@@ -973,9 +974,9 @@
    # Usage: Arg 'file' GetMac where <file> is the base name of
    #        a file in the INIT directory
    #
-   GetMac := cancel lasttext begline "$INIT:" endline ".MAC"  \
-             setfile <n +>Ok   lasttext begline               \
-             "Can't find \"" endline "\"" message =>          \
+   GetMac := cancel lasttext begline "${INIT}" endline ".MAC"  \
+             setfile <n +>Ok   lasttext begline                \
+             "Can't find \"" endline "\"" message =>           \
         :>Ok begfile arg endfile assign ->  arg refresh
 
 

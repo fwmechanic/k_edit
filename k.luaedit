@@ -383,16 +383,47 @@ do
    local function envExpanderGen( pat )
       return function( st ) return st:gsub( pat, envReplacer ) end
       end
-   local envExpanders = { -- note that '%', not '\', is the Lua-pattern metachar escaper!
-      function(str)
-         if str:match( "^~/" ) then
-            local up = GetenvOrNil( "USERPROFILE" ) or GetenvOrNil( "HOME" )
-            if up then   -- ~/.gitconfig
-               str = str:gsub( "^~/", up..dirsep_os )
+   local function sh_expander(st, nest)  -- expand ${VARNM}, ${VARNM:-dfltval} and ${VARNM-dfltval}
+      nest = nest or " "                 --                  ${VARNM:+altval}  and ${VARNM+altval}
+      return st:gsub( "%$%b{}", function( varx )
+         DBG( fmt( "%s+%s'", nest, varx ) )
+         local body = varx:sub(3,#varx-1)                                         DBG( fmt( "%sbody=%s'", nest, body or "nil" ) )
+         -- 2 near-identical matches follow because pattern varies in TWO
+         -- places: envnm and nullEqUnset
+         local envnm,nullEqUnset,op,dflt = body:match("([^$:-+]+)(:)([-+])(.*)")  DBG( fmt( "%s1: op=%s e=%s d=%s'", nest, op or "nil", envnm or "nil", dflt or "nil" ) )
+         if not dflt then
+            envnm,op,dflt = body:match("([^$-+]+)([-+])(.*)")                     DBG( fmt( "%s2: op=%s e=%s d=%s'", nest, op or "nil", envnm or "nil", dflt or "nil" ) )
+            if not dflt then
+               envnm = body
                end
             end
-         return str
-         end,
+         local rv = GetenvOrNil( envnm )
+         if op then
+            --[[ truthiness of empty/null rv (${envnm}) value depends on whether ':' prefix (nullEqUnset) was provided:
+               "...use of the <colon> in the format shall result in a test for a
+                parameter that is unset or null; omission of the <colon> shall
+                result in a test for a parameter that is only unset."
+               http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html "2.6.2 Parameter Expansion" ]]
+            if rv --[[is set]] and #rv==0 --[[isNull]] and nullEqUnset then rv = nil end  -- demote empty/null rv to nil iff ':' provided
+            if op=="+" then
+               rv =  rv                                and (dflt and sh_expander(dflt,nest.." ")) or ""
+            elseif op=="-" then
+               rv = (rv and sh_expander(rv,nest.." ")) or  (dflt and sh_expander(dflt,nest.." ")) or ""
+            else
+               assert( nil, "unknown op="..op )
+               end
+            end
+         rv = rv or ""
+         -- kludge to implement ${strftime-%Y.%m.%dT%H:%M:%S}
+         -- local strftime = envnm=="strftime" and dflt and assert( os.date( dflt ) )
+         DBG( fmt( "%s-%s -> %s'", nest, varx, rv ) )
+         return rv
+         end
+         )
+      end
+   local envExpanders = { -- note that '%', not '\', is the Lua-pattern metachar escaper!
+      -- prefix/format substitutions:
+      function(str) return str:gsub( "^~/", "${HOME:-${USERPROFILE}}" ) end,
       function(str) -- on MS OS, xlat "/p/dir/to/something" to "p:\dir\to\something"
          if dirsep_os=="\\" then
             local drvletter = str:match( "^/([a-zA-Z])/" )
@@ -402,12 +433,12 @@ do
             end
          return str
          end,
-      envExpanderGen( "%%"   .."([^%%]-)".. "%%"),   -- arg "%USERPROFILE%" setfile
-      envExpanderGen( "%$"   .."([^:]-)" .. ":" ),   -- arg "$USERPROFILE:" setfile
-      envExpanderGen( "%${"  .."([^}]-)" .. "}" ),   -- arg "${USERPROFILE}" setfile
-      envExpanderGen( "%$%(" .."([^)]-)" .. "%)"),   -- arg "$(USERPROFILE)" setfile
-      envExpanderGen( "%$"   ..envNamePat       ),   -- arg "$USERPROFILE" setfile
-      envExpanderGen( "%%"   ..envNamePat       ),   -- arg "%USERPROFILE" setfile
+      -- general substitutions:
+      sh_expander,                                 -- arg "${HOME:-${USERPROFILE}}" setfile  -- sh (w/  {})
+      envExpanderGen( "%$"   ..envNamePat       ), -- arg "$USERPROFILE" setfile    -- sh (w/o {})
+      envExpanderGen( "%$%(" .."([^)]-)" .. "%)"), -- arg "$(USERPROFILE)" setfile  -- make
+      envExpanderGen( "%%"   .."([^%%]-)".. "%%"), -- arg "%USERPROFILE%" setfile   -- DOS-COMMAND/Windows-CMD
+      envExpanderGen( "%%"   ..envNamePat       ), -- arg "%USERPROFILE" setfile    -- DOS-COMMAND/Windows-CMD
       }
 
    -- print( "dirsep_preferred=" .. (dirsep_os or "nil") )
@@ -429,8 +460,14 @@ do
 
    function StrExpandEnvVars( str ) -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
       -- print( "StrExpandEnvVars+("..str..")" )
+      DBG( "StrExpandEnvVars/SEEV:" )
       for _, fxn in ipairs(envExpanders) do
-         str = fxn( str )
+         local news = fxn( str )
+         if str ~= news then
+            DBG( " SEEV+ ".. str )
+            DBG( " SEEV- ".. news )
+            end
+         str = news
          end
       -- print( "StrExpandEnvVars-("..str..")" )
       return str
@@ -1310,34 +1347,11 @@ bool ARG::dif()
 
 -- ]]
 
-function dquoteSpacyName( name )  return  ifx( name:match( "%s" ), fmt( '"%s"', name ), name )  end
-
-function FnmFromCli( val )
-   local fnm, opts = split_str( val, " [-]" )
-   if not IsFile( fnm ) then  return nil, fmt( "'%s' is not a file", fnm )  end
-   if opts then opts = " -" .. opts  else opts = " " end
-   return fnm, opts
-   end
-
-function FnmFromEnvVar( envvarnm )
-   local val = GetenvOrNil( envvarnm )
-   if not val           then  return nil, "env var "..envvarnm.." is not set"            end
-   local fnm, opts = split_str( val, " -" )
-   if not IsFile( fnm ) then  return nil, fmt( "'%s' (from %s) is not a file", fnm, envvarnm )  end
-   if opts then opts = " -" .. opts  else opts = " " end
-   return fnm, opts
-   end
-
 -- arg ".kbackup\k.lua.005 k.lua" difc
 
 function runEmbShell( cmd ) fExecute( 'arg "EMBSHELL> '..cmd..'" runchild' ) end
 
 do
-   local function dfltEnvVarPgm( envnm, dflt )
-      local fnm = FnmFromEnvVar( envnm )
-      if not fnm then Putenv( envnm.."="..dflt ) end
-      end
-
    function a_filenames( text )
       local rv = {}
       for _,fnm in ipairs( string.a_gmatches( text, "%S+" ) ) do
@@ -1362,7 +1376,6 @@ do
       end
 
    function add_diff_edfxn( fxnm, diff_env_varnm, diff_cmdline, fxn_run_cmd, fmtrun )
-      -- dfltEnvVarPgm( diff_env_varnm, diff_cmdline )
       AddEdFxn{ name = fxnm, help = "Run "..diff_cmdline.." oldfile newfile, where oldfile newfile come from the arg or the current line", attr = NOARG+BOXSTR+TEXTARG, key = ""
          , TEXTARG = function ( arg )  dodiff( diff_cmdline, fxn_run_cmd, arg.text                       , fmtrun ) end
          , NOARG   = function ( arg )  dodiff( diff_cmdline, fxn_run_cmd, arg.fbuf:GetLine( arg.cursorY ), fmtrun ) end
