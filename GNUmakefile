@@ -381,6 +381,9 @@ TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=+K --
 
 .PHONY: tags
 tags : $(EXE_TGTS)
+	$(TAGS_CMDLN) --list-fields        `> tags_fields
+	$(TAGS_CMDLN) --list-extras         > tags_extras
+	$(TAGS_CMDLN) --list-kinds-full=C++ > tags_kinds
 	$(TAGS_CMDLN)
 
 $(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat bld_cmdtbl.lua

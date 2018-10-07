@@ -27,8 +27,9 @@ bkz/
 cmdtbl.h
 fxns
 tags
-tagfiles.in
-tagsonly
+tags_fields
+tags_extras
+tags_kinds
 k_rls.*
 k.RES
 k_D.LRF

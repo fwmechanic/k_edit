@@ -1,0 +1,14 @@
+--fields=+ ID
+N/name    tag name    the first field, being the primary key which the tags file is sorted on
+F/input   input file  name of file in which tagged object is defined
+P/pattern pattern     content governed by --excmd value: when --excmd=number, this has the value 'n;"' where n is a decimal (line) number
+
+f/file  "File-restricted scoping"  (dflt enabled for C++)  add a field "file:" to file-scoped tagged objects (don't add to global-scoped tagged objects) (#def macs in .c files, static objects)
+
+K "Kind of tag as full name"
+k "Kind of tag as a single letter" even though this is (dflt enabled for C++), it appears to be overridden by --fields=+K
+
+s/NONE "Scope of tag definition"          does not seem to do anything (C++, with --fields=+f in effect)
+p/scopeKind "Kind of scope as full name"  does not seem to do anything (C++, with --fields=+f in effect)
+
+t "Type and name of a variable or typedef"  (dflt enabled for C++)  add a field "typeref:<typename>" for fxns: return type
