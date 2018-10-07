@@ -19,6 +19,79 @@
 
 #include "lua_intf_common.h"
 #include <cmath>  // for std::log2
+#ifdef UNITTEST
+#include <cassert>
+#endif
+
+class TxtFileLineReader {
+   /* Why this exists: to offer a safe, efficient interface to
+      unlimited-line-length C stdio (fgets) based file-line-reading
+      functionality (a C++ std::ifstream implemetation having been tried and
+      found wanting in the areas of code size (1.3MB?!) and portability between
+      versions of GCC).
+    */
+   FILE  *d_ifh;
+   stref &d_line;  // ref to stref var in client's scope which we update upon successful getline call
+   char  *d_buf = nullptr;
+   size_t d_bufsize = 0;
+   const size_t d_buf_alloc_incr;
+#ifdef UNITTEST
+   size_t d_bytesRead = 0;
+#endif
+public:
+   TxtFileLineReader( FILE *ifh_, stref &line_, size_t buf_alloc_incr=2*1024 ) : d_ifh( ifh_ ), d_line(line_), d_buf_alloc_incr(buf_alloc_incr) {}
+   ~TxtFileLineReader() { free( d_buf ); d_buf = nullptr; d_bufsize = 0; }
+   decltype(d_ifh) fh() const { return d_ifh; }
+   int fno() const { return fileno( d_ifh ); }
+#ifdef UNITTEST
+   decltype(d_bytesRead) bytesRead() const { return d_bytesRead; }
+   decltype(d_bufsize)   bufsize()   const { return d_bufsize; }
+#endif
+   stref line() const { return d_line; }
+   bool getline() {
+      if( !d_buf ) {
+         d_buf = static_cast<char *>( malloc( d_buf_alloc_incr ) );
+         d_bufsize = d_buf_alloc_incr;
+         }
+      auto pinb( d_buf );
+      auto avail( d_bufsize );
+      for( ; ; ) {
+         if( fgets( pinb, avail, d_ifh ) == nullptr ) { // eof, error?
+            if( ferror( d_ifh ) ) {
+               return false;
+               }
+            if( feof( d_ifh ) ) {
+               *pinb = '\0';  // eof before any chars read; d_buf not written
+               return false;
+               }
+            }
+         const auto segLen( strlen( pinb ) );
+         if( segLen == 0 || pinb[segLen-1] != '\n' ) {
+            pinb += segLen;  // *pinb == '\0'
+            const auto bchars( (pinb - d_buf) + 1 );  // include '\0'
+            if( bchars == d_bufsize ) {
+               d_bufsize += d_buf_alloc_incr;
+               d_buf = static_cast<char *>( realloc( d_buf, d_bufsize ) );
+               pinb = d_buf + bchars - 1;
+               }
+            avail = d_bufsize - (pinb - d_buf);
+            continue;
+            }
+         // we have finished reading a line (to a '\n', OR hit EoF before a trailing '\n')
+         stref rv( d_buf, (pinb - d_buf) + segLen );
+#ifdef UNITTEST
+         d_bytesRead += rv.length();
+#endif
+         // truncate any trailing EoL chars and return what's left
+         const auto trimto( rv.find_first_of( "\n\r" ) );
+         if( eosr != trimto ) {
+            rv.remove_suffix( rv.length() - trimto );
+            }
+         d_line = rv;
+         return true;
+         }
+      }
+   };
 
 int FindMatchingTagsLines(
 #ifdef UNITTEST
@@ -44,7 +117,8 @@ int FindMatchingTagsLines(
       lua_setfield( L, -2, fieldNm );
       };
 #endif
-   auto bsearch_sorted_tagsfile = [&rv_append_string,&rv_setfield_string]( FILE *ifh, stref src ) {
+   auto bsearch_sorted_tagsfile = [&rv_append_string,&rv_setfield_string
+      ]( FILE *ifh, stref src ) {
       // Binary search of a sorted ctags (text) file becomes feasible only
       // because we're all running SSDs now, so seeks are ~free!  Given I'm
       // encountering 110MiB tag files, performance needs all the help it can
@@ -56,71 +130,25 @@ int FindMatchingTagsLines(
       // 1. the tag name starts each line, and is terminated by a HTAB.
       // 2. A file tag's filename lies between line's first and second HTAB.
 
-      fseek( ifh, 0, SEEK_END ); auto oMax( ftell( ifh ) );
-      fseek( ifh, 0, SEEK_SET ); auto oMin( ftell( ifh ) );
-      const auto maxProbes( static_cast<int>( std::log2( static_cast<double>(oMax) ) ) );
-
-      stref line; char *buf( nullptr ); size_t bufsize( 0 );
 #ifdef UNITTEST
-      size_t bytesRead( 0 );
+      std::string ut_tagsfile_mtime;
 #endif
-      auto getline_dtor = [&buf,&bufsize]() { free( buf ); buf = nullptr; bufsize = 0; };
-      auto getline = [&ifh,&buf,&bufsize,&line
-#ifdef UNITTEST
-         ,&bytesRead
-#endif
-         ]() {
-         const size_t alloc_incr( 2*1024 );
-         if( !buf ) {
-            buf = static_cast<char *>( malloc( alloc_incr ) );
-            bufsize = alloc_incr;
-            }
-         char  *pb( buf );
-         size_t bb( bufsize );
-         for( ; ; ) {
-            if( fgets( pb, bb, ifh ) == nullptr ) { // eof, error?
-               if( ferror( ifh ) ) {
-                  return false;
-                  }
-               if( feof( ifh ) ) {
-                  *pb = '\0';  // eof before any chars read; buf not written
-                  return false;
-                  }
-               }
-            const auto segLen( strlen( pb ) );
-            if( segLen == 0 || pb[segLen-1] != '\n' ) {
-               pb += segLen;  // *pb == '\0'
-               const auto bchars( pb - buf + 1 );  // include '\0'
-               if( bchars == bufsize ) {
-                  bufsize += alloc_incr;
-                  buf = static_cast<char *>( realloc( buf, bufsize ) );
-                  pb = buf + bchars - 1;
-                  }
-               bb = bufsize - (pb - buf);
-               continue;
-               }
-            // we have finished reading a line (to a '\n', OR hit EoF before a trailing '\n')
-            stref rv( buf, pb - buf + segLen );
-#ifdef UNITTEST
-            bytesRead += rv.length();
-#endif
-            // truncate any trailing EoL chars and return what's left
-            const auto trimto( rv.find_first_of( "\n\r" ) );
-            if( eosr != trimto ) {
-               rv.remove_suffix( rv.length() - trimto );
-               }
-            line = rv;
-            return true;
-            }
-         };
-
       struct stat statbuf;
       if( 0 == fstat( fileno( ifh ), &statbuf ) ) {
          char tmbuf[100]; const auto timeinfo( localtime( &statbuf.st_mtime ) );
-         rv_setfield_string( "tagsfile_mtime", timeinfo && strftime( tmbuf, sizeof(tmbuf), "%Y%m%dT%H%M%S", timeinfo ) ? tmbuf : "strftime failed!" );
+         PCChar tagsfile_mtime_val( timeinfo && strftime( tmbuf, sizeof(tmbuf), "%Y%m%dT%H%M%S", timeinfo ) ? tmbuf : "strftime failed!" );
+         rv_setfield_string( "tagsfile_mtime", tagsfile_mtime_val );
+#ifdef UNITTEST
+         ut_tagsfile_mtime = tagsfile_mtime_val;
+#endif
          }
+      stref line;  // set by tfrdr.getline()
+      TxtFileLineReader tfrdr( ifh, line );
       if( src.empty() || src == "<tagged-files>" ) { // linear scan to list all files of file tags
-         while( getline() ) {  // NB: to run on brain-dead CMD.EXE `tagfind_c ^<tagged-files^>`
+#ifdef UNITTEST
+         auto mnum( 0u );
+#endif
+         while( tfrdr.getline() ) {  // NB: to run on brain-dead CMD.EXE `tagfind_c ^<tagged-files^>`
             if( line.ends_with( "\t1;\"\tfile" ) ) {
                const auto it1( line.find( '\t' ) );
                if( it1 != eosr ) {
@@ -129,15 +157,26 @@ int FindMatchingTagsLines(
                   if( it2 != eosr ) {
                      line.remove_suffix( line.length() - it2 );
                      rv_append_string( line );
+#ifdef UNITTEST
+                     ++mnum;
+#endif
                      }
                   }
                }
             }
+#ifdef UNITTEST
+         ::DBG( "tmt=%" PR_BSR " R%" PR_SIZET " b%" PR_SIZET " M%d", BSR(ut_tagsfile_mtime), tfrdr.bytesRead(), tfrdr.bufsize(), mnum );
+#endif
          }
       else { // normal mode: binary search for all tags named src
-         constexpr auto START_OF_FILE( 0 );
-         auto getLnCmp = [&getline,&line,&src]() {
-            if( !getline() ) { // will be full unless @ EOL
+         DB && ::DBG( "%s: -----> '%" PR_BSR "'", __func__, BSR(src) );
+         fseek( ifh, 0, SEEK_END ); auto oMax( ftell( ifh ) );
+         fseek( ifh, 0, SEEK_SET ); auto oMin( ftell( ifh ) );
+         const auto maxProbes( static_cast<int>( std::log2( static_cast<double>(oMax) ) ) );
+
+         constexpr decltype(oMin) START_OF_FILE( 0 );
+         auto getLnCmp = [&tfrdr,&line,&src]() {
+            if( !tfrdr.getline() ) { // will be full unless @ EOL
                DB && ::DBG( "getline() failed" );
                return -1;
                }
@@ -149,19 +188,21 @@ int FindMatchingTagsLines(
             DB && ::DBG( "cand '%" PR_BSR "'", BSR(cand) );
             return cmp( src, cand );
             };
-         auto seekGetLnCmp = [&ifh,&getline,&getLnCmp]( decltype(oMin) skTgt ) {
-            fseek( ifh, skTgt, SEEK_SET );
+         auto seekGetLnCmp = [&tfrdr,&getLnCmp]( decltype(oMin) skTgt ) {
+            fseek( tfrdr.fh(), skTgt, SEEK_SET );
             if( skTgt != START_OF_FILE ) { // unless seek was to START_OF_FILE...
-               getline(); // ...post-seek getline has to be assumed to yield ...
-               }          // ...a partial line which must be ignored/discarded
+               tfrdr.getline();  // ...post-seek getline has to be assumed to yield ...
+               }                 // ...a partial line which must be ignored/discarded
             return getLnCmp();
             };
 
-         DB && ::DBG( "%s: -----> '%" PR_BSR "'", __func__, BSR(src) );
          constexpr auto move_back_lines( 5 );  // SWAG based on current line length
          auto probes(0);  // debug/algo verification
          while( oMin <= oMax ) {
             ++probes;
+#ifdef UNITTEST
+            assert( probes <= maxProbes );
+#endif
             //===========================================================
             auto cmpTgt( oMin + ((oMax - oMin) / 2) );  // overflow-proof version
             DB && ::DBG( "min/pt/max=%ld/%ld/%ld", oMin, cmpTgt, oMax );
@@ -177,7 +218,7 @@ int FindMatchingTagsLines(
                oMin = cmpTgt + 1;
                }
             //===========================================================
-            if( rslt == 0 ) { // HIT!  But perhaps not FIRST hit.
+            if( rslt == 0 ) { // HIT!  But perhaps not FIRST hit.  mvBack until we see a non-match, then linear-search fwd to (and past) matches.
                DB && ::DBG( "Match after %d probes: %" PR_BSR "'", probes, BSR(line) );
                // linear search phase: move back then search fwd to find NON-matching line, then fwd (first) to matching line(s)
                for( auto movesBack(1) ; ; ++movesBack ) {
@@ -186,7 +227,6 @@ int FindMatchingTagsLines(
                   auto mnum( 0u );
                   auto showMatch = [&mnum,&line,&rv_append_string]() {
                      ++mnum;
-                     DB && ::DBG( "MATCH %d: %" PR_BSR "'", mnum, BSR(line) );
                      rv_append_string( line );
                      };
                   auto linMiss( 0u );  // debug/algo verification
@@ -206,9 +246,8 @@ int FindMatchingTagsLines(
                      else {
                         if( mnum > 0 ) { // non-match after matches seen?  We're done!
 #ifdef UNITTEST
-                           ::DBG( "T=%" PR_BSR " P%d/%d B%d L%d R%" PR_SIZET " M%d", BSR(src), probes, maxProbes, movesBack, linMiss, bytesRead, mnum );
+                           ::DBG( "tmt=%" PR_BSR " P%02d/%d B%d L%d R%" PR_SIZET " b%" PR_SIZET " M%d T=%" PR_BSR "", BSR(ut_tagsfile_mtime), probes, maxProbes, movesBack, linMiss, tfrdr.bytesRead(), tfrdr.bufsize(), mnum, BSR(src) );
 #endif
-                           getline_dtor();
                            return 0;
                            }
                         ++linMiss;
@@ -218,8 +257,10 @@ int FindMatchingTagsLines(
                // assert( false );
                }
             }
+#ifdef UNITTEST
+         ::DBG( "tmt=%" PR_BSR " P%02d/%d R%" PR_SIZET " b%" PR_SIZET " M%d T=%" PR_BSR "", BSR(ut_tagsfile_mtime), probes, maxProbes, tfrdr.bytesRead(), tfrdr.bufsize(), 0, BSR(src) );
+#endif
          }
-      getline_dtor();
       return 1;
       };
 
@@ -235,12 +276,7 @@ int FindMatchingTagsLines(
 #ifdef UNITTEST
 
 int main(int argc, char *argv[]) {
-   DBG_init();
    return FindMatchingTagsLines( argc > 2 ? argv[2] : "tags", argc > 1 ? argv[1] : "EdOpBoundary" );
-   }
-
-void DBG_init() {
-   Win32::SetFileApisToOEM();
    }
 
 int DBG( char const *kszFormat, ... ) {
