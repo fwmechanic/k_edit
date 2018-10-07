@@ -21,30 +21,40 @@
 
 die() { printf %s "${@+$@$'\n'}" 1>&2 ; exit 1 ; }
 
-tagfnm=tags
-tgtexe=unittest_tagfind.exe
+num_rand_tags=50  # test param
 
-chk() {
-   local ans ; ans="$(grep -P '^'"$1\t" "$tagfnm" | wc -l)"
-   # echo "$1: expect $ans"
-   local lc ; lc="$(./"$tgtexe" "$1" | wc -l)" ; ((lc==$ans)) || die "FAIL: for T=$1, expected $ans, got $lc"
-   }
+tagfnm=tags
+first_tag="$(head -n 1 "$tagfnm" | cut -f 1)"
+last_tag="$(tail -n 1 "$tagfnm" | cut -f 1)"
+before_first="${first_tag%?}"  # remove last char of first_tag  https://unix.stackexchange.com/a/259042
+after_last="${last_tag}_nonexistent"
+
+tgtexe=unittest_tagfind.exe
 
 make "$tgtexe" || die
 
-chk "d_buf"
-chk "DB"
-chk "DBG"
-chk "DD"
-chk "ED"
-chk "VidWrStrColors"
-chk "NotATag"
-chk "val"
-chk "ThereIsNoTag"
-chk "CouldThereBeATagNo"
-chk "DIAGNOSTICS"
-chk "!_TAG_FILE_FORMAT"
-chk "!_TAG_PROGRAM_VERSION"
-chk "~Xbuf"
-chk "~zee_last_tag_nonexistent"
-chk "~kpto_er"
+chk_tagfind() {
+   local ans ; ans="$(grep -P '^\Q'"$1"'\E\t' "$tagfnm" | wc -l)"
+   # echo "$1: expect $ans"
+   local lc ; lc="$(./"$tgtexe" "$1" | wc -l)" ; ((lc==ans)) || die "FAIL: for T=$1, expected $ans, got $lc"
+   }
+chk_tagfind "$before_first"
+chk_tagfind "$first_tag"
+chk_tagfind "$last_tag"
+chk_tagfind "$after_last"
+
+readarray -t test_tags <<<"$( cut -f 1 "$tagfnm" | sort -u | sort -R | head -n "$num_rand_tags" )"  # https://unix.stackexchange.com/a/322505
+# echo "${test_tags[@]}"
+
+for tag in "${test_tags[@]}"; do
+   #echo "tag=$tag'"
+   chk_tagfind "$tag"
+done
+
+chk_tagged_files() {
+   local ref="$(grep -P '\t1;"\tfile\s*$' tags | cut -f2 | sort -u | wc -l)"
+   local tst="$(./"$tgtexe" "<tagged-files>" | wc -l)"
+   ((tst==ref)) || die "FAIL: for T=$1, expected $ans, got $lc"
+   }
+
+chk_tagged_files
