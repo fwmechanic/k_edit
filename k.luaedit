@@ -2506,29 +2506,27 @@ do
    AddEdFxn{ name = "_st_encodeurltxt", attr = NOARG   , NOARG   = function( arg ) stk[#stk] = gsub_URL_escape( stk[#stk] ) end , help = "macro-helper" }
 
    do
-      local dt_macs = {
-         cur_s   = "%S" ,
-         cur_min = "%M" ,
-         cur_h   = "%H" ,
-         cur_dow = "%A" ,
-         cur_woy = "%W" ,
-         cur_d   = "%d" ,
-         cur_mon = "%m" ,
-         cur_y2  = "%y" ,
-         cur_y4  = "%Y" ,
+      local dm = {
+         s   = "%S" ,
+         min = "%M" ,
+         h   = "%H" ,
+         dow = "%A" ,
+         woy = "%W" ,
+         d   = "%d" ,
+         mon = "%m" ,
+         y2  = "%y" ,
+         y4  = "%Y" ,
          }
-      dt_macs.cur_hhmm            = dt_macs.cur_h .. dt_macs.cur_min
-      dt_macs.cur_hhmmss          = dt_macs.cur_hhmm .. dt_macs.cur_s
-      dt_macs.cur_hh_mm_ss        = dt_macs.cur_h .. ":" .. dt_macs.cur_min .. ":" .. dt_macs.cur_s
-      dt_macs.cur_yy              = dt_macs.cur_y2
-      dt_macs.cur_yymmdd          = dt_macs.cur_y2 .. dt_macs.cur_mon .. dt_macs.cur_d
-      dt_macs.cur_yyyy            = dt_macs.cur_y4
-      dt_macs.cur_yyyymmdd        = dt_macs.cur_y4 .. dt_macs.cur_mon .. dt_macs.cur_d
-      dt_macs.cur_yyyymmdd_hhmm   = dt_macs.cur_yyyymmdd .. "_" .. dt_macs.cur_hhmm
-      dt_macs.cur_yyyymmdd_hhmmss = dt_macs.cur_yyyymmdd .. "_" .. dt_macs.cur_hhmmss
+      dm.hm       = dm.h .. dm.min
+      dm.hms      = dm.hm .. dm.s
+      dm.h_m_s    = dm.h .. ":" .. dm.min .. ":" .. dm.s
+      dm.y2md     = dm.y2 .. dm.mon .. dm.d
+      dm.y4md     = dm.y4 .. dm.mon .. dm.d
+      dm.y4md_hm  = dm.y4md .. "_" .. dm.hm
+      dm.y4md_hms = dm.y4md .. "_" .. dm.hms
 
-      for fxnm, fmtst in pairs(dt_macs) do
-         AddEdFxn{ name = fxnm, attr = MACROFUNC+KEEPMETA, NOARG = function() return PushVariableMacro( os.date(fmtst) ) end }
+      for fxnm, fmtst in pairs(dm) do
+         AddEdFxn{ name = "cur_"..fxnm, attr = MACROFUNC+KEEPMETA, NOARG = function() return PushVariableMacro( os.date(fmtst) ) end }
          end
    end
 

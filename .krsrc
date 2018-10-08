@@ -381,7 +381,7 @@
    # remove file from <info-file>
    zap:=dirty +>cant arg refresh => :>cant arg "can't remove: file is dirty" message
 
-   test2:= arg cur_hh_mm_ss message
+   test2:= arg cur_h_m_s message
 
    #같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같
    #�                          === TOGGLERS ===                            �
@@ -439,8 +439,8 @@
    newhelp:alt+h
 
 
-        # cur_yyyymmdd " kgoodwin "
-   dttag:=cur_yyyymmdd_hhmmss
+        # cur_y4md " kgoodwin "
+   dttag:=cur_y4md_hms
    dttag:Ctrl+D
    compile:ctrl+z
 
@@ -540,7 +540,7 @@
    setworklog:Alt+4
 
    kdb:=arg myscripts "*.kdb" setfile
-   tslog:=endfile emacsnewl begline cur_yyyymmdd_hhmm " " cur_dow
+   tslog:=endfile emacsnewl begline cur_y4md_hm " " cur_dow
 
    worklog:=cancel Arg myscripts "work.kdb" SetFile
 
@@ -606,7 +606,7 @@
    cd:=cd2file setfile readtagsfile
 
    eth:= cancel arg "http://www.speedtest.net/" setfile \
-         cancel Arg myscripts "etheric.kdb" setfile endfile emacsnewl begline cur_yyyymmdd "_" cur_hhmmss " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Ubiquiti WLAN)"
+         cancel Arg myscripts "etheric.kdb" setfile endfile emacsnewl begline cur_y4md "_" cur_hms " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Ubiquiti WLAN)"
 
    #
    # ALT+#key (Alt+1, ..., Alt+9, Alt+0)
@@ -838,7 +838,7 @@
 [.list]
 
 [.journl]
-   jentry:=endfile begline cur_yymmdd " " cur_hhmmss " "
+   jentry:=endfile begline cur_y2md " " cur_hms " "
    jentry:alt+j
 
 [.pas .dpr]
