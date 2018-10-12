@@ -362,7 +362,7 @@ namespace LFBUF {
    STATIC_FXN int CopyLines( lua_State *L )                { FBOP::CopyLines( thisPF(), I_(2)-1, PFBUF_(3), I_(4)-1, I_(5)-1 )  ; RZ; }
    STATIC_FXN int DiscardTrailSpcs( lua_State *L )         { thisPF()->DiscardTrailSpcs()                                       ; RZ; }
    STATIC_FXN int InsBlankLinesBefore( lua_State *L )      { thisPF()->InsBlankLinesBefore( I_(2)-1, Io_( 3, 1 ) )              ; RZ; }
-   STATIC_FXN int InsLine( lua_State *L )                  { std::string tmp; thisPF()->InsLine( I_(2)-1, S_(3), tmp )          ; RZ; }
+   STATIC_FXN int InsLine( lua_State *L )                  { std::string tmp; thisPF()->InsLineEntab( I_(2)-1, S_(3), tmp )     ; RZ; }
    STATIC_FXN int InsLineSortedAscending( lua_State *L )   { const PCChar st = S_(2);
                                                              FBOP::InsLineSortedAscending( thisPF(), Io_(3,1)-1, st ); RZ;
                                                            }
@@ -377,8 +377,8 @@ namespace LFBUF {
                                                            }
    STATIC_FXN int KeepTrailSpcs( lua_State *L )            { thisPF()->KeepTrailSpcs()                                    ; RZ; }
    STATIC_FXN int MakeEmpty( lua_State *L )                { thisPF()->MakeEmpty()                                        ; RZ; }
-   STATIC_FXN int PutLastLine( lua_State *L )              { thisPF()->PutLastLine( S_(2) )                               ; RZ; }
-   STATIC_FXN int PutLine( lua_State *L )                  { std::string tmp; thisPF()->PutLine( I_(2)-1, S_(3), tmp )    ; RZ; }
+   STATIC_FXN int PutLastLine( lua_State *L )              { thisPF()->PutLastMultilineRaw( S_(2) )                       ; RZ; }
+   STATIC_FXN int PutLine( lua_State *L )                  { std::string tmp; thisPF()->PutLineEntab( I_(2)-1, S_(3), tmp ); RZ; }
    STATIC_FXN int MoveCursorToBofAllViews( lua_State *L )  { thisPF()->MoveCursorToBofAllViews()                          ; RZ; }
    STATIC_FXN int SetAutoRead( lua_State *L )              { thisPF()->SetAutoRead()                                      ; RZ; }
    STATIC_FXN int SetBackupMode_Bak( lua_State *L )        { thisPF()->SetBackupMode(bkup_BAK)                            ; RZ; }

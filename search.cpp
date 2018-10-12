@@ -844,7 +844,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, c
    d_sbuf.replace( ixdestMatchMin, destMatchChars, sr2st(srReplace) ); // invalidates conv !!!
                                                        DB && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
    }
-   pFBuf->PutLine( curPt->lin, d_sbuf, d_stmp );             // ... and commit
+   pFBuf->PutLineEntab( curPt->lin, d_sbuf, d_stmp );             // ... and commit
    ++d_iReplacementsMade;
    // replacement done: adjust starting point for next iteration
    const ptrdiff_t lendiff( srReplace.length() - destMatchChars );
@@ -971,8 +971,7 @@ STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all dup
          }
       }
    if( pFbuf->PeekRawLine( 0 ) != str ) {
-      std::string tmp;
-      pFbuf->InsLine( 0, str, tmp );
+      pFbuf->InsLineRaw( 0, str );
       ++mods;
       }
    if( mods ) {

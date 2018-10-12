@@ -317,7 +317,7 @@ enum { SetKeyRV_OK, SetKeyRV_BADKEY, SetKeyRV_BADCMD };
 extern   int   BindKeyToCMD( stref pszCmdName, stref pszKeyName );
 
 extern   void  UnbindMacrosFromKeys();
-extern   void  AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
+extern   void  AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::string &tmp1, std::string &tmp2 );
 extern   void  AssignSubstituteCmd( PCMD pOldCmd, PCMD pNewCmd );
 extern   int   ShowAllUnassignedKeys( PFBUF pFBuf );
 extern   std::string  KeyNmAssignedToCmd_all( PCCMD pCmdToFind, PCChar nmSep );
@@ -392,7 +392,7 @@ extern   void  AdjustMarksForLineInsertion( LINE Line,int LineDelta,PFBUF pFBuf 
 //------------ Pseudofile readers (ONLY call from ReadPseudoFileOk system!)
 
 extern   bool  ReadPseudoFileOk( PFBUF pFBuf );
-extern   void  FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 );
+extern   void  FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::string &tmp1, std::string &tmp2 );
 extern   void  FBufRead_Assign_OsInfo( PFBUF pFBuf );
 extern   void  FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count );
 extern   void  FBufRead_Assign_Switches( PFBUF pFBuf );

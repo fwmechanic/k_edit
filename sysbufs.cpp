@@ -189,13 +189,7 @@ bool ARG::files() {  // bound to alt+f2
 
 void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
    pFBuf->PutLastLineRaw( " " );
-   if(true) {
-      pFBuf->FmtLastLine( "#-------------------- %d %s", count, subhd );
-      }
-   else {
-      CPCChar frags[] = { "#-------------------- ", FmtStr<12>( "%d ", count ), subhd };  // this is overkill (in this case)
-      pFBuf->PutLastLine( frags, ELEMENTS(frags) );
-      }
+   pFBuf->FmtLastLine( "#-------------------- %d %s", count, subhd );
    }
 
 STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
@@ -213,18 +207,17 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
       else if( pCmd->IsLuaFxn()    ) { ++luaCmds  ; }
       else                           { DBG( "%s ???", __func__ ); }
       }
-   std::vector<stref> coll_tmp;
    std::string tmp1, tmp2;
    FBufRead_Assign_SubHd( pFBuf, "Lua functions", luaCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsLuaFxn() ) { AssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 ); }
+      if( pCmd->IsLuaFxn() ) { AssignShowKeyAssignment( *pCmd, pFBuf, tmp1, tmp2 ); }
       }
-   FBufRead_Assign_intrinsicCmds( pFBuf, coll_tmp, tmp1, tmp2 );
+   FBufRead_Assign_intrinsicCmds( pFBuf, tmp1, tmp2 );
    FBufRead_Assign_SubHd( pFBuf, "Macros", macroCmds );
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) {
       const auto pCmd( CmdIdxToPCMD( pNd ) );
-      if( pCmd->IsRealMacro() ) { AssignShowKeyAssignment( *pCmd, pFBuf, coll_tmp, tmp1, tmp2 ); }
+      if( pCmd->IsRealMacro() ) { AssignShowKeyAssignment( *pCmd, pFBuf, tmp1, tmp2 ); }
       }
    FBufRead_Assign_SubHd( pFBuf, "Available Keys", ShowAllUnassignedKeys( nullptr ) );
    ShowAllUnassignedKeys( pFBuf );

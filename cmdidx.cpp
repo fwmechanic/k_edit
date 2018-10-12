@@ -574,34 +574,34 @@ std::string KeyNmAssignedToCmd_all( PCCMD pCmdToFind, PCChar nmSep ) {
    return dest;
    }
 
-void AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::vector<stref> &coll, std::string &tmp1, std::string &tmp2 ) {
+void AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::string &tmp1, std::string &tmp2 ) {
    if( Cmd.IsFnUnassigned() || Cmd.IsFnGraphic() ) {
       return;
       }
    FmtStr<50> cmdNm( "%-20s: ", Cmd.Name() );
    const PCChar pText( Cmd.IsRealMacro() ? Cmd.MacroText() : (Cmd.d_HelpStr && *Cmd.d_HelpStr ?  Cmd.d_HelpStr : "") );
    auto fFoundAssignment(false);
-   std::string keyNm;
-   coll.reserve( 4 );
+   std::string &keyNm( tmp1 );
+   std::string &accum( tmp2 );
    for( const auto &pCmd : s_Key2CmdTbl ) {
       if( pCmd == &Cmd ) {
-         coll.clear();
-         coll.emplace_back( cmdNm.k_str() );
+         accum.clear();
+         accum.append( cmdNm.k_str() );
          KeyNmOfEdkc( keyNm, &pCmd - s_Key2CmdTbl ); // trail-pad with spaces to width
-         coll.emplace_back( PadRight( keyNm, g_MaxKeyNameLen ) );
-         coll.emplace_back( " # " );
-         coll.emplace_back( !fFoundAssignment ? pText : "|" );
-         pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
+         accum.append( PadRight( keyNm, g_MaxKeyNameLen ) );
+         accum.append( " # " );
+         accum.append( !fFoundAssignment ? pText : "|" );
+         pFBufToWrite->PutLastLineRaw( accum );
          fFoundAssignment = true;
          }
       }
    if( !fFoundAssignment ) {
-      coll.clear();
-      coll.emplace_back( cmdNm.k_str() );
-      coll.emplace_back( PadRight( keyNm, g_MaxKeyNameLen ) );
-      coll.emplace_back( " # " );
-      coll.emplace_back( pText );
-      pFBufToWrite->PutLastLine( coll, tmp1, tmp2 );
+      accum.clear();
+      accum.append( cmdNm.k_str() );
+      accum.append( PadRight( keyNm, g_MaxKeyNameLen ) );
+      accum.append( " # " );
+      accum.append( pText );
+      pFBufToWrite->PutLastLineRaw( accum );
       }
    }
 
@@ -806,10 +806,10 @@ PCmdIdxNd CmdIdxAddinNil()                 { return rb_nil( s_CmdIdxAddins ); }
 PCmdIdxNd CmdIdxAddinNext( PCmdIdxNd pNd ) { return rb_next(  pNd      ); }
 PCCMD     CmdIdxToPCMD( PCmdIdxNd pNd )    { return IdxNodeToPCMD( pNd ); }
 
-void FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::vector<stref> &coll_tmp, std::string &tmp1, std::string &tmp2 ) {
+void FBufRead_Assign_intrinsicCmds( PFBUF pFBuf, std::string &tmp1, std::string &tmp2 ) {
    FBufRead_Assign_SubHd( pFBuf, "Intrinsic Functions", ELEMENTS( g_CmdTable ) );
    for( auto &cand : g_CmdTable ) {
-      AssignShowKeyAssignment( cand, pFBuf, coll_tmp, tmp1, tmp2 );
+      AssignShowKeyAssignment( cand, pFBuf, tmp1, tmp2 );
       }
    }
 

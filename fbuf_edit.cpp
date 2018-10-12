@@ -328,8 +328,8 @@ void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
       }
    }
 
-int FBUF::PutLastMultiline( PCChar buf ) {
-   lineIterator li( buf );
+int FBUF::PutLastMultilineRaw( stref sr ) {
+   lineIterator li( sr );
    auto lineCount( 0 );
    while( !li.empty() ) {
       PutLastLineRaw( li.next() );
@@ -343,7 +343,7 @@ void FBUF::xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val ) {
    pxb->vFmtStr( format, val );
    lineIterator li( pxb->sr() );
    while( !li.empty() ) {
-      InsLine( lineNum++, li.next(), tmp );
+      InsLineEntab( lineNum++, li.next(), tmp );
       }
    }
 
@@ -353,20 +353,8 @@ void FBUF::Vsprintf( LINE lineNum, PCChar format, va_list val ) {
    xb.vFmtStr( format, val );
    lineIterator li( xb.sr() );
    while( !li.empty() ) {
-      InsLine( lineNum++, li.next(), tmp );
+      InsLineEntab( lineNum++, li.next(), tmp );
       }
-   }
-
-void FBUF::xFmtLine( PXbuf pxb, LINE lineNum, PCChar format, ...  ) {
-   va_list val;  va_start( val, format );
-   xvsprintf( pxb, lineNum, format, val );
-   va_end( val );
-   }
-
-void FBUF::FmtLine( LINE lineNum, PCChar format, ...  ) {
-   va_list val;  va_start( val, format );
-   Vsprintf( lineNum, format, val );
-   va_end( val );
    }
 
 void FBUF::xvFmtLastLine( PXbuf pxb, PCChar format, va_list val ) {
@@ -416,7 +404,7 @@ void FBUF::PutLineRaw( LINE yLine, stref srSrc ) {
       }
    }
 
-void FBUF::PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ) {
+void FBUF::PutLineEntab( LINE yLine, stref srSrc, std::string &tmpbuf ) {
    0 && IsNoEdit() && DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() );
    BadParamIf( , IsNoEdit() );
    if( ENTAB_0_NO_CONV != Entab() ) {
@@ -432,37 +420,6 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ) {
       srSrc = tmpbuf;
       }
    PutLineRaw( yLine, srSrc );
-   }
-
-template <typename Iter>
-void PutLine( PFBUF pf, LINE yLine, Iter first, Iter last, std::string &stbuf0, std::string &stbuf1 ) {
-   stbuf0.clear();
-   for( ; first != last; ++first ) {
-      stbuf0.append( sr2st( *first ) );
-      }
-   pf->PutLine( yLine, stbuf0, stbuf1 );
-   }
-
-STATIC_FXN void test_PutLine_template( PFBUF pf ) {
-   std::string stbuf0; std::string stbuf1;
-   std::array<stref,4> srFrags = { kszCompileHdr, " ", "mfgrep::regex", " " };
-   PutLine( pf, 1+pf->LastLine(), srFrags.cbegin(), srFrags.cend(), stbuf0, stbuf1 );
-   }
-
-void FBUF::PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &stbuf0, std::string &stbuf1 ) {
-   stbuf0.clear();
-   for( const auto &sr : vsrSrc ) {
-      stbuf0.append( sr2st( sr ) );
-      }
-   PutLine( yLine, stbuf0, stbuf1 );
-   }
-
-void FBUF::PutLine( LINE yLine, CPCChar pa[], int elems ) {
-   std::string sbuf, tmp;
-   for( auto ix(0); ix<elems; ++ix ) {
-      sbuf.append( pa[ix] );
-      }
-   PutLine( yLine, sbuf, tmp );
    }
 
 COL ColOfFreeIdx( COL tabWidth, stref content, sridx offset, sridx startIx, COL colOfStartIx ) {
@@ -547,7 +504,7 @@ void FBUF::DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollaps
    std::string src; std::string stmp;
    for( auto yLine( yTop ); yLine <= yBottom; ++yLine ) {
       GetLineWithSegRemoved( this, src, yLine, xLeft, boxWidth, fCollapse );
-      PutLine( yLine, src, stmp );
+      PutLineEntab( yLine, src, stmp );
       }
    }
 
@@ -563,7 +520,7 @@ void FBUF::DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd ) {
    DelLines( yStart, yEnd - 1 );
    std::string stLast;  DupLineSeg( stLast, yStart, xEnd, COL_MAX );
    stFirst += stLast;
-   PutLine( yStart, stFirst, stLast );
+   PutLineEntab( yStart, stFirst, stLast );
    AdjMarksForInsertion( this, this, xEnd, yStart, COL_MAX, yStart, xStart, yStart );
    }
 
@@ -784,8 +741,7 @@ bool ARG::copy() {
                        }
                     else {
                        Clipboard_Prep( BOXARG );
-                       std::string stmp;
-                       g_pFbufClipboard->PutLine( 0, d_textarg.pText, stmp );
+                       g_pFbufClipboard->PutLineRaw( 0, d_textarg.pText );
                        }
                     break;
     }
@@ -814,7 +770,7 @@ bool ARG::linsert() { PCF;
                        }
                     if( sbuf.length() ) {
                        std::string stmp;
-                       pcf->PutLine( d_nullarg.cursor.lin, sbuf, stmp );
+                       pcf->PutLineEntab( d_nullarg.cursor.lin, sbuf, stmp );
                        }
                     } break;
     case NOARG:     pcf->InsBlankLinesBefore( d_noarg.cursor.lin );  // Inserts one blank line above the current line.
@@ -857,7 +813,7 @@ COL FBOP::PutChar_( PFBUF fb, LINE yLine, COL xCol, char theChar, bool fInsert, 
       return 0;       // this is a nop
       }
    tmp1[ destIx ] = theChar;                                          0 && DBG( "%s 2=%" PR_BSR "'", __func__, BSR(tmp1) );
-   fb->PutLine( yLine, tmp1, tmp2 );
+   fb->PutLineEntab( yLine, tmp1, tmp2 );
    // everything that follows is to determine the number of columns added by the insertion of theChar
    // (which is used to determine the new cursor position if a user keystroke op caused us to be doing this)
    // BUGBUG: this might be WRONG in the case of overwrite (replace, !fInsert) if theChar or what is replaces is an HTAB!
@@ -983,7 +939,7 @@ bool ARG::emacsnewl() {
    //
    // PCChar bos, eos;
    // if( pfb->PeekRawLineExists( g_CursorLine(), &bos, &eos ) && ColOfPtr( pfb->TabWidth(), bos, eos-1, eos ) < g_CursorCol() ) {
-   //    pfb->InsLine( g_CursorLine() + 1, "" );
+   //    pfb->InsLineEntab( g_CursorLine() + 1, "" );
    //    }
    // else {
       FBOP::CopyStream( pfb,
@@ -1352,7 +1308,7 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
          --yMaxEff;  // one less line in dest
          }
       else {
-         fb->PutLine( yY++, (*ppLSR++)->lbuf );
+         fb->PutLineEntab( yY++, (*ppLSR++)->lbuf );
          }
       }
    if( yMaxEff <= yPastEnd ) {
@@ -1395,8 +1351,8 @@ void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, st
    //         then ins is space padded to fill gap and will NOT terminate string.
    //      else ins is NOT space padded, will terminate string, perhaps to left of xRightIncl
    if( !fInsert && xLeftIncl == 0 && xRightIncl >= FBOP::LineCols( this, yLine ) ) { // a two-parameter call?
-      DE && DBG( "%s- PutLine(simple) )", __func__ );
-      PutLine( yLine, ins, stmp ); // optimal/trivial line-replace case
+      DE && DBG( "%s- PutLineEntab(simple) )", __func__ );
+      PutLineEntab( yLine, ins, stmp ); // optimal/trivial line-replace case
       }
    else { // segment ins/overwrite case
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
@@ -1422,8 +1378,8 @@ void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, st
       else if( holewidth > inslen ) {
          dest.replace( ixLeftIncl + inslen, holewidth - inslen, holewidth - inslen, ' ' );
          }
-      DE && DBG( "%s- PutLine(merged) )", __func__ );
-      PutLine( yLine, dest, stmp );
+      DE && DBG( "%s- PutLineEntab(merged) )", __func__ );
+      PutLineEntab( yLine, dest, stmp );
       }
    }
 
@@ -1605,7 +1561,7 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
    if( FBsrc ) {
       std::string tmp;
       for( ; ySrcStart <= ySrcEnd; ++ySrcStart, ++yDestStart ) {
-         FBdest->PutLine( yDestStart, FBsrc->PeekRawLine( ySrcStart ), tmp );
+         FBdest->PutLineEntab( yDestStart, FBsrc->PeekRawLine( ySrcStart ), tmp );
          }
       }
    }
@@ -1650,7 +1606,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
    const auto ixSrcEnd( FreeIdxOfCol( tws, srcbuf, xSrcEnd ) );
    srcbuf.replace( ixSrcEnd, srcbuf.length() - ixSrcEnd, destbuf, ixDst, std::string::npos ); // destbuf text PAST insertion point -> srcbuf past xSrcEnd
    //*** merge & write last line of FBsrc stream  srcbuf[0..ixSrcEnd) : destbuf[ixDst..end]]
-   FBdest->PutLine( yDstLast, srcbuf, stmp );
+   FBdest->PutLineEntab( yDstLast, srcbuf, stmp );
    destbuf.erase( ixDst ); // this belongs as else case for if( FBsrc ) below, but uses this scope's ixDst
    }
    //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
@@ -1660,7 +1616,7 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       const auto alen( srcbuf.length() - ixSrcStart + 1 );
       destbuf.replace( ixDst, alen, srcbuf, ixSrcStart, alen );
       }
-   FBdest->PutLine( yDst, destbuf, stmp );
+   FBdest->PutLineEntab( yDst, destbuf, stmp );
    AdjMarksForInsertion( FBdest, FBdest, xDst     , yDst     , COL_MAX, yDst     , xSrcEnd-1, yDstLast );
    AdjMarksForInsertion( FBsrc , FBdest,         0, ySrcEnd  , xSrcEnd, ySrcEnd  ,         0, yDstLast );
    AdjMarksForInsertion( FBsrc , FBdest, xSrcStart, ySrcStart, COL_MAX, ySrcStart, xDst     , yDst     );
@@ -1710,7 +1666,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
          const auto ixRight( conv.c2fi( xSrcRight ) );
          stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, ixLeft, ixRight - ixLeft + 1 );
          }
-      FBdest->PutLine( yDst, stDst, stSrc );
+      FBdest->PutLineEntab( yDst, stDst, stSrc );
       }
    }
 

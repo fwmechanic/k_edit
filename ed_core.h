@@ -1239,34 +1239,26 @@ public:
    void           PutLineRaw( LINE yLine, stref srSrc ); // same as Entab() == ENTAB_0_NO_CONV, requires no scratch std::str buffer
    void           PutLastLineRaw( stref srSrc ) { PutLineRaw( 1+LastLine(), srSrc ); }
                // meat-and-potatoes PutLine functions; note surfacing of tmpbuf(s) for efficiency
-   void           PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ); // WITH UNDO
-   // void           PutLastLineEntab( stref srSrc, std::string &tmpbuf ) { PutLine( 1+LastLine(), srSrc, tmpbuf ); }
+   void           PutLineEntab( LINE yLine, stref srSrc, std::string &tmpbuf ); // WITH UNDO
+   // void           PutLastLineEntab( stref srSrc, std::string &tmpbuf ) { PutLineEntab( 1+LastLine(), srSrc, tmpbuf ); }
    void           PutLineSeg( LINE yLine, const stref &ins, std::string &tmpbuf0, std::string &tmpbuf1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
-   void           PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &tmpbuf0, std::string &tmpbuf1 );
-   void           PutLastLine(         const std::vector<stref> &vsrSrc, std::string &tmpbuf0, std::string &tmpbuf1 ) { PutLine( 1+LastLine(), vsrSrc, tmpbuf0, tmpbuf1 ); }
                // _oddball_ PutLine... functions; may soon be deprecated; use sparingly!
-   void           PutLine( LINE yLine, CPCChar pa[], int elems );
-   int            PutLastMultiline( PCChar pszNewLineData );
-   void           PutLastLine( PCChar pszNewLineData )   { PutLastMultiline( pszNewLineData ); }
-   void           PutLastLine( CPCChar pa[], int elems ) { PutLine( 1+LastLine(), pa, elems ); }
+   int            PutLastMultilineRaw( stref sr );
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
    void           InsLineRaw( LINE yLine, const stref &srSrc )  // WITH UNDO
                      {
                      InsBlankLinesBefore( yLine );
                      PutLineRaw( yLine, srSrc );
                      }
-   void           InsLine( LINE yLine, const stref &srSrc, std::string &tmp )  // WITH UNDO
+   void           InsLineEntab( LINE yLine, const stref &srSrc, std::string &tmp )  // WITH UNDO
                      {
                      InsBlankLinesBefore( yLine );
-                     PutLine( yLine, srSrc, tmp );
+                     PutLineEntab( yLine, srSrc, tmp );
                      }
    void           cat( PCChar pszNewLineData );
 private:
    void           xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val );
    void           Vsprintf( LINE lineNum, PCChar format, va_list val );
-               // these 2 are UNREF'D?:
-   void           FmtLine( LINE lineNum, PCChar format, ... ) ATTR_FORMAT(3, 4) ;
-   void          xFmtLine( PXbuf pxb, LINE lineNum, PCChar format, ...  ) ATTR_FORMAT(4, 5) ;
    void          vFmtLastLine( PCChar format, va_list val );
    void         xvFmtLastLine( PXbuf pxb, PCChar format, va_list val );
 public:

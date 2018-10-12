@@ -1148,7 +1148,7 @@ STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
       Msg( "Changed directory to %s", cwdAfter.c_str() );
       if( fSave ) {
          std::string tmp;
-         g_pFBufCwd->InsLine( 0, cwdBefore, tmp );
+         g_pFBufCwd->InsLineRaw( 0, cwdBefore );
          }
       }
    return true;
