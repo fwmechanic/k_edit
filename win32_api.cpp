@@ -87,6 +87,53 @@ PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
    return OsErrStr( dest, sizeofDest, Win32::GetLastError() );
    }
 
+#if !NO_LOG
+
+// https://clarionhub.com/t/how-to-detect-if-an-outputdebugstring-viewer-is-running/241
+// https://blogs.msdn.microsoft.com/reiley/2011/07/29/a-debugging-approach-to-outputdebugstring/
+STATIC_FXN bool OutputDebugStringReady() {
+  auto hEventBufferReady( Win32::OpenEvent( SYNCHRONIZE, FALSE, "DBWIN_BUFFER_READY" ) );
+  if( hEventBufferReady ) {
+     Win32::CloseHandle( hEventBufferReady );
+     return true;
+     }
+  return false;
+  }
+
+// on windows, run DbgView and configure
+// Include: "K! *"
+// Exclude: (empty)
+// Menu / Capture / [x] "Capture Win32"
+
+GLOBAL_VAR bool g_fWrToWin32DbgView;
+void DBG_init() {
+   if( OutputDebugStringReady() ) {
+      g_fWrToWin32DbgView = true;
+      DBG( "DBGVIEWCLEAR" );    // clear DbgView buffer
+      }
+   Win32::SetFileApisToOEM();
+   }
+
+int DBG( char const *kszFormat, ...  ) {
+   if( g_fWrToWin32DbgView ) {
+      va_list args;  va_start(args, kszFormat);
+
+      STATIC_CONST char prefix[] = "K! ";
+      enum { PFX_LEN = KSTRLEN(prefix) };
+
+      char szBuffer[257];
+      memcpy( szBuffer, prefix, PFX_LEN+1 );
+      vsnprintf(szBuffer+PFX_LEN, (sizeof(szBuffer)-1)-PFX_LEN, kszFormat, args);
+
+      DebugLog(szBuffer);
+
+      va_end(args);
+      }
+   return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
+   }
+
+#endif
+
 //#############################################################################################################################
 //###########################################  Win32 DIALOG BOXES, ETC  #######################################################
 //#############################################################################################################################

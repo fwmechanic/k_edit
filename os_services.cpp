@@ -261,35 +261,7 @@ void MainThreadPerfCounter::ResumeAll() {
 
 #if !NO_LOG
 
-#if defined(_WIN32)
-
-// on windows, run DbgView and configure
-// Include: "K! *"
-// Exclude: (empty)
-// Menu / Capture / [x] "Capture Win32"
-
-void DBG_init() {
-   DBG( "DBGVIEWCLEAR" );    // clear DbgView buffer
-   Win32::SetFileApisToOEM();
-   }
-
-int DBG( char const *kszFormat, ...  ) {
-   va_list args;  va_start(args, kszFormat);
-
-   STATIC_CONST char prefix[] = "K! ";
-   enum { PFX_LEN = KSTRLEN(prefix) };
-
-   char szBuffer[257];
-   memcpy( szBuffer, prefix, PFX_LEN+1 );
-   vsnprintf(szBuffer+PFX_LEN, (sizeof(szBuffer)-1)-PFX_LEN, kszFormat, args);
-
-   DebugLog(szBuffer);
-
-   va_end(args);
-   return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
-   }
-
-#else
+#if !defined(_WIN32)
 
 // Linux version
 

@@ -68,6 +68,7 @@ GLOBAL_VAR uint8_t g_colorWndBorder = 0xa0;
                                    // 0x6c;
 GLOBAL_VAR uint8_t g_colorError     = 0x1e;
 GLOBAL_VAR bool    g_fBpEnabled;
+extern     bool    g_fWrToWin32DbgView;
 
 //--------------------------------------------------------------
 
@@ -264,6 +265,9 @@ void SwitblInit() {
    addswi( "langhilites"    , fc.SWIi_bv( g_fLangHilites      ) _AHELP( "enable (yes) partial language-aware hilighting" ) );
    addswi( "luagcstep"      , fc.SWIi_iv( g_iLuaGcStep             ) _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) );
    addswi( "m4backtickquote", fc.SWIi_bv( g_fM4backtickquote  ) _AHELP( "spanning backtick quoting right ends with ' (yes) or ` (no)" ) );
+#if defined(_WIN32)
+   addswi( "ods_enabled"    , fc.SWIi_bv( g_fWrToWin32DbgView ) _AHELP( "whether internal DBG() fxn actually calls Win32::OutputDebugString API" ) );
+#endif
    addswi( "maxundo"        , fc.SWIi_iv( g_iMaxUndo               ) _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) );
    addswi( "memusgink"      , fc.SWIi_bv( g_fShowMemUseInK    ) _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) );
    addswi( "mfgrepnoise"    , fc.SWIi_bv( g_fMfgrepNoise      ) _AHELP( "during mfgrep and mfreplace execution: display (yes) or hide (no) each filename & fio-phase display" ) );
