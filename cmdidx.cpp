@@ -581,8 +581,8 @@ void AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::string &t
    FmtStr<50> cmdNm( "%-20s: ", Cmd.Name() );
    const PCChar pText( Cmd.IsRealMacro() ? Cmd.MacroText() : (Cmd.d_HelpStr && *Cmd.d_HelpStr ?  Cmd.d_HelpStr : "") );
    auto fFoundAssignment(false);
-   std::string &keyNm( tmp1 );
-   std::string &accum( tmp2 );
+   auto &keyNm( tmp1 );
+   auto &accum( tmp2 );
    for( const auto &pCmd : s_Key2CmdTbl ) {
       if( pCmd == &Cmd ) {
          accum.clear();
