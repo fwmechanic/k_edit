@@ -1062,7 +1062,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
                for( auto jx(0) ; jx < src_size.col ; ++jx ) {
                   chbuf.push_back( (pc++)->Char.AsciiChar );
                   }
-               g_pFBufConsole->PutLastLine( chbuf.c_str() );
+               g_pFBufConsole->PutLastLineRaw( chbuf );
                }
             }
          }

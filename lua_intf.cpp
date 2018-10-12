@@ -472,12 +472,12 @@ STATIC_FXN void lh_handle_pcall_err( lua_State *L, bool fCompileErr=false ) { //
    const auto tp( fCompileErr?"compile ":"run" );
    // STATIC_CONST char rtErrTmplt[] = "*** Lua %stime error";
    //Msg( rtErrTmplt, tp, msg );
-   s_pFbufLuaLog->PutLastLine( "" );
+   s_pFbufLuaLog->PutLastLineRaw( "" );
    const auto yMsgStart( s_pFbufLuaLog->LastLine()+1 );
    s_pFbufLuaLog->FmtLastLine( "*** Lua %stime error", tp );
    s_pFbufLuaLog->PutLastMultiline( msg );
 #if 1
-   s_pFbufLuaLog->PutLastLine( "" );
+   s_pFbufLuaLog->PutLastLineRaw( "" );
    const auto pv( s_pFbufLuaLog->PutFocusOn() );
    pv->MoveCursor( yMsgStart, 0 );
 #else

@@ -81,7 +81,7 @@ struct OutputWriter {
 struct FbufWriter : public OutputWriter {
    PFBUF d_pFBuf;
    FbufWriter( PFBUF pFBuf ) : d_pFBuf(pFBuf) {}
-   void VWriteLn( PCChar string ) const override { d_pFBuf->PutLastLine( string ); }
+   void VWriteLn( PCChar string ) const override { d_pFBuf->PutLastLineRaw( string ); }
    };
 
 struct DBGWriter : public OutputWriter {
@@ -91,7 +91,7 @@ struct DBGWriter : public OutputWriter {
 struct DBGFbufWriter : public OutputWriter {
    PFBUF d_pFBuf;
    DBGFbufWriter( PFBUF pFBuf ) : d_pFBuf(pFBuf) {}
-   void VWriteLn( PCChar string ) const override { DBG( "%s", string ); d_pFBuf->PutLastLine( string ); }
+   void VWriteLn( PCChar string ) const override { DBG( "%s", string ); d_pFBuf->PutLastLineRaw( string ); }
    };
 //
 //---------------------------------------------------------------------------------------------------------------------
@@ -466,7 +466,7 @@ bool ARG::eds() { // nee ARG::showedits
    for( auto pEr(pFBuf->OldestEdit()) ; pEr ; pEr=pEr->d_pRedo ) {
       DumpEditOp( obuf, pFBuf, pEr );
       }
-   obuf->PutLastLine( "(newest)" );
+   obuf->PutLastLineRaw( "(newest)" );
    obuf->ClearUndo();
    obuf->UnDirty();
    obuf->PutFocusOn();

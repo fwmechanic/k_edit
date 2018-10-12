@@ -158,7 +158,7 @@ STATIC_FXN void InitNewView_File( PChar viewPersistentText ) {
          FBOP::FindOrAddFBuf( "<forgotten-files>", &s_ForgetAbsentFiles.logfb );
          s_ForgetAbsentFiles.logfb->PutFocusOn();
          }
-      s_ForgetAbsentFiles.logfb->PutLastLine( vp.filename );
+      s_ForgetAbsentFiles.logfb->PutLastLineRaw( vp.filename );
       DispDoPendingRefreshes();
       }
    else {

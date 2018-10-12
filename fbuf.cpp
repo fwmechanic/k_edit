@@ -1360,8 +1360,7 @@ bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          return Msg( "Cannot create %s - %s", Name(), strerror( errno ) );
          }
       VR_( DBG( "FRd: created newfile '%s'", Name() ); )
-      std::string tmp;
-      PutLine( 0, "", tmp );
+      PutLineRaw( 0, "" );
       }
    else {
       if( ReadDiskFileFailed( hFile ) ) {
@@ -1385,7 +1384,7 @@ bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          // this blank screen IS NOT a actual representation of the disk file.
          //
          // 20070309 kgoodwin
-         PutLastLine( "*** The last attempt to read this file from disk FAILED!!! ***" );
+         PutLastLineRaw( "*** The last attempt to read this file from disk FAILED!!! ***" );
          UnDirty();  // MUST do this otherwise the refresh inserts a prompt
          //---------------------------------------------------------------------
          FlushKeyQueuePrimeScreenRedraw();

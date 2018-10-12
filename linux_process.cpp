@@ -161,8 +161,7 @@ STATIC_FXN void PutLastLogLine( PFBUF d_pfLogBuf, stref s0, stref s1 ) {
 STATIC_FXN void PutLastLogLine( PFBUF d_pfLogBuf, stref s0 ) {
    WhileHoldingGlobalVariableLock gvlock; // wait until we own the output resource
    CapturePrevLineCountAllWindows( d_pfLogBuf, true );
-   STATIC_VAR std::string tmp0;
-   d_pfLogBuf->PutLastLine( s0, tmp0 );
+   d_pfLogBuf->PutLastLineRaw( s0 );
    MoveCursorToEofAllWindows( d_pfLogBuf, true );
    }
 

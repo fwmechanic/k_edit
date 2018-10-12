@@ -312,7 +312,6 @@ public:
 
 void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
    BoolOneShot first;
-   std::string tmp;
    lineIterator li( pszNewLineData );
    while( !li.empty() ) {
       auto ln( li.next() );
@@ -321,10 +320,10 @@ void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
          std::string lbuf; lbuf.reserve( rl.length() + ln.length() );
          lbuf.assign( rl.data(), rl.length() );
          lbuf.append( ln.data(), ln.length() );
-         PutLine( LastLine(), lbuf, tmp );
+         PutLineRaw( LastLine(), lbuf );
          }
       else {
-         PutLine( LineCount(), ln, tmp );
+         PutLastLineRaw( ln );
          }
       }
    }
@@ -332,9 +331,8 @@ void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
 int FBUF::PutLastMultiline( PCChar buf ) {
    lineIterator li( buf );
    auto lineCount( 0 );
-   std::string tmp;
    while( !li.empty() ) {
-      PutLine( LineCount(), li.next(), tmp );
+      PutLastLineRaw( li.next() );
       ++lineCount;
       }
    return lineCount;
@@ -391,21 +389,9 @@ void FBUF::FmtLastLine( PCChar format, ...  ) {
    va_end( val );
    }
 
-void FBUF::PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ) {
+void FBUF::PutLineRaw( LINE yLine, stref srSrc ) {
    0 && IsNoEdit() && DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() );
    BadParamIf( , IsNoEdit() );
-   if( ENTAB_0_NO_CONV != Entab() ) {
-      tmpbuf.clear();
-      const Tabber tabr( this->TabWidth() );
-      switch( Entab() ) { // compress spaces into tabs per this->Entab()
-         default:
-         case ENTAB_0_NO_CONV:                   Assert( 0 );                                                    break;
-         case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(tmpbuf), srSrc, tabr ); break;
-         case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(tmpbuf), srSrc, tabr ); break;
-         case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(tmpbuf), srSrc, tabr ); break;
-         }
-      srSrc = tmpbuf;
-      }
    if( !TrailSpcsKept() ) {
       auto trailSpcs = 0;
       for( auto it( srSrc.crbegin() ) ; it != srSrc.crend() && isblank( *it ) ; ++it ) {
@@ -428,6 +414,24 @@ void FBUF::PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ) {
          }
       UndoReplaceLineContent( yLine, srSrc );  // actually perform the write to this FBUF
       }
+   }
+
+void FBUF::PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ) {
+   0 && IsNoEdit() && DBG( "%s on noedit=%s", __PRETTY_FUNCTION__, Name() );
+   BadParamIf( , IsNoEdit() );
+   if( ENTAB_0_NO_CONV != Entab() ) {
+      tmpbuf.clear();
+      const Tabber tabr( this->TabWidth() );
+      switch( Entab() ) { // compress spaces into tabs per this->Entab()
+         default:
+         case ENTAB_0_NO_CONV:                   Assert( 0 );                                                    break;
+         case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(tmpbuf), srSrc, tabr ); break;
+         case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(tmpbuf), srSrc, tabr ); break;
+         case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(tmpbuf), srSrc, tabr ); break;
+         }
+      srSrc = tmpbuf;
+      }
+   PutLineRaw( yLine, srSrc );
    }
 
 template <typename Iter>

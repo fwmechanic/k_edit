@@ -472,7 +472,7 @@ STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const Win32::DWO
 STATIC_FXN void PutLastLogLine( PFBUF d_pfLogBuf, PCChar msg ) {
    WhileHoldingGlobalVariableLock gvlock; // wait until we own the output resource
    CapturePrevLineCountAllWindows( d_pfLogBuf, true );
-   d_pfLogBuf->PutLastLine( msg );
+   d_pfLogBuf->PutLastLineRaw( msg );
    MoveCursorToEofAllWindows( d_pfLogBuf, true );
    }
 

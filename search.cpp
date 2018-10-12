@@ -255,7 +255,6 @@ class FileSearcher;
 class MFGrepMatchHandler : public FileSearchMatchHandler {
    PFBUF d_pOutputFile;
    std::string  d_sb;
-   std::string  d_stmp;
 protected:
    bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) override;
    void VShowResultsNoMacs() override;
@@ -279,7 +278,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL M
    d_sb.assign( pFBuf->Namestr() );
    d_sb.append( FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).k_str() );
    d_sb.append( sr2st( rl ) );
-   d_pOutputFile->PutLastLine( d_sb, d_stmp );
+   d_pOutputFile->PutLastLineRaw( d_sb );
    }
    MoveCursorToEofAllWindows( d_pOutputFile );
    return true;  // action taken!
@@ -1400,18 +1399,18 @@ bool ARG::mfrplcword() {
    return mrcw.d_iReplacementsMade != 0;
    }
 
-void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, const stref &src ) {
+void FBOP::InsLineSorted_( PFBUF fb, bool descending, LINE ySkipLeading, const stref &src ) {
    const auto cmpSignMul( descending ? -1 : +1 );
-   // find insertion point using binary search
+   // find insertion point using binary search of RAW content (PeekRawLine)
    auto yMin( ySkipLeading );
    auto yMax( fb->LastLine() );
    while( yMin <= yMax ) {
       //                ( (yMax + yMin) / 2 );           // old overflow-susceptible version
       const auto cmpLine( yMin + ((yMax - yMin) / 2) );  // new overflow-proof version
-      fb->getLineTabxPerRealtabs( tmp, cmpLine );
-      auto rslt( cmpi( src, tmp ) * cmpSignMul );
+      const auto rl( fb->PeekRawLine( cmpLine ) );
+      auto rslt( cmpi( src, rl ) * cmpSignMul );
       if( 0 == rslt ) {
-         rslt = cmp( src, tmp ) * cmpSignMul;
+         rslt = cmp( src, rl ) * cmpSignMul;
          if( 0 == rslt ) {
             return; // drop DUPLICATES!
             }
@@ -1419,12 +1418,12 @@ void FBOP::InsLineSorted_( PFBUF fb, std::string &tmp, bool descending, LINE ySk
       if( rslt > 0 ) { yMin = cmpLine + 1; }
       if( rslt < 0 ) { yMax = cmpLine - 1; }
       }
-   fb->InsLine( yMin, src, tmp );
+   fb->InsLineRaw( yMin, src );  // note RAW insert
    }
 
-STATIC_FXN void InsFnm( PFBUF pFbuf, std::string &tmp, PCChar fnm, const bool fSorted ) {
+STATIC_FXN void InsFnm( PFBUF pFbuf, PCChar fnm, const bool fSorted ) {
    auto pb( Path::UserName( fnm ) );
-   if( fSorted ) { FBOP::InsLineSortedAscending( pFbuf, tmp, 0, pb ); } else { pFbuf->PutLastLine( pb.c_str() ); }
+   if( fSorted ) { FBOP::InsLineSortedAscending( pFbuf, 0, pb ); } else { pFbuf->PutLastLineRaw( pb ); }
    }
 
 int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted ) { enum { ED=0 }; ED && DBG( "%s '%s'", __func__, pszWildcardString );
@@ -1450,26 +1449,24 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
                                                                      ED && DBG( "dirBuf='%s'", dirBuf );
       Path::str_t pbuf, fbuf;
       DirListGenerator dlg( dirBuf );
-      std::string tmp;
       while( dlg.VGetNextName( pbuf ) ) {                            ED && DBG( "pbuf='%s'", pbuf.c_str() );
          WildcardFilenameGenerator wcg( __func__, FmtStr<_MAX_PATH>( "%s" DIRSEP_STR "%s", pbuf.c_str(), wcBuf ), ONLY_FILES );
          fbuf.clear();
          while( wcg.VGetNextName( fbuf ) ) {
-            InsFnm( fb, tmp, fbuf.c_str(), fSorted );
+            InsFnm( fb, fbuf.c_str(), fSorted );
             ++rv;
             }
          }
       }
    else {
       CfxFilenameGenerator wcg( __func__, pszWildcardString, FILES_AND_DIRS );
-      std::string tmp;
       Path::str_t fbuf;
       while( wcg.VGetNextName( fbuf ) ) {
          const auto chars( fbuf.length() );  ED && DBG( "wcg=%s", fbuf.c_str() );
          if( Path::IsDot( fbuf ) ) {
             continue; // drop the meaningless "." entry:
             }
-         InsFnm( fb, tmp, fbuf.c_str(), fSorted );
+         InsFnm( fb, fbuf.c_str(), fSorted );
          ++rv;
          }
       }
@@ -2136,10 +2133,9 @@ LINE CGrepper::WriteOutput
             ++numberedMatches;
             }
          }
-      std::string tmp;
       {
       SprintfBuf LastMetaLine( "%s %d %s", outfile->Name(), numberedMatches, thisMetaLine );
-      outfile->InsLine( grepHdrLines, LastMetaLine.k_str(), tmp );
+      outfile->InsLineRaw( grepHdrLines, LastMetaLine.k_str() );
       }
       const auto lwidth( uint_log_10( d_InfLines ) );
       for( auto iy(0); iy < d_InfLines; ++iy ) {
@@ -2147,7 +2143,7 @@ LINE CGrepper::WriteOutput
             sbuf.assign( FmtStr<20>( "%*d  ", lwidth, iy + 1 ) );
             const auto rl( d_SrchFile->PeekRawLine( iy ) );
             sbuf.append( sr2st( rl ) );
-            FBOP::InsLineSortedAscending( outfile, tmp, grepHdrLines, sbuf );
+            FBOP::InsLineSortedAscending( outfile, grepHdrLines, sbuf );
             }
          }
       outfile->PutFocusOn();
@@ -2384,14 +2380,13 @@ bool merge_grep_buf( PFBUF dest, PFBUF src ) {
        || !FBOP::IsGrepBuf( destSrchFnm, &destHdrLines,  dest)
        || !Path::eq( srcSrchFnm, destSrchFnm )
      ) { return false; }                                                 0 && DBG( "%s: %s copy [1..%d]", __func__, src->Name(), srcHdrLines );
-   std::string tmp;
    // insert/copy all src metalines (except 0) to dest
    for( auto iy(1) ; iy < srcHdrLines ; ++iy ) {
-      dest->InsLine( destHdrLines++, src->PeekRawLine( iy ), tmp );
+      dest->InsLineRaw( destHdrLines++, src->PeekRawLine( iy ) );
       }                                                                  0 && DBG( "%s: %s merg [%d..%d]", __func__, src->Name(), srcHdrLines, src->LineCount()-1 );
    // merge (copy while sorting) all match lines
    for( auto iy(srcHdrLines) ; iy < src->LineCount() ; ++iy ) {
-      FBOP::InsLineSortedAscending( dest, tmp, destHdrLines, src->PeekRawLine( iy ) );
+      FBOP::InsLineSortedAscending( dest, destHdrLines, src->PeekRawLine( iy ) );
       }
    return true;
    }

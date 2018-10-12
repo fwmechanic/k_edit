@@ -1236,9 +1236,11 @@ public:
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
    //************ PutLine
 public:
+   void           PutLineRaw( LINE yLine, stref srSrc ); // same as Entab() == ENTAB_0_NO_CONV, requires no scratch std::str buffer
+   void           PutLastLineRaw( stref srSrc ) { PutLineRaw( 1+LastLine(), srSrc ); }
                // meat-and-potatoes PutLine functions; note surfacing of tmpbuf(s) for efficiency
    void           PutLine( LINE yLine, stref srSrc, std::string &tmpbuf ); // WITH UNDO
-   void           PutLastLine(         stref srSrc, std::string &tmpbuf ) { PutLine( 1+LastLine(), srSrc, tmpbuf ); }
+   // void           PutLastLineEntab( stref srSrc, std::string &tmpbuf ) { PutLine( 1+LastLine(), srSrc, tmpbuf ); }
    void           PutLineSeg( LINE yLine, const stref &ins, std::string &tmpbuf0, std::string &tmpbuf1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
    void           PutLine( LINE yLine, const std::vector<stref> &vsrSrc, std::string &tmpbuf0, std::string &tmpbuf1 );
    void           PutLastLine(         const std::vector<stref> &vsrSrc, std::string &tmpbuf0, std::string &tmpbuf1 ) { PutLine( 1+LastLine(), vsrSrc, tmpbuf0, tmpbuf1 ); }
@@ -1248,6 +1250,11 @@ public:
    void           PutLastLine( PCChar pszNewLineData )   { PutLastMultiline( pszNewLineData ); }
    void           PutLastLine( CPCChar pa[], int elems ) { PutLine( 1+LastLine(), pa, elems ); }
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
+   void           InsLineRaw( LINE yLine, const stref &srSrc )  // WITH UNDO
+                     {
+                     InsBlankLinesBefore( yLine );
+                     PutLineRaw( yLine, srSrc );
+                     }
    void           InsLine( LINE yLine, const stref &srSrc, std::string &tmp )  // WITH UNDO
                      {
                      InsBlankLinesBefore( yLine );
@@ -1416,9 +1423,9 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    //     generator functions, you should not move the cursor to any particular
    //     place until AFTER you've inserted all lines.
    //
-   extern void    InsLineSorted_(          PFBUF fb, std::string &tmp, bool descending, LINE ySkipLeading, const stref &src );
-   STIL void      InsLineSortedAscending(  PFBUF fb, std::string &tmp, LINE ySkipLeading, const stref &src ) { InsLineSorted_( fb, tmp, false, ySkipLeading, src ); }
-   STIL void      InsLineSortedDescending( PFBUF fb, std::string &tmp, LINE ySkipLeading, const stref &src ) { InsLineSorted_( fb, tmp, true , ySkipLeading, src ); }
+   extern void    InsLineSorted_(          PFBUF fb, bool descending, LINE ySkipLeading, const stref &src );
+   STIL void      InsLineSortedAscending(  PFBUF fb, LINE ySkipLeading, const stref &src ) { InsLineSorted_( fb, false, ySkipLeading, src ); }
+   STIL void      InsLineSortedDescending( PFBUF fb, LINE ySkipLeading, const stref &src ) { InsLineSorted_( fb, true , ySkipLeading, src ); }
  #ifdef           fn_csort
    extern void    SortLineRange( PFBUF fb, LINE yMin, LINE yMax, bool fAscending, bool fCase, COL xMin, COL xMax, bool fRmvDups=false );
  #endif

@@ -618,7 +618,7 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
             if( pFBuf ) {
                lbuf.append( PadRight( keyNm, col_width ) );
                if( tblCol++ == (g_CurWin()->d_Size.col / col_width) - 1 ) {
-                  pFBuf->PutLastLine( lbuf.c_str() );
+                  pFBuf->PutLastLineRaw( lbuf );
                   tblCol = 0;
                   lbuf.clear();
                   }
@@ -627,7 +627,7 @@ int ShowAllUnassignedKeys( PFBUF pFBuf ) { // pFBuf may be 0 if caller is only i
          }
       }
    if( pFBuf && tblCol > 0 ) {
-      pFBuf->PutLastLine( lbuf.c_str() );
+      pFBuf->PutLastLineRaw( lbuf );
       }
    return count;
    }

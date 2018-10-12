@@ -29,10 +29,10 @@ GLOBAL_CONST char kszClipboard[] = "<clipboard>";
 GLOBAL_CONST char kszConsole[] = "<console>";
 GLOBAL_CONST char kszCwdStk   [] = "<cwd>";
 GLOBAL_CONST char kszEnvFile  [] = "<env_>";
+GLOBAL_CONST char kszMyEnvFile[] = "<env>";
 GLOBAL_CONST char kszFiles    [] = "<files>";
 GLOBAL_CONST char kszMacDefs  [] = "<macdefs>";
 GLOBAL_CONST char kszMasterRepo[] = "https://github.com/fwmechanic/k_edit.git";
-GLOBAL_CONST char kszMyEnvFile[] = "<env>";
 GLOBAL_CONST char kszNoFile   [] = "*";
 GLOBAL_CONST char kszSearchLog[] = "<search-keys>";
 GLOBAL_CONST char kszSearchRslts[] = "<search-results>";
@@ -188,7 +188,7 @@ bool ARG::files() {  // bound to alt+f2
    }
 
 void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
-   pFBuf->PutLastLine( " " );
+   pFBuf->PutLastLineRaw( " " );
    if(true) {
       pFBuf->FmtLastLine( "#-------------------- %d %s", count, subhd );
       }
@@ -359,7 +359,7 @@ STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) { // sorted traversal
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsRealMacro() ) {
-         pFBuf->PutLastLine( SprintfBuf( "%-*s %s", nmLen, pCmd->Name(), pCmd->MacroText() ) );
+         pFBuf->PutLastLineRaw( SprintfBuf( "%-*s %s", nmLen, pCmd->Name(), pCmd->MacroText() ).k_str() );
          }
       }
    }
@@ -367,9 +367,8 @@ STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
 //============================================================================
 
 STATIC_FXN void FBufRead_Environment( PFBUF pFBuf, int ) {
-   std::string tmp;
    for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
-      FBOP::InsLineSortedAscending( pFBuf, tmp, 0, g_envp[ix] );
+      FBOP::InsLineSortedAscending( pFBuf, 0, g_envp[ix] );
       }
    }
 
@@ -389,7 +388,7 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
       }
    qsort( lines, envEntries, sizeof(*lines), qsort_cmp_env );
    auto bytes(0);
-   std::string sbuf, stmp;
+   std::string sbuf;
    for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
       ALLOCA_STRDUP( envstr, len, lines[ix], Strlen( lines[ix] ) );
       bytes += len + 1;
@@ -405,7 +404,7 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
          if( slen > 0 ) {
             sbuf.assign( curIndent, ' ' );
             sbuf.append( pSegStart, slen );
-            pFBuf->PutLastLine( sbuf, stmp );
+            pFBuf->PutLastLineRaw( sbuf );
             }
          pPrevSEMI = pSEMI;
          pFirstSeg = nullptr;
@@ -416,7 +415,7 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
       if( slen > 0 ) {
          sbuf.assign( curIndent, ' ' );
          sbuf.append( pSegStart, slen );
-         pFBuf->PutLastLine( sbuf, stmp );
+         pFBuf->PutLastLineRaw( sbuf );
          }
       }
    Msg( "environment size = %d bytes", bytes );
@@ -452,7 +451,7 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
       else {
          uc->dest.append( KeyNmAssignedToCmd_all( Cmd, "," ) );
          }
-      FBOP::InsLineSortedDescending( uc->fbOut, uc->tmp, 0, uc->dest.c_str() );
+      FBOP::InsLineSortedDescending( uc->fbOut, 0, uc->dest.c_str() );
       }
    }
 
@@ -522,7 +521,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
    qsort( fbufs, count, sizeof(*fbufs), qsort_cmp_fbuf_wrtime );
    for( ix=0u ; ix < count ; ++ix ) {
       PCFBUF pFBuf( fbufs[ix] );
-      dest->PutLastLine( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+      dest->PutLastLineRaw( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
       }
    Free0( fbufs );
    Msg( "%u files have been written to disk", count );
@@ -541,11 +540,11 @@ STATIC_FXN void FBufRead_Usage( PFBUF pFBuf, int ) { 0 && DBG( "%s", FUNC );
    }
 
 STATIC_FXN void FBufRead_AsciiTbl( PFBUF pFBuf, int ) {
-   pFBuf->PutLastLine( "    0123 4567 89AB CDEF" );
+   pFBuf->PutLastLineRaw( "    0123 4567 89AB CDEF" );
    linebuf buf; buf[0] = '\0'; auto pb( buf ); auto sb( sizeof buf );
    for( auto ch(0); ch < 0x100; ++ch ) {
       if( (ch % 0x10) == 0 ) {
-         if( buf[0] ) { pFBuf->PutLastLine( buf ); }
+         if( buf[0] ) { pFBuf->PutLastLineRaw( buf ); }
          pb = buf, sb = sizeof buf;
          snprintf_full( &pb, &sb, "%02X:", ch );
          }

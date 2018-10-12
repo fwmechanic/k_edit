@@ -525,7 +525,7 @@ namespace Interpreter {
    };
 
 STATIC_FXN void Interpreter::ShowStack( PFBUF pFBuf ) {
-   pFBuf->PutLastLine( " " );
+   pFBuf->PutLastLineRaw( " " );
    auto nestLevel( ixPastTOS() );
    while( nestLevel > 0 ) {
       const auto &tos( s_MacroRuntimeStack[ --nestLevel ] );
@@ -904,9 +904,9 @@ bool ARG::record() {
 #ifdef RECORD_CLEARS_RECORDBUF
          g_pFbufRecord->MakeEmpty();  // old default
 #else
-         if( g_pFbufRecord->LineCount() > 0 ) { g_pFbufRecord->PutLastLine( " " ); }
+         if( g_pFbufRecord->LineCount() > 0 ) { g_pFbufRecord->PutLastLineRaw( " " ); }
 #endif
-         g_pFbufRecord->PutLastLine( SprintfBuf( "%s:=", pMacroName ) );
+         g_pFbufRecord->PutLastLineRaw( SprintfBuf( "%s:=", pMacroName ).k_str() );
          s_macro_defn_first_line = g_pFbufRecord->LastLine();
          if( f_cArg_GT_1 ) {
             PrintMacroDefToRecordFile( s_pCmdRecordMacro );

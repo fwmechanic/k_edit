@@ -461,8 +461,7 @@ bool ARG::erasebuf() {
 
 void Clipboard_PutText( stref sr ) {
    g_pFbufClipboard->MakeEmpty();
-   std::string tmp;
-   g_pFbufClipboard->PutLine( 0, sr, tmp );
+   g_pFbufClipboard->PutLineRaw( 0, sr );
    g_ClipboardType = BOXARG;
    }
 

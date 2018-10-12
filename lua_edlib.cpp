@@ -363,13 +363,11 @@ namespace LFBUF {
    STATIC_FXN int DiscardTrailSpcs( lua_State *L )         { thisPF()->DiscardTrailSpcs()                                       ; RZ; }
    STATIC_FXN int InsBlankLinesBefore( lua_State *L )      { thisPF()->InsBlankLinesBefore( I_(2)-1, Io_( 3, 1 ) )              ; RZ; }
    STATIC_FXN int InsLine( lua_State *L )                  { std::string tmp; thisPF()->InsLine( I_(2)-1, S_(3), tmp )          ; RZ; }
-   STATIC_FXN int InsLineSortedAscending( lua_State *L )   { std::string tmp;
-                                                             const PCChar st = S_(2);
-                                                             FBOP::InsLineSortedAscending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
+   STATIC_FXN int InsLineSortedAscending( lua_State *L )   { const PCChar st = S_(2);
+                                                             FBOP::InsLineSortedAscending( thisPF(), Io_(3,1)-1, st ); RZ;
                                                            }
-   STATIC_FXN int InsLineSortedDescending( lua_State *L )  { std::string tmp;
-                                                             const PCChar st = S_(2);
-                                                             FBOP::InsLineSortedDescending( thisPF(), tmp, Io_(3,1)-1, st ); RZ;
+   STATIC_FXN int InsLineSortedDescending( lua_State *L )  { const PCChar st = S_(2);
+                                                             FBOP::InsLineSortedDescending( thisPF(), Io_(3,1)-1, st ); RZ;
                                                            }
    STATIC_FXN int IsGrepBuf( lua_State *L )                { Path::str_t searchedFnm; int metaLines;
                                                              if( FBOP::IsGrepBuf( searchedFnm, &metaLines, thisPF() ) ) {
