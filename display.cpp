@@ -2532,6 +2532,9 @@ int DispRawDialogStr( PCChar st ) {
 int VMsg( PCChar pszFormat, va_list val ) {
    if( !pszFormat ) { pszFormat = ""; }
    Xbuf xb; xb.vFmtStr( pszFormat, val );
+   if( g_pFBufMsgLog ) {
+       g_pFBufMsgLog->PutLastLineRaw( xb.c_str() );
+      }
    WL(1,1) && DBG( "*** '%s'", xb.c_str() );  // <-- enable this for more UI visibility
    return DispRawDialogStr( xb.c_str() );
    }
@@ -2720,7 +2723,7 @@ void FBOP::PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax ) { // fo
       const auto pView( pWin->CurViewWr() );
       if( pView && pView->FBuf() == fb ) {
          NewScope { // hilighting: if the word moves under the cursor, it's the same as the cursor moving
-            Point cursor( pView->GetCursor() );
+            const auto cursor( pView->GetCursor() );
             if( yMin <= cursor.lin && yMax >= cursor.lin ) {
                pView->ForceCursorMovedCondition();
                }

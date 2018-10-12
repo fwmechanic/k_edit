@@ -40,6 +40,7 @@ extern CMD         g_CmdTable[];  // this is ALMOST const; can't BE const becaus
 //############  global PFBUF's
 
 extern PFBUF g_pFBufAssignLog    ;
+extern PFBUF g_pFBufMsgLog       ;
 extern PFBUF g_pFBufCmdlineFiles ;
 extern PFBUF g_pFBufConsole      ;
 extern PFBUF g_pFBufCwd          ;

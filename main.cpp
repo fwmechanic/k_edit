@@ -50,6 +50,7 @@ GLOBAL_VAR int   g_iVscroll           =       1;
 GLOBAL_VAR PFBUF g_pFbufClipboard          ;
 GLOBAL_VAR PFBUF g_pFBufCmdlineFiles       ;
 GLOBAL_VAR PFBUF s_pFbufLog                ;
+GLOBAL_VAR PFBUF g_pFBufMsgLog             ;
 GLOBAL_VAR PFBUF g_pFBufConsole            ;
 
 #if defined(__GNUC__)
@@ -634,6 +635,7 @@ STATIC_FXN void CreateStartupPseudofiles() { // construct special files early so
       bool    fKeepTrailSpcs;
       } startupPseudofiles[] = {              // fKeepTrailSpcs
       { "<cmdline-args>", g_pFBufCmdlineFiles        },
+      { "<msg>"         , g_pFBufMsgLog              },
       { kszCwdStk       , g_pFBufCwd                 },
       { kszSearchLog    , g_pFBufSearchLog           },
       { kszSearchRslts  , g_pFBufSearchRslts         },
