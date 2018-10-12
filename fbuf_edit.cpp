@@ -338,42 +338,22 @@ int FBUF::PutLastMultilineRaw( stref sr ) {
    return lineCount;
    }
 
-void FBUF::xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val ) {
-   std::string tmp;
-   pxb->vFmtStr( format, val );
-   lineIterator li( pxb->sr() );
-   while( !li.empty() ) {
-      InsLineEntab( lineNum++, li.next(), tmp );
-      }
-   }
-
-void FBUF::Vsprintf( LINE lineNum, PCChar format, va_list val ) {
-   std::string tmp;
+STATIC_FXN void Vsprintf_to_FBUF( PFBUF fb, LINE lineNum, PCChar format, va_list val ) {
    Xbuf xb;
    xb.vFmtStr( format, val );
    lineIterator li( xb.sr() );
    while( !li.empty() ) {
-      InsLineEntab( lineNum++, li.next(), tmp );
+      fb->InsLineRaw( lineNum++, li.next() );
       }
    }
 
-void FBUF::xvFmtLastLine( PXbuf pxb, PCChar format, va_list val ) {
-   xvsprintf( pxb, LineCount(), format, val );
-   }
-
-void FBUF::vFmtLastLine( PCChar format, va_list val ) {
-   Vsprintf( LineCount(), format, val );
-   }
-
-void FBUF::xFmtLastLine( PXbuf pxb, PCChar format, ...  ) {
-   va_list val;  va_start( val, format );
-   xvFmtLastLine( pxb, format, val );
-   va_end( val );
+STATIC_FXN void Vsprintf_to_FBUF_LastLine( PFBUF fb, PCChar format, va_list val ) {
+   Vsprintf_to_FBUF( fb, fb->LineCount(), format, val );
    }
 
 void FBUF::FmtLastLine( PCChar format, ...  ) {
    va_list val;  va_start( val, format );
-   vFmtLastLine( format, val );
+   Vsprintf_to_FBUF_LastLine( this, format, val );
    va_end( val );
    }
 

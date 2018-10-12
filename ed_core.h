@@ -1256,13 +1256,6 @@ public:
                      PutLineEntab( yLine, srSrc, tmp );
                      }
    void           cat( PCChar pszNewLineData );
-private:
-   void           xvsprintf( PXbuf pxb, LINE lineNum, PCChar format, va_list val );
-   void           Vsprintf( LINE lineNum, PCChar format, va_list val );
-   void          vFmtLastLine( PCChar format, va_list val );
-   void         xvFmtLastLine( PXbuf pxb, PCChar format, va_list val );
-public:
-   void          xFmtLastLine( PXbuf pxb, PCChar format, ...  ) ATTR_FORMAT(3, 4) ;
    void           FmtLastLine( PCChar format, ... ) ATTR_FORMAT(2, 3) ;
    //************ delete LINE/BOX/STREAM
 public:

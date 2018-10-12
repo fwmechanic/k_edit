@@ -300,9 +300,16 @@ void SwitblInit() {
 
 void FBufRead_Assign_Switches( PFBUF pFBuf ) {
    FBufRead_Assign_SubHd( pFBuf, "Switches", s_switbl.size() );
-   Xbuf xb;
+   std::string accum, dval;
    for( auto &swic : s_switbl ) {
-      pFBuf->xFmtLastLine( &xb, "%-20" PR_BSR ": %-*" PR_BSR " # %" PR_BSR "", BSR(swic.name()), g_MaxKeyNameLen, BSR(swic.disp()), BSR(swic.help()) );
+      FmtStr<50> swiNm( "%-20" PR_BSR ": ", BSR(swic.name()) );
+      accum.clear();
+      accum.append( swiNm.k_str() );
+      dval.assign( swic.disp() );
+      accum.append( PadRight( dval, g_MaxKeyNameLen ) );  // trail-pad with spaces to width
+      accum.append( " # " );
+      accum.append( sr2st( swic.help() ) );
+      pFBuf->PutLastLineRaw( accum );
       }
    }
 
