@@ -421,7 +421,7 @@ bool ARG::wct() {
       WildcardFilenameGenerator wcg( FmtStr<MAX_PATH>( "%s" DIRSEP_STR "%s", pbuf, searchSpec ), ONLY_FILES );
       pathbuf fbuf;
       while( wcg.VGetNextName( BSOB(fbuf) ) ) {
-         pF->FmtLastLine( fbuf );
+         pF->PutLastLineRaw( fbuf );
          }
       }
    return true;

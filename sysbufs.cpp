@@ -188,8 +188,7 @@ bool ARG::files() {  // bound to alt+f2
    }
 
 void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
-   pFBuf->PutLastLineRaw( " " );
-   pFBuf->FmtLastLine( "#-------------------- %d %s", count, subhd );
+   pFBuf->FmtLastLine( "\n#-------------------- %d %s", count, subhd );
    }
 
 STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
@@ -278,7 +277,7 @@ STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &ma
          );
       }
    else {
-      pFout->FmtLastLine( "%s", pFBuf->UserName().c_str() );
+      pFout->PutLastLineRaw( pFBuf->UserName() );
       }
    }
 
