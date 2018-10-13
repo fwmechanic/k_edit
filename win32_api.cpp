@@ -156,14 +156,14 @@ int ConIO::DbgPopf( PCChar fmt, ... ) {
    return retq == IDYES;
    }
 
-void AssertDialog_( PCChar function, int line ) {
-   ConIO::DbgPopf( "Assertion failed, %s L %d", function, line );
+void AssertDialog_( PCChar function, PCChar file, int line ) {
+   ConIO::DbgPopf( "Assertion failed, %s @ %s L %d", function, file, line );
    }
 
 #if DEBUG_LOGGING
 
-void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum ) {
-   FmtStr<100> msg( "GotHere: %s line %d", fn, lnum );
+void GotHereDialog_( bool *dialogShown, PCChar fn, PCChar file, int lnum ) {
+   FmtStr<100> msg( "GotHere: %s @ %s L %d", fn, file, lnum );
    DBG( "%s", msg.k_str() );
    if( !*dialogShown ) {
       ConIO::DbgPopf( "%s", msg.k_str() );

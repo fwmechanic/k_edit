@@ -28,11 +28,11 @@
 #endif
 
 //------------------------------------------------------------------------------
-extern void AssertDialog_( PCChar function, int line );
-extern void GotHereDialog_( bool *dialogShown, PCChar fn, int lnum );
-#define Assert( expr )  if( expr ) {} else { AssertDialog_( __func__, __LINE__ ); /*SW_BP;*/ }
-#define BadParamIf( rv , expr )  if( !expr ) {} else { AssertDialog_( __func__, __LINE__ ); return rv ; }
-#define GotHereDialog( pfDialogShown )  GotHereDialog_( pfDialogShown, __func__, __LINE__ )
+extern void AssertDialog_( PCChar function, PCChar file, int line );
+extern void GotHereDialog_( bool *dialogShown, PCChar file, PCChar fn, int lnum );
+#define Assert( expr )  if( expr ) {} else { AssertDialog_( __func__, __FILE__, __LINE__ ); /*SW_BP;*/ }
+#define BadParamIf( rv , expr )  if( !expr ) {} else { AssertDialog_( __func__, __FILE__, __LINE__ ); return rv ; }
+#define GotHereDialog( pfDialogShown )  GotHereDialog_( pfDialogShown, __func__, __FILE__, __LINE__ )
 //------------------------------------------------------------------------------
 
 // so far (20140209) I haven't been able to figure out a way to annotate

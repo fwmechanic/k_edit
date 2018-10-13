@@ -20,8 +20,8 @@
 #include "ed_main.h"
 #include <boost/filesystem/operations.hpp>
 
-void AssertDialog_( PCChar function, int line ) {
-   fprintf( stderr, "Assertion failed, %s L %d", function, line );
+void AssertDialog_( PCChar function, PCChar file, int line ) {
+   fprintf( stderr, "Assertion failed, %s @ %s L %d", function, file, line );
    abort();
    }
 
