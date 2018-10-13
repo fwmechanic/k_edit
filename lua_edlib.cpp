@@ -158,6 +158,8 @@ namespace LExFx { // exported functions
 
    STATIC_FXN int SleepMs( lua_State *L )   { ::SleepMs( U_(1) ); RZ; }
 
+   STATIC_FXN int WordCharSet_push( lua_State *L ) { ::WordCharSet_push(); RZ; }
+   STATIC_FXN int WordCharSet_pop( lua_State *L ) { R_bool( ::WordCharSet_pop() ); }
    } // namespace LExFx
 
 //------------------------------------------------------------------------------
@@ -708,6 +710,8 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        LUA_FUNC_I(hexstr2bitstr)
        LUA_FUNC_I(bitstr2hexstr)
        LUA_FUNC_GLOBAL(FindMatchingTagsLines)
+       LUA_FUNC_I(WordCharSet_push)
+       LUA_FUNC_I(WordCharSet_pop)
       #undef   LUA_FUNC_I
       };
 

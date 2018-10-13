@@ -120,6 +120,22 @@ void SetCurDelims( stref param ) {
 //--------------------------------------------------------------
 
 GLOBAL_VAR CharMap g_WordChars;
+STATIC_VAR CharMap g_WordChars_save;
+STATIC_VAR bool    g_WordChars_save_valid;
+
+void WordCharSet_push() {
+   g_WordChars_save = g_WordChars;
+   g_WordChars_save_valid = true;
+   }
+bool WordCharSet_pop()  {
+   const auto rv( g_WordChars_save_valid );
+   if( g_WordChars_save_valid ) {
+      g_WordChars = g_WordChars_save;
+      g_WordChars_save_valid = false;
+      }
+   return rv;
+   }
+
 GLOBAL_VAR CharMap g_HLJChars;
 
 STATIC_CONST char s_dfltWordChars[] = "_0123456789abcdefghijlkmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ";

@@ -334,6 +334,9 @@ extern   char  CharAsciiFromKybd();
 
 extern  std::string ArgTypeNames( int argval );
 
+extern  void WordCharSet_push();
+extern  bool WordCharSet_pop() ;
+
 //------------ Macro execution
 
 namespace Interpreter {

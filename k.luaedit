@@ -2491,6 +2491,33 @@ do
 end
 
 do
+   -- selword: selects the word at the cursor (or before cursor if not on a word)
+   local function run_selword_macro()  -- this macro formerly defined in .krsrc
+      return fExecute( "pword ->eof mword arg pword => :>eof mword pword arg pword" )
+      end
+   --[[ issue/paradox with this concept:
+     1. non-CURSORFUNC cannot extend (existing) selection (in the case below, when accepting
+        a TEXTARG it "consumes" that TEXTARG (though in this case it completely ignores it)
+        cancelling it, and creates a new selection.  The interesting thing is that it, a
+        non-cursorfunc, can create a new selection (presumably because it CALLS arg and CURSORFUNCs).
+     2.     CURSORFUNC cannot "see" existing arg/selection, can only move the cursor
+     Aside: prior to each usercmd executing, cursorposn should be saved, restored in event of cancelling arg-selection
+   ]]
+   --                               CURSORFUNC
+   AddEdFxn{ name = "selwd", attr = CURSORFUNC+NOARG+TEXTARG+BOXSTR -- , key = "ctrl+center"
+      , NOARG = function( arg )  return run_selword_macro() end
+      , TEXTARG = function( arg )
+           WordCharSet_push()
+           -- fExecute( 'arg "wordchars: .+-_/:#" assign' )
+           fExecute( 'arg "wordchars: nonwhite" assign' )
+           local rv = run_selword_macro()
+           WordCharSet_pop()
+           return rv
+           end
+      }
+end
+
+do
 
    local stk = {}
    local function spush( st )  stk[1+#stk] = st  end
