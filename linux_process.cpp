@@ -149,15 +149,6 @@ STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const int hProce
    return dest;
    }
 
-STATIC_FXN void PutLastLogLine( PFBUF d_pfLogBuf, stref s0, stref s1 ) {
-   WhileHoldingGlobalVariableLock gvlock; // wait until we own the output resource
-   CapturePrevLineCountAllWindows( d_pfLogBuf, true );
-   STATIC_VAR std::vector<stref> s_refs; STATIC_VAR std::string tmp0, tmp1;
-   s_refs.clear(); s_refs.emplace_back( s0 ); s_refs.emplace_back( s1 );
-   d_pfLogBuf->PutLastLine( s_refs, tmp0, tmp1 );
-   MoveCursorToEofAllWindows( d_pfLogBuf, true );
-   }
-
 STATIC_FXN void PutLastLogLine( PFBUF d_pfLogBuf, stref s0 ) {
    WhileHoldingGlobalVariableLock gvlock; // wait until we own the output resource
    CapturePrevLineCountAllWindows( d_pfLogBuf, true );

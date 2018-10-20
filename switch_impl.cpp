@@ -190,7 +190,7 @@ class SWI_color : public SWI_intf {
          return FmtStr<200>( "could not convert %" PR_BSR "", BSR(newValue) ).k_str();
          }
       if( newVal > UCHAR_MAX ) {
-         return FmtStr<200>( "value 0x%llX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).k_str();
+         return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).k_str();
          }
       if( d_var != newVal ) {
          d_var = newVal;
@@ -214,7 +214,7 @@ class SWI_chdisp : public SWI_intf {
          }
       else {
          if( newVal > UCHAR_MAX ) {
-            return FmtStr<200>( "value 0x%llX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).k_str();
+            return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).k_str();
             }
          d_var = newVal;
          }

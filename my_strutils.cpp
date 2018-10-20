@@ -341,7 +341,7 @@ SOMETHING: // not necessarily an error
 std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase ) { enum { DB=0 }; // DBG wrapper
    auto errno_( 0 ); uintmax_t rslt( 0 ); auto baseActual( numberBase );
    const auto srused( conv_u_( errno_, rslt, sr, baseActual ) );
-   DB && DBG( "conv_u: '%" PR_BSR "': e=%d '%" PR_BSR "' rv=%llu ", BSR(sr), errno_, BSR(srused), rslt );
+   DB && DBG( "conv_u: '%" PR_BSR "': e=%d '%" PR_BSR "' rv=%ju ", BSR(sr), errno_, BSR(srused), rslt );
    return std::make_tuple( errno_, rslt, srused, baseActual );
    }
 
