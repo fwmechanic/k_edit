@@ -458,6 +458,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          case 'F': CAS5( end      ); break;
          case 'G': CAS5( center   ); break;  // TERM=screen (only mod_cas==mod seen)
          case 'H': CAS5( home     ); break;
+         case 'M': CAS5( enter    ); break; // hack for PuTTY
          case 'P': CAS5( f1       ); break; // SS3 P
          case 'Q': CAS5( f2       ); break; // SS3 Q
          case 'R': CAS5( f3       ); break; // SS3 R
