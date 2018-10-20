@@ -163,8 +163,9 @@ GCC_OPTZ := -O0
 else
 STRIP      := -s
 C_OPTS_DBG :=
+GCC_OPTZ_ARCH ?= -march=native
 GCC_OPTZ := -Os
-GCC_OPTZ := -flto -O3
+GCC_OPTZ := -flto -O3 $(GCC_OPTZ_ARCH)
 endif
 
 LUA_DIR=lua-5.1/src
