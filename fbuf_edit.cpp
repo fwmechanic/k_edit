@@ -1386,6 +1386,9 @@ enum { LineHeadSpace =  1
      };
 
 void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const bool fSaveUndoInfo ) {
+   if( lineInsertCount <= 0 ) {
+      return;
+      }
    if( yInsAt > LastLine() ) {                      // insertion is at/beyond EOF?
       LineInfoReserve( yInsAt + lineInsertCount );  // alloc LineInfo for all requested
       return;
@@ -1503,22 +1506,22 @@ int FBUF::ViewCount() const {
 //
 // CopyLines: copy (RAW) a group of lines from one file to another.
 //
-// this:     The destination file.
+// FBdst: The destination file.
 //
-// pFBufSrc: The source file.  Cannot be same as this (dest file).
-//           If pFBufSrc == 0:
-//              N = (ySrcEnd - ySrcStart + 1) blank lines are inserted into the
-//              destination file.
+// FBsrc: The source file.  Cannot be same as this (dest file).
+//        If FBsrc == 0:
+//           N = (ySrcEnd - ySrcStart + 1) blank lines are inserted into the
+//           destination file.
 //
-//              If this is ALL you're trying to do, USE InsBlankLinesBefore()
-//              INSTEAD!!!  The (pFBufSrc == 0) case exists to support
-//              CopyStream() which has similar blank-fill variant semantics
-//              which are not worth (from a duplicated-code perspective) moving
-//              to a separate API.
+//           If this is ALL you're trying to do, USE InsBlankLinesBefore()
+//           INSTEAD!!!  The (FBsrc == 0) case exists to support
+//           CopyStream() which has similar blank-fill variant semantics
+//           which are not worth (from a duplicated-code perspective) moving
+//           to a separate API.
 //
-//           else:
-//              Lines [ySrcStart..ySrcEnd] are copied/inserted into the
-//              destination file.
+//        else:
+//           Lines [ySrcStart..ySrcEnd] are copied/inserted into the
+//           destination file.
 //
 // The lines are inserted into the destination file directly BEFORE line
 // yDestStart.
@@ -1528,20 +1531,20 @@ int FBUF::ViewCount() const {
 // more lines, which increases the length of the file.
 //
 
-void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStart, LINE ySrcEnd ) {
+void FBOP::CopyLines( PFBUF FBdst, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStart, LINE ySrcEnd ) {
    0 && DBG( "CopyLines [%d..%d] -> [%d]  '%s' -> '%s'"
            , ySrcStart, ySrcEnd
            , yDestStart
-           , FBsrc  && FBsrc ->Name() ? FBsrc ->Name() : "?"
-           , FBdest && FBdest->Name() ? FBdest->Name() : "?"
+           , FBsrc && FBsrc->Name() ? FBsrc->Name() : "?"
+           , FBdst && FBdst->Name() ? FBdst->Name() : "?"
            );
-   if( FBsrc == FBdest )     { DBG( "%s: src and dest cannot be the same buffer", FUNC ); return; }
+   if( FBsrc == FBdst )      { DBG( "%s: src and dest cannot be the same buffer", FUNC ); return; }
    if( ySrcStart > ySrcEnd ) { DBG( "%s: ySrcStart > ySrcEnd", FUNC ); return; }
-   FBdest->InsBlankLinesBefore( yDestStart, ySrcEnd - ySrcStart + 1 );
+   FBdst->InsBlankLinesBefore( yDestStart, ySrcEnd - ySrcStart + 1 );
    if( FBsrc ) {
       std::string tmp;
       for( ; ySrcStart <= ySrcEnd; ++ySrcStart, ++yDestStart ) {
-         FBdest->PutLineEntab( yDestStart, FBsrc->PeekRawLine( ySrcStart ), tmp );
+         FBdst->PutLineEntab( yDestStart, FBsrc->PeekRawLine( ySrcStart ), tmp );
          }
       }
    }
@@ -1551,26 +1554,26 @@ void FBOP::CopyLines( PFBUF FBdest, LINE yDestStart, PCFBUF FBsrc, LINE ySrcStar
 //
 // The same file cannot serve as both source and destination.
 //
-// If pFBufSrc is 0, a stream of blanks is inserted.
+// If FBsrc is 0, a stream of blanks is inserted.
 //
 // The text is inserted into the destination file just before the
-// location specified by <xDst> and <yDest>.
+// location specified by <xDst> and <yDst>.
 //
 // NB: See "STREAM definition" in ARG::FillArgStruct to understand parameters!
 // Nutshell: Last char of stream IS NOT INCLUDED in operation!
 //
-void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd ) {
-   BadParamIf( , (FBdest == FBsrc) );
+void FBOP::CopyStream( PFBUF FBdst, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd ) {
+   BadParamIf( , (FBdst == FBsrc) );
    BadParamIf( , (ySrcStart > ySrcEnd) );
    BadParamIf( , (ySrcStart == ySrcEnd && xSrcStart >= xSrcEnd) );
    if( ySrcStart == ySrcEnd ) { // single line?
-      FBOP::CopyBox( FBdest, xDst, yDst, FBsrc, xSrcStart, ySrcStart, xSrcEnd-1, ySrcEnd );
+      FBOP::CopyBox( FBdst, xDst, yDst, FBsrc, xSrcStart, ySrcStart, xSrcEnd-1, ySrcEnd );
       return;
       }
    //*** copy middle portion of stream
-   FBOP::CopyLines( FBdest, yDst+1, FBsrc, ySrcStart+1, ySrcEnd );
+   FBOP::CopyLines( FBdst, yDst+1, FBsrc, ySrcStart+1, ySrcEnd );
    //*** merge & write last line of FBsrc stream  [srcbuf:destbuf]
-   std::string destbuf; FBdest->DupLineForInsert( destbuf, yDst, xDst, 0 ); // rd dest line containing insertion point
+   std::string destbuf; FBdst->DupLineForInsert( destbuf, yDst, xDst, 0 ); // rd dest line containing insertion point
    std::string srcbuf; auto tws( 1 );
    if( FBsrc ) {
       tws = FBsrc->TabWidth();
@@ -1581,12 +1584,12 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       }
    const auto yDstLast( yDst + (ySrcEnd - ySrcStart) );
    std::string stmp;
-   const auto ixDst   ( FreeIdxOfCol( FBdest->TabWidth(), destbuf, xDst ) ); // where destbuf text PAST insertion point; where destbuf content is split
+   const auto ixDst   ( FreeIdxOfCol( FBdst->TabWidth(), destbuf, xDst ) ); // where destbuf text PAST insertion point; where destbuf content is split
    {
    const auto ixSrcEnd( FreeIdxOfCol( tws, srcbuf, xSrcEnd ) );
    srcbuf.replace( ixSrcEnd, srcbuf.length() - ixSrcEnd, destbuf, ixDst, std::string::npos ); // destbuf text PAST insertion point -> srcbuf past xSrcEnd
    //*** merge & write last line of FBsrc stream  srcbuf[0..ixSrcEnd) : destbuf[ixDst..end]]
-   FBdest->PutLineEntab( yDstLast, srcbuf, stmp );
+   FBdst->PutLineEntab( yDstLast, srcbuf, stmp );
    destbuf.erase( ixDst ); // this belongs as else case for if( FBsrc ) below, but uses this scope's ixDst
    }
    //*** merge & write first line of FBsrc stream [destbuf:srcbuf]
@@ -1596,51 +1599,51 @@ void FBOP::CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrc
       const auto alen( srcbuf.length() - ixSrcStart + 1 );
       destbuf.replace( ixDst, alen, srcbuf, ixSrcStart, alen );
       }
-   FBdest->PutLineEntab( yDst, destbuf, stmp );
-   AdjMarksForInsertion( FBdest, FBdest, xDst     , yDst     , COL_MAX, yDst     , xSrcEnd-1, yDstLast );
-   AdjMarksForInsertion( FBsrc , FBdest,         0, ySrcEnd  , xSrcEnd, ySrcEnd  ,         0, yDstLast );
-   AdjMarksForInsertion( FBsrc , FBdest, xSrcStart, ySrcStart, COL_MAX, ySrcStart, xDst     , yDst     );
+   FBdst->PutLineEntab( yDst, destbuf, stmp );
+   AdjMarksForInsertion( FBdst, FBdst, xDst     , yDst     , COL_MAX, yDst     , xSrcEnd-1, yDstLast );
+   AdjMarksForInsertion( FBsrc, FBdst,         0, ySrcEnd  , xSrcEnd, ySrcEnd  ,         0, yDstLast );
+   AdjMarksForInsertion( FBsrc, FBdst, xSrcStart, ySrcStart, COL_MAX, ySrcStart, xDst     , yDst     );
    }
 
 // CopyBox copies a box of text from one file to another.
 //
-// The source and destination files are specified by pFBufSrc and
-// <pFBufDest>. If pFBufSrc is 0, a box of blank spaces is inserted
+// The source and destination files are specified by FBsrc and
+// <FBdst>. If FBsrc is 0, a box of blank spaces is inserted
 // into the destination file.
 //
 // These arguments define the box to be copied:
 //
-// Argument     Position
+// Argument      Position
 //
-// xLeft      First column
-// yTop       First line
-// xRight     Last column
-// yBottom    Last line
+// xSrcLeft      First column
+// ySrcTop       First line
+// xSrcRight     Last column
+// ySrcBottom    Last line
 //
 // The text is inserted into the destination file just before the
-// location specified by <xDest> and <yDest>.
+// location specified by <xDst> and <yDst>.
 //
 // The same file can serve as source and destination, but the source
 // and destination regions must not overlap. To copy overlapped
 // regions, you must create a temporary intermediate file.
 //
-void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft, LINE ySrcTop, COL xSrcRight, LINE ySrcBottom ) {
+void FBOP::CopyBox( PFBUF FBdst, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft, LINE ySrcTop, COL xSrcRight, LINE ySrcBottom ) {
    BadParamIf( , (xSrcRight < xSrcLeft) );
    0 && DBG( "%s: ( xDst=%d, yDst=%d, src=%s, xSrcLeft=%d, ySrcTop=%d, xSrcRight=%d, ySrcBottom=%d )", __func__, xDst, yDst, FBsrc->Name(), xSrcLeft, ySrcTop, xSrcRight, ySrcBottom );
-   if( (FBsrc == FBdest) &&
+   if( (FBsrc == FBdst) &&
        (  (WithinRangeInclusive( xSrcLeft,                        xDst, xSrcRight ) && WithinRangeInclusive( ySrcTop, yDst                       , ySrcBottom) )
        || (WithinRangeInclusive( xSrcLeft, xSrcRight - xSrcLeft + xDst, xSrcRight ) && WithinRangeInclusive( ySrcTop, yDst - ySrcTop + ySrcBottom, ySrcBottom) )
        )
      ) { return; }
-   AdjMarksForInsertion( FBsrc, FBdest, xSrcLeft, ySrcTop, xSrcRight, ySrcBottom, xDst, yDst );
+   AdjMarksForInsertion( FBsrc, FBdst, xSrcLeft, ySrcTop, xSrcRight, ySrcBottom, xDst, yDst );
    const auto maxDestLineInvolved( yDst + (ySrcBottom - ySrcTop) );
-   FBdest->LineInfoReserve( maxDestLineInvolved + 1 );  // + 1 to convert lnum to count
-   const auto tws( FBsrc ? FBsrc ->TabWidth() : 0 );
-   const auto twd(         FBdest->TabWidth()     );
+   FBdst->LineInfoReserve( maxDestLineInvolved + 1 );  // + 1 to convert lnum to count
+   const auto tws( FBsrc ? FBsrc->TabWidth() : 0 );
+   const auto twd(         FBdst->TabWidth()     );
    const auto boxWidth( xSrcRight - xSrcLeft + 1 );
    std::string stSrc, stDst;  // BUGBUG one buffer would be nicer ...
    for( auto ySrc( ySrcTop ); ySrc <= ySrcBottom ; ++ySrc, ++yDst ) {
-      FBdest->DupLineForInsert( stDst, yDst, xDst, boxWidth );
+      FBdst->DupLineForInsert( stDst, yDst, xDst, boxWidth );
       if( FBsrc ) {
          FBsrc->DupLineForInsert( stSrc, ySrc, xSrcRight + 1, 0 );
          IdxCol_cached conv( tws, stSrc );
@@ -1648,7 +1651,7 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
          const auto ixRight( conv.c2fi( xSrcRight ) );
          stDst.replace( CaptiveIdxOfCol( twd, stDst, xDst ), boxWidth, stSrc, ixLeft, ixRight - ixLeft + 1 );
          }
-      FBdest->PutLineEntab( yDst, stDst, stSrc );
+      FBdst->PutLineEntab( yDst, stDst, stSrc );
       }
    }
 
@@ -1765,7 +1768,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                                                            : 508 );   // slightly less than a power of 2
    d_naLineInfoElements = initial_sample_lines;
    VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", d_naLineInfoElements ); )
-   AllocArrayNZ(      d_paLineInfo, d_naLineInfoElements, "initial d_paLineInfo" );
+   AllocArrayNZ(       d_paLineInfo, d_naLineInfoElements, "initial d_paLineInfo" );
    LineInfoClearRange( 0           , d_naLineInfoElements );
    if( d_cbOrigFileImage > 0 ) {
       struct {

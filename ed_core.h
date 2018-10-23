@@ -1384,9 +1384,9 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    STIL COL       LineCols( PCFBUF fb, LINE yLine ) { return StrCols( fb->TabWidth(), fb->PeekRawLine( yLine ) ); }
 
    //************ copy LINE/BOX/STREAM file->file
-   extern void    CopyLines(  PFBUF FBdest, LINE yDestStart    , PCFBUF FBsrc, LINE ySrcStart, LINE ySrcEnd );
-   extern void    CopyBox(    PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft, LINE ySrcTop, COL xSrcRight, LINE ySrcBottom );
-   extern void    CopyStream( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd );
+   extern void    CopyLines(  PFBUF FBdst, LINE yDestStart    , PCFBUF FBsrc, LINE ySrcStart, LINE ySrcEnd );
+   extern void    CopyBox(    PFBUF FBdst, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft, LINE ySrcTop, COL xSrcRight, LINE ySrcBottom );
+   extern void    CopyStream( PFBUF FBdst, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcStart, LINE ySrcStart, COL xSrcEnd, LINE ySrcEnd );
 
    extern void    CurFBuf_AssignMacros_RsrcLd(); // implicitly takes g_CurFBuf() as param
 

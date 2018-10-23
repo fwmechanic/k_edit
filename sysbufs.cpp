@@ -250,7 +250,6 @@ struct maxFileInfos {
    };
 
 STATIC_FXN void ShowAFilesInfo( PFBUF pFout, PFBUF pFBuf, maxFileInfos const &max ) {
-   pathbuf pb;
    if( g_fShowFbufDetails && (pFBuf->HasLines() || pFBuf->FnmIsPseudo()) ) {
       char entabStr[] = { 'e', char( '0' + pFBuf->Entab() ), 0 };
       pFout->FmtLastLine(
