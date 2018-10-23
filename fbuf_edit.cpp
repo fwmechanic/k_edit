@@ -338,23 +338,16 @@ int FBUF::PutLastMultilineRaw( stref sr ) {
    return lineCount;
    }
 
-STATIC_FXN void Vsprintf_to_FBUF( PFBUF fb, LINE lineNum, PCChar format, va_list val ) {
-   Xbuf xb;
-   xb.vFmtStr( format, val );
-   lineIterator li( xb.sr() );
-   while( !li.empty() ) {
-      fb->InsLineRaw( lineNum++, li.next() );
-      }
+STATIC_FXN int Vsprintf_to_FBUF_LastLine( PFBUF fb, PCChar format, va_list val ) {
+   Xbuf xb;  xb.vFmtStr( format, val );
+   return fb->PutLastMultilineRaw( xb.sr() );
    }
 
-STATIC_FXN void Vsprintf_to_FBUF_LastLine( PFBUF fb, PCChar format, va_list val ) {
-   Vsprintf_to_FBUF( fb, fb->LineCount(), format, val );
-   }
-
-void FBUF::FmtLastLine( PCChar format, ...  ) {
+int FBUF::FmtLastLine( PCChar format, ...  ) {
    va_list val;  va_start( val, format );
-   Vsprintf_to_FBUF_LastLine( this, format, val );
+   const auto rv( Vsprintf_to_FBUF_LastLine( this, format, val ) );
    va_end( val );
+   return rv;
    }
 
 void FBUF::PutLineRaw( LINE yLine, stref srSrc ) {
@@ -1380,16 +1373,17 @@ void FBUF::DirtyFBufAndDisplay() {
    SetDirty();
    }
 
-enum { LineHeadSpace =  1
-                 //    50
-     , FileReadLineHeadSpace = 21
-     };
+constexpr LINE LineHeadSpace(  1 )
+                         // ( 50 )
+          ;
+constexpr LINE FileReadLineHeadSpace( 21 );
 
 void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const bool fSaveUndoInfo ) {
    if( lineInsertCount <= 0 ) {
       return;
       }
-   if( yInsAt > LastLine() ) {                      // insertion is at/beyond EOF?
+   const auto trailingLineCount( LineCount() - yInsAt );
+   if( trailingLineCount <= 0 ) {                   // insertion is at/beyond EOF?
       LineInfoReserve( yInsAt + lineInsertCount );  // alloc LineInfo for all requested
       return;
       }
@@ -1398,43 +1392,31 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
    if( fSaveUndoInfo ) {
       UndoInsertLineRangeHole( yInsAt, lineInsertCount );  // generate a undo record
       }
-   if( lineInsertCount > 0 ) {
-      const auto linesNeeded( LineCount() + lineInsertCount );
-      if( !d_paLineInfo ) {
-         LineInfoReserve( linesNeeded );
-         }
-      else {
-         if( d_naLineInfoElements < linesNeeded ) {
-            const auto linesToAlloc( linesNeeded + LineHeadSpace );
-            LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, "Expanding d_paLineInfo" );
-            if( yInsAt > 0 ) {             /* leading subrange exists?  copy it */                           0 && DBG( "%s -mov [%d]<-[%d] L %d", __func__, 0, 0, yInsAt );
-               MoveArray( pNewLi                           , d_paLineInfo         ,               yInsAt );
-               }
-            if( !(yInsAt > LastLine()) ) { /* trailing subrange exists?  copy it */                          0 && DBG( "%s +mov [%d]<-[%d] L %d", __func__, (yInsAt+lineInsertCount), yInsAt, LineCount() - yInsAt );
-               MoveArray( pNewLi + (yInsAt+lineInsertCount), d_paLineInfo + yInsAt, LineCount() - yInsAt );
-               }
-            FreeUp( d_paLineInfo, pNewLi );
-            d_naLineInfoElements = linesToAlloc;
-            if( linesToAlloc > linesNeeded ) {  // tail-hole exists?
-               const auto arg0( d_naLineInfoElements - LineHeadSpace );  0 && DBG( "%s LineInfoClearRange(%d,%d)", __func__, arg0, LineHeadSpace );
-               LineInfoClearRange( arg0, LineHeadSpace );  // empty the tail-hole
-               }
-            }
-         else { // open a hole
-            if( !(yInsAt > LastLine()) ) {
-               MoveArray( d_paLineInfo + (yInsAt+lineInsertCount), d_paLineInfo + yInsAt, LineCount() - yInsAt );
-               }
-            }
-         LineInfoClearRange( yInsAt, lineInsertCount );  // empty the hole
+   const auto linesNeeded( LineCount() + lineInsertCount );
+   if( LineInfoCapacity() >= linesNeeded ) { // space sufficient: open a hole
+      MoveArray( d_paLineInfo + yInsAt + lineInsertCount, d_paLineInfo + yInsAt, trailingLineCount );
+      }
+   else { // space insufficient: realloc w/o redundant moves to open a hole
+      const auto linesToAlloc( linesNeeded + LineHeadSpace );
+      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, __PRETTY_FUNCTION__ );
+      if( yInsAt > 0 ) {  /* leading subrange exists?  copy it */   0 && DBG( "%s -mov [%d]<-[%d] L %d", __func__, 0, 0, yInsAt );
+         MoveArray( pNewLi, d_paLineInfo, yInsAt );
+         }                                                          0 && DBG( "%s +mov [%d]<-[%d] L %d", __func__, (yInsAt+lineInsertCount), yInsAt, trailingLineCount );
+      MoveArray( pNewLi + yInsAt + lineInsertCount, d_paLineInfo + yInsAt, trailingLineCount );
+      FreeUp( d_paLineInfo, pNewLi );
+      LineInfoSetCapacity( linesToAlloc );
+      if( LineHeadSpace > 0 ) {  // LineHeadSpace tail-hole exists?
+         const auto arg0( LineInfoCapacity() - LineHeadSpace );  0 && DBG( "%s LineInfoClearRange(%d,%d)", __func__, arg0, LineHeadSpace );
+         LineInfoClearRange( arg0, LineHeadSpace );  // clear the tail-hole
          }
       }
-   // 20091218 kgoodwin
-   IncLineCount( lineInsertCount );
+   LineInfoClearRange( yInsAt, lineInsertCount );  // clear the insert-hole
+   IncLineCount( lineInsertCount );                // inserted lines now exist
    FBufEvent_LineInsDel( yInsAt, lineInsertCount );
    }
 
-// This is an "INTERESTING" fxn!  It's called both by upper-level edit code (as
-// DelLine) AND by Undo/Redo code (as DeleteLines__ForUndoRedo).  When
+// Careful!  This fxn is called both by upper-level edit code (as DelLine)
+// AND by Undo/Redo code (as DeleteLines__ForUndoRedo).  When
 // DeleteLines__ForUndoRedo is called, fSaveUndoInfo == false.
 //
 // DelLine NEVER calls with (fSaveUndoInfo == false), so the memory
@@ -1468,14 +1450,14 @@ void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) { 
 
 void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    DestroyMarks();
-   if( d_paLineInfo ) {
+   if( LineInfoCapacity() < 0 ) {
       for( auto iy(0) ; iy < d_LineCount ; ++iy ) {
          d_paLineInfo[iy].FreeContent( *this );
          }
-      Free0( d_paLineInfo );
       }
    d_LineCount = 0;
-   d_naLineInfoElements = 0;
+   FreeUp( d_paLineInfo );
+   LineInfoSetCapacity( 0 );
    DiscardUndoInfo();   // call before Free0( d_pOrigFileImage ) (some EditOp's have d_pFBuf)!
    Free0( d_pOrigFileImage );
    d_cbOrigFileImage = 0;
@@ -1657,16 +1639,14 @@ void FBOP::CopyBox( PFBUF FBdst, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft
 
 // ensure that FBUF::d_paLineInfo has AT LEAST linesNeeded entries
 void FBUF::LineInfoReserve( const LINE linesNeeded ) {
-   if( !d_paLineInfo || d_naLineInfoElements < linesNeeded ) { 0 && DBG( "XPf2NL LineInfo[] %s: (%d,%d) -> %d", Name(), LineCount(), d_naLineInfoElements, linesNeeded );
+   if( LineInfoCapacity() < linesNeeded ) { 0 && DBG( "XPf2NL LineInfo[] %s: (%d,%d) -> %d", Name(), LineCount(), LineInfoCapacity(), linesNeeded );
       const auto linesToAlloc( linesNeeded + LineHeadSpace );
-      LineInfo *pNewLi;
-      AllocArrayNZ( pNewLi, linesToAlloc, "Expanding d_paLineInfo" );
-      if( d_paLineInfo ) {
+      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, __PRETTY_FUNCTION__ );
+      if( LineCount() ) {
          MoveArray( pNewLi, d_paLineInfo, LineCount() );
-         Free_( d_paLineInfo );
          }
-      d_paLineInfo = pNewLi;
-      d_naLineInfoElements = linesToAlloc;
+      FreeUp( d_paLineInfo, pNewLi );
+      LineInfoSetCapacity( linesToAlloc );
       LineInfoClearRange( LineCount(), linesToAlloc - LineCount() );
       }
    }
@@ -1764,12 +1744,15 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    const auto tmIO( pc.Capture() );
 #endif
    d_EolMode = platform_eol;
-   const auto initial_sample_lines( d_cbOrigFileImage == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
-                                                           : 508 );   // slightly less than a power of 2
-   d_naLineInfoElements = initial_sample_lines;
-   VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", d_naLineInfoElements ); )
-   AllocArrayNZ(       d_paLineInfo, d_naLineInfoElements, "initial d_paLineInfo" );
-   LineInfoClearRange( 0           , d_naLineInfoElements );
+   NewScope {
+      const auto initial_sample_lines( d_cbOrigFileImage == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
+                                                              : 508 );   // slightly less than a power of 2
+      VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", initial_sample_lines ); )
+      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, initial_sample_lines, "initial d_paLineInfo" );
+      FreeUp( d_paLineInfo, pNewLi );
+      LineInfoSetCapacity( initial_sample_lines );
+      LineInfoClearRange( 0, initial_sample_lines );
+      }
    if( d_cbOrigFileImage > 0 ) {
       struct {
          int leadBlankLines = 0;
@@ -1782,32 +1765,33 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
       auto pCurImageBuf( d_pOrigFileImage + MBCS_skip );
       const auto pPastImageBufEnd( d_pOrigFileImage + d_cbOrigFileImage );
       while( pCurImageBuf < pPastImageBufEnd ) { // we are about to read line 'curLineNum'
-         if( d_naLineInfoElements <= curLineNum /* CID128050 */ && curLineNum > 0 /* CID128050 */ ) { // need to reallocate d_paLineInfo
+         if( LineInfoCapacity() <= curLineNum /* CID128050 */ && curLineNum > 0 /* CID128050 */ ) { // need to reallocate d_paLineInfo
             // this is a little obscure, since for brevity I'm using 'curLineNum' as an alias
             // for 'LineCount()'; these are equivalent since 'curLineNum' hasn't been stored yet.
             const auto abpl_scale( 1.025 );
             const double avgBytesPerLine( std::max( abpl_scale, static_cast<double>(pCurImageBuf - d_pOrigFileImage) / curLineNum ) );
                   double dNewLineCntEstimate( (d_cbOrigFileImage / avgBytesPerLine) * abpl_scale );
-            if( dNewLineCntEstimate <= d_naLineInfoElements ) {
-                dNewLineCntEstimate = std::max( static_cast<double>(d_naLineInfoElements * 1.125)
-                                         , static_cast<double>(d_naLineInfoElements + FileReadLineHeadSpace)
-                                         );
+            if( dNewLineCntEstimate <= LineInfoCapacity() ) {
+                dNewLineCntEstimate = std::max( static_cast<double>(LineInfoCapacity() * 1.125)
+                                              , static_cast<double>(LineInfoCapacity() + FileReadLineHeadSpace)
+                                              );
                }
             const auto newLineCntEstimate( static_cast<LINE>(dNewLineCntEstimate) );
             VR_(
                DBG( "ReadDiskFile LineInfo %7d -> %7d (avg=%4.1f)"
-                  , d_naLineInfoElements
+                  , LineInfoCapacity()
                   , newLineCntEstimate
                   , avgBytesPerLine
                   );
                )
-            d_naLineInfoElements = std::min( INT_MAX, newLineCntEstimate );
-            //------------------------------------------------------------------------------------
-            LineInfo *pNewLi;
-            AllocArrayNZ( pNewLi, d_naLineInfoElements, "revised d_paLineInfo" );
-            MoveArray(    pNewLi, d_paLineInfo, curLineNum );
-            FreeUp( d_paLineInfo, pNewLi );
-            LineInfoClearRange( curLineNum, d_naLineInfoElements - curLineNum );
+            NewScope {
+               const auto linesToAlloc( std::min( INT_MAX, newLineCntEstimate ) );
+               LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, "revised d_paLineInfo" );
+               MoveArray( pNewLi, d_paLineInfo, curLineNum );
+               FreeUp( d_paLineInfo, pNewLi );
+               LineInfoSetCapacity( linesToAlloc );
+               LineInfoClearRange( curLineNum, linesToAlloc - curLineNum );
+               }
             pLi = d_paLineInfo + curLineNum;
             }
          switch( *pCurImageBuf ) {
@@ -1889,18 +1873,18 @@ IS_EOL:
       NewScope {
          const auto tmScan( pc.Capture() );
          double pctSCAN( 100 * (tmScan / (tmScan + tmIO)) );
-         unsigned wastedLIbytesNow( (d_naLineInfoElements - LineCount()) * sizeof(*d_paLineInfo) );
-         STATIC_VAR unsigned wastedLIbytes ;  wastedLIbytes += wastedLIbytesNow     ;
-         STATIC_VAR unsigned PredLC        ;  PredLC        += d_naLineInfoElements ;
-         STATIC_VAR unsigned actualLC      ;  actualLC      += LineCount()          ;
-         STATIC_VAR unsigned files         ;  files         += 1                    ;
+         unsigned wastedLIbytesNow( (LineInfoCapacity() - LineCount()) * sizeof(*d_paLineInfo) );
+         STATIC_VAR unsigned wastedLIbytes ;  wastedLIbytes += wastedLIbytesNow   ;
+         STATIC_VAR unsigned PredLC        ;  PredLC        += LineInfoCapacity() ;
+         STATIC_VAR unsigned actualLC      ;  actualLC      += LineCount()        ;
+         STATIC_VAR unsigned files         ;  files         += 1                  ;
          DBG( "ReadDiskFile Done  scan/IO=%4.1f%%  %7d (avg=%4.1f) wastage=%d/%dKB (%4.1f%%) cum=%dKB (%4.1f%%), %dKB per %d files"
             , pctSCAN
             , LineCount()
             , (static_cast<double>(d_cbOrigFileImage) - numBytesToProcessInImageBuf) / static_cast<double>(LineCount())
             , wastedLIbytesNow / 1024
-            , (d_naLineInfoElements) * sizeof(*d_paLineInfo) / 1024
-            , 100.0*(static_cast<double>(d_naLineInfoElements) - LineCount()) / static_cast<double>(LineCount())
+            , LineInfoCapacity() * sizeof(*d_paLineInfo) / 1024
+            , 100.0*(static_cast<double>(LineInfoCapacity()) - LineCount()) / static_cast<double>(LineCount())
             , wastedLIbytes / 1024
             , 100.0*(static_cast<double>(PredLC) - actualLC) / (double)actualLC
             , (wastedLIbytes / 1024) / files

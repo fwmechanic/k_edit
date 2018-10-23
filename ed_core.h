@@ -972,6 +972,8 @@ public:
    COL            LineLength( LINE lineNum ) const { return d_paLineInfo[lineNum].d_iLineLen; }
    bool           PtrWithinOrigFileImage( PCChar pc ) const { return pc >= d_pOrigFileImage && pc < (d_pOrigFileImage + d_cbOrigFileImage); }
    filesize_t     cbOrigFileImage() const { return d_cbOrigFileImage; }
+   void           LineInfoReserve( LINE linesNeeded );
+   LINE           LineInfoCapacity() const { return d_naLineInfoElements; }
    //************ ImgBuf manipulators (currently used only in CGrepper::WriteOutput)
 public:
    void           ImgBufAlloc(      size_t bufBytes, LINE PreallocLines=400 );
@@ -1167,8 +1169,7 @@ private:
                      for( const auto pLiPastEnd( pLi + numToInit ) ; pLi < pLiPastEnd ; ++pLi )
                         pLi->clear();
                      }
-public:
-   void           LineInfoReserve( LINE linesNeeded );
+   void           LineInfoSetCapacity( LINE capacity ) { d_naLineInfoElements = capacity; }  // low-level!
 private:
    //------------------------------------------------------------------
    void           FBufEvent_LineInsDel( LINE yLine, LINE lineDelta );  // negative lineDelta value signifies deletion of lines
@@ -1238,18 +1239,16 @@ public:
                // _oddball_ PutLine... functions; may soon be deprecated; use sparingly!
    int            PutLastMultilineRaw( stref sr );
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
-   void           InsLineRaw( LINE yLine, const stref &srSrc )  // WITH UNDO
-                     {
+   void           InsLineRaw( LINE yLine, const stref &srSrc ) { // WITH UNDO
                      InsBlankLinesBefore( yLine );
                      PutLineRaw( yLine, srSrc );
                      }
-   void           InsLineEntab( LINE yLine, const stref &srSrc, std::string &tmp )  // WITH UNDO
-                     {
+   void           InsLineEntab( LINE yLine, const stref &srSrc, std::string &tmp ) { // WITH UNDO
                      InsBlankLinesBefore( yLine );
                      PutLineEntab( yLine, srSrc, tmp );
                      }
-   void           cat( PCChar pszNewLineData );
-   void           FmtLastLine( PCChar format, ... ) ATTR_FORMAT(2, 3) ;
+   void           cat( PCChar pszNewLineData );  // appends to last line, honors '\n'
+   int            FmtLastLine( PCChar format, ... ) ATTR_FORMAT(2, 3) ;
    //************ delete LINE/BOX/STREAM
 public:
    void           DelLine            ( LINE firstLine                   ) { DeleteLines__( firstLine, firstLine, true  ); }
