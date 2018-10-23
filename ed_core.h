@@ -1175,12 +1175,13 @@ private:
                      for( const auto pLiPastEnd( pLi + numToInit ) ; pLi < pLiPastEnd ; ++pLi )
                         pLi->clear();
                      }
-   void           SetLineInfoCount( LINE linesNeeded );
+public:
+   void           LineInfoReserve( LINE linesNeeded );
+private:
    //------------------------------------------------------------------
    void           FBufEvent_LineInsDel( LINE yLine, LINE lineDelta );  // negative lineDelta value signifies deletion of lines
    //------------------------------------------------------------------
    //************ Diskfile WRITE
-private:
    int            d_backupMode = bkup_USE_SWITCH;
    time_t         d_tmLastWrToDisk = 0; // http://en.wikipedia.org/wiki/Year_2038_problem
    bool           write_to_disk( PCChar DestFileNm );

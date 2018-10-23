@@ -374,8 +374,8 @@ void FBUF::PutLineRaw( LINE yLine, stref srSrc ) {
       const auto minLineCount( yLine + 1 );
       if( LineCount() < minLineCount ) { 0 && DBG("%s Linecount=%d", __func__, minLineCount );
          FBOP::PrimeRedrawLineRangeAllWin( this, LastLine(), yLine ); // needed with addition of g_chTrailLineDisp; past-EOL lines need to be overwritten
-         SetLineInfoCount( minLineCount );
-         SetLineCount    ( minLineCount );
+         LineInfoReserve( minLineCount );
+         SetLineCount   ( minLineCount );
          }
       else {
          FBOP::PrimeRedrawLineRangeAllWin( this, yLine, yLine );
@@ -564,11 +564,12 @@ PFBUF GetNextClipFBufToWrite( int clipboardArgType ) {
 //====================================================================================================
 
 STIL void Clipboard_Prep( int clipboardArgType ) {
-   if( g_pFbufClipboard != g_CurFBuf() ) {
-       g_pFbufClipboard->MakeEmpty();
-       }
+   g_pFbufClipboard->MakeEmpty();
    g_ClipboardType = clipboardArgType;
    }
+
+// PCFV_ fxns operate on the current View/FBUF, using ARG::-typed params
+// intended mostly for use within ARG:: methods
 
 STATIC_FXN void PCFV_Copy_STREAMARG_ToClipboard( ARG::STREAMARG_t const &d_streamarg ) {
    Clipboard_Prep( STREAMARG );  FBOP::CopyStream( g_pFbufClipboard, 0, 0, g_CurFBuf(), d_streamarg.flMin.col, d_streamarg.flMin.lin, d_streamarg.flMax.col, d_streamarg.flMax.lin );
@@ -1385,7 +1386,8 @@ enum { LineHeadSpace =  1
      };
 
 void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const bool fSaveUndoInfo ) {
-   if( yInsAt > LastLine() ) { // no existing line inserted in front of?
+   if( yInsAt > LastLine() ) {                      // insertion is at/beyond EOF?
+      LineInfoReserve( yInsAt + lineInsertCount );  // alloc LineInfo for all requested
       return;
       }
    FBOP::PrimeRedrawLineRangeAllWin( this, yInsAt, LineCount() + lineInsertCount );
@@ -1396,7 +1398,7 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
    if( lineInsertCount > 0 ) {
       const auto linesNeeded( LineCount() + lineInsertCount );
       if( !d_paLineInfo ) {
-         SetLineInfoCount( linesNeeded );
+         LineInfoReserve( linesNeeded );
          }
       else {
          if( d_naLineInfoElements < linesNeeded ) {
@@ -1633,6 +1635,8 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
        )
      ) { return; }
    AdjMarksForInsertion( FBsrc, FBdest, xSrcLeft, ySrcTop, xSrcRight, ySrcBottom, xDst, yDst );
+   const auto maxDestLineInvolved( yDst + (ySrcBottom - ySrcTop) );
+   FBdest->LineInfoReserve( maxDestLineInvolved + 1 );  // + 1 to convert lnum to count
    const auto tws( FBsrc ? FBsrc ->TabWidth() : 0 );
    const auto twd(         FBdest->TabWidth()     );
    const auto boxWidth( xSrcRight - xSrcLeft + 1 );
@@ -1650,7 +1654,8 @@ void FBOP::CopyBox( PFBUF FBdest, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLef
       }
    }
 
-void FBUF::SetLineInfoCount( const LINE linesNeeded ) {
+// ensure that FBUF::d_paLineInfo has AT LEAST linesNeeded entries
+void FBUF::LineInfoReserve( const LINE linesNeeded ) {
    if( !d_paLineInfo || d_naLineInfoElements < linesNeeded ) { 0 && DBG( "XPf2NL LineInfo[] %s: (%d,%d) -> %d", Name(), LineCount(), d_naLineInfoElements, linesNeeded );
       const auto linesToAlloc( linesNeeded + LineHeadSpace );
       LineInfo *pNewLi;
@@ -1913,14 +1918,14 @@ void FBUF::ImgBufAlloc( size_t bufBytes, LINE PreallocLines ) {  0 && DBG( "%s B
    d_cbOrigFileImage = bufBytes;
    AllocArrayNZ( d_pOrigFileImage, bufBytes, __PRETTY_FUNCTION__ );
    SetLineCount( 0 );
-   SetLineInfoCount( PreallocLines );
+   LineInfoReserve( PreallocLines );
    }
 
 void FBUF::ImgBufAppendLine( stref st0, stref st1 ) {
    auto &newLI(
       [this] () -> LineInfo & {
          // LineCount is the NUMBER of the NEW LINE!
-         SetLineInfoCount( LineCount()+1 );
+         LineInfoReserve( LineCount()+1 );
          auto &rv( d_paLineInfo[ LineCount() ] );
          if( LineCount() == 0 ) {
             rv.d_pLineData = d_pOrigFileImage;
