@@ -483,14 +483,6 @@ public:
 
 extern std::string StreamArgToString( PFBUF pfb, Rect stream );
 
-// PCFV_ fxns operate on the current View/FBUF, using ARG::-typed params
-// intended mostly for use within ARG:: methods
-extern void PCFV_delete_STREAMARG( ARG::STREAMARG_t const &d_streamarg, bool copyToClipboard );
-extern void PCFV_delete_LINEARG  ( ARG::LINEARG_t   const &d_linearg  , bool copyToClipboard );
-extern void PCFV_delete_BOXARG   ( ARG::BOXARG_t    const &d_boxarg   , bool copyToClipboard, bool fCollapse=true );
-extern void PCFV_BoxInsertBlanks ( ARG::BOXARG_t    const &d_boxarg   );
-extern void PCFV_delete_ToEOL    ( Point            const &curpos     , bool copyToClipboard );
-
 class ArgLineWalker {
    NO_COPYCTOR(ArgLineWalker);
    NO_ASGN_OPR(ArgLineWalker);
@@ -1170,7 +1162,7 @@ public:
 private:
    void           SetLineCount( LINE newlc ) { d_LineCount  = newlc; }
    void           IncLineCount( LINE delta ) { d_LineCount += delta; }
-   void           InitLineInfoRange( LINE yMin, LINE numToInit ) {
+   void           LineInfoClearRange( LINE yMin, LINE numToInit ) {
                      auto pLi( d_paLineInfo + yMin );
                      for( const auto pLiPastEnd( pLi + numToInit ) ; pLi < pLiPastEnd ; ++pLi )
                         pLi->clear();

@@ -583,13 +583,13 @@ STATIC_FXN void PCFV_Copy_LINEARG_ToClipboard( ARG::LINEARG_t const &d_linearg )
    Clipboard_Prep( LINEARG   );  FBOP::CopyLines(  g_pFbufClipboard, 0,    g_CurFBuf(), d_linearg.yMin, d_linearg.yMax );
    }
 
-void PCFV_delete_STREAMARG( ARG::STREAMARG_t const &d_streamarg, bool copyToClipboard ) { PCFV;
+STATIC_FXN void PCFV_delete_STREAMARG( ARG::STREAMARG_t const &d_streamarg, bool copyToClipboard ) { PCFV;
    if( copyToClipboard ) { PCFV_Copy_STREAMARG_ToClipboard( d_streamarg ); }
    pcf->DelStream(  d_streamarg.flMin.col, d_streamarg.flMin.lin, d_streamarg.flMax.col, d_streamarg.flMax.lin );
    pcv->MoveCursor( d_streamarg.flMin.lin, d_streamarg.flMin.col );
    }
 
-void PCFV_BoxInsertBlanks( ARG::BOXARG_t const &d_boxarg ) { PCFV;
+STATIC_FXN void PCFV_BoxInsertBlanks( ARG::BOXARG_t const &d_boxarg ) { PCFV;
    FBOP::CopyBox( pcf,
         d_boxarg.flMin.col, d_boxarg.flMin.lin, nullptr
       , d_boxarg.flMin.col, d_boxarg.flMin.lin
@@ -597,7 +597,7 @@ void PCFV_BoxInsertBlanks( ARG::BOXARG_t const &d_boxarg ) { PCFV;
       );
    }
 
-void PCFV_delete_LINEARG( ARG::LINEARG_t const &d_linearg, bool copyToClipboard ) { PCFV;
+STATIC_FXN void PCFV_delete_LINEARG( ARG::LINEARG_t const &d_linearg, bool copyToClipboard ) { PCFV;
    // LINEARG or BOXARG: Deletes the specified text and copies it to the
    // clipboard.  The argument is a LINEARG or BOXARG regardless of the
    // current selection mode.  The argument is a LINEARG if the starting
@@ -607,7 +607,7 @@ void PCFV_delete_LINEARG( ARG::LINEARG_t const &d_linearg, bool copyToClipboard 
    pcv->MoveCursor( d_linearg.yMin, g_CursorCol() );
    }
 
-void PCFV_delete_BOXARG( ARG::BOXARG_t const &d_boxarg, bool copyToClipboard, bool fCollapse ) { PCFV;
+STATIC_FXN void PCFV_delete_BOXARG( ARG::BOXARG_t const &d_boxarg, bool copyToClipboard, bool fCollapse=true ) { PCFV;
    if( copyToClipboard ) { PCFV_Copy_BOXARG_ToClipboard( d_boxarg ); }
    pcf->DelBox( d_boxarg.flMin.col, d_boxarg.flMin.lin, d_boxarg.flMax.col, d_boxarg.flMax.lin, fCollapse );
    pcv->MoveCursor( d_boxarg.flMin.lin, d_boxarg.flMin.col );
@@ -622,7 +622,7 @@ STATIC_FXN void DelArgRegion( const ARG &arg ) {
     }
    }
 
-void PCFV_delete_ToEOL( Point const &curpos, bool copyToClipboard ) { PCFV;
+STATIC_FXN void PCFV_delete_ToEOL( Point const &curpos, bool copyToClipboard ) { PCFV;
    auto xMax( FBOP::LineCols( pcf, curpos.lin ) );
    if( xMax >= curpos.col ) {
       PCFV_delete_BOXARG( {curpos.lin, curpos.col, curpos.lin, xMax }, copyToClipboard );
@@ -1413,8 +1413,8 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
             FreeUp( d_paLineInfo, pNewLi );
             d_naLineInfoElements = linesToAlloc;
             if( linesToAlloc > linesNeeded ) {  // tail-hole exists?
-               const auto arg0( d_naLineInfoElements - LineHeadSpace );  0 && DBG( "%s InitLineInfoRange(%d,%d)", __func__, arg0, LineHeadSpace );
-               InitLineInfoRange( arg0, LineHeadSpace );  // empty the tail-hole
+               const auto arg0( d_naLineInfoElements - LineHeadSpace );  0 && DBG( "%s LineInfoClearRange(%d,%d)", __func__, arg0, LineHeadSpace );
+               LineInfoClearRange( arg0, LineHeadSpace );  // empty the tail-hole
                }
             }
          else { // open a hole
@@ -1422,7 +1422,7 @@ void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const b
                MoveArray( d_paLineInfo + (yInsAt+lineInsertCount), d_paLineInfo + yInsAt, LineCount() - yInsAt );
                }
             }
-         InitLineInfoRange( yInsAt, lineInsertCount );  // empty the hole
+         LineInfoClearRange( yInsAt, lineInsertCount );  // empty the hole
          }
       }
    // 20091218 kgoodwin
@@ -1459,13 +1459,12 @@ void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) { 
    MoveArray( d_paLineInfo + firstLine, d_paLineInfo + lastLine + 1, LastLine() - lastLine );
    const auto yDelta( lastLine - firstLine + 1 );
    IncLineCount( -yDelta ); // CANNOT swap with next stmt
-   InitLineInfoRange( LineCount(), yDelta ); // fill in hole left by "slide ... down"
+   LineInfoClearRange( LineCount(), yDelta ); // fill in hole left by "slide ... down"
    FBufEvent_LineInsDel( firstLine, -yDelta );
    }
 
 void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    DestroyMarks();
-   { // formerly DestroyLineInfoArray()
    if( d_paLineInfo ) {
       for( auto iy(0) ; iy < d_LineCount ; ++iy ) {
          d_paLineInfo[iy].FreeContent( *this );
@@ -1473,7 +1472,6 @@ void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
       Free0( d_paLineInfo );
       }
    d_LineCount = 0;
-   }
    d_naLineInfoElements = 0;
    DiscardUndoInfo();   // call before Free0( d_pOrigFileImage ) (some EditOp's have d_pFBuf)!
    Free0( d_pOrigFileImage );
@@ -1666,7 +1664,7 @@ void FBUF::LineInfoReserve( const LINE linesNeeded ) {
          }
       d_paLineInfo = pNewLi;
       d_naLineInfoElements = linesToAlloc;
-      InitLineInfoRange( LineCount(), linesToAlloc - LineCount() );
+      LineInfoClearRange( LineCount(), linesToAlloc - LineCount() );
       }
    }
 
@@ -1768,7 +1766,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    d_naLineInfoElements = initial_sample_lines;
    VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", d_naLineInfoElements ); )
    AllocArrayNZ(      d_paLineInfo, d_naLineInfoElements, "initial d_paLineInfo" );
-   InitLineInfoRange( 0           , d_naLineInfoElements );
+   LineInfoClearRange( 0           , d_naLineInfoElements );
    if( d_cbOrigFileImage > 0 ) {
       struct {
          int leadBlankLines = 0;
@@ -1806,7 +1804,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
             AllocArrayNZ( pNewLi, d_naLineInfoElements, "revised d_paLineInfo" );
             MoveArray(    pNewLi, d_paLineInfo, curLineNum );
             FreeUp( d_paLineInfo, pNewLi );
-            InitLineInfoRange( curLineNum, d_naLineInfoElements - curLineNum );
+            LineInfoClearRange( curLineNum, d_naLineInfoElements - curLineNum );
             pLi = d_paLineInfo + curLineNum;
             }
          switch( *pCurImageBuf ) {
