@@ -1304,13 +1304,13 @@ bool ARG::csort() {
 
 void LineInfo::PutContent( stref src ) { // assume previous content has been destroyed!
    if( src.length() == 0 ) {
-      d_pLineData = nullptr;
+      clear();
       }
    else {
-      AllocBytesNZ( d_pLineData, src.length(), __func__ );
-      memcpy( CAST_AWAY_CONST(PChar)(d_pLineData), src.data(), src.length() );
+      d_iLineLen = src.length();
+      AllocBytesNZ( d_pLineData, d_iLineLen, __func__ );
+      memcpy( CAST_AWAY_CONST(PChar)(d_pLineData), src.data(), d_iLineLen );
       }
-   d_iLineLen = src.length();
    }
 
 void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
@@ -1450,12 +1450,10 @@ void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) { 
 
 void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    DestroyMarks();
-   if( LineInfoCapacity() < 0 ) {
-      for( auto iy(0) ; iy < d_LineCount ; ++iy ) {
-         d_paLineInfo[iy].FreeContent( *this );
-         }
+   for( auto iy(0) ; iy < LineCount() ; ++iy ) {
+      d_paLineInfo[iy].FreeContent( *this );
       }
-   d_LineCount = 0;
+   SetLineCount( 0 );
    FreeUp( d_paLineInfo );
    LineInfoSetCapacity( 0 );
    DiscardUndoInfo();   // call before Free0( d_pOrigFileImage ) (some EditOp's have d_pFBuf)!

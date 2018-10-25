@@ -967,8 +967,8 @@ private:
 public:
    bool           HasLines()                 const { return ToBOOL(d_paLineInfo); }
    LINE           LineCount()                const { return d_LineCount; }
-   bool           KnownLine( LINE lineNum )  const { return lineNum >= 0 && lineNum < d_LineCount; }
-   LINE           LastLine()                 const { return d_LineCount - 1; }
+   bool           KnownLine( LINE lineNum )  const { return lineNum >= 0 && lineNum < LineCount(); }
+   LINE           LastLine()                 const { return LineCount() - 1; }
    COL            LineLength( LINE lineNum ) const { return d_paLineInfo[lineNum].d_iLineLen; }
    bool           PtrWithinOrigFileImage( PCChar pc ) const { return pc >= d_pOrigFileImage && pc < (d_pOrigFileImage + d_cbOrigFileImage); }
    filesize_t     cbOrigFileImage() const { return d_cbOrigFileImage; }
