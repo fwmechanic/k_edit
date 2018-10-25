@@ -1373,46 +1373,46 @@ void FBUF::DirtyFBufAndDisplay() {
    SetDirty();
    }
 
-constexpr LINE LineHeadSpace(  1 )
-                         // ( 50 )
+constexpr LINE LineHeadSpace( 50 )
+                         // (  1 )
           ;
 constexpr LINE FileReadLineHeadSpace( 21 );
 
-void FBUF::InsertLines__( const LINE yInsAt, const LINE lineInsertCount, const bool fSaveUndoInfo ) {
+void FBUF::InsertLines__( const LINE yInsBefore, const LINE lineInsertCount, const bool fSaveUndoInfo ) {
    if( lineInsertCount <= 0 ) {
       return;
       }
-   const auto trailingLineCount( LineCount() - yInsAt );
+   const auto trailingLineCount( LineCount() - yInsBefore );
    if( trailingLineCount <= 0 ) {                   // insertion is at/beyond EOF?
-      LineInfoReserve( yInsAt + lineInsertCount );  // alloc LineInfo for all requested
+      LineInfoReserve( yInsBefore + lineInsertCount );  // alloc LineInfo for all requested
       return;
       }
-   FBOP::PrimeRedrawLineRangeAllWin( this, yInsAt, LineCount() + lineInsertCount );
+   FBOP::PrimeRedrawLineRangeAllWin( this, yInsBefore, LineCount() + lineInsertCount );
    DirtyFBufAndDisplay();
    if( fSaveUndoInfo ) {
-      UndoInsertLineRangeHole( yInsAt, lineInsertCount );  // generate a undo record
+      UndoInsertLineRangeHole( yInsBefore, lineInsertCount );  // generate a undo record
       }
    const auto linesNeeded( LineCount() + lineInsertCount );
    if( LineInfoCapacity() >= linesNeeded ) { // space sufficient: open a hole
-      MoveArray( d_paLineInfo + yInsAt + lineInsertCount, d_paLineInfo + yInsAt, trailingLineCount );
+      MoveArray( d_paLineInfo + yInsBefore + lineInsertCount, d_paLineInfo + yInsBefore, trailingLineCount );
       }
    else { // space insufficient: realloc w/o redundant moves to open a hole
       const auto linesToAlloc( linesNeeded + LineHeadSpace );
       LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, __PRETTY_FUNCTION__ );
-      if( yInsAt > 0 ) {  /* leading subrange exists?  copy it */   0 && DBG( "%s -mov [%d]<-[%d] L %d", __func__, 0, 0, yInsAt );
-         MoveArray( pNewLi, d_paLineInfo, yInsAt );
-         }                                                          0 && DBG( "%s +mov [%d]<-[%d] L %d", __func__, (yInsAt+lineInsertCount), yInsAt, trailingLineCount );
-      MoveArray( pNewLi + yInsAt + lineInsertCount, d_paLineInfo + yInsAt, trailingLineCount );
+      if( yInsBefore > 0 ) {  /* leading subrange exists?  copy it */   0 && DBG( "%s -mov [%d]<-[%d] L %d", __func__, 0, 0, yInsBefore );
+         MoveArray( pNewLi, d_paLineInfo, yInsBefore );
+         }                                                          0 && DBG( "%s +mov [%d]<-[%d] L %d", __func__, (yInsBefore+lineInsertCount), yInsBefore, trailingLineCount );
+      MoveArray( pNewLi + yInsBefore + lineInsertCount, d_paLineInfo + yInsBefore, trailingLineCount );
       FreeUp( d_paLineInfo, pNewLi );
       LineInfoSetCapacity( linesToAlloc );
-      if( LineHeadSpace > 0 ) {  // LineHeadSpace tail-hole exists?
+      if( LineHeadSpace > 0 ) {  // LineHeadSpace (tail-hole) exists?
          const auto arg0( LineInfoCapacity() - LineHeadSpace );  0 && DBG( "%s LineInfoClearRange(%d,%d)", __func__, arg0, LineHeadSpace );
-         LineInfoClearRange( arg0, LineHeadSpace );  // clear the tail-hole
+         LineInfoClearRange( arg0, LineHeadSpace );  // clear it (NB: this is arguably unnecessary as these lines NOT dereferencible...)
          }
       }
-   LineInfoClearRange( yInsAt, lineInsertCount );  // clear the insert-hole
-   IncLineCount( lineInsertCount );                // inserted lines now exist
-   FBufEvent_LineInsDel( yInsAt, lineInsertCount );
+   LineInfoClearRange( yInsBefore, lineInsertCount );  // clear the insert-hole
+   IncLineCount( lineInsertCount );                    // make last lineInsertCount lines visible to user
+   FBufEvent_LineInsDel( yInsBefore, lineInsertCount );
    }
 
 // Careful!  This fxn is called both by upper-level edit code (as DelLine)
