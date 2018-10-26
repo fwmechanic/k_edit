@@ -3713,7 +3713,7 @@ function MultiWcx( nm, a_wc, a_strip )
          end
       DeleteLinesMatching( match_strips, fb )
       end
-   fb:ClearUndo();
+   fb:Undo_Reinit();
    fb:UnDirty();
    return fb
    end

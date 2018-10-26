@@ -301,7 +301,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
    DLINK_JOIN( cvh, tmpVHd, dlinkViewsOfWindow );
    cvh.front()->PutFocusOn();
    if( s_ForgetAbsentFiles.logfb ) {
-       s_ForgetAbsentFiles.logfb->ClearUndo();
+       s_ForgetAbsentFiles.logfb->Undo_Reinit();
        s_ForgetAbsentFiles.logfb->UnDirty();
        Msg( "done forgetting %d files", s_ForgetAbsentFiles.logfb->LineCount() );
        }

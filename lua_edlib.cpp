@@ -359,7 +359,7 @@ namespace LFBUF {
    STATIC_FXN int __tostring( lua_State *L )               { R_strf( "FBUF(\"%s\")", thisPF()->Name() ); }
    STATIC_FXN int Next( lua_State *L )                     { return l_construct_FBUF( L, thisPF()->Next()     ); }
 
-   STATIC_FXN int ClearUndo( lua_State *L )                { thisPF()->ClearUndo()                                              ; RZ; }
+   STATIC_FXN int Undo_Reinit( lua_State *L )              { thisPF()->Undo_Reinit()                                            ; RZ; }
    STATIC_FXN int ClrNoEdit( lua_State *L )                { thisPF()->ClrNoEdit()                                              ; RZ; }
    STATIC_FXN int CopyLines( lua_State *L )                { FBOP::CopyLines( thisPF(), I_(2)-1, PFBUF_(3), I_(4)-1, I_(5)-1 )  ; RZ; }
    STATIC_FXN int DiscardTrailSpcs( lua_State *L )         { thisPF()->DiscardTrailSpcs()                                       ; RZ; }
@@ -839,7 +839,7 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       LUA_FUNC_I(__tostring)
       LUA_FUNC_I(CantModify)
       LUA_FUNC_I(CopyLines)
-      LUA_FUNC_I(ClearUndo)
+      LUA_FUNC_I(Undo_Reinit)
       LUA_FUNC_I(ClrNoEdit)
       LUA_FUNC_I(DelLine)
       LUA_FUNC_I(DiscardTrailSpcs)

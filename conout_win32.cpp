@@ -448,7 +448,7 @@ YX_t TConsoleOutputControl::GetMaxConsoleSize() {
       return YX_t(0,0);
       }
    auto rv( csbi.MaxBufSize() );
-   NoMoreThan( &rv.col, static_cast<int>(sizeof(Linebuf)-1) );
+   NoMoreThan( &rv.col, static_cast<decltype(rv.col)>(sizeof(Linebuf)-1) );
    return rv;
    }
 
@@ -1067,7 +1067,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
             }
          }
       Free0( dest_buf );
-      g_pFBufConsole->ClearUndo();
+      g_pFBufConsole->Undo_Reinit();
       g_pFBufConsole->UnDirty();
       }
    }

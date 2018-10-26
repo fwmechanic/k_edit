@@ -452,7 +452,7 @@ void FetchAndExecuteCMDs( const bool fCatchExecutionHaltRequests ) {
          }
       if( const auto newPCMD = CMD_reader().GetNextCMD() ) {
          if( !prevPCMD->IsFnGraphic() || !newPCMD->IsFnGraphic() ) {
-            g_CurFBuf()->PutUndoBoundary();
+            g_CurFBuf()->UndoInsBoundary();
             }
          g_fFuncRetVal = newPCMD->BuildExecute();
          // _ASSERTE( _CrtCheckMemory() );

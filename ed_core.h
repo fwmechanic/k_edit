@@ -989,8 +989,8 @@ private:
    EditRec       *d_pNewestEdit;  // most recent edit action
    EditRec       *d_pCurrentEdit; // "current" editlist node
    EditRec       *d_pOldestEdit;  // least recent edit action
-   void           InitUndoInfo(); // CTOR for 4 above private vars via EdOpBoundary::EdOpBoundary( PFBUF pFBuf, int only ) and EditRec::EditRec( PFBUF pFBuf, int only_placeholder )
-   void           AddNewEditOpToListHead( EditRec *pEr );
+   void           Undo_Init(); // CTOR for 4 above private vars via EdOpBoundary::EdOpBoundary( PFBUF pFBuf, int only ) and EditRec::EditRec( PFBUF pFBuf, int only_placeholder )
+   void           Undo_AddNewEditOpToListHead( EditRec *pEr );
    //************ Undo/Redo intf used by ARG::eds()
 public:
    int            UndoCount()   const { return d_UndoCount   ; }
@@ -999,19 +999,19 @@ public:
    EditRec       *NewestEdit()  const { return d_pNewestEdit ; }
    int            GetUndoCounts( int *pBRTowardUndo, int *pARTowardUndo, int *pBRTowardRedo, int *pARTowardRedo ) const;
    //************ user-level undo/redo impl
-private:          // called by DoUserUndoOrRedo
-   bool           EditOpUndo();
-   bool           EditOpRedo();
+private:          // called by Undo_UserStep_UndoOrRedo
+   bool           Undo_EdOpUndo();
+   bool           Undo_EdOpRedo();
    bool           AnythingToUndoRedo( bool fChkRedo ) const;
-   bool           RmvOneEdOp_fNextIsBoundary( bool fFromListHead );
+   bool           Undo_RmvOneEdOp_fNextIsBoundary( bool fFromListHead );
    void           SetUndoStateToBoundrec();
 public:
-   bool           DoUserUndoOrRedo( bool fRedo ); // called by ARG::undo() & ARG::redo()
+   bool           Undo_UserStep_UndoOrRedo( bool fRedo ); // called by ARG::undo() & ARG::redo()
    //************ Undo/Redo FBUF edit API
 private:
-   void           UndoReplaceLineContent(  LINE lineNum  , stref newContent );
-   void           UndoSaveLineRange(       LINE firstLine, LINE lastLine );
-   void           UndoInsertLineRangeHole( LINE firstLine, int lineCount );
+   void           UndoIns_EditLine(         LINE lineNum  , stref newContent );
+   void           UndoIns_LineRangeDel(     LINE firstLine, LINE lastLine );
+   void           UndoIns_LineRangeInsHole( LINE firstLine, int lineCount );
    void           InsertLines__( LINE firstLine, LINE lineCount, bool fSaveUndoInfo );
    void           DeleteLines__( LINE firstLine, LINE lastLine , bool fSaveUndoInfo );
    void           DeleteLines__ForUndoRedo( LINE firstLine, LINE lastLine  )  { DeleteLines__( firstLine, lastLine , false ); }
@@ -1019,14 +1019,14 @@ private:
    //************ Undo/Redo user-level-command execution boundary insertion
 public:
    void           UndoInsertCmdAnnotation( PCCMD Cmd ); // used by buildexecute
-   void           PutUndoBoundary();
+   void           UndoInsBoundary();
    //************ command-level FBUF-content cleanup
 private:
-   void           DiscardUndoInfo();
+   void           Undo_DeleteAll();
 public:
    void           FreeLinesAndUndoInfo();
    void           MakeEmpty();
-   void           ClearUndo();
+   void           Undo_Reinit();
    //***********  yChangedMin
 private:
    unsigned       d_contentRevision = 1; // used to passively detect FBUF content change; each change incrs this value; init value 1 allows others who maintain copied to init these to 0

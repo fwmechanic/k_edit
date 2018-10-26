@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -137,7 +137,6 @@ extern const char kszNoFile [];    // = "*";
 extern const char kszRecord[];     // = "<record>";
 extern const char kszSearchLog[];  // = "<search-keys>"
 extern const char kszSearchRslts[];// = "<search-results>"
-extern const char kszStkname[];    // = "<stack>";
 extern const char kszUsgFile[];    // = "<usage>";
 
 extern "C" const char kszDtTmOfBuild[];

@@ -2205,7 +2205,7 @@ LINE CGrepper::WriteOutput
          outfile->ImgBufAppendLine( prefix.k_str(), d_SrchFile->PeekRawLine( iy ) );
          }
       }
-   outfile->ClearUndo();
+   outfile->Undo_Reinit();
    outfile->UnDirty();
    outfile->PutFocusOn();
    Msg( "%u line%s %s", numberedMatches, Add_s(numberedMatches), d_fFindAllNegate ? "removed" : "matched" );

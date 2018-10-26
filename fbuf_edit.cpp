@@ -373,7 +373,7 @@ void FBUF::PutLineRaw( LINE yLine, stref srSrc ) {
       else {
          FBOP::PrimeRedrawLineRangeAllWin( this, yLine, yLine );
          }
-      UndoReplaceLineContent( yLine, srSrc );  // actually perform the write to this FBUF
+      UndoIns_EditLine( yLine, srSrc );  // actually perform the write to this FBUF
       }
    }
 
@@ -1390,7 +1390,7 @@ void FBUF::InsertLines__( const LINE yInsBefore, const LINE lineInsertCount, con
    FBOP::PrimeRedrawLineRangeAllWin( this, yInsBefore, LineCount() + lineInsertCount );
    DirtyFBufAndDisplay();
    if( fSaveUndoInfo ) {
-      UndoInsertLineRangeHole( yInsBefore, lineInsertCount );  // generate a undo record
+      UndoIns_LineRangeInsHole( yInsBefore, lineInsertCount );  // generate a undo record
       }
    const auto linesNeeded( LineCount() + lineInsertCount );
    if( LineInfoCapacity() >= linesNeeded ) { // space sufficient: open a hole
@@ -1431,7 +1431,7 @@ void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) { 
    DirtyFBufAndDisplay();
    lastLine = std::min( lastLine, LastLine() );
    if( fSaveUndoInfo ) {
-      UndoSaveLineRange( firstLine, lastLine );
+      UndoIns_LineRangeDel( firstLine, lastLine );
       }
  #if 0  // if you do this (to fix what looks like a memory leak), undo/redo BREAKS because it calls this API with fSaveUndoInfo == false
    else { // d_paLineInfo[firstLine..lastLine] abt to be overwritten: free
@@ -1456,7 +1456,7 @@ void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    SetLineCount( 0 );
    FreeUp( d_paLineInfo );
    LineInfoSetCapacity( 0 );
-   DiscardUndoInfo();   // call before Free0( d_pOrigFileImage ) (some EditOp's have d_pFBuf)!
+   Undo_DeleteAll();   // call before Free0( d_pOrigFileImage ) (some EditOp's have d_pFBuf)!
    Free0( d_pOrigFileImage );
    d_cbOrigFileImage = 0;
    UnDirty();

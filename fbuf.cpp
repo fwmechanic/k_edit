@@ -70,7 +70,7 @@ FBUF::FBUF( stref filename, PPFBUF ppGlobalPtr )
    {
    ChangeName( filename );
    SetGlobalPtr( ppGlobalPtr );
-   InitUndoInfo();
+   Undo_Init();
    }
 
 FBUF::~FBUF() {
@@ -170,7 +170,7 @@ void FBUF::MakeEmpty() {
    //
    FBOP::PrimeRedrawLineRangeAllWin( this, 0, LineCount() );
    FreeLinesAndUndoInfo();
-   InitUndoInfo();
+   Undo_Init();
    MakeEmptyAllViewsOntoFbuf( this );
    }
 
@@ -1268,7 +1268,7 @@ struct DisplayNoiseBlanker {
 STATIC_FXN bool FBufRead_Wildcard( PFBUF pFBuf ) {
    pFBuf->MakeEmpty();
    FBOP::ExpandWildcardSorted( pFBuf, pFBuf->Name() );
-   pFBuf->ClearUndo();
+   pFBuf->Undo_Reinit();
    pFBuf->UnDirty();
    return true;
    }

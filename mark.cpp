@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -123,7 +123,7 @@ bool ARG::showmarks() {
 #endif
       totalMarks += NamedPointListDump( pFBuf->d_MarkHead, ofile, pFBuf->Name() );
       }
-   ofile->ClearUndo();
+   ofile->Undo_Reinit();
    ofile->UnDirty();
    ofile->SetNoEdit();
    ofile->PutFocusOn();

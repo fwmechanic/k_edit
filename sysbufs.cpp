@@ -36,7 +36,6 @@ GLOBAL_CONST char kszMasterRepo[] = "https://github.com/fwmechanic/k_edit.git";
 GLOBAL_CONST char kszNoFile   [] = "*";
 GLOBAL_CONST char kszSearchLog[] = "<search-keys>";
 GLOBAL_CONST char kszSearchRslts[] = "<search-results>";
-GLOBAL_CONST char kszStkname  [] = "<stack>";
 GLOBAL_CONST char kszUsgFile  [] = "<usage>";
 
 STATIC_VAR CPCChar s_InvisibleFilenames[] = {
@@ -549,7 +548,7 @@ STATIC_FXN void CallFbufReader( PFBUF pFBuf, FbufReaderFxn readerFxn, int instan
    pFBuf->MakeEmpty();
    readerFxn( pFBuf, instance );
    pFBuf->MoveCursorToBofAllViews();
-   pFBuf->ClearUndo();
+   pFBuf->Undo_Reinit();
    pFBuf->UnDirty();
    pFBuf->SetAutoRead();
    }
