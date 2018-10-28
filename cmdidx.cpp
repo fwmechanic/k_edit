@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -732,7 +732,7 @@ STATIC_FXN void cmdIdxAdd( stref name, funcCmd pFxn, int argType, stref macroDef
       CMD_PlacementFree_SameName( pCmd );
       }
    else {
-      AllocArrayZ( pCmd );
+      AllocArrayZ( pCmd, 1 );
       pCmd->d_name = Strdup( name );
       rb_insert_before( s_CmdIdxAddins, pNd, pCmd->Name(), pCmd );
       }

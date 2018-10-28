@@ -1308,7 +1308,7 @@ void LineInfo::PutContent( stref src ) { // assume previous content has been des
       }
    else {
       d_iLineLen = src.length();
-      AllocBytesNZ( d_pLineData, d_iLineLen, __func__ );
+      AllocBytesNZ( d_pLineData, d_iLineLen );
       memcpy( CAST_AWAY_CONST(PChar)(d_pLineData), src.data(), d_iLineLen );
       }
    }
@@ -1398,7 +1398,7 @@ void FBUF::InsertLines__( const LINE yInsBefore, const LINE lineInsertCount, con
       }
    else { // space insufficient: realloc w/o redundant moves to open a hole
       const auto linesToAlloc( linesNeeded + LineHeadSpace );
-      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, __PRETTY_FUNCTION__ );
+      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc );
       if( yInsBefore > 0 ) {  /* leading subrange exists?  copy it */   0 && DBG( "%s -mov [%d]<-[%d] L %d", __func__, 0, 0, yInsBefore );
          MoveArray( pNewLi, d_paLineInfo, yInsBefore );
          }                                                          0 && DBG( "%s +mov [%d]<-[%d] L %d", __func__, (yInsBefore+lineInsertCount), yInsBefore, trailingLineCount );
@@ -1639,7 +1639,7 @@ void FBOP::CopyBox( PFBUF FBdst, COL xDst, LINE yDst, PCFBUF FBsrc, COL xSrcLeft
 void FBUF::LineInfoReserve( const LINE linesNeeded ) {
    if( LineInfoCapacity() < linesNeeded ) { 0 && DBG( "XPf2NL LineInfo[] %s: (%d,%d) -> %d", Name(), LineCount(), LineInfoCapacity(), linesNeeded );
       const auto linesToAlloc( linesNeeded + LineHeadSpace );
-      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, __PRETTY_FUNCTION__ );
+      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc );
       if( LineCount() ) {
          MoveArray( pNewLi, d_paLineInfo, LineCount() );
          }
@@ -1667,8 +1667,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
       return true;
       }
    rdNoiseAllc();
-   PChar fileBuf;
-   AllocBytesNZ( fileBuf, fileBytes+1, __func__ );
+   PChar fileBuf;  AllocBytesNZ( fileBuf, fileBytes+1 );
    fileBuf[fileBytes] = '\0'; // so wcslen works
    VR_(
       DBG( "ReadDiskFile %s: %uKB buf=[%p..%p)"
@@ -1722,8 +1721,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
             );
          const auto utf8len( Win32::WideCharToMultiByte( cp, 0, pszTextUTF16, utf16len, nullptr, 0, nullptr, nullptr ) ); // note this returns an int (even in x64)
          0 && DBG( "reading UTF-16 file \"%s\": fileBytes=%" PR__i64 "u, utf16len=%" PR_SIZET ", utf8len=%d", Name(), fileBytes, utf16len, utf8len );
-         PChar utf16buf;
-         AllocBytesNZ( utf16buf, utf16len+1, __func__ );
+         PChar utf16buf;  AllocBytesNZ( utf16buf, utf16len+1 );
          utf16buf[utf16len] = '\0';
          Win32::WideCharToMultiByte( cp, 0, pszTextUTF16, utf16len, utf16buf, utf8len, nullptr, nullptr );
          // adjust external state accordingly
@@ -1746,7 +1744,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
       const auto initial_sample_lines( d_cbOrigFileImage == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
                                                               : 508 );   // slightly less than a power of 2
       VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", initial_sample_lines ); )
-      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, initial_sample_lines, "initial d_paLineInfo" );
+      LineInfo *pNewLi;  AllocArrayNZ( pNewLi, initial_sample_lines );
       FreeUp( d_paLineInfo, pNewLi );
       LineInfoSetCapacity( initial_sample_lines );
       LineInfoClearRange( 0, initial_sample_lines );
@@ -1784,7 +1782,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                )
             NewScope {
                const auto linesToAlloc( std::min( INT_MAX, newLineCntEstimate ) );
-               LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc, "revised d_paLineInfo" );
+               LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc );
                MoveArray( pNewLi, d_paLineInfo, curLineNum );
                FreeUp( d_paLineInfo, pNewLi );
                LineInfoSetCapacity( linesToAlloc );
@@ -1899,7 +1897,7 @@ IS_EOL:
 
 void FBUF::ImgBufAlloc( size_t bufBytes, LINE PreallocLines ) {  0 && DBG( "%s Bytes=%" PR_SIZET ", Lines=%d", __PRETTY_FUNCTION__, bufBytes, PreallocLines );
    d_cbOrigFileImage = bufBytes;
-   AllocArrayNZ( d_pOrigFileImage, bufBytes, __PRETTY_FUNCTION__ );
+   AllocArrayNZ( d_pOrigFileImage, bufBytes );
    SetLineCount( 0 );
    LineInfoReserve( PreallocLines );
    }

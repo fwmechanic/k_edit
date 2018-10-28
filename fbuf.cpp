@@ -31,9 +31,20 @@
 
 // All inlines that alloc mem call this (terminating) function in their error-path
 //
-void MemErrFatal( PCChar opn, size_t byteCount, PCChar msg ) {
-   Msg( "%s %s( %" PR_SIZET " ) failed: %s", __func__, opn, byteCount, msg );
-   EditorExit( 4, false );
+void Abend_MemAllocFailed( PCChar szFile, int nLine, size_t byteCount ) {
+   Msg(             "%s:%d heap-alloc of %ju bytes failed", szFile, nLine, static_cast<uintmax_t>(byteCount) );
+   fprintf( stderr, "%s:%d heap-alloc of %ju bytes failed", szFile, nLine, static_cast<uintmax_t>(byteCount) );
+   SW_CBP();
+   fprintf( stderr, "aborting" );
+   abort();
+   }
+
+void Abend_UintMulOvflow( PCChar szFile, int nLine, uintmax_t nelems, uintmax_t elsize, uintmax_t maxAllowed ) {
+   Msg(             "%s:%d unsigned multiply overflow (%ju * %ju) > %ju", szFile, nLine, nelems, elsize, maxAllowed );
+   fprintf( stderr, "%s:%d unsigned multiply overflow (%ju * %ju) > %ju", szFile, nLine, nelems, elsize, maxAllowed );
+   SW_CBP();
+   fprintf( stderr, "aborting" );
+   abort();
    }
 
 // Helper rtnes for templates of same names

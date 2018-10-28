@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -24,7 +24,8 @@
 #define  SIZE_MAX  std::numeric_limits<size_t>::max()
 #endif
 
-extern void  MemErrFatal( PCChar opn, size_t byteCount, PCChar msg );
+extern void  Abend_MemAllocFailed( PCChar szFile, int nLine, size_t byteCount ) __attribute__((noreturn));
+extern void  Abend_UintMulOvflow( PCChar szFile, int nLine, uintmax_t nelems, uintmax_t elsize, uintmax_t maxAllowed ) __attribute__((noreturn));
 
 #define  MEM_BP  0
 #if      MEM_BP
@@ -75,60 +76,66 @@ inline void FreeUp( Ptr &ptr, Ptr newp=nullptr ) {
    ptr = newp;  // updt ptr w/new value
    }
 
-template<typename type>
-inline void MoveArray( type * dest, const type * src, size_t elements=1 ) {
-   memmove( static_cast<void*>(dest), src, elements * sizeof(*src) );
-   }
-
-template<typename type>
-inline type * DupArray( const type *pSrc, size_t elements=1 ) {
-   type *rv;
-   AllocArrayNZ( rv, elements );
-   memcpy( static_cast<void*>(rv), pSrc, elements * sizeof(*rv) );
-   return rv;
-   }
-
-template<typename Ptr>
-inline void AllocBytesNZ( Ptr &rv, size_t bytes, PCChar msg="" ) {
-   rv = static_cast<Ptr>( AllocNZ( bytes ) );
-   if( rv == nullptr ) {
-      MemErrFatal( __func__, bytes, msg );
-      }
-   }
-
-template<typename Ptr>
-inline void AllocBytesZ( Ptr &rv, size_t bytes, PCChar msg="" ) {
-   rv = reinterpret_cast<Ptr>( Alloc0d( bytes ) );
-   if( rv == nullptr ) {
-      MemErrFatal( __func__, bytes, msg );
-      }
-   }
-
-STIL size_t CHK_PRODUCT( size_t nelems, size_t elsize, PCChar msg="" ) {
-   const auto rv( nelems * elsize );
-   const auto min( nelems < elsize?nelems:elsize );
-   const auto max( nelems > elsize?nelems:elsize );
-   if( min > 1 && rv <= max ) {
-      MemErrFatal( __func__, SIZE_MAX, msg );
+template<typename uinttype>
+inline uinttype CHK_PRODUCT( uinttype nelems, uinttype elsize, PCChar szFile, int nLine ) {
+   if( nelems > std::numeric_limits<uinttype>::max() / elsize ) {
+      Abend_UintMulOvflow( szFile, nLine, nelems, elsize, std::numeric_limits<uinttype>::max() );
       }
    return nelems * elsize;
    }
 
-template<typename Ptr>
-inline void AllocArrayNZ( Ptr &rv, size_t elements=1, PCChar msg="" ) {
-   AllocBytesNZ( rv, CHK_PRODUCT( elements, sizeof(*rv), msg ), msg );
+template<typename type>
+inline void MoveArray_( type * dest, const type * src, size_t elements, PCChar szFile, int nLine ) {
+   memmove( static_cast<void*>(dest), src, CHK_PRODUCT( elements, sizeof(*src), szFile, nLine ) );
    }
+#define MoveArray( dest, src, elements ) MoveArray_( (dest), (src), (elements), __FILE__, __LINE__ )
 
 template<typename Ptr>
-inline void AllocArrayZ( Ptr &rv, size_t elements=1, PCChar msg="" ) {
-   AllocBytesZ( rv, CHK_PRODUCT( elements, sizeof(*rv), msg ), msg );
-   }
-
-template<typename Ptr>
-inline void ReallocArray( Ptr &rv, size_t elements=1, PCChar msg="" ) {
-   const auto bytes( CHK_PRODUCT( elements, sizeof(*rv), msg ) );
-   rv = reinterpret_cast<Ptr>( ReallocNZ( rv, bytes ) );
+inline void AllocBytesNZ_( Ptr &rv, size_t bytes, PCChar szFile, int nLine ) {
+   rv = static_cast<Ptr>( AllocNZ( bytes ) );
    if( rv == nullptr ) {
-      MemErrFatal( __func__, bytes, msg );
+      Abend_MemAllocFailed( szFile, nLine, bytes );
       }
    }
+#define AllocBytesNZ( rv, bytes ) AllocBytesNZ_( (rv), (bytes), __FILE__, __LINE__ )
+
+template<typename Ptr>
+inline void AllocBytesZ_( Ptr &rv, size_t bytes, PCChar szFile, int nLine ) {
+   rv = reinterpret_cast<Ptr>( Alloc0d( bytes ) );
+   if( rv == nullptr ) {
+      Abend_MemAllocFailed( szFile, nLine, bytes );
+      }
+   }
+#define AllocBytesZ( rv, bytes ) AllocBytesZ_( (rv), (bytes), __FILE__, __LINE__ )
+
+template<typename Ptr>
+inline void AllocArrayNZ_( Ptr &rv, size_t elements, PCChar szFile, int nLine ) {
+   AllocBytesNZ_( rv, CHK_PRODUCT( elements, sizeof(*rv), szFile, nLine ), szFile, nLine );
+   }
+#define AllocArrayNZ( rv, elements ) AllocArrayNZ_( (rv), (elements), __FILE__, __LINE__ )
+
+template<typename Ptr>
+inline void AllocArrayZ_( Ptr &rv, size_t elements, PCChar szFile, int nLine ) {
+   AllocBytesZ_( rv, CHK_PRODUCT( elements, sizeof(*rv), szFile, nLine ), szFile, nLine );
+   }
+#define AllocArrayZ( rv, elements ) AllocArrayZ_( (rv), (elements), __FILE__, __LINE__ )
+
+template<typename Ptr>
+inline void ReallocArray_( Ptr &rv, size_t elements, PCChar szFile, int nLine ) {
+   const auto bytes( CHK_PRODUCT( elements, sizeof(*rv), szFile, nLine ) );
+   rv = reinterpret_cast<Ptr>( ReallocNZ( rv, bytes ) );
+   if( rv == nullptr ) {
+      Abend_MemAllocFailed( szFile, nLine, bytes );
+      }
+   }
+#define ReallocArray( rv, elements ) ReallocArray_( (rv), (elements), __FILE__, __LINE__ )
+
+template<typename type>
+inline type * DupArray_( const type *pSrc, size_t elements, PCChar szFile, int nLine ) {
+   type *rv;
+   const auto bytes( CHK_PRODUCT( elements, sizeof(*rv), szFile, nLine ) );
+   AllocBytesNZ_( rv, bytes, szFile, nLine );
+   memcpy( static_cast<void*>(rv), pSrc, bytes );
+   return rv;
+   }
+#define DupArray( pSrc, elements ) DupArray_( (pSrc), (elements), __FILE__, __LINE__ )

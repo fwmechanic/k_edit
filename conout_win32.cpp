@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -548,9 +548,9 @@ Win32ConsoleFontChanger::Win32ConsoleFontChanger()
    Win32::CONSOLE_FONT_INFO ConsoleCurrentFont;
    d_setFont = d_origFont = GetCurrentConsoleFont( d_hConout, 0, &ConsoleCurrentFont ) ? ConsoleCurrentFont.nFont : 0xFFFF;
    d_num_fonts = d_GetNumberOfConsoleFonts();
-   AllocArrayNZ( d_pFonts, d_num_fonts, "CONSOLE_FONT_INFO" );
+   AllocArrayNZ( d_pFonts, d_num_fonts );
    GetFontInfo();
-   AllocArrayNZ( d_pFontSizes, d_num_fonts, "CONSOLE_FONT_SIZE.COORD" );
+   AllocArrayNZ( d_pFontSizes, d_num_fonts );
    for( auto idx(0); idx < d_num_fonts; ++idx ) {
       d_pFontSizes[idx] = Win32::GetConsoleFontSize(d_hConout, d_pFonts[idx].nFont);
       0 && DBG( "%cfont[%2d]: XxY = %3dx%3d"
@@ -1037,7 +1037,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
       dest_buf_size.Y  = ( maxReadConsoleBufsize / (src_size.col * sizeof(ScreenCell)) );
       CON_DBG && DBG( "dest_buf_size.Y = %u, %" PR_SIZET " bytes", dest_buf_size.Y, dest_buf_size.Y * src_size.col * sizeof(ScreenCell) );
       ScreenCell *dest_buf;
-      AllocArrayNZ( dest_buf, dest_buf_size.Y * src_size.col, "<console> copy buffer" );
+      AllocArrayNZ( dest_buf, dest_buf_size.Y * src_size.col );
       std::string chbuf;
       auto lcnt( dest_buf_size.Y );
       for( auto iy(0) ; iy < src_size.lin ; iy += lcnt ) {

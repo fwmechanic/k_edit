@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -380,7 +380,7 @@ GenericList::~GenericList() {
 
 void GenericList::Cat( int num ) {
    GenericListEl *rv;
-   AllocArrayNZ( rv );
+   AllocArrayNZ( rv, 1 );
    rv->dlink.clear();
    rv->d_typeof = GenericListEl::IS_INT;
    rv->value.num = num;

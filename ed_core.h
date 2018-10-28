@@ -238,7 +238,7 @@ public:
       if( d_buf_bytes < size ) {
           d_buf_bytes = ROUNDUP_TO_NEXT_POWER2( size, 512 );
           if( &ds_empty==d_buf ) { d_buf = nullptr; }
-          ReallocArray( d_buf, d_buf_bytes, __func__ );
+          ReallocArray( d_buf, d_buf_bytes );
          }
       return d_buf;
       }

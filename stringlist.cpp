@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -23,7 +23,7 @@
 StringListEl *NewStringListEl( stref src ) {
    const auto sbytes( src.length() + 1 );
    StringListEl *rv;
-   AllocBytesNZ( rv, sizeof( *rv ) + sbytes, __func__ );
+   AllocBytesNZ( rv, sizeof( *rv ) + sbytes );
    rv->dlink.clear();
    memcpy( rv->string, src.data(), sbytes-1 );
    rv->string[sbytes-1] = '\0';

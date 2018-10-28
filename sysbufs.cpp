@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -371,8 +371,7 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
    for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
       ++envEntries;
       }
-   PPCChar             lines  ;
-   AllocArrayNZ(       lines  , envEntries, __func__ );
+   PPCChar lines;  AllocArrayNZ( lines, envEntries );
    for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
       lines[ix] =  g_envp[ ix ];
       }
@@ -490,8 +489,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
          }
       }
    }
-   PPFBUF        fbufs  ;
-   AllocArrayNZ( fbufs  , count, __func__ );
+   PPFBUF fbufs;  AllocArrayNZ( fbufs, count );
    auto ix( 0u );
    {
 #if FBUF_TREE

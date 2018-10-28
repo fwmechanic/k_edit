@@ -38,6 +38,7 @@
 #if defined(_WIN32)
 // see https://sourceforge.net/p/mingw-w64/wiki2/gnu%20printf/
 // must define __USE_MINGW_ANSI_STDIO before ANY toolchain #includes
+// though we're theoretically NOT supposed to be doing this http://mingw.5.n7.nabble.com/snprintf-and-USE-MINGW-ANSI-STDIO-td35399.html
 #define __USE_MINGW_ANSI_STDIO 1
 #endif
 
@@ -47,6 +48,10 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#if defined(__USE_MINGW_ANSI_STDIO) && (__USE_MINGW_ANSI_STDIO != 0)
+   // for some reason, fprintf is excluded from the effect of __USE_MINGW_ANSI_STDIO in stdio.h ?
+#  define  fprintf  __mingw_fprintf
+#endif
 #include <cctype>
 #include <ctime>
 #include <climits>
