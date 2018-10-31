@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -29,8 +29,10 @@
 hdr="$ID K-prereq-install: "
 complete() {
    local rv="$?"
-   [ "$rv" -gt "0" ] && { echo "${hdr}FAILED"    ; exit 1 ; }
-                        { echo "${hdr}SUCCEEDED" ; exit 0 ; }
+   [ "$rv" -gt "0" ] && { echo "${hdr}FAILED" ; exit 1 ; }
+   echo "to build & install universal-ctags: run ./ubuntu_univ-ctags_build_install"
+   echo "${hdr}SUCCEEDED"
+   exit 0
    }
 
 . /etc/os-release
@@ -39,12 +41,12 @@ if [ "$ID" = "ubuntu" ] ; then
    echo "${hdr}STARTING"
    sudo apt-get install -yq   \
       build-essential         \
+      g++                     \
       libboost-dev            \
       libboost-filesystem-dev \
       libboost-system-dev     \
       libncurses5-dev         \
       libpcre3-dev            \
-      exuberant-ctags         \
       ncurses-term            \
       xclip
    complete

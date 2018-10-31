@@ -1,0 +1,40 @@
+#!/bin/bash
+
+#
+# Copyright 2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+#
+# This file is part of K.
+#
+# K is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# K is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along
+# with K.  If not, see <http:#www.gnu.org/licenses/>.
+#
+
+# run to unilaterally install universal-ctags from source code on ubuntu
+
+# based on https://askubuntu.com/a/836521 whose comments contain necessary updates reflected below
+
+repo="https://github.com/universal-ctags/ctags.git"
+pkgs=(  # prereqs from askubuntu ticket comments
+  "autoconf"
+  "automake"
+  "pkg-config"
+)
+join_by() { local IFS="$1"; shift; echo "$*"; }
+
+sudo apt-get install -yq $(join_by " " "${pkgs[@]}") &&
+git clone "$repo"  &&
+cd ctags           &&
+./autogen.sh       &&
+./configure        &&
+make               &&
+sudo make install

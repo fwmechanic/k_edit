@@ -1,6 +1,6 @@
 #!make
 #
-# Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -193,6 +193,7 @@ CWARN := -Wall -Werror -Wextra -W \
 -Wnarrowing \
 -Wno-enum-compare \
 -Wno-format-nonliteral \
+-Wno-logical-op \
 -Wno-missing-field-initializers \
 -Wno-parentheses \
 -Wno-sign-compare \
@@ -210,6 +211,7 @@ CWARN := -Wall -Werror -Wextra -W \
 
 CXXWARN := \
 -Wctor-dtor-privacy \
+-Wno-noexcept-type \
 -Woverloaded-virtual \
 -Wold-style-cast \
 -Wzero-as-null-pointer-constant \
