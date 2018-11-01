@@ -73,6 +73,14 @@ local dirsep_class     = _dir.dirsep_class()
 local function new_non_dirsep_class( st ) return dirsep_class:gsub("%[","[^"..st ) end
 local not_dirsep_class = new_non_dirsep_class("")
 
+local norm_path_case
+if dirsep_os=='/' then  -- kludgy but sufficient
+   norm_path_case = function( st ) return st end
+else
+   norm_path_case = function( st ) return st:lower() end
+   end
+local function leadingDirPattern( path ) return "^"..norm_path_case(StrExpandEnvVars( path ) .. dirsep_os):gsub( dirsep_class .. "+", dirsep_os ) end
+
 Min = math.min
 Max = math.max
 
@@ -167,11 +175,17 @@ do
       end
 
    local s_EdFxns = {}
+   local s_MenuEdFxns = {}
 
    function AddEdFxn( tbl )
       if not HasEdFxnSignature( tbl ) then return Msg( "AddEdFxn: malformed tbl param!!!" ) end
-
       local name, help = tbl.name, tbl.help or ""
+      local mhs, isMf = help:gsub( '^Menu[:]? ', '' )
+      if isMf > 0 then
+         mhs = mhs:gsub( '^of ', '' )
+         s_MenuEdFxns[1+#s_MenuEdFxns] = { mhs, name }
+         end
+
       printf( "AddEdFxn adding ArgType=%03X: '%s', '%s'", tbl.attr, name, help )
       if s_EdFxns[ name ] then  printf( "overriding EdFxn %s", name )  end
 
@@ -181,14 +195,22 @@ do
       if tbl.key then SetKeyOk( name, tbl.key ) end
       end
 
+   AddEdFxn{ name = "mm", help = "menu of menu commands", attr = NOARG
+      , NOARG = function( arg )
+         local _,fxnm = Menu.new( { title="Menu commands", choices=s_MenuEdFxns } ):PickOne()
+         if fxnm then  return fExecute( fxnm )  end
+         return false
+         end
+      }
+
    function AddEdStringFxn( name, fxn, key, help ) -- common idiom
       AddEdFxn{ name = name, attr = BOXSTR+TEXTARG, TEXTARG = function( arg ) return fxn( arg.text ) end, help=help or name, key=key }
       end
 
-   AddEdFxn{ name = "mom", help = "Menu of Lua-based commands", key="alt+m", attr = NOARG
+   AddEdFxn{ name = "mol", help = "Menu of Lua-based commands", key="alt+m", attr = NOARG
       , NOARG = function( arg )
          local cmdnms,len = {}, 0
-         printf( "mom arg.fMeta = %s", tostring(arg.fMeta) )
+         printf( "mol arg.fMeta = %s", tostring(arg.fMeta) )
          for nm,efx in pairs(s_EdFxns) do
             if (not arg.fMeta or (efx.help and efx.help:match "^[Mm]enu")) and _bin.bitand( efx.attr, NOARG ) ~= 0 then
                len = (len > #efx.name) and len or #efx.name
@@ -240,6 +262,38 @@ function Assign( tbl )
 
 function SwitchToFile( fname ) FBUF.new( fname ):PutFocusOn() end
 
+local function AllFbufs()   -- factory per PiL 7.1
+   local iter = 0
+   return function()
+      if iter == 0 then  iter = FBUF:first()
+      elseif iter  then  iter = iter:Next()
+          end
+      return iter
+      end
+   end
+
+local function AllWins()   -- factory per PiL 7.1
+   local state = 0
+   return function()
+      if state == nil then return  end
+      state = state + 1
+      local rv = Win.getn(state)
+      if rv == nil then  state = nil  end
+      return state,rv
+      end
+   end
+
+local function ViewsFbufsByHistOrder()   -- factory per PiL 7.1
+   local fb,vw = nil,0
+   return function()
+      if vw == 0 then  fb,vw = FBUF.CurView()
+      elseif vw  then  vw = vw:Next()
+                       fb = vw and vw:FBuf()
+          end
+      return vw,fb
+      end
+   end
+
 function PathOf   ( str )  return str:match( "^(.-)"..not_dirsep_class.."*$" )   end
 function Path_Name( str )  return str:match( "^(.-)("..not_dirsep_class.."*)$" ) end
 function NameExtOf( str )  return str:match( dirsep_class.."("..not_dirsep_class.."*)$" ) end
@@ -261,8 +315,8 @@ function PrettyPath( path )
    end
 
 do
-local cwd = GetCwd()
-print( "GetCwd='" ..  cwd .. " PathOf='" ..  PathOf( cwd ) .. "'  '".. PrettyPath( PathOf( cwd ) ).."'" )
+   local cwd = GetCwd()
+   print( "GetCwd='" ..  cwd .. " PathOf='" ..  PathOf( cwd ) .. "'  '".. PrettyPath( PathOf( cwd ) ).."'" )
 end
 
 -- Makes a deep copy of a table.  This version of DeepCopy
@@ -331,39 +385,35 @@ function FactorOutCommonLeadingPath( fnm_ary )
    end
 
 ----------------------------------------------------------------------------------------------------
+local curf_prop_rdr, SetCurFName
 do
-
    local curf_fmap_ = {
+   -- keys MUST be lowercase!
    -- curfile
       curfileext  = ExtOf     ,
       curfilename = Path_Name ,
       curfilepath = PathOf    ,
+      psscriptroot= PathOf    ,  -- for Windows' $PSScriptRoot
       }
-   local curf_map = { curfile = "" }
-   local function curf_fmappy( tb, ky )
-      if type(ky) ~= "string" then -- print( "curf_fmappy w/"..type(ky) )
-         return
-         end
-      ky = ky:lower()
-      -- print( ky.." ?>" )
-      local nv = curf_fmap_[ky] and curf_fmap_[ky]( curf_map.curfile )
-      tb[ky] = nv
-      -- print( "curf_fmappy ".. ky.." -> ".. (nv or "(nil)") )
-      return nv
-      end
-   local fnmt = { __index = curf_fmappy }
-
-   function SetCurFName( curfn )
-      if curf_map.curfile and curf_map.curfile ~= curfn then
-         -- print( "SetCurFName ".. curfn )
-         curf_map = { curfile = curfn }
-         setmetatable( curf_map, fnmt )
+   local curfnm, curfnm_norm = "", ""
+   curf_prop_rdr = function( nm )
+      if type(nm) == "string" then
+         nm = nm:lower()
+         return curf_fmap_[nm] and curf_fmap_[nm]( curfnm )
          end
       end
+   local cf_mt = { __index = curf_prop_rdr }
+   SetCurFName = function ( new_curfnm )  -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
+      local new_curfnm_norm = norm_path_case( new_curfnm )
+      if curfnm_norm ~= new_curfnm_norm then  -- print( "SetCurFName ".. new_curfnm )
+         curfnm, curfnm_norm = new_curfnm, new_curfnm_norm
+         end
+      end
+end
 
-   -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
-   local function envReplacer( espec )
-      local rv = curf_map[espec] or GetenvOrNil( espec )
+do
+   local function envReplacer( espec )  -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
+      local rv = curf_prop_rdr( espec ) or GetenvOrNil( espec )
       print( "   envReplacer: '"..espec.."' -> '" .. (rv or "(nil)") .. "'" )
       return rv
       end
@@ -386,18 +436,18 @@ do
    local function sh_expander(st, nest)  -- expand ${VARNM}, ${VARNM:-dfltval} and ${VARNM-dfltval}
       nest = nest or " "                 --                  ${VARNM:+altval}  and ${VARNM+altval}
       return st:gsub( "%$%b{}", function( varx )
-         DBG( fmt( "%s+%s'", nest, varx ) )
-         local body = varx:sub(3,#varx-1)                                         DBG( fmt( "%sbody=%s'", nest, body or "nil" ) )
+         -- DBG( fmt( "%s+%s'", nest, varx ) )
+         local body = varx:sub(3,#varx-1)                                         -- DBG( fmt( "%sbody=%s'", nest, body or "nil" ) )
          -- 2 near-identical matches follow because pattern varies in TWO
          -- places: envnm and nullEqUnset
-         local envnm,nullEqUnset,op,dflt = body:match("([^$:-+]+)(:)([-+])(.*)")  DBG( fmt( "%s1: op=%s e=%s d=%s'", nest, op or "nil", envnm or "nil", dflt or "nil" ) )
+         local envnm,nullEqUnset,op,dflt = body:match("([^$:-+]+)(:)([-+])(.*)")  -- DBG( fmt( "%s1: op=%s e=%s d=%s'", nest, op or "nil", envnm or "nil", dflt or "nil" ) )
          if not dflt then
-            envnm,op,dflt = body:match("([^$-+]+)([-+])(.*)")                     DBG( fmt( "%s2: op=%s e=%s d=%s'", nest, op or "nil", envnm or "nil", dflt or "nil" ) )
+            envnm,op,dflt = body:match("([^$-+]+)([-+])(.*)")                     -- DBG( fmt( "%s2: op=%s e=%s d=%s'", nest, op or "nil", envnm or "nil", dflt or "nil" ) )
             if not dflt then
                envnm = body
                end
             end
-         local rv = GetenvOrNil( envnm )
+         local rv = envReplacer( envnm )
          if op then
             --[[ truthiness of empty/null rv (${envnm}) value depends on whether ':' prefix (nullEqUnset) was provided:
                "...use of the <colon> in the format shall result in a test for a
@@ -416,14 +466,14 @@ do
          rv = rv or ""
          -- kludge to implement ${strftime-%Y.%m.%dT%H:%M:%S}
          -- local strftime = envnm=="strftime" and dflt and assert( os.date( dflt ) )
-         DBG( fmt( "%s-%s -> %s'", nest, varx, rv ) )
+         -- DBG( fmt( "%s-%s -> %s'", nest, varx, rv ) )
          return rv
          end
          )
       end
    local envExpanders = { -- note that '%', not '\', is the Lua-pattern metachar escaper!
       -- prefix/format substitutions:
-      function(str) return str:gsub( "^~/", "${HOME:-${USERPROFILE}}" ) end,
+      function(str) return str:gsub( "^~/", "${HOME:-${USERPROFILE}}"..dirsep_os ) end,
       function(str) -- on MS OS, xlat "/p/dir/to/something" to "p:\dir\to\something"
          if dirsep_os=="\\" then
             local drvletter = str:match( "^/([a-zA-Z])/" )
@@ -433,6 +483,16 @@ do
             end
          return str
          end,
+      -- in the cmd.exe (batch) language, %~dp0 expands to "path of current [script] file[name] (%0 e.g. argv[0])"
+      -- in the Powershell language, $PSScriptRoot or ${PSScriptRoot} expands to "path of current [script] file[name] (%0 e.g. argv[0])"
+      -- %~dp0fbuf_edit.cpp
+      -- $PSScriptRoot\fbuf.cpp
+      -- ${PSScriptRoot}ed_mem.h
+      -- https://stackoverflow.com/a/5034119
+      function(str) return str:gsub( "%%~dp0" , "${curfilepath}" ) end,  -- must appear BEFORE sh_expander in envExpanders[]!
+      function(str) return str:gsub( "%%~nx0" , "%~n0%~x0"       ) end,  -- must appear BEFORE defs of %~n0 & %~x0
+      function(str) return str:gsub( "%%~n0"  , "${curfilename}" ) end,  -- must appear BEFORE sh_expander in envExpanders[]!
+      function(str) return str:gsub( "%%~x0"  , "${curfileext}"  ) end,  -- must appear BEFORE sh_expander in envExpanders[]!
       -- general substitutions:
       sh_expander,                                 -- arg "${HOME:-${USERPROFILE}}" setfile  -- sh (w/  {})
       envExpanderGen( "%$"   ..envNamePat       ), -- arg "$USERPROFILE" setfile    -- sh (w/o {})
@@ -441,31 +501,14 @@ do
       envExpanderGen( "%%"   ..envNamePat       ), -- arg "%USERPROFILE" setfile    -- DOS-COMMAND/Windows-CMD
       }
 
-   -- print( "dirsep_preferred=" .. (dirsep_os or "nil") )
-   local dosDirOfThisFilePat = dirsep_os == "\\" and "^%%~dp0" or nil
-   -- print( "dosDirOfThisFilePat=" .. (dosDirOfThisFilePat or "nil") )
-   envExpanders[1+#envExpanders] = dosDirOfThisFilePat and
-      function( str ) -- in the elegant cmd.exe (batch) language, %~dp0 expands to "path of current batch file[name] (%0 e.g. argv[0])"
-         if str:match( dosDirOfThisFilePat ) then
-            local curfn = GetCurrentFilename()  -- ASSUMPTION: current file is source of str!
-            if curfn and #curfn > 0 then
-               local curfpath = PathOf( curfn )
-               if curfpath and #curfpath > 0 and IsDir(curfpath) then
-                  str = str:gsub( dosDirOfThisFilePat, curfpath )
-                  end
-               end
-            end
-         return str
-         end
-
    function StrExpandEnvVars( str ) -- <<<********* this is a CRITICAL function called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
       -- print( "StrExpandEnvVars+("..str..")" )
-      DBG( "StrExpandEnvVars/SEEV:" )
+      -- DBG( "StrExpandEnvVars/SEEV:" )
       for _, fxn in ipairs(envExpanders) do
          local news = fxn( str )
          if str ~= news then
-            DBG( " SEEV+ ".. str )
-            DBG( " SEEV- ".. news )
+            -- DBG( " SEEV+ ".. str )
+            -- DBG( " SEEV- ".. news )
             end
          str = news
          end
@@ -559,29 +602,6 @@ function FBUF.new_empty_may_create( fnm )
 --          end
 --       end
 --    end
-
-
-function AllFbufs()   -- generator
-   local iter = 0
-   return function()
-      if iter == 0 then  iter = FBUF:first()
-      elseif iter  then  iter = iter:Next()
-      --  if iter  then  print( iter:Name() )
-          end
-      return iter
-      end
-   end
-
-function AllWins()   -- generator
-   local state = 0
-   return function()
-      if state == nil then return  end
-      state = state + 1
-      local rv = Win.getn(state)
-      if rv == nil then  state = nil  end
-      return state,rv
-      end
-   end
 
 --[[
 
@@ -1075,7 +1095,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
 
    -- edfxn readtagsfile is CALLED FROM C++ core!
    AddEdFxn{ name = "readtagsfile", help = "(re-)read tags data file", attr = NOARG
-      , NOARG   = function(arg)  read_tagged_files_from_tags_file() end
+      , NOARG   = function(arg) return read_tagged_files_from_tags_file() end
       }
 
    AddEdFxn{ name = "gototag", help = "Lua tags function", attr = NOARG+NOARGWUC+TEXTARG+BOXSTR, key = "alt+u"
@@ -1250,12 +1270,57 @@ do --- counting files switched to, fxn "mvf" to choose among them
       }
 end
 
+do
+   local function PwdHistFiles( path )
+      local destBufNm = path .. '<hist>'
+      path = leadingDirPattern( path )
+      local dest
+      for _,fb in ViewsFbufsByHistOrder() do
+         local fnm = fb:Name()
+         local normfnm = norm_path_case( fnm )
+         if normfnm:match( path ) then
+            dest = dest or FBUF.new( destBufNm )
+            dest:PutLastLine( fnm )
+            end
+         end
+      if dest then
+         dest:PutFocusOn()
+         return true
+         end
+      Msgf( "no files found matching '%s'", path )
+      return false
+      end
+
+   AddEdFxn{ name = "PwdHistFiles", attr = NOARG
+      , NOARG = function(arg) return PwdHistFiles( GetCwd() ) end
+      }
+end
+
+do
+   local function SwitchToMostRecentlyViewedFileInTree( path )
+      path = leadingDirPattern( path )
+      for _,fb in ViewsFbufsByHistOrder() do
+         if norm_path_case( fb:Name() ):match( path ) then
+            fb:PutFocusOn()
+            return true
+            end
+         end
+      Msgf( "no files found matching '%s'", path )
+      return false
+      end
+
+   AddEdFxn{ name = "SwitchToMostRecentlyViewedFileInTree", help = "takes path TEXTARG", attr = NOARG+TEXTARG
+      , NOARG   = function(arg) return SwitchToMostRecentlyViewedFileInTree( GetCwd() ) end
+      , TEXTARG = function(arg) return SwitchToMostRecentlyViewedFileInTree( arg.text ) end
+      }
+end
 
 
 local function fn_execute_TEXTARG( cmd ) return function(str) assert(#str>0,cmd.." invoked w/nul param") return fExecute( "arg \""..str.."\" "..cmd )  end  end
 
 setfile = fn_execute_TEXTARG( "setfile" )
 shex    = fn_execute_TEXTARG( "shex" )
+function runEmbShell( cmd ) fExecute( 'arg "EMBSHELL> '..cmd..'" runchild' ) end
 
 --------------------------------------------------------------------------------------
 
@@ -1294,10 +1359,9 @@ AddEdFxn{ name = "bax", help = "open wildcard buffer listing .kbackup files ", a
    , TEXTARG = function( arg ) return OpenBackupWcFBuf( arg.text )           end
    }
 
---[[  BUGBUG convert the following C++ code into 'diff' function below
-#ifdef fn_dif
+--[[  TODO convert the following C++ code into 'diff' function below
 
-BOXSTR + NOARG + TEXTARG + NULLARG + NULLEOW
+// BOXSTR + NOARG + TEXTARG + NULLARG + NULLEOW
 
 // write tools to work with contents of '.kbackup' directories.
 //    hook into GUI diff tool:
@@ -1343,13 +1407,9 @@ bool ARG::dif()
       }
    }
 
-#endif
-
 -- ]]
 
 -- arg ".kbackup\k.lua.005 k.lua" difc
-
-function runEmbShell( cmd ) fExecute( 'arg "EMBSHELL> '..cmd..'" runchild' ) end
 
 do
    function a_filenames( text )
@@ -1569,12 +1629,11 @@ local function DirMenu( title, choices, pseudo_dest )
       end
    end
 
-
 AddEdFxn{ name = "dp", help = "Menu: Dirs of Parent", attr = NOARG, key = ""
    , NOARG = function ( arg )
       local choices = {}
       for dir in CwdToRoot() do choices[1+#choices] = PrettyPath( dir ) end
-      local choice = DirMenu( "Dirs of Parent", choices, "<"..GetCwd().."-parent-dirs>" )
+      local choice = DirMenu( "Dirs of Parent", choices, GetCwd().."<parent-dirs>" )
       if choice then  fChangeFile( choice )  end
       end
    }
@@ -1585,7 +1644,7 @@ AddEdFxn{ name = "dc", help = "Menu: Dirs of Child", attr = NOARG, key = ""
       local dirs = GetChildDirs()
       table.sort( dirs )
       local choices = tu.a_grep( function(s) return not s:find( dirsep_os..".svn" ) and not s:find( dirsep_os.."k_backup" ) end, dirs )
-      local choice = DirMenu( "Child Dirs", choices, "<"..GetCwd().."child-dirs>" )
+      local choice = DirMenu( "Child Dirs", choices, GetCwd().."<child-dirs>" )
       if choice then fChangeFile( choice )  end
       end
    }
@@ -1734,10 +1793,8 @@ do
       }
 end
 
---[[
-  show a pseudofile containing a list of all FBUFs which are greps of a given file, or perhaps better, show, for each FBUF
-  having any greps extant, list the subject FBUF-name and each of the associated grep bufs
---]]
+   -- show a pseudofile containing a list of all FBUFs which are greps of a given file, or perhaps better, show, for each FBUF
+   -- having any greps extant, list the subject FBUF-name and each of the associated grep bufs
    AddEdFxn{ name = "glist", help = "list grep buffers", attr = NOARG
       , NOARG = function ( arg )
                   local gl = {}
@@ -1776,8 +1833,6 @@ do
          end
       }
 end
-
-
 
 --[[
 /////////////////////////////////////////////////////////////////////////////////
@@ -1830,13 +1885,14 @@ function boxContent( arg )
    end
 
 function sum_cols_dope( ary )
-   local fHexCh, fLeading0s = false, false
+   local fHexCh, fLeading0s, fw = false, false, 0
    for _,st in ipairs(ary) do
       if st:match( "^%s*0%d"  ) then fLeading0s = true end
       if st:match( "[a-fA-F]" ) then fHexCh     = true end
+      local fp = st:match( "%.(%d+)" )
+      if fp and fw < #fp  then fw = #fp end
       end
-
-   return (fHexCh or fLeading0s) and 16 or 10, fLeading0s
+   return (fHexCh or fLeading0s) and 16 or 10, fLeading0s, fw
    end
 
 function sum_cols( ary, base )
@@ -1849,24 +1905,19 @@ function sum_cols( ary, base )
          sum = sum + num
          end
       end
-
    return sum, numbersAdded
    end
 
-function fmtNum( num, base, width, leading0s )
-   base = base or 10
-   width = width or 1
-   leading0s = leading0s or false
-   if num % 1 == 0 then
-      leading0s = ifx( leading0s, "0", "" )
-      local pfx = "%"..leading0s..width
-      if     base == 16 then return fmt( pfx.."X", num )
-      elseif base == 10 then return fmt( pfx.."d", num )
-      else                   error( "cannot fmtNum to "..base )
-         end
+function fmtNum( num, base, width, fw, fLeading0s )
+   if fw > 0 then  -- any floating-point input?
+      return fmt( "%"..width.."."..fw.."f", num )
       end
-   local fmts = "%"..width.. ".3f"
-   return fmt( fmts, num )
+   local pfx = "%"..(fLeading0s and "0" or "")..(width or 1)
+   base = base or 10
+   if     base == 10 then return fmt( pfx.."d", num )
+   elseif base == 16 then return fmt( pfx.."X", num )
+   else                   error( "cannot fmtNum to base="..base )
+      end
    end
 
 --     0000cc
@@ -1877,12 +1928,13 @@ function fmtNum( num, base, width, leading0s )
 AddEdFxn{ name = "sumcol", attr = MODIFIES+BOXARG, key = "alt+num+", help = ""
    , BOXARG  = function( arg )
       local bc = boxContent( arg )
-      local base, leading0s = sum_cols_dope( bc )
+      local base, leading0s, fw = sum_cols_dope( bc )
       Msgf( "sumcol base = %d", base )
       local sum, cnt = sum_cols( bc, base )
       if cnt > 0 then
-         local st = fmtNum( sum, base, arg.maxX - arg.minX + 1, leading0s )
-         local xtraWide = #st - (arg.maxX - arg.minX + 1)
+         local width = arg.maxX - arg.minX + 1
+         local st = fmtNum( sum, base, width, fw, leading0s )
+         local xtraWide = #st - width
          local pad = string.rep( " ", arg.minX-1-xtraWide )
          arg.fbuf:InsLine( arg.maxY+1, pad .. st )
          end
@@ -3056,7 +3108,7 @@ end
 
 
    -- 20150315 help debugging mfspec, etc. macros and others
-   AddEdFxn{ name = "cur", help = "inert menu displaying dynamic macro definitions", attr = NOARG
+   AddEdFxn{ name = "cur", help = "Menu of dynamic macro definitions", attr = NOARG
       , NOARG   = function( arg )
                   local _,fx = Menu.new( { title="dynamic macro definitions", choices=GetDynMacros() } ):PickOne()
                   return false

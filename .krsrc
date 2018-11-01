@@ -1,5 +1,16 @@
 #!krsrc dummy tag
 
+# macro branching:
+#   +----------+-----------------------------------------------+
+#   | Operator | Action/Effect                                 |
+#   +----------+-----------------------------------------------+
+#   | +>label  | Branch to label if last function yields TRUE  |
+#   | ->label  | Branch to label if last function yields FALSE |
+#   | =>label  | Branch unconditionally to label               |
+#   | :>label  | Define label                                  |
+#   +----------+-----------------------------------------------+
+#   if label is not provided, the current macro is exited
+
 [@startup] #*****************************       === GLOBAL LOAD ===   *****************************
 
    # === SWITCHES ===
@@ -99,6 +110,8 @@
 
    con:=cancel arg "<console>" setfile
    wr:=cancel arg "<most_recently_written_files>" setfile
+
+   here:=PwdHistFiles
 
    # an autostart macro that changes fgcolor colors overrides the extension-specific
    # color setings for the first file in a way that looks like a BUG
@@ -433,11 +446,11 @@
 
    # close all windows except the one the cursor is currently in:
    1window:= :>nxtwin window -> meta window =>nxtwin
-   1window:alt+`
+   1window:alt+1
+   1w:=1window  # alias
 
    newhelp:=cancel arg "<CMD-SWI-Keys>" setfile
    newhelp:alt+h
-
 
         # cur_y4md " kgoodwin "
    dttag:=cur_y4md_hms
@@ -451,6 +464,10 @@
 
    clrbuf:=Begfile Arg Endfile meta delete ldelete Begfile setfile
    clraccbuf:=accbuf clrbuf
+
+   pybp:="import pdb; pdb.set_trace()"  # see https://github.com/spiside/pdb-tutorial#the-5-pdb-commands-that-will-leave-you-speechless
+   pdbhelp:=cancel arg "https://github.com/spiside/pdb-tutorial#the-5-pdb-commands-that-will-leave-you-speechless" setfile
+   python_insert_breakpoint:= pybp pdbhelp
 
    index:=Arg "<maintain-deleted>" setfile Arg arg "!ix/d|sort +1" paste
 
@@ -514,12 +531,8 @@
 
    # quik:ctrl+'    # experimental version of an old ws.dll extension
 
-
-   work_notes:=arg "c:/ws/notes.txt" setfile
-   work_notes:Alt+1
-
-   foodlog:=cancel Arg myscripts "foodlog.kdb" SetFile tslog
-   foodlog:Alt+2
+   mrvnote:=cancel Arg "${K_NOTES_DIR:-${HOME:-${USERPROFILE}}\klg\pers}" SwitchToMostRecentlyViewedFileInTree
+   mrvnote:Alt+2
 
    #같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같같
    #�                      === QUICK FILE ACCESS ===                       �
@@ -604,6 +617,7 @@
    ftab:ctrl+tab
    cd2file:=cancel arg meta curfilepath setfile  # set cwd to dir of current file
    cd:=cd2file setfile readtagsfile
+   tf:=cancel readtagsfile -> arg "<tagged-files>" setfile
 
    eth:= cancel arg "http://www.speedtest.net/" setfile \
          cancel Arg myscripts "etheric.kdb" setfile endfile emacsnewl begline cur_y4md "_" cur_hms " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Ubiquiti WLAN)"
@@ -891,6 +905,7 @@
    ftype:clang  # odd as it seems, this works pretty well; even for """triple double quoted strings"""!
 
 [ftype:pwrshell]
+   wordchars:_-
 
 [.ps1 .psm1 .psd1]  # https://stackoverflow.com/a/12108746
    ftype:pwrshell
@@ -946,7 +961,7 @@
 
 [.kdb]
    rmargin:80
-   mfspec_:= curfilepath "*" curfileext
+   mfspec_:= "%~dp0*%~x0"
 
 [.awk .gawk .twk .twl .kxt .kxl]
    ftype:awk

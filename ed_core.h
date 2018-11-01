@@ -872,16 +872,16 @@ public:
    bool           FnmIsDiskWritable() const { return d_fFnmDiskWritable; }
    PCChar         Name() const { return d_filename.c_str(); }
    const Path::str_t &Namestr() const { return d_filename; }
-   stref              Namesr() const { return stref( d_filename.data(), d_filename.length() ); }
+   stref              Namesr() const { return d_filename; }
    Path::str_t    UserName() const;
    int            UserNameLen() const {
                      const auto len( d_filename.length() );
                      return Path::DelimChar( Name() ) ? len + 2 : len;
                      }
    bool           NameMatch( stref name ) const { return Path::eq( d_filename, name ); }
-   STATIC_FXN bool FnmIsPseudo( PCChar name )   { return  name[0] == '<'; }
-   bool            FnmIsPseudo()          const { return  FnmIsPseudo( Name() ); }
-   stref           GetRsrcExt()           const { return  d_RsrcExt; }
+   STATIC_FXN bool FnmIsPseudo( stref nm )      { return '<'==nm[0] || nm[nm.length()-1]=='>'; }
+   bool            FnmIsPseudo()          const { return FnmIsPseudo( Namesr() ); }
+   stref           GetRsrcExt()           const { return d_RsrcExt; }
    void            SetRsrcExt();
    //***********  membership in list of all FBUFs
  #if              FBUF_TREE

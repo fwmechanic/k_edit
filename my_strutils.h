@@ -401,6 +401,14 @@ STIL void trim( strlval &inout ) { // remove leading and trailing whitespace
    }
 
 template<typename strlval>
+STIL void unquote( strlval &inout ) { // remove any outer quotes, assuming input has been trimmed
+   if( (inout[0]=='\'' || inout[0]=='"') && inout[0]==inout[inout.length()-1] ) {
+      inout.remove_suffix( 1 );
+      inout.remove_prefix( 1 );
+      }
+   }
+
+template<typename strlval>
 void rmv_trail_blanks( strlval &inout ) {
    while( !inout.empty() && isblank( inout.back() ) ) {
       inout.pop_back();

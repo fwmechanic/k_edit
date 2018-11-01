@@ -1106,22 +1106,10 @@ std::string DupTextMacroValue( PCChar macroName ) {
    if( !pCmd || !pCmd->IsRealMacro() ) {
       return std::string();
       }
-   decltype(macroName) pastTokEnd;
-   auto tokStrt( StrPastAnyBlanks( pCmd->MacroText() ) );            0 && DBG( "%s: '%s'", __func__, tokStrt );
-   switch( *tokStrt ) {
-      case chNUL:   pastTokEnd = nullptr;                                  break;
-      case chQuot2: pastTokEnd = findDelim( ++tokStrt, "\"", macroName );  break;
-      case chQuot1: pastTokEnd = findDelim( ++tokStrt, "'" , macroName );  break;
-      default:      pastTokEnd = StrToNextBlankOrEos( tokStrt );           break;
-      }
-   if( nullptr == pastTokEnd ) { // empty value or bad delim?
-      return std::string();
-      }
-   const auto txtLen( pastTokEnd - tokStrt );
-   if( 0 == txtLen ) { // empty value?
-      return std::string();
-      }
-   return std::string( tokStrt, txtLen );
+   auto val( pCmd->MacroStref() );
+   trim( val );
+   unquote( val );
+   return sr2st( val );
    }
 
 STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
@@ -1154,7 +1142,9 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
    auto txtMacro2CFG = [&] ( PCChar srcNm ) -> PathStrGenerator * {
       const auto macroVal( DupTextMacroValue( srcNm ) );
       if( !IsStringBlank( macroVal ) ) {                                          DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
-         return new CfxFilenameGenerator( std::string(srcNm) + " (macro) = " + macroVal, macroVal, ONLY_FILES );
+         Path::str_t macroPVal( macroVal );
+         LuaCtxt_Edit::ExpandEnvVarsOk( macroPVal );                              DB && DBG( "ExpandEnvVarsOk( %" PR_BSR " )", BSR(macroPVal) );
+         return new CfxFilenameGenerator( std::string(srcNm) + " (macro) = " + macroPVal, macroPVal, ONLY_FILES );
          }
       return nullptr;
       };

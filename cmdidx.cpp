@@ -596,6 +596,7 @@ void AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::string &t
          }
       }
    if( !fFoundAssignment ) {
+      keyNm.clear();
       accum.clear();
       accum.append( cmdNm.k_str() );
       accum.append( PadRight( keyNm, g_MaxKeyNameLen ) );
