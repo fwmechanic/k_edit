@@ -615,6 +615,22 @@ STATIC_VAR std::string g_SavedSearchString_Buf ;
 GLOBAL_VAR std::string g_SnR_stSearch          ;
 GLOBAL_VAR std::string g_SnR_stReplacement     ;
 
+GTS::eRV GTS::addText( stref sr ) {
+   if( fInitialStringSelected_ ) {
+      stb_.assign( sr2st( sr ) );
+      xCursor_ = stb_.length();
+      }
+   else {
+      stb_.insert( xCursor_, sr2st( sr ) );
+      xCursor_ += sr.length();
+      }
+   return KEEP_GOING;
+   }
+
+GTS::eRV GTS::qreplace() {
+   return addText( g_SnR_stSearch );
+   }
+
 class CharWalkerReplace {
    std::string             d_sbuf; // replace-action getLine... tmp
    std::string             d_stmp; // replace-action PutLine tmp
@@ -1294,7 +1310,7 @@ STATIC_FXN bool GenericReplace_CollectInputs( bool fRegex, bool fInteractive, bo
 
 STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
    const auto startingTopFbuf( g_CurFBuf() );
-   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator() );
+   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator( true ) );
    if( !pGen ) {
       ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
       }

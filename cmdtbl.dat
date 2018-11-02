@@ -147,7 +147,7 @@ s newline      newline        CURSORFUNC
   prompt       prompt                    BOXSTR + TEXTARG + NULLEOW + KEEPMETA
   psearch      psearch                   BOXSTR + NOARG + TEXTARG + NULLEOW , Forward search
 s pword        pword          CURSORFUNC , Moves cursor to first char of next word.  META: Moves cursor to first char following next word
-  qreplace     qreplace       MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Interactive single-file (or arg-region) replace
+s qreplace     qreplace       MODIFIES + BOXARG + MARKARG + NUMARG + STREAMARG + NOARG + LINEARG + NULLARG , Interactive single-file (or arg-region) replace
   quik         quik           CURSORFUNC
 # rawline      rawline                   BOXARG, for debug
   record       record                    NOARG + NULLARG + TEXTARG

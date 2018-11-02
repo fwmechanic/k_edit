@@ -229,8 +229,8 @@ K implements a large number of editor-functions, all of which the user can invok
  ** `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
  ** In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression.
  * text-replace functions (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
- ** noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer.
- ** noarg `qreplace` (`ctrl+\`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer.
+ ** noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer (or throughout a BOX/LINE/STREAMARG selection).
+ ** noarg `qreplace` (`ctrl+5`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer (or throughout a BOX/LINE/STREAMARG selection).
  ** if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
  ** `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple entire files.
  ** Regular-expression (PCRE) replace is supported: in regex mode (when prefixed with `arg arg`) the search string is treated as a regular expression, and replace functions support the replacement string ; insertion of regex captures in the replacement string via `\n` where `n` is the capture number.

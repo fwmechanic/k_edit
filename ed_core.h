@@ -528,6 +528,8 @@ struct GTS {
    const int      flags_       ;
    const bool     fInitialStringSelected_;
 
+   eRV addText( stref sr );
+
    // methods start here!!!
    typedef eRV (GTS::*pfxGTS)(); // declare type of pointer to class method
    #define CMDTBL_H_GTS_METHODS
