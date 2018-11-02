@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -95,7 +95,7 @@ void ExtendSelectionHilite( const Point &pt ) { PCV;
                }
             }
          }
-   // if( !Interpreter::Interpreting() )
+   // if( !Interpreter::Interpreting() ) // comment out so selword macro leaves updated dialog line
          {
          FixedCharArray<100> buf;
          if( fLinesel ) {
