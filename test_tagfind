@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -52,9 +52,10 @@ for tag in "${test_tags[@]}"; do
 done
 
 chk_tagged_files() {
-   local ref="$(grep -P '\t1;"\tfile\s*$' tags | cut -f2 | sort -u | wc -l)"
-   local tst="$(./"$tgtexe" "<tagged-files>" | wc -l)"
-   ((tst==ref)) || die "FAIL: for T=$1, expected $ans, got $lc"
+   local file_tag_field=$'\t'"kind:file"
+   local ref="$(grep -P "$file_tag_field"'(\t|$)' tags | cut -f2 | sort -u | wc -l)"
+   local tst="$(./"$tgtexe" "$file_tag_field" | wc -l)"
+   ((tst==ref)) || die "FAIL: for T=$1, expected $ref, got $lc"
    }
 
 chk_tagged_files

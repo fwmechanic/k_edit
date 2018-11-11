@@ -1,5 +1,5 @@
 //
-// Copyright 2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2018-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -144,16 +144,27 @@ int FindMatchingTagsLines(
          }
       stref line;  // set by tfrdr.getline()
       TxtFileLineReader tfrdr( ifh, line );
-      if( src.empty() || src == "<tagged-files>" ) { // linear scan to list all files of file tags
+      if( src.starts_with( '\t' ) ) { // linear scan returning all files of file tags
+         // If src starts with '\t' (src is therefore an invalid tag), we will
+         // return tag[1] (tag.fnm) of all tag records matching this field.  NB:
+         // src must NOT contain a trailing '\t' character; this is supplied
+         // conditionally below since the field specified by src might occur at
+         // the end of the tag record (line) where it would not be followed by a
+         // trailing '\t'.
+         //
+         // If src=="kind:file", names of all files having kind:file tags will
+         // be returned.
+
 #ifdef UNITTEST
          auto mnum( 0u );
 #endif
          while( tfrdr.getline() ) {  // NB: to run on brain-dead CMD.EXE `tagfind_c ^<tagged-files^>`
-            if( line.ends_with( "\t1;\"\tfile" ) ) {
-               const auto it1( line.find( '\t' ) );
+            auto oField( line.find( src ) );
+            if( eosr != oField && ( oField += src.length(), oField+1==line.length() || '\t'==line[oField] ) ) {
+               const auto it1( line.find( '\t' ) ); // end of tag
                if( it1 != eosr ) {
                   line.remove_prefix( it1+1 );
-                  const auto it2( line.find( '\t' ) );
+                  const auto it2( line.find( '\t' ) ); // end of filename
                   if( it2 != eosr ) {
                      line.remove_suffix( line.length() - it2 );
                      rv_append_string( line );
@@ -172,6 +183,10 @@ int FindMatchingTagsLines(
          DB && ::DBG( "%s: -----> '%" PR_BSR "'", __func__, BSR(src) );
          fseek( ifh, 0, SEEK_END ); auto oMax( ftell( ifh ) );
          fseek( ifh, 0, SEEK_SET ); auto oMin( ftell( ifh ) );
+         if( oMin < 0 || oMax < 0 ) {  // CID 184286 fix
+            ::DBG( "ftell error!" );
+            return 1;
+            }
          const auto maxProbes( static_cast<int>( std::log2( static_cast<double>(oMax) ) ) );
 
          constexpr decltype(oMin) START_OF_FILE( 0 );
@@ -189,7 +204,10 @@ int FindMatchingTagsLines(
             return cmp( src, cand );
             };
          auto seekGetLnCmp = [&tfrdr,&getLnCmp]( decltype(oMin) skTgt ) {
-            fseek( tfrdr.fh(), skTgt, SEEK_SET );
+            if( fseek( tfrdr.fh(), skTgt, SEEK_SET ) != 0 ) {  // CID 184290 "fix"
+               ::DBG( "fseek() failed!" );
+               return -1;
+               }
             if( skTgt != START_OF_FILE ) { // unless seek was to START_OF_FILE...
                tfrdr.getline();  // ...post-seek getline has to be assumed to yield ...
                }                 // ...a partial line which must be ignored/discarded

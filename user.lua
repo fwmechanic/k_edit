@@ -112,10 +112,6 @@ local ebyTail1           = "&query="
 local ebyTail2           = "&ebaytag1code=0"
 
 local googl = "https://www.google.com/"
-           -- "https://encrypted.google.com/"
-           -- "https://encrypted.google.com/"
-           -- "http://www.google.com/"
-
 local function goSiteSrch( site )
    return goUrl( googl.."custom?q=".. UrlSrchTag .."&sa=%C2%BB&domains="..site.."&sitesearch="..site )
  --return goUrl( googl.."webhp?hl=en#?q=site:"..site.."+".. UrlSrchTag )
@@ -125,6 +121,7 @@ local function goSiteSrch( site )
 local URL_StartPage      = goUrl( "https://startpage.com/do/search?q=".. UrlSrchTag )
 -- local URL_Google         = goUrl( googl.."search?hl=en&as_q=" .. UrlSrchTag )
 local URL_Google         = goUrl( googl.."search?q=" .. UrlSrchTag )
+local URL_CMake_docs     = goUrl( "https://cmake.org/cmake/help/v3.13/search.html?q=" .. UrlSrchTag )
 local URL_Epinions       = goSiteSrch( "www.epinions.com" )
 local URL_Bing           = goUrl( "http://www.bing.com/search?q=" .. UrlSrchTag )
 local URL_DuckDuckGo     = goUrl( "https://duckduckgo.com/" .. UrlSrchTag )
@@ -143,8 +140,6 @@ local URL_RvsDictionary  = goUrl( "http://onelook.com/?w=*&?loc=revfp&clue=" .. 
 local URL_GoogleMaps     = goUrl( "http://maps.google.com/maps?f=q&hl=en&q=" .. UrlSrchTag .. "&btnG=Search" )
 local URL_GoogleNews     = goUrl( "http://news.google.com/news?hl=en&q=" .. UrlSrchTag .. "&btnG=Search+News" )
 local URL_GoogleCode     = goUrl( googl.."codesearch?q=" .. UrlSrchTag .. "&btnG=Search+Code" )
-local URL_FoodXref       = goUrl( "http://search.freefind.com/find.html?id=81296093&pageid=r&mode=ALL&n=0&query=" .. UrlSrchTag )
-local URL_PriceGr        = goUrl( "http://www.pricegrabber.com/search.php?form_keyword=" .. UrlSrchTag )
 
 AddEdStringFxn( "google"         , URL_Google        )
 AddEdStringFxn( "epinions"       , URL_Epinions      )
@@ -162,12 +157,7 @@ AddEdStringFxn( "rvsdictionary"  , URL_RvsDictionary )
 AddEdStringFxn( "googlemaps"     , URL_GoogleMaps    )
 AddEdStringFxn( "googlenews"     , URL_GoogleNews    )
 AddEdStringFxn( "googlecode"     , URL_GoogleCode    )
-AddEdStringFxn( "foodxref"       , URL_FoodXref      )
-AddEdStringFxn( "pricegr"        , URL_PriceGr       )
 AddEdStringFxn( "adv"            , URL_GoogAdvRider  )
-
-AddEdStringFxn( "msie", function(st) StartGuiProcess( '"c:/program files/internet explorer/iexplore.exe" -new ' .. st ) end )
-AddEdStringFxn( "vs"  , function(st) StartGuiProcess( '"c:/program files/slickedit11/win/vs.exe" ' .. st ) end )
 
 local function frhed(fn) StartGuiProcess( '"c:/_tools/frhed/frhed.exe" ' .. fn ) end
 AddEdFxn{ name = "hex"                                                       ,
@@ -183,6 +173,7 @@ do
       , choices = {
           default = 1
         , { "Google"            , URL_Google        }
+        , { "CMake-DocSearch"   , URL_CMake_docs    }
         , { "StartPage"         , URL_StartPage     }
         , { "DuckDuckGo"        , URL_DuckDuckGo    }
         , { "s=epinions"        , URL_Epinions      }
@@ -201,8 +192,6 @@ do
         , { "Google Maps"       , URL_GoogleMaps    }
         , { "Google News"       , URL_GoogleNews    }
         , { "Google code"       , URL_GoogleCode    }
-        , { "Food Xref"         , URL_FoodXref      }
-        , { "PriceGrabber"      , URL_PriceGr       }
         }
       }
 

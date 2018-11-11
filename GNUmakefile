@@ -1,6 +1,6 @@
 #!make
 #
-# Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -380,14 +380,28 @@ printvars:
 	)
 
 
-TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=+K --extras=+f --recurse
+
+
+# +p +x seem to do nothing
+# +Z+s adds 'scope:' prefix to 'class:' and 'struct:' Extension fields (coalescing them into a single 'scope:' field)
+
+TAGS_FIELDS=+K+z+S+l+n
+#            K           Kind of tag as full name
+#              z         Include the "kind:" key in kind field (use k or K) in tags output
+#                S       Signature of routine (e.g. prototype or parameter list)
+#                  l     Language of input file containing tag
+#                    n   Line number of tag definition
+TAGS_EXTRAS=+f
+#            f           Include [a tag record] for the base file name of every input file
+
+TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=$(TAGS_FIELDS) --extras=$(TAGS_EXTRAS) --recurse
 # !!! SEE ALSO ctags.d/*.ctags
 
 .PHONY: tags
 tags : $(EXE_TGTS)
-	$(TAGS_CMDLN) --list-fields         > tags_fields
-	$(TAGS_CMDLN) --list-extras         > tags_extras
-	$(TAGS_CMDLN) --list-kinds-full=C++ > tags_kinds
+	@$(TAGS_CMDLN) --list-fields         > tags_fields
+	@$(TAGS_CMDLN) --list-extras         > tags_extras
+	@$(TAGS_CMDLN) --list-kinds-full=C++ > tags_kinds
 	$(TAGS_CMDLN)
 
 $(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat bld_cmdtbl.lua

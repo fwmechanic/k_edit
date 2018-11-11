@@ -97,7 +97,7 @@ local lua_settings   = { colors = DeepCopy(darkColors), hilite = "lua" }
 
 local python_settings  = { colors = stdColors, hilite = "python" }
 local perl_settings  = { colors = darkColors, hilite = "python" }
-local make_settings  = { colors = proto( darkColors, { txt = bfg( Black, White ), } ), hilite = "make" }
+local make_settings  = { colors = darkColors, hilite = "make" }
 local ushell_settings= { colors = darkColors, hilite = "bash" }
 local sql_settings   = { colors = darkColors, hilite = "sql" }
 local pwrshell_settings= { colors = darkColors, hilite = "pwrshell" }
@@ -108,8 +108,8 @@ ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    msbatch      = bat_settings                         ,
    lua          = lua_settings                         ,
    expect       = expect_settings                      ,
-   perl         = python_settings                      ,
-   python       = python_settings                      ,
+   perl         = perl_settings                        ,
+   python       = perl_settings                        ,
    make         = make_settings                        ,
    kdb          = text_settings                        ,
    krsrc        = krsrc_settings                       ,
