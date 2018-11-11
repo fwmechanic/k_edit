@@ -141,11 +141,12 @@ STIL   bool   SetFileAttrsOk( PCChar fnm, int attrs )    {
 //----------------------------------------------------------------
 // filename checkers
 
-STIL   sridx  ixFirstWildcardOrEos( stref psz )          { return nposToEnd( psz, psz.find_first_of( "?*" ) ); }
-STIL   bool   HasWildcard( stref psz )                   { return !atEnd( psz, ixFirstWildcardOrEos( psz ) ); }
+#define kszWildcardChars         "?*"
+#define kszLogicalWildcardChars  "?*|"
+STIL   sridx  ixFirstWildcardOrEos( stref sr )        { return nposToEnd( sr, sr.find_first_of( kszWildcardChars ) ); }
+STIL   bool   HasWildcard( stref sr )                 { return stref::npos != sr.find_first_of( kszWildcardChars ); }
 
-STIL   sridx  ixFirstLogicalWildcardOrEos( stref psz )   { return nposToEnd( psz, psz.find_first_of( "?*|" ) ); }
-STIL   bool   FnmIsLogicalWildcard( stref psz )          { return !atEnd( psz, ixFirstLogicalWildcardOrEos( psz ) ); }
+STIL   bool   FnmIsLogicalWildcard( stref sr )        { return stref::npos != sr.find_first_of( kszLogicalWildcardChars ); }
 
 //##############################################################################
 

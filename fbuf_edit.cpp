@@ -287,10 +287,10 @@ public:
    lineIterator( stref remainder ) : d_remainder( remainder ) { DV&&DBG( "ctor: '%" PR_BSR "'", BSR(d_remainder) ); }
    bool empty() const { return d_remainder.empty(); }
    stref next() {
-      if( d_remainder.empty() ) { return stref(); }
-      auto len( nposToEnd( d_remainder, d_remainder.find_first_of( "\n\r" ) ) );
+      if( d_remainder.empty() ) { return d_remainder; }
+      auto len( d_remainder.find_first_of( "\n\r" ) );
       const auto rv( d_remainder.substr( 0, len ) );
-      d_remainder.remove_prefix( len );
+      d_remainder.remove_prefix( rv.length() );
       if( !d_remainder.empty() ) { // d_remainder[0] === '\n' or '\r'
          auto toRmv( 1 );
          // accommodate all possible EOL sequences:

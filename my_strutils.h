@@ -78,7 +78,6 @@ enum {
 // indicating a "not found" condition); I have chosen to signify a "not found"
 // condition with the index equivalent of the cend() iterator value:
 STIL sridx nposToEnd( const stref       &str, sridx from ) { return from == stref::npos ? str.length() : from; }
-STIL sridx nposToEnd( const std::string &str, sridx from ) { return from == stref::npos ? str.length() : from; }
 STIL bool  atEnd    ( const stref       &str, sridx idx  ) { return idx == str.length(); }
 STIL bool  atEnd    ( const std::string &str, sridx idx  ) { return idx == str.length(); }
 
