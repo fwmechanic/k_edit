@@ -58,11 +58,6 @@ public:
    STIL       void     SeekBoF( int fh ) {        Lseek( fh, 0, SEEK_SET ); }
    };
 
-// wrappers
-//
-#define     unlinkOk( filename )  unlinkOk_( (filename), __func__ )
-extern bool unlinkOk_( PCChar filename, PCChar caller );
-
 extern bool MoveFileOk( PCChar pszCurFileName, PCChar pszNewFilename );
 
 #define     CopyFileManuallyOk( pszCurFileName, pszNewFilename )  CopyFileManuallyOk_( pszCurFileName, pszNewFilename, __func__ )

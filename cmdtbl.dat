@@ -193,4 +193,5 @@ w waitcompiledone waitcompiledone        NOARG + NUMARG + TEXTARG + LINEARG
   wr0          wr0                       NOARG , call Reset_TmLastWrToDisk() on all FBUFs
   window       window                    NOARG + NULLARG
   wrstatefile  wrstatefile               NOARG , write the editor state (history) file
+# wrtempfile   wrtempfile                NOARG , write a temporary file
   xquote       xquote         MODIFIES + NOARG , interactively enter a charter at the cursor position, in hex

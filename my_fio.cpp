@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -29,35 +29,35 @@
 #include "my_log.h"
 #include <sys/stat.h>
 
-bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int create_mode ) {
+STATIC_FXN int openFailed( PCChar pszFileName, int flags, int create_mode ) {
    create_mode &= 0777;  // mask bits extraneous to our use (e.g. from stat st_mode)
 #if defined(_WIN32)
-   const auto fh( _sopen(
-        pszFileName
-      , _O_BINARY | (fWrAccess ? (_O_WRONLY|_O_TRUNC) : _O_RDONLY) | (create_mode ? O_CREAT : 0)
-      , _SH_DENYNO
-      , create_mode // permissions relevant iff _O_CREAT specified (and subject to umask anyway)
-      )
-    );
-#else
-   const auto fh( open(
-        pszFileName
-      , (fWrAccess ? (O_WRONLY|O_TRUNC) : O_RDONLY) | (create_mode ? O_CREAT : 0)
-      , create_mode // permissions relevant iff O_CREAT specified (and subject to umask anyway)
-      )
-    );
+   flags |= O_BINARY;
 #endif
+   const auto fh( WL( _sopen, open )( pszFileName, flags
+#if defined(_WIN32)
+      , _SH_DENYNO
+#endif
+      , create_mode // permissions relevant iff _O_CREAT specified (and subject to umask anyway)
+      ) );
    if( fh == -1 ) {
-      return true;
+      return fh;
       }
-   0 && DBG( "%s [%d] %c mode=%03o '%s'", __func__, fh, fWrAccess?'W':'w', create_mode, pszFileName );
+   0 && DBG( "%s [%d] %c mode=%03o '%s'", __func__, fh, (flags&(O_WRONLY|O_RDWR))?'W':'w', create_mode, pszFileName );
    struct_stat stat;
    if( func_fstat( fh, &stat ) == 0 && 0 == (stat.st_mode & WL( _S_IFREG, S_IFREG ) ) ) {
       WL( _close, close )( fh );
-      return true;
+      return -1;
       }
-   *pfh = fh;
-   return false;
+   return fh;
+   }
+
+bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int create_mode ) {
+   const auto fh( openFailed( pszFileName, (fWrAccess ? (O_WRONLY|O_TRUNC) : O_RDONLY) | (create_mode ? O_CREAT : 0), create_mode ) );
+   if( fh != -1 ) {
+      *pfh = fh;
+      }
+   return fh == -1;
    }
 
 int fio::Read( int fh, PVoid pBuf, size_t bytesToRead ) {
@@ -120,3 +120,54 @@ bool CopyFileManuallyOk_( PCChar pszCurFileName, PCChar pszNewFilename, PCChar c
    fclose( new_FILE );
    return fOk;
    }
+
+#include <boost/filesystem/operations.hpp>
+// https://www.boost.org/doc/libs/1_54_0/libs/filesystem/doc/reference.html
+
+// boost 1_54_0 (Nuwen 10.4, GCC 4.8.1, MinGW runtime 3.20) specific
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+
+tempfile::tempfile( PCChar mode )
+   : d_fh( nullptr )
+   {
+   auto tempPath( boost::filesystem::temp_directory_path() );  // https://www.boost.org/doc/libs/1_54_0/libs/filesystem/doc/reference.html#temp_directory_path
+   for( auto ix=0 ; ix<10 ; ++ix ) {
+      auto upath( boost::filesystem::unique_path() );
+      auto thepath( tempPath / upath );                        0 && DBG( "try %d: '%s'", ix, thepath.string().c_str() );
+      const auto fd( openFailed( thepath.string().c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRWXU ) );
+      if( fd != -1 ) {
+         d_fh = fdopen( fd, mode );
+         if( !d_fh ) {                                         0 && DBG( "%s fdopen w/mode='%s' FAILED: %s", __func__, mode, strerror( errno ) );
+            ::close( fd );
+            return;
+            }
+         d_name.assign( thepath.string() );
+         return;
+         }
+      SleepMs( ix*10 );
+      }
+   }
+
+#pragma GCC diagnostic pop
+
+#ifdef fn_wrtempfile
+
+// this is a development-assist fn; not useful to users
+//
+//  wrtempfile:alt+t
+//
+bool ARG::wrtempfile() {
+   std::unique_ptr<tempfile> tf( new tempfile( "w" ) );
+   if( !tf->fh() ) {
+      Msg( "tempfile failed" );
+      return false;
+      }
+   fprintf( tf->fh(), "hello %s\n", "world" );
+   fflush( tf->fh() );
+   Msg( "tempfile %s", tf->name() );
+   SleepMs( 20000 );
+   return true;
+   }
+
+#endif

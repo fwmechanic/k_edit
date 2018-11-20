@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -35,42 +35,33 @@ enum
 
 //##############################################################################
 
-namespace Win32 // Win32::
-   {
-   class Event  // Win32::Event
-      {
+namespace Win32 { // Win32::
+   class Event { // Win32::Event
    protected:
-
       HANDLE d_hEvent;
-
       Event( bool fManualReset ) : d_hEvent( CreateEventA( nullptr,fManualReset,0,nullptr ) ) {}
-
       void SignalAndYield()                 { SetEvent( d_hEvent ); }
 
    public:
-
       void WaitForSignalForever()                    {                        WaitForSingleObject( d_hEvent, INFINITE ); }
       bool WaitForSignalForMs_TimedOut( int waitMS ) { return WAIT_TIMEOUT == WaitForSingleObject( d_hEvent, waitMS   ); }
       void Unsignal()                                {                        ResetEvent( d_hEvent ); }
       };
 
-   class AutoClrEvent : public Event // Win32::AutoClrEvent
+   class AutoClrEvent : public Event { // Win32::AutoClrEvent
       // see http://blogs.msdn.com/oldnewthing/archive/2006/06/22/642849.aspx for insights
-      {
       public:
       AutoClrEvent() : Event( false ) {}
       void SignalOneWaiterAndYield()  { SignalAndYield(); }
       };
 
-   class ManualClrEvent : public Event // Win32::ManualClrEvent
-      {
+   class ManualClrEvent : public Event { // Win32::ManualClrEvent
       public:
       ManualClrEvent() : Event( true ) {}
       void SignalAllWaitersAndYield()  { SignalAndYield(); }
       };
 
-   class AutoSignalEvent  // Win32::AutoSignalEvent
-      {
+   class AutoSignalEvent { // Win32::AutoSignalEvent
       ManualClrEvent &d_mce;
       public:
       AutoSignalEvent( ManualClrEvent &mce ) : d_mce( mce ) { d_mce.Unsignal(); }
@@ -262,6 +253,9 @@ enum {
    CH_IGNORE_ERROR  = '-', IGNORE_ERROR  = BIT(1),
    CH_NOSHELL       = '^', NOSHELL       = BIT(2),
    };
+PCChar szNO_ECHO_CMDLN( int flags ) { STATIC_CONST char rv[]{ CH_NO_ECHO_CMDLN , '\0' }; return (flags & NO_ECHO_CMDLN) ? rv : nullptr; }
+PCChar szIGNORE_ERROR ( int flags ) { STATIC_CONST char rv[]{ CH_IGNORE_ERROR  , '\0' }; return (flags & IGNORE_ERROR ) ? rv : nullptr; }
+PCChar szNOSHELL      ( int flags ) { STATIC_CONST char rv[]{ CH_NOSHELL       , '\0' }; return (flags & NOSHELL      ) ? rv : nullptr; }
 
 STATIC_FXN PCChar analyze_cmdline_( PCChar pCmdln, int *flags ) {
    0 && DBG( "%s+ '%s'", __func__,  pCmdln );
@@ -275,8 +269,7 @@ STATIC_FXN PCChar analyze_cmdline_( PCChar pCmdln, int *flags ) {
          }
       } while( *(++pCmdln) );
 PAST_OPTS: ;
-
-   0 && DBG( "%s- '%s'", __func__,  pCmdln );
+   0 && DBG( "%s- fl=0x%X '%s'", __func__, *flags,  pCmdln );
    return *pCmdln ? pCmdln : nullptr;
    }
 
@@ -287,7 +280,9 @@ STATIC_FXN void prep_cmdline_( PChar pc ) {
    const auto chDelim( Path::DelimChar( pc ) );
    const auto pEoArgv0( chDelim ? strchr(pc+1,chDelim) : StrToNextBlankOrEos( pc ) );
    for( ; pc < pEoArgv0 ; ++pc ) {
-      if( Path::chDirSepPosix == *pc ) *pc = Path::chDirSepMS;
+      if( Path::chDirSepPosix == *pc ) {
+         *pc = Path::chDirSepMS;
+         }
       }
    }
 
@@ -295,9 +290,9 @@ STATIC_FXN void prep_cmdline( PChar pc, int cmdFlags, PCChar func__ ) {
    prep_cmdline_( pc );
    0 && DBG( "%s: %s%s%s: %s"
       , func__
-      , (cmdFlags & NO_ECHO_CMDLN) ? "@" : ""
-      , (cmdFlags & IGNORE_ERROR ) ? "-" : ""
-      , (cmdFlags & NOSHELL      ) ? "^" : ""
+      , szNO_ECHO_CMDLN( cmdFlags )
+      , szIGNORE_ERROR ( cmdFlags )
+      , szNOSHELL      ( cmdFlags )
       , pc
       );
    }
@@ -309,16 +304,11 @@ class TPipeReader {
    Win32::DWORD  d_bytesInRawBuffer;
    PChar         d_pRawBuffer;
    char          d_rawBuffer[1024];
-
    int           RdChar();
-
    enum { EMPTY = -1 };
-
 public:
-
    TPipeReader( Win32::HANDLE hReadPipe ) : d_RdPipeHandle( hReadPipe ), d_bytesInRawBuffer( 0 ), d_pRawBuffer( d_rawBuffer ) {}
    ~TPipeReader() { Win32::CloseHandle( d_RdPipeHandle ); }
-
    int GetFilteredLine( PXbuf xb );
    };
 
@@ -382,12 +372,10 @@ class ConsoleSpawnHandles {
    //                   implementation _does not_ help the GNU make issue
    //                   "process_easy: DuplicateHandle(In) failed (e=6)"
    //                   which is seen when running zbpllwt.bat
-
    bool                  d_fError        ;
    Win32::HANDLE         d_hInputPipeWr  ;
    Win32::HANDLE         d_hOutputPipeRd ;
    Win32::STARTUPINFO    d_si            ;
-
    bool DupFailed( Win32::HANDLE *pOut, Win32::HANDLE in, Win32::DWORD fInherit ) {
       return !Win32::DuplicateHandle( g_hCurProc, in, g_hCurProc, pOut, 0, fInherit, DUPLICATE_SAME_ACCESS );
       }
@@ -420,24 +408,18 @@ public:
          || DupFailed( &d_si.hStdError, d_si.hStdOutput, TRUE )
          );
       }
-
    Win32::STARTUPINFO *StartHandlesSwapCriticalSection() { return &d_si; }
-
    void EndHandlesSwapCriticalSection() {
       CLOSEHANDLE( d_si.hStdInput  );
       CLOSEHANDLE( d_si.hStdOutput );
       CLOSEHANDLE( d_si.hStdError  );
       0 && DBG( "closed child's stdhandles" );
       }
-
    Win32::HANDLE hOutPipeRd() const { return d_hOutputPipeRd; }
    Win32::HANDLE hInPipeWr()  const { return d_hInputPipeWr ; }
-
    void PostChildTerminate() { CLOSEHANDLE( d_hInputPipeWr ); }
-
    ~ConsoleSpawnHandles() {}
    };
-
 
 STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const Win32::DWORD hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
    if( 0 == hProcessExitCode ) {
@@ -487,24 +469,34 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    ( Win32::PROCESS_INFORMATION *pPI
    , Win32::DWORD *pd_hProcessExitCode
    , PFBUF pfLogBuf
-   , PChar pS
+   , PCChar pS
    , int cmdFlags
    , PXbuf CommandLine
    , PXbuf xb
-   ) { // arg arg 'echo "hello"' execute   arg "hello ""world" message
-   const auto useShell( !(cmdFlags & NOSHELL) ); // { echo "hello worlds in $(pwd)" ; }
-   PCChar shell, shellopt, clDelim;
-   auto getShellDope = [useShell, &shell, &shellopt, &clDelim]() {
-      auto envIsFile = []( PCChar envNm ) -> PCChar {
-         const auto val( getenv( envNm ) );
-         return val && IsFile( val ) ? val : nullptr;
-         };
-      if( !useShell )                                       { shell = ""  ; shellopt = ""    ; clDelim = ""  ; return; }
-      { const auto env( envIsFile( "SHELL"   ) ); if( env ) { shell = env ; shellopt = " -c "; clDelim = "\""; return; } }
-      { const auto env( envIsFile( "COMSPEC" ) ); if( env ) { shell = env ; shellopt = " /c "; clDelim = ""  ; return; } }
-                                                         shell = "CMD.EXE"; shellopt = " /c "; clDelim = ""  ; return;
-      }; getShellDope();
-   CommandLine->FmtStr( "-%s%s%s%s%s", shell, shellopt, clDelim, pS, clDelim ); // leading '-' is (at most) for PutLastLogLine _only_
+   ) { // arg arg "echo hello" execute   arg arg "^ls.exe -l" execute
+   STATIC_CONST char CMD_bin[]{ "CMD.EXE" };  // NB: `CMD.exe /c file` REQUIRES 'file' have extension .bat (`new tempfile` creates extension-less file)
+   PCChar shell( "" );  // { echo "hello worlds in $(pwd)" ; }
+   if( !(cmdFlags & NOSHELL) ) {  // { cd .kbackup && echo "hello worlds in $(pwd)" ; }
+      shell = []() {
+         auto envIsFile = []( PCChar envNm ) -> PCChar {  // explicit PCChar return type to ensure return type isn't deduced as 'char *'
+            const auto val( getenv( envNm ) );
+            return val && IsFile( val ) ? val : nullptr;
+            };
+         { const auto env( envIsFile( "SHELL"   ) ); if( env ) { return env; } }
+         { const auto env( envIsFile( "COMSPEC" ) ); if( env ) { return env; } }
+                                                                 return CMD_bin;  // default shell
+         }();
+      }
+   auto usingAShell( ToBOOL( shell[0] ) );
+   auto shellopt( usingAShell ? " " : "" );  auto ndTempFile( usingAShell );
+   if( Path::endsWith( shell, CMD_bin ) ) { shellopt = " /c "; ndTempFile = false; }
+   std::unique_ptr<tempfile> tempf( ndTempFile ? new tempfile( "w" ) : nullptr );
+   if( tempf && tempf->fh() ) {  // echo "$0"
+      fputs( pS, tempf->fh() );
+      tempf->close();
+      pS = tempf->name();
+      }
+   CommandLine->FmtStr( "-%s%s%s", shell, shellopt, pS );  // leading '-' is (at most) for PutLastLogLine _only_
    0 && DBG( "%s: CommandLine='%s'", __func__, CommandLine->c_str() );
    const auto pXeq(      CommandLine->wbuf()  + 1 );  // skip the '-' always (stupid Win32::CreateProcessA takes PChar cmdline param)
    const auto pXeqConst( CommandLine->c_str() + 1 );  // skip the '-' always (for internal use)
@@ -575,66 +567,46 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
 struct Win32pty_job_Q_el {
    PChar    d_PtyXeqParam; // heap string owned by this object!
    int      d_cmdFlags;
-
    DLinkEntry<Win32pty_job_Q_el> d_dlinkJobsOfPty;
-
    Win32pty_job_Q_el( PChar PtyXeqParam, int cmdFlags )
       : d_PtyXeqParam( PtyXeqParam )
       , d_cmdFlags   ( cmdFlags )
       {}
-
    ~Win32pty_job_Q_el() { Free0( d_PtyXeqParam ); }
-
    };
 
 class Win32_pty {
-   STATIC_VAR Win32_pty             *s_Win32_pty_ListHead;
-
+   STATIC_VAR Win32_pty         *s_Win32_pty_ListHead;
    NO_COPYCTOR(Win32_pty);
    NO_ASGN_OPR(Win32_pty);
-
    Win32::ManualClrEvent         d_AllJobsDone;
-
    DLinkHead<Win32pty_job_Q_el>  d_jobQHead;
    int                           d_numJobRequestsPending;
    Mutex                         d_jobQueueMtx;
-
    Win32::PROCESS_INFORMATION    d_processInfo = {nullptr};
    Win32::HANDLE                 d_hThread;
    Win32::DWORD                  d_hProcessExitCode;
-
    PFBUF                         d_pfLogBuf;
-
    Win32_pty                    *d_pNext;
-
    // _nolock methods do not lock the queue internally; caller MUST
    bool EnqueueJobPrimeThread_nolock();
-
    int  DeleteAllEnqueuedJobs_locks();
-
    void ThreadFxnRunAllJobs();
 
 public:
-
    STATIC_FXN Win32::DWORD K_STDCALL ChildProcessCtrlThread( Win32::LPVOID pThreadParam );
    STATIC_FXN void QuiesceAll();
    STATIC_FXN int  ActiveQueues();
-
    Win32_pty( PCChar pszLogBufferName );
    ~Win32_pty();
-
    bool WaitExeDoneTimedout( int timeoutMS=20000 );
-
    bool IsThreadActive() const { return nullptr != d_hThread; }
    int  JobQueueDepth()  const { return d_numJobRequestsPending; }
-
    int  EnqueueJobsAndRun( const StringList &sl );
-
    int  KillAllJobsInBkgndProcessQueue();
    };
 
 Win32_pty *Win32_pty::s_Win32_pty_ListHead;
-
 
 void Win32_pty::QuiesceAll() {
    for( auto pQ(s_Win32_pty_ListHead) ; pQ ; pQ=pQ->d_pNext ) {
@@ -861,8 +833,7 @@ class InternalShellJobExecutor {
 public:
    InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput );
    ~InternalShellJobExecutor();
-   void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const
-      {
+   void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const {
       *pNumRequested  = d_numJobsRequested;
       *pNumNotStarted = d_pSL->length();
       }
@@ -934,7 +905,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
 
 Win32::DWORD InternalShellJobExecutor::ChildProcessCtrlThread( Win32::LPVOID pThreadParam ) {
    0 && DBG( cpct_start_fmts, "ISJE" );
-                                        static_cast<InternalShellJobExecutor *>( pThreadParam )->ThreadFxnRunAllJobs();
+   static_cast<InternalShellJobExecutor *>( pThreadParam )->ThreadFxnRunAllJobs();
    0 && DBG( cpct_exit_fmts , "ISJE" );
    return 0; // equivalent to ExitThread( 0 );
    }

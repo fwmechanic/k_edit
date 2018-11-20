@@ -405,6 +405,40 @@ extern   void  FBufRead_Assign_Switches( PFBUF pFBuf );
 extern   void  AddToTextargStack( stref str );
 extern   void  AddToSearchLog   ( stref str );
 
+//------------ tempfile management
+
+// wrappers
+//
+#define     unlinkOk( filename )  unlinkOk_( (filename), __func__ )
+extern bool unlinkOk_( PCChar filename, PCChar caller );
+
+class tempfile {
+   std::string d_name;
+   FILE       *d_fh;
+public:
+   tempfile( PCChar mode );
+   FILE * fh() { return d_fh; }  // d_name fopened in "wx" mode (or nullptr if closed)
+   PCChar name() { return d_name.c_str(); }
+   bool   close() {
+      if( d_fh ) {
+         fclose( d_fh );
+         d_fh = nullptr;
+         return true;
+         }
+      return false;
+      }
+   bool   unlink() {
+      if( !d_name.empty() ) {
+         close();
+         unlinkOk( d_name.c_str() );
+         d_name.clear();
+         return true;
+         }
+      return false;
+      }
+   ~tempfile() { unlink(); }
+   };
+
 //------------ Editor startup and shutdown
 
 extern   void  WriteAllDirtyFBufs();

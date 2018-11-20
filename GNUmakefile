@@ -261,6 +261,8 @@ PLAT_OBJS := \
  linux_api.o \
  linux_process.o
 
+endif
+
 # http://stackoverflow.com/questions/14605362/linking-statically-only-boost-library-g
 #
 #   The only time g++ will make a decision (and take into account the
@@ -271,8 +273,6 @@ PLAT_OBJS := \
 #   regardless.
 #
 BOOST_LIBS := $(call LINK_LIB_STATIC,-lboost_filesystem -lboost_system)
-
-endif
 
 USE_PCRE := 1
 export USE_PCRE
