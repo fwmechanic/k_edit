@@ -244,11 +244,11 @@ KEEPASM :=
 ifdef K_WINDOWS
 
 PLAT_OBJS := \
- conin_win32.o    \
- conout_win32.o   \
  win32.o          \
  win32_api.o      \
  win32_clipbd.o   \
+ win32_conin.o    \
+ win32_conout.o   \
  win32_contit.o   \
  win32_filename.o \
  win32_process.o  \
@@ -256,10 +256,10 @@ PLAT_OBJS := \
 else
 
 PLAT_OBJS := \
- conout_ncurses.o \
- conin_ncurses.o \
- linux_api.o \
- linux_process.o
+ linux_api.o      \
+ linux_process.o  \
+ ncurses_conin.o  \
+ ncurses_conout.o \
 
 endif
 
