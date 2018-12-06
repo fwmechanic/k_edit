@@ -607,7 +607,7 @@ struct ViewPersistent {
    PChar  filename;
    Point  origin;
    Point  cursor;
-   time_t temptv;
+   time_t tmLastWrToDisk;
    };
 extern bool ViewPersistentInitOk( ViewPersistent &vp, PChar viewSaveRec );
 
@@ -1182,9 +1182,9 @@ private:
    bool           write_to_disk( PCChar DestFileNm );
 public:
    bool           WriteToDisk( PCChar pszSavename=nullptr );
-   time_t         TmLastWrToDisk() const { return d_tmLastWrToDisk; }
-   void           Set_TmLastWrToDisk( time_t viewVal ) { if( viewVal > d_tmLastWrToDisk ) { d_tmLastWrToDisk = viewVal; } }
-   void           Reset_TmLastWrToDisk() { d_tmLastWrToDisk = 0; }
+   time_t         get_tmLastWrToDisk() const { return d_tmLastWrToDisk; }
+   void           set_tmLastWrToDisk( time_t viewVal ) { if( viewVal > d_tmLastWrToDisk ) { d_tmLastWrToDisk = viewVal; } }
+   void           clr_tmLastWrToDisk() { d_tmLastWrToDisk = 0; }
    void           SetBackupMode( int backupMode ) { d_backupMode = backupMode; }
    bool           SaveToDiskByName( PCChar pszNewName, bool fNeedUserConfirmation );
    //************ Marks
@@ -1237,15 +1237,15 @@ public:
                // meat-and-potatoes PutLine functions; note surfacing of tmpbuf(s) for efficiency
    void           PutLineEntab( LINE yLine, stref srSrc, std::string &tmpbuf ); // WITH UNDO
    // void           PutLastLineEntab( stref srSrc, std::string &tmpbuf ) { PutLineEntab( 1+LastLine(), srSrc, tmpbuf ); }
-   void           PutLineSeg( LINE yLine, const stref &ins, std::string &tmpbuf0, std::string &tmpbuf1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
+   void           PutLineSeg( LINE yLine, stref ins, std::string &tmpbuf0, std::string &tmpbuf1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
                // _oddball_ PutLine... functions; may soon be deprecated; use sparingly!
    int            PutLastMultilineRaw( stref sr );
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
-   void           InsLineRaw( LINE yLine, const stref &srSrc ) { // WITH UNDO
+   void           InsLineRaw( LINE yLine, stref srSrc ) { // WITH UNDO
                      InsBlankLinesBefore( yLine );
                      PutLineRaw( yLine, srSrc );
                      }
-   void           InsLineEntab( LINE yLine, const stref &srSrc, std::string &tmp ) { // WITH UNDO
+   void           InsLineEntab( LINE yLine, stref srSrc, std::string &tmp ) { // WITH UNDO
                      InsBlankLinesBefore( yLine );
                      PutLineEntab( yLine, srSrc, tmp );
                      }
@@ -1308,7 +1308,7 @@ STIL  COL      ColOfPrevChar( COL tabWidth, stref rl, COL xCol ) {
                   }
 extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
-STIL   COL     StrCols( COL tabWidth, const stref &src ) { return ColOfFreeIdx( tabWidth, src, src.length() ); }
+STIL   COL     StrCols( COL tabWidth, stref src ) { return ColOfFreeIdx( tabWidth, src, src.length() ); }
 extern char    CharAtCol     ( COL tabWidth, stref content, const COL colTgt ); // returns 0 if col is not present in content
 //             CaptiveIdxOfCol content[CaptiveIdxOfCol(colTgt)] is always valid; colTgt values which
 //                             map beyond the last char of content elicit the index of the last char
@@ -1402,9 +1402,9 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    //     generator functions, you should not move the cursor to any particular
    //     place until AFTER you've inserted all lines.
    //
-   extern void    InsLineSorted_(          PFBUF fb, bool descending, LINE ySkipLeading, const stref &src );
-   STIL void      InsLineSortedAscending(  PFBUF fb, LINE ySkipLeading, const stref &src ) { InsLineSorted_( fb, false, ySkipLeading, src ); }
-   STIL void      InsLineSortedDescending( PFBUF fb, LINE ySkipLeading, const stref &src ) { InsLineSorted_( fb, true , ySkipLeading, src ); }
+   extern void    InsLineSorted_(          PFBUF fb, bool descending, LINE ySkipLeading, stref src );
+   STIL void      InsLineSortedAscending(  PFBUF fb, LINE ySkipLeading, stref src ) { InsLineSorted_( fb, false, ySkipLeading, src ); }
+   STIL void      InsLineSortedDescending( PFBUF fb, LINE ySkipLeading, stref src ) { InsLineSorted_( fb, true , ySkipLeading, src ); }
  #ifdef           fn_csort
    extern void    SortLineRange( PFBUF fb, LINE yMin, LINE yMax, bool fAscending, bool fCase, COL xMin, COL xMax, bool fRmvDups=false );
  #endif

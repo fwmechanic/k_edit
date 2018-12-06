@@ -95,20 +95,19 @@ typedef const void *        PCVoid;
 
 #include <string>
 
-typedef std::back_insert_iterator<std::string > string_back_inserter;
+typedef std::back_insert_iterator<std::string> string_back_inserter;
 
-// driven by https://news.ycombinator.com/item?id=8704318
-// I'm motivated to experiment with boost::string_ref
-// to minimize gratuitious std::string mallocs/copies
+// driven by https://news.ycombinator.com/item?id=8704318 I've deployed
+// boost::string_ref to minimize gratuitious std::string mallocs/copies
 
-// last 32-bit Nuwen MinGW contains Boost 1.54
-// http://www.boost.org/doc/libs/1_54_0/libs/utility/doc/html/string_ref.html
 #include <boost/version.hpp>
 #include <boost/utility/string_ref.hpp>
-
-typedef boost::string_ref stref;
+                                 // The final 32-bit Nuwen MinGW release (10.4) contains Boost 1.54
+typedef boost::string_ref stref; // http://www.boost.org/doc/libs/1_54_0/libs/utility/doc/html/string_ref.html
 typedef stref::size_type  sridx; // a.k.a. boost::string_ref::size_type
-const auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::npos )' syntax is used!
+constexpr auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::npos )' syntax is used!
+typedef stref::const_iterator         stref_iter;
+typedef stref::const_reverse_iterator stref_riter;
 
 // we sometimes need to "printf" (DBG) boost::string_ref referents
 // unfortunately static_cast<int> of size_t seems unavoidable per
@@ -126,8 +125,7 @@ STIL std::string sr2st( stref bsr ) { return std::string( bsr.data(), bsr.length
 STIL stref se2sr( PCChar bos, PCChar eos ) { return stref( bos, eos - bos ); }
 
 typedef WL(__int64,off_t) filesize_t;
-
-typedef signed long FilesysTime;
+typedef signed long       FilesysTime;
 
 #include "attr_format.h"
 

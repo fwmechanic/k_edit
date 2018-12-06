@@ -74,15 +74,46 @@ enum {
        BACKTICK = 0x60,
    };
 
+// blank vs. space:
+// http://www.cplusplus.com/reference/cctype/isblank/
+//
+//   A blank character is a space character used to separate words within a line of text.
+//
+//   The standard "C" locale considers blank characters the tab character ('\t') and the space character (' ').
+//
+// http://www.cplusplus.com/reference/cctype/isspace/
+//
+//   For the "C" locale, white-space characters are any of:
+//   ' '	(0x20)	space (SPC)
+//   '\t'	(0x09)	horizontal tab (TAB)
+//   '\n'	(0x0a)	newline (LF)
+//   '\v'	(0x0b)	vertical tab (VT)
+//   '\f'	(0x0c)	feed (FF)
+//   '\r'	(0x0d)	carriage return (CR)
+
+// char predicates; return int to match http://en.cppreference.com/w/cpp/header/cctype is functions
+
+STIL   int   notBlank    ( int ch ) { return !isblank( ch ); }
+extern int   isWordChar  ( int ch );
+STIL   int   notWordChar ( int ch ) { return !isWordChar( ch ); }
+extern int   isHJChar    ( int ch );
+STIL   int   notHJChar   ( int ch ) { return !isHJChar( ch ); }
+STIL   int   isbdigit    ( int ch ) { return ch == '0' || ch == '1'; }
+STIL   int   isQuoteEscCh( int ch ) { return chESC==ch; }
+
+// predicate + extract; return exact char matching a char class (or chNUL)
+
+STIL   char  isQuoteCh   ( char inCh ) { return chQuot2==inCh || chQuot1==inCh ? inCh : chNUL; }
+
 // many stref (and std::string) methods return "index or npos" (the latter
 // indicating a "not found" condition); I have chosen to signify a "not found"
 // condition with the index equivalent of the cend() iterator value:
-STIL sridx nposToEnd( const stref       &str, sridx from ) { return from == stref::npos ? str.length() : from; }
-STIL bool  atEnd    ( const stref       &str, sridx idx  ) { return idx == str.length(); }
+STIL sridx nposToEnd(       stref        str, sridx from ) { return from == stref::npos ? str.length() : from; }
+STIL bool  atEnd    (       stref        str, sridx idx  ) { return idx == str.length(); }
 STIL bool  atEnd    ( const std::string &str, sridx idx  ) { return idx == str.length(); }
 
 // INNER stringref index to OUTER stringref index
-STIL sridx isri2osri( const stref &osr, const stref &isr, sridx isri ) { return isri + (isr.data()-osr.data()); }
+STIL sridx isri2osri( stref osr, stref isr, sridx isri ) { return isri + (isr.data()-osr.data()); }
 
 STIL sridx find( stref this_, stref key, sridx start=0 ) {
    this_.remove_prefix( start );
@@ -148,17 +179,14 @@ typename cont_inst::size_type ToNextNotOrEnd( stref key, cont_inst src, typename
    return std::distance( src.cbegin(), src.cend() );
    }
 
-STIL char isQuoteCh   ( char inCh ) { return chQuot2==inCh || chQuot1==inCh ? inCh : '\0'; }
-STIL char isQuoteEscCh( char inCh ) { return chESC==inCh; }
-
-#define SKIP_QUOTED_STR( quoteCh, it, src, EOS_LBL )           \
+#define SKIP_QUOTED_STR( quoteCh, it, end, EOS_LBL )           \
    if( quoteCh=isQuoteCh( *it ) ) {                            \
-      for( ++it ; it != src.cend() ; ++it ) {                  \
+      for( ++it ; it != end ; ++it ) {                         \
          if( *it == quoteCh ) {                                \
             break;                                             \
             }                                                  \
-         if( isQuoteEscCh( *it ) && ++it == src.cend() ) {     \
-            goto EOS_LBL; /* src ends amid quoted string? */   \
+         if( isQuoteEscCh( *it ) && ++it == end ) {            \
+            goto EOS_LBL; /* [it..end) ends before unquote? */ \
             }                                                  \
          }                                                     \
       }
@@ -166,12 +194,12 @@ STIL char isQuoteEscCh( char inCh ) { return chESC==inCh; }
 template < typename cont_inst, typename Pred >
 typename cont_inst::size_type ToNextOrEndSkipQuoted( Pred pred, cont_inst src, typename cont_inst::size_type start ) {
    if( start < src.length() ) {
-      char quoteCh( '\0' );
+      char quoteCh( chNUL );
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
          if( pred( *it ) ) {
             return std::distance( src.cbegin(), it );
             }
-         SKIP_QUOTED_STR( quoteCh, it, src, NO_MATCH )
+         SKIP_QUOTED_STR( quoteCh, it, src.cend(), NO_MATCH )
          }
       }
 NO_MATCH:
@@ -181,12 +209,12 @@ NO_MATCH:
 template < typename cont_inst >
 typename cont_inst::size_type ToNextOrEndSkipQuoted( const int key, cont_inst src, typename cont_inst::size_type start ) {
    if( start < src.length() ) {
-      char quoteCh( '\0' );
+      char quoteCh( chNUL );
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
          if( key == *it ) {
             return std::distance( src.cbegin(), it );
             }
-         SKIP_QUOTED_STR( quoteCh, it, src, NO_MATCH )
+         SKIP_QUOTED_STR( quoteCh, it, src.cend(), NO_MATCH )
          }
       }
 NO_MATCH:
@@ -213,14 +241,6 @@ extern   int   FlipCase( int ch );
 extern PChar   xlatCh( PChar pStr, int fromCh, int toCh );
 extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
-
-// char predicates; return int to match http://en.cppreference.com/w/cpp/header/cctype is functions
-STIL   int   notBlank    ( int ch ) { return !isblank( ch ); }
-extern int   isWordChar  ( int ch );
-STIL   int   notWordChar ( int ch ) { return !isWordChar( ch ); }
-extern int   isHJChar    ( int ch );
-STIL   int   notHJChar   ( int ch ) { return !isHJChar( ch ); }
-STIL   int   isbdigit    ( int ch ) { return ch == '0' || ch == '1'; }
 
 STIL   bool  StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
@@ -255,7 +275,7 @@ STIL int cmpi( int c1, int c2 ) { // impl w/highly ASCII-centric optzn taken fro
    return (c1 | cd) < (c2 | cd) ? -1 : +1;
    }
 
-STIL int cmp( const stref &s1, const stref &s2 ) {
+STIL int cmp( stref s1, stref s2 ) {
    const auto cmplen( std::min( s1.length(), s2.length() ) );
    for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
       const auto rv( cmp( s1[ix], s2[ix] ) );
@@ -267,7 +287,7 @@ STIL int cmp( const stref &s1, const stref &s2 ) {
    return s1.length() < s2.length() ? -1 : +1;
    }
 
-STIL int cmpi( const stref &s1, const stref &s2 ) {
+STIL int cmpi( stref s1, stref s2 ) {
    const auto cmplen( std::min( s1.length(), s2.length() ) );
    for( sridx ix( 0 ); ix < cmplen ; ++ix ) {
       const auto rv( cmpi( s1[ix], s2[ix] ) );
@@ -428,6 +448,14 @@ STIL sridx FirstDigitOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isd
 
 //#######################################################################################
 
+class lineIterator {
+   stref d_remainder;
+public:
+   lineIterator( stref remainder ) : d_remainder( remainder ) {}
+   bool empty() const { return d_remainder.empty(); }
+   stref next();
+   };
+
 template <int elements> class FmtStr {
    char b[ elements ];
    FmtStr() = delete; // no dflt ctor
@@ -446,7 +474,7 @@ public:
    };
 
 STIL void insert_hole( PChar b, size_t sizeof_b, int xCol, int insertWidth=1 )
-   { // assumes that last char in b is a '\0', and preserves it
+   { // assumes that last char in b is a chNUL, and preserves it
    memmove( b+xCol+insertWidth, b+xCol, (sizeof_b-1) - (xCol+insertWidth) );
    }
 
@@ -454,7 +482,7 @@ template <size_t elements>
 class FixedCharArray {
    char d_buf[ elements ];
 public:
-   FixedCharArray() { d_buf[0] = '\0'; }
+   FixedCharArray() { d_buf[0] = chNUL; }
    FixedCharArray( stref src ) { bcpy( d_buf, src ); }
    stref  sr()    const { return stref( d_buf, std::min( elements-1, Strlen( d_buf ) ) ); }
    PCChar k_str() const { return d_buf; }
@@ -502,7 +530,7 @@ public:
          return wref{ d_bp, 0 };
          }
       };
-   Catbuf() { d_buf[0] = '\0'; } // paranoia
+   Catbuf() { d_buf[0] = chNUL; } // paranoia
    wref Wref() { return wref{ d_buf, elements }; }
    stref sr( const wref& wr ) const { return stref( d_buf, (wr.bp() - d_buf) ); }
    stref sr()                 const { return stref( d_buf, std::min( elements-1, Strlen( d_buf ) ) ); }
@@ -573,10 +601,10 @@ public:
          }
       return false;
       }
-   bool empty() const { return d_buf[0] == '\0'; }
+   bool empty() const { return d_buf[0] == chNUL; }
    void clear() {
-      d_buf[0] = '\0';
-      d_buf[1] = '\0';  // not ABSOLUTELY necessary, but cheap insurance...
+      d_buf[0] = chNUL;
+      d_buf[1] = chNUL;  // not ABSOLUTELY necessary, but cheap insurance...
       d_nxtS = d_buf;
       }
    PCChar AddString( stref sr ) {
@@ -587,8 +615,8 @@ public:
       auto rv( d_nxtS );
       memcpy( d_nxtS, sr.data(), len );
        d_nxtS += len;
-      *d_nxtS++ = '\0';
-      *d_nxtS   = '\0';
+      *d_nxtS++ = chNUL;
+      *d_nxtS   = chNUL;
       return rv;
       }
    };

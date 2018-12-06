@@ -465,9 +465,9 @@ void Clipboard_PutText( stref sr ) {
    g_ClipboardType = BOXARG;
    }
 
-void Clipboard_PutText_Multiline( PCChar szData ) {
+void Clipboard_PutText_Multiline( stref sr ) {
    g_pFbufClipboard->MakeEmpty();
-   const int lineCount( g_pFbufClipboard->PutLastMultilineRaw( szData ) );
+   const int lineCount( g_pFbufClipboard->PutLastMultilineRaw( sr ) );
    g_ClipboardType = (lineCount == 1) ? BOXARG : LINEARG;
    }
 

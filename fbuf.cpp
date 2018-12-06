@@ -1568,7 +1568,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
          }
       return Msg( "Cannot write %s", destFileNm );
       }
-   d_tmLastWrToDisk = time( nullptr ); // note this is not == stat mtime, thus not comparable to same
+   set_tmLastWrToDisk( time( nullptr ) ); // note this is not == stat mtime, thus not comparable to same
    wrNoiseBak();
    const auto abs_dest( Path::Absolutize( destFileNm ) );
    if( !backupOldDiskFile( abs_dest.c_str(), d_backupMode==bkup_USE_SWITCH ? g_iBackupMode : d_backupMode ) ) {

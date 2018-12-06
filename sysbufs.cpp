@@ -445,8 +445,8 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
    }
 
 STATIC_FXN int CDECL__ qsort_cmp_fbuf_wrtime( PCVoid pA, PCVoid pB ) {
-   const auto pFA( *static_cast<CPPFBUF>(pA) ); const auto tA( pFA->TmLastWrToDisk() );
-   const auto pFB( *static_cast<CPPFBUF>(pB) ); const auto tB( pFB->TmLastWrToDisk() );
+   const auto pFA( *static_cast<CPPFBUF>(pA) ); const auto tA( pFA->get_tmLastWrToDisk() );
+   const auto pFB( *static_cast<CPPFBUF>(pB) ); const auto tB( pFB->get_tmLastWrToDisk() );
    const auto rv( tA==tB ? 0 : tA>tB ? -1 : 1 ); // descending sort: greatest first/top
    0 && DBG( "%s %" PR_TIMET ", %s %" PR_TIMET " = %d", pFA->Name(), tA, pFB->Name(), tB, rv );
    return rv;
@@ -463,12 +463,12 @@ bool ARG::wr0() {
 #if FBUF_TREE
       auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      if( pFBuf->TmLastWrToDisk() > 0 ) {
-         pFBuf->Reset_TmLastWrToDisk();
+      if( pFBuf->get_tmLastWrToDisk() > 0 ) {
+         pFBuf->clr_tmLastWrToDisk();
          ++count;
          }
       }
-   Msg( "Reset_TmLastWrToDisk() on %u files", count );
+   Msg( "clr_tmLastWrToDisk() on %u files", count );
    return false;
    }
 
@@ -484,7 +484,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
 #if FBUF_TREE
       auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      if( pFBuf->TmLastWrToDisk() > 0 ) {
+      if( pFBuf->get_tmLastWrToDisk() > 0 ) {
          ++count;
          }
       }
@@ -501,7 +501,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
 #if FBUF_TREE
       auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      if( pFBuf->TmLastWrToDisk() > 0 ) { DB && DBG( "[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+      if( pFBuf->get_tmLastWrToDisk() > 0 ) { DB && DBG( "[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->get_tmLastWrToDisk() );
          fbufs[ix++] = pFBuf;
          }
       }
@@ -509,7 +509,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
    qsort( fbufs, count, sizeof(*fbufs), qsort_cmp_fbuf_wrtime );
    for( ix=0u ; ix < count ; ++ix ) {
       PCFBUF pFBuf( fbufs[ix] );
-      dest->PutLastLineRaw( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->TmLastWrToDisk() );
+      dest->PutLastLineRaw( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->get_tmLastWrToDisk() );
       }
    Free0( fbufs );
    Msg( "%u files have been written to disk", count );

@@ -1404,7 +1404,7 @@ bool ARG::mfrplcword() {
    return mrcw.d_iReplacementsMade != 0;
    }
 
-void FBOP::InsLineSorted_( PFBUF fb, bool descending, LINE ySkipLeading, const stref &src ) {
+void FBOP::InsLineSorted_( PFBUF fb, bool descending, LINE ySkipLeading, stref src ) {
    const auto cmpSignMul( descending ? -1 : +1 );
    // find insertion point using binary search of RAW content (PeekRawLine)
    auto yMin( ySkipLeading );

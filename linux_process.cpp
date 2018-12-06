@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -307,7 +307,7 @@ STATIC_FXN bool xclip_read( std::string &dest ) {
 bool ARG::fromwinclip() {
    std::string dest;
    if( xclip_installed( dest ) && xclip_read( dest ) ) {
-      Clipboard_PutText_Multiline( dest.c_str() );
+      Clipboard_PutText_Multiline( dest );
       Msg( "X clipboard -> <clipboard> ok" );
       return true;
       }

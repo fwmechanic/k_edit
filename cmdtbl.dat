@@ -190,7 +190,7 @@ s up           up             CURSORFUNC , move cursor up one line
 w waitcompiledone waitcompiledone        NOARG + NUMARG + TEXTARG + LINEARG
 # waitkey15    waitkey15                 NOARG , test func
 # wct          wct                       NOARG + TEXTARG + BOXSTR, tester for DirListGenerator and WildcardFilenameGenerator
-  wr0          wr0                       NOARG , call Reset_TmLastWrToDisk() on all FBUFs
+  wr0          wr0                       NOARG , call clr_tmLastWrToDisk() on all FBUFs
   window       window                    NOARG + NULLARG
   wrstatefile  wrstatefile               NOARG , write the editor state (history) file
 # wrtempfile   wrtempfile                NOARG , write a temporary file

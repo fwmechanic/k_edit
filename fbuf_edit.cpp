@@ -279,37 +279,6 @@ STATIC_FXN void spcs2tabs_leading( string_back_inserter dit, stref src, TabberPa
 //*******************************  END TABS *******************************
 //*******************************  END TABS *******************************
 
-//==========================================================================================
-
-class lineIterator { enum { DV=0 };
-   stref d_remainder;
-public:
-   lineIterator( stref remainder ) : d_remainder( remainder ) { DV&&DBG( "ctor: '%" PR_BSR "'", BSR(d_remainder) ); }
-   bool empty() const { return d_remainder.empty(); }
-   stref next() {
-      if( d_remainder.empty() ) { return d_remainder; }
-      auto len( d_remainder.find_first_of( "\n\r" ) );
-      const auto rv( d_remainder.substr( 0, len ) );
-      d_remainder.remove_prefix( rv.length() );
-      if( !d_remainder.empty() ) { // d_remainder[0] === '\n' or '\r'
-         auto toRmv( 1 );
-         // accommodate all possible EOL sequences:
-         // Windows => "\x0D\x0A".
-         // UNIX    => "\x0A"
-         // MacOS   => "\x0A\x0D"
-         // ???     => "\x0D"
-         if( d_remainder.length() > 1 &&
-               (d_remainder[0] == '\n' && d_remainder[1] == '\r')
-            || (d_remainder[0] == '\r' && d_remainder[1] == '\n')
-           ) { ++toRmv; }
-         d_remainder.remove_prefix( toRmv ); // skip logical newline (may be one or two characters)
-         }                                              DV&&DBG( "next: '%" PR_BSR "'", BSR(rv) );
-      return rv;
-      }
-   };
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
    BoolOneShot first;
    lineIterator li( pszNewLineData );
@@ -1313,7 +1282,7 @@ void LineInfo::PutContent( stref src ) { // assume previous content has been des
       }
    }
 
-void FBUF::PutLineSeg( const LINE yLine, const stref &ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
+void FBUF::PutLineSeg( const LINE yLine, stref ins, std::string &stmp, std::string &dest, const COL xLeftIncl, const COL xRightIncl, const bool fInsert ) {
    enum { DE=0 };                                                              DE && DBG( "%s+ L %d [%d..%d] <= '%" PR_BSR "' )", __func__, yLine, xLeftIncl, xRightIncl, BSR(ins) );
    // insert ins into gap = [xLeftIncl, xRightIncl]
    // rules:

@@ -2302,7 +2302,7 @@ View::View( PFBUF pFBuf_, PWin pWin_, const ViewPersistent &vp )
    {
    d_current.Cursor.Set( vp.cursor.lin, vp.cursor.col );
    d_current.Origin.Set( vp.origin.lin, vp.origin.col );
-   FBuf()->Set_TmLastWrToDisk( vp.temptv );
+   FBuf()->set_tmLastWrToDisk( vp.tmLastWrToDisk );
    d_prev = d_saved = d_current;
    CommonInit();
    }
@@ -2335,7 +2335,7 @@ void View::Write( FILE *fout ) const {
        , FBuf()->Name()
        , Origin().col, Origin().lin
        , Cursor().col, Cursor().lin
-       , FBuf()->TmLastWrToDisk()
+       , FBuf()->get_tmLastWrToDisk()
        );
    }
 
@@ -2363,14 +2363,14 @@ bool ViewPersistentInitOk( ViewPersistent &vp, PChar viewSaveRec ) {
       , &vp.origin.lin
       , &vp.cursor.col
       , &vp.cursor.lin
-      , &vp.temptv
+      , &vp.tmLastWrToDisk
       ) );
    if( 5 != scnt ) {
       DBG( "bogus viewSaveRecTail decode: '%s'\n", viewSaveRecTail );
       return false;
       }
    vp.filename = viewSaveRec;
-   0 && DBG( " %s|%d %d %d %d %" PR_TIMET "\n", vp.filename, vp.origin.col, vp.origin.lin, vp.cursor.col, vp.cursor.lin, vp.temptv );
+   0 && DBG( " %s|%d %d %d %d %" PR_TIMET "\n", vp.filename, vp.origin.col, vp.origin.lin, vp.cursor.col, vp.cursor.lin, vp.tmLastWrToDisk );
    return true;
    }
 

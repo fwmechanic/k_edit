@@ -404,3 +404,24 @@ sridx FirstNonBlankOrEnd( stref src, sridx start ) {
 sridx FirstBlankOrEnd( stref src, sridx start ) {
    return ToNextOrEnd( isblank , src, start );
    }
+
+stref lineIterator::next() {
+   if( d_remainder.empty() ) { return d_remainder; }
+   auto len( d_remainder.find_first_of( "\n\r" ) );
+   const auto rv( d_remainder.substr( 0, len ) );
+   d_remainder.remove_prefix( rv.length() );
+   if( !d_remainder.empty() ) { // d_remainder[0] === '\n' or '\r'
+      auto toRmv( 1 );
+      // accommodate all possible EOL sequences:
+      // Windows => "\x0D\x0A".
+      // UNIX    => "\x0A"
+      // MacOS   => "\x0A\x0D"
+      // ???     => "\x0D"
+      if( d_remainder.length() > 1 &&
+            (d_remainder[0] == '\n' && d_remainder[1] == '\r')
+         || (d_remainder[0] == '\r' && d_remainder[1] == '\n')
+        ) { ++toRmv; }
+      d_remainder.remove_prefix( toRmv ); // skip logical newline (may be one or two characters)
+      }                                              0 && DBG( "next: '%" PR_BSR "'", BSR(rv) );
+   return rv;
+   }
