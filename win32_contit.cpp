@@ -38,6 +38,8 @@ Win32::LONG g_DllLoadCount = 0;  // VARS MUST BE INITIALIZED, or they won't go i
 
 STATIC_VAR Win32::LONG local_DllLoadCount;
 
+#define  DBG_THREAD  DBG
+
 Win32::BOOL WINAPI DllMain( Win32::HINSTANCE hInstDll, Win32::DWORD fdwReason, Win32::LPVOID fImpLoad ) {
    PCChar type;
    switch( fdwReason ) {
@@ -47,7 +49,7 @@ Win32::BOOL WINAPI DllMain( Win32::HINSTANCE hInstDll, Win32::DWORD fdwReason, W
     case DLL_PROCESS_ATTACH: type = "DLL_PROCESS_ATTACH"; Win32::InterlockedIncrement( &g_DllLoadCount ); local_DllLoadCount = g_DllLoadCount; break;
     case DLL_PROCESS_DETACH: type = "DLL_PROCESS_DETACH"; Win32::InterlockedDecrement( &g_DllLoadCount ); break;
     }
-   DBG( "-----------> %s %s <------------", __func__, type );
+   DBG_THREAD( "-----------> %s %s <------------", __func__, type );
    return true;
    }
 
@@ -126,16 +128,16 @@ int BatteryStatus::GetBatteryLifePercent() {
    return sps.BatteryLifePercent;
    }
 void BatteryStatus::BatteryStatusMonitorThread() {
-   DBG( "*** %s STARTING***", __func__ );
+   0 && DBG_THREAD( "*** %s STARTING***", __func__ );
    while( 1 ) {
       const int newVal( GetBatteryLifePercent() );
-      0 && DBG( "BatteryLifePercent now=%d%%", newVal );
+      0 && DBG_THREAD( "BatteryLifePercent now=%d%%", newVal );
       {
       AutoMutex am( d_mtx );
       if( d_BatteryLifePercent != newVal ) {
           d_BatteryLifePercent  = newVal;
           d_fChanged = true;
-          0 && DBG( "BatteryLifePercent changed, now=%d%%", d_BatteryLifePercent );
+          0 && DBG_THREAD( "BatteryLifePercent changed, now=%d%%", d_BatteryLifePercent );
           }
       }
       SleepMs( 2500 );

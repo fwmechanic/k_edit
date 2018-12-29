@@ -137,12 +137,6 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
  ** most `ctrl+` and `alt+` function and keypad modulations do not work.
  ** I've not begun investigating the possibilities here.
 
-## Debug/Development
-
-I use http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx[DebugView] to capture the output from the DBG macros which are sprinkled liberally throughout the source code.  I am grateful for GCC's printf format-string+argument-type checking which makes saves _a lot_ of crash-debugging.
-
-The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable (e.g. when nuwen.net MinGW distros omitted `gdb`) I use https://github.com/jrfonseca/drmingw[DrMinGW] as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
-
 ## Editor State/History Persistence
 
 K persists information between sessions in state files written to
@@ -157,6 +151,12 @@ Information stored in state files includes:
  * recent files edited (including window/cursor position)
  * recent search-key and replace-string values
  * editor-function invocation-count accumulators (to enable fact-based key assignments)
+
+## Debug/Development
+
+Logfile $K_LOGFNM, having session-unique name is stored in $K_LOGDIR which == "$K_STATEDIR/log", contains output from DBG macros which are sprinkled liberally throughout the source code.  I am grateful for GCC's printf format-string+argument-type checking which makes saves _a lot_ of crash-debugging.
+
+The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable (e.g. when nuwen.net MinGW distros omitted `gdb`) I use https://github.com/jrfonseca/drmingw[DrMinGW] as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
 ## Tutorial
 

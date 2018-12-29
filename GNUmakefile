@@ -202,6 +202,7 @@ CWARN := -Wall -Werror -Wextra -W \
 -Wno-unused-parameter \
 -Wno-unused-value \
 -Wno-unused-variable \
+-Wno-format-y2k \
 -Wpointer-arith \
 -Wredundant-decls \
 -Wreturn-local-addr \

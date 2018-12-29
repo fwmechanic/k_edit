@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -190,7 +190,6 @@ COMPLEX_STATIC_VAR OsEnv *g_Process;
 
 void ThisProcessInfo::Init() {
    g_Process = new OsEnv();
-   DBG_init();
    }
 
 PCChar ThisProcessInfo::ExePath()  { return g_Process->ExePath(); }  // includes trailing '\'
@@ -258,51 +257,3 @@ void MainThreadPerfCounter::ResumeAll() {
           }
       }
    }
-
-#if !NO_LOG
-
-#if !defined(_WIN32)
-
-// Linux version
-
-STATIC_VAR FILE *ofh_DBG;
-
-void DBG_init() {
-   if( !ofh_DBG ) {
-      const auto tnow( time( nullptr ) );
-      const auto lt( localtime( &tnow ) );
-      if( lt == nullptr ) {
-         perror("localtime");
-         exit(EXIT_FAILURE);
-         }
-      char tmstr[100];
-      if( strftime( BSOB(tmstr), "%Y%m%dT%H%M%S", lt ) == 0 ) {
-         perror( "strftime returned 0" );
-         exit(EXIT_FAILURE);
-         }
-      pathbuf buf;
-      snprintf( BSOB( buf ), "%s%s-%s.log", ThisProcessInfo::ExePath(), ThisProcessInfo::ExeName(), tmstr );
-      ofh_DBG = fopen( buf, "w" );
-      if( ofh_DBG == nullptr ) {
-         perror("DBG_init() fopen");
-         exit(EXIT_FAILURE);
-         }
-      fprintf( ofh_DBG, "logging to %s\n", buf );
-      PutEnvOk( "K_LOGFNM", buf );
-   // fprintf( stderr , "logging to %s\n", buf );
-      }
-   }
-
-int DBG( char const *kszFormat, ...  ) {
-   auto ofh( ofh_DBG ? ofh_DBG : stdout );
-   va_list args;  va_start(args, kszFormat);
-   vfprintf( ofh, kszFormat, args );
-   va_end(args);
-   fputc( '\n', ofh );
-   fflush( ofh );
-   return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
-   }
-
-#endif
-
-#endif

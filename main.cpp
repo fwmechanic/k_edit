@@ -499,6 +499,17 @@ bool ARG::exit() {
 
 //------------------------------------------------
 
+bool mkdir_failed( PCChar dirname ) {
+   const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
+   if( !err ) {             0 && fprintf( stderr, "created dir '%s'", dirname );
+      return false;
+      }
+   if( EEXIST == errno ) {  0 && fprintf( stderr, "existing dir '%s'", dirname );
+      return false;
+      }
+   return true;
+   }
+
 STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    PutEnvOk( "K_RUNNING?", "yes" );
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
@@ -574,6 +585,80 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
   #endif
    PutEnvOk( "K_STATEDIR", s_EditorStateDir.c_str() );
    }
+
+#if !NO_LOG
+
+STATIC_VAR FILE *ofh_DBG;
+STATIC_VAR time_t log_t0;
+
+constexpr auto LOG_STRFTIME = true;
+#define        LOG_STRFTIME_FMT  "%y%m%dT%H%M%S"
+
+void DBG_init() {
+   if( !ofh_DBG ) {
+      log_t0 = time( nullptr );
+      const auto lt( localtime( &log_t0 ) );
+      if( lt == nullptr ) {
+         perror("localtime");
+         exit(EXIT_FAILURE);
+         }
+      char tmstr[100];
+      if( strftime( BSOB(tmstr), LOG_STRFTIME_FMT, lt ) == 0 ) {
+         perror( "strftime returned 0" );
+         exit(EXIT_FAILURE);
+         }
+      pathbuf fnmbuf;
+      snprintf( BSOB( fnmbuf ), "%s-%s.log", ThisProcessInfo::ExeName(), tmstr );
+      Path::str_t
+      logfnm( EditorStateDir() );
+      logfnm.append( "log"      );
+      if( mkdir_failed( logfnm.c_str() ) ) {
+         fprintf( stderr, "mkdir(%s) failed: %s\n", logfnm.c_str(), strerror( errno ) );
+         exit( 1 );
+         }
+      logfnm.append( DIRSEP_STR );
+      PutEnvOk( "K_LOGDIR", logfnm.c_str() );
+      logfnm.append( fnmbuf     );
+      ofh_DBG = fopen( logfnm.c_str(), "w" );
+      if( ofh_DBG == nullptr ) {
+         fprintf( stderr, "DBG_init() fopen(%s): %s", logfnm.c_str(), strerror(errno) );
+         exit(EXIT_FAILURE);
+         }
+      if( LOG_STRFTIME ) {
+         fprintf( ofh_DBG, "%s logging to %s\n", tmstr, logfnm.c_str() );
+         }
+      else {
+         fprintf( ofh_DBG, "%" PR_TIMET " %s logging to %s\n", log_t0, tmstr, logfnm.c_str() );
+         }
+      PutEnvOk( "K_LOGFNM", logfnm.c_str() );
+   // fprintf( stderr , "logging to %s\n", logfnm.c_str() );
+      }
+   }
+
+int DBG( char const *kszFormat, ...  ) {
+   auto ofh( ofh_DBG ? ofh_DBG : stdout );
+   const auto tnow( time( nullptr ) );
+   auto ndTsPr( true );
+   if( LOG_STRFTIME ) {
+      const auto lt( localtime( &tnow ) );
+      char tmstr[100];
+      if( strftime( BSOB(tmstr), LOG_STRFTIME_FMT " ", lt ) ) {
+         fputs( tmstr, ofh );
+         ndTsPr = false;
+         }
+      }
+   if( ndTsPr ) {
+      fprintf( ofh, "%" PR_TIMET " ", (tnow - log_t0) );
+      }
+   va_list args;  va_start(args, kszFormat);
+   vfprintf( ofh, kszFormat, args );
+   va_end(args);
+   fputc( '\n', ofh );
+   fflush( ofh );
+   return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
+   }
+
+#endif
 
 class kGetopt : public Getopt {
 public:
@@ -662,6 +747,18 @@ STATIC_FXN ptrdiff_t memdelta() {
 
 GLOBAL_VAR bool g_CLI_fUseRsrcFile = true;
 
+STATIC_FXN void ConstructStatics() {
+   ThisProcessInfo::Init();
+   AssignLogTag( "InitEnvRelatedSettings" );
+   InitEnvRelatedSettings();
+   DBG_init();
+#if defined(_Win32)
+   extern void TestMQ();
+   TestMQ();
+#endif
+   }
+
+
 // NB: CANNOT use Main function's envp parameter to initialize g_envp: it does
 //     not point to the same environment that _environ does (the latter is the
 //     one that's modified by _putenv())
@@ -676,17 +773,10 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
    {
    // extern void test_CaptiveIdxOfCol();
    //             test_CaptiveIdxOfCol();
-   ThisProcessInfo::Init();
+   ConstructStatics();
    enum { DBGFXN=1 };
    DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT, __func__, memdelta() );
-#if defined(_Win32)
-   extern void TestMQ();
-   TestMQ();
-#endif
-   0 && DBG( "Got to Main!!!" );
    // for( auto argi(0); argi < argc; ++argi ) { DBG( "argv[%d] = '%s'", argi, argv[argi] ); }
-   AssignLogTag( "InitEnvRelatedSettings" );
-   InitEnvRelatedSettings();
    CmdIdxInit();
    SwitblInit();
    InitFTypeSettings();

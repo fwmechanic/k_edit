@@ -464,6 +464,7 @@ extern  bool   PutCharIntoCurfileAtCursor( char theChar, std::string &tmp1, std:
 extern  void   SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard=false );
 extern  Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc );
 extern  FileStat GetFileStat( PCChar fname );
+extern  bool   mkdir_failed( PCChar dirname );
 
 // call around FBUF::PutLastLine() calls to effect (smart) cursor-tailing
 extern  void   CapturePrevLineCountAllWindows( PFBUF pFBuf, bool fIncludeCurWindow=false );

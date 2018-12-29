@@ -87,7 +87,7 @@ PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
    return OsErrStr( dest, sizeofDest, Win32::GetLastError() );
    }
 
-#if !NO_LOG
+#if 0 && !NO_LOG
 
 // https://clarionhub.com/t/how-to-detect-if-an-outputdebugstring-viewer-is-running/241
 // https://blogs.msdn.microsoft.com/reiley/2011/07/29/a-debugging-approach-to-outputdebugstring/
