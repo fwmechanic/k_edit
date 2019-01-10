@@ -41,8 +41,16 @@ class TxtFileLineReader {
 public:
    TxtFileLineReader( FILE *ifh_, stref &line_, size_t buf_alloc_incr=2*1024 ) : d_ifh( ifh_ ), d_line(line_), d_buf_alloc_incr(buf_alloc_incr) {}
    ~TxtFileLineReader() { free( d_buf ); d_buf = nullptr; d_bufsize = 0; }
-   decltype(d_ifh) fh() const { return d_ifh; }
-   int fno() const { return fileno( d_ifh ); }
+   // NB: fgetpos/fsetpos CANNOT be used (in lieu of fseet/ftell) because arithmetic on fpos_t is not defined https://stackoverflow.com/a/21042679
+   typedef decltype( ::ftell( stdin ) ) ftell_rv_t;  // avoid having to declare type of ::ftell as it may change (e.g. ftello...)
+   ftell_rv_t ftell() { return ::ftell( d_ifh ); }
+   bool fseekFailed( ftell_rv_t skTgt, int origin  ) {
+      if( fseek( d_ifh, skTgt, origin ) != 0 ) {
+         ::DBG( "fseek() failed!" );
+         return true;
+         }
+      return false;
+      }
 #ifdef UNITTEST
    decltype(d_bytesRead) bytesRead() const { return d_bytesRead; }
    decltype(d_bufsize)   bufsize()   const { return d_bufsize; }
@@ -92,6 +100,48 @@ public:
          }
       }
    };
+
+static bool tagfieldValInTagrec( stref line, stref fieldVal ) {
+   auto oField( line.find( fieldVal ) );
+   return eosr != oField && ( oField += fieldVal.length(), oField+1==line.length() || '\t'==line[oField] );
+   }
+
+static stref tagFromLine( stref line ) {
+   const auto oHTab( line.find('\t') );
+   if( oHTab != eosr ) {
+      line.remove_suffix( line.length() - oHTab );
+      }
+   return line;
+   }
+
+static bool srIsDunder( stref sr ) {
+   return sr.length() > 4 && sr.starts_with("__") && sr.ends_with("__");
+   }
+
+/*
+   new API requirement: ( stref classnm )
+   1. bin search for topmost line for which srIsDunder( tag.name )
+   2. linear walk down while( srIsDunder( tag.name ) ), adding to
+      retval those lines for which
+      tagfieldValInTagrec( line, "class:$classnm" ) && tagfieldValInTagrec( line, "language:Python" )
+
+   ideas:
+     a. don't worry about tag.name match exactitude: rather match
+        if( tag.startwith "__" and tag.endswith "__" )
+        and don't care about what's in between.
+        then check for
+
+  POR:
+     A. Add write tagfield->tag xref file API: performs linear scan of entire tags file. param: array of field names to gen xref
+     B. pass 2 Lua arrays (tables) of strings containing (1) tag and (2) field:val selector(s)
+        enqueue_compile_jobs is sample code accepting array of strings parameter; easy-peasy.
+
+  mods:
+  x. if you're gonna perform a linear scan of a potentially gigantic file: do it ONLY ONCE.
+     a. already: for <tagged-files> creation (impl shared with Lua)
+     b. new: for xref-file creation; creation of <tagged-files> would probably be moved to C++
+
+ */
 
 int FindMatchingTagsLines(
 #ifdef UNITTEST
@@ -154,13 +204,11 @@ int FindMatchingTagsLines(
          //
          // If src=="kind:file", names of all files having kind:file tags will
          // be returned.
-
 #ifdef UNITTEST
          auto mnum( 0u );
 #endif
          while( tfrdr.getline() ) {  // NB: to run on brain-dead CMD.EXE `tagfind_c ^<tagged-files^>`
-            auto oField( line.find( src ) );
-            if( eosr != oField && ( oField += src.length(), oField+1==line.length() || '\t'==line[oField] ) ) {
+            if( tagfieldValInTagrec( line, src ) ) {
                const auto it1( line.find( '\t' ) ); // end of tag
                if( it1 != eosr ) {
                   line.remove_prefix( it1+1 );
@@ -181,8 +229,8 @@ int FindMatchingTagsLines(
          }
       else { // normal mode: binary search for all tags named src
          DB && ::DBG( "%s: -----> '%" PR_BSR "'", __func__, BSR(src) );
-         fseek( ifh, 0, SEEK_END ); auto oMax( ftell( ifh ) );
-         fseek( ifh, 0, SEEK_SET ); auto oMin( ftell( ifh ) );
+         tfrdr.fseekFailed( 0, SEEK_END ); auto oMax( tfrdr.ftell() );
+         tfrdr.fseekFailed( 0, SEEK_SET ); auto oMin( tfrdr.ftell() );
          if( oMin < 0 || oMax < 0 ) {  // CID 184286 fix
             ::DBG( "ftell error!" );
             return 1;
@@ -195,17 +243,12 @@ int FindMatchingTagsLines(
                DB && ::DBG( "getline() failed" );
                return -1;
                }
-            auto cand( line );
-            const auto oT( cand.find('\t') );
-            if( oT != eosr ) {
-               cand.remove_suffix( cand.length() - oT );
-               }
+            auto cand( tagFromLine( line ) );
             DB && ::DBG( "cand '%" PR_BSR "'", BSR(cand) );
             return cmp( src, cand );
             };
          auto seekGetLnCmp = [&tfrdr,&getLnCmp]( decltype(oMin) skTgt ) {
-            if( fseek( tfrdr.fh(), skTgt, SEEK_SET ) != 0 ) {  // CID 184290 "fix"
-               ::DBG( "fseek() failed!" );
+            if( tfrdr.fseekFailed( skTgt, SEEK_SET ) != 0 ) {  // CID 184290 "fix"
                return -1;
                }
             if( skTgt != START_OF_FILE ) { // unless seek was to START_OF_FILE...
