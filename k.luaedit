@@ -67,11 +67,26 @@ require "show"
 
 fmt = string.format
 
+local function LuaPat_escape( s ) return s:gsub( "[%$%^%(%)%%%.%[%]%*%+%-%?]", "%%%0" ) end  -- line noise!
+
 local dirsep_os        = _dir.dirsep_os()
 local dirsep_preferred = _dir.dirsep_preferred()
 local dirsep_class     = _dir.dirsep_class()
 local function new_non_dirsep_class( st ) return dirsep_class:gsub("%[","[^"..st ) end
 local not_dirsep_class = new_non_dirsep_class("")
+local pat_dup_dirsep_pat = dirsep_class..'+'..dirsep_class
+local function dedup_dirsep( st ) return st:gsub( pat_dup_dirsep_pat, dirsep_os ) end
+local pathnm_wrap_class = "['\"]"
+local function unwrapPathNm( nm )
+   local d0 = nm:match( "^("..pathnm_wrap_class..")" )
+   if d0 then
+      local rv = nm:match( "^"..d0.."([^"..d0.."]+)"..d0 )
+      if rv then  -- DBG( fmt("uwp+: %s '%s'",rv, d0) )
+         return rv, d0
+         end
+      end         -- DBG( fmt("uwp-: %s '%s'",nm, '') )
+   return nm,''
+   end
 
 local norm_path_case
 if dirsep_os=='/' then  -- kludgy but sufficient
@@ -79,7 +94,11 @@ if dirsep_os=='/' then  -- kludgy but sufficient
 else
    norm_path_case = function( st ) return st:lower() end
    end
-local function leadingDirPattern( path ) return "^"..norm_path_case(StrExpandEnvVars( path ) .. dirsep_os):gsub( dirsep_class .. "+", dirsep_os ) end
+local function leadingDirPattern( path ) return "^"..
+   LuaPat_escape(
+     norm_path_case( StrExpandEnvVars( path ) .. dirsep_os):gsub( dirsep_class .. "+", dirsep_os )
+     )
+   end
 
 Min = math.min
 Max = math.max
@@ -1106,7 +1125,6 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
 
 end  -- local scope for private functions and data the implement tgs EdFxn
 
-
 -- TopN: iterator that accepts 'max' and a 'tbl' having the structure
 --       {
 --        key = <anything>,
@@ -1651,6 +1669,21 @@ AddEdFxn{ name = "dc", help = "Menu: Dirs of Child", attr = NOARG, key = ""
 
 ---------------------------------------------------------------------------------------------------
 
+local function EditLines( edfxn, fbuf, view, y0, y1 )
+   y0 = y0 or 1
+   y1 = y1 or fbuf:LastLine()
+   -- printf( "EditLines [%d..%d]", y0, y1 )
+   for lnum = y0,y1 do
+      local line = fbuf:GetLineRaw( lnum )
+      if line then
+         local newval = edfxn( line )
+         if newval then
+            fbuf:PutLine( lnum, newval )
+            end
+         end
+      end
+   end
+
 local function DeleteLinesMatching( matchfxn, fbuf, view, y0, y1 )
    y0 = y0 or 1
    y1 = y1 or fbuf:LastLine()
@@ -1711,6 +1744,50 @@ AddEdFxn{ name = "https", help = "<matchn> contains all Lua pattern matches", at
                 )
                 end
    }
+
+do  -- edfxns to delete wildcard buffer lines
+   local function pred_not_isdir ( ln ) return not _dir.name_isdir ( unwrapPathNm( ln ) ) end
+   local function pred_not_isfile( ln ) return not _dir.name_isfile( unwrapPathNm( ln ) ) end
+   AddEdFxn{ name = "fo", help = "files only", attr = NOARG
+      , NOARG   = function(arg)  return DeleteLinesMatching( pred_not_isfile, arg.fbuf, arg.view )  end
+      }
+   AddEdFxn{ name = "do", help = "dirs only", attr = NOARG
+      , NOARG   = function(arg)  return DeleteLinesMatching( pred_not_isdir , arg.fbuf, arg.view )  end
+      }
+end
+
+do  -- edfxns to modify wildcard buffer content
+   local function name_isdir_or_isfile( rv, wd )  DBG( fmt("name_isdir_or_isfile cand=[%s]", rv) )
+      if _dir.name_isdir ( rv )
+      or _dir.name_isfile( rv ) then              DBG( fmt("name_isdir_or_isfile cand=[%s]", rv) )
+         rv = wd..rv..wd
+         return rv
+         end
+      end
+   local function toRel_er( absdir )
+      absdir = absdir or GetCwd()
+      local absdirPat = leadingDirPattern( absdir ) DBG( fmt("toRel_er [%s,%s]", absdir, absdirPat) )
+      return function( ln )
+         local nm, wd = unwrapPathNm( ln )          DBG( fmt("toRel_er cand=[%s '%s']", nm, wd) )
+         if norm_path_case( nm ):match( absdirPat ) then
+            return name_isdir_or_isfile( nm:sub( #absdir+1 ), wd )
+            end
+         end
+      end
+   local function toAbs_er( absdir )
+      absdir = absdir or GetCwd()
+      return function( st )
+         local nm, wd = unwrapPathNm( ln )
+         return name_isdir_or_isfile( dedup_dirsep(absdir..st), wd )
+         end
+      end
+   AddEdFxn{ name = "abs", help = "make paths absolute", attr = NOARG
+      , NOARG   = function(arg)  return EditLines( toAbs_er(), arg.fbuf, arg.view )  end
+      }
+   AddEdFxn{ name = "rel", help = "make paths relative", attr = NOARG
+      , NOARG   = function(arg)  return EditLines( toRel_er(), arg.fbuf, arg.view )  end
+      }
+end
 
 local function Arg2MultilineKey( arg )
 --  box
@@ -2609,8 +2686,6 @@ do
          end
    end
 
-
-   local function LuaPat_escape( s ) return s:gsub( "%%", "%%%%" ) end
 
    UrlSrchTag = "$sstr$"
    local UrlSrchTagEscaped = "%$sstr%$"  -- bugbug s/b LuaPat_escape( UrlSrchTag )
