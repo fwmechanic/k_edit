@@ -480,6 +480,15 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
    if( lin >= 0 ) {                                       auto keynum( 1 );
+      if( !wuc.starts_with( "-D" )) { // experimental
+         char scratch[81];
+         bcat( bcpy( scratch, "-D" ).length(), scratch, wuc );                         PCChar key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+         }
+      else {
+         if( wuc.length() > 2 ) {
+            PCChar key = d_sb.AddString( wuc.substr( 2 ) );                                                                     DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+            }
+         }
       if( !wuc.starts_with( "$" )) { // experimental
          char scratch[81]; PCChar key;
                bcat( bcpy( scratch, "$"  ).length(), scratch, wuc );                          key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
