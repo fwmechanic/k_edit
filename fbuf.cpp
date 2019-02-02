@@ -1,5 +1,5 @@
 // -*- c is foobar -*-
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -462,6 +462,7 @@ PView FBUF::PutFocusOn() { enum { DB=0 };           DB && DBG( "%s+ %s", __func_
       }
    if( !fContentChanged && g_CurFBuf() == this ) {  // fileAlreadyHasView?
       Assert( g_CurView() && g_CurView()->FBuf() == this );
+      g_CurView()->PutFocusOn();  // necessary for all_window_WUC_hiliting to unhilite when switching windows
       return g_CurView();
       }                                             DB && DBG( "%s is %s will be %s", __func__, g_CurFBuf()?g_CurFBuf()->Name():"", this->Name() );
    g_UpdtCurFBuf( this ); //##########################################################################

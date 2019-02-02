@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -741,7 +741,7 @@ public:
    void         PokeOriginLine_HACK( LINE yLine ) { d_current.Origin.lin = yLine; }
    char         CharUnderCursor(); // cursor being a View concept...
    bool         PBalFindMatching( bool fSetHilite, Point *pPt );
-   bool         GetBOXSTR_Selection( std::string &st );
+   stref        GetBOXSTR_Selection();
    bool         d_LastSelect_isValid;
    Point        d_LastSelectAnchor, d_LastSelectCursor;
    bool         prev_balln( LINE yStart, bool fStopOnElse );

@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -326,7 +326,7 @@ bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { 
       }
    }
 
-bool View::GetBOXSTR_Selection( std::string &st ) {
+stref View::GetBOXSTR_Selection() {
    if( this == g_CurView() ) {
       const auto cursor( Cursor() );
       if( Get_g_ArgCount() > 0 /* && s_SelAnchor.lin == cursor.lin */ ) {   0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
@@ -334,11 +334,10 @@ bool View::GetBOXSTR_Selection( std::string &st ) {
          const auto xMax( std::max( s_SelAnchor.col, cursor.col ) );
          auto sr( FBuf()->PeekRawLineSeg( cursor.lin, xMin, xMax-1 ) );     0 && DBG("x:%d,%d '%" PR_BSR "'", xMin, xMax-1, BSR(sr) );
          trim( sr );
-         st.assign( sr.data(), sr.length() );
-         return true;
+         return sr;
          }
       }
-   return false;
+   return stref();
    }
 
 bool ARG::BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax ) {

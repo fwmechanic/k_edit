@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -403,13 +403,13 @@ protected:
    };
 const char FileSearcher::FindStrRslt::chNoMatch = '\0';
 
-STATIC_CONST auto s_PtInvalid = Point( -1, -1 );
+GLOBAL_CONST Point g_PtInvalid = Point( -1, -1 );
 
 void FileSearcher::ResolveDfltBounds() {
    auto &Bof( d_sm.d_fSearchForward ? d_start : d_end   );
    auto &Eof( d_sm.d_fSearchForward ? d_end   : d_start );
-   if( s_PtInvalid == Bof ) { Bof = Point( 0, 0 );                         }
-   if( s_PtInvalid == Eof ) { Eof = Point( d_pFBuf->LastLine(), COL_MAX ); }
+   if( g_PtInvalid == Bof ) { Bof = Point( 0, 0 );                         }
+   if( g_PtInvalid == Eof ) { Eof = Point( d_pFBuf->LastLine(), COL_MAX ); }
    }
 
 void FileSearcher::FindMatches() {
@@ -418,14 +418,14 @@ void FileSearcher::FindMatches() {
    }
 
 void FileSearcher::SetBoundsWholeFile() {
-   d_start = s_PtInvalid;
-   d_end   = s_PtInvalid;
+   d_start = g_PtInvalid;
+   d_end   = g_PtInvalid;
    }
 
 void FileSearcher::SetBoundsToEnd( Point StartPt ) {
    // this is the only method that would be used for backward searches (since ARG::msearch is the only backward-searching cmd)
    d_start = StartPt;
-   d_end   = s_PtInvalid;
+   d_end   = g_PtInvalid;
    }
 
 void FileSearcher::SetBounds( Point StartPt, Point EndPt ) {

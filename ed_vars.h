@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -117,6 +117,8 @@ extern int   g_swiWBCidx         ;
 //############################  const  ############################
 //############################  const  ############################
 //############################  const  ############################
+
+extern const Point g_PtInvalid;    // a Point that will never match a Point validly located within a file (FBUF, View)
 
 extern const int  g_MaxKeyNameLen;
 

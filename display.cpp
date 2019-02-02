@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -457,40 +457,51 @@ bool HiliteAddin_Pbal::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
    return false;
    }
 
-/* 20110516 kgoodwin
-   allow a envp-style sequence of WUC needles so that calc'd derivatives of the
-   actual WUC can be highlighted.  In particular, the MWDT elfdump disasm shows
-   0xhexaddress in intruction operands, but each instruction's address is shown
-   as hexaddress (and I want the latter to be highlighted when the former is
-   WUC).  */
+/* 20190202 kgoodwin
+   sole instance of WucState (s_wucState) is used to implement
+   all_window_WUC_hiliting: any call to
+   HiliteAddin_WordUnderCursor::VHilitLineSegs() (for current View of _any_ Win)
+   references the last-set WUC in s_wucState. */
 
-class HiliteAddin_WordUnderCursor : public HiliteAddin {
-   void VCursorMoved( bool fUpdtWUC ) override;
-// void VFbufLinesChanged( LINE yMin, LINE yMax )  { /* d_wucbuf[0] = '\0'; */ }
-   bool VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) override;
+class WucState {
 public:
-   HiliteAddin_WordUnderCursor( PView pView )
-      : HiliteAddin( pView )
-      {}
-   ~HiliteAddin_WordUnderCursor() {}
-   PCChar Name() const override { return "WUC"; }
-private:
-   StringsBuf<BUFBYTES> d_sb;
-   std::string          d_stCandidate;
-   std::string          d_stSel;     // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
-   void SetNewWuc( stref src, LINE lin, COL col );
-   };
+/* 20110516 kgoodwin
+   sb_t is a envp-style sequence of WUC needles so that calc'd derivatives of
+   the actual WUC can be highlighted.  In particular, the MWDT elfdump disasm
+   shows 0xhexaddress in intruction operands, but each instruction's address is
+   shown as hexaddress (and I want the latter to be highlighted when the former
+   is WUC). */
 
-void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
+   typedef StringsBuf<BUFBYTES> sb_t;
+private:
+   sb_t        d_sb;
+   std::string d_stSel;     // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
+   PCView      d_wucSrc = nullptr;  // never dereferenced, only compared (indirectly) vs. g_CurView()
+
+public:
+    WucState() {}
+   ~WucState() {}
+   void SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc );
+   void VCursorMoved( bool fUpdtWUC, View &view );
+   bool VHilitLineSegs( View &view, LINE yLine, LineColorsClipped &alcc ) const;
+private:
+   sb_t        get_sb      () const { return d_sb;     }
+   std::string get_stSel   () const { return d_stSel;  }
+   PCView      get_wucSrc  () const { return d_wucSrc; }
+   void        PrimeRefresh() const { DispNeedsRedrawAllLinesAllWindows(); }  // all_window_WUC_hiliting demands ...AllWindows() version
+   } s_wucState;
+
+void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
+   d_wucSrc = wucSrc;
    d_stSel.clear();
    if( d_sb.find( src ) ) { /* assume transitivity */                                                           DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
-      DispNeedsRedrawAllLines();   // we're setting the same WUC: redraw in case cursor was off-any-WUC (all WUC's HL'd) and is now
+      PrimeRefresh();   // we're setting the same WUC: redraw in case cursor was off-any-WUC (all WUC's HL'd) and is now
       return;                      // over a WUC (in which case WUC-UC (under-cursor) is now HL'd, and needs to become un-HL'd)
       }
    d_sb.clear(); // aaa aaa aaa aaa
    stref wuc( d_sb.AddString( src ) );
    if( !wuc.data() ) {                                                                                          DBG_HL_EVENT && DBG( "%s toolong", __func__);
-      DispNeedsRedrawAllLines();
+      PrimeRefresh();
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
    if( lin >= 0 ) {                                       auto keynum( 1 );
@@ -540,7 +551,7 @@ void HiliteAddin_WordUnderCursor::SetNewWuc( stref src, LINE lin, COL col ) {
             }
          }
       }
-   DispNeedsRedrawAllLines();                                                                                // DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
+   PrimeRefresh();                                                                                           // DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
    }
 
 GLOBAL_VAR int g_iWucMinLen = 2;
@@ -644,37 +655,60 @@ bool ARG::dquc() {
    }
 #endif
 
-void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
-   if( d_view.GetBOXSTR_Selection( d_stCandidate ) && !IsStringBlank( d_stCandidate ) ) {
-      if( d_stSel != d_stCandidate ) {
-         d_stSel = d_stCandidate;
+void WucState::VCursorMoved( bool fUpdtWUC, View &view ) { 0 && DBG( "%s fUpdtWuc=%d V=%p", __func__, fUpdtWUC, &view );
+   const auto boxstr_sel( view.GetBOXSTR_Selection() );
+   if( !IsStringBlank( boxstr_sel ) ) {
+      if( !eq( d_stSel, boxstr_sel ) ) {
+         d_stSel.assign( sr2st( boxstr_sel ) );
          d_stSel.push_back( 0 );  // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
-                                                            0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
+                                                             0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
          d_sb.clear();
-         DispNeedsRedrawAllLines();
+         PrimeRefresh();
          }
       }
    else if( fUpdtWUC ) {
-      const auto yCursor( Cursor().lin );
-      auto start( Cursor() );
-      const auto wuc( GetWordUnderPoint( CFBuf(), &start ) );
+      const auto yCursor( view.Cursor().lin );
+      auto start( view.Cursor() );
+      const auto wuc( GetWordUnderPoint( view.CFBuf(), &start ) );
       if( !wuc.empty() ) {
          if( wuc.length() >= g_iWucMinLen ) { // WUC is long enough?
-            SetNewWuc( wuc, start.lin, start.col );
+            SetNewWuc( wuc, start.lin, start.col, &view );
             }
          }
       else { // not on a word...
-         if( !d_sb.empty() ) {          // ...but we are highlighting a non-sel WUC, so must redraw in case cursor...
-            DispNeedsRedrawAllLines();  // ...just departed the WUC (must transition from not- to highlighted)
+         if( !d_sb.empty() ) {   // ...but we are highlighting a non-sel WUC, so must redraw in case cursor...
+            PrimeRefresh();      // ...just departed the WUC (must transition from not- to highlighted)
             }
          }
       }
    }
 
-bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
+
+class HiliteAddin_WordUnderCursor : public HiliteAddin {
+   void VCursorMoved( bool fUpdtWUC ) override;
+// void VFbufLinesChanged( LINE yMin, LINE yMax )  { /* d_wucbuf[0] = '\0'; */ }
+   bool VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) override;
+public:
+   HiliteAddin_WordUnderCursor( PView pView )
+      : HiliteAddin( pView )
+      {}
+   ~HiliteAddin_WordUnderCursor() {}
+   PCChar Name() const override { return "WUC"; }
+   };
+
+void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
+   s_wucState.VCursorMoved( fUpdtWUC, d_view );
+   }
+
+STATIC_FXN bool HilitWucLineSegs
+   ( PCFBUF         fb
+   , WucState::sb_t d_sb
+   , std::string    d_stSel
+   , const Point   &cursor
+   , LINE yLine, LineColorsClipped &alcc
+   ) {
    const auto keyStart( !d_sb.empty() ? d_sb.data() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
    if( keyStart ) {
-      auto fb( CFBuf() );
       const auto rlAll( fb->PeekRawLine( yLine ) );
       if( !rlAll.empty() ) {
          const auto tw( fb->TabWidth() );
@@ -716,7 +750,7 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
                   || // or a true WUC (only match _whole words_ matching d_wucbuf)
                     (  (ixFirstMatch      == 0           || !isWordChar(rl[ixFirstMatch       ]) || !isWordChar(rl[ixFirstMatch-1   ])) // char to left  of match is non-word
                     && (ixFirstMatch+mlen == rl.length() || !isWordChar(rl[ixFirstMatch+mlen-1]) || !isWordChar(rl[ixFirstMatch+mlen])) // char to right of match is non-word
-                    && (yLine != Cursor().lin || Cursor().col < xFound || Cursor().col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
+                    && (yLine != cursor.lin || cursor.col < xFound || cursor.col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
                     )
                  ) {
                   alcc.PutColor( xFound, mlen, ColorTblIdx::WUC );
@@ -730,6 +764,16 @@ bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped 
          }
       }
    return false;
+   }
+
+bool WucState::VHilitLineSegs( View &view, LINE yLine, LineColorsClipped &alcc ) const {
+   const auto fIgnoreCursorWuc( &view == get_wucSrc() );                           0 && DBG( "%s: igCurWUC=%d v=%p", __func__, fIgnoreCursorWuc, &view );
+   const Point &cursor = fIgnoreCursorWuc ? view.Cursor() : g_PtInvalid;
+   return HilitWucLineSegs( view.CFBuf(), get_sb(), get_stSel(), cursor, yLine, alcc );
+   }
+
+bool HiliteAddin_WordUnderCursor::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
+   return s_wucState.VHilitLineSegs( d_view, yLine, alcc );
    }
 
 struct CppCondEntry_t {
@@ -2446,14 +2490,15 @@ void View::EnsureWinContainsCursor() {
 // used to display an FBUF.  View::PutFocusOn()'s responsibility is to
 // initialize these fields
 //
-void View::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ %s", __func__, this->FBuf()->Name() );
+void View::PutFocusOn() { enum { DBG_OK=0 }; DBG_OK && DBG( "%s+ v=%p %s", __func__, this, this->FBuf()->Name() );
    // BUGBUG This causes the View list to link to self; don't know why!?
    // ViewHead &cvwHd = g_CurViewHd();
    // DLINK_INSERT_FIRST( cvwHd, this, dlink );
    EnsureWinContainsCursor();  // window resize may have occurred
-   ForceCursorMovedCondition();
+   // ForceCursorMovedCondition(); redundant to "d_fUpdtWUC_pending = true;"
+   d_fUpdtWUC_pending = true;  // all_window_WUC_hiliting
    HiliteAddins_Init();
-   d_tmFocusedOn = time( nullptr );
+   d_tmFocusedOn = time( nullptr );          DBG_OK && DBG( "%s- v=%p %s", __func__, this, this->FBuf()->Name() );
    }
 
 void View::HiliteAddin_Event_WinResized() {
@@ -2468,7 +2513,8 @@ void View::HiliteAddin_Event_If_CursorMoved() {
       DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
          pDispAddin->VCursorMoved( d_fUpdtWUC_pending );
          }
-      d_fCursorMoved = d_fUpdtWUC_pending = false;
+      d_fCursorMoved     = false;
+      d_fUpdtWUC_pending = false;
       }
    }
 
