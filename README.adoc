@@ -152,6 +152,15 @@ Information stored in state files includes:
  * recent search-key and replace-string values
  * editor-function invocation-count accumulators (to enable fact-based key assignments)
 
+## User Editor Customization via files outside the k_edit worktree
+
+K loads (compiles and executes into its primary Lua environment) a Lua source code file named `${K_SITE_DIR}/k_edit_site.lua`.  The user may define `${K_SITE_DIR}` directly; if not, locations
+
+ * `${XDG_CONFIG_HOME}${XDG_CONFIG_HOME:+/k_edit"}`
+ * `${USERPROFILE}${USERPROFILE:+/k_edit"}`
+
+are tried.  See variable `sled_childenv` in `k.luaedit` for a list of the Lua-code functions which are exported from that file to (Lua code in) `${K_SITE_DIR}/k_edit_site.lua`.  There is a sample `k_edit_site.lua` file to be found nearby...
+
 ## Debug/Development
 
 Logfile $K_LOGFNM, having session-unique name is stored in $K_LOGDIR which == "$K_STATEDIR/log", contains output from DBG macros which are sprinkled liberally throughout the source code.  I am grateful for GCC's printf format-string+argument-type checking which makes saves _a lot_ of crash-debugging.

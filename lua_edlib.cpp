@@ -91,7 +91,7 @@ namespace LExFx { // exported functions
       }
 
    STATIC_FXN int GetDynMacros( lua_State *L ) {
-      lua_newtable(L);  // result
+      lua_newtable(L);  // result array
       auto tblIdx( 0u );
       push_mac_def( L, "curfile"     );                      lua_rawseti( L, -2, ++tblIdx );
       push_mac_def( L, "curfileext"  );                      lua_rawseti( L, -2, ++tblIdx );
@@ -118,7 +118,7 @@ namespace LExFx { // exported functions
    STATIC_FXN int Path_Ext( lua_State *L )   { const auto rv( Path::RefExt(      S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
    STATIC_FXN int Path_FnameExt( lua_State *L ) { const auto rv( Path::RefFnameExt( S_(1) ) ); R_lstr( rv.data(), rv.length() ); }
    STATIC_FXN int GetChildDirs( lua_State *L ) {
-      lua_newtable(L);  // result
+      lua_newtable(L);  // result array
       DirListGenerator dlg( __PRETTY_FUNCTION__ );
       Path::str_t xb;
       for( int tblIdx=1 ; dlg.VGetNextName( xb ) ; ++tblIdx ) {
@@ -212,7 +212,7 @@ STATIC_FXN int lua_split_rtn_tbl( lua_State *L, TLuaSplitFxn sf ) {
    auto strToSplit = S_(1);
    auto sep = S_(2);
    auto ix  = 1;
-   lua_newtable(L);  // result
+   lua_newtable(L);  // result array
    // repeat for each separator
    PCChar pastEnd;
    int sepLen(0);
@@ -722,7 +722,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
       }
    }
 
-void l_SetEditorGlobalsInts( lua_State *L ) {
+void l_SetEditorGlobals( lua_State *L ) {
    struct nm2int { PCChar name; int value; };
    STATIC_CONST nm2int intVals[] = {
       { "NOARG"       , NOARG      },
@@ -744,9 +744,18 @@ void l_SetEditorGlobalsInts( lua_State *L ) {
       { "MACROFUNC"   , MACROFUNC  },
       { "MAXCOL"      , COL_MAX    },
    };
+   // above table processed TWICE:
+   // 1: define all as globals having int values
    for( const auto &pE : intVals ) { 0 && DBG_LUA && DBG( "%s *** loading %s ***", __func__, pE.name );
       setglobal( L, pE.name, pE.value );
       }
+   // 2: define all in a global dict "ArgType" with string keys -> int values
+   //    Purpose: to allow these variables (alone) to be exported to Lua sandboxes
+   lua_createtable(L, 0, 18);  // 18 = number of fields
+   for( const auto &pE : intVals ) { 0 && DBG_LUA && DBG( "%s *** loading %s ***", __func__, pE.name );
+      setfield( L, pE.name, pE.value );
+      }
+   lua_setglobal( L, "ArgType" );
    }
 
 void l_register_class( lua_State *L
@@ -924,7 +933,7 @@ void l_register_Editor_objects( lua_State *L ) {
    }
 
 void l_register_EdLib( lua_State *L ) {
-   l_SetEditorGlobalsInts   ( L );
+   l_SetEditorGlobals       ( L );
    l_RegisterEditorFuncs    ( L );
    l_register_Editor_objects( L );
    }

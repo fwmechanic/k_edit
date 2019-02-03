@@ -69,6 +69,7 @@ fmt = string.format
 
 local function LuaPat_escape( s ) return s:gsub( "[%$%^%(%)%%%.%[%]%*%+%-%?]", "%%%0" ) end  -- line noise!
 
+local prog_leaf_dnm = "k_edit"
 local dirsep_os        = _dir.dirsep_os()
 local dirsep_preferred = _dir.dirsep_preferred()
 local dirsep_class     = _dir.dirsep_class()
@@ -4039,23 +4040,29 @@ do
       , BOXARG =  function(arg) xform_boxarg( arg,  eval08X ) end
       }
 
-   function load_env( fnm, env )
-      if not IsFile( fnm ) then return end
-      print( "loading "..fnm )
-      local ok,fxn = pcall( loadfile, fnm )         -- print( "compiled something" )
-      if not ok then
-         print( "pcall loadfile "..fnm.. " compile failed: "..fxn )
+   function load_lua_env( fnm, env ) -- TODO this is NEARLY identical to compileWorkspace; see if they can be collapsed
+      if not IsFile( fnm ) then
+         print( "load_lua_env: FAIL "..fnm.." is not a file, skipping" )
          return
          end
+      print( "load_lua_env: compiling "..fnm )
+      local fxn,emsg = loadfile( fnm )         -- print( "compiled something" )
+      if not fxn then
+         print( "load_lua_env: FAIL loadfile "..fnm.. " compile failed: "..emsg )
+         return
+         end
+      print( "load_lua_env: executing "..fnm )
       env = env or {}
-      env._G = env
+      -- env._G = env     -- why is this here?
+      env = strict_fenv( env )
       setfenv( fxn, env )
       local pcstat, em = pcall( fxn )
       if not pcstat then
-         print( "pcall fxn "..fnm.. " NOT OK: "..em )
+         print( "load_lua_env: FAIL pcall fxn "..fnm.. " NOT OK: "..em )
          return
          end
       -- ObjectShow( env, "prod.lua for "..fnm )
+      print( "load_lua_env: SUCCESS "..fnm )
       return env
       end
 
@@ -4255,7 +4262,7 @@ printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )
 
 --########################################################################################################################################
 -- DO NOT DELETE NEXT LINE!  (the global variable) filesettings IS READ BY C++ CODE!!!
-filesettings = load_env( RsrcFilename( "filesettings" ), {
+filesettings = load_lua_env( RsrcFilename( "filesettings" ), {
      print         = print         ,
      NameExtOf     = NameExtOf     ,
      ExtOf         = ExtOf         ,
@@ -4267,9 +4274,58 @@ filesettings = load_env( RsrcFilename( "filesettings" ), {
 print( "filesettings is a "..type(filesettings) )
 --########################################################################################################################################
 
-print( "runchild is a "..type(runchild) )
+require "user"  -- compile & execute %~dp0user.lua
 
-require "user"
+-- "sled" = Site Local Editor Directory: where site-/user-specific/owned (i.e. exo-k_edit-worktree) editor-extending files are sought
+do
+   local sledfxfnm = "k_edit_site.lua"
+   local function sitedir_tmplt( envvnm )
+      return "${"..envvnm.."}".."${"..envvnm..":+"..dirsep_os..prog_leaf_dnm.."}"
+      end
+   local sledfxf_search = {
+      "${K_SITE_DIR}",
+      sitedir_tmplt( "XDG_CONFIG_HOME" ),
+      sitedir_tmplt( "USERPROFILE" ),
+      }
+   local function find_sled_file( fnm )
+      for _,tmlpt in ipairs(sledfxf_search) do           print( "find_sled_file: tmlpt='"..tmlpt.."'" )
+         local exp = StrExpandEnvVars( tmlpt )           print( "find_sled_file: expansion='"..exp.."'" )
+         if #exp == 0 then                               print( "find_sled_file: noexpansion" )
+         else
+            if not _dir.name_isdir( exp ) then           print( "find_sled_file: not a dir" )
+            else                                         print( "find_sled_file:  is a dir" )
+               local cand_fnm = exp..dirsep_os..fnm
+               if not _dir.name_isfile( cand_fnm ) then  print( "find_sled_file: not a file '"..cand_fnm.."'" )
+               else                                      print( "find_sled_file:  is a file '"..cand_fnm.."'" )
+                  return cand_fnm
+                  end
+               end
+            end
+         end
+      end
+   local sled_fnm = find_sled_file( sledfxfnm )
+   if sled_fnm then
+      local sled_childenv = { -- (judiciously) expand as needed
+         AddEdFxn    = AddEdFxn ,
+         AssignStrOk = AssignStrOk ,
+         ArgType     = ArgType ,
+         Msgf        = Msgf ,
+         print       = print ,
+         }
+      local sled_lua_env = load_lua_env( sled_fnm, sled_childenv )
+      -- note that sled_lua_env is "forgotten"; the value of sled_lua_env lies in its load-time (e.g. AddEdFxn, AssignStrOk) execution side-effects
+
+      if false then  -- example sled file: c:\Users\Kevin\k_edit\k_edit_site.lua
+         print( "execute start" )
+         AssignStrOk( 'hithere:=arg "hello" message' )
+         AddEdFxn{ name = "hello_world", help = "test"
+                 , attr = ArgType.NOARG
+                 , NOARG = function( arg ) Msgf( "hello %s", "world" ) return false end
+                 }
+         print( "execute end" )
+         end  -- example sled file
+      end
+end
 
 do
    RecoverStatusFile()
