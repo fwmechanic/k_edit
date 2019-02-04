@@ -212,26 +212,17 @@ STATIC_FXN inline FTypeSetting *IdxNodeToFTS( RbNode *pNd ) { return static_cast
 
 struct FTypeSetting {
    enum { DB=0 };
-   enum HL_ID {
-          HL_none   ,
-          HL_C      ,
-          HL_MAKE   ,
-          HL_LUA    ,
-          HL_PYTHON ,
-          HL_BASH   ,
-          HL_SQL    ,
-          HL_PWRSHL ,
-          HL_DIFF   ,
-        };
-   Path::str_t d_key;  // rbtree key
+   std::string d_ftypeName;  // rbtree key
+   std::string d_hiliteName;
    colorval_t  d_colors[ ColorTblIdx::VIEW_COLOR_COUNT ];
    constexpr STATIC_FXN int d_colors_ELEMENTS() { return ELEMENTS(d_colors); }
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
-   HL_ID       d_hl_id;
    void  Update();
+   stref ftypeName()  const { return d_ftypeName ; }
+   stref hiliteName() const { return d_hiliteName; }  // HiliteAddins_Init() uses to map specific hilites
    FTypeSetting( stref ext )
-      : d_key( sr2st(ext) )
-      {                            0 && DBG( "%s CTOR: '%" PR_BSR "' ----------------------------------------------", __func__, BSR(d_key) );
+      : d_ftypeName( sr2st(ext) )
+      {                            0 && DBG( "%s CTOR: '%" PR_BSR "' ----------------------------------------------", __func__, BSR(d_ftypeName) );
       Update();
       }
    ~FTypeSetting() {}
@@ -241,7 +232,7 @@ STATIC_VAR RbTree *s_FTS_idx;
 STATIC_FXN int Show_FTypeSettings() {
    if( FTypeSetting::DB ) {                      DBG( "%s+ ----------------------------------------------", __func__ );
       rb_traverse( pNd, s_FTS_idx ) {
-         const auto pFTS( IdxNodeToFTS( pNd ) ); DBG( "%s  %d=[%s] ", __func__, pFTS->d_hl_id, pFTS->d_key.c_str() );
+         const auto pFTS( IdxNodeToFTS( pNd ) ); DBG( "%s  %" PR_BSR "=%" PR_BSR, __func__, BSR(pFTS->ftypeName()), BSR(pFTS->hiliteName()) );
          }                                       DBG( "%s- ----------------------------------------------", __func__ );
       }
    return 1;
@@ -251,7 +242,7 @@ void FTypeSetting::Update() {
    Catbuf<120> kybuf;
    const auto w0( kybuf.Wref() );
    const auto w1( w0.cpy( "filesettings.ftype_map." ) );
-         auto w2( w1.cpy( stref(d_key) ) );
+         auto w2( w1.cpy( stref(d_ftypeName) ) );
    if( !LuaCtxt_Edit::TblKeyExists( kybuf.c_str() ) ) {
       w2 = w1.cpy( "unknown" );
       }
@@ -261,24 +252,7 @@ void FTypeSetting::Update() {
    w2.cpy( ".hilite" );
    char hiliteNmBuf[21];
    LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf.c_str(), "" );           DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
-   stref key( hiliteNmBuf );
-   STATIC_CONST struct { stref nm; HL_ID enumval; } hlnms[] = {
-      { "c"          , HL_C      },
-      { "make"       , HL_MAKE   },
-      { "lua"        , HL_LUA    },
-      { "python"     , HL_PYTHON },
-      { "bash"       , HL_BASH   },
-      { "sql"        , HL_SQL    },
-      { "diff"       , HL_DIFF   },
-      { "pwrshell"   , HL_PWRSHL },
-      };
-   d_hl_id = HL_none;
-   for( const auto &cc : hlnms ) {
-      if( eq( key, cc.nm ) ) {                                            DB && DBG( "%s.extmatch: %" PR_BSR " = %" PR_BSR "", __func__, BSR(key), BSR(cc.nm) );
-         d_hl_id = cc.enumval;
-         break;
-         }
-      }
+   d_hiliteName.assign( hiliteNmBuf );
    }
    {
    STATIC_CONST struct { PCChar pLuaName; size_t ofs; int dflt; } s_color2Lua[] = { // contents init'd from $KINIT:k.filesettings
@@ -323,13 +297,19 @@ STATIC_FXN FTypeSetting *Get_FTypeSetting( stref ftype ) {              FTypeSet
       return IdxNodeToFTS( pNd );
       }
    auto pNew( new FTypeSetting( ftype ) );                              FTypeSetting::DB && DBG( "%s CREATING [%" PR_BSR "]", __func__, BSR(ftype) );
-   rb_insert_before( s_FTS_idx, pNd, pNew->d_key.c_str(), pNew );
+   rb_insert_before( s_FTS_idx, pNd, pNew->d_ftypeName.c_str(), pNew );
    return pNew;
+   }
+
+void FBUF::SetFType() {
+   if( !GetFTypeSettings() ) {
+      d_ftypeStruct = Get_FTypeSetting( DeduceFType() );
+      }
    }
 
 void Reread_FTypeSettings() {                                           FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
    rb_traverse( pNd, s_FTS_idx ) {
-      const auto pFTS( IdxNodeToFTS( pNd ) );                           FTypeSetting::DB && DBG( "%s  [%s]", __func__, pFTS->d_key.c_str() );
+      const auto pFTS( IdxNodeToFTS( pNd ) );                           FTypeSetting::DB && DBG( "%s  [%" PR_BSR "]", __func__, BSR(pFTS->ftypeName()) );
       pFTS->Update();
       }                                                                 FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
@@ -355,12 +335,7 @@ int View::ColorIdx2Attr( int colorIdx ) const {
    return unknownColor;
    }
 
-void FBUF::SetFType( stref ft ) {
-   if( !FTypeEq( ft ) ) {
-      d_ftype.assign( sr2st(ft) );
-      d_ftypeStruct = ::Get_FTypeSetting( ft );
-      }
-   }
+stref FBUF::FTypeName() const { return d_ftypeStruct ? d_ftypeStruct->ftypeName() : ""; }
 
 //-----------------------------------------------------------------------------------------------------------
 
@@ -2289,35 +2264,54 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
 
 GLOBAL_VAR bool g_fLangHilites = true;
 
+/* Supporting new FTypeName:
+
+   In k.filesettings:
+
+   1. define new FTypeName={ colors={}, hilite="hlname" } mapping in ftype_map
+         colors=map
+         hilite=name of hilite to be used in HiliteAddins_Init()
+
+   2. bind file characteristics (filename/extension/content (e.g. shebang)) to
+      new FTypeName by adding to tables e.g. exToFType_ above Lua function
+      FnmToFType.
+
+   In .krsrc:
+
+   3. If desired, add a section [ftype:FTypeName] with trailing assigns to suit.
+
+   In display.cpp:
+
+   4. If necessary,
+   4a.  create a NEW HiliteAddin-derived-class to hilite FTypeName.
+   4b.  add new class' instantiation (and mapping to FTypeName) in HiliteAddins_Init.
+   NB: Often an existing hilite can be at least temporarily reused to avoid/delay
+       writing new C++ code.
+
+*/
 void View::HiliteAddins_Init() {
    DBADIN && DBG( "******************* %s+ %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , CFBuf()->HasLines() ? "has" : "no", CFBuf()->Name() );
    if(   g_fLangHilites
       && d_addins.empty()
       && (CFBuf()->HasLines() || CFBuf()->FnmIsPseudo())
-      && !CFBuf()->FType().empty()
-      && CFBuf()->GetFTypeSettings()
+      &&  CFBuf()->GetFTypeSettings()
      ) {                                               DBADIN && Show_FTypeSettings();
-      const auto pFTS( CFBuf()->GetFTypeSettings() );  DBADIN && DBG( "%s [%s] HL_ID=%d HL_PS=%d ================================================================", __func__, CFBuf()->FType().c_str(), pFTS->d_hl_id, FTypeSetting::HL_PWRSHL );
      #define IAL( ainm ) InsertAddinLast( new ainm( this ) )
-             /* ALWAYS */              IAL( HiliteAddin_Pbal       );
-      switch( pFTS->d_hl_id ) {
-         case FTypeSetting::HL_C     : IAL( HiliteAddin_cond_CPP   );
-                                       IAL( HiliteAddin_clang      );  break;
-         case FTypeSetting::HL_MAKE  : IAL( HiliteAddin_cond_gmake );
-                                       IAL( HiliteAddin_python     );  break;
-         case FTypeSetting::HL_LUA   : IAL( HiliteAddin_lua        );  break;
-         case FTypeSetting::HL_PYTHON: IAL( HiliteAddin_python     );  break;
-         case FTypeSetting::HL_BASH  : IAL( HiliteAddin_python     );  break;
-         case FTypeSetting::HL_SQL   : IAL( HiliteAddin_sql        );  break;
-         case FTypeSetting::HL_DIFF  : IAL( HiliteAddin_Diff       );  break;
-         case FTypeSetting::HL_PWRSHL: IAL( HiliteAddin_powershell );  break;
-         default: if( pFTS->d_eolCommentDelim[0] ) {
-                     InsertAddinLast( new HiliteAddin_EolComment( this, pFTS->d_eolCommentDelim ) );
-                     }
-                  break;
-         }
-             /* ALWAYS */               { IAL( HiliteAddin_WordUnderCursor ); }
-      if( USE_HiliteAddin_CompileLine ) { IAL( HiliteAddin_CompileLine     ); }
+      const auto fts ( CFBuf()->GetFTypeSettings() );
+      const auto hlNm( fts->hiliteName() );
+      const auto ftnm( fts->ftypeName() );             DBADIN && DBG( "%s [ftype=%" PR_BSR "/hilite=%" PR_BSR "] ================================================================", __func__, BSR( ftnm ), BSR( hlNm ) );
+             /* ALWAYS */                   IAL( HiliteAddin_Pbal );
+      if     ( eqi( hlNm, "c"         ) ) { IAL( HiliteAddin_cond_CPP ); IAL( HiliteAddin_clang ); }
+      else if( eqi( hlNm, "make"      ) ) { IAL( HiliteAddin_cond_gmake ); IAL( HiliteAddin_python );  }
+      else if( eqi( hlNm, "lua"       ) ) { IAL( HiliteAddin_lua );  }
+      else if( eqi( hlNm, "python"    ) ) { IAL( HiliteAddin_python );  }
+      else if( eqi( hlNm, "bash"      ) ) { IAL( HiliteAddin_python );  }
+      else if( eqi( hlNm, "sql"       ) ) { IAL( HiliteAddin_sql );  }
+      else if( eqi( hlNm, "diff"      ) ) { IAL( HiliteAddin_Diff );  }
+      else if( eqi( hlNm, "pwrshell"  ) ) { IAL( HiliteAddin_powershell );  }
+      else{if( fts->d_eolCommentDelim[0]) { InsertAddinLast( new HiliteAddin_EolComment( this, fts->d_eolCommentDelim ) ); } }
+             /* ALWAYS */                 { IAL( HiliteAddin_WordUnderCursor ); }
+      if( USE_HiliteAddin_CompileLine )   { IAL( HiliteAddin_CompileLine     ); }
       /* later IAL's have "last say" and therefore take precedence.  Because I want
          HiliteAddin_CursorLine, to be visible in all cases, it's IAL'd last */
                                         { IAL( HiliteAddin_CursorLine      ); }
@@ -3019,16 +3013,16 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    if( pfh->IsDiskRO() )                                                 { cl.Cat( ColorTblIdx::ERRM, " DiskRO" ); }
 #endif
    cl.Cat( ColorTblIdx::SEL , FmtStr<45>( "X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ).k_str() );
-// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "%s]", BSR( pfh->FType() ), LastRsrcLdFileSectionNm() ).k_str() );
+// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "%s]", BSR( pfh->FTypeName() ), LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).k_str() );
 // cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).k_str() );
-   { const auto ftypset( pfh->FType().c_str() ); const auto lastrsrcftypset( LastRsrcFileLdSectionFtypeNm() );
-   if( eq( ftypset, lastrsrcftypset ) ) { // avoid redundant status display
-      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[rx:%" PR_BSR "/ft:%s]", BSR(pfh->GetRsrcExt()), ftypset ).k_str() );
+   { const auto ftypenm( pfh->FTypeName() ); const auto lastrsrcftypenm( LastRsrcFileLdSectionFtypeNm() );
+   if( eq( ftypenm, lastrsrcftypenm ) || '\0'==lastrsrcftypenm[0] ) { // avoid redundant status display
+      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(ftypenm) ).k_str() );
       }
    else {
-      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[rx:%" PR_BSR "/ft:%s/ldd:%s]", BSR(pfh->GetRsrcExt()), ftypset, lastrsrcftypset ).k_str() );
+      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "/ldd:%s]", BSR(ftypenm), lastrsrcftypenm ).k_str() );
       }
    }
 // cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).k_str() );

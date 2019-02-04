@@ -1,4 +1,23 @@
 #!lua
+--
+-- Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+--
+-- This file is part of K.
+--
+-- K is free software: you can redistribute it and/or modify it under the
+-- terms of the GNU General Public License as published by the Free Software
+-- Foundation, either version 3 of the License, or (at your option) any later
+-- version.
+--
+-- K is distributed in the hope that it will be useful, but WITHOUT ANY
+-- WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+-- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+-- details.
+--
+-- You should have received a copy of the GNU General Public License along
+-- with K.  If not, see <http://www.gnu.org/licenses/>.
+--
+
 --[[
 
 20070823 kgoodwin wrote
@@ -6,9 +25,131 @@
 20080618 kgoodwin NB!  K (editor core) directly accesses the contents of
                   this file's global ftype_map (see display.cpp)
 
+20190208 kgoodwin FnmToFType, ShebangToFType
+
 --]]
 
 -- print "hello 1"
+
+do
+   --------------------------------------------------------------
+   local shebangToFType_ = {
+      perl6   = "perl",
+      python2 = "python",
+      python3 = "python",
+      }
+   function ShebangToFType( shebang )  -- called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
+      return shebangToFType_[shebang] or shebang
+      end
+   --------------------------------------------------------------
+   local nxToFType_ = { -- keep sorted by value (FType)
+      ["CMakeLists.txt"] = "cmake"     ,
+      ["k.luaedit"     ] = "lua"       ,
+      ["makefile"      ] = "make"      ,
+      ["GNUmakefile"   ] = "make"      ,
+      ["Makefile"      ] = "make"      ,
+      }
+   local nxToFType_patterns = { -- keep sorted by value (FType)
+      -- startsWith
+      ["^\.bash"        ] = "bash"    ,
+      ["^Dockerfile"    ] = "bash"    ,  -- https://stackoverflow.com/questions/26077543/how-to-name-dockerfiles
+      ["^SConstruct"    ] = "python"  ,  -- https://scons.org/doc/production/HTML/scons-man.html
+      ["^SConscript"    ] = "python"  ,  -- https://scons.org/doc/production/HTML/scons-man.html
+      -- endsWith
+      ["makefile$"      ] = "make"    ,
+      ["Makefile$"      ] = "make"    ,
+      }
+   local exToFType_ = { -- keep sorted by value (FType)
+      asm         = "asm"         ,
+      inc         = "asm"         ,
+      s           = "asm"         ,
+      twk         = "awk"         ,
+      gawk        = "awk"         ,
+      kxt         = "awk"         ,
+      awk         = "awk"         ,
+      kxl         = "awk"         ,
+      twl         = "awk"         ,
+      csh         = "bash"        ,
+      tcsh        = "bash"        ,
+      bash        = "bash"        ,
+      fish        = "bash"        ,
+      sh          = "bash"        ,
+      zsh         = "bash"        ,
+      ksh         = "bash"        ,
+      hxx         = "clang"       ,
+      kh          = "clang"       ,
+      h           = "clang"       ,
+      kc          = "clang"       ,
+      hpp         = "clang"       ,
+      cxx         = "clang"       ,
+      cs          = "clang"       ,
+      groovy      = "clang"       ,  -- odd as it seems, this works pretty well; even for """triple double quoted strings"""!
+      m           = "clang"       ,
+      cpp         = "clang"       ,
+      cc          = "clang"       ,
+      c           = "clang"       ,
+      cmake       = "cmake"       ,
+      diff        = "diff"        ,
+      expect      = "expect"      ,
+      tcl         = "expect"      ,
+      kdb         = "kdb"         ,
+      krsrc       = "krsrc"       ,
+      log         = "log"         ,
+      lua         = "lua"         ,
+      mak         = "make"        ,
+      conf        = "make"        ,
+      mik         = "make"        ,
+      mak         = "make"        ,
+      make        = "make"        ,
+      md          = "markdown"    ,
+      mod         = "modula2"     ,
+      def         = "modula2"     ,
+      cmd         = "msbatch"     ,
+      bat         = "msbatch"     ,
+      pas         = "pascal"      ,
+      dpr         = "pascal"      ,
+      pl          = "perl"        ,
+      pm          = "perl"        ,
+      perl        = "perl"        ,
+      ps1         = "pwrshell"    ,  -- https://stackoverflow.com/a/12108746
+      psm1        = "pwrshell"    ,  -- https://stackoverflow.com/a/12108746
+      psd1        = "pwrshell"    ,  -- https://stackoverflow.com/a/12108746
+      python      = "python"      ,
+      python3     = "python"      ,
+      py          = "python"      ,
+      spa         = "sprintascii" ,
+      psql        = "sql"         ,
+      sql         = "sql"         ,
+      xml         = "xml"         ,
+      html        = "xml"         ,
+      htm         = "xml"         ,
+      dtd         = "xml"         ,
+      }
+   function FnmToFType( nx )  -- called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
+                                     printf( "k.f.FnmToFType(%s)", nx or "(nil)" )
+      if nx and nxToFType_[nx] then
+         local rv = nxToFType_[nx]   printf( "k.f.FnmToFType(%s) => %s", nx, rv )
+         return rv
+         end
+      for pat,rv in pairs( nxToFType_patterns ) do printf( "k.f.FnmToFType(%s) nx.pat=%s", nx, pat )
+         if string.match( nx, pat ) then           printf( "k.f.FnmToFType(%s) nx.pat=%s => %s", nx, pat, rv )
+            return rv
+            end
+         end
+      local ex = ExtOf( nx )         printf( "k.f.FnmToFType(%s) ex=%s", nx, ex or "(nil)" )
+      if ex and exToFType_[ex] then
+         local rv = exToFType_[ex]   printf( "k.f.FnmToFType(%s) ex=%s => %s", nx, ex, rv )
+         return rv
+         end
+      -- local nm = NameOf( nx )  printf( "k.f.FnmToFType(%s) -> %s,%s", nx,nm,ex )
+      return
+      end
+
+end
+
+
+ printf( "%s", string.match( 'foobar', "foo" ) )
+--printf( "%s", ExtOf( "nx.ex" ) )
 
 local function bfg(bg,fg) return bg*16 + fg end
 
@@ -88,6 +229,7 @@ local lua_settings   = { colors = DeepCopy(darkColors), hilite = "lua" }
 local python_settings  = { colors = stdColors, hilite = "python" }
 local perl_settings  = { colors = darkColors, hilite = "python" }
 local make_settings  = { colors = darkColors, hilite = "make" }
+local cmake_settings = { colors = darkColors, hilite = "bash" }
 local ushell_settings= { colors = darkColors, hilite = "bash" }
 local sql_settings   = { colors = darkColors, hilite = "sql" }
 local pwrshell_settings= { colors = darkColors, hilite = "pwrshell" }
@@ -101,6 +243,7 @@ ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    perl         = perl_settings                        ,
    python       = perl_settings                        ,
    make         = make_settings                        ,
+   cmake        = cmake_settings                       ,
    kdb          = text_settings                        ,
    krsrc        = krsrc_settings                       ,
    text         = text_settings                        ,

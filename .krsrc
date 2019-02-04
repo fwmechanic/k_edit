@@ -738,9 +738,6 @@
    wordchars:_
    hljoinchars: :.
 
-[.krsrc]
-   ftype:krsrc
-
 [ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    wordchars:_
    hljoinchars:_
@@ -748,95 +745,52 @@
 [ftype:markdown]
    wordchars:_-/.:
 
-[.md]
-   ftype:markdown
+[ftype:log]
+   wordchars:_-/.:
+
+[ftype:cmake]
+   wordchars:_.
 
 [ftype:sprintascii]
    wordchars:_
    hljoinchars: :.
-
-[.spa]
-   ftype:sprintascii
+   wordwrap:yes
+   rmargin:77
 
 [ftype:sql]
-
-[.sql .psql]
-   ftype:sql
 
 [ftype:msbatch]
    wordchars:$_
    hljoinchars: :.
    tabwidth:8
 
-[.bat]
-   ftype:msbatch
-
-[.cmd]
-   ftype:msbatch
-
 [ftype:wildcard]  # wildcard expansion
    wordchars:_
    hljoinchars:_
    wucminlen:2
 
-[.*]  # wildcard expansion
-   ftype:wildcard
-
 [ftype:pseudo]  # wildcard expansion
    wordchars:_
    hljoinchars:_
-
-[.<>]  # PSEUDOFILE
-   ftype:pseudo
-
-[.]  # USED IF FILE HAS NO EXTENSION and content decode reveals nothing
-   ftype:unknown
-
-[.~dat] # qq --filter output file
-   rm:= "rm " mword arg arg execute setfile
 
 [ftype:lua]
    wordchars:_
    hljoinchars: :.
    rmargin:80
 
-[.lua .luaedit]
-   ftype:lua
-
 [ftype:bash]
    wordchars:_
    hljoinchars: .
 
-[.bash .sh .ksh .zsh .csh .tcsh .fish]
-   ftype:bash
-
-[.perl .pl .pm]
-   ftype:perl
-
 [ftype:expect]
    wordchars:_
    hljoinchars: .
-
-[.expect]
-   ftype:expect
+   rmargin:80
 
 [ftype:perl]
    wordchars:@$%
    hljoinchars: .->
    rmargin:80
-
-[.spa]
-   wordwrap:yes
-   rmargin:77
-
-[.tcl]
-   rmargin:80
-
-[.make .mak .mik]
-   ftype:make
-
-[.conf]
-   ftype:make
 
 [ftype:make]
    wordchars:_
@@ -856,24 +810,14 @@
    jentry:=endfile begline cur_y2md " " cur_hms " "
    jentry:alt+j
 
-[.pas .dpr]
-   ftype:pascal
-   hljoinchars: .
-
 [ftype:pascal]
    wordchars:_
    hljoinchars: .^
    rmargin:100
 
-[.mod .def]
-   ftype:modula2
-
 [ftype:modula2]
    wordchars:_
    hljoinchars: .
-
-[.asm .s .inc]
-   ftype:asm
 
 [ftype:asm]
    wordchars:_
@@ -881,7 +825,7 @@
    call:=savecur arg "call" searchall restcur
    rmargin:100
 
-[.xml .html .htm .dtd .vpj .vpw]
+[ftype:xml]
    delims: <
 
 [ftype:python]
@@ -889,27 +833,12 @@
    hljoinchars: .
    wucminlen:1
 
-[.python .python3 .py]
-   ftype:python
-
-[.c .cpp .cc .cs .m .cxx 32.kc .h .hpp .hxx 32.kh]
-   ftype:clang
-
 [ftype:diff]
    wordchars:_
    hljoinchars:_
 
-[.diff]
-   ftype:diff
-
-[.groovy]
-   ftype:clang  # odd as it seems, this works pretty well; even for """triple double quoted strings"""!
-
 [ftype:pwrshell]
    wordchars:_-
-
-[.ps1 .psm1 .psd1]  # https://stackoverflow.com/a/12108746
-   ftype:pwrshell
 
 [ftype:clang]
    wordchars:_
@@ -960,12 +889,9 @@
    nxtspceol:num/
    joinallspeceol:= :>again nxtspceol -> join =>again
 
-[.kdb]
+[ftype:kdb]
    rmargin:80
    mfspec_:= "%~dp0*%~x0"
-
-[.awk .gawk .twk .twl .kxt .kxl]
-   ftype:awk
 
 [ftype:awk]
    wordchars:_

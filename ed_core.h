@@ -866,7 +866,6 @@ public:
    void           RemoveFBufOnly();  // ONLY USE THIS AT SHUTDOWN TIME, or within private_RemovedFBuf()!
    //************ FBUF name
 private:
-   Path::str_t    d_RsrcExt; // on heap
    Path::str_t    d_filename; // on heap
    bool           d_fFnmDiskWritable;
    void           ChangeName( stref newName );  // THE ONLY PLACE WHERE AN FBUF's NAME MAY BE SET!!!
@@ -883,8 +882,6 @@ public:
    bool           NameMatch( stref name ) const { return Path::eq( d_filename, name ); }
    STATIC_FXN bool FnmIsPseudo( stref nm )      { return '<'==nm[0] || nm[nm.length()-1]=='>'; }
    bool            FnmIsPseudo()          const { return FnmIsPseudo( Namesr() ); }
-   stref           GetRsrcExt()           const { return d_RsrcExt; }
-   void            SetRsrcExt();
    //***********  membership in list of all FBUFs
  #if              FBUF_TREE
 private:
@@ -1068,13 +1065,12 @@ private:
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
-   std::string    d_ftype; // since d_ftype is now mostly a content-based auto-detected property (therefore of the file itself), it is a FBUF (not View) property
-   const FTypeSetting *d_ftypeStruct = nullptr;
+   const FTypeSetting *d_ftypeStruct = nullptr;  // since d_ftypeStruct is now mostly a content-based auto-detected property (therefore of the file itself), it is a FBUF (not View) property
+   std::string    DeduceFType() const;
 public:
-   const std::string &FType()            const { return  d_ftype; }
-   bool           FTypeEmpty()           const { return  d_ftype.empty(); }
-   bool           FTypeEq( stref ft )    const { return  eqi( d_ftype, ft ); } // case-insensitive!
-   void           SetFType( stref ft );
+   void           SetFType();
+   stref          FTypeName()             const;  // (*d_ftypeStruct) or ""
+   bool           FTypeNmEq( stref ftnm ) const { return eqi( FTypeName(), ftnm ); } // case-insensitive!
    const FTypeSetting *GetFTypeSettings() const { return d_ftypeStruct; }
  #ifdef           fn_su
    bool           SilentUpdateMode()     const { return  d_fSilentUpdateMode; }

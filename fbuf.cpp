@@ -555,7 +555,7 @@ int FBOP::GetSoftcrIndent( PFBUF fb ) { // cursor has NOT been moved
       }
    else {
       rv = ColOfFreeIdx( tw, thisRl, ixNonb );
-      if( fb->FTypeEq( "clang" ) ) {
+      if( fb->FTypeNmEq( "clang" ) ) {
          const auto rv_C( SoftcrForCFiles( fb, rv, yStart, thisRl, ixNonb, rv ) );
          if( rv_C >= 0 ) {                    0 && DBG( "SoftCR C: %d", rv_C );
             return rv_C;
@@ -785,7 +785,7 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    return rv;
    }
 
-STATIC_FXN stref is_content_diff( PCFBUF pFile ) { 0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
+STATIC_FXN std::string is_content_diff( PCFBUF pFile ) { 0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
    auto lnum(0);
    stref rl;
 #define  CHKL()       (rl=pFile->PeekRawLine( lnum ), lnum <= pFile->LastLine())
@@ -922,7 +922,19 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    return shebang;
    }
 
-STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software/emacs/manual/html_node/emacs/Choosing-Modes.html
+STATIC_FXN std::string ShebangToFType_lua( PCFBUF pfb ) {
+   std::string inout( sr2st( shebang_binary_name( pfb ) ) );
+   if( !inout.empty() ) { LuaCtxt_Edit::ShebangToFType( inout ); }
+   return inout;
+   }
+
+STATIC_FXN std::string FnmToFType_lua( PCFBUF pfb ) {
+   std::string inout( sr2st( Path::RefFnameExt( pfb->Namesr() ) ) );
+   if( !inout.empty() ) { LuaCtxt_Edit::FnmToFType( inout ); }
+   return inout;
+   }
+
+STATIC_FXN std::string emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software/emacs/manual/html_node/emacs/Choosing-Modes.html
 #if 0 // following WORKS, except  isolate "mode: param"  functionality has not been written (pending impl of stref_split_walk etc.)
    // find first nonblank line
    stref rv( "" );
@@ -950,50 +962,40 @@ STATIC_FXN stref emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/software
    return "";
    }
 
-STATIC_FXN stref content_to_ftype( PCFBUF pfb ) {
-   typedef stref (*content_deducer_t)( PCFBUF pfb );
-   STATIC_CONST content_deducer_t content_deducers[] = {
+STATIC_FXN std::string FType_deduce_( PCFBUF pfb ) {
+   typedef std::string (*FType_deducer_t)( PCFBUF pfb );
+   STATIC_CONST FType_deducer_t FType_deducers[] = {
       emacs_major_mode     ,
-      shebang_binary_name  ,
       is_content_diff      ,
+      ShebangToFType_lua   ,
+      FnmToFType_lua       ,
       };
-   for( const auto fxn : content_deducers ) {
+   for( const auto fxn : FType_deducers ) {
       const auto rv( fxn( pfb ) );
-      if( !rv.empty() ) { return rv; }
+      if( !rv.empty() ) {                            DBG( "%s '%" PR_BSR "'", __func__, BSR(rv) );
+         return rv;
+         }
       }
-   return "";
+   return sr2st( Path::RefExt( pfb->Namesr() ) );
    }
 
-STATIC_FXN PCChar fnm_to_ftype( PCFBUF pfb ) {
-   const auto srNm( pfb->Namesr() );
-   const auto srFnm( Path::RefFnm( srNm ) );
-   if(   Path::endsWith( srFnm, "makefile" )
-        #if !defined(_WIN32)
-        || Path::endsWith( srFnm, "Makefile" )
-        #endif
-     ) {                                            0 && DBG( "%s %" PR_BSR "' is %s", __func__, BSR(srFnm), "make" );
-      return "make";
+std::string FBUF::DeduceFType() const {
+   std::string rv;
+   if( FnmIsLogicalWildcard( Namestr() ) ) {
+      rv = "wildcard";
       }
-  #if 1 || !defined(_WIN32)
-   if( srFnm.starts_with( ".bash" ) ) {             1 && DBG( "%s %" PR_BSR "' is %s", __func__, BSR(srFnm), "bash" );
-      return "bash";
+   else if( FnmIsPseudo() || !FnmIsDiskWritable() ) {
+      rv = "pseudo";
       }
-  #endif
-   return "";
+   else {
+      rv = FType_deduce_( this );
+      }                                                            1 && DBG( "%s %s -> '%" PR_BSR "'", __func__, Name(), BSR(rv) );
+   return rv;
    }
 
 STATIC_CONST char s_sftype_prefix[] = "ftype:";
 enum { SIZEOF_MAX_FTYPE=51 };
-STATIC_VAR char s_cur_Ftype         [ SIZEOF_MAX_FTYPE ];
 STATIC_VAR char s_cur_FtypeSectionNm[ SIZEOF_MAX_FTYPE + KSTRLEN(s_sftype_prefix) ];
-
-stref GetCurFtype() {
-   return s_cur_Ftype;
-   }
-
-void SetCurFtype( stref ftype ) {
-   bcpy( s_cur_Ftype, ftype );    0 && DBG( "%s %s", __func__, s_cur_Ftype );
-   }
 
 STATIC_FXN void FtypeRestoreDefaults() {
    SetCurDelims( "{[(" );
@@ -1011,36 +1013,6 @@ STATIC_FXN bool RsrcFileLdSectionFtype( stref ftype ) {
 
 PCChar LastRsrcFileLdSectionFtypeNm       () { return s_cur_FtypeSectionNm+KSTRLEN(s_sftype_prefix); }
 PCChar LastRsrcFileLdSectionFtypeSectionNm() { return s_cur_FtypeSectionNm; }
-
-STATIC_FXN stref SetRsrcExt_( PCFBUF fb ) { // all rv's shall NOT have leading '.'
-   stref rv;
-   if( FnmIsLogicalWildcard( fb->Namestr() ) ) {
-      rv = "*";
-      }
-   else if( fb->FnmIsPseudo() || !fb->FnmIsDiskWritable() ) {
-      rv = "<>";
-      }
-   else {
-      rv = content_to_ftype( fb );
-      if( rv.empty() ) {
-         rv = Path::RefExt( fb->Namestr() );
-         if( !rv.empty() ) {
-            rv.remove_prefix( 1 ); // Path::RefExt() preserves the leading '.' that defines the start of the file extension; remove it
-            }
-         if( rv.empty() ) {
-            rv = fnm_to_ftype( fb );
-            }
-         }
-      }                                                            1 && DBG( "%s %s -> '%" PR_BSR "'", __func__, fb->Name(), BSR(rv) );
-   return rv;
-   }
-
-void FBUF::SetRsrcExt() {
-   const stref srDot( "." );
-   const auto ext( ::SetRsrcExt_( this ) );
-   d_RsrcExt.reserve( srDot.length() + ext.length() );
-   d_RsrcExt.assign( sr2st( srDot ) + sr2st( ext ) ); // d_RsrcExt shall have leading '.'
-   }
 
 STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'"     , __func__, BSR(name), BSR(strval) );
    const auto str( "\"" + sr2st(strval) + "\"" );
@@ -1063,21 +1035,10 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
    DefineStrMacro( "curfilename", Path::RefFnm  ( fb->Namestr() ) );
    DefineStrMacro( "curfileext" , Path::RefExt  ( fb->Namestr() ) );
    DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
+   fb->SetFType();
    if( !fb->IsRsrcLdBlocked() ) { // ONLY AFTER curfile, curfilepath, curfilename, curfileext assigned:
-      const auto rsrcExt( fb->GetRsrcExt() );
-      // weirdness: ftype is a switch setting which (among other things) guides
-      // content-sensitive display hiliting.  The ftype setting is cached by the
-      // FBuf.  This is ASSUMED to be set in rsrcExt sections.  Since switch values
-      // are currently stored in global (boo!) variables, we snoop the rsrcExt
-      // section assignment process ...
-      SetCurFtype( "unknown" ); // default
-      RsrcFileLdAllNamedSections( rsrcExt );
-      const auto ftype( GetCurFtype() );  // snoop ftype
-      fb->SetFType( ftype );                                     0 && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
+      const auto ftype( fb->FTypeName() );        0 && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
       RsrcFileLdSectionFtype( ftype );
-      }
-   else {
-      fb->SetFType( GetCurFtype() );
       }
    }
 
@@ -1429,8 +1390,8 @@ bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
 
 bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    const auto rv( FBufReadOk_( fAllowDiskFileCreate, fCreateSilently ) );
-   if( !IsRsrcLdBlocked() ) {
-      SetRsrcExt();
+   if( rv && !IsRsrcLdBlocked() ) {
+      SetFType();
       }
    return rv;
    }

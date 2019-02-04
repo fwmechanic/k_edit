@@ -89,6 +89,19 @@ bool Path::eq( stref name1, stref name2 ) {
    return true;
    }
 
+bool Path::startsWith( stref haystack, stref needle ) {
+   if( haystack.length() < needle.length() ) {
+      return false;
+      }
+   auto hit( haystack.cbegin() );
+   for( auto nit(  needle.cbegin() ) ; nit != needle.cend() ; ++nit, ++hit ) {
+      if( !PathChEq( *nit, *hit ) ) {
+         return false;
+         }
+      }
+   return true;
+   }
+
 bool Path::endsWith( stref haystack, stref needle ) {
    if( haystack.length() < needle.length() ) {
       return false;

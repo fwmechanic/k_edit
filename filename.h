@@ -96,7 +96,8 @@ namespace Path {
 #endif
       }
    extern bool eq( stref name1, stref name2 ); // with appropriate case-sensitivity
-   extern bool endsWith( stref haystack, stref needle ); // true if haystack ends with needle, using PathChEq
+   extern bool startsWith( stref haystack, stref needle ); // true if haystack starts with needle, using PathChEq
+   extern bool endsWith  ( stref haystack, stref needle ); // true if haystack ends   with needle, using PathChEq
    str_t::size_type CommonPrefixLen( stref s1, stref s2 );
 
    extern char  DelimChar( PCChar fnm );

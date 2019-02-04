@@ -302,8 +302,6 @@ extern   bool  SetSwitch( stref pszSwitchName, stref pszNewValue );
 extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
 
 extern void  SetCurDelims( stref param );
-extern stref GetCurFtype();
-extern void  SetCurFtype( stref ftype );
 
 extern   void  AssignLogTag( PCChar tag );
 enum { RSRCFILE_COMMENT_DELIM = '#' };
@@ -516,6 +514,8 @@ namespace LuaCtxt_Edit {
    extern bool  ExpandEnvVarsOk( Path::str_t &st );
 
    extern bool  from_C_lookup_glock( std::string &st );
+   extern bool  FnmToFType         ( Path::str_t &st );
+   extern bool  ShebangToFType     ( Path::str_t &st );
    extern void  LocnListInsertCursor();  // intf into Lua locn-list subsys
 
    extern bool  nextmsg_setbufnm     ( PCChar src );  // for mfgrep

@@ -98,7 +98,7 @@ bool ARG::ext() {
       default:
            return BadArg();
       case NOARG: { // if noarg, go to extension- or ftype- section of .krsrc assoc w/curfile
-           const auto lastTag( LastRsrcFileLdSectionFtypeSectionNm() );
+           const std::string lastTag( LastRsrcFileLdSectionFtypeSectionNm() );  DBG( "lastTag='%s'", lastTag.c_str() );
            // pass 1: find out how many matching tags there are
            auto count(0);
            {

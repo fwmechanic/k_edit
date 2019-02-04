@@ -455,7 +455,7 @@ namespace LFBUF {
       R_nil();
       }
 
-   STATIC_FXN int FTypeEq( lua_State *L ) { R_bool( thisPF()->FTypeEq( S_(2) ) ); }
+   STATIC_FXN int FTypeNmEq( lua_State *L ) { R_bool( thisPF()->FTypeNmEq( S_(2) ) ); }
 
    STATIC_FXN int GetLineSeg( lua_State *L ) {
       const auto pf( thisPF() );
@@ -855,7 +855,7 @@ STATIC_FXN void l_register_FBUF_object( lua_State *L ) {
       LUA_FUNC_I(WriteToDisk)
       LUA_FUNC_I(ExpandWildcardSorted  )
       LUA_FUNC_I(ExpandWildcardUnsorted)
-      LUA_FUNC_I(FTypeEq)
+      LUA_FUNC_I(FTypeNmEq)
       LUA_FUNC_I(GetLine)
       LUA_FUNC_I(GetLineRaw)
       LUA_FUNC_I(GetLineSeg)

@@ -2484,7 +2484,7 @@ do
 
    AddEdFxn{ name = "gotofileline", key = "alt+g", attr = NOARG+BOXSTR+BOXARG+TEXTARG, help = "jumps to the file location described on the current line"
       , NOARG   = function( arg )
-                  if arg.fbuf:FTypeEq( "diff" ) then return nil ~= gofileline_dif( arg ) end
+                  if arg.fbuf:FTypeNmEq( "diff" ) then return nil ~= gofileline_dif( arg ) end
                   return nil ~= gofileline( arg.fbuf:GetLine( 1 ), arg.fbuf:GetLineRaw( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
                   end
       , TEXTARG = function( arg ) return nil ~=  gofileline( ""                   , arg.text                       , arg.fbuf:Name() ~= nextmsgFBufName() ) end
@@ -4053,7 +4053,7 @@ do
          end
       print( "load_lua_env: executing "..fnm )
       env = env or {}
-      -- env._G = env     -- why is this here?
+      -- env._G = env     -- why is this here?  See PIL2e ch 14: "Non-Global Environments"
       env = strict_fenv( env )
       setfenv( fxn, env )
       local pcstat, em = pcall( fxn )
@@ -4264,11 +4264,15 @@ printf( "_bin.bitand: 0x%08X", _bin.bitand( 0x00FFFF00, 0x00FF00FF ) )
 -- DO NOT DELETE NEXT LINE!  (the global variable) filesettings IS READ BY C++ CODE!!!
 filesettings = load_lua_env( RsrcFilename( "filesettings" ), {
      print         = print         ,
+     printf        = printf        ,
      NameExtOf     = NameExtOf     ,
      ExtOf         = ExtOf         ,
      DeepCopy      = DeepCopy      ,
      setmetatable  = setmetatable  ,
      OsName        = OsName        ,
+     ipairs        = ipairs        ,
+     pairs         = pairs         ,
+     string        = string        ,  -- stopgap: replace this with import of the string: mechanism (metatable...)
      }
   )
 print( "filesettings is a "..type(filesettings) )
