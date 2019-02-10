@@ -35,5 +35,9 @@ LIB_O=\
  ltablib$(OBJ_SFX)   \
  lundump$(OBJ_SFX)   \
  linit$(OBJ_SFX)     \
- lpeg$(OBJ_SFX)      \
+ lpcap$(OBJ_SFX)     \
+ lpcode$(OBJ_SFX)    \
+ lpprint$(OBJ_SFX)   \
+ lptree$(OBJ_SFX)    \
+ lpvm$(OBJ_SFX)      \
  k_lib$(OBJ_SFX)
