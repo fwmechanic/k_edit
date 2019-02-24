@@ -1,5 +1,5 @@
 --
--- Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+-- Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 --
 -- This file is part of K.
 --
@@ -75,7 +75,7 @@ do
       rv[1+#rv] = "%USERPROFILE%/Mercurial.ini"
       rv[1+#rv] = "%USERPROFILE%/Application Data/Subversion/config"
       rv[1+#rv] = "%USERPROFILE%/MP3/*.m3u|"
-      rv[1+#rv] = "%USERPROFILE%/Application Data/Kevins Editor"
+      rv[1+#rv] = "%APPDATA%/k_edit"
       local fwtwiki = "http://fwtwiki.nowhere.com/bin/view/BuildTools/"
       rv[1+#rv] = {"FwTWiki", fwtwiki}
       rv[1+#rv] = {"FwTWiki:ArzProcessorCoreManuals", fwtwiki.."ArzProcessorCoreManuals"}

@@ -139,11 +139,11 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
 
 ## Editor State/History Persistence
 
-K persists information between sessions in state files written to
+K persists information between sessions in state files written to directory (K defines $K_STATEDIR)
 
- * Windows: `%APPDATA%\Kevins Editor\*`
+ * Windows: `%APPDATA%\k_edit\*`
  ** K ignores the Windows Registry.
- * Linux: `${XDG_CACHE_HOME:-$HOME/.cache}/kedit/$(hostname)/`
+ * Linux: `${XDG_CACHE_HOME:-$HOME/.cache}/k_edit/$(hostname)/`
  ** `$(hostname)` is added since it is not unusual for a user's $HOME to be located on a shared filesystem (e.g. NFS).
 
 Information stored in state files includes:

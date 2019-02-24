@@ -317,7 +317,7 @@ Path::str_t RsrcFilename( PCChar ext ) {
    return rv;
    }
 
-STATIC_VAR Path::str_t s_EditorStateDir;
+STATIC_VAR Path::str_t s_EditorStateDir; // init'd by InitEnvRelatedSettings()
 
 PCChar EditorStateDir() { return s_EditorStateDir.c_str(); }
 
@@ -515,39 +515,32 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
    auto mkdir_stf = [&]() {
       const auto dirname( s_EditorStateDir.c_str() );
-      const auto err( WL( _mkdir( dirname ), mkdir( dirname, 0777 ) ) == -1 );
-      if( !err ) { 0 && fprintf( stderr, "created dir '%s'", dirname ); }
-      else {
-         switch( errno ) {
-            case EEXIST: break;
-            default    : fprintf( stderr, "mkdir(%s) failed: %s\n", dirname, strerror( errno ) );
-                         exit( 1 );
-            }
+      if( mkdir_failed( dirname ) ) {
+         fprintf( stderr, "mkdir(%s) failed: %s\n", dirname, strerror( errno ) );
+         exit( 1 );
          }
       s_EditorStateDir.append( DIRSEP_STR );  0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
       };
+   #define  HOME_SUBDIR_NM  "k_edit"
 #if defined(_WIN32)
    #define  HOME_ENVVAR_NM  "APPDATA"
-   #define  HOME_SUBDIR_NM  "Kevins Editor"
    const PCChar appdataVal( getenv( HOME_ENVVAR_NM ) );
    if( !(appdataVal && appdataVal[0]) )  { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
    if( !IsDir( appdataVal ) )            { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
    s_EditorStateDir.assign( appdataVal );                    0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
    s_EditorStateDir.append( DIRSEP_STR HOME_SUBDIR_NM );     0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
    #undef   HOME_ENVVAR_NM
-   #undef   HOME_SUBDIR_NM
 #else
    //
    // ifdef XDG_CACHE_HOME
-   //    "$XDG_CACHE_HOME/kedit"
+   //    "$XDG_CACHE_HOME/k_edit"
    // else
-   //    "$HOME/.cache/kedit"
+   //    "$HOME/.cache/k_edit"
    // endif
    //
    #define  CACHE_ENVVAR_NM       "XDG_CACHE_HOME"
    #define  HOME_ENVVAR_NM        "HOME"
    #define  HOME_ENVVAR_SUFFIXNM  ".cache"
-   #define  HOME_SUBDIR_NM        "kedit"
    PCChar baseVarVal( getenv( CACHE_ENVVAR_NM ) );
    if( baseVarVal && baseVarVal[0] ) {
       s_EditorStateDir.assign( baseVarVal );
@@ -564,8 +557,8 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
       }
    s_EditorStateDir.append( HOME_SUBDIR_NM );   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
    #undef   HOME_ENVVAR_NM
-   #undef   HOME_SUBDIR_NM
 #endif
+   #undef   HOME_SUBDIR_NM
    mkdir_stf();
   #if !defined(_WIN32)
    { // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host

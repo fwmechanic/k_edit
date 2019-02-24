@@ -341,7 +341,7 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
 // $PATH:\%USERNAME%\*.exe  $PATH:${}$(PATH)*.exe  %USERPROFILE%\\\* $PATH:*.exe
 // %TAGZ%\*.h;%TAGZ%*.hpp;$(TAGZ)*.hxx;$TAGZ:*.kh;$(TAGZ)*.c;$TAGZ:*.cpp;$TAGZ:*.cc;$TAGZ:*.cxx;$TAGZ:*.kc
 // mfspec:=".\*.h;.\*.hpp;$(TAGZ)*.hxx;$TAGZ:*.kh;$(TAGZ)*.c;$TAGZ:*.cpp;$TAGZ:*.cc;$TAGZ:*.cxx;$TAGZ:*.kc"
-// %PATH%\*.bat;${USERPROFILE}\Application Data\Kevins Editor\*.$(lua|tmp)
+// %PATH%\*.bat;${USERPROFILE}\Application Data\k_edit\*.$(lua|tmp)
 
 bool ARG::cfx() {
    switch( d_argType ) {
