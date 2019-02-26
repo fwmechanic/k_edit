@@ -1327,14 +1327,14 @@ bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       if( errno != ENOENT ) {
          return Msg( "Cannot open %s - %s", Name(), strerror( errno ) );
          }
-      if( DontRecreateDeletedFile( Namesr() ) ) {
+      // SW_BP;
+      if( !fAllowDiskFileCreate ) {  DBG( "FRd! create !allowed" );
          return false;
          }
-      if(    !fAllowDiskFileCreate
-         || (!fCreateSilently && !ConIO::Confirm( Sprintf2xBuf( "%s does not exist. Create? ", Name() ) ))
-        ) {
-         // SW_BP;
-         DBG( "FRd! user denied create" );
+      if( DontRecreateDeletedFile( Namesr() ) ) {  DBG( "FRd! policy denied create of %s", Name() );
+         return false;
+         }
+      if( !fCreateSilently && !ConIO::Confirm( Sprintf2xBuf( "%s does not exist. Create? ", Name() ) ) ) {  DBG( "FRd! user denied create of %s", Name() );
          return false;
          }
       if( fio::OpenFileFailed( &hFile, Name(), false, DFLT_TEXTFILE_CREATE_MODE ) ) {
