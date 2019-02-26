@@ -1283,6 +1283,14 @@ STIL void wrNoiseRenm () { DisplayNoise( "                Renm " ); }
 
 const Eol_t platform_eol = WL( EolCRLF, EolLF );
 
+STATIC_FXN bool DontRecreateDeletedFile( stref fnm ) {
+   // TODO 20190226: move this function to lua
+   if( fnm.starts_with( "/tmp/" ) ) {                             DBG( "FRd! not creating /tmp/ file %" PR_BSR, BSR(fnm) );
+      return true;
+      }
+   return false;
+   }
+
 bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    VR_( DBG( "FRd+ %s", Name() ); )
 // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
@@ -1319,7 +1327,7 @@ bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       if( errno != ENOENT ) {
          return Msg( "Cannot open %s - %s", Name(), strerror( errno ) );
          }
-      if( Namesr().starts_with( "/tmp/" ) ) {                  DBG( "FRd! not creating /tmp/ file" );
+      if( DontRecreateDeletedFile( Namesr() ) ) {
          return false;
          }
       if(    !fAllowDiskFileCreate
