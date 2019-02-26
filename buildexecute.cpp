@@ -548,23 +548,21 @@ bool ARG::InitOk( PCCMD pCmd ) {
 bool ARG::Invoke() { 0 && DBG( "%s %s", FUNC, CmdName() );
    d_pCmd->IncrCallCount();
    // most of what follows is monitoring activity, not functionality-related...
-#define  MONITOR_INVOCATION  (0 && DEBUG_LOGGING)
-#if      MONITOR_INVOCATION
+   constexpr auto MONITOR_INVOCATION( 0 && DEBUG_LOGGING );
    STATIC_VAR int s_nestLevel;
-   ++s_nestLevel;
-   enum { NEST_CHARS = 6 };
-   const auto ixEos( s_nestLevel * NEST_CHARS );
-   if( 0 && g_fDvlogcmds && !d_pCmd->isCursorOrWindowFunc() && ixEos < sizeof(linebuf)-1 ) {
-      linebuf lbuf;
-      for( auto ix=0 ; ix < ixEos ; ++ix ) { lbuf[ix] = '>'; }
-      lbuf[ ixEos ] = '\0';                 DBG( "%s %-15s", lbuf, CmdName() );
+   if( MONITOR_INVOCATION ) {
+      ++s_nestLevel;
+      enum { NEST_CHARS = 6 };
+      const auto ixEos( s_nestLevel * NEST_CHARS );
+      if( 0 && g_fDvlogcmds && !d_pCmd->isCursorOrWindowFunc() && ixEos < sizeof(linebuf)-1 ) {
+         linebuf lbuf;
+         for( auto ix=0 ; ix < ixEos ; ++ix ) { lbuf[ix] = '>'; }
+         lbuf[ ixEos ] = '\0';                 DBG( "%s %-15s", lbuf, CmdName() );
+         }
       }
-#endif
    g_CurFBuf()->UndoInsertCmdAnnotation( d_pCmd );
    const auto rv( CALL_METHOD( *this, d_pCmd->d_func )() );
-#if      MONITOR_INVOCATION
-   --s_nestLevel;
-#endif
+   MONITOR_INVOCATION && --s_nestLevel;
    return rv;
    }
 
@@ -835,6 +833,7 @@ GTS::eRV GTS::graphic() { // !!! called by macro_graphic !!!
    stb_.insert( xCursor_++, 1, ch );
    return KEEP_GOING;
    }
+
 #ifdef fn_dispmstk
 GTS::eRV GTS::dispmstk() {
    noargNoMeta.dispmstk();
@@ -991,7 +990,6 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 
 GLOBAL_VAR bool g_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
 
-
 #ifdef fn_selkeymaptogl
 bool ARG::selkeymaptogl() {
    return SelKeymapToggle();
@@ -1125,7 +1123,6 @@ STATIC_FXN bool GetTextargStringNXeq( std::string &str, int cArg, COL xCursor ) 
    }
 
 #ifdef fn_cliptext
-
 bool ARG::cliptext() { // patterned after lasttext
    auto cArg(0);
    switch( d_argType ) {
@@ -1136,7 +1133,6 @@ bool ARG::cliptext() { // patterned after lasttext
    WinClipGetFirstLine( TextArgBuffer() );
    return GetTextargStringNXeq( TextArgBuffer(), cArg, 0 );
    }
-
 #endif
 
 bool ARG::lasttext() {
@@ -1178,7 +1174,6 @@ bool ARG::prompt() {
    }
 
 #ifdef fn_selcmd
-
 //
 // selcmd - accept a selection argument, then prompt the user for the command
 //          name, find the command, and invoke it on the selection argument.
@@ -1349,28 +1344,28 @@ bool ARG::selcmd() { // selcmd:alt+0
          0 && DBG( "%s CMD '%s'", __func__, newCmd->Name() );
          return Invoke();
          }
-#if 0
-      //
-      // if selcmd were to call Invoke() on the macro CMD as above, what selcmd
-      // Invoke()s is RunMacro (which really only _pushes_ the macro's
-      // expanded text ("makebox") into the interpreter pipe and returns to
-      // Invoke(), which returns here.  We then we return, and the interpreter
-      // subsequently parses 'makebox' from its pipe and Invoke()s it, but the
-      // selection-arg context of this selcmd has long since disappeared.
-      //
-      // The solution is to use fExecute to invoke the macro a w/reconstructed
-      // arg:
-      //
-      // 20091215 kgoodwin all of this now seems completely superfluous
-      //
-      switch( d_argType ) {
-         default:         return fnMsg( "bad arg for '%s'", newCmd->Name() );
-         case BOXARG:     ATTR_FALLTHRU;
-         case LINEARG:    ATTR_FALLTHRU;
-         case STREAMARG:  return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), 0 );
-         case TEXTARG:    return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), d_textarg.pText );
+      if( 0 ) {
+         //
+         // if selcmd were to call Invoke() on the macro CMD as above, what selcmd
+         // Invoke()s is RunMacro (which really only _pushes_ the macro's
+         // expanded text ("makebox") into the interpreter pipe and returns to
+         // Invoke(), which returns here.  We then we return, and the interpreter
+         // subsequently parses 'makebox' from its pipe and Invoke()s it, but the
+         // selection-arg context of this selcmd has long since disappeared.
+         //
+         // The solution is to use fExecute to invoke the macro a w/reconstructed
+         // arg:
+         //
+         // 20091215 kgoodwin all of this now seems completely superfluous
+         //
+         switch( d_argType ) {
+            default:         return fnMsg( "bad arg for '%s'", newCmd->Name() );
+            case BOXARG:     ATTR_FALLTHRU;
+            case LINEARG:    ATTR_FALLTHRU;
+            case STREAMARG:  return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), nullptr );
+            case TEXTARG:    return BuildXeqArgCmdStr( d_fMeta, d_cArg, cmdNameBuf.c_str(), d_textarg.pText );
+            }
          }
-#endif
       return fnMsg( "%s: unsupported arg for '%s'", __func__, newCmd->Name() );
       }
    }
@@ -1518,13 +1513,14 @@ bool ARG::execute() {
                       Path::str_t cmd( d_textarg.pText );
                       LuaCtxt_Edit::ExpandEnvVarsOk( cmd ); // BEFORE fChangeFile so curfile envvar expansions are correct
                       0 && DBG( "execute (%" PR_SIZET ") '%s'", cmd.length(), cmd.c_str() );
-                    #if 1
-                      StartInternalShellJob( new StringList( cmd.c_str() ), false );
-                      rv = true;
-                    #else
-                      fChangeFile( kszCompile );
-                      rv = CompilePty_CmdsAsyncExec( StringList( cmd.c_str() ), true ) > 0;
-                    #endif
+                      if( 1 ) {
+                         StartInternalShellJob( new StringList( cmd.c_str() ), false );
+                         rv = true;
+                         }
+                      else {
+                         fChangeFile( kszCompile );
+                         rv = CompilePty_CmdsAsyncExec( StringList( cmd.c_str() ), true ) > 0;
+                         }
                       }
                    break;
     case BOXARG:   ATTR_FALLTHRU;
