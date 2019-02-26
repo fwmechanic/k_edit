@@ -619,11 +619,11 @@ public:
        , d_colorAttribute(colorAttribute)
        { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszPrompt );
        }
-   void Write() const;
-   void UnWrite() const;
+   auto Write()   const -> void;
+   auto UnWrite() const -> void { CursorLocnOutsideView_Unset(); }
    };
 
-void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszPrompt );
+auto EditPrompt::Write() const -> void  { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszPrompt );
    const auto promptLen( Strlen( d_pszPrompt ) );
    auto oEditText( std::max( 0, d_xCursor - EditScreenCols() + promptLen + 1 ) );
    auto editTextLen( Strlen( d_pszEditText ) );
@@ -644,20 +644,18 @@ void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszP
    CursorLocnOutsideView_Set( DialogLine(), d_xCursor - oEditText + promptLen );
    }
 
-void EditPrompt::UnWrite() const { CursorLocnOutsideView_Unset(); }
-
 class GetTextargString_CMD_reader : public CMD_reader
    {
    const EditPrompt &d_ep;
 protected:
-   void VWritePrompt()   override { d_ep.Write  (); }
-   void VUnWritePrompt() override { d_ep.UnWrite(); }
+   auto VWritePrompt()   -> void override { d_ep.Write  (); }
+   auto VUnWritePrompt() -> void override { d_ep.UnWrite(); }
 public:
    GetTextargString_CMD_reader( const EditPrompt &ep ) : d_ep( ep ) {}
-   PCCMD GetNextCMD( bool fGetKbInput ); // OVERRIDE parent-class method
+   auto GetNextCMD( bool fGetKbInput ) -> PCCMD; // OVERRIDE parent-class method
    };
 
-PCCMD GetTextargString_CMD_reader::GetNextCMD( bool fKbInputOnly ) {
+auto GetTextargString_CMD_reader::GetNextCMD( bool fKbInputOnly ) -> PCCMD {
    if( fKbInputOnly ) {
       VWritePrompt();
       d_fAnyInputFromKbd = true;
@@ -859,11 +857,11 @@ public:
    ~TabCompletion_filesystem() {
       Delete0( pDirContent );
       }
-   void Deactivate() {
+   auto Deactivate() -> void {
       Delete0( pDirContent );
       pbTabxBase.clear(); // forget prev used WC
       }
-   void GetNext( std::string &stb, COL &xCursor ) {
+   auto GetNext( std::string &stb, COL &xCursor ) -> void {
       if( !pDirContent ) {
          if( pbTabxBase.empty() ) { // no prev'ly used WC?
             pbTabxBase = stb;   // create based on curr content
@@ -885,7 +883,7 @@ public:
          fBellAndFreezeKbInput = true;
          }
       }
-   void BellAndFreezeKbInputIfExhausted() {
+   auto BellAndFreezeKbInputIfExhausted() -> void {
       // BUGBUG GetTextargString_CMD_reader may prevent the following
       // fBellAndFreezeKbInput code from achieving it's intended task
       //
