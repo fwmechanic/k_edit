@@ -283,7 +283,7 @@ void InitFTypeSettings() {                                              FTypeSet
 
 STATIC_FXN void DeleteFTS( void *pData, void *pExtra ) {                FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
    auto pFTS( static_cast<FTypeSetting *>(pData) );
-   Free0( pFTS );                                                       FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
+   delete pFTS;                                                         FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
 void CloseFTypeSettings() {
