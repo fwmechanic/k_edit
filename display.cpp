@@ -460,10 +460,10 @@ public:
    void VCursorMoved( bool fUpdtWUC, View &view );
    bool VHilitLineSegs( View &view, LINE yLine, LineColorsClipped &alcc ) const;
 private:
-   sb_t        get_sb      () const { return d_sb;     }
-   std::string get_stSel   () const { return d_stSel;  }
-   PCView      get_wucSrc  () const { return d_wucSrc; }
-   void        PrimeRefresh() const { DispNeedsRedrawAllLinesAllWindows(); }  // all_window_WUC_hiliting demands ...AllWindows() version
+   const sb_t        &get_sb      () const { return d_sb;     }
+   const std::string &get_stSel   () const { return d_stSel;  }
+   PCView             get_wucSrc  () const { return d_wucSrc; }
+   void               PrimeRefresh() const { DispNeedsRedrawAllLinesAllWindows(); }  // all_window_WUC_hiliting demands ...AllWindows() version
    } s_wucState;
 
 void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
@@ -685,11 +685,12 @@ void HiliteAddin_WordUnderCursor::VCursorMoved( bool fUpdtWUC ) {
    }
 
 STATIC_FXN bool HilitWucLineSegs
-   ( PCFBUF         fb
-   , WucState::sb_t d_sb
-   , std::string    d_stSel
-   , const Point   &cursor
-   , LINE yLine, LineColorsClipped &alcc
+   (       PCFBUF          fb
+   , const WucState::sb_t &d_sb
+   , const std::string    &d_stSel
+   , const Point          &cursor
+   ,       LINE            yLine
+   , LineColorsClipped    &alcc
    ) {
    const auto keyStart( !d_sb.empty() ? d_sb.data() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
    if( keyStart ) {
