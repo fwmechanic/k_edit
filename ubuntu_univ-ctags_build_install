@@ -23,7 +23,8 @@
 
 # based on https://askubuntu.com/a/836521 whose comments contain necessary updates reflected below
 
-repo="https://github.com/universal-ctags/ctags.git"
+reponm="ctags"
+repo="https://github.com/universal-ctags/$reponm.git"
 pkgs=(  # prereqs from askubuntu ticket comments
   "autoconf"
   "automake"
@@ -31,9 +32,14 @@ pkgs=(  # prereqs from askubuntu ticket comments
 )
 join_by() { local IFS="$1"; shift; echo "$*"; }
 
+# if we're in a repo/worktree dir, cd to its parent dir before cloning
+wtpath="$(git rev-parse --show-toplevel)"
+[ "$wtpath" ] && wtpath="$(dirname "$wtpath")"
+[ "$wtpath" ] && cd "$wtpath"
+
 sudo apt-get install -yq $(join_by " " "${pkgs[@]}") &&
 git clone "$repo"  &&
-cd ctags           &&
+cd "$reponm"       &&
 ./autogen.sh       &&
 ./configure        &&
 make               &&
