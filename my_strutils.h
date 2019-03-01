@@ -609,8 +609,8 @@ public:
       }
    PCChar AddString( stref sr ) {
       const auto len( sr.length() );
-      if( len > ((d_buf + sizeof(d_buf) - 1) - d_nxtS) - 2 ) {
-         return nullptr;
+      if( len + 2 > sizeof(d_buf) - (d_nxtS-d_buf) ) {
+         return "";
          }
       auto rv( d_nxtS );
       memcpy( d_nxtS, sr.data(), len );

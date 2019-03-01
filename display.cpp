@@ -475,7 +475,7 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       }
    d_sb.clear(); // aaa aaa aaa aaa
    stref wuc( d_sb.AddString( src ) );
-   if( !wuc.data() ) {                                                                                          DBG_HL_EVENT && DBG( "%s toolong", __func__);
+   if( wuc.empty() ) {                                                                                          DBG_HL_EVENT && DBG( "%s toolong", __func__);
       PrimeRefresh();
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
