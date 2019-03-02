@@ -972,7 +972,7 @@ STATIC_FXN std::string FType_deduce_( PCFBUF pfb ) {
       };
    for( const auto fxn : FType_deducers ) {
       const auto rv( fxn( pfb ) );
-      if( !rv.empty() ) {                            DBG( "%s '%" PR_BSR "'", __func__, BSR(rv) );
+      if( !rv.empty() ) {                    0 && DBG( "%s '%" PR_BSR "'", __func__, BSR(rv) );
          return rv;
          }
       }

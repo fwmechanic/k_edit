@@ -965,7 +965,7 @@ STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout, bool f
    }
 
 // functionName may contain '.' (table dereferences)
-STATIC_FXN bool LuaTblS2S( lua_State *L, PCChar functionName, Path::str_t &inout, bool fClearInoutOnFail=true ) { enum { DB=1 };
+STATIC_FXN bool LuaTblS2S( lua_State *L, PCChar functionName, Path::str_t &inout, bool fClearInoutOnFail=true ) { enum { DB=0 };
    constexpr bool rv_fail = false;                                           DB && DBG( "%s+ %s<-%s", __func__, functionName, inout.c_str() );
    if( !L ) { return rv_fail; }
    LuaCallCleanup( L );
