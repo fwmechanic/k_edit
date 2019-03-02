@@ -2761,16 +2761,17 @@ do
    end
 
 
+   -- used in user.lua
    UrlSrchTag = "$sstr$"
    local UrlSrchTagEscaped = "%$sstr%$"  -- bugbug s/b LuaPat_escape( UrlSrchTag )
-
-   function goUrl( url ) -- NB:  url param contains a magic string which is replaced with the escaped str value
+   -- used in user.lua
+   function goUrl( url ) -- NB:  url param should contain a magic string (UrlSrchTag) which is replaced with the escaped str value
       return function(str)
          str = str or ""
          str = gsub_URL_escape( str )
          str = LuaPat_escape( str )
          printf( ": '%s'", str )
-         local fnm = url:gsub( UrlSrchTagEscaped , str )
+         local fnm = url:gsub( UrlSrchTagEscaped , str )  printf( ": '%s'", fnm )
          shex( fnm )  printf( ": '%s'", fnm )
          end
       end
@@ -2782,7 +2783,7 @@ do
       return fxUrl and fxUrl( str )
       end
 
-   function OpenUrlOrMenu( arg, tMenu )  -- used by "websearch" in user.lua
+   function OpenUrlOrMenu( arg, tMenu )  -- called by EdFxn "websearch" in user.lua
       if arg.argCount == 1 then tMenu.choices[ tMenu.choices.default ][ 2 ]( arg.text or "testing" )
       else                      OpenUrlMenu( tMenu, arg.text )
          end
