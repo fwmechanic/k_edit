@@ -17,8 +17,15 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+
 #include "ed_main.h"
-#include <boost/filesystem/operations.hpp>
+
+#define USE_BOOST_FILESYSTEM_PATH 0
+#if USE_BOOST_FILESYSTEM_PATH
+   #include <boost/filesystem/operations.hpp>
+#else
+   #include <linux/limits.h>
+#endif
 
 void AssertDialog_( PCChar function, PCChar file, int line ) {
    fprintf( stderr, "Assertion failed, %s @ %s L %d", function, file, line );
@@ -49,6 +56,15 @@ Path::str_t Path::GetCwd_() {
 PCChar OsVerStr()  { return ""; }
 
 Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
+#if !USE_BOOST_FILESYSTEM_PATH
+   // 20190306 would like to remove the boost _library_ dependency, so:
+   // This WORKS https://stackoverflow.com/a/2341857 but suffers from http://insanecoding.blogspot.com/2007/11/pathmax-simply-isnt.html
+   // I'm using (PATH_MAX*2)+1 in a perhaps forlorn attempt to stave off this issue
+   char resolved_path[(PATH_MAX*2)+1]; // PATH_MAX==4096 (GCC 7.3 ubuntu 18.04)
+   realpath(pszFilename, resolved_path); DB && DBG( "%s [%" PR_SIZET "] '%s' -> '%s'", __func__, sizeof(resolved_path), pszFilename, resolved_path );
+   return resolved_path;
+#else
+
    // first approximation based on
    // http://stackoverflow.com/questions/1746136/how-do-i-normalize-a-pathname-using-boostfilesystem
    // note that this handles the case where some trailing part does not exist
@@ -85,6 +101,7 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
       Msg( "%s caught boost::filesystem::filesystem_error on %s", __func__, pszFilename );
       return "";
       };
+#endif
    }
 
 #include <glob.h>
