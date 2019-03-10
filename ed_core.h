@@ -158,8 +158,12 @@ struct Point {   // file location
    COL     col = 0;
    Point() {}
    Point( LINE yLine, COL xCol ) : lin(yLine), col(xCol) {}
-   Point( const YX_t &src ) : lin( src.lin ), col( src.col ) {} // conv from conio.h type
-   Point( const Point  &rhs, LINE yDelta=0, COL xDelta=0 ) : lin(rhs.lin + yDelta), col(rhs.col + xDelta) {} // COPY CTOR
+   Point( const YX_t  &src ) : lin(src.lin), col(src.col) {} // conv from conio.h type
+   Point( const Point &rhs ) : lin(rhs.lin), col(rhs.col) {} // COPY CTOR
+   Point( const Point &rhs, LINE yDelta, COL xDelta )        // COPY CTOR w/a twist
+      : lin(std::max(rhs.lin + yDelta, 0))
+      , col(std::max(rhs.col + xDelta, 0))
+      {}
    void Set( LINE yLine, COL xCol ) { lin = yLine, col = xCol; }
    bool operator==( const Point &rhs ) const { return lin == rhs.lin && col == rhs.col; }
    bool operator!=( const Point &rhs ) const { return !(*this == rhs); }
