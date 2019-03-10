@@ -152,7 +152,7 @@ protected:
    // SUBCLASS Event Hooks
       // called by FoundMatchContinueSearching
       virtual bool VMatchWithinColumnBounds( PFBUF pFBuf, const Point &cur, COL MatchCols ) { return true; };
-      virtual bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures );
+      virtual bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) = 0;
       virtual bool VContinueSearching() { return true; }
       // called by ShowResults
       virtual void VShowResultsNoMacs() {}
@@ -179,14 +179,6 @@ bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, const Poi
    return VContinueSearching();
    }
 
-bool FileSearchMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) {
-   PCV;
-   if( pcv->FBuf() == pFBuf ) {
-      pcv->SetMatchHiLite( cur, MatchCols, g_fCase );
-      }
-   return true;  // "action" taken!
-   }
-
 bool FileSearchMatchHandler::ScrollToFLOk() const { return d_flToScroll.ScrollToOk(); }
 
 //****************************
@@ -195,6 +187,7 @@ bool FileSearchMatchHandler::ScrollToFLOk() const { return d_flToScroll.ScrollTo
 class FindPrevNextMatchHandler : public FileSearchMatchHandler {
    NO_COPYCTOR(FindPrevNextMatchHandler);
    NO_ASGN_OPR(FindPrevNextMatchHandler);
+   const LINE   d_yAtStart = g_CurView()->Cursor().lin;
    const char   d_dirCh;
    const bool   d_fIsRegex;
    const std::string d_SrchDispStr;
@@ -204,6 +197,11 @@ protected:
 public:
    FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, stref srchStr );
    ~FindPrevNextMatchHandler() {}
+   bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) {
+      PCV;
+      pcv->SetMatchHiLite( cur, MatchCols, cur.lin != d_yAtStart );
+      return true;  // "action" taken!
+      }
    void VShowResultsNoMacs() override;
    };
 
@@ -1822,7 +1820,7 @@ STATIC_FXN FileSearcher *NewFileSearcher(
    return rv;
    }
 
-STATIC_FXN bool GenericSearch( const ARG &arg, const SearchScanMode &sm ) {
+STATIC_FXN bool FindNextMatch( const ARG &arg, const SearchScanMode &sm ) {
    if( !SearchSpecifierOK( arg ) ) {
       return false;
       }
@@ -1843,8 +1841,8 @@ STATIC_FXN bool GenericSearch( const ARG &arg, const SearchScanMode &sm ) {
    return rv;
    }
 
-bool ARG::msearch()   { return GenericSearch( *this, smBackwd ); }
-bool ARG::psearch()   { return GenericSearch( *this, smFwd    ); }
+bool ARG::msearch()   { return FindNextMatch( *this, smBackwd ); }
+bool ARG::psearch()   { return FindNextMatch( *this, smFwd    ); }
 
 //-------------------------- pbal
 
