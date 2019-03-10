@@ -3200,21 +3200,6 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
    const auto xOriginDelta( xOrigin - d_current.Origin.col );
    d_current.Origin.lin = yOrigin; // don't use yOrigin below here; use d_current.Origin.lin
    d_current.Origin.col = xOrigin; // don't use xOrigin below here; use d_current.Origin.col
-   LINE yMin, yMax;
-   if( xOriginDelta || yOriginDelta ) {
-      // CopyCurrentCursLocnToSaved(); 15-Jul-2004 klg Win() makes savecur/restcur less than useful
-      if( yOriginDelta > 0 ) {
-         yMin = d_current.Origin.lin + Win()->d_Size.lin;
-         yMax = yMin + yOriginDelta;  // coupled w/prev stmt!
-         }
-      else {
-         yMax = d_current.Origin.lin;
-         yMin = yMax + yOriginDelta;  // coupled w/prev stmt!
-         }
-      }
-   else { // origin has not moved in y dimension
-      yMin = yMax = yCursorInitial;
-      }
               d_current.Cursor.col = d_current.Origin.col + Win()->d_Size.col - 1;   0 && DBG( "ccF=%d", d_current.Cursor.col );
    Constrain( d_current.Origin.col, &d_current.Cursor.col, xCursor );                0 && DBG( "ccG=%d", d_current.Cursor.col );
               d_current.Cursor.lin = d_current.Origin.lin + Win()->d_Size.lin - 1;
@@ -3229,7 +3214,6 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
    SHOWDBG && DBG( "ScrollW&C-  UlcYX=(%d,%d) CurYX=(%d,%d) --------------", d_current.Origin.lin, d_current.Origin.col, d_current.Cursor.lin, d_current.Cursor.col );
    if( ActiveInWin() ) { // this is the current view of a(ny) window?
                          // push display updates out
-      const auto fVertScreenScroll( yOriginInitial != d_current.Origin.lin );
       const auto fVertCursorMove( yOriginDelta || yCursorInitial != d_current.Cursor.lin );
       const auto fHorzCursorMove( xOriginDelta || xCursorInitial != d_current.Cursor.col );
       if( fVertCursorMove ) {
