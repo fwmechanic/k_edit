@@ -3382,8 +3382,8 @@ void View::GetLineForDisplay
       const auto showBlanks( CFBuf()->RevealBlanks() || isActiveLine );
       PrettifyMemcpy( dest, xLeft, xWidth, CFBuf()->PeekRawLine( yLineOfFile ), Origin().col
          ,              CFBuf()->TabWidth()
-         , showBlanks ? CFBuf()->TabDispChar()   : ' '
-         , showBlanks ? CFBuf()->TrailDispChar() : 0
+         , showBlanks ? g_chTabDisp        : ' '
+         , showBlanks ? g_chTrailSpaceDisp : 0
          );
       constexpr decltype(xWidth) PCT_WIDTH( 7 );
       if( DrawVerticalCursorHilite() && (xWidth > PCT_WIDTH) && isActiveLine ) {
