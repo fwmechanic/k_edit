@@ -3190,12 +3190,9 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
          );                                                   SHOWDBG && DBG( "yOriginMax = %d", yOriginMax );
       Constrain( LINE(0), &yOrigin, yOriginMax );             SHOWDBG && DBG( "yOrigin = %d", yOrigin );
       }
-
-   // save initial values for future change detection
-   const auto yOriginInitial( d_current.Origin.lin );
+   const auto yOriginInitial( d_current.Origin.lin );  // save initial values for later change detection
    const auto yCursorInitial( d_current.Cursor.lin );
    const auto xCursorInitial( d_current.Cursor.col );  0 && DBG( "cc0=%d", d_current.Cursor.col );
-
    const auto yOriginDelta( yOrigin - d_current.Origin.lin );
    const auto xOriginDelta( xOrigin - d_current.Origin.col );
    d_current.Origin.lin = yOrigin; // don't use yOrigin below here; use d_current.Origin.lin
@@ -3205,27 +3202,17 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
               d_current.Cursor.lin = d_current.Origin.lin + Win()->d_Size.lin - 1;
    Constrain( d_current.Origin.lin, &d_current.Cursor.lin, yCursor );
    //##########################################################################################
-   //##########################################################################################
-   //##
    //## calcs done: propagate changes to display-updater as necessary
-   //##
-   //##########################################################################################
    //##########################################################################################
    SHOWDBG && DBG( "ScrollW&C-  UlcYX=(%d,%d) CurYX=(%d,%d) --------------", d_current.Origin.lin, d_current.Origin.col, d_current.Cursor.lin, d_current.Cursor.col );
-   if( ActiveInWin() ) { // this is the current view of a(ny) window?
-                         // push display updates out
+   if( ActiveInWin() ) { // is this the current view of a(ny) window?  push display updates out...
       const auto fVertCursorMove( yOriginDelta || yCursorInitial != d_current.Cursor.lin );
       const auto fHorzCursorMove( xOriginDelta || xCursorInitial != d_current.Cursor.col );
       if( fVertCursorMove ) {
-         // this is done to update the "current line hilite" which follows the
-         // cursor, making it easier to track it when in high res mode (or for
-         // older eyes)
-         //
-         // calling PrimeRedrawLine**AllWin** because we COULD be moving the
-         // cursor in the non-ACTIVE window.  EX: nextmsg causes cursor to move
-         // in primary window/View _AND_ in search-results FBUF which is
-         // probably being viewed in another window
-         //
+         // Following done to update the "current line hilite" which follows the cursor,
+         //   making it easier to see when in "high res" mode (or for older eyes).
+         // Calling PrimeRedrawLine**AllWin** because we COULD be moving the cursor in the non-ACTIVE window.
+         // EX: nextmsg causes cursor to move in primary window/View _AND_ in search-results FBUF which is probably being viewed in another window
          FBOP::PrimeRedrawLineRangeAllWin( FBuf(), yCursorInitial      , yCursorInitial       );
          FBOP::PrimeRedrawLineRangeAllWin( FBuf(), d_current.Cursor.lin, d_current.Cursor.lin );
          }
