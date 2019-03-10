@@ -74,7 +74,7 @@ bool FBufLocn::ScrollToOk() const {
       return false;
       }
    d_pFBuf->PutFocusOn();
-   g_CurView()->MoveCursor( d_pt.lin, d_pt.col, d_width );
+   g_CurView()->MoveCursor( d_pt.lin, d_pt.col, d_width+1 );
    DispNeedsRedrawAllLinesAllWindows();
    return true;
    }
