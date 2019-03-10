@@ -2738,19 +2738,8 @@ STATIC_FXN void RedrawScreen() {
          for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin < yLine ; ++dvsit ) {
             }
          for( ; dvsit != s_direct_vid_segs.cend() && yLine == dvsit->d_origin.lin ; ++dvsit ) {
-           #if 1
             buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
             alc.PutColor( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorIndex );
-           #else
-            const auto ix( dvsit->d_origin.col );
-            (ix < 0) && DBG( "IX NEGATIVE! %d", ix );
-            if( ix >= 0 && ix < scrnCols ) {
-               const auto maxXwr( ix + dvsit->d_str.length() - 1 );
-               const auto len( maxXwr > scrnCols ? dvsit->d_str.length() - (maxXwr - scrnCols) : dvsit->d_str.length() );
-               buf.replace ( ix, len, dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
-               alc.PutColor( ix, len, dvsit->d_colorIndex );
-               }
-           #endif
             }
          (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
          VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, false );
