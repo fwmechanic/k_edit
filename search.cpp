@@ -113,16 +113,14 @@ protected:
    int         d_lifetimeFileCountMatchAction;
    SearchStats d_lifetimeStats;
    SearchStats d_curFileStats;
-   bool        d_fScrollToFirstMatch;
    FBufLocn    d_flToScroll;
    Point       d_scrollPoint;
    MainThreadPerfCounter d_pc;
 public:
-   FileSearchMatchHandler( bool fScrollToFirstMatch=true )
+   FileSearchMatchHandler()
       : d_lifetimeFileCount           (0)
       , d_lifetimeFileCountMatch      (0)
       , d_lifetimeFileCountMatchAction(0)
-      , d_fScrollToFirstMatch(fScrollToFirstMatch)
       { g_CurView()->FreeHiLiteRects(); }
    virtual ~FileSearchMatchHandler() {}
    // External Event Hooks
@@ -166,7 +164,7 @@ protected:
 
 bool FileSearchMatchHandler::FoundMatchContinueSearching( PFBUF pFBuf, const Point &cur, COL MatchCols, RegexMatchCaptures &captures ) {
    if( VMatchWithinColumnBounds( pFBuf, cur, MatchCols ) ) { // it IS a MATCH?
-      if( d_fScrollToFirstMatch && !d_flToScroll.IsSet() ) {
+      if( !d_flToScroll.IsSet() ) {
          d_flToScroll.Set( pFBuf, cur, MatchCols );
          }
       d_lifetimeStats.IncMatch();
@@ -220,8 +218,7 @@ void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
    }
 
 FindPrevNextMatchHandler::FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, stref srchStr )
-   : FileSearchMatchHandler( true )
-   , d_dirCh(fSearchForward ? '+' : '-')
+   : d_dirCh(fSearchForward ? '+' : '-')
    , d_fIsRegex(fIsRegex)
    , d_SrchDispStr( FormatExpandedSeg( COL_MAX, srchStr, 0, 1, g_chTabDisp, g_chTrailSpaceDisp ) )
    {
