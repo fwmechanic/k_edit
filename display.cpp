@@ -2231,8 +2231,8 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
 
 void View::MoveAndCenterCursor( const Point &pt, COL xWidth ) {
    ScrollOriginAndCursor_(
-        std::max( 0, pt.lin - (d_pWin->d_Size.lin/2)             )
-      , std::max( 0, pt.col - (d_pWin->d_Size.col/2) + (xWidth/2) )
+        std::max( 0, pt.lin - (Win()->d_Size.lin/2)              )
+      , std::max( 0, pt.col - (Win()->d_Size.col/2) + (xWidth/2) )
       ,         pt.lin
       ,         pt.col
       , true
@@ -3161,8 +3161,8 @@ GLOBAL_VAR char g_chTrailLineDisp = '~';
 
 void View::ScrollByPages( int pages ) {
    ScrollOriginAndCursorNoUpdtWUC(
-        Origin().lin + (d_pWin->d_Size.lin * pages), Origin().col
-      , Cursor().lin + (d_pWin->d_Size.lin * pages), Cursor().col
+        Origin().lin + (Win()->d_Size.lin * pages), Origin().col
+      , Cursor().lin + (Win()->d_Size.lin * pages), Cursor().col
       );
    }
 
@@ -3171,24 +3171,24 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
       , d_current.Origin.lin, d_current.Origin.col, d_current.Cursor.lin, d_current.Cursor.col
       , yOrigin, xOrigin, yCursor, xCursor, fUpdtWUC?'t':'f'
       );
-   SHOWDBG && DBG( "lastline=%d, winsize=%d, vscroll=%d, 1/3=%d", CFBuf()->LastLine(), d_pWin->d_Size.lin, g_iVscroll, (d_pWin->d_Size.lin/3) ); // max 1/3 of window contains past-EOF
+   SHOWDBG && DBG( "lastline=%d, winsize=%d, vscroll=%d, 1/3=%d", CFBuf()->LastLine(), Win()->d_Size.lin, g_iVscroll, (Win()->d_Size.lin/3) ); // max 1/3 of window contains past-EOF
    NewScope { // constrain x
       Constrain( COL(0), &xCursor, COL_MAX );                 SHOWDBG && DBG( "xCursor = %d", xCursor );
-      Assert( COL_MAX > d_pWin->d_Size.col );
-      const auto xOriginMax( COL_MAX - d_pWin->d_Size.col );
+      Assert( COL_MAX > Win()->d_Size.col );
+      const auto xOriginMax( COL_MAX - Win()->d_Size.col );
       Constrain( COL(0), &xOrigin, xOriginMax );
       }
    NewScope { // constrain yOrigin
-      const auto yOriginMax( CFBuf()->LastLine() // d_pWin value defines the bottom scroll limit
+      const auto yOriginMax( CFBuf()->LastLine() // Win() value defines the bottom scroll limit
          #if 1
-            - d_pWin->d_Size.lin + g_iVscroll + (d_pWin->d_Size.lin/3) // max 1/3 of window contains past-EOF
+            - Win()->d_Size.lin + g_iVscroll + (Win()->d_Size.lin/3) // max 1/3 of window contains past-EOF
          #elif 0
-            - d_pWin->d_Size.lin + g_iVscroll + 1 // new behavior: only show ONE nonexistent line at bottom.
+            - Win()->d_Size.lin + g_iVscroll + 1 // new behavior: only show ONE nonexistent line at bottom.
          #else
              // old behavior: only last line is visible (top line)
          #endif
-         );                                                      SHOWDBG && DBG( "yOriginMax = %d", yOriginMax );
-      Constrain( LINE(0), &yOrigin, yOriginMax );                      SHOWDBG && DBG( "yOrigin = %d", yOrigin );
+         );                                                   SHOWDBG && DBG( "yOriginMax = %d", yOriginMax );
+      Constrain( LINE(0), &yOrigin, yOriginMax );             SHOWDBG && DBG( "yOrigin = %d", yOrigin );
       }
 
    // save initial values for future change detection
@@ -3202,22 +3202,22 @@ void View::ScrollOriginAndCursor_( LINE yOrigin, COL xOrigin, LINE yCursor, COL 
    d_current.Origin.col = xOrigin; // don't use xOrigin below here; use d_current.Origin.col
    LINE yMin, yMax;
    if( xOriginDelta || yOriginDelta ) {
-      // CopyCurrentCursLocnToSaved(); 15-Jul-2004 klg d_pWin makes savecur/restcur less than useful
+      // CopyCurrentCursLocnToSaved(); 15-Jul-2004 klg Win() makes savecur/restcur less than useful
       if( yOriginDelta > 0 ) {
-         yMin = d_current.Origin.lin + d_pWin->d_Size.lin;
-         yMax = yMin + yOriginDelta;
+         yMin = d_current.Origin.lin + Win()->d_Size.lin;
+         yMax = yMin + yOriginDelta;  // coupled w/prev stmt!
          }
       else {
          yMax = d_current.Origin.lin;
-         yMin = yMax + yOriginDelta;
+         yMin = yMax + yOriginDelta;  // coupled w/prev stmt!
          }
       }
    else { // origin has not moved in y dimension
       yMin = yMax = yCursorInitial;
       }
-              d_current.Cursor.col = d_current.Origin.col + d_pWin->d_Size.col - 1;   0 && DBG( "ccF=%d", d_current.Cursor.col );
-   Constrain( d_current.Origin.col, &d_current.Cursor.col, xCursor );                 0 && DBG( "ccG=%d", d_current.Cursor.col );
-              d_current.Cursor.lin = d_current.Origin.lin + d_pWin->d_Size.lin - 1;
+              d_current.Cursor.col = d_current.Origin.col + Win()->d_Size.col - 1;   0 && DBG( "ccF=%d", d_current.Cursor.col );
+   Constrain( d_current.Origin.col, &d_current.Cursor.col, xCursor );                0 && DBG( "ccG=%d", d_current.Cursor.col );
+              d_current.Cursor.lin = d_current.Origin.lin + Win()->d_Size.lin - 1;
    Constrain( d_current.Origin.lin, &d_current.Cursor.lin, yCursor );
    //##########################################################################################
    //##########################################################################################
