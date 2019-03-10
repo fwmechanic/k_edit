@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -528,14 +528,14 @@ STATIC_FXN int l_Win_function_by_filename( lua_State *L ) { // Beware!  There MA
 namespace LExFx {
    STATIC_FXN int SplitCurWnd( lua_State *L ) {
       const auto fSplitVertical = ToBOOL(I_(1));
-            auto splitAt        = I_(2);    // this is a PERCENTAGE
+            auto splitAtPct     = I_(2);    // this is a PERCENTAGE
       const auto pWin( g_CurWin() );
-      const auto size   = fSplitVertical ? pWin->d_Size.col : pWin->d_Size.lin;
-      const int  minwin = fSplitVertical ? MIN_WIN_WIDTH    : MIN_WIN_HEIGHT  ;
-      if( size > (2*minwin)+1 ) { // +1 for border
-         splitAt = (size * splitAt) / 100;
-         NoLessThan( &splitAt, minwin );
-         auto rv = ::SplitCurWnd( fSplitVertical, splitAt );
+      const auto size      = fSplitVertical ? pWin->d_Size.col : pWin->d_Size.lin;
+      const int  minWinDim = fSplitVertical ? MIN_WIN_WIDTH    : MIN_WIN_HEIGHT  ;
+      if( size > (2*minWinDim)+1 ) { // +1 for border
+         splitAtPct = (size * splitAtPct) / 100;
+         NoLessThan( &splitAtPct, minWinDim );
+         auto rv = ::SplitCurWnd( fSplitVertical, splitAtPct );
          if( rv ) {
             ::DispRefreshWholeScreenNow();
             return l_construct_Win( L, rv );

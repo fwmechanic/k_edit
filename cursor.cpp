@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -98,9 +98,9 @@ bool ARG::ppage() { return pmpage( +1 ); }
 
 void View::MoveCursor_( LINE yCursor, COL xCursor, COL visibleCharsAtCursor, bool fUpdtWUC ) {
    0 && DBG( "%s(%d,%d L %d) fUpdtWUC=%c", __func__, yCursor, xCursor, visibleCharsAtCursor, fUpdtWUC?'t':'f' );
-   const auto &winSize( d_pWin->d_Size );
-   NoLessThan( &xCursor, COL (0) );
-   NoLessThan( &yCursor, LINE(0) );
+   xCursor = std::max( COL (0), xCursor );
+   yCursor = std::max( LINE(0), yCursor );
+   const auto &winSize( Win()->d_Size );
    Constrain( COL(1), &visibleCharsAtCursor, winSize.col ); // ensure visibleCharsAtCursor request is satisfiable
    xCursor = TabAlignCursorPolicy( CFBuf(), yCursor, xCursor );
    // HORIZONTAL WINDOW SCROLL HANDLING

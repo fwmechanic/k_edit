@@ -681,10 +681,10 @@ public:
    void         ScrollOriginAndCursor( const Point &ulc, const Point &cursor ) { ScrollOriginAndCursor( ulc.lin, ulc.col, cursor.lin, cursor.col ); }
    void         ScrollOriginAndCursor( const ULC_Cursor &ulcc )                { ScrollOriginAndCursor( ulcc.Origin, ulcc.Cursor ); }
    void         ScrollOriginYX( LINE yLine, COL xCol );
-   void         ScrollOrigin_X_Abs( COL  xCol  )     { ScrollOriginYX(     Origin().lin , xCol         ); }
-   void         ScrollOrigin_Y_Abs( LINE yLine )     { ScrollOriginYX(     yLine        , Origin().col ); }
-   void         ScrollOrigin_X_Rel( int colDelta  )  { ScrollOrigin_X_Abs( Origin().col + colDelta     ); }
-   void         ScrollOrigin_Y_Rel( int lineDelta )  { ScrollOrigin_Y_Abs( Origin().lin + lineDelta    ); }
+   void         ScrollOrigin_X_Abs( COL  xCol  )  { ScrollOriginYX(     Origin().lin , xCol         ); }
+   void         ScrollOrigin_Y_Abs( LINE yLine )  { ScrollOriginYX(     yLine        , Origin().col ); }
+   void         ScrollOrigin_X_Rel( int xDelta )  { ScrollOrigin_X_Abs( Origin().col + xDelta       ); }
+   void         ScrollOrigin_Y_Rel( int yDelta )  { ScrollOrigin_Y_Abs( Origin().lin + yDelta       ); }
    void         ScrollByPages( int pages );
    void         EnsureWinContainsCursor();
    //********** screen highlights
