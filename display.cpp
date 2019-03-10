@@ -469,70 +469,84 @@ private:
 void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
    d_wucSrc = wucSrc;
    d_stSel.clear();
-   if( d_sb.find( src ) ) { /* assume transitivity */                                                           DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
-      PrimeRefresh();   // we're setting the same WUC: redraw in case cursor was off-any-WUC (all WUC's HL'd) and is now
-      return;                      // over a WUC (in which case WUC-UC (under-cursor) is now HL'd, and needs to become un-HL'd)
+   if( eq( d_sb.data(), src ) ) {                                                                               DBG_HL_EVENT && DBG("unch->%s", d_sb.data() );
+      PrimeRefresh();  // we're setting the same WUC: redraw in case cursor was off-any-WUC (all WUC's HL'd) and is now
+      return;          // over a WUC (in which case WUC-UC (under-cursor) is now HL'd, and needs to become un-HL'd)
       }
    d_sb.clear(); // aaa aaa aaa aaa
    stref wuc( d_sb.AddString( src ) );
-   if( wuc.empty() ) {                                                                                          DBG_HL_EVENT && DBG( "%s toolong", __func__);
+   if( wuc.empty() || lin < 0 ) {                                                                               DBG_HL_EVENT && DBG( "%s toolong", __func__);
       PrimeRefresh();
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
-   if( lin >= 0 ) {                                       auto keynum( 1 );
-      if( !wuc.starts_with( "-D" )) { // experimental
-         char scratch[81];
-         bcat( bcpy( scratch, "-D" ).length(), scratch, wuc );                         PCChar key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+   { // add leaf-name of compound thing   clss::xWUCX clss::xWUCX xWUCX xWUCX clss.xWUCX clss.xWUCX
+   STATIC_CONST std::array<stref,2> compound_seps{ "::", "." };
+   auto maxIx( stref::npos );
+   for( auto sep : compound_seps ) {
+      const auto rfrv( wuc.rfind( sep ) );  // find last instance of sep
+      if( rfrv != stref::npos ) { maxIx = (maxIx == stref::npos) ? rfrv : std::max( maxIx, rfrv ); }
+      }                          // NB: rfind returns "index [from start of wuc] of first ch of match", which is the LAST char of the match char in wuc ...
+   if( maxIx != stref::npos ) {  // when looked at from a non-reverse perspective; thus regardless of key length, the index
+      d_sb.AddString( wuc.substr( maxIx + 1 ) ); // of the first char after the match is always (maxIx + 1)
+      }
+   }
+   if( !wuc.starts_with( "-D" )) { // experimental
+      char scratch[81]; bcat( bcpy( scratch, "-D" ).length(), scratch, wuc ); d_sb.AddString( scratch );
+      }
+   else {
+      if( wuc.length() > 2 ) { d_sb.AddString( wuc.substr( 2 ) ); }
+      }
+   if( !wuc.starts_with( "$" )) { // experimental
+      char scratch[81];
+            bcat( bcpy( scratch, "$"  ).length(), scratch, wuc );                          d_sb.AddString( scratch );
+      bcat( bcat( bcpy( scratch, "$(" ).length(), scratch, wuc ).length(), scratch, ")" ); d_sb.AddString( scratch );
+      bcat( bcat( bcpy( scratch, "${" ).length(), scratch, wuc ).length(), scratch, "}" ); d_sb.AddString( scratch );
+      }
+   if(0) { // GCCARM variations: funcname -> __funcname_veneer
+      STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
+      STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
+      const auto vnr_fx_len( KSTRLEN(vnr_pfx)+KSTRLEN(vnr_sfx) );
+      if( (wuc.length() > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx ) ) {
+         d_sb.AddString( wuc.substr( KSTRLEN(vnr_pfx), wuc.length() - vnr_fx_len ) );
          }
       else {
-         if( wuc.length() > 2 ) {
-            PCChar key = d_sb.AddString( wuc.substr( 2 ) );                                                                     DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+         char scratch[61];
+         if( (wuc.length() > 1) && (wuc.length() < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
+            d_sb.AddString( bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx ) );
             }
          }
-      if( !wuc.starts_with( "$" )) { // experimental
-         char scratch[81]; PCChar key;
-               bcat( bcpy( scratch, "$"  ).length(), scratch, wuc );                          key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-         bcat( bcat( bcpy( scratch, "$(" ).length(), scratch, wuc ).length(), scratch, ")" ); key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-         bcat( bcat( bcpy( scratch, "${" ).length(), scratch, wuc ).length(), scratch, "}" ); key = d_sb.AddString( scratch );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-         }
-      if(0) { // GCCARM variations: funcname -> __funcname_veneer
-         STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
-         STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
-         const auto vnr_fx_len( KSTRLEN(vnr_pfx)+KSTRLEN(vnr_sfx) );
-         if( (wuc.length() > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx ) ) {
-            PCChar key( d_sb.AddString( wuc.substr( KSTRLEN(vnr_pfx), wuc.length() - vnr_fx_len ) ) );          DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
+      }
+   if( 0 ) { // MWDT hexnum variations: 0xdeadbeef, 0xdead_beef (<- old MWDT elfdump format), deadbeef
+      if( (wuc.length() > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {
+         auto hex( wuc ); hex.remove_prefix( 2 );
+         const int xrun( consec_xdigits( hex ) );                                                            DBG_HL_EVENT && DBG( "xrun=%d",xrun );
+         if( (8==hex.length()) && (8==xrun) ) {
+            d_sb.AddString( hex );
             }
-         else {
-            char scratch[61];
-            if( (wuc.length() > 1) && (wuc.length() < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
-               PCChar key( d_sb.AddString( bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx ) ) );  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-               }
+         else if( (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
+            char kb[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };
+            d_sb.AddString( kb );
             }
          }
-      if(0) { // MWDT hexnum variations: 0xdeadbeef, 0xdead_beef (<- old MWDT elfdump format), deadbeef
-         if( (wuc.length() > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {
-            auto hex( wuc ); hex.remove_prefix( 2 );
-            const int xrun( consec_xdigits( hex ) );                                                            DBG_HL_EVENT && DBG( "xrun=%d",xrun );
-            if( (8==hex.length()) && (8==xrun) ) {                                                              DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, hex.data() );
-               PCChar key( d_sb.AddString( hex ) );                                                             DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-               }
-            else if( (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
-               char kb[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };               DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, kb );
-               PCChar key( d_sb.AddString( kb ) );                                                              DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key );   ++keynum;
-               }
-            }
-         else if( (8==wuc.length()) && (8==consec_xdigits( wuc )) ) {       //                                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, wuc+2 );
-            char kb[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], wuc[4], wuc[5], wuc[6], wuc[7], 0, 0 };
-            stref key( d_sb.AddString( kb ) );                                                                  DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key.data() );   ++keynum;
-            auto ix( 6 );
-            kb[ix++] = '_';
-            kb[ix++] = wuc[4];
-            kb[ix++] = wuc[5];
-            kb[ix++] = wuc[6];
-            kb[ix++] = wuc[7];
-            kb[ix++] = 0;
-            key = d_sb.AddString( kb );                                                                         DBG_HL_EVENT && DBG( "WUC[%d]='%s'", keynum, key.data() );   ++keynum;
-            }
+      else if( (8==wuc.length()) && (8==consec_xdigits( wuc )) ) {       //
+         char kb[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], wuc[4], wuc[5], wuc[6], wuc[7], 0, 0 };
+         d_sb.AddString( kb );
+         auto ix( 6 );
+         kb[ix++] = '_';
+         kb[ix++] = wuc[4];
+         kb[ix++] = wuc[5];
+         kb[ix++] = wuc[6];
+         kb[ix++] = wuc[7];
+         kb[ix++] = 0;
+         d_sb.AddString( kb );
+         }
+      }
+   if( DBG_HL_EVENT ) {
+      auto ix(0);
+      for( auto pNeedle(d_sb.data()) ; *pNeedle ; ) {
+         const stref needle( pNeedle );
+         DBG( "needle[%d] %" PR_BSR "'", ix++, BSR(needle) );
+         pNeedle += needle.length() + 1;
          }
       }
    PrimeRefresh();                                                                                           // DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
@@ -714,7 +728,7 @@ STATIC_FXN bool HilitWucLineSegs
             const stref rl( rlAll.data(), maxLen );
             IdxCol_cached conv( tw, rl );
             for( size_t ixStart( minIxClip > (maxNeedleLen-1) ? minIxClip - (maxNeedleLen-1) : 0 ) ; ixStart < rl.length() ; ) {
-               auto ixFirstMatch( stref::npos ); auto mlen( 0u );
+               auto ixFirstMatch( stref::npos ); auto mlen( 0u ); bool fMatchesFirstNeedle( false ); bool fTestingFirstNeedle( true );
                auto haystack( rl ); haystack.remove_prefix( ixStart );
                for( auto pNeedle(keyStart) ; *pNeedle ; ) {
                   const stref needle( pNeedle );
@@ -722,10 +736,11 @@ STATIC_FXN bool HilitWucLineSegs
                   if( ixFind != stref::npos ) {
                      ixFind += ixStart;
                      if( ixFirstMatch == stref::npos || ixFind < ixFirstMatch ) {
+                        fMatchesFirstNeedle = fTestingFirstNeedle;
                         ixFirstMatch = ixFind; mlen = needle.length();
                         }
-                     } // xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX xWUCX
-                  pNeedle += needle.length() + 1;
+                     } // xWUCX xWUCX xWUCX clss::xWUCX clss::xWUCX xWUCX xWUCX xWUCX xWUCX
+                  pNeedle += needle.length() + 1; fTestingFirstNeedle = false;
                   }
                if( ixFirstMatch == stref::npos ) { break; }
                const auto xFound( conv.i2c( ixFirstMatch ) );
@@ -738,7 +753,7 @@ STATIC_FXN bool HilitWucLineSegs
                     && (yLine != cursor.lin || cursor.col < xFound || cursor.col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
                     )
                  ) {
-                  alcc.PutColor( xFound, mlen, ColorTblIdx::WUC );
+                  alcc.PutColor( xFound, mlen, fMatchesFirstNeedle ? ColorTblIdx::HIL : ColorTblIdx::WUC );
                   ixStart = ixFirstMatch + mlen;   // xWUCXxWUCXxWUCXxWUCX
                   }
                else {

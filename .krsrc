@@ -842,7 +842,7 @@
 
 [ftype:clang]
    wordchars:_
-   hljoinchars: .->
+   hljoinchars: :.->
    wucminlen:1
    dquc:alt+4
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
