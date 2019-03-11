@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -61,7 +61,10 @@ Path::str_t Path::Absolutize( PCChar pszFilename ) {  enum { DB = 0 };
    // This WORKS https://stackoverflow.com/a/2341857 but suffers from http://insanecoding.blogspot.com/2007/11/pathmax-simply-isnt.html
    // I'm using (PATH_MAX*2)+1 in a perhaps forlorn attempt to stave off this issue
    char resolved_path[(PATH_MAX*2)+1]; // PATH_MAX==4096 (GCC 7.3 ubuntu 18.04)
-   realpath(pszFilename, resolved_path); DB && DBG( "%s [%" PR_SIZET "] '%s' -> '%s'", __func__, sizeof(resolved_path), pszFilename, resolved_path );
+   if( !realpath( pszFilename, resolved_path ) ) {
+      Msg( "%s realpath[%" PR_SIZET "] failed on %s", __func__, sizeof(resolved_path), pszFilename );
+      return "";
+      } DB && DBG( "%s [%" PR_SIZET "] '%s' -> '%s'", __func__, sizeof(resolved_path), pszFilename, resolved_path );
    return resolved_path;
 #else
 
