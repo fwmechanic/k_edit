@@ -20,7 +20,7 @@
 
 #include "ed_main.h"
 
-#define USE_BOOST_FILESYSTEM_PATH 0
+#define USE_BOOST_FILESYSTEM_PATH 1
 #if USE_BOOST_FILESYSTEM_PATH
    #include <boost/filesystem/operations.hpp>
 #else
