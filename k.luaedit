@@ -3458,6 +3458,33 @@ if false then  -- test io.popen
    for line in fh:lines() do print( cmd .. ': ' .. line ) end
    end
 
+do -- git integration
+   local function run_git_cmd( tail )
+      local cmd = "git " .. tail
+      local ifh = io.popen( cmd )
+      if not ifh then return end
+      local rv = {}
+      for ln in ifh:lines() do rv[1+#rv] = ln end
+      ifh:close()
+      return rv
+      end
+
+   local git_version = 'not_checked'
+   local function git_init()
+      if git_version and git_version == 'not_checked' then
+         local rv = run_git_cmd "--version"
+         git_version = rv and #rv >= 1 and rv[1]
+         end
+      return git_version
+      end
+   AddEdFxn{ name = "git", help = "", attr = NOARG
+      , NOARG   = function(arg)
+         Msg( git_init() or "git command not installed?" )
+         end
+      }
+
+end
+
 nextmsg_setbufnm_FROM_C   = true  -- CAREFUL called from C++
 nextmsg_newsection_FROM_C = true  -- CAREFUL called from C++
 
