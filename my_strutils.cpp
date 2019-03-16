@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -262,7 +262,7 @@ bool StrSpnSignedInt( PCChar pszString ) {
 
 typedef int (*isfxn)(int);
 
-STATIC_FXN int consec_is_its( isfxn ifx, stref sr ) {
+STATIC_FXN sridx consec_is_its( isfxn ifx, stref sr ) {
    auto rv( 0 );
    for( auto ch : sr ) {
       if( !ifx( ch ) ) {
@@ -273,8 +273,8 @@ STATIC_FXN int consec_is_its( isfxn ifx, stref sr ) {
    return rv;
    }
 
-int consec_xdigits( stref sr ) { return consec_is_its( isxdigit, sr ); }
-int consec_bdigits( stref sr ) { return consec_is_its( isbdigit, sr ); }
+sridx consec_xdigits( stref sr ) { return consec_is_its( isxdigit, sr ); }
+sridx consec_bdigits( stref sr ) { return consec_is_its( isbdigit, sr ); }
 
 STATIC_FXN stref conv_u_( int &errno_, uintmax_t &rv, stref sr, UI &numberBase ) {
    stref v2v( "0123456789abcdefghijklmnopqrstuvwxyz" );

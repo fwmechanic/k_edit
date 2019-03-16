@@ -502,7 +502,7 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       bcat( bcat( bcpy( scratch, "$(" ).length(), scratch, wuc ).length(), scratch, ")" ); d_sb.AddString( scratch );
       bcat( bcat( bcpy( scratch, "${" ).length(), scratch, wuc ).length(), scratch, "}" ); d_sb.AddString( scratch );
       }
-   if(0) { // GCCARM variations: funcname -> __funcname_veneer
+   if( 1 ) { // GCCARM variations: funcname -> __funcname_veneer
       STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
       STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
       const auto vnr_fx_len( KSTRLEN(vnr_pfx)+KSTRLEN(vnr_sfx) );
@@ -516,29 +516,37 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
             }
          }
       }
-   if( 0 ) { // MWDT hexnum variations: 0xdeadbeef, 0xdead_beef (<- old MWDT elfdump format), deadbeef
-      if( (wuc.length() > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {
+   constexpr size_t MAX_WUC_HEXNUM_LEN(16);  // up to 64-bit
+   if( MAX_WUC_HEXNUM_LEN > 0 ) { // hexnum variations: 0xdeadbeef, deadbeef, 0xdead_beef (old MWDT elfdump format)
+      constexpr auto   SUPPORT_0xdead_beef(true);  // 32-bit only
+      if( (wuc.length() > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {  // 0xhexnum ?
          auto hex( wuc ); hex.remove_prefix( 2 );
-         const int xrun( consec_xdigits( hex ) );                                                            DBG_HL_EVENT && DBG( "xrun=%d",xrun );
-         if( (8==hex.length()) && (8==xrun) ) {
+         const auto xrun( consec_xdigits( hex ) );
+         if( hex.length() == xrun ) {  // no hex.length() <= MAX_WUC_HEXNUM_LEN check here since no intermed buffer required
             d_sb.AddString( hex );
-            }
-         else if( (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
+            }  // 0x123 123 0x123 123  0x01234 01234 0x01234 01234 0x0123456789abcde 0123456789abcde
+         else if( SUPPORT_0xdead_beef && (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
             char kb[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };
             d_sb.AddString( kb );
             }
          }
-      else if( (8==wuc.length()) && (8==consec_xdigits( wuc )) ) {       //
-         char kb[] = { '0','x', wuc[0], wuc[1], wuc[2], wuc[3], wuc[4], wuc[5], wuc[6], wuc[7], 0, 0 };
+      else if(   (MAX_WUC_HEXNUM_LEN > 0)
+              && (wuc.length() <= MAX_WUC_HEXNUM_LEN)
+              && (wuc.length() == consec_xdigits( wuc ))  // hexnum?
+             ) {  // 0x12345678 12345678 0x12345678 12345678  0x0123456789abcdef 0123456789abcdef 0x0123456789abcdef 0123456789abcdef
+         char kb[3+MAX_WUC_HEXNUM_LEN] = { '0', 'x', chNUL }; // 3=sizeof(chNUL)+strlen("0x")
+         scat( BSOB(kb), wuc );
          d_sb.AddString( kb );
-         auto ix( 6 );
-         kb[ix++] = '_';
-         kb[ix++] = wuc[4];
-         kb[ix++] = wuc[5];
-         kb[ix++] = wuc[6];
-         kb[ix++] = wuc[7];
-         kb[ix++] = 0;
-         d_sb.AddString( kb );
+         if( SUPPORT_0xdead_beef && 8==wuc.length() ) {
+            auto ix( 6 );
+            kb[ix++] = '_';
+            kb[ix++] = wuc[4];
+            kb[ix++] = wuc[5];
+            kb[ix++] = wuc[6];
+            kb[ix++] = wuc[7];
+            kb[ix++] = 0;
+            d_sb.AddString( kb );
+            }
          }
       }
    if( DBG_HL_EVENT ) {

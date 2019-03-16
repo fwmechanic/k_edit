@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -369,8 +369,8 @@ extern  PChar _strlwr( PChar buf );
 
 #endif
 
-extern int   consec_xdigits( stref sr );
-extern int   consec_bdigits( stref sr );
+extern sridx consec_xdigits( stref sr );
+extern sridx consec_bdigits( stref sr );
 
 STIL int Strnicmp( PCChar string1, PCChar string2, size_t count ) { return WL( _strnicmp, strncasecmp )( string1, string2, count ); }
 STIL int Stricmp ( PCChar string1, PCChar string2 )               { return WL( _strcmpi , strcasecmp  )( string1, string2 ); }
