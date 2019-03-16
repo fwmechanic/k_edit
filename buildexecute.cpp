@@ -165,6 +165,9 @@ bool ARG::cancel() {               0 && DBG( "%s+", __func__ );
                      fnMsg( "Argument cancelled" );
                      }
                   ClearArgAndSelection();
+                  // following does NOT work to restore the cursor to its initial position prior to selword macro execution
+                  // why? because the selword macro moves the cursor to one end of the word BEFORE it begins the selection
+                  // g_CurView()->MoveCursor( s_SelAnchor );
                   break;
       }
    if( !Interpreter::Interpreting() ) {
