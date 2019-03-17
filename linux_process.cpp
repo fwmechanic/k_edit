@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -380,8 +380,9 @@ STATIC_FXN int system_detached( PCChar pFullCmdLn ) {
    }
 
 void StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile ) {
-   std::string cli( "xdg-open " );
+   std::string cli( "xdg-open '" );
                cli.append( pFullCmdLn );
+               cli.append( "'" );
    // int lunacy __attribute__((unused));
    // lunacy = system( cli.c_str() );
    system_detached( cli.c_str() );
