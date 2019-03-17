@@ -303,7 +303,7 @@ STATIC_FXN FTypeSetting *Get_FTypeSetting( stref ftype ) {              FTypeSet
 
 void FBUF::SetFType() {
    if( !GetFTypeSettings() ) {
-      d_ftypeStruct = Get_FTypeSetting( DeduceFType() );
+      d_ftypeStruct = ::Get_FTypeSetting( FBOP::DeduceFType( this ) );
       }
    }
 

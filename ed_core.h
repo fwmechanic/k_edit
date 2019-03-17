@@ -1070,7 +1070,6 @@ private:
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
    const FTypeSetting *d_ftypeStruct = nullptr;  // since d_ftypeStruct is now mostly a content-based auto-detected property (therefore of the file itself), it is a FBUF (not View) property
-   std::string    DeduceFType() const;
 public:
    void           SetFType();
    stref          FTypeName()             const;  // (*d_ftypeStruct) or ""
@@ -1147,7 +1146,6 @@ private:
    enum DiskFileVsFbufStatus { DISKFILE_NO_EXIST, DISKFILE_NEWERTHAN_FBUF, DISKFILE_SAME_AS_FBUF, DISKFILE_OLDERTHAN_FBUF };
    DiskFileVsFbufStatus checkDiskFileStatus() const;
    PView          PutFocusOnView();
-   bool           FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ); // called ONLY by FBufReadOk!
    bool           FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently );
    bool           ReadDiskFileFailed( int hFile );
    bool           UpdateFromDisk( bool fPromptBeforeRefreshing );
@@ -1370,6 +1368,8 @@ public:
 namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Prefer non-member non-friend functions to member functions."
 
    extern PFBUF   FindOrAddFBuf( stref filename, PFBUF *ppGlobalPtr=nullptr );
+
+   extern std::string DeduceFType( PCFBUF pfb );
 
    extern void    PrimeRedrawLineRangeAllWin( PCFBUF fb, LINE yMin, LINE yMax );
 

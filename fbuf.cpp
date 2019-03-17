@@ -785,6 +785,19 @@ PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
    return rv;
    }
 
+STATIC_FXN std::string is_content_grep( PCFBUF pFile ) { 1 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
+   auto  metaLines( 0 ); // params that govern how...
+   Path::str_t origSrchFnm;    // ...srchfile is processed
+   if( FBOP::IsGrepBuf( origSrchFnm, &metaLines, pFile ) ) {
+      auto srchfile( OpenFileNotDir_NoCreate( origSrchFnm.c_str() ) );
+      if( srchfile ) {
+         auto rv( sr2st( srchfile->FTypeName() ) );  1 && DBG( "%s called on %s %s returns %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name(), rv.c_str() );
+         return rv;
+         }
+      }
+   return "";
+   }
+
 STATIC_FXN std::string is_content_diff( PCFBUF pFile ) { 0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
    auto lnum(0);
    stref rl;
@@ -962,13 +975,13 @@ STATIC_FXN std::string emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/so
    return "";
    }
 
-STATIC_FXN std::string FType_deduce_( PCFBUF pfb ) {
+STATIC_FXN std::string FType_deduce_from_content( PCFBUF pfb ) {
    typedef std::string (*FType_deducer_t)( PCFBUF pfb );
    STATIC_CONST FType_deducer_t FType_deducers[] = {
-      emacs_major_mode     ,
-      is_content_diff      ,
-      ShebangToFType_lua   ,
-      FnmToFType_lua       ,
+      is_content_grep     ,
+      is_content_diff     ,
+      emacs_major_mode    ,
+      ShebangToFType_lua  ,
       };
    for( const auto fxn : FType_deducers ) {
       const auto rv( fxn( pfb ) );
@@ -976,20 +989,28 @@ STATIC_FXN std::string FType_deduce_( PCFBUF pfb ) {
          return rv;
          }
       }
-   return sr2st( Path::RefExt( pfb->Namesr() ) );
+   return "";
    }
 
-std::string FBUF::DeduceFType() const {
+std::string FBOP::DeduceFType( PCFBUF pfb ) {
    std::string rv;
-   if( FnmIsLogicalWildcard( Namestr() ) ) {
-      rv = "wildcard";
+   if( pfb->HasLines() ) {
+      rv = ::FType_deduce_from_content( pfb );
       }
-   else if( FnmIsPseudo() || !FnmIsDiskWritable() ) {
-      rv = "pseudo";
+   if( rv.empty() ) {
+      rv = ::FnmToFType_lua( pfb );
       }
-   else {
-      rv = FType_deduce_( this );
-      }                                                            1 && DBG( "%s %s -> '%" PR_BSR "'", __func__, Name(), BSR(rv) );
+   if( rv.empty() ) {
+      if( ::FnmIsLogicalWildcard( pfb->Namesr() ) ) {
+         rv = "wildcard";
+         }
+      else if( pfb->FnmIsPseudo() || !pfb->FnmIsDiskWritable() ) {
+         rv = "pseudo";
+         }
+      else {
+         rv = sr2st( Path::RefExt( pfb->Namesr() ) );
+         }
+      }                                                            1 && DBG( "%s %s -> '%" PR_BSR "'", __func__, pfb->Name(), BSR(rv) );
    return rv;
    }
 
@@ -1291,7 +1312,7 @@ STATIC_FXN bool DontRecreateDeletedFile( stref fnm ) {
    return false;
    }
 
-bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
+bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    VR_( DBG( "FRd+ %s", Name() ); )
 // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
       {
@@ -1394,14 +1415,6 @@ bool FBUF::FBufReadOk_( bool fAllowDiskFileCreate, bool fCreateSilently ) {
    SetLastFileStatFromDisk();
    VR_( DBG( "FRd- OK" ); )
    return true;
-   }
-
-bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
-   const auto rv( FBufReadOk_( fAllowDiskFileCreate, fCreateSilently ) );
-   if( rv && !IsRsrcLdBlocked() ) {
-      SetFType();
-      }
-   return rv;
    }
 
 bool FBUF::ReadOtherDiskFileNoCreateFailed( PCChar pszName ) {
