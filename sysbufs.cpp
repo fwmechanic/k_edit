@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -194,7 +194,8 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
    pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s\n ", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, kszMasterRepo );
    FBufRead_Assign_OsInfo( pFBuf );
-   pFBuf->FmtLastLine( " \n#-------------------- %s\npgmdir   %s\nstatedir %s", "Metadata", ThisProcessInfo::ExePath(), EditorStateDir() );
+   pFBuf->FmtLastLine( " \n#-------------------- %s\npgmdir   %s\nstatedir %s\n", "Metadata", ThisProcessInfo::ExePath(), EditorStateDir() );
+   pFBuf->FmtLastLine( " \n#-------------------- %s\nsizeof(FBUF) %" PR_SIZET "\nsizeof(View) %" PR_SIZET "\n", "Internals", sizeof(FBUF), sizeof(View) );
    FBufRead_Assign_Switches( pFBuf );
    // We do most print loops twice: first time to determine the count for the header
    auto macroCmds(0);
