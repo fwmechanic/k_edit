@@ -386,3 +386,7 @@ do
       }
 
 end
+
+return {
+   URL_CMake_docs = URL_CMake_docs,
+   }

@@ -65,6 +65,7 @@ require "show"
 
 require "lpeg"
 local lpeg = lpeg
+local user
 
 local lpeg_split,lp_C_compound_sep
 do
@@ -970,6 +971,29 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       return rv  -- table (array) containing matching tags
       end
 
+   local cmk_globalvars = {             -- "oh, the humanity!"  (or: "the abomination known as CMake")
+      -- https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html
+      -- following variables are fixed symbols defined by CMake which do not bear a "CMAKE_" prefix (and thus offer no clues as to their origin)
+      BUILD_SHARED_LIBS=true, CACHE=true, ENV=true, EXECUTABLE_OUTPUT_PATH=true, LIBRARY_OUTPUT_PATH=true,
+
+      PROJECT_BINARY_DIR=true, PROJECT_DESCRIPTION=true, PROJECT_HOMEPAGE_URL=true,        -- NB: these have analogs prefixed by project name
+      PROJECT_NAME=true, PROJECT_SOURCE_DIR=true, PROJECT_VERSION=true,                    --     see cmk_autovar_pats elsewhere
+      PROJECT_VERSION_MAJOR=true, PROJECT_VERSION_MINOR=true, PROJECT_VERSION_PATCH=true,
+      PROJECT_VERSION_TWEAK=true,
+
+      -- a large number of these are 'current-build-tool' indicators which may be defined by many tools aside from CMake
+      ANDROID=true, APPLE=true, BORLAND=true, CYGWIN=true, ["GHS-MULTI"]=true, IOS=true, MINGW=true,
+      MSVC=true, MSVC10=true, MSVC11=true, MSVC12=true, MSVC14=true, MSVC60=true, MSVC70=true,
+      MSVC71=true, MSVC80=true, MSVC90=true, MSVC_IDE=true, MSVC_TOOLSET_VERSION=true,
+      MSVC_VERSION=true, MSYS=true, UNIX=true, WIN32=true, WINCE=true, WINDOWS_PHONE=true,
+      WINDOWS_STORE=true, XCODE=true, XCODE_VERSION=true,
+      }  -- still need to figure out what to do with these {being a new category: tagless-tags?}: perform a CMake man-page web-search?
+   local function cmake_globalvar( tag )
+      if tag:match '^CMAKE_' or cmk_globalvars[tag] then
+         return tag, user.URL_CMake_docs
+         end
+      end
+
    local cmk_pjnm_pat = '([%a%d_][%a%d_%-]+)'
    local cmk_autovar_pats = {           -- "oh, the humanity!"  (or: "the abomination known as CMake")
       cmk_pjnm_pat..'_SOURCE_DIR'    ,  -- these variables are auto-vivified (into the global namespace?)
@@ -983,9 +1007,11 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       cmk_pjnm_pat..'_HOMEPAGE_URL'  ,
       }
    local function cmake_proj_autovar( tag )  -- https://cmake.org/cmake/help/latest/command/project.html
-      for _,pat in ipairs(cmk_autovar_pats) do
-         local proj = tag:match( pat )
-         if proj then return proj end
+      if not tag:match '^PROJECT_' then  -- tags matching this pattern are left to hit cmake_globalvar
+         for _,pat in ipairs(cmk_autovar_pats) do
+            local proj = tag:match( pat )
+            if proj then return proj end
+            end
          end
       end
 
@@ -1005,6 +1031,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          string.lower  ,  -- might have typed the wrong case of a function name or, in windoze a filename
       fs "_%s"         ,  -- C identifier might be defined in asm source (with leading '_')
       cmake_proj_autovar, -- CMake magically defines variables with names prefixed by user-defined "project" names
+      cmake_globalvar  ,
       }
    do
       local function Choice_Debug( at )
@@ -1097,9 +1124,9 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       AddToSearchLog( tagStr )
       local tagdefs
       for _,fxn in ipairs(tag_variants) do
-         local tagVariant = fxn( tagStr )
+         local tagVariant, actionFxn = fxn( tagStr )
          if tagVariant then  -- DBG( fmt( "tagStr=%s tagVariant=%s", tagStr, tagVariant ) )
-            tagdefs = DefinedTag( tagVariant )
+            tagdefs = actionFxn or DefinedTag( tagVariant )
             if tagdefs then
                tagStr = tagVariant
                break
@@ -1112,6 +1139,11 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          else
             return Msgf( "tag '%s' not defined", tagStr )
             end
+         end
+      if 'function'==type(tagdefs) then  -- hack alert!  tagdefs contains actionFxn
+         tagdefs( tagStr )
+         Msgf( "executing actionFxn of tag '%s'", tagStr )
+         return false
          end
       if fSaveCurLocn then LocnListInsertCursor() end
       s_prevTagLookedUp = tagStr
@@ -4390,7 +4422,7 @@ filesettings = load_lua_env( RsrcFilename( "filesettings" ), {
 print( "filesettings is a "..type(filesettings) )
 --########################################################################################################################################
 
-require "user"  -- compile & execute %~dp0user.lua
+user = require "user"  -- compile & execute %~dp0user.lua
 
 -- "sled" = Site Local Editor Directory: where site-/user-specific/owned (i.e. exo-k_edit-worktree) editor-extending files are sought
 do
