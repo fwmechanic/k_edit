@@ -2404,7 +2404,10 @@ do
                printf( "gofileline_dif: lines_above_base=%d", lines_above_base )
             else
                local n1,n2,n3,n4 = str:match( "^@@ ([-+]%d+),(%d+) ([-+]%d+),(%d+) @@" )
-               if n4 then
+               if not n3 then
+                  n1,n3 = str:match( "^@@ ([-+]%d+) ([-+]%d+) @@" )
+                  end
+               if n3 then
                   ybase = n3 + lines_above_base - 1
                   printf( "gofileline_dif: ybase=%d", ybase )
                   end
