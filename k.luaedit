@@ -2390,32 +2390,45 @@ do
       end
 
 -- [[
+   local hpat_m = '^@@ %-(%d+)$1 %+(%d+)$1 @@'
+   local hpat_0 = hpat_m:gsub( '$1', ',(%%d+)' )   -- printf( 'hpat_0=%s', hpat_0 )
+   local hpat_1 = hpat_m:gsub( '$1', '' )          -- printf( 'hpat_1=%s', hpat_1 )
    local function gofileline_diff( arg )
       local fbuf, cursorY = arg.fbuf, arg.cursorY
       printf( "gofileline_diff(fbuf.nm='%s',line=%d)", fbuf:Name(), cursorY )
+      local str = fbuf:GetLine( cursorY )
+      local chs = str and str:match( '[ %+%-]' )
+      if not chs then
+         return Msgf( "gofileline_diff: chs='%s' cannot be sought", chs )
+         end
+      chs = chs==' ' and '+' or chs
+      printf( "gofileline_diff: chs=%s line[%d]=%s", chs, cursorY, str )
+      local labPat = '^'..'[%'..chs..' ]'
+      local fnmPat = '^'..('%'..chs):rep(3)..' (%S+)'
       local ybase
       local lines_above_base = 0
-      for yy=cursorY,1,-1 do
-         local str = fbuf:GetLine( yy )
+      for yy=cursorY-1,1,-1 do
+         str = fbuf:GetLine( yy )
          printf( "gofileline_diff: line[%d]=%s", yy,str )
          if nil == ybase then
-            if str:match( "^[%+ ]" ) then
+            if str:match( labPat ) then
                lines_above_base = 1+ lines_above_base
                printf( "gofileline_diff: lines_above_base=%d", lines_above_base )
             else
-               local n1,n2,n3,n4 = str:match( "^@@ ([-+]%d+),(%d+) ([-+]%d+),(%d+) @@" )
+               local n1,n2,n3,n4 = str:match( hpat_0 )
                if not n3 then
-                  n1,n3 = str:match( "^@@ ([-+]%d+) ([-+]%d+) @@" )
+                  n1,n3 = str:match( hpat_1 )
                   end
                if n3 then
-                  ybase = n3 + lines_above_base - 1
+                  local nn = chs=='-' and n1 or n3
+                  ybase = nn + lines_above_base
                   printf( "gofileline_diff: ybase=%d", ybase )
                   end
                end
          else
-            local fnm = str:match( "^%+%+%+ (%S+)" )
+            local fnm = str:match( fnmPat )
             if fnm then
-               fnm = fnm:gsub("^b/","")
+               fnm = fnm:gsub("^[ab]/","")  -- git adds (artificial) a/ or b/ prefix to fnm
                printf( "gofileline_diff: fnm=%s", fnm )
                return GotoFileYX_Msg_( fnm, ybase, arg.cursorX-1, "dif", "dif", 0 )
                end
