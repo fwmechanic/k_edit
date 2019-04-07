@@ -2440,20 +2440,20 @@ do
    function gofileline( l1buf, lbuf, fSaveLocn, fnmToNotMatch )
       fnm_to_f_in_tree = nil
 
-      local function GotoFileYX_Msg( fnm, line, col, msg, patnm, cols )
+      local function GotoFileYX_Msg( fnm, lnum, col, msg, patnm, cols )
          if fnmToNotMatch and fnmToNotMatch == fnm then return end
          if fSaveLocn then LocnListInsertCursor() end
-         return GotoFileYX_Msg_( fnm, line, col, msg, patnm, cols )
+         return GotoFileYX_Msg_( fnm, lnum, col, msg, patnm, cols )
          end
 
       local function ParseErr() Msgf( "Parse of line failed!  Update gofileline() in k.lua:%s", lbuf ) end
 
       local fnm = l1buf:match( "^%*GREP%* (.+)$" )
-      local emsg, line, extra
+      local msg1, lnum, msg2
       if fnm then -- <grep_n> pseudofile hyperlink: dest fnm
          local xLineBegin
-         line,xLineBegin = lbuf:match( "^%s*(%d+)%s()" )
-         if not line then return ParseErr() end
+         lnum,xLineBegin = lbuf:match( "^%s*(%d+)%s()" )
+         if not lnum then return ParseErr() end
          fnm = fnm:gsub( "^\"(.*)\"$", function(tok) return tok end )  -- in <grep> files, fnames containing spaces are wrapped in '"': unwrap
 
          -- direct use of following 2 API's is a bit "impure", but the means justify the end  :-)
@@ -2461,13 +2461,13 @@ do
          local _,xCur = vw:GetCursorYX()
          xCur = (xCur > xLineBegin) and (xCur - xLineBegin) or 1
 
-         return GotoFileYX_Msg( fnm, line, xCur, "grep Hyperlink", "grep" )
+         return GotoFileYX_Msg( fnm, lnum, xCur, "grep Hyperlink", "grep" )
          end
 
       -- ../../Source/system/rom/locincludes/AOM_rm_dstructs.h:122:2: #error "Use up-to-date Header Structure in Flashware"
       do local col
-      fnm, line, col, emsg = lbuf:match( "^(%S[^:%s]+):(%d+):(%d+):%s+(.+)" )
-      if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "MW C" ) then return fnm end
+      fnm, lnum, col, msg1 = lbuf:match( "^(%S[^:%s]+):(%d+):(%d+):%s+(.+)" )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, "MW C" ) then return fnm end
       end
 
       do
@@ -2493,102 +2493,102 @@ do
       --   File "C:\stardes\code\des_v2_1_fe_v2_4_star_v7_1_ps_v2_0\python\RunDESfull.py", line 36, in <module>
       --     import CreateEmptyStartState as CreateStartState
       --
-      fnm, line = lbuf:match( '^%s+File "([^"]+)", line (%d+)' )
-      if line and GotoFileYX_Msg( fnm, line, 1, "", "Python" ) then return fnm end
+      fnm, lnum = lbuf:match( '^%s+File "([^"]+)", line (%d+)' )
+      if lnum and GotoFileYX_Msg( fnm, lnum, 1, "", "Python" ) then return fnm end
 
       -- Perl cmdline interpreter  Use of uninitialized value $syn_updatePer in string eq at C:\klg\d\cscrape\cscrape.pl line 1083.
       --                           Died at C:\klg\d\cscrape\cscrape.pl line 1083.
       -- common: at C:\klg\d\cscrape\cscrape.pl line 1083.
-      emsg, fnm, line  = lbuf:match( "(%S.*)%sat (%S.*)%sline%s(%d+)%." )
-      if line and GotoFileYX_Msg( fnm, line, 1, emsg, "Perl" ) then return fnm end
+      msg1, fnm, lnum  = lbuf:match( "(%S.*)%sat (%S.*)%sline%s(%d+)%." )
+      if lnum and GotoFileYX_Msg( fnm, lnum, 1, msg1, "Perl" ) then return fnm end
 
       -- GCC fbuf.cpp:1629:28: error: no match for 'operator*' (operand type is 'Path::str_t {aka std::basic_string<char>}')
-      fnm, line, emsg = lbuf:match( "^([^ :]+):(%d+): (.+)$" )
-      if not emsg then
-         fnm, line, emsg = lbuf:match( "^(.+):(%d+):(%d+): (error: .+)$" )
-         if not emsg then
-            fnm, line, emsg = lbuf:match( "^(.+):(%d+):(%d+): (warning: .+)$" )
-            if not emsg then
-               fnm, line, emsg = lbuf:match( "^(.+):(%d+):(%d+): (note: .+)$" )
+      fnm, lnum, msg1 = lbuf:match( "^([^ :]+):(%d+): (.+)$" )
+      if not msg1 then
+         fnm, lnum, msg1 = lbuf:match( "^(.+):(%d+):(%d+): (error: .+)$" )
+         if not msg1 then
+            fnm, lnum, msg1 = lbuf:match( "^(.+):(%d+):(%d+): (warning: .+)$" )
+            if not msg1 then
+               fnm, lnum, msg1 = lbuf:match( "^(.+):(%d+):(%d+): (note: .+)$" )
                end
             end
          end
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "gcc" ) then return fnm end
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "gcc" ) then return fnm end
 
       -- GCC w/o emsg fbuf.cpp:1629
-      fnm, line = lbuf:match( "^([^ :]+):(%d+)" )
-      if line and GotoFileYX_Msg( fnm, line, 1, "", "gcc w/o emsg" ) then return fnm end
+      fnm, lnum = lbuf:match( "^([^ :]+):(%d+)" )
+      if lnum and GotoFileYX_Msg( fnm, lnum, 1, "", "gcc w/o emsg" ) then return fnm end
 
       -- Lua cmdline interpreter  lua: asicgen.lua:20: 'then' expected near '='
       local luaMsig = "(%S+):(%d+):?%s+(.+)$"
-      fnm, line, emsg = lbuf:match( "^[Ll]ua:%s+"..luaMsig )
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "Lua" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( "^[Ll]ua:%s+"..luaMsig )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "Lua" ) then return fnm end
 
-      fnm, line, emsg = lbuf:match( "^%s*"..luaMsig )
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "LuaRT1" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( "^%s*"..luaMsig )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "LuaRT1" ) then return fnm end
 
-      fnm, line, emsg = lbuf:match( "[Ll]ua%.exe:%s+"..luaMsig )
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "LuaRT2" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( "[Ll]ua%.exe:%s+"..luaMsig )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "LuaRT2" ) then return fnm end
 
       -- HighC (Metaware) "../../../Source/BE/FRM/frm.c(573) : warning 652: value: Variable is never used."
-      fnm, line, emsg = lbuf:match( "^([^ :]+)%((%d+)%)%s?:%s(.+)$" )
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "highc" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( "^([^ :]+)%((%d+)%)%s?:%s(.+)$" )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "highc" ) then return fnm end
 
                        -- "E:\ws\cad2\Make\lib.lua:212: attempt to call method 'write' (a nil value)"
-      fnm, line, emsg = lbuf:match( "^([^ :]+):(%d+):%s(.+)$" )
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "highc" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( "^([^ :]+):(%d+):%s(.+)$" )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "highc" ) then return fnm end
 
       -- cppcheck
-      fnm, line, emsg = lbuf:match( "^%[([^:]+):(%d+)][%s:]+(.+)$" )
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "cppcheck" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( "^%[([^:]+):(%d+)][%s:]+(.+)$" )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "cppcheck" ) then return fnm end
 
       -- ARMCC "../../Source/be/apiincludes/BE_PublicTypes.h", line 33: Warning:  #66-D: enumeration value is out of "int" range
-      fnm, line, emsg = lbuf:match( '^"([^"]+)", line (%d+): (.+)$' )
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "gcc" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( '^"([^"]+)", line (%d+): (.+)$' )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "gcc" ) then return fnm end
 
       -- Borland C++
       do               local pat_flx =                                  " ([^ ]+) (%d+): (.*)$"
-                       emsg, fnm, line, extra = lbuf:match( "^(Error)"  ..pat_flx )
-      if not emsg then emsg, fnm, line, extra = lbuf:match( "^(Warning)"..pat_flx ) end
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg..": "..extra, "Borland C++" ) then return fnm end
+                       msg1, fnm, lnum, msg2 = lbuf:match( "^(Error)"  ..pat_flx )
+      if not msg1 then msg1, fnm, lnum, msg2 = lbuf:match( "^(Warning)"..pat_flx ) end
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1..": "..msg2, "Borland C++" ) then return fnm end
       end
 
       -- Borland TASM
       do               local pat_flx =                      " ([^(]+)%((%d+)%) (.*)$"
-                       emsg, fnm, line, extra = lbuf:match( "^(%*%*Error%*%*)"..pat_flx )
-      if not emsg then emsg, fnm, line, extra = lbuf:match( "^(%*Warning%*)"  ..pat_flx ) end
-      if emsg and GotoFileYX_Msg( fnm, line, 1, string.gsub( emsg..": "..extra, "%*", "", "Borland TASM" ) ) then return fnm end
+                       msg1, fnm, lnum, msg2 = lbuf:match( "^(%*%*Error%*%*)"..pat_flx )
+      if not msg1 then msg1, fnm, lnum, msg2 = lbuf:match( "^(%*Warning%*)"  ..pat_flx ) end
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, string.gsub( msg1..": "..msg2, "%*", "", "Borland TASM" ) ) then return fnm end
       end
 
       -- Borland Delphi 5
-      fnm, line, emsg = lbuf:match( "^(%S+)%((%d+)%) (.+)$" )
-      if emsg and GotoFileYX_Msg( fnm, line, 1, emsg, "Borland Delphi 5" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( "^(%S+)%((%d+)%) (.+)$" )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "Borland Delphi 5" ) then return fnm end
 
       -- MSVC 12: c:\cecil\ws5_go\cecil_v1_0\trunk\test\sim_params\unittest.cpp(43): error C2664: 'ParamSection_intf::ParamSection_intf(const ParamSection_intf &)' : cannot convert argument 1 from 'ParamSetSpec' to 'const ParamSectionSpec &' [C:\cecil\ws5_go\Cecil_v1_0\trunk\test\sim_params\msvc120\paramTest\paramTest.vcxproj]
       do
-      fnm, line, emsg = lbuf:match( "^(%S+)%((%d+)%):%s+(.+)" )
-      if emsg and GotoFileYX_Msg( fnm, line, 0, emsg, "MSVC 12" ) then return fnm end
+      fnm, lnum, msg1 = lbuf:match( "^(%S+)%((%d+)%):%s+(.+)" )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 0, msg1, "MSVC 12" ) then return fnm end
       end
 
       -- MSVC-like: e:/ws/fij1rc1/source/be/fps/fps.c(205,24): info: Unexpected array subscript
       do local col
-      fnm, line, col, emsg = lbuf:match( "^(%S+)%((%d+),(%d+)%):%s+(.+)" )
-      if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "SNDK-instrumenter" ) then return fnm end
+      fnm, lnum, col, msg1 = lbuf:match( "^(%S+)%((%d+),(%d+)%):%s+(.+)" )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, "SNDK-instrumenter" ) then return fnm end
       end
 
       -- generic: "c:\klg\s n\k\k.lua 870 10L7"  -- for now mfgrep does NOT quote fnms containing spaces
       do local col, wid                          -- assumption: fnm must begin and end with non-space (%S)
       local mfgrep_pat_tail = "%s+(%d+)%s(%d+)L(%d+):%s+(.+)"
-      fnm, line, col, wid, emsg = lbuf:match( "^(%S.*%S)" .. mfgrep_pat_tail )  -- if begin and end chars are different
-      if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "K internal, Y,X", wid ) then return fnm end
-      fnm, line, col, wid, emsg = lbuf:match( "^(%S)" .. mfgrep_pat_tail )      -- if begin and end chars are same (single-char abs fnm is impossible AFAIK but let's be paranoid)
-      if emsg and GotoFileYX_Msg( fnm, line, col, emsg, "K internal, Y,X", wid ) then return fnm end
+      fnm, lnum, col, wid, msg1 = lbuf:match( "^(%S.*%S)" .. mfgrep_pat_tail )  -- if begin and end chars are different
+      if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, "K internal, Y,X", wid ) then return fnm end
+      fnm, lnum, col, wid, msg1 = lbuf:match( "^(%S)" .. mfgrep_pat_tail )      -- if begin and end chars are same (single-char abs fnm is impossible AFAIK but let's be paranoid)
+      if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, "K internal, Y,X", wid ) then return fnm end
       end
 
       -- generic
 
-      fnm, line = lbuf:match( "^(%S+)%s+(%d+)" )
-      if line and GotoFileYX_Msg( fnm, line, 1, fnm.." "..line, "K internal, Y only" ) then return fnm end
+      fnm, lnum = lbuf:match( "^(%S+)%s+(%d+)" )
+      if lnum and GotoFileYX_Msg( fnm, lnum, 1, fnm.." "..lnum, "K internal, Y only" ) then return fnm end
 
       return ParseErr()
       end
@@ -2598,7 +2598,9 @@ do
                   if arg.fbuf:FTypeNmEq( "diff" ) then return nil ~= gofileline_diff( arg ) end
                   return nil ~= gofileline( arg.fbuf:GetLine( 1 ), arg.fbuf:GetLineRaw( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
                   end
-      , TEXTARG = function( arg ) return nil ~=  gofileline( ""                   , arg.text                       , arg.fbuf:Name() ~= nextmsgFBufName() ) end
+      , TEXTARG = function( arg )
+                  return nil ~= gofileline( ""                   , arg.text                          , arg.fbuf:Name() ~= nextmsgFBufName() )
+                  end
       }
 end
 
