@@ -2204,23 +2204,16 @@ local function xform_boxarg( arg, gsubfunc )
    end
 
 local function gsub_URL_escape( s )
-   local cnt1,cnt2,cnt3
+   local cnt1,cnt2
    s,cnt1 = s:gsub( '[#&="+%%%c%s]', function(c) return string.format( "%%%02X", c:byte() ) end )
    s,cnt2 = s:gsub( " ", "+" )
-   -- ugly hack-o-rama
-   if dirsep_os == '/' then
-      s,cnt3 = s:gsub( "'", [['\'']] )
-      s = "'" .. s .. "'"
-   else
-      cnt3 = 0
-      end
    return s, cnt1+cnt2
    end
 
 local function gsub_URL_unescape( s )
    local cnt1,cnt2
-   s,cnt1 = s:gsub( "&#(%d+);", function(c) return string.char(c) end )
-   s,cnt2 = s:gsub( " ", "+" )
+   s,cnt1 = s:gsub( "+", " " )
+   s,cnt2 = s:gsub( "&#(%d+);", function(c) return string.char(c) end )
    return s, cnt1+cnt2
    end
 
