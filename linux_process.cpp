@@ -57,7 +57,7 @@ int piped_forker::ReapChild() {
 
 ssize_t piped_forker::Read( void *dest, ssize_t sizeofDest ) {
    if( fd == INVALID_fd ) {
-      return -1;
+      return 0;
       }
    const auto rv( read( fd, dest, sizeofDest ) );  0 && DBG( "%s-[%d] %ld", __func__, fd, rv );
    if( rv <= 0 ) { ReapChild(); }
