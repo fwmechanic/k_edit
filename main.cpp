@@ -628,6 +628,18 @@ void DBG_init() {
       }
    }
 
+STATIC_FXN void wr_nl_flush( FILE *ofh ) {
+   fputc( '\n', ofh );
+   if( true ) {  // TODO for performance, may want to create a switch to control flushing
+      fflush( ofh );
+      }
+   }
+
+void DBGNL() {
+   auto ofh( ofh_DBG ? ofh_DBG : stdout );
+   wr_nl_flush( ofh );
+   }
+
 int DBG( char const *kszFormat, ...  ) {
    auto ofh( ofh_DBG ? ofh_DBG : stdout );
    const auto tnow( time( nullptr ) );
@@ -646,8 +658,7 @@ int DBG( char const *kszFormat, ...  ) {
    va_list args;  va_start(args, kszFormat);
    vfprintf( ofh, kszFormat, args );
    va_end(args);
-   fputc( '\n', ofh );
-   fflush( ofh );
+   wr_nl_flush( ofh );
    return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
    }
 
@@ -777,6 +788,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
    FBufIdxInit();
 #endif
    CreateStartupPseudofiles();
+   DBGNL();
    auto fForceNewConsole(false);
    PCChar cmdlineMacro(nullptr);
    kGetopt opt( argc, argv, "acde:h?nt:vx:" );

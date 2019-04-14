@@ -451,6 +451,7 @@ void FetchAndExecuteCMDs( const bool fCatchExecutionHaltRequests ) {
          break; // DON'T RELY on s_fRtndFrom_fExecuted_macro being set (although it SHOULD be)
          }
       if( const auto newPCMD = CMD_reader().GetNextCMD() ) {
+         DBGNL();
          if( !prevPCMD->IsFnGraphic() || !newPCMD->IsFnGraphic() ) {
             g_CurFBuf()->UndoInsBoundary();
             }
