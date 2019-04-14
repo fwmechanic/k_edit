@@ -443,6 +443,22 @@ STIL void rmv_trail_blanks( stref &inout ) {
    inout.remove_suffix( trailSpcs );
    }
 
+STIL bool chomp( std::string &st ) {
+   // return: whether at-entry st was not empty; matters because an (at-entry) legit blank line (containing
+   // only newline chars which this fxn removes) and an empty string will both be returned as st.empty()
+   if( st.empty() ) {
+      return false;
+      }
+   const auto ixlast( st.length() - 1 );
+   if( st[ixlast] == 0x0A ) {
+      st.pop_back();
+      if( ixlast > 0 && st[ixlast-1] == 0x0D ) {
+         st.pop_back();
+         }
+      }
+   return true;
+   }
+
 STIL sridx FirstAlphaOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isalpha, src, start ); }
 STIL sridx FirstDigitOrEnd( stref src, sridx start=0 ) { return ToNextOrEnd( isdigit, src, start ); }
 

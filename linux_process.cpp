@@ -166,7 +166,7 @@ class TPipeReader {
 public:
    TPipeReader( piped_forker &piper ) : d_piper( piper ), d_bytesInRawBuffer( 0 ), d_pRawBuffer( d_rawBuffer ) {}
    ~TPipeReader() { }
-   int GetFilteredLine( std::string &dest );
+   bool GetlineEof( std::string &dest ); // printf "hi"
    };
 
 int TPipeReader::RdChar() {
@@ -182,21 +182,18 @@ int TPipeReader::RdChar() {
    return rv;
    }
 
-int TPipeReader::GetFilteredLine( std::string &dest ) { enum { DB=0 };
+bool TPipeReader::GetlineEof( std::string &dest ) { enum { DB=0 };
    dest.clear();
-   auto lastCh(0);
    while( 1 ) {
-      lastCh = RdChar();               DB && DBG("   %d", lastCh );
-      switch( lastCh ) {
-         case 0x0D:  break;            // drop CR
-         case 0x0A:  goto END_OF_LINE; // LF signifies EOL
-         case EMPTY: goto END_OF_LINE; // no more data available (for now)
-         default:    dest.push_back( lastCh );
-                     break;
+      const auto lastCh( RdChar() );               DB && DBG("   %d", lastCh );
+      const auto atEof( lastCh == EMPTY );
+      if( !atEof ) {
+         dest.push_back( lastCh );
+         }
+      if( atEof || lastCh == 0x0A ) {
+         return atEof;
          }
       }
-END_OF_LINE:
-   return !(lastCh == EMPTY && 0 == dest.length());
    }
 
 enum CP_PIPED_RC {
@@ -227,10 +224,11 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
       }
    TPipeReader pipeReader( piper );
    while( 1 ) {
-      if( pipeReader.GetFilteredLine( sb ) > 0 ) {
+      const auto atEof( pipeReader.GetlineEof( sb ) );
+      if( chomp( sb ) ) {
          PutLastLogLine( pfLogBuf, sb );
          }
-      else { // process has been reaped
+      if( atEof ) {  // process has been reaped
          const auto status( piper.Status() );
          if( status && (cmdFlags & IGNORE_ERROR) ) {
             PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%d ignored", status ).k_str() );
