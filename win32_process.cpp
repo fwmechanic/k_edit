@@ -305,7 +305,7 @@ class TPipeReader {
    PChar         d_pRawBuffer;
    char          d_rawBuffer[1024];
    int           RdChar();
-   enum { EMPTY = -1 };
+   enum { EMPTY = -1, DB=0 };
 public:
    TPipeReader( Win32::HANDLE hReadPipe ) : d_RdPipeHandle( hReadPipe ), d_bytesInRawBuffer( 0 ), d_pRawBuffer( d_rawBuffer ) {}
    ~TPipeReader() { Win32::CloseHandle( d_RdPipeHandle ); }
@@ -314,13 +314,17 @@ public:
 
 int TPipeReader::RdChar() { // see http://support.microsoft.com/kb/q190351/
    if( d_bytesInRawBuffer == 0 ) {
-      if( 0 == Win32::ReadFile(
+      if( FALSE == Win32::ReadFile(
                     d_RdPipeHandle
                   , BSOB(d_rawBuffer)
                   , &d_bytesInRawBuffer
                   , nullptr
                   )
         ) {
+         if( DB ) {
+            char erbuf[265]; auto winerr( Win32::GetLastError() );
+            DBG( "'%s' -> Win32::ReadFile FAILED: %lu %s", __func__, winerr, OsErrStr( BSOB(erbuf), winerr ) );
+            }
          // all write handles to the pipe are closed
          //
          d_bytesInRawBuffer = 0;
@@ -349,7 +353,7 @@ int TPipeReader::GetFilteredLine( PXbuf xb ) {
                      STATIC_CONST char tabspaces[] = "        ";
                      xb->cat( tabspaces+( xb->length() & (MAX_TAB_WIDTH-1)) );
                      }break;
-         default:    xb->push_back( lastCh );
+         default:    xb->push_back( lastCh );    DB && DBG( "%c", lastCh );
                      break;
          }
       }
