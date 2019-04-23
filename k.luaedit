@@ -3493,26 +3493,59 @@ AddEdFxn{ name = "aligncol", help = "align columns", attr = MODIFIES+KEEPMETA+NO
 
    }
 
-AddEdFxn{ name = "splitline", help = "", attr = NOARG
-   , help="split single line into multiple lines on whitespace"
-   , NOARG   = function(arg)
-        local yIns = arg.cursorY
-        local ltxt = arg.fbuf:GetLine( yIns )
-        for tok in ltxt:gmatch( "%S+" ) do
-           if yIns == arg.cursorY then
+do --[[
+   presplit==HACK: I typically use splitline on (multi-thousand-char-long) _compiler_ cmdlines; GCC versions of these
+   canonically accept -D -I -o & -c options always taking 1 arg; if space is present betw opt & arg, splitline puts
+   them on separate lines, which makes them immune to sorting & diffing.  My interest is in seeing these opt+arg on
+   same line (so they can be sorted, diff'd, etc.) deleting any space between prior to splitting provides this result. ]]
+   local function isGccCmdline( st )
+      local gccp = 'gcc[%s%.]'
+      local gppp = 'g%+%+[%s%.]'
+      local pre  = '[%s/\\%-]'  -- 'gcc'/'g++' preceded by Linux/Win dirsep or '-' (as in 'arm-none-eabi-g++')
+      return
+            st:match( '^'..gccp )
+         or st:match( pre..gccp )
+         or st:match( '^'..gppp )
+         or st:match( pre..gppp )
+      end
+   local function joinoptarg( optpat )
+      return function( st ) return st:gsub( '(%s%-'..optpat..')%s+([^%-])', '%1%2' ) end
+      end
+   local gccpats = {
+   -- joinoptarg( '%a' )    , -- cast widest net: ALL 1-char opts followed by non-opts
+   -- joinoptarg( '%a%a' )  , -- cast widest net: ALL 2-char opts followed by non-opts
+      joinoptarg( '[DIoc]' ), -- target -D -I -o -c (NB: -c does NOT take an arg; only idiomatic (CMake? Scons?) causes nm of input file to follow -c
+      joinoptarg( 'M[FT]' ) , -- target -MF -MT
+      }
+   local function presplit( st )
+      if isGccCmdline( st ) then
+         for _,fxn in ipairs(gccpats) do
+            st = fxn( st )
+            end
+         end
+      return st
+      end
+   AddEdFxn{ name = "splitline", help = "", attr = NOARG
+      , help="split single line into multiple lines on whitespace"
+      , NOARG = function(arg)
+           local yIns = arg.cursorY
+           local ltxt = presplit( arg.fbuf:GetLine( yIns ) )
+           for tok in ltxt:gmatch( "%S+" ) do
+              if yIns == arg.cursorY then
+                 yIns = 1+yIns
+                 arg.fbuf:InsLine( yIns, "" )
+                 arg.view:MoveCursor( yIns+1, 1 )
+                 end
+              yIns = 1+yIns
+              arg.fbuf:InsLine( yIns, tok )
+              end
+           if yIns ~= arg.cursorY then
               yIns = 1+yIns
               arg.fbuf:InsLine( yIns, "" )
-              arg.view:MoveCursor( yIns+1, 1 )
               end
-           yIns = 1+yIns
-           arg.fbuf:InsLine( yIns, tok )
            end
-        if yIns ~= arg.cursorY then
-           yIns = 1+yIns
-           arg.fbuf:InsLine( yIns, "" )
-           end
-        end
-   }
+      }
+end
 
 if false then  -- test io.popen
    local cmd = "git rev-parse --is-inside-work-tree"
