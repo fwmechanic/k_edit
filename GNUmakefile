@@ -50,8 +50,12 @@ endif
 
 
 ifdef K_WINDOWS
+
 PLAT = mingw
 export PLAT
+
+# to disable, _comment out_ next line!
+# DBG_BUILD := x
 
 # By default GNU make searches $(PATH) for an executable named 'sh' (in the
 # Mingw case, 'sh.exe'), and if found, uses it as the shell which executes all
@@ -109,6 +113,10 @@ CPPFLAGS += -DWINVER=0x0501
 else
 PLAT = linux
 export PLAT
+
+# to disable, _comment out_ next line!
+DBG_BUILD := x
+
 UNCOND_CMD_SEP := ;
 
 MV = mv
@@ -137,7 +145,7 @@ export RM
 # to be able to debug BOTH 32- and 64-bit versions of this app (K editor)
 #
 # You MUST rebuild K to get useful info from DrMinGW:
-# 1. define DBG_BUILD (uncomment line 'DBG_BUILD := 1' below)
+# 1. define DBG_BUILD (uncomment PLAT-specific line 'DBG_BUILD := 1' above)
 # 2. make clean&&et make -j
 # 3. cause k to crash or call abort() due to -ftrapv
 # 4. choose [Debug] when Windows crash-dialog appears
@@ -152,9 +160,6 @@ export RM
 #    (follow step 4 above; you will be put into gdb console)
 # c. >bt to see stack trace
 # d. >q  to exit gdb
-
-# to disable, _comment out_ next line!
-# DBG_BUILD := x
 
 ifdef DBG_BUILD
 STRIP      :=
