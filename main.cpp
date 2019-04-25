@@ -630,7 +630,7 @@ void DBG_init() {
 
 STATIC_FXN void wr_nl_flush( FILE *ofh ) {
    fputc( '\n', ofh );
-   if( true ) {  // TODO for performance, may want to create a switch to control flushing
+   if( false ) {  // TODO for performance, may want to create a switch to control flushing
       fflush( ofh );
       }
    }
