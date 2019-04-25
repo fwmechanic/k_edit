@@ -14,6 +14,7 @@ RANLIB= ranlib
 
 LIBS= -lm $(MYLIBS)
 
+# next ifdef syms defined in %~dp0../../GNUmakefile
 ifdef USE_PCRE
 # changes @ PCRE 8.37 -> 8.38 require -DPCRE_STATIC
 CPPFLAGS += -DPCRE_STATIC
@@ -25,6 +26,13 @@ PCRE_LIB := -lpcre
 else
 PCRE_OBJ :=
 PCRE_LIB :=
+endif
+
+ifdef LUA_USE_POSIX
+CPPFLAGS += -DLUA_USE_POSIX
+endif
+ifdef LUA_WIN
+CPPFLAGS += -DLUA_WIN
 endif
 
 MYCFLAGS=

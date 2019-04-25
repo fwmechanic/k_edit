@@ -3451,10 +3451,12 @@ AddEdFxn{ name = "splitline", help = "", attr = NOARG
         end
    }
 
-do -- test io.popen
-   -- local fh = io.popen( "dir *.cpp" )
-   -- for line in fh:Lines() do print( line ) end
-end
+if false then  -- test io.popen
+   local cmd = "git rev-parse --is-inside-work-tree"
+   print( cmd )
+   local fh = io.popen( cmd )
+   for line in fh:lines() do print( cmd .. ': ' .. line ) end
+   end
 
 nextmsg_setbufnm_FROM_C   = true  -- CAREFUL called from C++
 nextmsg_newsection_FROM_C = true  -- CAREFUL called from C++

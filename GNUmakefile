@@ -111,6 +111,7 @@ DIRSEP := \\
 CPPFLAGS += -DWINVER=0x0501
 
 else
+
 PLAT = linux
 export PLAT
 
@@ -133,6 +134,9 @@ LS_L := ls -l
 LS_L_TAIL :=
 DIRSEP := /
 
+# allow io.popen in Linux
+LUA_USE_POSIX := 1
+export LUA_USE_POSIX
 endif
 
 # needed by Lua make:
