@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -734,22 +734,6 @@ STATIC_FXN int XlatKeysWhenNumlockOn( uint16_t theVK ) {
       }
    }
 
-
-// 20070309 kgoodwin added EdKC_EVENT_xxx
-//
-// "normal" EdKC's are
-//
-//    executed via a table lookup mechanism that the user is in control of.
-//
-// EdKC_EVENT's are:
-//
-//    always executed immediately; their execution does not alter any
-//    in-progress user command sequence.
-//
-
-#define  EdKC_EVENT_ProgramGotFocus       (EdKC_COUNT+1)
-#define  EdKC_EVENT_ProgramLostFocus      (EdKC_COUNT+2)
-#define  EdKC_EVENT_ProgramExitRequested  (EdKC_COUNT+3)
 
 STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER ) {
    if( !KER.bKeyDown ) { // auto-repeat gen's a series of bKeyDown's so these are NOT skipped

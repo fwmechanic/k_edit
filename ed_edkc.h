@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -573,3 +573,20 @@ enum { correct_edKC_f1_val =  0x100
 
 static_assert( EdKC_f1 == correct_edKC_f1_val, "EdKeyCodes::EdKC_f1 == correct_edKC_f1_val" );
 static_assert( EdKC_Count == EdKC_COUNT, "EdKC_Count == enum EdKeyCodes" );
+
+// 20070309 kgoodwin added EdKC_EVENT_xxx
+//
+// "normal" EdKC's are
+//
+//    executed via a table lookup mechanism that the user is in control of.
+//
+// EdKC_EVENT's are:
+//
+//    always executed immediately; their execution does not alter any
+//    in-progress user command sequence.
+//
+
+enum { EdKC_EVENT_ProgramGotFocus      = EdKC_COUNT+1,
+       EdKC_EVENT_ProgramLostFocus     ,
+       EdKC_EVENT_ProgramExitRequested ,
+     };

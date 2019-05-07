@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -245,10 +245,6 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh );
 bool ConIn::FlushKeyQueueAnythingFlushed(){ return flushinp(); }
 
 int ConIO::DbgPopf( PCChar fmt, ... ){ return 0; }
-
-#define  EdKC_EVENT_ProgramGotFocus       (EdKC_COUNT+1)
-#define  EdKC_EVENT_ProgramLostFocus      (EdKC_COUNT+2)
-#define  EdKC_EVENT_ProgramExitRequested  (EdKC_COUNT+3)
 
 STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API for reading a key
    while( true ) {
