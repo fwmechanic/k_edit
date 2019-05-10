@@ -207,7 +207,6 @@
    mpara :shift+sel_k
    pword :shift+sel_l
 
-   find:=_spush arg arg _spop begline "for /r %f in (" endline ") do @echo %f" execute
    mak:=arg "*.mak" find
 
    tree:=arg "." find

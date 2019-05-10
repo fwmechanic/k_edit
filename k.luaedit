@@ -547,6 +547,7 @@ do
       -- $PSScriptRoot\fbuf.cpp
       -- ${PSScriptRoot}ed_mem.h
       -- https://stackoverflow.com/a/5034119
+      function(str) return str:gsub( "%%~0"   , "${curfile}" ) end,  -- must appear BEFORE sh_expander in envExpanders[]!
       function(str) return str:gsub( "%%~dp0" , "${curfilepath}" ) end,  -- must appear BEFORE sh_expander in envExpanders[]!
       function(str) return str:gsub( "%%~nx0" , "%~n0%~x0"       ) end,  -- must appear BEFORE defs of %~n0 & %~x0
       function(str) return str:gsub( "%%~n0"  , "${curfilename}" ) end,  -- must appear BEFORE sh_expander in envExpanders[]!
@@ -3557,10 +3558,11 @@ if false then  -- test io.popen
    for line in fh:lines() do print( cmd .. ': ' .. line ) end
    end
 
-do -- git integration
-   local function run_git_cmd( tail )
-      local cmd = "git " .. tail
-      local ifh = io.popen( cmd )
+do -- git/find/ripgrep "integration" (meaning, giving easy user-access
+   -- to the most useful incarnations of these awesome tools!)
+   local function popen_to_ary( cmd )
+      DBG( 'popen_to_ary: '..cmd )
+      local ifh = io.popen( --[[ "2>&1 " .. ]] cmd )
       if not ifh then return end
       local rv = {}
       for ln in ifh:lines() do rv[1+#rv] = ln end
@@ -3568,20 +3570,97 @@ do -- git integration
       return rv
       end
 
+   local function ary_to_fbuf( ary, fbufnm )
+      local fb = FBUF.new( fbufnm )
+      fb:MakeEmpty()
+      for _,ln in ipairs(ary) do
+         fb:PutLastLine( ln )
+         end
+      fb:PutFocusOn()
+      end
+
    local git_version = 'not_checked'
    local function git_init()
       if git_version and git_version == 'not_checked' then
-         local rv = run_git_cmd "--version"
+         local rv = popen_to_ary( "git --version" )
          git_version = rv and #rv >= 1 and rv[1]
          end
       return git_version
       end
-   AddEdFxn{ name = "git", help = "", attr = NOARG
-      , NOARG   = function(arg)
-         Msg( git_init() or "git command not installed?" )
-         end
-      }
 
+   local function cmd_to_fbuf( cli, st )
+      local cli = util.trim( cli:gsub( '"$@"', st ) )
+            cli = StrExpandEnvVars( cli )
+      local rv = popen_to_ary( cli )
+      if rv and #rv > 0 then
+         ary_to_fbuf( rv, '<cmd:'..cli..'>' )
+         end
+      Msg( cli )
+      end
+
+   local function cmd_menu_arg( tb )
+      return function( arg )  -- DBG( "cmd_menu "..st )
+         local _,tat = Menu.new( tb ):PickOne()
+         if tat then
+            local tmplt, st = tat[1], tat[2]( arg )
+            Msg( "menu chose ".. tmplt .. ' << ' .. st )
+            cmd_to_fbuf( tmplt, st )
+            end
+         end
+      end
+
+   local function curfnm(arg)
+      DBG( "curfnm called! ".. arg.fbuf:Name() )
+      return arg.fbuf:Name()
+      end
+   local function mtstring( arg )  return '' end
+   local function arg_text_or_mtstring( arg )  return arg.text and #arg.text > 0 and arg.text or mtstring(arg) end
+   local function arg_text_or_curfnm( arg )    return arg.text and #arg.text > 0 and arg.text or curfnm  (arg) end
+   local function menu_and_cmdfuncs( nmpfx, longnm, argToSt, ary )
+      argToSt = argToSt or arg_text_or_mtstring  -- basically governs TEXTARG vs NOARG behavior
+      local menu_choices = {}
+      for _,mgtat in ipairs(ary) do  -- mgtat=menu+git text action table
+         local nm, tat = mgtat[1], mgtat[2]
+         tat[2] = tat[2] or argToSt
+         local fx = function(arg) cmd_to_fbuf( tat[1], tat[2]( arg ) ) end
+         AddEdFxn{ name = nmpfx..'.'..nm, attr = NOARG+TEXTARG+BOXSTR
+            , NOARG   = fx
+            , TEXTARG = fx
+            }
+         menu_choices[1+#menu_choices] = mgtat
+         end
+      local menufx = cmd_menu_arg{ title=(longnm or nmpfx).." commands", choices=menu_choices }
+      AddEdFxn{ name = nmpfx, help = "", attr = NOARG+TEXTARG+BOXSTR
+         , NOARG   = menufx
+         , TEXTARG = menufx
+         }
+      end
+
+   menu_and_cmdfuncs( 'git', false, false, {
+      { "show"   , { 'git show "$@"'   } },  -- git.show
+      { "diff"   , { 'git diff "$@"'   } },  -- git.diff
+      { "status" , { 'git status "$@"' } },  -- git.status
+      { "annotate",{ 'git annotate "$@"', arg_text_or_curfnm } },  -- git.annotate
+      })
+
+   menu_and_cmdfuncs( 'find', '(unixy-)find', false, {
+      -- git-bash version doesn't seem to be working...?
+      { "name"  , { 'find . -iname "$@"'         } },  -- find.name
+      { "namef" , { 'find . -iname -type f "$@"' } },  -- find.namef
+      { "named" , { 'find . -iname -type d "$@"' } },  -- find.named
+      })
+
+   local rg_base = 'rg -n '  -- -n to force line # in output
+   menu_and_cmdfuncs( 'rg', 'ripgrep', false, {
+      -- ripgrep:  https://github.com/BurntSushi/ripgrep/blob/master/README.md
+      -- download: https://github.com/BurntSushi/ripgrep/releases
+      --   on windows I use GCC build
+      --   on ubuntu I d/l & install deb package
+      { "string" , { rg_base..'"$@"'     } },            -- rg.string
+      { "word"   , { rg_base..'-w "$@"'  } },            -- rg.word      arg "BUGBUG" rg.word
+      { "log"    , { rg_base..'"$@" $K_LOGDIR'  } },     -- rg.log       arg "Saved\s\s" rg.log
+      { "logw"   , { rg_base..'-w "$@" $K_LOGDIR'  } },  -- rg.logw      arg "Saved" rg.logw
+      })
 end
 
 nextmsg_setbufnm_FROM_C   = true  -- CAREFUL called from C++
