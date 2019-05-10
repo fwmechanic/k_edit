@@ -1078,6 +1078,7 @@ private:
    const FTypeSetting *d_ftypeStruct = nullptr;  // since d_ftypeStruct is now mostly a content-based auto-detected property (therefore of the file itself), it is a FBUF (not View) property
 public:
    void           SetFType();
+   void           ForgetFType() { d_ftypeStruct = nullptr; }  // reset _NON-owning_ pointer to force re-DeduceFType
    stref          FTypeName()             const;  // (*d_ftypeStruct) or ""
    bool           FTypeNmEq( stref ftnm ) const { return eqi( FTypeName(), ftnm ); } // case-insensitive!
    const FTypeSetting *GetFTypeSettings() const { return d_ftypeStruct; }

@@ -182,6 +182,7 @@ void FBUF::MakeEmpty() {
    FBOP::PrimeRedrawLineRangeAllWin( this, 0, LineCount() );
    FreeLinesAndUndoInfo();
    Undo_Init();
+   ForgetFType();
    MakeEmptyAllViewsOntoFbuf( this );
    }
 
@@ -804,68 +805,31 @@ STATIC_FXN std::string is_content_diff( PCFBUF pFile ) { 0 && DBG( "%s called on
 #define  CHKL()       (rl=pFile->PeekRawLine( lnum ), lnum <= pFile->LastLine())
 #define  CMPL(kstr)   (rl.starts_with( kstr ))
 #define  NXTL()       (++lnum,CHKL())
-   // from http://git-scm.com/docs/git-diff   search for "new file mode"
-   STATIC_CONST char diff_[] = "diff ";
-   STATIC_CONST char min_ [] = "--- ";
-   STATIC_CONST char pls_ [] = "+++ ";
-   //
-   //     skip these:
-   //
-   STATIC_CONST char om__[] = "old mode "          ; // old mode <mode>
-   STATIC_CONST char nm__[] = "new mode "          ; // new mode <mode>
-   STATIC_CONST char dfm_[] = "deleted file mode " ; // deleted file mode <mode>
-   STATIC_CONST char nfm_[] = "new file mode "     ; // new file mode <mode>
-   STATIC_CONST char cpfr[] = "copy from"          ; // copy from <path>
-   STATIC_CONST char cpto[] = "copy to"            ; // copy to <path>
-   STATIC_CONST char mvfm[] = "rename from"        ; // rename from <path>
-   STATIC_CONST char mvto[] = "rename to"          ; // rename to <path>
-   STATIC_CONST char simi[] = "similarity index"   ; // similarity index <number>
-   STATIC_CONST char disi[] = "dissimilarity index"; // dissimilarity index <number>
-   STATIC_CONST char idx_[] = "index "             ; // index <hash>..<hash> <mode>
-   STATIC_CONST char IdxQ[] = "Index: "            ; // Index: des_v2_1_fe_v2_4_star_v7_1_ps_v2_0/python/CommonFunctionsDES.py  (svn)
-   STATIC_CONST char dopt[] = "DIFFOPTS="          ; // this is VERY particular to a bat file I wrote this is first line prefixing std svn diff output 20140313
-   STATIC_CONST char eql_[] = "==================================================================="; // (svn)
 
-#if 0
-   auto ok( CHKL() && CMPL( diff_ ) || CMPL( IdxQ ) || (CMPL( dopt ) && NXTL() && CMPL( IdxQ )) );
-   if( ok ) {
-      while( NXTL() &&
-         // skip these
-         CMPL( om__ ) ||
-         CMPL( nm__ ) ||
-         CMPL( dfm_ ) ||
-         CMPL( nfm_ ) ||
-         CMPL( cpfr ) ||
-         CMPL( cpto ) ||
-         CMPL( mvfm ) ||
-         CMPL( mvto ) ||
-         CMPL( simi ) ||
-         CMPL( disi ) ||
-         CMPL( idx_ ) ||
-         CMPL( eql_ )
-        ) {}
-      ok = CHKL() && CMPL( min_ ) && NXTL() && CMPL( pls_ );
-      }
-#else
    while( CHKL() &&
       // skip these
-      CMPL( diff_ ) ||
-      CMPL( IdxQ ) ||
-      CMPL( om__ ) ||
-      CMPL( nm__ ) ||
-      CMPL( dfm_ ) ||
-      CMPL( nfm_ ) ||
-      CMPL( cpfr ) ||
-      CMPL( cpto ) ||
-      CMPL( mvfm ) ||
-      CMPL( mvto ) ||
-      CMPL( simi ) ||
-      CMPL( disi ) ||
-      CMPL( idx_ ) ||
-      CMPL( eql_ )
+      IsStringBlank( rl ) ||
+      CMPL( "diff "               ) ||  // from http://git-scm.com/docs/git-diff   search for "new file mode"
+      CMPL( "commit "             ) ||  // git show
+      CMPL( "Author: "            ) ||  // git show
+      CMPL( "Date:   "            ) ||  // git show
+      CMPL( "    "                ) ||  // git show
+   // CMPL( "diff --git "         ) ||  // git show ; "diff " takes care of this
+      CMPL( "Index: "             ) ||  // Index: des_v2_1_fe_v2_4_star_v7_1_ps_v2_0/python/CommonFunctionsDES.py  (svn)
+      CMPL( "old mode "           ) ||  // old mode <mode>
+      CMPL( "new mode "           ) ||  // new mode <mode>
+      CMPL( "deleted file mode "  ) ||  // deleted file mode <mode>
+      CMPL( "new file mode "      ) ||  // new file mode <mode>
+      CMPL( "copy from"           ) ||  // copy from <path>
+      CMPL( "copy to"             ) ||  // copy to <path>
+      CMPL( "rename from"         ) ||  // rename from <path>
+      CMPL( "rename to"           ) ||  // rename to <path>
+      CMPL( "similarity index"    ) ||  // similarity index <number>
+      CMPL( "dissimilarity index" ) ||  // dissimilarity index <number>
+      CMPL( "index "              ) ||  // index <hash>..<hash> <mode>
+      CMPL( "===================================================================" ) // (svn)
      ) { NXTL(); }
-   const auto ok = CHKL() && CMPL( min_ ) && NXTL() && CMPL( pls_ );
-#endif
+   const auto ok( CHKL() && CMPL( "--- " ) && NXTL() && CMPL( "+++ " ) );
    0 && DBG( "%s %s (%d) ? %s", __PRETTY_FUNCTION__, pFile->Name(), pFile->LineCount(), ok?"yes":"no" );
    return ok ? "diff" : "";
 #undef  CHKL
