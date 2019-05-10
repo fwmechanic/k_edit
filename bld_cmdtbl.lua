@@ -1,5 +1,5 @@
 --
--- Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+-- Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 --
 -- This file is part of K.
 --
@@ -56,6 +56,7 @@ local maxNameWidth  = maxAccumr()
 local maxMNameWidth = maxAccumr()
 local tbl = {}
 
+local TEXTARG_gts_conflict_counter = 0
 for line in io.lines() do
    line = line:gsub( "#.*$", "" )
    local plat_mat = line:match( plat_pat )
@@ -78,12 +79,18 @@ for line in io.lines() do
       name = name:lower()
       -- print( fmt( "mnm=\"%s\", nm=\"%s\", fxn=\"%s\", attr=\"%s\" hlp=\"%s\"", mname, name, fxn, attr_expr, helpString ) )
       assert( nil == tbl[name], "name "..name.." defined twice! (case INsensitive!)" )
+      local has_gts = plat_mat == "s"
+      local accepts_TEXTARG = attr_expr:match( 'TEXTARG' ) and true or false
+      if name ~= 'cancel' and has_gts and accepts_TEXTARG then -- cancel, being destructive, gets a pass...
+         print( "error: EdFxn "..name.." accepts TEXTARG and defines GTS::"..name )
+         TEXTARG_gts_conflict_counter = 1+TEXTARG_gts_conflict_counter
+         end
       tbl[name] = {
            fxn   = fxn
          , attr  = attr_expr
          , help  = helpString
          , mname = mname
-         , has_gts = plat_mat == "s"
+         , has_gts = has_gts
          }
 
       maxNameWidth ( #name      )
@@ -91,6 +98,11 @@ for line in io.lines() do
       maxAttrWidth ( #attr_expr )
       maxfnmWidth  ( #fxn       )
       end
+   end
+
+if TEXTARG_gts_conflict_counter > 0 then
+   print( "DYING: there were "..TEXTARG_gts_conflict_counter.." TEXTARG-GTS:: conflicts" )
+   os.exit(1)
    end
 
 -- this prog used to write 4 _output files_, but standard GNU make has completely brain-dead non-support for

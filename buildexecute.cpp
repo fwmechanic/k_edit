@@ -769,6 +769,7 @@ GTS::eRV GTS::arg() {
    }
 
 GTS::eRV GTS::restcur() {
+   // assumes restcur remains assigned to alt+center!!!
    // alt+center=alg+arg: does the converse of arg:
    if( xCursor_ < stb_.length() ) {
       stb_.erase( 0, xCursor_ ); // delete all chars preceding (to the left of) the cursor

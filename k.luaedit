@@ -700,10 +700,13 @@ local function EditorHelpFile()
    return FBUF.new( StrExpandEnvVars( "$KINIT:khelp.txt" ) )
    end
 
-AddEdFxn{ name = "edhelp", help = "goto editor help for a keyword", key="F1", attr = NOARG+TEXTARG+BOXSTR+NULLEOW
+AddEdFxn{ name = "edhelp", help = "goto editor help for a keyword", --[[key="F1",]] attr = NOARG+TEXTARG+BOXSTR+NULLEOW
    , NOARG = function ( arg ) return EditorHelpFile():PutFocusOn() ~= nil end  -- simply switch to help file
    , TEXTARG = function ( arg )
       local hf = EditorHelpFile()         -- print( "'"..hf:Name().."'" )
+      if not hf then
+         return Msg( "no help file found" )
+         end
       local key = "^ÄÄ"..pat_nocase( arg.text ) .. (arg.text:match"%s" and "Ä" or " ")
       for lnum, line in hf:RawLines() do  -- DBG( line )
          if line:match( key ) then

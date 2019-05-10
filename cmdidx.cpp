@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -164,7 +164,7 @@ STATIC_VAR PCMD s_Key2CmdTbl[] = // use this so assert @ end of initializer will
 
 #endif // #ifdef fn_argselkeymap
 
-   , IDX_EQ( EdKC_f1           )  pCMD_unassigned
+   , IDX_EQ( EdKC_f1           )  pCMD_selcmd
    , IDX_EQ( EdKC_f2           )  pCMD_setfile
    , IDX_EQ( EdKC_f3           )  pCMD_psearch
    , IDX_EQ( EdKC_f4           )  pCMD_msearch

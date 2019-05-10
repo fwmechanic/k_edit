@@ -187,7 +187,7 @@
 
    tell_loop:= :>again tell =>again
 
-   selcmd:alt+0
+   restcur:alt+center
 
 # selkeymap
    left:sel_s
