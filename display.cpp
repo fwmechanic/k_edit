@@ -390,10 +390,11 @@ protected:
          bool   LineIs_LineCompile( LINE yLine ) const { return d_view.LineCompile_Valid() && yLine == d_view.Get_LineCompile(); }
    const Point &Cursor()              const { return d_view.Cursor(); }
    const Point &Origin()              const { return d_view.Origin(); }
-         LINE   ViewLines()           const { return d_view.Win()->d_Size.lin ; }
-         LINE   ViewCols()            const { return d_view.Win()->d_Size.col ; }
-         LINE   MaxVisibleFbufLine()  const { return Origin().lin + ViewLines() - 1; }
-         bool   isActiveWindow()      const { return d_view.Win() == g_CurWin(); }
+         LINE   ViewLines()           const { return d_view.ViewLines(); }
+         LINE   ViewCols()            const { return d_view.ViewCols() ; }
+         LINE   MinVisibleFbufLine()  const { return d_view.MinVisibleFbufLine(); }
+         LINE   MaxVisibleFbufLine()  const { return d_view.MaxVisibleFbufLine(); }
+         bool   isActiveWindow()      const { return d_view.isActive(); }
    int  ColorIdx2Attr( int colorIdx ) const { return d_view.ColorIdx2Attr( colorIdx ); }
    NO_COPYCTOR(HiliteAddin);
    NO_ASGN_OPR(HiliteAddin);
@@ -419,7 +420,7 @@ private:
 
 void HiliteAddin_Pbal::VCursorMoved( bool fUpdtWUC ) {
    const auto prevPbalValid( d_fPbalMatchValid );
-   d_fPbalMatchValid = d_view.PBalFindMatching( false, &d_ptPbalMatch );
+   d_fPbalMatchValid = d_view.PBalFindMatching( true, &d_ptPbalMatch );
    if( d_fPbalMatchValid || prevPbalValid ) { // turning ON, turning OFF, _or_ MOVING?
       DispNeedsRedrawAllLinesAllWindows(); // BUGBUG need API to select lines/ranges of curWindow
       }
@@ -902,7 +903,7 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
    const auto tw( fb->TabWidth() );
    for( auto iy(0) ; iy < ViewLines() ; ++iy ) {
       auto &line( d_PerViewableLine[ iy ].line );
-      const auto yFile( Origin().lin + iy );
+      const auto yFile( MinVisibleFbufLine() + iy );
       const auto rl( fb->PeekRawLine( yFile ) );
       IdxCol_nocache conv( tw, rl );
       line.xMax = conv.i2c( rl.length() );
@@ -957,7 +958,7 @@ bool HiliteAddin_cond_CPP::VHilitLine( LINE yLine, COL xIndent, LineColorsClippe
       if( d_need_refresh ) { // BUGBUG fix this!!!!!!!!!!
          refresh( 0, 0 );
          }
-      const auto lineInWindow( yLine - Origin().lin );
+      const auto lineInWindow( yLine - MinVisibleFbufLine() );
       Assert( lineInWindow >= 0 && lineInWindow < ViewLines() );
       const auto &line( d_PerViewableLine[ lineInWindow ].line );
       // highlight any CPPcond that occurs on this line

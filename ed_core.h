@@ -615,6 +615,34 @@ struct ViewPersistent {
    };
 extern bool ViewPersistentInitOk( ViewPersistent &vp, PChar viewSaveRec );
 
+struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
+   ViewHead  ViewHd;   // public: exposed
+   Point     d_Size;   // public: exposed
+   Point     d_UpLeft; // public: exposed
+   int       d_wnum = 0;  // will be set correctly if/when this is sorted into correct place
+   Point     d_size_pct;
+public:
+             Win();
+             Win( PCChar pC );
+             Win( Win &rhs, bool fSplitVertical, int columnOrLineToSplitAt );
+             ~Win();
+   void      Maximize();
+   bool      operator< ( const Win &rhs ) const { return d_UpLeft < rhs.d_UpLeft; }
+   void      Write( FILE *fout ) const;
+   PCView    CurView()   const { return ViewHd.front(); }
+   PView     CurViewWr() const { return ViewHd.front(); }
+   void      DispNeedsRedrawAllLines() const;
+   void      Event_Win_Reposition( const Point &newUlc );
+   void      Event_Win_Resized( const Point &newSize );
+   void      Event_Win_Resized( const Point &newSize, const Point &newSizePct );
+   bool      VisibleOnDisplayLine( LINE yLineOfDisplay ) const { return( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ); }
+   bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
+   bool      GetCursorForDisplay( Point *pt ) const;
+   void      GetLineForDisplay( int winNum, std::string &dest, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
+   const Point &SizePct() const { return d_size_pct; }
+   void      SizePct_set( const Point &src )  { d_size_pct = src; }
+   }; // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
+
 class View { // View View View View View View View View View View View View View View View View View View View View View View View View
 public:
    DLinkEntry<View> dlinkViewsOfWindow;
@@ -639,7 +667,7 @@ public:
    PFBUF        FBuf()   const { return d_vwToPFBuf; }
    PCWin        Win()    const { return d_pWin ; }
    PWin         wr_Win() const { return d_pWin ; }
-   bool         ActiveInWin();
+   bool         ActiveInWin() const { return d_pWin->CurView() == this; }
    struct ULC_Cursor {
       Point     Origin;
       Point     Cursor;
@@ -659,6 +687,14 @@ public:
    ULC_Cursor   d_saved;         // window state saved by ARG::savecur
    const Point  &Cursor() const { return d_current.Cursor; }
    const Point  &Origin() const { return d_current.Origin; }
+
+         bool   isActive()            const;
+
+         LINE   ViewLines()           const { return Win()->d_Size.lin ; }
+         COL    ViewCols()            const { return Win()->d_Size.col ; }
+         LINE   MinVisibleFbufLine()  const { return Origin().lin; }
+         LINE   MaxVisibleFbufLine()  const { return MinVisibleFbufLine() + ViewLines() - 1; }
+
    bool         RestCur();
    void         SaveCur()     { d_saved.Set( d_current ); }
    void         SavePrevCur() { d_prev .Set( d_current ); }
@@ -744,7 +780,7 @@ public:
    void         ViewEvent_LineInsDel( LINE yLine, LINE lineDelta );
    void         PokeOriginLine_HACK( LINE yLine ) { d_current.Origin.lin = yLine; }
    char         CharUnderCursor(); // cursor being a View concept...
-   bool         PBalFindMatching( bool fSetHilite, Point *pPt );
+   bool         PBalFindMatching( bool fVisibleOnly, Point *pPt );
    stref        GetBOXSTR_Selection();
    bool         d_LastSelect_isValid;
    Point        d_LastSelectAnchor, d_LastSelectCursor;
@@ -753,36 +789,6 @@ public:
 public:
    int          ColorIdx2Attr( int colorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
-
-struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
-   ViewHead  ViewHd;   // public: exposed
-   Point     d_Size;   // public: exposed
-   Point     d_UpLeft; // public: exposed
-   int       d_wnum = 0;  // will be set correctly if/when this is sorted into correct place
-   Point     d_size_pct;
-public:
-             Win();
-             Win( PCChar pC );
-             Win( Win &rhs, bool fSplitVertical, int columnOrLineToSplitAt );
-             ~Win();
-   void      Maximize();
-   bool      operator< ( const Win &rhs ) const { return d_UpLeft < rhs.d_UpLeft; }
-   void      Write( FILE *fout ) const;
-   PCView    CurView()   const { return ViewHd.front(); }
-   PView     CurViewWr() const { return ViewHd.front(); }
-   void      DispNeedsRedrawAllLines() const;
-   void      Event_Win_Reposition( const Point &newUlc );
-   void      Event_Win_Resized( const Point &newSize );
-   void      Event_Win_Resized( const Point &newSize, const Point &newSizePct );
-   bool      VisibleOnDisplayLine( LINE yLineOfDisplay ) const { return( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ); }
-   bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
-   bool      GetCursorForDisplay( Point *pt ) const;
-   void      GetLineForDisplay( int winNum, std::string &dest, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
-   const Point &SizePct() const { return d_size_pct; }
-   void      SizePct_set( const Point &src )  { d_size_pct = src; }
-   }; // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
-
-inline bool View::ActiveInWin() { return d_pWin->CurView() == this; }
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -1306,9 +1312,12 @@ extern COL     ColPrevTabstop( COL tabWidth, COL xCol );
 extern COL     ColNextTabstop( COL tabWidth, COL xCol );
 STIL   COL     StrCols( COL tabWidth, stref src ) { return ColOfFreeIdx( tabWidth, src, src.length() ); }
 extern char    CharAtCol     ( COL tabWidth, stref content, const COL colTgt ); // returns 0 if col is not present in content
-//             CaptiveIdxOfCol content[CaptiveIdxOfCol(colTgt)] is always valid; colTgt values which
-//                             map beyond the last char of content elicit the index of the last char
+
+CompileTimeAssert( COL(eosr) == -1 );  // (return value) eosr converts to COL == -1
 STIL   sridx   CaptiveIdxOfCol ( COL tabWidth, stref content, const COL colTgt ) {
+                  if( content.empty() ) {  // __NO__ dereferenceable index within content?
+                     return eosr;  // converts to COL(-1) (note 'CompileTimeAssert( COL(eosr) == -1 )' above)
+                     }
                   return std::min( FreeIdxOfCol( tabWidth, content, colTgt ), content.length()-1 );
                   }
 STIL   COL     TabAlignedCol( COL tabWidth, stref rl, COL xCol ) {
@@ -1475,4 +1484,5 @@ STIL void         g_UpdtCurFBuf( PFBUF pfb ) {        s_curFBuf = pfb; }
 #define PCF        const auto pcf( g_CurFBuf() )
 #define PCFV  PCV; PCF
 
+inline bool View::isActive()      const { return g_CurWin()  == Win(); }
 inline bool FBufLocn::InCurFBuf() const { return g_CurFBuf() == d_pFBuf; }
