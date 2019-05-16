@@ -687,7 +687,7 @@ AddEdFxn{ name = "dirs", help = "open <dirs> buffer", key="alt+f", attr = NOARG
             if not dirs[ path ] then  dirs[ path ] = true  end
             end
          end
-      for dir in PairsBySortedKeys( dirs ) do  out:PutLastLine( dir )  end
+      for dir in tu.PairsBySortedKeys( dirs ) do  out:PutLastLine( dir )  end
    -- out:ScrollAllCursorsToBof()
       out:PutFocusOn()
       return true
