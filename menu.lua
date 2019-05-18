@@ -1,5 +1,5 @@
 --
--- Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+-- Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 --
 -- This file is part of K.
 --
@@ -93,16 +93,13 @@ function MenuProto_:prepAboutChoices()
    self.aboutChoices = {}
    local ac = self.aboutChoices
    local choices_ = {}
-   for i, val in ipairs( self.choices ) do  -- Msg( i .. ":".. val )
-      choices_[1+#choices_] = ifx( type(val) == "table", val[1], val )
-      end
-
    local max = 0
-   for i, val in ipairs( choices_ ) do  -- Msg( i .. ":".. val )
-      -- val = val:gsub( "&", "" )    -- more on this later
-      choices_[i] = val
-      max = Max( max, #val + self.extra )
+   for ix, val in ipairs( self.choices ) do
+      local aval = type(val) == "table" and val[1] or val  -- DBG( "choices["..ix.."]="..aval )
+      choices_[1+#choices_] = aval
+      max = Max( max, #aval + self.extra )
       end
+   self.rawChoices = choices_
 
    ac.title = self.title
    if ac.title then
@@ -118,50 +115,15 @@ function MenuProto_:prepAboutChoices()
    -- center the menu's window
    ac.minY = int( (ScreenLines() - ac.numVisibleChoices )/2-2 )  -- "-2" magic number to position max menu window correctly
    ac.minX = int( (ScreenCols()  - ac.maxlen            )/2 )
-
    ac.titPre, ac.title,ac.titPost = prepTitle( ac.title, ac.maxlen, chHbar )
 
-   -- Create self.paddedChoices array containing all choices padded to aboutChoices.maxlen
-   self.paddedChoices = {}
+   self.paddedChoices = {}  -- array containing all choices padded to aboutChoices.maxlen
    local wid = ac.maxlen-self.extra
    for ix, val in ipairs( choices_ ) do
       self.paddedChoices[ix] = self.opt.center_choices
          and pad( (" "):rep( (wid - #val)/2 ) .. val, wid )
          or  pad( val, wid )
       end
-
-   -- self.keyTbl = {}
-   -- for ix,choice in ipairs(choices_) do
-   --    if choice:match("^~") then
-   --       par[ix] = pad(substr(choices_[ix],2),width)
-   --       firstselect++
-   --    else
-   --       # Log( "par["ix"]="pad(choices_[ix],width) )
-   --
-   --       par[ix] = pad(choices_[ix],width)
-   --
-   --       # 06-Oct-2002 klg
-   --       # keyTbl is indexed by first char (capital) key,
-   --       #
-   --       # value is,
-   --       # if positive, choice number uniquely identified by key
-   --       # if negative the FIRST choice number, when key does NOT uniquely identify a single choice
-   --       #
-   --       if choice:match( /([a-z0-9])/i ) then
-   --          key = toupper( substr( choices_[ix], RSTART, 1 ) )
-   --          if keyTbl[key] then
-   --             if keyTbl[key] > 0 then
-   --                keyTbl[key] = -keyTbl[key]  # negative value means more than one match
-   --                # Log( "keyTbl["key"]="keyTbl[key] )
-   --                end
-   --          else
-   --             keyTbl[key] = i - firstselect
-   --             # Log( "keyTbl["key"]="keyTbl[key] )
-   --             end
-   --          end
-   --       end
-   --    end
-
    end
 
 
@@ -208,12 +170,24 @@ function MenuProto_:PickOne( initialChoice )
    self:prepAboutChoices()
    self:frame()
 
+   local choiceNmIdx,choiceNmLastKey,choiceNmLastIx = {}
+   for ix,ca in ipairs(self.rawChoices) do
+      -- DBG( "rawChoices["..ix.."] "..type(ca) )
+      local st = ((type(ca) == "table") and ca[1] or ca)
+      local cnm1 = st:match '%w'  -- first alnum ch
+      if cnm1 then
+         cnm1 = cnm1:lower()
+         choiceNmIdx[cnm1] = choiceNmIdx[cnm1] or {}
+         local ar = choiceNmIdx[cnm1]
+         ar[1+#ar] = ix
+         end
+      end
+
    local ac = self.aboutChoices
    local curChoice,theChoice = initialChoice or 1
    while true do
       self:update( curChoice )  -- redraw the contents of the menu
-      local  key = GetKey()
-   -- DBG(  "KEY="..key )
+      local  key = GetKey()     -- DBG(  "KEY="..key )
       if     key=="esc"   then                       break
       elseif key=="enter" then theChoice = curChoice break
       elseif key=="up"    then curChoice = curChoice - 1
@@ -222,11 +196,24 @@ function MenuProto_:PickOne( initialChoice )
       elseif key=="pgdn"  then curChoice = curChoice + (ac.numVisibleChoices-1)
       elseif key=="home"  then curChoice = 1
       elseif key=="end"   then curChoice = ac.count
-   -- elseif key[keyTbl] then  -- TBD
-   --    Log( "hit: keyTbl["..key.."]="..keyTbl[key] )
-   --    if     keyTbl[key] <  0 then curChoice = -keyTbl[key]+1
-   --    elseif keyTbl[key] >= 0 then theChoice =  keyTbl[key]+1  break
-   --       end
+      elseif #key==1 and choiceNmIdx[key] then  --[[ 1st-char-of-choicenm-based lookup ]]  -- DBG( "hey look!  "..key )
+         local ar = choiceNmIdx[key]
+         if #ar == 1 then  -- one choice, choose and return
+            theChoice = ar[1]
+            break
+            end
+         if not choiceNmLastKey or choiceNmLastKey ~= key then
+            choiceNmLastIx = 1 + ((ar[1] == curChoice) and 1 or 0)  -- if already on first match, move to next
+            choiceNmLastKey = key
+         else  -- user hit same key as last time; advance ring-style
+            -- local was = choiceNmLastIx
+            choiceNmLastIx = 1+choiceNmLastIx
+            if choiceNmLastIx > #ar then
+               choiceNmLastIx = 1
+               end                                             -- DBG( 'was '..was..', now '..choiceNmLastIx )
+
+            end  -- DBG( 'done '..choiceNmLastIx )
+         curChoice = ar[choiceNmLastIx]
       else Bell() -- Beep for unrecognized keyboard input.
          end
 
@@ -236,7 +223,6 @@ function MenuProto_:PickOne( initialChoice )
 
       ac.minVisibleChoice = Max( ac.minVisibleChoice, curChoice - (ac.numVisibleChoices - 1) )
       ac.minVisibleChoice = Min( ac.minVisibleChoice, curChoice )
-
    -- DBG( "curChoice="..curChoice..", minVisibleChoice="..ac.minVisibleChoice )
       end
 
