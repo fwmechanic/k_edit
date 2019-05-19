@@ -264,10 +264,7 @@ STIL bool eqi( stref s1, stref s2 ) {
    return true;
    }
 
-STIL int cmp( int c1, int c2 ) {
-   if( c1 == c2 ) { return 0; }
-   return c1 < c2 ? -1 : +1;
-   }
+template < typename comparable > int cmp( comparable c1, comparable c2 ) { return (c1 > c2) - (c1 < c2); }
 
 STIL int cmpi( int c1, int c2 ) { // impl w/highly ASCII-centric optzn taken from http://www.geeksforgeeks.org/write-your-own-strcmp-which-ignores-cases/
    const auto cd( 'a'-'A' );
