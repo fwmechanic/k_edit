@@ -171,7 +171,7 @@ STATIC_FXN void InitNewView_File( PChar viewPersistentText ) {
      #endif
       auto pView( new View( FBOP::FindOrAddFBuf( vp.filename ), g_CurWinWr(), vp ) );
       auto &cvwHd( g_CurViewHd() );
-      DLINK_INSERT_LAST( cvwHd, pView, dlinkViewsOfWindow ); // push_back()
+      DLINK_INSERT_LAST( cvwHd, pView, d_dlinkViewsOfWindow ); // push_back()
       }
    }
 
@@ -298,7 +298,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
          case ' ': InitNewView_File( buf+1 );  break;  // another View + FBUF entry
          }
       }
-   DLINK_JOIN( cvh, tmpVHd, dlinkViewsOfWindow );
+   DLINK_JOIN( cvh, tmpVHd, d_dlinkViewsOfWindow );
    cvh.front()->PutFocusOn();
    if( s_ForgetAbsentFiles.logfb ) {
        s_ForgetAbsentFiles.logfb->Undo_Reinit();
@@ -399,7 +399,7 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
    CloseFTypeSettings();
                                                          DV && DBG("%s DestroyViewList(%" PR_SIZET ");", __func__, g_WindowCount() );
    for( auto &win : g__.aWindow ) {
-      DestroyViewList( &win->ViewHd );
+      DestroyViewList( &win->d_ViewHd );
       }                                                  DV && DBG("%s RemoveFBufOnly();", __func__ );
 #if FBUF_TREE
 

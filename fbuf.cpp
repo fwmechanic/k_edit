@@ -150,7 +150,7 @@ bool FBUF::CantModify() const {
 void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf ) {
    for( auto wix(0) ; wix < g_WindowCount(); ++wix ) {
       const auto pWin( g_Win( wix ) );
-      DLINKC_FIRST_TO_LASTA( pWin->ViewHd, dlinkViewsOfWindow, pv ) {
+      DLINKC_FIRST_TO_LASTA( pWin->d_ViewHd, d_dlinkViewsOfWindow, pv ) {
          if( pv->FBuf() == pFBuf ) {
             if( pv->LineCompile_Valid() ) {
                 pv->Set_LineCompile( 0 );
@@ -718,7 +718,7 @@ bool ARG::refresh() {
                    DispNeedsRedrawStatLn();
                    return true;
                    }
-    case NULLARG:  if( DLINK_NEXT( g_CurView(), dlinkViewsOfWindow ) == nullptr ) {
+    case NULLARG:  if( DLINK_NEXT( g_CurView(), d_dlinkViewsOfWindow ) == nullptr ) {
                       return fnMsg( "no alternate file" );
                       }
                    if( !ConIO::Confirm( "Forget the current file (from all windows)?! " ) ) {
@@ -1876,7 +1876,7 @@ bool ARG::setfile() {
    switch( d_argType ) {
     default:      return BadArg(); //--------------------------------------------
     case NOARG:   {
-                  const auto nxtvw( DLINK_NEXT( g_CurView(), dlinkViewsOfWindow ) );
+                  const auto nxtvw( DLINK_NEXT( g_CurView(), d_dlinkViewsOfWindow ) );
                   if( !nxtvw ) { return fnMsg( "no alternate file" ); }
                   fnm = nxtvw->FBuf()->Namestr();
                   } break; //-------------------------------------------------------

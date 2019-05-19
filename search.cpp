@@ -2277,7 +2277,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
          }
       else {
          PCV;
-         auto nextview( DLINK_NEXT( pcv, dlinkViewsOfWindow ) );
+         auto nextview( DLINK_NEXT( pcv, d_dlinkViewsOfWindow ) );
          if( !nextview || !nextview->FBuf() ) {
             return Msg( "no next file!" );
             }
@@ -2364,13 +2364,13 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
 
 PView FindClosestGrepBufForCurfile( PView pv, PCChar srchFilename ) {
    if( !pv ) { pv = g_CurView(); }
-   pv = DLINK_NEXT( pv, dlinkViewsOfWindow );
+   pv = DLINK_NEXT( pv, d_dlinkViewsOfWindow );
    while( pv ) {
       Path::str_t srchFnm; int dummy;
       if( FBOP::IsGrepBuf( srchFnm, &dummy, pv->FBuf() ) && Path::eq( srchFnm, srchFilename ) ) {
          return pv;
          }
-      pv = DLINK_NEXT( pv, dlinkViewsOfWindow );
+      pv = DLINK_NEXT( pv, d_dlinkViewsOfWindow );
       }
    return nullptr;
    }

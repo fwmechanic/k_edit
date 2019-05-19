@@ -398,7 +398,7 @@ protected:
    int  ColorIdx2Attr( int colorIdx ) const { return d_view.ColorIdx2Attr( colorIdx ); }
    NO_COPYCTOR(HiliteAddin);
    NO_ASGN_OPR(HiliteAddin);
-   void DispNeedsRedrawAllLines() { d_view.Win()->DispNeedsRedrawAllLines(); }
+   void DispNeedsRedrawAllLines() { d_view.RedrawAllVisbleLines(); }
    };
 
 //--------------------------------------------------------------------------
@@ -2264,7 +2264,7 @@ void View::MoveAndCenterCursor( const Point &pt, COL xWidth ) {
    }
 
 void FBUF::LinkView( PView pv ) {
-   DLINK_INSERT_LAST( d_dhdViewsOfFBUF, pv, dlinkViewsOfFBUF );
+   DLINK_INSERT_LAST( d_dhdViewsOfFBUF, pv, d_dlinkViewsOfFBUF );
    }
 
 void View::CommonInit() {
@@ -2277,7 +2277,7 @@ void FBUF::Push_yChangedMin() {
       return;
       }
    DBG_HL_EVENT && DBG( "%s(%d,%d)", __func__, d_yChangedMin, yMax );
-   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, dlinkViewsOfFBUF, pv ) {
+   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, d_dlinkViewsOfFBUF, pv ) {
       pv->HiliteAddin_Event_FBUF_content_changed( d_yChangedMin, yMax );
       }
    d_yChangedMin = yMax+1;
@@ -2485,7 +2485,7 @@ void View::ViewEvent_LineInsDel( LINE yLine, LINE lineDelta ) {
       0 && DBG( "%s checking: %d %+d", __func__, yLine, lineDelta );
       const auto fOriginMoved( AddLineDelta( d_current.Origin.lin, yLine, lineDelta ) );
       const auto fCursorMoved( AddLineDelta( d_current.Cursor.lin, yLine, lineDelta ) );
-      if( (fOriginMoved || fCursorMoved) && this == Win()->ViewHd.front() ) {
+      if( (fOriginMoved || fCursorMoved) && this == Win()->d_ViewHd.front() ) {
          0 && DBG( "%s %s %s moved!", __func__, fOriginMoved?"Origin":"", fCursorMoved?"Cursor":"" );
          // MoveCursor( Cursor().lin, Cursor().col );
          }
@@ -3465,30 +3465,30 @@ PView FBUF::PutFocusOnView() { enum{ DD=0 };
    {
    PView pNxtView;
    auto &cvwHd( g_CurViewHd() );
-   DLINK_FIRST_TO_LAST( cvwHd, dlinkViewsOfWindow, myView, pNxtView ) { // remove(), push_front()
+   DLINK_FIRST_TO_LAST( cvwHd, d_dlinkViewsOfWindow, myView, pNxtView ) { // remove(), push_front()
       if( myView->FBuf() == this ) { DD&&DBG("%s(%s) found", __func__, Name() );
-         DLINK_REMOVE( cvwHd, myView, dlinkViewsOfWindow );
+         DLINK_REMOVE( cvwHd, myView, d_dlinkViewsOfWindow );
          break;
          }
       }
    if( !myView ) { DD&&DBG("%s(%s) not found, creating", __func__, Name() ); // a View for this was not found?  Create and insert at head
       myView = new View( this, g_CurWinWr() );
       }
-   DLINK_INSERT_FIRST( cvwHd, myView, dlinkViewsOfWindow );
+   DLINK_INSERT_FIRST( cvwHd, myView, d_dlinkViewsOfWindow );
    }
    myView->PutFocusOn();
    return myView;
    }
 
 void FBUF::UnlinkView( PView pv ) {
-   DLINK_REMOVE( d_dhdViewsOfFBUF, pv, dlinkViewsOfFBUF );
+   DLINK_REMOVE( d_dhdViewsOfFBUF, pv, d_dlinkViewsOfFBUF );
    if( d_dhdViewsOfFBUF.empty() ) {
       private_RemovedFBuf();
       }
    }
 
 STATIC_FXN void KillView( PView pv ) { // destroy an arbitrary View
-   DLINK_REMOVE( pv->wr_Win()->ViewHd, pv, dlinkViewsOfWindow );
+   DLINK_REMOVE( pv->thisViewHead(), pv, d_dlinkViewsOfWindow );
    pv->FBuf()->UnlinkView( pv );
    delete pv;
    }
@@ -3510,8 +3510,8 @@ void KillTheCurrentView() {
 
 bool FBUF::UnlinkAllViews() {
    while( auto pEl=d_dhdViewsOfFBUF.front() ) {
-      DLINK_REMOVE_FIRST( d_dhdViewsOfFBUF     , pEl, dlinkViewsOfFBUF   );
-      DLINK_REMOVE      ( pEl->wr_Win()->ViewHd, pEl, dlinkViewsOfWindow );
+      DLINK_REMOVE_FIRST( d_dhdViewsOfFBUF   , pEl, d_dlinkViewsOfFBUF   );
+      DLINK_REMOVE      ( pEl->thisViewHead(), pEl, d_dlinkViewsOfWindow );
       delete pEl;
       }
    return private_RemovedFBuf();

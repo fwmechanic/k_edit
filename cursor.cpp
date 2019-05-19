@@ -260,7 +260,7 @@ bool MoveCursorToEofAllWindows( PFBUF pFBuf, bool fIncludeCurWindow ) {
    }
 
 void FBUF::MoveCursorAllViews( LINE yLine, COL xCol ) { // NB: this affects _all Views_ referencing this!
-   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, dlinkViewsOfFBUF, pv ) {
+   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, d_dlinkViewsOfFBUF, pv ) {
       pv->MoveCursor( yLine, xCol );
       }
    }

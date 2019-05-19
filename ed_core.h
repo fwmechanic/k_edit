@@ -78,7 +78,6 @@ typedef FBUF const * PCFBUF;
 typedef      PFBUF * PPFBUF;
 typedef     PCFBUF const * CPPFBUF;
 
-typedef  DLinkHead<FBUF> FBufHead;
 
 // Use OpenFileNotDir_... in lieu of fChangeFile if you don't want to affect
 // PFBUF-stack-order and cwd
@@ -269,18 +268,14 @@ private:
       rv[len0+len_] = '\0';
       return rv;
       }
-   PCChar assign( PCChar str ) {
-      const size_t len_( Strlen(str) );
-      const auto rv( wresize( 1+len_ ) );
-      memcpy( rv, str, len_ );
-      rv[len_] = '\0';
-      return rv;
-      }
    PCChar assign( PCChar str, const size_t len_ ) {
       const auto rv( wresize( 1+len_ ) );
       memcpy( rv, str, len_ );
       rv[len_] = '\0';
       return rv;
+      }
+   PCChar assign( PCChar str ) {
+      return assign( str, Strlen(str) );
       }
    PCChar poke( int xCol, char ch, char fillch=' ' ) {
       const auto rv( wresize( 1+xCol ) );
@@ -589,19 +584,22 @@ inline PCChar ARG::CmdName() const { return d_pCmd->Name(); }
 
 // forward decls:
 
-class                            EditRec;
-struct                           HiLiteRec;
-class                            View;
-   typedef View       *          PView;
-   typedef View const *          PCView;
+class                  EditRec;
+struct                 HiLiteRec;
+class                  View;
+   typedef View       *PView;
+   typedef View const *PCView;
+class                  ViewHiLites;
+class                  FileTypeSettings;
+struct                 Win;
+   typedef Win        *PWin;
+   typedef Win const  *PCWin;
+class                  HiliteAddin;
+
+typedef  DLinkHead<FBUF>         FBufHead;
 typedef  DLinkHead<View>         ViewHead;
-class                            ViewHiLites;
-class                            FileTypeSettings;
-struct                           Win;
-   typedef Win        *          PWin;
-   typedef Win const  *          PCWin;
-class                            HiliteAddin;
 typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;
+
 extern void DestroyViewList( ViewHead *pViewHd );
 
 struct FTypeSetting;
@@ -616,7 +614,7 @@ struct ViewPersistent {
 extern bool ViewPersistentInitOk( ViewPersistent &vp, PChar viewSaveRec );
 
 struct Win { // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
-   ViewHead  ViewHd;   // public: exposed
+   ViewHead  d_ViewHd; // public: exposed
    Point     d_Size;   // public: exposed
    Point     d_UpLeft; // public: exposed
    int       d_wnum = 0;  // will be set correctly if/when this is sorted into correct place
@@ -629,8 +627,8 @@ public:
    void      Maximize();
    bool      operator< ( const Win &rhs ) const { return d_UpLeft < rhs.d_UpLeft; }
    void      Write( FILE *fout ) const;
-   PCView    CurView()   const { return ViewHd.front(); }
-   PView     CurViewWr() const { return ViewHd.front(); }
+   PCView    CurView()   const { return d_ViewHd.front(); }
+   PView     CurViewWr() const { return d_ViewHd.front(); }
    void      DispNeedsRedrawAllLines() const;
    void      Event_Win_Reposition( const Point &newUlc );
    void      Event_Win_Resized( const Point &newSize );
@@ -645,8 +643,8 @@ public:
 
 class View { // View View View View View View View View View View View View View View View View View View View View View View View View
 public:
-   DLinkEntry<View> dlinkViewsOfWindow;
-   DLinkEntry<View> dlinkViewsOfFBUF;
+   DLinkEntry<View> d_dlinkViewsOfWindow;
+   DLinkEntry<View> d_dlinkViewsOfFBUF;
                 View( const View &, PWin pWin );
                 View( PFBUF pFBuf , PWin pWin, const ViewPersistent &vp );
                 View( PFBUF pFBuf , PWin pWin );
@@ -660,13 +658,14 @@ private:
    ViewHiLites *d_pHiLites = nullptr; // we own this!
    void         CommonInit();
    time_t       d_tmFocusedOn = 0; // http://en.wikipedia.org/wiki/Year_2038_problem
+   PCWin        Win()    const { return d_pWin ; }
+   PWin         wr_Win() const { return d_pWin ; }
 public:
    void         PutFocusOn();
    time_t       TmFocusedOn() const { return d_tmFocusedOn; }
    PCFBUF       CFBuf()  const { return d_vwToPFBuf; }
    PFBUF        FBuf()   const { return d_vwToPFBuf; }
-   PCWin        Win()    const { return d_pWin ; }
-   PWin         wr_Win() const { return d_pWin ; }
+   ViewHead    &thisViewHead() { return  wr_Win()->d_ViewHd; }
    bool         ActiveInWin() const { return d_pWin->CurView() == this; }
    struct ULC_Cursor {
       Point     Origin;
@@ -694,6 +693,8 @@ public:
          COL    ViewCols()            const { return Win()->d_Size.col ; }
          LINE   MinVisibleFbufLine()  const { return Origin().lin; }
          LINE   MaxVisibleFbufLine()  const { return MinVisibleFbufLine() + ViewLines() - 1; }
+
+         void   RedrawAllVisbleLines() const { Win()->DispNeedsRedrawAllLines() ; }
 
    bool         RestCur();
    void         SaveCur()     { d_saved.Set( d_current ); }
@@ -1461,7 +1462,7 @@ STIL PCWin        g_Win( int ix )  { return  g__.aWindow[ ix ]        ; }
 STIL PWin         g_WinWr( int ix ){ return  g__.aWindow[ ix ]        ; }
 STIL PCWin        g_CurWin()       { return  g_Win(   g_CurWindowIdx() ); }
 STIL PWin         g_CurWinWr()     { return  g_WinWr( g_CurWindowIdx() ); }
-STIL ViewHead    &g_CurViewHd()    { return *(&g_CurWinWr()->ViewHd)  ; } // directly dependent on g__.ixCurrentWin
+STIL ViewHead    &g_CurViewHd()    { return *(&g_CurWinWr()->d_ViewHd)  ; } // directly dependent on g__.ixCurrentWin
 STIL PView        g_CurView()      { return  g_CurViewHd().front()  ; } // NOT CACHED since can change independent of g__.ixCurrentWin changing
 
 // *** I'm not totally sure I like these, but it beats repeating g_CurWin() and g_CurView() multiple times in the code
@@ -1469,8 +1470,8 @@ STIL PView        g_CurView()      { return  g_CurViewHd().front()  ; } // NOT C
 #define PCW        const auto pcw( g_CurWin()          )
 #define PCWr       const auto pcw( g_CurWinWr()        )
 #define PCV        const auto pcv( g_CurView()         )
-#define PCWV  PCW; const auto pcv( pcw->ViewHd.front() )
-#define PCWrV PCWr;const auto pcv( pcw->ViewHd.front() )
+#define PCWV  PCW; const auto pcv( pcw->d_ViewHd.front() )
+#define PCWrV PCWr;const auto pcv( pcw->d_ViewHd.front() )
 
 STIL const Point &g_Cursor()       { return  g_CurView()->Cursor(); } // NOT CACHED since can change independent of g__.ixCurrentWin changing
 STIL LINE         g_CursorLine()   { return  g_Cursor().lin       ; } // NOT CACHED since can change independent of g__.ixCurrentWin changing

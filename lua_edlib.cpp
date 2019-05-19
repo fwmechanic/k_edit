@@ -518,7 +518,7 @@ STATIC_FXN int l_Win_function_getn( lua_State *L ) { return l_construct_Win( L, 
 STATIC_FXN int l_Win_function_by_filename( lua_State *L ) { // Beware!  There MAY BE more than one window onto a given file
    auto pFnm = S_(1);
    for( auto ix(0) ; ix < g_WindowCount(); ++ix ) {
-      if( g_Win( ix )->ViewHd.front()->FBuf()->NameMatch( pFnm ) ) {
+      if( g_Win( ix )->d_ViewHd.front()->FBuf()->NameMatch( pFnm ) ) {
          return l_construct_Win( L, ix );
          }
       }
@@ -546,7 +546,7 @@ namespace LExFx {
    }
 
 namespace LWin {
-   STATIC_FXN int CurFBUF( lua_State *L )    { return l_construct_FBUF( L, thisWin()->ViewHd.front()->FBuf() ); }
+   STATIC_FXN int CurFBUF( lua_State *L )    { return l_construct_FBUF( L, thisWin()->d_ViewHd.front()->FBuf() ); }
    STATIC_FXN int Height( lua_State *L )     { R_int( thisWin()->d_Size.lin ); }
    STATIC_FXN int MakeCurrent( lua_State *L ){ SetWindowSetValidView_( thisWin() ); R_nil(); }
    }
@@ -579,7 +579,7 @@ int l_construct_View( lua_State *L, PView pView ) {
    }
 
 namespace LWin {
-   STATIC_FXN int CurView( lua_State *L )    { return l_construct_View( L, thisWin()->ViewHd.front() ); }  // Note that View ctor is a Win _method_
+   STATIC_FXN int CurView( lua_State *L )    { return l_construct_View( L, thisWin()->d_ViewHd.front() ); }  // Note that View ctor is a Win _method_
    }
 
 namespace LFBUF {
@@ -588,7 +588,7 @@ namespace LFBUF {
 
 int l_View_function_cur( lua_State *L ) { return l_construct_View( L, g_CurView() ); }
 namespace LView {
-   STATIC_FXN int Next( lua_State *L )     { return l_construct_View( L, DLINK_NEXT( thisVw(), dlinkViewsOfWindow ) ); }
+   STATIC_FXN int Next( lua_State *L )     { return l_construct_View( L, DLINK_NEXT( thisVw(), d_dlinkViewsOfWindow ) ); }
    STATIC_FXN int __tostring( lua_State *L )  { auto pView = thisVw(); lua_pushfstring( L, "View(%p=\"%s\")", pView, pView->FBuf()->Name() ); return 1; }
    STATIC_FXN int MoveCursor( lua_State *L )  { thisVw()->MoveCursor( I_(2)-1, I_(3)-1 ); RZ; }
    STATIC_FXN int GetCursorYX( lua_State *L ) {

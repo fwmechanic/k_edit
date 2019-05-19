@@ -34,7 +34,7 @@ STIL bool WidxInRange( int widx )  {  return widx >= 0 && widx < g_WindowCount()
 #define  AssertWidx( widx )   Assert( WidxInRange( widx ) );
 
 bool Win::GetCursorForDisplay( Point *pt ) const {
-   const auto pcv( ViewHd.front() );
+   const auto pcv( d_ViewHd.front() );
    pt->lin = d_UpLeft.lin + (pcv->Cursor().lin - pcv->Origin().lin) + MinDispLine();
    pt->col = d_UpLeft.col + (pcv->Cursor().col - pcv->Origin().col);
    return true; // used to chain (with CursorLocnOutsideView_Get)
@@ -56,9 +56,9 @@ void Win::Event_Win_Resized( const Point &newSize, const Point &newSizePct ) {
       if( SizePct() != newSizePct ) { 0 && DBG( "%s[%d] pctg(%d%%,%d%%)->(%d%%,%d%%)", __func__, d_wnum,  SizePct().lin, SizePct().col, newSizePct.lin, newSizePct.col );
           SizePct_set( newSizePct );
          }
-      auto pv( ViewHd.front() );
+      auto pv( d_ViewHd.front() );
       pv->EnsureWinContainsCursor();
-      DLINKC_FIRST_TO_LAST( ViewHd, dlinkViewsOfWindow, pv ) {
+      DLINKC_FIRST_TO_LAST( d_ViewHd, d_dlinkViewsOfWindow, pv ) {
          pv->Event_Win_Resized( newSize );
          }
       }
@@ -204,9 +204,9 @@ Win::Win( Win &parent_, bool fSplitVertical, int columnOrLineToSplitAt )
 
    parent_.Event_Win_Resized( newParentSize, newParentSizePct ); // feed newParentSize back into parent
    // clone all of original window's Views in a new list bound to the new window  !BUGBUG a different approach should be created!
-   for( auto view( parent_.CurView() ) ; view ; view = DLINK_NEXT( view, dlinkViewsOfWindow ) ) {
+   for( auto view( parent_.CurView() ) ; view ; view = DLINK_NEXT( view, d_dlinkViewsOfWindow ) ) {
       auto dupdPF( new View( *view, this ) ); // DO NOT inline the 'new View( ... )' into DLINK_INSERT_LAST _macro_ !!!
-      DLINK_INSERT_LAST( ViewHd, dupdPF, dlinkViewsOfWindow );
+      DLINK_INSERT_LAST( d_ViewHd, dupdPF, d_dlinkViewsOfWindow );
       }
    }
 
@@ -318,7 +318,7 @@ STATIC_FXN void CloseWindow_( PWin pWinToClose, PWin pWinToMergeTo ) {
          auto wixToMergeTo( pWinToMergeTo->d_wnum );
    const auto wixToClose(   pWinToClose->d_wnum );    1 && DBG( "%s merge %d to %d of %" PR_SIZET, __func__, wixToClose, wixToMergeTo, g_WindowCount() );
    {
-   DLINKC_FIRST_TO_LASTA( pWinToClose->ViewHd, dlinkViewsOfWindow, pv ) {
+   DLINKC_FIRST_TO_LASTA( pWinToClose->d_ViewHd, d_dlinkViewsOfWindow, pv ) {
       const auto pFBuf( pv->FBuf() );
       if( pFBuf->IsDirty() && pFBuf->FnmIsDiskWritable() && pFBuf->ViewCount() == 1 ) {
          switch( chGetCmdPromptResponse( "yn", -1, -1, "%s has changed!  Save changes (Y/N)? ", pFBuf->Name() ) ) {
@@ -330,7 +330,7 @@ STATIC_FXN void CloseWindow_( PWin pWinToClose, PWin pWinToMergeTo ) {
          }
       }
    }
-   DestroyViewList( &pWinToClose->ViewHd );
+   DestroyViewList( &pWinToClose->d_ViewHd );
 
    Point newSizePct( pWinToMergeTo->SizePct()  );
    Point newSize(    pWinToMergeTo->d_Size     );
@@ -568,7 +568,7 @@ void Wins_WriteStateFile( FILE *ofh ) {
          DV && DBG( "%c=%c%c%c %s", (skip?'1':'0'), chAlreadySaved, chNotOnDisk, chExplicitForget, fbuf.Name() );
          return skip;
          }
-      void Next()             { d_pVw = DLINK_NEXT( d_pVw, dlinkViewsOfWindow ); }
+      void Next()             { d_pVw = DLINK_NEXT( d_pVw, d_dlinkViewsOfWindow ); }
       void ToSaveCand()       { while( skip_( d_pVw ) ) { DV && DBG("skipping %s", d_pVw->FBuf()->Name() );
                                    Next();
                                    }
@@ -576,8 +576,8 @@ void Wins_WriteStateFile( FILE *ofh ) {
       } hds[ MAX_WINDOWS ];
    auto hdsMax( 0 );
    for( auto pWin : g__.aWindow ) {
-      if( !pWin->ViewHd.empty() ) {
-         hds[hdsMax++].Init( pWin->ViewHd.front() );
+      if( !pWin->d_ViewHd.empty() ) {
+         hds[hdsMax++].Init( pWin->d_ViewHd.front() );
          }
       }
    auto iFilesSaved(0);

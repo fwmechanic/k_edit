@@ -1433,7 +1433,7 @@ void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
 
 void FBUF::FBufEvent_LineInsDel( LINE yLine, LINE lineDelta ) { // negative lineDelta value signifies deletion of lines
    Set_yChangedMin( yLine );
-   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, dlinkViewsOfFBUF, pv ) {
+   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, d_dlinkViewsOfFBUF, pv ) {
       pv->ViewEvent_LineInsDel( yLine, lineDelta );
       }
    if( lineDelta > 0 )      { AdjustMarksForLineInsertion( yLine, lineDelta, this ); }
@@ -1442,7 +1442,7 @@ void FBUF::FBufEvent_LineInsDel( LINE yLine, LINE lineDelta ) { // negative line
 
 int FBUF::ViewCount() const {
    auto rv( 0 );
-   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, dlinkViewsOfFBUF, pv ) {
+   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, d_dlinkViewsOfFBUF, pv ) {
       ++rv;
       }
    return rv;

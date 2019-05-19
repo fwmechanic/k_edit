@@ -130,7 +130,7 @@ bool FBUF::IsInterestingFile( int widx ) const {
 STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFBufs[], int pFBufsEls ) {
    auto ix( 0 );
    if( fFromWinViewList ) {
-      DLINKC_FIRST_TO_LASTA( g_CurViewHd(), dlinkViewsOfWindow, pv ) // find
+      DLINKC_FIRST_TO_LASTA( g_CurViewHd(), d_dlinkViewsOfWindow, pv ) // find
          if( pv->FBuf()->IsInterestingFile( widx ) ) {
             pFBufs[ix++] = pv->FBuf();
             if( !(ix < pFBufsEls) ) {
@@ -320,7 +320,7 @@ STATIC_FXN void FBufRead_Files( PFBUF pFout, int ) { // fxn that fills kszFiles
 void FBufRead_WInformation( PFBUF pFout, int widx ) { // fxn that fills "<winN>"
    //*** preprocessing pass to determine max width of some fields:
    maxFileInfos max;
-   DLINKC_FIRST_TO_LASTA( g_CurViewHd(), dlinkViewsOfWindow, pv ) {
+   DLINKC_FIRST_TO_LASTA( g_CurViewHd(), d_dlinkViewsOfWindow, pv ) {
       auto pFBuf( pv->FBuf() );
       if( !pFBuf || pFBuf->IsInvisibleFile( widx ) ) {
          continue;
@@ -329,7 +329,7 @@ void FBufRead_WInformation( PFBUF pFout, int widx ) { // fxn that fills "<winN>"
       }
    max.Calc();
    //*** content-fill pass:
-   DLINKC_FIRST_TO_LASTA( g_CurViewHd(), dlinkViewsOfWindow, pv ) {
+   DLINKC_FIRST_TO_LASTA( g_CurViewHd(), d_dlinkViewsOfWindow, pv ) {
       auto pFBuf( pv->FBuf() );
       if( !pFBuf || pFBuf->IsInvisibleFile( widx ) ) {
          continue;
