@@ -273,23 +273,24 @@ void SwitblInit() {
    addswi( "errprompt"      , fc.SWIi_bv( g_fErrPrompt        ) _AHELP( "error message display pauses with \"Press any key...\" prompt" ) );
    addswi( "fastsearch"     , fc.SWIi_bv( g_fFastsearch       ) _AHELP( "use fast search algorithm (when key contains no spaces)" ) );
    addswi( "forceplateol"   , fc.SWIi_bv( g_fForcePlatformEol ) _AHELP(  kszHelpPlatEoL ) );
-   addswi( "hike"           , fc.SWIi_iv( g_iHike                  ) _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) );
+   addswi( "hike"           , fc.SWIi_iv( g_iHike             ) _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) );
    addswi( "hljoinchars"    , fc.SWIsb( swidHLJoinchars, swixHLJoinchars )  _AHELP( "Hierarchial Left Join charset: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes; [_a-zA-Z0-9] are always members" ) );
    addswi( "hscroll"        , fc.SWIi_ci( [](){ return g_iHscroll  ; }, [](int v_){ g_iHscroll   = v_; }, [](){ return 1; }, [](){ return EditScreenCols ()-1; }, false ) _AHELP( "the number of columns that the editor scrolls the text left or right when you move the cursor out of the window" ) );
    addswi(  kszBackup       , fc.SWI_enum( [](){ return g_iBackupMode ; }, [](int v_){ g_iBackupMode = v_; }, AEOA(bkup_enums)  )     _AHELP( "choices are 'undel', 'bak' or 'none'; see online help for details" ) );
    addswi( "langhilites"    , fc.SWIi_bv( g_fLangHilites      ) _AHELP( "enable (yes) partial language-aware hilighting" ) );
-   addswi( "luagcstep"      , fc.SWIi_iv( g_iLuaGcStep             ) _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) );
+   addswi( "logflush"       , fc.SWIi_bv( g_fLogFlush         ) _AHELP( "fflush after every line-write to editor logfile" ) );
+   addswi( "luagcstep"      , fc.SWIi_iv( g_iLuaGcStep        ) _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) );
    addswi( "m4backtickquote", fc.SWIi_bv( g_fM4backtickquote  ) _AHELP( "spanning backtick quoting right ends with ' (yes) or ` (no)" ) );
 #if 0 && defined(_WIN32)
    addswi( "ods_enabled"    , fc.SWIi_bv( g_fWrToWin32DbgView ) _AHELP( "whether internal DBG() fxn actually calls Win32::OutputDebugString API" ) );
 #endif
-   addswi( "maxundo"        , fc.SWIi_iv( g_iMaxUndo               ) _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) );
+   addswi( "maxundo"        , fc.SWIi_iv( g_iMaxUndo          ) _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) );
    addswi( "memusgink"      , fc.SWIi_bv( g_fShowMemUseInK    ) _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) );
    addswi( "mfgrepnoise"    , fc.SWIi_bv( g_fMfgrepNoise      ) _AHELP( "during mfgrep and mfreplace execution: display (yes) or hide (no) each filename & fio-phase display" ) );
    addswi( "msgflush"       , fc.SWIi_bv( g_fMsgflush         ) _AHELP( "<compile> is flushed (yes) or retained (no) when a new job is started" ) );
    addswi( "realtabs"       , fc.SWIi_bv( g_fRealtabs         ) _AHELP( "see online help" ) );
    addswi( "replacecase"    , fc.SWIi_bv( g_fReplaceCase      ) _AHELP( "replace operations are case sensitive (yes) or insensitive (no)" ) );
-   addswi( "rmargin"        , fc.SWIi_iv( g_iRmargin               ) _AHELP( "see online help" ) );
+   addswi( "rmargin"        , fc.SWIi_iv( g_iRmargin          ) _AHELP( "see online help" ) );
    addswi( "showfbufdetails", fc.SWIi_bv( g_fShowFbufDetails  ) _AHELP( "show FBUF status details in <winN> sysbufs" ) );
    addswi( "softcr"         , fc.SWIi_bv( g_fSoftCr           ) _AHELP( "see online help" ) );
    addswi( "tabalign"       , fc.SWIi_bv( g_fTabAlign         ) _AHELP( "within tab fields, cursor can be positioned (yes) only on tab char (no) in any column" ) );

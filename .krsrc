@@ -121,7 +121,7 @@
    nobadeol:=replace "" nl "" nl  # BUGBUG doesn't work
    nobadeol:alt+0
 
-   log:=arg "${K_LOGFNM}" setfile endfile
+   log:=cancel arg "logflush:yes" assign arg "${K_LOGFNM}" setfile endfile
 
    st:=savetmpfile
 

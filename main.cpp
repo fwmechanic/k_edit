@@ -628,14 +628,18 @@ void DBG_init() {
       }
    }
 
+GLOBAL_VAR bool g_fLogFlush = false;
+STATIC_VAR bool fDBGNL_last;
 STATIC_FXN void wr_nl_flush( FILE *ofh ) {
    fputc( '\n', ofh );
-   if( false ) {  // TODO for performance, may want to create a switch to control flushing
+   if( g_fLogFlush ) {
       fflush( ofh );
       }
    }
 
 void DBGNL() {
+   if( fDBGNL_last ) { return; }
+   fDBGNL_last = true;
    auto ofh( ofh_DBG ? ofh_DBG : stdout );
    wr_nl_flush( ofh );
    }
@@ -656,9 +660,12 @@ int DBG( char const *kszFormat, ...  ) {
       fprintf( ofh, "%" PR_TIMET " ", (tnow - log_t0) );
       }
    va_list args;  va_start(args, kszFormat);
-   vfprintf( ofh, kszFormat, args );
+   const auto chWr( vfprintf( ofh, kszFormat, args ) );
    va_end(args);
-   wr_nl_flush( ofh );
+   if( chWr ) {
+      wr_nl_flush( ofh );
+      fDBGNL_last = false;
+      }
    return 1; // so we can use short-circuit bools like (DBG_X && DBG( "got here" ))
    }
 

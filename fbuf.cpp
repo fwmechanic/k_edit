@@ -227,7 +227,7 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
       for( auto ix(2) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) { // special range: [ix-1] && [ix+1] defined for all ix!
          milliQ[ix] = ( (1000*d_firstIndentAt[ix]) / static_cast<double>( d_firstIndentAt[ix-1] + d_firstIndentAt[ix+1] + 1 ) );
          }
-      1 && DBG( "indent=%% @ %u 2=%u 3=%u 4=%u 5=%u 6=%u 7=%u 8=%u"
+      0 && DBG( "indent=%% @ %u 2=%u 3=%u 4=%u 5=%u 6=%u 7=%u 8=%u"
          , d_sampleCount
          , milliQ[ 2]
          , milliQ[ 3]
@@ -255,7 +255,7 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
             && (ThisIndentCount > (d_firstIndentAt[ix-1] * PrevNextIndentCountVsThisCount))
             && (ThisIndentCount > (d_firstIndentAt[ix+1] * PrevNextIndentCountVsThisCount))
            ) {
-            1 && DBG( "indent=? @ %u 1=%u 2=%u 3=%u 4=%u 5=%u 6=%u 7=%u 8=%u 9=%u"
+            0 && DBG( "indent=? @ %u 1=%u 2=%u 3=%u 4=%u 5=%u 6=%u 7=%u 8=%u 9=%u"
                , d_sampleCount
                , d_firstIndentAt[ 1]
                , d_firstIndentAt[ 2]
@@ -267,7 +267,7 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
                , d_firstIndentAt[ 8]
                , d_firstIndentAt[ 9]
                );
-            1 && DBG( "indent=%d @ %d %s", ix, d_sampleCount, fLastLine ? "LAST" : "" );
+            0 && DBG( "indent=%d @ %d %s", ix, d_sampleCount, fLastLine ? "LAST" : "" );
             return ix; // clear winner
             }
          }
