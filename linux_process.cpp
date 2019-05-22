@@ -30,49 +30,53 @@
 enum { INVALID_ProcessId = 0, INVALID_fd = -1, PIPE_RD=0, PIPE_WR=1 };
 
 class piped_forker {
-   int     fd  =  INVALID_fd;
-   int     pid =  INVALID_ProcessId;
-   int     exit_status = -1;
+   int     d_fd  =  INVALID_fd;
+   int     d_pid =  INVALID_ProcessId;
+   int     d_exit_status = -1;
    int     ReapChild();
 public:
    piped_forker() {}
    bool    ForkChildOk( const char *command );
-   int     Status() const { return exit_status; }
+   int     Status() const {  1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
+      return d_exit_status;
+      }
    ssize_t Read( void *dest, ssize_t sizeofDest );
    };
 
 int piped_forker::ReapChild() {
-   if( fd != INVALID_fd ) {
-      close( fd );
-      fd = INVALID_fd;
+   if( d_fd != INVALID_fd ) {
+      close( d_fd );
+      d_fd = INVALID_fd;
       }
-   if( pid != INVALID_ProcessId ) {
+   if( d_pid != INVALID_ProcessId ) {
+      kill( d_pid, SIGHUP );
+      alarm(1);
       int status;
-      waitpid( pid, &status, 0 );
+      waitpid( d_pid, &status, 0 );               1 && DBG( "%s waitpid status=%d", __func__, status );
       alarm(0);
-      exit_status = WEXITSTATUS( status );
+      d_exit_status = WEXITSTATUS( status );      1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
       }
-   return exit_status;
+   return d_exit_status;
    }
 
 ssize_t piped_forker::Read( void *dest, ssize_t sizeofDest ) {
-   if( fd == INVALID_fd ) {
+   if( d_fd == INVALID_fd ) {
       return 0;
       }
-   const auto rv( read( fd, dest, sizeofDest ) );  0 && DBG( "%s-[%d] %ld", __func__, fd, rv );
+   const auto rv( read( d_fd, dest, sizeofDest ) );  0 && DBG( "%s-[%d] %ld", __func__, d_fd, rv );
    if( rv <= 0 ) { ReapChild(); }
    return rv;
    }
 
 bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'", __func__, getpid(), command );
-   pid = INVALID_ProcessId;
+   d_pid = INVALID_ProcessId;
    int pipefds[2];
    if( pipe( pipefds ) == -1 ) {
       perror( "pipe" );
       return false;
       }
 
-   switch( (pid=fork()) ) {
+   switch( (d_pid=fork()) ) {
       case -1: perror( "fork" );  /* fail */
                return false;
 
@@ -89,8 +93,8 @@ bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'
 
       default: close(  pipefds[PIPE_WR] );  /* parent */
                // fcntl(  pipefds[PIPE_RD], F_SETFL, O_NONBLOCK );
-               fd = pipefds[PIPE_RD];
-               DBG( "%s-(from %d) fork parent; child=%d, fd=%d; '%s'", __func__, getpid(), pid, fd, command );
+               d_fd = pipefds[PIPE_RD];
+               DBG( "%s-(from %d) fork parent; child=%d, d_fd=%d; '%s'", __func__, getpid(), d_pid, d_fd, command );
                return true;
       }
    }
