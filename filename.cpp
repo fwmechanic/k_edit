@@ -60,14 +60,14 @@ stref Path::RefExt( stref src ) { // a.k.a. IdxOfFnm()
    }
 
 bool Path::IsDot( stref str ) { // truly useless!
-   return str ==                      "."
+   return str ==                    "."
        || str.ends_with( DIRSEP_STR "."             )
        || str.ends_with( DIRSEP_STR "."  DIRSEP_STR )
        ;
    }
 
 bool Path::IsDotDot( stref str ) {
-   return str ==                      ".."
+   return str ==                    ".."
        || str.ends_with( DIRSEP_STR ".."            )
        || str.ends_with( DIRSEP_STR ".." DIRSEP_STR )
        ;

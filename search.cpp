@@ -1994,16 +1994,35 @@ bool ARG::balln() {
 //-------------------------- pword/mword
 
 class CharWalkerPMWord : public CharWalker_ {
-   bool d_fPMWordSearchMeta;
+   bool d_fMeta;
 public:
-   CharWalkerPMWord( bool fPMWordSearchMeta ) : d_fPMWordSearchMeta( fPMWordSearchMeta ) {}
+   CharWalkerPMWord( bool fPMWordSearchMeta ) : d_fMeta( fPMWordSearchMeta ) {}
    CheckNextRetval VCheckNext( stref rl, const Point &curPtIx, COL tabWidth ) override;
    };
 
+STATIC_FXN bool firstCharOfWord( stref rl, COL ix ) {
+   // extreme hack: detect various leading-punctuation-heavy path edges:
+   //   "/[A-za-z]" [1], ".[\\/]", "..[\\/]" as first char of word
+   const auto preblank( ix == 0 || isblank( rl[ix-1] ) );
+   return (DIRSEP_CH=='/'
+           && '/' == rl[ix] && preblank && (ix+1 < rl.length() && isalpha( rl[ix+1] ))  // [1] NB: ASSUMES that unix rootdirnm SHALL begin with ALPHA!!!
+          )
+       || (   '.' == rl[ix] && preblank && (   (ix+1 < rl.length()                    && Path::IsDirSepCh( rl[ix+1] ))
+                                            || (ix+2 < rl.length() && '.' == rl[ix+1] && Path::IsDirSepCh( rl[ix+2] ))
+                                           )
+          );
+   }
+
 CheckNextRetval CharWalkerPMWord::VCheckNext( stref rl, const Point &curPtIx, COL tabWidth ) {
-   if( false == d_fPMWordSearchMeta ) { // rtn true iff curPtIx.col is FIRST CHAR OF WORD
+   if( !d_fMeta ) {  // rtn true iff curPtIx.col is FIRST CHAR OF WORD
+      if( firstCharOfWord( rl, curPtIx.col ) ) {
+         goto MOV_TO_CURPT;       // firstCharOfWord hack PART A: leading '/' in "/usr/bin" IS the first char of a word
+         }
       if( !isWordChar( rl[curPtIx.col] ) || (curPtIx.col > 0 && isWordChar( rl[curPtIx.col-1] )) ) {
          return CONTINUE_SEARCH;
+         }
+      if( curPtIx.col > 0 && firstCharOfWord( rl, curPtIx.col-1 ) ) {
+         return CONTINUE_SEARCH;  // firstCharOfWord hack PART B: 'u' in "/usr/bin" IS NOT the first char of a word
          }
 MOV_TO_CURPT:
       g_CurView()->MoveCursor( Point( curPtIx.lin, ColOfFreeIdx( tabWidth, rl, curPtIx.col ) ) );
