@@ -572,7 +572,7 @@ STATIC_FXN bool CharWalkToEnd( bool fWalkFwd, bool fVisibleOnly, PFBUF pFBuf, co
    0 && DBG( "%s: @(y=%d,x=%d) LINEs(%d->%d)", __func__, start.lin, start.col, start.lin, yLast );
    const auto tw( pFBuf->TabWidth() );
    #define CHECK_BREAK                          \
-           if( ExecutionHaltRequested() ) {     \
+           if( 0==(curPt.lin & 0x1FF) && ExecutionHaltRequested() ) { \
               FlushKeyQueuePrimeScreenRedraw(); \
               return false;                     \
               }
@@ -1313,7 +1313,7 @@ STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
       }
    else {
       Path::str_t pbuf;
-      while( pGen->VGetNextName( pbuf ) ) {
+      while( pGen->VGetNextName( pbuf ) ) {  // VGetNextName returns false on user break (quit) via SetUserChoseEarlyCmdTerminate()
          MFReplaceProcessFile( pbuf.c_str(), &mrcw );
          }
       // Lua event handler GETFOCUS is called by PutFocusOn() and
