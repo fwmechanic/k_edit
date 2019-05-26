@@ -65,6 +65,7 @@ namespace Path {
    PCChar STIL  InvalidFnmChars()     { return "<>|*?"; }
    PCChar STIL  WildcardFnmChars()    { return "*?"; }
    PCChar STIL  EnvSepStr()           { return ";"; }
+   extern bool  IsAbsolute   ( stref name );
    extern bool  IsLegalFnm   ( stref name );
    extern bool  IsDot        ( stref str );
    extern bool  IsDotDot     ( stref str );

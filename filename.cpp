@@ -196,3 +196,12 @@ Path::str_t Path::GetCwd_ps() {
 bool Path::IsLegalFnm( stref name ) {
    return name.find_first_of( Path::InvalidFnmChars() ) == stref::npos;
    }
+
+bool Path::IsAbsolute( stref name ) {
+   if( name.length() == 0 ) { return false; }
+   if( name.length() == 1 ) { return IsDirSepCh( name[0] ); }
+   if( name.length() >= 3 ) {
+      return isalpha( name[0] ) && name[1] == ':' && IsDirSepCh( name[2] );
+      }
+   return false;
+   }
