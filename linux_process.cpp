@@ -285,30 +285,38 @@ STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
    return false;
    }
 
-STATIC_CONST char cli_fromxclip[] = "xclip -selection c -o";
-STATIC_CONST char xclip_rderr[] = "X clipboard read (xclip -selection c -o) failed?";
-STATIC_CONST char xclip_notinst[] = "xclip not in PATH; apt-get install xclip needed?";
-
-STATIC_FXN bool xclip_installed( std::string &dest ) {
-   if( popen_rd_ok( dest, "command -v xclip" ) ) {
-      DBG( "%s: %s", __func__, dest.c_str() );
-      return true;
-      }
-   dest = xclip_notinst;
-   return false;
+STATIC_FXN bool cmd_available( PCChar cmdnm ) {
+   FmtStr<11+256+1> cmdline( "command -v %s" , cmdnm );
+   std::string dest;
+   const auto rv( popen_rd_ok( dest, cmdline.k_str() ) );      DBG( "%s: '%s' -> '%s'", __func__, cmdline.k_str(), dest.c_str() );
+   return rv;
    }
 
 STATIC_FXN bool xclip_read( std::string &dest ) {
-   if( popen_rd_ok( dest, cli_fromxclip ) ) {
+   STATIC_VAR std::string cli_fromxclip;
+   if( cli_fromxclip.empty() ) {
+      std::string emsg, em_xclip, em_iconv;
+      const auto xci( cmd_available( "xclip" ) );
+      const auto ici( cmd_available( "iconv" ) );
+      if( !xci ) {
+         dest = "xclip not in PATH; apt-get install xclip needed?";
+         return false;  // fatal error
+         }
+      cli_fromxclip.append( "xclip -selection c -o" );
+      if( ici ) { // I believe iconv is a CORE package, so this is not expected.  But check anyway.
+         cli_fromxclip.append( " | iconv -f UTF8 -t US-ASCII//TRANSLIT" );
+         }
+      }
+   if( popen_rd_ok( dest, cli_fromxclip.c_str() ) ) {
       return true;
       }
-   dest = xclip_rderr;
+   dest = "X clipboard read (xclip -selection c -o) failed?";
    return false;
    }
 
 bool ARG::fromwinclip() {
    std::string dest;
-   if( xclip_installed( dest ) && xclip_read( dest ) ) {
+   if( xclip_read( dest ) ) {
       Clipboard_PutText_Multiline( dest );
       Msg( "X clipboard -> <clipboard> ok" );
       return true;
@@ -318,7 +326,7 @@ bool ARG::fromwinclip() {
    }
 
 void WinClipGetFirstLine( std::string &dest ) {
-   if( xclip_installed( dest ) && xclip_read( dest ) ) {
+   if( xclip_read( dest ) ) {
       const auto eol( StrToNextOrEos( dest.c_str(), "\n" ) );
       dest.resize( eol - dest.c_str() );
       }
