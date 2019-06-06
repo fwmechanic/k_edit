@@ -890,7 +890,7 @@
 
 [ftype:kdb]
    rmargin:80
-   mfspec_:= "%~dp0*%~x0"
+   # mfspec_:= "%~dp0*%~x0"  works but stickiness confuses tags-file (<tagged-files>)-based mfgrep behavior.
 
 [ftype:awk]
    wordchars:_
