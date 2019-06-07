@@ -570,6 +570,10 @@ LUAFUNC_(current) {
    R_str( buf );
 #else
    char *mallocd_cwd = getcwd( NULL, 0 );
+   // This code is relying on GNU-extension-specific behavior of getcwd, which
+   // specifies that a NULL first parameter will cause the function to return a
+   // pointer to a mallocd block which the caller must free.
+   if( !mallocd_cwd ) { R_nil(); }  // CID186315 protect against non-GNU behavior
    luaL_Buffer buf;
    luaL_buffinit(L, &buf);
    // convention in _dir module is that returned directories have trailing sep
