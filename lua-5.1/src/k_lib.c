@@ -433,7 +433,7 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
             if( stat( buf, &sbuf ) == 0 ) {
                if( sbuf.st_mode & S_IFDIR ) {
                   int len = strlen( buf );
-                  if( len+1 > sizeof buf ) {
+                  if( len+1 > sizeof( buf )-1 ) {
                      A_PUSH( "** TRUNCATED **" );
                      }
                   else {
@@ -564,7 +564,7 @@ LUAFUNC_(current) {
 
    // convention in _dir module is that returned directories have trailing sep
    const int len = strlen( buf );
-   if( len > sizeof( buf )-2 )  { R_nil(); }
+   if( len+1 > sizeof( buf )-1 )  { R_nil(); }
    buf[len  ] = sep;
    buf[len+1] = 0  ;
    R_str( buf );
