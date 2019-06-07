@@ -375,7 +375,7 @@ static void close_func (LexState *ls) {
   lua_assert(fs->bl == NULL);
   ls->fs = fs->prev;
   /* last token read was anchored in defunct function; must reanchor it */
-  if (fs) anchor_token(ls);
+  /* if (fs) */ anchor_token(ls);  /* CID23957: 'if (fs)' nonsensical since fs deref'd above; in Lua 5.2 'if (fs)' is removed */
   L->top -= 2;  /* remove table and prototype from the stack */
 }
 
