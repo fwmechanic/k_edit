@@ -1847,7 +1847,6 @@ bool ARG::psearch()   { return FindNextMatch( *this, smFwd    ); }
 
 class CharWalkerPBal : public CharWalker_ {
    const bool d_fFwd;
-   const bool d_fHiliteMatch;
    const stref d_opens, d_closes;
    char       d_stack[100];
    int        d_stackIx;
@@ -1857,9 +1856,8 @@ class CharWalkerPBal : public CharWalker_ {
                           d_stack[ d_stackIx++ ] = ch; }
    char Pop()           { const char rv(d_stack[ --d_stackIx ]); 0 && DBG("Pop [%3d]'%c'",d_stackIx,rv); return rv; }
 public:
-   CharWalkerPBal( bool fFwd, bool fHiliteMatch, char chStart )
+   CharWalkerPBal( bool fFwd, char chStart )
       : d_fFwd( fFwd )
-      , d_fHiliteMatch( fHiliteMatch )
       , d_opens ( fFwd ? g_delims : g_delimMirrors )
       , d_closes( fFwd ? g_delimMirrors: g_delims  )
       , d_stackIx( 0 )
@@ -1913,16 +1911,14 @@ bool View::PBalFindMatching( bool fVisibleOnly, Point *pPt ) {
    if( !startCh ) { return false; }
                                               0 && DBG( "%s: %c in '%s'?", __func__, startCh, g_delims       );
                                               0 && DBG( "%s: %c in '%s'?", __func__, startCh, g_delimMirrors );
-   bool fSetHilite = false;
    bool fSearchFwd;
    if(      strchr( g_delims      , startCh ) ) { fSearchFwd = true;  }
    else if( strchr( g_delimMirrors, startCh ) ) { fSearchFwd = false; }
    else return false;
-   CharWalkerPBal chSrchr( fSearchFwd, fSetHilite, startCh );
+   CharWalkerPBal chSrchr( fSearchFwd, startCh );
    CharWalkToEnd( fSearchFwd, fVisibleOnly, FBuf(), Cursor(), chSrchr );
-   if( chSrchr.ClosingMatchFound() ) {
-      if( pPt )        { *pPt = chSrchr.ClosingPt();                     }
-      if( fSetHilite ) { SetMatchHiLite( chSrchr.ClosingPt(), 1, true ); }
+   if( chSrchr.ClosingMatchFound() && pPt ) {
+      *pPt = chSrchr.ClosingPt();
       }
    return chSrchr.ClosingMatchFound();
    }
