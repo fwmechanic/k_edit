@@ -5,6 +5,8 @@
 */
 
 
+#include "fix_coverity.h"
+
 #include <stdlib.h>
 #include <math.h>
 
@@ -260,4 +262,3 @@ LUALIB_API int luaopen_math (lua_State *L) {
 #endif
   return 1;
 }
-

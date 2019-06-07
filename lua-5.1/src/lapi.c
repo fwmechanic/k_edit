@@ -6,6 +6,7 @@
 
 
 #include <assert.h>
+#include "fix_coverity.h"
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
@@ -1084,4 +1085,3 @@ LUA_API const char *lua_setupvalue (lua_State *L, int funcindex, int n) {
   lua_unlock(L);
   return name;
 }
-

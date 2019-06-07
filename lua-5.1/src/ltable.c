@@ -18,6 +18,7 @@
 ** Hence even when the load factor reaches 100%, performance remains good.
 */
 
+#include "fix_coverity.h"
 #include <math.h>
 #include <string.h>
 

@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <direct.h>
 #else
+#include "fix_coverity.h"
 #include <unistd.h>  // readlink etc
 #include <sys/types.h>
 #include <dirent.h>

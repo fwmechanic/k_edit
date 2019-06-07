@@ -5,6 +5,8 @@
 */
 
 
+#include "fix_coverity.h"
+
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>

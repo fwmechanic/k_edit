@@ -5,6 +5,8 @@
 */
 
 
+#include "fix_coverity.h"
+
 #include <stdlib.h>
 
 #define lcode_c

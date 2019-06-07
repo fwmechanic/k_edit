@@ -4,6 +4,8 @@
 ** See Copyright Notice in lua.h
 */
 
+#include "fix_coverity.h"
+
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
