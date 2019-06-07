@@ -326,7 +326,7 @@ STATIC_FXN int l_FBUF_function_new( lua_State *L ) {
    }
 
 STATIC_FXN int l_FBUF_function_new_may_create( lua_State *L ) {
-   const auto filename( So0_(1) );
+   const auto filename( S_(1) );
    return l_construct_FBUF( L, OpenFileNotDir_CreateSilently( filename ) );
    }
 
