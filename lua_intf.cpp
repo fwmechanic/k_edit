@@ -744,7 +744,7 @@ STATIC_FXN bool loadLuaFileFailed( lua_State **pL, PCChar fnm ) {
            break;
       }
    FDBG && DBG( "%s+3 L=%p fLoadOK=%c",  __func__, *pL, fLoadOK?'t':'f' );
-   if( !fLoadOK && *pL ) { DBG( "%s failed", __func__ );
+   if( !fLoadOK ) { DBG( "%s failed", __func__ );
       init_lua_ok( pL );
       }
    FDBG && DBG( "%s- L=%p fLoadOK=%c",  __func__, *pL, fLoadOK?'t':'f' );
