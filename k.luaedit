@@ -2910,9 +2910,19 @@ do
       end
 
 -- [[
-   local hpat_m = '^@@ %-(%d+)$1 %+(%d+)$1 @@'
-   local hpat_0 = hpat_m:gsub( '$1', ',(%%d+)' )   -- printf( 'hpat_0=%s', hpat_0 )
-   local hpat_1 = hpat_m:gsub( '$1', '' )          -- printf( 'hpat_1=%s', hpat_1 )
+   local hpat_1234,hpat_13,hpat_134,hpat_123
+   local at,sp = '@@',' '
+   do
+      local cd = '(%d+)'
+      local cd2 = cd..','..cd
+      local min,pls = '%-','%+'
+      local function hpatw( st ) return '^'..at..sp..st..sp..at end
+      hpat_1234 = hpatw( min..cd2..sp..pls..cd2 )
+      hpat_13   = hpatw( min..cd ..sp..pls..cd  )
+      hpat_134  = hpatw( min..cd ..sp..pls..cd2 )
+      hpat_123  = hpatw( min..cd2..sp..pls..cd  )
+   end
+
    local function gofileline_diff( arg )
       local fbuf, cursorY = arg.fbuf, arg.cursorY
       printf( "gofileline_diff(fbuf.nm='%s',line=%d)", fbuf:Name(), cursorY )
@@ -2934,10 +2944,16 @@ do
             if str:match( labPat ) then
                lines_above_base = 1+ lines_above_base
                printf( "gofileline_diff: lines_above_base=%d", lines_above_base )
-            else
-               local n1,n2,n3,n4 = str:match( hpat_0 )
+            elseif str:match( '^'..at..sp ) then
+               local n1,n2,n3,n4 = str:match( hpat_1234 )
                if not n3 then
-                  n1,n3 = str:match( hpat_1 )
+                  n1,n3 = str:match( hpat_13 )
+                  if not n3 then
+                     n1,n3,n4 = str:match( hpat_134 )
+                     if not n3 then
+                        n1,n2,n3 = str:match( hpat_123 )
+                        end
+                     end
                   end
                if n3 then
                   local nn = chs=='-' and n1 or n3
@@ -3122,7 +3138,7 @@ do
 
    AddEdFxn{ name = "gotofileline", key = "alt+g", attr = NOARG+BOXSTR+BOXARG+TEXTARG, help = "jumps to the file location described on the current line"
       , NOARG   = function( arg )
-                  if arg.fbuf:FTypeNmEq( "diff" ) then return nil ~= gofileline_diff( arg ) end
+                  if arg.fbuf:FTypeNmEq( "diff" ) and nil ~= gofileline_diff( arg ) then return true end
                   return nil ~= gofileline( grepBufSrcFnm( arg.fbuf, 2 ), arg.fbuf:GetLineRaw( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
                   end
       , TEXTARG = function( arg )
