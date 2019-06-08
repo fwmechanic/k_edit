@@ -5045,29 +5045,31 @@ assert( _bin.shiftl( _bin.bits( 31 ), 1 ) == 0xFFFFFFFE )
 
 printf( "cwd=%s", _dir.current( dirsep_preferred ) )
 
---[[
+-- assert( false )  -- assert at compile time causes PROCESS CRASH
 
-assert( _dir.create( ".." ) )
-assert( _dir.create( "."  ) )
+if false then
 
-do
-   local dirs = _dir.read_names( "."..dirsep_preferred, 1 )    -- read once to fill the filesystem/OS cache
-   local start = _win.NowSeconds()
-   local dirs = _dir.read_dirnames( "."..dirsep_preferred, 1 )
-   printf( "_dir.read_dirnames took %f", _win.NowSeconds() - start )
-end
-
-do
-   local start = _win.NowSeconds()
-   local dirs = _dir.read_names( "."..dirsep_preferred, 1 )
-   printf( "_dir.read_names    took %f", _win.NowSeconds() - start )
-end
-
-for _,dir in ipairs(dirs) do
-   printf( "   %s", dir )
+   _dir.create( ".." )
+   _dir.create( "."  )
+   do
+      local dirs = _dir.read_names( "."..dirsep_preferred, 1 )    -- read once to fill the filesystem/OS cache
+      local start = _win.NowSeconds()
+      local dirs = _dir.read_dirnames( "."..dirsep_preferred, 1 )
+      printf( "_dir.read_dirnames took %f", _win.NowSeconds() - start )
    end
 
---]]
+   do
+      local start = _win.NowSeconds()
+      local dirs = _dir.read_names( "."..dirsep_preferred, 1 )
+      printf( "_dir.read_names    took %f", _win.NowSeconds() - start )
+      if false then
+         for _,dir in ipairs(dirs) do
+            printf( "   %s", dir )
+            end
+         end
+   end
+
+   end
 
 function ReadPseudoFileOk_FROM_C( fb )  -- return Lua true (not (rv==nil or rv==false)) if this code rewrites fb content
    print( "ReadPseudoFileOk_FROM_C("..fb:Name()..")" )
