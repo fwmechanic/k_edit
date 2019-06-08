@@ -2972,7 +2972,7 @@ do
       local msg1, lnum, msg2
       if fnm then -- <grep_n> pseudofile hyperlink: dest fnm
          local xLineBegin
-         lnum,xLineBegin = lbuf:match( "^%s*(%d+)%s()" )
+         lnum,xLineBegin = lbuf:match( "^%s*(%d+)[%s:]()" )  -- support `grep -n` output too ':'
          if not lnum then return ParseErr() end
          fnm = fnm:gsub( "^\"(.*)\"$", function(tok) return tok end )  -- in <grep> files, fnames containing spaces are wrapped in '"': unwrap
 
