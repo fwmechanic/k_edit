@@ -2957,7 +2957,15 @@ do
       end
 --]]
 
-   function gofileline( l1buf, lbuf, fSaveLocn, fnmToNotMatch )
+   local function grepBufSrcFnm( fbuf, maxlines )
+      for yy=1,maxlines do
+         local st = fbuf:GetLine( yy )
+         local fnm = st:match( "^%*GREP%* (%S.+%S)$" )
+         if fnm then return fnm end
+         end
+      end
+
+   function gofileline( grepSrcFnm, lbuf, fSaveLocn, fnmToNotMatch )
       fnm_to_f_in_tree = nil
 
       local function GotoFileYX_Msg( fnm, lnum, col, msg, patnm, cols )
@@ -2968,8 +2976,7 @@ do
 
       local function ParseErr() Msgf( "Parse of line failed!  Update gofileline() in k.lua:%s", lbuf ) end
 
-      local fnm = l1buf:match( "^%*GREP%* (.+)$" )
-      local msg1, lnum, msg2
+      local fnm, msg1, msg2, lnum = grepSrcFnm
       if fnm then -- <grep_n> pseudofile hyperlink: dest fnm
          local xLineBegin
          lnum,xLineBegin = lbuf:match( "^%s*(%d+)[%s:]()" )  -- support `grep -n` output too ':'
@@ -3116,10 +3123,10 @@ do
    AddEdFxn{ name = "gotofileline", key = "alt+g", attr = NOARG+BOXSTR+BOXARG+TEXTARG, help = "jumps to the file location described on the current line"
       , NOARG   = function( arg )
                   if arg.fbuf:FTypeNmEq( "diff" ) then return nil ~= gofileline_diff( arg ) end
-                  return nil ~= gofileline( arg.fbuf:GetLine( 1 ), arg.fbuf:GetLineRaw( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
+                  return nil ~= gofileline( grepBufSrcFnm( arg.fbuf, 2 ), arg.fbuf:GetLineRaw( arg.cursorY ), arg.fbuf:Name() ~= nextmsgFBufName() )
                   end
       , TEXTARG = function( arg )
-                  return nil ~= gofileline( ""                   , arg.text                          , arg.fbuf:Name() ~= nextmsgFBufName() )
+                  return nil ~= gofileline( nil                         , arg.text                          , arg.fbuf:Name() ~= nextmsgFBufName() )
                   end
       }
 end
@@ -4454,7 +4461,7 @@ do
                end
             end
 
-         local fnm = gofileline( "", ldata, false, ifx(fToNextFile, prevFnmGoneTo, nil) )
+         local fnm = gofileline( nil, ldata, false, ifx(fToNextFile, prevFnmGoneTo, nil) )
          if fnm then
             prevFnmGoneTo = fnm
             -- DBG(tostring(nmvw)..":SetLineCompile="..curline)
