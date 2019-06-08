@@ -407,7 +407,7 @@ STATIC_FXN int lua_atpanic_handler( lua_State *L ) {
    DBG( "########################################## %s called ##########################################", __func__ );
    DBG( "###  %s", msg );
    DBG( "########################################## %s called ##########################################", __func__ );
-   SW_BP;
+   // SW_BP;
    exit(1);
    }
 
@@ -458,18 +458,9 @@ STATIC_FXN int lh_pcall_inout (lua_State *L, int narg, int nres) { enum { DB=0 }
   return pcall_rv;
 }
 
-STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L)=nullptr, void (*openlibs)(lua_State *L)=nullptr ); // forward
-
 STATIC_FXN void lh_handle_pcall_err( lua_State *L, bool fCompileErr=false ) { // c:\klg\sn\k\util.lua:107: variable 'at' is not declared
    linebuf msg;
    CopyLuaString( BSOB(msg), L, -1 );
-   // if( fCompileErr )
-   //    {
-   //    init_lua_ok( &L );  // shutdown Lua so that core->Lua calls made below will short-circuit vs. causing a Lua panic
-   //    Assert( L == 0 );
-   //    L = 0;
-   //    }
-
    DBG( "L=%p, LuaMsg='%s'", L, msg );
    const auto tp( fCompileErr?"compile ":"run" );
    // STATIC_CONST char rtErrTmplt[] = "*** Lua %stime error";
@@ -653,74 +644,66 @@ STATIC_FXN void l_hook_handler( lua_State *L, lua_Debug *ar ) {
       }
    }
 
-void LuaClose() {
-   for( const auto &gl : g_L ) {
-      if( *gl ) {
-         init_lua_ok( gl );
-         }
+STATIC_FXN void cleanup_lua( lua_State *L ) {
+   if( L ) { 0 && DBG( "#######################  CLOSING current Lua session  ###################" );
+      auto cleanup = (void (*)(lua_State *L))LREGP_get_cleanup( L );
+      if(  cleanup ) { cleanup( L ); }
+      lua_close( L );
       }
    }
 
-STATIC_FXN bool init_lua_ok( lua_State **pL, void (*cleanup)(lua_State *L), void (*openlibs)(lua_State *L) ) {
-   if( *pL ) { 0 && DBG( "#######################  CLOSING current Lua session  ###################" );
-      if( !cleanup ) { cleanup = (void (*)(lua_State *L))LREGP_get_cleanup( *pL ); }
-      if(  cleanup ) { cleanup( *pL ); }
-      lua_close( *pL );
-      *pL = nullptr;
+STATIC_FXN void cleanup_plua( lua_State *&L ) {
+   if( L ) { 0 && DBG( "#######################  CLOSING current Lua session  ###################" );
+      cleanup_lua( L );
+      L = nullptr;
       }
-   if( !openlibs ) {
-      return true;
+   }
+
+void LuaClose() {
+   for( const auto gl : g_L ) {
+      cleanup_plua( *gl );
       }
+   }
+
+STATIC_FXN lua_State *init_lua_ok( void (*cleanup)(lua_State *L), void (*openlibs)(lua_State *L) ) {
+   if( !openlibs ) { return nullptr; }
    s_pFbufLuaLog->MakeEmpty();
    s_pFbufLuaLog->MoveCursorToBofAllViews();
-   0 && DBG( "%s+ *(%p)=init'ing", __func__, pL );
-   { // NB: each Lua 5.1.2 lua_newstate consumes 2.5KB!  20070724 kgoodwin
-    const auto luaHeapBytesAtStart( LuaHeapSize() );
-    *pL = lua_newstate( l_alloc, nullptr );
-    const auto heapChange( LuaHeapSize() - luaHeapBytesAtStart );
-    if( !*pL ) { DBG( "%s- lua_newstate FAILED", __func__ );
-       return false;
-       }
-    DBG_LUA_ALLOC && DBG( "%s lua_newstate (%" PR_SIZET " bytes)  ******************************************", __func__, heapChange );
-   }
-   {
-   lua_getfield( *pL, LUA_REGISTRYINDEX, "schickelgruber-nickel" );
-   Assert( lua_isnil( *pL, -1 ) );
-   lua_pop( *pL, 1 );
-   }
-   lua_atpanic( *pL, lua_atpanic_handler );
-   lua_sethook( *pL, l_hook_handler, LUA_MASKLINE | LUA_MASKCOUNT, INT_MAX );
-   LuaCallCleanup( *pL );
-   openlibs( *pL );
+   0 && DBG( "%s+", __func__ );
+   // NB: each Lua 5.1.2 lua_newstate consumes 2.5KB!  20070724 kgoodwin
+   const auto luaHeapBytesAtStart( LuaHeapSize() );
+   lua_State *L = lua_newstate( l_alloc, nullptr );
+   const auto heapChange( LuaHeapSize() - luaHeapBytesAtStart );
+   if( !L ) { DBG( "%s- lua_newstate FAILED", __func__ );
+      return nullptr;
+      }
+   DBG_LUA_ALLOC && DBG( "%s lua_newstate (%" PR_SIZET " bytes)  ******************************************", __func__, heapChange );
+   lua_atpanic( L, lua_atpanic_handler );
+   lua_sethook( L, l_hook_handler, LUA_MASKLINE | LUA_MASKCOUNT, INT_MAX );
+   LuaCallCleanup( L );
+   openlibs( L );
    // override package.path so required Lua code is only looked for in sm dir as editor exe
    // (I used to setenv("LUA_PATH") but that impacted child processes that ran Lua.exe)
-   lua_getglobal( *pL, "package" );  Assert( lua_istable( *pL, -1 ) );  // NB: package table does not exist until l_OpenStdLibs() has been called!
-   setfield( *pL, "path", FmtStr<_MAX_PATH>( "%s?.lua", getenv( "KINIT" ) ) );
-   LREGP_set_cleanup( *pL, reinterpret_cast<void *>(cleanup) );
-   0 && DBG( "%s- *(%p)=%p", __func__, pL, *pL );
-   return true;
+   lua_getglobal( L, "package" );  Assert( lua_istable( L, -1 ) );  // NB: package table does not exist until l_OpenStdLibs() has been called!
+   setfield( L, "path", FmtStr<_MAX_PATH>( "%s?.lua", getenv( "KINIT" ) ) );
+   LREGP_set_cleanup( L, reinterpret_cast<void *>(cleanup) );
+   0 && DBG( "%s- %p", __func__, L );
+   return L;
    }
 
-enum { FDBG=0 };
-
-STATIC_FXN bool loadLuaFileFailed( lua_State **pL, PCChar fnm ) {
-   FDBG && DBG( "%s+1 L=%p fnm='%s'",  __func__, *pL, fnm );
-   auto fLoadOK(false);
-   const auto luaRC( luaL_loadfile( *pL, fnm ) );
-   FDBG && DBG( "%s+2 L=%p luaRC=%u",  __func__, *pL, luaRC );
+STATIC_FXN bool loadLuaFileOk( lua_State *L, PCChar fnm ) { enum { DB=0 };
+   auto fLoadOK(false);                                        DB && DBG( "%s+1 L=%p fnm='%s'",  __func__, L, fnm );
+   const auto luaRC( luaL_loadfile( L, fnm ) );                DB && DBG( "%s+2 L=%p luaRC=%u",  __func__, L, luaRC );
    switch( luaRC ) {
-      case LUA_ERRFILE:    DBG( "LUA_ERRFILE"   ); lh_handle_pcall_err( *pL, true ); break;
-      case LUA_ERRSYNTAX:  DBG( "LUA_ERRSYNTAX" ); lh_handle_pcall_err( *pL, true ); break;
+      case LUA_ERRFILE:    DBG( "LUA_ERRFILE"   ); lh_handle_pcall_err( L, true ); break;
+      case LUA_ERRSYNTAX:  DBG( "LUA_ERRSYNTAX" ); lh_handle_pcall_err( L, true ); break;
       case LUA_ERRMEM:     Msg( "Lua memory error while loading '%s'"     , fnm );  break;
       default:             Msg( "Unknown Lua error %d loading '%s'", luaRC, fnm );  break;
-      case 0:
-           FDBG && LDS( "LoadLuaFileFailed post-load/pre-pcall", *pL );
+      case 0:                                                  DB && LDS( "loadLuaFileOk luaL_loadfile() OK", L );
            {
-           const auto failed( lh_pcall_inout( *pL, 0, 0 ) );
-           if( failed ) {
-              FDBG && DBG( "%s L=%p docall() Failed",  __func__, *pL );
-              //
-              // NB!  The above docall() runtime includes the COMPILE phase
+           const auto failed( lh_pcall_inout( L, 0, 0 ) );
+           if( failed ) {                                      DB && DBG( "%s L=%p docall() Failed",  __func__, L );
+              // NB!  The above lh_pcall_inout() runtime includes the COMPILE phase
               //      of any modules require()'d by 'fnm'.  As such, even if
               //      we get here, we could be facing a compile error, so we call
               //      lh_handle_pcall_err( , true ) so the L gets shut down
@@ -728,47 +711,46 @@ STATIC_FXN bool loadLuaFileFailed( lua_State **pL, PCChar fnm ) {
               //
               //      20060922 klg
               //
-              lh_handle_pcall_err( *pL, true );
+              lh_handle_pcall_err( L, true );
               }
            else {
-           #if 0
-           // const char tnm[] = "_VERSION";
-           // const char tnm[] = "package.loaded.string.gmatch";
-              const char tnm[] = "dp.help";
-              linebuf lbutt;
-              DBG( "%s = '%s'", tnm, LuaTbl2S( *pL, BSOB(lbutt), tnm, "" ) );
-           #endif
               fLoadOK = true;
               }
            }
            break;
-      }
-   FDBG && DBG( "%s+3 L=%p fLoadOK=%c",  __func__, *pL, fLoadOK?'t':'f' );
-   if( !fLoadOK ) { DBG( "%s failed", __func__ );
-      init_lua_ok( pL );
-      }
-   FDBG && DBG( "%s- L=%p fLoadOK=%c",  __func__, *pL, fLoadOK?'t':'f' );
+      }                                                        DB && DBG( "%s+3 L=%p fLoadOK=%c",  __func__, L, fLoadOK?'t':'f' );
+   !fLoadOK && DBG( "%s failed", __func__ );                   DB && DBG( "%s- L=%p fLoadOK=%c",  __func__, L, fLoadOK?'t':'f' );
    return fLoadOK;
    }
 
 STATIC_FXN bool LuaCtxt_InitOk(
      PCChar filename
-   , char **dupdFnm
-   , lua_State **pL
+   , std::string &dupdFnm
+   , lua_State *&Linout
    , void (*cleanup)  (lua_State *L)
    , void (*openlibs) (lua_State *L)
    , void (*post_load)(lua_State *L)
    ) {
-   if( dupdFnm ) {
-      Free0( *dupdFnm );
-      *dupdFnm = Strdup( filename );
+   dupdFnm.assign( filename );
+   cleanup_plua( Linout );
+   //
+   // Design note: if loadLuaFileOk fails while processing source file(s) for LuaCtxt_Edit (syntax error, assert),
+   // *L remains non-null but defectively constructed lua_State, and a panic (causing process crash) will occur
+   // during execution of LuaCtxt_Edit::Tbl2S() as loadLuaFileOk attempts to perform error-logging/-display via e.g.
+   //
+   //    FBUF::PutFocusOn() -> FTypeSetting::Update() -> LuaCtxt_Edit::Tbl2S()
+   //
+   // Solution: construct local L and DON'T assign to Linout UNTIL successful construction concludes
+   //
+   auto L( init_lua_ok( cleanup, openlibs ) );
+   if( !L ) { return false; }
+   if( !loadLuaFileOk( L, filename ) ) {
+      cleanup_lua( L );
+      return false;
       }
-   if(   init_lua_ok( pL, cleanup, openlibs )
-      && loadLuaFileFailed( pL, filename )
-     ) {
-      post_load( *pL ); // Lua environment-loaded hook-outs
-      }
-   return *pL != nullptr;
+   post_load( L ); // Lua environment-loaded hook-outs
+   Linout = L;     // successful construction concluded
+   return true;
    }
 
 STATIC_FXN void L_restore_save_post_load( lua_State *L ) { // Lua environment-loaded hook-outs
@@ -779,15 +761,15 @@ STATIC_FXN void L_std_openlibs( lua_State *L ) {
 // l_register_EdLib( L ); //BUGBUG remove or trim down?
    }
 
-STATIC_VAR PChar psrc_LuaCtxt_restore_save;
+STATIC_VAR std::string psrc_LuaCtxt_restore_save;
 bool LuaCtxt_State::InitOk( PCChar filename ) {
    return LuaCtxt_InitOk(
-         filename
-      , &psrc_LuaCtxt_restore_save
-      , &L_restore_save
-      ,  nullptr
-      ,  L_std_openlibs
-      ,  L_restore_save_post_load
+        filename
+      , psrc_LuaCtxt_restore_save
+      , L_restore_save
+      , nullptr
+      , L_std_openlibs
+      , L_restore_save_post_load
       );
    }
 
@@ -805,15 +787,15 @@ STATIC_FXN void L_edit_cleanup( lua_State *L ) {
    DeleteAllLuaCmds();
    }
 
-STATIC_VAR PChar psrc_LuaCtxt_Edit;
+STATIC_VAR std::string psrc_LuaCtxt_Edit;
 bool LuaCtxt_Edit::InitOk( PCChar filename ) {
    return LuaCtxt_InitOk(
-         filename
-      , &psrc_LuaCtxt_Edit
-      , &L_edit
-      ,  L_edit_cleanup
-      ,  L_edit_openlibs
-      ,  L_edit_post_load
+        filename
+      , psrc_LuaCtxt_Edit
+      , L_edit
+      , L_edit_cleanup
+      , L_edit_openlibs
+      , L_edit_post_load
       );
    }
 
@@ -823,10 +805,10 @@ bool ARG::lua() {
       return true;
       }
    WriteAllDirtyFBufs();  // In case any required Lua files are dirty. Pseudofiles are not saved.
-   if( psrc_LuaCtxt_Edit ) {
-      const auto pFBuf( OpenFileNotDir_NoCreate( psrc_LuaCtxt_Edit ) );
+   if( !psrc_LuaCtxt_Edit.empty() ) {
+      const auto pFBuf( OpenFileNotDir_NoCreate( psrc_LuaCtxt_Edit.c_str() ) );
       if( !pFBuf ) {
-         return Msg( "'%s' not found?", psrc_LuaCtxt_Edit );
+         return Msg( "'%s' not found?", psrc_LuaCtxt_Edit.c_str() );
          }
       if( g_CurFBuf() == pFBuf ) {
          return LuaCtxt_Edit::InitOk( pFBuf->Name() );
