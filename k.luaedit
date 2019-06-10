@@ -2939,7 +2939,7 @@ do
       local lines_above_base = 0
       for yy=cursorY-1,1,-1 do
          str = fbuf:GetLine( yy )
-         printf( "gofileline_diff: line[%d]=%s", yy,str )
+         printf( "gofileline_diff: line[%d]=%s'", yy,str )
          if nil == ybase then
             if str:match( labPat ) then
                lines_above_base = 1+ lines_above_base
@@ -2958,7 +2958,7 @@ do
                if n3 then
                   local nn = chs=='-' and n1 or n3
                   ybase = nn + lines_above_base
-                  printf( "gofileline_diff: ybase=%d", ybase )
+                  printf( "gofileline_diff: ybase=%d (%d + %d)", ybase, nn, lines_above_base )
                   end
                end
          else

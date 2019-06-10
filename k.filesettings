@@ -126,19 +126,19 @@ do
       dtd         = "xml"         ,
       }
    function FnmToFType( nx )  -- called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
-                                     printf( "k.f.FnmToFType(%s)", nx or "(nil)" )
+                                     -- printf( "k.f.FnmToFType(%s)", nx or "(nil)" )
       if nx and nxToFType_[nx] then
-         local rv = nxToFType_[nx]   printf( "k.f.FnmToFType(%s) => %s", nx, rv )
+         local rv = nxToFType_[nx]   -- printf( "k.f.FnmToFType(%s) => %s", nx, rv )
          return rv
          end
-      for pat,rv in pairs( nxToFType_patterns ) do printf( "k.f.FnmToFType(%s) nx.pat=%s", nx, pat )
-         if string.match( nx, pat ) then           printf( "k.f.FnmToFType(%s) nx.pat=%s => %s", nx, pat, rv )
+      for pat,rv in pairs( nxToFType_patterns ) do -- printf( "k.f.FnmToFType(%s) nx.pat=%s", nx, pat )
+         if string.match( nx, pat ) then           -- printf( "k.f.FnmToFType(%s) nx.pat=%s => %s", nx, pat, rv )
             return rv
             end
          end
-      local ex = ExtOf( nx )         printf( "k.f.FnmToFType(%s) ex=%s", nx, ex or "(nil)" )
+      local ex = ExtOf( nx )         -- printf( "k.f.FnmToFType(%s) ex=%s", nx, ex or "(nil)" )
       if ex and exToFType_[ex] then
-         local rv = exToFType_[ex]   printf( "k.f.FnmToFType(%s) ex=%s => %s", nx, ex, rv )
+         local rv = exToFType_[ex]   -- printf( "k.f.FnmToFType(%s) ex=%s => %s", nx, ex, rv )
          return rv
          end
       -- local nm = NameOf( nx )  printf( "k.f.FnmToFType(%s) -> %s,%s", nx,nm,ex )
