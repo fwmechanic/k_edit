@@ -4098,7 +4098,7 @@ do --[[
 end
 
 if false then  -- test io.popen
-   local cmd = "git rev-parse --is-inside-work-tree"
+   local cmd = "git rev-parse --is-inside-work-tree"  -- returns one line containing "true"
    print( cmd )
    local fh = io.popen( cmd )
    for line in fh:lines() do print( cmd .. ': ' .. line ) end
@@ -4134,11 +4134,16 @@ do -- git/find/ripgrep "integration" (meaning, giving easy user-access
       return git_version
       end
 
-   local function cmd_to_fbuf( cli, st )
+   local function cmd_to_fbuf( cli, st, sortFxn )
       local cli = util.trim( cli:gsub( '"$@"', st ) )
             cli = StrExpandEnvVars( cli )
       local rv = popen_to_ary( cli )
       if rv and #rv > 0 then
+         if sortFxn then  -- if sortFxn is not a function, sort w/default sort operator
+            local sfx = type(sortFxn)=='function' and sortFxn or nil  -- nil -> default sort operator
+            -- print( "doSort==sorting" )
+            table.sort( rv, sfx )
+            end
          ary_to_fbuf( rv, '<cmd:'..cli..'>' )
          end
       Msg( cli )
@@ -4168,7 +4173,7 @@ do -- git/find/ripgrep "integration" (meaning, giving easy user-access
       for _,mgtat in ipairs(ary) do  -- mgtat=menu+git text action table
          local nm, tat = mgtat[1], mgtat[2]
          tat[2] = tat[2] or argToSt
-         local fx = function(arg) cmd_to_fbuf( tat[1], tat[2]( arg ) ) end
+         local fx = function(arg) cmd_to_fbuf( tat[1], tat[2]( arg ), tat.sort ) end
          AddEdFxn{ name = nmpfx..'.'..nm, attr = NOARG+TEXTARG+BOXSTR
             , NOARG   = fx
             , TEXTARG = fx
@@ -4197,15 +4202,26 @@ do -- git/find/ripgrep "integration" (meaning, giving easy user-access
       })
 
    local rg_base = 'rg -n '  -- -n to force line # in output
+   local rsPat = "^([^:].[^:]+):(%d+):"
+   local function rgn_sort( st1, st2 )  -- sort rg -n output
+      local fn1,lnum1 = st1:match( rsPat )
+      local fn2,lnum2 = st2:match( rsPat )
+      assert( fn1       )
+      assert(     lnum1 )
+      assert( fn2       )
+      assert(     lnum2 )
+      return fn1 < fn2 or (fn1 == fn2 and 0+lnum1 < 0+lnum2)
+      end
+
    menu_and_cmdfuncs( 'rg', 'ripgrep', false, {
       -- ripgrep:  https://github.com/BurntSushi/ripgrep/blob/master/README.md
       -- download: https://github.com/BurntSushi/ripgrep/releases
       --   on windows I use GCC build
       --   on ubuntu I d/l & install deb package
-      { "string" , { rg_base..'"$@"'     } },            -- rg.string
-      { "word"   , { rg_base..'-w "$@"'  } },            -- rg.word      arg "BUGBUG" rg.word
-      { "log"    , { rg_base..'"$@" $K_LOGDIR'  } },     -- rg.log       arg "Saved\s\s" rg.log
-      { "logw"   , { rg_base..'-w "$@" $K_LOGDIR'  } },  -- rg.logw      arg "Saved" rg.logw
+      { "string" , { sort=rgn_sort, rg_base..'"$@"'     } },            -- rg.string
+      { "word"   , { sort=rgn_sort, rg_base..'-w "$@"'  } },            -- rg.word      arg "DBG" rg.word
+      { "log"    , { sort=rgn_sort, rg_base..'"$@" $K_LOGDIR'  } },     -- rg.log       arg "Saved\s\s" rg.log
+      { "logw"   , { sort=rgn_sort, rg_base..'-w "$@" $K_LOGDIR'  } },  -- rg.logw      arg "Saved" rg.logw
       })
 end
 
