@@ -2926,19 +2926,19 @@ do
    local function gofileline_diff( arg )
       local fbuf, cursorY = arg.fbuf, arg.cursorY
       printf( "gofileline_diff(fbuf.nm='%s',line=%d)", fbuf:Name(), cursorY )
-      local str = fbuf:GetLine( cursorY )
+      local str = fbuf:GetLineRaw( cursorY )
       local chs = str and str:match( '[ %+%-]' )
       if not chs then
          return Msgf( "gofileline_diff: chs='%s' cannot be sought", chs )
          end
-      chs = chs==' ' and '+' or chs
+      chs = chs==' ' and '-' or chs
       printf( "gofileline_diff: chs=%s line[%d]=%s", chs, cursorY, str )
       local labPat = '^'..'[%'..chs..' ]'
       local fnmPat = '^'..('%'..chs):rep(3)..' (%S+)'
       local ybase
       local lines_above_base = 0
       for yy=cursorY-1,1,-1 do
-         str = fbuf:GetLine( yy )
+         str = fbuf:GetLineRaw( yy )
          printf( "gofileline_diff: line[%d]=%s'", yy,str )
          if nil == ybase then
             if str:match( labPat ) then
@@ -2974,8 +2974,8 @@ do
 --]]
 
    local function grepBufSrcFnm( fbuf, maxlines )
-      for yy=1,maxlines do
-         local st = fbuf:GetLine( yy )
+      for yy=1,Min(fbuf:LastLine(),maxlines) do
+         local st = fbuf:GetLineRaw( yy )
          local fnm = st:match( "^%*GREP%* (%S.+%S)$" )
          if fnm then return fnm end
          end
