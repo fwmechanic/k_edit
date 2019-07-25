@@ -63,23 +63,18 @@ TODO LIST
 require "strict"
 require "show"
 
-require "lpeg"
+require "lpeg"      -- http://lua-users.org/wiki/LpegTutorial
+lpeg.locale(lpeg)   -- adds locale entries into 'lpeg' table
 local lpeg = lpeg
 local user
 
-local lpeg_split,lp_C_compound_sep
+local lpeg_split,lp_C_compound_sep,lp_C_sh_cmd_sep
 do
-   local lp_lower = lpeg.R "az"
-   local lp_upper = lpeg.R "AZ"
-   local lp_alpha = lp_lower + lp_upper
-
-   local lp_digit = lpeg.R "09"
-   local lp_alphanum = lp_lower + lp_upper + lp_digit
-   local lp_decint = lp_digit^1
+   local lp_decint = lpeg.digit^1
    assert( lp_decint:match( "20077" )==6 )
 
-   local lp_ident_1 = lp_lower + lp_upper + lpeg.S "_"  -- _1: first char
-   local lp_ident_s = lp_ident_1 + lp_digit             -- _s: suffix chars
+   local lp_ident_1 = lpeg.alpha + lpeg.S "_"    -- _1: first char
+   local lp_ident_s = lp_ident_1 + lpeg.digit    -- _s: suffix chars
    local lp_ident = lp_ident_1^1 * lp_ident_s^0
    assert( lp_ident:match( "6" )==nil )
    assert( lp_ident:match( "6a_bc6" )==nil )
@@ -87,10 +82,7 @@ do
 
    lp_C_compound_sep = lpeg.P "." + lpeg.P "->" + lpeg.P "::"
 
-   local lp_lower_hex = lpeg.R "af"
-   local lp_upper_hex = lpeg.R "AF"
-   local lp_hexit = lp_digit + lp_lower_hex + lp_upper_hex
-   local lp_hexint = lp_hexit^1
+   local lp_hexint = lpeg.xdigit^1
    assert( lp_hexint:match( "2eE77" )==6 )
 
    lpeg_split = function( st, sep )  -- sep: [lpeg] pattern or string to be converted to pattern (taken from 'split' in the lpeg manual)
@@ -99,6 +91,10 @@ do
       local p = lpeg.Ct(elem * (sep * elem)^0)  -- make a table capture
       return lpeg.match(p, st)
       end
+
+   -- for use with lpeg_split
+   local cmdlinesep_raw = lpeg.P ";" + lpeg.P "&"^2 + lpeg.P "|"^2
+   lp_C_sh_cmd_sep = lpeg.space^0 * cmdlinesep_raw * lpeg.space^0
 end
 
 ----------------------------------------------------------------------------------------------------
