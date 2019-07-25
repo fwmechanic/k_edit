@@ -63,10 +63,10 @@ TODO LIST
 require "strict"
 require "show"
 
+----------------------------------------------------------------------------------------------------
 require "lpeg"      -- http://lua-users.org/wiki/LpegTutorial
 lpeg.locale(lpeg)   -- adds locale entries into 'lpeg' table
 local lpeg = lpeg
-local user
 
 local lpeg_split,lp_C_compound_sep,lp_C_sh_cmd_sep
 do
@@ -96,8 +96,9 @@ do
    local cmdlinesep_raw = lpeg.P ";" + lpeg.P "&"^2 + lpeg.P "|"^2
    lp_C_sh_cmd_sep = lpeg.space^0 * cmdlinesep_raw * lpeg.space^0
 end
-
 ----------------------------------------------------------------------------------------------------
+
+local user  -- forward
 
 fmt = string.format
 
@@ -3373,10 +3374,10 @@ do
    end
 
 
-   -- used in user.lua
+   -- used in %~dp0user.lua
    UrlSrchTag = "$sstr$"
    local UrlSrchTagEscaped = LuaPat_escape( UrlSrchTag )
-   -- used in user.lua
+   -- used in %~dp0user.lua
    function goUrl( url ) -- NB:  url param should contain a magic string (UrlSrchTag) which is replaced with the escaped str value
       return function(str)
          str = str or ""
@@ -3406,7 +3407,7 @@ do
       return fxUrl and fxUrl( str )
       end
 
-   function OpenUrlOrMenu( arg, tMenu )  -- called by EdFxn "websearch" in user.lua
+   function OpenUrlOrMenu( arg, tMenu )  -- called by EdFxn "websearch" in %~dp0user.lua
       if arg.argCount == 1 then tMenu.choices[ tMenu.choices.default ][ 2 ]( arg.text or "testing" )
       else                      OpenUrlMenu( tMenu, arg.text )
          end
@@ -3627,13 +3628,9 @@ function mtFBUF:normalizeLineRange( yMin, yMax )
 
 do -- see justify.cpp for missing functionality
    function mtFBUF:JustifyRect( yMin, yMax, xMin, xMax )
-      yMin, yMax = self:normalizeLineRange( yMin, yMax )
-
-      -- printf( "JustifyRect: Y=%d, %d, X=%d, %d", yMin, yMax, xMin, xMax )
+      yMin, yMax = self:normalizeLineRange( yMin, yMax )  -- printf( "JustifyRect: Y=%d, %d, X=%d, %d", yMin, yMax, xMin, xMax )
       if self:GetLine( yMin ) == "" then return end
-
       ----------------------  extract line segments into combined lbuf
-
       local comment = "[#/-]"  -- not great, but a minimal abstraction
       local lnpat = "^(%s*)("..comment.."+)%s+"
       local maxPrefixSpcs = 0
@@ -3655,23 +3652,11 @@ do -- see justify.cpp for missing functionality
             )
          -- printf( "[%d] nl=|%s|", yLine, abuf[#abuf] )
          end
-      -- printf( "#lines = %d", #abuf )
-      -- for ix,ln in ipairs(abuf) do
-      --    printf( "  [%d] nl=|%s|", ix, ln )
-      --    end
+      -- printf( "#lines = %d", #abuf )  for ix,ln in ipairs(abuf) do printf( " [%d] nl=|%s|", ix, ln ) end
 
       local lbuf = util.trim( table.concat(abuf," ") )
       -- DBG( lbuf )
       -- printf( "(%d..%d) lbuf[%d]=|%s|-", yMin, yMax, #lbuf, lbuf )
-      -- if true then return end
-
-      if false then
-         local uniques = {}
-         for _,pfx in ipairs(prefixes) do
-            uniques[pfx] = uniques[pfx] or 0
-            uniques[pfx] = 1+uniques[pfx]
-            end
-         end
 
       ----------------------  pack words into lines
 
@@ -3701,8 +3686,7 @@ do -- see justify.cpp for missing functionality
    -- local prefix = self:GetLineSeg( yMin, 1, xMin-1 )  -- printf( "prefix=|%s|", prefix ) -- get prefix BEFORE
       local prefix = string.rep( ' ', xMin-1 )
       for iy,text in ipairs(lines) do
-         local ltxt = prefix..text
-         -- printf( "ltxt=|%s|", ltxt )
+         local ltxt = prefix..text     -- printf( "ltxt=|%s|", ltxt )
          self:PutLine( yMin+iy-1, ltxt )
          end
       end
