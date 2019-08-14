@@ -1505,7 +1505,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
       }
    }
   #endif
-   const auto tmpFnm( Path::Union( ".$k$", destFileNm ) );
+   const auto tmpFnm( Path::Union( ".__k", destFileNm ) );
    DisplayNoiseBlanker dblank;
    if( !FBUF_WriteToDiskOk( this, tmpFnm.c_str() ) ) {
       // cannot write tmpFnm: directory is probably not writable
