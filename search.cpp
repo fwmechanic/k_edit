@@ -682,7 +682,7 @@ class CharWalkerReplace {
 #endif
          AddLitRef( srSrc );
          }
-      };
+      }; // class replaceDope_t
    const replaceDope_t d_replaceDope;
    std::string   d_stReplace;
    ColoredStrefs d_promptCsrs;
@@ -727,11 +727,14 @@ class CharWalkerReplace {
    bool              d_fDoReplaceQuery;
    const pFxn_strstr d_pfxStrnstr;
    FBufLocn          d_user_refused; // last match to which user replied "no" to a replace query
+   LINE              d_lastLineVisited = -1;  // only to calc d_linesVisited
 public:
-   int               d_iReplacementsPoss;
-   int               d_iReplacementsMade;
-   int               d_iReplacementFiles;
-   int               d_iReplacementFileCandidates;
+   size_t            d_linesVisited = 0;
+   size_t            d_CheckNextCallCount = 0;
+   int               d_iReplacementsPoss = 0;
+   int               d_iReplacementsMade = 0;
+   int               d_iReplacementFiles = 0;
+   int               d_iReplacementFileCandidates = 0;
    CharWalkerReplace(
         bool fDoReplaceQuery
       , bool fSearchCase
@@ -742,10 +745,6 @@ public:
       , d_fDoAnyReplaceQueries( fDoReplaceQuery )
       , d_fDoReplaceQuery   ( fDoReplaceQuery )
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
-      , d_iReplacementsPoss ( 0 )
-      , d_iReplacementsMade ( 0 )
-      , d_iReplacementFiles ( 0 )
-      , d_iReplacementFileCandidates ( 0 )
       {}
    bool Interactive() const { return d_fDoAnyReplaceQueries; }
    CheckNextRetval CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar );
@@ -757,6 +756,11 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, c
       curPt->col = rlc.ColOfNextChar( curPt->col );
       return CONTINUE_SEARCH;
       };
+   if( d_CheckNextCallCount != SIZE_MAX ) { ++d_CheckNextCallCount; }
+   if( d_lastLineVisited != curPt->lin ) {   DBG( "d_lastLineVisited != curPt->lin: %d != %d", d_lastLineVisited, curPt->lin );
+       d_lastLineVisited  = curPt->lin;
+       ++d_linesVisited;
+       }
    const sridx ix_curPt_Col( rlc.c2ci( curPt->col ) );
    const auto srRawSearch( d_ss.SrchStr() );
    const auto ixLastPossibleLastMatchChar( rlc.c2ci( *colLastPossibleMatchChar ) );
@@ -1342,6 +1346,7 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
       DoMultiFileReplace( mrcw );
       }
    else {
+      MainThreadPerfCounter pc;
       switch( arg.d_argType ) {
        default:
        case NOARG:   { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, g_Cursor(), mrcw ); } break;
@@ -1367,11 +1372,22 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
        case BOXARG:    CharWalkRectReplace( g_CurFBuf(), arg.d_boxarg, arg.d_boxarg.flMin, mrcw );
                        break;
        }
-      Msg( "%d of %d occurrences replaced%s"
-         , mrcw.d_iReplacementsMade
-         , mrcw.d_iReplacementsPoss
-         , (fInteractive && ExecutionHaltRequested()) ? " INTERRUPTED!" : ""
-         );
+      if( fInteractive ) {
+         Msg( "%d of %d occurrences replaced%s"
+            , mrcw.d_iReplacementsMade
+            , mrcw.d_iReplacementsPoss
+            , (fInteractive && ExecutionHaltRequested()) ? " INTERRUPTED!" : ""
+            );
+         }
+      else {
+         Msg( "%d of %d occurrences replaced in %5.3f S; %" PR_SIZET " lines visited, %" PR_SIZET " CheckNext calls"
+            , mrcw.d_iReplacementsMade
+            , mrcw.d_iReplacementsPoss
+            , pc.Capture()
+            , mrcw.d_linesVisited
+            , mrcw.d_CheckNextCallCount
+            );
+         }
       }
 
    // 20060526 klg commented out since if user hit 'Q' he probably wants to
