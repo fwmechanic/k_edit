@@ -283,10 +283,11 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL M
 //****************************
 
 GLOBAL_VAR bool g_fFastsearch = true;
+GLOBAL_VAR bool g_fPcreAlways = true;
 
 class SearchSpecifier {
 #if USE_PCRE
-   const bool   d_fRegex;
+   bool   d_fRegex;
 #endif
    std::string  d_rawStr;
 #if USE_PCRE
@@ -1504,16 +1505,19 @@ void SearchSpecifier::CaseUpdt() {
 #endif
    }
 
-SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex) {  // Assert( fRegex && rawStr ); // if fRegex true then rawStr cannot be 0
+SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex) {
    d_fNegateMatch = rawSrc.starts_with( "!!" );
    if( d_fNegateMatch ) {
       rawSrc.remove_prefix( 2 );
       }
-   d_rawStr.assign( sr2st(rawSrc) );
-   d_fCanUseFastSearch = !fRegex && std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
+   const auto fPromotingPlainSearchToRegex( !d_fRegex && g_fPcreAlways );
+   d_rawStr.assign( fPromotingPlainSearchToRegex ? "\\Q" : "" );
+   d_fRegex = d_fRegex || fPromotingPlainSearchToRegex;
+   d_rawStr.append( sr2st(rawSrc) );
+   d_fCanUseFastSearch = !d_fRegex && std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
 #if USE_PCRE
    d_fRegexCase = g_fCase;
-   d_re = fRegex ? Regex_Compile( d_rawStr.c_str(), d_fRegexCase ) : nullptr;
+   d_re = d_fRegex ? Regex_Compile( d_rawStr.c_str(), d_fRegexCase ) : nullptr;
 #endif
    }
 

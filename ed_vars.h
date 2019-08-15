@@ -83,6 +83,7 @@ extern bool  g_fM4backtickquote  ;
 extern bool  g_fMfgrepNoise      ;
 extern bool  g_fMfgrepRunning    ; STATIC_FXN bool show_noise() { return !g_fMfgrepRunning || g_fMfgrepNoise; }
 extern bool  g_fMsgflush         ;
+extern bool  g_fPcreAlways       ;
 extern bool  g_fRealtabs         ;
 extern bool  g_fReplaceCase      ;
 extern bool  g_fShowFbufDetails  ;

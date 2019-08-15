@@ -284,6 +284,7 @@ void SwitblInit() {
 #if 0 && defined(_WIN32)
    addswi( "ods_enabled"    , fc.SWIi_bv( g_fWrToWin32DbgView ) _AHELP( "whether internal DBG() fxn actually calls Win32::OutputDebugString API" ) );
 #endif
+   addswi( "pcrealways"     , fc.SWIi_bv( g_fPcreAlways       ) _AHELP( "literal-string (i.e. non-Regex) searches performed using PCRE (the Regex search engine)" ) );
    addswi( "maxundo"        , fc.SWIi_iv( g_iMaxUndo          ) _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) );
    addswi( "memusgink"      , fc.SWIi_bv( g_fShowMemUseInK    ) _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) );
    addswi( "mfgrepnoise"    , fc.SWIi_bv( g_fMfgrepNoise      ) _AHELP( "during mfgrep and mfreplace execution: display (yes) or hide (no) each filename & fio-phase display" ) );
