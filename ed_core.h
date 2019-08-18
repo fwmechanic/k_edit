@@ -1342,10 +1342,10 @@ public:
 class IdxCol_cached { // optimal when performing multiple conversions that sweep incrementing ix/col of long d_sr
    const COL d_tw;
    stref     d_sr;
-   sridx     d_lastCOFIix  = 0;
-   COL       d_lastCOFIx   = 0;
-   COL       d_lastFIOCcol = 0;
-   sridx     d_lastFIOCix  = 0;
+   sridx     d_lastCOFIix  = 0; // \ from
+   COL       d_lastCOFIcol = 0; // / to
+   COL       d_lastFIOCcol = 0; // \ from
+   sridx     d_lastFIOCix  = 0; // / to
 
 public:
    IdxCol_cached( const COL tw, stref sr_ )
@@ -1355,20 +1355,26 @@ public:
    void reset( stref sr_ ) {
       d_sr = sr_ ;
       d_lastCOFIix  = 0;
-      d_lastCOFIx   = 0;
+      d_lastCOFIcol = 0;
       d_lastFIOCcol = 0;
       d_lastFIOCix  = 0;
       }
+   // use *_nocache methods when we don't want to invalidate the cache
    stref  sr() const { return d_sr; }
-   COL    i2c ( sridx iC   )       {
-      const auto rv( ColOfFreeIdx( d_tw, d_sr, iC, d_lastCOFIix, d_lastCOFIx ) );
-      d_lastCOFIx = rv; d_lastCOFIix = iC;
+   COL    i2c ( sridx iC )       {
+      const auto rv( ColOfFreeIdx( d_tw, d_sr, iC, d_lastCOFIix, d_lastCOFIcol ) );
+      d_lastCOFIcol = rv; d_lastCOFIix = iC;
       return rv;
+      }
+   COL    i2c_nocache ( sridx iC ) {
+      return ColOfFreeIdx( d_tw, d_sr, iC );
       }
    // c2ci = CaptiveIdxOfCol content[c2ci(colTgt)] is always valid; colTgt values which map
    //                        beyond the last char of content elicit the index of the last char
-   sridx  c2ci( COL xCol )       { return std::min( FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ), d_sr.length()-1 ); }
-   sridx  c2fi( COL xCol )       { return           FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ); }
+   sridx  c2ci        ( COL xCol ) { return std::min( FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ), d_sr.length()-1 ); }
+   sridx  c2ci_nocache( COL xCol ) { return std::min( FreeIdxOfCol( d_tw, d_sr, xCol                              ), d_sr.length()-1 ); }
+   sridx  c2fi        ( COL xCol ) { return           FreeIdxOfCol( d_tw, d_sr, xCol, d_lastFIOCcol, d_lastFIOCix ); }
+   sridx  c2fi_nocache( COL xCol ) { return           FreeIdxOfCol( d_tw, d_sr, xCol                              ); }
 
    COL    ColOfNextChar( COL xCol ) { return i2c( c2fi( xCol ) + 1 ); }
 
