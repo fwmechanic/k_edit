@@ -136,23 +136,16 @@ won't say any more about it].
 The only real problem remaining is whether I'll be able to continue use K in my
 professional environment "going forward".
 
-Lately I'm really feeling the pressure of increasingly authoritarian
-corporate IT security policies that are penetrating the internal operations
-of the Product Development Engineering Organizations (PDEO) within which I've
-always worked (the vast majority of which have been _Windows-based_ (yes,
-this _sucks_)).
+Lately I'm really feeling the pressure of increasingly authoritarian corporate
+IT security policies that are penetrating the internal operations of the Product
+Development Engineering Organizations (PDEO) which I've always been a part of
+(the vast majority of which have been _Windows-based_ (yes, this _sucks_)).
 
-IT orgs have a strong tendency toward rigidity: "here is our solution; we won't
-change it.  You need to align your problem with our solution."  In the past, PDEO
-could resist this imposition with various strategies (and could be convinced of
-the need to do so), but what I'm seeing lately is that aggressive pursuit of
-operating efficiencies and PDEO management that (amazingly enough) has minimal
-appreciation of computing environment nuances and their impact on PDEO
-efficiencies, are increasingly willing to kowtow blindly to the corporate IT
-party line.  And corporate IT has demonstrated a willingness to follow
-https://en.wikiquote.org/wiki/Rahm_Emanuel[the lead of Rahm Emmanuel, White
-House Chief of Staff to President Barack Obama]:
-
+The penetration is occurring for two reasons: (1) PDEO management that _cannot
+imagine_ resisting IT initiatives to "improve security and reduce OpEx" ("mom and
+apple pie") (2) corporate IT has demonstrated a willingness to follow
+https://en.wikiquote.org/wiki/Rahm_Emanuel[the lead of Rahm Emmanuel, White House
+Chief of Staff to President Barack Obama]:
 
 > You never want a serious crisis to go to waste. ... This crisis provides the opportunity for us to do things that you could not before.
 
@@ -162,29 +155,32 @@ a losing battle since the OS chosen to be the platform of the PDEO, Windows (7!
 desktop!), is so promiscuous as to be readily susceptible to viruses and malware
 in the absence of this invasive garbage (can you say "crisis"?).  The consequence
 (_aside from_ 50% of the resources of a given machine being consumed by the
-activity of this invasive garbage) is that if I want to run K on a work PC, I
-need admin privileges on said PC, in order to be able to create an (Anti-)Virus
-software _exception_; w/o this, the (Anti-)Virus software will terminate and
-swallow the K.exe with prejudice.  And, given above-mentioned trends, it's
-increasingly doubtful whether IT policy will allow me to be granted admin
-privileges a few years hence.
+activity of this invasive garbage (the virus-like "anti-virus" software) is that
+if I want to run K on a work PC, I need admin privileges on said PC, in order to
+be able to create an (Anti-)Virus software _exception_; w/o this, the
+(Anti-)Virus software will often (and for reasons unknown, because AV is a black
+box (that acts virus-like)) terminate and swallow the K.exe with prejudice.  And,
+given the above-mentioned trends, it's increasingly doubtful whether IT policy will
+allow me to be granted admin privileges a few years hence.
 
 So basically, it's a race between my (early) retirement date arriving and the
 closing of the corporate PDEO computing environment to any except "standard
-tools".  And developer-private tools such as K are at the top of the list of
-those that will be locked out.  The alternative is to elevate K to being a
-maintained Linux package (what is the Windows analog?  I don't know).  I'm not
-sure I have the energy to do this (if only for the reason that for Windows there
-is no such thing as a standard package repo (format), so how would I even begin
-to create an installable K package for Windows (another thing I absolutely loathe
-is Windows Installers (of the executable kind)!).  K already has a "release
-package" which can be built: it spits out (on Windows) a 7z archive and a
-self-extracting (.exe) version of the same.  The latter is essentially the same
-thing as the "packaging" of the Nuwen MinGW GCC toolset.  Will this be acceptable
-to corporate IT who may govern my reality?  I have no idea what their policy
-might be now, nor what it might become later when they decide to change it.  It
-won't have my interests first and foremost anyway, and will be subject to change
-at any time w/o notice, so why should I even bother?
+tools" (in the case of Windows, that apparently means those produced by MS or
+python.org).  And developer-private tools such as K are at the top of the list of
+those that will be locked out (after all, what percentage of developers
+_have/use_ developer-private tools: 0.00001%?).  The alternative is to elevate K
+to being a maintained Linux package (what is the Windows analog?  I don't know).
+I'm not sure I have the energy to do this (if only for the reason that for
+Windows there is no such thing as a standard package repo (format), so how would
+I even begin to create an installable K package for Windows (another thing I
+absolutely loathe is Windows Installers (of the executable kind)!).  K already
+has a "release package" which can be built: it spits out (on Windows) a 7z
+archive and a self-extracting (.exe) version of the same.  The latter is
+essentially the same thing as the "packaging" of the Nuwen MinGW GCC toolset.
+Will this be acceptable to corporate IT who may govern my reality?  I have no
+idea what their policy might be now, nor what it might become later when they
+decide to change it.  It won't have my interests first and foremost anyway, and
+will be subject to change at any time w/o notice, so why should I even bother?
 
 ## Summary
 
