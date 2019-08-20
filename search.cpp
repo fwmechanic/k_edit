@@ -748,43 +748,11 @@ public:
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
       {}
    bool Interactive() const { return d_fDoAnyReplaceQueries; }
-   CheckNextRetval CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, bool fWholeLine, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar );
+   CheckNextRetval CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, bool fWholeLine );
+   CheckNextRetval DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, sridx ixLastPossibleLastMatchChar );
    };
 
-CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, bool fWholeLine, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar ) { enum { DB=0 };
-   if( d_CheckNextCallCount != SIZE_MAX ) { ++d_CheckNextCallCount; }
-   if( d_lastLineVisited != curPt->lin ) {  DB && DBG( "d_lastLineVisited != curPt->lin: %d != %d", d_lastLineVisited, curPt->lin );
-       d_lastLineVisited  = curPt->lin;
-       ++d_linesVisited;
-       }
-   const sridx ix_curPt_Col( rlc.c2ci( curPt->col ) );
-   const auto srRawSearch( d_ss.SrchStr() );
-   const auto ixLastPossibleLastMatchChar( fWholeLine ? rlc.sr().length() : rlc.c2ci( *colLastPossibleMatchChar ) );
-   d_captures.clear(); DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rlc.sr()) );
-   const auto haystack( rlc.sr().substr( ixBOL, ixLastPossibleLastMatchChar + 1 - ixBOL ) );
-                       DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(haystack) );
-   const auto ixHaystackCurCol( ix_curPt_Col - ixBOL );  // leading ix_curPt_Col chars will not be searched
-#if USE_PCRE
-   if( d_ss.IsRegex() ) {
-   // const auto pcre_exec_flags( ixHaystackCurCol == 0 ? 0 : PCRE_NOTBOL ); // !/PCRE_NOTBOL describes haystack[0], not haystack[ixHaystackCurCol] (in Regex_Match call), so
-      const auto pcre_exec_flags(                         0               ); DB && DBG( "%s (%d,%d) for '%" PR_BSR "' in '%" PR_BSR "[%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, BSR(srRawSearch), BSR(haystack.substr(0,ixHaystackCurCol)), BSR(haystack.substr(ixHaystackCurCol)) );
-      const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, ixHaystackCurCol, pcre_exec_flags ) );
-      if( rv == 0 || !d_captures[0].valid() ) {      // no match this line?
-         curPt->col = *colLastPossibleMatchChar + 1; // next check next line
-         return CONTINUE_SEARCH;
-         }                                                                   DB && DbgDumpCaptures( d_captures, "?" );
-      }
-   else
-#endif
-      {
-      const auto hsTail( haystack.substr( ixHaystackCurCol ) );
-      const auto relIxMatch( d_pfxStrnstr( hsTail, srRawSearch ) );
-      if( relIxMatch == stref::npos ) {              // no match this line?
-         curPt->col = *colLastPossibleMatchChar + 1; // next check next line
-         return CONTINUE_SEARCH;
-         }
-      d_captures.emplace_back( ixHaystackCurCol + relIxMatch, hsTail.substr( relIxMatch, srRawSearch.length() ) );
-      } // !d_ss.IsRegex()
+CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, sridx ixLastPossibleLastMatchChar ) { enum { DB=0 };
    const sridx ixMatchMin( d_captures[0].offset() + ixBOL );
    auto adv_continue = [&]() {
       curPt->col = rlc.ColOfNextChar( curPt->col );
@@ -792,7 +760,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, b
       };
    // d_captures[0] describes the overall match
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
-   if( ixMatchMax > ixLastPossibleLastMatchChar ) { DB && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds", BSR(haystack), BSR(srRawSearch), static_cast<int>(*colLastPossibleMatchChar - ixMatchMax), rlc.sr().data()+ixMatchMin );
+   if( ixMatchMax > ixLastPossibleLastMatchChar ) { // DB && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds", BSR(haystack), BSR(srRawSearch), static_cast<int>(*colLastPossibleMatchChar - ixMatchMax), rlc.sr().data()+ixMatchMin );
       return adv_continue(); // match lies partially OUTSIDE a BOXARG: skip (isn't this impossible?)
       }
    const auto xMatchMin( rlc.i2c( ixMatchMin ) );
@@ -862,6 +830,43 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, b
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 
+CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, const bool fWholeLine ) { enum { DB=0 };
+   if( d_CheckNextCallCount != SIZE_MAX ) { ++d_CheckNextCallCount; }
+   if( d_lastLineVisited != curPt->lin ) {  DB && DBG( "d_lastLineVisited != curPt->lin: %d != %d", d_lastLineVisited, curPt->lin );
+       d_lastLineVisited  = curPt->lin;
+       ++d_linesVisited;
+       }
+   const sridx ix_curPt_Col( rlc.c2ci( curPt->col ) );
+   const auto srRawSearch( d_ss.SrchStr() );
+   const auto ixLastPossibleLastMatchChar( fWholeLine ? rlc.sr().length() : rlc.c2ci( *colLastPossibleMatchChar ) );
+   d_captures.clear(); DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rlc.sr()) );
+   const auto haystack( rlc.sr().substr( ixBOL, ixLastPossibleLastMatchChar + 1 - ixBOL ) );
+                       DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(haystack) );
+   const auto ixHaystackCurCol( ix_curPt_Col - ixBOL );  // leading ix_curPt_Col chars will not be searched
+#if USE_PCRE
+   if( d_ss.IsRegex() ) {
+   // const auto pcre_exec_flags( ixHaystackCurCol == 0 ? 0 : PCRE_NOTBOL ); // !/PCRE_NOTBOL describes haystack[0], not haystack[ixHaystackCurCol] (in Regex_Match call), so
+      const auto pcre_exec_flags(                         0               ); DB && DBG( "%s (%d,%d) for '%" PR_BSR "' in '%" PR_BSR "[%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, BSR(srRawSearch), BSR(haystack.substr(0,ixHaystackCurCol)), BSR(haystack.substr(ixHaystackCurCol)) );
+      const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, ixHaystackCurCol, pcre_exec_flags ) );
+      if( rv == 0 || !d_captures[0].valid() ) {      // no match this line?
+         curPt->col = *colLastPossibleMatchChar + 1; // next check next line
+         return CONTINUE_SEARCH;
+         }                                                                   DB && DbgDumpCaptures( d_captures, "?" );
+      }
+   else
+#endif
+      {
+      const auto hsTail( haystack.substr( ixHaystackCurCol ) );
+      const auto relIxMatch( d_pfxStrnstr( hsTail, srRawSearch ) );
+      if( relIxMatch == stref::npos ) {              // no match this line?
+         curPt->col = *colLastPossibleMatchChar + 1; // next check next line
+         return CONTINUE_SEARCH;
+         }
+      d_captures.emplace_back( ixHaystackCurCol + relIxMatch, hsTail.substr( relIxMatch, srRawSearch.length() ) );
+      } // !d_ss.IsRegex()
+   return DoReplace( pFBuf, rlc, ixBOL, curPt, colLastPossibleMatchChar, ixLastPossibleLastMatchChar );
+   }
+
 STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point start, CharWalkerReplace &walker ) { enum { DB=0 };
    const bool fWholeLine( within.flMax.col == COL_MAX );
    DB && DBG( "%s: within=LINEs(%d-%d) COLs(%d,%d)", __func__, within.flMin.lin, within.flMax.lin, within.flMin.col, within.flMax.col );
@@ -875,7 +880,7 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
       auto ixBOL( rlc.c2ci( within.flMin.col ) );
       auto colLastPossibleMatchChar( std::min( rlc.i2c_nocache( rlc.sr().length()-1 ), within.flMax.col ) );
       while( ( DB && DBG( "%d vs %d", curPt.col, colLastPossibleMatchChar ), curPt.col <= colLastPossibleMatchChar ) ) {
-         const auto rv( walker.CheckNext( pFBuf, rlc, fWholeLine, ixBOL, &curPt, &colLastPossibleMatchChar ) );
+         const auto rv( walker.CheckNext( pFBuf, rlc, ixBOL, &curPt, &colLastPossibleMatchChar, fWholeLine ) );
          if( STOP_SEARCH == rv ) { return true; }
          if( REREAD_LINE_CONTINUE_SEARCH == rv ) {
             rlc.reset( pFBuf->PeekRawLine( curPt.lin ) );
