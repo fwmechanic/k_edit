@@ -1591,10 +1591,6 @@ FileSearcherRegex::FileSearcherRegex( const SearchScanMode &sm, const SearchSpec
    }
 
 FileSearcher::FindStrRslt FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
-   VS_(
-               DBG( "++++++" );
-               DBG( "RegEx?[%d-],%s='%*.*s'", src_offset, src.length() - src_offset, src.length() - src_offset, src.data() + src_offset );
-      )
    const auto rv( Regex_Match( d_ss.re(), d_captures, src, src_offset, pcre_exec_options ) );
    if( rv > 0 && d_captures[0].valid() ) {
       const auto srMatch( d_captures[0].value() );  0 && DBG( "RegEx:->MATCH=(%" PR_PTRDIFFT " L %" PR_SIZET ")='%" PR_BSR "'", srMatch.data() - src.data(), srMatch.length(), BSR(srMatch) );
