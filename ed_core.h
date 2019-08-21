@@ -170,6 +170,16 @@ struct Point {   // file location
    bool operator> ( const Point &rhs ) const { return lin > rhs.lin || (lin == rhs.lin && col > rhs.col); }
    bool operator>=( const Point &rhs ) const { return !(*this < rhs); }
    bool operator<=( const Point &rhs ) const { return !(*this > rhs); }
+   // IncrOk & DecrOk include carry/borrow handling, are performed with NO awareness of underlying FBUF-line content.
+   bool DecrOk() {
+      if( this->lin == 0 && this->col == 0 ) { return false; }  // underflow
+      if( --this->col < 0 ) { --this->lin; this->col = COL_MAX; }
+      return true;
+      }
+   bool IncrOk() {
+      if( this->col++ == COL_MAX ) { ++this->lin; this->col = 0; }
+      return true;  // cannot overflow
+      }
    }; // HAS CTORS, so union canNOT HAS-A one of these
 
 class FBufLocn { // dflt ctor leaves locn empty; must be Set() later

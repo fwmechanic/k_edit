@@ -1050,7 +1050,9 @@ STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation
 STATIC_FXN void IncArgCnt_DropAnchor() {
    if( Inc_g_ArgCount() == 1 ) { // was 0, now 1?
       s_SelAnchor = g_Cursor();
-      ExtendSelectionHilite( Point( s_SelAnchor, 0, 1 ) );
+      Point tmp( s_SelAnchor );
+      tmp.IncrOk();
+      ExtendSelectionHilite( tmp );
       }
    }
 

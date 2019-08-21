@@ -1836,10 +1836,10 @@ STATIC_FXN bool FindNextMatch( const ARG &arg, const SearchScanMode &sm ) {
    if( !SearchSpecifierOK( arg ) ) {
       return false;
       }
-   Point                         curPt;
-   if(      &smBackwd == &sm ) { curPt = Point( g_CurView()->Cursor(), 0, -1 ); }
-   else if( &smFwd    == &sm ) { curPt = Point( g_CurView()->Cursor(), 0, +1 ); }
-   else /*suppress warning*/   { curPt = Point(0,0);  Assert( !"invalid sm value" ); }
+   Point curPt( g_CurView()->Cursor() );
+   if(      &smBackwd == &sm ) { curPt.DecrOk(); }
+   else if( &smFwd    == &sm ) { curPt.IncrOk(); }
+   else                        { Assert( !"invalid sm value" ); }
    std::unique_ptr<FindPrevNextMatchHandler> mh( new FindPrevNextMatchHandler( sm.d_fSearchForward, s_searchSpecifier->IsRegex(), s_searchSpecifier->SrchStr() ) );
    std::unique_ptr<FileSearcher> pSrchr( NewFileSearcher( FileSearcher::fsTABSAFE_STRING, sm, *s_searchSpecifier, *mh ) );
    if( !pSrchr ) {
