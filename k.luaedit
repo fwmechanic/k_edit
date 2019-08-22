@@ -3382,14 +3382,14 @@ do
       return function(str)
          str = str or ""
          do  --[[
-            Double-quote any (except first) search term beginning with '-' (which
+            Double-quote any {{was(except first), now ALL}} search term beginning with '-' (which
             w/o quoting google interprets as "exclude matches containing this term").
             Rationale: 99.9% of my searches containing such terms are querying about
             cmdline options) when googling cmdline options, I invariably begin the query
             string w/the program name (hopefully not being too tricky here!) ]]
             local ar = {}
             for ix,term in ipairs(split_ch_tbl( str:gsub('%s+',' '), " " )) do
-               ar[1+#ar] = (ix==1) and term or term:gsub( '^(%-.*)', '"%1"' )
+               ar[1+#ar] = --[[ (ix==1) and term or ]] term:gsub( '^(%-.*)', '"%1"' )
                end
             str = gsub_URL_escape( table.concat( ar, ' ' ) )
          end
