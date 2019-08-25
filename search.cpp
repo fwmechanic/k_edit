@@ -556,7 +556,7 @@ public:
    ~HiLiteFreer() { d_View->FreeHiLiteRects(); }
    };
 
-enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH, /* CONTINUE_SEARCH_NEXT_LINE */ };
+enum CheckNextRetval { STOP_SEARCH, CONTINUE_SEARCH, REREAD_LINE_CONTINUE_SEARCH, DO_REPLACE, /* CONTINUE_SEARCH_NEXT_LINE */ };
 
 class CharWalker_ {
 public:
@@ -748,69 +748,75 @@ public:
       , d_pfxStrnstr        ( fSearchCase ? strnstr : strnstri )
       {}
    bool Interactive() const { return d_fDoAnyReplaceQueries; }
-   CheckNextRetval CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, bool fWholeLine );
-   CheckNextRetval DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, sridx ixLastPossibleLastMatchChar );
+   CheckNextRetval CheckNext(       PFBUF pFBuf, IdxCol_cached &rlc, sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, bool fWholeLine );
+   CheckNextRetval DoReplace(       PFBUF pFBuf, IdxCol_cached &rlc, sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, sridx ixLastPossibleLastMatchChar );
+   CheckNextRetval GetUserApproval( PFBUF pFBuf, IdxCol_cached &rlc, Point *curPt, sridx ixMatchMin, sridx ixMatchMax );
    };
 
-CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, sridx ixLastPossibleLastMatchChar ) { enum { DB=0 };
+CheckNextRetval CharWalkerReplace::GetUserApproval( PFBUF pFBuf, IdxCol_cached &rlc, Point *curPt, sridx ixMatchMin, sridx ixMatchMax ) { enum { DB=0 };
+   const auto pView( pFBuf->PutFocusOn() );
+   // rlc_post_focus exists (vs rlc) because pFBuf->TabWidth() may have changed (vs rlc.tw()) due to side effects of PutFocusOn()
+   IdxCol_cached rlc_post_focus( pFBuf->TabWidth(), rlc.sr() );
+   const auto xMatchMin( rlc_post_focus.i2c( ixMatchMin ) );
+   const auto xMatchMax( rlc_post_focus.i2c( ixMatchMax ) );   DB && rlc.tw() != rlc_post_focus.tw() && DBG( "%s tw=%d->%d ix[%" PR_SIZET "..%" PR_SIZET "] col[%d..%d]", __func__, rlc.tw(), rlc_post_focus.tw(), ixMatchMin, ixMatchMax, xMatchMin, xMatchMax );
    auto adv_continue = [&]() {
-      curPt->col = rlc.ColOfNextChar( curPt->col );
+      curPt->col = rlc_post_focus.ColOfNextChar( curPt->col );
       return CONTINUE_SEARCH;
       };
-   // d_captures[0] describes the overall match
-   const auto ixMatchMin( d_captures[0].offset() + ixBOL );
+   const auto matchCols( xMatchMax - xMatchMin + 1 );
+   Point matchBegin( curPt->lin, xMatchMin );
+   FBufLocn thisMatch( pFBuf, matchBegin, matchCols );
+   if( d_user_refused == thisMatch ) { // when performing Regex relaces, multiple consecutive search iterations can produce
+      return adv_continue();           // THE SAME match; if the user already refused to replace this match, don't ask again!
+      }
+   ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
+   pView->FreeHiLiteRects();
+   DispDoPendingRefreshesIfNotInMacro();
+   pView->MoveCursor         ( matchBegin, matchCols );
+       // MoveAndCenterCursor
+   pView->SetMatchHiLite( matchBegin, matchCols, true );
+   DispDoPendingRefreshesIfNotInMacro();
+   HiLiteFreer hf;
+#if USE_PCRE
+   const auto szAllowed( d_ss.IsRegex() ? "ynsaq" : "ynaq" );
+#else
+   constexpr auto szAllowed( "ynaq" );
+#endif
+   const auto ch( chGetCmdPromptResponse
+      ( szAllowed     //  allowed responses
+      , '?'           //  interactive dflt: cause retry by NOT matching any explicit case below
+      , 'a'           //  macro dflt:
+      , d_promptCsrs  //
+      ) );
+   switch( ch ) {
+      default:  Assert( 0 );        // chGetCmdPromptResponse has bug or params wrong
+                return STOP_SEARCH;
+      case -1 : ATTR_FALLTHRU;
+      case 'q': SetUserChoseEarlyCmdTerminate();
+                return STOP_SEARCH;
+      case 'n': d_user_refused = thisMatch;
+                return adv_continue();
+      case 's': curPt->col = xMatchMax;     // advance cursor past entire match (dflt 'n' only advances to next char)
+                return CONTINUE_SEARCH;     // mfrplcword "GenericReplace" nl "foobar"
+      case 'a': d_fDoReplaceQuery = false;  ATTR_FALLTHRU;
+      case 'y': return DO_REPLACE;          // perform replacement (below)
+      }
+   }
+
+CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, sridx ixLastPossibleLastMatchChar ) { enum { DB=0 };
+   const auto ixMatchMin( d_captures[0].offset() + ixBOL );  // d_captures[0] describes the overall match
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
-   if( ixMatchMax > ixLastPossibleLastMatchChar ) {
-      return adv_continue(); // match lies partially OUTSIDE a BOXARG: skip (isn't this impossible?)
+   if( ixMatchMax > ixLastPossibleLastMatchChar ) {  // match lies partially OUTSIDE a BOXARG: skip (isn't this impossible?)
+      curPt->col = rlc.ColOfNextChar( curPt->col );
+      return CONTINUE_SEARCH;
       }
    stref srReplace( GenerateReplacement() ); // generates d_promptCsrs too!
-   if( !d_fDoReplaceQuery ) {
-      ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
+   if( d_fDoReplaceQuery ) { // interactive-replace (mfreplace/qreplace) ONLY ...
+      const auto rv( GetUserApproval( pFBuf, rlc, curPt, ixMatchMin, ixMatchMax ) );
+      if( rv != DO_REPLACE ) { return rv; }
       }
-   else { // interactive-replace (mfreplace/qreplace) ONLY ...
-      const auto pView( pFBuf->PutFocusOn() );
-      // rlc_post_focus exists (vs rlc) because pFBuf->TabWidth() may have changed (vs rlc.tw()) due to side effects of PutFocusOn()
-      IdxCol_cached rlc_post_focus( pFBuf->TabWidth(), rlc.sr() );
-      const auto xMatchMin( rlc_post_focus.i2c( ixMatchMin ) );
-      const auto xMatchMax( rlc_post_focus.i2c( ixMatchMax ) );   DB && rlc.tw() != rlc_post_focus.tw() && DBG( "%s tw=%d->%d ix[%" PR_SIZET "..%" PR_SIZET "] col[%d..%d]", __func__, rlc.tw(), rlc_post_focus.tw(), ixMatchMin, ixMatchMax, xMatchMin, xMatchMax );
-      const auto matchCols( xMatchMax - xMatchMin + 1 );
-      Point matchBegin( curPt->lin, xMatchMin );
-      FBufLocn thisMatch( pFBuf, matchBegin, matchCols );
-      if( d_user_refused == thisMatch ) { // when performing Regex relaces, multiple consecutive search iterations can produce
-         return adv_continue();           // THE SAME match; if the user already refused to replace this match, don't ask again!
-         }
+   else {
       ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
-      pView->FreeHiLiteRects();
-      DispDoPendingRefreshesIfNotInMacro();
-      pView->MoveCursor         ( matchBegin, matchCols );
-          // MoveAndCenterCursor
-      pView->SetMatchHiLite( matchBegin, matchCols, true );
-      DispDoPendingRefreshesIfNotInMacro();
-      HiLiteFreer hf;
-#if USE_PCRE
-      const auto szAllowed( d_ss.IsRegex() ? "ynsaq" : "ynaq" );
-#else
-      constexpr auto szAllowed( "ynaq" );
-#endif
-      const auto ch( chGetCmdPromptResponse
-         ( szAllowed     //  allowed responses
-         , '?'           //  interactive dflt: cause retry by NOT matching any explicit case below
-         , 'a'           //  macro dflt:
-         , d_promptCsrs  //
-         ) );
-      switch( ch ) {
-         default:  Assert( 0 );        // chGetCmdPromptResponse has bug or params wrong
-                   return STOP_SEARCH;
-         case -1 : ATTR_FALLTHRU;
-         case 'q': SetUserChoseEarlyCmdTerminate();
-                   return STOP_SEARCH;
-         case 'n': d_user_refused = thisMatch;
-                   return adv_continue();
-         case 's': curPt->col = xMatchMax;     // advance cursor past entire match (dflt 'n' only advances to next char)
-                   return CONTINUE_SEARCH;     // mfrplcword "GenericReplace" nl "foobar"
-         case 'a': d_fDoReplaceQuery = false;  // fall thru!
-         case 'y': break;                      // perform replacement (below)
-         }
       }
    // perform replacement...
    const auto destMatchChars( ixMatchMax - ixMatchMin + 1 );
@@ -818,11 +824,10 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
    d_sbuf.replace( ixMatchMin, destMatchChars, sr2st( srReplace ) );  DB && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLineEntab( curPt->lin, d_sbuf, d_stmp );  // ... and commit
    ++d_iReplacementsMade;
-   { // replacement done: adjust starting, limit point for next iteration
+   // replacement done: adjust starting, limit point for next iteration
    IdxCol_cached conv( pFBuf->TabWidth(), d_sbuf );
    curPt->col                = conv.i2c( ixMatchMin                  + srReplace.length() );
    *colLastPossibleMatchChar = conv.i2c( ixLastPossibleLastMatchChar + srReplace.length() - destMatchChars );  DB && DBG("DFPoR- y/x=%d/%d,%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
-   }
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 
@@ -835,9 +840,9 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, c
    const sridx ix_curPt_Col( rlc.c2ci( curPt->col ) );
    const auto srRawSearch( d_ss.SrchStr() );
    const auto ixLastPossibleLastMatchChar( fWholeLine ? rlc.sr().length() : rlc.c2ci( *colLastPossibleMatchChar ) );
-   d_captures.clear(); DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rlc.sr()) );
+   d_captures.clear();                             DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rlc.sr()) );
    const auto haystack( rlc.sr().substr( ixBOL, ixLastPossibleLastMatchChar + 1 - ixBOL ) );
-                       DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(haystack) );
+                                                   DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(haystack) );
    const auto ixHaystackCurCol( ix_curPt_Col - ixBOL );  // leading ix_curPt_Col chars will not be searched
 #if USE_PCRE
    if( d_ss.IsRegex() ) {
@@ -847,7 +852,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, c
       if( rv == 0 || !d_captures[0].valid() ) {      // no match this line?
          curPt->col = *colLastPossibleMatchChar + 1; // next check next line
          return CONTINUE_SEARCH;
-         }                                                                   DB && DbgDumpCaptures( d_captures, "?" );
+         }
       }
    else
 #endif
@@ -859,7 +864,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, c
          return CONTINUE_SEARCH;
          }
       d_captures.emplace_back( ixHaystackCurCol + relIxMatch, hsTail.substr( relIxMatch, srRawSearch.length() ) );
-      } // !d_ss.IsRegex()
+      }                                                               DB && DbgDumpCaptures( d_captures, "?" );
    return DoReplace( pFBuf, rlc, ixBOL, curPt, colLastPossibleMatchChar, ixLastPossibleLastMatchChar );
    }
 
