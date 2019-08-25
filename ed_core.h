@@ -1348,8 +1348,8 @@ class IdxCol_cached { // optimal when performing multiple conversions that sweep
    sridx     d_lastFIOCix  = 0; // / to
 
 public:
-   IdxCol_cached( const COL tw, stref sr_ )
-      : d_tw( tw )
+   IdxCol_cached( const COL tw_, stref sr_ )
+      : d_tw( tw_ )
       , d_sr( sr_ )
       {}
    void reset( stref sr_ ) {
@@ -1359,6 +1359,7 @@ public:
       d_lastFIOCcol = 0;
       d_lastFIOCix  = 0;
       }
+   COL tw() const { return d_tw; }
    // use *_nocache methods when we don't want to invalidate the cache
    stref  sr() const { return d_sr; }
    COL    i2c ( sridx iC )       {

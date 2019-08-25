@@ -753,21 +753,26 @@ public:
    };
 
 CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, sridx ixLastPossibleLastMatchChar ) { enum { DB=0 };
-   const sridx ixMatchMin( d_captures[0].offset() + ixBOL );
    auto adv_continue = [&]() {
       curPt->col = rlc.ColOfNextChar( curPt->col );
       return CONTINUE_SEARCH;
       };
    // d_captures[0] describes the overall match
+   const auto ixMatchMin( d_captures[0].offset() + ixBOL );
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
-   if( ixMatchMax > ixLastPossibleLastMatchChar ) { // DB && DBG( " '%" PR_BSR "' matches '%" PR_BSR "', but only '%" PR_BSR "' in bounds", BSR(haystack), BSR(srRawSearch), static_cast<int>(*colLastPossibleMatchChar - ixMatchMax), rlc.sr().data()+ixMatchMin );
+   if( ixMatchMax > ixLastPossibleLastMatchChar ) {
       return adv_continue(); // match lies partially OUTSIDE a BOXARG: skip (isn't this impossible?)
       }
-   const auto xMatchMin( rlc.i2c( ixMatchMin ) );
-   const auto xMatchMax( rlc.i2c( ixMatchMax ) );
    stref srReplace( GenerateReplacement() ); // generates d_promptCsrs too!
-   if( d_fDoReplaceQuery ) { // interactive-replace (mfreplace/qreplace) ONLY ...
+   if( !d_fDoReplaceQuery ) {
+      ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
+      }
+   else { // interactive-replace (mfreplace/qreplace) ONLY ...
       const auto pView( pFBuf->PutFocusOn() );
+      // rlc_post_focus exists (vs rlc) because pFBuf->TabWidth() may have changed (vs rlc.tw()) due to side effects of PutFocusOn()
+      IdxCol_cached rlc_post_focus( pFBuf->TabWidth(), rlc.sr() );
+      const auto xMatchMin( rlc_post_focus.i2c( ixMatchMin ) );
+      const auto xMatchMax( rlc_post_focus.i2c( ixMatchMax ) );   DB && rlc.tw() != rlc_post_focus.tw() && DBG( "%s tw=%d->%d ix[%" PR_SIZET "..%" PR_SIZET "] col[%d..%d]", __func__, rlc.tw(), rlc_post_focus.tw(), ixMatchMin, ixMatchMax, xMatchMin, xMatchMax );
       const auto matchCols( xMatchMax - xMatchMin + 1 );
       Point matchBegin( curPt->lin, xMatchMin );
       FBufLocn thisMatch( pFBuf, matchBegin, matchCols );
@@ -807,19 +812,10 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
          case 'y': break;                      // perform replacement (below)
          }
       }
-   else {
-      ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
-      }
-   // setup to perform replacement...
-   pFBuf->getLineTabxPerRealtabs( d_sbuf, curPt->lin );
-   decltype( static_cast<IdxCol_cached*>(nullptr)->c2ci( xMatchMin ) ) destMatchChars; // https://stackoverflow.com/a/5580411
-   {
-   IdxCol_cached conv( pFBuf->TabWidth(), d_sbuf );
-   const auto ixdestMatchMin( conv.c2ci( xMatchMin ) );
-   const auto ixdestMatchMax( conv.c2ci( xMatchMax ) );
-   destMatchChars = ixdestMatchMax - ixdestMatchMin + 1;
-   d_sbuf.replace( ixdestMatchMin, destMatchChars, sr2st(srReplace) );  DB && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
-   } // conv now invalid !!!
+   // perform replacement...
+   const auto destMatchChars( ixMatchMax - ixMatchMin + 1 );
+   d_sbuf = sr2st( rlc.sr() );
+   d_sbuf.replace( ixMatchMin, destMatchChars, sr2st( srReplace ) );  DB && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLineEntab( curPt->lin, d_sbuf, d_stmp );  // ... and commit
    ++d_iReplacementsMade;
    { // replacement done: adjust starting, limit point for next iteration
