@@ -641,11 +641,12 @@
    # 0xFA (centered dot, faint)
    trailspace:no
    traildisp: 0xFA
-   # tabdisp: ^
-   # tabdisp: 0xF9
-   # tabdisp: >
+   # tabdisp: <
    # tabdisp: -
-   tabdisp: <
+   # tabdisp: ^
+   # tabdisp: *
+   # tabdisp: >
+     tabdisp: 0xF9
 
    savescreen:ctrl+k
    towinclip:ctrl+num+
@@ -658,7 +659,10 @@
    ds:="/"
    trailspace:no
    traildisp: ?
-   tabdisp: <
+   # tabdisp: -
+   # tabdisp: <
+   # tabdisp: ^
+     tabdisp: >
    cmdn:=arg arg "^cmd\d" grep
    grepm4:=arg "./test/_m4ex:" grep
 

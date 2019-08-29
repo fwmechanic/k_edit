@@ -67,12 +67,14 @@ void PrettifyWriter
   #if defined(BIG_BULLET)
       chTabExpand == BIG_BULLET ? stref( bsbullet   ) :
   #endif
+      chTabExpand == '>'        ? stref( ">-"       ) :
+      chTabExpand == '*'        ? stref( "*."       ) :
       chTabExpand == '-'        ? stref( "-->"      ) :
       chTabExpand == '<'        ? stref( "<->"      ) :
       chTabExpand == '^'        ? stref( "^`"       ) :
                                   stref( &chTabExpand, sizeof(chTabExpand) )
       );
-   const auto chLast( srTabExpand[ srTabExpand.length() > 2 ? 2 : 0 ] );
+   const auto chLast( srTabExpand[ srTabExpand.length() - 1 ] );
    const auto chFill( srTabExpand[ srTabExpand.length() > 1 ? 1 : 0 ] );
    while( sit != src.cend() && dix < maxCharsToWrite ) {
       const auto ch( *sit++ );
