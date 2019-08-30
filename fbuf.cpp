@@ -810,6 +810,7 @@ STATIC_FXN std::string is_content_diff( PCFBUF pFile ) { 0 && DBG( "%s called on
       // skip these
       IsStringBlank( rl ) ||
       CMPL( "diff "               ) ||  // from http://git-scm.com/docs/git-diff   search for "new file mode"
+      CMPL( "Only in "            ) ||  // diff
       CMPL( "commit "             ) ||  // git show
       CMPL( "Author: "            ) ||  // git show
       CMPL( "Date:   "            ) ||  // git show
