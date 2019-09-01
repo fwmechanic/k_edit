@@ -58,8 +58,8 @@ do
       do
       if kroot then
          AddInDir(                                 kroot
-                 , { "boost::string_ref Manual" , "http://www.boost.org/doc/libs/1_54_0/libs/utility/doc/html/string_ref.html" }
                  , { "Lua Reference Manual"     , fkroot.."lua-5.1/doc/contents.html" }
+                 , { "boost::string_ref Manual" , "http://www.boost.org/doc/libs/1_54_0/libs/utility/doc/html/string_ref.html" }
                  , { "Lua PiL 2e"               , fkroot.."lua-5.1/doc/Programming.in.Lua.2e.pdf" }
                  , { "Lpeg Reference Manual"    , fkroot.."lua-5.1/src/lpeg.html"     }
                  , { "Lpeg.re Reference Manual" , fkroot.."lua-5.1/src/re.html"       }
