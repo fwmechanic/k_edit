@@ -126,10 +126,10 @@ int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const 
 
 // multi-file grep/replace file selection:
 //
-// There are two forms for specifying files: a macro ("mfspec_", "mfspec"), or
-// the contents of a buffer ("<mfx>" or *mfptr)
+// There are two forms for specifying files: a macro (one of { "mfspec_", "mfspec" }), or
+// the contents of a buffer named by macro "mffile" (e.g. "mffile:=<tagged-files>")
 //
-// The macro forms are a string value containing an array of ';' separated
+// The macro forms are a string value containing an array of Path::chEnvSep-separated
 // entries, each of which is a CFX ...  arg "CFX" help
 //
 // The buffer forms interpret each line as a macro-form string.

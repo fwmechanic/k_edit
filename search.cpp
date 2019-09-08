@@ -1135,9 +1135,8 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
       const auto pFBufMfspec( FindFBufByName( macroVal.c_str() ) );
       if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
          if( FBOP::IsBlank( pFBufMfspec ) ) {
-            STATIC_CONST auto tagged_files_bufnm( "<tagged-files>" );
-            if( 0 == cmp( pFBufMfspec->Name(), tagged_files_bufnm ) ) {
-               // Msg( "mffile:=\"%s\" but it's empty", tagged_files_bufnm );
+            if( 0 == cmp( pFBufMfspec->Name(), "<tagged-files>" ) ) {
+               // Msg( "mffile:=\"%s\" but it's empty", pFBufMfspec->Name() );
                return nullptr;
                }
             }
@@ -1168,18 +1167,32 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
    return nullptr;
    }
 
-STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( bool readtagsfile_retry=false ) { enum { DB=0 };
-   auto rv( MultiFileGrepFnmGenerator_() );
-   if( !rv && readtagsfile_retry ) {  // only do retry after reading tags in mfgrep; mfreplace requires pre-run w/mfgrep or explicit fileset setup
-      fExecute( "readtagsfile", true );
-      rv = MultiFileGrepFnmGenerator_();
+STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( bool retry_after_refreshing_taggedfiles=true ) { enum { DB=0 };
+   auto rv( MultiFileGrepFnmGenerator_() );  // try to dereference any user-preconfigured "mf..." macros.
+   if( !rv && retry_after_refreshing_taggedfiles ) {
+      // Typical scenario: user HAS NOT preconfigured any of the "mf..." macros,
+      // but has used e.g. universal-ctags[1] to generate a tags file.
+      // [1] https://github.com/universal-ctags/ctags
+      //
+      // K supports using a tags file to guide multi-file grep by (if the first
+      // attempt to dereference any preconfigured "mf..." macros fails to net
+      // anything of value) attempting to switch to the "<tagged-files>" system
+      // buffer (pseudofile) which is, when switched, autoloaded with the files
+      // named by kind:file entries in the tags file.  The K handler for the
+      // 'load "<tagged-files>" system buffer with content' event (function
+      // read_tagged_files_from_tags_file) WILL if successful ALSO assign
+      // "mffile:=<tagged-files>", so that subsequent calls to
+      // MultiFileGrepFnmGenerator_ will return an (indirect) reference to the
+      // "<tagged-files>" system buffer.
+      fExecute( "arg \"<tagged-files>\" setfile", true );  // if no tags file was found, mffile will remain unset and...
+      rv = MultiFileGrepFnmGenerator_();                   // ...MultiFileGrepFnmGenerator_ will (again) return nullptr.
       }
    return rv;
    }
 
 #ifdef fn_mgl
 bool ARG::mgl() {
-   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator() );
+   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator( false ) );
    if( pGen ) {
       auto ix(0);
       Path::str_t pbuf;
@@ -1209,7 +1222,7 @@ bool ARG::mfgrep() {
    if( !pSrchr ) {
       return false;
       }
-   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator( true ) );
+   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator() );
    if( !pGen ) {
       // ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil && no tags" );
       return false;
@@ -1309,7 +1322,7 @@ STATIC_FXN bool GenericReplace_CollectInputs( bool fRegex, bool fInteractive, bo
 
 STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
    const auto startingTopFbuf( g_CurFBuf() );
-   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator( true ) );
+   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator() );
    if( !pGen ) {
       ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
       }
@@ -1460,8 +1473,7 @@ int FBOP::ExpandWildcard( PFBUF fb, PCChar pszWildcardString, const bool fSorted
       else {
          bcpy( wcBuf , se2sr( pszWildcardString, pVbar ) );
          bcpy( dirBuf, "." DIRSEP_STR );
-         }
-                                                                     ED && DBG( "wcBuf='%s'" , wcBuf  );
+         }                                                           ED && DBG( "wcBuf='%s'" , wcBuf  );
                                                                      ED && DBG( "dirBuf='%s'", dirBuf );
       Path::str_t pbuf, fbuf;
       DirListGenerator dlg( dirBuf );

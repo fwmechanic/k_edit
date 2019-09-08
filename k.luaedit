@@ -788,7 +788,7 @@ function GotoFileLineCol( fnm, line, column )
    return fb,vw
    end
 
-local GotoCtagsUri, LineToTagRec, ChoiceTxtOfATag
+local GotoCtagsUri, LineToTagRec, ChoiceTxtOfATag, read_tagged_files_from_tags_file
 do -- local scope for private functions and data that implement EdFxn "tgs"
 
    -- Read Exuberant Tags output file
@@ -859,28 +859,24 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       end
 
    local function Msg_print( msg ) Msg( msg )  print( msg ) end
-   local function read_tagged_files_from_tags_file()
+   read_tagged_files_from_tags_file = function( tfbuf )
       -- following is ONLY to provide default mffile (mfgrep, mfreplace) buffer (oh, and to provide tfbuf:LineCount() for Msg below)
-      local bfnm = "<tagged-files>"  -- magical parameter to get_tags_matching()!
       local tagged_files = get_tags_matching( '\tkind:file' )
-      local tfbuf
       table.sort( tagged_files )
       for _,tfnm in ipairs( tagged_files ) do
          local absfnm = norm_fnm_of_tag( tfnm )
          if _dir.name_isfile( absfnm ) then
-            tfbuf = tfbuf or FBUF.new_empty_may_create( bfnm )
             tfbuf:PutLastLine( absfnm )
             end
          end
       collectgarbage( "collect" )
-      if tfbuf then
-         AssignStrOk( 'mffile:='..(tfbuf:LineCount() > 0 and ('"'..tfbuf:Name()..'"') or "") )
-         Msg_print( fmt( "%d files named in %s per %s", tfbuf:LineCount(), tfbuf:Name(), s_tagsFilename ) )
-         return true
-      else
+      if not tfbuf or tfbuf:LineCount() == 0 then
          Msg_print( "no tags file found in "..GetCwd().."; ctags cmdline missing --extras=+f ?" )
          return false
          end
+      AssignStrOk( 'mffile:='..(tfbuf:LineCount() > 0 and ('"'..tfbuf:Name()..'"') or "") )
+      Msg_print( fmt( "%d files named in %s per %s", tfbuf:LineCount(), tfbuf:Name(), s_tagsFilename ) )
+      return true
       end
 
    local ignored_atag = {
@@ -1734,11 +1730,6 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
    -- edfxn invalidate_tags is CALLED FROM C++ core!
    AddEdFxn{ name = "invalidate_tags", help = "forget any tags file", attr = NOARG
       , NOARG   = function(arg) return invalidate_tags() end
-      }
-
-   -- edfxn readtagsfile is CALLED FROM C++ core!
-   AddEdFxn{ name = "readtagsfile", help = "(re-)read tags data file", attr = NOARG
-      , NOARG   = function(arg) return read_tagged_files_from_tags_file() end
       }
 
    AddEdFxn{ name = "gototag", help = "Lua tags function", attr = NOARG+NOARGWUC+TEXTARG+BOXSTR, key = "alt+u"
@@ -5067,8 +5058,17 @@ if false then
 
    end
 
+local lua_gend_fbufs = {
+   ["<tagged-files>"] = read_tagged_files_from_tags_file,
+   }
+
 function ReadPseudoFileOk_FROM_C( fb )  -- return Lua true (not (rv==nil or rv==false)) if this code rewrites fb content
-   print( "ReadPseudoFileOk_FROM_C("..fb:Name()..")" )
+   local fx = lua_gend_fbufs[fb:Name()]
+   if fx then
+      local rv = fx( fb )
+      print( "ReadPseudoFileOk_FROM_C("..fb:Name()..") -> " .. tostring( rv ) )
+      return rv
+      end
    -- return false  -- this is unnecessary (just like when returning from Lua to Lua)
    end
 
