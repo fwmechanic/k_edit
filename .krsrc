@@ -752,7 +752,7 @@
    wordchars:_-/.:
 
 [ftype:cmake]
-   wordchars:_.
+   wordchars:_-.
 
 [ftype:sprintascii]
    wordchars:_
