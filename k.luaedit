@@ -2597,14 +2597,15 @@ function sum_cols_dope( ary )
    end
 
 function sum_ary_numstrs( ary, base )
-   local sum
+   local sum, count
    for _,st in ipairs(ary) do
       local num = tonumber( st, base )
       if num then
-         sum = (sum or 0) + num
+         sum   = (sum   or 0) + num
+         count = (count or 0) + 1
          end
       end
-   return sum
+   return sum, count
    end
 
 local _b2fns = { [10]='d', [16]='X' }
@@ -2627,18 +2628,46 @@ function fmtNum( num, fw, base, width, fLeading0s )
 --     00500cc
 --     00500cc
 
+local function sum_extracted_anums( bc )
+   local sum, count, ctSfx
+   for _,ln in ipairs(bc) do
+      for st,sfx in ln:gmatch "a([1-9]%d*)([._]?)" do  -- print( "hey! " .. sfx or "?" )
+         sum   = (sum   or 0) + st
+         count = (count or 0) + 1
+         ctSfx = (ctSfx or 0) + (#sfx > 0 and 1 or 0)
+         end
+      end
+   return sum, count, ctSfx
+   end
+
+--[[ reimplement same-named C++ functions
+   // this may be a mistake!  English language is unorthogonal in the extreme!
+  ]]
+local function Add_es( count ) return 1 == count and "" or "es" end
+local function Add_s(  count ) return 1 == count and "" or  "s" end
+
+
 AddEdFxn{ name = "sumcol", attr = MODIFIES+BOXARG, key = "alt+num+", help = ""
    , BOXARG  = function( arg )
       local bc = boxContent( arg )
-      local base, leading0s, fw = sum_cols_dope( bc )
-      Msgf( "sumcol base = %d", base )
-      local sum = sum_ary_numstrs( bc, base )
-      if sum then
+      local minInd = arg.minX-1
+      local sum, count, ctSfx = sum_extracted_anums( bc )
+      if sum and count and ctSfx and (count - ctSfx) <= 3 then  -- magic-coupled to _reconcile.txt content
+         arg.fbuf:InsLine( arg.maxY+1, (" "):rep( minInd ) .. sum .. fmt( " (%d check%s)", count, Add_s(count) ) )
+      else
+         local base, leading0s, fw = sum_cols_dope( bc )
+         sum, count = sum_ary_numstrs( bc, base )
+         if not sum then return Msg( "no summable content" ) end
          local width = arg.maxX - arg.minX + 1
          local st = fmtNum( sum, fw, base, width, leading0s )
-         local xtraWide = #st - width
-         local pad = string.rep( " ", arg.minX-1-xtraWide )
-         arg.fbuf:InsLine( arg.maxY+1, pad .. st )
+         local nummsg = (" "):rep( minInd-(#st - width) ) .. st
+         local msg = fmt( "summed %d base %d entries", count, base )
+         if arg.fMeta then
+            arg.fbuf:InsLine( arg.maxY+1, nummsg .. " @ " .. msg )
+         else
+            arg.fbuf:InsLine( arg.maxY+1, nummsg )
+            Msg( msg )
+            end
          end
       end
    }
