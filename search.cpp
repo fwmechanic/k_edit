@@ -268,13 +268,10 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL M
       LuaCtxt_Edit::LocnListInsertCursor(); // do this IFF a match was found
       }
    CapturePrevLineCountAllWindows( d_pOutputFile );
-   {
-   const auto rl( pFBuf->PeekRawLine( cur.lin ) );
    d_sb.assign( pFBuf->Namestr() );
    d_sb.append( FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).k_str() );
-   d_sb.append( sr2st( rl ) );
+   d_sb.append( sr2st( pFBuf->PeekRawLine( cur.lin ) ) );
    d_pOutputFile->PutLastLineRaw( d_sb );
-   }
    MoveCursorToEofAllWindows( d_pOutputFile );
    return true;  // action taken!
    }
