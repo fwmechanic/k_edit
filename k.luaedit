@@ -87,8 +87,8 @@ do
 
    lpeg_split = function( st, sep )  -- sep: [lpeg] pattern or string to be converted to pattern (taken from 'split' in the lpeg manual)
       sep = lpeg.P(sep)              -- NB: lpeg.P(pat) == pat
-      local elem = lpeg.C((1 - sep)^0)
-      local p = lpeg.Ct(elem * (sep * elem)^0)  -- make a table capture
+      local elem = lpeg.C((1 - sep)^0) -- elem: "a repetition of zero of more arbitrary characters as long as there is not a match against the separator. It also captures its match."
+      local p = lpeg.Ct(elem * (sep * elem)^0)  -- make a table capture of "matches a list of elements separated by sep."
       return lpeg.match(p, st)
       end
 
