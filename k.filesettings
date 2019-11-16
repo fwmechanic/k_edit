@@ -84,6 +84,9 @@ do
       cxx         = "clang"       ,
       cs          = "clang"       ,
       groovy      = "clang"       ,  -- odd as it seems, this works pretty well; even for """triple double quoted strings"""!
+      java        = "clang"       ,  -- odd as it seems, this works pretty well
+      json        = "clang"       ,  -- odd as it seems, this works pretty well
+      painless    = "clang"       ,  -- odd as it seems, this works pretty well (groovy-like elastisearch-only scripting language)
       m           = "clang"       ,
       cpp         = "clang"       ,
       cc          = "clang"       ,
