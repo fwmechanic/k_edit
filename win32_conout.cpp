@@ -526,6 +526,31 @@ SIZE_OK:
    return retVal;
    }
 
+// 20191203 thinking about updating Win32ConsoleFontChanger:
+//    there are console font APIs that have been officially supported for Vista/S08+:
+//
+//       https://docs.microsoft.com/en-us/windows/console/console-font-infoex
+//       https://docs.microsoft.com/en-us/windows/console/getcurrentconsolefontex
+//       https://docs.microsoft.com/en-us/windows/console/setcurrentconsolefontex
+//       https://docs.microsoft.com/en-us/windows/console/getconsolefontsize       <-- using this now
+//
+//    which the current Win32ConsoleFontChanger impl is not using (IIRC) because of a need to support
+//    pre-Vista (IOW: XP) OS versions, a need which has now passed into history.
+//
+//    Unfortunately, while the need to support pre-Vista has passed, it appears the newer/unused APIs
+//    do not fully duplicate the functionality of the old, undocumented APIs which the current
+//    Win32ConsoleFontChanger impl uses.
+//
+//    In particular, today GetNumberOfConsoleFonts has no officially supported replacement API.
+//
+
+// note that the above APIs are from Vista/S08+, whereas IIRC in recent (past 2-3) years, there as been
+// a major effort within MS to revamp the Console subsystem.  I suspect the fruits of this effort have
+// NOT been documented in the same place, but in another MS silo (this is one of the major practical
+// hassles of programming on MS platform: almost wiki-like siloing of information, with ostensible
+// "single-point of reference" docs being superseded elsewhere with no way of knowing that fact (or where
+// "elsewhere" is)).
+
 Win32ConsoleFontChanger::~Win32ConsoleFontChanger() {
    Free0( d_pFonts     );
    Free0( d_pFontSizes );
