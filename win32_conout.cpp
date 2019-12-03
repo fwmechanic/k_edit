@@ -227,16 +227,17 @@ void TConsoleOutputControl::SetNewScreenSize( const YX_t &newSize ) {
 HANDLE_CTRL_CLOSE_EVENT( volatile bool g_fProcessExitRequested; )
 
 #if defined(__GNUC__) && !defined(__x86_64)
-namespace Win32 {
-#ifdef __cplusplus
-extern "C" {
-#endif
-BOOL WINAPI GetCurrentConsoleFont(HANDLE hConsoleOutput,BOOL bMaximumWindow,PCONSOLE_FONT_INFO lpConsoleCurrentFont);
-COORD WINAPI GetConsoleFontSize(HANDLE hConsoleOutput,DWORD nFont);
-#ifdef __cplusplus
-}
-#endif
-}
+  namespace Win32 {
+  #ifdef __cplusplus
+    extern "C" {
+  #endif
+      // NB: these are officially supported Win32 APIs, however last-released nuwen 32-bit mingw gcc does not provide their prototypes:
+      BOOL WINAPI GetCurrentConsoleFont(HANDLE hConsoleOutput,BOOL bMaximumWindow,PCONSOLE_FONT_INFO lpConsoleCurrentFont);
+      COORD WINAPI GetConsoleFontSize(HANDLE hConsoleOutput,DWORD nFont);
+  #ifdef __cplusplus
+      }
+  #endif
+    }
 #endif
 
 //--------------------------------------------------------------------------------------------
@@ -578,7 +579,7 @@ Win32ConsoleFontChanger::Win32ConsoleFontChanger()
    AllocArrayNZ( d_pFontSizes, d_num_fonts );
    for( auto idx(0); idx < d_num_fonts; ++idx ) {
       d_pFontSizes[idx] = Win32::GetConsoleFontSize(d_hConout, d_pFonts[idx].nFont);
-      0 && DBG( "%cfont[%2d]: XxY = %3dx%3d"
+      1 && DBG( "%cfont[%2d]: XxY = %3dx%3d"
               , idx == ConsoleCurrentFont.nFont ? '*' : ' '
               , idx
               ,                d_pFonts[idx].dwFontSize.X, d_pFonts[idx].dwFontSize.Y
