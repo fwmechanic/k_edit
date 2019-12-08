@@ -159,6 +159,7 @@ struct Point {   // file location
    Point( LINE yLine, COL xCol ) : lin(yLine), col(xCol) {}
    Point( const YX_t  &src ) : lin(src.lin), col(src.col) {} // conv from conio.h type
    Point( const Point &rhs ) : lin(rhs.lin), col(rhs.col) {} // COPY CTOR
+   Point& operator=(const Point &rhs) = default;
    Point( const Point &rhs, LINE yDelta, COL xDelta )        // COPY CTOR w/a twist
       : lin(std::max(rhs.lin + yDelta, 0))
       , col(std::max(rhs.col + xDelta, 0))
