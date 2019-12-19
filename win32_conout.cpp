@@ -560,7 +560,7 @@ Win32ConsoleFontChanger::~Win32ConsoleFontChanger() {
 Win32ConsoleFontChanger::Win32ConsoleFontChanger()
    : d_pFonts(nullptr)
    , d_pFontSizes(nullptr)
-   {
+   { enum { SHOWDBG=1 };
    auto hmod( Win32::GetModuleHandleA("KERNEL32.DLL") );
    if(  !hmod
      || !LoadFuncOk( d_SetConsoleFont         , hmod, "SetConsoleFont"          )
@@ -574,16 +574,19 @@ Win32ConsoleFontChanger::Win32ConsoleFontChanger()
    Win32::CONSOLE_FONT_INFO ConsoleCurrentFont;
    d_setFont = d_origFont = GetCurrentConsoleFont( d_hConout, 0, &ConsoleCurrentFont ) ? ConsoleCurrentFont.nFont : 0xFFFF;
    d_num_fonts = d_GetNumberOfConsoleFonts();
-   AllocArrayNZ( d_pFonts, d_num_fonts );
-   GetFontInfo();
-   AllocArrayNZ( d_pFontSizes, d_num_fonts );
-   for( auto idx(0); idx < d_num_fonts; ++idx ) {
-      d_pFontSizes[idx] = Win32::GetConsoleFontSize(d_hConout, d_pFonts[idx].nFont);
-      1 && DBG( "%cfont[%2d]: XxY = %3dx%3d"
-              , idx == ConsoleCurrentFont.nFont ? '*' : ' '
-              , idx
-              ,                d_pFonts[idx].dwFontSize.X, d_pFonts[idx].dwFontSize.Y
-              );
+   SHOWDBG && DBG( "d_num_fonts = %lu", d_num_fonts );
+   if( d_num_fonts > 0 ) {
+      AllocArrayNZ( d_pFonts, d_num_fonts );
+      GetFontInfo();
+      AllocArrayNZ( d_pFontSizes, d_num_fonts );
+      for( auto idx(0); idx < d_num_fonts; ++idx ) {
+         d_pFontSizes[idx] = Win32::GetConsoleFontSize(d_hConout, d_pFonts[idx].nFont);
+         SHOWDBG && DBG( "%cfont[%2d]: XxY = %3dx%3d"
+            , idx == ConsoleCurrentFont.nFont ? '*' : ' '
+            , idx
+            ,                d_pFonts[idx].dwFontSize.X, d_pFonts[idx].dwFontSize.Y
+            );
+         }
       }
    }
 
