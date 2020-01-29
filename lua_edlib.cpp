@@ -131,13 +131,7 @@ namespace LExFx { // exported functions
    STATIC_FXN int Get_SearchCaseSensitive( lua_State *L )      { R_bool( g_fCase ); }
    STATIC_FXN int Getenv( lua_State *L )      { return lh_rtnStr(      L, getenv( S_(1) ) ); }
    STATIC_FXN int GetenvOrNil( lua_State *L ) { return lh_rtnStrOrNil( L, getenv( S_(1) ) ); }
-   STATIC_FXN int Putenv( lua_State *L )      {
-      const auto    param1( S_(1) );
-      const auto    param2( So0_(2) );
-      if( param2 )  PutEnvOk( param1, param2 );
-      else          PutEnvOk( param1 );
-      RZ;
-      }
+   STATIC_FXN int Putenv( lua_State *L )      { PutEnvOk( S_(1), S_(2) ); RZ; }
    STATIC_FXN int Clipboard_PutText( lua_State *L )     { ::Clipboard_PutText( S_(1) ); RZ; }
    STATIC_FXN int MarkDefineAtCurPos( lua_State *L )    { ::MarkDefineAtCurPos( S_(1) ); RZ; }
    STATIC_FXN int MarkGoto( lua_State *L )              { R_bool( ::MarkGoto( S_(1) ) ); }

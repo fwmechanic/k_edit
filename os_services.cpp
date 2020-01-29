@@ -35,47 +35,39 @@ PCChar Getenv( stref varnm ) {
 
 //------------------------------------------------
 
+bool PutEnvOk( PCChar varName, PCChar varValue ) { // params canNOT be stref since non-_WIN32 API which takes ASCIZ strings is called directly
+   // nullptr == varValue || !*varValue result in unsetenv (variable undefine) operation being performed
+   if( nullptr == varValue ) { varValue = ""; }  // promote nullptr to empty string
+   0 && DBG( "*** %s(%s=%s)", FUNC, varName, varValue );
 #if defined(_WIN32)
-
-STATIC_FXN bool putenv_ok( PCChar szNameEqualsVal ) {
-   const auto ok( _putenv( szNameEqualsVal ) == 0 );
+   // MSVC-specific _putenv COPIES params (therefore SAFE to use with auto buffer params); if empty string follows "=", unsetenv is performed
+   auto pBuf( PChar( alloca( Strlen(varName) + Strlen(varValue) + (1+1) ) ) ); // (1+1) = ('=' + '\0')
+   sprintf( pBuf, "%s=%s", varName, varValue ); // sprintf is OK here since we have pre-calc'd the buf size to fit
+   const auto ok( 0 == _putenv( pBuf ) );
+#else
+   // posix putenv NOT USED because parameter becomes part of process-duration environment of process (therefore should never pass auto buffers to it)
+   // posix setenv     USED because it COPIES params into process-duration environment (therefore SAFE to use with auto buffer params)
+   const auto ok( 0 == (*varValue ? setenv( varName, varValue, 1 ) : unsetenv( varName )) );
+#endif
    if( !ok ) {
-      ErrorDialogBeepf( "%s(%s) FAILED: %s", FUNC, szNameEqualsVal, strerror( errno ) );
+      ErrorDialogBeepf( "%s(%s=%s) FAILED: %s", FUNC, varName, varValue, strerror( errno ) );
       }
    return ok;
    }
 
-#endif
-
-bool PutEnvOk( PCChar varName, PCChar varValue ) { // params canNOT be stref since non-_WIN32 API which takes ASCIZ strings is called directly
-   0 && DBG( "*** %s(%s=%s)", FUNC, varName, varValue );
-#if defined(_WIN32)
-   auto pBuf( PChar( alloca( Strlen(varName) + Strlen(varValue) + (1+1) ) ) ); // (1+1) = ('=' + '\0')
-   sprintf( pBuf, "%s=%s", varName, varValue ); // sprintf is OK here since we have pre-calc'd the buf size to fit
-   return putenv_ok( pBuf );
-#else
-   return 0 == setenv( varName, varValue, 1 );
-#endif
-   }
-
-bool PutEnvOk( PCChar szNameEqualsVal ) {
+STATIC_FXN bool PutEnvOk( PCChar szNameEqualsVal ) {
    0 && DBG( "*** %s(%s)", FUNC, szNameEqualsVal );
    const auto pEQ( strchr( szNameEqualsVal, '=' ) );
    if( pEQ == szNameEqualsVal ) { // no name?
       return false; // not OK
       }
-   if( !pEQ ) {
-#if !defined(_WIN32)
-      return 0 == unsetenv( szNameEqualsVal );
-#else
+   if( pEQ == nullptr ) {
       return PutEnvOk( szNameEqualsVal, "" );
-#endif
       }
-   else {
-      ALLOCA_STRDUP( nm, nmLen, szNameEqualsVal, pEQ - szNameEqualsVal - 1 );
-      return PutEnvOk( nm, pEQ + 1 );
-      }
+   ALLOCA_STRDUP( nm, nmLen, szNameEqualsVal, pEQ - szNameEqualsVal - 1 );
+   return PutEnvOk( nm, pEQ + 1 );
    }
+
 
 bool PutEnvChkOk( PCChar szNameEqualsVal ) {
    if( strchr( szNameEqualsVal, '=' ) ) {

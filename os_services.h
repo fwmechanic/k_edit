@@ -281,7 +281,6 @@ extern PCChar OsVerStr();
 //--------------------------------------------------------------------------------
 
 extern bool   PutEnvOk(    PCChar varName, PCChar varValue );
-extern bool   PutEnvOk(    PCChar szNameEqualsVal );
 extern bool   PutEnvChkOk( PCChar szNameEqualsVal );
 
 extern PCChar Getenv( stref varnm );
