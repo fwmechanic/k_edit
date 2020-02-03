@@ -1008,7 +1008,11 @@ STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) {
 
 // returns dfltVal if any errors
 int LuaCtxt_Edit::Tbl2Int( PCChar tableDescr, int dfltVal ) { return LuaTbl2Int( L_edit, tableDescr, dfltVal ); }
-bool LuaCtxt_Edit::TblKeyExists( PCChar tableDescr ) { return LuaTblKeyExists( L_edit, tableDescr ); }
+
+bool LuaCtxt_Edit::TblKeyExists( PCChar tableDescr ) { enum { DB=1 };
+   const auto rv( LuaTblKeyExists( L_edit, tableDescr ) );  DB && DBG( "%s %s '%s'", __func__, rv ? "EXISTS " : "MISSING", tableDescr );
+   return rv;
+   }
 
 
 #pragma GCC diagnostic pop

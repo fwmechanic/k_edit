@@ -614,6 +614,8 @@ typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;
 extern void DestroyViewList( ViewHead *pViewHd );
 
 struct FTypeSetting;
+typedef FTypeSetting       *PFTypeSetting;
+typedef FTypeSetting const *PCFTypeSetting;
 
 // used to receive data decoded from state-save file string written by View::Write()
 struct ViewPersistent {
@@ -1087,13 +1089,14 @@ private:
    eEntabModes    d_Entab = ENTAB_0_NO_CONV;
    int            d_BlankAnnoDispSrcAsserted = BlankDispSrc_ALL_ALWAYS;
    bool           d_fRevealBlanks = true;
-   const FTypeSetting *d_ftypeStruct = nullptr;  // since d_ftypeStruct is now mostly a content-based auto-detected property (therefore of the file itself), it is a FBUF (not View) property
+   PCFTypeSetting d_ftypeStruct = nullptr;  // since d_ftypeStruct is now mostly a content-based auto-detected property (therefore of the file itself), it is a FBUF (not View) property
 public:
    void           SetFType();
    void           ForgetFType() { d_ftypeStruct = nullptr; }  // reset _NON-owning_ pointer to force re-DeduceFType
    stref          FTypeName()             const;  // (*d_ftypeStruct) or ""
    bool           FTypeNmEq( stref ftnm ) const { return eqi( FTypeName(), ftnm ); } // case-insensitive!
-   const FTypeSetting *GetFTypeSettings() const { return d_ftypeStruct; }
+
+   PCFTypeSetting GetFTypeSettings() const { return d_ftypeStruct; }
  #ifdef           fn_su
    bool           SilentUpdateMode()     const { return  d_fSilentUpdateMode; }
    void           SetSilentUpdateMode()               {  d_fSilentUpdateMode = true; }

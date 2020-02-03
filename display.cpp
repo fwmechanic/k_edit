@@ -208,10 +208,10 @@ STATIC_FXN char GenAltHiliteColor( const char color ) {
 
 //--------------------------------------------------------------------------------------------------------------------------
 
-STATIC_FXN inline FTypeSetting *IdxNodeToFTS( RbNode *pNd ) { return static_cast<FTypeSetting *>( rb_val(pNd) ); }  // type-safe conversion function
+STATIC_FXN inline PFTypeSetting IdxNodeToFTS( RbNode *pNd ) { return static_cast<PFTypeSetting>( rb_val(pNd) ); }  // type-safe conversion function
 
 struct FTypeSetting {
-   enum { DB=0 };
+   enum { DB=1 };
    std::string d_ftypeName;  // rbtree key
    std::string d_hiliteName;
    colorval_t  d_colors[ ColorTblIdx::VIEW_COLOR_COUNT ];
@@ -282,7 +282,7 @@ void InitFTypeSettings() {                                              FTypeSet
    }
 
 STATIC_FXN void DeleteFTS( void *pData, void *pExtra ) {                FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
-   auto pFTS( static_cast<FTypeSetting *>(pData) );
+   auto pFTS( static_cast<PFTypeSetting>(pData) );
    delete pFTS;                                                         FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
@@ -290,7 +290,7 @@ void CloseFTypeSettings() {
    rb_dealloc_treev( s_FTS_idx, nullptr, DeleteFTS );
    }
 
-STATIC_FXN FTypeSetting *Get_FTypeSetting( stref ftype ) {              FTypeSetting::DB && DBG( "%s+ ---------------------------------------------- PROBING [%" PR_BSR "]", __func__, BSR(ftype) );
+STATIC_FXN PCFTypeSetting Get_FTypeSetting( stref ftype ) {             FTypeSetting::DB && DBG( "%s+ ---------------------------------------------- PROBING [%" PR_BSR "]", __func__, BSR(ftype) );
    int equal;
    auto pNd( rb_find_gte_sri( &equal, s_FTS_idx, ftype ) );
    if( equal ) {                                                        FTypeSetting::DB && DBG( "%s FOUND [%" PR_BSR "]", __func__, BSR(ftype) );
@@ -315,10 +315,10 @@ void Reread_FTypeSettings() {                                           FTypeSet
    }
 
 int View::ColorIdx2Attr( int colorIdx ) const {
-   const auto unknownColor( bgRED|fgRED|FGhi );
+   constexpr auto unknownColor( bgRED|fgPNK|FGhi );
    if( colorIdx >= 0 ) {
       if( colorIdx < FTypeSetting::d_colors_ELEMENTS() ) {
-         const auto pFTS( CFBuf()->GetFTypeSettings() );
+         const auto pFTS( CFBuf()->GetFTypeSettings() );                1 && (pFTS == nullptr) && DBG( "%s null FTypeSettings! %s", __func__, CFBuf()->Name() );
          return pFTS ? pFTS->d_colors[ colorIdx ] : unknownColor;
          }
       STATIC_CONST colorval_t *s_colorVars[] = {
