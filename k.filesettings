@@ -83,6 +83,7 @@ do
       hpp         = "clang"       ,
       cxx         = "clang"       ,
       cs          = "clang"       ,
+      go          = "clang"       ,  -- odd as it seems, this works pretty well
       groovy      = "clang"       ,  -- odd as it seems, this works pretty well; even for """triple double quoted strings"""!
       java        = "clang"       ,  -- odd as it seems, this works pretty well
       json        = "clang"       ,  -- odd as it seems, this works pretty well
