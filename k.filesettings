@@ -92,6 +92,7 @@ do
       cpp         = "clang"       ,
       cc          = "clang"       ,
       c           = "clang"       ,
+      go          = "clang"       ,
       cmake       = "cmake"       ,
       diff        = "diff"        ,
       expect      = "expect"      ,
