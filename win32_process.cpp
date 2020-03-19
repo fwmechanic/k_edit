@@ -478,6 +478,14 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    , PXbuf CommandLine
    , PXbuf xb
    ) { // arg arg "echo hello" execute   arg arg "^ls.exe -l" execute
+   if( !(cmdFlags & NO_ECHO_CMDLN) ) {
+      PCChar pDisp( pS );
+      if( cmdFlags & IGNORE_ERROR ) {  // need scratch buffer?
+         CommandLine->FmtStr( "-%s", pDisp );
+         pDisp = CommandLine->c_str();
+         }
+      PutLastLogLine( pfLogBuf, pDisp );
+      }
    STATIC_CONST char CMD_bin[]{ "CMD.EXE" };  // NB: `CMD.exe /c file` REQUIRES 'file' have extension .bat (`new tempfile` creates extension-less file)
    PCChar shell( "" );  // { echo "hello worlds in $(pwd)" ; }
    if( !(cmdFlags & NOSHELL) ) {  // { cd .kbackup && echo "hello worlds in $(pwd)" ; }
@@ -500,13 +508,10 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
       tempf->close();
       pS = tempf->name();
       }
-   CommandLine->FmtStr( "-%s%s%s", shell, shellopt, pS );  // leading '-' is (at most) for PutLastLogLine _only_
-   0 && DBG( "%s: CommandLine='%s'", __func__, CommandLine->c_str() );
-   const auto pXeq(      CommandLine->wbuf()  + 1 );  // skip the '-' always (stupid Win32::CreateProcessA takes PChar cmdline param)
-   const auto pXeqConst( CommandLine->c_str() + 1 );  // skip the '-' always (for internal use)
-   if( !(cmdFlags & NO_ECHO_CMDLN) ) {
-      PutLastLogLine( pfLogBuf, CommandLine->c_str() + ((cmdFlags & IGNORE_ERROR) ? 0 : 1 ) );
-      }
+   CommandLine->FmtStr( "%s%s%s", shell, shellopt, pS );
+   1 && DBG( "%s: CommandLine='%s'", __func__, CommandLine->c_str() );
+   const auto pXeq(      CommandLine->wbuf()  );  // Win32::CreateProcessA takes PChar (not PCChar) cmdline param
+   const auto pXeqConst( CommandLine->c_str() );  // for internal use
    ConsoleSpawnHandles csh;
    if( csh.Error() ) {
       PutLastLogLine( pfLogBuf, "Cannot create pipe - did not create process" );
