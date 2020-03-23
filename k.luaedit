@@ -3102,6 +3102,31 @@ do
       fnm, lnum, msg1 = lbuf:match( "^%[([^:]+):(%d+)][%s:]+(.+)$" )
       if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "cppcheck" ) then return fnm end
 
+
+      do -- Maven/Java
+         local jf = " (%S.+)"
+         local je = "^%[ERROR]"
+         local jw = "^%[WARNING]"
+         local jet = "mavenJavaErr"
+         local jwt = "mavenJavaWarn"
+         local lc = ":%[(%d+),(%d+)]"  -- line,col (from jdk8 ) \ might be due to build options
+         local l_ = ":(%d+):"          -- line     (from jdk11) / rather than JDK versions...?
+         local jmsg = " (%S.+)$"
+         local function flm( pat, tag )
+            local fnm, lnum, msg1 = lbuf:match( pat )
+            if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, tag ) then return fnm end
+            end
+         local function flcm( pat, tag )
+            local fnm, lnum, col, msg1 = lbuf:match( pat )
+            if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, tag ) then return fnm end
+            end
+         local rslt = flm(  je..jf..l_..jmsg, jet ) or
+                      flm(  jw..jf..l_..jmsg, jwt ) or
+                      flcm( je..jf..lc..jmsg, jet ) or
+                      flcm( jw..jf..lc..jmsg, jwt )
+         if rslt then return rslt end
+      end
+
       -- ARMCC "../../Source/be/apiincludes/BE_PublicTypes.h", line 33: Warning:  #66-D: enumeration value is out of "int" range
       fnm, lnum, msg1 = lbuf:match( '^"([^"]+)", line (%d+): (.+)$' )
       if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "gcc" ) then return fnm end
