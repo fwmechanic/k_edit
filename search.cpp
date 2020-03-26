@@ -823,8 +823,16 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
    ++d_iReplacementsMade;
    // replacement done: adjust starting, limit point for next iteration
    IdxCol_cached conv( pFBuf->TabWidth(), d_sbuf );
-   curPt->col                = conv.i2c( ixMatchMin                  + srReplace.length() );
-   *colLastPossibleMatchChar = conv.i2c( ixLastPossibleLastMatchChar + srReplace.length() - destMatchChars );  DB && DBG("DFPoR- y/x=%d/%d,%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
+   const auto ixCurcol( ixMatchMin                  + srReplace.length() );
+   const auto ixLPMC  ( ixLastPossibleLastMatchChar + srReplace.length() - destMatchChars );  DB && DBG("DFPoR: ix: cur=%" PR_PTRDIFFT " ixLPMC=%" PR_PTRDIFFT, ixCurcol, ixLPMC );
+   if( ixCurcol < ixLPMC ) {
+      curPt->col                = conv.i2c( ixCurcol );
+      *colLastPossibleMatchChar = conv.i2c( ixLPMC   );
+      }
+   else {
+      *colLastPossibleMatchChar = conv.i2c( ixLPMC   );
+      curPt->col                = conv.i2c( ixCurcol );
+      }                                                               DB && DBG("DFPoR- cursor=(%d,%d),%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 
