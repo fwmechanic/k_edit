@@ -800,7 +800,7 @@ CheckNextRetval CharWalkerReplace::GetUserApproval( PFBUF pFBuf, IdxCol_cached &
       }
    }
 
-CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, sridx ixLastPossibleLastMatchChar ) { enum { DB=0 };
+CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, const sridx ixLastPossibleLastMatchChar ) { enum { DB=0 };
    const auto ixMatchMin( d_captures[0].offset() + ixBOL );  // d_captures[0] describes the overall match
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
    if( ixMatchMax > ixLastPossibleLastMatchChar ) {  // match lies partially OUTSIDE a BOXARG: skip (isn't this impossible?)
@@ -816,9 +816,9 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
       ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
       }
    // perform replacement...
-   const auto destMatchChars( ixMatchMax - ixMatchMin + 1 );
+   const auto destMatchChars( ixMatchMax - ixMatchMin + 1 );          DB && DBG("DFPoR+ y=%d ixMaxValid=%" PR_PTRDIFFT " ixMaxPossMatch=%" PR_PTRDIFFT " ixMatch[%" PR_PTRDIFFT ",%" PR_PTRDIFFT "] L=%" PR_PTRDIFFT, curPt->lin, rlc.sr().length()-1, ixLastPossibleLastMatchChar, ixMatchMax, ixMatchMin, destMatchChars );
    d_sbuf = sr2st( rlc.sr() );
-   d_sbuf.replace( ixMatchMin, destMatchChars, sr2st( srReplace ) );  DB && DBG("DFPoR+ y/x=%d/%d LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
+   d_sbuf.replace( ixMatchMin, destMatchChars, sr2st( srReplace ) );  DB && DBG("DFPoR+ cursor=(%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLineEntab( curPt->lin, d_sbuf, d_stmp );  // ... and commit
    ++d_iReplacementsMade;
    // replacement done: adjust starting, limit point for next iteration
@@ -885,7 +885,7 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
       IdxCol_cached  rlc( tw, pFBuf->PeekRawLine( curPt.lin ) );
       auto ixBOL( rlc.c2ci( within.flMin.col ) );
       auto colLastPossibleMatchChar( std::min( rlc.i2c_nocache( rlc.sr().length()-1 ), within.flMax.col ) );
-      while( ( DB && DBG( "%d vs %d", curPt.col, colLastPossibleMatchChar ), curPt.col <= colLastPossibleMatchChar ) ) {
+      while( ( DB && DBG( "COL: cur %d vs %d lastPoss ixLastCh %" PR_SIZET, curPt.col, colLastPossibleMatchChar, rlc.sr().length()-1 ), curPt.col <= colLastPossibleMatchChar ) ) {
          const auto rv( walker.CheckNext( pFBuf, rlc, ixBOL, &curPt, &colLastPossibleMatchChar, fWholeLine ) );
          if( STOP_SEARCH == rv ) { return true; }
          if( REREAD_LINE_CONTINUE_SEARCH == rv ) {
