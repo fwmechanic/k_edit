@@ -238,6 +238,8 @@ STATIC_FXN int Show_FTypeSettings() {
    return 1;
    }
 
+GLOBAL_VAR bool g_fBrightFg = false;
+
 void FTypeSetting::Update() {
    Catbuf<120> kybuf;
    const auto w0( kybuf.Wref() );
@@ -268,9 +270,10 @@ void FTypeSetting::Update() {
    #undef SINIT
       }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
    const auto w3( w2.cpy( ".colors." ) );
+   const colorval_t orVal( g_fBrightFg ? FGhi : 0 );
    for( const auto &c2L : s_color2Lua ) {
       w3.cpy( c2L.pLuaName );
-      d_colors[ c2L.ofs ] = LuaCtxt_Edit::Tbl2Int( kybuf.c_str(), c2L.dflt );   DB && DBG( "%s: %s = 0x%02X%s", __func__, kybuf.c_str(), d_colors[ c2L.ofs ], d_colors[ c2L.ofs ]==c2L.dflt?" (C++dflt)":"" );
+      d_colors[ c2L.ofs ] = orVal | LuaCtxt_Edit::Tbl2Int( kybuf.c_str(), c2L.dflt );   DB && DBG( "%s: %s = 0x%02X%s", __func__, kybuf.c_str(), d_colors[ c2L.ofs ], d_colors[ c2L.ofs ]==c2L.dflt?" (C++dflt)":"" );
       }
    }
 // d_colors[ ColorTblIdx::CXY ] = GenAltHiliteColor( d_colors[ ColorTblIdx::TXT ] );
@@ -2297,6 +2300,7 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
    }
 
 GLOBAL_VAR bool g_fLangHilites = true;
+
 
 /* Supporting new FTypeName:
 

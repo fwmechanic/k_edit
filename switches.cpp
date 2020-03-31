@@ -253,6 +253,7 @@ void SwitblInit() {
    addswi( "beep"           , fc.SWIi_bv( g_fAllowBeep        ) _AHELP( "beeping allowed (yes) or not (no)" ) );
    addswi( "blankdispmask"  , fc.SWIi_iv( g_iBlankAnnoDispSrcMask  ) _AHELP( "bitmask: tabdisp, traildisp honored only when 1 (dirty) | 2 (arg-selecting) | 4 (all files)" ) );
    addswi( "boxmode"        , fc.SWIi_bv( g_fBoxMode          ) _AHELP( "selects BOXARGs (yes) or STREAMARGs (no)" ) );
+   addswi( "brightfg"       , fc.SWIi_bv( g_fBrightFg         ) _AHELP( "force bright foreground colors" ) );
    addswi( "bpen"           , fc.SWIi_bv( g_fBpEnabled        ) _AHELP( "enables conditional breakpoints" ) );
    addswi( "case"           , fc.SWIi_bv( g_fCase             ) _AHELP( "searches are case sensitive (yes) or insensitive (no)" ) );
    addswi( "colorerr"       , fc.SWI_color( g_colorError     )  _AHELP( "the color of error messages" )              );

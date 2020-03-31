@@ -70,6 +70,7 @@ extern char  g_chTrailSpaceDisp  ;
 extern bool  g_fAllowBeep        ;
 extern bool  g_fAskExit          ;
 extern bool  g_fBoxMode          ;
+extern bool  g_fBrightFg         ;
 extern bool  g_fCase             ;
 extern bool  g_fDialogTop        ;
 extern bool  g_fDvlogcmds        ;
