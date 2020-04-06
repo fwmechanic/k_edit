@@ -32,13 +32,7 @@ static void lstop (lua_State *L, lua_Debug *ar) {
 }
 
 
-#if defined(_WIN32)
-#define CDECL__ __cdecl
-#else
-#define CDECL__
-#endif
-
-static void CDECL__ laction (int i) {  /* KG: __cdecl needed for MSVC++ 7.1 */
+static void laction (int i) {
   signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
                               terminate process (default action) */
   lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
@@ -394,7 +388,7 @@ static int pmain (lua_State *L) {
 }
 
 
-int CDECL__ main (int argc, char **argv) {  /* KG: __cdecl needed for MSVC++ 7.1 */
+int main (int argc, char **argv) {
   int status;
   struct Smain s;
   lua_State *L = lua_open();  /* create state */
