@@ -3087,6 +3087,9 @@ do
       fnm, lnum, msg1 = lbuf:match( "^%s*"..luaMsig )
       if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "LuaRT1" ) then return fnm end
 
+      fnm, lnum, msg1 = lbuf:match( "[Ll]ua:%s+"..luaMsig )
+      if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "LuaRT2" ) then return fnm end
+
       fnm, lnum, msg1 = lbuf:match( "[Ll]ua%.exe:%s+"..luaMsig )
       if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "LuaRT2" ) then return fnm end
 
@@ -3101,7 +3104,6 @@ do
       -- cppcheck
       fnm, lnum, msg1 = lbuf:match( "^%[([^:]+):(%d+)][%s:]+(.+)$" )
       if msg1 and GotoFileYX_Msg( fnm, lnum, 1, msg1, "cppcheck" ) then return fnm end
-
 
       do -- Maven/Java
          local jf = " (%S.+)"
