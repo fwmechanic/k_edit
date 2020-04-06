@@ -63,8 +63,7 @@ static int push_errno_result (lua_State *L, int fOk, const char *filename) {
 #define  K_BIN_DEF  1
 #if      K_BIN_DEF
 
-unsigned GetUint_Hack( lua_State *L, int n )
-   {
+unsigned GetUint_Hack( lua_State *L, int n ) {
    // I_(n) macro does not handle corner case where int value would have MSBit
    // set.  For those cases where it is assumed that the "integer" value is
    // actually unsigned, you should use U_ which calls this function.
@@ -96,8 +95,7 @@ LUAFUNC_(shiftr)  { R_num( U_(1) >> U_(2) ); }
 LUAFUNC_(bit )    { R_num( pow( ((lua_Number)2), ((lua_Number)U_(1)) ) ); }
 LUAFUNC_(bits)    { R_num( pow( ((lua_Number)2), ((lua_Number)U_(1)) ) - 1 ); }
 
-LUAFUNC_(replace)   // in S1, replace S2 with S3, return replaced string, # of replacements
-   {
+LUAFUNC_(replace) {  // in S1, replace S2 with S3, return replaced string, # of replacements
    size_t inBytes, srchBytes, rplcBytes, bytesLeft;
 
    const char *pIn   = Bytes_( 1, inBytes   );
@@ -105,8 +103,7 @@ LUAFUNC_(replace)   // in S1, replace S2 with S3, return replaced string, # of r
    const char *pRplc = Bytes_( 3, rplcBytes );
 
 #if 1
-   if( srchBytes == rplcBytes )
-      {
+   if( srchBytes == rplcBytes ) {
       //
       // Since srchBytes == rplcBytes we can (when the buffers involved are very
       // large: circa 10MB) reap a MAJOR performance improvement by avoiding any
@@ -131,35 +128,30 @@ LUAFUNC_(replace)   // in S1, replace S2 with S3, return replaced string, # of r
       pC = pOutbuf = malloc( inBytes );
       if( !pOutbuf ) return luaL_error( L, "replace1: failed to alloc %d bytes for buffer", inBytes );
       bytesLeft = inBytes;
-      while( bytesLeft >= srchBytes )
-         {
+      while( bytesLeft >= srchBytes ) {
          const char *pStart = pIn + (inBytes - bytesLeft);
          const char *pMatch = memchr( pStart, *pSrch, bytesLeft );
          // fprintf( stderr, "%d# 0x%02X @%d\n", rplcCount, pStart - pIn );
-         if( pMatch )
-            {
+         if( pMatch ) {
             const size_t numBytes = (pMatch - pStart);
             bytesLeft -= numBytes;
             memcpy( pC, pStart, numBytes );
             pC += numBytes;
             // fprintf( stderr, "%d# @%X C  @%X cpy %X\n", rplcCount, pStart - pIn, pMatch - pIn, pMatch - pStart );
 
-            if( (0 == memcmp( pMatch, pSrch, srchBytes )) )
-               {
+            if( (0 == memcmp( pMatch, pSrch, srchBytes )) ) {
                bytesLeft -= srchBytes;
                // fprintf( stderr, "%d# @%X -> @%X cpy %X\n", rplcCount, pStart - pIn, pMatch - pIn, rplcBytes );
                memcpy( pC, pRplc, rplcBytes );
                pC += rplcBytes;
                ++rplcCount;
                }
-            else
-               {
+            else {
                *pC++ = *pMatch;
                --bytesLeft;
                }
             }
-         else
-            {
+         else {
             break;
             }
          }
@@ -178,32 +170,27 @@ LUAFUNC_(replace)   // in S1, replace S2 with S3, return replaced string, # of r
       luaL_buffinit(L, &buf);
 
       bytesLeft = inBytes;
-      while( bytesLeft >= srchBytes )
-         {
+      while( bytesLeft >= srchBytes ) {
          const char *pStart = pIn + (inBytes - bytesLeft);
          const char *pMatch = memchr( pStart, *pSrch, bytesLeft );
          // fprintf( stderr, "%d# 0x%02X @%d\n", rplcCount, pStart - pIn );
-         if( pMatch )
-            {
+         if( pMatch ) {
             bytesLeft -= (pMatch - pStart);
             luaL_addlstring( &buf, pStart, pMatch - pStart );
             // fprintf( stderr, "%d# @%X C  @%X cpy %X\n", rplcCount, pStart - pIn, pMatch - pIn, pMatch - pStart );
 
-            if( (0 == memcmp( pMatch, pSrch, srchBytes )) )
-               {
+            if( (0 == memcmp( pMatch, pSrch, srchBytes )) ) {
                bytesLeft -= srchBytes;
                // fprintf( stderr, "%d# @%X -> @%X cpy %X\n", rplcCount, pStart - pIn, pMatch - pIn, rplcBytes );
                luaL_addlstring( &buf, pRplc , rplcBytes       );
                ++rplcCount;
                }
-            else
-               {
+            else {
                luaL_addlstring( &buf, pMatch, 1 );
                --bytesLeft;
                }
             }
-         else
-            {
+         else {
             break;
             }
          }
@@ -216,10 +203,8 @@ LUAFUNC_(replace)   // in S1, replace S2 with S3, return replaced string, # of r
    }
 
 
-void register_k_bin( lua_State *L )
-   {
-   static const luaL_reg myLuaFuncs[] =
-      {
+void register_k_bin( lua_State *L ) {
+   static const luaL_reg myLuaFuncs[] = {
       LUA_FUNC_I( bitand  )  // leading "bit" as these conflict with build-in operators of the same name
       LUA_FUNC_I( bitor   )  // leading "bit" as these conflict with build-in operators of the same name
       LUA_FUNC_I( bitxor  )  // leading "bit" as these conflict with build-in operators of the same name
@@ -259,30 +244,26 @@ static int pathsep_of_path( const char *path )  { return strchr( path, '/' ) ? '
 // 20061212 kgoodwin I HATE that Win32 API's insist on capitalizing the drive letter!
 #define  FIX_DRIVE_LETTER( buf )  do { if( buf[0] && buf[1] == ':' )  buf[0] = tolower( buf[0] ); } while( 0 )
 
-static void tr1( char *buf, int from, int to )
-   {
+static void tr1( char *buf, int from, int to ) {
    int ix;
    for( ix=0 ; buf[ix] ; ++ix )
       if( buf[ix] == from )
           buf[ix] =  to;
    }
 
-static void tr_pathsep( char *buf, int pathsep )
-   {
+static void tr_pathsep( char *buf, int pathsep ) {
    tr1( buf, (pathsep == '/') ? '\\' : '/', pathsep );
    }
 
 #endif
 
-LUAFUNC_(chdir)
-   {
+LUAFUNC_(chdir) {
    const char *dirnm = S_(1);
    int ok = !( WL( _chdir, chdir )( dirnm ) == -1);
    return push_errno_result(L, ok, dirnm);
    }
 
-LUAFUNC_(create)
-   {
+LUAFUNC_(create) {
    const char *dirnm = S_(1);
    int ok = (WL( _mkdir( dirnm ), mkdir( dirnm, 0777 ) ) != -1);
    return push_errno_result(L, ok, dirnm);
@@ -304,14 +285,12 @@ LUAFUNC_(create)
 // relative paths (IOW, those parts are not filtered out for duplicate
 // sequential pathsep chars, nor for incorrectly-cased names
 
-LUAFUNC_(fullpath)
-   {
+LUAFUNC_(fullpath) {
    const char *pnm = S_(1);
 #if defined(_WIN32)
    char buf[ _MAX_PATH+1 ];
    char pathsep = pathsep_of_path( pnm );
-   if( !_fullpath( buf, pnm, sizeof buf ) )
-      {
+   if( !_fullpath( buf, pnm, sizeof buf ) ) {
       R_nil();
       }
 
@@ -330,8 +309,7 @@ LUAFUNC_(fullpath)
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-typedef struct
-   {
+typedef struct {
    lua_State *L;
    int        ix;
 #if defined(_WIN32)
@@ -342,8 +320,7 @@ typedef struct
 
 #if defined(_WIN32)
 
-static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
-   {
+static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv ) {
 
 #define  A_PUSH( str )                           \
       {                                          \
@@ -357,8 +334,7 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
    WIN32_FIND_DATA fd;
 
    int dnLen = strlen( dirname );
-   if( dnLen && (dirname[dnLen-1] == '\\' || dirname[dnLen-1] == '/') )
-      {
+   if( dnLen && (dirname[dnLen-1] == '\\' || dirname[dnLen-1] == '/') ) {
       --dnLen;
       _snprintf( wcStr, sizeof wcStr, "%s*", dirname);
       }
@@ -379,10 +355,8 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
    do { // Traverse through the directory structure
       char buf[ _MAX_PATH+1 ];
       _snprintf( buf, sizeof buf, "%*.*s%c%s", dnLen, dnLen, wcStr, pSdsv->pathsep, fd.cFileName);
-      if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-         {
-         if( (strcmp(fd.cFileName, ".") != 0) && (strcmp(fd.cFileName, "..") != 0) )
-            {
+      if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) {
+         if( (strcmp(fd.cFileName, ".") != 0) && (strcmp(fd.cFileName, "..") != 0) ) {
             char buf2[ _MAX_PATH+1 ];
             _snprintf( buf2, sizeof buf2, "%s%c", buf, pSdsv->pathsep );
             A_PUSH( buf2 );
@@ -390,10 +364,8 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
                scandir_( buf, 1, pSdsv );
             }
          }
-      else // it's a FILE
-         {
-         if( !pSdsv->fDirsOnly )
-            {
+      else {  // it's a FILE
+         if( !pSdsv->fDirsOnly ) {
             A_PUSH( buf );
             }
          }
@@ -405,8 +377,7 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
 
 #else
 
-static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
-   {
+static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv ) {
 #if 1
 #define  A_PUSH( str )                           \
       {                                          \
@@ -445,8 +416,7 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
                         scandir_( buf, recurse, pSdsv );
                      }
                   }
-               else // it's a FILE
-                  {
+               else { // it's a FILE
                   if( !pSdsv->fDirsOnly ) {
                      A_PUSH( buf );
                      }
@@ -464,8 +434,7 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv )
 //
 // Return an array of names of all entries (except '.' and '..') contained in
 // the directory named S_(1), optionally (if I_(2)) recursively.
-static int read_names_( lua_State *L, int fDirsOnly )
-   {
+static int read_names_( lua_State *L, int fDirsOnly ) {
    const char  *pnm = S_(1);
    scand_shvars sv = { L, 1 };
 #if defined(_WIN32)
@@ -477,15 +446,8 @@ static int read_names_( lua_State *L, int fDirsOnly )
    return 1;
    }
 
-LUAFUNC_(read_names)
-   {
-   return read_names_( L, 0 );
-   }
-
-LUAFUNC_(read_dirnames)
-   {
-   return read_names_( L, 1 );
-   }
+LUAFUNC_(read_names)    { return read_names_( L, 0 ); }
+LUAFUNC_(read_dirnames) { return read_names_( L, 1 ); }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -651,8 +613,7 @@ static void register__dir( lua_State *L ) {
 
 static LARGE_INTEGER s_PcFreq;
 
-LUAFUNC_(NowSeconds)
-   {
+LUAFUNC_(NowSeconds) {
    double rv;
    LARGE_INTEGER now;
    QueryPerformanceCounter( &now );
@@ -660,10 +621,8 @@ LUAFUNC_(NowSeconds)
    R_num(rv);
    }
 
-void register__windows( lua_State *L )
-   {
-   static const luaL_reg myLuaFuncs[] =
-      {
+void register__windows( lua_State *L ) {
+   static const luaL_reg myLuaFuncs[] = {
       LUA_FUNC_I( NowSeconds )
       { 0, 0 }
       };
