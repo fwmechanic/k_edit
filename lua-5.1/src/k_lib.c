@@ -241,9 +241,6 @@ void register_k_bin( lua_State *L ) {
 //
 static int pathsep_of_path( const char *path )  { return strchr( path, '/' ) ? '/' : '\\'; }
 
-// 20061212 kgoodwin I HATE that Win32 API's insist on capitalizing the drive letter!
-#define  FIX_DRIVE_LETTER( buf )  do { if( buf[0] && buf[1] == ':' )  buf[0] = tolower( buf[0] ); } while( 0 )
-
 static void tr1( char *buf, int from, int to ) {
    int ix;
    for( ix=0 ; buf[ix] ; ++ix )
@@ -259,15 +256,18 @@ static void tr_pathsep( char *buf, int pathsep ) {
 
 LUAFUNC_(chdir) {
    const char *dirnm = S_(1);
-   int ok = !( WL( _chdir, chdir )( dirnm ) == -1);
+   const int ok = !( WL( _chdir, chdir )( dirnm ) == -1);
    return push_errno_result(L, ok, dirnm);
    }
 
 LUAFUNC_(create) {
    const char *dirnm = S_(1);
-   int ok = (WL( _mkdir( dirnm ), mkdir( dirnm, 0777 ) ) != -1);
+   const int ok = (WL( _mkdir( dirnm ), mkdir( dirnm, 0777 ) ) != -1);
    return push_errno_result(L, ok, dirnm);
    }
+
+// 20061212 kgoodwin I HATE that Win32 API's insist on capitalizing the drive letter!
+#define  FIX_DRIVE_LETTER( buf )  do { if( buf[0] && buf[1] == ':' )  buf[0] = tolower( buf[0] ); } while( 0 )
 
 //
 // Functions not implemented (or removed) because the following functions exist
@@ -293,7 +293,6 @@ LUAFUNC_(fullpath) {
    if( !_fullpath( buf, pnm, sizeof buf ) ) {
       R_nil();
       }
-
    FIX_DRIVE_LETTER( buf );
    tr_pathsep( buf, pathsep );
    R_str( buf );
@@ -598,7 +597,7 @@ static void register__dir( lua_State *L ) {
       LUA_FUNC_I( dirsep_class     )
       LUA_FUNC_I( dirsep_os        )
       LUA_FUNC_I( dirsep_preferred )
-      LUA_FUNC_I( pathsep_os    )
+      LUA_FUNC_I( pathsep_os       )
       LUA_FUNC_I( rmdir         ) // os.remove will not remove directories on Win32; this does!
       { 0, 0 }
       };
