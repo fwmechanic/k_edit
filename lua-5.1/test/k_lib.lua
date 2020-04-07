@@ -11,6 +11,7 @@ do -- test _dir C library
    printf( "_dir tests: begin (cwd=%s, install=%s)", _dir.current(), _dir.install() )
    local ods = _dir.dirsep_os()
    local pds = _dir.dirsep_preferred()
+   local start = os.gettimeofday()
    local k_dir = ".."..ods..".."..ods
    printf( "_dir.fullpath '%s' -> '%s'", k_dir, _dir.fullpath( k_dir ) )
    if pds ~= ods then printf( "_dir tests: begin (cwd=%s)", _dir.current(pds) )
@@ -23,7 +24,7 @@ do -- test _dir C library
                                                                             printf( "-----------------------------------------------" )
    for ix,nm in ipairs( _dir.read_dirnames( k_dir, 1 ) )                do  printf( "%4d: %-40s -> '%s'", ix, nm, _dir.fullpath( nm ) )  end
                                                                             printf( "-----------------------------------------------" )
-   print( "_dir tests: passed" )
+   printf( "_dir tests: passed; took %f", os.gettimeofday() - start )
 end
 
 print( stars )

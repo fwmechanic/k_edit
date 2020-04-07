@@ -5096,15 +5096,15 @@ if false then
    _dir.create( "."  )
    do
       local dirs = _dir.read_names( "."..dirsep_preferred, 1 )    -- read once to fill the filesystem/OS cache
-      local start = _win.NowSeconds()
+      local start = os.gettimeofday()
       local dirs = _dir.read_dirnames( "."..dirsep_preferred, 1 )
-      printf( "_dir.read_dirnames took %f", _win.NowSeconds() - start )
+      printf( "_dir.read_dirnames took %f", os.gettimeofday() - start )
    end
 
    do
-      local start = _win.NowSeconds()
+      local start = os.gettimeofday()
       local dirs = _dir.read_names( "."..dirsep_preferred, 1 )
-      printf( "_dir.read_names    took %f", _win.NowSeconds() - start )
+      printf( "_dir.read_names    took %f", os.gettimeofday() - start )
       if false then
          for _,dir in ipairs(dirs) do
             printf( "   %s", dir )

@@ -243,9 +243,11 @@ static int pathsep_of_path( const char *path )  { return strchr( path, '/' ) ? '
 
 static void tr1( char *buf, int from, int to ) {
    int ix;
-   for( ix=0 ; buf[ix] ; ++ix )
-      if( buf[ix] == from )
+   for( ix=0 ; buf[ix] ; ++ix ) {
+      if( buf[ix] == from ) {
           buf[ix] =  to;
+          }
+      }
    }
 
 static void tr_pathsep( char *buf, int pathsep ) {
@@ -266,9 +268,6 @@ LUAFUNC_(create) {
    return push_errno_result(L, ok, dirnm);
    }
 
-// 20061212 kgoodwin I HATE that Win32 API's insist on capitalizing the drive letter!
-#define  FIX_DRIVE_LETTER( buf )  do { if( buf[0] && buf[1] == ':' )  buf[0] = tolower( buf[0] ); } while( 0 )
-
 //
 // Functions not implemented (or removed) because the following functions exist
 // in the standard Lua libraries:
@@ -284,6 +283,9 @@ LUAFUNC_(create) {
 // note that we appear to IGNORE the parts of the string that are not
 // relative paths (IOW, those parts are not filtered out for duplicate
 // sequential pathsep chars, nor for incorrectly-cased names
+
+// 20061212 kgoodwin I HATE that Win32 API's insist on capitalizing the drive letter!
+#define  FIX_DRIVE_LETTER( buf )  do { if( buf[0] && buf[1] == ':' )  buf[0] = tolower( buf[0] ); } while( 0 )
 
 LUAFUNC_(fullpath) {
    const char *pnm = S_(1);
@@ -337,19 +339,22 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv ) {
       --dnLen;
       _snprintf( wcStr, sizeof wcStr, "%s*", dirname);
       }
-   else
+   else {
       _snprintf( wcStr, sizeof wcStr, "%s%c*", dirname, pSdsv->pathsep);
+      }
 
    tr_pathsep( wcStr, pSdsv->pathsep );
 
-   if( pSdsv->fDirsOnly )
+   if( pSdsv->fDirsOnly ) {
       // 20081005 kgoodwin FindExSearchLimitToDirectories appears to have NO EFFECT, so using FindFirstFileEx is same as using FindFirstFile
       hList = FindFirstFileEx( wcStr, FindExInfoStandard, &fd, FindExSearchLimitToDirectories, NULL, 0 );  // Get the first file
-   else
+      }
+   else {
       hList = FindFirstFile(wcStr, &fd);  // Get the first file
-
-   if( hList == INVALID_HANDLE_VALUE ) // No dirs or files found?
-      return;                          // return emptyhanded
+      }
+   if( hList == INVALID_HANDLE_VALUE ) { // No dirs or files found?
+      return;                            // return emptyhanded
+      }
 
    do { // Traverse through the directory structure
       char buf[ _MAX_PATH+1 ];
@@ -359,17 +364,17 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv ) {
             char buf2[ _MAX_PATH+1 ];
             _snprintf( buf2, sizeof buf2, "%s%c", buf, pSdsv->pathsep );
             A_PUSH( buf2 );
-            if( recurse )  // Get the full path for sub directory
+            if( recurse ) { // Get the full path for sub directory
                scandir_( buf, 1, pSdsv );
+               }
             }
          }
       else {  // it's a FILE
          if( !pSdsv->fDirsOnly ) {
             A_PUSH( buf );
             }
-         }
+         }       // failure                    && failure
       } while( !(FindNextFile(hList, &fd) == 0 && GetLastError() == ERROR_NO_MORE_FILES) );
-                 // failure                    && failure
 
    FindClose(hList);
    }
@@ -394,9 +399,9 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv ) {
       if( d ) {
          struct dirent *dir;
          while ((dir = readdir(d)) != NULL) { // Traverse through the directory structure (depth first)
-            if( (strcmp(dir->d_name, ".") == 0) || (strcmp(dir->d_name, "..") == 0) )
+            if( (strcmp(dir->d_name, ".") == 0) || (strcmp(dir->d_name, "..") == 0) ) {
                continue;
-
+               }
             char buf[ PATH_MAX+1 ];
             snprintf( buf, sizeof buf, "%*.*s/%s", dnLen, dnLen, dirname, dir->d_name );
             struct stat sbuf;
@@ -411,8 +416,9 @@ static void scandir_( const char *dirname, int recurse, scand_shvars *pSdsv ) {
                      buf[len+1] = '\0';
                      A_PUSH( buf );
                      buf[len] = '\0';
-                     if( recurse )  // Get the full path for sub directory
+                     if( recurse ) { // Get the full path for sub directory
                         scandir_( buf, recurse, pSdsv );
+                        }
                      }
                   }
                else { // it's a FILE
@@ -546,11 +552,6 @@ LUAFUNC_(current) {
 #endif
    }
 
-LUAFUNC_(dirsep_class)     { R_str( WL( "[\\/]", "[/]" ) ); }
-LUAFUNC_(dirsep_os)        { R_str( WL( "\\", "/" ) ); }
-LUAFUNC_(dirsep_preferred) { R_str(           "/"   ); }
-LUAFUNC_(pathsep_os)       { R_str( WL( ";", ":" ) ); }
-
 LUAFUNC_(name_isfile) {
    const char *nm = S_(1);
    return is_name_stat( L, nm, WL( _S_IFREG, (S_IFREG | S_IFLNK) ) );
@@ -581,6 +582,11 @@ LUAFUNC_(rmdir) {
    return push_errno_result(L, ok, dirnm);
    }
 
+// constants
+LUAFUNC_(dirsep_class)     { R_str( WL( "[\\/]", "[/]" ) ); }
+LUAFUNC_(dirsep_os)        { R_str( WL( "\\", "/" ) ); }
+LUAFUNC_(dirsep_preferred) { R_str(           "/"   ); }
+LUAFUNC_(pathsep_os)       { R_str( WL( ";", ":" ) ); }
 
 static void register__dir( lua_State *L ) {
    static const luaL_reg myLuaFuncs[] = {
@@ -608,33 +614,7 @@ static void register__dir( lua_State *L ) {
 #endif//U_DIR_DEF
 
 
-#if defined(_WIN32)
-
-static LARGE_INTEGER s_PcFreq;
-
-LUAFUNC_(NowSeconds) {
-   double rv;
-   LARGE_INTEGER now;
-   QueryPerformanceCounter( &now );
-   rv = ((double)now.QuadPart) / ((double)s_PcFreq.QuadPart);
-   R_num(rv);
-   }
-
-void register__windows( lua_State *L ) {
-   static const luaL_reg myLuaFuncs[] = {
-      LUA_FUNC_I( NowSeconds )
-      { 0, 0 }
-      };
-
-   luaL_register(L, "_win", myLuaFuncs);
-
-   QueryPerformanceFrequency( &s_PcFreq );
-   }
-
-#endif
-
-LUALIB_API int luaopen_klib (lua_State *L)
-   {
+LUALIB_API int luaopen_klib (lua_State *L) {
 #if K_BIN_DEF
    register_k_bin( L );
 #endif
@@ -642,10 +622,5 @@ LUALIB_API int luaopen_klib (lua_State *L)
 #if U_DIR_DEF
    register__dir( L );
 #endif
-
-#if defined(_WIN32)
-   register__windows( L );
-#endif
-
    return 1;
    }

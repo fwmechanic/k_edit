@@ -4,12 +4,21 @@
 ** See Copyright Notice in lua.h
 */
 
+/* 20200407 kgoodwin for os_gettimeofday; requires gettimeofday which is available on PLAT=mingw and PLAT=linux */
+#define  USE_GETTIMEOFDAY  1
 
 #include <errno.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#if USE_GETTIMEOFDAY
+  #if defined(_WIN32)
+    #include <windows.h>
+  #else
+    #include <sys/time.h>
+  #endif
+#endif
 
 #define loslib_c
 #define LUA_LIB
@@ -75,6 +84,33 @@ static int os_clock (lua_State *L) {
   lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);
   return 1;
 }
+
+#if USE_GETTIMEOFDAY
+
+static int os_gettimeofday (lua_State *L) {  /* 20200407 kgoodwin */
+  double rv;
+#if defined(_WIN32)
+  static int s_fPcFreq_Initd;
+  static LARGE_INTEGER s_PcFreq;
+  LARGE_INTEGER now;
+  if( !s_fPcFreq_Initd ) {
+       s_fPcFreq_Initd = 1;
+       QueryPerformanceFrequency( &s_PcFreq );
+       }
+  QueryPerformanceCounter( &now );
+  rv = ((double)now.QuadPart) / ((double)s_PcFreq.QuadPart);
+#else
+  /* Though as of 20200407 this _builds_ on PLAT=mingw, it DOES NOT
+     return reasonable results at the microsecond level */
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  rv = ((double)tv.tv_sec) + ((double)tv.tv_usec / 1.0e6);
+#endif
+  lua_pushnumber(L, (lua_Number)rv);
+  return 1;
+}
+
+#endif
 
 
 /*
@@ -224,6 +260,9 @@ static const luaL_Reg syslib[] = {
   {"execute",   os_execute},
   {"exit",      os_exit},
   {"getenv",    os_getenv},
+#if USE_GETTIMEOFDAY
+  {"gettimeofday", os_gettimeofday },
+#endif
   {"remove",    os_remove},
   {"rename",    os_rename},
   {"setlocale", os_setlocale},
@@ -240,4 +279,3 @@ LUALIB_API int luaopen_os (lua_State *L) {
   luaL_register(L, LUA_OSLIBNAME, syslib);
   return 1;
 }
-
