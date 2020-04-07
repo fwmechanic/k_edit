@@ -1,6 +1,6 @@
 #!make
 #
-# Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -19,7 +19,13 @@
 #
 
 #
-# When building on Windows, uses MinGW tools from http://nuwen.net/mingw.html
+# When building on Windows, uses
+#  * GCC from http://nuwen.net/mingw.html
+#     * needs to be in PATH
+#     * with equivalent of its SET_DISTRO_PATHS.BAT executed
+#  * 'git for Windows' for MinGW environment (including bash)
+#     #### make MUST be run from 'git for Windows' bash shell,
+#     ####        ***NOT*** from CMD.exe (Windows "DOS shell")
 #
 # When building on (*ubuntu) Linux,
 #   . install_build_tools.sh
@@ -42,40 +48,39 @@ $(info make $(MAKE_VERSION))
 
 # APP_IN_DLL = 1
 
-# 'ifdef ComSpec' -> 'if building on Windows'
-# https://stackoverflow.com/a/6019523
-ifneq "$(strip $(ComSpec) $(COMSPEC) $(comspec) $(windir) $(WINDIR) $(LOCALAPPDATA))" ""
-K_WINDOWS := 1
+ifeq '$(strip $(SHELL))' ''
+  ifneq '$(strip $(COMSPEC))' ''
+    $(error COMSPEC defined but SHELL undefined; Git For Windows not installed?)
+  else
+    $(error SHELL not defined, cannot continue)
+  endif
 endif
 
+OS := $(shell uname -o)
+$(info uname -o says: '$(OS)')
+ifeq '$(OS)' 'Msys'
+  K_WINDOWS := 1
+else
+  ifeq '$(OS)' 'GNU/Linux'
+  else
+    ifneq '$(COMSPEC)' ''
+      $(error COMSPEC defined but uname -o output != 'Msys'; Git For Windows not installed?)
+    else
+      $(error unknown/unsupported uname -o output, cannot continue)
+    endif
+  endif
+endif
+
+# wrap -llib refs to make them link statically
+LINK_LIB_STATIC = -Wl,-Bstatic $1 -Wl,-Bdynamic
 
 ifdef K_WINDOWS
 
-PLAT = mingw
-export PLAT
+# CMDTBL_PLAT is ONLY to control cmdtbl processing
+CMDTBL_PLAT = mingw
 
 # to disable, _comment out_ next line!
 # DBG_BUILD := x
-
-# By default GNU make searches $(PATH) for an executable named 'sh' (in the
-# Mingw case, 'sh.exe'), and if found, uses it as the shell which executes all
-# child build command lines.  Msysgit (for some install variants) puts a
-# directory "C:\Program Files (x86)\Git\bin", which contains an instance of
-# sh.exe, in PATH.  This causes make to use msysgit's sh.exe when executing
-# build steps, which (unless I decided to formally adopt Msysgit as a
-# prerequisite build-tool for K) causes the K build to fail (since this makefle
-# is written for the default MS shell, 'CMD.exe').  In the past I've renamed
-# this file to sh_.exe and lived to tell the tale, but my use case for git
-# (perhaps uniquely) did not, until recently, include `git clone` which fails
-# if it cannot find (its) sh.exe.  Also I've found it useful to have this dir
-# in PATH since these versions of the "unix utils" tend to be quite up-to-date
-# and "come for free" since I religiously update msysgit on each release,
-# renaming sh.exe to sh_.exe is no longer an option.  'SHELL=cmd' forces use of
-# CMD.exe even if an sh.exe is present in $(PATH)
-
-SHELL=cmd
-export SHELL # inherited by child (recursive) makes such as that which builds $(LUA_T)
-UNCOND_CMD_SEP := &
 
 #######################################################################################
 # patch GNU make 4.0 (or nuwen GCC 11.6+ distro) bug by replacing dflt .c compile rule
@@ -84,69 +89,37 @@ export CC
 # end patch
 #######################################################################################
 
-MV = move
-export MV
 EXE_EXT := .exe
-export EXE_EXT
 DLL_EXT := .dll
 OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:" $@.exp | grep -Fivf std.dynlib.mingw
 OS_LIBS := -lpsapi
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
-# LS_L_TAIL is from http://ss64.com/nt/dir.html (MS BATch programming and cmdline utils suck SO BAD!)
-ifeq "$(strip $(SHELL) )" ""
-LS_L := dir
-LS_L_TAIL := | FIND "/"
-# `del /F /Q` fails if any named parameter does not exist; add '-' prefix to ignore this error
-RM= -del /F /Q
-else
-# bash in Windows (Git For Windows bash)
-LS_L := ls -l
-LS_L_TAIL :=
-# rm is not part of Nuwen MinGW package
-RM= rm -f
-endif
-
-# MinGW _mostly_ works OK using / as dirsep, HOWEVER when specifying a path prefix to argv[0], cmd _requires_ DIRSEP==\ (fails if DIRSEP==/)
-DIRSEP := \\
 CPPFLAGS += -DWINVER=0x0501
 
 else
 
-PLAT = linux
-export PLAT
+# CMDTBL_PLAT is ONLY to control cmdtbl processing
+CMDTBL_PLAT = linux
 
 # to disable, _comment out_ next line!
 DBG_BUILD := x
 
-UNCOND_CMD_SEP := ;
-
-MV = mv
-export MV
-RM= rm -f
 EXE_EXT :=
 DLL_EXT := .so
 OBJDUMP_BINARY = echo "objdumping $@" && objdump -p $@ > $@.exp && readelf -d $@ | grep NEEDED | grep -Fvf std.dynlib.linux
 CPPFLAGS += -pthread
 # NB: once certain C++ _compiles_ see CPPFLAGS, should remove -lpthread
-OS_LIBS := -lncurses -lpthread
+OS_LIBS := -lncurses -lpthread -ldl
 PLAT_LINK_OPTS=
-LS_L := ls -l
-LS_L_TAIL :=
-DIRSEP := /
 
-# allow io.popen in Linux
-LUA_USE_POSIX := 1
-export LUA_USE_POSIX
 endif
 
-# needed by Lua make:
-export RM
-
-# generally I don't use a debugger, but when crashes occur, obtaining a stack
-# trace is VERY helpful.  I use DrMinGW  https://github.com/jrfonseca/drmingw/releases
+# Generally I don't use a debugger, but when crashes occur, obtaining a stack
+# trace is VERY helpful.  On Windows I use DrMinGW
+# https://github.com/jrfonseca/drmingw/releases
 # note that the version (32- vs. 64-bit) is _app-being-debugged_ specific!  And you can
 # simultaneously install BOTH 32- and 64-bit versions of DrMinGW (and MUST if you want
-# to be able to debug BOTH 32- and 64-bit versions of this app (K editor)
+# to be able to debug BOTH 32- and 64-bit versions of your app.
 #
 # You MUST rebuild K to get useful info from DrMinGW:
 # 1. define DBG_BUILD (uncomment PLAT-specific line 'DBG_BUILD := 1' above)
@@ -178,9 +151,6 @@ GCC_OPTZ := -flto -O3 $(GCC_OPTZ_ARCH)
 endif
 
 LUA_DIR=lua-5.1/src
-
-# wrap -llib refs to make them link statically
-LINK_LIB_STATIC = -Wl,-Bstatic $1 -Wl,-Bdynamic
 
 CC_OUTPUT := # --save-temp
 # -fstack-protector    gens link error
@@ -305,8 +275,8 @@ CFLAGS   = $(C_OPTS_COMMON) $(C_OPTS_DBG)
 CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtti $(C_OPTS_LUA_REF) $(KEEPASM) $(C_OPTS_DBG)
 #####################################################################################################################
 
-LIBLUA := $(LUA_DIR)/liblua.a
-LIBS   := -static-libgcc -static-libstdc++ -lgcc $(BOOST_LIBS) $(OS_LIBS) $(LIBLUA) $(PCRE_LIB) #  -lmcheck (seems not to exist in MinGW)
+LUA_A := $(LUA_DIR)/liblua.a
+LIBS   := -static-libgcc -static-libstdc++ -lgcc $(LUA_A) $(BOOST_LIBS) $(PCRE_LIB) $(OS_LIBS) #  -lmcheck (seems not to exist in MinGW)
 
 CPP_OPTS:=
 
@@ -366,14 +336,13 @@ endif
 
 CMDTBL_OUTPUTS := cmdtbl.h
 
-THISDIR := .$(DIRSEP)
+THISDIR := ./
 
-# !!! in Lua-5.1/src/Makefile, PLAT=mingw, LUA_T=lua (not lua.exe)
-LUA_T=$(THISDIR)lua$(EXE_EXT)
+LUA_T=$(LUA_DIR)/lua$(EXE_EXT)
 
 CLEAN_ARGS = $(OBJS) *.makedeps *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLS_PKG_FILES) *_unittest *_unittest.o
 
-ZAP_ARGS := $(EXE_TGTS) $(LUA_T)
+ZAP_ARGS := $(EXE_TGTS) $(LUA_T) $(LUA_A)
 
 all : tags
 
@@ -414,23 +383,35 @@ tags : $(EXE_TGTS)
 	$(TAGS_CMDLN)
 
 $(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat bld_cmdtbl.lua
-	$(LUA_T) bld_cmdtbl.lua $(PLAT) < cmdtbl.dat
+	$(LUA_T) bld_cmdtbl.lua $(CMDTBL_PLAT) < cmdtbl.dat
 
 cleanliblua:
 	cd $(LUA_DIR) && $(MAKE) clean
 
-$(LIBLUA):
-	cd $(LUA_DIR) && $(MAKE) liblua.a
+echo:
+	@echo "LUA_T = $(LUA_T)"
 
 # !!! in Lua-5.1/src/Makefile, PLAT=mingw, `make lua` builds lua.exe aka $(LUA_T)
-BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) clean&&$(MAKE) test&&$(MV) $(LUA_T) ../..&&$(MAKE) clean
-BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) test&&$(MV) $(LUA_T) ../..
+BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) clean&&$(MAKE) test&&mv $(LUA_T) ../..&&$(MAKE) clean
+BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) test&&mv $(LUA_T) ../..
+BLD_LUA_T = cd $(LUA_DIR)&&$(MAKE) clean&&$(MAKE) test&&mv $(LUA_T) ../..
+BLD_LUA_T = $(MAKE) -C $(LUA_DIR) clean && $(MAKE) -C $(LUA_DIR) test && mv $(LUA_DIR)/$(LUA_T) .
+BLD_LUA_T = $(MAKE) -C $(LUA_DIR) clean && $(MAKE) -C $(LUA_DIR) test
 
 $(LUA_T):
+	$(MAKE) -C $(LUA_DIR)
+
+.PHONY: lua
+lua:
 	$(BLD_LUA_T)
+	@ls -l $(LUA_T)
+
+# $(LUA_A):  NOT needed since target $(LUA_T) builds $(LUA_A)
+# 	$(MAKE) -C $(LUA_DIR) liblua.a
 
 clean:
-	$(RM) $(CLEAN_ARGS)
+	$(RM) $(CLEAN_ARGS) $(LUA_T)
+	$(MAKE) -C $(LUA_DIR) clean
 
 zap: cleanliblua
 	$(RM) $(ZAP_ARGS) $(CLEAN_ARGS)
@@ -459,8 +440,8 @@ endif
 
 # common phrases used in linking recipes
 BLD_TIME_OBJ = @$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
-LS_BINARY = $(LS_L) $@ $(LS_L_TAIL)
-SHOW_BINARY = $(OBJDUMP_BINARY) $(UNCOND_CMD_SEP) $(LS_BINARY)
+LS_BINARY = ls -l $@
+SHOW_BINARY = $(OBJDUMP_BINARY) ; $(LS_BINARY)
 
 ifdef APP_IN_DLL
 
@@ -470,7 +451,7 @@ $(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
 	$(LINK.cpp) $^ -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)
 	@$(SHOW_BINARY)
 
-$(ED_DLL)$(DLL_EXT): $(OBJS) $(LIBLUA)
+$(ED_DLL)$(DLL_EXT): $(OBJS)
 	$(BLD_TIME_OBJ)
 	@echo linking $@&& $(CXX) -shared -o $@ $(OBJS) _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP)
 	@$(SHOW_BINARY)
@@ -483,7 +464,7 @@ LINK_EXE_RAW = $(CXX) $^ -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_M
 LINK_EXE = $(LINK_EXE_RAW)
 LINK_EXE = @echo linking $@&& $(LINK_EXE_RAW)
 
-$(TGT)$(EXE_EXT): $(OBJS) $(LIBLUA) $(WINDRES)
+$(TGT)$(EXE_EXT): $(OBJS) $(WINDRES)
 	$(BLD_TIME_OBJ)
 	$(LINK_EXE)
 	@$(SHOW_BINARY)
@@ -530,8 +511,8 @@ kb_190351:
 PANDOC_OPTS := -f markdown_github-hard_line_breaks-raw_html+inline_notes+pipe_tables --section-divs
 
 khelp.html: khelp.txt
-	$(THISDIR)pdconv.lua > log
-	$(THISDIR)pandoc.bat khelp.md_ $(PANDOC_OPTS) -t html -s -o khelp.html
+	./pdconv.lua > log
+	./pandoc.bat khelp.md_ $(PANDOC_OPTS) -t html -s -o khelp.html
 	khelp.html
 
 
@@ -540,21 +521,21 @@ khelp.html: khelp.txt
 run_unittests: run_boost_stref_unittest run_krbtree_unittest run_dlink_unittest
 
 run_dlink_unittest: dlink_unittest$(EXE_EXT)
-	$(THISDIR)dlink_unittest$(EXE_EXT)
+	./dlink_unittest$(EXE_EXT)
 
 dlink_unittest$(EXE_EXT): CXXFLAGS += -Werror
 dlink_unittest$(EXE_EXT): dlink_unittest.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_boost_stref_unittest: boost_stref_unittest$(EXE_EXT)
-	$(THISDIR)boost_stref_unittest$(EXE_EXT)
+	./boost_stref_unittest$(EXE_EXT)
 
 boost_stref_unittest$(EXE_EXT): CXXFLAGS += -Werror
 boost_stref_unittest$(EXE_EXT): boost_stref_unittest.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_krbtree_unittest: krbtree_unittest$(EXE_EXT)
-	$(THISDIR)krbtree_unittest$(EXE_EXT) < COPYING
+	./krbtree_unittest$(EXE_EXT) < COPYING
 
 krbtree_unittest$(EXE_EXT): krbtree_unittest.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@

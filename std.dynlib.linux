@@ -4,4 +4,5 @@ libpthread.so
 libpcre.so
 libm.so
 libc.so
+libdl.so
 ld-linux-x86-64.so

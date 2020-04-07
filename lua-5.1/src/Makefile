@@ -6,6 +6,14 @@
 
 # Your platform. See PLATS for possible values.
 PLAT= none
+OS := $(shell uname -o)
+ifeq '$(OS)' 'Msys'
+  PLAT= mingw
+  EXE_EXT= .exe
+else
+  PLAT= linux
+  EXE_EXT=
+endif
 
 # CC= gcc
 CFLAGS= -O2 -Wall $(MYCFLAGS)
@@ -14,31 +22,20 @@ RANLIB= ranlib
 
 LIBS= -lm $(MYLIBS)
 
+MY_LPEG_O= lpcap.o lpcode.o lpprint.o lptree.o lpvm.o
+
 # next ifdef syms defined in %~dp0../../GNUmakefile
 ifdef USE_PCRE
 # changes @ PCRE 8.37 -> 8.38 require -DPCRE_STATIC
 CPPFLAGS += -DPCRE_STATIC
-PCRE_OBJ = \
-lpcre$(OBJ_SFX) \
-lpcre_f$(OBJ_SFX) \
-lpcre_common$(OBJ_SFX)
+MY_LPCRE_O = lpcre.o lpcre_f.o lpcre_common.o
 PCRE_LIB := -lpcre
-else
-PCRE_OBJ :=
-PCRE_LIB :=
-endif
-
-ifdef LUA_USE_POSIX
-CPPFLAGS += -DLUA_USE_POSIX
-endif
-ifdef LUA_WIN
-CPPFLAGS += -DLUA_WIN
 endif
 
 MYCFLAGS=
 MYLDFLAGS=-s
 MYLIBS= $(PCRE_LIB)
-MYLIBS=
+MYLIB_O = $(MY_LPEG_O) lpack.o $(MY_LPCRE_O) k_lib.o
 
 # == END OF USER SETTINGS. NO NEED TO CHANGE ANYTHING BELOW THIS LINE =========
 
@@ -53,26 +50,22 @@ MYLIBS=
 
 PLATS= aix ansi bsd freebsd generic linux macosx mingw posix solaris
 
-LIB_PFX=lib
-LIB_SFX=.a
-OBJ_SFX=.o
-include LUA_OBJS.mik
-
-# LUA_A=  liblua.a
-# CORE_O= lapi.o lcode.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o lmem.o \
-#         lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o ltm.o  \
-#         lundump.o lvm.o lzio.o
-# LIB_O=  lauxlib.o lbaselib.o ldblib.o liolib.o lmathlib.o loslib.o ltablib.o \
-#         lstrlib.o loadlib.o linit.o
-
 LUA_T=	lua$(EXE_EXT)
 LUA_O=	lua.o
+LUA_A=	liblua.a
+CORE_O=	lapi.o lcode.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o lmem.o \
+	lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o ltm.o  \
+	lundump.o lvm.o lzio.o
+LIB_O=	lauxlib.o lbaselib.o ldblib.o liolib.o lmathlib.o loslib.o ltablib.o \
+	lstrlib.o loadlib.o linit.o
+
+LIB_O += $(MYLIB_O)
 
 LUAC_T=	luac$(EXE_EXT)
 LUAC_O=	luac.o print.o
 
 ALL_O= $(CORE_O) $(LIB_O) $(LUA_O) $(LUAC_O)
-ALL_T= $(LUA_A) $(LUA_T) $(LUAC_T)
+ALL_T= $(LUA_A) $(LUA_T) # $(LUAC_T)
 ALL_A= $(LUA_A)
 
 default: $(PLAT)
@@ -144,10 +137,11 @@ macosx:
 #	$(MAKE) all MYCFLAGS=-DLUA_USE_MACOSX
 
 mingw:
-	$(MAKE) "LUA_A=lua51.dll" "LUA_T=lua.exe" \
-	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
-	"MYCFLAGS=-DLUA_BUILD_AS_DLL" "MYLIBS=" "MYLDFLAGS=-s" lua.exe
-	$(MAKE) "LUAC_T=luac.exe" luac.exe
+#	$(MAKE) "LUA_A=lua51.dll" "LUA_T=lua.exe" \
+#	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
+#	"MYCFLAGS=-DLUA_BUILD_AS_DLL" "MYLIBS=" "MYLDFLAGS=-s" lua.exe
+#	$(MAKE) "LUAC_T=luac.exe" luac.exe
+	$(MAKE) $(LUA_T)
 
 posix:
 	$(MAKE) all MYCFLAGS=-DLUA_USE_POSIX

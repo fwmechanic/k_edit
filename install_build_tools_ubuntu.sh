@@ -48,6 +48,7 @@ if [ "$ID" = "ubuntu" ] ; then
       libncurses5-dev         \
       libpcre3-dev            \
       ncurses-term            \
+      libreadline-dev         \
       xclip
    complete
 fi
@@ -55,14 +56,16 @@ fi
 if [ "$ID" = "centos" ] ; then
    echo "${hdr}STARTING"
    yum -yq groupinstall "Development Tools"   &&
-   yum -yq install boost-devel ncurses-devel pcre-devel ncurses-term &&
-   yum -yq install exuberant-ctags
+   yum -yq install boost-devel ncurses-devel pcre-devel ncurses-term readline-devel &&
+   yum -yq install exuberant-ctags &&
    yum -yq install xclip
    complete
 fi
 
-echo "${hdr}FAILED: '$ID' unknown" ; exit 1
+echo "${hdr}FAILED: '$ID' unknown" ;
+exit 1
 
+# notes (not used): alternative yum version
 yum groupinstall "Development Tools"
 yum install libboost-devel
 yum install libboost-filesystem-devel
