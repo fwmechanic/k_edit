@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -644,19 +644,37 @@ void DBGNL() {
    wr_nl_flush( ofh );
    }
 
+#if !defined(_WIN32)
+
+static void strftime_us( char *buf, size_t sizeof_buf ) {  // based on https://stackoverflow.com/a/2409054
+   struct timeval tv;
+   time_t nowtime;
+   struct tm *nowtm;
+
+   gettimeofday( &tv, nullptr );
+   nowtime = tv.tv_sec;
+   nowtm = localtime( &nowtime );
+   const size_t sftLen = strftime( buf, sizeof_buf, LOG_STRFTIME_FMT, nowtm );
+   snprintf( buf+sftLen, sizeof_buf-sftLen, ".%06ld" " ", tv.tv_usec );
+   }
+
+#endif
+
 int DBG( char const *kszFormat, ...  ) {
    auto ofh( ofh_DBG ? ofh_DBG : stdout );
-   const auto tnow( time( nullptr ) );
-   auto ndTsPr( true );
    if( LOG_STRFTIME ) {
-      const auto lt( localtime( &tnow ) );
       char tmstr[100];
-      if( strftime( BSOB(tmstr), LOG_STRFTIME_FMT " ", lt ) ) {
-         fputs( tmstr, ofh );
-         ndTsPr = false;
-         }
+#if defined(_WIN32)
+      const auto tnow( time( nullptr ) );
+      const auto lt( localtime( &tnow ) );
+      strftime( BSOB(tmstr), LOG_STRFTIME_FMT " ", lt );
+#else
+      strftime_us( BSOB(tmstr) );
+#endif
+      fputs( tmstr, ofh );
       }
-   if( ndTsPr ) {
+   else {
+      const auto tnow( time( nullptr ) );
       fprintf( ofh, "%" PR_TIMET " ", (tnow - log_t0) );
       }
    va_list args;  va_start(args, kszFormat);
