@@ -3323,6 +3323,7 @@ do
 
    local exts = {
       exe = true,
+      pdf = true,
    -- mp3 = true,
    -- m3u = true,
       }
