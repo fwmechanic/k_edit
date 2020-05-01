@@ -26,7 +26,6 @@
       errprompt:    YES # [allow]/prevent "press any key" sequence following error
       beep:no
       memusgink:yes
-      brightfg:yes
 
       # langhilites:no  # note that this will not affect any file loaded first at editor startup :-(
 
@@ -657,6 +656,7 @@
    ds:="\"
 
 [os.linux]
+   brightfg:yes
    ds:="/"
    trailspace:no
    traildisp: ?
