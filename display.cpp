@@ -2763,9 +2763,9 @@ STATIC_FXN void RedrawScreen() {
             g_Win(ix)->GetLineForDisplay( ix, buf, alc, pFirstPossibleHiLite, yLine );
             }
          }
-         for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin < yLine ; ++dvsit ) {
+         for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin <  yLine ; ++dvsit ) {
             }
-         for( ; dvsit != s_direct_vid_segs.cend() && yLine == dvsit->d_origin.lin ; ++dvsit ) {
+         for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin == yLine ; ++dvsit ) {
             buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
             alc.PutColor( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorIndex );
             }
@@ -3055,9 +3055,9 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 // cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).k_str() );
 // cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).k_str() );
    cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).k_str() );
-// cl.Cat( ColorTblIdx::INF , FmtStr<20>( "%s"           , g_fCase ? "E!=e" : "E==e" ).k_str() );
-// cl.Cat( ColorTblIdx::INF , FmtStr<20>( "%s"           , g_fCase ? "Q!=q" : "Q==q" ).k_str() );
-   cl.Cat( ColorTblIdx::INF , FmtStr<20>( "%s"           , g_fCase ? "A!=a" : "A==a" ).k_str() );
+                       //     g_fCase ? "E!=e" : "E==e"
+                       //     g_fCase ? "Q!=q" : "Q==q"
+   cl.Cat( ColorTblIdx::INF , g_fCase ? "A!=a" : "A==a" );
    if( 0 ) { // 20150105 KG: seems superfluous
       if( g_pFbufClipboard && g_pFbufClipboard->LineCount() ) {
          PCChar st;
