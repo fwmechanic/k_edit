@@ -238,7 +238,6 @@ extern   std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase=1
 extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
 extern   int   FlipCase( int ch );
-extern PChar   xlatCh( PChar pStr, int fromCh, int toCh );
 extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
 

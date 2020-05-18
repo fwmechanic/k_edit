@@ -776,16 +776,6 @@ void StrUnDoubleBackslashes( PChar pszString ) {
       } while( *pRd != 0 );
    }
 
-PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
-   const auto rv( pStr );
-   for( ; *pStr ; ++pStr ) {
-      if( *pStr == fromCh ) {
-          *pStr =  toCh;
-          }
-      }
-   return rv;
-   }
-
 STATIC_FXN std::string is_content_grep( PCFBUF pFile ) { 1 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
    auto  metaLines( 0 ); // params that govern how...
    Path::str_t origSrchFnm;    // ...srchfile is processed

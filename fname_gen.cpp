@@ -275,6 +275,17 @@ bool StrSubstituterGenerator::GetNextString( std::string &st ) {
    return true;
    }
 
+
+STATIC_FXN PChar xlatCh( PChar pStr, int fromCh, int toCh ) {
+   const auto rv( pStr );
+   for( ; *pStr ; ++pStr ) {
+      if( *pStr == fromCh ) {
+          *pStr =  toCh;
+          }
+      }
+   return rv;
+   }
+
 // Parses a string complying with CFX grammar and (if pSSG is NZ) prepares it
 // for a StrSubstituterGenerator
 //
