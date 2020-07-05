@@ -413,7 +413,7 @@ bool ARG::emacscdel() { return DeletePrevChar( true  ); }
 //------------------------------------------------------------------------------
 
 STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE yLine, const COL xLeft, const COL boxWidth, bool fCollapse ) {
-   pf->DupLineTabxPerRealtabs( dest, yLine );
+   pf->DupLineTabs2Spcs( dest, yLine );
    const auto tw( pf->TabWidth() );
    const auto xEolNul( StrCols( tw, dest ) );
    if( xEolNul <= xLeft ) { 0 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
@@ -1153,9 +1153,8 @@ bool ARG::rawline() {
    }
 #endif
 
-COL FBUF::getLine_( std::string &dest, LINE yLine, int chExpandTabs ) const {
-   FormatExpandedSeg( dest, COL_MAX, PeekRawLine( yLine ), 0, TabWidth(), chExpandTabs, ' ' );
-   return dest.length();
+void FBUF::DupLineTabs2Spcs( std::string &dest, LINE yLine ) const {
+   FormatExpandedSeg( dest, COL_MAX, PeekRawLine( yLine ), 0, TabWidth(), ' ', ' ' );
    }
 
 // gap: [xMinIncl..xMaxIncl]
@@ -1177,7 +1176,7 @@ void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl
 //    original dest[xIns] is moved to dest[xIns+insertCols]
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
-int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
+void FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
    DupLineTabs2Spcs( dest, yLine );
    const auto tw       ( TabWidth() );
    const auto lineCols ( StrCols( tw, dest ) );                   DB && DBG( "%s: %" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
@@ -1186,9 +1185,8 @@ int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL i
       }
    if( insertCols > 0 ) {
       const auto ixIns( FreeIdxOfCol( tw, dest, xIns ) );         DB && DBG( "%s: %" PR_BSR "| L %d (%d) [%" PR_SIZET "]", __func__, BSR(dest), lineCols, xIns, ixIns );
-      dest.insert( ixIns, insertCols, ' ' );
+      dest.insert( ixIns, insertCols, ' ' );  // BUGBUG: inefficient: memmove's the trailing part of dest which was just copied into dest by DupLineTabs2Spcs
       }                                                           DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET " (%d)", __func__, BSR(dest), dest.length(), xIns );
-   return dest.length();
    }
 
 //--------------------------------------------------------------------------------------------------

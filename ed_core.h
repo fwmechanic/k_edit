@@ -1211,8 +1211,6 @@ public:
    bool           FindMark( PCChar pszMarkname, FBufLocn *pFL );
    void           DestroyMarks();
    //************ GetLine
-private:
-   COL            getLine_( std::string &dest, LINE yLine, int chExpandTabs=0 ) const;
 public:
                // !!!use PeekRawLine to access line content whenever possible!!!
                // you can just use PeekRawLine() and stref methods + helper functions
@@ -1239,10 +1237,9 @@ public:
                      const auto rv( PeekRawLine( yLine ) );
                      dest.assign( rv.data(), rv.length() );
                      }
-   COL            DupLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ? 0 : ' ' ); }
-   COL            DupLineTabs2Spcs      ( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine,                   ' ' ); }
+   void           DupLineTabs2Spcs      ( std::string &dest, LINE yLine ) const;
    void           DupLineSeg            ( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const;
-   int            DupLineForInsert      ( std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
+   void           DupLineForInsert      ( std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
    //************ PutLine
 public:
