@@ -1607,7 +1607,7 @@ STATIC_FXN bool IfOnlyOneFilespecInCurWcFileSwitchToIt() {
       return true;
       }
    Path::str_t fnm;
-   if( pFBuf->GetLineIsolateFilename( fnm, 0, 0 ) < 1 ) { // read first line from pseudofile
+   if( FBOP::GetLineIsolateFilename( pFBuf, fnm, 0, 0 ) < 1 ) { // read first line from pseudofile
       return Msg( "GetLineIsolateFilename(0) failed!" );
       }
    const auto pFn( fnm.c_str() );
@@ -1876,7 +1876,7 @@ bool ARG::setfile() {
                      if( d_cArg == 2 && !g_CurFBuf()->IsDirty() ) { return !fnMsg( "current file not dirty" ); }
                      return g_CurFBuf()->WriteToDisk() == false;   // *** 'arg arg setfile' saves current file to disk
                      }
-                  if( g_CurFBuf()->GetLineIsolateFilename( fnm, d_nullarg.cursor.lin, d_nullarg.cursor.col ) < 1 ) { // read first line from pseudofile
+                  if( FBOP::GetLineIsolateFilename( g_CurFBuf(), fnm, d_nullarg.cursor.lin, d_nullarg.cursor.col ) < 1 ) { // read first line from pseudofile
                      return false;
                      }
                   break; //-------------------------------------------------------

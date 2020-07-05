@@ -185,7 +185,7 @@ The following outline describes all possible argtypes.  Different ``ARG::functio
  * `NULLARG`: if `function` is invoked with an `arg` prefix active but without intervening cursor movement or entry of literal characters.  The actual argtype received by ``ARG::function()`` can vary, but always includes the cursor position and cArg, containing a count, the number of times `arg` was invoked prior:
  ** if the ``function``s argtype is qualified by `NULLEOW` or `NULLEOL` (these can only apply to `NULLARG`), ``ARG::function()`` receives a `TEXTARG` (string value) containing a string value read from buffer text content:
  *** `NULLEOL`: from cursor to end of the line.
- **** EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` string value, truncating it at the first whitespace character or in other "magical" ways (see `FBUF::GetLineIsolateFilename()`).
+ **** EX: `arg setfile` opens (switches to) the file or URL beginning at the cursor position.  Note that `ARG::setfile()` contains code which further parses the `TEXTARG` string value, truncating it at the first whitespace character or in other "magical" ways (see `FBOP::GetLineIsolateFilename()`).
  *** `NULLEOW`: from cursor and including all contiguous "word characters" through end of line (if the cursor is positioned in the middle of a word, `NULLEOW` passes only the trailing substring of the word to ``ARG::function()``).
  **** EX: `arg psearch` (likewise `msearch`, `grep`, `mfgrep`) searches for the word beginning at the cursor position.
  * `TEXTARG`: when a string value is passed to `ARG::anyfunction()`.  Generated when: 

@@ -1210,7 +1210,8 @@ public:
    NamedPointHead d_MarkHead; // needs to be public since Mark subsys manages it directly
    bool           FindMark( PCChar pszMarkname, FBufLocn *pFL );
    void           DestroyMarks();
-   //************ GetLine
+
+   //************ GetLine: Peek (stref value) and Dup (std::string reference) variants
 public:
                // !!!use PeekRawLine to access line content whenever possible!!!
                // you can just use PeekRawLine() and stref methods + helper functions
@@ -1227,12 +1228,7 @@ public:
                         }
                      }
    stref          PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl=COL_MAX ) const; // returns RAW line content BY REFERENCE
-               // most of the time, you can just use PeekRawLine() and stref methods + helper functions
-               // in my_strutils.h and the tabWidth-dependent col-of-ptr/ptr-of-col xlators
-               // to reference/parse line content w/o copying (MUCH more efficient to
-               // avoid a heap alloc).  However there are times when an actual copy is needed, so...
-               // (NOTE that this the dup'd string is RAW, you still have to handle tabx yourself
-               // if necessary)
+               // Dup*: when an actual copy is needed:
    void           DupRawLine( std::string &dest, LINE yLine ) const {
                      const auto rv( PeekRawLine( yLine ) );
                      dest.assign( rv.data(), rv.length() );
@@ -1240,7 +1236,6 @@ public:
    void           DupLineTabs2Spcs      ( std::string &dest, LINE yLine ) const;
    void           DupLineSeg            ( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const;
    void           DupLineForInsert      ( std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
-   int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
    //************ PutLine
 public:
    void           PutLineRaw( LINE yLine, stref srSrc ); // same as Entab() == ENTAB_0_NO_CONV, requires no std::string &scratch buffer
@@ -1449,6 +1444,8 @@ namespace FBOP { // FBUF Ops: ex-FBUF methods per Effective C++ 3e "Item 23: Pre
    extern bool    IsLineBlank( PCFBUF fb, LINE yLine );
    extern bool    IsBlank( PCFBUF fb );
    extern COL     MaxCommonLeadingBlanksInLinerange( PCFBUF fb, LINE yTop, LINE yBottom );
+
+   extern int     GetLineIsolateFilename( PCFBUF fb, Path::str_t &st, LINE yLine, COL xCol ); // -1=yLine does not exist, 0=no token found, 1=token found
 
    //************ indent
    extern COL     GetSoftcrIndent( PFBUF fb );

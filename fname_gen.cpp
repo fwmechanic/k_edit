@@ -108,18 +108,20 @@ STATIC_FXN bool IsolateFilename( sridx *pMin, sridx *pMax, stref rl ) {
    return true;
    }
 
-int FBUF::GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const {
-   if( yLine > LastLine() ) {
+int FBOP::GetLineIsolateFilename( PCFBUF fb, Path::str_t &st, LINE yLine, COL xCol ) {
+   if( yLine > fb->LastLine() ) {
       return -1;
       }
-   auto rl( PeekRawLine( yLine ) );
-   const auto ixCol( FreeIdxOfCol( g_CurFBuf()->TabWidth(), rl, xCol ) );
+   auto rl( fb->PeekRawLine( yLine ) );
+   const auto ixCol( FreeIdxOfCol( fb->TabWidth(), rl, xCol ) );
    if( ixCol > rl.length()-1 ) {
       return -1;
       }
    rl.remove_prefix( ixCol );
    sridx oMin, oMax;
-   if( !IsolateFilename( &oMin, &oMax, rl ) ) { return 0; }
+   if( !IsolateFilename( &oMin, &oMax, rl ) ) {
+      return 0;
+      }
    st.assign( rl.data()+oMin, oMax-oMin );
    return 1;
    }
@@ -169,7 +171,7 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
          Delete0( d_pCfxGen );
          }
       RTN_false_ON_BRK;
-      const auto glif_rv( d_pFBuf->GetLineIsolateFilename( d_sbuf, d_curLine++, 0 ) );
+      const auto glif_rv( FBOP::GetLineIsolateFilename( d_pFBuf, d_sbuf, d_curLine++, 0 ) );
       if( glif_rv < 0 ) { return false; } // no more lines
       if( glif_rv > 0 ) { d_pCfxGen = new CfxFilenameGenerator( __PRETTY_FUNCTION__, d_sbuf, ONLY_FILES ); }
       }
