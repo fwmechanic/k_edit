@@ -1243,14 +1243,11 @@ public:
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
    //************ PutLine
 public:
-   void           PutLineRaw( LINE yLine, stref srSrc ); // same as Entab() == ENTAB_0_NO_CONV, requires no scratch std::str buffer
-   void           PutLastLineRaw( stref srSrc ) { PutLineRaw( 1+LastLine(), srSrc ); }
+   void           PutLineRaw( LINE yLine, stref srSrc ); // same as Entab() == ENTAB_0_NO_CONV, requires no std::string &scratch buffer
                // meat-and-potatoes PutLine functions; note surfacing of tmpbuf(s) for efficiency
    void           PutLineEntab( LINE yLine, stref srSrc, std::string &tmpbuf ); // WITH UNDO
-   // void           PutLastLineEntab( stref srSrc, std::string &tmpbuf ) { PutLineEntab( 1+LastLine(), srSrc, tmpbuf ); }
    void           PutLineSeg( LINE yLine, stref ins, std::string &tmpbuf0, std::string &tmpbuf1, COL xLeftIncl=0, COL xRightIncl=COL_MAX, bool fInsert=false );
-               // _oddball_ PutLine... functions; may soon be deprecated; use sparingly!
-   int            PutLastMultilineRaw( stref sr );
+               // InsLine...
    void           InsBlankLinesBefore( LINE firstLine, LINE lineCount=1 )     { InsertLines__( firstLine, lineCount, true  ); }
    void           InsLineRaw( LINE yLine, stref srSrc ) { // WITH UNDO
                      InsBlankLinesBefore( yLine );
@@ -1260,12 +1257,15 @@ public:
                      InsBlankLinesBefore( yLine );
                      PutLineEntab( yLine, srSrc, tmp );
                      }
+               // PutLastLine...
+   void           PutLastLineRaw( stref srSrc ) { PutLineRaw( 1+LastLine(), srSrc ); }
    void           cat( PCChar pszNewLineData );  // appends to last line, honors '\n'
+   int            PutLastMultilineRaw( stref sr );
    int            FmtLastLine( PCChar format, ... ) ATTR_FORMAT(2, 3) ;
    //************ delete LINE/BOX/STREAM
 public:
-   void           DelLine            ( LINE firstLine                   ) { DeleteLines__( firstLine, firstLine, true  ); }
-   void           DelLines           ( LINE firstLine, LINE lastLine    ) { DeleteLines__( firstLine, lastLine , true  ); }
+   void           DelLine ( LINE firstLine                   ) { DeleteLines__( firstLine, firstLine, true  ); }
+   void           DelLines( LINE firstLine, LINE lastLine    ) { DeleteLines__( firstLine, lastLine , true  ); }
    void           DelBox( COL xLeft, LINE yTop, COL xRight, LINE yBottom, bool fCollapse=true );
    void           DelStream( COL xStart, LINE yStart, COL xEnd, LINE yEnd );
 private:
@@ -1295,8 +1295,8 @@ extern void        FormatExpandedSeg // more efficient version: recycles (but cl
           ( std::string &dest, size_t maxCharsToWrite  // dest-related
           , stref src, COL src_xMin, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0
           );
-extern std::string FormatExpandedSeg // less efficient version: uses virgin dest each call, thus hits the heap each time (USE RARELY!!!)
-          ( size_t maxCharsToWrite                     // dest-related
+extern std::string FormatExpandedSeg // less efficient version: uses/returns virgin dest each call, thus hits the heap each time; USE SPARINGLY!!!
+          (                    size_t maxCharsToWrite  // dest-related
           , stref src, COL src_xMin, COL tabWidth, char chTabExpand=' ', char chTrailSpcs=0
           );
 
