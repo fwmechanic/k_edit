@@ -374,27 +374,25 @@ STATIC_FXN int32_t strtol_er( rtl_errno_t &conv_errno, PCChar nptr, PCChar &endp
 
 bool ARG::vrepeat() { enum {DB=0};
    auto lx( d_boxarg.flMin.lin );
-   std::string st; g_CurFBuf()->DupLineSeg( st, lx, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
-   CPCChar inbuf( st.c_str() );
-   DB && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, inbuf );
-   const auto fInsertArg( d_cArg < 2 );
-   std::string t0,t1;
+   std::string fillseg; g_CurFBuf()->DupLineSeg( fillseg, lx, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
+   std::string t0,t1;                                 DB && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, fillseg.c_str() );
    if( !d_fMeta ) {
+      const auto fInsertArg( d_cArg < 2 );
       for( ++lx ; lx <= d_boxarg.flMax.lin; ++lx ) { // each line in boxarg
-         g_CurFBuf()->PutLineSeg( lx, inbuf, t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col, fInsertArg );
+         g_CurFBuf()->PutLineSeg( lx, fillseg.c_str(), t0,t1, d_boxarg.flMin.col, d_boxarg.flMax.col, fInsertArg );
          }
       }
    else { // insert incrementing sequence of numbers, with initial value given in top line of BOXARG
       PCChar pe; rtl_errno_t conv_errno;
-      int val( strtol_er( conv_errno, st.c_str(), pe, 0 ) );
+      int val( strtol_er( conv_errno, fillseg.c_str(), pe, 0 ) );
       if( conv_errno /* || *pe != 0 */ ) {
-         return Msg( "%s could not convert first-line content '%s' to int", __func__, st.c_str() );
+         return Msg( "%s could not convert first-line content '%s' to int", __func__, fillseg.c_str() );
          }
-      const auto ixMaxDigit( pe - st.c_str() - 1 ); // pe points at char AFTER digits
-      const auto ixMinDigit( FirstDigitOrEnd( st ) ); if( atEnd( st, ixMinDigit ) ) { return Msg( "internal error, no first digit?" ); }
+      const auto ixMaxDigit( pe - fillseg.c_str() - 1 ); // pe points at char AFTER digits
+      const auto ixMinDigit( FirstDigitOrEnd( fillseg ) ); if( atEnd( fillseg, ixMinDigit ) ) { return Msg( "internal error, no first digit?" ); }
       enum { MAX_INT_PRINT_CHARS = 9 };
-      const auto fLead0( '0' == st[ixMinDigit] );
-      const auto width_DueToArgWidth( st.length() );  DB && DBG( "width_DueToArgWidth=%" PR_SIZET, width_DueToArgWidth );
+      const auto fLead0( '0' == fillseg[ixMinDigit] );
+      const auto width_DueToArgWidth( fillseg.length() );  DB && DBG( "width_DueToArgWidth=%" PR_SIZET, width_DueToArgWidth );
       decltype(width_DueToArgWidth) width_DueToArgHeight( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  DB && DBG( "width_DueToArgHeight=%" PR_SIZET, width_DueToArgHeight );
       const auto width( std::max( width_DueToArgHeight, width_DueToArgWidth ) );
       if( width > MAX_INT_PRINT_CHARS ) { return Msg( "internal error, width %" PR_SIZET " > %d", width, MAX_INT_PRINT_CHARS ); }

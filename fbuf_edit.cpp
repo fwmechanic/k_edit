@@ -1302,7 +1302,7 @@ void FBUF::PutLineSeg( const LINE yLine, stref ins, std::string &stmp, std::stri
    else { // segment ins/overwrite case
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
       const auto inslen( std::min( ins.length(), holewidth ) );                DE && DBG( "%s [%d L gap/inslen=%" PR_BSRSIZET "/%" PR_BSRSIZET "]", __func__, xLeftIncl, holewidth, inslen );
-      DupLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );
+      DupLineForInsert( dest, yLine, xLeftIncl, fInsert ? holewidth : 0 );     DE && DBG( "%s dest: %s'", __func__, dest.c_str() );
       const auto tw( TabWidth() );
       const auto lcols( StrCols( tw, dest ) );
       const auto maxCol( fInsert ? lcols : xLeftIncl+inslen );                 DE && DBG( "%s GL4Ins: cch/col=%" PR_BSRSIZET "/%d maxCol=%" PR_BSRSIZET, __func__, dest.length(), lcols, maxCol );
