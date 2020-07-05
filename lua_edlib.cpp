@@ -433,7 +433,7 @@ namespace LFBUF {
       const auto lnum( I_(2) - 1 );
       if( isValidLineNum( pf, lnum ) ) {
          std::string tmp;
-         pf->DupLineLua( tmp, lnum );
+         pf->DupLineTabs2Spcs( tmp, lnum );
          R_lstr( tmp.c_str(), tmp.length() );
          }
       R_nil();

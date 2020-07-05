@@ -1228,6 +1228,7 @@ public:
                         return stref();
                         }
                      }
+   stref          PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl=COL_MAX ) const; // returns RAW line content BY REFERENCE
                // most of the time, you can just use PeekRawLine() and stref methods + helper functions
                // in my_strutils.h and the tabWidth-dependent col-of-ptr/ptr-of-col xlators
                // to reference/parse line content w/o copying (MUCH more efficient to
@@ -1238,15 +1239,10 @@ public:
                      const auto rv( PeekRawLine( yLine ) );
                      dest.assign( rv.data(), rv.length() );
                      }
-   COL            getLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ?0:' ' ); }
-               // DupLineLua should only be used by Lua (I haven't yet figured out how to get the
-               // tab-handling niceties available here (C++ ed_core.h) into Lua, or whether it would be
-               // worth the hassle/headache.  In the meantime for Lua coding only, tabs are ALWAYS
-               // translated to spaces).
-   COL            DupLineLua( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, ' ' ); }
-   stref          PeekRawLineSeg(                LINE yLine, COL xMinIncl, COL xMaxIncl=COL_MAX ) const; // returns RAW line content BY REFERENCE
-   void           DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const;
-   int            DupLineForInsert     (  std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
+   COL            DupLineTabxPerRealtabs( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine, g_fRealtabs ? 0 : ' ' ); }
+   COL            DupLineTabs2Spcs      ( std::string &dest, LINE yLine ) const { return getLine_( dest, yLine,                   ' ' ); }
+   void           DupLineSeg            ( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const;
+   int            DupLineForInsert      ( std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
    int            GetLineIsolateFilename( Path::str_t &st, LINE yLine, COL xCol ) const; // -1=yLine does not exist, 0=no token found, 1=token found
    //************ PutLine
 public:

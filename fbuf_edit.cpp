@@ -413,7 +413,7 @@ bool ARG::emacscdel() { return DeletePrevChar( true  ); }
 //------------------------------------------------------------------------------
 
 STATIC_FXN void GetLineWithSegRemoved( PFBUF pf, std::string &dest, const LINE yLine, const COL xLeft, const COL boxWidth, bool fCollapse ) {
-   pf->getLineTabxPerRealtabs( dest, yLine );
+   pf->DupLineTabxPerRealtabs( dest, yLine );
    const auto tw( pf->TabWidth() );
    const auto xEolNul( StrCols( tw, dest ) );
    if( xEolNul <= xLeft ) { 0 && DBG( "%s xEolNul(%d) <= xLeft(%d)", __func__, xEolNul, xLeft );
@@ -1178,7 +1178,7 @@ void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
 int FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
-   getLineTabxPerRealtabs( dest, yLine );
+   DupLineTabxPerRealtabs( dest, yLine );
    const auto tw       ( TabWidth() );
    const auto lineCols ( StrCols( tw, dest ) );                   DB && DBG( "%s: %" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
    if( xIns > lineCols ) {                 // line shorter than insert point?
