@@ -44,7 +44,7 @@
 
 #if 0
 
-  // int stays 32-bit in w64, so forcing these to 64-bits is a radical change
+  // int stays 32-bit in w64, so forcing COL & LINE to 64-bits is a radical change
 
   #ifndef PTRDIFF_MAX
   #error undefined PTRDIFF_MAX
