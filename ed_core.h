@@ -1299,7 +1299,6 @@ extern void    PrettifyMemcpy( std::string &dest, COL xLeft, size_t maxCharsToWr
 
 //************ tabWidth-dependent string fxns
 //---          FreeIdxOfCol returns index that MAY be > max indexable char in content; used to see whether col maps to content, or is beyond it, and for cursor movement
-// extern sridx   FreeIdxOfCol ( COL tabWidth, stref content, COL   colTgt, COL   startCol=0, sridx ixOfStartCol=0 );
 extern sridx   FreeIdxOfCol ( COL tabWidth, stref content, COL colTgt );
 extern sridx   FreeIdxOfCol ( COL tabWidth, stref content, COL colTgt, COL &startCol, sridx &ixOfStartCol );
 
