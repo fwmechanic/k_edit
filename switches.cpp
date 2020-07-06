@@ -60,8 +60,6 @@ const enum_nm cursorsize_enums[] = {
 
 GLOBAL_CONST char kszBackup[] = "backup";
 
-GLOBAL_VAR Linebuf SwiErrBuf; // shared buffer used to format err msg strings returned by swix functions
-
 GLOBAL_VAR uint8_t g_colorInfo      = 0x1e;
 GLOBAL_VAR uint8_t g_colorStatus    = 0x1e;
 GLOBAL_VAR uint8_t g_colorWndBorder = 0xa0;

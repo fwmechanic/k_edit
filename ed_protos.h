@@ -299,8 +299,6 @@ extern   void  Wins_WriteStateFile( FILE *ofh );
 extern   void  SwitblInit();
 extern   bool  SetSwitch( stref pszSwitchName, stref pszNewValue );
 
-extern Linebuf SwiErrBuf; // shared(!!!) buffer used to format err msg strings returned by swix functions
-
 extern void  SetCurDelims( stref param );
 
 extern   void  AssignLogTag( PCChar tag );
