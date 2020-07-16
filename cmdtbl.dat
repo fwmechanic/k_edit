@@ -168,7 +168,7 @@ s sdelete      sdelete        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + 
   selcmd       selcmd         MODIFIES + NULLEOL + TEXTARG + BOXARG + STREAMARG + LINEARG
   setenv       setenv                    TEXTARG + BOXARG + LINEARG
   seteol       seteol                    NOARG + NULLARG , 1xarg: set UNIX EOL mode 2xarg: set DOS EOL mode
-  setfile      setfile                   BOXSTR + NOARG + TEXTARG + NULLARG , Switch to another (TEXTARG/BOXSTR) file, 2xArg: save curfile [as TEXTARG], 3xArg: save all files and tmpfile
+  setfile      setfile                   NOARG + NULLARG + TEXTARG + BOXSTR + BOXARG + LINEARG, Switch to another (TEXTARG/BOXSTR) file, 2xArg: save curfile [as TEXTARG], 3xArg: save all files and tmpfile
   setwindow    setwindow                 NOARG + NULLARG
 # shell        shell                     BOXARG + NULLEOL + NOARG + LINEARG + TEXTARG
   shex         shex                      BOXSTR + TEXTARG , execute arg string with Win32's ShellExecute's default verb

@@ -497,7 +497,7 @@ namespace LuaCtxt_State {
 
 namespace LuaCtxt_Edit {
    extern bool InitOk( PCChar filename );  // constructor
-   extern bool ExecutedURL( PCChar strToExecute, bool fNullarg );  // if string matches "http[s]?//:", start a browser on it and return true
+   extern bool ExecutedURL( stref strToExecute, bool fNullarg );  // if string matches "http[s]?//:", start a browser on it and return true
    //
    // String transformation functions have standard signature:
    //

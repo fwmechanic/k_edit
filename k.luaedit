@@ -3329,6 +3329,7 @@ do
       }
 
    function ExecutedURL( strToExecute, fNullarg )
+      strToExecute = util.trim( strToExecute )
       if strToExecute:match( '%*' ) then return false end -- some URL's have '?' () not sure about '*'
 
       -- If you want browser to open your URL in a NEW window (or tab), change the

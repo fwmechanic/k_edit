@@ -1888,6 +1888,21 @@ bool ARG::setfile() {
                      }
                   fnm = d_textarg.pText;
                   break; //-------------------------------------------------------
+    case BOXARG:  ATTR_FALLTHRU;
+    case LINEARG: { // assume that a BOXARG or LINEARG contains URLs and OPEN THEM ALL:
+                  auto candCount( 0 );
+                  auto didCount( 0 );
+                  for( ArgLineWalker aw( this ) ; !aw.Beyond() ; aw.NextLine() ) {
+                     if( aw.GetLine() ) {
+                        auto ln( aw.lineref() );
+                        didCount += LuaCtxt_Edit::ExecutedURL( ln, true ) ? 1 : 0;
+                        ++candCount;
+                        }
+                     }
+                  fnMsg( "Executed %d of %d URLs", didCount, candCount );
+                  return (didCount > 0) && (didCount == candCount);
+                  }
+                  break; //-------------------------------------------------------
     }                    0 && DBG( "%s: %s", __func__, fnm.c_str() );
    if( d_argType != NOARG ) { // for NOARG we HAVE a definitive name, skip the following reinterpretations
       LuaCtxt_Edit::ExpandEnvVarsOk( fnm );

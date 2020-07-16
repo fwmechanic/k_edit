@@ -819,7 +819,7 @@ bool ARG::lua() {
    return false;
    }
 
-bool LuaCtxt_Edit::ExecutedURL( PCChar strToExecute, bool fNullarg ) {
+bool LuaCtxt_Edit::ExecutedURL( stref strToExecute, bool fNullarg ) {
    constexpr bool rv_fail = false;
    auto L( L_edit ); if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
