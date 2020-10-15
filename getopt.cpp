@@ -20,13 +20,8 @@
 #include "getopt.h"
 
 STIL bool isSwitchPrefixCh( int ch ) {
-   return
-#if defined(_WIN32)
-          ch == '/' ||
-#endif
-          ch == '-';
+   return ch == '-';
    }
-
 
 Getopt::Getopt( int argc_, PPCChar argv_, PCChar optset_ )
    : d_argc( argc_ )
