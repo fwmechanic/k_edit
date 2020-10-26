@@ -1900,10 +1900,10 @@ bool ARG::setfile() {
                   break; //-------------------------------------------------------
     }                    0 && DBG( "%s: %s", __func__, fnm.c_str() );
    if( d_argType != NOARG ) { // for NOARG we HAVE a definitive name, skip the following reinterpretations
+      LuaCtxt_Edit::ExpandEnvVarsOk( fnm );
       if( LuaCtxt_Edit::ExecutedURL( fnm.c_str(), d_argType == NULLARG ) ) {
          return true;
          }
-      LuaCtxt_Edit::ExpandEnvVarsOk( fnm );
       SearchEnvDirListForFile( fnm, true );
       }
    const auto rv( fChangeFileIfOnlyOneFilespecInCurWcFileSwitchToIt( fnm.c_str() ) );
