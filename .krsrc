@@ -544,33 +544,20 @@
    edf:=arg curfile endline
    edf:Alt+3
 
-   myscripts:="${HOME:-${USERPROFILE}}\klg\pers\"
+   notesdnm:="${K_NOTES_DIR:-${HOME:-${USERPROFILE}}/my/repos/pers}/"
 
-   #
-   # Alt+4  worklog file
-   setworklog:=cancel Arg myscripts "*.txt" SetFile
-   setworklog:Alt+4
-
-   kdb:=arg myscripts "*.kdb" setfile
+   kdb:=arg notesdnm "*.kdb" setfile
    tslog:=endfile emacsnewl begline cur_y4md_hm " " cur_dow
 
-   worklog:=cancel Arg myscripts "work.kdb" SetFile
+   worklog:=cancel Arg notesdnm "work.kdb" SetFile
 
    worklog:= meta arg cur_y4 "_wk" cur_woy ".log" SetFile -> tslog
    worklog:Alt+4
 
-   daily:=cancel Arg "${K_DIARY_FILE:-${HOME:-${USERPROFILE}}\klg\pers\daily_notes.kdb}" SetFile -> tslog
-   daily:=cancel Arg "${K_DIARY_FILE:-${HOME:-${USERPROFILE}}\klg\pers\daily_notes.kdb}" SetFile -> tslog
-   daily:=cancel Arg "${K_DIARY_FILE:-${K_NOTES_DIR:-${HOME:-${USERPROFILE}}\klg\pers\daily_notes.kdb}}${K_NOTES_DIR:+/daily_notes.kdb}" SetFile -> tslog
-   daily:Alt+5
+   diary:=cancel Arg "${K_DIARY_FILE:-${K_NOTES_DIR:-${HOME:-${USERPROFILE}}/my/repos/pers/daily_notes.kdb}}${K_NOTES_DIR:+/daily_notes.kdb}" SetFile -> tslog
+   diary:Alt+5
 
    exts :=arg "%.[^.\\]+$" matches
-
-   # Alt+6  C manual
-   set_C_manual:=cancel Arg myscripts "n869.txt" SetFile
-   # set_C_manual:Alt+6
-
-   bpl:= arg "<bpng>" ww mfx setfile cy
 
    #*************************************************************************
 
@@ -620,7 +607,7 @@
    tf:=cancel readtagsfile -> arg "<tagged-files>" setfile
 
    eth:= cancel arg "http://www.speedtest.net/" setfile \
-         cancel Arg myscripts "etheric.kdb" setfile endfile emacsnewl begline cur_y4md "_" cur_hms " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Ubiquiti WLAN)"
+         cancel Arg notesdnm "etheric.kdb" setfile endfile emacsnewl begline cur_y4md "_" cur_hms " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Ubiquiti WLAN)"
 
    #
    # ALT+#key (Alt+1, ..., Alt+9, Alt+0)
