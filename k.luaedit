@@ -4257,6 +4257,24 @@ nextmsg_setbufnm_FROM_C   = true  -- CAREFUL called from C++
 nextmsg_newsection_FROM_C = true  -- CAREFUL called from C++
 
 do
+   local wtdnm = GetenvOrNil 'PERSWORKTREE'
+   if wtdnm and _dir.name_isdir(wtdnm) then
+      local openNewPersWtFile = function( leafnm )
+         local fnm = wtdnm .. dirsep_preferred .. leafnm
+         local fb = assert( FBUF.new_may_create( fnm ), "couldn't open or create \""..fnm.."\" ???" )
+         local vw = fb:PutFocusOn()
+         vw:MoveCursor( fb:LastLine(), 0 )
+         return true
+         end
+
+      AddEdFxn{ name = "onetab", help = "", attr = NOARG
+         , NOARG = function(arg) openNewPersWtFile( "onetab" ) end
+      -- , NOARG = function(arg) openNewPersWtFile( os.date("onetab-%Y%m%dt%H%M%S") ) end
+         }
+      end
+end
+
+do
    --[[
 
    Nextmsg
