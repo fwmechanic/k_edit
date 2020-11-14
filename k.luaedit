@@ -3324,6 +3324,8 @@ do
    local exts = {
       exe = true,
       pdf = true,
+      png = true,
+      jpg = true,
    -- mp3 = true,
    -- m3u = true,
       }
@@ -3403,6 +3405,7 @@ do
          min = "%M" ,
          h   = "%H" ,
          dow = "%A" ,
+         dow3= "%a" ,
          woy = "%W" ,
          d   = "%d" ,
          mon = "%m" ,

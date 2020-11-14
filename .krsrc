@@ -452,7 +452,7 @@
    newhelp:alt+h
 
         # cur_y4md " kgoodwin "
-   dttag:=cur_y4md_hms
+   dttag:=cur_y4md_hm " " cur_dow3
    dttag:Ctrl+D
    compile:ctrl+z
 
@@ -547,7 +547,7 @@
    notesdnm:="${K_NOTES_DIR:-${HOME:-${USERPROFILE}}/my/repos/pers}/"
 
    kdb:=arg notesdnm "*.kdb" setfile
-   tslog:=endfile emacsnewl begline cur_y4md_hm " " cur_dow
+   tslog:=endfile emacsnewl begline cur_y4md_hm " " cur_dow3
 
    worklog:=cancel Arg notesdnm "work.kdb" SetFile
 
