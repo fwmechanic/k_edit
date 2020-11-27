@@ -1646,14 +1646,13 @@ namespace BufdWr { // BufdWr "mini module"
       return rv;
       }
 
-   STATIC_FXN bool WrFailed( int hFile, PCChar pSrcData, size_t byteCount ) {
-      for( size_t bytesLeft=byteCount ; bytesLeft ;  ) {
-         const size_t cpyBytes( std::min( bytesLeft, sizeof(s_Buf.WriteBuffer) - s_Buf.bytesToWriteThisTime ) );
-         memcpy( s_Buf.pWriteBufferCurrent, pSrcData, cpyBytes );
+   STATIC_FXN bool WrFailed( int hFile, stref src ) {
+      while( src.length() ) {
+         const size_t cpyBytes( std::min( src.length(), sizeof(s_Buf.WriteBuffer) - s_Buf.bytesToWriteThisTime ) );
+         memcpy( s_Buf.pWriteBufferCurrent, src.data(), cpyBytes );
+         src.remove_prefix( cpyBytes );
          s_Buf.pWriteBufferCurrent  += cpyBytes;
          s_Buf.bytesToWriteThisTime += cpyBytes;
-         pSrcData                   += cpyBytes;
-         bytesLeft                  -= cpyBytes;
          if(    s_Buf.bytesToWriteThisTime == sizeof s_Buf.WriteBuffer
              && FlushFailed( hFile )
            ) {
@@ -1710,8 +1709,8 @@ STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB
          return FileWrErr( hFile_Write, pszDestName, "User break writing '%s'" );
          }
       const auto src( pFBuf->PeekRawLine( yLine ) );
-      if(   (src.length() && BufdWr::WrFailed( hFile_Write, src  .data(), src  .length() ))
-         ||                  BufdWr::WrFailed( hFile_Write, srEol.data(), srEol.length() )
+      if(   (src.length() && BufdWr::WrFailed( hFile_Write, src   ))
+         ||                  BufdWr::WrFailed( hFile_Write, srEol )
         ) {
          return FileWrErr( hFile_Write, pszDestName, ExecutionHaltRequested() ? "User break writing '%s'" : "Out of space on '%s'" );
          }
