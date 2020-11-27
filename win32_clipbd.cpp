@@ -112,21 +112,21 @@ bool ARG::fromwinclip() {
 
 void WinClipGetFirstLine( std::string &dest ) {
    if( !Win32::OpenClipboard( Win32::GetActiveWindow() ) ) {
-      dest = ClipUnavail;
+      dest.assign( ClipUnavail );
       }
    else {
       if( !Win32::IsClipboardFormatAvailable(CF_TEXT) ) {
-         dest = "CF_TEXT format data not available";
+         dest.assign( "CF_TEXT format data not available" );
          }
       else {
          auto hglb( Win32::GetClipboardData( CF_TEXT ) );
          if( !hglb ) {
-            dest = "GetClipboardData failed";
+            dest.assign( "GetClipboardData failed" );
             }
          else {
             const auto pClip( PCChar(Win32::GlobalLock( hglb )) );
             if( !pClip ) {
-               dest = "GlobalLock on ClipboardData failed";
+               dest.assign( "GlobalLock on ClipboardData failed" );
                }
             else {
                dest.assign( pClip, StrToNextOrEos( pClip, "\x0D\x0A" ) - pClip );

@@ -72,17 +72,15 @@ bool ARG::towinclip() {
          size += stbuf.length() + sizeof_eol();
          }
       Msg( "%s (%d lines, %ld bytes)->%sClip", srcNm ? srcNm : ArgTypeName(), (yMax - yMin)+1, size, DestNm() );
-      if( nullptr == (bufptr=PrepClip( 1+size, hglbCopy )) ) { // ++ for trailing '\0'
+      if( nullptr == (bufptr=PrepClip( 1+size, hglbCopy )) ) { // 1+ for trailing '\0'
          return false;
          }
       }
       // copy source data into into *bufptr
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
-         const PCChar bs( bufptr );
          pFBuf->DupLineSeg( stbuf, lineNum, xLeft, xRight );
-         const auto chars( stbuf.length() );
-         memcpy( bufptr, stbuf.c_str(), chars );
-         bufptr += chars;
+         memcpy( bufptr, stbuf.c_str(), stbuf.length() );
+         bufptr += stbuf.length();
          cat_eol( bufptr );
          }
       *bufptr++ = '\0'; // buffer terminator
