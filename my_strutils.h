@@ -226,10 +226,7 @@ NO_MATCH:
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
 
 extern int  strnicmp_LenOfFirstStr( stref s1, stref s2 );
-extern int  strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
 extern int  strncmp_LenOfFirstStr( stref s1, stref s2 );
-extern int  strncmp_LenOfFirstStr( PCChar s1, PCChar s2, int s2chars );
-extern bool streq_LenOfFirstStr( PCChar s1, int s1chars, PCChar s2, int s2chars );
 
 // extern   stref  StrSpnSignedInt( stref src );
 extern   bool   StrSpnSignedInt( PCChar pszString );
@@ -484,11 +481,6 @@ public:
    PCChar   k_str()  const { return b; }
    PChar    c_str()        { return b; }
    };
-
-STIL void insert_hole( PChar b, size_t sizeof_b, int xCol, int insertWidth=1 )
-   { // assumes that last char in b is a chNUL, and preserves it
-   memmove( b+xCol+insertWidth, b+xCol, (sizeof_b-1) - (xCol+insertWidth) );
-   }
 
 template <size_t elements>
 class FixedCharArray {

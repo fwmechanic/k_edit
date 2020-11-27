@@ -43,7 +43,6 @@ void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
    }
 
 STATIC_FXN void StrTruncd_( PCChar fxnm, int truncd, stref src, stref dst ) {
-   STATIC_CONST char fmt[] = "%s: STRING TRUNCATED by %d chars\nsrc: '%%" PR_BSR "'\ndst: '%%" PR_BSR "'";
    DBG( "%s: STR-TRUNC by %d chars..."   , fxnm, truncd );
    DBG( "%s: STR-TRUNC src '%" PR_BSR "'", fxnm, BSR(src) );
    DBG( "%s: STR-TRUNC dst '%" PR_BSR "'", fxnm, BSR(dst) );
@@ -98,36 +97,8 @@ stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
    return stref( dest, destCharsToWr > 0 ? destCharsToWr-1 : 0 );
    }
 
-//----- no-longer-used begin
-
-extern int  stricmp_eos( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 );
-extern int  strcmp_eos ( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 );
-
-#define strcmp_eos_def( fxnm, CMPFX )                        \
-int fxnm( PCChar s1, PCChar eos1, PCChar s2, PCChar eos2 ) { \
-   const auto l1( eos1-s1 );                                 \
-   const auto l2( eos2-s2 );                                 \
-   const auto rv( CMPFX ( s1, s2, std::min( l1,l2 ) ) );     \
-   if( l1==l2 || rv != 0 ) { return rv; }                    \
-   return (l1 > l2) ? +1 : -1;                               \
-   }
-
-strcmp_eos_def( stricmp_eos, Strnicmp )
-strcmp_eos_def( strcmp_eos , memcmp   )
-
-#undef strcmp_eos_def
-
-//----- no-longer-used end
-typedef int slen_t; // should be size_t or sridx
 int strnicmp_LenOfFirstStr( stref s1, stref s2 )                   { return Strnicmp( s1.data(), s2.data(), s1.length()         ); }
-int strnicmp_LenOfFirstStr( PCChar s1, PCChar s2, slen_t s2chars ) { return Strnicmp( s1, s2, std::min( Strlen( s1 ), s2chars ) ); }
 int strncmp_LenOfFirstStr ( stref s1, stref s2 )                   { return strncmp ( s1.data(), s2.data(), s1.length()         ); }
-int strncmp_LenOfFirstStr ( PCChar s1, PCChar s2, slen_t s2chars ) { return strncmp ( s1, s2, std::min( Strlen( s1 ), s2chars ) ); }
-
-bool streq_LenOfFirstStr( PCChar s1, slen_t s1chars, PCChar s2, slen_t s2chars ) {
-   if( s2chars == 0 ) { return s1chars==0; }
-   return 0==Strnicmp( s1, s2, std::min( s1chars, s2chars ) );
-   }
 
 #define Strnspn_def( fxnm, EQ_OP )                           \
 size_t fxnm  ( PCChar str1, PCChar eos1, PCChar needle ) {   \
