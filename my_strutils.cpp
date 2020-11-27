@@ -43,6 +43,7 @@ void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
    }
 
 STATIC_FXN void StrTruncd_( PCChar fxnm, int truncd, stref src, stref dst ) {
+   // cd "$(cygpath -u "$K_LOGDIR")" && grep -F 'STR-TRUNC' *
    DBG( "%s: STR-TRUNC by %d chars..."   , fxnm, truncd );
    DBG( "%s: STR-TRUNC src '%" PR_BSR "'", fxnm, BSR(src) );
    DBG( "%s: STR-TRUNC dst '%" PR_BSR "'", fxnm, BSR(dst) );
@@ -58,27 +59,25 @@ PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) {
    return dest;
    }
 
-stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
+sridx scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( 0==destLen && sizeof_dest > 0 && dest[0] ) { destLen = Strlen( dest ); }
-   auto truncd( 0 );
-   auto srcLen( src.length() );
-   if( destLen + srcLen + 1 > sizeof_dest ) {
-      truncd = srcLen - (sizeof_dest - destLen - 1);
-      srcLen = sizeof_dest - destLen - 1;
+   size_t truncd( 0 );
+   auto cpyLen( src.length() );
+   if( destLen + cpyLen + 1 > sizeof_dest ) {
+      truncd = cpyLen - (sizeof_dest - destLen - 1);
+      cpyLen = sizeof_dest - destLen - 1;
       }
-   auto rv( srcLen );
-   if( srcLen > 0 ) {
-      memcpy( dest + destLen, src.data(), srcLen );
-      dest[ destLen + srcLen ] = '\0';
-      rv = destLen + srcLen;
+   if( cpyLen > 0 ) {
+      memcpy( dest + destLen, src.data(), cpyLen );
+      dest[ destLen + cpyLen ] = '\0';
       }
    if( truncd ) {
       StrTruncd_( __func__, truncd, src.data(), dest );
       }
-   return stref( dest, rv );
+   return destLen + cpyLen;
    }
 
-stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
+sridx scpy( PChar dest, size_t sizeof_dest, stref src ) {
    auto truncd( 0 );
    const auto fullCpyChars( src.length()+1 );
    const auto destCharsToWr( std::min( sizeof_dest, fullCpyChars ) );
@@ -94,7 +93,7 @@ stref scpy( PChar dest, size_t sizeof_dest, stref src ) {
    if( truncd > 0 ) {
       StrTruncd_( __func__, truncd, src.data(), dest );
       }
-   return stref( dest, destCharsToWr > 0 ? destCharsToWr-1 : 0 );
+   return destCharsToWr > 0 ? destCharsToWr-1 : 0;
    }
 
 int strnicmp_LenOfFirstStr( stref s1, stref s2 )                   { return Strnicmp( s1.data(), s2.data(), s1.length()         ); }

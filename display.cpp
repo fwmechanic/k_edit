@@ -495,16 +495,16 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       }
    }
    if( !wuc.starts_with( "-D" )) { // experimental
-      char scratch[81]; bcat( bcpy( scratch, "-D" ).length(), scratch, wuc ); d_sb.AddString( scratch );
+      char scratch[81]; bcat( bcpy( scratch, "-D" ), scratch, wuc ); d_sb.AddString( scratch );
       }
    else {
       if( wuc.length() > 2 ) { d_sb.AddString( wuc.substr( 2 ) ); }
       }
    if( !wuc.starts_with( "$" )) { // experimental
       char scratch[81];
-            bcat( bcpy( scratch, "$"  ).length(), scratch, wuc );                          d_sb.AddString( scratch );
-      bcat( bcat( bcpy( scratch, "$(" ).length(), scratch, wuc ).length(), scratch, ")" ); d_sb.AddString( scratch );
-      bcat( bcat( bcpy( scratch, "${" ).length(), scratch, wuc ).length(), scratch, "}" ); d_sb.AddString( scratch );
+      d_sb.AddString( stref( scratch,       bcat( bcpy( scratch, "$"  ), scratch, wuc )                 ) );
+      d_sb.AddString( stref( scratch, bcat( bcat( bcpy( scratch, "$(" ), scratch, wuc ), scratch, ")" ) ) );
+      d_sb.AddString( stref( scratch, bcat( bcat( bcpy( scratch, "${" ), scratch, wuc ), scratch, "}" ) ) );
       }
    if( 1 ) { // GCCARM variations: funcname -> __funcname_veneer
       STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
@@ -516,7 +516,7 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       else {
          char scratch[61];
          if( (wuc.length() > 1) && (wuc.length() < sizeof(scratch)-vnr_fx_len) && isalpha( wuc[0] ) ) {
-            d_sb.AddString( bcat( bcat( bcpy( scratch, vnr_pfx ).length(), scratch, wuc ).length(), scratch, vnr_sfx ) );
+            d_sb.AddString( stref( scratch, bcat( bcat( bcpy( scratch, vnr_pfx ), scratch, wuc ), scratch, vnr_sfx ) ) );
             }
          }
       }

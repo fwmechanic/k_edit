@@ -315,11 +315,11 @@ TF_Ptr STIL Ptr  Eos( Ptr psz ) { return psz + Strlen( psz ); }
 
 //--------------------------------------------------------------------------------
 
-extern stref scpy( PChar dest, size_t sizeof_dest, stref src );
-extern stref scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
+extern sridx scpy( PChar dest, size_t sizeof_dest, stref src );
+extern sridx scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
 
 #define    bcpy( d, s )     scpy( BSOB(d), s )
-#define    bcat( l, d, s )  scat( BSOB(d), s, (l) )
+#define    bcat( l, d, s )  scat( BSOB(d), s, l )
 
 extern PChar  safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) ATTR_FORMAT(3,4);
 
@@ -526,12 +526,8 @@ public:
       wref( PChar bp_, sridx len ) : d_bp( bp_ ), d_len( len ) {}
       // only public interface: copy stref into trailing segment of d_buf
       wref cpy( stref src ) const {
-         const auto srWr( scpy( d_bp, d_len, src ) );
-         const auto ix( (d_bp - srWr.data()) + srWr.length() ); // index of first un-scpy-written char in d_buf
-         if( ix < d_len ) {
-            return wref{ d_bp + ix, ix - (d_len - 1) };
-            }
-         return wref{ d_bp, 0 };
+         const auto newLen( scpy( d_bp, d_len, src ) );  // index of first un-scpy-written char in d_buf
+         return wref{ d_bp + newLen, newLen - (d_len - 1) };
          }
       };
    Catbuf() { d_buf[0] = chNUL; } // paranoia
