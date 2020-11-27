@@ -249,7 +249,9 @@ void FTypeSetting::Update() {
       w2 = w1.cpy( "unknown" );
       }
    w2.cpy( ".eolCommentDelim" );
+
    LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf.c_str(), "" );     DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
+                                                                          0  && DBG( "%s: w0 %" PR_SIZET ", w1 %" PR_SIZET ", w2 %" PR_SIZET, __func__, w0.len(), w1.len(), w2.len() );
    {
    w2.cpy( ".hilite" );
    char hiliteNmBuf[21];
@@ -306,7 +308,7 @@ STATIC_FXN PCFTypeSetting Get_FTypeSetting( stref ftype ) {             FTypeSet
 
 void FBUF::SetFType() {
    if( !GetFTypeSettings() ) {
-      d_ftypeStruct = ::Get_FTypeSetting( FBOP::DeduceFType( this ) );
+      d_ftypeStruct = ::Get_FTypeSetting( FBOP::DeduceFType( this ) );  1 && (d_ftypeStruct == nullptr) && DBG( "%s null FTypeSettings! %s", __func__, this->Name() );
       }
    }
 
@@ -318,10 +320,10 @@ void Reread_FTypeSettings() {                                           FTypeSet
    }
 
 int View::ColorIdx2Attr( int colorIdx ) const {
-   constexpr auto unknownColor( bgRED|fgPNK|FGhi );
    if( colorIdx >= 0 ) {
       if( colorIdx < FTypeSetting::d_colors_ELEMENTS() ) {
-         const auto pFTS( CFBuf()->GetFTypeSettings() );                1 && (pFTS == nullptr) && DBG( "%s null FTypeSettings! %s", __func__, CFBuf()->Name() );
+         constexpr auto unknownColor( bgBLU|fgCYN|FGhi );
+         const auto pFTS( CFBuf()->GetFTypeSettings() );
          return pFTS ? pFTS->d_colors[ colorIdx ] : unknownColor;
          }
       STATIC_CONST colorval_t *s_colorVars[] = {
@@ -335,6 +337,7 @@ int View::ColorIdx2Attr( int colorIdx ) const {
          return *s_colorVars[ colorIdx ];
          }
       }
+   constexpr auto unknownColor( bgRED|fgPNK|FGhi );
    return unknownColor;
    }
 

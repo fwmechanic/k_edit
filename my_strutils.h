@@ -521,14 +521,16 @@ public:
       PChar d_bp;
       sridx d_len;
    public:
-      // these are FOR INTERNAL (Catbuf implementation) USE ONLY
-      PCChar bp() const { return d_bp; }  // ONLY for stref sr( const wref& wr )
-      wref( PChar bp_, sridx len ) : d_bp( bp_ ), d_len( len ) {}
-      // only public interface: copy stref into trailing segment of d_buf
+      // only public interface: copy stref into (trailing segment of d_buf described by) this and
+      // return a new wref describing the trailing empty segment of d_buf that remains
       wref cpy( stref src ) const {
          const auto newLen( scpy( d_bp, d_len, src ) );  // index of first un-scpy-written char in d_buf
          return wref{ d_bp + newLen, newLen - (d_len - 1) };
          }
+      // following (bp(), wref()) are FOR Catbuf IMPLEMENTATION USE ONLY!
+      PCChar bp()  const { return d_bp ; }  // ONLY for stref sr( const wref& wr )
+      sridx  len() const { return d_len; }  // ONLY for stref sr( const wref& wr )
+      wref( PChar bp_, sridx len ) : d_bp( bp_ ), d_len( len ) {}
       };
    Catbuf() { d_buf[0] = chNUL; } // paranoia
    wref Wref() { return wref{ d_buf, elements }; }
