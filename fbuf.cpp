@@ -365,32 +365,38 @@ bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff 
     case DISKFILE_SAME_AS_FBUF:   return false;
     case DISKFILE_NO_EXIST:       return Msg( "File has been deleted" );
 
-    case DISKFILE_OLDERTHAN_FBUF: why = "older"; // EX: did a 'ct unco', restoring an old file version underneath us
-                                  ATTR_FALLTHRU;
-    case DISKFILE_NEWERTHAN_FBUF:
-                                  0 && DBG( "trying update" );
-                                  if(    fPromptBeforeRefreshing
-                                      #ifdef fn_su
-                                      && !SilentUpdateMode()
-                                      #endif
-                                   // && DBG( "confirming" )
-                                      && !ConIO::Confirm( Sprintf2xBuf( "%s has been changed DiskFile %s than buffer: Refresh? ", Name(), why ) )
-                                    )
-                                     {
-                                     0 && DBG( "not confirmed" );
-                                     SetLastFileStatFromDisk();
-                                     return false;
-                                     }
-                                  if( ReadDiskFileNoCreateFailed() ) {
-                                     return false;
-                                     }
-                                #ifdef fn_su
-                                  if( SilentUpdateMode() ) {
-                                     Msg( "%s Silently Updated from %s diskfile", Name(), why );
-                                     }
-                                #endif
-                                  DispNeedsRedrawTotal();
-                                  return true;
+    case DISKFILE_OLDERTHAN_FBUF:
+         why = "older"; // EX: did a 'ct unco', restoring an old file version underneath us
+         ATTR_FALLTHRU;
+
+    case DISKFILE_NEWERTHAN_FBUF:            0 && DBG( "trying update" );
+         if(    fPromptBeforeRefreshing
+             #ifdef fn_su
+             && !SilentUpdateMode()
+             #endif
+          // && DBG( "confirming" )
+             && !ConIO::Confirm( Sprintf2xBuf( "%s has been changed DiskFile %s than buffer: Refresh? ", Name(), why ) )
+           )
+            {                                0 && DBG( "not confirmed" );
+            SetLastFileStatFromDisk();
+            return false;
+            }
+         {
+         const bool hadFtype( GetFTypeSettings() );
+         if( ReadDiskFileNoCreateFailed() ) {
+            return false;
+            }
+         if( hadFtype ) {
+            SetFType();  // reverse ForgetFType() <- MakeEmpty() <- FBufReadOk() <- ReadDiskFileNoCreateFailed()
+            }
+         }
+       #ifdef fn_su
+         if( SilentUpdateMode() ) {
+            Msg( "%s Silently Updated from %s diskfile", Name(), why );
+            }
+       #endif
+         DispNeedsRedrawTotal();
+         return true;
     }
    }
 
