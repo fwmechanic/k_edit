@@ -197,7 +197,7 @@ CXXWARN := \
 -Wzero-as-null-pointer-constant \
 
 C_OPTS_COMMON  := $(GCC_OPTZ) $(CWARN) -funsigned-char $(TRAPV) $(CC_OUTPUT)
-C_OPTS_LUA_REF := -I$(LUA_DIR)
+CPPFLAGS += -I$(LUA_DIR)
 
 #                 -fno-exceptions
 USE_EXCEPTIONS := -fexceptions
@@ -272,7 +272,7 @@ CXX_D_FLAGS = -std=gnu++11 -DUSE_PCRE=$(USE_PCRE) $(APP_IN_DLL_CPP)
 # We use these default rules to compile .c and .cpp source files, plugging in our custom options via these variables:
 # CPPFLAGS is used when compiling both .c and .cpp, CFLAGS only for .c, CXXFLAGS only for .cpp
 CFLAGS   = $(C_OPTS_COMMON) $(C_OPTS_DBG)
-CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtti $(C_OPTS_LUA_REF) $(KEEPASM) $(C_OPTS_DBG)
+CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtti $(KEEPASM) $(C_OPTS_DBG) -MMD -MF $*.makedeps
 #####################################################################################################################
 
 LUA_A := $(LUA_DIR)/liblua.a
@@ -356,9 +356,6 @@ printvars:
 	       $(info $V=$($V) ($(value $V))) \
 	  ) \
 	)
-
-
-
 
 # +p +x seem to do nothing
 # +Z+s adds 'scope:' prefix to 'class:' and 'struct:' Extension fields (coalescing them into a single 'scope:' field)
@@ -485,23 +482,15 @@ endif
 %.o: %.c
 	$(BLD_C)
 
-# GCC _alone_ FTW!  sed, intermed files NOT needed!  https://news.ycombinator.com/item?id=7700812
-# both of these work:
-BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) $(CPPFLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $(basename $<).o
-BLD_CPP_to_D = $(CC) $(CXX_D_FLAGS) $(CPPFLAGS) -MM -MF $@ $(C_OPTS_LUA_REF) $< -MT $@ -MT $*.o
-
-%.makedeps: %.cpp $(CMDTBL_OUTPUTS)
-	@echo generating $*.makedeps&&$(BLD_CPP_to_D)
-
 ifneq "$(MAKECMDGOALS)" "zap"
 ifneq "$(MAKECMDGOALS)" "clean"
 
-  -include $(patsubst %.o,%.makedeps,$(OBJS))
+  include $(wildcard *.makedeps)  # if no .makedeps files exist: no harm, no foul
 
 endif
 endif
 
-ed_core.h: $(CMDTBL_OUTPUTS)
+$(OBJS) : $(CMDTBL_OUTPUTS)  # force build of $(CMDTBL_OUTPUTS) when *.makedeps files absent (i.e. zap/clean + build)
 
 .PHONY: kb_190351
 kb_190351:
