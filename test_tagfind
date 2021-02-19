@@ -21,6 +21,7 @@
 
 die() { printf %s "${@+$@$'\n'}" 1>&2 ; exit 1 ; }
 
+export LC_ALL="en_US.utf8"  # fix `grep -P`
 num_rand_tags=50  # test param
 
 tagfnm=tags
@@ -34,7 +35,7 @@ tgtexe=unittest_tagfind.exe
 make "$tgtexe" || die
 
 chk_tagfind() {
-   local ans ; ans="$(grep -P '^\Q'"$1"'\E\t' "$tagfnm" | wc -l)"
+   local ans ; ans="$(grep --count -P '^\Q'"$1"'\E\t' "$tagfnm")"
    # echo "$1: expect $ans"
    local lc ; lc="$(./"$tgtexe" "$1" | wc -l)" ; ((lc==ans)) || die "FAIL: for T=$1, expected $ans, got $lc"
    }
@@ -52,10 +53,10 @@ for tag in "${test_tags[@]}"; do
 done
 
 chk_tagged_files() {
-   local file_tag_field=$'\t'"kind:file"
-   local ref="$(grep -P "$file_tag_field"'(\t|$)' tags | cut -f2 | sort -u | wc -l)"
-   local tst="$(./"$tgtexe" "$file_tag_field" | wc -l)"
-   ((tst==ref)) || die "FAIL: for T=$1, expected $ref, got $lc"
+   local file_tag_field ; file_tag_field=$'\t'"kind:file"
+   local ref ; ref="$(grep -P "$file_tag_field"'(\t|$)' tags | cut -f2 | sort -u | wc -l)"
+   local tst ; tst="$(./"$tgtexe" "$file_tag_field" | wc -l)"
+   ((tst==ref)) || die "FAIL: chk_tagged_files, expected $ref, got $lc"
    }
 
 chk_tagged_files
