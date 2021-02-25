@@ -1,2 +1,22 @@
 #!/bin/bash
-find . -type d -name '.kbackup' | xargs rm -r
+dnm='.kbackup'
+dinpath='*/'"$dnm"'/*'
+show() (
+   dct="$(find . -type d -name "$dnm" | wc -l)"
+   fct="$(find . -path "$dinpath" -type f | wc -l)"
+   echo "$1 $fct files in $dct $dnm dirs"
+   )
+list() (
+   find . -path "$dinpath" -type f | sort -i
+   )
+case "$1" in
+   rmall)    show "deleting" ;
+             find . -type d -name "$dnm" -exec rm -r {} +
+           ;;
+   list)     list
+           ;;
+   *)        show "there are"
+             echo "  list   to list all files"
+             echo "  rmall  to delete all files/dirs"
+           ;;
+esac
