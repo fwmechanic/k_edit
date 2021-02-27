@@ -92,6 +92,7 @@ bool ARG::towinclip() {
    else if( d_argType == TEXTARG ) {
       stbuf = d_textarg.pText;
 SINGLE_LINE: // HACK O'RAMA!
+      if( d_fMeta ) { ToWinClipMetaSingleLineXlat( stbuf ); }
       const auto blen( stbuf.length() );
       Msg( "%s(%" PR_SIZET ")->%sClip:\"%s\"", ArgTypeName(), blen, DestNm(), stbuf.c_str() );
       if( nullptr == (bufptr=PrepClip( 1+blen, hglbCopy )) ) {

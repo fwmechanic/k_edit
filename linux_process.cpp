@@ -360,6 +360,10 @@ STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
 
 typedef  PChar  hglbCopy_t;
 
+STATIC_FXN bool ToWinClipMetaSingleLineXlat( std::string &stbuf ) {
+   return true;
+   }
+
 STATIC_FXN PChar PrepClip( long size, hglbCopy_t &hglbCopy ) {
    hglbCopy = static_cast<PChar>( malloc( size ) );
    return hglbCopy;

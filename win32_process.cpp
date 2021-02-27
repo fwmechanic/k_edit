@@ -1144,3 +1144,33 @@ bool ARG::shell() {
    }
 
 #endif
+
+bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
+   dest.clear();
+   auto fp( _popen( szcmdline, "r" ) );
+   if( fp != NULL ) {
+      char buf[8192];
+      while( fgets( buf, sizeof buf, fp ) != NULL ) {
+         dest.append( buf );
+         }
+      const auto status( _pclose(fp) );
+      if( status == -1 ) { /* Error reported by pclose() */
+         }
+      else {
+         if( 0 == status ) {
+            return true;
+            }
+         }
+      }
+   return false;
+   }
+
+bool cygpath_xlat( std::string &stbuf ) {
+   std::string cmdline { "cygpath '" + stbuf + "'" };
+   const auto rv( popen_rd_ok( stbuf, cmdline.c_str() ) );
+   const auto ix( stbuf.find_first_of( '\n' ) );
+   if( std::string::npos != ix ) {
+      stbuf.resize( ix );
+      }
+   return rv;
+   }

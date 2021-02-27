@@ -1,0 +1,21 @@
+Problem:
+  My chosen Windows shell environment is GitForWindows bash.  In this
+  environment, constructing [bash] cmdlines using "Windows format" filenames
+  provided by K (e.g. from <win0>) is labor-intensive and error-prone.
+
+Possible solutions:
+
+  Implementation of CYPTL ("CYgPath Translation Layer") mimicking the
+  functionality of `cygpath` (reinvention of the wheel?  Would rather not).
+
+  When to enable this translation layer?  if $SHELL:match("[/\\]bash.exe$")
+
+  What about shell cmdline param translation?  Ugh, parsing a cmdline would suck.
+
+  What about declaring a bash alias/function cyp() { cygpath "$1" ; } and
+  (yes, manually) coding cmdline tokens w/ "$(cyp 'pasted-filename')" ; but
+  that's still __A LOT__ of picky TYPING.
+
+  Maybe a new function derivative of lasttext which runs cygpath on the select text?
+
+  But maybe it's better to wait

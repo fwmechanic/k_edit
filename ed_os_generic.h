@@ -32,6 +32,8 @@ extern bool   EditorLoadCountChanged();
 extern bool   RunChildSpawnOrSystem( PCChar pCmdStr );
 extern bool   KillAllBkgndProcesses();
 
+extern bool   popen_rd_ok( std::string &dest, PCChar szcmdline );
+extern bool   cygpath_xlat( std::string &stbuf );
 
 extern size_t GetProcessMem();
 
