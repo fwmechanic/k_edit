@@ -153,23 +153,23 @@ STATIC_FXN void InitNewView_File( PChar viewPersistentText ) {
    ViewPersistent vp;
    if( !ViewPersistentInitOk( vp, viewPersistentText ) ) { return; }
    // viewPersistentText HAS BEEN MODIFIED!!!
+   stref fnm( vp.filename );
    if( s_ForgetAbsentFiles.fDoIt && !FileAttribs( vp.filename ).Exists() ) {
       // garbage-discard mode: don't create Views for nonexistent files
       if( !s_ForgetAbsentFiles.logfb ) {
          FBOP::FindOrAddFBuf( "<forgotten-files>", &s_ForgetAbsentFiles.logfb );
          s_ForgetAbsentFiles.logfb->PutFocusOn();
          }
-      s_ForgetAbsentFiles.logfb->PutLastLineRaw( vp.filename );
+      s_ForgetAbsentFiles.logfb->PutLastLineRaw( fnm );
       DispDoPendingRefreshes();
       }
    else {
      #if !defined(_WIN32)
-      stref fnm( vp.filename );
       if( fnm.starts_with( "/tmp/" ) && !FileAttribs( vp.filename ).Exists() ) {
          return;
          }
      #endif
-      auto pView( new View( FBOP::FindOrAddFBuf( vp.filename ), g_CurWinWr(), vp ) );
+      auto pView( new View( FBOP::FindOrAddFBuf( fnm ), g_CurWinWr(), vp ) );
       auto &cvwHd( g_CurViewHd() );
       DLINK_INSERT_LAST( cvwHd, pView, d_dlinkViewsOfWindow ); // push_back()
       }
