@@ -185,8 +185,15 @@ int FindMatchingTagsLines(
 #endif
       struct stat statbuf;
       if( 0 == fstat( fileno( ifh ), &statbuf ) ) {
-         char tmbuf[100]; const auto timeinfo( localtime( &statbuf.st_mtime ) );
-         PCChar tagsfile_mtime_val( timeinfo && strftime( tmbuf, sizeof(tmbuf), "%Y%m%dT%H%M%S", timeinfo ) ? tmbuf : "strftime failed!" );
+         struct tm tt;
+         const auto fOk(
+#if defined(_WIN32)
+                         0       == localtime_s( &tt, &statbuf.st_mtime )
+#else
+                         nullptr != localtime_s( &statbuf.st_mtime, &tt )
+#endif
+                       );
+         char tmbuf[100]; PCChar tagsfile_mtime_val( fOk && strftime( tmbuf, sizeof(tmbuf), "%Y%m%dT%H%M%S", &tt ) ? tmbuf : "strftime failed!" );
          rv_setfield_string( "tagsfile_mtime", tagsfile_mtime_val );
 #ifdef UNITTEST
          ut_tagsfile_mtime = tagsfile_mtime_val;

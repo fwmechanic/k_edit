@@ -160,26 +160,40 @@ static int getfield (lua_State *L, const char *key, int d) {
 static int os_date (lua_State *L) {
   const char *s = luaL_optstring(L, 1, "%c");
   time_t t = luaL_opt(L, (time_t)luaL_checknumber, 2, time(NULL));
-  struct tm *stm;
+  struct tm tmbuf;
+  int fOk;
   if (*s == '!') {  /* UTC? */
-    stm = gmtime(&t);
+    fOk =
+#if defined(_WIN32)
+                         0       == gmtime_s(&tmbuf, &t)
+#else
+                         nullptr != gmtime_s(&t, &tmbuf)
+#endif
+        ;
     s++;  /* skip `!' */
   }
-  else
-    stm = localtime(&t);
-  if (stm == NULL)  /* invalid date? */
+  else {
+    fOk =
+#if defined(_WIN32)
+                         0       == localtime_s( &tmbuf, &t )
+#else
+                         nullptr != localtime_s( &t, &tmbuf )
+#endif
+        ;
+    }
+  if (!fOk)  /* invalid date? */
     lua_pushnil(L);
   else if (strcmp(s, "*t") == 0) {
     lua_createtable(L, 0, 9);  /* 9 = number of fields */
-    setfield(L, "sec", stm->tm_sec);
-    setfield(L, "min", stm->tm_min);
-    setfield(L, "hour", stm->tm_hour);
-    setfield(L, "day", stm->tm_mday);
-    setfield(L, "month", stm->tm_mon+1);
-    setfield(L, "year", stm->tm_year+1900);
-    setfield(L, "wday", stm->tm_wday+1);
-    setfield(L, "yday", stm->tm_yday+1);
-    setboolfield(L, "isdst", stm->tm_isdst);
+    setfield(L, "sec", tmbuf.tm_sec);
+    setfield(L, "min", tmbuf.tm_min);
+    setfield(L, "hour", tmbuf.tm_hour);
+    setfield(L, "day", tmbuf.tm_mday);
+    setfield(L, "month", tmbuf.tm_mon+1);
+    setfield(L, "year", tmbuf.tm_year+1900);
+    setfield(L, "wday", tmbuf.tm_wday+1);
+    setfield(L, "yday", tmbuf.tm_yday+1);
+    setboolfield(L, "isdst", tmbuf.tm_isdst);
   }
   else {
     char cc[3];
@@ -193,7 +207,7 @@ static int os_date (lua_State *L) {
         size_t reslen;
         char buff[200];  /* should be big enough for any conversion result */
         cc[1] = *(++s);
-        reslen = strftime(buff, sizeof(buff), cc, stm);
+        reslen = strftime(buff, sizeof(buff), cc, &tmbuf);
         luaL_addlstring(&b, buff, reslen);
       }
     }

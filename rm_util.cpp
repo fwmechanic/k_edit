@@ -55,8 +55,17 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
          }
       }
    }
+   struct tm tt;
+   const auto fOk(
+#if defined(_WIN32)
+                   0       == localtime_s( &tt, &stat_buf.st_mtime )
+#else
+                   nullptr != localtime_s( &stat_buf.st_mtime, &tt )
+#endif
+                 );
    char tbuf[32];
-   strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", localtime( &stat_buf.st_mtime ) );
+   if( fOk ) { strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", &tt ); }
+   else      { bcpy( tbuf, "XlocaltimeX" ); }
    const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  DB && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
    dest.append( (DIRSEP_STR + sr2st( filenameNoPath ) + "." + tbuf ) );
   #if defined(_WIN32)

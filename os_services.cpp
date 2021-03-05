@@ -41,9 +41,12 @@ bool PutEnvOk( PCChar varName, PCChar varValue ) { // params canNOT be stref sin
    0 && DBG( "*** %s(%s=%s)", FUNC, varName, varValue );
 #if defined(_WIN32)
    // MSVC-specific _putenv COPIES params (therefore SAFE to use with auto buffer params); if empty string follows "=", unsetenv is performed
-   auto pBuf( PChar( alloca( Strlen(varName) + Strlen(varValue) + (1+1) ) ) ); // (1+1) = ('=' + '\0')
-   sprintf( pBuf, "%s=%s", varName, varValue ); // sprintf is OK here since we have pre-calc'd the buf size to fit
-   const auto ok( 0 == _putenv( pBuf ) );
+   const auto ln( Strlen(varName) );
+   const auto lv( Strlen(varValue) );
+   const auto bs( ln + lv + (1+1) ); // (1+1) = ('=' + '\0')
+   auto bp( PChar( alloca( bs ) ) );
+   scat( bp, bs, stref(varValue,lv), scat( bp, bs, "=", scpy( bp, bs, stref(varName,ln) ) ) );
+   const auto ok( 0 == _putenv( bp ) );
 #else
    // posix putenv NOT USED because parameter becomes part of process-duration environment of process (therefore should never pass auto buffers to it)
    // posix setenv     USED because it COPIES params into process-duration environment (therefore SAFE to use with auto buffer params)
