@@ -181,7 +181,16 @@ STATIC_FXN void saveProgVer ( FILE *fout ) { fprintf( fout, "%s\n" , ProgramVers
 STATIC_FXN void saveTsNow ( FILE *fout ) {
    char lbuf[40];
    auto now( time( nullptr ) );
-   strftime( BSOB(lbuf), "%Y/%m/%d %H:%M:%S", localtime( &now ) );
+   struct tm tt;
+   const auto fOk(
+#if defined(_WIN32)
+                   0       == localtime_s( &tt, &now )
+#else
+                   nullptr != localtime_r( &now, &tt )
+#endif
+                 );
+   if( fOk ) { strftime( BSOB(lbuf), "%Y/%m/%d %H:%M:%S", &tt ); }
+   else      { bcpy(          lbuf , "YY/mm/dd HH:MM:SS" ); }
    fprintf( fout, "state at %s\n" , lbuf );
    }
 
@@ -590,13 +599,20 @@ constexpr auto LOG_STRFTIME = true;
 void DBG_init() {
    if( !ofh_DBG ) {
       log_t0 = time( nullptr );
-      const auto lt( localtime( &log_t0 ) );
-      if( lt == nullptr ) {
-         perror("localtime");
+      struct tm tt;
+      const auto fOk(
+#if defined(_WIN32)
+                      0       == localtime_s( &tt, &log_t0 )
+#else
+                      nullptr != localtime_r( &log_t0, &tt )
+#endif
+                    );
+      if( !fOk ) {
+         perror("localtime_s");
          exit(EXIT_FAILURE);
          }
       char tmstr[100];
-      if( strftime( BSOB(tmstr), LOG_STRFTIME_FMT, lt ) == 0 ) {
+      if( strftime( BSOB(tmstr), LOG_STRFTIME_FMT, &tt ) == 0 ) {
          perror( "strftime returned 0" );
          exit(EXIT_FAILURE);
          }
@@ -649,13 +665,18 @@ void DBGNL() {
 static void strftime_us( char *buf, size_t sizeof_buf ) {  // based on https://stackoverflow.com/a/2409054
    struct timeval tv;
    time_t nowtime;
-   struct tm *nowtm;
-
    gettimeofday( &tv, nullptr );
    nowtime = tv.tv_sec;
-   nowtm = localtime( &nowtime );
-   const size_t sftLen = strftime( buf, sizeof_buf, LOG_STRFTIME_FMT, nowtm );
-   snprintf( buf+sftLen, sizeof_buf-sftLen, ".%06ld" " ", tv.tv_usec );
+   struct tm tt;
+   const auto fOk( nullptr != localtime_r( &nowtime, &tt ) );
+   if( fOk ) {
+      const size_t sftLen( strftime( buf, sizeof_buf, LOG_STRFTIME_FMT, &tt ) );
+      snprintf( buf+sftLen, sizeof_buf-sftLen, ".%06ld" " ", tv.tv_usec );
+      }
+   else {
+      const auto sftLen( scpy( buf, sizeof_buf, LOG_STRFTIME_FMT ) );
+      snprintf( buf+sftLen, sizeof_buf-sftLen, ".%06ld" " ", 0L );
+      }
    }
 
 #endif
@@ -666,8 +687,10 @@ int DBG( char const *kszFormat, ...  ) {
       char tmstr[100];
 #if defined(_WIN32)
       const auto tnow( time( nullptr ) );
-      const auto lt( localtime( &tnow ) );
-      strftime( BSOB(tmstr), LOG_STRFTIME_FMT " ", lt );
+      struct tm tt;
+      const auto fOk( 0 == localtime_s( &tt, &tnow ) );
+      if( fOk ) { strftime( BSOB(tmstr), LOG_STRFTIME_FMT " ", &tt ); }
+      else      { bcpy(          tmstr , LOG_STRFTIME_FMT " " ); }
 #else
       strftime_us( BSOB(tmstr) );
 #endif
