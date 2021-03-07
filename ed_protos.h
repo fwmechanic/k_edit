@@ -342,7 +342,8 @@ namespace Interpreter {
    int   chGetAnyMacroPromptResponse();
 
    enum  macroRunFlags { variableMacro=BIT(0), breakOutHere=BIT(1) };
-   bool  PushMacroStringOk( PCChar pszMacroString, int macroRunFlags );
+   bool  PushMacroStringOk       ( PCChar pszMacroString, int macroRunFlags );
+   bool  PushMacroStringLiteralOk( PCChar pszMacroString, int macroRunFlags );
    }
 
 extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );

@@ -112,27 +112,18 @@ bool DefineMacro( stref pszMacroName, stref pszMacroCode ) { 0 && DBG( "%s '%" P
 
 bool PushVariableMacro( PCChar pText ) { 0 && DBG( "%s+ '%s'", __func__, pText );
 #if MACRO_BACKSLASH_ESCAPES
-   const auto len( (2*Strlen( pText )) + 3 );
-#else
-   const auto len(    Strlen( pText )  + 3 );
-#endif
+   const auto len( (2*Strlen( pText )) + 1 );
    const auto pBuf( PChar( alloca( len ) ) );
-   pBuf[0] = chQuot2;
-#if MACRO_BACKSLASH_ESCAPES
    // NB!: escapes every backslash in pText !!!
    //      This is a kludgy fix for the annoying requirement to escape '\' with
    //      '\' in macro text strings...
    //
-   const auto newlen( DoubleBackslashes( pBuf+1, len-3, pText ) );
-   pBuf[newlen  ] = chQuot2;
-   pBuf[newlen+1] = '\0';
-#else
-   memcpy( pBuf+1, pText, len-3 );
-   pBuf[len-2] = chQuot2;
-   pBuf[len-1] = '\0';
-#endif
+   const auto newlen( DoubleBackslashes( pBuf, len-1, pText ) );
    0 && DBG( "%s- '%s'", __func__, pBuf );
-   return Interpreter::PushMacroStringOk( pBuf, Interpreter::variableMacro );
+   return Interpreter::PushMacroStringLiteralOk( pBuf, Interpreter::variableMacro );
+#else
+   return Interpreter::PushMacroStringLiteralOk( pText, Interpreter::variableMacro );
+#endif
    }
 
 bool ARG::RunMacro() { 0 && DBG( "%s '%s':='%s'", __func__, CmdName(), d_pCmd->d_argData.pszMacroDef );
@@ -162,6 +153,16 @@ namespace Interpreter {
          }
       void   Ctor( PCChar pszMacroString, int macroFlags ) {
          d_macroText.assign( StrPastAnyBlanks( pszMacroString ) );
+         d_pCurTxt = d_macroText.c_str();
+         d_runFlags = macroFlags;
+         d_insideQuot2dString = false;
+         Advance();
+         }
+      void   CtorStringLiteral( stref src, int macroFlags ) {
+         d_macroText.reserve( src.length() );
+         d_macroText.assign( "\"" );
+         d_macroText.append( src.data(), src.length() );
+         d_macroText.append( "\"" );
          d_pCurTxt = d_macroText.c_str();
          d_runFlags = macroFlags;
          d_insideQuot2dString = false;
@@ -296,8 +297,15 @@ bool Interpreter::PushMacroStringOk( PCChar pszMacroString, int macroFlags ) {
    if( ELEMENTS(s_MacroRuntimeStack) == ixPastTOS() ) {
       return ErrorDialogBeepf( "Macros nested too deep (%" PR_SIZET " levels)! recursive macro defn?", ELEMENTS(s_MacroRuntimeStack) );
       }                                            0 && DBG( "PushMacStr[%d] '%s'", ixPastTOS(), pszMacroString );
-
    s_MacroRuntimeStack[ s_ixPastTOS++ ].Ctor( pszMacroString, macroFlags );
+   return true;
+   }
+
+bool Interpreter::PushMacroStringLiteralOk( PCChar pszMacroString, int macroFlags ) {
+   if( ELEMENTS(s_MacroRuntimeStack) == ixPastTOS() ) {
+      return ErrorDialogBeepf( "Macros nested too deep (%" PR_SIZET " levels)! recursive macro defn?", ELEMENTS(s_MacroRuntimeStack) );
+      }                                            0 && DBG( "PushMacStr[%d] '%s'", ixPastTOS(), pszMacroString );
+   s_MacroRuntimeStack[ s_ixPastTOS++ ].CtorStringLiteral( pszMacroString, macroFlags );
    return true;
    }
 
