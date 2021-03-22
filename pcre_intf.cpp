@@ -449,7 +449,7 @@ STATIC_FXN void test_rpc( PCChar szRawReplace ) {
 
 #if 0
 
-// here's how lua does it ... lua-5.1\src\lpcre.c
+// to see how lua does it: %~dp0/lua-5.1/src/lpcre.c
 
 #ifdef ALG_USERETRY
    #define SET_RETRY(a,b) (a=b)
