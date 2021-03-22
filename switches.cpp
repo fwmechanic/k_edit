@@ -197,7 +197,21 @@ sridx FirstNonWordOrEnd( stref src, sridx start ) {
 sridx IdxFirstHJCh( stref src, sridx start ) {
    if( start >= src.length() ) { return stref::npos; }
    for( auto it( src.crbegin() + (src.length() - start - 1) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
-      if( !isWordChar(*it) && !isHJChar(*it) )  { return src.length() - std::distance( src.crbegin(), it ); }
+      if( isHJChar(*it) ) {
+         if( '>' == *it ) {  // hack: '>' (in hljoinchars) means '->'
+            if( std::distance( src.crend(), it ) > 1 && '-' == *(it+1) ) {
+               ++it;  // include "->" in HJChar seq by skipping '-'
+               }
+            else {  // treat '>' not preceded by '-' as a non HJChar
+               return src.length() - std::distance( src.crbegin(), it );
+               }
+            }
+         }
+      else {
+         if( !isWordChar(*it) ) {
+            return src.length() - std::distance( src.crbegin(), it );
+            }
+         }
       }
    return 0;
    }
@@ -273,7 +287,7 @@ void SwitblInit() {
    addswi( "fastsearch"     , fc.SWIi_bv( g_fFastsearch       ) _AHELP( "use fast search algorithm (when key contains no spaces)" ) );
    addswi( "forceplateol"   , fc.SWIi_bv( g_fForcePlatformEol ) _AHELP(  kszHelpPlatEoL ) );
    addswi( "hike"           , fc.SWIi_iv( g_iHike             ) _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) );
-   addswi( "hljoinchars"    , fc.SWIsb( swidHLJoinchars, swixHLJoinchars )  _AHELP( "Hierarchial Left Join charset: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes; [_a-zA-Z0-9] are always members" ) );
+   addswi( "hljoinchars"    , fc.SWIsb( swidHLJoinchars, swixHLJoinchars )  _AHELP( "Hierarchial Left Join charset: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes; [_a-zA-Z0-9] are always members; > means ->" ) );
    addswi( "hscroll"        , fc.SWIi_ci( [](){ return g_iHscroll  ; }, [](int v_){ g_iHscroll   = v_; }, [](){ return 1; }, [](){ return EditScreenCols ()-1; }, false ) _AHELP( "the number of columns that the editor scrolls the text left or right when you move the cursor out of the window" ) );
    addswi(  kszBackup       , fc.SWI_enum( [](){ return g_iBackupMode ; }, [](int v_){ g_iBackupMode = v_; }, AEOA(bkup_enums)  )     _AHELP( "choices are 'undel', 'bak' or 'none'; see online help for details" ) );
    addswi( "langhilites"    , fc.SWIi_bv( g_fLangHilites      ) _AHELP( "enable (yes) partial language-aware hilighting" ) );

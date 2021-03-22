@@ -780,7 +780,7 @@
 
 [ftype:perl]
    wordchars:@$%
-   hljoinchars: .->
+   hljoinchars: .>
    rmargin:80
 
 [ftype:make]
@@ -833,7 +833,7 @@
 
 [ftype:clang]
    wordchars:_
-   hljoinchars: :.->
+   hljoinchars: :.>
    wucminlen:1
    dquc:alt+4
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
