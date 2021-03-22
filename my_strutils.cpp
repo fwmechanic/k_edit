@@ -214,14 +214,14 @@ int snprintf_full( char **ppBuf, size_t *pBufBytesRemaining, PCChar fmt, ... ) {
     return *pBufBytesRemaining <= 1;
     }
 
-stref StrSpnSignedInt( stref src ) {
-   if( src.empty() ) { return src; }
-   auto signofs( src[0] == '-' || src[0] == '+' ? 1 : 0 );
-   auto declook( src.substr( signofs ) );
-   const auto ixPast( declook.find_first_not_of( "0123456789" ) );
-   if( ixPast == stref::npos ) { return ""; }
-   return src.substr( 0, signofs + ixPast );
-   }
+// stref StrSpnSignedInt( stref src ) {
+//    if( src.empty() ) { return src; }
+//    auto signofs( src[0] == '-' || src[0] == '+' ? 1 : 0 );
+//    auto declook( src.substr( signofs ) );
+//    const auto ixPast( declook.find_first_not_of( "0123456789" ) );
+//    if( ixPast == stref::npos ) { return ""; }
+//    return src.substr( 0, signofs + ixPast );
+//    }
 
 bool StrSpnSignedInt( PCChar pszString ) {
    if( *pszString == '-' || *pszString == '+' ) {

@@ -228,7 +228,6 @@ extern int  strcmp4humans( PCChar s1, PCChar s2 );
 extern int  strnicmp_LenOfFirstStr( stref s1, stref s2 );
 extern int  strncmp_LenOfFirstStr( stref s1, stref s2 );
 
-// extern   stref  StrSpnSignedInt( stref src );
 extern   bool   StrSpnSignedInt( PCChar pszString );
 extern   std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase=10 );
 
