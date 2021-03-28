@@ -196,7 +196,7 @@ sridx FirstNonWordOrEnd( stref src, sridx start ) {
 
 sridx IdxFirstHJCh( stref src, sridx start ) {
    if( start >= src.length() ) { return stref::npos; }
-   for( auto it( src.crbegin() + (src.length() - start - 1) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
+   for( auto it( src.crbegin() + (src.length() - start) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
       if( isHJChar(*it) ) {
          if( '>' == *it ) {  // hack: '>' (in hljoinchars) means '->'
             if( std::distance( src.crend(), it ) > 1 && '-' == *(it+1) ) {
