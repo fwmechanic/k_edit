@@ -569,22 +569,22 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
 
 GLOBAL_VAR int g_iWucMinLen = 2;
 
-stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) {
+stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) { enum { DB=0 };
    const auto yCursor( cursor->lin );
    const auto xCursor( cursor->col );
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
-   if( !rl.empty() ) {                                              0 && DBG( "newln=%" PR_BSR, BSR(rl) );
+   if( !rl.empty() ) {                                              DB && DBG( "newln=%" PR_BSR, BSR(rl) );
       IdxCol_cached conv( pFBuf->TabWidth(), rl );   // abc   abc
       if( xCursor < conv.cols() ) {
          const auto ixC( conv.c2ci( xCursor ) );
          if( isWordChar( rl[ixC] ) ) {
             const auto ixFirst   ( IdxFirstHJCh     ( rl, ixC ) );
-            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  0 && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
+            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  DB && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
             const auto xMin( conv.i2c( ixFirst      ) );
-            const auto xMax( conv.i2c( ixPastLast-1 ) );            0 && DBG( "x[%d..%d]", xMin, xMax );
+            const auto xMax( conv.i2c( ixPastLast-1 ) );            DB && DBG( "x[%d..%d]", xMin, xMax );
             const auto wordCols ( xMax - xMin + 1 );
             // this degree of paranoia only matters if the definition of a WORD includes a tab
-            const auto wordChars( ixPastLast - ixFirst );           0 && wordCols != wordChars && DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars );
+            const auto wordChars( ixPastLast - ixFirst );           DB && wordCols != wordChars && DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars );
             // return everything
             cursor->col = xMin;
             return stref( rl.data() + ixFirst, wordChars );
