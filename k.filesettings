@@ -129,6 +129,7 @@ do
       html        = "xml"         ,
       htm         = "xml"         ,
       dtd         = "xml"         ,
+      tex         = "tex"         ,
       }
    function FnmToFType( nx )  -- called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
                                      -- printf( "k.f.FnmToFType(%s)", nx or "(nil)" )
@@ -221,6 +222,7 @@ local darkColors = {
 --------------------------------------------------
 
 local text_settings  = { colors = darkColors }
+local tex_settings   = { colors = darkColors, eolCommentDelim = "%" }
 local krsrc_settings = { colors = darkColors, eolCommentDelim = "#" }
 local sprintascii_settings = { colors = darkColors, eolCommentDelim = ";;" }  -- hack: eolCommentDelim is valid only at start of line
 local diff_settings  = { colors = stdColors, hilite = "diff" }
@@ -261,6 +263,7 @@ ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    wildcard     = ushell_settings                      ,
    diff         = diff_settings                        ,
    sprintascii  = sprintascii_settings                 ,
+   tex          = tex_settings                         ,
    [""]         = { colors = stdColors }               ,
    }
 
