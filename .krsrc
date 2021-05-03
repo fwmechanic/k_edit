@@ -773,6 +773,10 @@
    wordchars:_
    hljoinchars: .
 
+[ftype:tex]
+   wordchars:_
+   rmargin:132
+
 [ftype:expect]
    wordchars:_
    hljoinchars: .
