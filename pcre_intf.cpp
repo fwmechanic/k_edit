@@ -70,6 +70,14 @@ void PCRE_API_INIT() {
       }
    }
 
+stref RegexVersion() {
+   STATIC_VAR char s_RegexVer[31] = { '\0', };
+   if( '\0' == s_RegexVer[0] ) {
+      safeSprintf( BSOB(s_RegexVer), "PCRE %s", pcre_version() );
+      }
+   return s_RegexVer;
+   }
+
 //------------------------------------------------------------------------------
 
 CompiledRegex::CompiledRegex( pcre *pPcre, pcre_extra *pPcreExtra, int maxPossCaptures )

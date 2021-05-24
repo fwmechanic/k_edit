@@ -71,6 +71,8 @@ STIL bool EditorFilesystemNoneDirty() { return EditorFilesStatus().dirtyFBufs ==
 
 extern PCChar ProgramVersion();
 extern PCChar ExecutableFormat();
+extern stref  CompilerVersion();
+extern stref  BoostVersion();
 
 //----------- Arg and Selection
 

@@ -21,6 +21,7 @@
 // called by ReadPseudoFileOk
 
 #include "ed_main.h"
+#include "ed_search.h"   // for RegexVersion()
 
 char Xbuf::ds_empty = 0;
 
@@ -190,9 +191,28 @@ void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
    pFBuf->FmtLastLine( "\n#-------------------- %d %s", count, subhd );
    }
 
+stref BoostVersion() {
+   STATIC_VAR char s_BoostVer[31] = { '\0', };
+   if( '\0' == s_BoostVer[0] ) {
+      safeSprintf( BSOB(s_BoostVer), "Boost %d.%d.%d"
+                 , BOOST_VERSION / 100000
+                 , BOOST_VERSION / 100 % 1000
+                 , BOOST_VERSION % 100
+         );
+      }
+   return s_BoostVer;
+   }
+
 STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
-   pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s\n ", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, kszMasterRepo );
+   pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, kszMasterRepo );
+   pFBuf->FmtLastLine( "  %" PR_BSR, BSR(CompilerVersion()) );
+   const auto rexinfo( RegexVersion() );
+   if( !rexinfo.empty() ) {
+      pFBuf->FmtLastLine( "  %" PR_BSR, BSR(rexinfo) );
+      }
+   pFBuf->FmtLastLine( "  %" PR_BSR, BSR(BoostVersion()) );
+   pFBuf->PutLastLineRaw( "" );
    FBufRead_Assign_OsInfo( pFBuf );
    pFBuf->FmtLastLine( " \n#-------------------- %s\npgmdir   %s\nstatedir %s\n", "Metadata", ThisProcessInfo::ExePath(), EditorStateDir() );
    pFBuf->FmtLastLine( " \n#-------------------- %s\nsizeof(FBUF) %" PR_SIZET "\nsizeof(View) %" PR_SIZET "\n", "Internals", sizeof(FBUF), sizeof(View) );

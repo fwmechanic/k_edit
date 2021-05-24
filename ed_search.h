@@ -42,9 +42,11 @@ extern CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase );
 extern CompiledRegex *Regex_Delete0( CompiledRegex *pcr );
 extern RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
 extern void register_atexit_search();
+extern stref RegexVersion();
 
 #else
 
 #define register_atexit_search()
+STIL stref RegexVersion() { return ""; }
 
 #endif
