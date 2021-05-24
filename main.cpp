@@ -718,18 +718,33 @@ public:
    kGetopt( int argc_, PPCChar argv_, PCChar optset_ ) : Getopt( argc_, argv_, optset_ ) {}
    };
 
+#if defined(__GNUC__)
+
+   #if !defined(__GNUC_PATCHLEVEL__)
+   #define __GNUC_PATCHLEVEL__ 0
+   #endif
+
+stref CompilerVersion() {
+   STATIC_VAR char s_GccVer[81] = { '\0', };
+   if( '\0' == s_GccVer[0] ) {
+      safeSprintf( BSOB(s_GccVer), "GCC %d.%d.%d"
+   #ifdef __MINGW32_MAJOR_VERSION
+                                " + MinGW runtime %d.%d"
+   #endif
+         , __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__
+   #ifdef __MINGW32_MAJOR_VERSION
+         , __MINGW32_MAJOR_VERSION, __MINGW32_MINOR_VERSION // http://sourceforge.net/p/predef/wiki/Compilers/
+   #endif
+         );
+      }
+   return s_GccVer;
+   }
+
+#endif
+
 void kGetopt::VErrorOut( PCChar msg ) {
    printf(
-"\n%s  Copyright KLG 2015-%4.4s\n%s, built %s with "
-#if defined(__GNUC__)
-                  "GCC %d.%d.%d"
-   #ifdef __MINGW32_MAJOR_VERSION
-                                 ", MinGW runtime %d.%d"
-   #endif
-                  "\n\n"
-#else
-                  "MSVC\n\n"
-#endif
+"\n%s  Copyright KLG 2015-%4.4s\n%s, built %s with\n  %" PR_BSR "\n  %" PR_BSR "\n  %" PR_BSR "\n\n"
 "Usage: %s [-acdh?nv] [-e n=v] [-x mac] [-t] filename\n\n"
 " -a     write assign-log pseudofile %s\n"
 " -c     clean: remove non-existent files from tmpfile at init-time\n"
@@ -745,16 +760,9 @@ void kGetopt::VErrorOut( PCChar msg ) {
       , kszDtTmOfBuild
       , ExecutableFormat()
       , kszDtTmOfBuild
-#if defined(__GNUC__)
-   #if !defined(__GNUC_PATCHLEVEL__)
-   #define __GNUC_PATCHLEVEL__ 0
-   #endif
-      , __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__
-   #ifdef __MINGW32_MAJOR_VERSION
-      , __MINGW32_MAJOR_VERSION, __MINGW32_MINOR_VERSION // http://sourceforge.net/p/predef/wiki/Compilers/
-   #endif
-#else
-#endif
+      , BSR(CompilerVersion())
+      , BSR(RegexVersion())
+      , BSR(BoostVersion())
       , d_pgm.c_str()
       , kszAssignLog
       );
