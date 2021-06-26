@@ -1,0 +1,169 @@
+Feature: preserve important file-location (per file?) for future return-to.
+
+Background: the existing feature is a major asset.  Being able to easily
+return to the last location visited in a file simply by switching to the file
+is a huge time-saver.
+
+The problem: like browser tabs, K editor instances are opened at the drop of a
+hat, and have potentially long lifetimes.  It is common for dozens of editor
+instances to be running (and sometimes forgotten).  The problem arises when
+closing an editor instance: Wins_WriteStateFile is called to ... write the state
+file, but does so using a blind overwrite approach, overwriting the sole existing
+statefile with its internal state comprised of "recovered state" (content
+of the statefile) read at startup, plus "new state" created/updated as a
+result of user's file visits & navigation.
+
+Thus unless great attention is paid to close editor instances in an
+opportune order, which is to say if more recently started instances
+containing a newer recovered state and/or more germane new state are closed
+before longer running instances containing a older recovered state and/or less
+germane new state, the newer recovered state and/or more germane new state will
+be completely lost.
+
+This loss of important state occurs frequently under the following scenario:
+the host OS needs to be restarted (imagine Windows 10 cajoling (or worse
+forcing) a restart to complete Windows Update installation).  Typically this
+operation is done under user time pressure: the user has been nagged to
+restart the host, but puts it off until a "logical break" moment arises when
+the "loss of flow and state" (primarily editor state and shell history) that
+a host restart causes can be absorted with the least impact.  But in any
+case, the user wants to execute the restart, and post-restart return to
+productive status as quickly as possible.  So the user decides to accept the
+host restart now.  He starts looking for editor instances to close.  Usually
+thanks to Windows, the most recently used editor instances appear most
+readily in the window Z-order, and these are quickly closed.  Sometimes the
+user closes this set of editor instances in an order deliberately chosen to
+minimize most-valuable editor state data loss.  However what often LATER
+happens is that one or more really old, forgotten (thus minimally relevant)
+editor instances are discovered _and closed_, obliterating the most-valuable
+editor state carefully husbanded by the earlier carefuly sequenced
+editor-session-closing effort.
+
+Mitigations:
+
+When exiting:
+
+A: offer an exit-without-state-save user option (EX: meta exit?).
+   Prereqs: none
+
+B: automatically exit-without-state-save if the current editor state is (by some
+   TBD criteria) "older" than the last-written statefile content.
+   Pros: straightforward to implement
+   Cons: too coarse: all new state is unconditionally lost if Tsessionstart is "old".
+   Prereqs:
+     comparable state file written time
+       exists today: 2nd line of state file: "state at 2021/06/05 16:12:28"
+
+C: merge current statefile content with current editor state.
+   Prereqs:
+     comparable state file written time <- exists (unsure it's needed)
+     comparable per-file Twritten <- exists
+     comparable per-file Tvisited    missing
+
+   re Tvisited: this has proven challenging to develop due to
+      wanting to exclude certain visits from updating this field:
+      * exclude view-only visits stemming from mfgrep: a mfgrep run can put
+        large numbers of files into the mfgrep-hit buffer[1], and it's easy
+        to buzz thru lg quantities of these hits at high speed (resulting in
+        them being (undesirably) added to the statefile), with most visits
+        quickly resulting in "I don't care; next?".  I've been thinking about
+        some sort of dwell-time-based metric or
+        dwell-time/cursor-key-count-based metric, but the core issue is that
+        it appears to be difficult to have awareness that "this visit was
+        caused by an mfgrep hit".  Also, some mfgrep hits are
+        preservation-worthy (most are not).
+
+        The primary issue with touching Tvisited due to 'visit stemming from
+        mfgrep' is that (assuming there can be only one sort order in the
+        statefile) a single (even partial) buzz thru a set of mfgrep matches
+        will create a huge bloc of (non-interactively caused) new state that
+        pushes (far) down all not-quite-as-recent (interactively caused and
+        thus presumed to be more valuable) new state.
+
+        [1] I'm using the mfgrep editor function as a proxy for any
+            multi-file-scanning editor function (which might run external
+            commands) which can produce a "locations-buffer" which nxtmsg and
+            prevmsg commands are used to cycle thru.
+
+        Also, there are often multiple mfgrep hits per file, meaning a
+        dwell-time-based metric algo would need to be aware of
+        "switch-to-file" events that were short-circuited into noops (due to
+        current file==requested file).
+
+        A lazy answer is to disable per-file Tvisited update when an
+        mfgrep-results buffer is open in "another window" (although this
+        smells like a kludge), and (even worse) add a user command
+        touchTvisited (so the user can explicitly save).  Or perhaps
+        touchTvisited could be performed when `arg arg setfile` cmd seq is
+        performed (regardless of whether the buffer is dirty).
+
+        Another idea is to have 2 Tvisited fields per file; one for "mfgrep
+        visited" the other for "non".  You'd think this might also require 2
+        corresponding CursorLocn fields (which would ramp up complexity).  The
+        next thought is that "you can only save one", and presumably "non"
+        would always take priority.  This appears almost same as the 'disable
+        per-file Tvisited update when an mfgrep-results buffer is open in
+        "another window"' approach, except that while the latter corrects
+        the "order within statefile" problem, it does nothing to prevent the
+        locn saved in the statefile becoming that of the (more recent this
+        session) mfgrep visit.  The only counters to that are: (a) save a
+        const copy of recovered.locn in file separate from current.locn in file,
+        and save to statefile:
+
+        current.Tvisited == recovered.Tvisited ? recovered.locn : current.locn
+
+        or (b) merge with statefile when saving (in which case the effective
+        recovered.locn comes from read of statefile just prior to statefile
+        write, meaning there'd be no need to save a const copy of
+        recovered.locn in the editor session).
+
+        What might be profitably added is a per file flag
+        fMfgrepCausedCursorlocn which would be saved in the statefile; this would
+        cause the associated locn to have low precedence.  Or this flag could be
+        a editor-session-only entity ... never mind; (b) 'merge with statefile
+        when saving' is probably the better approach and (done correctly) also
+        resolves the primary problem of multi-editor-session-overwrite.
+
+   Algo:
+
+   SaveMergedState
+      vector<ViewRec> diskKeepers;  // owning
+      vector<PViewRec> keepers;     // non-owning
+      ourVws := CurViews.ToHash()   // for efficient name-based lookup; case insensitive on Win32
+      iofh := open( rwlock, statefile )
+      for line in iofh.lines() do
+         ViewRec disk( line )
+         PViewRec our( ourVws.lookup( disk.fname ) )
+         if our && (our->fSaved = true) && our->Tvisit > disk.Tvisit then
+            keepers.append( our );
+         else
+            diskKeepers.emplace_back( disk )
+            end
+         end
+      for disk in diskKeepers do  // ONLY NOW that diskKeepers is complete can we safely take addresses of its elements
+         keepers.append( &disk );
+         end
+      for( auto &our : CurViews ) do
+         if !our->fSaved then
+            keepers.append( &our );
+            end
+         end
+      sort( keepers, cmpVwTvisit )
+      rewind( iofh )
+      for pvw in keepers do
+         VwWrToState( iofh, pvw )
+         end
+      close( iofh )
+
+
+   Aside: I've toyed with adding support for a "workspace_statefile" to store
+   some of the per-file state that is less likely to relate to "stuff that I work
+   on" (vs "stuff that I search/read only".  But creating implementable
+   definitions for these vague terms has proven (like the dwell-time based
+   metrics) difficult.  Perhaps (since almost EVERYTHING I edit or search is in a
+   git worktree) git history-mining could define this?  But some repos I work
+   with are super-gigantic with massive amounts of commit history (99.999% of
+   which does not involve me at all...) which means a git-history-search-result
+   caching layer could be needed.
+
+     git log --no-merges --author="fwmech" --name-only --pretty=format:"" | sort -u  # https://stackoverflow.com/a/6349483
