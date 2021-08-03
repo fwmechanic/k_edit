@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdarg>
 #include <cstring>
 #include <tuple>
@@ -239,6 +240,14 @@ extern   void  StrUnDoubleBackslashes( PChar pszString );
 
 STIL   bool  StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
+// C++17 std::string_view omits these boost::string_ref methods (arrrgh!)
+STIL bool starts_with(const stref haystack, const stref needle) {
+   return needle.size() <= haystack.size() && (needle == haystack.substr(0                              , needle.size()));
+   }
+STIL bool ends_with(const stref haystack, const stref needle) {
+   return needle.size() <= haystack.size() && (needle == haystack.substr(haystack.size() - needle.size(), needle.size()));
+   }
+
 STIL bool eq( stref s1, stref s2 ) {
    return s1 == s2;
    }
@@ -302,7 +311,7 @@ STIL bool IsStringBlank( stref src ) { // note that empty strings are Blank stri
 #if 0
 STIL int Strlen( PCChar pS ) { return int( strlen(pS) ); }
 #else
-STIL int Strlen( register PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...
+STIL int Strlen( PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...
    const auto start(pc);
    for( ; *pc ; ++pc ) {
       }

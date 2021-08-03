@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015,2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -61,15 +61,15 @@ stref Path::RefExt( stref src ) { // a.k.a. IdxOfFnm()
 
 bool Path::IsDot( stref str ) { // truly useless!
    return str ==                    "."
-       || str.ends_with( DIRSEP_STR "."             )
-       || str.ends_with( DIRSEP_STR "."  DIRSEP_STR )
+       || ends_with( str, DIRSEP_STR "."             )
+       || ends_with( str, DIRSEP_STR "."  DIRSEP_STR )
        ;
    }
 
 bool Path::IsDotDot( stref str ) {
    return str ==                    ".."
-       || str.ends_with( DIRSEP_STR ".."            )
-       || str.ends_with( DIRSEP_STR ".." DIRSEP_STR )
+       || ends_with( str, DIRSEP_STR ".."            )
+       || ends_with( str, DIRSEP_STR ".." DIRSEP_STR )
        ;
    }
 

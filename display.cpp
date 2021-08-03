@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -497,13 +497,13 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       d_sb.AddString( wuc.substr( maxIx + 1 ) ); // of the first char after the match is always (maxIx + 1)
       }
    }
-   if( !wuc.starts_with( "-D" )) { // experimental
+   if( !starts_with( wuc, "-D" )) { // experimental
       char scratch[81]; bcat( bcpy( scratch, "-D" ), scratch, wuc ); d_sb.AddString( scratch );
       }
    else {
       if( wuc.length() > 2 ) { d_sb.AddString( wuc.substr( 2 ) ); }
       }
-   if( !wuc.starts_with( "$" )) { // experimental
+   if( !starts_with( wuc, "$" )) { // experimental
       char scratch[81];
       d_sb.AddString( stref( scratch,       bcat( bcpy( scratch, "$"  ), scratch, wuc )                 ) );
       d_sb.AddString( stref( scratch, bcat( bcat( bcpy( scratch, "$(" ), scratch, wuc ), scratch, ")" ) ) );
@@ -513,7 +513,7 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       STATIC_CONST char vnr_pfx[] = { "__"      };  CompileTimeAssert( 2 == KSTRLEN(vnr_pfx) );
       STATIC_CONST char vnr_sfx[] = { "_veneer" };  CompileTimeAssert( 7 == KSTRLEN(vnr_sfx) );
       const auto vnr_fx_len( KSTRLEN(vnr_pfx)+KSTRLEN(vnr_sfx) );
-      if( (wuc.length() > vnr_fx_len) && wuc.starts_with( vnr_pfx ) && wuc.ends_with( vnr_sfx ) ) {
+      if( (wuc.length() > vnr_fx_len) && starts_with( wuc, vnr_pfx ) && ends_with( wuc, vnr_sfx ) ) {
          d_sb.AddString( wuc.substr( KSTRLEN(vnr_pfx), wuc.length() - vnr_fx_len ) );
          }
       else {
@@ -1090,7 +1090,7 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          is known */
       auto ixTgt( rl.find( d_eolCommentDelim ) );
       if( ixTgt == stref::npos && !d_eolCommentDelimWOTrailSpcs.empty() ) {
-         if( rl.ends_with( d_eolCommentDelimWOTrailSpcs ) ) {
+         if( ends_with( rl, d_eolCommentDelimWOTrailSpcs ) ) {
             ixTgt = rl.length() - d_eolCommentDelimWOTrailSpcs.length();
             }
          }

@@ -1,5 +1,5 @@
 // -*- c is foobar -*-
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -521,7 +521,7 @@ STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl
       }                                       DB && DBG( "%s 1 %" PR_BSR "'", __func__, BSR(rl) );
    rl.remove_prefix( ixNonb );                DB && DBG( "%s 2 %" PR_BSR "'", __func__, BSR(rl) );
    rmv_trail_blanks( rl );                    DB && DBG( "%s 3 %" PR_BSR "'", __func__, BSR(rl) );
-   if( rl.ends_with( "{" ) ) {                DB && DBG( "%s rl.ends_with( \"{\" )", __func__ );
+   if( ends_with( rl, "{" ) ) {               DB && DBG( "%s ends_with( rl, \"{\" )", __func__ );
       return xNonb + indent;
       }
    STATIC_VAR stref c_statement_names[] = {
@@ -537,7 +537,7 @@ STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl
       "class"    ,
       };
    for( const auto &sr : c_statement_names ) {
-      if( rl.starts_with( sr ) && (rl.length()==sr.length() || (rl.length()>sr.length() && !isalpha( rl[sr.length()]) ) ) ) {
+      if( starts_with( rl, sr ) && (rl.length()==sr.length() || (rl.length()>sr.length() && !isalpha( rl[sr.length()]) ) ) ) {
                                               DB && DBG( "%s c_statement_names[%" PR_BSR "]", __func__, BSR(sr) );
          return xNonb + indent;
          }
@@ -799,7 +799,7 @@ STATIC_FXN std::string is_content_diff( PCFBUF pFile ) { 0 && DBG( "%s called on
    auto lnum(0);
    stref rl;
 #define  CHKL()       (rl=pFile->PeekRawLine( lnum ), lnum <= pFile->LastLine())
-#define  CMPL(kstr)   (rl.starts_with( kstr ))
+#define  CMPL(kstr)   (starts_with( rl, kstr ))
 #define  NXTL()       (++lnum,CHKL())
 
    while( CHKL() &&
@@ -875,7 +875,7 @@ public:
 
 STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    auto rl0( pfb->PeekRawLine( 0 ) );
-   if( !rl0.starts_with( "#!" ) ) { return ""; }
+   if( !starts_with( rl0, "#!" ) ) { return ""; }
    const auto ib( FirstNonBlankOrEnd( rl0, 2 ) );  // space may follow #!
    const auto i1( FirstBlankOrEnd( rl0, ib ) );    // assume: no spaces in path of binary
    rl0.remove_suffix( rl0.length() - i1 );         // strip command tail
@@ -888,7 +888,7 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
       stref_split_walk ssw( rl );
       stref tok;
       while( tok = ssw.next() , !tok.empty() ) {       0 && DBG( "tok=%" PR_BSR "'", BSR(tok) );
-         if( !tok.starts_with( '-' ) ) {
+         if( !starts_with( tok, "-" ) ) {
             return tok;
             }
          }
@@ -914,7 +914,7 @@ STATIC_FXN std::string emacs_major_mode( PCFBUF pfb ) { // http://www.gnu.org/so
    stref rv( "" );
    for( auto yLine(0) ; yLine < pfb->LineCount() ; ++yLine ) {
       const auto rl( pfb->PeekRawLine( yLine ) );
-      if( !IsStringBlank( rl ) && !(yLine==0 && rl.starts_with( "#!" )) ) {
+      if( !IsStringBlank( rl ) && !(yLine==0 && starts_with( rl, "#!" )) ) {
          rv = rl;
          break;
          }
@@ -1267,7 +1267,7 @@ const Eol_t platform_eol = WL( EolCRLF, EolLF );
 
 STATIC_FXN bool DontRecreateDeletedFile( stref fnm ) {
    // TODO 20190226: move this function to lua
-   if( fnm.starts_with( "/tmp/" ) ) {                             DBG( "FRd! not creating /tmp/ file %" PR_BSR, BSR(fnm) );
+   if( starts_with( fnm, "/tmp/" ) ) {                              DBG( "FRd! not creating /tmp/ file %" PR_BSR, BSR(fnm) );
       return true;
       }
    return false;

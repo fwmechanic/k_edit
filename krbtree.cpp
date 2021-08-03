@@ -998,7 +998,7 @@ RbNode *rb_find_gte_str( int *equal, RbTree *tree, const char *key )
    }
    }
 
-RbNode *rb_find_gte_sri( int *equal, RbTree *tree, const boost::string_ref &key )
+RbNode *rb_find_gte_sri( int *equal, RbTree *tree, const stref &key )
    {
    RTN_UNLESS_PRBHD_OK( nullptr, tree );
    incr_searches( tree );
@@ -1066,7 +1066,7 @@ RbNode *rb_find_gen(RbTree *tree, PCVoid key, rb_cmpfxn fxn)
    return equal ? rv : nullptr;
    }
 
-RbNode *rb_find_sri(RbTree *tree, const boost::string_ref &key )
+RbNode *rb_find_sri(RbTree *tree, const stref &key )
    {
    int equal;
    RbNode *rv = rb_find_gte_sri(&equal, tree, key);

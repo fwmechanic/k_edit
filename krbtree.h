@@ -197,7 +197,7 @@ extern RbNode *rb_insert_gen( RbTree *tree, PCVoid key, rb_cmpfxn fxn, PVoid val
 // Returns nullptr if there is no such node in the tree
 //
 extern RbNode *rb_find_str( RbTree *tree, const char *key);
-extern RbNode *rb_find_sri( RbTree *tree, const boost::string_ref &key);
+extern RbNode *rb_find_sri( RbTree *tree, const stref &key);
 extern RbNode *rb_find_mem( RbTree *tree, PCVoid key, size_t keylen);
 extern RbNode *rb_find_gen( RbTree *tree, PCVoid key, rb_cmpfxn fxn);
 
@@ -206,7 +206,7 @@ extern RbNode *rb_find_gen( RbTree *tree, PCVoid key, rb_cmpfxn fxn);
 // Sets *equal to 0 unless an identical key was found.
 //
 extern RbNode *rb_find_gte_str( int *equal, RbTree *tree, const char *key           );
-extern RbNode *rb_find_gte_sri( int *equal, RbTree *tree, const boost::string_ref &key );
+extern RbNode *rb_find_gte_sri( int *equal, RbTree *tree, const stref &key );
 extern RbNode *rb_find_gte_mem( int *equal, RbTree *tree, PCVoid key, size_t keylen );
 extern RbNode *rb_find_gte_gen( int *equal, RbTree *tree, PCVoid key, rb_cmpfxn fxn );
 

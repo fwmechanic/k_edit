@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -97,19 +97,18 @@ typedef const void *        PCVoid;
 
 typedef std::back_insert_iterator<std::string> string_back_inserter;
 
-// driven by https://news.ycombinator.com/item?id=8704318 I've deployed
-// boost::string_ref to minimize gratuitious std::string mallocs/copies
-
 #include <boost/version.hpp>
-#include <boost/utility/string_ref.hpp>
-                                 // The final 32-bit Nuwen MinGW release (10.4) contains Boost 1.54
-typedef boost::string_ref stref; // http://www.boost.org/doc/libs/1_54_0/libs/utility/doc/html/string_ref.html
-typedef stref::size_type  sridx; // a.k.a. boost::string_ref::size_type
+
+// driven by https://news.ycombinator.com/item?id=8704318 I've deployed
+// std::string_view to minimize gratuitious std::string mallocs/copies
+#include <string_view>
+typedef std::string_view stref; // https://en.cppreference.com/w/cpp/header/string_view
+typedef stref::size_type  sridx;
 constexpr auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::npos )' syntax is used!
 typedef stref::const_iterator         stref_iter;
 typedef stref::const_reverse_iterator stref_riter;
 
-// we sometimes need to "printf" (DBG) boost::string_ref referents
+// we sometimes need to "printf" (DBG) stref (std::string_view) referents
 // unfortunately static_cast<int> of size_t seems unavoidable per
 // http://stackoverflow.com/questions/19145951/printf-variable-string-length-specifier
 // http://stackoverflow.com/questions/8081613/using-size-t-for-specifying-the-precision-of-a-string-in-cs-printf

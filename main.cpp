@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -165,7 +165,7 @@ STATIC_FXN void InitNewView_File( PChar viewPersistentText ) {
       }
    else {
      #if !defined(_WIN32)
-      if( fnm.starts_with( "/tmp/" ) && !FileAttribs( vp.filename ).Exists() ) {
+      if( starts_with( fnm, "/tmp/" ) && !FileAttribs( vp.filename ).Exists() ) {
          return;
          }
      #endif

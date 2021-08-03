@@ -12,7 +12,7 @@ toc::[]
 
 K is my personal programmer's text editor, whose design is derived from Microsoft's http://www.texteditors.org/cgi-bin/wiki.pl?M[M editor] (a.k.a. "Microsoft Editor") which was itself derived from the http://www.texteditors.org/cgi-bin/wiki.pl?Z[Z] http://www.applios.com/z/z.html[editor].
 
-K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is written in C++11 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
+K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is written in C++17 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
 
 ## Features
 
@@ -55,11 +55,9 @@ The K source code distro contains, and K incorporates, by building and static li
 
 ### External Build Dependencies
 
- * `GCC` >= 4.8 (`GCC` versions thru 7.3 have been and are being used): I first built (and _still_ build 32-bit Windows) K using GCC 4.8; K might not build with any lesser GCC version.
+ * `GCC` >= 9.2.0
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
  ** `boost::filesystem`: a small subset only
- ** `boost::string_ref`: this is used pervasively (C++14 adopted `boost::string_ref` as `std::string_view` but we'll continue to use `boost::string_ref` until we abandon GCC 4.8 (32-bit Windows) builds.
- *** `boost::string_ref` appears to be implemented in ".h file(s) only"; I have toyed with the idea of copying the `boost::string_ref` source code subset into the K source tree (in order, for example, to un-break the CentOS 7 build), but so far have successfully resisted the idea.
  * http://www.pcre.org/[`PCRE`] "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
  * `ctags` (either http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant https://ctags.io/[Universal Ctags]) is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread` libraries
@@ -97,17 +95,10 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 
 ### Platform-specific Notes
 
-#### CentOS 7
-
- * K build fails on CentOS 7.2.1511 because its default Boost version is 1.53, whose boost::string_ref contains a compile-breaking bug (yes, in the library .h file itself).
- ** _Hacky workaround_: in my experience, K built on Ubuntu 14.04 runs flawlessly on CentOS 7.2.1511
- *** the non-static-linked K prerequisites (`ncurses*`, `pthread`, `pcre`) having inevitably already been installed on any Linux system.
-
 #### Windows
 
- * both i386 and x64 are in active use on Win 7, Win 8.1, and Win 10.
- * i386 K for Windows: The last http://nuwen.net/mingw.html[nuwen.net MinGW release] that builds 32-bit targets, 10.4 (w/https://gcc.gnu.org/projects/cxx-status.html#cxx11[GCC 4.8.1, having full C++11 support]), was released 2013/08/01 and is no longer available from nuwen.net.  So, while I continue to build K as both 32- and 64- bit .exe's (and can supply a copy of the nuwen.net MinGW 10.4 release upon request), the future of K on the Windows platform is clearly x64 only.
- * x64 K for Windows: first released 2014/02/09:
+ * x64 build, first supported 2014.02, is in active use on Win 8.1 and Win 10.
+ * i386 build was removed 2021.08.
 
 ### Linux key-decoding status quo
 

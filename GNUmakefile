@@ -1,6 +1,6 @@
 #!make
 #
-# Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -265,7 +265,7 @@ PCRE_LIB :=
 endif
 
 # 20140821 this flag needs to be used when _compiling_ .cpp files as well as when (w/gcc 4.9.1) using gcc to generate .makedeps
-CXX_D_FLAGS = -std=gnu++11 -DUSE_PCRE=$(USE_PCRE) $(APP_IN_DLL_CPP)
+CXX_D_FLAGS = -std=gnu++17 -DUSE_PCRE=$(USE_PCRE) $(APP_IN_DLL_CPP)
 
 #####################################################################################################################
 # Set variables used in GNU Make builtin rules (run `make -p > rules` in a dir w/o any makefile to see these rules).
@@ -505,22 +505,15 @@ khelp.html: khelp.txt
 	khelp.html
 
 
-.PHONY: run_unittests run_krbtree_unittest run_dlink_unittest
+.PHONY: run_unittests run_krbtree_unittest run_dlink_unittest run_unittest_tagfind
 
-run_unittests: run_boost_stref_unittest run_krbtree_unittest run_dlink_unittest
+run_unittests: run_krbtree_unittest run_dlink_unittest
 
 run_dlink_unittest: dlink_unittest$(EXE_EXT)
 	./dlink_unittest$(EXE_EXT)
 
 dlink_unittest$(EXE_EXT): CXXFLAGS += -Werror
 dlink_unittest$(EXE_EXT): dlink_unittest.o
-	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
-
-run_boost_stref_unittest: boost_stref_unittest$(EXE_EXT)
-	./boost_stref_unittest$(EXE_EXT)
-
-boost_stref_unittest$(EXE_EXT): CXXFLAGS += -Werror
-boost_stref_unittest$(EXE_EXT): boost_stref_unittest.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_krbtree_unittest: krbtree_unittest$(EXE_EXT)
@@ -533,6 +526,9 @@ krbtree_unittest.o: CPPFLAGS += -DUNIT_TEST_KRBTREE
 krbtree_unittest.o: CXXFLAGS += -Werror
 krbtree_unittest.o: krbtree.cpp
 	$(BLD_CXX)
+
+run_unittest_tagfind: unittest_tagfind$(EXE_EXT)
+	./test_tagfind
 
 unittest_tagfind$(EXE_EXT): unittest_tagfind.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@

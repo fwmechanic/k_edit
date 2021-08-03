@@ -29,11 +29,11 @@ CODING CONVENTIONS *** existing code is uniformly formatted.  Get used to it.
 Semantic Coding Guidelines
 
   * When strings are being assembled, prefer std::string
-  * When strings are being referenced, prefer boost::string_ref
+  * When strings are being referenced, prefer stref (std::string_view)
   * Deprecate (pointer to) ASCI_Z_ string in lieu of the above whereever possible.
   * You will see many duplications of methods and functions along the axis of
-      * std::string vs. Xbuf         param or retval
-      * boost::string_ref vs. PCChar param or retval
+      * std::string vs. Xbuf                param or retval
+      * stref (std::string_view) vs. PCChar param or retval
       in all cases, prefer the first to the second (try to rmv the second)
       this does not mean that the first is as well-tested as the second!
 

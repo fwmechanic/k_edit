@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -896,7 +896,7 @@ stref ExtractAssignableText( stref src, bool &continues ) {
       itEarlyTerm = itContinuationChar - 1; // the continuation char is always preceded by a space which is NOT included in the macro text
       }
    auto rv( src.substr( 0, std::distance( src.cbegin(), itEarlyTerm ) ) );
-   if( IsStringBlank( rv ) ) { rv.clear(); }
+   if( IsStringBlank( rv ) ) { rv = stref(); }
    0 && DBG( "--> %" PR_BSR "|", BSR(rv) );
    return rv;
    }

@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -124,16 +124,12 @@ bool CopyFileManuallyOk_( PCChar pszCurFileName, PCChar pszNewFilename, PCChar c
 #include <boost/filesystem/operations.hpp>
 // https://www.boost.org/doc/libs/1_54_0/libs/filesystem/doc/reference.html
 
-// boost 1_54_0 (Nuwen 10.4, GCC 4.8.1, MinGW runtime 3.20) specific
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-
 tempfile::tempfile( PCChar mode )
    : d_fh( nullptr )
    {
    auto tempPath( boost::filesystem::temp_directory_path() );  // https://www.boost.org/doc/libs/1_54_0/libs/filesystem/doc/reference.html#temp_directory_path
    for( auto ix=0 ; ix<10 ; ++ix ) {
-      auto upath( boost::filesystem::unique_path() );
+      auto upath( boost::filesystem::unique_path() );  // https://stackoverflow.com/questions/43316527/what-is-the-c17-equivalent-to-boostfilesystemunique-path
       auto thepath( tempPath / upath );                        0 && DBG( "try %d: '%s'", ix, thepath.string().c_str() );
       const auto fd( openFailed( thepath.string().c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRWXU ) );
       if( fd != -1 ) {

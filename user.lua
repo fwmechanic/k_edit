@@ -1,5 +1,5 @@
 --
--- Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+-- Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 --
 -- This file is part of K.
 --
@@ -59,7 +59,7 @@ do
       if kroot then
          AddInDir(                                 kroot
                  , { "Lua Reference Manual"     , fkroot.."lua-5.1/doc/contents.html" }
-                 , { "boost::string_ref Manual" , "http://www.boost.org/doc/libs/1_54_0/libs/utility/doc/html/string_ref.html" }
+                 , { "std::string_view Manual"  , "https://en.cppreference.com/w/cpp/header/string_view" }
                  , { "Lua PiL 2e"               , fkroot.."lua-5.1/doc/Programming.in.Lua.2e.pdf" }
                  , { "Lpeg Reference Manual"    , fkroot.."lua-5.1/src/lpeg.html"     }
                  , { "Lpeg.re Reference Manual" , fkroot.."lua-5.1/src/re.html"       }

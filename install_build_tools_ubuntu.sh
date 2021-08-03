@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -20,11 +20,6 @@
 #
 
 # run to unilaterally install prereqs for building & running K
-
-# gcc 4.9.x is the dflt version on *ubuntu 14.10, and seems to be
-#           a major memory hog (I've observed this w/MinGW too)
-# gcc 4.8.x is sufficient for our needs, and is much less of a
-#           memory hog (thus runs faster on <= 2GB VMs)
 
 hdr="$ID K-prereq-install: "
 complete() {

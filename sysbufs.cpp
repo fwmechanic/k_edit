@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -86,7 +86,7 @@ STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, CPCChar *pC, size_t element
    }
 
 STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"
-   if( !(pszName.starts_with( "<win" ) && pszName.ends_with( ">" )) ) {
+   if( !(starts_with( pszName, "<win" ) && ends_with( pszName, ">" )) ) {
       return -1;
       }
    const auto numst( pszName.substr( 4, pszName.length()-4-1 ) );

@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015,2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -20,9 +20,9 @@
 #include <assert.h>
 #include <iostream>
 #include <stdlib.h>
+#include "my_types.h"
 #include "dlink.h"
 
-#define  ELEMENTS(array)  (sizeof(array)/sizeof(array[0]))
 #define  AEOB( array )   array , ELEMENTS(array), #array
 
 struct inta {
