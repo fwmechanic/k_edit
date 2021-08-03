@@ -25,10 +25,6 @@ bool CMD::IsFnCancel()     const { return &ARG::cancel     == d_func || fn_cance
 bool CMD::IsFnUnassigned() const { return &ARG::unassigned == d_func || fn_unassigned == d_func; }
 bool CMD::IsFnGraphic()    const { return &ARG::graphic    == d_func || fn_graphic    == d_func; }
 
-GLOBAL_VAR PFBUF g_pFBufAssignLog;
-
-GLOBAL_CONST char kszAssignLog[] = "<a!>";
-
 bool ARG::assignlog() { // toggle function
    0 && DBG( "%s %p", __func__, g_pFBufAssignLog );
    if( !g_pFBufAssignLog ) {
@@ -637,8 +633,6 @@ bool ARG::tell() {
    return fn_unassigned == pCmd->d_func;
    }
 
-GLOBAL_VAR PFBUF g_pFbufRecord;
-
 STATIC_VAR bool  s_fInRecordDQuote; // if set than output is in the middle of a chQuot2-delimited (literal) string
 
 STIL bool RecordingInDQuote() { return s_fInRecordDQuote         ; }
@@ -767,8 +761,6 @@ STATIC_FXN void PrintMacroDefToRecordFile( PCMD pCmd ) {
 //  True:  Recording turned on.
 //  False: Recording turned off.
 //
-
-GLOBAL_CONST char kszRecord[] = "<record>";
 
 GLOBAL_VAR bool g_fCmdXeqInhibitedByRecord;
 

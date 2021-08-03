@@ -24,34 +24,6 @@
 
 //--------------------------------------
 
-GLOBAL_VAR bool  g_fShowMemUseInK     =    true;
-GLOBAL_VAR bool  g_fCase                       ;
-GLOBAL_VAR bool  g_fEditReadonly               ;
-GLOBAL_VAR bool  g_fErrPrompt         =    true;
-GLOBAL_VAR bool  g_fSoftCr            =    true;
-GLOBAL_VAR bool  g_fTabAlign                   ;
-GLOBAL_VAR bool  g_fViewOnly                   ;
-GLOBAL_VAR bool  g_fWordwrap                   ;
-GLOBAL_VAR bool  g_fWcShowDotDir               ;
-GLOBAL_VAR bool  g_fFuncRetVal                 ;
-GLOBAL_VAR bool  g_fMeta                       ;
-GLOBAL_VAR bool  g_fMfgrepNoise                ;
-GLOBAL_VAR bool  g_fMfgrepRunning              ;
-GLOBAL_VAR bool  g_fMsgflush                   ;
-GLOBAL_VAR bool  g_fSelKeymapEnabled           ;
-GLOBAL_VAR int   g_ClipboardType               ; // 0 == EMPTY
-GLOBAL_VAR int   g_iTabWidth          =       8;
-GLOBAL_VAR int   g_iHike              =      25;
-GLOBAL_VAR int   g_iHscroll           =      10;
-GLOBAL_VAR int   g_iRmargin           =      80;
-GLOBAL_VAR int   g_iMaxUndo           =  100000;
-GLOBAL_VAR int   g_iVscroll           =       1;
-
-GLOBAL_VAR PFBUF g_pFbufClipboard          ;
-GLOBAL_VAR PFBUF g_pFBufCmdlineFiles       ;
-GLOBAL_VAR PFBUF s_pFbufLog                ;
-GLOBAL_VAR PFBUF g_pFBufMsgLog             ;
-GLOBAL_VAR PFBUF g_pFBufConsole            ;
 
 #if defined(__GNUC__)
 //=================================================================
@@ -216,7 +188,7 @@ STATIC_CONST char kszSRC[] = "SRC:";
 STATIC_FXN bool recovSRC( PCChar lbuf ) {
    const auto fFailed( ToBOOL( Strnicmp( lbuf, kszSRC, KSTRLEN(kszSRC) ) ) );
    if( !fFailed ) {
-      g_SnR_stSearch = lbuf+KSTRLEN(kszSRC);
+      g_SnR_stSearch.assign( lbuf+KSTRLEN(kszSRC) );
       }
    return fFailed;
    }
@@ -226,7 +198,7 @@ STATIC_CONST char kszDST[] = "DST:";
 STATIC_FXN bool recovDST( PCChar lbuf ) {
    const auto fFailed( ToBOOL( Strnicmp( lbuf, kszDST, KSTRLEN(kszDST) ) ) );
    if( !fFailed ) {
-      g_SnR_stReplacement = lbuf+KSTRLEN(kszDST);
+      g_SnR_stReplacement.assign( lbuf+KSTRLEN(kszDST) );
       }
    return fFailed;
    }
@@ -472,8 +444,6 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
    return rvWILL_EXIT;
    }
 
-GLOBAL_VAR bool g_fAskExit; // global/switchval
-
 bool ARG::exit() {
    DBG( "%s ***************************************************", FUNC );
    bool fToNextFile;
@@ -644,7 +614,6 @@ void DBG_init() {
       }
    }
 
-GLOBAL_VAR bool g_fLogFlush = false;
 STATIC_VAR bool fDBGNL_last;
 STATIC_FXN void wr_nl_flush( FILE *ofh ) {
    fputc( '\n', ofh );
@@ -804,8 +773,6 @@ STATIC_FXN ptrdiff_t memdelta() {
    lastmem = memnow;
    return delta;
    }
-
-GLOBAL_VAR bool g_CLI_fUseRsrcFile = true;
 
 STATIC_FXN void ConstructStatics() {
    ThisProcessInfo::Init();

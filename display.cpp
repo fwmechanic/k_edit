@@ -238,8 +238,6 @@ STATIC_FXN int Show_FTypeSettings() {
    return 1;
    }
 
-GLOBAL_VAR bool g_fBrightFg = false;
-
 void FTypeSetting::Update() {
    Catbuf<120> kybuf;
    const auto w0( kybuf.Wref() );
@@ -566,8 +564,6 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       }
    PrimeRefresh();                                                                                           // DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
    }
-
-GLOBAL_VAR int g_iWucMinLen = 2;
 
 stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) { enum { DB=0 };
    const auto yCursor( cursor->lin );
@@ -2302,9 +2298,6 @@ bool View::InsertAddinLast( HiliteAddin *pAddin ) {
    return false;
    }
 
-GLOBAL_VAR bool g_fLangHilites = true;
-
-
 /* Supporting new FTypeName:
 
    In k.filesettings:
@@ -2822,8 +2815,6 @@ void DispNeedsRedrawAllLinesCurWin_() {
 // dialogtop:yes
 // dialogtop:no
 
-GLOBAL_VAR bool g_fDialogTop = true;
-
 GLOBAL_VAR LINE s_iHeight;  // global read, local write
 GLOBAL_VAR COL  s_iWidth ;  // global read, local write
 
@@ -3171,11 +3162,6 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
    s_paScreenLineNeedsRedraw->SetBit( new_it->d_origin.lin );
    UpdtDisplay();
    }
-//--------------------------------------------------------------------------------------
-
-GLOBAL_VAR char g_chTabDisp = DFLT_G_CHTABDISP;
-GLOBAL_VAR char g_chTrailSpaceDisp = ' ';
-GLOBAL_VAR char g_chTrailLineDisp = '~';
 
 //--------------------------------------------------------------------------------------
 
@@ -3337,8 +3323,6 @@ void DispNeedsRedrawCursorMoved() { if( g_CurView() ) { g_CurView()->ForceCursor
 
 void UnhideCursor()  { if( ConOut::SetCursorVisibilityChanged( true  ) ) { DispNeedsRedrawCursorMoved(); } }
 void HideCursor()    { if( ConOut::SetCursorVisibilityChanged( false ) ) { DispNeedsRedrawCursorMoved(); } }
-
-GLOBAL_VAR int g_iCursorSize = -1;
 
 void View::InsertHiLitesOfLineSeg
    ( const LINE                yLine

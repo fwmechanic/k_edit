@@ -23,22 +23,6 @@
 #include "ed_main.h"
 #include "ed_search.h"   // for RegexVersion()
 
-char Xbuf::ds_empty = 0;
-
-GLOBAL_CONST char kszAsgnFile  [] = "<CMD-SWI-Keys>";
-GLOBAL_CONST char kszClipboard[] = "<clipboard>";
-GLOBAL_CONST char kszConsole[] = "<console>";
-GLOBAL_CONST char kszCwdStk   [] = "<cwd>";
-GLOBAL_CONST char kszEnvFile  [] = "<env_>";
-GLOBAL_CONST char kszMyEnvFile[] = "<env>";
-GLOBAL_CONST char kszFiles    [] = "<files>";
-GLOBAL_CONST char kszMacDefs  [] = "<macdefs>";
-GLOBAL_CONST char kszMasterRepo[] = "https://github.com/fwmechanic/k_edit.git";
-GLOBAL_CONST char kszNoFile   [] = "*";
-GLOBAL_CONST char kszSearchLog[] = "<search-keys>";
-GLOBAL_CONST char kszSearchRslts[] = "<search-results>";
-GLOBAL_CONST char kszUsgFile  [] = "<usage>";
-
 STATIC_VAR CPCChar s_InvisibleFilenames[] = {
    kszClipboard  ,
    kszFiles      ,
@@ -241,8 +225,6 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    FBufRead_Assign_SubHd( pFBuf, "Available Keys", ShowAllUnassignedKeys( nullptr ) );
    ShowAllUnassignedKeys( pFBuf );
    }
-
-GLOBAL_VAR bool g_fShowFbufDetails = false;
 
 struct maxFileInfos {
    COL        nmLen   ;

@@ -1,5 +1,5 @@
 #
-# Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+# Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 #
 # This file is part of K.
 #
@@ -77,7 +77,6 @@ s delete       delete_        MODIFIES + BOXARG + STREAMARG + NOARG + LINEARG + 
 #s dispmstk     dispmstk       CURSORFUNC
   dquc         dquc                      NOARG, Double quoted string under cursor
 s down         down           CURSORFUNC , Move cursor down one line
-w dvlog        dvlog                     TEXTARG , write string to DbgView using Win32's OutputDebugString
   eds          eds            CURSORFUNC , Show internal undo/redo details
 s emacscdel    emacscdel      MODIFIES + NOARG , Deletes previous character.  If cursor is in column 1, moves cursor to end of previous line. This is similar to Cdelete, but Cdelete never deletes line breaks
 s emacsnewl    emacsnewl      MODIFIES + NOARG , In insert mode, starts a new line.  The editor automatically positions cursor on new line, according to Softcr switch setting.

@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -57,16 +57,6 @@ const enum_nm cursorsize_enums[] = {
    { 0, "small" },
    { 1, "large" },
    };
-
-GLOBAL_CONST char kszBackup[] = "backup";
-
-GLOBAL_VAR uint8_t g_colorInfo      = 0x1e;
-GLOBAL_VAR uint8_t g_colorStatus    = 0x1e;
-GLOBAL_VAR uint8_t g_colorWndBorder = 0xa0;
-                                   // 0x6c;
-GLOBAL_VAR uint8_t g_colorError     = 0x1e;
-GLOBAL_VAR bool    g_fBpEnabled;
-extern     bool    g_fWrToWin32DbgView;
 
 //--------------------------------------------------------------
 
@@ -278,9 +268,7 @@ void SwitblInit() {
    addswi( "cursorsize"     , fc.SWI_enum( [](){ return g_iCursorSize ; }, [](int v_){ g_iCursorSize = v_; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); }, AEOA(cursorsize_enums) ) _AHELP( "small, large" ) );
    addswi( "delims"         , fc.SWIsb( swidDelims     , SetCurDelims    )  _AHELP( "string containing delimiters" ) );
    addswi( "dialogtop"      , fc.SWIi_bv( g_fDialogTop        ) _AHELP( "dialog & status lines placed at top (yes) or bottom (no) of screen" ) );
-#if defined(_WIN32)
-   addswi( "dvlogcmds"      , fc.SWIi_bv( g_fDvlogcmds        ) _AHELP( "log non-cursor-movement cmds to DbgView using Windows' OutputDebugString()" ) );
-#endif
+   addswi( "logcmds"        , fc.SWIi_bv( g_fLogcmds          ) _AHELP( "log non-cursor-movement cmds" ) );
    addswi( "editreadonly"   , fc.SWIi_bv( g_fEditReadonly     ) _AHELP( "allow (yes) or prevent (no) editing of files which are not writable on disk" ) );
    addswi( "entab"          , fc.SWI_enum( []()->int { return g_CurFBuf()->Entab(); }, [](int v_){ g_CurFBuf()->SetEntabOk( v_ ); }, AEOA(entab_enums) )     _AHELP( "when lines are modified, convert 0/none,1/leading,2/exoquote,3/all spaces to tabs" ) );
    addswi( "errprompt"      , fc.SWIi_bv( g_fErrPrompt        ) _AHELP( "error message display pauses with \"Press any key...\" prompt" ) );
@@ -294,9 +282,6 @@ void SwitblInit() {
    addswi( "logflush"       , fc.SWIi_bv( g_fLogFlush         ) _AHELP( "fflush after every line-write to editor logfile" ) );
    addswi( "luagcstep"      , fc.SWIi_iv( g_iLuaGcStep        ) _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) );
    addswi( "m4backtickquote", fc.SWIi_bv( g_fM4backtickquote  ) _AHELP( "spanning backtick quoting right ends with ' (yes) or ` (no)" ) );
-#if 0 && defined(_WIN32)
-   addswi( "ods_enabled"    , fc.SWIi_bv( g_fWrToWin32DbgView ) _AHELP( "whether internal DBG() fxn actually calls Win32::OutputDebugString API" ) );
-#endif
    addswi( "pcrealways"     , fc.SWIi_bv( g_fPcreAlways       ) _AHELP( "literal-string (i.e. non-Regex) searches performed using PCRE (the Regex search engine)" ) );
    addswi( "maxundo"        , fc.SWIi_iv( g_iMaxUndo          ) _AHELP( "maximum number of major undo-steps allowed before oldest undo-step is discarded" ) );
    addswi( "memusgink"      , fc.SWIi_bv( g_fShowMemUseInK    ) _AHELP( "Show memory usage message in Kbytes (yes) or Mbytes (no)" ) );

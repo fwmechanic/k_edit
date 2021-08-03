@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -50,7 +50,8 @@
 #define  SW_BP     _asm { int 3 }
 #endif
 
-STIL int SW_CBP()  { extern bool g_fBpEnabled; if( g_fBpEnabled ) { SW_BP } return 1; }
+GLOBAL_VAR inline bool g_fBpEnabled = false;
+STIL int SW_CBP()  { if( g_fBpEnabled ) { SW_BP } return 1; }
 
 #if defined(_WIN32)
    #if USE_STAT64

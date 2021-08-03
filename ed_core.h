@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -143,10 +143,10 @@ namespace ColorTblIdx { // see color2Lua
 
 // CompileTimeAssert( ColorTblIdx::COLOR_COUNT <= 16 ); // all ColorTblIdx:: must fit into a nibble
 
-GLOBAL_VAR extern uint8_t g_colorInfo     ; // INF
-GLOBAL_VAR extern uint8_t g_colorStatus   ; // STA
-GLOBAL_VAR extern uint8_t g_colorWndBorder; // WND
-GLOBAL_VAR extern uint8_t g_colorError    ; // ERR
+GLOBAL_VAR inline uint8_t g_colorInfo      = 0x1e; // INF
+GLOBAL_VAR inline uint8_t g_colorStatus    = 0x1e; // STA
+GLOBAL_VAR inline uint8_t g_colorWndBorder = 0xa0; // WND
+GLOBAL_VAR inline uint8_t g_colorError     = 0x1e; // ERR
 
 #define  HILITE_CPP_CONDITIONALS  1
 
@@ -236,7 +236,7 @@ class Xbuf {
    // each line touched.
    PChar           d_buf;
    size_t          d_buf_bytes;
-   STATIC_VAR char ds_empty;
+   STIL char ds_empty = 0;
 public:
    Xbuf()                          : d_buf (&ds_empty), d_buf_bytes( 0 ) {}
    Xbuf( size_t size )             : d_buf ( nullptr ), d_buf_bytes( 0 ) { wresize( size ); }
@@ -813,10 +813,6 @@ extern bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ); // a very friendly (with FBUF
 
 extern void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf );
 
-GLOBAL_VAR extern bool g_fRealtabs;         // some inline code below references
-GLOBAL_VAR extern char g_chTabDisp;         // some inline code below references
-GLOBAL_VAR extern char g_chTrailSpaceDisp;  // some inline code below references
-
 typedef bool (*ForFBufCallbackDone)( const FBUF &fbuf, void *pContext );
 enum eEntabModes { ENTAB_0_NO_CONV, ENTAB_1_LEADING_SPCS_TO_TABS, ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS, ENTAB_3_ALL_SPC_TO_TABS, MAX_ENTAB_INVALID };
 enum eBlankDispSrcs { BlankDispSrc_DIRTY=BIT(0), BlankDispSrc_SEL=BIT(1), BlankDispSrc_ALL_ALWAYS=BIT(2), BlankDispSrc_USER_ALWAYS=BIT(3), MAX_BlankDispSrc_INVALID=BIT(4) };
@@ -866,7 +862,7 @@ STIL int cmp( const FileStat &a, const FileStat &b ) {
    }
 
 enum Eol_t { EolLF, EolCRLF };
-extern GLOBAL_CONST Eol_t platform_eol;
+GLOBAL_CONST inline Eol_t platform_eol = WL( EolCRLF, EolLF );
 extern PCChar EolName( Eol_t );
 
 class FBUF { // FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF

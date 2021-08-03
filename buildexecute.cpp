@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -61,8 +61,6 @@ void ClearArgAndSelection() { PCV;
       Clr_g_ArgCount();
       }
    }
-
-GLOBAL_VAR bool g_fBoxMode = true;  // global/switchval
 
 void ExtendSelectionHilite( const Point &pt ) { PCV;
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, true );
@@ -557,7 +555,7 @@ bool ARG::Invoke() { 0 && DBG( "%s %s", FUNC, CmdName() );
       ++s_nestLevel;
       enum { NEST_CHARS = 6 };
       const auto ixEos( s_nestLevel * NEST_CHARS );
-      if( 0 && g_fDvlogcmds && !d_pCmd->isCursorOrWindowFunc() && ixEos < sizeof(linebuf)-1 ) {
+      if( 0 && g_fLogcmds && !d_pCmd->isCursorOrWindowFunc() && ixEos < sizeof(linebuf)-1 ) {
          linebuf lbuf;
          for( auto ix=0 ; ix < ixEos ; ++ix ) { lbuf[ix] = '>'; }
          lbuf[ ixEos ] = '\0';                 DBG( "%s %-15s", lbuf, CmdName() );
@@ -1098,8 +1096,6 @@ bool ARG::lastselect() {
 //
 //  return value is that of the last-executed function.
 //
-
-GLOBAL_VAR int g_fExecutingInternal; // to support correct recording-to-macro
 
 bool fExecute( PCChar strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%s'", __func__, strToExecute );
    if( fInternalExec ) { ++g_fExecutingInternal; }

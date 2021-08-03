@@ -74,8 +74,6 @@ void IdleIntegrityCheck() {
 // 께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께�
 // 께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께께�
 
-GLOBAL_VAR bool g_fTrailSpace;
-
 FBUF::FBUF( stref filename, PPFBUF ppGlobalPtr )
    : d_fPreserveTrailSpc  ( g_fTrailSpace )
    {
@@ -1084,7 +1082,6 @@ PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heav
 //
 // SetCwdOk is THE ONLY PLACE from which Path::SetCwdOk may be called!
 //
-GLOBAL_VAR PFBUF g_pFBufCwd;
 STATIC_FXN bool SetCwdOk( PCChar newCwd, bool fSave, bool *pfCwdChanged ) {
    // if( !IsDir(newCwd) ) { // appropriate for the extra-paranoid
    //    DBG( "not a dir '%s'", newCwd );
@@ -1262,8 +1259,6 @@ STIL void wrNoiseWrite() { DisplayNoise( "          Write      " ); }
 STIL void wrNoiseRenm () { DisplayNoise( "                Renm " ); }
 
 #endif
-
-const Eol_t platform_eol = WL( EolCRLF, EolLF );
 
 STATIC_FXN bool DontRecreateDeletedFile( stref fnm ) {
    // TODO 20190226: move this function to lua
@@ -1680,9 +1675,6 @@ STATIC_FXN bool FileWrErr( int hFile_Write, PCChar pszDestName, PCChar Dialog_fm
    }
 
 PCChar EolName( Eol_t eol ) { return eol==EolLF ? "LF" : "CRLF"; }
-
-GLOBAL_VAR bool g_fTrailLineWrite   = false;
-GLOBAL_VAR bool g_fForcePlatformEol = false;
 
 STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hidden/private FBUF method
    wrNoiseOpen();

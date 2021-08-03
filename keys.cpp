@@ -490,7 +490,7 @@ STATIC_CONST TKyCd2KyNameTbl KyCd2KyNameTbl[] = {
 
 static_assert( ELEMENTS( KyCd2KyNameTbl ) == (EdKC_COUNT - 256), "KyCd2KyNameTbl ) == (EdKC_COUNT - 256)" );
 
-STATIC_FXN int MaxKeyNameLen_() {
+STATIC_FXN constexpr int MaxKeyNameLen_() {
    auto maxLen(0);
    for( const auto &ky2Nm : KyCd2KyNameTbl ) {
       NoLessThan( &maxLen, Strlen( ky2Nm.name ) );

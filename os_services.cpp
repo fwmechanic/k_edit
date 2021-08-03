@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -18,8 +18,6 @@
 //
 
 #include "ed_main.h"
-
-GLOBAL_VAR bool g_fAllowBeep = true; // global/switchval
 
 void ConOut::Bell() {
    if( g_fAllowBeep ) { fputc( '\a', stdout ); } // write RTL's stdout, which hasn't been touched since startup

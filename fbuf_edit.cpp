@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -23,9 +23,6 @@
 //*******************************  BEGIN TABS  *******************************
 //*******************************  BEGIN TABS  *******************************
 //*******************************  BEGIN TABS  *******************************
-
-GLOBAL_VAR bool g_fRealtabs;
-GLOBAL_VAR bool g_fM4backtickquote;
 
 class Tabber {
    const int d_tabWidth;

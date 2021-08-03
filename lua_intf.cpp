@@ -108,7 +108,6 @@ int lh_pop( lua_State *L, HEAD head, TAIL... tail ) {
 
 STATIC_VAR lua_State* L_edit;
 STATIC_VAR lua_State* L_restore_save;
-GLOBAL_VAR PFBUF s_pFbufLuaLog;
 
 STIL void get_LuaRegistry( lua_State* L, PCChar varnm ) { lua_getfield( L, LUA_REGISTRYINDEX, varnm ); }
 STIL void set_LuaRegistry( lua_State* L, PCChar varnm ) { lua_setfield( L, LUA_REGISTRYINDEX, varnm ); }

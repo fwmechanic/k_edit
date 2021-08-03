@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -538,8 +538,6 @@ public:
    ~OneEnterer() { Win32::InterlockedDecrement( d_pCount ); }
    Win32::LONG Value() const { return d_myIncdVal; }
    };
-
-GLOBAL_VAR bool g_fUseMouse;
 
 class TMouseEvent {
    // 20160929 (I now realize that) some weeks/months ago (specifically, after the monster "Windows 10 Anniv Update"), mouse-wheel scrolling stopped working in Windows 10.

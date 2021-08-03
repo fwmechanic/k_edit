@@ -60,8 +60,6 @@ STATIC_FXN sridx strnstri( stref haystack, stref needle ) {
    return pos == haystack.cend() ? stref::npos : std::distance( haystack.cbegin(), pos );
    }
 
-GLOBAL_VAR PFBUF g_pFBufSearchLog;
-GLOBAL_VAR PFBUF g_pFBufSearchRslts;
 
 FBufLocnNow::FBufLocnNow() : FBufLocn( g_CurFBuf(), g_Cursor() ) {}
 
@@ -203,16 +201,15 @@ public:
    void VShowResultsNoMacs() override;
    };
 
-GLOBAL_CONST char chRex = '/';
-
 void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
    const auto de_color( 0x5f );
    const auto ss_color( g_fCase ? (bgRED|fgWHT) : (bgGRN|fgWHT) );
+   STATIC_CONST char s_chRex = '/';
    ColoredStrefs csrs; csrs.reserve( d_fIsRegex ? 5 : 3 );
                       csrs.emplace_back( g_colorInfo , hdr );
-   if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &chRex, sizeof(chRex) ) ); }
+   if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &s_chRex, sizeof(s_chRex) ) ); }
                       csrs.emplace_back( ss_color    , d_SrchDispStr );
-   if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &chRex, sizeof(chRex) ) ); }
+   if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &s_chRex, sizeof(s_chRex) ) ); }
                       csrs.emplace_back( g_colorInfo , trlr, true );
    VidWrColoredStrefs( DialogLine(), 0, csrs );
    }
@@ -278,9 +275,6 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL M
 
 //****************************
 //****************************
-
-GLOBAL_VAR bool g_fFastsearch = true;
-GLOBAL_VAR bool g_fPcreAlways = false;
 
 class SearchSpecifier {
 #if USE_PCRE
@@ -446,8 +440,6 @@ FileSearcher::~FileSearcher() {
       d_mh.VLeavingFile( d_pFBuf );
       }
    }
-
-GLOBAL_CONST char kszCompileHdr[] = "+^-^+";
 
 void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher, stref src ) { // digression!
    LuaCtxt_Edit::nextmsg_setbufnm( kszSearchRslts );
@@ -958,9 +950,6 @@ int FBUF::SyncWriteIfDirty_Wrote() {
    return 0;
    }
 
-GLOBAL_CONST char szSetfile[] = "setfile";
-GLOBAL_CONST char kszCompile[] = "<compile>";
-
 STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
    VS_( if( s_searchSpecifier ) { s_searchSpecifier->Dbgf( "befor" ); } )
    std::unique_ptr<SearchSpecifier> ssNew( new SearchSpecifier( src, fRegex ) );
@@ -999,8 +988,6 @@ STATIC_FXN void AddLineToLogStack( PFBUF pFbuf, stref str ) { // deletes all dup
       }
    }
 
-GLOBAL_VAR PFBUF g_pFBufTextargStack;
-
 void AddToTextargStack( stref str ) {  0 && DBG( "%s: '%" PR_BSR "'", __func__, BSR(str) );
    AddLineToLogStack( g_pFBufTextargStack, str );
    }
@@ -1011,7 +998,7 @@ void AddToSearchLog( stref str ) {  // *** CALLED BY LUA Libfunc
 
 STATIC_FXN bool SearchLogSwap() {
    if( g_CurFBuf() == g_pFBufSearchLog ) {
-      fExecute( szSetfile );
+      fExecute( "setfile" );
       return true;
       }
    return false;
@@ -1351,7 +1338,6 @@ STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
       }
    }
 
-GLOBAL_VAR bool g_fReplaceCase;
 RSXL( template <typename Lambda> )
 STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFileReplace RSXLC( Lambda transform_stSearch ) ) {
    if( !GenericReplace_CollectInputs( arg.d_cArg >= 2, fInteractive, fMultiFileReplace RSXLC( transform_stSearch ) ) ) {

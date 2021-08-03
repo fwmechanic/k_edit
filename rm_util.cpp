@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -27,8 +27,6 @@
 #if defined(_WIN32)
 #include "win32_base.h"
 #endif
-
-GLOBAL_CONST char kszBakDirNm[] = ".kbackup";
 
 int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    DB && DBG( "SFMG+ '%s'", pszFileName );
