@@ -45,8 +45,4 @@
 #endif
 #endif
 
-#if defined(__GNUC__) && (GCC_VERSION > 70000)
-#define ATTR_FALLTHRU __attribute__ ((fallthrough))
-#else
-#define ATTR_FALLTHRU
-#endif
+#define ATTR_FALLTHRU [[fallthrough]]
