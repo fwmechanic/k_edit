@@ -358,8 +358,6 @@ struct CharMap {
 extern CharMap g_WordChars;
 extern CharMap g_HLJChars;
 
-extern const char szMacroTerminators[];
-
 STIL PCChar Strchr( PCChar psz, int ch ) { return       strchr( psz, ch ); }
 STIL PChar  Strchr( PChar  psz, int ch ) { return PChar(strchr( psz, ch )); }
 
@@ -402,7 +400,7 @@ extern int Quot2_strcspn( PCChar pszToSearch, PCChar pszToSearchFor );
 
 TF_Ptr STIL Ptr Quot2StrToNextOrEos( Ptr  pszToSearch, PCChar pszToSearchFor ) { return pszToSearch + Quot2_strcspn( pszToSearch, pszToSearchFor ); }
 
-TF_Ptr STIL Ptr StrToNextMacroTermOrEos( Ptr pszToSearch ) { return Quot2StrToNextOrEos( pszToSearch, szMacroTerminators ); }
+TF_Ptr STIL Ptr StrToNextMacroTermOrEos( Ptr pszToSearch ) { return Quot2StrToNextOrEos( pszToSearch, "#" ); }
 
 template<typename strlval> void string_tolower( strlval &inout ) { std::transform( inout.begin(), inout.end(), inout.begin(), ::tolower ); }
 

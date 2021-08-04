@@ -103,10 +103,8 @@ typedef std::back_insert_iterator<std::string> string_back_inserter;
 // std::string_view to minimize gratuitious std::string mallocs/copies
 #include <string_view>
 typedef std::string_view stref; // https://en.cppreference.com/w/cpp/header/string_view
-typedef stref::size_type  sridx;
+typedef stref::size_type sridx;
 constexpr auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::npos )' syntax is used!
-typedef stref::const_iterator         stref_iter;
-typedef stref::const_reverse_iterator stref_riter;
 
 // we sometimes need to "printf" (DBG) stref (std::string_view) referents
 // unfortunately static_cast<int> of size_t seems unavoidable per

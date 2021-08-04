@@ -19,8 +19,6 @@
 
 #include "ed_main.h"
 
-GLOBAL_CONST char szMacroTerminators[] = "#";
-
 bool CMD::IsFnCancel()     const { return &ARG::cancel     == d_func || fn_cancel     == d_func; }
 bool CMD::IsFnUnassigned() const { return &ARG::unassigned == d_func || fn_unassigned == d_func; }
 bool CMD::IsFnGraphic()    const { return &ARG::graphic    == d_func || fn_graphic    == d_func; }
@@ -155,7 +153,7 @@ namespace Interpreter {
          Advance();
          }
       void   CtorStringLiteral( stref src, int macroFlags ) {
-         d_macroText.reserve( src.length() );
+         d_macroText.reserve( src.length() + 2 );
          d_macroText.assign( "\"" );
          d_macroText.append( src.data(), src.length() );
          d_macroText.append( "\"" );
