@@ -74,8 +74,7 @@ void PrettifyWriter
    const auto chLast( srTabExpand[ srTabExpand.length() - 1 ] );
    const auto chFill( srTabExpand[ srTabExpand.length() > 1 ? 1 : 0 ] );
    while( sit != src.cend() && dix < maxCharsToWrite ) {
-      const auto ch( *sit++ );
-      if( ch != HTAB || chTabExpand == '\0' ) {
+      if( const auto ch = *sit++ ; ch != HTAB || chTabExpand == '\0' ) {
          wr_char( ch );
          }
       else { // expand an HTAB-spring

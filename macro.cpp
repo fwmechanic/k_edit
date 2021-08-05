@@ -89,8 +89,7 @@ void CMD::RedefMacro( stref newDefn ) {
    }
 
 bool DefineMacro( stref pszMacroName, stref pszMacroCode ) { 0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'", __func__, BSR(pszMacroName), BSR(pszMacroCode) );
-   const auto pCmd( CmdFromName( pszMacroName ) );
-   if( pCmd ) {
+   if( const auto pCmd = CmdFromName( pszMacroName ); pCmd ) {
       if( !pCmd->IsRealMacro() ) {
          return Msg( "'%" PR_BSR "' is a non-macro function; cannot redefine as macro", BSR(pszMacroName) );
          }
@@ -391,18 +390,14 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
          macro_graphic.d_argData.eka.Ascii    = token[0];
          macro_graphic.d_argData.eka.EdKcEnum = token[0];
          return &macro_graphic;
-         }
-      {                                           0 && DBG( "%s non-LIT '%s'", __func__, token.c_str() );
-      const auto pCmd( CmdFromName( token ) );
-      if( pCmd ) {                                0 && DBG( "%s CMD '%s'", __func__, pCmd->Name() );
+         }                                                   0 && DBG( "%s non-LIT '%s'", __func__, token.c_str() );
+      if( const auto pCmd = CmdFromName( token ) ; pCmd ) {  0 && DBG( "%s CMD '%s'", __func__, pCmd->Name() );
          return pCmd;
          }
-      }
       // OK, a token was found, but it's not a literal char, and it doesn't
       // match any known command.  Last choice is a branch command/defn:
       //
-      const auto cond( token[0] );
-      if( (':' == cond || '=' == cond || '+' == cond || '-' == cond) && '>' == token[1] ) {
+      if( const auto cond = token[0]; (':' == cond || '=' == cond || '+' == cond || '-' == cond) && '>' == token[1] ) {
          if(  ('=' == cond                  )  // branch always?
            || ('+' == cond &&  g_fFuncRetVal)  // branch if prev cmd true?
            || ('-' == cond && !g_fFuncRetVal)  // branch if prev cmd false?
