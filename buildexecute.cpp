@@ -47,9 +47,10 @@
 STATIC_VAR Point s_SelAnchor;
 STATIC_VAR Point s_SelEnd;
 
-GLOBAL_VAR int      g_iArgCount; // write ONLY via Clr_g_ArgCount(), Inc_g_ArgCount(); read ONLY via Get_g_ArgCount()
-STATIC_FXN int  Inc_g_ArgCount() { return ++g_iArgCount; }
-STATIC_FXN void Clr_g_ArgCount() {          g_iArgCount = 0; }
+STATIC_VAR int      s_iArgCount; // write ONLY via Clr_g_ArgCount(), Inc_g_ArgCount(); read ONLY via Get_g_ArgCount()
+           int  Get_g_ArgCount() { return   s_iArgCount; }
+STATIC_FXN int  Inc_g_ArgCount() { return ++s_iArgCount; }
+STATIC_FXN void Clr_g_ArgCount() {          s_iArgCount = 0; }
 
 void ClearArgAndSelection() { PCV;
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
@@ -988,7 +989,8 @@ PCCMD GetTextargString( std::string &dest, PCChar pszPrompt, int xCursor, PCCMD 
 
 //--------------------------------------------------------------
 
-GLOBAL_VAR bool g_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
+STATIC_VAR bool s_fSelectionActive; // read by IsSelectionActive(), which is used by mouse code
+bool IsSelectionActive() { return s_fSelectionActive; }
 
 #ifdef fn_selkeymaptogl
 bool ARG::selkeymaptogl() {
@@ -998,7 +1000,7 @@ bool ARG::selkeymaptogl() {
 
 STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation (i.e. when Get_g_ArgCount()==0) of ARG::arg or ARG::Lastselect.
    ExtendSelectionHilite( g_Cursor() ); // candidate for removal: IncArgCnt_DropAnchor() (called by ARG::arg()) already does this?
-   g_fSelectionActive = true;           // move to IncArgCnt_DropAnchor()?
+   s_fSelectionActive = true;           // move to IncArgCnt_DropAnchor()?
    while( auto pCmd = CMD_reader().GetNextCMD() ) {
       if(   pCmd->d_func == fn_arg
        #ifdef fn_argselkeymap
@@ -1017,7 +1019,7 @@ STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation
          }
       // We HAVE a valid CMD that is not arg, meta, or a CURSORFUNC
       // We SHALL call pCmd->BuildExecute() and return from this function
-      g_fSelectionActive = false; // this fn is consuming the selection
+      s_fSelectionActive = false; // this fn is consuming the selection
       if( g_Cursor() == s_SelAnchor ) { // no selection in effect? (i.e. is NULLARG)
          if( pCmd->IsFnGraphic() ) {    // user typed a literal char?
             // Feed literal char embedded in CMD["graphic"] (pCmd) into GetTextargString

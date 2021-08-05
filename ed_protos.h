@@ -76,8 +76,8 @@ extern stref  BoostVersion();
 
 //----------- Arg and Selection
 
-STIL     bool IsSelectionActive()         { extern bool g_fSelectionActive; return g_fSelectionActive; }
-STIL     int  Get_g_ArgCount()            { extern int  g_iArgCount       ; return g_iArgCount; }
+extern   bool IsSelectionActive();
+extern   int  Get_g_ArgCount();
 STIL     bool IsMacroRecordingActive()    { extern bool g_fMacroRecordingActive; return g_fMacroRecordingActive; }
 STIL     bool IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedByRecord; return g_fCmdXeqInhibitedByRecord; }
 

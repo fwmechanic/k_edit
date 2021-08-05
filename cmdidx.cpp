@@ -667,11 +667,10 @@ void UnbindMacrosFromKeys() {
       }
    }
 
-
 // s_CmdIdxAddins is a dynamic tree which is searched prior to g_CmdTable
 // during user-function-lookups: all CMDs indexed herein (for macros and Lua
 // functions) are heap-allocated, and can thus be created and destroyed at will:
-GLOBAL_VAR RbTree *s_CmdIdxAddins;
+STATIC_VAR RbTree *s_CmdIdxAddins;
 
 STIL PCMD IdxNodeToPCMD( PCmdIdxNd pNd ) { return static_cast<PCMD>( rb_val(pNd) ); }  // type-safe conversion function
 
