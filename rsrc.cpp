@@ -134,12 +134,12 @@ bool ARG::ext() {
 
 bool RsrcFileLdAllNamedSections( stref srSectionName, int *pAssignCountAccumulator ) {
    if( srSectionName.empty() ) { return false; }
-   RsrcSectionWalker rsw( srSectionName );
-   FmtStr<90> tag( "LoadRsrcSection [%" PR_BSR "]", BSR(rsw.SectionName()) );
+   FmtStr<90> tag( "LoadRsrcSection [%" PR_BSR "]", BSR(srSectionName) );
    AssignLogTag( tag.k_str() );
    auto fFound(false);
    auto totalAssignsDone(0);
    FBufLocn fl;
+   RsrcSectionWalker rsw( srSectionName );
    while( rsw.NextSectionInstance( &fl ) ) {
       fFound = true;
       int assignsDone;
@@ -179,7 +179,7 @@ int ReinitializeMacros( bool fEraseExistingMacros ) {
       RsrcFileLdAllNamedSections( "@startup"      , &assignDone ); // [@startup]
       std::string key( "os." );
                   key.append( OsName() );
-      RsrcFileLdAllNamedSections( key   , &assignDone ); // [os.osname]
+      RsrcFileLdAllNamedSections( key             , &assignDone ); // [os.osname]
      #if 0
       const stref verval( OsVerStr() );
       if( !verval.empty() ) {
@@ -198,12 +198,6 @@ int ReinitializeMacros( bool fEraseExistingMacros ) {
    }
 
 //-------------------------------------------------------------------------------------------------------
-
-bool RsrcFileLdAllNamedSections( stref pszSectionName ) {
-   auto fDummy(0);
-   return RsrcFileLdAllNamedSections( pszSectionName, &fDummy );
-   }
-
 //
 //  Initialize
 //

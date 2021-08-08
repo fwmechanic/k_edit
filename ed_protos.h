@@ -450,8 +450,7 @@ extern   void  IdleIntegrityCheck();
 //------------ rsrc file section processing
 
 extern Path::str_t RsrcFilename( PCChar ext );
-extern bool    RsrcFileLdAllNamedSections( stref pszSectionName );
-extern bool    RsrcFileLdAllNamedSections( stref pszSectionName, int *pAssignCountAccumulator );
+extern bool    RsrcFileLdAllNamedSections( stref pszSectionName, int *pAssignCountAccumulator=nullptr );
 extern bool    RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE yEnd=-1, int *pAssignsDone=nullptr, Point *pErrorPt=nullptr );
 extern PCChar  LastRsrcFileLdSectionFtypeNm();
 extern PCChar  LastRsrcFileLdSectionFtypeSectionNm();

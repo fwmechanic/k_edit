@@ -985,8 +985,7 @@ STATIC_FXN bool RsrcFileLdSectionFtype( stref ftype ) {
    FtypeRestoreDefaults();
    char section[ SIZEOF_MAX_FTYPE + KSTRLEN(s_sftype_prefix) ];
    bcat( bcpy( section, s_sftype_prefix ), section, ftype );    0 && DBG( "%s %s", __func__, section );
-   auto dummy( 0 );
-   const auto fSectionExists( RsrcFileLdAllNamedSections( section, &dummy ) );
+   const auto fSectionExists( RsrcFileLdAllNamedSections( section ) );
    bcpy( s_cur_FtypeSectionNm, fSectionExists ? section : s_sftype_prefix );
    return fSectionExists;
    }
