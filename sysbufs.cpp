@@ -352,7 +352,7 @@ STATIC_FXN void FBufRead_MacDefs( PFBUF pFBuf, int ) {
    for( auto pNd( CmdIdxAddinFirst() ) ; pNd != CmdIdxAddinNil() ; pNd = CmdIdxNext( pNd ) ) { // sorted traversal
       const auto pCmd( CmdIdxToPCMD( pNd ) );
       if( pCmd->IsRealMacro() ) {
-         pFBuf->PutLastLineRaw( SprintfBuf( "%-*s %s", nmLen, pCmd->Name(), pCmd->MacroText() ).k_str() );
+         pFBuf->PutLastLineRaw( SprintfBuf( "%-*s %s", nmLen, pCmd->Name(), pCmd->MacroText() ).c_str() );
          }
       }
    }
@@ -434,7 +434,7 @@ STATIC_FXN void CalledMaxNmLen( PCCMD Cmd, void *pCtxt ) {
 STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
    if( Cmd->d_gCallCount ) {
       auto uc( static_cast<UsageCtxt*>(pCtxt) );
-      uc->dest.assign( FmtStr<132>( "%*u  %-*s  ", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name() ).k_str() );
+      uc->dest.assign( FmtStr<132>( "%*u  %-*s  ", uc->maxCallCount, Cmd->d_gCallCount, uc->maxCmdNmLen, Cmd->Name() ).c_str() );
       if(   Cmd == pCMD_graphic
          || Cmd == pCMD_unassigned
         ) {

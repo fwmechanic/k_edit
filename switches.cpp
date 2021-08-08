@@ -319,7 +319,7 @@ void FBufRead_Assign_Switches( PFBUF pFBuf ) {
    for( auto &swic : s_switbl ) {
       FmtStr<50> swiNm( "%-20" PR_BSR ": ", BSR(swic.name()) );
       accum.clear();
-      accum.append( swiNm.k_str() );
+      accum.append( swiNm.c_str() );
       dval.assign( swic.disp() );
       accum.append( PadRight( dval, g_MaxKeyNameLen ) );  // trail-pad with spaces to width
       accum.append( " # " );

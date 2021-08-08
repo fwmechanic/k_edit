@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -40,25 +40,25 @@ STATIC_FXN std::string defnBool( bool &fChanged, bool &val, stref newValue ) {
       fChanged = val!=oldVal;
       return "";
       }
-   return FmtStr<200>( "Boolean switch needs 'yes', 'no', or 'invert' (0/1/-) value, not '%" PR_BSR "'", BSR(newValue) ).k_str();
+   return FmtStr<200>( "Boolean switch needs 'yes', 'no', or 'invert' (0/1/-) value, not '%" PR_BSR "'", BSR(newValue) ).c_str();
    }
 
-STATIC_FXN std::string dispInt( int val ) { return FmtStr<20>( "%d", val ).k_str(); }
+STATIC_FXN std::string dispInt( int val ) { return FmtStr<20>( "%d", val ).c_str(); }
 STATIC_FXN std::string defnInt( stref newValue, bool &fChanged, int &val, int min=INT_MIN, int max=INT_MAX, bool fUseConstrained=true ) {
    int errno_; uintmax_t numVal_ull; stref txtConvd; UI bs; std::tie( errno_, numVal_ull, txtConvd, bs ) = conv_u( newValue, 10 );
    if( errno_ || numVal_ull > INT_MAX ) {
       if( txtConvd == newValue ) {
-         return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).k_str();
+         return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).c_str();
          }
       else {
-         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(txtConvd), BSR(newValue) ).k_str();
+         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(txtConvd), BSR(newValue) ).c_str();
          }
       }
    int numVal_int( numVal_ull );
    int constrVal( numVal_int );
    Constrain( min, &constrVal, max );
    if( !fUseConstrained && constrVal != numVal_int ) {
-      return FmtStr<50>( "%" PR_BSR " (%d) not within [%d..%d]", BSR(newValue), numVal_int, min, max ).k_str();
+      return FmtStr<50>( "%" PR_BSR " (%d) not within [%d..%d]", BSR(newValue), numVal_int, min, max ).c_str();
       }
    fChanged = constrVal != val;
    if( fChanged ) {
@@ -67,22 +67,22 @@ STATIC_FXN std::string defnInt( stref newValue, bool &fChanged, int &val, int mi
    return "";
    }
 
-STATIC_FXN std::string dispUInt( int val ) { return FmtStr<20>( "%d", val ).k_str(); }
+STATIC_FXN std::string dispUInt( int val ) { return FmtStr<20>( "%d", val ).c_str(); }
 STATIC_FXN std::string defnUInt( stref newValue, bool &fChanged, UI &val, UI min=0, UI max=INT_MAX, bool fUseConstrained=true ) {
    int errno_; uintmax_t numVal_ull; stref txtConvd; UI bs; std::tie( errno_, numVal_ull, txtConvd, bs ) = conv_u( newValue, 10 );
    if( errno_ || numVal_ull > UINT_MAX ) {
       if( txtConvd == newValue ) {
-         return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).k_str();
+         return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).c_str();
          }
       else {
-         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(txtConvd), BSR(newValue) ).k_str();
+         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(txtConvd), BSR(newValue) ).c_str();
          }
       }
    UI numVal_uint( numVal_ull );
    UI constrVal( numVal_uint );
    Constrain( min, &constrVal, max );
    if( !fUseConstrained && constrVal != numVal_uint ) {
-      return FmtStr<50>( "%" PR_BSR " (%u) not within [%u..%u]", BSR(newValue), numVal_uint, min, max ).k_str();
+      return FmtStr<50>( "%" PR_BSR " (%u) not within [%u..%u]", BSR(newValue), numVal_uint, min, max ).c_str();
       }
    fChanged = constrVal != val;
    if( fChanged ) {
@@ -187,10 +187,10 @@ class SWI_color : public SWI_intf {
    std::string defn( stref newValue ) override {
       int errno_; uintmax_t newVal; stref txtConvd; UI bs; std::tie( errno_, newVal, txtConvd, bs ) = conv_u( newValue, 16 );
       if( errno_ ) {
-         return FmtStr<200>( "could not convert %" PR_BSR "", BSR(newValue) ).k_str();
+         return FmtStr<200>( "could not convert %" PR_BSR "", BSR(newValue) ).c_str();
          }
       if( newVal > UCHAR_MAX ) {
-         return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).k_str();
+         return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).c_str();
          }
       if( d_var != newVal ) {
          d_var = newVal;
@@ -199,7 +199,7 @@ class SWI_color : public SWI_intf {
       return "";
       }
    std::string disp() override {
-      return FmtStr<20>( "%02X", d_var ).k_str();
+      return FmtStr<20>( "%02X", d_var ).c_str();
       }
    };
 
@@ -214,7 +214,7 @@ class SWI_chdisp : public SWI_intf {
          }
       else {
          if( newVal > UCHAR_MAX ) {
-            return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).k_str();
+            return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).c_str();
             }
          d_var = newVal;
          }
@@ -222,7 +222,7 @@ class SWI_chdisp : public SWI_intf {
       return "";
       }
    std::string disp() override {
-      return FmtStr<20>( "0x%02X (%c)", d_var, d_var ).k_str();
+      return FmtStr<20>( "0x%02X (%c)", d_var, d_var ).c_str();
       }
    };
 
@@ -258,7 +258,7 @@ class SWI_enum : public SWI_intf {
             return "";
             }
          }
-      return FmtStr<200>( "value %" PR_BSR " not in %" PR_BSR "", BSR(newValue), BSR(d_str_allowed_names) ).k_str();
+      return FmtStr<200>( "value %" PR_BSR " not in %" PR_BSR "", BSR(newValue), BSR(d_str_allowed_names) ).c_str();
       }
    std::string disp() override {
       const auto val( d_get() );

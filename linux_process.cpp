@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -139,8 +139,8 @@ STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const int hProce
    enum { USER_BREAK = 99999999 }; // bugbug this MADE UP
    if( 0 == hProcessExitCode ) {
       FmtStr<30> ets( "in %.3f S", et );
-      if( failedJobsIgnored ) { snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.k_str() ); }
-      else                    { snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.k_str() ); }
+      if( failedJobsIgnored ) { snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.c_str() ); }
+      else                    { snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.c_str() ); }
       }
    else if( USER_BREAK == hProcessExitCode ) {
       snprintf( dest, sizeofDest, "--- process TERMINATED with prejudice" );
@@ -235,7 +235,7 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
       if( atEof ) {  // process has been reaped
          const auto status( piper.Status() );
          if( status && (cmdFlags & IGNORE_ERROR) ) {
-            PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%d ignored", status ).k_str() );
+            PutLastLogLine( pfLogBuf, FmtStr<64>( "-   process exit code=%d ignored", status ).c_str() );
             }
          return CP_PIPED_RC_OK;
          }
@@ -288,7 +288,7 @@ STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
 STATIC_FXN bool cmd_available( PCChar cmdnm ) {
    FmtStr<11+256+1> cmdline( "command -v %s" , cmdnm );
    std::string dest;
-   const auto rv( popen_rd_ok( dest, cmdline.k_str() ) );      DBG( "%s: '%s' -> '%s'", __func__, cmdline.k_str(), dest.c_str() );
+   const auto rv( popen_rd_ok( dest, cmdline.c_str() ) );      DBG( "%s: '%s' -> '%s'", __func__, cmdline.c_str(), dest.c_str() );
    return rv;
    }
 

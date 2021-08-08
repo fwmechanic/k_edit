@@ -806,7 +806,7 @@ bool ARG::record() {
 #else
          if( g_pFbufRecord->LineCount() > 0 ) { g_pFbufRecord->PutLastLineRaw( " " ); }
 #endif
-         g_pFbufRecord->PutLastLineRaw( SprintfBuf( "%s:=", pMacroName ).k_str() );
+         g_pFbufRecord->PutLastLineRaw( SprintfBuf( "%s:=", pMacroName ).c_str() );
          s_macro_defn_first_line = g_pFbufRecord->LastLine();
          if( f_cArg_GT_1 ) {
             PrintMacroDefToRecordFile( s_pCmdRecordMacro );

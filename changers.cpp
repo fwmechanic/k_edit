@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -59,7 +59,7 @@ class KeyChanger {
 
 void KeyChanger::doRedraw() {
    updtMsg();
-   Msg( "%s", d_msgbuf.k_str() );
+   Msg( "%s", d_msgbuf.c_str() );
    DispRefreshWholeScreenNow();
    }
 

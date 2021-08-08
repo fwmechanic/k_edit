@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -428,8 +428,8 @@ public:
 STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const Win32::DWORD hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
    if( 0 == hProcessExitCode ) {
       FmtStr<30> ets( "in %.3f S", et );
-      if( failedJobsIgnored )   { _snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.k_str() ); }
-      else                      { _snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.k_str() );                                                                          }
+      if( failedJobsIgnored )   { _snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.c_str() ); }
+      else                      { _snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.c_str() );                                                                          }
       }
    else if( Win32::Status_Control_C_Exit() == hProcessExitCode ) {
       _snprintf( dest, sizeofDest, "--- process TERMINATED with prejudice" );

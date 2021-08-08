@@ -266,7 +266,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL M
       }
    CapturePrevLineCountAllWindows( d_pOutputFile );
    d_sb.assign( pFBuf->Namestr() );
-   d_sb.append( FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).k_str() );
+   d_sb.append( FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).c_str() );
    d_sb.append( sr2st( pFBuf->PeekRawLine( cur.lin ) ) );
    d_pOutputFile->PutLastLineRaw( d_sb );
    MoveCursorToEofAllWindows( d_pOutputFile );
@@ -2168,7 +2168,7 @@ LINE CGrepper::WriteOutput
          }
       {
       SprintfBuf LastMetaLine( "%s %d %s", outfile->Name(), numberedMatches, thisMetaLine );
-      outfile->InsLineRaw( grepHdrLines, LastMetaLine.k_str() );
+      outfile->InsLineRaw( grepHdrLines, LastMetaLine.c_str() );
       }
       const auto lwidth( uint_log_10( d_InfLines ) );
       for( auto iy(0); iy < d_InfLines; ++iy ) {
@@ -2203,7 +2203,7 @@ LINE CGrepper::WriteOutput
          }                                                 ED && DBG( "d_MetaLineCount=%i,MetaLinesToCopy=%i", d_MetaLineCount, MetaLinesToCopy );
       }
    SprintfBuf Line1( "*GREP* %s", origSrchfnm ? origSrchfnm : d_SrchFile->UserName().c_str() );
-   const stref srLine1( Line1 );                           ED && DBG( "%s", Line1.k_str() );
+   const stref srLine1( Line1 );                           ED && DBG( "%s", Line1.c_str() );
    imgBufBytes += srLine1.length();
    auto numberedMatches(0);
    for( auto iy(0); iy < d_InfLines; ++iy ) {
@@ -2236,7 +2236,7 @@ LINE CGrepper::WriteOutput
          if( fFirstGen ) { // this is a 1st-generation search: include line # right justified w/in fixed-width field
             prefix.Sprintf( "%*d  ", lwidth, iy + 1 );
             }
-         outfile->ImgBufAppendLine( prefix.k_str(), d_SrchFile->PeekRawLine( iy ) );
+         outfile->ImgBufAppendLine( prefix.c_str(), d_SrchFile->PeekRawLine( iy ) );
          }
       }
    outfile->Undo_Reinit();
@@ -2324,7 +2324,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
                                           , curfile->Name()
                                                   , g_fCase ? "sen" : "ign"
                        );
-                                                ED && DBG( "'%s'", auxHdrBuf.k_str() );
+                                                ED && DBG( "'%s'", auxHdrBuf.c_str() );
    auto keyLen(2); // for alternation header (2 chars)
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
       const auto rl( curfile->PeekRawLine( line ) );

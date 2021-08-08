@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -686,7 +686,7 @@ void WaitForKey( int secondsToWait ) {
       FmtStr<71> msg( " You have %c%2" PR_TIMET "%c seconds to press any key ", spinner, (timeEnd - timeNow), spinner );
       const auto mlen( msg.Len() );
       NoLessThan( &maxWidth, mlen );
-      VidWrStrColorFlush( DialogLine(), EditScreenCols() - mlen, msg.k_str(), mlen, g_colorError, true );
+      VidWrStrColorFlush( DialogLine(), EditScreenCols() - mlen, msg.c_str(), mlen, g_colorError, true );
       } while( timeNow < timeEnd );
    VidWrStrColorFlush( DialogLine(), EditScreenCols() - maxWidth, "", 0, g_colorInfo, true );
    }

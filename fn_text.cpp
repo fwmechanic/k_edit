@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -397,8 +397,8 @@ bool ARG::vrepeat() { enum {DB=0};
       const auto width( std::max( width_DueToArgHeight, width_DueToArgWidth ) );
       if( width > MAX_INT_PRINT_CHARS ) { return Msg( "internal error, width %" PR_SIZET " > %d", width, MAX_INT_PRINT_CHARS ); }
 
-      FmtStr<7>fmts( "%%%s%" PR_SIZET "d", fLead0 ? "0":"", width ); const auto fmt( fmts.k_str() );   DB && DBG( "fmt='%s'", fmt );
-      FmtStr<1+MAX_INT_PRINT_CHARS> st0( fmt, val ); auto ps0 = st0.k_str();  DB && DBG( "st0='%s'", ps0 );
+      FmtStr<7>fmts( "%%%s%" PR_SIZET "d", fLead0 ? "0":"", width ); const auto fmt( fmts.c_str() );   DB && DBG( "fmt='%s'", fmt );
+      FmtStr<1+MAX_INT_PRINT_CHARS> st0( fmt, val ); auto ps0 = st0.c_str();  DB && DBG( "st0='%s'", ps0 );
       const auto xMax( d_boxarg.flMin.col+width-1 );
       bool ins;
       if( xMax == d_boxarg.flMax.col ) {
@@ -408,9 +408,9 @@ bool ARG::vrepeat() { enum {DB=0};
          g_CurFBuf()->DelBox( d_boxarg.flMin.col, lx, d_boxarg.flMax.col, lx );
          ins = true;
          }
-      g_CurFBuf()->PutLineSeg( lx, FmtStr<1+MAX_INT_PRINT_CHARS>( fmt, val ).k_str(), t0,t1, d_boxarg.flMin.col, xMax, ins );
+      g_CurFBuf()->PutLineSeg( lx, FmtStr<1+MAX_INT_PRINT_CHARS>( fmt, val ).c_str(), t0,t1, d_boxarg.flMin.col, xMax, ins );
       for( ++lx ; lx <= d_boxarg.flMax.lin; ++lx ) { // each line in boxarg
-         g_CurFBuf()->PutLineSeg( lx, FmtStr<1+MAX_INT_PRINT_CHARS>( fmt, ++val ).k_str(), t0,t1, d_boxarg.flMin.col, xMax, true );
+         g_CurFBuf()->PutLineSeg( lx, FmtStr<1+MAX_INT_PRINT_CHARS>( fmt, ++val ).c_str(), t0,t1, d_boxarg.flMin.col, xMax, true );
          }
       }
    return true;
@@ -420,7 +420,7 @@ bool ARG::numlines () {
    const auto lwidth( uint_log_10( g_CurFBuf()->LineCount() ) );
    std::string t0,t1;
    for( auto line(0); line < g_CurFBuf()->LineCount(); ++line ) {
-      g_CurFBuf()->PutLineSeg( line, FmtStr<33>( "%*u ", lwidth, line+1 ).k_str(), t0,t1, 0, 0, true ); // insert @ BoL
+      g_CurFBuf()->PutLineSeg( line, FmtStr<33>( "%*u ", lwidth, line+1 ).c_str(), t0,t1, 0, 0, true ); // insert @ BoL
       }
    return true;
    }

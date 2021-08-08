@@ -2991,7 +2991,7 @@ void ColoredLine::Cat( const ColoredLine &rhs ) {
 
 STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" );
    ColoredLine cl;
-   cl.Cat( ColorTblIdx::HIL, (EditorLoadCount() > 1) ? FmtStr<15>( " +%u", EditorLoadCount()-1 ).k_str() : "" );
+   cl.Cat( ColorTblIdx::HIL, (EditorLoadCount() > 1) ? FmtStr<15>( " +%u", EditorLoadCount()-1 ).c_str() : "" );
    const auto pfh( g_CurFBuf() );
    if( 0 ) {
       int BRTowardUndo, ARTowardUndo, BRTowardRedo, ARTowardRedo;
@@ -3002,7 +3002,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
               , pfh->IsDirty() ? "*" : ""
               , BRTowardUndo, ARTowardUndo
               , BRTowardRedo, ARTowardRedo
-              ).k_str()
+              ).c_str()
             );
          }
       }
@@ -3017,22 +3017,22 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
 #if defined(_WIN32)
    if( pfh->IsDiskRO() )                                                 { cl.Cat( ColorTblIdx::ERRM, " DiskRO" ); }
 #endif
-   cl.Cat( ColorTblIdx::SEL , FmtStr<45>( "X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ).k_str() );
-// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "%s]", BSR( pfh->FTypeName() ), LastRsrcLdFileSectionNm() ).k_str() );
-// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).k_str() );
-// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).k_str() );
-// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).k_str() );
+   cl.Cat( ColorTblIdx::SEL , FmtStr<45>( "X=%u Y=%u/%u", 1+g_CursorCol(), 1+g_CursorLine()   , pfh->LineCount() ).c_str() );
+// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "%s]", BSR( pfh->FTypeName() ), LastRsrcLdFileSectionNm() ).c_str() );
+// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%s]", LastRsrcLdFileSectionNm() ).c_str() );
+// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "%s", LastRsrcLdFileSectionNm() ).c_str() );
+// cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(LastRsrcLdFileSectionNmTruncd()) ).c_str() );
    { const auto ftypenm( pfh->FTypeName() ); const auto lastrsrcftypenm( LastRsrcFileLdSectionFtypeNm() );
    if( eq( ftypenm, lastrsrcftypenm ) || '\0'==lastrsrcftypenm[0] ) { // avoid redundant status display
-      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(ftypenm) ).k_str() );
+      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "]", BSR(ftypenm) ).c_str() );
       }
    else {
-      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "/ldd:%s]", BSR(ftypenm), lastrsrcftypenm ).k_str() );
+      cl.Cat( ColorTblIdx::INF , FmtStr<60>( "[%" PR_BSR "/ldd:%s]", BSR(ftypenm), lastrsrcftypenm ).c_str() );
       }
    }
-// cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).k_str() );
-// cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).k_str() );
-   cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).k_str() );
+// cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "t%ue%d "      , pfh->TabWidth(), pfh->Entab() ).c_str() );
+// cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%ui%d " , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth(), pfh->IndentIncrement() ).c_str() );
+   cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).c_str() );
                        //     g_fCase ? "E!=e" : "E==e"
                        //     g_fCase ? "Q!=q" : "Q==q"
    cl.Cat( ColorTblIdx::INF , g_fCase ? "A!=a" : "A==a" );
@@ -3045,7 +3045,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
             case BOXARG:    st = "Box"; break;
             default:        st = "???"; break;
             }
-         cl.Cat( ColorTblIdx::SEL, FmtStr<20>( "clp(%s%d)", st, g_pFbufClipboard->LineCount() ).k_str() );
+         cl.Cat( ColorTblIdx::SEL, FmtStr<20>( "clp(%s%d)", st, g_pFbufClipboard->LineCount() ).c_str() );
          }
       else {
          cl.Cat( ColorTblIdx::SEL, "clp()" );
@@ -3055,7 +3055,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    cl.Cat( ColorTblIdx::INF, FmtStr<40>( "%s%s"
             , g_fMeta                  ? " META"      : ""
             , IsMacroRecordingActive() ? (IsCmdXeqInhibitedByRecord() ? " NOX-RECORDING" : " RECORDING") : ""
-            ).k_str()
+            ).c_str()
          );
    //-----------------------------------------------------------------------
    // Display that part of pfh->Namestr() which is common with the cwd in a
@@ -3086,7 +3086,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
          out.Cat( ColorTblIdx::TXT, s_dot3 );
          }
       else {
-         out.Cat( ColorTblIdx::TXT, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).k_str() );
+         out.Cat( ColorTblIdx::TXT, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).c_str() );
          }
       }
    else {
@@ -3377,7 +3377,7 @@ void View::GetLineForDisplay
       if( DrawVerticalCursorHilite() && (xWidth > PCT_WIDTH) && isActiveLine ) {
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / CFBuf()->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
-         stref pct( pctst.k_str() );
+         stref pct( pctst.c_str() );
          dest.replace( xLeft + xWidth - pct.length(), pct.length(), pct.data() );
          }
       }

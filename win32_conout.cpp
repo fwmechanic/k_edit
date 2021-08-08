@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -457,7 +457,7 @@ bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
    enum { DODBG = 0 };
    AutoMutex mtx( d_mutex );  //##################################################
    FmtStr<80> trying( "%s+ Ask(%dx%d)", __func__, newSize.col, newSize.lin );
-   DODBG && DBG( "%s", trying.k_str() );
+   DODBG && DBG( "%s", trying.c_str() );
    // NB: GetLargestConsoleWindowSize()'s retVal will change if the console
    //    font size is changed, so WE CAN'T JUST alloc the dynamic buffers for
    //    the biggest size and forget about them forevermore.
@@ -466,7 +466,7 @@ bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
    //
    const ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "console resize" );
    if( !csbi.isValid() ) {
-      DBG( "%s", trying.k_str() );
+      DBG( "%s", trying.c_str() );
       DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
       return false;
       }
@@ -495,19 +495,19 @@ bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
          // cannot be less than the minimum size allowed by the system."
          //
          if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, std::min( int(bufSize.lin), newSize.lin ), std::min( int(bufSize.col), newSize.col ) ) ) {
-            DBG( "%s shrinking SetConsoleWindowInfo FAILED!", trying.k_str() );
+            DBG( "%s shrinking SetConsoleWindowInfo FAILED!", trying.c_str() );
             break;
             }
          }
       if( !SetConsoleBufferSizeOk( d_hConsoleScreenBuffer, newSize.lin, newSize.col ) ) {
          // *** ConsoleScreenBuffer resize failed (likely too small): restore window mapping and exit
          Win32::SetConsoleWindowInfo( d_hConsoleScreenBuffer, 1, &csbi.srWindow() );
-         DBG( "%s SetConsoleScreenBufferSize FAILED!", trying.k_str() );
+         DBG( "%s SetConsoleScreenBufferSize FAILED!", trying.c_str() );
          break;
          }
       //lint -e{734}
       if( !SetConsoleWindowSizeOk( d_hConsoleScreenBuffer, newSize.lin, newSize.col ) ) {
-         DBG( "%s growing SetConsoleWindowSizeOk FAILED!", trying.k_str() );
+         DBG( "%s growing SetConsoleWindowSizeOk FAILED!", trying.c_str() );
          break;
          }
       {

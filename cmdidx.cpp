@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -586,7 +586,7 @@ void AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::string &t
    for( const auto &pCmd : s_Key2CmdTbl ) {
       if( pCmd == &Cmd ) {
          accum.clear();
-         accum.append( cmdNm.k_str() );
+         accum.append( cmdNm.c_str() );
          KeyNmOfEdkc( keyNm, &pCmd - s_Key2CmdTbl ); // trail-pad with spaces to width
          accum.append( PadRight( keyNm, g_MaxKeyNameLen ) );
          accum.append( " # " );
@@ -598,7 +598,7 @@ void AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::string &t
    if( !fFoundAssignment ) {
       keyNm.clear();
       accum.clear();
-      accum.append( cmdNm.k_str() );
+      accum.append( cmdNm.c_str() );
       accum.append( PadRight( keyNm, g_MaxKeyNameLen ) );
       accum.append( " # " );
       accum.append( pText );

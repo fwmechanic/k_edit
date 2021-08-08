@@ -1076,7 +1076,7 @@ STATIC_FXN void sweep_CaptiveIdxOfCol( COL tw, PCChar content ) {
       // printf( "%s( %s, %d ) -> %" PR_BSRSIZET "\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) );
       // above generates a warning: format '%u' expects argument of type 'unsigned int' while
       // passing the identical format string to FmtStr does not elicit such a warning
-      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) ).k_str() );
+      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "\n", __func__, content, ix, CaptiveIdxOfCol( tw, bbb, ix ) ).c_str() );
       }
    printf( "\n" );
    }
@@ -1085,7 +1085,7 @@ STATIC_FXN void sweep_FreeIdxOfCol( COL tw, PCChar content ) {
    const stref bbb( content );
    for( int ix( 0 ) ; ix <= bbb.length() + 3 ; ++ix ) {
       // see above for why we're using FmtStr here... bizarre!
-      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) ).k_str() );
+      printf( "%s", FmtStr<100>( "%s( %s, %d ) -> %" PR_BSRSIZET "\n", __func__, content, ix, FreeIdxOfCol( tw, bbb, ix ) ).c_str() );
       }
    printf( "\n" );
    }

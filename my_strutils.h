@@ -481,11 +481,9 @@ public:
       use_vsnprintf( b, sizeof(b), format, val );
       va_end(val);
       }
-// operator PChar()        { return b; }
    operator PCChar() const { return b; }
    int      Len()    const { return Strlen( b ); }
-   PCChar   k_str()  const { return b; }
-   PChar    c_str()        { return b; }
+   PCChar   c_str()  const { return b; }
    };
 
 template <size_t elements>
@@ -495,8 +493,7 @@ public:
    FixedCharArray() { d_buf[0] = chNUL; }
    FixedCharArray( stref src ) { bcpy( d_buf, src ); }
    stref  sr()    const { return stref( d_buf, std::min( elements-1, Strlen( d_buf ) ) ); }
-   PCChar k_str() const { return d_buf; }
-   PChar  c_str()       { return d_buf; }
+   PCChar c_str() const { return d_buf; }
    void Vsprintf( PCChar format, va_list val ) { // yes, part of the PUBLIC interface!
       use_vsnprintf( BSOB(d_buf), format, val );
       }
@@ -542,8 +539,7 @@ public:
    wref Wref() { return wref{ d_buf, elements }; }
    stref sr( const wref& wr ) const { return stref( d_buf, (wr.bp() - d_buf) ); }
    stref sr()                 const { return stref( d_buf, std::min( elements-1, Strlen( d_buf ) ) ); }
-   PCChar k_str() const { return d_buf; }
-   PChar  c_str()       { return d_buf; }
+   PCChar c_str() const { return d_buf; }
    // Test code:
    // Catbuf<5> tbuf;
    // auto t0( tbuf.Wref() );

@@ -97,7 +97,7 @@ int ConIO::DbgPopf( PCChar fmt, ... ) {
    va_start( val, fmt );
    buf.Vsprintf( fmt, val );
    va_end( val );
-   DebugLog( buf.k_str() );
+   DebugLog( buf.c_str() );
    MainThreadPerfCounter::PauseAll();
    const auto retq( Win32::MessageBox(
       nullptr,                           // handle of owner window
@@ -117,9 +117,9 @@ void AssertDialog_( PCChar function, PCChar file, int line ) {
 
 void GotHereDialog_( bool *dialogShown, PCChar fn, PCChar file, int lnum ) {
    FmtStr<100> msg( "GotHere: %s @ %s L %d", fn, file, lnum );
-   DBG( "%s", msg.k_str() );
+   DBG( "%s", msg.c_str() );
    if( !*dialogShown ) {
-      ConIO::DbgPopf( "%s", msg.k_str() );
+      ConIO::DbgPopf( "%s", msg.c_str() );
       }
    *dialogShown = true;
    }

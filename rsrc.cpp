@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2017 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -135,7 +135,7 @@ bool ARG::ext() {
 bool RsrcFileLdAllNamedSections( stref srSectionName, int *pAssignCountAccumulator ) {
    if( srSectionName.empty() ) { return false; }
    FmtStr<90> tag( "LoadRsrcSection [%" PR_BSR "]", BSR(srSectionName) );
-   AssignLogTag( tag.k_str() );
+   AssignLogTag( tag.c_str() );
    auto fFound(false);
    auto totalAssignsDone(0);
    FBufLocn fl;
@@ -144,7 +144,7 @@ bool RsrcFileLdAllNamedSections( stref srSectionName, int *pAssignCountAccumulat
       fFound = true;
       int assignsDone;
       // const auto fErr =
-      RsrcFileLineRangeAssignFailed( tag.k_str(), s_pFBufRsrc, fl.Pt().lin, -1, &assignsDone );
+      RsrcFileLineRangeAssignFailed( tag.c_str(), s_pFBufRsrc, fl.Pt().lin, -1, &assignsDone );
       totalAssignsDone += assignsDone;
       }
    if( pAssignCountAccumulator ) {
