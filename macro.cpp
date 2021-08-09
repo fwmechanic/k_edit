@@ -132,6 +132,15 @@ namespace Interpreter {
       int    d_runFlags;
       bool   d_insideQuot2dString;
    public:
+      void ShowStack( PFBUF pFBuf, int nestLevel ) const {
+         pFBuf->FmtLastLine( "[%d]%c%c%c='%s'"
+             , nestLevel
+             , d_insideQuot2dString ? chQuot2 : chQuot1
+             , IsVariableMacro()    ? 'D'     : 'd'
+             , Breaks()             ? 'B'     : 'b'
+             , d_pCurTxt
+            );
+         }
       bool   Breaks()          const { return ToBOOL(d_runFlags & breakOutHere ); }
       bool   IsVariableMacro() const { return ToBOOL(d_runFlags & variableMacro); }
       void   clear() {  0 && DBG( "Clear[%d]=%s|", s_ixPastTOS-1, d_macroText.c_str() );
@@ -161,10 +170,10 @@ namespace Interpreter {
          d_insideQuot2dString = false;
          Advance();
          }
-      enum   eGot { EXHAUSTED=0, GotLitCh, GotToken };
-      eGot   GetNextTokenIsLiteralCh( std::string &dest ) {  0 && DBG("GetNxtTok+    %X '%s'",d_runFlags,d_pCurTxt);
-         if( '\0' == d_pCurTxt[0] ) {                        0 && DBG("GetNxtTok-    %X EXHAUSTED",d_runFlags);
-            return EXHAUSTED;
+      enum eGot { Exhausted=0, GotLitCh, GotToken };
+      eGot GetNextToken( std::string &dest ) {  0 && DBG("GetNxtTok+    %X '%s'",d_runFlags,d_pCurTxt);
+         if( '\0' == d_pCurTxt[0] ) {           0 && DBG("GetNxtTok-    %X Exhausted",d_runFlags);
+            return Exhausted;
             }
          eGot rv;
          if( d_insideQuot2dString ) {
@@ -191,8 +200,8 @@ namespace Interpreter {
             while( '<' == d_pCurTxt[0] ) { // skip any Prompt Directive tokens
                d_pCurTxt = StrPastAnyBlanks( StrToNextBlankOrEos( d_pCurTxt ) );
                }
-            if( '\0' == d_pCurTxt[0] ) {   0 && DBG("GetNxtTok-    %X EXHAUSTED",d_runFlags);
-               return EXHAUSTED;
+            if( '\0' == d_pCurTxt[0] ) {   0 && DBG("GetNxtTok-    %X Exhausted",d_runFlags);
+               return Exhausted;
                }
             const auto pPastEndOfToken( StrToNextBlankOrEos( d_pCurTxt ) );
             dest.assign( d_pCurTxt, pPastEndOfToken - d_pCurTxt );
@@ -202,7 +211,7 @@ namespace Interpreter {
          Advance();
          return rv;
          }
-      int    chGetAnyMacroPromptResponse() { // return int so we can return AskUser==-1
+      int chGetAnyMacroPromptResponse() { // return int so we can return AskUser==-1
          // see: arg "Macro Prompt Directives" edhelp arg "LIMITATION" psearch
          0 && DBG("GetPrompt+ %X '%s'",d_runFlags,d_pCurTxt);
          if( d_insideQuot2dString )   { return AskUser; }
@@ -212,13 +221,13 @@ namespace Interpreter {
          d_pCurTxt = StrPastAnyBlanks( d_pCurTxt + 1 );     0 && DBG( "macro prompt-response=%c!", ch );
          return ch;
          }
-      bool   BranchToLabel( stref pszBranchToken ) {
+      bool BranchToLabel( stref pszBranchToken ) {
          // if  rv, tos.d_pCurTxt points at token AFTER matching branch label
          // if !rv, NO matching branch label was found!
          // pszBranchToken[0] = ':';     // pszBranchToken[0] is branch prefix char [=+-]; change to label-DEFINITION prefix
          d_pCurTxt = d_macroText.c_str();  // start from beginning
          std::string token;  eGot got;
-         while( EXHAUSTED != (got=GetNextTokenIsLiteralCh( token )) ) {
+         while( Exhausted != (got=GetNextToken( token )) ) {
             if( GotToken==got && (':'==token[0]) && cmpi( pszBranchToken[1], token[1] ) == 0 ) {
                return true;
                }
@@ -228,8 +237,8 @@ namespace Interpreter {
    private:
       bool   Advance() {
          // Advance commentary: the active pointer (d_pCurTxt) is kept pointing at the
-         // next token or character.  Advance is called at the end of GetNextTokenIsLiteralCh,
-         // just prior to the return.  Thus if GetNextTokenIsLiteralCh is returning the
+         // next token or character.  Advance is called at the end of GetNextToken,
+         // just prior to the return.  Thus if GetNextToken is returning the
          // last character of a literal string, d_pCurTxt will point outside that string,
          // at the next token/string in the macro stream.
          if( d_insideQuot2dString ) {
@@ -249,37 +258,25 @@ namespace Interpreter {
             }
          return 0 != d_pCurTxt[0];
          }
-      bool   NON_ESCAPED_QUOT2() { return chQuot2 == d_pCurTxt[0]
+      bool   NON_ESCAPED_QUOT2() {
+         return chQuot2 == d_pCurTxt[0]
 #if !MACRO_BACKSLASH_ESCAPES
-                                                                   && chQuot2 != d_pCurTxt[1]
+                                        && chQuot2 != d_pCurTxt[1]
 #endif
-                                  ; }
+            ;
+         }
       };
-   STATIC_VAR  MacroRuntimeStkEntry  s_MacroRuntimeStack[ MAX_MACRO_NESTING ];
-   STIL int                   ixPastTOS()     { return s_ixPastTOS; }
-        bool                  Interpreting()  { return s_ixPastTOS > 0; }
-   STIL MacroRuntimeStkEntry &TOS() { return s_MacroRuntimeStack[ s_ixPastTOS - 1 ]; }
+   STATIC_VAR  MacroRuntimeStkEntry             s_MacroRuntimeStack[ MAX_MACRO_NESTING ];
+   STIL MacroRuntimeStkEntry& TOS()    { return s_MacroRuntimeStack[ s_ixPastTOS - 1 ]; }
+   STIL int            ixPastTOS()     { return s_ixPastTOS; }
+                 bool  Interpreting()  { return s_ixPastTOS > 0; }
+                 bool  Interpreting_VariableMacro() { return Interpreting() && TOS().IsVariableMacro(); }
    STATIC_FXN    bool  PopIsBreak();
    STATIC_FXN    bool  PopUntilBreak();
-   STATIC_FXN    PCCMD AbortUntilBreak( PCChar emsg );
+   STATIC_FXN    void  AbortUntilBreak( PCChar emsg );
    STATIC_FXN    PCCMD CmdFromCurMacro();
-   STATIC_FXN    bool  AnyStackEntryBreaksOut();
+   STATIC_FXN    void  ShowStack( PFBUF pFBuf );
    } // namespace Interpreter
-
-STATIC_FXN bool Interpreter::AnyStackEntryBreaksOut() {
-   for( auto ix(0) ; ix < s_ixPastTOS ; ++ix ) {
-      if( s_MacroRuntimeStack[ ix ].Breaks() ) {
-         return true;
-         }
-      }
-   return false;
-   }
-
-namespace Interpreter {
-   bool  Interpreting_VariableMacro();
-   }
-
-bool Interpreter::Interpreting_VariableMacro() { return Interpreting() && TOS().IsVariableMacro(); }
 
 // PushMacroStringOk - "enqueue" a macro string for later consumption/execution
 //
@@ -319,9 +316,8 @@ STATIC_FXN bool Interpreter::PopUntilBreak() {
 
 STATIC_VAR bool s_fRtndFrom_fExecuted_macro;
 
-STIL PCCMD CleanupPendingMacroStream() {
+STIL void CleanupPendingMacroStream() {
    s_fRtndFrom_fExecuted_macro = Interpreter::PopUntilBreak();
-   return nullptr;
    }
 
 STATIC_FXN bool CleanupExecutionHaltRequests( const bool fCatchExecutionHaltRequests ) {
@@ -370,22 +366,24 @@ void FetchAndExecuteCMDs( const bool fCatchExecutionHaltRequests ) {
    s_fRtndFrom_fExecuted_macro = false;
    }
 
-STATIC_FXN PCCMD Interpreter::AbortUntilBreak( PCChar emsg ) {
+STATIC_FXN void Interpreter::AbortUntilBreak( PCChar emsg ) {
    ErrorDialogBeepf( "%s", emsg );
    ClearArgAndSelection();
    FlushKeyQueuePrimeScreenRedraw();
-   return CleanupPendingMacroStream();
+   CleanupPendingMacroStream();
    }
 
 STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
    Assert( Interpreting() );
    auto &tos( TOS() );
-   std::string token; NOAUTO MacroRuntimeStkEntry::eGot got;
-   while( MacroRuntimeStkEntry::EXHAUSTED != (got=tos.GetNextTokenIsLiteralCh( token )) ) {
+   std::string token;
+   MacroRuntimeStkEntry::eGot got;
+   while( MacroRuntimeStkEntry::Exhausted != (got=tos.GetNextToken( token )) ) {
       if( ExecutionHaltRequested() ) {              // testme:= popd popd
-         return CleanupPendingMacroStream();
+         CleanupPendingMacroStream();
+         return nullptr;
          }
-      if( MacroRuntimeStkEntry::GotLitCh==got ) { 0 && DBG( "%s LIT '%c'", __func__, token[0] );
+      if( MacroRuntimeStkEntry::GotLitCh==got ) {            0 && DBG( "%s LIT '%c'", __func__, token[0] );
          STATIC_VAR CMD macro_graphic = { .d_name="macro_graphic", .d_func=&ARG::graphic, .d_GTS_fxn=&GTS::graphic };
          macro_graphic.d_argData.eka.Ascii    = token[0];
          macro_graphic.d_argData.eka.EdKcEnum = token[0];
@@ -406,14 +404,16 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
                break;
                }
             if( !tos.BranchToLabel( token ) ) {
-               return AbortUntilBreak( FmtStr<BUFBYTES>( "Cannot find label '%s'", token.c_str()+2 ) );
+               AbortUntilBreak( FmtStr<BUFBYTES>( "Cannot find label '%s'", token.c_str()+2 ) );
+               return nullptr;
                }
             }
          continue; // branch not taken or branch-label defn
          }
-      return AbortUntilBreak( FmtStr<BUFBYTES>( "unknown function '%s'", token.c_str() ) );
+      AbortUntilBreak( FmtStr<BUFBYTES>( "unknown function '%s'", token.c_str() ) );
+      return nullptr;
       }
-   // break exited the loop: this means the macro exited normally: unnest one level
+   // Exhausted or break exited the loop: this means the macro exited normally: unnest one level
    //
    s_fRtndFrom_fExecuted_macro = PopIsBreak();
    return nullptr;
@@ -423,26 +423,16 @@ int Interpreter::chGetAnyMacroPromptResponse() { // return int so we can return 
    return Interpreting() ? TOS().chGetAnyMacroPromptResponse() : AskUser;
    }
 
-#ifdef fn_dispmstk
-namespace Interpreter {
-   STATIC_FXN void ShowStack( PFBUF pFBuf );
-   };
-
 STATIC_FXN void Interpreter::ShowStack( PFBUF pFBuf ) {
    pFBuf->PutLastLineRaw( " " );
    auto nestLevel( ixPastTOS() );
    while( nestLevel > 0 ) {
       const auto &tos( s_MacroRuntimeStack[ --nestLevel ] );
-      pFBuf->FmtLastLine( "[%d]%c%c%c%c='%s'"
-          , nestLevel
-          , tos.d_insideQuot2dString ? chQuot2 : chQuot1
-          , tos.IsVariableMacro()    ? 'D'     : 'd'
-          , tos.Breaks()             ? 'B'     : 'b'
-          , tos.d_pCurTxt
-         );
+      tos.ShowStack( pFBuf, nestLevel );
       }
    }
 
+#ifdef fn_dispmstk
 bool ARG::dispmstk() {
    Interpreter::ShowStack( FBOP::FindOrAddFBuf( "<mstk>" ) );
    return true;
