@@ -219,32 +219,7 @@ int MaxIndentAccumulator::addSample( sridx indent, bool fLastLine ) {
       }
    // periodically check for a clear winner
    //
-   if( fLastLine || (1 && fSampled && ((d_sampleCount % 512) == 0)) ) {
-     #if 0
-      unsigned milliQ[ ELEMENTS(d_firstIndentAt) ];
-      for( auto ix(2) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) { // special range: [ix-1] && [ix+1] defined for all ix!
-         milliQ[ix] = ( (1000*d_firstIndentAt[ix]) / static_cast<double>( d_firstIndentAt[ix-1] + d_firstIndentAt[ix+1] + 1 ) );
-         }
-      0 && DBG( "indent=%% @ %u 2=%u 3=%u 4=%u 5=%u 6=%u 7=%u 8=%u"
-         , d_sampleCount
-         , milliQ[ 2]
-         , milliQ[ 3]
-         , milliQ[ 4]
-         , milliQ[ 5]
-         , milliQ[ 6]
-         , milliQ[ 7]
-         , milliQ[ 8]
-         );
-      struct {
-         unsigned ix;
-         unsigned val;
-         } best[] = { {0,0}, {0,0}, };
-      best[0].ix  = 2;
-      best[0].val = milliQ[2];
-      for( auto ix(3) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) {
-         if( milliQ[ ix ] <
-         }
-     #endif
+   if( fLastLine || (fSampled && ((d_sampleCount % 512) == 0)) ) {
       // if fLastLine, we have limited information, so relax criteria
       const auto PrevNextIndentCountVsThisCount( fLastLine ? 6 : 12 );
       for( auto ix(2) ; ix < ELEMENTS(d_firstIndentAt)-1 ; ++ix ) { // special range: [ix-1] && [ix+1] defined for all ix!
