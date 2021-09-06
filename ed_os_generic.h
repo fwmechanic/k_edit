@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015, 2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -67,7 +67,7 @@ STIL int    StartConProcess( PCChar pFullCommandLine ) { return 1; }
 extern void   StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile=nullptr );
 
 extern PFBUF  StartInternalShellJob( StringList *sl, bool fAppend );
-extern void   InitJobQueues();
+extern void   DetachIdleThread();
 
 extern PCChar OsErrStr( PChar dest, size_t sizeofDest, int errorCode );
 extern PCChar OsErrStr( PChar dest, size_t sizeofDest );

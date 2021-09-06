@@ -593,7 +593,7 @@ STATIC_FXN void IdleThread() {
       }
    }
 
-void InitJobQueues() {
+void DetachIdleThread() {
    // IdleThread is quasi-related to JobQueues: it updates <compile> window when
    // writer is a spawned process...
    //

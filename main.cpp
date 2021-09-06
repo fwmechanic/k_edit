@@ -872,7 +872,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
    ReinitializeMacros( false );  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    InitFromStateFile();          DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    // MsgClr(); // hack this is the earliest that it will actually have the effect of clearing the dialog line on startup (which is REALLY necessary in dialogtop mode)
-   InitJobQueues();              DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru InitJobQueues"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   DetachIdleThread();           DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru DetachIdleThread"  , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
                                  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " done"                   , __func__, pc.Capture(), memdelta() );
    }
    win_fully_on_desktop();

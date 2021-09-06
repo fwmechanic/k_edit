@@ -1000,7 +1000,7 @@ STATIC_FXN Win32::DWORD K_STDCALL IdleThread( Win32::LPVOID ) {
    return 0; // suppress warning
    }
 
-void InitJobQueues() {
+void DetachIdleThread() {
    // IdleThread is quasi-related to JobQueues: it updates <compile> window when
    // writer is a spawned process...
    //
