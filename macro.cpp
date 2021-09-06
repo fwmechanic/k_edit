@@ -359,7 +359,6 @@ void FetchAndExecuteCMDs( const bool fCatchExecutionHaltRequests ) {
             g_CurFBuf()->UndoInsBoundary();
             }
          g_fFuncRetVal = newPCMD->BuildExecute();
-         // _ASSERTE( _CrtCheckMemory() );
          prevPCMD = newPCMD;
          }
       }

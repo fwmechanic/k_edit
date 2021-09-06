@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -456,7 +456,6 @@ bool ARG::rmeds() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool FBUF::Undo_RmvOneEdOp_fNextIsBoundary( bool fFromListHead ) {
-   // DBG_EDOP( _ASSERTE( _CrtCheckMemory() ); )
    EditRec *pEr; EditRec *pNextEr;
    if( fFromListHead ) {
       pEr              = d_pNewestEdit;
@@ -472,7 +471,6 @@ bool FBUF::Undo_RmvOneEdOp_fNextIsBoundary( bool fFromListHead ) {
       }
    DBG_EDOP( DBGEditOp( pEr ); )
    Delete0( pEr );
-   // DBG_EDOP( _ASSERTE( _CrtCheckMemory() ); )
    return pNextEr->VIsBoundary();
    }
 
