@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -25,8 +25,6 @@
 #include "my_types.h"
 #include "my_strutils.h"
 #include "my_log.h"
-
-//-------------------------------------------------------------------------------------------------------
 
 void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
    buf[ bufBytes - 1 ] = '\0';
@@ -144,8 +142,7 @@ StrToPastPrevOrNull_def( StrToPrevOrNull_  , != ) // do NOT call this directly! 
 int Quot2_strcspn( PCChar pszToSearch, PCChar pszToSearchFor ) {
    const auto p0( pszToSearch );
    auto fInQuot2dStr(false);
-   char ch;
-   for( ; (ch=*pszToSearch); ++pszToSearch ) {
+   for( char ch ; (ch=*pszToSearch); ++pszToSearch ) {
       const auto isQuot2( ch == chQuot2 && (pszToSearch > p0) && (pszToSearch[-1] != chESC) );
       if( fInQuot2dStr ) {
          if( isQuot2 ) {
@@ -367,17 +364,12 @@ PChar _strlwr( PChar buf ) {
 
 #endif
 
-sridx FirstNonBlankOrEnd( stref src, sridx start ) {
-   return ToNextOrEnd( notBlank, src, start );
-   }
-
-sridx FirstBlankOrEnd( stref src, sridx start ) {
-   return ToNextOrEnd( isblank , src, start );
-   }
+sridx FirstNonBlankOrEnd( stref src, sridx start ) { return ToNextOrEnd( notBlank, src, start ); }
+sridx FirstBlankOrEnd(    stref src, sridx start ) { return ToNextOrEnd( isblank , src, start ); }
 
 stref lineIterator::next() {
    if( d_remainder.empty() ) { return d_remainder; }
-   auto len( d_remainder.find_first_of( "\n\r" ) );
+   const auto len( d_remainder.find_first_of( "\n\r" ) );
    const auto rv( d_remainder.substr( 0, len ) );
    d_remainder.remove_prefix( rv.length() );
    if( !d_remainder.empty() ) { // d_remainder[0] === '\n' or '\r'
