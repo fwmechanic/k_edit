@@ -885,12 +885,13 @@ int HiliteAddin_cond_CPP::close_level( int level_ix, int yLast ) {
    level.yMax = yLast;
    for( auto ixLine(level.yMin) ; ixLine <= level.yMax ; ++ixLine ) {
       auto &line( d_PerViewableLine[ ixLine ].line );
-      NoLessThan( &level.xBox, line.xMax+1 );
+      level.xBox = std::max( level.xBox, line.xMax+1 );
       }
    // push out xBox of containing levels so they don't collide with this level's xBox
    for( auto bump(0) ; level_ix > -1 ; level_ix = d_PerViewableLine[ level_ix ].level.containing_level_idx, bump += 2 ) {
       auto &cont_level( d_PerViewableLine[ level_ix ].level );
-      NoLessThan( &cont_level.xBox, level.xBox + bump );
+      cont_level.xBox = std::max( cont_level.xBox, level.xBox + bump );
+   // NoLessThan( &cont_level.xBox, level.xBox + bump );
       }
    return level.containing_level_idx;
    }
@@ -2447,7 +2448,8 @@ STATIC_FXN bool AddLineDelta( LINE &yLineVar, LINE yLine, LINE lineDelta ) {
    const auto fAffected( yLine <= yLineVar );
    if( fAffected ) {
       yLineVar += lineDelta;
-      NoLessThan( &yLineVar, 0 );
+      yLineVar = std::max( yLineVar, 0 );
+   // NoLessThan( &yLineVar, 0 );
       }
    return fAffected;
    }
@@ -2637,7 +2639,8 @@ STATIC_VAR int s_dispNoiseMaxLen;
 STATIC_FXN void conDisplayNoise( PCChar buffer ) {
    if( show_noise() ) {
       const auto len( Strlen( buffer ) );
-      NoLessThan( &s_dispNoiseMaxLen, len );
+      s_dispNoiseMaxLen = std::max( s_dispNoiseMaxLen, len );
+   // NoLessThan( &s_dispNoiseMaxLen, len );
       VidWrStrColorFlush( StatusLine(), EditScreenCols() - len, buffer, len, g_colorError, true );
       }
    }
