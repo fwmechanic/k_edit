@@ -215,7 +215,7 @@ template<typename T> class TD;
 
 #ifndef CompileTimeAssert
    // now using static_assert
-   #define CompileTimeAssert(expr)  extern char _CompileTimeAssert[(expr)?1:-1]
+   #define CompileTimeAssert(expr)  static_assert(expr)
 // #define CompileTimeAssert(expr)  struct CompileTimeAssert_ ## __FILE__ ## _ ## __LINE__ { int bf : (expr); }
 // #define CompileTimeAssert(expr)  do { typedef int ai[(expr)?1:0]; } while(0)
 // #define CompileTimeAssert(expr)  extern char _CompileTimeAssert[expr?1:0];
