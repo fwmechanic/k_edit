@@ -2006,8 +2006,6 @@ struct HiLiteRec {
       }
    };
 
-typedef DLinkHead<HiLiteRec> HiLiteHead;
-
 constexpr auto HILITE_SPEEDTABLE_LINE_INCR( 16 * 1024 );
 STIL size_t SpeedTableIndex( LINE yLine ) {
    const size_t idx( yLine / HILITE_SPEEDTABLE_LINE_INCR );                     0 && DBG( "SpeedIdx  ==============> %d -> %" PR_SIZET "", yLine, idx );
@@ -2018,14 +2016,14 @@ STIL size_t SpeedTableIndexFirstLine( size_t idx )  { return idx * HILITE_SPEEDT
 
 class ViewHiLites {
    friend class View;
-   const FBUF       &d_FBuf;
+   const FBUF                    &d_FBuf;
    std::vector<const HiLiteRec *> d_SpeedTable;  // references, does NOT own!
-   HiLiteHead        d_HiLiteList;
+   DLinkHead<HiLiteRec>           d_HiLiteList;
    void              UpdtSpeedTbl( HiLiteRec *pThis );
    const HiLiteRec  *FirstHiLiteAtOrAfter( LINE yLine ) const;
    ViewHiLites( PCFBUF pFBuf );
    int  SpeedTableIndex( LINE yLine ) const { return std::min( ::SpeedTableIndex( yLine ), d_SpeedTable.size()-1 ); }
-   void vhInsHiLiteBox(   int newColorIdx, Rect newRgn );
+   void vhInsHiLiteBox( int newColorIdx, Rect newRgn );
    void PrimeRedraw() const;
    int  InsertHiLitesOfLineSeg( LINE yLine, COL Indent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const;
 public:
@@ -2042,11 +2040,10 @@ ViewHiLites::ViewHiLites( PCFBUF pFBuf )
 
 ViewHiLites::~ViewHiLites() {
    PrimeRedraw();
-   auto numHL(0);
+   auto numHL( d_HiLiteList.length() );
    while( auto pEl=d_HiLiteList.front() ) { // zap d_HiLiteList list
       DLINK_REMOVE_FIRST( d_HiLiteList, pEl, dlink );
       delete pEl;
-      ++numHL;
       }
    DBG( "%s numHL=%d", __func__, numHL );
    }
