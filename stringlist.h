@@ -44,6 +44,6 @@ struct StringList {
    ~StringList() { clear(); }
    void push_back( stref src ) { InsStringListEl( d_head, src ); }
    unsigned length() const { return d_head.length(); }
-   StringListHead &Head() { return d_head; }
+   StringListEl *remove_first() { StringListEl *rv; DLINK_REMOVE_FIRST( d_head, rv, dlink ); return rv; }
    bool empty() const { return d_head.empty(); }
    };

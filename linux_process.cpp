@@ -469,7 +469,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
          // d_hThread = nullptr;
          return; // ##################### LockTheJobQueue ######################
          }
-      DLINK_REMOVE_FIRST( d_pSL->Head(), pEl, dlink );
+      pEl = d_pSL->remove_first();
       } // ##################### LockTheJobQueue ######################
       auto cmdFlags(0);
       PChar pS( analyze_cmdline( pEl->string, &cmdFlags ) );
