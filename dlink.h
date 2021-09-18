@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015,2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -19,13 +19,6 @@
 
 #pragma once
 
-#define  DLINK_HEAD_KEEPS_COUNT  1
-#if DLINK_HEAD_KEEPS_COUNT
-#define  DLINK_COUNT( x )  x
-#else
-#define  DLINK_COUNT( x )
-#endif
-
 //
 // Doubly Linked List template/macro-set that preserves type-checking and allows
 // an object to be a member of more than one DLL at once.  The last is not a
@@ -36,19 +29,20 @@
 // Lists simultaneously, the OPERATION MACROS (e.g.  DLINK_INSERT_FIRST,
 // DLINK_REMOVE) are parameterized by 'link field name' (the _name_ of the
 // struct/class member that links the list of interest).  As a result, we can't
-// implement OPERATIONS as template functions (each usage of such a template will
-// occur at a different offset within T, duplicating code hugely).  Instead,
-// macros are used (oy vey!), which end up duplicating code in a slightly
-// different way...
+// implement OPERATIONS (e.g. push_front(), push_back()) as DLinkHead template
+// functions (each usage of such a template will occur at a different offset
+// within T, duplicating code hugely).  Instead, macros are used (oy vey!), which
+// end up duplicating code in a slightly different way...
 //
 // An important requirement of this implementation is that type-safety NOT be
 // compromised; there are NO void pointers, and only a few const_casts (and no
 // other casts) used herein!
 //
-// One advantage of this implementation is that the prev and next pointers are
-// (intended to be) stored within the object being linked.  IOW, the extra node
-// mem-block containing prev-node+next-node+object pointers commonly found in
-// other implementations is not necessary in this implementation.
+// The primary advantage of this implementation (over std::list) is that the
+// prev and next pointers (contained within DLinkEntry) are (intended to be)
+// stored within the object being linked.  IOW, the extra node mem-block
+// containing prev-node+next-node+object pointers commonly found in generic list
+// implementations is not necessary in this implementation.
 //
 // ONLY macro code (erstwhile member functions) should use the (public) data
 // members of DLinkEntry.
@@ -70,7 +64,7 @@ struct DLinkHead {
    typedef const T *CP;
    P                dl_first = nullptr;
    P                dl_last  = nullptr;
-   DLINK_COUNT( unsigned count = 0; )
+   unsigned count = 0;
 
 public: // the intended "public interface"
 
@@ -80,7 +74,7 @@ public: // the intended "public interface"
    P    front()    const { return                    dl_first ; }
    CP   backK()    const { return cast_add_const(CP)(dl_last) ; } // probably never needed; DO NOT rename back()
    P    back ()    const { return                    dl_last  ; }
-   DLINK_COUNT( unsigned length() const { return count; } )
+   unsigned length() const { return count; }
    };
 
 
@@ -138,7 +132,7 @@ do { auto &Hd_( Hd ); auto pNew_( pNew );         \
       }                                           \
    Hd_.dl_first = pNew_;                          \
    pNew_->field.dl_prev = nullptr;                \
-   DLINK_COUNT( ++Hd_.count; )                    \
+   ++Hd_.count;                                   \
    } while( 0 )
 
 // pNew is new element
@@ -153,7 +147,7 @@ do { auto &Hd_( Hd ); auto pNew_( pNew );         \
       }                                           \
    Hd_.dl_last = pNew_;                           \
    pNew_->field.dl_next = nullptr;                \
-   DLINK_COUNT( ++Hd_.count; )                    \
+   ++Hd_.count;                                   \
    } while( 0 )
 
 // pRef is existing element; pNew is new element
@@ -168,7 +162,7 @@ do { auto &Hd_( Hd ); auto pRef_( pRef ); auto pNew_( pNew );  \
       }                                                        \
    pRef_->field.dl_next = pNew_;                               \
    pNew_->field.dl_prev = pRef_;                               \
-   DLINK_COUNT( ++Hd_.count; )                                 \
+   ++Hd_.count;                                                \
    } while( 0 )
 
 // pRef is existing element; pNew is new element
@@ -183,7 +177,7 @@ do { auto &Hd_( Hd ); auto pRef_( pRef ); auto pNew_( pNew );  \
       }                                                        \
    pRef_->field.dl_prev = pNew_;                               \
    pNew_->field.dl_next = pRef_;                               \
-   DLINK_COUNT( ++Hd_.count; )                                 \
+   ++Hd_.count;                                                \
    } while( 0 )
 
 // remove pEl from the list Hd
@@ -202,7 +196,7 @@ do { auto &Hd_( Hd ); auto pEl_( pEl );                         \
    else {                                                       \
       Hd_.dl_last = pEl_->field.dl_prev;                        \
       }                                                         \
-   DLINK_COUNT( --Hd_.count; )                                  \
+   --Hd_.count;                                                 \
    pEl->field.clear();                                          \
    } while( 0 )
 
@@ -218,7 +212,7 @@ do { auto &Hd_( Hd );                                 \
       else {                                          \
          Hd_.dl_last = nullptr;                       \
          }                                            \
-      DLINK_COUNT( --Hd_.count; )                     \
+      --Hd_.count;                                    \
       pEl->field.clear();                             \
       }                                               \
    } while( 0 )
@@ -235,7 +229,7 @@ do { auto &destHd_(destHd); auto &srcHd_(srcHd);      \
       srcHd_.front()->field.dl_prev = destHd_.back(); \
       destHd_.dl_last = srcHd_.back();                \
       }                                               \
-   DLINK_COUNT( destHd_.count += srcHd_.count; )      \
+   destHd_.count += srcHd_.count;                     \
    srcHd_.clear();                                    \
    } while( 0 )
 
@@ -244,6 +238,6 @@ do { auto &destHd_(destHd); auto &srcHd_(srcHd);      \
 do { auto &destHd_(destHd); auto &srcHd_(srcHd);      \
    destHd_.dl_first = srcHd_.front();                 \
    destHd_.dl_last  = srcHd_.back();                  \
-   DLINK_COUNT( destHd_.count = srcHd_.count; )       \
+   destHd_.count = srcHd_.count;                      \
    srcHd_.clear();                                    \
    } while( 0 )
