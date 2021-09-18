@@ -66,7 +66,8 @@ constexpr LINE MAX_LINES = PTRDIFF_MAX;
 
 typedef int COL ;     // column or position within line
 typedef int LINE;     // line number within file
-   enum { MAX_LINES = INT_MAX };
+constexpr LINE MAX_LINES = INT_MAX;
+constexpr COL  COL_MAX   = INT_MAX - 1; // -1 is a HACK to avoid integer overflow in cases like alcc->PutColor( xMin, xMax-xMin+1, ColorTblIdx::COM ); where xMin==0 and xMax==COL_MAX
 
 #endif
 
@@ -104,8 +105,6 @@ terminating NUL.
   BUFBYTES number of bytes in a buffer, including space for the terminating NUL
 
 */
-constexpr COL COL_MAX  = INT_MAX-1; // -1 is a HACK to avoid integer overflow in cases like alcc->PutColor( xMin, xMax-xMin+1, ColorTblIdx::COM ); where xMin==0 and xMax==COL_MAX
-
 constexpr COL LINELEN  = (512)+1  ;    // DEPRECATED
 constexpr COL BUFBYTES = LINELEN+1;    // DEPRECATED
 typedef char linebuf[BUFBYTES];    // DEPRECATED line buffer
