@@ -852,16 +852,12 @@ GTS::eRV GTS::dispmstk() {
 //       }
 
 class TabCompletion_filesystem {
-   bool        d_fBellAndFreezeKbInput = false;
-   DirMatches *d_pDirContent = nullptr;
-   std::string d_pbTabxBase;
+   bool                        d_fBellAndFreezeKbInput = false;
+   std::unique_ptr<DirMatches> d_pDirContent;
+   std::string                 d_pbTabxBase;
 public:
-   TabCompletion_filesystem() {}
-   ~TabCompletion_filesystem() {
-      Delete0( d_pDirContent );
-      }
    auto Deactivate() -> void {
-      Delete0( d_pDirContent );
+      delete d_pDirContent.release();
       d_pbTabxBase.clear(); // forget prev used WC
       }
    auto GetNext( std::string &stb, COL &xCursor ) -> void {
@@ -869,7 +865,7 @@ public:
          if( d_pbTabxBase.empty() ) { // no prev'ly used WC?
             d_pbTabxBase = stb;   // create based on curr content
             }
-         d_pDirContent = new DirMatches( d_pbTabxBase.c_str(), HasWildcard( d_pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
+         d_pDirContent = std::make_unique<DirMatches>( d_pbTabxBase.c_str(), HasWildcard( d_pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
          }
       Path::str_t nxt;
       do {
@@ -880,7 +876,7 @@ public:
          xCursor = stb.length();  // past end
          }
       else {
-         Delete0( d_pDirContent );
+         delete d_pDirContent.release();
          stb = d_pbTabxBase;
          xCursor = ixFirstWildcardOrEos( stb ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
          d_fBellAndFreezeKbInput = true;
