@@ -2008,10 +2008,6 @@ struct HiLiteRec {
 
 typedef DLinkHead<HiLiteRec> HiLiteHead;
 
-struct HiLiteSpeedTable {
-   const HiLiteRec *pHL = nullptr;  // references, does NOT own!
-   };
-
 constexpr auto HILITE_SPEEDTABLE_LINE_INCR( 16 * 1024 );
 STIL size_t SpeedTableIndex( LINE yLine ) {
    const size_t idx( yLine / HILITE_SPEEDTABLE_LINE_INCR );                     0 && DBG( "SpeedIdx  ==============> %d -> %" PR_SIZET "", yLine, idx );
@@ -2023,10 +2019,10 @@ STIL size_t SpeedTableIndexFirstLine( size_t idx )  { return idx * HILITE_SPEEDT
 class ViewHiLites {
    friend class View;
    const FBUF       &d_FBuf;
-   std::vector<HiLiteSpeedTable> d_SpeedTable;
+   std::vector<const HiLiteRec *> d_SpeedTable;  // references, does NOT own!
    HiLiteHead        d_HiLiteList;
    void              UpdtSpeedTbl( HiLiteRec *pThis );
-   const HiLiteRec  *FindFirstEntryAffectingOrAfterLine( LINE yLine ) const;
+   const HiLiteRec  *FirstHiLiteAtOrAfter( LINE yLine ) const;
    ViewHiLites( PCFBUF pFBuf );
    int  SpeedTableIndex( LINE yLine ) const { return std::min( ::SpeedTableIndex( yLine ), d_SpeedTable.size()-1 ); }
    void vhInsHiLiteBox(   int newColorIdx, Rect newRgn );
@@ -2058,28 +2054,26 @@ void View::FreeHiLiteRects() {
 
 //-----------------------------------------------------------------------------
 
-STIL void ShowHilite( const HiLiteRec &hl, PCChar str ) {
+STIL int ShowHilite( const HiLiteRec &hl, PCChar str ) {
    DBG( "%s HLy=[%d..%d]"
       , str
       , hl.rect.flMin.lin
       , hl.rect.flMax.lin
       );
+   return 1;
    }
 
-const HiLiteRec *ViewHiLites::FindFirstEntryAffectingOrAfterLine( LINE yLine ) const {
-   0 && DBG( "FFEAoAL+ %d", yLine );
+const HiLiteRec *ViewHiLites::FirstHiLiteAtOrAfter( LINE yLine ) const { enum {DB=0};   DB && DBG( "FHAoA+ %d", yLine );
    for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpeedTable.size() ; ++idx ) {
-      if( d_SpeedTable[ idx ].pHL ) {
-         0 && DBG( "1NZ=%d", idx );
-         for( auto pHL=d_SpeedTable[ idx ].pHL; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
-            if( yLine <= pHL->rect.flMax.lin ) { // ShowHilite( *pHL, "FFEAoAL-" );
+      if( d_SpeedTable[ idx ] ) {                                                   DB && DBG( "1NZ=%d", idx );
+         for( auto pHL=d_SpeedTable[ idx ]; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
+            if( yLine <= pHL->rect.flMax.lin ) {                                    DB && ShowHilite( *pHL, "FHAoA-" );
                return pHL;
                }
             }
          break;
          }
-      0 && DBG( "FFEAoAL-" );
-      }
+      }                                                                             DB && DBG( "FHAoA-" );
    return nullptr;
    }
 
@@ -2101,9 +2095,9 @@ void View::RedrawHiLiteRects() {
 
 void ViewHiLites::UpdtSpeedTbl( HiLiteRec *pThis ) {
    const auto idx( SpeedTableIndex( pThis->rect.flMax.lin ) );
-   auto &stEntry( d_SpeedTable[ idx ].pHL );
-   if( !stEntry ||  pThis->rect.flMax.lin < stEntry->rect.flMax.lin ) {
-        stEntry = pThis;
+   auto &stEntry( d_SpeedTable[ idx ] );
+   if( !stEntry || pThis->rect.flMax.lin < stEntry->rect.flMax.lin ) {
+        stEntry =  pThis;
         }
    }
 
@@ -2162,7 +2156,7 @@ void View::InsHiLite1Line( int newColorIdx, LINE yLine, COL xLeft, COL xRight ) 
 int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const
    { 0 && DBG( "IHLoS+ %d", yLine );
    if( !pFirstPossibleHiLite ) {
-        pFirstPossibleHiLite = FindFirstEntryAffectingOrAfterLine( yLine );
+        pFirstPossibleHiLite = FirstHiLiteAtOrAfter( yLine );
         }
    auto rv(0);
    for( auto pHL(pFirstPossibleHiLite) ; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
