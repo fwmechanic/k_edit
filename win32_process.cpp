@@ -831,7 +831,7 @@ class InternalShellJobExecutor {
    NO_COPYCTOR(InternalShellJobExecutor);
    NO_ASGN_OPR(InternalShellJobExecutor);
    PFBUF                       d_pfLogBuf;
-   StringList                 *d_pSL;
+   std::unique_ptr<StringList> d_pSL;
    const size_t                d_numJobsRequested;
    Win32::PROCESS_INFORMATION  d_processInfo;
    Win32::HANDLE               d_hThread;
@@ -869,7 +869,6 @@ InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, b
 
 InternalShellJobExecutor::~InternalShellJobExecutor() {
    KillAllJobsInBkgndProcessQueue();
-   Delete0( d_pSL );
    }
 
 void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS!!!
