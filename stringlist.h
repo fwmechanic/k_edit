@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015,2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -28,22 +28,27 @@ struct StringListEl {
    char string[0];
    };
 
-typedef  DLinkHead<StringListEl> StringListHead;
-
 extern StringListEl *NewStringListEl( stref src );
-extern void          InsStringListEl( StringListHead &slhd, stref src );
-extern void          DeleteStringList( StringListHead &slhd );
 
 #define  FreeStringListEl( pSLE )  Free0( pSLE )
 
-struct StringList {
-   StringListHead d_head; // _public_ so DLINKC_FIRST_TO_LASTA can be used to efficiently walk the list
+class StringList {
+public:
+   DLinkHead<StringListEl> d_head; // _public_ so DLINKC_FIRST_TO_LASTA can be used to efficiently walk the list
    StringList() {}
-   StringList( PCChar str ) { InsStringListEl( d_head, str ); }
-   void clear() { DeleteStringList( d_head ); }
+   StringList( PCChar str ) { push_back( str ); }
    ~StringList() { clear(); }
-   void push_back( stref src ) { InsStringListEl( d_head, src ); }
    unsigned length() const { return d_head.length(); }
+   bool     empty()  const { return d_head.empty(); }
+   void clear() {
+      while( auto pEl = d_head.front() ) {
+         DLINK_REMOVE_FIRST( d_head, pEl, dlink );
+         FreeStringListEl( pEl );
+         }
+      }
+   void push_back( stref src ) {
+      auto pIns( NewStringListEl( src ) );
+      DLINK_INSERT_LAST( d_head, pIns, dlink );
+      }
    StringListEl *remove_first() { StringListEl *rv; DLINK_REMOVE_FIRST( d_head, rv, dlink ); return rv; }
-   bool empty() const { return d_head.empty(); }
    };

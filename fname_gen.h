@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015,2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -48,8 +48,8 @@ public:
 class DirListGenerator : public PathStrGenerator {
    NO_COPYCTOR( DirListGenerator );
    NO_ASGN_OPR( DirListGenerator );
-   StringListHead  d_input ;
-   StringListHead  d_output;
+   StringList  d_input ;
+   StringList  d_output;
    void AddName( stref name );
 public:
    DirListGenerator( std::string &&src, PCChar dirName=nullptr );

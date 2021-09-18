@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -377,16 +377,15 @@ bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
    if( d_output.empty() ) {
       return false;
       }
-   auto pEl( d_output.front() );
-   DLINK_REMOVE_FIRST( d_output, pEl, dlink );
+   auto pEl( d_output.remove_first() );
    dest = pEl->string;
    FreeStringListEl( pEl );
    return true;
    }
 
 void DirListGenerator::AddName( stref name ) {
-   InsStringListEl( d_input , name );
-   InsStringListEl( d_output, name );
+   d_input .push_back( name );
+   d_output.push_back( name );
    }
 
 DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
@@ -395,8 +394,7 @@ DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
    const Path::str_t pStartDir( dirName ? dirName : Path::GetCwd() );
    AddName( pStartDir );  DB && DBG( "%s StartDir ='%s'", __PRETTY_FUNCTION__, pStartDir.c_str() );
    Path::str_t pbuf;
-   while( auto pNxt=d_input.front() ) {
-      DLINK_REMOVE_FIRST( d_input, pNxt, dlink );
+   while( auto pNxt=d_input.remove_first() ) {
       pbuf = Path::str_t( pNxt->string ) + (DIRSEP_STR "*");
       FreeStringListEl( pNxt );
       DB && DBG( "%s Looking in ='%s'", __PRETTY_FUNCTION__, pbuf.c_str() );
@@ -412,10 +410,7 @@ DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
       }
    }
 
-DirListGenerator::~DirListGenerator() {
-   DeleteStringList( d_input  );
-   DeleteStringList( d_output );
-   }
+DirListGenerator::~DirListGenerator() {}
 
 #ifdef fn_wct  // testbed for code used in setfile
 bool ARG::wct() {

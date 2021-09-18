@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -28,16 +28,4 @@ StringListEl *NewStringListEl( stref src ) {
    memcpy( rv->string, src.data(), sbytes-1 );
    rv->string[sbytes-1] = '\0';
    return rv;
-   }
-
-void InsStringListEl( StringListHead &slhd, stref src ) { 0 && DBG("%s: %" PR_BSR, __func__, BSR(src) );
-   auto pIns( NewStringListEl( src ) );
-   DLINK_INSERT_LAST( slhd, pIns, dlink );
-   }
-
-void DeleteStringList( StringListHead &slhd ) {
-   while( auto pEl = slhd.front() ) {
-      DLINK_REMOVE_FIRST( slhd, pEl, dlink );
-      FreeStringListEl( pEl );
-      }
    }

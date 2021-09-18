@@ -933,12 +933,8 @@ NEXT_OUTBUF:
 
 int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
    AutoMutex LockTheJobQueue( d_jobQueueMtx );
-   auto &d_jobQHead = d_pSL->d_head;
-   const auto rmCnt( d_jobQHead.length() );
-   while( auto pEl = d_jobQHead.front() ) {
-      DLINK_REMOVE_FIRST( d_jobQHead, pEl, dlink );
-      Delete0( pEl );
-      }
+   const auto rmCnt( d_pSL->length() );
+   d_pSL->clear();
    return rmCnt;
    }
 
