@@ -859,10 +859,7 @@ InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, b
    , d_hThread          ( nullptr )
    , d_hProcessExitCode ( 0 )
    {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-   if( 0 == (d_hThread=Win32::CreateThread( nullptr, 4*1024, InternalShellJobExecutor::ChildProcessCtrlThread, this, 0L, nullptr )) ) {
-#pragma GCC diagnostic pop
+   if( nullptr == (d_hThread=Win32::CreateThread( nullptr, 4*1024, InternalShellJobExecutor::ChildProcessCtrlThread, this, 0L, nullptr )) ) {
       DBG( "%s Win32::CreateThread FAILED!", __func__  );
       }
    }
