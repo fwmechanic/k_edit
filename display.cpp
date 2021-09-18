@@ -2042,10 +2042,13 @@ ViewHiLites::ViewHiLites( PCFBUF pFBuf )
 
 ViewHiLites::~ViewHiLites() {
    PrimeRedraw();
+   auto numHL(0);
    while( auto pEl=d_HiLiteList.front() ) { // zap d_HiLiteList list
       DLINK_REMOVE_FIRST( d_HiLiteList, pEl, dlink );
       delete pEl;
+      ++numHL;
       }
+   DBG( "%s numHL=%d", __func__, numHL );
    }
 
 void View::FreeHiLiteRects() {

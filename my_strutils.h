@@ -311,7 +311,7 @@ STIL bool IsStringBlank( stref src ) { // note that empty strings are Blank stri
 #if 0
 STIL int Strlen( PCChar pS ) { return int( strlen(pS) ); }
 #else
-STIL int Strlen( PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...
+STIL constexpr int Strlen( PCChar pc ) { // this MAY be faster than RTL version (which typically uses rep scasb); at least it uses stdcall ...
    const auto start(pc);
    for( ; *pc ; ++pc ) {
       }
