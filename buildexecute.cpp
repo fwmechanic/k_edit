@@ -852,55 +852,55 @@ GTS::eRV GTS::dispmstk() {
 //       }
 
 class TabCompletion_filesystem {
-   bool        fBellAndFreezeKbInput = false;
-   DirMatches *pDirContent = nullptr;
-   std::string pbTabxBase;
+   bool        d_fBellAndFreezeKbInput = false;
+   DirMatches *d_pDirContent = nullptr;
+   std::string d_pbTabxBase;
 public:
    TabCompletion_filesystem() {}
    ~TabCompletion_filesystem() {
-      Delete0( pDirContent );
+      Delete0( d_pDirContent );
       }
    auto Deactivate() -> void {
-      Delete0( pDirContent );
-      pbTabxBase.clear(); // forget prev used WC
+      Delete0( d_pDirContent );
+      d_pbTabxBase.clear(); // forget prev used WC
       }
    auto GetNext( std::string &stb, COL &xCursor ) -> void {
-      if( !pDirContent ) {
-         if( pbTabxBase.empty() ) { // no prev'ly used WC?
-            pbTabxBase = stb;   // create based on curr content
+      if( !d_pDirContent ) {
+         if( d_pbTabxBase.empty() ) { // no prev'ly used WC?
+            d_pbTabxBase = stb;   // create based on curr content
             }
-         pDirContent = new DirMatches( pbTabxBase.c_str(), HasWildcard( pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
+         d_pDirContent = new DirMatches( d_pbTabxBase.c_str(), HasWildcard( d_pbTabxBase ) ? nullptr : "*", FILES_AND_DIRS, false );
          }
       Path::str_t nxt;
       do {
-         nxt = pDirContent->GetNext();
+         nxt = d_pDirContent->GetNext();
          } while( Path::IsDotOrDotDot( nxt ) );
       if( !nxt.empty() ) {
          stb = nxt;
          xCursor = stb.length();  // past end
          }
       else {
-         Delete0( pDirContent );
-         stb = pbTabxBase;
+         Delete0( d_pDirContent );
+         stb = d_pbTabxBase;
          xCursor = ixFirstWildcardOrEos( stb ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
-         fBellAndFreezeKbInput = true;
+         d_fBellAndFreezeKbInput = true;
          }
       }
    auto BellAndFreezeKbInputIfExhausted() -> void {
       // BUGBUG GetTextargString_CMD_reader may prevent the following
-      // fBellAndFreezeKbInput code from achieving it's intended task
+      // d_fBellAndFreezeKbInput code from achieving it's intended task
       //
-      if( fBellAndFreezeKbInput ) {
+      if( d_fBellAndFreezeKbInput ) {
          // goal is to freeze the KB input so if user holds tab down, he
-         // can easily get back to the display of pbTabxBase.
+         // can easily get back to the display of d_pbTabxBase.
          //
-         // fBellAndFreezeKbInput exists because where fBellAndFreezeKbInput is
+         // d_fBellAndFreezeKbInput exists because where d_fBellAndFreezeKbInput is
          // set is temporarily prior to RefreshPromptAndEditInput being called;
          // freezing there shows the old dialog line content, which is not
          // useful; instead defer the freeze to here, when the latest dialog
          // line content has actually been displayed.
          //
-         fBellAndFreezeKbInput = false;
+         d_fBellAndFreezeKbInput = false;
          Bell_FlushKeyQueue_WaitForKey();
          }
       }
