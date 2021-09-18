@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -290,7 +290,7 @@ namespace LExFx {
          lua_rawgeti(L, 1, ix);  // push t[ix]
          PCChar pCmd = luaL_checkstring(L, -1);
          0 && ::DBG( "%s", pCmd );
-         sl.push_front( pCmd );
+         sl.push_back( pCmd );
          }
       CompilePty_CmdsAsyncExec( sl, true );
       RZ;

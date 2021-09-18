@@ -1541,7 +1541,7 @@ bool ARG::execute() {
                       auto pSL( new StringList() );
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {                                                    1 && DBG( "--- '%" PR_BSR "'", BSR( aw.lineref() ) );
-                            pSL->push_front( aw.lineref() );
+                            pSL->push_back( aw.lineref() );
                             }
                          }
                       StartInternalShellJob( pSL, false );
