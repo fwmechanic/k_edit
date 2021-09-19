@@ -323,7 +323,7 @@ void FBufRead_Assign_Switches( PFBUF pFBuf ) {
       dval.assign( swic.disp() );
       accum.append( PadRight( dval, g_MaxKeyNameLen ) );  // trail-pad with spaces to width
       accum.append( " # " );
-      accum.append( sr2st( swic.help() ) );
+      accum.append( swic.help() );
       pFBuf->PutLastLineRaw( accum );
       }
    }

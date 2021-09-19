@@ -267,7 +267,7 @@ bool MFGrepMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL M
    CapturePrevLineCountAllWindows( d_pOutputFile );
    d_sb.assign( pFBuf->Namestr() );
    d_sb.append( FmtStr<40>( " %d %dL%d: ", cur.lin+1, cur.col+1, MatchCols ).c_str() );
-   d_sb.append( sr2st( pFBuf->PeekRawLine( cur.lin ) ) );
+   d_sb.append( pFBuf->PeekRawLine( cur.lin ) );
    d_pOutputFile->PutLastLineRaw( d_sb );
    MoveCursorToEofAllWindows( d_pOutputFile );
    return true;  // action taken!
@@ -446,9 +446,9 @@ void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher, stref src )
    std::string sbuf;
    sbuf.append( "mfgrep::" );
    sbuf.append( FSearcher.IsRegex() ? "regex " : "str " );
-   sbuf.append( sr2st( FSearcher.SrchStr() ) );
+   sbuf.append( FSearcher.SrchStr() );
    sbuf.append( " " );
-   sbuf.append( sr2st( src ) );                                 DBG( "%s: '%" PR_BSR "'", __func__, BSR(src) );
+   sbuf.append( src );                                      DBG( "%s: '%" PR_BSR "'", __func__, BSR(src) );
    LuaCtxt_Edit::nextmsg_newsection_ok( sbuf.c_str() );
    }
 
@@ -604,7 +604,7 @@ GLOBAL_VAR std::string g_SnR_stReplacement     ;
 
 GTS::eRV GTS::addText( stref sr ) {
    if( fInitialStringSelected_ ) {
-      stb_.assign( sr2st( sr ) );
+      stb_.assign( sr );
       xCursor_ = stb_.length();
       }
    else {
@@ -706,7 +706,7 @@ class CharWalkerReplace {
                        : (ixCont < d_captures             .size() ? d_captures             [ixCont].value() : "")
                        );
          if( sr.length() > 0 ) {
-            d_stReplace.append( sr2st( sr ) );
+            d_stReplace.append( sr );
             d_promptCsrs.emplace_back( ent.d_isLit ? g_colorInfo : g_colorError, sr );
             }
          }
@@ -809,7 +809,7 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
       }
    // perform replacement...
    const auto destMatchChars( ixMatchMax - ixMatchMin + 1 );          DB && DBG("DFPoR+ y=%d ixMaxValid=%" PR_PTRDIFFT " ixMaxPossMatch=%" PR_PTRDIFFT " ixMatch[%" PR_PTRDIFFT ",%" PR_PTRDIFFT "] L=%" PR_PTRDIFFT, curPt->lin, rlc.sr().length()-1, ixLastPossibleLastMatchChar, ixMatchMax, ixMatchMin, destMatchChars );
-   d_sbuf = sr2st( rlc.sr() );
+   d_sbuf.assign( rlc.sr() );
    d_sbuf.replace( ixMatchMin, destMatchChars, sr2st( srReplace ) );  DB && DBG("DFPoR+ cursor=(%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLineEntab( curPt->lin, d_sbuf, d_stmp );  // ... and commit
    ++d_iReplacementsMade;
@@ -959,7 +959,7 @@ STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
 #endif
       {
       DeleteUp( s_searchSpecifier, ssNew.release() );
-      g_SavedSearchString_Buf.assign( sr2st( src ) );  // HACK to let ARG::grep inherit prev search strings
+      g_SavedSearchString_Buf.assign( src );  // HACK to let ARG::grep inherit prev search strings
       }
    VS_( s_searchSpecifier->Dbgf( "after" ); )
    return
@@ -1513,7 +1513,7 @@ SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex)
    const auto fPromotingPlainSearchToRegex( !d_fRegex && g_fPcreAlways );
    d_rawStr.assign( fPromotingPlainSearchToRegex ? "\\Q" : "" );
    d_fRegex = d_fRegex || fPromotingPlainSearchToRegex;
-   d_rawStr.append( sr2st(rawSrc) );
+   d_rawStr.append( rawSrc );
    d_fCanUseFastSearch = !d_fRegex && std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
 #if USE_PCRE
    d_fRegexCase = g_fCase;
@@ -1634,7 +1634,7 @@ FileSearcherFast::FileSearcherFast( const SearchScanMode &sm, const SearchSpecif
          fNdAppendTrailingAltSepChar = true;
          }
       }
-   d_searchKey.assign( sr2st( pS ) );
+   d_searchKey.assign( pS );
    if( fNdAppendTrailingAltSepChar ) {
       d_searchKey += AltSepChar;
       }
@@ -2175,7 +2175,7 @@ LINE CGrepper::WriteOutput
          if( d_MatchingLines[iy] ) {
             sbuf.assign( FmtStr<20>( "%*d  ", lwidth, iy + 1 ) );
             const auto rl( d_SrchFile->PeekRawLine( iy ) );
-            sbuf.append( sr2st( rl ) );
+            sbuf.append( rl );
             FBOP::InsLineSortedAscending( outfile, grepHdrLines, sbuf );
             }
          }
@@ -2382,7 +2382,7 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
    if( !starts_with( rl, srgp ) )      { goto FAIL; }
    rl.remove_prefix( srgp.length() );
    if( IsStringBlank( rl ) )           { goto FAIL; }
-   dest.assign( sr2st(rl) );
+   dest.assign( rl );
    }
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {

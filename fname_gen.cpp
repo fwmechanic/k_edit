@@ -375,7 +375,7 @@ bool ARG::cfx() {
 
 bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
    if( auto pEl=d_output.remove_first() ) {
-      dest.assign( sr2st( pEl->ref() ));
+      dest.assign( pEl->ref() );
       FreeStringListEl( pEl );
       return true;
       }
@@ -394,7 +394,7 @@ DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
    AddName( pStartDir );  DB && DBG( "%s StartDir ='%s'", __PRETTY_FUNCTION__, pStartDir.c_str() );
    Path::str_t pbuf;
    while( auto pNxt=d_input.remove_first() ) {
-      pbuf = Path::str_t( sr2st(pNxt->ref()) ) + (DIRSEP_STR "*");
+      pbuf = Path::str_t( pNxt->ref() ) + (DIRSEP_STR "*");
       FreeStringListEl( pNxt );
       DB && DBG( "%s Looking in ='%s'", __PRETTY_FUNCTION__, pbuf.c_str() );
       WildcardFilenameGenerator wcg( __PRETTY_FUNCTION__, pbuf.c_str(), ONLY_DIRS );
@@ -576,7 +576,7 @@ STATIC_FXN void SearchEnvDirListForFile( Path::str_t &dest, const PCChar pszSrc,
          }
       CfxFilenameGenerator mfg( std::string( __PRETTY_FUNCTION__ ) + " ONLY_DIRS", path, ONLY_DIRS );
       if( mfg.VGetNextName( dest ) ) { // only care about FIRST match
-         dest.append( sr2st(fname) );                                                 VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
+         dest.append( fname );                                                        VERBOSE && DBG( "%s '%s' =.> '%s'"     , __func__, pszSrc, dest.c_str() );
          return;
          }
       const auto abs_pb( Path::Absolutize( pszSrc ) );

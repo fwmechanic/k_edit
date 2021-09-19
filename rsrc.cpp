@@ -272,7 +272,7 @@ bool RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE
             }
          auto continues( false );
          const auto parsed( ExtractAssignableText( rl, continues ) );
-         srcAccum.append( sr2st( parsed ) );                  DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(srcAccum) );
+         srcAccum.append( parsed );                           DBGEN && DBG( "%c+> %" PR_BSR "|", continues?'C':'c', BSR(srcAccum) );
          if( !continues && !srcAccum.empty() ) {              DBGEN && DBG( "RTN HvContent" );
             return HAVE_CONTENT; // we got SOME text in the buffer, and the parser says there is no continuation to the next line
             }

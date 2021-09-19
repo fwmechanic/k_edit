@@ -221,7 +221,7 @@ struct FTypeSetting {
    stref ftypeName()  const { return d_ftypeName ; }
    stref hiliteName() const { return d_hiliteName; }  // HiliteAddins_Init() uses to map specific hilites
    FTypeSetting( stref ext )
-      : d_ftypeName( sr2st(ext) )
+      : d_ftypeName( ext )
       {                            0 && DBG( "%s CTOR: '%" PR_BSR "' ----------------------------------------------", __func__, BSR(d_ftypeName) );
       Update();
       }
@@ -668,7 +668,7 @@ void WucState::VCursorMoved( bool fUpdtWUC, View &view ) { 0 && DBG( "%s fUpdtWu
    const auto boxstr_sel( view.GetBOXSTR_Selection() );
    if( !IsStringBlank( boxstr_sel ) ) {
       if( !eq( d_stSel, boxstr_sel ) ) {
-         d_stSel.assign( sr2st( boxstr_sel ) );
+         d_stSel.assign( boxstr_sel );
          d_stSel.push_back( 0 );  // d_stSel content must look like StringsBuf content, which means an extra/2nd NUL marks the end of the last string
                                                              0 && DBG( "BOXSTR=%s|", d_stSel.c_str() );
          d_sb.clear();
@@ -2432,7 +2432,7 @@ struct direct_vid_seg {
    direct_vid_seg( Point origin, int colorIndex, stref sr )
      : d_origin( origin )
      , d_colorIndex( colorIndex )
-     , d_str( sr2st(sr) )
+     , d_str( sr )
      {}
    };
 
@@ -3124,7 +3124,7 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
             fChanged = true;
             }
          if( !eq( it->d_str, sr ) ) {
-            it->d_str.assign( sr2st(sr) ); // overwrite same-length string with new
+            it->d_str.assign( sr ); // overwrite same-length string with new
                            0 && DBG( "%s [%" PR_SIZET "]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
             fChanged = true;
             }

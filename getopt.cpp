@@ -27,7 +27,7 @@ Getopt::Getopt( int argc_, PPCChar argv_, PCChar optset_ )
    : d_argc( argc_ )
    , d_argv( argv_ )
    , d_pOptSet( optset_ )
-   , d_pgm( sr2st( Path::RefFnm( d_argv[0] ) ) )
+   , d_pgm( Path::RefFnm( d_argv[0] ) )
    {
    if( 0 ) {
       printf( "d_pgm=%s\n", d_pgm.c_str() );

@@ -761,7 +761,7 @@ STATIC_FXN std::string is_content_grep( PCFBUF pFile ) { 1 && DBG( "%s called on
    if( FBOP::IsGrepBuf( origSrchFnm, &metaLines, pFile ) ) {
       auto srchfile( OpenFileNotDir_NoCreate( origSrchFnm.c_str() ) );
       if( srchfile ) {
-         auto rv( sr2st( srchfile->FTypeName() ) );  1 && DBG( "%s called on %s %s returns %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name(), rv.c_str() );
+         std::string rv( srchfile->FTypeName() );  1 && DBG( "%s called on %s %s returns %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name(), rv.c_str() );
          return rv;
          }
       }
@@ -870,13 +870,13 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    }
 
 STATIC_FXN std::string ShebangToFType_lua( PCFBUF pfb ) {
-   std::string inout( sr2st( shebang_binary_name( pfb ) ) );
+   std::string inout( shebang_binary_name( pfb ) );
    if( !inout.empty() ) { LuaCtxt_Edit::ShebangToFType( inout ); }
    return inout;
    }
 
 STATIC_FXN std::string FnmToFType_lua( PCFBUF pfb ) {
-   std::string inout( sr2st( Path::RefFnameExt( pfb->Namesr() ) ) );
+   std::string inout( Path::RefFnameExt( pfb->Namesr() ) );
    if( !inout.empty() ) { LuaCtxt_Edit::FnmToFType( inout ); }
    return inout;
    }
@@ -942,7 +942,7 @@ std::string FBOP::DeduceFType( PCFBUF pfb ) {
          rv = "pseudo";
          }
       else {
-         rv = sr2st( Path::RefExt( pfb->Namesr() ) );
+         rv.assign( Path::RefExt( pfb->Namesr() ) );
          }
       }                                                            1 && DBG( "%s %s -> '%" PR_BSR "'", __func__, pfb->Name(), BSR(rv) );
    return rv;
