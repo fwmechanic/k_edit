@@ -978,7 +978,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
 
    local function DefinedTag( tag )
       local rv = (s_filteredTagsCache and s_filteredTagsCache[tag]) or filterTags( get_tags_matching( tag ) ) or true
-      -- rv is either true (if NO matching tag(s) or tags file) or a table (array) containing matching tags
+      -- rv is either true (if NO matching tag(s) or tags file) or a table (array) containing matching raw tagsfile lines
       if rv==true then
          return  -- NO matching tag(s) or tags file
          end
@@ -1563,13 +1563,13 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          identity      ,  -- *** IDENTITY ***  variants before supercede identity; tag_variants after tried iff DefinedTag(identity(tag)) fails
          rightident    ,  -- 'NOARG tags' defaults to WUC which today can yield 'x.y.z' (vs legacy 'z'); if DefinedTag('x.y.z') fails, try DefinedTag('z') here
       fs "%s.py"       ,  -- python module name maps to file "${modnm}.py"
-      fs "%s.cmake"    ,
+   -- fs "%s.cmake"    ,
       fs "l_edfunc_%s" ,  -- lua fxn wr in C?  (hardly works since macros mask true fxn names)
          string.lower  ,  -- might have typed the wrong case of a function name or, in windoze a filename
       fs "_%s"         ,  -- C identifier might be defined in asm source (with leading '_')
-      cmake_proj_autovar, -- CMake magically defines variables with names prefixed by user-defined "project" names
-      cmake_ident      ,
-      cmake_globalvar  ,
+   -- cmake_proj_autovar, -- CMake magically defines variables with names prefixed by user-defined "project" names
+   -- cmake_ident      ,
+   -- cmake_globalvar  ,
       }
    do
       local function Choice_Debug( at )
@@ -1666,6 +1666,17 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          if tagVariant then  -- DBG( fmt( "tagStr=%s tagVariant=%s", tagStr, tagVariant ) )
             tagdefs = actionFxn or DefinedTag( tagVariant )
             if tagdefs then
+               --[[ 20210919 ++function-scoped-tags support:
+               remove from tagdefs all function-scoped-tags lying outside the function the cursor is positioned in.
+               Do this by iterating over all tagdefs: for each function-scoped-tag (kind:local or kind:parameter):
+               if tag is instance of function-scoped-tag: fstag = tag
+                  discard if fstag.file ~= cursor.file
+                  discard if fstag.line >  cursor.line
+                  # lookup the function's tag ...
+                  discard if fstag.function.end > cursor.line  # file and start line having been checked above by exam of fstag attrs
+
+
+                 ]]
                tagStr = tagVariant
                break
                end

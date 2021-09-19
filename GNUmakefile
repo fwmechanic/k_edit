@@ -360,16 +360,22 @@ printvars:
 # +p +x seem to do nothing
 # +Z+s adds 'scope:' prefix to 'class:' and 'struct:' Extension fields (coalescing them into a single 'scope:' field)
 
-TAGS_FIELDS=+K+z+S+l+n
+TAGS_FIELDS=+K+z+S+l+n+e
 #            K           Kind of tag as full name
 #              z         Include the "kind:" key in kind field (use k or K) in tags output
 #                S       Signature of routine (e.g. prototype or parameter list)
 #                  l     Language of input file containing tag
 #                    n   Line number of tag definition
+#                      e end line number (of functions (etc?))
+
+TAGS_KINDS=--kinds-C++=+l+z
+#                       l    kind:local variables
+#                         z  function kind:parameters
+
 TAGS_EXTRAS=+f
 #            f           Include [a tag record] for the base file name of every input file
 
-TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=$(TAGS_FIELDS) --extras=$(TAGS_EXTRAS) --recurse
+TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=$(TAGS_FIELDS) $(TAGS_KINDS) --extras=$(TAGS_EXTRAS) --recurse
 # !!! SEE ALSO ctags.d/*.ctags
 
 .PHONY: tags
