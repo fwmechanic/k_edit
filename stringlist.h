@@ -25,10 +25,10 @@
 
 struct StringListEl {
    DLinkEntry<StringListEl> dlink;
+   size_t len;
    char string[0];
+   stref ref() const { return stref(string,len); }
    };
-
-extern StringListEl *NewStringListEl( stref src );
 
 #define  FreeStringListEl( pSLE )  Free0( pSLE )
 
@@ -39,13 +39,12 @@ public:
    StringList( PCChar str ) { push_back( str ); }
    ~StringList() { clear(); }
    unsigned length() const { return d_head.length(); }
-   bool     empty()  const { return d_head.empty(); }
    void clear() {
-      while( auto pEl = d_head.front() ) {
-         DLINK_REMOVE_FIRST( d_head, pEl, dlink );
+      while( auto pEl=remove_first() ) {
          FreeStringListEl( pEl );
          }
       }
+   static StringListEl *NewStringListEl( stref src );
    void push_back( stref src ) {
       auto pIns( NewStringListEl( src ) );
       DLINK_INSERT_LAST( d_head, pIns, dlink );

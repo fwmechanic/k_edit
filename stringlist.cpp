@@ -20,12 +20,13 @@
 #include "ed_main.h"
 #include "stringlist.h"
 
-StringListEl *NewStringListEl( stref src ) {
-   const auto sbytes( src.length() + 1 );
+StringListEl *StringList::NewStringListEl( stref src ) {
+   const auto len( src.length() );
    StringListEl *rv;
-   AllocBytesNZ( rv, sizeof( *rv ) + sbytes );
+   AllocBytesNZ( rv, sizeof( *rv ) + len + 1 );
    rv->dlink.clear();
-   memcpy( rv->string, src.data(), sbytes-1 );
-   rv->string[sbytes-1] = '\0';
+   rv->len = len;
+   memcpy( rv->string, src.data(), len );
+   rv->string[len] = '\0';
    return rv;
    }

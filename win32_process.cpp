@@ -884,14 +884,13 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
       d_processInfo.dwProcessId = INVALID_dwProcessId;
       DispNeedsRedrawStatLn(); // ???
-      if( d_pSL->empty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
+      if( !(pEl=d_pSL->remove_first()) ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
          PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_hProcessExitCode = 0;
          d_hThread = nullptr;
          return; // ##################### LockTheJobQueue ######################
          }
-      pEl = d_pSL->remove_first();
       } // ##################### LockTheJobQueue ######################
       auto cmdFlags(0);
       PChar pS( analyze_cmdline( pEl->string, &cmdFlags ) );

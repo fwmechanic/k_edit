@@ -374,13 +374,12 @@ bool ARG::cfx() {
 #endif
 
 bool DirListGenerator::VGetNextName( Path::str_t &dest ) {
-   if( d_output.empty() ) {
-      return false;
+   if( auto pEl=d_output.remove_first() ) {
+      dest.assign( sr2st( pEl->ref() ));
+      FreeStringListEl( pEl );
+      return true;
       }
-   auto pEl( d_output.remove_first() );
-   dest = pEl->string;
-   FreeStringListEl( pEl );
-   return true;
+   return false;
    }
 
 void DirListGenerator::AddName( stref name ) {
@@ -395,7 +394,7 @@ DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
    AddName( pStartDir );  DB && DBG( "%s StartDir ='%s'", __PRETTY_FUNCTION__, pStartDir.c_str() );
    Path::str_t pbuf;
    while( auto pNxt=d_input.remove_first() ) {
-      pbuf = Path::str_t( pNxt->string ) + (DIRSEP_STR "*");
+      pbuf = Path::str_t( sr2st(pNxt->ref()) ) + (DIRSEP_STR "*");
       FreeStringListEl( pNxt );
       DB && DBG( "%s Looking in ='%s'", __PRETTY_FUNCTION__, pbuf.c_str() );
       WildcardFilenameGenerator wcg( __PRETTY_FUNCTION__, pbuf.c_str(), ONLY_DIRS );
