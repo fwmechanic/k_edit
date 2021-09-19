@@ -608,7 +608,7 @@ GTS::eRV GTS::addText( stref sr ) {
       xCursor_ = stb_.length();
       }
    else {
-      stb_.insert( xCursor_, sr2st( sr ) );
+      stb_.insert( xCursor_, sr );
       xCursor_ += sr.length();
       }
    return KEEP_GOING;
@@ -810,7 +810,7 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
    // perform replacement...
    const auto destMatchChars( ixMatchMax - ixMatchMin + 1 );          DB && DBG("DFPoR+ y=%d ixMaxValid=%" PR_PTRDIFFT " ixMaxPossMatch=%" PR_PTRDIFFT " ixMatch[%" PR_PTRDIFFT ",%" PR_PTRDIFFT "] L=%" PR_PTRDIFFT, curPt->lin, rlc.sr().length()-1, ixLastPossibleLastMatchChar, ixMatchMax, ixMatchMin, destMatchChars );
    d_sbuf.assign( rlc.sr() );
-   d_sbuf.replace( ixMatchMin, destMatchChars, sr2st( srReplace ) );  DB && DBG("DFPoR+ cursor=(%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
+   d_sbuf.replace( ixMatchMin, destMatchChars, srReplace );           DB && DBG("DFPoR+ cursor=(%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLineEntab( curPt->lin, d_sbuf, d_stmp );  // ... and commit
    ++d_iReplacementsMade;
    // replacement done: adjust starting, limit point for next iteration
