@@ -250,3 +250,20 @@ void MainThreadPerfCounter::ResumeAll() {
           }
       }
    }
+
+ptrdiff_t xlat_cmdline_flag_chars( PCChar pCmdln, int *flags ) {
+   0 && DBG( "%s+ '%s'", __func__,  pCmdln );
+   const auto p0( pCmdln );
+   do {
+      switch( *pCmdln ) {
+         case ' ': case HTAB:                            break;
+         case CH_NO_ECHO_CMDLN: *flags |= NO_ECHO_CMDLN; break;
+         case CH_IGNORE_ERROR : *flags |= IGNORE_ERROR ; break;
+         case CH_NOSHELL      : *flags |= NOSHELL      ; break;
+         default:                goto  PAST_OPTS;
+         }
+      } while( *(++pCmdln) );
+PAST_OPTS: ;
+   0 && DBG( "%s- fl=0x%X '%s'", __func__, *flags,  pCmdln );
+   return pCmdln - p0;
+   }

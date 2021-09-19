@@ -99,33 +99,7 @@ bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'
       }
    }
 
-
-enum {
-   CH_NO_ECHO_CMDLN = '@', NO_ECHO_CMDLN = BIT(0),
-   CH_IGNORE_ERROR  = '-', IGNORE_ERROR  = BIT(1),
-   CH_NOSHELL       = '^', NOSHELL       = BIT(2),
-   };
-
-STATIC_FXN PCChar analyze_cmdline_( PCChar pCmdln, int *flags ) {
-   0 && DBG( "%s+ '%s'", __func__,  pCmdln );
-   do {
-      switch( *pCmdln ) {
-         case ' ': case HTAB:                            break;
-         case CH_NO_ECHO_CMDLN: *flags |= NO_ECHO_CMDLN; break;
-         case CH_IGNORE_ERROR : *flags |= IGNORE_ERROR ; break;
-         case CH_NOSHELL      : *flags |= NOSHELL      ; break;
-         default:                           goto  PAST_OPTS;
-         }
-      } while( *(++pCmdln) );
-PAST_OPTS: ;
-
-   0 && DBG( "%s- '%s'", __func__,  pCmdln );
-   return *pCmdln ? pCmdln : nullptr;
-   }
-
-TF_Ptr STIL Ptr analyze_cmdline( Ptr pCmdln, int *flags ) { return cast_add_const(Ptr)(analyze_cmdline_( pCmdln, flags )); }
-
-STATIC_FXN void prep_cmdline( PChar pc, int cmdFlags, PCChar func__ ) {
+STATIC_FXN void prep_cmdline( PCChar pc, int cmdFlags, PCChar func__ ) {
    0 && DBG( "%s: %s%s%s: %s"
       , func__
       , (cmdFlags & NO_ECHO_CMDLN) ? "@" : ""
@@ -462,24 +436,25 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       // AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
       d_Pid = INVALID_ProcessId;
       DispNeedsRedrawStatLn(); // ???
-      if( d_pSL->empty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
+      if( !(pEl=d_pSL->remove_first()) ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
          PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_ChildProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_ChildProcessExitCode = 0;
          // d_hThread = nullptr;
          return; // ##################### LockTheJobQueue ######################
          }
-      pEl = d_pSL->remove_first();
       } // ##################### LockTheJobQueue ######################
       auto cmdFlags(0);
-      PChar pS( analyze_cmdline( pEl->string, &cmdFlags ) );
-      if( *pS ) { prep_cmdline( pS, cmdFlags, __func__ ); }
-      piped_forker piper;
-      const auto cp_rc( CreateProcess_piped( piper, &d_ChildProcessExitCode, d_pfLogBuf, pS, cmdFlags, x2 ) );
-      if( CP_PIPED_RC_OK == cp_rc ) {
-         if( d_ChildProcessExitCode ) {
-            if( cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;  }
-            else                          {  unstartedJobCnt = DeleteAllEnqueuedJobs_locks();  }
+      auto pS( pEl->string + xlat_cmdline_flag_chars( pEl->string, &cmdFlags ) );
+      if( *pS ) {
+         prep_cmdline( pS, cmdFlags, __func__ );
+         piped_forker piper;
+         const auto cp_rc( CreateProcess_piped( piper, &d_ChildProcessExitCode, d_pfLogBuf, pS, cmdFlags, x2 ) );
+         if( CP_PIPED_RC_OK == cp_rc ) {
+            if( d_ChildProcessExitCode ) {
+               if( cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;  }
+               else                          {  unstartedJobCnt = DeleteAllEnqueuedJobs_locks();  }
+               }
             }
          }
       FreeStringListEl( pEl );

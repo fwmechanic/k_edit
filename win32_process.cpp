@@ -248,34 +248,14 @@ STATIC_FXN int TerminateApp( const DWORD dwPID, int TmoutMs ) {
 //#############################################################################################################################
 //
 
-enum {
-   CH_NO_ECHO_CMDLN = '@', NO_ECHO_CMDLN = BIT(0),
-   CH_IGNORE_ERROR  = '-', IGNORE_ERROR  = BIT(1),
-   CH_NOSHELL       = '^', NOSHELL       = BIT(2),
-   };
 PCChar szNO_ECHO_CMDLN( int flags ) { STATIC_CONST char rv[]{ CH_NO_ECHO_CMDLN , '\0' }; return (flags & NO_ECHO_CMDLN) ? rv : nullptr; }
 PCChar szIGNORE_ERROR ( int flags ) { STATIC_CONST char rv[]{ CH_IGNORE_ERROR  , '\0' }; return (flags & IGNORE_ERROR ) ? rv : nullptr; }
 PCChar szNOSHELL      ( int flags ) { STATIC_CONST char rv[]{ CH_NOSHELL       , '\0' }; return (flags & NOSHELL      ) ? rv : nullptr; }
 
-STATIC_FXN PCChar analyze_cmdline_( PCChar pCmdln, int *flags ) {
-   0 && DBG( "%s+ '%s'", __func__,  pCmdln );
-   do {
-      switch( *pCmdln ) {
-         case ' ': case HTAB:                            break;
-         case CH_NO_ECHO_CMDLN: *flags |= NO_ECHO_CMDLN; break;
-         case CH_IGNORE_ERROR : *flags |= IGNORE_ERROR ; break;
-         case CH_NOSHELL      : *flags |= NOSHELL      ; break;
-         default:                           goto  PAST_OPTS;
-         }
-      } while( *(++pCmdln) );
-PAST_OPTS: ;
-   0 && DBG( "%s- fl=0x%X '%s'", __func__, *flags,  pCmdln );
-   return *pCmdln ? pCmdln : nullptr;
-   }
-
-TF_Ptr STIL Ptr analyze_cmdline( Ptr pCmdln, int *flags ) { return cast_add_const(Ptr)(analyze_cmdline_( pCmdln, flags )); }
-
 STATIC_FXN void prep_cmdline_( PChar pc ) {
+   // FIXME   this is horrendous!   FIXME
+   // FIXME   this is horrendous!   FIXME
+   // FIXME   this is horrendous!   FIXME
    // CMD shell cannot handle '/' dirsep in argv[0], so xlat to '\'
    const auto chDelim( Path::DelimChar( pc ) );
    const auto pEoArgv0( chDelim ? strchr(pc+1,chDelim) : StrToNextBlankOrEos( pc ) );
@@ -760,9 +740,9 @@ int Win32_pty::EnqueueJobsAndRun( const StringList &sl ) {
    DLINKC_FIRST_TO_LASTA( sl.d_head, dlink, pCur ) {
       DBG( "%s '%s'", __func__,  pCur->string );
       auto flags(0);
-      const auto pC( analyze_cmdline_( pCur->string, &flags ) );
-      if( pC ) {
-         const auto pCD( Strdup( pC ) );
+      auto pf( pCur->string + xlat_cmdline_flag_chars( pCur->string, &flags ) );
+      if( *pf ) {
+         const auto pCD( Strdup( pf ) );
          prep_cmdline( pCD, flags, __func__ );  // todo: maybe defer this to subprocess-start-time?
          auto pEl( new Win32pty_job_Q_el( pCD, flags ) );
          DLINK_INSERT_LAST(d_jobQHead, pEl, d_dlinkJobsOfPty);
@@ -893,13 +873,15 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
          }
       } // ##################### LockTheJobQueue ######################
       auto cmdFlags(0);
-      PChar pS( analyze_cmdline( pEl->string, &cmdFlags ) );
-      if( *pS ) { prep_cmdline( pS, cmdFlags, __func__ ); }
-      const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_hProcessExitCode, d_pfLogBuf, pS, cmdFlags, &x1, &x2 ) );
-      if( CP_PIPED_RC_OK == cp_rc ) {
-         if( d_hProcessExitCode ) {
-            if( cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;  }
-            else                          {  unstartedJobCnt = DeleteAllEnqueuedJobs_locks();  }
+      auto pS( pEl->string + xlat_cmdline_flag_chars( pEl->string, &cmdFlags ) );
+      if( *pS ) {
+         prep_cmdline( pS, cmdFlags, __func__ );
+         const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_hProcessExitCode, d_pfLogBuf, pS, cmdFlags, &x1, &x2 ) );
+         if( CP_PIPED_RC_OK == cp_rc ) {
+            if( d_hProcessExitCode ) {
+               if( cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;  }
+               else                          {  unstartedJobCnt = DeleteAllEnqueuedJobs_locks();  }
+               }
             }
          }
       FreeStringListEl( pEl );

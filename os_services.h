@@ -77,6 +77,12 @@ STIL void SleepMs( int ms ) {
 #endif
    }
 
+enum {
+   CH_NO_ECHO_CMDLN = '@', NO_ECHO_CMDLN = BIT(0),
+   CH_IGNORE_ERROR  = '-', IGNORE_ERROR  = BIT(1),
+   CH_NOSHELL       = '^', NOSHELL       = BIT(2),
+   };
+extern ptrdiff_t xlat_cmdline_flag_chars( PCChar pCmdln, int *flags );
 
 class FileAttribs { // for lower-level usage where a sequence of checks may be needed
    // this class should cease to exist:
