@@ -34,7 +34,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    if( func_stat( pszFileName, &stat_buf ) == -1 ) { DB && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
       return SFMG_NO_SRCFILE;
       }
-   auto dest( sr2st(Path::RefDirnm( pszFileName )) + kszBakDirNm );
+   auto dest( std::string(Path::RefDirnm( pszFileName )) + kszBakDirNm );
    auto mkdirLen( dest.length() );
    NewScope { // validity of dirname
    const auto dirname( dest.c_str() );
@@ -65,7 +65,7 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    if( fOk ) { strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", &tt ); }
    else      { bcpy( tbuf, "XlocaltimeX" ); }
    const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  DB && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
-   dest.append( (DIRSEP_STR + sr2st( filenameNoPath ) + "." + tbuf ) );
+   dest.append( (DIRSEP_STR + std::string( filenameNoPath ) + "." + tbuf ) );
   #if defined(_WIN32)
    unlinkOk( dest.c_str() );
   #endif

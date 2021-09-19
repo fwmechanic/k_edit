@@ -100,8 +100,8 @@ class SWIs : public SWI_intf {
       : d_get(get_)
       , d_set(set_)
       {}
-   std::string defn( stref newValue ) override { return sr2st( d_set( newValue ) ); }
-   std::string disp() override { return sr2st( d_get() ); }
+   std::string defn( stref newValue ) override { return std::string( d_set( newValue ) ); }
+   std::string disp() override { return std::string( d_get() ); }
    };
 
 class SWIsb : public SWI_intf {

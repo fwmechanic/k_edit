@@ -1116,7 +1116,7 @@ std::string DupTextMacroValue( PCChar macroName ) {
    auto val( pCmd->MacroStref() );
    trim( val );
    unquote( val );
-   return sr2st( val );
+   return std::string( val );
    }
 
 STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };

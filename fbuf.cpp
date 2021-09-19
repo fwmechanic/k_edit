@@ -969,7 +969,7 @@ PCChar LastRsrcFileLdSectionFtypeNm       () { return s_cur_FtypeSectionNm+KSTRL
 PCChar LastRsrcFileLdSectionFtypeSectionNm() { return s_cur_FtypeSectionNm; }
 
 STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'"     , __func__, BSR(name), BSR(strval) );
-   const auto str( "\"" + sr2st(strval) + "\"" );
+   const auto str( "\"" + std::string(strval) + "\"" );
    const auto rv( DefineMacro( name, str ) );                      0 && DBG( "%s '%" PR_BSR "'='%" PR_BSR "'-> %c", __func__, BSR(name), BSR(strval), rv?'y':'n' );
    return rv;
    }

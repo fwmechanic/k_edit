@@ -116,9 +116,6 @@ constexpr auto eosr = stref::npos; // tag not generated if 'const auto eosr( str
 #define BSR(bsr) static_cast<int>((bsr).length()),(bsr).data()
 #define PR_BSR ".*s"
 
-//      sr2st(stref) convert a stref to a std::string; there seems to be no added overhead if the created std::string is a temp object
-STIL std::string sr2st( stref bsr ) { return std::string( bsr.data(), bsr.length() ); }
-// #define       sr2st(       bsr )          std::string( (bsr).data(),(bsr).length() )
 STIL stref se2sr( PCChar bos, PCChar eos ) { return stref( bos, eos - bos ); }
 
 typedef WL(__int64,off_t) filesize_t;
