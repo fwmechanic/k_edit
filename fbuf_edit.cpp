@@ -1242,7 +1242,7 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
          && (ppLSR != papLSR) // ppLSR - 1 exists?
          && 0 == strcmp( (*ppLSR)->keydata, (*(ppLSR-1))->keydata )
         ) {
-         // line is dup of it's predecessor (maybe later save to <dups0> ???)
+         // line is dup of its predecessor (maybe later save to <dups0> ???)
          ++ppLSR; // skip *ppLSR w/o copying
          --yMaxEff;  // one less line in dest
          }

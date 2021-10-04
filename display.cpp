@@ -242,7 +242,7 @@ void FTypeSetting::Update() {
    Catbuf<120> kybuf;
    const auto w0( kybuf.Wref() );
    const auto w1( w0.cpy( "filesettings.ftype_map." ) );
-         auto w2( w1.cpy( stref(d_ftypeName) ) );
+         auto w2( w1.cpy( stref(d_ftypeName) ) );  // NB! sets up if expression's kybuf.c_str()!  Cannot be folded into if expression!
    if( !LuaCtxt_Edit::TblKeyExists( kybuf.c_str() ) ) {
       w2 = w1.cpy( "unknown" );
       }
@@ -2017,7 +2017,7 @@ STIL size_t SpeedTableIndexFirstLine( size_t idx )  { return idx * HILITE_SPEEDT
 class ViewHiLites {
    friend class View;
    const FBUF                    &d_FBuf;
-   std::vector<const HiLiteRec *> d_SpeedTable;  // references, does NOT own!
+   std::vector<const HiLiteRec *> d_SpeedTable;  // references, does NOT own!  d_SpeedTable may contain nullptr entries!
    DLinkHead<HiLiteRec>           d_HiLiteList;
    void              UpdtSpeedTbl( HiLiteRec *pThis );
    const HiLiteRec  *FirstHiLiteAtOrAfter( LINE yLine ) const;
@@ -2032,7 +2032,7 @@ public:
 
 ViewHiLites::ViewHiLites( PCFBUF pFBuf )
    : d_FBuf(*pFBuf)
-   , d_SpeedTable( 1 + ::SpeedTableIndex( d_FBuf.LineCount() ) )
+   , d_SpeedTable( 1 + ::SpeedTableIndex( d_FBuf.LineCount() ) )  // vector ctor inits all entries w/nullptr
    {
    }
 

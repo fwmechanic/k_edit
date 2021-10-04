@@ -171,7 +171,7 @@ public:
       : EditRec    ( fb )
       , d_LineCount( d_pFBuf->LineCount() )
       , d_lineNum  ( lineNum )
-      , d_li       ( std::move( d_pFBuf->d_paLineInfo[d_lineNum] ) ) // after this, d_pFBuf->d_paLineInfo[lineNum] is clear()'d
+      , d_li       ( std::move( d_pFBuf->d_paLineInfo[d_lineNum] ) ) // leaves d_pFBuf->d_paLineInfo[lineNum] undefined
       {
       IF_UNDO_REDO_MARKS( d_MarkListHd = updateMarksForLineDeletion_DupMarks( d_pFBuf, lineNum, lineNum ); )
       }

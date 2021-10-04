@@ -209,7 +209,7 @@ int FindMatchingTagsLines(
          // the end of the tag record (line) where it would not be followed by a
          // trailing '\t'.
          //
-         // If src=="kind:file", names of all files having kind:file tags will
+         // EX: If src=="\tkind:file", names of all files having kind:file tags will
          // be returned.
 #ifdef UNITTEST
          auto mnum( 0u );

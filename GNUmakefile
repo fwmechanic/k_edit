@@ -154,7 +154,7 @@ LUA_DIR=lua-5.1/src
 
 CC_OUTPUT := # --save-temp
 # -fstack-protector    gens link error
-# -fsanitize=undefined gens link errors (is supposed to work on Linux x64 w/GCC 4.9.2 only)
+# -fsanitize=undefined MinGW GCC 10.3 gens link errors for missing syms '__ubsan_handle_*' Linux might be better?
 # -fstrict-overflow -Wstrict-overflow=2
 TRAPV := -ftrapv
 
