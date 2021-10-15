@@ -211,7 +211,7 @@ STATIC_FXN char GenAltHiliteColor( const char color ) {
 STATIC_FXN inline PFTypeSetting IdxNodeToFTS( RbNode *pNd ) { return static_cast<PFTypeSetting>( rb_val(pNd) ); }  // type-safe conversion function
 
 struct FTypeSetting {
-   enum { DB=1 };
+   enum { DB=0 };
    std::string d_ftypeName;  // rbtree key
    std::string d_hiliteName;
    colorval_t  d_colors[ ColorTblIdx::VIEW_COLOR_COUNT ];
@@ -2045,7 +2045,7 @@ ViewHiLites::~ViewHiLites() {
       DLINK_REMOVE_FIRST( d_HiLiteList, pEl, dlink );
       delete pEl;
       }
-   DBG( "%s numHL=%d", __func__, numHL );
+   0 && DBG( "%s numHL=%d", __func__, numHL );
    }
 
 void View::FreeHiLiteRects() {

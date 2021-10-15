@@ -24,7 +24,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 
-int LDS( PCChar tag, lua_State *L ) {
+int LDS( PCChar tag, lua_State *L ) {  // Lua Dump Stack
    const auto top( lua_gettop(L) );
    DBG( "+luaStack.bottom, %d els @ '%s'", top, tag );
    for( auto ix(1); ix <= top; ++ix ) {
@@ -249,7 +249,10 @@ class LuaCallCleanup_ {
    lua_State *d_L;
 public:
    LuaCallCleanup_( lua_State *L, const char *fxn ) : d_L(L) {
-      const auto els( lua_gettop( d_L ) ); if( els ) { DBG( "%s @ entry stack contains %d (%s)", __func__, els, fxn ); LDS( __func__, L ); }
+      const auto els( lua_gettop( d_L ) );
+      if( els ) {                             0 && DBG( "%s @ entry stack contains %d (%s)", __func__, els, fxn );
+                                              0 && LDS( __func__, L );
+         }
       }
    ~LuaCallCleanup_() {
       lua_settop( d_L, 0 );  // Lua refman: "If index is 0, then all stack elements are removed."

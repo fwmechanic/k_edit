@@ -144,7 +144,7 @@ STATIC_FXN Win32::DWORD GetConsoleInputMode() {
          }
       DBG( "%s ********************** REALLOCATED CONIN$ **********************", __func__ );
       }
-   DBG( "GetConsoleMode(IN) => 0x%lX *****************************", dwMode );
+   0 && DBG( "GetConsoleMode(IN) => 0x%lX *****************************", dwMode );
    return dwMode;
    }
 
@@ -155,7 +155,7 @@ STATIC_FXN void SetConsoleInputMode_( Win32::DWORD dwMode, PCChar caller ) {
       DBG( "%s: %s FAILED <- %lX (is %lX) %s *****************************", caller, __func__, dwMode, GetConsoleInputMode(), OsErrStr( BSOB(oseb) ) );
       }
    else {
-      DBG( "%s: %s Ok <- %lX *****************************", caller, __func__, dwMode );
+      0 && DBG( "%s: %s Ok <- %lX *****************************", caller, __func__, dwMode );
       }
    }
 
@@ -166,7 +166,7 @@ void ConsoleInputModeRestorer::Set() const { SetConsoleInputMode( d_cim ); }
 
 void Conin_Init() {
    s_Conin.hStdin = Win32::CreateFile( "CONIN$", GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr );
-   DBG( "INITIAL s_Conin.hStdin=%p", s_Conin.hStdin );
+   0 && DBG( "INITIAL s_Conin.hStdin=%p", s_Conin.hStdin );
    s_Conin.CIB_ValidElements = 0;
    s_Conin.CIB_IdxRead       = 0;
    s_Conin.CIB.resize( conin_statics::CIB_DFLT_ELEMENTS );
