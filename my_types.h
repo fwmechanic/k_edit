@@ -236,22 +236,22 @@ namespace Path {
 
 // readability template macros
 
-template<typename T> inline T    Abs ( T t ) { return ( t < 0 ) ?  -t : +t; }
-template<typename T> inline T    Sign( T t ) { return ( t < 0 ) ?  -1 : +1; }
+template<typename T> constexpr inline T    Abs ( T t ) { return ( t < 0 ) ?  -t : +t; }
+template<typename T> constexpr inline T    Sign( T t ) { return ( t < 0 ) ?  -1 : +1; }
 
-template<typename T> inline T    AbsDiff   ( T t1, T t2 )    { return (t1 > t2) ? (t1-t2) : (t2-t1); }
+template<typename T> constexpr inline T    AbsDiff   ( T t1, T t2 )    { return (t1 > t2) ? (t1-t2) : (t2-t1); }
 
-template<typename T> inline void NoLessThan( T *v, T limit ) { if( *v <= limit ) {*v = limit;} }
-template<typename T> inline void NoMoreThan( T *v, T limit ) { if( *v >= limit ) {*v = limit;} }
+template<typename T> constexpr inline void NoLessThan( T *v, T limit ) { if( *v <= limit ) {*v = limit;} }
+template<typename T> constexpr inline void NoMoreThan( T *v, T limit ) { if( *v >= limit ) {*v = limit;} }
 
 template<typename T>
-inline void Constrain( T loLimit, T *v, T hiLimit ) {
+constexpr inline void Constrain( T loLimit, T *v, T hiLimit ) {
    if( *v >= hiLimit ) { *v = hiLimit; }
    if( *v <= loLimit ) { *v = loLimit; }
    }
 
 template<typename T>
-bool WithinRangeInclusive( T nLower, T toCheck, T nUpper ) {
+constexpr bool WithinRangeInclusive( T nLower, T toCheck, T nUpper ) {
    return (toCheck >= nLower && toCheck <= nUpper); // ASSUMES nLower <= nUpper !!!
    }
 
