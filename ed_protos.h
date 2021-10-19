@@ -192,12 +192,13 @@ extern int DispScreenRedraws();
 //--------------------------------------------------------------------------------------------
 // Display Driver
 
+enum class eFlush { noFlush, doFlush };
 enum class ePad { noPad, padWSpcsToEol };
 struct DisplayDriverApi {
    void  (*DisplayNoise)( PCChar buffer );
    void  (*DisplayNoiseBlank)();
    COL   (*VidWrStrColor    )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, int colorAttribute, ePad pad );
-   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fFlushNow );
+   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, eFlush doFlush );
    };
 
 extern DisplayDriverApi g_DDI;
@@ -223,7 +224,7 @@ public:
       }
    };
 typedef std::vector<ColoredStref_> ColoredStrefs;
-extern COL VidWrColoredStrefs( LINE yLine, COL xCol, const ColoredStrefs &csrs, bool fFlushNow=true );
+extern COL VidWrColoredStrefs( LINE yLine, COL xCol, const ColoredStrefs &csrs, eFlush fFlushNow=eFlush::doFlush );
 
 extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, PCChar pszPrompt, ... ) ATTR_FORMAT(4, 5);
 extern   int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResponse, int chDfltMacroResponse, const ColoredStrefs &csrs );

@@ -2747,7 +2747,7 @@ STATIC_FXN void RedrawScreen() {
             alc.PutColor( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorIndex );
             }
          (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
-         VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, false );
+         VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, eFlush::doFlush );
          }
       ShowDraws( *pLbf++ = ch; )
       }
@@ -2915,8 +2915,8 @@ void DispRefreshWholeScreenNow_()            { DispNeedsRedrawTotal_(); DispDoPe
 
 // NOTE: xCol & yLine are WITHIN CONSOLE WINDOW !!!
 
-STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fFlushNow ) {
-   VideoFlusher vf( fFlushNow );
+STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, eFlush fFlushNow ) {
+   VideoFlusher vf( fFlushNow==eFlush::doFlush );
    FULL_DB && DBG( "%s+", __func__ );
    auto lastColor(0);
    for( auto ix(0) ; maxCharsToDisp > 0 && alc->inRange( ix ) ; ) {
@@ -2944,8 +2944,8 @@ void LineColors::Cat( const LineColors &rhs ) {  0 && DBG( "CAT[%3d]", cols() );
       }
    }
 
-COL VidWrColoredStrefs( LINE yLine, COL xCol, const ColoredStrefs &csrs, bool fFlushNow ) {
-   VideoFlusher vf( fFlushNow );
+COL VidWrColoredStrefs( LINE yLine, COL xCol, const ColoredStrefs &csrs, eFlush fFlushNow ) {
+   VideoFlusher vf( fFlushNow==eFlush::doFlush );
    for( const auto &csr : csrs ) {
       xCol += csr.VidWr( yLine, xCol );
       }
@@ -2965,7 +2965,7 @@ public:
    int  textcols() const { return d_curLen; }
    void Cat( int ColorIdx, stref src );
    void Cat( const ColoredLine &rhs );
-   void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), &d_alc, true ); }
+   void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), &d_alc, eFlush::doFlush ); }
    };
 
 void ColoredLine::Cat( int ColorIdx, stref src ) {
@@ -3253,7 +3253,7 @@ STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, int, ePad ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
-STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, const LineColors *, bool ) {
+STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, const LineColors *, eFlush fFlushNow ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
