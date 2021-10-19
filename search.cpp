@@ -210,7 +210,7 @@ void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
    if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &s_chRex, sizeof(s_chRex) ) ); }
                       csrs.emplace_back( ss_color    , d_SrchDispStr );
    if( d_fIsRegex ) { csrs.emplace_back( de_color    , stref( &s_chRex, sizeof(s_chRex) ) ); }
-                      csrs.emplace_back( g_colorInfo , trlr, true );
+                      csrs.emplace_back( g_colorInfo , trlr, ePad::padWSpcsToEol );
    VidWrColoredStrefs( DialogLine(), 0, csrs );
    }
 
@@ -695,7 +695,7 @@ class CharWalkerReplace {
          const auto &ent( d_replaceDope.ReplaceRefs()[ixEnt] );
          const auto rv_only( ent.d_isLit ? d_replaceDope.Literal()[ixCont] : (ixCont < d_captures.size() ? d_captures[ixCont].value() : "") );
          d_promptCsrs.emplace_back( ent.d_isLit ? g_colorInfo : g_colorError, rv_only );
-         d_promptCsrs.emplace_back( g_colorStatus, endq, true );
+         d_promptCsrs.emplace_back( g_colorStatus, endq, ePad::padWSpcsToEol );
          return rv_only;
          }
       d_stReplace.clear();
@@ -710,7 +710,7 @@ class CharWalkerReplace {
             d_promptCsrs.emplace_back( ent.d_isLit ? g_colorInfo : g_colorError, sr );
             }
          }
-      d_promptCsrs.emplace_back( g_colorStatus, endq, true );
+      d_promptCsrs.emplace_back( g_colorStatus, endq, ePad::padWSpcsToEol );
       return stref( d_stReplace );
       }
    const bool        d_fDoAnyReplaceQueries; // only to support Interactive() method

@@ -637,10 +637,10 @@ auto EditPrompt::Write() const -> void  { 0 && DBG( "%p %s: '%s'", this, __func_
    {
    const auto editTextShown( std::min( EditScreenCols() - promptLen, editTextLen ) );
    VideoFlusher vf;
-   VidWrStrColor( DialogLine(), 0        , d_pszPrompt            , promptLen    , d_colorAttribute, false );
-   VidWrStrColor( DialogLine(), promptLen, d_pszEditText+oEditText, editTextShown, g_colorStatus   , false );
+   VidWrStrColor( DialogLine(), 0        , d_pszPrompt            , promptLen    , d_colorAttribute, ePad::noPad );
+   VidWrStrColor( DialogLine(), promptLen, d_pszEditText+oEditText, editTextShown, g_colorStatus   , ePad::noPad );
    if( promptLen + editTextShown < EditScreenCols() ) {
-      VidWrStrColor( DialogLine(), promptLen+editTextShown, " "   , 1            , d_colorAttribute, true  );
+      VidWrStrColor( DialogLine(), promptLen+editTextShown, " "   , 1            , d_colorAttribute, ePad::padWSpcsToEol );
       }
    }
    CursorLocnOutsideView_Set( DialogLine(), d_xCursor - oEditText + promptLen );
@@ -666,7 +666,7 @@ auto GetTextargString_CMD_reader::GetNextCMD( bool fKbInputOnly ) -> PCCMD {
       return rv;
       }
    else { // VWritePrompt() called internal to GetNextCMD_ExpandAnyMacros if needed
-      return GetNextCMD_ExpandAnyMacros( false );
+      return GetNextCMD_ExpandAnyMacros( eOnMacHalt::Continue );
       }
    }
 
@@ -1579,7 +1579,7 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
          const auto pCmd( CmdFromKbdForExec() );
          if( pCmd->IsFnCancel() ) {
             STATIC_CONST char kszCancelled[] = "cancelled";
-            VidWrStrColor( DialogLine(), xCol, kszCancelled, KSTRLEN(kszCancelled), g_colorInfo, false );
+            VidWrStrColor( DialogLine(), xCol, kszCancelled, KSTRLEN(kszCancelled), g_colorInfo, ePad::noPad );
             0 && DBG( "%s- -1", __func__ );
             return -1;
             }
@@ -1592,7 +1592,7 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
          #endif
             {
             fdbk[0] = chMacroPromptResponse = tolower( pCmd->IsFnGraphic() && isprint( pCmd->d_argData.chAscii() ) ? pCmd->d_argData.chAscii() : chDfltInteractiveResponse );
-            VidWrStrColor( DialogLine(), xCol, fdbk, sizeof(fdbk)-1, g_colorInfo, false );
+            VidWrStrColor( DialogLine(), xCol, fdbk, sizeof(fdbk)-1, g_colorInfo, ePad::noPad );
             }
          } while( strchr( szAllowedResponses, chMacroPromptResponse ) == nullptr );
       }                                                       0 && DBG( "%s- '%c'", __func__, chMacroPromptResponse );
@@ -1632,7 +1632,7 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
          const auto pCmd( CmdFromKbdForExec() );
          if( pCmd->IsFnCancel() ) {
             STATIC_CONST char kszCancelled[] = "cancelled";
-            VidWrStrColor( DialogLine(), xCol, kszCancelled, KSTRLEN(kszCancelled), g_colorInfo, false );
+            VidWrStrColor( DialogLine(), xCol, kszCancelled, KSTRLEN(kszCancelled), g_colorInfo, ePad::noPad );
             0 && DBG( "%s- -1", __func__ );
             return -1;
             }
@@ -1645,7 +1645,7 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
          #endif
             {
             fdbk[0] = chMacroPromptResponse = tolower( pCmd->IsFnGraphic() && isprint( pCmd->d_argData.chAscii() ) ? pCmd->d_argData.chAscii() : chDfltInteractiveResponse );
-            VidWrStrColor( DialogLine(), xCol, fdbk, sizeof(fdbk)-1, g_colorInfo, false );
+            VidWrStrColor( DialogLine(), xCol, fdbk, sizeof(fdbk)-1, g_colorInfo, ePad::noPad );
             }
          } while( strchr( szAllowedResponses, chMacroPromptResponse ) == nullptr );
       }              0 && DBG( "%s- '%c'", __func__, chMacroPromptResponse );

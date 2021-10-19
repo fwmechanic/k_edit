@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -107,10 +107,11 @@ protected:
    bool d_fAnyInputFromKbd;
    virtual void  VWritePrompt()   {}
    virtual void  VUnWritePrompt() {}
-           PCCMD GetNextCMD_ExpandAnyMacros( bool fRtnOnMacroHalt );
+           enum class eOnMacHalt { Continue, Return };
+           PCCMD GetNextCMD_ExpandAnyMacros( eOnMacHalt fRtnOnMacroHalt );
 public:
    CMD_reader() : d_fAnyInputFromKbd( false ) {}
-   PCCMD GetNextCMD()               { return GetNextCMD_ExpandAnyMacros( true ); }
+   PCCMD GetNextCMD()               { return GetNextCMD_ExpandAnyMacros( eOnMacHalt::Return ); }
    bool  GotAnyInputFromKbd() const { return d_fAnyInputFromKbd; }
    };
 
@@ -191,10 +192,11 @@ extern int DispScreenRedraws();
 //--------------------------------------------------------------------------------------------
 // Display Driver
 
+enum class ePad { noPad, padWSpcsToEol };
 struct DisplayDriverApi {
    void  (*DisplayNoise)( PCChar buffer );
    void  (*DisplayNoiseBlank)();
-   COL   (*VidWrStrColor    )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, int colorAttribute, bool fPadWSpcsToEol );
+   COL   (*VidWrStrColor    )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, int colorAttribute, ePad pad );
    COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, bool fFlushNow );
    };
 
@@ -204,19 +206,19 @@ extern void ConIO_Shutdown();
 
 #define DisplayNoise( buffer )   (g_DDI.DisplayNoise( buffer ))
 #define DisplayNoiseBlank()      (g_DDI.DisplayNoiseBlank())
-#define VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol )\
- (g_DDI.VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, fPadWSpcsToEol ))
+#define VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, pad )\
+ (g_DDI.VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, pad ))
 #define VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fFlushNow )\
  (g_DDI.VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fFlushNow ))
 
 class ColoredStref_ {
-   const bool    d_padToEol;
+   const ePad    d_pad;
    const uint8_t d_color;
    const stref   d_sr;
 public:
-   ColoredStref_( uint8_t color_, stref sr_, bool padToEol_=false ) : d_padToEol(padToEol_), d_color(color_), d_sr(sr_) {}
+   ColoredStref_( uint8_t color_, stref sr_, ePad pad_=ePad::noPad ) : d_pad(pad_), d_color(color_), d_sr(sr_) {}
    COL VidWr( LINE yLine, COL xCol ) const {
-      VidWrStrColor( yLine, xCol, d_sr.data(), d_sr.length(), d_color, d_padToEol );
+      VidWrStrColor( yLine, xCol, d_sr.data(), d_sr.length(), d_color, d_pad );
       return d_sr.length();
       }
    };
@@ -245,7 +247,7 @@ struct hl_rgn_t {
 //    it will be switched to, newSize will be updated, "OK" status will be returned
 extern bool  VideoSwitchModeToXYOk( Point &newSize );
 
-extern COL   VidWrStrColorFlush(       LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, bool fPadWSpcsToEol );
+extern COL   VidWrStrColorFlush(       LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, ePad pad );
 extern void  DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex );
 extern void  DirectVidClear();
 

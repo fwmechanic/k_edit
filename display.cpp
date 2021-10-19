@@ -2547,13 +2547,13 @@ STATIC_FXN void DispErrMsg( PCChar emsg ) { DBG( "!!! '%s'", emsg );
    ConOut::Bell();
    ConIn::FlushKeyQueueAnythingFlushed();
    // HideCursor();
-   VidWrStrColorFlush( DialogLine(), 0, emsg, Strlen(emsg), g_colorError, true );
+   VidWrStrColorFlush( DialogLine(), 0, emsg, Strlen(emsg), g_colorError, ePad::padWSpcsToEol );
    if( g_fErrPrompt ) {
       STATIC_CONST char szPAK[] = "Press any key...";
-      VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, szPAK, KSTRLEN(szPAK), g_colorError, true );
+      VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, szPAK, KSTRLEN(szPAK), g_colorError, ePad::padWSpcsToEol );
       ConIn::WaitForKey();
-    //VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, " ", 1, g_colorError, true );
-    //VidWrStrColorFlush( DialogLine(), 0, " ", 1, g_colorError, true );
+    //VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, " ", 1, g_colorError, ePad::padWSpcsToEol );
+    //VidWrStrColorFlush( DialogLine(), 0, " ", 1, g_colorError, ePad::padWSpcsToEol );
       }
    else {
       WaitForKey( 1 );
@@ -2579,7 +2579,7 @@ bool ErrorDialogBeepf( PCChar format, ... ) {
 
 int DispRawDialogStr( PCChar st ) {
    const auto showCols( std::min( Strlen( st ), EditScreenCols() ) );
-   VidWrStrColorFlush( DialogLine(), 0, st, showCols, g_colorInfo, true );
+   VidWrStrColorFlush( DialogLine(), 0, st, showCols, g_colorInfo, ePad::padWSpcsToEol );
    return showCols;
    }
 
@@ -2635,14 +2635,14 @@ STATIC_FXN void conDisplayNoise( PCChar buffer ) {
       const auto len( Strlen( buffer ) );
       s_dispNoiseMaxLen = std::max( s_dispNoiseMaxLen, len );
    // NoLessThan( &s_dispNoiseMaxLen, len );
-      VidWrStrColorFlush( StatusLine(), EditScreenCols() - len, buffer, len, g_colorError, true );
+      VidWrStrColorFlush( StatusLine(), EditScreenCols() - len, buffer, len, g_colorError, ePad::padWSpcsToEol );
       }
    }
 
 STATIC_FXN void conDisplayNoiseBlank() {
    if( show_noise() ) {
       if( s_dispNoiseMaxLen && EditScreenCols() > s_dispNoiseMaxLen ) {
-         VidWrStrColorFlush( StatusLine(), EditScreenCols() - s_dispNoiseMaxLen, "", 0, g_colorInfo, true );
+         VidWrStrColorFlush( StatusLine(), EditScreenCols() - s_dispNoiseMaxLen, "", 0, g_colorInfo, ePad::padWSpcsToEol );
          s_dispNoiseMaxLen = 0;
          }
       }
@@ -2923,14 +2923,14 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
       lastColor = alc->colorAt( ix );
       const auto segLen( std::min( alc->runLength( ix ), maxCharsToDisp ) );
       FULL_DB && DBG( "%s Len=%d", __func__, segLen );
-      VidWrStrColor( yLine, xCol, pszStringToDisp, segLen, lastColor, 0 );
+      VidWrStrColor( yLine, xCol, pszStringToDisp, segLen, lastColor, ePad::noPad );
       ix              += segLen;
       xCol            += segLen;
       pszStringToDisp += segLen;
       maxCharsToDisp  -= segLen;
       }
-   if( ScreenCols() > xCol ) { VidWrStrColor( yLine, xCol, " "    , 1, lastColor, true  ); }
-// else                      { VidWrStrColor( yLine, xCol, nullptr, 0, lastColor, false ); }
+   if( ScreenCols() > xCol ) { VidWrStrColor( yLine, xCol, " "    , 1, lastColor, ePad::padWSpcsToEol ); }
+// else                      { VidWrStrColor( yLine, xCol, nullptr, 0, lastColor, ePad::noPad ); }
    FULL_DB && DBG( "%s-", __func__ );
    return xCol;
    }
@@ -3228,9 +3228,9 @@ VideoFlusher::~VideoFlusher() {
       }
    }
 
-STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, bool fPadWSpcs ) { WL( 0, 0 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, fPadWSpcs, src );
+STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, ePad pad ) { WL( 0, 0 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, pad==ePad::padWSpcsToEol, src );
    if( src ) {
-      const auto charsWritten( ConOut::BufferWriteString( src, srcChars, yConsole, xConsole, attr, fPadWSpcs ) );
+      const auto charsWritten( ConOut::BufferWriteString( src, srcChars, yConsole, xConsole, attr, pad==ePad::padWSpcsToEol ) );
       if( charsWritten ) {
          DISP_LL_STAT_COLLECT(++d_stats.screenRedraws);
          s_VideoFlushData.fDidVideoWrite = true;
@@ -3240,16 +3240,16 @@ STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL sr
    return 0;
    }
 
-COL VidWrStrColorFlush( LINE yConsole, COL xConsole, PCChar src, size_t srcChars, int attr, bool fPadWSpcs ) {
+COL VidWrStrColorFlush( LINE yConsole, COL xConsole, PCChar src, size_t srcChars, int attr, ePad pad ) {
    VideoFlusher vf;
-   return VidWrStrColor( yConsole, xConsole, src, srcChars, attr, fPadWSpcs );
+   return VidWrStrColor( yConsole, xConsole, src, srcChars, attr, pad );
    }
 
 //***********************************************************************************************
 
 STATIC_FXN void streamDisplayNoise( PCChar buffer ) {}
 STATIC_FXN void streamDisplayNoiseBlank() {}
-STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, int, bool ) {
+STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, int, ePad ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
@@ -3504,8 +3504,8 @@ void Display_hilite_regex_err( PCChar errMsg, PCChar searchStr, int errOffset ) 
                          csrs.emplace_back( g_colorError , errMsg );
                          csrs.emplace_back( g_colorStatus, ": " );
    if( errOffset > 1 ) { csrs.emplace_back( g_colorInfo  , stref( searchStr            , errOffset -1 )        ); } // leading OK part of pattern
-                         csrs.emplace_back( g_colorError , stref( searchStr+errOffset  , 1            ), !tail );   // err char of pattern
-   if( tail )          { csrs.emplace_back( g_colorInfo  , searchStr+errOffset+1                       ,  tail ); } // post-err part of pattern
+                         csrs.emplace_back( g_colorError , stref( searchStr+errOffset  , 1            ), !tail ? ePad::padWSpcsToEol : ePad::noPad );   // err char of pattern
+   if( tail )          { csrs.emplace_back( g_colorInfo  , searchStr+errOffset+1                       ,  tail ? ePad::padWSpcsToEol : ePad::noPad ); } // post-err part of pattern
    VidWrColoredStrefs( DialogLine(), 0, csrs );
    }
 

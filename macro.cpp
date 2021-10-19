@@ -475,9 +475,9 @@ STIL void RecordCmd( PCCMD pCmd ) {
    SaveCMDInMacroRecordFbuf( pCmd );
    }
 
-PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const bool fRtnNullOnMacroRtn ) { enum{DB=0}; DB && DBG( "+%s", __func__ );
+PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const eOnMacHalt onMacHalt ) { enum{DB=0}; DB && DBG( "+%s", __func__ );
    while(1) {
-      if( fRtnNullOnMacroRtn && s_fRtndFrom_fExecuted_macro ) { DB && DBG( "-%s 0", __func__ );
+      if( eOnMacHalt::Return==onMacHalt && s_fRtndFrom_fExecuted_macro ) { DB && DBG( "-%s 0", __func__ );
          return nullptr;
          }                                                      DB && DBG( ":%s %s", __func__, Interpreter::Interpreting() ? "MACRO?" : "KB?" );
       // much of the complexity that follows is due to the difficulty of
