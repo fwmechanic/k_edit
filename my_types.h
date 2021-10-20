@@ -255,6 +255,11 @@ constexpr bool WithinRangeInclusive( T nLower, T toCheck, T nUpper ) {
    return (toCheck >= nLower && toCheck <= nUpper); // ASSUMES nLower <= nUpper !!!
    }
 
+template <typename E>  // https://stackoverflow.com/a/35937021
+constexpr typename std::underlying_type<E>::type to_underlying(E e) {
+   return static_cast<typename std::underlying_type<E>::type>(e);
+   }
+
 class BoolOneShot { // simple utility functor
    bool first = true;
 public:

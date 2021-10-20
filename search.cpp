@@ -2184,7 +2184,7 @@ LINE CGrepper::WriteOutput
       return numberedMatches;
       }
    const auto PerfCnt( d_pc.Capture() );
-   auto outfile( PseudoBuf( GREP_BUF, true ) );
+   auto outfile( PseudoBuf( ePseudoBufType::GREP, true ) );
    outfile->MakeEmpty();
    outfile->SetTabWidth( d_SrchFile->TabWidth() ); // inherit tabwidth from searched file
                                                            ED && DBG( "WriteOutput: thisMetaLine='%s', origSrchfnm='%s' => '%s'", thisMetaLine, origSrchfnm?origSrchfnm:"", outfile->Name() );

@@ -43,20 +43,21 @@ STATIC_VAR struct {
    PCChar name;
    int    counter;
    } pseudoBufInfo[] = {
-     {"grep"},
-     {"sel"},
+     [to_underlying(ePseudoBufType::GREP)]={"grep"},
+     [to_underlying(ePseudoBufType::SEL )]={"sel"},
    };
 
-PFBUF PseudoBuf( ePseudoBufType pseudoBufType, int fNew ) {
-   auto &selNum( pseudoBufInfo[ pseudoBufType ].counter );
+PFBUF PseudoBuf( ePseudoBufType pseudoBufType, bool fNew ) {
+   auto bti( to_underlying(pseudoBufType) );
+   auto &selNum( pseudoBufInfo[ bti ].counter );
    if( fNew ) {
       ++selNum;
       }
-   return OpenFileNotDir_NoCreate( FmtStr<20>( "<%s.%u>", pseudoBufInfo[ pseudoBufType ].name, selNum ) );
+   return OpenFileNotDir_NoCreate( FmtStr<20>( "<%s.%u>", pseudoBufInfo[ bti ].name, selNum ) );
    }
 
 bool ARG::nextselbuf() {
-   ++pseudoBufInfo[ SEL_BUF ].counter;
+   ++pseudoBufInfo[ to_underlying(ePseudoBufType::SEL) ].counter;
    return true;
    }
 
