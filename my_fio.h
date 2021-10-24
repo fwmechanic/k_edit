@@ -63,7 +63,7 @@ extern bool MoveFileOk( PCChar pszCurFileName, PCChar pszNewFilename );
 #define     CopyFileManuallyOk( pszCurFileName, pszNewFilename )  CopyFileManuallyOk_( pszCurFileName, pszNewFilename, __func__ )
 extern bool CopyFileManuallyOk_( PCChar pszCurFileName, PCChar pszNewFilename, PCChar caller );
 
-#define  VERBOSE_READ   0
+#define  VERBOSE_READ   1
 #if      VERBOSE_READ
 #  define  VR_( x ) x
 #else

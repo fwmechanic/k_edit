@@ -1620,6 +1620,7 @@ STIL void rdNoiseRead() { DisplayNoise( kszRdNoiseRead ); }
 STIL void rdNoiseScan() { DisplayNoise( kszRdNoiseScan ); }
 
 bool FBUF::ReadDiskFileFailed( int hFile ) {
+   MainThreadPerfCounter pc;
    MakeEmpty();
    rdNoiseSeek();
    auto MBCS_skip( 0 );
@@ -1635,7 +1636,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    PChar fileBuf;  AllocBytesNZ( fileBuf, fileBytes+1 );
    fileBuf[fileBytes] = '\0'; // so wcslen works
    VR_(
-      DBG( "ReadDiskFile %s: %uKB buf=[%p..%p)"
+      DBG( "ReadDiskFile %s: %" WL( PR__i64 "u", "ld" ) "KB buf=[%p..%p)"
          , Name()
          , fileBytes/1024
          , fileBuf
@@ -1643,7 +1644,6 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
          );
       )
    rdNoiseRead();
-   MainThreadPerfCounter pc;
    if( !fio::ReadOk( hFile, fileBuf, fileBytes ) ) {
       Free0( fileBuf );
       ErrorDialogBeepf( "Read NOT OK!" );
@@ -1833,23 +1833,22 @@ IS_EOL:
 #if VERBOSE_READ
       NewScope {
          const auto tmScan( pc.Capture() );
-         double pctSCAN( 100 * (tmScan / (tmScan + tmIO)) );
-         unsigned wastedLIbytesNow( (LineInfoCapacity() - LineCount()) * sizeof(*d_paLineInfo) );
+         const double pctSCAN( 100 * (tmScan / (tmScan + tmIO)) );
+         const unsigned wastedLIbytesNow( (LineInfoCapacity() - LineCount()) * sizeof(*d_paLineInfo) );
          STATIC_VAR unsigned wastedLIbytes ;  wastedLIbytes += wastedLIbytesNow   ;
          STATIC_VAR unsigned PredLC        ;  PredLC        += LineInfoCapacity() ;
          STATIC_VAR unsigned actualLC      ;  actualLC      += LineCount()        ;
          STATIC_VAR unsigned files         ;  files         += 1                  ;
-         DBG( "ReadDiskFile Done  scan/IO=%4.1f%%  %7d (avg=%4.1f) wastage=%d/%dKB (%4.1f%%) cum=%dKB (%4.1f%%), %dKB per %d files"
-            , pctSCAN
-            , LineCount()
-            , (static_cast<double>(d_cbOrigFileImage) - numBytesToProcessInImageBuf) / static_cast<double>(LineCount())
-            , wastedLIbytesNow / 1024
-            , LineInfoCapacity() * sizeof(*d_paLineInfo) / 1024
-            , 100.0*(static_cast<double>(LineInfoCapacity()) - LineCount()) / static_cast<double>(LineCount())
-            , wastedLIbytes / 1024
-            , 100.0*(static_cast<double>(PredLC) - actualLC) / (double)actualLC
-            , (wastedLIbytes / 1024) / files
-            , files
+      // DBG( "ReadDiskFile Done  scan/IO=%4.1f%%  %7d (avg=%4.1f) LIuse=%d of %" PR__i64 "uKB (%4.1f%%) cum=%dKB (%4.1f%%), %dKB per %d files"
+         DBG( "ReadDiskFile Done  scan/IO=%4.1f%%  %7d "          "LI now{use=%4.1f%% waste=%5dKB} cum{use=%4.1f%% waste=%5dKB %dKB per file}"
+                                          , pctSCAN
+                                                   , LineCount()
+                                                         // , (static_cast<double>(d_cbOrigFileImage) - numBytesToProcessInImageBuf) / static_cast<double>(LineCount())
+                                                                              , (100.0 * LineCount()) / static_cast<double>(LineInfoCapacity())
+                                                                                            , wastedLIbytesNow / 1024
+                                                                                                           , (100.0 * actualLC) / static_cast<double>(PredLC)
+                                                                                                                         , wastedLIbytes / 1024
+                                                                                                                               , (wastedLIbytes / 1024) / files
             );
          }
 #endif
