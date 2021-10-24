@@ -3357,6 +3357,7 @@ void View::GetLineForDisplay
    , const LINE               yLineOfFile
    , const bool               isActiveWindow
    ) const {
+   COL xPctposWidth = 0; COL xPctposLeft = 0;
    const auto isActiveLine( isActiveWindow && g_CursorLine() == yLineOfFile );
    dest.replace( xLeft, xWidth, xWidth, ' ' ); // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
    if( yLineOfFile > CFBuf()->LastLine() ) {
@@ -3376,7 +3377,9 @@ void View::GetLineForDisplay
          const auto percent( static_cast<UI>((100.0 * yLineOfFile) / CFBuf()->LastLine()) );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
          stref pct( pctst.c_str() );
-         dest.replace( xLeft + xWidth - pct.length(), pct.length(), pct.data() );
+         xPctposWidth = pct.length();
+         xPctposLeft = xLeft + xWidth - xPctposWidth;
+         dest.replace( xPctposLeft, xPctposWidth, pct.data() );
          }
       }
    InsertHiLitesOfLineSeg(  // patch in any hilites [which MAY be present when yLineOfFile > CFBuf()->LastLine(); think "cursorline highlight" or selecting beyond EOF]
@@ -3385,6 +3388,9 @@ void View::GetLineForDisplay
       , Origin().col + xWidth - 1
       , alcc, pFirstPossibleHiLite, isActiveWindow, isActiveLine
       );
+   if( xPctposWidth ) {
+      alcc.PutColorval( xPctposLeft, xPctposWidth, bgBLK|fgDGR );
+      }
    }
 
 void Win::GetLineForDisplay
