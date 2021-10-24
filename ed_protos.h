@@ -197,8 +197,8 @@ enum class ePad { noPad, padWSpcsToEol };
 struct DisplayDriverApi {
    void  (*DisplayNoise)( PCChar buffer );
    void  (*DisplayNoiseBlank)();
-   COL   (*VidWrStrColor    )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, int colorAttribute, ePad pad );
-   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, eFlush doFlush );
+   COL   (*VidWrStrColor    )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, colorval_t colorAttribute, ePad pad );
+   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColorvals * alc, eFlush doFlush );
    };
 
 extern DisplayDriverApi g_DDI;
@@ -239,17 +239,17 @@ extern bool  ErrorDialogBeepf(  PCChar format, ... ) ATTR_FORMAT(1, 2);
 extern void  Event_ScreenSizeChanged( const Point &newSize );
 
 struct hl_rgn_t {
-   const int  color;
+   const ColorTblIdx color;
    const Rect rgn;
-   hl_rgn_t( int color_, LINE yulc_, COL xulc_, LINE ylrc_, COL xlrc_ ) : color( color_ ), rgn( yulc_, xulc_, ylrc_, xlrc_ ) {}
+   hl_rgn_t( ColorTblIdx color_, LINE yulc_, COL xulc_, LINE ylrc_, COL xlrc_ ) : color( color_ ), rgn( yulc_, xulc_, ylrc_, xlrc_ ) {}
    };
 
 // if newSize is not supported, and a supported size can be switched to:
 //    it will be switched to, newSize will be updated, "OK" status will be returned
 extern bool  VideoSwitchModeToXYOk( Point &newSize );
 
-extern COL   VidWrStrColorFlush(       LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, int colorIndex, ePad pad );
-extern void  DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex );
+extern COL   VidWrStrColorFlush(       LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, colorval_t attr, ePad pad );
+extern void  DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr );
 extern void  DirectVidClear();
 
 class VideoFlusher {

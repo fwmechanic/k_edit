@@ -62,7 +62,7 @@ enum { // these are COLOR CODES!
    FGbase=0x07, BGbase=0x70,
    };
 
-typedef uint8_t colorval_t;
+typedef uint8_t colorval_t;  // as comprehended by the system's conio API; a.k.a. color attribute a.k.a. attr
 
 struct YX_t {
    int  lin;

@@ -524,7 +524,7 @@ bool FBUF::RefreshFailedShowError() {
 
 //=============================================================================================
 
-void View::SetStrHiLite( const Point &pt, COL Cols, int color ) {
+void View::SetStrHiLite( const Point &pt, COL Cols, ColorTblIdx color ) {
    const auto hiliteWidth( Cols > 0 ? Cols : 1 );
    InsHiLite1Line( color, pt.lin, pt.col, pt.col + hiliteWidth - 1 );
    }

@@ -76,16 +76,16 @@ void DbgHilite_( char ch, PCChar func ) {
       system about what it needs to do
 */
 
-class LineColors {
+class LineColorvals {
    enum { END_MARKER=0, ELEMENTS_=BUFBYTES };  // one simplifying assumption: color==0 is not used (used for EOS)
-   uint8_t b[ ELEMENTS_+1 ];
+   colorval_t d_acv[ ELEMENTS_+1 ];
 public:
-   bool    inRange( int ix ) const { return ix < ELEMENTS(b); }
-   uint8_t colorAt( int ix ) const { return b[ ix ]; }
-   int     cols()            const { return Strlen( PCChar(&b[0]) ); }  // BUGBUG assumes END_MARKER == 0 !
-   LineColors( uint8_t initcolor=END_MARKER ) {
-      for( auto &ch : b ) { ch = initcolor; }
-      b[ ELEMENTS_ ] = END_MARKER;
+   bool       inRange( int ix ) const { return ix < ELEMENTS(d_acv); }
+   colorval_t colorAt( int ix ) const { return d_acv[ ix ]; }
+   int        cols()            const { return Strlen( PCChar(&d_acv[0]) ); }  // BUGBUG assumes END_MARKER == 0 !
+   LineColorvals( colorval_t initcolor=END_MARKER ) {
+      for( auto &ch : d_acv ) { ch = initcolor; }
+      d_acv[ ELEMENTS_ ] = END_MARKER;
       }
    int runLength( int ix ) const {
       if( !inRange( ix ) ) { return 0; }
@@ -94,25 +94,25 @@ public:
       for( ++ix ; inRange( ix ) && colorAt( ix ) == color ; ++ix ) {}
       return ix - ix0;
       }
-   void PutColor( int ix, int len, int color ) {
+   void PutColorval( int ix, int len, colorval_t color ) {
       const auto maxIx( ix+len );
       for( ; ix < maxIx && inRange( ix ) ; ++ix ) {
-         b[ ix ] = uint8_t(color);
+         d_acv[ ix ] = color;
          }
       }
-   void Cat( const LineColors &rhs );
+   void Cat( const LineColorvals &rhs );
    };
 
 class LineColorsClipped {
-   const View       &d_view       ;
-         LineColors &d_alc        ;
-   const int         d_idxWinLeft ;  // LineColors ix of leftmost visible char
-   const COL         d_colWinLeft ;
-   const int         d_width      ;
+   const View          &d_view       ;
+         LineColorvals &d_lcvs       ;
+   const int            d_idxWinLeft ;  // LineColorvals ix of leftmost visible char
+   const COL            d_colWinLeft ;
+   const int            d_width      ;
 public:
-   LineColorsClipped( const View &view, LineColors &alc, int idxWinLeft, int colWinLeft, int width )
+   LineColorsClipped( const View &view, LineColorvals &lcvs, int idxWinLeft, int colWinLeft, int width )
       : d_view       ( view       )
-      , d_alc        ( alc        )
+      , d_lcvs       ( lcvs       )
       , d_idxWinLeft ( idxWinLeft )
       , d_colWinLeft ( colWinLeft )
       , d_width      ( width      )
@@ -120,15 +120,15 @@ public:
       }
    COL GetMinColInDisp() const { return d_colWinLeft; }
    COL GetMaxColInDisp() const { return d_colWinLeft+d_width-1; }
-   void PutColorRaw( int col, int len, int color ) {                 0 && DBG( "%s a: %3d L %3d", __func__, col, len );
+   void PutColorval( int col, int len, colorval_t color ) {          0 && DBG( "%s a: %3d L %3d", __func__, col, len );
       if( col > d_colWinLeft+d_width || col + len < d_colWinLeft ) { return; }
       const auto colMin( std::max( col      , d_colWinLeft      ) ); 0 && DBG( "%s b: %3d L %3d", __func__, col, len );
       const auto colMax( std::min( col+len-1, GetMaxColInDisp() ) );
       const auto ixMin( colMin - d_colWinLeft + d_idxWinLeft );
       const auto ixMax( colMax - d_colWinLeft + d_idxWinLeft );      0 && DBG( "%s c: %3d L %3d", __func__, ixMin, ixMax );
-      d_alc.PutColor( ixMin, ixMax - ixMin+1, color );
+      d_lcvs.PutColorval( ixMin, ixMax - ixMin+1, color );
       }
-   void PutColor( int col, int len, int colorIdx ) { PutColorRaw( col, len, d_view.ColorIdx2Attr( colorIdx ) ); }
+   void PutColorTblIdx( int col, int len, ColorTblIdx colorIdx ) { PutColorval( col, len, d_view.ColorIdxToColorval( colorIdx ) ); }
    };
 
 #if VARIABLE_WINBORDER
@@ -214,7 +214,7 @@ struct FTypeSetting {
    enum { DB=0 };
    std::string d_ftypeName;  // rbtree key
    std::string d_hiliteName;
-   colorval_t  d_colors[ ColorTblIdx::VIEW_COLOR_COUNT ];
+   colorval_t  d_colors[ to_underlying(ColorTblIdx::VIEW_COLOR_COUNT) ];
    constexpr STATIC_FXN int d_colors_ELEMENTS() { return ELEMENTS(d_colors); }
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
    void  Update();
@@ -259,14 +259,14 @@ void FTypeSetting::Update() {
    {
    STATIC_CONST struct { PCChar pLuaName; size_t ofs; int dflt; } s_color2Lua[] = { // contents init'd from $KINIT:k.filesettings
    #define SINIT( nm, idx, dflt )  { #nm, idx, dflt }
-      SINIT( txt , ColorTblIdx::TXT , bgBLU|fgYEL ),
-      SINIT( hil , ColorTblIdx::HIL , bgCYN|fgWHT ),
-      SINIT( sel , ColorTblIdx::SEL , bgGRN|fgWHT ),
-      SINIT( wuc , ColorTblIdx::WUC , bgWHT|fgGRN ),
-      SINIT( cxy , ColorTblIdx::CXY , bgRED|fgWHT ),
-      SINIT( cpp , ColorTblIdx::CPP , bgBLK|fgBRN ),
-      SINIT( com , ColorTblIdx::COM , bgBLK|fgMGR ),
-      SINIT( str , ColorTblIdx::STR , bgBLU|fgBRN ),
+      SINIT( txt , to_underlying(ColorTblIdx::TXT) , bgBLU|fgYEL ),
+      SINIT( hil , to_underlying(ColorTblIdx::HIL) , bgCYN|fgWHT ),
+      SINIT( sel , to_underlying(ColorTblIdx::SEL) , bgGRN|fgWHT ),
+      SINIT( wuc , to_underlying(ColorTblIdx::WUC) , bgWHT|fgGRN ),
+      SINIT( cxy , to_underlying(ColorTblIdx::CXY) , bgRED|fgWHT ),
+      SINIT( cpp , to_underlying(ColorTblIdx::CPP) , bgBLK|fgBRN ),
+      SINIT( com , to_underlying(ColorTblIdx::COM) , bgBLK|fgMGR ),
+      SINIT( str , to_underlying(ColorTblIdx::STR) , bgBLU|fgBRN ),
    #undef SINIT
       }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
    const auto w3( w2.cpy( ".colors." ) );
@@ -317,7 +317,8 @@ void Reread_FTypeSettings() {                                           FTypeSet
       }                                                                 FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
-int View::ColorIdx2Attr( int colorIdx ) const {
+colorval_t View::ColorIdxToColorval( ColorTblIdx cti ) const {
+   auto colorIdx = to_underlying(cti);
    if( colorIdx >= 0 ) {
       if( colorIdx < FTypeSetting::d_colors_ELEMENTS() ) {
          constexpr auto unknownColor( bgBLU|fgCYN|FGhi );
@@ -329,7 +330,7 @@ int View::ColorIdx2Attr( int colorIdx ) const {
          &g_colorStatus    ,
          &g_colorWndBorder ,
          &g_colorError     ,
-         }; static_assert( ELEMENTS(s_colorVars) == (ColorTblIdx::COLOR_COUNT - FTypeSetting::d_colors_ELEMENTS()), "ELEMENTS(s_colorVars) == ColorTblIdx::COLOR_COUNT" );
+         }; static_assert( ELEMENTS(s_colorVars) == (to_underlying(ColorTblIdx::COLOR_COUNT) - FTypeSetting::d_colors_ELEMENTS()), "ELEMENTS(s_colorVars) == ColorTblIdx::COLOR_COUNT" );
       colorIdx -= FTypeSetting::d_colors_ELEMENTS();
       if( colorIdx < ELEMENTS(s_colorVars) ) {
          return *s_colorVars[ colorIdx ];
@@ -399,7 +400,7 @@ protected:
          LINE   MinVisibleFbufLine()  const { return d_view.MinVisibleFbufLine(); }
          LINE   MaxVisibleFbufLine()  const { return d_view.MaxVisibleFbufLine(); }
          bool   isActiveWindow()      const { return d_view.isActive(); }
-   int  ColorIdx2Attr( int colorIdx ) const { return d_view.ColorIdx2Attr( colorIdx ); }
+   colorval_t ColorIdxToColorval( ColorTblIdx colorIdx ) const { return d_view.ColorIdxToColorval( colorIdx ); }
    NO_COPYCTOR(HiliteAddin);
    NO_ASGN_OPR(HiliteAddin);
    void DispNeedsRedrawAllLines() { d_view.RedrawAllVisbleLines(); }
@@ -432,7 +433,7 @@ void HiliteAddin_Pbal::VCursorMoved( bool fUpdtWUC ) {
 
 bool HiliteAddin_Pbal::VHilitLineSegs( LINE yLine, LineColorsClipped &alcc ) {
    if( d_fPbalMatchValid && d_ptPbalMatch.lin == yLine ) { 0 && DBG( "HiliteAddin_Pbal::HilitLine %d %d", d_ptPbalMatch.lin, yLine );
-      alcc.PutColor( d_ptPbalMatch.col, 1, ColorTblIdx::WND );
+      alcc.PutColorTblIdx( d_ptPbalMatch.col, 1, ColorTblIdx::WND );
       }
    return false;
    }
@@ -764,7 +765,7 @@ STATIC_FXN bool HilitWucLineSegs
                     && (yLine != cursor.lin || cursor.col < xFound || cursor.col > xFound + mlen - 1)  // DON'T hilite actual WUC (it's visually annoying)
                     )
                  ) {
-                  alcc.PutColor( xFound, mlen, fMatchesFirstNeedle ? ColorTblIdx::HIL : ColorTblIdx::WUC );
+                  alcc.PutColorTblIdx( xFound, mlen, fMatchesFirstNeedle ? ColorTblIdx::HIL : ColorTblIdx::WUC );
                   ixStart = ixFirstMatch + mlen;   // xWUCXxWUCXxWUCXxWUCX
                   }
                else {
@@ -966,12 +967,12 @@ bool HiliteAddin_cond_CPP::VHilitLine( LINE yLine, COL xIndent, LineColorsClippe
       const auto &line( d_PerViewableLine[ lineInWindow ].line );
       // highlight any CPPcond that occurs on this line
       if( cppcNone != line.acppc ) {
-         alcc.PutColor( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, ColorTblIdx::CPP );
+         alcc.PutColorTblIdx( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, ColorTblIdx::CPP );
          }
       // continue any "surrounds" of other highlit CPPconds above/below
       for( auto level_idx(line.level_ix) ; level_idx > -1 ; level_idx = d_PerViewableLine[ level_idx ].level.containing_level_idx ) {
          const auto xBar( d_PerViewableLine[ level_idx ].level.xBox );
-         alcc.PutColor( xBar, 1, ColorTblIdx::CPP );
+         alcc.PutColorTblIdx( xBar, 1, ColorTblIdx::CPP );
          }
       }
    catch( const std::out_of_range& exc ) {
@@ -1040,7 +1041,7 @@ public:
    };
 bool HiliteAddin_CompileLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
    if( LineIs_LineCompile( yLine ) ) {
-      alcc.PutColor( 0, COL_MAX, ColorTblIdx::CXY );
+      alcc.PutColorTblIdx( 0, COL_MAX, ColorTblIdx::CXY );
       }
    return false;
    }
@@ -1095,7 +1096,7 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          IdxCol_cached conv( CFBuf()->TabWidth(), rl );
          const auto xC  ( conv.i2c( ixTgt                         ) );
          const auto xPWS( conv.i2c( rl.find_last_not_of( SPCTAB ) ) );
-         alcc.PutColor( xC, xPWS - xC + 1, ColorTblIdx::COM ); // len extends 1 char into dead space beyond line text: is cosmetically appealing
+         alcc.PutColorTblIdx( xC, xPWS - xC + 1, ColorTblIdx::COM ); // len extends 1 char into dead space beyond line text: is cosmetically appealing
          }
       }
    return false;
@@ -1136,11 +1137,11 @@ class HiliteAddin_StreamParse : public HiliteAddin {
    bool d_counting = false; // scan_pass() called 2x: 1: counting, 2: collecting
    unsigned d_num_hl_rgns_found = 0;
    std::vector<hl_rgn_t> d_hl_rgns;
-   void add_hl_rgn( int color, LINE yulc, COL xulc, LINE ylrc, COL xlrc ) {
+   void add_hl_rgn( ColorTblIdx color, LINE yulc, COL xulc, LINE ylrc, COL xlrc ) {
       if( d_counting ) {
          ++d_num_hl_rgns_found;
          }
-      else {                                                       0 && DBG( "%02X: %d,%d-%d,%d", color, yulc, xulc, ylrc, xlrc );
+      else {                                                       0 && DBG( "%02X: %d,%d-%d,%d", to_underlying(color), yulc, xulc, ylrc, xlrc );
          d_hl_rgns.emplace_back( color, yulc, xulc, ylrc, xlrc );
          }
       }
@@ -1177,7 +1178,7 @@ bool HiliteAddin_StreamParse::VHilitLine( const LINE yLine, const COL xIndent, L
             const auto &hl( d_hl_rgns[ix] );
             const auto xMin( hl.rgn.flMin.lin == yLine ? conv.i2c( hl.rgn.flMin.col ) :          0 );
             const auto xMax( hl.rgn.flMax.lin == yLine ? conv.i2c( hl.rgn.flMax.col ) : xMaxOfLine );  0 && DBG( "hl %d [%d] %d L %d", yLine, ix, xMin, xMax-xMin+1 );
-            alcc.PutColor( xMin, xMax-xMin+1, hl.color );
+            alcc.PutColorTblIdx( xMin, xMax-xMin+1, hl.color );
             }
          }
       return false;
@@ -1914,8 +1915,8 @@ bool HiliteAddin_Diff::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &a
    const auto rl( CFBuf()->PeekRawLine( yLine ) );
    if( !rl.empty() ) {
       switch( rl[0] ) {
-         case '+': alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgGRN|FGhi ); /*DBG( "+" );*/ break;
-         case '-': alcc.PutColorRaw( 0, COL_MAX, bgBLK|fgRED|FGhi ); /*DBG( "-" );*/ break;
+         case '+': alcc.PutColorval( 0, COL_MAX, bgBLK|fgGRN|FGhi ); /*DBG( "+" );*/ break;
+         case '-': alcc.PutColorval( 0, COL_MAX, bgBLK|fgRED|FGhi ); /*DBG( "-" );*/ break;
          default: break;
          }
       }
@@ -1996,9 +1997,9 @@ struct HiLiteRec {
    // horizontally, hilite col 0 is the leftmost visible column).
    //
    Rect                  rect;
-   int                   colorIndex;
+   ColorTblIdx           colorIndex;
    DLinkEntry<HiLiteRec> dlink;
-   HiLiteRec( const Rect &rect_, int colorIndex_ )
+   HiLiteRec( const Rect &rect_, ColorTblIdx colorIndex_ )
       : rect(rect_)
       , colorIndex( colorIndex_ )
       {
@@ -2023,7 +2024,7 @@ class ViewHiLites {
    const HiLiteRec  *FirstHiLiteAtOrAfter( LINE yLine ) const;
    ViewHiLites( PCFBUF pFBuf );
    int  SpeedTableIndex( LINE yLine ) const { return std::min( ::SpeedTableIndex( yLine ), d_SpeedTable.size()-1 ); }
-   void vhInsHiLiteBox( int newColorIdx, Rect newRgn );
+   void vhInsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn );
    void PrimeRedraw() const;
    int  InsertHiLitesOfLineSeg( LINE yLine, COL Indent, COL xMax, LineColorsClipped &alcc, const HiLiteRec * &pFirstPossibleHiLite ) const;
 public:
@@ -2101,10 +2102,10 @@ void ViewHiLites::UpdtSpeedTbl( HiLiteRec *pThis ) {
         }
    }
 
-void ViewHiLites::vhInsHiLiteBox( int newColorIdx, Rect newRgn ) {
+void ViewHiLites::vhInsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
    DbgHilite( '+' );
    FBOP::PrimeRedrawLineRangeAllWin( &d_FBuf, newRgn.flMin.lin, newRgn.flMax.lin );
-   DBGHILITE && DBG( "SetHiLite   c=%02X [%d-%d] [%d-%d]", newColorIdx, newRgn.flMin.lin, newRgn.flMax.lin, newRgn.flMin.col, newRgn.flMax.col );
+   DBGHILITE && DBG( "SetHiLite   c=%02X [%d-%d] [%d-%d]", to_underlying(newColorIdx), newRgn.flMin.lin, newRgn.flMax.lin, newRgn.flMin.col, newRgn.flMax.col );
    auto &Head( d_HiLiteList );
    // walk last to first: THIS IS A LOT FASTER in the heaviest-usage case (searchall) where hilites are added at ever-higher line numbers
    int ix = 0;
@@ -2136,14 +2137,14 @@ void ViewHiLites::vhInsHiLiteBox( int newColorIdx, Rect newRgn ) {
    DbgHilite( '-' );
    }
 
-void View::InsHiLiteBox( int newColorIdx, Rect newRgn ) {
+void View::InsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
    if( !d_pHiLites ) {
         d_pHiLites = new ViewHiLites( CFBuf() );
         }
    d_pHiLites->vhInsHiLiteBox( newColorIdx, newRgn );
    }
 
-void View::InsHiLite1Line( int newColorIdx, LINE yLine, COL xLeft, COL xRight ) {
+void View::InsHiLite1Line( ColorTblIdx newColorIdx, LINE yLine, COL xLeft, COL xRight ) {
    Rect newRgn;
    newRgn.flMin.lin = newRgn.flMax.lin = yLine;
    newRgn.flMin.col = xLeft;
@@ -2160,7 +2161,7 @@ int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, Lin
         }
    auto rv(0);
    for( auto pHL(pFirstPossibleHiLite) ; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
-      const auto &Rn( pHL->rect );              0 && DBG( "HL L %5d: c=%02X [%d-%d] [%d-%d]", yLine, pHL->colorIndex, Rn.flMin.lin, Rn.flMax.lin, Rn.flMin.col, Rn.flMax.col );
+      const auto &Rn( pHL->rect );              0 && DBG( "HL L %5d: ci=%02d [%d-%d] [%d-%d]", yLine, to_underlying(pHL->colorIndex), Rn.flMin.lin, Rn.flMax.lin, Rn.flMin.col, Rn.flMax.col );
       const auto lcmp( Rn.cmp_line( yLine ) );
       if( lcmp < 0 ) {  // performance improv: since list is sorted, there's NO reason
          break;         // to walk the whole damned thing when we'll never have another match!
@@ -2181,8 +2182,8 @@ int  ViewHiLites::InsertHiLitesOfLineSeg( LINE yLine, COL xIndent, COL xMax, Lin
                auto xLeft( std::max( xIndent, rn_xMin )          );
          const auto Len  ( std::min( xMax, rn_xMax ) - xLeft + 1 );
                     xLeft -= xIndent;
-         0 && DBG( "HL C! %d L %d ci=%02X", xLeft, Len, pHL->colorIndex );
-         alcc.PutColor( xLeft+xIndent, Len, pHL->colorIndex );
+         0 && DBG( "HL C! %d L %d ci=%02d", xLeft, Len, to_underlying(pHL->colorIndex) );
+         alcc.PutColorTblIdx( xLeft+xIndent, Len, pHL->colorIndex );
          ++rv;
          }
       }
@@ -2213,19 +2214,19 @@ bool HiliteAddin_CursorLine::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
    const auto isActiveWindow_( isActiveWindow() );
    const auto isCursorLine( isActiveWindow_ && g_CursorLine() == yLine );
    if( isCursorLine ) {
-      alcc.PutColor( 0            , COL_MAX, ColorTblIdx::CXY );
+      alcc.PutColorTblIdx( 0            , COL_MAX, ColorTblIdx::CXY );
       if( DrawVerticalCursorHilite() ) {
          return true;
          }
       }
    else {
       if( isActiveWindow_ && DrawVerticalCursorHilite() ) {
-         alcc.PutColor( 0            , COL_MAX, ColorTblIdx::TXT  );
-         alcc.PutColor( g_CursorCol(),       1, ColorTblIdx::CXY );
+         alcc.PutColorTblIdx( 0            , COL_MAX, ColorTblIdx::TXT  );
+         alcc.PutColorTblIdx( g_CursorCol(),       1, ColorTblIdx::CXY );
          return true;
          }
       if( !USE_HiliteAddin_CompileLine && LineIs_LineCompile( yLine ) ) {
-         alcc.PutColor( 0            , COL_MAX, ColorTblIdx::STS );
+         alcc.PutColorTblIdx( 0            , COL_MAX, ColorTblIdx::STS );
          }
       }
    return false;
@@ -2427,11 +2428,11 @@ bool ViewPersistentInitOk( ViewPersistent &vp, PChar viewSaveRec ) {
 
 struct direct_vid_seg {
    Point       d_origin;
-   int         d_colorIndex;
+   colorval_t  d_colorval;
    std::string d_str;
-   direct_vid_seg( Point origin, int colorIndex, stref sr )
+   direct_vid_seg( Point origin, colorval_t colorval, stref sr )
      : d_origin( origin )
-     , d_colorIndex( colorIndex )
+     , d_colorval( colorval )
      , d_str( sr )
      {}
    };
@@ -2732,22 +2733,22 @@ STATIC_FXN void RedrawScreen() {
    for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) { ShowDraws( char ch = ' '; )
       if( s_paScreenLineNeedsRedraw->IsBitSet( yLine ) ) {
          ShowDraws( ch = '0' + (yLine % 10); )
-         LineColors alc;
+         LineColorvals lcvs;
          { FULL_DB && DBG( "%s y=%d", FUNC, yLine );
          buf.assign( scrnCols, H__ ); //***** initial assumption: this line is a horizontal border ('Í')
-         alc.PutColor( 0, scrnCols, g_colorWndBorder );
+         lcvs.PutColorval( 0, scrnCols, g_colorWndBorder );
          for( auto ix(0) ; ix < g_WindowCount(); ++ix ) {
-            g_Win(ix)->GetLineForDisplay( ix, buf, alc, pFirstPossibleHiLite, yLine );
+            g_Win(ix)->GetLineForDisplay( ix, buf, lcvs, pFirstPossibleHiLite, yLine );
             }
          }
          for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin <  yLine ; ++dvsit ) {
             }
          for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin == yLine ; ++dvsit ) {
             buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
-            alc.PutColor( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorIndex );
+            lcvs.PutColorval( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorval );
             }
          (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
-         VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &alc, eFlush::doFlush );
+         VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &lcvs, eFlush::doFlush );
          }
       ShowDraws( *pLbf++ = ch; )
       }
@@ -2910,18 +2911,18 @@ void DispRefreshWholeScreenNow_()            { DispNeedsRedrawTotal_(); DispDoPe
 //
 // Some API's "think" in ColorTblIdx::codes.  Chief among these are the InsHiLite
 // (Box, Lines) family.  Internally, these directly xlat ColorTblIdx::codes to
-// attributes using ColorIdx2Attr().
+// attributes using ColorIdxToColorval().
 //
 
 // NOTE: xCol & yLine are WITHIN CONSOLE WINDOW !!!
 
-STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColors * alc, eFlush fFlushNow ) {
+STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColorvals * lcvs, eFlush fFlushNow ) {
    VideoFlusher vf( fFlushNow==eFlush::doFlush );
    FULL_DB && DBG( "%s+", __func__ );
    auto lastColor(0);
-   for( auto ix(0) ; maxCharsToDisp > 0 && alc->inRange( ix ) ; ) {
-      lastColor = alc->colorAt( ix );
-      const auto segLen( std::min( alc->runLength( ix ), maxCharsToDisp ) );
+   for( auto ix(0) ; maxCharsToDisp > 0 && lcvs->inRange( ix ) ; ) {
+      lastColor = lcvs->colorAt( ix );
+      const auto segLen( std::min( lcvs->runLength( ix ), maxCharsToDisp ) );
       FULL_DB && DBG( "%s Len=%d", __func__, segLen );
       VidWrStrColor( yLine, xCol, pszStringToDisp, segLen, lastColor, ePad::noPad );
       ix              += segLen;
@@ -2937,10 +2938,10 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
 
 // STATIC_CONST char EntabDispChar[] = "nyY"; static_assert( KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID, "KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID" );
 
-void LineColors::Cat( const LineColors &rhs ) {  0 && DBG( "CAT[%3d]", cols() );
+void LineColorvals::Cat( const LineColorvals &rhs ) {  0 && DBG( "CAT[%3d]", cols() );
    auto iy(0);
    for( auto ix(cols()) ; inRange( ix ) && rhs.inRange( iy ) && (END_MARKER != rhs.colorAt( iy )) ; ++ix, ++iy ) {
-      b[ ix ] = rhs.colorAt( iy );
+      d_acv[ ix ] = rhs.colorAt( iy );
       }
    }
 
@@ -2953,9 +2954,9 @@ COL VidWrColoredStrefs( LINE yLine, COL xCol, const ColoredStrefs &csrs, eFlush 
    }
 
 class ColoredLine {
-   size_t      d_curLen;
-   linebuf     d_charBuf;
-   LineColors  d_alc;
+   size_t        d_curLen;
+   linebuf       d_charBuf;
+   LineColorvals d_lcvs;
 public:
    ColoredLine()
       : d_curLen( 0 )
@@ -2963,16 +2964,16 @@ public:
       d_charBuf[0] = '\0';
       }
    int  textcols() const { return d_curLen; }
-   void Cat( int ColorIdx, stref src );
+   void Cat( ColorTblIdx ColorIdx, stref src );
    void Cat( const ColoredLine &rhs );
-   void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), &d_alc, eFlush::doFlush ); }
+   void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), &d_lcvs, eFlush::doFlush ); }
    };
 
-void ColoredLine::Cat( int ColorIdx, stref src ) {
-   const auto attr( g_CurView()->ColorIdx2Attr( ColorIdx ) );
+void ColoredLine::Cat( ColorTblIdx ColorIdx, stref src ) {
+   const auto attr( g_CurView()->ColorIdxToColorval( ColorIdx ) );
    const auto cpyLen( std::min( src.length(), (int(sizeof(d_charBuf))-1) - d_curLen) );
    if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3" PR_SIZET "..%3" PR_SIZET "] %02X %" PR_BSR "", d_curLen, d_curLen+cpyLen-1, attr, BSR(src) );
-      d_alc.PutColor( d_curLen, cpyLen, attr );
+      d_lcvs.PutColorval( d_curLen, cpyLen, attr );
       memcpy( d_charBuf + d_curLen, src.data(), cpyLen );
       d_curLen += cpyLen;
       d_charBuf[ d_curLen ] = '\0';
@@ -2983,7 +2984,7 @@ void ColoredLine::Cat( const ColoredLine &rhs ) {
    memcpy( d_charBuf + d_curLen, rhs.d_charBuf, rhs.d_curLen );
    d_curLen += rhs.d_curLen;
    d_charBuf[ d_curLen ] = '\0';
-   d_alc.Cat( rhs.d_alc );
+   d_lcvs.Cat( rhs.d_lcvs );
    }
 
 STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" );
@@ -3103,7 +3104,7 @@ void DirectVidClear() {
    UpdtDisplay();
    }
 
-void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) {
+void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr ) {
    if( !(yLine >= 0 && yLine < ScreenLines()) ) { return; }
    if( xCol < 0 ) {
       sr.remove_prefix( -xCol );
@@ -3119,13 +3120,13 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
    for( ; it != s_direct_vid_segs.end() ; ++it ) {
       if( tgt == it->d_origin && it->d_str.length() == sr.length() ) {
          auto fChanged( false );
-         if( it->d_colorIndex != colorIndex ) {
-            it->d_colorIndex = colorIndex;
+         if( it->d_colorval != attr ) {
+            it->d_colorval = attr;
             fChanged = true;
             }
          if( !eq( it->d_str, sr ) ) {
             it->d_str.assign( sr ); // overwrite same-length string with new
-                           0 && DBG( "%s [%" PR_SIZET "]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorIndex, BSR(it->d_str) );
+                           0 && DBG( "%s [%" PR_SIZET "]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorval, BSR(it->d_str) );
             fChanged = true;
             }
          if( fChanged ) { // mark line dirty
@@ -3138,8 +3139,8 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, int colorIndex ) 
          break;
          }
       }
-   const auto new_it( s_direct_vid_segs.emplace( it, tgt, colorIndex, sr ) );
-                           0 && DBG( "%s @[%" PR_SIZET "]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorIndex, BSR(new_it->d_str) );
+   const auto new_it( s_direct_vid_segs.emplace( it, tgt, attr, sr ) );
+                           0 && DBG( "%s @[%" PR_SIZET "]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorval, BSR(new_it->d_str) );
    s_paScreenLineNeedsRedraw->SetBit( new_it->d_origin.lin );
    UpdtDisplay();
    }
@@ -3228,7 +3229,7 @@ VideoFlusher::~VideoFlusher() {
       }
    }
 
-STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, int attr, ePad pad ) { WL( 0, 0 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, pad==ePad::padWSpcsToEol, src );
+STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, colorval_t attr, ePad pad ) { WL( 0, 0 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, pad==ePad::padWSpcsToEol, src );
    if( src ) {
       const auto charsWritten( ConOut::BufferWriteString( src, srcChars, yConsole, xConsole, attr, pad==ePad::padWSpcsToEol ) );
       if( charsWritten ) {
@@ -3240,7 +3241,7 @@ STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL sr
    return 0;
    }
 
-COL VidWrStrColorFlush( LINE yConsole, COL xConsole, PCChar src, size_t srcChars, int attr, ePad pad ) {
+COL VidWrStrColorFlush( LINE yConsole, COL xConsole, PCChar src, size_t srcChars, colorval_t attr, ePad pad ) {
    VideoFlusher vf;
    return VidWrStrColor( yConsole, xConsole, src, srcChars, attr, pad );
    }
@@ -3249,11 +3250,11 @@ COL VidWrStrColorFlush( LINE yConsole, COL xConsole, PCChar src, size_t srcChars
 
 STATIC_FXN void streamDisplayNoise( PCChar buffer ) {}
 STATIC_FXN void streamDisplayNoiseBlank() {}
-STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, int, ePad ) {
+STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, colorval_t, ePad ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
-STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, const LineColors *, eFlush fFlushNow ) {
+STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, const LineColorvals *, eFlush fFlushNow ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
@@ -3359,11 +3360,11 @@ void View::GetLineForDisplay
    const auto isActiveLine( isActiveWindow && g_CursorLine() == yLineOfFile );
    dest.replace( xLeft, xWidth, xWidth, ' ' ); // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
    if( yLineOfFile > CFBuf()->LastLine() ) {
-      alcc.PutColorRaw( Origin().col, xWidth, bgBLK|fgDGR );
+      alcc.PutColorval( Origin().col, xWidth, bgBLK|fgDGR );
       dest[xLeft] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
       }
    else {
-      alcc.PutColor( Origin().col, xWidth, ColorTblIdx::TXT );
+      alcc.PutColorTblIdx( Origin().col, xWidth, ColorTblIdx::TXT );
       const auto showBlanks( CFBuf()->RevealBlanks() || isActiveLine );
       PrettifyMemcpy( dest, xLeft, xWidth, CFBuf()->PeekRawLine( yLineOfFile ), Origin().col
          ,              CFBuf()->TabWidth()
@@ -3389,7 +3390,7 @@ void View::GetLineForDisplay
 void Win::GetLineForDisplay
    ( const int          winNum
    , std::string       &dest
-   , LineColors        &alc
+   , LineColorvals     &lcvs
    , const HiLiteRec * &pFirstPossibleHiLite
    , const LINE         yLineOfDisplay
    ) const {
@@ -3398,7 +3399,7 @@ void Win::GetLineForDisplay
       NewScope {
          const auto pView( this->CurView() );
          const auto yLineOfFile( pView->Origin().lin - d_UpLeft.lin + yLineOfDisplay );
-         LineColorsClipped alcc( *pView, alc, d_UpLeft.col, pView->Origin().col, d_Size.col );
+         LineColorsClipped alcc( *pView, lcvs, d_UpLeft.col, pView->Origin().col, d_Size.col );
          pView->GetLineForDisplay( dest, d_UpLeft.col, d_Size.col, alcc, pFirstPossibleHiLite, yLineOfFile, this == g_CurWin() );
          }
       if( d_UpLeft.col > 0 ) { // this window not on left edge? (i.e. window has visible left border?) plug in a line-draw char to make the border

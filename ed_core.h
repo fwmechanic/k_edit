@@ -120,36 +120,34 @@ typedef  FmtStr<2*BUFBYTES>  Sprintf2xBuf;
 #define  USE_CURSORLINE_VERT_HILITE  1
 
 // Editor color table indicies
-namespace ColorTblIdx { // see color2Lua
-   enum { // these are ARRAY _INDICES_!
-      TXT,  // foreground (normal)
-      HIL,  // highlighted region
-      SEL,  // selection
-      WUC,  // word-under-cursor hilight
-      CXY,  // cursor line (and column) hilight
-      CPP,  // cppc line hilight
-      COM,  // comment hiliting, etc.
-      STR,  // litStr
-      VIEW_COLOR_COUNT,
+enum class ColorTblIdx { // see color2Lua // these are ARRAY _INDICES_!
+   TXT,  // foreground (normal)
+   HIL,  // highlighted region
+   SEL,  // selection
+   WUC,  // word-under-cursor hilight
+   CXY,  // cursor line (and column) hilight
+   CPP,  // cppc line hilight
+   COM,  // comment hiliting, etc.
+   STR,  // litStr
+   VIEW_COLOR_COUNT,
 
-      INF=VIEW_COLOR_COUNT,  // information
-      STS,  // status line
-      WND,  // window border
-      ERRM,  // error message
-      COLOR_COUNT // MUST BE LAST!
-      }; // NO MORE THAN 16 ALLOWED!
-   }
+   INF=VIEW_COLOR_COUNT,  // information
+   STS,  // status line
+   WND,  // window border
+   ERRM,  // error message
+   COLOR_COUNT // MUST BE LAST!
+   }; // NO MORE THAN 16 ALLOWED!
 
 // CompileTimeAssert( ColorTblIdx::COLOR_COUNT <= 16 ); // all ColorTblIdx:: must fit into a nibble
-
-GLOBAL_VAR inline uint8_t g_colorInfo      = 0x1e; // INF
-GLOBAL_VAR inline uint8_t g_colorStatus    = 0x1e; // STA
-GLOBAL_VAR inline uint8_t g_colorWndBorder = 0xa0; // WND
-GLOBAL_VAR inline uint8_t g_colorError     = 0x1e; // ERR
 
 #define  HILITE_CPP_CONDITIONALS  1
 
 #include "conio.h"
+
+GLOBAL_VAR inline colorval_t g_colorInfo      = 0x1e; // INF
+GLOBAL_VAR inline colorval_t g_colorStatus    = 0x1e; // STA
+GLOBAL_VAR inline colorval_t g_colorWndBorder = 0xa0; // WND
+GLOBAL_VAR inline colorval_t g_colorError     = 0x1e; // ERR
 
 struct Point {   // file location
    LINE    lin = 0;
@@ -351,7 +349,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class LineColors       ;
+class LineColorvals    ;
 class LineColorsClipped;
 
 //-----------------------------------------------------------------------------
@@ -648,7 +646,7 @@ public:
    bool      VisibleOnDisplayLine( LINE yLineOfDisplay ) const { return( WithinRangeInclusive( d_UpLeft.lin, yLineOfDisplay, d_UpLeft.lin + d_Size.lin - 1 ) ); }
    bool      VisibleOnDisplayCol ( COL  xColOfDisplay  ) const { return( WithinRangeInclusive( d_UpLeft.col, xColOfDisplay , d_UpLeft.col + d_Size.col - 1 ) ); }
    bool      GetCursorForDisplay( Point *pt ) const;
-   void      GetLineForDisplay( int winNum, std::string &dest, LineColors &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
+   void      GetLineForDisplay( int winNum, std::string &dest, LineColorvals &alc, const HiLiteRec * &pFirstPossibleHiLite, const LINE yDisplayLine ) const;
    const Point &SizePct() const { return d_size_pct; }
    void      SizePct_set( const Point &src )  { d_size_pct = src; }
    }; // Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win Win
@@ -737,10 +735,10 @@ public:
    void         ScrollByPages( int pages );
    void         EnsureWinContainsCursor();
    //********** screen highlights
-   void         SetStrHiLite  ( const Point &pt, COL Cols, int color );
+   void         SetStrHiLite  ( const Point &pt, COL Cols, ColorTblIdx color );
    void         SetMatchHiLite( const Point &pt, COL Cols, bool fErrColor );
-   void         InsHiLiteBox( int newColorIdx, Rect newRgn );
-   void         InsHiLite1Line( int newColorIdx, LINE yLine, COL xLeft, COL xRight );
+   void         InsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn );
+   void         InsHiLite1Line( ColorTblIdx newColorIdx, LINE yLine, COL xLeft, COL xRight );
    void         FreeHiLiteRects();
    void         RedrawHiLiteRects();
    void         InsertHiLitesOfLineSeg
@@ -800,7 +798,7 @@ public:
    bool         prev_balln( LINE yStart, bool fStopOnElse );
    bool         next_balln( LINE yStart, bool fStopOnElse );
 public:
-   int          ColorIdx2Attr( int colorIdx ) const;
+   colorval_t   ColorIdxToColorval( ColorTblIdx ColorIdx ) const;
    }; // View View View View View View View View View View View View View View View View View View View View View View View View
 
 //---------------------------------------------------------------------------------------------------------------------
