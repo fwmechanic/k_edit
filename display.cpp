@@ -3319,7 +3319,7 @@ void View::InsertHiLitesOfLineSeg
    ) const {
    constexpr auto EXCLUSIVE_VIEWHILITES( false );
    if( EXCLUSIVE_VIEWHILITES && d_pHiLites ) {
-      const int hls( d_pHiLites->InsertHiLitesOfLineSeg( yLine, xIndent, xMax, alcc, pFirstPossibleHiLite ) );  0 && DBG( "%d hls=%d", yLine, hls );
+      const auto hls( d_pHiLites->InsertHiLitesOfLineSeg( yLine, xIndent, xMax, alcc, pFirstPossibleHiLite ) );  0 && DBG( "%d hls=%d", yLine, hls );
       // if( hls > 0 ) return;
       }
    DLINKC_FIRST_TO_LASTA( d_addins, dlinkAddins, pDispAddin ) {
