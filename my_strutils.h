@@ -104,7 +104,7 @@ STIL   int   isQuoteEscCh( int ch ) { return chESC==ch; }
 
 // predicate + extract; return exact char matching a char class (or chNUL)
 
-STIL   char  isQuoteCh   ( char inCh ) { return chQuot2==inCh || chQuot1==inCh ? inCh : chNUL; }
+STIL constexpr char isQuoteCh   ( char inCh ) { return chQuot2==inCh || chQuot1==inCh ? inCh : chNUL; }
 
 // many stref (and std::string) methods return "index or npos" (the latter
 // indicating a "not found" condition); I have chosen to signify a "not found"
@@ -420,21 +420,28 @@ STIL void trim( strlval &inout ) { // remove leading and trailing whitespace
    }
 
 template<typename strlval>
-STIL void unquote( strlval &inout ) { // remove any outer quotes, assuming input has been trimmed
-   if( (inout[0]=='\'' || inout[0]=='"') && inout[0]==inout[inout.length()-1] ) {
-      inout.remove_suffix( 1 );
-      inout.remove_prefix( 1 );
+STIL constexpr bool isQuotedStr( const strlval &in ) { // remove any outer quotes, assuming input has been trimmed
+   return isQuoteCh( in[0] ) && in[0]==in[in.length()-1];
+   }
+
+STIL constexpr stref unquote( stref in ) { // remove any outer quotes, assuming input has been trimmed
+   if( isQuotedStr( in ) ) {
+      auto out = in;
+      out.remove_suffix( 1 );
+      out.remove_prefix( 1 );
+      return out;
       }
+   return in;
    }
 
 template<typename strlval>
-void rmv_trail_blanks( strlval &inout ) {
+void constexpr rmv_trail_blanks( strlval &inout ) {
    while( !inout.empty() && isblank( inout.back() ) ) {
       inout.pop_back();
       }
    }
 
-STIL void rmv_trail_blanks( stref &inout ) {
+STIL constexpr void rmv_trail_blanks( stref &inout ) {
    auto trailSpcs( 0u );
    for( auto it( inout.crbegin() ) ; it != inout.crend() && *it == ' ' ; ++it ) {
       ++trailSpcs;

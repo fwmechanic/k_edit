@@ -608,7 +608,7 @@ void SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard ) {
 
 Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
    if( FBUF::FnmIsPseudo( pszSrc ) ) {                               DB && DBG( "%s- (FnmIsPseudo) '%s'", __func__, pszSrc );
-      return Path::str_t( pszSrc );
+      return pszSrc;
       }
    Path::str_t st( pszSrc );
    if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {                       DB && DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
@@ -617,6 +617,10 @@ Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
       if( '$' == pszSrc[0] ) { SearchEnvDirListForFile( st ); }
       else                   { st = pszSrc; }
       }                                                              DB && DBG( "%s post-expansion='%s'", __func__, st.c_str() );
+   if( isQuotedStr( st ) ) {  // Path::Absolutize misbehaves when given a quoted filename, so flag and give up
+      ErrorDialogBeepf( "%s internal error: quoted '%s'", __func__, st.c_str() );
+      return pszSrc;
+      }
    st = Path::Absolutize( st.c_str() );                              DB && DBG( "%s- '%s'", __func__, st.c_str() );
    return st;
    }

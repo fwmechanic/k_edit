@@ -1115,8 +1115,7 @@ std::string DupTextMacroValue( PCChar macroName ) {
       }
    auto val( pCmd->MacroStref() );
    trim( val );
-   unquote( val );
-   return std::string( val );
+   return std::string( unquote( val ) );
    }
 
 STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
@@ -2382,7 +2381,7 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
    if( !starts_with( rl, srgp ) )      { goto FAIL; }
    rl.remove_prefix( srgp.length() );
    if( IsStringBlank( rl ) )           { goto FAIL; }
-   dest.assign( rl );
+   dest.assign( unquote( rl ) );
    }
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {
