@@ -2064,8 +2064,8 @@ STIL int ShowHilite( const HiLiteRec &hl, PCChar str ) {
    return 1;
    }
 
-const HiLiteRec *ViewHiLites::FirstHiLiteAtOrAfter( LINE yLine ) const { enum {DB=0};   DB && DBG( "FHAoA+ %d", yLine );
-   for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpeedTable.size() ; ++idx ) {
+const HiLiteRec *ViewHiLites::FirstHiLiteAtOrAfter( LINE yLine ) const { enum {DB=0}; DB && DBG( "FHAoA+ %d", yLine );
+   for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpeedTable.size() ; ++idx ) {  DB && DBG( "1NZ[%d] = %p", idx, d_SpeedTable[ idx ] );
       if( d_SpeedTable[ idx ] ) {                                                   DB && DBG( "1NZ=%d", idx );
          for( auto pHL=d_SpeedTable[ idx ]; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
             if( yLine <= pHL->rect.flMax.lin ) {                                    DB && ShowHilite( *pHL, "FHAoA-" );

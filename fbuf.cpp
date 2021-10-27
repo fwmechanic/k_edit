@@ -755,7 +755,7 @@ void StrUnDoubleBackslashes( PChar pszString ) {
       } while( *pRd != 0 );
    }
 
-STATIC_FXN std::string is_content_grep( PCFBUF pFile ) { 1 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
+STATIC_FXN std::string is_content_grep( PCFBUF pFile ) { 0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
    auto  metaLines( 0 ); // params that govern how...
    Path::str_t origSrchFnm;    // ...srchfile is processed
    if( FBOP::IsGrepBuf( origSrchFnm, &metaLines, pFile ) ) {
@@ -974,7 +974,8 @@ STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s
    return rv;
    }
 
-void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && DBG( "%s '%s'", __func__, fb->Name() );
+void FBOP::CurFBuf_AssignMacros_RsrcLd() { enum{DB=0};
+   const auto fb( g_CurFBuf() );                                      DB && DBG( "%s+ '%s'", __func__, fb->Name() );
    if( g_pFBufAssignLog ) { g_pFBufAssignLog->FmtLastLine( "##### %s -> %s", __func__, fb->Name() ); }
    // 1. assigns "curfile..." macros based on g_CurFBuf()->Namestr()
    // 2. loads rsrc file section for [extension and] ftype of g_CurFBuf()
@@ -988,12 +989,12 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { const auto fb( g_CurFBuf() );  1 && D
   #endif
    DefineStrMacro( "curfilename", Path::RefFnm  ( fb->Namestr() ) );
    DefineStrMacro( "curfileext" , Path::RefExt  ( fb->Namestr() ) );
-   DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );
-   fb->SetFType();
+   DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );  DB && DBG( "%s SetFType()+", __func__ );
+   fb->SetFType();                                                    DB && DBG( "%s SetFType()-", __func__ );
    if( !fb->IsRsrcLdBlocked() ) { // ONLY AFTER curfile, curfilepath, curfilename, curfileext assigned:
-      const auto ftype( fb->FTypeName() );        0 && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
+      const auto ftype( fb->FTypeName() );                            DB && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
       RsrcFileLdSectionFtype( ftype );
-      }
+      }                                                               DB && DBG( "%s- '%s'", __func__, fb->Name() );
    }
 
 STATIC_FXN Path::str_t xlat_fnm( PCChar pszName ) {

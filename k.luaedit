@@ -5167,6 +5167,9 @@ filesettings = load_lua_env( RsrcFilename( "filesettings" ), {
      }
   )
 print( "filesettings is a "..type(filesettings) )
+
+print( filesettings.ftype_map.clang and ("filesettings.ftype_map.clang DEFINED: "..tostring(filesettings.ftype_map.clang)) or "filesettings.ftype_map.clang UNdefined" )
+
 --########################################################################################################################################
 
 user = require "user"  -- compile & execute %~dp0user.lua

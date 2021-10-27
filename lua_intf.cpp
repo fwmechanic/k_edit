@@ -341,7 +341,7 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
          name[depth++] = pc+1;
          }
       }                                              DB && DBG( "%s depth = %d", __func__, depth );
-   for( auto ix(0); ix < depth; ++ix ) {             DB && DBG(  "%s ix = %d", __func__, ix );
+   for( auto ix(0); ix < depth; ++ix ) {             DB && DBG(  "%s ix = %d %s", __func__, ix, name[ix] );
       if( !getTblVal( L, name[ix], ix ) ) {
          return false;
          }
@@ -364,7 +364,7 @@ STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, in
    }
 
 // returns false if any errors
-STATIC_FXN bool LuaTblKeyExists( lua_State *L, PCChar tableDescr ) { 0 && DBG( "+%s '%s'?", __func__ , tableDescr );
+STATIC_FXN bool LuaTblKeyExists( lua_State *L, PCChar tableDescr ) { 0 && DBG( "+%s '%s'? (%p)", __func__ , tableDescr, L );
    if( !L ) { return false; }
    LuaCallCleanup( L );
    const auto rv( gotTblVal( L, tableDescr ) && !lua_isnil(L,-1) );  0 && DBG( "-%s '%s' %c", __func__ , tableDescr, rv?'t':'f' );
@@ -732,7 +732,7 @@ STATIC_FXN bool LuaCtxt_InitOk(
    , void (*cleanup)  (lua_State *L)
    , void (*openlibs) (lua_State *L)
    , void (*post_load)(lua_State *L)
-   ) {
+   ) { enum {DB=0};                                            DB && DBG( "%s+ %s",  __func__, filename );
    dupdFnm.assign( filename );
    cleanup_plua( Linout );
    //

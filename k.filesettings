@@ -267,5 +267,6 @@ ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    [""]         = { colors = stdColors }               ,
    }
 
+print( ftype_map.clang and "ftype_map.clang DEFINED" or "ftype_map.clang UNdefined" )
 
 print( "###############################  k.filesettings execution complete  ##########################" )
