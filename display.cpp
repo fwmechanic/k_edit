@@ -1317,9 +1317,9 @@ void HiliteAddin_powershell::scan_pass( LINE yMaxScan ) {
          case in_2Qstr   : findnext = &HiliteAddin_powershell::find_end_2Qstr   ; break;
          case in_comment : findnext = &HiliteAddin_powershell::find_end_comment ; break;
          case atEOF      : if( in_comment==prevret ) { 0 && DBG( "atEOF+in_comment @y=%d x=%d", pt.lin, pt.col );
-                              add_comment( d_start_C.lin, d_start_C.col, pt.lin, 0 );
-                              }
-                           return;
+                                       add_comment( d_start_C.lin, d_start_C.col, pt.lin, 0 );
+                                       }
+                                    return;
          }
       prevret = ret;
       }
@@ -2314,21 +2314,23 @@ void View::HiliteAddins_Init() {
       const auto fts ( CFBuf()->GetFTypeSettings() );
       const auto hlNm( fts->hiliteName() );
       const auto ftnm( fts->ftypeName() );             DBADIN && DBG( "%s [ftype=%" PR_BSR "/hilite=%" PR_BSR "] ================================================================", __func__, BSR( ftnm ), BSR( hlNm ) );
-             /* ALWAYS */                   IAL( HiliteAddin_Pbal );
-      if     ( eqi( hlNm, "c"         ) ) { IAL( HiliteAddin_cond_CPP ); IAL( HiliteAddin_clang ); }
-      else if( eqi( hlNm, "make"      ) ) { IAL( HiliteAddin_cond_gmake ); IAL( HiliteAddin_python );  }
-      else if( eqi( hlNm, "lua"       ) ) { IAL( HiliteAddin_lua );  }
-      else if( eqi( hlNm, "python"    ) ) { IAL( HiliteAddin_python );  }
-      else if( eqi( hlNm, "bash"      ) ) { IAL( HiliteAddin_python );  }
-      else if( eqi( hlNm, "sql"       ) ) { IAL( HiliteAddin_sql );  }
-      else if( eqi( hlNm, "diff"      ) ) { IAL( HiliteAddin_Diff );  }
-      else if( eqi( hlNm, "pwrshell"  ) ) { IAL( HiliteAddin_powershell );  }
+             /* ALWAYS -> */                IAL( HiliteAddin_Pbal            );
+      if     ( eqi( hlNm, "c"         ) ) { IAL( HiliteAddin_cond_CPP        );
+                                            IAL( HiliteAddin_clang           ); }
+      else if( eqi( hlNm, "make"      ) ) { IAL( HiliteAddin_cond_gmake      );
+                                            IAL( HiliteAddin_python          );  }
+      else if( eqi( hlNm, "lua"       ) ) { IAL( HiliteAddin_lua             );  }
+      else if( eqi( hlNm, "python"    ) ) { IAL( HiliteAddin_python          );  }
+      else if( eqi( hlNm, "bash"      ) ) { IAL( HiliteAddin_python          );  }
+      else if( eqi( hlNm, "sql"       ) ) { IAL( HiliteAddin_sql             );  }
+      else if( eqi( hlNm, "diff"      ) ) { IAL( HiliteAddin_Diff            );  }
+      else if( eqi( hlNm, "pwrshell"  ) ) { IAL( HiliteAddin_powershell      );  }
       else{if( fts->d_eolCommentDelim[0]) { InsertAddinLast( new HiliteAddin_EolComment( this, fts->d_eolCommentDelim ) ); } }
-             /* ALWAYS */                 { IAL( HiliteAddin_WordUnderCursor ); }
+             /* ALWAYS -> */              { IAL( HiliteAddin_WordUnderCursor ); }
       if( USE_HiliteAddin_CompileLine )   { IAL( HiliteAddin_CompileLine     ); }
       /* later IAL's have "last say" and therefore take precedence.  Because I want
          HiliteAddin_CursorLine, to be visible in all cases, it's IAL'd last */
-                                        { IAL( HiliteAddin_CursorLine      ); }
+             /* ALWAYS -> */              { IAL( HiliteAddin_CursorLine      ); }
       DBADIN && DBG( "******************* %s- %s hilite-addins %s lines %s", __PRETTY_FUNCTION__, d_addins.empty() ? "no": "has" , CFBuf()->HasLines() ? "has" : "no", CFBuf()->Name() );
      #undef IAL
       }
