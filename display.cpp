@@ -257,23 +257,24 @@ void FTypeSetting::Update() {
    d_hiliteName.assign( hiliteNmBuf );
    }
    {
-   STATIC_CONST struct { PCChar pLuaName; size_t ofs; int dflt; } s_color2Lua[] = { // contents init'd from $KINIT:k.filesettings
+   STATIC_CONST struct { PCChar pLuaName; ColorTblIdx ofs; colorval_t dflt; } s_color2Lua[] = { // contents init'd from $KINIT:k.filesettings
    #define SINIT( nm, idx, dflt )  { #nm, idx, dflt }
-      SINIT( txt , to_underlying(ColorTblIdx::TXT) , bgBLU|fgYEL ),
-      SINIT( hil , to_underlying(ColorTblIdx::HIL) , bgCYN|fgWHT ),
-      SINIT( sel , to_underlying(ColorTblIdx::SEL) , bgGRN|fgWHT ),
-      SINIT( wuc , to_underlying(ColorTblIdx::WUC) , bgWHT|fgGRN ),
-      SINIT( cxy , to_underlying(ColorTblIdx::CXY) , bgRED|fgWHT ),
-      SINIT( cpp , to_underlying(ColorTblIdx::CPP) , bgBLK|fgBRN ),
-      SINIT( com , to_underlying(ColorTblIdx::COM) , bgBLK|fgMGR ),
-      SINIT( str , to_underlying(ColorTblIdx::STR) , bgBLU|fgBRN ),
+      SINIT( txt , ColorTblIdx::TXT , fb( fg::YEL, bg::BLU ) ),
+      SINIT( hil , ColorTblIdx::HIL , fb( fg::WHT, bg::CYN ) ),
+      SINIT( sel , ColorTblIdx::SEL , fb( fg::WHT, bg::GRN ) ),
+      SINIT( wuc , ColorTblIdx::WUC , fb( fg::GRN, bg::WHT ) ),
+      SINIT( cxy , ColorTblIdx::CXY , fb( fg::WHT, bg::RED ) ),
+      SINIT( cpp , ColorTblIdx::CPP , fb( fg::BRN, bg::BLK ) ),
+      SINIT( com , ColorTblIdx::COM , fb( fg::MGR, bg::BLK ) ),
+      SINIT( str , ColorTblIdx::STR , fb( fg::BRN, bg::BLU ) ),
    #undef SINIT
       }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
    const auto w3( w2.cpy( ".colors." ) );
    const colorval_t orVal( g_fBrightFg ? FGhi : 0 );
    for( const auto &c2L : s_color2Lua ) {
+      const auto ofs = to_underlying( c2L.ofs );
       w3.cpy( c2L.pLuaName );
-      d_colors[ c2L.ofs ] = orVal | LuaCtxt_Edit::Tbl2Int( kybuf.c_str(), c2L.dflt );   DB && DBG( "%s: %s = 0x%02X%s", __func__, kybuf.c_str(), d_colors[ c2L.ofs ], d_colors[ c2L.ofs ]==c2L.dflt?" (C++dflt)":"" );
+      d_colors[ ofs ] = orVal | LuaCtxt_Edit::Tbl2Int( kybuf.c_str(), c2L.dflt );   DB && DBG( "%s: %s = 0x%02X%s", __func__, kybuf.c_str(), d_colors[ ofs ], d_colors[ ofs ]==c2L.dflt?" (C++dflt)":"" );
       }
    }
 // d_colors[ ColorTblIdx::CXY ] = GenAltHiliteColor( d_colors[ ColorTblIdx::TXT ] );

@@ -62,7 +62,48 @@ enum { // these are COLOR CODES!
    FGbase=0x07, BGbase=0x70,
    };
 
+enum class fg: uint8_t {
+   BLK =  0x0,
+   BLU =  0x1,
+   GRN =  0x2,
+   CYN =  0x3,
+   RED =  0x4,
+   PNK =  0x5,
+   BRN =  0x6,
+   DGR =  0x7,
+   MGR =  0x8,
+   LBL =  0x9,
+   LGR =  0xA,
+   LCY =  0xB,
+   LRD =  0xC,
+   LPK =  0xD,
+   YEL =  0xE,
+   WHT =  0xF,
+   };
+
+enum class bg: uint8_t {
+   //------------
+   BLK = (to_underlying(fg::BLK)<<4),
+   BLU = (to_underlying(fg::BLU)<<4),
+   GRN = (to_underlying(fg::GRN)<<4),
+   CYN = (to_underlying(fg::CYN)<<4),
+   RED = (to_underlying(fg::RED)<<4),
+   PNK = (to_underlying(fg::PNK)<<4),
+   BRN = (to_underlying(fg::BRN)<<4),
+   DGR = (to_underlying(fg::DGR)<<4),
+   MGR = (to_underlying(fg::MGR)<<4),
+   LBL = (to_underlying(fg::LBL)<<4),
+   LGR = (to_underlying(fg::LGR)<<4),
+   LCY = (to_underlying(fg::LCY)<<4),
+   LRD = (to_underlying(fg::LRD)<<4),
+   LPK = (to_underlying(fg::LPK)<<4),
+   YEL = (to_underlying(fg::YEL)<<4),
+   WHT = (to_underlying(fg::WHT)<<4),
+   };
+
 typedef uint8_t colorval_t;  // as comprehended by the system's conio API; a.k.a. color attribute a.k.a. attr
+
+STIL constexpr colorval_t fb( fg ff, bg bb ) { return to_underlying( ff ) | to_underlying( bb ); }
 
 struct YX_t {
    int  lin;
