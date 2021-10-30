@@ -242,12 +242,12 @@ void FTypeSetting::Update() {
    Catbuf<120> kybuf;
    const auto w0( kybuf.Wref() );
    const auto w1( w0.cpy( "filesettings.ftype_map." ) );
-         auto w2( w1.cpy( stref(d_ftypeName) ) );  // NB! sets up if expression's kybuf.c_str()!  Cannot be folded into if expression!
+         auto w2( w1.cpy( d_ftypeName ) );  // NB! sets up following if expression's kybuf.c_str()!  Cannot be folded into if expression!
    if( !LuaCtxt_Edit::TblKeyExists( kybuf.c_str() ) ) {
       w2 = w1.cpy( "unknown" );
       }
-   w2.cpy( ".eolCommentDelim" );
 
+   w2.cpy( ".eolCommentDelim" );
    LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf.c_str(), "" );     DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
                                                                           0  && DBG( "%s: w0 %" PR_SIZET ", w1 %" PR_SIZET ", w2 %" PR_SIZET, __func__, w0.len(), w1.len(), w2.len() );
    {
