@@ -2597,15 +2597,19 @@ function sum_cols_dope( ary )
    end
 
 function sum_ary_numstrs( ary, base )
-   local sum, count
+   local sum, count, min, minAt
    for _,st in ipairs(ary) do
       local num = tonumber( st, base )
       if num then
          sum   = (sum   or 0) + num
+         if num < 0 and (min or sum) >= sum then
+            min = sum
+            minAt = num
+            end
          count = (count or 0) + 1
          end
       end
-   return sum, count
+   return sum, count, min, minAt
    end
 
 local _b2fns = { [10]='d', [16]='X' }
@@ -2656,11 +2660,15 @@ AddEdFxn{ name = "sumcol", attr = MODIFIES+BOXARG, key = "alt+num+", help = ""
          arg.fbuf:InsLine( arg.maxY+1, (" "):rep( minInd ) .. sum .. fmt( " (%d check%s)", count, Add_s(count) ) )
       else
          local base, leading0s, fw = sum_cols_dope( bc )
-         sum, count = sum_ary_numstrs( bc, base )
+         local min, minAt
+         sum, count, min, minAt = sum_ary_numstrs( bc, base )
          if not sum then return Msg( "no summable content" ) end
          local width = arg.maxX - arg.minX + 1
          local st = fmtNum( sum, fw, base, width, leading0s )
          local nummsg = (" "):rep( minInd-(#st - width) ) .. st
+         if min then
+            nummsg = nummsg .. ' min ' .. fmtNum( min, fw, base, false, false ) .. ' @ ' .. fmtNum( minAt, fw, base, false, false )
+            end
          local msg = fmt( "summed %d base %d entries", count, base )
          if arg.fMeta then
             arg.fbuf:InsLine( arg.maxY+1, nummsg .. " @ " .. msg )
