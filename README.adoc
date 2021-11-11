@@ -12,7 +12,7 @@ toc::[]
 
 K is my personal programmer's text editor, whose design is derived from Microsoft's http://www.texteditors.org/cgi-bin/wiki.pl?M[M editor] (a.k.a. "Microsoft Editor") which was itself derived from the http://www.texteditors.org/cgi-bin/wiki.pl?Z[Z] http://www.applios.com/z/z.html[editor].
 
-K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.  K is written in C++17 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
+K builds to a 64-bit binary/exe for Win32 (Console) and Linux (ncurses) platforms.  K is written in C++17 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
 
 ## Features
 
@@ -24,7 +24,7 @@ K runs on Win32 (Console) and Linux (ncurses) platforms, in 32- and 64-bit form.
  * *M*: Edit undo/redo limited only by available memory (effectively infinite).
  * *M*: Default automatic backup of previous versions of all files edited.  Every time a dirty file is saved to disk, the previous incarnation of the file (being overwritten) is moved to `.kbackup\filename.yyyymmdd_hhmmss` where `.kbackup` is a directory created by K in the directory containing `filename`, and `yyyymmdd_hhmmss` is the mtime of the instance `filename` being saved.  This feature was a lifesaver in the "dark decades" preceding the availability of free, multi-platform DVCS (git, Mercurial), and is much less important when DVCS is used; *use DVCS*!
  * *K*: Powerful file/source-code navigation
- ** K comprehends http://ctags.sourceforge.net/[Exuberant Ctags] (or its descendant https://ctags.io/[Universal Ctags]) tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
+ ** K comprehends https://ctags.io/[Universal Ctags] tagfile format, and provides a hyperlinking experience navigating amongst tagged items in your programming project.
  ** K can perform multi-file-greps/-replaces targeting sets of files enumerated in any editor buffer.
  ** K supports powerful recursive (tree) directory scanning with output to an editor buffer, so, when combined with file-filtering editor-functions such as grep, strip, etc.  it's easy to quickly construct a buffer containing the names of all of the files of interest to you, and have the multi-file-aware editor-functions use this buffer as its source of names of files to examine.  And since this is based on current filesystem content, it's more likely to be complete and correct than a "project file" which must be independently maintained (and thus can easily fall out of sync with workspace reality).
  * *K*: highlighting
@@ -59,7 +59,7 @@ The K source code distro contains, and K incorporates, by building and static li
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
  ** `boost::filesystem`: a small subset only
  * http://www.pcre.org/[`PCRE`] "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
- * `ctags` (either http://ctags.sourceforge.net/[Exuberant Ctags] or its descendant https://ctags.io/[Universal Ctags]) is invoked to rebuild the "tags database" at the close of each successful build of K.
+ * https://ctags.io/[`Universal Ctags`]) is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread` libraries
  * Windows-only: https://www.7-zip.org/download.html[`7zip.exe`] is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
 
@@ -67,8 +67,7 @@ The K source code distro contains, and K incorporates, by building and static li
 
  * The http://nuwen.net/mingw.html[nuwen.net distribution of MinGW] provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
  ** `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
- ** `mingw32.bat` (i386): `c:\_tools\mingw\32\mingw\set_distro_paths.bat`
- * `ctags.exe` from https://github.com/universal-ctags/ctags[Universal Ctags] must be deployed in `PATH` separately (I successfully use https://github.com/universal-ctags/ctags-win32/releases[the newest CI build]).
+ * `ctags.exe` from https://github.com/universal-ctags/ctags[Universal Ctags] must be deployed in `PATH`; https://community.chocolatey.org/packages/universal-ctags[Chocolatey] closely tracks https://github.com/universal-ctags/ctags-win32/releases[ctags-win32 releases]).
 
  * FYI: http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html[MinGW gcc non-optionally dyn-links to MSVCRT.DLL] which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
 
@@ -80,14 +79,20 @@ The K source code distro contains, and K incorporates, by building and static li
 
 ### To build
 
-    make clean
-    make -j     # the build is parallel-make-safe
+make targets:
 
-To clean a workspace sufficient to switch between 32-bit and 64-bit toolchains:
+  * `all`: (default) build everything; the build is parallel-make-safe
+  * `clean`: clean K-core C++ build outputs only
+  * `zap`: clean K-core C++ build outputs plus all Lua related
 
-    make zap    # clean K build products plus nuke all Lua related
+To perform a clean-slate (re)build:
+
+    make zap
+    make -j
 
 ### Create Release files
+
+Use of release files is optional: intended to be used K needs to be run on a host lacking build tools or access to e.g. github.
 
 A release file is a Windows=7z/Linux=tgz archive containing the minimum fileset needed to use the editor.  On Windows two (2) variants of the release file are created by `make rls`: `k_rls.7z` and `k_rls.exe` (a self-extracting-console archive).
 
@@ -108,7 +113,9 @@ The default (Windows-originated) K key mappings make extensive use of `ctrl+` an
  ** common: with `TERM=xterm`, _after_ you disable various terminal-menu/-command key-modulation (e.g. `alt+`) hooks, default terminfo for xterm correctly decodes a substantial proportion of the Windows-supported key combinations that K uses.
  ** Lubuntu/LXDE Desktop (`lxterminal` nee `x-terminal-emulator`) running as VirtualBox guest: mouse scroll wheel _does_ work.
  ** I think I've exhausted the possibilities here
- * PuTTY 0.67 (released 2016-03-05) to Lubuntu 14.04+
+ * Windows openssh client (built into Git for Windows bash) to ubuntu 20.04+.
+ ** mostly works; exceptions: `ctrl+4` (exit)
+ * Windows client running PuTTY 0.67 (released 2016-03-05) to Lubuntu 14.04+.
  ** Be sure to use http://www.chiark.greenend.org.uk/~sgtatham/putty/changes.html[the most recent release] of http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html[PuTTY].
  ** To set PuTTY's
  *** *keyboard setting*: PuTTY `Menu` / `Change Settings` / `Terminal` / `Keyboard` / `the function keys and keypad` : <choose one radio-button>
@@ -269,7 +276,7 @@ K is heavily based upon Microsoft's http://www.texteditors.org/cgi-bin/wiki.pl?M
 
 K development started (in spirit) in 1988 when I started link:historical_scans_fair_use/1988.09-MS.Journal-Notenboom-Customizing.M.Editor.pdf[writing (in C) loadable extension modules (the immediate forerunner of DLL's)] for the DOS version of the Microsoft http://www.texteditors.org/cgi-bin/wiki.pl?M[M editor] which was included with Microsoft (not _Visual_) C 5.1 for DOS & OS/2.  In the next Microsoft C releases (6.0, 6.0a, 7.x) for DOS and OS/2, Microsoft bloated-up M into http://www.texteditors.org/cgi-bin/wiki.pl?PWB[PWB] (v1.0, 1.1, 2.0; see link:historical_scans_fair_use/2001.07-MSDN.News-Michell-PWB.pdf[MSDN News article from 2001]) then replaced it with the GUI "Visual Studio" IDE when Windows replaced DOS.  I preferred the simpler yet tremendously powerful M, so starting in 1991 I wrote my own version, K.  True to its DOS heritage, K is a Win32 Console App (with no mouse support aside from the scroll-wheel) because I have no interest in mice or GUIs.  The current (since 2005) extension language is Lua 5.1.  A full source distro of Lua, plus a few of its key modules, is included herein, and `lua.exe`, built herein, is used in an early build step.
 
-2014/10: an "employment transition" into an (effectively) Linux-only environment (willingly) forced me to port K to (x64) Linux; I had wanted to do this for years, but lacked the motivation: the prospect of working daily on a platform w/o K provided the needed motivation!
+2014/10: an employment transition into an (effectively) Linux-only environment (willingly) forced me to port K to (x64) Linux; I had wanted to do this for years, but lacked the motivation: the prospect of working daily on a platform w/o K provided the needed motivation!
 
 2014/11: I just discovered http://www.schulenberg.com/page2.htm["Q" Text Editor], another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
 
