@@ -555,6 +555,19 @@ LUA_API void lua_getfield (lua_State *L, int idx, const char *k) {
 }
 
 
+LUA_API void lua_getfield_lstr (lua_State *L, int idx, const char *k, size_t l) {
+  StkId t;
+  TValue key;
+  lua_lock(L);
+  t = index2adr(L, idx);
+  api_checkvalidindex(L, t);
+  setsvalue(L, &key, luaS_newlstr(L, k, l));
+  luaV_gettable(L, t, &key, L->top);
+  api_incr_top(L);
+  lua_unlock(L);
+}
+
+
 LUA_API void lua_rawget (lua_State *L, int idx) {
   StkId t;
   lua_lock(L);
