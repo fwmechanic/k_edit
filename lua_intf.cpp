@@ -347,7 +347,7 @@ STATIC_FXN bool gotTblVal( lua_State *L, PCChar tbdescr ) { enum {DB=0};
 STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, int stackLevel ) {
    if( sizeof_dest > 0 ) {
       dest[0] = '\0';
-      const auto pSrc( lua_tostring( L, -1 ) ); // converts number to string!
+      const auto pSrc( lua_tostring( L, stackLevel ) ); // converts number to string!
       if( pSrc ) {
          scpy( dest, sizeof_dest, pSrc );
          }
