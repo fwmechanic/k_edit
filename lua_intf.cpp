@@ -21,6 +21,7 @@
 
 #include "lua_intf_common.h"
 
+// we use some macros defined in lua .h files that contain C-style casts which generate the following warning ...
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 
@@ -82,7 +83,7 @@ int lh_push( lua_State *L, HEAD head, TAIL... tail ) {
 #define LUA_TOBOOLEAN(L, ix) ToBOOL( lua_toboolean( L, ix ) )
 
 STATIC_FXN void lua_assigncppstring( lua_State *L, int ix, std::string &out ) {
-   size_t srcBytes; auto pSrc( lua_tolstring(L, ix, &srcBytes) );  0 && DBG( "%s raw='%" PR_BSR "'", __func__, (int)srcBytes, pSrc );
+   size_t srcBytes; auto pSrc( lua_tolstring(L, ix, &srcBytes) );  0 && DBG( "%s raw='%" PR_BSR "'", __func__, static_cast<int>(srcBytes), pSrc );
    out.assign( pSrc, srcBytes );                                   0 && DBG( "%s cst='%s'", __func__, out.c_str() );
    }
 
@@ -92,7 +93,7 @@ STATIC_FXN void lh_pop_( lua_State *L, int ix, bool        &out ) { out = 0 != l
 STATIC_FXN void lh_pop_( lua_State *L, int ix, int         &out ) { out =      lua_tointeger( L, ix ); DBG("%s =%d", __func__, out ); }
 STATIC_FXN void lh_pop_( lua_State *L, int ix, double      &out ) { out =      lua_tonumber ( L, ix ); }
 STATIC_FXN void lh_pop_( lua_State *L, int ix, std::string &out ) {
-   size_t srcBytes; auto pSrc( lua_tolstring(L, ix, &srcBytes) );  0 && DBG( "%s raw='%" PR_BSR "'", __func__, (int)srcBytes, pSrc );
+   size_t srcBytes; auto pSrc( lua_tolstring(L, ix, &srcBytes) );  0 && DBG( "%s raw='%" PR_BSR "'", __func__, static_cast<int>(srcBytes), pSrc );
    out.assign( pSrc, srcBytes );                                   1 && DBG( "%s cst='%s'", __func__, out.c_str() );
    }
 
