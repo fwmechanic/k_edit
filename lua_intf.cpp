@@ -307,7 +307,7 @@ STATIC_FXN void *l_alloc( void *ud, void *ptr, size_t osize, size_t nsize ) {
 
 // reliable reading of Lua global variables (including '.'-separated table expressions) from C
 //
-STIL bool getTblVal( lua_State *L, PCChar key, int ix ) { 0 && DBG( "%s indexing '%s'", __func__, key );
+STIL bool getTblVal( lua_State *L, PCChar key, size_t keylen, bool gettingGlobal ) { 0 && DBG( "%s indexing %s '%" PR_BSR "'", __func__, gettingGlobal ? "G":" ", static_cast<int>(keylen), key );
 //                                                        [-o, +p, x]
 //      o: how many elements the function pops from the stack
 //      p: how many elements the function pushes onto the stack
@@ -317,39 +317,31 @@ STIL bool getTblVal( lua_State *L, PCChar key, int ix ) { 0 && DBG( "%s indexing
 //         'e' means the function may throw other kinds of errors;
 //         'v' means the function may throw an error on purpose
 //
-   const auto gettingGlobal( ix==0 );
-   // unfortunately there is not a lua_getfield-like API which takes a stref-like, thus we have to pass ASCIZ here
-   lua_getfield( L, gettingGlobal ? LUA_GLOBALSINDEX : -1, key );  // [-0, +1, e]  if field key is not defined
+   // I _added_ a lua_getfield-like API which takes a stref-like, so we can accept and pass (effectively) a stref here.
+   lua_getfield_lstr( L, gettingGlobal ? LUA_GLOBALSINDEX : -1, key, keylen );  // [-0, +1, e]  if field key is not defined
    if( !gettingGlobal ) {  // if not reading global (therefore lua_getfield of table [formerly] on top of stack)
       lua_remove(L, -2);   // pop table [formerly] on top of stack    [-1, +0, e]  which (its field having been read) is no longer needed
       }
    return true;
    }
 
-STATIC_FXN bool gotTblVal( lua_State *L, PCChar pcRvalNm ) { enum { DB=0 };
-   // because there is not a lua_getfield-like API which takes a stref-like, we must
-   // COPY pcRvalNm so we can poke NULs into it to form sequence of ASCIZ's
-   ALLOCA_STRDUP( rvNm, rvlen, pcRvalNm, Strlen( pcRvalNm ) );
-   PCChar name[ 20 ] = { rvNm };
-   auto depth(1);
-   for( PChar pc(rvNm); pc < rvNm + rvlen; ++pc ) {
+STATIC_FXN bool gotTblVal( lua_State *L, PCChar tbdescr ) { enum {DB=0};
+   const size_t tdsclen = Strlen( tbdescr );
+   auto pst( tbdescr );
+   for( auto pc(tbdescr); pc < tbdescr + tdsclen; ++pc ) {
       if( *pc == '.' ) {
-         *pc = '\0';
-         if( !(depth < ELEMENTS(name)) ) {           DB && DBG( "%s MAX DEPTH (%" PR_SIZET ") exceeded: %s", __func__, ELEMENTS(name), pcRvalNm );
+         if( !getTblVal( L, pst, pc - pst, pst == tbdescr ) ) {  DB && DBG( "%s- !getTblVal '%"   PR_BSR "'", __func__, static_cast<int>(pc - tbdescr), tbdescr );
             return false;
             }
-         name[depth++] = pc+1;
+         if( !lua_istable( L, -1 ) ) {                           DB && DBG( "%s- !lua_istable '%" PR_BSR "'", __func__, static_cast<int>(pc - tbdescr), tbdescr );
+            return false;
+            }
+         pst = pc+1;
          }
-      }                                              DB && DBG( "%s depth = %d", __func__, depth );
-   for( auto ix(0); ix < depth; ++ix ) {             DB && DBG(  "%s ix = %d %s", __func__, ix, name[ix] );
-      if( !getTblVal( L, name[ix], ix ) ) {
-         return false;
-         }
-      if( ix < depth-1 && !lua_istable( L, -1 ) ) {  DB && DBG( "%s field '%s' is not a table in '%s'", __func__, name[ix], pcRvalNm );
-         return false;
-         }
-      }                                           // DB && DBG( "%s ix(out) = %d", __func__, ix );
-   return true; // *** caller is responsible for converting TOS to appropriate C value ***
+      }
+   const auto rv( getTblVal( L, pst, (tbdescr + tdsclen) - pst, pst == tbdescr ) );
+                                                                 DB && !rv && DBG( "%s- !last getTblVal '%" PR_BSR "'", __func__, static_cast<int>(tdsclen), tbdescr );
+   return rv;  // *** caller is responsible for converting TOS to appropriate C value ***  if table lookup failed here, lua_isnil(L,-1) is true
    }
 
 STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, int stackLevel ) {
