@@ -524,6 +524,7 @@ namespace LuaCtxt_Edit {
    extern bool  nextmsg_setbufnm     ( PCChar src );  // for mfgrep
    extern bool  nextmsg_newsection_ok( PCChar src );  // for mfgrep
    extern bool  ReadPseudoFileOk     ( PFBUF src );
+   extern bool  RegisterAllLuaEdFxns ();
 
    //###                 ###
    //###   DATA ACCESS   ###

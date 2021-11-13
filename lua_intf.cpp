@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2020 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -733,8 +733,6 @@ STATIC_FXN bool LuaCtxt_InitOk(
    , void (*openlibs) (lua_State *L)
    , void (*post_load)(lua_State *L)
    ) { enum {DB=0};                                            DB && DBG( "%s+ %s",  __func__, filename );
-   dupdFnm.assign( filename );
-   cleanup_plua( Linout );
    //
    // Design note: if loadLuaFileOk fails while processing source file(s) for LuaCtxt_Edit (syntax error, assert),
    // *L remains non-null but defectively constructed lua_State, and a panic (causing process crash) will occur
@@ -745,13 +743,17 @@ STATIC_FXN bool LuaCtxt_InitOk(
    // Solution: construct local L and DON'T assign to Linout UNTIL successful construction concludes
    //
    auto L( init_lua_ok( cleanup, openlibs ) );
-   if( !L ) { return false; }
-   if( !loadLuaFileOk( L, filename ) ) {
-      cleanup_lua( L );
-      return false;
+   if( !L ) {                                                  DB && DBG( "%s- init_lua_ok() failed",  __func__ );
+      return false;  // w/Linout undisturbed
       }
+   if( !loadLuaFileOk( L, filename ) ) {                       DB && DBG( "%s- loadLuaFileOk() failed",  __func__ );
+      cleanup_lua( L );
+      return false;  // w/Linout undisturbed
+      }
+   cleanup_plua( Linout );  // only now are we committed... zap the now-redundant previous instance
+   dupdFnm.assign( filename );
+   Linout = L; /* post_load may depend on this being set!!! */ DB && DBG( "%s- OK",  __func__ );
    post_load( L ); // Lua environment-loaded hook-outs
-   Linout = L;     // successful construction concluded
    return true;
    }
 
@@ -776,6 +778,7 @@ bool LuaCtxt_State::InitOk( PCChar filename ) {
    }
 
 STATIC_FXN void L_edit_post_load( lua_State *L ) { // Lua environment-loaded hook-outs
+   LuaCtxt_Edit::RegisterAllLuaEdFxns();
    LREGI_set_EvtHandlerEnabled( L, 1 );
    Reread_FTypeSettings();
    }
@@ -864,11 +867,26 @@ bool LuaCtxt_Edit::nextmsg_setbufnm     ( PCChar src )  {
    return true;
    }
 
+
+bool LuaCtxt_Edit::RegisterAllLuaEdFxns()  {
+   constexpr bool rv_fail = false;
+   auto L( L_edit ); if( !L ) { return rv_fail; }
+   lua_settop( L, 0 );  // clear the stack
+   LuaCallCleanup( L ); // clear the stack on function return
+   if( lh_push_global_function( L, "RegisterAllLuaEdFxns" ) ) {
+      return rv_fail;
+      }
+   if( lh_pcall_inout( L, 0, 0 ) != 0 ) {  // do the call
+      lh_handle_pcall_err( L );
+      return rv_fail;
+      }
+   return true;
+   }
+
 bool LuaCtxt_Edit::nextmsg_newsection_ok( PCChar src )  {
    constexpr bool rv_fail = false;
-   auto L( L_edit );
-   if( !L ) { return rv_fail; }
-   lua_settop( L, 0 );      // clear the stack
+   auto L( L_edit ); if( !L ) { return rv_fail; }
+   lua_settop( L, 0 );  // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
    if( lh_push_global_function( L, "nextmsg_newsection_FROM_C" ) ) {
       return rv_fail;

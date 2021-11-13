@@ -229,10 +229,21 @@ do
          and type(tbl.attr) == "number"
       end
 
+   local s_EdFxTblsToRegiter = {}
    local s_EdFxns = {}
    local s_MenuEdFxns = {}
 
    function AddEdFxn( tbl )
+      --[[ defer actual registration of EdFxn with C++ core until
+           RegisterAllLuaEdFxns, which is only called AFTER we've successfully
+           compiled & run this module (AND unplugged any existing LuaCtxt
+           instance of this same code). ]]
+      s_EdFxTblsToRegiter[1+#s_EdFxTblsToRegiter] = tbl
+      end
+
+   -----------------------------------------------------------------------------------------------
+   -- following is called by (C++) L_edit_post_load
+   local function RegisterLuaEdFxn( tbl )  -- CALLED indirectly FROM C++!!! Be CAREFUL!!!
       if not HasEdFxnSignature( tbl ) then return Msg( "AddEdFxn: malformed tbl param!!!" ) end
       local name, help = tbl.name, tbl.help or ""
       local mhs, isMf = help:gsub( '^Menu[:]? ', '' )
@@ -249,6 +260,13 @@ do
       s_EdFxns[ name ] = tbl
       if tbl.key then SetKeyOk( name, tbl.key ) end
       end
+
+   function RegisterAllLuaEdFxns()  -- CALLED DIRECTLY FROM C++!!! Be CAREFUL!!!
+      for _,tbl in ipairs(s_EdFxTblsToRegiter) do
+         RegisterLuaEdFxn( tbl )
+         end
+      end
+   -----------------------------------------------------------------------------------------------
 
    AddEdFxn{ name = "mm", help = "menu of menu commands", attr = NOARG
       , NOARG = function( arg )
