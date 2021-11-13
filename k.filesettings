@@ -50,6 +50,7 @@ do
       ["Makefile"      ] = "make"      ,
       }
    local nxToFType_patterns = { -- keep sorted by value (FType)
+      ["^<.*>$"         ] = "pseudo"  ,
       -- startsWith
       ["^\.bash"        ] = "bash"    ,
       ["^Dockerfile"    ] = "bash"    ,  -- https://stackoverflow.com/questions/26077543/how-to-name-dockerfiles
@@ -138,16 +139,17 @@ do
          return rv
          end
       for pat,rv in pairs( nxToFType_patterns ) do -- printf( "k.f.FnmToFType(%s) nx.pat=%s", nx, pat )
-         if string.match( nx, pat ) then           -- printf( "k.f.FnmToFType(%s) nx.pat=%s => %s", nx, pat, rv )
+         if string.match( nx, pat ) then              printf( "k.f.FnmToFType(%s) nx.pat=%s => %s", nx, pat, rv )
             return rv
             end
          end
       local ex = ExtOf( nx )         -- printf( "k.f.FnmToFType(%s) ex=%s", nx, ex or "(nil)" )
       if ex and exToFType_[ex] then
-         local rv = exToFType_[ex]   -- printf( "k.f.FnmToFType(%s) ex=%s => %s", nx, ex, rv )
+         local rv = exToFType_[ex]      printf( "k.f.FnmToFType(%s) ex=%s => %s", nx, ex, rv )
          return rv
          end
       -- local nm = NameOf( nx )  printf( "k.f.FnmToFType(%s) -> %s,%s", nx,nm,ex )
+                                        printf( "k.f.FnmToFType(%s) => nil", nx )
       return
       end
 

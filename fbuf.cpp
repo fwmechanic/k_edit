@@ -926,13 +926,13 @@ STATIC_FXN std::string FType_deduce_from_content( PCFBUF pfb ) {
    return "";
    }
 
-std::string FBOP::DeduceFType( PCFBUF pfb ) {
+std::string FBOP::DeduceFType( PCFBUF pfb ) {   enum{DB=1};
    std::string rv;
    if( pfb->HasLines() ) {
-      rv = ::FType_deduce_from_content( pfb );
+      rv = ::FType_deduce_from_content( pfb );  DB && DBG( "%s ::FType_deduce_from_content(%s) -> '%" PR_BSR "'", __func__, pfb->Name(), BSR(rv) );
       }
    if( rv.empty() ) {
-      rv = ::FnmToFType_lua( pfb );
+      rv = ::FnmToFType_lua( pfb );             DB && DBG( "%s ::FnmToFType_lua(%s) -> '%" PR_BSR "'", __func__, pfb->Name(), BSR(rv) );
       }
    if( rv.empty() ) {
       if( ::FnmIsLogicalWildcard( pfb->Namesr() ) ) {
@@ -944,7 +944,7 @@ std::string FBOP::DeduceFType( PCFBUF pfb ) {
       else {
          rv.assign( Path::RefExt( pfb->Namesr() ) );
          }
-      }                                                            1 && DBG( "%s %s -> '%" PR_BSR "'", __func__, pfb->Name(), BSR(rv) );
+      }                                         DB && DBG( "%s %s -> '%" PR_BSR "'", __func__, pfb->Name(), BSR(rv) );
    return rv;
    }
 
