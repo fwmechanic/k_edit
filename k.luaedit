@@ -229,10 +229,29 @@ do
          and type(tbl.attr) == "number"
       end
 
+   local s_EdFxTblsToRegister = {}
+   local s_AssignsToRegister = {}
    local s_EdFxns = {}
    local s_MenuEdFxns = {}
 
-   function AddEdFxn( tbl )
+   --[[ following 2 functions AddEdFxn and Assign are "vectored" to defer their
+     effect (registration of Lua EdFxn and key assignments with C++ core) until
+     RegisterAllLuaEdFxns is called by the C++ core only AFTER we've successfully
+     compiled & run this module (AND un-registered any assignments made by the
+     prior LuaCtxt instance of this same code).  RegisterAllLuaEdFxns then
+     reassign AddEdFxn and Assign to functions that take immediate action ]]
+
+   function AddEdFxn( tbl )  -- re-aimed at RegisterLuaEdFxn
+      s_EdFxTblsToRegister[1+#s_EdFxTblsToRegister] = tbl
+      end
+
+   function Assign( tbl )  -- re-aimed at DoAssign
+      s_AssignsToRegister[1+#s_AssignsToRegister] = tbl
+      end
+
+   -----------------------------------------------------------------------------------------------
+   -- RegisterAllLuaEdFxns is called by (C++) L_edit_post_load
+   local function RegisterLuaEdFxn( tbl )  -- CALLED indirectly FROM C++!!! Be CAREFUL!!!
       if not HasEdFxnSignature( tbl ) then return Msg( "AddEdFxn: malformed tbl param!!!" ) end
       local name, help = tbl.name, tbl.help or ""
       local mhs, isMf = help:gsub( '^Menu[:]? ', '' )
@@ -249,6 +268,31 @@ do
       s_EdFxns[ name ] = tbl
       if tbl.key then SetKeyOk( name, tbl.key ) end
       end
+
+   local function DoAssign( tbl )
+      for _,val in ipairs( tbl ) do
+         if not AssignStrOk( val ) then
+            return Msgf( "assign: '%s' failed", val )
+            end
+         end
+      return true
+      end
+
+   function RegisterAllLuaEdFxns()  -- CALLED DIRECTLY FROM C++!!! Be CAREFUL!!!
+      if s_EdFxTblsToRegister ~= nil then
+         for _,tbl in ipairs(s_EdFxTblsToRegister) do
+            RegisterLuaEdFxn( tbl )
+            end
+         for _,tbl in ipairs( s_AssignsToRegister ) do
+            DoAssign( tbl )
+            end
+         s_EdFxTblsToRegister = nil
+         s_AssignsToRegister = nil
+         AddEdFxn = RegisterLuaEdFxn  -- re-aim public API to immediate mode
+         Assign = DoAssign            -- re-aim public API to immediate mode
+         end
+      end
+   -----------------------------------------------------------------------------------------------
 
    AddEdFxn{ name = "mm", help = "menu of menu commands", attr = NOARG
       , NOARG = function( arg )
@@ -305,15 +349,6 @@ do
    -- function ExecEdFxn( name, arg ) end
 end
 
-
-function Assign( tbl )
-   for _,val in ipairs( tbl ) do
-      if not AssignStrOk( val ) then
-         return Msgf( "assign: '%s' failed", val )
-         end
-      end
-   return true
-   end
 
 function SwitchToFile( fname ) FBUF.new( fname ):PutFocusOn() end
 
