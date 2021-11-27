@@ -19,6 +19,8 @@
 
 #include "ed_main.h"
 
+#include <stdexcept>
+
 #if defined(_WIN32)
 #define  IS_LINUX  0
 #define  FULL_DB   0

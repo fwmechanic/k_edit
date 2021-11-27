@@ -4,3 +4,4 @@ PSAPI.DLL
 SHELL32.dll
 USER32.dll
 ADVAPI32.dll
+bcrypt.dll

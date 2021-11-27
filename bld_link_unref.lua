@@ -40,6 +40,7 @@ for nm, count in pairs( unrefs ) do  -- print( "-> \"" .. ix, tb.fxn .. "\"" )
    unrefdCount = 1+ unrefdCount
    end
 
-
-io.stderr:write( unrefdCount, " undefined references, see ", ofnm, "\n" )
-os.exit(1)
+if unrefdCount > 0 then
+   io.stderr:write( unrefdCount, " undefined references, see ", ofnm, "\n" )
+   os.exit(1)
+   end

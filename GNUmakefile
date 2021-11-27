@@ -71,6 +71,8 @@ else
   endif
 endif
 
+TGT:=k
+
 # wrap -llib refs to make them link statically
 LINK_LIB_STATIC = -Wl,-Bstatic $1 -Wl,-Bdynamic
 
@@ -92,7 +94,7 @@ export CC
 EXE_EXT := .exe
 DLL_EXT := .dll
 OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:" $@.exp | grep -Fivf std.dynlib.mingw
-OS_LIBS := -lpsapi
+OS_LIBS := -lpsapi -lbcrypt
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
 CPPFLAGS += -DWINVER=0x0501
 
@@ -222,6 +224,7 @@ KEEPASM := -save-temps -fverbose-asm  # to get .S files
 KEEPASM :=
 
 ifdef K_WINDOWS
+WINDRES_O=$(TGT)_res.o
 
 PLAT_OBJS := \
  win32.o          \
@@ -232,14 +235,17 @@ PLAT_OBJS := \
  win32_contit.o   \
  win32_filename.o \
  win32_process.o  \
+ $(WINDRES_O)     \
 
 else
+WINDRES_O=
 
 PLAT_OBJS := \
  linux_api.o      \
  linux_process.o  \
  ncurses_conin.o  \
  ncurses_conout.o \
+ $(WINDRES_O)     \
 
 endif
 
@@ -317,8 +323,6 @@ OBJS := \
  wnd.o
 
 UNBUILT_RLS_FILES = .krsrc k.luaedit k.filesettings strict.lua user.lua README.md menu.lua show.lua tu.lua util.lua re.lua
-
-TGT:=k
 
 ifdef APP_IN_DLL
 
@@ -414,12 +418,8 @@ zap: cleanliblua
 	$(RM) $(ZAP_ARGS) $(CLEAN_ARGS)
 
 ifdef K_WINDOWS
-WINDRES=$(TGT)_res.o
-
-$(WINDRES): $(TGT).rc  # http://sourceware.org/binutils/docs/binutils/windres.html
+$(WINDRES_O): $(TGT).rc  # http://sourceware.org/binutils/docs/binutils/windres.html
 	windres $< $@
-else
-WINDRES=
 endif
 
 RLS_FILES = $(BUILT_RLS_FILES) $(UNBUILT_RLS_FILES)
@@ -444,7 +444,7 @@ ifdef APP_IN_DLL
 
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT) $(ED_DLL)$(DLL_EXT)
 
-$(TGT)$(EXE_EXT): $(TGT).o $(WINDRES)
+$(TGT)$(EXE_EXT): $(TGT).o $(WINDRES_O)
 	$(LINK.cpp) $^ -o $@ $(LINK_OPTS_COMMON) $(LINK_MAP)
 	@$(SHOW_BINARY)
 
@@ -457,11 +457,11 @@ else
 
 BUILT_RLS_FILES = $(TGT)$(EXE_EXT)
 
-LINK_EXE_RAW = $(CXX) $^ -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP) 2>link.errs || $(LUA_T) bld_link_unref.lua <link.errs
+LINK_EXE_RAW = $(CXX) $^ -o $@ _buildtime.o $(LIBS) $(LINK_OPTS_COMMON) $(LINK_MAP) 2>link.errs || ( $(LUA_T) bld_link_unref.lua <link.errs && cat link.errs && false )
 LINK_EXE = $(LINK_EXE_RAW)
 LINK_EXE = @echo linking $@&& $(LINK_EXE_RAW)
 
-$(TGT)$(EXE_EXT): $(OBJS) $(WINDRES)
+$(TGT)$(EXE_EXT): $(OBJS) $(WINDRES_O)
 	$(BLD_TIME_OBJ)
 	$(LINK_EXE)
 	@$(SHOW_BINARY)
@@ -505,9 +505,10 @@ khelp.html: khelp.txt
 	khelp.html
 
 
-.PHONY: run_unittests run_krbtree_unittest run_dlink_unittest run_unittest_tagfind
+UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_unittest_tagfind
+.PHONY: run_unittests $(UNITTEST_RUNTGTS)
 
-run_unittests: run_krbtree_unittest run_dlink_unittest
+run_unittests: $(UNITTEST_RUNTGTS)
 
 run_dlink_unittest: dlink_unittest$(EXE_EXT)
 	./dlink_unittest$(EXE_EXT)

@@ -20,6 +20,8 @@
 #include "ed_main.h"
 #include "stringlist.h"
 
+#include <stdexcept>
+
 //
 // A single textArgBuf has a major disadvantage: macros which use any inline
 // literal args overwrite the last USER arg.  Define SINGLE_TextArgBuffer to 0
