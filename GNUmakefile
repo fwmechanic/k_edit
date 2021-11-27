@@ -85,7 +85,7 @@ CMDTBL_PLAT = mingw
 # DBG_BUILD := x
 
 #######################################################################################
-# patch GNU make 4.0 (or nuwen GCC 11.6+ distro) bug by replacing dflt .c compile rule
+# patch GNU make 4.0 (or nuwen-11.6+ GCC distro) disconnect by replacing dflt .c compile rule
 CC = gcc
 export CC
 # end patch
