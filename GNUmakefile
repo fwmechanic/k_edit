@@ -322,7 +322,7 @@ OBJS := \
  $(PLAT_OBJS)   \
  wnd.o
 
-UNBUILT_RLS_FILES = .krsrc k.luaedit k.filesettings strict.lua user.lua README.md menu.lua show.lua tu.lua util.lua re.lua
+UNBUILT_RLS_FILES = .krsrc k.luaedit k.filesettings strict.lua user.lua README.adoc menu.lua show.lua tu.lua util.lua re.lua
 
 ifdef APP_IN_DLL
 
@@ -344,7 +344,7 @@ THISDIR := ./
 
 LUA_T=$(LUA_DIR)/lua$(EXE_EXT)
 
-CLEAN_ARGS = $(OBJS) *.makedeps *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLS_PKG_FILES) *_unittest *_unittest.o
+CLEAN_ARGS = $(OBJS) *.makedeps *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLSPKG_FNMS) *_unittest *_unittest.o
 
 ZAP_ARGS := $(EXE_TGTS) $(LUA_T) $(LUA_A)
 
@@ -422,18 +422,18 @@ $(WINDRES_O): $(TGT).rc  # http://sourceware.org/binutils/docs/binutils/windres.
 	windres $< $@
 endif
 
-RLS_FILES = $(BUILT_RLS_FILES) $(UNBUILT_RLS_FILES)
+ifdef K_WINDOWS
+RLSPKG_ARCHIVE = $(TGT)_rls.7z
+RLSPKG_SFX = $(TGT)_rls.exe
+else
+RLSPKG_ARCHIVE = $(TGT)_rls.tgz
+RLSPKG_SFX =
+endif
 
-RLS_PKG_FILES = $(TGT)_rls.7z $(TGT)_rls.exe
+RLSPKG_FNMS = $(RLSPKG_ARCHIVE) $(RLSPKG_SFX)
 
 .PHONY: rls
-rls: $(RLS_FILES)
-ifdef K_WINDOWS
-	7z a      $(TGT)_rls.7z  $(RLS_FILES)
-	7z a -sfx $(TGT)_rls.exe $(RLS_FILES)
-else
-	GZIP=-9 tar -zcvf $(TGT)_rls.tgz $(RLS_FILES)
-endif
+rls: $(RLSPKG_FNMS)
 
 # common phrases used in linking recipes
 BLD_TIME_OBJ = @$(LUA_T) bld_datetime.lua > _buildtime.c&&$(COMPILE.c) _buildtime.c
@@ -467,6 +467,16 @@ $(TGT)$(EXE_EXT): $(OBJS) $(WINDRES_O)
 	@$(SHOW_BINARY)
 
 endif
+
+RLS_FILES = $(BUILT_RLS_FILES) $(UNBUILT_RLS_FILES)
+
+ifdef K_WINDOWS
+$(RLSPKG_ARCHIVE): $(RLS_FILES) ; 7z a              $@ $^
+$(RLSPKG_SFX)    : $(RLS_FILES) ; 7z a -sfx         $@ $^
+else
+$(RLSPKG_ARCHIVE): $(RLS_FILES) ; GZIP=-9 tar -zcvf $@ $^
+endif
+
 
 ifeq "" ""
 BLD_CXX = @echo COMPILE.cpp $<&&$(COMPILE.cpp) $(OUTPUT_OPTION) $<
