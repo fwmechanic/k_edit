@@ -322,7 +322,7 @@ int TPipeReader::RdChar() { // see http://support.microsoft.com/kb/q190351/
 
 int TPipeReader::GetFilteredLine( PXbuf xb ) {
    xb->clear();
-   auto lastCh(0);
+   decltype(RdChar()) lastCh(0);
    while( 1 ) {
       lastCh = RdChar();
       switch( lastCh ) {
