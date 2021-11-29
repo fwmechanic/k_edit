@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -26,21 +26,20 @@
 
 STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
    switch( ch ) {
-      case '\200' : snprintf_full( &dest, &sizeofDest, "\\0"  ); break;
-      case '\\'   : snprintf_full( &dest, &sizeofDest, "\\\\" ); break;
-      case 27     : snprintf_full( &dest, &sizeofDest, "\\E"  ); break;
-      case '^'    : snprintf_full( &dest, &sizeofDest, "\\^"  ); break;
-      case ','    : snprintf_full( &dest, &sizeofDest, "\\,"  ); break;
-      case ':'    : snprintf_full( &dest, &sizeofDest, "\\:"  ); break;
-      case '\n'   : snprintf_full( &dest, &sizeofDest, "\\n"  ); break;
-      case '\r'   : snprintf_full( &dest, &sizeofDest, "\\r"  ); break;
-      case '\t'   : snprintf_full( &dest, &sizeofDest, "\\t"  ); break;
-      case '\b'   : snprintf_full( &dest, &sizeofDest, "\\b"  ); break;
-      case '\f'   : snprintf_full( &dest, &sizeofDest, "\\f"  ); break;
-      case ' '    : snprintf_full( &dest, &sizeofDest, "\\s"  ); break;
-      default     : if( ch >= 1 && ch <= 26 ) { snprintf_full( &dest, &sizeofDest, "^%c", ch-1+'A' ); }
-                    else                      { snprintf_full( &dest, &sizeofDest, isprint( ch ) ? "%c" : "\\%03o", ch ); }
-                    break;
+      break;case '\200' : snprintf_full( &dest, &sizeofDest, "\\0"  );
+      break;case '\\'   : snprintf_full( &dest, &sizeofDest, "\\\\" );
+      break;case 27     : snprintf_full( &dest, &sizeofDest, "\\E"  );
+      break;case '^'    : snprintf_full( &dest, &sizeofDest, "\\^"  );
+      break;case ','    : snprintf_full( &dest, &sizeofDest, "\\,"  );
+      break;case ':'    : snprintf_full( &dest, &sizeofDest, "\\:"  );
+      break;case '\n'   : snprintf_full( &dest, &sizeofDest, "\\n"  );
+      break;case '\r'   : snprintf_full( &dest, &sizeofDest, "\\r"  );
+      break;case '\t'   : snprintf_full( &dest, &sizeofDest, "\\t"  );
+      break;case '\b'   : snprintf_full( &dest, &sizeofDest, "\\b"  );
+      break;case '\f'   : snprintf_full( &dest, &sizeofDest, "\\f"  );
+      break;case ' '    : snprintf_full( &dest, &sizeofDest, "\\s"  );
+      break;default     : if( ch >= 1 && ch <= 26 ) { snprintf_full( &dest, &sizeofDest, "^%c", ch-1+'A' ); }
+                          else                      { snprintf_full( &dest, &sizeofDest, isprint( ch ) ? "%c" : "\\%03o", ch ); }
       }
    }
 
@@ -267,8 +266,8 @@ STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API
          else {
             0 && DBG( "%s %u (vs. %u)", __func__, ev, EdKC_COUNT );
             switch( ev ) {
-               case EdKC_EVENT_ProgramGotFocus:      RefreshCheckAllWindowsFBufs();  break;
-               case EdKC_EVENT_ProgramExitRequested: EditorExit( 0, true );          break;
+               break;case EdKC_EVENT_ProgramGotFocus:      RefreshCheckAllWindowsFBufs();
+               break;case EdKC_EVENT_ProgramExitRequested: EditorExit( 0, true );
                }
             }
          CleanupAnyExecutionHaltRequest();
@@ -383,14 +382,14 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
       //    8     | Shift + Alt + Control
       int mod;  enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
       switch( ch ) {
-         default : mod =    0     +    0    +    0     ; break;
-         case '2': mod =    0     +    0    + mod_shift; break;
-         case '3': mod =    0     + mod_alt +    0     ; break;
-         case '4': mod =    0     + mod_alt + mod_shift; break;
-         case '5': mod = mod_ctrl +    0    +    0     ; break;
-         case '6': mod = mod_ctrl +    0    + mod_shift; break;
-         case '7': mod = mod_ctrl + mod_alt +    0     ; break;
-         case '8': mod = mod_ctrl + mod_alt + mod_shift; break;
+         break;default : mod =    0     +    0    +    0     ;
+         break;case '2': mod =    0     +    0    + mod_shift;
+         break;case '3': mod =    0     + mod_alt +    0     ;
+         break;case '4': mod =    0     + mod_alt + mod_shift;
+         break;case '5': mod = mod_ctrl +    0    +    0     ;
+         break;case '6': mod = mod_ctrl +    0    + mod_shift;
+         break;case '7': mod = mod_ctrl + mod_alt +    0     ;
+         break;case '8': mod = mod_ctrl + mod_alt + mod_shift;
          }
       return mod;
       };

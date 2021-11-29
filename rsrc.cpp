@@ -244,12 +244,10 @@ bool ARG::initialize() {
       }
    auto assignsDone(0);
    switch( d_argType ) {
-    default:      return BadArg();
-    case TEXTARG: RsrcFileLdAllNamedSections( d_textarg.pText, &assignsDone );
-                  break;
-    case NOARG:   s_pFBufRsrc->ReadDiskFileNoCreateFailed(); // force reread
-                  assignsDone = ReinitializeMacros( true );
-                  break;
+    break; default:      return BadArg();
+    break; case TEXTARG: RsrcFileLdAllNamedSections( d_textarg.pText, &assignsDone );
+    break; case NOARG:   s_pFBufRsrc->ReadDiskFileNoCreateFailed(); // force reread
+                         assignsDone = ReinitializeMacros( true );
     }
    Msg( "%d assign%s done", assignsDone, Add_s( assignsDone ) );
    return assignsDone > 0;
@@ -283,21 +281,20 @@ bool RsrcFileLineRangeAssignFailed( PCChar title, PFBUF pFBuf, LINE yStart, LINE
    for( ; fContinueScan && yCur <= yEnd ; ++yCur ) {          DBGEN && DBG( "%s L %d", __func__, yCur );
       const auto rslt( AccumAssignableEntity() );             DBGEN && DBG( "%s L %d rslt=%d", __func__, yCur, rslt );
       switch( rslt ) {
-       case HAVE_CONTENT :                                    DBGEN && DBG( "assigning --- |%s|", srcAccum.c_str() );
-                            if( !AssignStrOk( srcAccum ) ) {  DBGEN && DBG( "%s atom failed '%s'", __func__, srcAccum.c_str() );
-                               if( pErrorPt ) {
-                                  pErrorPt->Set( yCur, 0 );
-                                  }
-                               fAssignError = true;
-                               }
-                            else {                            DBGEN && DBG( "%s atom OKOKOK '%s'", __func__, srcAccum.c_str() );
-                               ++assignsDone;
-                               }
-                            srcAccum.clear();
-                            break;
-       case BLANK_LINE   :  /* keep going */        break;
-       case FOUND_TAG    :  fContinueScan = false;  break;
-       default           :  fContinueScan = false;  break;
+       break; case HAVE_CONTENT :                                    DBGEN && DBG( "assigning --- |%s|", srcAccum.c_str() );
+                                   if( !AssignStrOk( srcAccum ) ) {  DBGEN && DBG( "%s atom failed '%s'", __func__, srcAccum.c_str() );
+                                      if( pErrorPt ) {
+                                         pErrorPt->Set( yCur, 0 );
+                                         }
+                                      fAssignError = true;
+                                      }
+                                   else {                            DBGEN && DBG( "%s atom OKOKOK '%s'", __func__, srcAccum.c_str() );
+                                      ++assignsDone;
+                                      }
+                                   srcAccum.clear();
+       break; case BLANK_LINE   :  /* keep going */        break;
+       break; case FOUND_TAG    :  fContinueScan = false;  break;
+       break; default           :  fContinueScan = false;  break;
        }
       }                                                       DBGEN && DBG( "%s: {%s} L [%d..%d/%d] = %d", __func__, title, yStart, yCur, yEnd, assignsDone );
    if( pAssignsDone ) { *pAssignsDone = assignsDone; }

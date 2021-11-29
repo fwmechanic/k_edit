@@ -326,15 +326,14 @@ int TPipeReader::GetFilteredLine( PXbuf xb ) {
    while( 1 ) {
       lastCh = RdChar();
       switch( lastCh ) {
-         case 0x0D:  break;            // drop CR
-         case 0x0A:  goto END_OF_LINE; // LF signifies EOL
-         case EMPTY: goto END_OF_LINE; // no more data available (for now)
-         case HTAB:  { // expand to spaces            01234567
-                     STATIC_CONST char tabspaces[] = "        ";
-                     xb->cat( tabspaces+( xb->length() & (MAX_TAB_WIDTH-1)) );
-                     }break;
-         default:    xb->push_back( lastCh );    DB && DBG( "%c", lastCh );
-                     break;
+         break;case 0x0D:  // drop CR
+         break;case 0x0A:  goto END_OF_LINE; // LF signifies EOL
+         break;case EMPTY: goto END_OF_LINE; // no more data available (for now)
+         break;case HTAB:  { // expand to spaces            01234567
+                           STATIC_CONST char tabspaces[] = "        ";
+                           xb->cat( tabspaces+( xb->length() & (MAX_TAB_WIDTH-1)) );
+                           }
+         break;default:    xb->push_back( lastCh );    DB && DBG( "%c", lastCh );
          }
       }
 END_OF_LINE:
@@ -773,11 +772,11 @@ int Win32_pty::KillAllJobsInBkgndProcessQueue() {
    if( IsThreadActive() && ConIO::Confirm( Sprintf2xBuf( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), d_processInfo.dwProcessId ) ) ) {
       PCChar msg;
       switch( Win32::TerminateApp( d_processInfo.dwProcessId, 2000 ) ) {
-         default                      : msg = "WTF!?"                    ;  break;
-         case TA_FAILED               : msg = "TA_FAILED"                ;  break;
-         case TA_SUCCESS_CTRL_BREAK   : msg = "TA_SUCCESS_CTRL_BREAK"    ;  break;
-         case TA_SUCCESS_WM_CLOSE     : msg = "TA_SUCCESS_WM_CLOSE"      ;  break;
-         case TA_SUCCESS_TERM_PROCESS : msg = "TA_SUCCESS_TERM_PROCESS"  ;  break;
+         break;default                      : msg = "WTF!?"                    ;
+         break;case TA_FAILED               : msg = "TA_FAILED"                ;
+         break;case TA_SUCCESS_CTRL_BREAK   : msg = "TA_SUCCESS_CTRL_BREAK"    ;
+         break;case TA_SUCCESS_WM_CLOSE     : msg = "TA_SUCCESS_WM_CLOSE"      ;
+         break;case TA_SUCCESS_TERM_PROCESS : msg = "TA_SUCCESS_TERM_PROCESS"  ;
          }
       Msg( "Win32::TerminateApp returned %s", msg );
       return true;
@@ -927,11 +926,11 @@ int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
       ) {
       PCChar msg;
       switch( Win32::TerminateApp( d_processInfo.dwProcessId, 2000 ) ) {
-         default                      : msg = "WTF!?"                    ;  break;
-         case TA_FAILED               : msg = "TA_FAILED"                ;  break;
-         case TA_SUCCESS_CTRL_BREAK   : msg = "TA_SUCCESS_CTRL_BREAK"    ;  break;
-         case TA_SUCCESS_WM_CLOSE     : msg = "TA_SUCCESS_WM_CLOSE"      ;  break;
-         case TA_SUCCESS_TERM_PROCESS : msg = "TA_SUCCESS_TERM_PROCESS"  ;  break;
+         break;default                      : msg = "WTF!?"                   ;
+         break;case TA_FAILED               : msg = "TA_FAILED"               ;
+         break;case TA_SUCCESS_CTRL_BREAK   : msg = "TA_SUCCESS_CTRL_BREAK"   ;
+         break;case TA_SUCCESS_WM_CLOSE     : msg = "TA_SUCCESS_WM_CLOSE"     ;
+         break;case TA_SUCCESS_TERM_PROCESS : msg = "TA_SUCCESS_TERM_PROCESS" ;
          }
       d_processInfo.dwProcessId = INVALID_dwProcessId;
       Msg( "Win32::TerminateApp returned %s", msg );

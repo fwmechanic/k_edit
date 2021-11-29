@@ -186,13 +186,11 @@ STATIC_FXN void spcs2tabs_outside_quotes( string_back_inserter dit, stref src, T
             }
          if( sit != src.cend() && !fNxtChEscaped ) {
             switch( *sit ) {
-               case chQuot1:
-               case chQuot2:  fInQuotedRgn = true;
-                              quoteCh = *sit;
-                              break;
-               case chESC:    fNxtChEscaped = true; // ESCAPE char, not PathSepCh!
-                              break;
-               default:       break;
+               break; case chQuot1:
+               break; case chQuot2:  fInQuotedRgn = true;
+                                     quoteCh = *sit;
+               break; case chESC:    fNxtChEscaped = true; // ESCAPE char, not PathSepCh!
+               break; default:       ;
                }
             }
          else {
@@ -351,11 +349,11 @@ void FBUF::PutLineEntab( LINE yLine, stref srSrc, std::string &tmpbuf ) {
       tmpbuf.clear();
       const Tabber tabr( this->TabWidth() );
       switch( Entab() ) { // compress spaces into tabs per this->Entab()
-         default:
-         case ENTAB_0_NO_CONV:                   Assert( 0 );                                                    break;
-         case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(tmpbuf), srSrc, tabr ); break;
-         case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(tmpbuf), srSrc, tabr ); break;
-         case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(tmpbuf), srSrc, tabr ); break;
+         break;default:
+         break;case ENTAB_0_NO_CONV:                   Assert( 0 );
+         break;case ENTAB_1_LEADING_SPCS_TO_TABS:      spcs2tabs_leading       ( back_inserter(tmpbuf), srSrc, tabr );
+         break;case ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS: spcs2tabs_outside_quotes( back_inserter(tmpbuf), srSrc, tabr );
+         break;case ENTAB_3_ALL_SPC_TO_TABS:           spcs2tabs_all           ( back_inserter(tmpbuf), srSrc, tabr );
          }
       srSrc = tmpbuf;
       }
@@ -377,8 +375,8 @@ COL ColOfFreeIdx( COL tabWidth, stref content, sridx offset, sridx startIx, COL 
          return xCol;
          }
       switch( content[ix] ) {
-         default  : ++xCol;                                break;
-         case HTAB: xCol = tabr.ColOfNextTabStop( xCol );  break;
+         break;default  : ++xCol;
+         break;case HTAB: xCol = tabr.ColOfNextTabStop( xCol );
          }
       }
    return xCol + (offset - content.length());  // 'offset' indexes _past_ content: assume all chars past EOL are spaces (non-tabs)
@@ -575,10 +573,10 @@ STATIC_FXN void PCFV_delete_BOXARG( ARG::BOXARG_t const &d_boxarg, bool copyToCl
 
 STATIC_FXN void DelArgRegion( const ARG &arg ) {
    switch( arg.d_argType ) {
-    case LINEARG:   PCFV_delete_LINEARG  ( arg.d_linearg  , false );  break;
-    case BOXARG:    PCFV_delete_BOXARG   ( arg.d_boxarg   , false );  break;
-    case STREAMARG: PCFV_delete_STREAMARG( arg.d_streamarg, false );  break;
-    default:        break;
+    break;case LINEARG:   PCFV_delete_LINEARG  ( arg.d_linearg  , false );
+    break;case BOXARG:    PCFV_delete_BOXARG   ( arg.d_boxarg   , false );
+    break;case STREAMARG: PCFV_delete_STREAMARG( arg.d_streamarg, false );
+    break;default:        ;
     }
    }
 
@@ -591,17 +589,16 @@ STATIC_FXN void PCFV_delete_ToEOL( Point const &curpos, bool copyToClipboard ) {
 
 bool ARG::sdelete() { PCFV;
    switch( d_argType ) {
-    default:        return BadArg();
-    case NOARG:     FBOP::DelChar( pcf, pcv->Cursor().lin, pcv->Cursor().col ); break; // Delete the CHARACTER at the cursor w/o saving it to <clipboard>
-    case NULLARG:   PCFV_delete_STREAMARG( { d_nullarg.cursor.lin, d_nullarg.cursor.col, d_nullarg.cursor.lin+1, 0 }, !d_fMeta ); break;  // Deletes text from the cursor to the end of the line, INCLUDING THE LINE BREAK.
-    case BOXARG:    // STREAMARG ³ BOXARG ³ LINEARG: Deletes the selected stream of text
-                    // from the starting point of the selection to the cursor and copies
-                    // it to the clipboard.  This always deletes a stream of text,
-                    // regardless of the current selection mode.
-                    ATTR_FALLTHRU;
-    case LINEARG:   ConvertLineOrBoxArgToStreamArg();
-                    ATTR_FALLTHRU;
-    case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, !d_fMeta ); break;
+    break;default:        return BadArg();
+    break;case NOARG:     FBOP::DelChar( pcf, pcv->Cursor().lin, pcv->Cursor().col );  // Delete the CHARACTER at the cursor w/o saving it to <clipboard>
+    break;case NULLARG:   PCFV_delete_STREAMARG( { d_nullarg.cursor.lin, d_nullarg.cursor.col, d_nullarg.cursor.lin+1, 0 }, !d_fMeta );   // Deletes text from the cursor to the end of the line, INCLUDING THE LINE BREAK.
+                          // STREAMARG ³ BOXARG ³ LINEARG: Deletes the selected stream of text
+                          // from the starting point of the selection to the cursor and copies
+                          // it to the clipboard.  This always deletes a stream of text,
+                          // regardless of the current selection mode.
+    break;case BOXARG:    ConvertLineOrBoxArgToStreamArg(); PCFV_delete_STREAMARG( d_streamarg, !d_fMeta );
+    break;case LINEARG:   ConvertLineOrBoxArgToStreamArg(); PCFV_delete_STREAMARG( d_streamarg, !d_fMeta );
+    break;case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, !d_fMeta );
     }
    return true;
    }
@@ -611,33 +608,34 @@ bool ARG::ldelete() { PCFV;
       ConvertStreamargToLineargOrBoxarg();
       }
    switch( d_argType ) {
-    default:        return BadArg();
-    case NOARG:     PCFV_delete_LINEARG( { d_noarg.cursor.lin, d_noarg.cursor.lin }, !d_fMeta ); break; // Deletes the line at the cursor
-    case NULLARG:   PCFV_delete_ToEOL( d_nullarg.cursor, !d_fMeta );                             break; // Deletes text from the cursor to the end of the line
-    case LINEARG:   PCFV_delete_LINEARG( d_linearg, !d_fMeta );                                  break;
-    case BOXARG:    PCFV_delete_BOXARG( d_boxarg, !d_fMeta );                                    break;
+    break;default:      return BadArg();
+    break;case NOARG:   PCFV_delete_LINEARG( { d_noarg.cursor.lin, d_noarg.cursor.lin }, !d_fMeta );  // Deletes the line at the cursor
+    break;case NULLARG: PCFV_delete_ToEOL( d_nullarg.cursor, !d_fMeta );                              // Deletes text from the cursor to the end of the line
+    break;case LINEARG: PCFV_delete_LINEARG( d_linearg, !d_fMeta );
+    break;case BOXARG:  PCFV_delete_BOXARG( d_boxarg, !d_fMeta );
     }
    return true;
    }
 
 bool ARG::udelete() { // "user interface" delete; does not convert BOX/LINE/STREAM ARGs; intended to replace ldelete on user's keyboard
    switch( d_argType ) {
-    default:        return BadArg();
-    case NOARG:     PCFV_delete_LINEARG( { d_noarg.cursor.lin, d_noarg.cursor.lin }, !d_fMeta ); break; // Deletes the line at the cursor
-    case NULLARG:   PCFV_delete_ToEOL( d_nullarg.cursor, !d_fMeta );                             break; // Deletes text from the cursor to the end of the line
-    case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, !d_fMeta );                              break;
-    case LINEARG:   PCFV_delete_LINEARG( d_linearg, !d_fMeta );                                  break;
-    case BOXARG:    PCFV_delete_BOXARG( d_boxarg, !d_fMeta, d_cArg < 2 );                        break;
+    break;default:        return BadArg();
+    break;case NOARG:     PCFV_delete_LINEARG( { d_noarg.cursor.lin, d_noarg.cursor.lin }, !d_fMeta );  // Deletes the line at the cursor
+    break;case NULLARG:   PCFV_delete_ToEOL( d_nullarg.cursor, !d_fMeta );                              // Deletes text from the cursor to the end of the line
+    break;case STREAMARG: PCFV_delete_STREAMARG( d_streamarg, !d_fMeta );
+    break;case LINEARG:   PCFV_delete_LINEARG( d_linearg, !d_fMeta );
+    break;case BOXARG:    PCFV_delete_BOXARG( d_boxarg, !d_fMeta, d_cArg < 2 );
     }
    return true;
    }
 
 bool ARG::delete_() {  // BUGBUG make this NOT save to clipboard!!! (current workaround: del key assigned to "meta delete")
    switch( d_argType ) {
-      default:      sdelete();  return true;
-      case LINEARG: ATTR_FALLTHRU;
-      case BOXARG:  ldelete();  return true;
-      }
+    break;default:      sdelete();
+    break;case LINEARG: ldelete();
+    break;case BOXARG:  ldelete();
+    }
+   return true;
    }
 
 bool ARG::sinsert() { PCF;
@@ -671,20 +669,19 @@ bool ARG::sinsert() { PCF;
 
 bool ARG::copy() {
    switch( d_argType ) {
-    default:        return BadArg();
-    case NOARG:     PCFV_Copy_LINEARG_ToClipboard  ( { d_noarg.cursor.lin, d_noarg.cursor.lin } );  break;  // Copies the line at the cursor to the clipboard.
-    case LINEARG:   PCFV_Copy_LINEARG_ToClipboard  ( d_linearg   );  break;
-    case STREAMARG: PCFV_Copy_STREAMARG_ToClipboard( d_streamarg );  break;
-    case BOXARG:    PCFV_Copy_BOXARG_ToClipboard   ( d_boxarg    );  break;
-    case TEXTARG:   0 && DBG( "%s: textarg.len=%d", __func__, Strlen( d_textarg.pText ) );
-                    if( d_textarg.pText[0] == 0 ) {
-                       Clipboard_Prep( 0 );  // 0 == EMPTY
-                       }
-                    else {
-                       Clipboard_Prep( BOXARG );
-                       g_pFbufClipboard->PutLineRaw( 0, d_textarg.pText );
-                       }
-                    break;
+    break;default:        return BadArg();
+    break;case NOARG:     PCFV_Copy_LINEARG_ToClipboard  ( { d_noarg.cursor.lin, d_noarg.cursor.lin } );  // Copies the line at the cursor to the clipboard.
+    break;case LINEARG:   PCFV_Copy_LINEARG_ToClipboard  ( d_linearg   );
+    break;case STREAMARG: PCFV_Copy_STREAMARG_ToClipboard( d_streamarg );
+    break;case BOXARG:    PCFV_Copy_BOXARG_ToClipboard   ( d_boxarg    );
+    break;case TEXTARG:   0 && DBG( "%s: textarg.len=%d", __func__, Strlen( d_textarg.pText ) );
+                          if( d_textarg.pText[0] == 0 ) {
+                             Clipboard_Prep( 0 );  // 0 == EMPTY
+                             }
+                          else {
+                             Clipboard_Prep( BOXARG );
+                             g_pFbufClipboard->PutLineRaw( 0, d_textarg.pText );
+                             }
     }
    return true;
    }
@@ -694,36 +691,33 @@ bool ARG::linsert() { PCF;
       ConvertStreamargToLineargOrBoxarg();
       }
    switch( d_argType ) {
-    default:        return BadArg();
-    case NULLARG:   {
-                    // Inserts or deletes blanks at the beginning of a line to move the
-                    // first nonblank character to the cursor.
-                    // (same as NOARG aligncol?)
-                    const auto rl( pcf->PeekRawLine( d_nullarg.cursor.lin ) );
-                    const auto ixNonb( FirstNonBlankOrEnd( rl ) );
-                    const auto  xNonb( CaptiveIdxOfCol( pcf->TabWidth(), rl, ixNonb ) );
-                    std::string sbuf;
-                    if     ( xNonb > d_nullarg.cursor.col ) {
-                       GetLineWithSegRemoved( pcf, sbuf, d_nullarg.cursor.lin, d_nullarg.cursor.col, xNonb - d_nullarg.cursor.col, true );
-                       }
-                    else if( xNonb < d_nullarg.cursor.col ) {
-                       pcf->DupLineForInsert( sbuf, d_nullarg.cursor.lin, xNonb, d_nullarg.cursor.col - xNonb );
-                       }
-                    if( sbuf.length() ) {
-                       std::string stmp;
-                       pcf->PutLineEntab( d_nullarg.cursor.lin, sbuf, stmp );
-                       }
-                    } break;
-    case NOARG:     pcf->InsBlankLinesBefore( d_noarg.cursor.lin );  // Inserts one blank line above the current line.
-                    break;
-    case LINEARG:   // LINEARG or BOXARG: Inserts blanks within the specified area.  The
-                    // argument is a linearg or boxarg regardless of the current selection
-                    // mode.  The argument is a linearg if the starting and ending points are
-                    // in the same column.
-                    pcf->InsBlankLinesBefore( d_linearg.yMin, d_linearg.yMax - d_linearg.yMin + 1 );
-                    break;
-    case BOXARG:    PCFV_BoxInsertBlanks( d_boxarg );
-                    break;
+    break;default:        return BadArg();
+    break;case NULLARG:   {
+                          // Inserts or deletes blanks at the beginning of a line to move the
+                          // first nonblank character to the cursor.
+                          // (same as NOARG aligncol?)
+                          const auto rl( pcf->PeekRawLine( d_nullarg.cursor.lin ) );
+                          const auto ixNonb( FirstNonBlankOrEnd( rl ) );
+                          const auto  xNonb( CaptiveIdxOfCol( pcf->TabWidth(), rl, ixNonb ) );
+                          std::string sbuf;
+                          if     ( xNonb > d_nullarg.cursor.col ) {
+                             GetLineWithSegRemoved( pcf, sbuf, d_nullarg.cursor.lin, d_nullarg.cursor.col, xNonb - d_nullarg.cursor.col, true );
+                             }
+                          else if( xNonb < d_nullarg.cursor.col ) {
+                             pcf->DupLineForInsert( sbuf, d_nullarg.cursor.lin, xNonb, d_nullarg.cursor.col - xNonb );
+                             }
+                          if( sbuf.length() ) {
+                             std::string stmp;
+                             pcf->PutLineEntab( d_nullarg.cursor.lin, sbuf, stmp );
+                             }
+                          }
+    break;case NOARG:     pcf->InsBlankLinesBefore( d_noarg.cursor.lin );  // Inserts one blank line above the current line.
+    break;case LINEARG:   // LINEARG or BOXARG: Inserts blanks within the specified area.  The
+                          // argument is a linearg or boxarg regardless of the current selection
+                          // mode.  The argument is a linearg if the starting and ending points are
+                          // in the same column.
+                          pcf->InsBlankLinesBefore( d_linearg.yMin, d_linearg.yMax - d_linearg.yMin + 1 );
+    break;case BOXARG:    PCFV_BoxInsertBlanks( d_boxarg );
     }
    return true;  // Linsert always returns true.
    }
@@ -854,10 +848,11 @@ bool ARG::graphic() { enum { DB=0 };
 
 bool ARG::insert() {
    switch( d_argType ) {
-    case BOXARG:  //-lint fallthrough
-    case LINEARG: linsert(); return true;
-    default:      sinsert(); return true;
+    break;case BOXARG:  linsert();
+    break;case LINEARG: linsert();
+    break;default:      sinsert();
     }
+   return true;
    }
 
 bool ARG::emacsnewl() {
@@ -896,66 +891,64 @@ bool ARG::emacsnewl() {
 
 bool ARG::paste() {
    switch( d_argType ) {
-    default:        break;
-    case STREAMARG: //-lint fallthrough
-    case BOXARG:    //-lint fallthrough
-    case LINEARG:   ::DelArgRegion( *this ); // Replace the selected text with the contents of <clipboard>
-                    break;
-    case TEXTARG:   {
-                    g_pFbufClipboard->MakeEmpty();
-                    if( d_cArg < 2 ) {
-                       Clipboard_PutText( d_textarg.pText );
-                       }
-                    else {
-#if 0
-                       //  Arg Arg <textarg> Paste
-                       //
-                       //      Copies the contents of the file specified by <textarg> to the
-                       //      current file above the current line.
-                       //
-                       //  Arg Arg !<textarg> Paste
-                       //
-                       //      Runs <textarg> as an operating-system command, capturing the
-                       //      command's output to standard output. The output is copied to the
-                       //      clipboard and inserted above the current line.
-                       //
-                       pathbuf tmpfilenamebuf;
-                       Pathbuf cmdstrbuf;
-                       tmpfilenamebuf[0] = '\0'; // init to 'no tmpfile created'
-                       auto pSrcFnm( StrPastAnyBlanks( d_textarg.pText ) ); // arg arg "!dir" paste
-                       if( *pSrcFnm == '!' ) {
-                          NOAUTO CPCChar pszCmd( pSrcFnm + 1 );
-                          const auto tmpx( CompletelyExpandFName_wEnvVars( "$TMP:" DIRSEP_STR "paste.$k$" ) );
-                          bcpy( tmpfilenamebuf, tmpx.c_str() );
-                          0 && DBG( "tmp '%s'", tmpfilenamebuf );
-                          pSrcFnm = tmpfilenamebuf;
-                          cmdstrbuf.Sprintf( "%s >\"%s\" 2>&1", pszCmd, tmpfilenamebuf );
-                          RunChildSpawnOrSystem( cmdstrbuf );
-                          }
-                       if( FBUF::FnmIsPseudo( pSrcFnm ) ) {
-                          cmdstrbuf.Strcpy( pSrcFnm );
-                          }
-                       else {
-                          CompletelyExpandFName_wEnvVars( BSOB(cmdstrbuf), pSrcFnm );
-                          }
-                       const auto pFBuf( FindFBufByName( cmdstrbuf ) );
-                       if( pFBuf ) {
-                          if( pFBuf->RefreshFailedShowError() ) {
-                             return false;
+    break;default:
+    break;case STREAMARG: ::DelArgRegion( *this ); // Replace the selected text with the contents of <clipboard>
+    break;case BOXARG:    ::DelArgRegion( *this ); // Replace the selected text with the contents of <clipboard>
+    break;case LINEARG:   ::DelArgRegion( *this ); // Replace the selected text with the contents of <clipboard>
+    break;case TEXTARG:   {
+                          g_pFbufClipboard->MakeEmpty();
+                          if( d_cArg < 2 ) {
+                             Clipboard_PutText( d_textarg.pText );
                              }
-                          FBOP::CopyLines( g_pFbufClipboard, 0, pFBuf, 0, pFBuf->LastLine() );
-                          }
-                       else { // couldntFindFile
-                          g_pFbufClipboard->ReadOtherDiskFileNoCreateFailed( cmdstrbuf );
-                          }
-                       if( tmpfilenamebuf[0] ) {
-                          unlinkOk( tmpfilenamebuf );
-                          }
-                       g_ClipboardType = LINEARG;
+                          else {
+#if 0
+                             //  Arg Arg <textarg> Paste
+                             //
+                             //      Copies the contents of the file specified by <textarg> to the
+                             //      current file above the current line.
+                             //
+                             //  Arg Arg !<textarg> Paste
+                             //
+                             //      Runs <textarg> as an operating-system command, capturing the
+                             //      command's output to standard output. The output is copied to the
+                             //      clipboard and inserted above the current line.
+                             //
+                             pathbuf tmpfilenamebuf;
+                             Pathbuf cmdstrbuf;
+                             tmpfilenamebuf[0] = '\0'; // init to 'no tmpfile created'
+                             auto pSrcFnm( StrPastAnyBlanks( d_textarg.pText ) ); // arg arg "!dir" paste
+                             if( *pSrcFnm == '!' ) {
+                                NOAUTO CPCChar pszCmd( pSrcFnm + 1 );
+                                const auto tmpx( CompletelyExpandFName_wEnvVars( "$TMP:" DIRSEP_STR "paste.$k$" ) );
+                                bcpy( tmpfilenamebuf, tmpx.c_str() );
+                                0 && DBG( "tmp '%s'", tmpfilenamebuf );
+                                pSrcFnm = tmpfilenamebuf;
+                                cmdstrbuf.Sprintf( "%s >\"%s\" 2>&1", pszCmd, tmpfilenamebuf );
+                                RunChildSpawnOrSystem( cmdstrbuf );
+                                }
+                             if( FBUF::FnmIsPseudo( pSrcFnm ) ) {
+                                cmdstrbuf.Strcpy( pSrcFnm );
+                                }
+                             else {
+                                CompletelyExpandFName_wEnvVars( BSOB(cmdstrbuf), pSrcFnm );
+                                }
+                             const auto pFBuf( FindFBufByName( cmdstrbuf ) );
+                             if( pFBuf ) {
+                                if( pFBuf->RefreshFailedShowError() ) {
+                                   return false;
+                                   }
+                                FBOP::CopyLines( g_pFbufClipboard, 0, pFBuf, 0, pFBuf->LastLine() );
+                                }
+                             else { // couldntFindFile
+                                g_pFbufClipboard->ReadOtherDiskFileNoCreateFailed( cmdstrbuf );
+                                }
+                             if( tmpfilenamebuf[0] ) {
+                                unlinkOk( tmpfilenamebuf );
+                                }
+                             g_ClipboardType = LINEARG;
 #endif
-                       }
-                    }
-                    break;
+                             }
+                          }
     } // switch
 
    0 && DBG( "g_ClipboardType = %04X", g_ClipboardType );

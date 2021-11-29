@@ -160,16 +160,14 @@ bool ARG::bp() {
 
 bool ARG::cancel() {               0 && DBG( "%s+", __func__ );
    switch( d_argType ) {
-      case NOARG: MsgClr();
-                  break;
-      default:    if( !Interpreter::Interpreting() ) {
-                     fnMsg( "Argument cancelled" );
-                     }
-                  ClearArgAndSelection();
-                  // following does NOT work to restore the cursor to its initial position prior to selword macro execution
-                  // why? because the selword macro moves the cursor to one end of the word BEFORE it begins the selection
-                  // g_CurView()->MoveCursor( s_SelAnchor );
-                  break;
+      break;case NOARG: MsgClr();
+      break;default:    if( !Interpreter::Interpreting() ) {
+                           fnMsg( "Argument cancelled" );
+                           }
+                        ClearArgAndSelection();
+                        // following does NOT work to restore the cursor to its initial position prior to selword macro execution
+                        // why? because the selword macro moves the cursor to one end of the word BEFORE it begins the selection
+                        // g_CurView()->MoveCursor( s_SelAnchor );
       }
    if( !Interpreter::Interpreting() ) {
       DispNeedsRedrawVerticalCursorHilite();
@@ -506,12 +504,11 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
 bool ARG::stream() {  // test for StreamArgToString
    auto cArg(0);      // stream:alt+k
    switch( d_argType ) {
-      default:        return BadArg();
-      case STREAMARG: {
-                      const auto ststr( StreamArgToString( g_CurFBuf(), d_streamarg ) );
-                      DBG( "Stream:%s|", ststr.c_str() );
-                      }
-                      break;
+      break;default:        return BadArg();
+      break;case STREAMARG: {
+                            const auto ststr( StreamArgToString( g_CurFBuf(), d_streamarg ) );
+                            DBG( "Stream:%s|", ststr.c_str() );
+                            }
       }
    return true;
    }
@@ -1126,9 +1123,9 @@ STATIC_FXN bool GetTextargStringNXeq( std::string &str, int cArg, COL xCursor ) 
 bool ARG::cliptext() { // patterned after lasttext
    auto cArg(0);
    switch( d_argType ) {
-      default:        return BadArg();
-      case NULLARG:   cArg = 1 + d_cArg;  break;
-      case NOARG:     cArg = 1;           break;
+      break;default:        return BadArg();
+      break;case NULLARG:   cArg = 1 + d_cArg;
+      break;case NOARG:     cArg = 1;
       }
    WinClipGetFirstLine( TextArgBuffer() );
    return GetTextargStringNXeq( TextArgBuffer(), cArg, 0 );
@@ -1138,23 +1135,20 @@ bool ARG::cliptext() { // patterned after lasttext
 bool ARG::lasttext() {
    auto cArg(0);
    switch( d_argType ) {
-      default:        return BadArg();
-      case NULLARG:   cArg = 1 + d_cArg;  break;
-      case NOARG:     cArg = 1;           break;
-      case LINEARG:   cArg = d_cArg; g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_linearg.yMin, 0, COL_MAX );
-                      break;
-      case BOXARG:    cArg = d_cArg; g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col );
-                      break;
-      case STREAMARG: cArg = d_cArg; TextArgBuffer() = StreamArgToString( g_CurFBuf(), d_streamarg );
-                      break;
+      break;default:        return BadArg();
+      break;case NULLARG:   cArg = 1 + d_cArg;
+      break;case NOARG:     cArg = 1;
+      break;case LINEARG:   cArg = d_cArg; g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_linearg.yMin, 0, COL_MAX );
+      break;case BOXARG:    cArg = d_cArg; g_CurFBuf()->DupLineSeg( TextArgBuffer(), d_boxarg.flMin.lin, d_boxarg.flMin.col, d_boxarg.flMax.col );
+      break;case STREAMARG: cArg = d_cArg; TextArgBuffer() = StreamArgToString( g_CurFBuf(), d_streamarg );
       }
    return GetTextargStringNXeq( TextArgBuffer(), cArg, TextArgBuffer().length() );
    }
 
 bool ARG::prompt() {
    switch( d_argType ) {
-      default:        return BadArg();
-      case TEXTARG:   break;
+      break;default:      return BadArg();
+      break;case TEXTARG: ;
       }
    std::string src( d_textarg.pText );
    for( auto ix(0) ; ix < d_cArg ; ++ix ) {
@@ -1413,20 +1407,20 @@ int ARG::GetLineRange( LINE *pyMin, LINE *pyMax ) const {
 
 void ARG::BeginPt( Point *pPt ) const {
    switch( d_argType ) {
-    case LINEARG:   pPt->Set( d_linearg.yMin       , 0                     ); break;
-    case BOXARG:    pPt->Set( d_boxarg.flMin.lin   , d_boxarg.flMin.col    ); break;
-    case STREAMARG: pPt->Set( d_streamarg.flMin.lin, d_streamarg.flMin.col ); break;
-    default:        pPt->Set( g_CursorLine()       , g_CursorCol()         ); break;
-    }               0 && DBG( "%s=(%d,%d)", __func__, pPt->lin, pPt->col );
+    break;case LINEARG:   pPt->Set( d_linearg.yMin       , 0                     );
+    break;case BOXARG:    pPt->Set( d_boxarg.flMin.lin   , d_boxarg.flMin.col    );
+    break;case STREAMARG: pPt->Set( d_streamarg.flMin.lin, d_streamarg.flMin.col );
+    break;default:        pPt->Set( g_CursorLine()       , g_CursorCol()         );
+    }                     0 && DBG( "%s=(%d,%d)", __func__, pPt->lin, pPt->col );
    }
 
 void ARG::EndPt( Point *pPt ) const {
    switch( d_argType ) {
-    case LINEARG:   pPt->Set( d_linearg.yMax       , COL_MAX               ); break;
-    case BOXARG:    pPt->Set( d_boxarg.flMax.lin   , d_boxarg.flMax.col    ); break;
-    case STREAMARG: pPt->Set( d_streamarg.flMax.lin, d_streamarg.flMax.col ); break;
-    default:        pPt->Set( g_CursorLine()       , g_CursorCol()         ); break;
-    }               0 && DBG( "%s=(%d,%d)", __func__, pPt->lin, pPt->col );
+    break;case LINEARG:   pPt->Set( d_linearg.yMax       , COL_MAX               );
+    break;case BOXARG:    pPt->Set( d_boxarg.flMax.lin   , d_boxarg.flMax.col    );
+    break;case STREAMARG: pPt->Set( d_streamarg.flMax.lin, d_streamarg.flMax.col );
+    break;default:        pPt->Set( g_CursorLine()       , g_CursorCol()         );
+    }                     0 && DBG( "%s=(%d,%d)", __func__, pPt->lin, pPt->col );
    }
 
 bool ARG::Beyond( const Point &pt ) const { // Beyond() DOES NOT pay attention to the x dimension (COLumn), while Within() DOES
@@ -1440,12 +1434,10 @@ bool ARG::Beyond( const Point &pt ) const { // Beyond() DOES NOT pay attention t
 
 void ARG::GetColumnRange( COL *pxMin, COL *pxMax ) const {
    switch( d_argType ) {
-    case BOXARG: *pxMin = d_boxarg.flMin.col;
-                 *pxMax = d_boxarg.flMax.col;
-                 break;
-    default:     *pxMin = 0;
-                 *pxMax = COL_MAX;
-                 break;
+    break;case BOXARG: *pxMin = d_boxarg.flMin.col;
+                       *pxMax = d_boxarg.flMax.col;
+    break;default:     *pxMin = 0;
+                       *pxMax = COL_MAX;
     }
    }
 
@@ -1479,14 +1471,12 @@ void ARG::ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const {
    *pxLeftIncl  = 0;
    *pxRightIncl = COL_MAX;
    switch( d_argType ) { // further constrain x based on Arg:
-      default:        break;
-      case LINEARG:   break;
-      case BOXARG:    *pxLeftIncl  = d_boxarg.flMin.col;
-                      *pxRightIncl = d_boxarg.flMax.col;
-                      break;
-      case STREAMARG: if(      yLine == d_streamarg.flMin.lin ) { *pxLeftIncl  = d_streamarg.flMin.col; }
-                      else if( yLine == d_streamarg.flMax.lin ) { *pxRightIncl = d_streamarg.flMax.col; }
-                      break;
+      break;default:
+      break;case LINEARG:
+      break;case BOXARG:    *pxLeftIncl  = d_boxarg.flMin.col;
+                            *pxRightIncl = d_boxarg.flMax.col;
+      break;case STREAMARG: if(      yLine == d_streamarg.flMin.lin ) { *pxLeftIncl  = d_streamarg.flMin.col; }
+                            else if( yLine == d_streamarg.flMax.lin ) { *pxRightIncl = d_streamarg.flMax.col; }
       }
    }
 

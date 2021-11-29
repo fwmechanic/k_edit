@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -43,11 +43,11 @@ STATIC_VAR Win32::LONG local_DllLoadCount;
 Win32::BOOL WINAPI DllMain( Win32::HINSTANCE hInstDll, Win32::DWORD fdwReason, Win32::LPVOID fImpLoad ) {
    PCChar type;
    switch( fdwReason ) {
-    default                : type = "???"               ; break;
-    case DLL_THREAD_ATTACH : type = "DLL_THREAD_ATTACH" ; break;
-    case DLL_THREAD_DETACH : type = "DLL_THREAD_DETACH" ; break;
-    case DLL_PROCESS_ATTACH: type = "DLL_PROCESS_ATTACH"; Win32::InterlockedIncrement( &g_DllLoadCount ); local_DllLoadCount = g_DllLoadCount; break;
-    case DLL_PROCESS_DETACH: type = "DLL_PROCESS_DETACH"; Win32::InterlockedDecrement( &g_DllLoadCount ); break;
+    break;default                : type = "???"               ;
+    break;case DLL_THREAD_ATTACH : type = "DLL_THREAD_ATTACH" ;
+    break;case DLL_THREAD_DETACH : type = "DLL_THREAD_DETACH" ;
+    break;case DLL_PROCESS_ATTACH: type = "DLL_PROCESS_ATTACH"; Win32::InterlockedIncrement( &g_DllLoadCount ); local_DllLoadCount = g_DllLoadCount;
+    break;case DLL_PROCESS_DETACH: type = "DLL_PROCESS_DETACH"; Win32::InterlockedDecrement( &g_DllLoadCount );
     }
    DBG_THREAD( "-----------> %s %s <------------", __func__, type );
    return true;

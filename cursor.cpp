@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -193,11 +193,10 @@ bool ARG::newline() {
 
 bool ARG::setwindow() { PCV;
    switch( d_argType ) {
-    default:      DispNeedsRedrawTotal();  // bug-masker: if color is changed interactively or in a startup macro the change did not affect all lines w/o this change
-                  return true;
-    case NULLARG: pcv->ScrollOriginYX( g_CursorLine(), d_cArg == 1 ? g_CursorCol() : pcv->Origin().col );
-                  return true;
+    break;default:      DispNeedsRedrawTotal();  // bug-masker: if color is changed interactively or in a startup macro the change did not affect all lines w/o this change
+    break;case NULLARG: pcv->ScrollOriginYX( g_CursorLine(), d_cArg == 1 ? g_CursorCol() : pcv->Origin().col );
     }
+   return true;
    }
 
 bool ARG::pmlines( int direction ) { PCWrV;

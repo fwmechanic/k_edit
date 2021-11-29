@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -134,13 +134,11 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
    captures.clear(); // before any return
    if( rc <= 0 ) {
       switch( rc ) {
-         case PCRE_ERROR_NOMATCH: break; // the only "expected" error: be silent
-         case 0:  // if PCRE returns 0, it says there were more captures than we gave him space for (sizeof(d_pcreCapture) / sizeof(int)).
-                  // This is an internal error.
-                  ErrorDialogBeepf( "PCRE: actualPcreCaptureCount(?) < d_pcreCapture.size()(%d)", d_maxPossCaptures );
-                  break;
-         default: ErrorDialogBeepf( "PCRE returned %d?", rc );
-                  break;
+         break;case PCRE_ERROR_NOMATCH:  // the only "expected" error: be silent
+         break;case 0:  // if PCRE returns 0, it says there were more captures than we gave him space for (sizeof(d_pcreCapture) / sizeof(int)).
+                        // This is an internal error.
+                        ErrorDialogBeepf( "PCRE: actualPcreCaptureCount(?) < d_pcreCapture.size()(%d)", d_maxPossCaptures );
+         break;default: ErrorDialogBeepf( "PCRE returned %d?", rc );
          }
       return 0;
       }

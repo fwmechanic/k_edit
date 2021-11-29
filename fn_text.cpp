@@ -40,13 +40,13 @@ STATIC_FXN char first_alpha( PCChar str ) {
 int FlipCase( int ch ) {
    if( isalpha(ch) ) { return islower(ch) ? _toupper(ch) : _tolower(ch); }
    switch( ch ) {
-      case '+' : return '-' ;
-      case '-' : return '+' ;
-      case '/' : return '\\';
-      case '\\': return '/' ;
+      case '+'        : return '-' ;
+      case '-'        : return '+' ;
+      case '/'        : return '\\';
+      case '\\'       : return '/' ;
       case chBackTick : return chQuot1    ;
       case chQuot1    : return chBackTick ;
-      default:  return ch;
+      default         : return ch;
       }
    }
 
@@ -259,14 +259,13 @@ bool ARG::makebox() {
    std::string buf;
    std::string stTmp;
    switch( d_argType ) {
-      default: return BadArg();
-      case NOARG: // replace char @ at cursor position w/"CE" of selected type
+      break;default: return BadArg();
+      break;case NOARG: // replace char @ at cursor position w/"CE" of selected type
          GetMinLine( buf, d_noarg.cursor.lin, d_noarg.cursor.col, g_CurFBuf() );
          buf[d_noarg.cursor.col] = pchBox[CE];
          g_CurFBuf()->PutLineEntab( d_noarg.cursor.lin, buf, stTmp );
          g_CurView()->MoveCursor( d_noarg.cursor.lin, d_noarg.cursor.col + 1 );
-         break;
-      case BOXARG: {
+      break;case BOXARG: {
          const auto fBox(  d_cArg == 1 );
                auto xTemp( d_boxarg.flMin.col );
                auto yTemp( d_boxarg.flMin.lin );
@@ -328,7 +327,6 @@ bool ARG::makebox() {
             g_CurFBuf()->PutLineEntab( yTemp, buf, stTmp );
             }
          }
-         break;
       }
    return true;
    }

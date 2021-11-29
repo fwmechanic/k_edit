@@ -302,21 +302,19 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
       auto pName( pRefStart + 1 );
       char term;
       switch( *pRefStart ) {
-         case '$': if( '(' == pRefStart[1] ) {
-                      ++pName;
-                      term = ')';
-                      }
-                   else if( '{' == pRefStart[1] ) {
-                      ++pName;
-                      term = '}';
-                      }
-                   else {
-                      term = ':';
-                      }
-                   break;
-         case '%': term = '%';
-                   break;
-         default:  /*suppress warning*/term = 0; Assert( 0 );
+         break;case '$': if( '(' == pRefStart[1] ) {
+                            ++pName;
+                            term = ')';
+                            }
+                         else if( '{' == pRefStart[1] ) {
+                            ++pName;
+                            term = '}';
+                            }
+                         else {
+                            term = ':';
+                            }
+         break;case '%': term = '%';
+         break;default:  /*suppress warning*/term = 0; Assert( 0 );
          }
       const decltype(pName) pTerm( strchr( pName, term ) );
       if( !pTerm ) {
@@ -358,8 +356,8 @@ STATIC_FXN int CFX_to_SSG( const PCChar inbuf, StrSubstituterGenerator *pSSG ) {
 
 bool ARG::cfx() {
    switch( d_argType ) {
-      default:       return BadArg();
-      case TEXTARG:  break;
+      break;default:       return BadArg();
+      break;case TEXTARG:
       }
    DBG( "[-] %s", d_textarg.pText );
    StrSubstituterGenerator ssg;
@@ -415,9 +413,9 @@ DirListGenerator::~DirListGenerator() {}
 bool ARG::wct() {
    pathbuf searchSpec;
    switch( d_argType ) {
-      default:       return BadArg();
-      case NOARG:    bcpy( searchSpec, "*" )  ;            break;
-      case TEXTARG:  bcpy( searchSpec, d_textarg.pText );  break;
+      break;default:      return BadArg();
+      break;case NOARG:   bcpy( searchSpec, "*" )  ;
+      break;case TEXTARG: bcpy( searchSpec, d_textarg.pText );
       }
    DirListGenerator dirs;
    pathbuf pbuf;

@@ -182,12 +182,12 @@ STATIC_FXN Win32::BOOL K_STDCALL CtrlBreakHandler( Win32::DWORD dwCtrlType ) {
    //
    auto type("");
    switch( dwCtrlType ) {
-      default                 : type = "???"                 ;    break;
-      case CTRL_C_EVENT       : type = "CTRL_C_EVENT"        ;    break;
-      case CTRL_BREAK_EVENT   : type = "CTRL_BREAK_EVENT"    ; SetUserInterrupt();                        break;
-      case CTRL_CLOSE_EVENT   : type = "CTRL_CLOSE_EVENT"    ; HANDLE_CTRL_CLOSE_EVENT( g_fProcessExitRequested = true; ) break;
-      case CTRL_LOGOFF_EVENT  : type = "CTRL_LOGOFF_EVENT"   ; g_fSystemShutdownOrLogoffRequested = true; break;
-      case CTRL_SHUTDOWN_EVENT: type = "CTRL_SHUTDOWN_EVENT" ; g_fSystemShutdownOrLogoffRequested = true; break;
+      break;default                 : type = "???"                 ;
+      break;case CTRL_C_EVENT       : type = "CTRL_C_EVENT"        ;
+      break;case CTRL_BREAK_EVENT   : type = "CTRL_BREAK_EVENT"    ; SetUserInterrupt();
+      break;case CTRL_CLOSE_EVENT   : type = "CTRL_CLOSE_EVENT"    ; HANDLE_CTRL_CLOSE_EVENT( g_fProcessExitRequested = true; )
+      break;case CTRL_LOGOFF_EVENT  : type = "CTRL_LOGOFF_EVENT"   ; g_fSystemShutdownOrLogoffRequested = true;
+      break;case CTRL_SHUTDOWN_EVENT: type = "CTRL_SHUTDOWN_EVENT" ; g_fSystemShutdownOrLogoffRequested = true;
       }
    DBG( "!!!!!!!! %s %s (cim=%lX) !!!!!!!!", __func__, type, GetConsoleInputMode() );
    return 1;
@@ -739,9 +739,9 @@ STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER ) {
       }
    switch( KER.wVirtualKeyCode ) {
       case VK_MENU:    return KER.uChar.UnicodeChar != 0;
-      case VK_NUMLOCK:
-      case VK_CAPITAL:
-      case VK_SHIFT:
+      case VK_NUMLOCK: return false;
+      case VK_CAPITAL: return false;
+      case VK_SHIFT:   return false;
       case VK_CONTROL: return false;
       default:         return true;
       }
@@ -759,34 +759,32 @@ STATIC_FXN EdInputEvent ReadInputEventPrimitive() {
       auto pIR( ReadNextUsefulConsoleInputRecord() );
       if( pIR ) { // pIR is within s_Conin.CIB[]?
          switch( pIR->EventType ) {
-            default:  DBG( "*** InputEvent %d ??? ***", pIR->EventType );  break;
-            case KEY_EVENT:
-                 if( IsInterestingKeyEvent( pIR->Event.KeyEvent ) ) {
-                    EdInputEvent rv;
-                    rv.fIsEdKC_EVENT            = false;
-                    rv.rawkey.unicodeChar       = pIR->Event.KeyEvent.uChar.UnicodeChar;
-                    rv.rawkey.wVirtualKeyCode   = pIR->Event.KeyEvent.wVirtualKeyCode;
-                    rv.rawkey.dwControlKeyState = pIR->Event.KeyEvent.dwControlKeyState;
-                    return rv;
-                    }
-                 break;
-            case FOCUS_EVENT: {
-                 EdInputEvent rv;
-                 rv.fIsEdKC_EVENT = true;
-                 rv.   EdKC_EVENT = pIR->Event.FocusEvent.bSetFocus ? EdKC_EVENT_ProgramGotFocus : EdKC_EVENT_ProgramLostFocus;
-                 0 && DBG( "*** InputEvent %s ***", pIR->Event.FocusEvent.bSetFocus ? "GotFocus" : "LostFocus" );
-                 return rv;
-                 }
+            break;default:  DBG( "*** InputEvent %d ??? ***", pIR->EventType );
+            break;case KEY_EVENT:
+                       if( IsInterestingKeyEvent( pIR->Event.KeyEvent ) ) {
+                          EdInputEvent rv;
+                          rv.fIsEdKC_EVENT            = false;
+                          rv.rawkey.unicodeChar       = pIR->Event.KeyEvent.uChar.UnicodeChar;
+                          rv.rawkey.wVirtualKeyCode   = pIR->Event.KeyEvent.wVirtualKeyCode;
+                          rv.rawkey.dwControlKeyState = pIR->Event.KeyEvent.dwControlKeyState;
+                          return rv;
+                          }
+            break;case FOCUS_EVENT: {
+                       EdInputEvent rv;
+                       rv.fIsEdKC_EVENT = true;
+                       rv.   EdKC_EVENT = pIR->Event.FocusEvent.bSetFocus ? EdKC_EVENT_ProgramGotFocus : EdKC_EVENT_ProgramLostFocus;
+                       0 && DBG( "*** InputEvent %s ***", pIR->Event.FocusEvent.bSetFocus ? "GotFocus" : "LostFocus" );
+                       return rv;
+                       }
 #if MOUSE_SUPPORT
-            case MOUSE_EVENT:
-                 0 && DBG( "*** InputEvent Mouse ***" );
-                 if( g_fUseMouse ) {
-                    TMouseEvent( pIR->Event.MouseEvent ).Process();
-                    }
-                 break;
+            break;case MOUSE_EVENT:
+                       0 && DBG( "*** InputEvent Mouse ***" );
+                       if( g_fUseMouse ) {
+                          TMouseEvent( pIR->Event.MouseEvent ).Process();
+                          }
 #endif
-            case WINDOW_BUFFER_SIZE_EVENT:  break;  // I CANNOT cause this to be generated
-            case MENU_EVENT:                break;  // MENU_EVENT _IS_ received, but its field(s) are reserved AND it's unclear what use these could be anyway, so we'll ignore
+            break;case WINDOW_BUFFER_SIZE_EVENT:  // I CANNOT cause this to be generated
+            break;case MENU_EVENT: ;              // MENU_EVENT _IS_ received, but its field(s) are reserved AND it's unclear what use these could be anyway, so we'll ignore
             }
          }
       }
@@ -1196,8 +1194,8 @@ STATIC_FXN KeyData_EdKC GetKeyData_EdKC( bool fFreezeOtherThreads ) { // PRIMARY
       else {
          0 && DBG( "%s %u (vs. %u)", __func__, rv.EdKC_, EdKC_COUNT );
          switch( rv.EdKC_ ) {
-            case EdKC_EVENT_ProgramGotFocus:      RefreshCheckAllWindowsFBufs();  break;
-            case EdKC_EVENT_ProgramExitRequested: EditorExit( 0, true );          break;
+            break;case EdKC_EVENT_ProgramGotFocus:      RefreshCheckAllWindowsFBufs();
+            break;case EdKC_EVENT_ProgramExitRequested: EditorExit( 0, true );
             }
          }
       CleanupAnyExecutionHaltRequest();

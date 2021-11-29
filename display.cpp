@@ -918,16 +918,13 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
       if( cppcNone != line.acppc ) {
          line.xPound = conv.i2c( line.xPound );
          switch( line.acppc ) {
-            default:       break;
-            case cppcIf  : --upDowns;
-                           ++not_elses;
-                           break;
-            case cppcEnd : ++upDowns; maxUnIfdEnds = std::max( maxUnIfdEnds, upDowns );
-                           ++not_elses;
-                           break;
-            case cppcElif: ATTR_FALLTHRU;
-            case cppcElse: ++elses;
-                           break;
+            break; default:
+            break; case cppcIf  : --upDowns;
+                                  ++not_elses;
+            break; case cppcEnd : ++upDowns; maxUnIfdEnds = std::max( maxUnIfdEnds, upDowns );
+                                  ++not_elses;
+            break; case cppcElif: ++elses;
+            break; case cppcElse: ++elses;
             }
          }
       }
@@ -3043,10 +3040,10 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
       if( g_pFbufClipboard && g_pFbufClipboard->LineCount() ) {
          PCChar st;
          switch( g_ClipboardType ) {
-            case LINEARG:   st = "Lin"; break;
-            case STREAMARG: st = "Str"; break;
-            case BOXARG:    st = "Box"; break;
-            default:        st = "???"; break;
+            break;case LINEARG:   st = "Lin";
+            break;case STREAMARG: st = "Str";
+            break;case BOXARG:    st = "Box";
+            break;default:        st = "???";
             }
          cl.Cat( ColorTblIdx::SEL, FmtStr<20>( "clp(%s%d)", st, g_pFbufClipboard->LineCount() ).c_str() );
          }

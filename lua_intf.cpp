@@ -31,10 +31,10 @@ int LDS( PCChar tag, lua_State *L ) {  // Lua Dump Stack
    for( auto ix(1); ix <= top; ++ix ) {
       const auto type( lua_type( L, ix ) );
       switch( type ) {
-         case LUA_TSTRING:  DBG( " [%d]=\"%s\"", ix, lua_tostring( L, ix ) ); break;
-         case LUA_TBOOLEAN: DBG( " [%d]=%s"    , ix, lua_toboolean( L, ix ) ? "true":"false" ); break;
-         case LUA_TNUMBER:  DBG( " [%d]=%f"    , ix, lua_tonumber( L, ix ) ); break;
-         default:           DBG( " [%d]={%s}"  , ix, lua_typename( L, type ) ); break;
+         break;case LUA_TSTRING:  DBG( " [%d]=\"%s\"", ix, lua_tostring( L, ix ) );
+         break;case LUA_TBOOLEAN: DBG( " [%d]=%s"    , ix, lua_toboolean( L, ix ) ? "true":"false" );
+         break;case LUA_TNUMBER:  DBG( " [%d]=%f"    , ix, lua_tonumber( L, ix ) );
+         break;default:           DBG( " [%d]={%s}"  , ix, lua_typename( L, type ) );
          }
       }
    0 && DBG( "-luaStack.top Dump @ '%s'", tag );
@@ -690,11 +690,11 @@ STATIC_FXN bool loadLuaFileOk( lua_State *L, PCChar fnm ) { enum { DB=0 };
    auto fLoadOK(false);                                        DB && DBG( "%s+1 L=%p fnm='%s'",  __func__, L, fnm );
    const auto luaRC( luaL_loadfile( L, fnm ) );                DB && DBG( "%s+2 L=%p luaRC=%u",  __func__, L, luaRC );
    switch( luaRC ) {
-      case LUA_ERRFILE:    DBG( "LUA_ERRFILE"   ); lh_handle_pcall_err( L, true ); break;
-      case LUA_ERRSYNTAX:  DBG( "LUA_ERRSYNTAX" ); lh_handle_pcall_err( L, true ); break;
-      case LUA_ERRMEM:     Msg( "Lua memory error while loading '%s'"     , fnm );  break;
-      default:             Msg( "Unknown Lua error %d loading '%s'", luaRC, fnm );  break;
-      case 0:                                                  DB && LDS( "loadLuaFileOk luaL_loadfile() OK", L );
+      break;case LUA_ERRFILE:    DBG( "LUA_ERRFILE"   ); lh_handle_pcall_err( L, true );
+      break;case LUA_ERRSYNTAX:  DBG( "LUA_ERRSYNTAX" ); lh_handle_pcall_err( L, true );
+      break;case LUA_ERRMEM:     Msg( "Lua memory error while loading '%s'"     , fnm );
+      break;default:             Msg( "Unknown Lua error %d loading '%s'", luaRC, fnm );
+      break;case 0:              DB && LDS( "loadLuaFileOk luaL_loadfile() OK", L );
            {
            const auto failed( lh_pcall_inout( L, 0, 0 ) );
            if( failed ) {                                      DB && DBG( "%s L=%p docall() Failed",  __func__, L );
@@ -712,7 +712,6 @@ STATIC_FXN bool loadLuaFileOk( lua_State *L, PCChar fnm ) { enum { DB=0 };
               fLoadOK = true;
               }
            }
-           break;
       }                                                        DB && DBG( "%s+3 L=%p fLoadOK=%c",  __func__, L, fLoadOK?'t':'f' );
    !fLoadOK && DBG( "%s failed", __func__ );                   DB && DBG( "%s- L=%p fLoadOK=%c",  __func__, L, fLoadOK?'t':'f' );
    return fLoadOK;

@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2018 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -222,7 +222,6 @@ bool ARG::mark() {
                      g_CurView()->MoveCursor( atoi( d_textarg.pText ) - 1, 0 );
                      return true;
                      }
-
                   if( d_cArg == 2 ) {
                      if( d_fMeta )
                         MarkDelete( d_textarg.pText, true );
@@ -230,7 +229,6 @@ bool ARG::mark() {
                         MarkDefineAtCurPos( d_textarg.pText );
                      return true;
                      }
-
                   return MarkGoto( d_textarg.pText );
     }
    }

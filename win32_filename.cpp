@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -340,14 +340,14 @@ bool ARG::glds() {
    for( auto px(lbuf); *px != '\0'; ++ix, px=Eos( px )+1 ) {
       PCChar pdt;
       switch( Win32::GetDriveType( px ) ) {
-         default:pdt = "???"               ; break;
-         case 0: pdt = "DRIVE_UNKNOWN"     ; break;
-         case 1: pdt = "DRIVE_NO_ROOT_DIR" ; break;
-         case 2: pdt = "DRIVE_REMOVABLE"   ; break;
-         case 3: pdt = "DRIVE_FIXED"       ; break;
-         case 4: pdt = "DRIVE_REMOTE"      ; break;
-         case 5: pdt = "DRIVE_CDROM"       ; break;
-         case 6: pdt = "DRIVE_RAMDISK"     ; break;
+         break;default: pdt = "???"               ;
+         break;case 0:  pdt = "DRIVE_UNKNOWN"     ;
+         break;case 1:  pdt = "DRIVE_NO_ROOT_DIR" ;
+         break;case 2:  pdt = "DRIVE_REMOVABLE"   ;
+         break;case 3:  pdt = "DRIVE_FIXED"       ;
+         break;case 4:  pdt = "DRIVE_REMOTE"      ;
+         break;case 5:  pdt = "DRIVE_CDROM"       ;
+         break;case 6:  pdt = "DRIVE_RAMDISK"     ;
          }
       pFBuf->FmtLastLine( "%s = %s", px, pdt );
       }

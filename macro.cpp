@@ -597,13 +597,11 @@ bool ARG::tell() {
    std::string keystringBuffer;
    PCCMD pCmd;
    switch( d_argType ) {
-    default:      return BadArg();
-    case NOARG:   Msg( "Press key to tell about:" );
-                  pCmd = CmdFromKbdForInfo( keystringBuffer );
-                  break;
-    case TEXTARG: pCmd = CmdFromName( d_textarg.pText );
-                  if( !pCmd ) { return Msg( "%s is not an editor function or macro", d_textarg.pText ); }
-                  break;
+    break;default:      return BadArg();
+    break;case NOARG:   Msg( "Press key to tell about:" );
+                        pCmd = CmdFromKbdForInfo( keystringBuffer );
+    break;case TEXTARG: pCmd = CmdFromName( d_textarg.pText );
+                        if( !pCmd ) { return Msg( "%s is not an editor function or macro", d_textarg.pText ); }
     }
    auto outbux( std::string(pCmd->Name()) + ":" + (!keystringBuffer.empty() ? keystringBuffer : pCmd->Name()) );
    outbux.append( pCmd->IsRealMacro()

@@ -271,12 +271,11 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
       const auto buf( xb.wbuf() );
       DBG_RECOV && DBG( "%s %s", FUNC, buf );
       switch( buf[0] ) {
-         default :                             break;  // ignore blank line
-         case '.':                             break;  // ignore EoF marker
-         case '>': ++winCnt;                           // New window.  Lines following contain that window's View + FBUF list.
-                // InitNewWin(       buf+1 );
-                                               break;
-         case ' ': InitNewView_File( buf+1 );  break;  // another View + FBUF entry
+         break;default :                             // ignore blank line
+         break;case '.':                             // ignore EoF marker
+         break;case '>': ++winCnt;                   // New window.  Lines following contain that window's View + FBUF list.
+                      // InitNewWin(       buf+1 );
+         break;case ' ': InitNewView_File( buf+1 );  // another View + FBUF entry
          }
       }
    DLINK_JOIN( cvh, tmpVHd, d_dlinkViewsOfWindow );
@@ -428,7 +427,7 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
                default:   Assert( 0 );  // chGetCmdPromptResponse bug or params out of sync
                case 'n':                         break;        // will ask user about each file in turn
                case -1:                          return rvUSER_ESCAPED;
-               case 'a':  // fall thru
+               case 'a':  ATTR_FALLTHRU;
                case 'y':  WriteAllDirtyFBufs();  return rvWILL_EXIT;
                }
             }
@@ -447,24 +446,21 @@ STATIC_FXN bool SaveAllDirtyFilesUserEscaped() {
 bool ARG::exit() {
    DBG( "%s ***************************************************", FUNC );
    bool fToNextFile;
-   switch( d_argType )
-    {
-    default:      return BadArg();
-    case NULLARG: DBG( "%s NULLARG", FUNC );
-                  {
-                  const auto filesRemaining( NumberOfCmdlineFilesRemaining() );
-                  fToNextFile =
-                     (   filesRemaining
-                      && !ConIO::Confirm( Sprintf2xBuf( "You have %d more file%s to edit.  Are you sure you want to exit? "
-                                 , filesRemaining
-                                 , Add_s( filesRemaining )
-                                 ))
-                     );
-                  }
-                  break;
-    case NOARG:   DBG( "%s NOARG", FUNC );
-                  fToNextFile = true;
-                  break;
+   switch( d_argType ) {
+    break; default:      return BadArg();
+    break; case NULLARG: DBG( "%s NULLARG", FUNC );
+                         {
+                         const auto filesRemaining( NumberOfCmdlineFilesRemaining() );
+                         fToNextFile =
+                            (   filesRemaining
+                             && !ConIO::Confirm( Sprintf2xBuf( "You have %d more file%s to edit.  Are you sure you want to exit? "
+                                        , filesRemaining
+                                        , Add_s( filesRemaining )
+                                        ))
+                            );
+                         }
+    break; case NOARG:   DBG( "%s NOARG", FUNC );
+                         fToNextFile = true;
     }
    if( fToNextFile && SwitchToNextCmdlineFile() ) { DBG( "%s ********* switching to another file *********", FUNC );  return false; }
    if( !KillAllBkgndProcesses()                 ) { DBG( "%s ********* !KillAllBkgndProcesses() *********" , FUNC );  return false; }
@@ -817,31 +813,19 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
    kGetopt opt( argc, argv, "acde:h?nt:vx:" );
    while( char ch=opt.NextOptCh() ) {  0 && DBG( "opt='%c'", ch );
      switch( ch ) {
-       default:  opt.VErrorOut( FmtStr<60>( "internal error: unsupported option -%c\n", ch ) );
-                 break;
-       case ' ': // NON-OPTION-ARGUMENT
-                 AddCmdlineFile( opt.nextarg(), false );
-                 break;
-       case 'a': AddFBuf( kszAssignLog, &g_pFBufAssignLog );
-                 AssignLogTag( "editor startup" );
-                 break;
-       case 'c': s_ForgetAbsentFiles.fDoIt = true;
-                 break;
-       case 'd': g_CLI_fUseRsrcFile = false; // don't read .krsrc or the status file.
-                 break;
-       case 'e': PutEnvChkOk( opt.optarg() );
-                 break;
-       case '?': ATTR_FALLTHRU;
-       case 'h': opt.VErrorOut( nullptr );
-                 break;
-       case 'n': fForceNewConsole = true;
-                 break;
-       case 'v': g_fViewOnly = true;
-                 break;
-       case 't': AddCmdlineFile( opt.optarg(), true ); // The following filename is not retained in the tmpfile.
-                 break;
-       case 'x': cmdlineMacro = opt.optarg();
-                 break;
+       break;default:  opt.VErrorOut( FmtStr<60>( "internal error: unsupported option -%c\n", ch ) );
+       break;case ' ': AddCmdlineFile( opt.nextarg(), false );  // NON-OPTION-ARGUMENT
+       break;case 'a': AddFBuf( kszAssignLog, &g_pFBufAssignLog );
+                       AssignLogTag( "editor startup" );
+       break;case 'c': s_ForgetAbsentFiles.fDoIt = true;
+       break;case 'd': g_CLI_fUseRsrcFile = false; // don't read .krsrc or the status file.
+       break;case 'e': PutEnvChkOk( opt.optarg() );
+       break;case '?': opt.VErrorOut( nullptr );
+       break;case 'h': opt.VErrorOut( nullptr );
+       break;case 'n': fForceNewConsole = true;
+       break;case 'v': g_fViewOnly = true;
+       break;case 't': AddCmdlineFile( opt.optarg(), true ); // The following filename is not retained in the tmpfile.
+       break;case 'x': cmdlineMacro = opt.optarg();
        }
      }
    {                             DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT, __func__, memdelta() );

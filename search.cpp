@@ -1038,26 +1038,24 @@ bool ARG::searchlog() {
 STATIC_FXN bool SearchSpecifierOK( const ARG &arg ) {
    if( arg.d_fMeta ) { g_fCase = !g_fCase; }
    switch( arg.d_argType ) {
-      default:      return arg.BadArg();
-      case TEXTARG: SearchLogSwap();
-                    AddToSearchLog( arg.d_textarg.pText );
-                    if( !SetNewSearchSpecifierOK( arg.d_textarg.pText, arg.d_cArg >= 2 ) ) {
-                       return ErrorDialogBeepf( "bad search specifier '%s'", arg.d_textarg.pText );
-                       }
-                    break;
-      case NOARG:   if( s_searchSpecifier ) {
-                       s_searchSpecifier->CaseUpdt();
-                       }
-                    else {
-                       if( !g_pFBufSearchLog || FBOP::IsLineBlank( g_pFBufSearchLog, 0 ) ) {
-                          return ErrorDialogBeepf( "No search string specified, %s empty", kszSearchLog );
-                          }
-                       const auto rl( g_pFBufSearchLog->PeekRawLine( 0 ) );
-                       if( !SetNewSearchSpecifierOK( rl, false ) ) {
-                          return ErrorDialogBeepf( "bad search specifier '%" PR_BSR "'", BSR(rl) );
-                          }
-                       }
-                    break;
+      break;default:      return arg.BadArg();
+      break;case TEXTARG: SearchLogSwap();
+                          AddToSearchLog( arg.d_textarg.pText );
+                          if( !SetNewSearchSpecifierOK( arg.d_textarg.pText, arg.d_cArg >= 2 ) ) {
+                             return ErrorDialogBeepf( "bad search specifier '%s'", arg.d_textarg.pText );
+                             }
+      break;case NOARG:   if( s_searchSpecifier ) {
+                              s_searchSpecifier->CaseUpdt();
+                              }
+                           else {
+                              if( !g_pFBufSearchLog || FBOP::IsLineBlank( g_pFBufSearchLog, 0 ) ) {
+                                 return ErrorDialogBeepf( "No search string specified, %s empty", kszSearchLog );
+                                 }
+                              const auto rl( g_pFBufSearchLog->PeekRawLine( 0 ) );
+                              if( !SetNewSearchSpecifierOK( rl, false ) ) {
+                                 return ErrorDialogBeepf( "bad search specifier '%" PR_BSR "'", BSR(rl) );
+                                 }
+                              }
       }
    return true;
    }
@@ -1349,29 +1347,27 @@ STATIC_FXN bool GenericReplace( const ARG &arg, bool fInteractive, bool fMultiFi
    else {
       MainThreadPerfCounter pc;
       switch( arg.d_argType ) {
-       default:
-       case NOARG:   { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, g_Cursor(), mrcw ); } break;
-       case NULLARG: { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, g_Cursor(), mrcw ); } break;
-       case LINEARG: { Rect rn;
-                       rn.flMin.lin = arg.d_linearg.yMin;  rn.flMin.col = 0;
-                       rn.flMax.lin = arg.d_linearg.yMax;  rn.flMax.col = COL_MAX;
-                       CharWalkRectReplace( g_CurFBuf(), rn, rn.flMin, mrcw );
-                     } break;
-       case STREAMARG: if( arg.d_streamarg.flMin.lin == arg.d_streamarg.flMax.lin ) {
-                          CharWalkRectReplace( g_CurFBuf(), arg.d_streamarg, arg.d_streamarg.flMin, mrcw );
-                          }
-                       else { Rect rn;
-                          rn.flMin.lin = arg.d_streamarg.flMin.lin;      rn.flMin.col = 0;
-                          rn.flMax.lin = arg.d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
-                          CharWalkRectReplace( g_CurFBuf(), rn, arg.d_streamarg.flMin, mrcw );
-                          rn.flMax.col = arg.d_streamarg.flMax.col;
-                          rn.flMax.lin++;
-                          rn.flMin.lin = rn.flMax.lin;
-                          CharWalkRectReplace( g_CurFBuf(), rn, rn.flMin, mrcw );
-                          }
-                       break;
-       case BOXARG:    CharWalkRectReplace( g_CurFBuf(), arg.d_boxarg, arg.d_boxarg.flMin, mrcw );
-                       break;
+       break;default:
+       break;case NOARG:     { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, g_Cursor(), mrcw ); }
+       break;case NULLARG:   { Rect rn( true ); CharWalkRectReplace( g_CurFBuf(), rn, g_Cursor(), mrcw ); }
+       break;case LINEARG:   { Rect rn;
+                                     rn.flMin.lin = arg.d_linearg.yMin;  rn.flMin.col = 0;
+                               rn.flMax.lin = arg.d_linearg.yMax;  rn.flMax.col = COL_MAX;
+                               CharWalkRectReplace( g_CurFBuf(), rn, rn.flMin, mrcw );
+                             }
+       break;case STREAMARG: if( arg.d_streamarg.flMin.lin == arg.d_streamarg.flMax.lin ) {
+                                CharWalkRectReplace( g_CurFBuf(), arg.d_streamarg, arg.d_streamarg.flMin, mrcw );
+                                }
+                             else { Rect rn;
+                                rn.flMin.lin = arg.d_streamarg.flMin.lin;      rn.flMin.col = 0;
+                                rn.flMax.lin = arg.d_streamarg.flMax.lin - 1;  rn.flMax.col = COL_MAX;
+                                CharWalkRectReplace( g_CurFBuf(), rn, arg.d_streamarg.flMin, mrcw );
+                                rn.flMax.col = arg.d_streamarg.flMax.col;
+                                rn.flMax.lin++;
+                                rn.flMin.lin = rn.flMax.lin;
+                                CharWalkRectReplace( g_CurFBuf(), rn, rn.flMin, mrcw );
+                                }
+       break;case BOXARG:    CharWalkRectReplace( g_CurFBuf(), arg.d_boxarg, arg.d_boxarg.flMin, mrcw );
        }
       if( fInteractive ) {
          Msg( "%d of %d occurrences replaced%s"
@@ -1820,17 +1816,11 @@ STATIC_FXN FileSearcher *NewFileSearcher(
 #endif
       {
       switch( type ) {
-         default:
-              Assert( 0 != 0 );
-              return nullptr;
-         case FileSearcher::fsTABSAFE_STRING:
-              rv = new FileSearcherString( sm, ss, mh );   VS_( DBG( "  FileSearcherString %p", rv ); )
-              break;
-         case FileSearcher::fsFAST_STRING:
-              rv = new FileSearcherFast( sm, ss, mh );     VS_( DBG( "  FileSearcherFast %p", rv ); )
-              break;
+         break; default:                             Assert( 0 != 0 ); return nullptr;
+         break; case FileSearcher::fsTABSAFE_STRING: rv = new FileSearcherString( sm, ss, mh );   VS_( DBG( "  FileSearcherString %p", rv ); )
+         break; case FileSearcher::fsFAST_STRING:    rv = new FileSearcherFast( sm, ss, mh );     VS_( DBG( "  FileSearcherFast %p", rv ); )
          }
-      }                                                    VS_( rv->Dbgf(); )
+      }                                              VS_( rv->Dbgf(); )
    return rv;
    }
 
@@ -1954,11 +1944,11 @@ bool View::next_balln( LINE yStart, bool fStopOnElse ) {
    for( auto iy(yStart + 1) ; iy < pFbuf->LineCount() ; ++iy ) {
       auto fStop(false);
       switch( FBOP::IsCppConditional( pFbuf, iy ) ) {
-         case cppcNone : break;
-         case cppcIf   : ++nest; break;
-         case cppcElif : ATTR_FALLTHRU;
-         case cppcElse : if( 0 == nest   && fStopOnElse ) { fStop = true; } break;
-         case cppcEnd  : if( 0 == nest-- )                { fStop = true; } break;
+         break;case cppcNone :
+         break;case cppcIf   : ++nest;
+         break;case cppcElif : if( 0 == nest   && fStopOnElse ) { fStop = true; }
+         break;case cppcElse : if( 0 == nest   && fStopOnElse ) { fStop = true; }
+         break;case cppcEnd  : if( 0 == nest-- )                { fStop = true; }
          }
       if( fStop ) {
          MoveCursor( iy, 0 );
@@ -1974,11 +1964,11 @@ bool View::prev_balln( LINE yStart, bool fStopOnElse ) {
    for( auto iy(yStart - 1) ; iy >= 0 ; --iy ) {
       auto fStop(false);
       switch( FBOP::IsCppConditional( pFbuf, iy ) ) {
-         case cppcNone : break;
-         case cppcEnd  : ++nest; break;
-         case cppcElif : ATTR_FALLTHRU;
-         case cppcElse : if( 0 == nest   && fStopOnElse ) { fStop = true; } break;
-         case cppcIf   : if( 0 == nest-- )                { fStop = true; } break;
+         break;case cppcNone :
+         break;case cppcEnd  : ++nest;
+         break;case cppcElif : if( 0 == nest   && fStopOnElse ) { fStop = true; }
+         break;case cppcElse : if( 0 == nest   && fStopOnElse ) { fStop = true; }
+         break;case cppcIf   : if( 0 == nest-- )                { fStop = true; }
          }
       if( fStop ) {
          MoveCursor( iy, 0 );
@@ -1993,11 +1983,11 @@ bool ARG::balln() {
    PCV;
    const auto pFbuf( g_CurFBuf() );
    switch( FBOP::IsCppConditional( pFbuf, d_noarg.cursor.lin ) ) {
-      case cppcNone : pcv->prev_balln( d_noarg.cursor.lin, true  ); break;
-      case cppcIf   : ATTR_FALLTHRU;
-      case cppcElif : ATTR_FALLTHRU;
-      case cppcElse : pcv->next_balln( d_noarg.cursor.lin, true  ); break;
-      case cppcEnd  : pcv->prev_balln( d_noarg.cursor.lin, false ); break;
+      break;case cppcNone : pcv->prev_balln( d_noarg.cursor.lin, true  );
+      break;case cppcIf   : pcv->next_balln( d_noarg.cursor.lin, true  );
+      break;case cppcElif : pcv->next_balln( d_noarg.cursor.lin, true  );
+      break;case cppcElse : pcv->next_balln( d_noarg.cursor.lin, true  );
+      break;case cppcEnd  : pcv->prev_balln( d_noarg.cursor.lin, false );
       }
    return cp.Moved();
    }

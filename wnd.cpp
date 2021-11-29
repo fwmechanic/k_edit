@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -242,8 +242,8 @@ void CreateWindow0() { // Used before ReadStateFile processing only!
 
 void SetWindow0() { // Used during ReadStateFile processing only!
    switch( g_WindowCount() ) {
-   // case 0: SaveNewWin( new Win )      ; break; // state file had NO windows?
-      case 1: g__.aWindow[0]->Maximize() ; break; // state file had one window, but its size may not equal the size of the console
+   // break;case 0: SaveNewWin( new Win )      ;  // state file had NO windows?
+      break;case 1: g__.aWindow[0]->Maximize() ;  // state file had one window, but its size may not equal the size of the console
       }
    SetWindowIdx( 0 );
    }
@@ -322,10 +322,10 @@ STATIC_FXN void CloseWindow_( PWin pWinToClose, PWin pWinToMergeTo ) {
       const auto pFBuf( pv->FBuf() );
       if( pFBuf->IsDirty() && pFBuf->FnmIsDiskWritable() && pFBuf->ViewCount() == 1 ) {
          switch( chGetCmdPromptResponse( "yn", -1, -1, "%s has changed!  Save changes (Y/N)? ", pFBuf->Name() ) ) {
-            default:   Assert( 0 );            break; // chGetCmdPromptResponse bug or params out of sync
-            case 'y':  pFBuf->WriteToDisk();   break; // SAVE
-            case 'n':                          break; // NO SAVE
-            case -1:                           break; // NO SAVE
+            break;default:  Assert( 0 );           // chGetCmdPromptResponse bug or params out of sync
+            break;case 'y': pFBuf->WriteToDisk();  // SAVE
+            break;case 'n':                        // NO SAVE
+            break;case -1:  ;                      // NO SAVE
             }
          }
       }
@@ -452,27 +452,25 @@ bool SwitchToWinContainingPointOk( const Point &pt ) {
 bool ARG::window() {
    auto rv( true );
    switch( d_argType ) {
-      default:       return false;
-      case NOARG:    if( g_WindowCount() == 1 ) {
-                        rv = false;
-                        break;
-                        }
-                     if( d_fMeta ) {
-                        if( !CloseWnd( g_CurWinWr() ) ) {
-                           return Msg( "Cannot close this window" );
-                           }
-                        }
-                     else {
-                        SetWindowSetValidView( (g_CurWindowIdx()+1) % g_WindowCount() );
-                        }
-                     break;
-      case NULLARG:  const auto fSplitVertical( d_cArg != 1 );
-                     const auto xyParam( fSplitVertical
-                        ? d_nullarg.cursor.col - g_CurView()->Origin().col
-                        : d_nullarg.cursor.lin - g_CurView()->Origin().lin
-                        );
-                     rv = nullptr != SplitCurWnd( fSplitVertical, xyParam );
-                     break;
+      break;default:      return false;
+      break;case NOARG:   if( g_WindowCount() == 1 ) {
+                             rv = false;
+                             break;
+                             }
+                          if( d_fMeta ) {
+                             if( !CloseWnd( g_CurWinWr() ) ) {
+                                return Msg( "Cannot close this window" );
+                                }
+                             }
+                          else {
+                             SetWindowSetValidView( (g_CurWindowIdx()+1) % g_WindowCount() );
+                             }
+      break;case NULLARG: const auto fSplitVertical( d_cArg != 1 );
+                          const auto xyParam( fSplitVertical
+                             ? d_nullarg.cursor.col - g_CurView()->Origin().col
+                             : d_nullarg.cursor.lin - g_CurView()->Origin().lin
+                             );
+                          rv = nullptr != SplitCurWnd( fSplitVertical, xyParam );
       }
    DispRefreshWholeScreenNow();
    return rv;

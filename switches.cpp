@@ -73,12 +73,12 @@ STATIC_FXN int delimNorm( int ch ) {
 
 STATIC_FXN int delimMirror( int ch ) {
    switch( ch ) {
-      case '('  : return ')';
-      case '<'  : return '>';
-      case chLSQ: return chRSQ;
-      case '{'  : return '}';
+      case '('     : return ')';
+      case '<'     : return '>';
+      case chLSQ   : return chRSQ;
+      case '{'     : return '}';
       case BACKTICK: return TICK;
-      default : return ch;
+      default      : return ch;
       }
    }
 
