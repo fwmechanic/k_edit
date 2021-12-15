@@ -331,7 +331,10 @@ bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { 
 stref View::GetWucOfSelection() {
    if( this == g_CurView() ) {
       const auto cursor( Cursor() );
-      if( Get_g_ArgCount() > 0 /* && s_SelAnchor.lin == cursor.lin */ ) {   0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
+      if(    Get_g_ArgCount() > 0
+          && s_SelAnchor.col != cursor.col
+       /* && s_SelAnchor.lin == cursor.lin */
+        ) {                                                                 0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
          const auto xMin( std::min( s_SelAnchor.col, cursor.col ) );
          const auto xMax( std::max( s_SelAnchor.col, cursor.col ) );
          auto sr( FBuf()->PeekRawLineSeg( cursor.lin, xMin, xMax-1 ) );     0 && DBG("x:%d,%d '%" PR_BSR "'", xMin, xMax-1, BSR(sr) );
