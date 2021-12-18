@@ -328,7 +328,7 @@ bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { 
       }
    }
 
-stref View::GetBOXSTR_Selection() {
+stref View::GetWucOfSelection() {
    if( this == g_CurView() ) {
       const auto cursor( Cursor() );
       if( Get_g_ArgCount() > 0 /* && s_SelAnchor.lin == cursor.lin */ ) {   0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);

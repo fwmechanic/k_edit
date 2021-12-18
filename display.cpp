@@ -669,7 +669,7 @@ bool ARG::dquc() {
 #endif
 
 void WucState::VCursorMoved( bool fUpdtWUC, View &view ) { 0 && DBG( "%s fUpdtWuc=%d V=%p", __func__, fUpdtWUC, &view );
-   const auto boxstr_sel( view.GetBOXSTR_Selection() );
+   const auto boxstr_sel( view.GetWucOfSelection() );
    if( !IsStringBlank( boxstr_sel ) ) {
       if( !eq( d_stSel, boxstr_sel ) ) {
          d_stSel.assign( boxstr_sel );

@@ -792,7 +792,7 @@ public:
    void         PokeOriginLine_HACK( LINE yLine ) { d_current.Origin.lin = yLine; }
    char         CharUnderCursor(); // cursor being a View concept...
    bool         PBalFindMatching( bool fVisibleOnly, Point *pPt );
-   stref        GetBOXSTR_Selection();
+   stref        GetWucOfSelection();
    bool         d_LastSelect_isValid;
    Point        d_LastSelectAnchor, d_LastSelectCursor;
    bool         prev_balln( LINE yStart, bool fStopOnElse );
