@@ -1118,6 +1118,12 @@ void test_CaptiveIdxOfCol() {
 //--------------------------------------------------------------------------------------------------
 
 stref FBUF::PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl ) const {
+   // as this is a copy-less API, the stref/seg returned is raw: no tab expansion has been done;
+   // uses TabWidth() to xlat COL params to PeekRawLine() indices (seg content)!!!
+   // NON-TabWidth()-xlated raw seg extraction is expected to be done via inline stref code operating on PeekRawLine()
+   if( xMinIncl > xMaxIncl ) {                         0 && DBG( "%s L %d [%d < %d]", __PRETTY_FUNCTION__, yLine, xMinIncl, xMaxIncl );
+      return stref();
+      }
    auto rl( PeekRawLine( yLine ) );
    const auto tw( TabWidth() );
    IdxCol_cached conv( tw, rl );
