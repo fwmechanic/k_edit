@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -20,10 +20,9 @@
 #include "ed_main.h"
 #include "win32_pvt.h"
 
-
 //================================================================================================================
 //
-// s_GlobalVariableLock is a Win32 CRITICAL_SECTION
+// s_GlobalVariableLock is a std::mutex
 //
 // We use it to allow multiple threads to exclusively access the "MainThread"
 // variables (the vast majority of global editor data structures).  When the
@@ -49,8 +48,8 @@ const Win32::DWORD mainThreadId( Win32::GetCurrentThreadId() );
 #define  ASSERT_MAIN_THREAD()      Assert(mainThreadId == Win32::GetCurrentThreadId())
 #define  ASSERT_NOT_MAIN_THREAD()  Assert(mainThreadId != Win32::GetCurrentThreadId())
 
+STATIC_VAR std::mutex s_GlobalVariableLock;
 
-STATIC_VAR AcquiredMutex s_GlobalVariableLock;
 #define GiveUpGlobalVariableLock()  ( /* DBG( "rls baton" ), */ s_GlobalVariableLock.unlock() )
 #define WaitForGlobalVariableLock() (                           s_GlobalVariableLock.lock() /* , DBG( "got baton" ) */ )
 

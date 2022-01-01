@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -570,7 +570,7 @@ class Win32_pty {
    Win32::ManualClrEvent         d_AllJobsDone;
    DLinkHead<Win32pty_job_Q_el>  d_jobQHead;
    int                           d_numJobRequestsPending;
-   Mutex                         d_jobQueueMtx;
+   std::mutex                    d_jobQueueMtx;
    Win32::PROCESS_INFORMATION    d_processInfo = {nullptr};
    Win32::HANDLE                 d_hThread;
    Win32::DWORD                  d_hProcessExitCode;
@@ -682,7 +682,7 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
    while( true ) { //**************** outerthreadloop ****************
       Win32pty_job_Q_el *pEl;
       {
-      AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
+      std::scoped_lock<std::mutex> LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
       d_processInfo.dwProcessId = INVALID_dwProcessId;
       DispNeedsRedrawStatLn();
       if( d_jobQHead.empty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
@@ -734,7 +734,7 @@ bool Win32_pty::EnqueueJobPrimeThread_nolock() {
 
 int Win32_pty::EnqueueJobsAndRun( const StringList &sl ) {
    auto numAdded(0);
-   AutoMutex LockTheJobQueue( d_jobQueueMtx );
+   std::scoped_lock<std::mutex> LockTheJobQueue( d_jobQueueMtx );
    const auto fNeedToPrime( 0 == d_numJobRequestsPending );
    DLINKC_FIRST_TO_LASTA( sl.d_head, dlink, pCur ) {
       DBG( "%s '%s'", __func__,  pCur->string );
@@ -756,7 +756,7 @@ int Win32_pty::EnqueueJobsAndRun( const StringList &sl ) {
    }
 
 int Win32_pty::DeleteAllEnqueuedJobs_locks() {
-   AutoMutex LockTheJobQueue( d_jobQueueMtx );
+   std::scoped_lock<std::mutex> LockTheJobQueue( d_jobQueueMtx );
    const auto rmCnt( d_jobQHead.length() );
    while( auto pEl = d_jobQHead.front() ) {
       DLINK_REMOVE_FIRST( d_jobQHead, pEl, d_dlinkJobsOfPty );
@@ -815,7 +815,7 @@ class InternalShellJobExecutor {
    Win32::PROCESS_INFORMATION  d_processInfo;
    Win32::HANDLE               d_hThread;
    Win32::DWORD                d_hProcessExitCode;
-   Mutex                       d_jobQueueMtx;
+   std::mutex                  d_jobQueueMtx;
    Win32::ManualClrEvent       d_AllJobsDone;
    STATIC_FXN Win32::DWORD K_STDCALL ChildProcessCtrlThread( Win32::LPVOID pThreadParam );
 public:
@@ -860,7 +860,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
    while( true ) { //**************** outerthreadloop ****************
       StringListEl *pEl;
       {
-      AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
+      std::scoped_lock<std::mutex> LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
       d_processInfo.dwProcessId = INVALID_dwProcessId;
       DispNeedsRedrawStatLn(); // ???
       if( !(pEl=d_pSL->remove_first()) ) { // ONLY EXIT FROM THREAD IS HERE!!!
@@ -912,7 +912,7 @@ NEXT_OUTBUF:
    }
 
 int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
-   AutoMutex LockTheJobQueue( d_jobQueueMtx );
+   std::scoped_lock<std::mutex> LockTheJobQueue( d_jobQueueMtx );
    const auto rmCnt( d_pSL->length() );
    d_pSL->clear();
    return rmCnt;

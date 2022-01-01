@@ -1,5 +1,5 @@
 //
-// Copyright 2016 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2016-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -122,47 +122,7 @@ public:
 
 //--------------------------------------------------------------------------------------------
 
-   // we use a Win32::CRITICAL_SECTION as a mutex since we don't need the
-   // interprocess features that a Win32::MUTEX offers; a Win32::CRITICAL_SECTION
-   // is the lowest-overhead Win32 synchro object that meets our needs (indeed it
-   // is the lowest-overhead Win32 synchro object, period!).
-
-class Mutex {
-   Win32::CRITICAL_SECTION d_critsec;
-public:
-   Mutex()        { InitializeCriticalSection( &d_critsec ); }
-   ~Mutex()       { DeleteCriticalSection( &d_critsec ); }
-   void lock()    { EnterCriticalSection( &d_critsec ); }
-   void unlock()  { LeaveCriticalSection( &d_critsec ); }
-private:
-   NO_COPYCTOR(Mutex);
-   NO_ASGN_OPR(Mutex);
-   };
-
-class AcquiredMutex : public Mutex {
-public:
-   AcquiredMutex() { lock(); }
-private:
-   NO_COPYCTOR(AcquiredMutex);
-   NO_ASGN_OPR(AcquiredMutex);
-   };
-
-template<class T> class AutoSync {
-   T & d_syncObj;
-public:
-   AutoSync( T & m ) : d_syncObj(m) { d_syncObj.lock(); }
-   ~AutoSync()                      { d_syncObj.unlock(); }
-   // for those cases where the mutex needs toggling within it's scope
-   void lock()                      { d_syncObj.lock(); }
-   void unlock()                    { d_syncObj.unlock(); }
-private:
-   // NON-supported
-   AutoSync();
-   NO_COPYCTOR(AutoSync);
-   NO_ASGN_OPR(AutoSync);
-   };
-
-typedef AutoSync<Mutex> AutoMutex;
+#include <mutex>
 
 //--------------------------------------------------------------------------------------------
 

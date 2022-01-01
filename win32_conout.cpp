@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -77,7 +77,7 @@ class TConsoleOutputControl {
       int first;
       int last;
       }              d_LineToUpdt;
-   Mutex             d_mutex;
+   std::mutex        d_mutex;
    W32_ScreenSize_CursorLocn d_xyState; // height of CSB-mapped window
 public: //**************************************************
    TConsoleOutputControl( int yHeight, int xWidth );
@@ -272,7 +272,7 @@ bool TConsoleOutputControl::SetCursorVisibilityChanged( bool fVisible ) { enum {
    }
 
 bool TConsoleOutputControl::GetCursorState( YX_t *pt, bool *pfVisible ) {
-   AutoMutex mtx( d_mutex );
+   std::scoped_lock<std::mutex> mtx( d_mutex );
    *pt        = d_xyState.cursor;
    *pfVisible = d_fCursorVisible;
    return true;
@@ -293,7 +293,7 @@ void ConOut::SetCursorLocn( LINE yLine, COL xCol ) {
 
 void TConsoleOutputControl::SetCursorLocn( LINE yLine, COL xCol ) {
    const YX_t newPt( yLine, xCol );
-   AutoMutex mtx( d_mutex );
+   std::scoped_lock<std::mutex> mtx( d_mutex );
    if( d_xyState.cursor != newPt ) {
       Win32::COORD dwCursorPosition;
       dwCursorPosition.Y = yLine;
@@ -310,7 +310,7 @@ COL ConOut::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLine
    }
 
 COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars, LINE yConsole, int xConsole, const int attr, bool fPadWSpcs ) {
-   AutoMutex mtx( d_mutex );
+   std::scoped_lock<std::mutex> mtx( d_mutex );
    if(   yConsole  >= d_xyState.size.lin
       || xConsole  >= d_xyState.size.col
       || (srcChars == 0 && !fPadWSpcs)
@@ -443,7 +443,7 @@ YX_t ConOut::GetMaxConsoleSize() {
    }
 
 YX_t TConsoleOutputControl::GetMaxConsoleSize() {
-   AutoMutex mtx( d_mutex );  //##################################################
+   std::scoped_lock<std::mutex> mtx( d_mutex );  //##################################################
    const ConsoleScreenBufferInfo csbi( d_hConsoleScreenBuffer, "console resize" );
    if( !csbi.isValid() ) { DBG( "%s: Win32::GetConsoleScreenBufferInfo FAILED", __func__ );
       return YX_t(0,0);
@@ -455,7 +455,7 @@ YX_t TConsoleOutputControl::GetMaxConsoleSize() {
 
 bool TConsoleOutputControl::SetConsoleSizeOk( YX_t &newSize ) {
    enum { DODBG = 0 };
-   AutoMutex mtx( d_mutex );  //##################################################
+   std::scoped_lock<std::mutex> mtx( d_mutex );  //##################################################
    FmtStr<80> trying( "%s+ Ask(%dx%d)", __func__, newSize.col, newSize.lin );
    DODBG && DBG( "%s", trying.c_str() );
    // NB: GetLargestConsoleWindowSize()'s retVal will change if the console
@@ -703,7 +703,7 @@ int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL x
 
 void TConsoleOutputControl::FlushConsoleBufferToScreen() {
    auto ConWriteCount(0);
-   AutoMutex mtx( d_mutex );  //##################################################
+   std::scoped_lock<std::mutex> mtx( d_mutex );  //##################################################
 #define  CONSOLE_VIDEO_FLUSH_MODE   1
    // CONSOLE_VIDEO_FLUSH_MODE == 0
    // minimizes # of calls to Win32::WriteConsoleOutputA;
@@ -764,12 +764,12 @@ void ConOut::GetScreenSize( YX_t *rv ) { // returning 8 byte struct msvc
    }
 
 void TConsoleOutputControl::GetSizeCursorLocn( W32_ScreenSize_CursorLocn *cxy ) {
-   AutoMutex mtx( d_mutex );  //##################################################
+   std::scoped_lock<std::mutex> mtx( d_mutex );  //##################################################
    *cxy = d_xyState;
    }
 
 bool TConsoleOutputControl::WriteToFileOk( FILE *ofh ) { // would be const but use of d_mutex prevents...
-   AutoMutex mtx( d_mutex );  //##################################################
+   std::scoped_lock<std::mutex> mtx( d_mutex );  //##################################################
    const struct {
       uint32_t magic          ;
       int ySize               ;

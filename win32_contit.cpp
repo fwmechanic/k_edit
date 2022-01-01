@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -108,7 +108,7 @@ public:
    };
 //------------------------------------------------------------------------------
 class BatteryStatus : public TitleBarContributor {
-   Mutex d_mtx;
+   std::mutex d_mtx;
    bool  d_fChanged;
    int   d_BatteryLifePercent;
    char  d_buf[40];
@@ -133,7 +133,7 @@ void BatteryStatus::BatteryStatusMonitorThread() {
       const int newVal( GetBatteryLifePercent() );
       0 && DBG_THREAD( "BatteryLifePercent now=%d%%", newVal );
       {
-      AutoMutex am( d_mtx );
+      std::scoped_lock<std::mutex> am( d_mtx );
       if( d_BatteryLifePercent != newVal ) {
           d_BatteryLifePercent  = newVal;
           d_fChanged = true;
@@ -165,7 +165,7 @@ bool BatteryStatus::Changed() {
    bool fChanged;
    auto newVal(-1); // init to rmv warning
    {
-   AutoMutex am( d_mtx );
+   std::scoped_lock<std::mutex> am( d_mtx );
    fChanged = d_fChanged;
    if( fChanged ) {
       d_fChanged = false;

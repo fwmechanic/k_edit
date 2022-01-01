@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -17,6 +17,7 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+
 #include "ed_main.h"
 #include "win32_pvt.h"
 
@@ -32,7 +33,7 @@ struct conin_statics {
    Win32::DWORD          InitialConsoleInputMode;
    Win32::DWORD          CIB_ValidElements;
    Win32::DWORD          CIB_IdxRead;
-   Mutex                 mutex;
+   std::mutex            mutex;
    std::vector<Win32::INPUT_RECORD> CIB;
    conin_statics() : mutex() {};
    void ClearBuf() { CIB_IdxRead = CIB_ValidElements = 0; }
@@ -54,7 +55,7 @@ private:
 STATIC_VAR conin_statics s_Conin;
 
 bool ConIn::FlushKeyQueueAnythingFlushed() {
-   AutoMutex mtx( s_Conin.mutex );
+   std::scoped_lock<std::mutex> mtx(s_Conin.mutex);
    auto rv( s_Conin.ScanConinBufForKeyDowns() );
    s_Conin.ClearBuf();
    Win32::DWORD NumberOfConsoleEventsPending;
@@ -229,7 +230,7 @@ void ConinRelease() {
 //
 
 STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
-   AutoMutex mtx( s_Conin.mutex ); //#########################################################
+   std::unique_lock<std::mutex> mtx(s_Conin.mutex); //#########################################################
    STATIC_VAR bool fWaitingOnInput;
    if( fWaitingOnInput ) {
       return nullptr;
@@ -475,7 +476,7 @@ struct EdInputEvent {
 // processing, in the case of the most recently read ConinRecord _was_ the mouse record
 
 STATIC_FXN void InsertConinRecord( const Win32::INPUT_RECORD &ir ) {
-   AutoMutex mtx( s_Conin.mutex );
+   std::scoped_lock<std::mutex> mtx(s_Conin.mutex);
    if( s_Conin.CIB_IdxRead == 0 ) { // trying to insert w/no leading gap?
       s_Conin.CIB.insert( s_Conin.CIB.begin(), ir );
       s_Conin.CIB_IdxRead++;
@@ -700,7 +701,7 @@ void TMouseEvent::Process() { // usemouse:yes
 #endif
 
 bool KbHit() { // BUGBUG does this actually WORK? 20081215 kgoodwin NO it doesn't because s_Conin is not being filled unless there were leftovers from the last ReadConsoleInput call
-   AutoMutex mtx( s_Conin.mutex );
+   std::scoped_lock<std::mutex> mtx( s_Conin.mutex );
    if( s_Conin.CIB_IdxRead < s_Conin.CIB_ValidElements ) {
       auto &inrec( s_Conin.CIB[ s_Conin.CIB_IdxRead ] );
       if( inrec.EventType == KEY_EVENT && inrec.Event.KeyEvent.bKeyDown ) {

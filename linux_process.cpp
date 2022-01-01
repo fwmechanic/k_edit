@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -433,7 +433,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
    while( true ) { //**************** outerthreadloop ****************
       StringListEl *pEl;
       {
-      // AutoMutex LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
+      // std::scoped_lock LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
       d_Pid = INVALID_ProcessId;
       DispNeedsRedrawStatLn(); // ???
       if( !(pEl=d_pSL->remove_first()) ) { // ONLY EXIT FROM THREAD IS HERE!!!
@@ -497,7 +497,7 @@ NEXT_OUTBUF:
    }
 
 int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
-   // AutoMutex LockTheJobQueue( d_jobQueueMtx );
+   // std::scoped_lock LockTheJobQueue( d_jobQueueMtx );
    auto &d_jobQHead = d_pSL->d_head;
    const auto rmCnt( d_jobQHead.length() );
    while( auto pEl = d_jobQHead.front() ) {
