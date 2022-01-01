@@ -119,7 +119,6 @@ public:
 private:
    STATIC_FXN int GetBatteryLifePercent();
    void BatteryStatusMonitorThread();
-   STATIC_FXN Win32::DWORD K_STDCALL StartThread( Win32::LPVOID pThreadParam );
    };
 typedef BatteryStatus *PBatteryStatus;
 int BatteryStatus::GetBatteryLifePercent() {
@@ -143,22 +142,13 @@ void BatteryStatus::BatteryStatusMonitorThread() {
       SleepMs( 2500 );
       }
    }
-Win32::DWORD BatteryStatus::StartThread( Win32::LPVOID pThreadParam ) {
-   PBatteryStatus(pThreadParam)->BatteryStatusMonitorThread();
-   return 0; // equivalent to ExitThread( 0 );
-   }
 BatteryStatus::BatteryStatus() {
    d_buf[0]   = '\0';
    d_fChanged = false;
    const auto blp( GetBatteryLifePercent() );
    d_BatteryLifePercent = blp+100; // make sure first pass thru BatteryStatusMonitorThread() (if any) asserts fChanged
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-   if(  !(blp > 100)  // only start the monitoring thread if there's something _to_ monitor
-      && (0 == Win32::CreateThread( nullptr, 1*1024, BatteryStatus::StartThread, this, 0L, nullptr ))
-     ) {
-#pragma GCC diagnostic pop
-      DBG( "%s Win32::CreateThread FAILED!", __func__ );
+   if( !(blp > 100) ) { // only start the monitoring thread if there's something _to_ monitor
+      std::thread bsmt( BatteryStatus::BatteryStatusMonitorThread, this ); bsmt.detach();
       }
    }
 bool BatteryStatus::Changed() {

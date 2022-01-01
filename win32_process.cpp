@@ -582,7 +582,6 @@ class Win32_pty {
    void ThreadFxnRunAllJobs();
 
 public:
-   STATIC_FXN Win32::DWORD K_STDCALL ChildProcessCtrlThread( Win32::LPVOID pThreadParam );
    STATIC_FXN void QuiesceAll();
    STATIC_FXN int  ActiveQueues();
    Win32_pty( PCChar pszLogBufferName );
@@ -710,23 +709,10 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
 STATIC_CONST auto cpct_start_fmts = "%s::CPCT vvvvvvvvvvvvvvvvvv THREAD STARTS vvvvvvvvvvvvvvvvvv";
 STATIC_CONST auto cpct_exit_fmts  = "%s::CPCT ^^^^^^^^^^^^^^^^^^ THREAD EXITS  ^^^^^^^^^^^^^^^^^^";
 
-Win32::DWORD Win32_pty::ChildProcessCtrlThread( Win32::LPVOID pThreadParam ) {
-   0 && DBG( cpct_start_fmts, "W32pty" );
-                                          static_cast<Win32_pty *>( pThreadParam )->ThreadFxnRunAllJobs();
-   0 && DBG( cpct_exit_fmts , "W32pty" );
-   return 0; // equivalent to ExitThread( 0 );
-   }
-
 bool Win32_pty::EnqueueJobPrimeThread_nolock() {
    if( !IsThreadActive() ) {
       Assert( d_pfLogBuf );
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-      if( 0 == (d_hThread=Win32::CreateThread( nullptr, 4*1024, Win32_pty::ChildProcessCtrlThread, this, 0L, nullptr )) ) {
-#pragma GCC diagnostic pop
-         DBG( "%s Win32::CreateThread FAILED!", __func__  );
-         return false;
-         }
+      std::thread cpct( Win32_pty::ThreadFxnRunAllJobs, this ); cpct.detach();
       return true;
       }
    return false;
@@ -817,7 +803,6 @@ class InternalShellJobExecutor {
    Win32::DWORD                d_hProcessExitCode;
    std::mutex                  d_jobQueueMtx;
    Win32::ManualClrEvent       d_AllJobsDone;
-   STATIC_FXN Win32::DWORD K_STDCALL ChildProcessCtrlThread( Win32::LPVOID pThreadParam );
 public:
    InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput );
    ~InternalShellJobExecutor();
@@ -838,9 +823,7 @@ InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, b
    , d_hThread          ( nullptr )
    , d_hProcessExitCode ( 0 )
    {
-   if( nullptr == (d_hThread=Win32::CreateThread( nullptr, 4*1024, InternalShellJobExecutor::ChildProcessCtrlThread, this, 0L, nullptr )) ) {
-      DBG( "%s Win32::CreateThread FAILED!", __func__  );
-      }
+   std::thread rajt( InternalShellJobExecutor::ThreadFxnRunAllJobs, this ); rajt.detach();
    }
 
 InternalShellJobExecutor::~InternalShellJobExecutor() {
@@ -888,13 +871,6 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
    ConOut::Bell();
    }
 
-Win32::DWORD InternalShellJobExecutor::ChildProcessCtrlThread( Win32::LPVOID pThreadParam ) {
-   0 && DBG( cpct_start_fmts, "ISJE" );
-   static_cast<InternalShellJobExecutor *>( pThreadParam )->ThreadFxnRunAllJobs();
-   0 && DBG( cpct_exit_fmts , "ISJE" );
-   return 0; // equivalent to ExitThread( 0 );
-   }
-
 PFBUF StartInternalShellJob( StringList *sl, bool fAppend ) {
    STATIC_VAR size_t s_nxt_shelljob_output_FBUF_num;
    if( !fAppend ) {
@@ -939,7 +915,7 @@ int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
    return 1; // !IsThreadActive();
    }
 
-STATIC_FXN Win32::DWORD K_STDCALL IdleThread( Win32::LPVOID ) {
+STATIC_FXN void IdleThread() {
    0 && DBG( "*** %s STARTING***", __func__ );
    while( true ) {
       SleepMs( 100 );  // was 50 @ 20130101
@@ -969,20 +945,13 @@ STATIC_FXN Win32::DWORD K_STDCALL IdleThread( Win32::LPVOID ) {
       DispDoPendingRefreshes();
       LuaIdleGC();
       }
-   return 0; // suppress warning
    }
 
 void DetachIdleThread() {
    // IdleThread is quasi-related to JobQueues: it updates <compile> window when
    // writer is a spawned process...
    //
-   Win32::DWORD ThreadId;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-   if( !Win32::CreateThread( nullptr, (4*1024), IdleThread, 0, 0, &ThreadId ) ) {
-#pragma GCC diagnostic pop
-      Msg( "Unable to start Idle thread" );
-      }
+   std::thread idle( IdleThread ); idle.detach();
    s_pCompilePty = new Win32_pty( kszCompile );
    }
 

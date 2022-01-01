@@ -43,15 +43,14 @@
 //
 //================================================================================================================
 
-const Win32::DWORD mainThreadId( Win32::GetCurrentThreadId() );
+const auto mainThreadId( std::this_thread::get_id() );
 
-#define  ASSERT_MAIN_THREAD()      Assert(mainThreadId == Win32::GetCurrentThreadId())
-#define  ASSERT_NOT_MAIN_THREAD()  Assert(mainThreadId != Win32::GetCurrentThreadId())
+STIL void ASSERT_MAIN_THREAD()     { Assert(mainThreadId == std::this_thread::get_id()); }
+STIL void ASSERT_NOT_MAIN_THREAD() { Assert(mainThreadId != std::this_thread::get_id()); }
 
 STATIC_VAR std::mutex s_GlobalVariableLock;
-
-#define GiveUpGlobalVariableLock()  ( /* DBG( "rls baton" ), */ s_GlobalVariableLock.unlock() )
-#define WaitForGlobalVariableLock() (                           s_GlobalVariableLock.lock() /* , DBG( "got baton" ) */ )
+STIL void GiveUpGlobalVariableLock()  { /* DBG( "rls baton" ); */ s_GlobalVariableLock.unlock(); }
+STIL void WaitForGlobalVariableLock() {                           s_GlobalVariableLock.lock(); /*  DBG( "got baton" ); */ }
 
 WhileHoldingGlobalVariableLock::WhileHoldingGlobalVariableLock()  { WaitForGlobalVariableLock(); }
 WhileHoldingGlobalVariableLock::~WhileHoldingGlobalVariableLock() { GiveUpGlobalVariableLock();  }
@@ -65,5 +64,3 @@ void MainThreadWaitForGlobalVariableLock() { ASSERT_MAIN_THREAD();  WaitForGloba
 //
 // do NOT reference s_GlobalVariableLock by name below this line!
 //================================================================================================================
-
-#pragma GCC diagnostic pop

@@ -410,23 +410,18 @@ void wrap_mqi_tx( MQ_input *pMsg ) {
    Assert( rv==0 );
    }
 
-   Win32::DWORD MQ_Test_Thread( Win32::LPVOID pThreadParam ) {
-      const auto ch( char(pThreadParam) );
+   void MQ_Test_Thread( char ch ) {
       printf( "\nTHREAD %c+\n", ch );
       for( auto ix(0); ix<MQ_TEST_MSGS_PER_THREAD; ++ix ) {
          wrap_mqi_tx( new MQ_input(ch,ix) );
          }
       printf( "\nTHREAD %c-\n", ch );
-      return 0; // equivalent to ExitThread( 0 );
       }
 
    int MQ_Test_StartThreads() {
       char ch('a');
       for( auto ix(0); ix<MQ_TEST_THREADS; ++ix, ++ch ) {
-         if( (0 == Win32::CreateThread( nullptr, 1*1024, MQ_Test_Thread, Win32::LPVOID(ch), 0, nullptr ))
-           ) {
-            DBG( "%s Win32::CreateThread FAILED!", __func__ );
-            }
+         std::thread mqtt( MQ_Test_Thread, ch ); mqtt.detach();
          }
       return MQ_TEST_THREADS * MQ_TEST_MSGS_PER_THREAD;
       }
