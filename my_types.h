@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -243,6 +243,12 @@ template<typename T> constexpr inline T    AbsDiff   ( T t1, T t2 )    { return 
 
 template<typename T> constexpr inline void NoLessThan( T *v, T limit ) { if( *v <= limit ) {*v = limit;} }
 template<typename T> constexpr inline void NoMoreThan( T *v, T limit ) { if( *v >= limit ) {*v = limit;} }
+
+template<typename T> constexpr inline std::pair<T, T> MinMax( T a, T b ) {  // C++17 provides clean structured binding syntax at point of call
+   // use in preference to problematic C++11 std::minmax: https://stackoverflow.com/a/51504686
+   static_assert(std::is_arithmetic<T>::value, "arithmetic type required."); // this value-returning version is only(?) efficient with arithmetic types
+   return (b < a) ? std::pair(b, a) : std::pair(a, b);
+   }
 
 template<typename T>
 constexpr inline void Constrain( T loLimit, T *v, T hiLimit ) {

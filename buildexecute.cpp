@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -313,17 +313,14 @@ void TermNulleow( std::string &st ) {
 bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { // intended use: selection-smart CURSORFUNC's
    const auto Cursor( g_CurView()->Cursor() );
    if( Get_g_ArgCount() > 0 ) {
-      *yMin = std::min( s_SelAnchor.lin, Cursor.lin );
-      *yMax = std::max( s_SelAnchor.lin, Cursor.lin );
-      *xMin = std::min( s_SelAnchor.col, Cursor.col );
-      *xMax = std::max( s_SelAnchor.col, Cursor.col );
+      const auto [xmin,xmax] = MinMax( s_SelAnchor.col, Cursor.col );
+      const auto [ymin,ymax] = MinMax( s_SelAnchor.lin, Cursor.lin );
+      *xMin=xmin; *xMax=xmax; *yMin=ymin; *yMax=ymax;  // marshall
       return true;
       }
    else {
-      *yMin = Cursor.lin;
-      *yMax = Cursor.lin;
-      *xMin = Cursor.col;
-      *xMax = Cursor.col;
+      *yMin = *yMax = Cursor.lin;
+      *xMin = *xMax = Cursor.col;
       return false;
       }
    }
@@ -335,8 +332,7 @@ stref View::GetWucOfSelection() {
        /* && s_SelAnchor.col != cursor.col */
        /* && s_SelAnchor.lin == cursor.lin */
         ) {                                                                 0 && DBG("cur=%d,%d anchor=%d,%d",s_SelAnchor.lin,s_SelAnchor.col,cursor.lin,cursor.col);
-         const auto xMin( std::min( s_SelAnchor.col, cursor.col ) );
-         const auto xMax( std::max( s_SelAnchor.col, cursor.col ) );
+         const auto [xMin,xMax] = MinMax( s_SelAnchor.col, cursor.col );
          auto sr( FBuf()->PeekRawLineSeg( cursor.lin, xMin, xMax-1 ) );     0 && DBG("x:%d,%d '%" PR_BSR "'", xMin, xMax-1, BSR(sr) );
          trim( sr );
          return sr;
@@ -422,10 +418,8 @@ bool ARG::IngestArgTextAndSelection() { enum {DB=0};                            
          }                                                                                    DB && DBG( "%s !NULLARG", __func__ );
       return true; //=========================================================================
       }
-   const auto xMin( std::min( s_SelAnchor.col, Cursor.col ) );
-   const auto xMax( std::max( s_SelAnchor.col, Cursor.col ) );
-   const auto yMin( std::min( s_SelAnchor.lin, Cursor.lin ) );
-   const auto yMax( std::max( s_SelAnchor.lin, Cursor.lin ) );
+   const auto [xMin,xMax] = MinMax( s_SelAnchor.col, Cursor.col );
+   const auto [yMin,yMax] = MinMax( s_SelAnchor.lin, Cursor.lin );
    if( (d_pCmd->d_argType & BOXSTR) && s_SelAnchor.lin == Cursor.lin ) {                      DB && DBG( "%s BOXSTR_to_TEXTARG", __func__ );
       return BOXSTR_to_TEXTARG( Cursor.lin, xMin, xMax ); //==================================
       }
