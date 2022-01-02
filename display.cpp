@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -754,7 +754,7 @@ STATIC_FXN bool HilitWucLineSegs
                         fMatchesFirstNeedle = fTestingFirstNeedle;
                         ixFirstMatch = ixFind; mlen = needle.length();
                         }
-                     } // xWUCX xWUCX xWUCX clss::xWUCX clss::xWUCX xWUCX xWUCX xWUCX xWUCX
+                     } // xWUCX xWUCX xWUCX clss::xWUCX clss::xWUCX objx.xWUCX objy.xWUCX objx.xWUCX xWUCX xWUCX xWUCX xWUCX
                   pNeedle += needle.length() + 1; fTestingFirstNeedle = false;
                   }
                if( ixFirstMatch == stref::npos ) { break; }
