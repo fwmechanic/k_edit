@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -138,7 +138,7 @@ enum class ColorTblIdx { // see color2Lua // these are ARRAY _INDICES_!
    COLOR_COUNT // MUST BE LAST!
    }; // NO MORE THAN 16 ALLOWED!
 
-// CompileTimeAssert( ColorTblIdx::COLOR_COUNT <= 16 ); // all ColorTblIdx:: must fit into a nibble
+CompileTimeAssert( to_underlying(ColorTblIdx::COLOR_COUNT) <= 16 ); // all ColorTblIdx:: must fit into a nibble
 
 #define  HILITE_CPP_CONDITIONALS  1
 
