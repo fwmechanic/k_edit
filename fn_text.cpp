@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -166,25 +166,40 @@ bool ARG::flipcase() {
 
 //=================================================================================================
 
+// multiple implementations of ARG::longline test 3 different combinations of
+// calling 2 different implementations of CursorFuncPeekSeln (returning either
+// tuple or struct).  The two impls which call CursorFuncPeekSelnS() have
+// smaller codegen than the tuple-returning call impl.  See
+// CursorFuncPeekSeln/CursorFuncPeekSelnS for further details.
+// 20220102
+//
 bool ARG::longline() {
    PCFV;
-   LINE yMin; LINE yMax; COL xMin; COL xMax;
-   const auto fMoveLine( !GetSelectionLineColRange( &yMin, &yMax, &xMin, &xMax ) );
-   if( fMoveLine ) {
-      yMin = 0;
-      yMax = pcf->LineCount();
+ #if 0
+   auto [selnActive,yMin,yMax,xMin,xMax] = CursorFuncPeekSeln();  // returned tuple  values referenced via structured binding to scalar vars
+   #define VP
+ #elif 0
+   auto [selnActive,yMin,yMax,xMin,xMax] = CursorFuncPeekSelnS(); // returned struct fields referenced via structured binding to scalar vars
+   #define VP
+ #else
+   auto sl = CursorFuncPeekSelnS();  // return struct and reference struct fields explicitly
+   #define VP sl.
+ #endif
+   if( !VP selnActive ) {
+      VP yMin = 0;
+      VP yMax = pcf->LineCount();
       }
    auto max_lnum( 0 );  auto max_len ( 0 );
-   for( auto iy(yMin); iy <= yMax; ++iy ) {
-      const auto len( FBOP::LineCols( pcf, iy ) );
-      if( len > max_len ) {
+   for( auto iy(VP yMin); iy <= VP yMax; ++iy ) {
+      if( const auto len( FBOP::LineCols( pcf, iy ) ); len > max_len ) {
          max_lnum = iy;
          max_len  = len;
          }
       }
    const Point Cursor( pcv->Cursor() );
-   pcv->MoveCursor( fMoveLine ? max_lnum : Cursor.lin, max_len );
+   pcv->MoveCursor( !VP selnActive ? max_lnum : Cursor.lin, max_len );
    return true;
+#undef VP
    }
 
 //=================================================================================================

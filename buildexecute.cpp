@@ -310,18 +310,49 @@ void TermNulleow( std::string &st ) {
       }
    }
 
-bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax ) { // intended use: selection-smart CURSORFUNC's
-   const auto Cursor( g_CurView()->Cursor() );
+// NB: CursorFuncPeekSelnS and CursorFuncPeekSeln can both be CALLED using
+//     structured binding syntax (which is low-ceremony to write and understand).
+//     ref: see various implementations of ARG::longline
+// BUT (calling) CursorFuncPeekSelnS codegen is smaller than
+//     (calling)  CursorFuncPeekSeln codegen
+// which appears to mean that returning a struct (subject to copy elision), even
+// when that struct is "unpacked" via structured binding, is more efficient than
+// returning a same-data tuple which is identically "unpacked" via structured
+// binding (at the cost of introducing a new type (the function return struct
+// type) into the global namespace; OTOH the new function return struct type is a
+// single identifier, vs the tuple definition which is a complex aggregate
+// declaration; repeating the latter in the function prototype and function
+// definition (in different files) is noisier (I can't say "more error prone"
+// because any mismatch in the tuple defs will cause a compile-time error)).
+//
+// The struct-return approach will improve when I fully adopt C++20 because at
+// that time 'designated initializers' will be in-scope (they effectively already
+// are due to GCC supporting designated initializers even in C++ effectively
+// forever...), allowing clear matching of return values with their assigned fields.
+//
+// 20220102
+//
+TCursorFuncPeekSeln CursorFuncPeekSelnS() { // intended use: selection-smart CURSORFUNC's
+   const auto Cursor( g_CurView()->Cursor() );                              0 && DBG( "Get_g_ArgCount = %d", Get_g_ArgCount() );
    if( Get_g_ArgCount() > 0 ) {
       const auto [xmin,xmax] = MinMax( s_SelAnchor.col, Cursor.col );
       const auto [ymin,ymax] = MinMax( s_SelAnchor.lin, Cursor.lin );
-      *xMin=xmin; *xMax=xmax; *yMin=ymin; *yMax=ymax;  // marshall
-      return true;
+      return { .selnActive=true, .yMin=ymin, .yMax=ymax, .xMin=xmin, .xMax=xmax }; // use designated initializers
       }
    else {
-      *yMin = *yMax = Cursor.lin;
-      *xMin = *xMax = Cursor.col;
-      return false;
+      return { false, Cursor.lin, Cursor.lin, Cursor.col, Cursor.col }; // don't use designated initializers: field order dependent init...
+      }
+   }
+
+std::tuple<bool,LINE,LINE,COL,COL> CursorFuncPeekSeln() { // intended use: selection-smart CURSORFUNC's
+   const auto Cursor( g_CurView()->Cursor() );                              0 && DBG( "Get_g_ArgCount = %d", Get_g_ArgCount() );
+   if( Get_g_ArgCount() > 0 ) {
+      const auto [xmin,xmax] = MinMax( s_SelAnchor.col, Cursor.col );
+      const auto [ymin,ymax] = MinMax( s_SelAnchor.lin, Cursor.lin );
+      return std::make_tuple(true,ymin,ymax,xmin,xmax);
+      }
+   else {
+      return std::make_tuple(false,Cursor.lin,Cursor.lin,Cursor.col,Cursor.col);
       }
    }
 

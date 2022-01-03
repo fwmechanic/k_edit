@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -83,7 +83,10 @@ STIL     bool IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedByReco
 
 extern   void ClearArgAndSelection();
 extern   void ExtendSelectionHilite( const Point &pt );
-extern   bool GetSelectionLineColRange( LINE *yMin, LINE *yMax, COL *xMin, COL *xMax );
+extern   std::tuple<bool,LINE,LINE,COL,COL> CursorFuncPeekSeln();
+         struct TCursorFuncPeekSeln { bool selnActive; LINE yMin, yMax; COL xMin, xMax; };
+extern   TCursorFuncPeekSeln CursorFuncPeekSelnS();
+
 extern   void TermNulleow( std::string &st );
 
          // GetTextargString flags bits
