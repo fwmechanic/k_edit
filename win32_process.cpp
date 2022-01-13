@@ -41,6 +41,7 @@ namespace Win32 { // Win32::
       HANDLE d_hEvent;
       Event( bool fManualReset ) : d_hEvent( CreateEventA( nullptr,fManualReset,0,nullptr ) ) {}
       void SignalAndYield()                 { SetEvent( d_hEvent ); }
+      virtual ~Event() { CloseHandle( d_hEvent ); }
 
    public:
       void WaitForSignalForever()                    {                        WaitForSingleObject( d_hEvent, INFINITE ); }
