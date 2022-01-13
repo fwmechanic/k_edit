@@ -116,6 +116,7 @@ public:
    CMD_reader() : d_fAnyInputFromKbd( false ) {}
    PCCMD GetNextCMD()               { return GetNextCMD_ExpandAnyMacros( eOnMacHalt::Return ); }
    bool  GotAnyInputFromKbd() const { return d_fAnyInputFromKbd; }
+   virtual ~CMD_reader() {}
    };
 
 extern   void  FetchAndExecuteCMDs( bool fCatchExecutionHaltRequests );

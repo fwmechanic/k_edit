@@ -31,9 +31,9 @@
 class SWI_intf {
  public:
    SWI_intf() {}
+   virtual ~SWI_intf() {}
    virtual std::string defn( stref newValue ) = 0; // { return "not implemented!"; }
    virtual std::string disp()                 = 0; // { return "not implemented!"; }
-   virtual ~SWI_intf() {}
    };
 
 struct enum_nm { int val; PCChar name; };

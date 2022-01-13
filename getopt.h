@@ -46,6 +46,7 @@ class Getopt
    virtual void VErrorOut( PCChar emsg ) = 0;
 
    Getopt( int argc_, PPCChar argv_, PCChar optset_ );
+   virtual ~Getopt() {}
    int    NextOptCh();
    PCChar optarg()  const { return d_pOptarg; }
    PCChar nextarg() { return (d_argi < d_argc) ? d_argv[d_argi++] : nullptr; }

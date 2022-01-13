@@ -147,7 +147,9 @@ typedef signed long       FilesysTime;
 #   define  EXTERNC  extern
 #endif
 
+#define NO_DFLTCTOR(c)   c             (           ) = delete
 #define NO_COPYCTOR(c)   c             ( const c & ) = delete
+#define NO_MOVECTOR(c)   c             ( c      && ) = delete
 #define NO_ASGN_OPR(c)   c & operator= ( const c & ) = delete
 
 #define  NewScope

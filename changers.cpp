@@ -34,6 +34,7 @@ class KeyChanger {
    public:
 
    KeyChanger() {} // must supply dflt ctor if we even _declared_ any other ctor
+   virtual ~KeyChanger() {}
 
    bool Run();
 

@@ -73,14 +73,15 @@ protected:
 public:
    TBC_Virtual bool   Changed() = 0;
    TBC_Virtual PCChar Str()     = 0;
+   virtual ~TitleBarContributor() {}
    };
 //------------------------------------------------------------------------------
 class EdFilesStatus : public TitleBarContributor {
    EditorFilesStatus_t d_efs;
    char d_buf[40];
 public:
-   TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str() { return d_buf; }
+   TBC_Virtual bool Changed() override;
+   TBC_Virtual PCChar Str() override { return d_buf; }
    };
 bool EdFilesStatus::Changed() { // BUGBUG this is near-identical to EditorFilesystemNoneDirty()
    const auto now( EditorFilesStatus() );
@@ -96,7 +97,7 @@ class CwdStatus : public TitleBarContributor {
    Path::str_t d_last;
 public:
    CwdStatus() {}
-   TBC_Virtual bool Changed() {
+   TBC_Virtual bool Changed() override {
       Path::str_t now( Path::GetCwd() );
       const auto changed( now != d_last );
       if( changed ) {
@@ -104,7 +105,7 @@ public:
          }
       return changed;
       }
-   TBC_Virtual PCChar Str() { return d_last.c_str(); }
+   TBC_Virtual PCChar Str() override { return d_last.c_str(); }
    };
 //------------------------------------------------------------------------------
 class BatteryStatus : public TitleBarContributor {
@@ -114,8 +115,8 @@ class BatteryStatus : public TitleBarContributor {
    char  d_buf[40];
 public:
    BatteryStatus();
-   TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str() { return d_buf; }
+   TBC_Virtual bool Changed() override;
+   TBC_Virtual PCChar Str() override { return d_buf; }
 private:
    STATIC_FXN int GetBatteryLifePercent();
    void BatteryStatusMonitorThread();
@@ -172,8 +173,8 @@ class MemStatus : public TitleBarContributor {
    typedef char dbuf[27];
    dbuf d_buf;
 public:
-   TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str() { return d_buf; }
+   TBC_Virtual bool Changed() override;
+   TBC_Virtual PCChar Str() override { return d_buf; }
    };
 size_t GetProcessMem() {
    Win32::PSAPI::PROCESS_MEMORY_COUNTERS pmc;
@@ -195,8 +196,8 @@ class LuaMemStatus : public TitleBarContributor {
    int  d_Size;
    char d_buf[25];
 public:
-   TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str() { return d_buf; }
+   TBC_Virtual bool Changed() override;
+   TBC_Virtual PCChar Str() override { return d_buf; }
    };
 bool LuaMemStatus::Changed() {
    const auto newSize( LuaHeapSize() );
@@ -218,8 +219,8 @@ class CursMoves : public TitleBarContributor {
    int  d_prev;
    char d_buf[25];
 public:
-   TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str() { return d_buf; }
+   TBC_Virtual bool Changed() override;
+   TBC_Virtual PCChar Str() override { return d_buf; }
    };
 bool CursMoves::Changed() {
    const auto newVal( DispCursorMoves() );
@@ -233,8 +234,8 @@ class StatLnUpdts : public TitleBarContributor {
    int  d_prev;
    char d_buf[25];
 public:
-   TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str() { return d_buf; }
+   TBC_Virtual bool Changed() override;
+   TBC_Virtual PCChar Str() override { return d_buf; }
    };
 bool StatLnUpdts::Changed() {
    const auto newVal( DispStatLnUpdates() );
@@ -248,8 +249,8 @@ class ScreenRefreshes : public TitleBarContributor {
    int  d_prev;
    char d_buf[25];
 public:
-   TBC_Virtual bool Changed();
-   TBC_Virtual PCChar Str() { return d_buf; }
+   TBC_Virtual bool Changed() override;
+   TBC_Virtual PCChar Str() override { return d_buf; }
    };
 bool ScreenRefreshes::Changed() {
    const auto newVal( g_WriteConsoleOutputLines );

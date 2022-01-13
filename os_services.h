@@ -209,8 +209,8 @@ protected:
 
    public: //===================================================================
 
-    PerfCounter() { Reset(); }
-   ~PerfCounter() { }
+   PerfCounter() { Reset(); }
+   virtual ~PerfCounter() {}
 
    void   Start()   { TCapture now; GetTOD( &now ); Start_( now ); }
    void   Reset()   { d_acc = 0; Start(); }
@@ -314,7 +314,9 @@ class DirMatches {
    bool FoundNext();
    bool KeepMatch();
 
+   NO_DFLTCTOR(DirMatches);
    NO_COPYCTOR(DirMatches);
+   NO_MOVECTOR(DirMatches);
    NO_ASGN_OPR(DirMatches);
 
    public: //===================================================================

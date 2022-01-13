@@ -74,6 +74,7 @@ STATIC_FXN void copyUndoMarks( PFBUF pFBuf, NamedPointHead &SavedMarkList, int L
 
 struct OutputWriter {
    virtual void VWriteLn( PCChar string ) const = 0;
+   virtual ~OutputWriter() {};
    };
 
 struct FbufWriter : public OutputWriter {
