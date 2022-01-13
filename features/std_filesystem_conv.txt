@@ -1,0 +1,226 @@
+20220105 kgoodwin
+
+Notes from an attempt to begin migrating my current (ANSI-mode (8-bit)) Win32
+API-based filesystem path codebase to use C++17 std::filesystem(::path).
+
+On Windows (GCC 11.2.0 + MinGW runtime 3.11), std::filesystem::path::value_type
+is wchar_t whereas in the same build I'm now and have always used char and
+std::string<char> value_type's to interface successfully with _ANSI (8-bit)_ CRTL
+and Win32 APIs.
+
+This adds yet another twist to the larger longstanding question (Gordian Knot)
+of character encoding.
+
+It seems clear that UTF8 is the winner of text-file formatting "wars"; Linux
+uses UTF8 everywhere (filenames as well as other text such as text file content.
+Source code text files containing non-ANSI chars will almost certainly encode
+them as UTF8.  In my personal experience only some rarely encountered MS-sourced
+tools (and maybe Windows OS config files etc.?) use UTF16-encoded text files;
+otherwise, UTF16 as a text file format is a DEAD DUCK.  The only serious use of
+UTF16 in my world today is the Win32 API.
+
+In K, there are several textual-information domains with substantial crossover:
+
+Command-line parameters
+ * filenames which in odd cases might contain non-ANSI chars (this hasn't been
+   even a slight problem thus far, but impedes widespread adoption).
+
+File content
+ * character indexing used in display output code and pervasively for other
+   content introspection:
+ * parsed to discover HTABs to translate from character index to character
+   column for display formatting and selection extent decoding.
+ * substring extraction based on char index range frequently performed.
+   * in some cases substring extraction used as filename (e.g. passed to file-open APIs)
+ * parsed for content-based highlighting
+   * word-under-cursor discovery
+   * string literal
+   * etc.
+   Parsing for highlighting purposes sometimes depends on file content preceding
+   that being displayed (which means: starting from the first char in the file).
+
+Efficient indexing and/or iteration of chars (code points) on a line is
+essential to avoid pathological performance problems (especially in wuc
+highlighting code on long lines[1]).  In K, this has been accomplished by the
+simplification of using ANSI (8-bit) characters to represent all text throughout
+the program.
+
+[1] possible to delegate wuc highlighting (on long lines) to transient threads?
+
+Filenames
+ * are maintained in editor history state files.
+ * are of course stored internally at editor runtime.
+
+Console output
+ * Win32 Console API presents 2-dimensional grid representation of console
+   Current impl uses Win32 ANSI API to write a single (8-bit) char to each grid
+   location.
+
+The huge challenge is to define the boundaries of these domains, and choose
+performant while not egregiously space-inefficient ways of storing text in each.
+
+The core problem with UTF8 and UTF16 is that neither is one byte (indexable
+granule) per code point (aka displayable character); only UTF32 (4 bytes per
+code point) can store any code point in a single storage element.  Thus only
+UTF32 can be random accessed (indexed) in O(1).  Thus it seems that worst case,
+converting to UTF32 will be necessary to enable O(1) indexing into a string/array
+of code points when O(1) indexing is required.
+
+UTF16 seems to be needed only for interfacing with Win32 Wide APIs (which
+themselves are a forever lingering manifestation of an early (and regrettably
+wrong) decision based on an assumption that "surely no more than 64K unique
+characters will ever be encountered in the world".  Sigh).  But since UTF8
+presents the same problem (of variable-width code points) as UTF16, most of the
+problems under discussion here are equally present when considering the question
+of how to support UTF8 (only).
+
+utf8everywhere.org advocates for solving Win32API<->UTF8 impedance-mismatch
+problems by
+* storing all text in UTF8 (string) format (value_type==char)
+* explicitly calling WIDE Win32 API's (using UTF16 (string) format
+  (value_type==wchar_t)) everywhere,
+  * converting all parameters and return values between UTF8 and UTF16
+    immediately before/after making such calls[2].
+  * boost/nowide lib is proffered to support such conversions
+
+  [2] Note that this approach is IDENTICAL to Windows' implementation of the
+  NARROW (ANSI) Win32 (A) API's: incoming char[] string(s) are encoded into UTF16
+  wchar_t[] using the current Code Page, the corresponding WIDE Win32 API (W) is
+  called w/wchar_t[] params, and any returned UTF16 strings are encoded back into
+  ANSI char[] using the current Code Page.
+
+This seems reasonable, BUT the just discovered reality that
+std::filesystem::path::value_type on MinGW is wchar_t seems to collide
+unfortunately with this approach.  Perhaps more research is needed to see whether
+buried somewhere in some part of std::filesystem::path there is some knob or
+template parameter that could be used to specify
+std::filesystem::path::value_type == char (AND EQUALLY IMPORTANTLY) that said
+char[] data be en/decoded as UTF8; it seems this might not be possible as
+std::filesystem code wraps all and sundry Win32 APIs, and presumably the current
+chose of wchar_t was made specifically to allow such std::filesystem::path values
+to be passed to and from such wrapped Win32 APIs sans translating en/code
+operations).  The problem is that, unless such an override to
+std::filesystem::path::value_type == char::UTF8 is found, use of std::filesystem
+greatly expands the envelope of places where a UTF8/16 conversion layer needs to
+be performed.  Note also that AFAIK this problem only exists on MinGW (and MSVC?
+and if both, they will likely solve it independent of each other) so a clean
+solution implementing "std::filesystem::path::value_type == char::UTF8" might
+have very low priority.
+
+Some favorable properties of UTF8 may make some single-pass (i.e.
+iterator-based) parsing tasks straightforward; it might be the case that newline
+and HTAB char byte values are disallowed as extra-byte; if so, linear scan of
+UTF8 text in search of these chars would be just as efficient as if performed on
+ANSI text.  However once the location of such chars was determined, the distance
+between those locations and other chars would NOT reliably be a matter of
+subtracting array indices (e.g. the difference between std::distance between
+vector iterators vs list iterators).  Therefore, a running character count would
+need to be maintained while iterating, which must be based on further (perhaps
+trivial) decoding of the bytes iterated over.  Restatement of the preceding: UTF8
+(and UTF16) string array indices do not necessarily correspond to the start of a
+UTF8 (UTF16) code point.  Thus there are times where maintenance of a 1x decoded
+cache of UTF32 representations of UTF8 strings would be preferred to repeatedly
+performing the same decode op on the same data.  Obviously such an approach adds
+much complexity and overhead.
+
+All of the above explicates my long internally held reasons for NOT putting
+forth any effort to add UTF8 support to K; this essay was triggered by my
+attempt to begin leveraging std::filesystem which collided with a closely
+related challenge.
+
+Outlook 20220105
+
+Regarding K's future adoption of the utf8everywhere.org
+approach to using WIDE Win32 API's with UTF8 params, this could be done
+gradually: the Nuwen MinGW environment provides Boost which has long contained
+the boost/nowide components (as will boost on Linux).  Initially such work will
+bear little/no fruit, as the input strings are unlikely to ever contain non-ANSI
+UTF8 chars.  But as a (low priority) foundational effort, work could start
+immediately.  There is of course a race condition (or two): I might decide to
+abandon Windows OS in the near future for a 100% Linux future, in which case, my
+motivation to engage in this effort becomes even lower.
+
+Regarding K's use of std::filesystem; per above unless a char[]+UTF8 en/decode
+modality of MinGW is discovered, this effort is stalled.  And per above, if I
+abandon Windows (support for K), I can move forward with this initiative on
+Linux w/o encountering the the wchar_t problem.
+
+20220107_1059 Fri
+
+further on how a supposed "designed from the ground up as a superior language
+learning from the [many] defects of C/C++" language, Rust, handles UTF8 strings:
+
+source: https://doc.rust-lang.org/book/ch08-02-strings.html
+
+  Bytes and Scalar Values and Grapheme Clusters! Oh My!
+
+  Another point about UTF-8 is that there are actually three relevant ways to
+  look at strings from Rust's perspective: as bytes, scalar values, and grapheme
+  clusters (the closest thing to what we would call letters).
+
+The text goes on to describe what I will attempt to paraphrase: scalar values
+are what I've been calling (above) code points, while grapheme clusters are
+comprised of a sequence of scalar values which result in a single displayed
+character (apparently, trailing scalar values of a grapheme cluster acts as
+modifiers; of course, this is probably quite simplistic and thus inaccurate;
+Unicode appears to be a bottomless pit of complexity...).
+
+However the ultimate message from this section of the Rust doc is:
+
+  Methods for Iterating Over Strings
+
+  Fortunately, you can access elements in a string in other ways.
+
+  If you need to perform operations on individual Unicode scalar values, the best
+  way to do so is to use the chars method. [...]
+
+  for c in "??????".chars() {
+      println!("{}", c);
+  }
+
+  [...]
+
+  Getting grapheme clusters from strings is complex, so this functionality is
+  not provided by the standard library.  Crates are available on crates.io if
+  this is the functionality you need.
+
+So as of this writing (assuming the above referenced book/doc is current), an
+app which seeks to determine which bytes of a string map to which displayable
+characters, is left to choose an external library.
+
+Stepping away from Rust, either (a) the application is assumed to be writing
+UTF8 output to a stream and leaving the display interpretation of the output
+stream's bytes' (into displayable characters by decoding UTF8) to the output
+display device (if any), _OR_ (b) the application bears responsibility for
+delineating displayable characters and writing them one by one to the output
+device (for example, in a 2D matrix where each element is a single (fixed width)
+displayable character).  This last example exactly describes the output mode of K
+editor.  In which case, the editor bears full responsibility for decoding the
+stream of UTF8 bytes into displayable characters; this is (a restatement of?) one
+of the challenges of "adding UTF8 support to K".  This challenge involves not the
+display subsystem but text editing as well: K already offers the ability to edit
+a line (file) displayable char by displayable char; this would need to
+incorporate UTF8 displayable char comprehension.
+
+Another thought: it appears uncertain whether the Win32 Console Wide API
+supports full unicode:
+
+Win32::WriteConsoleOutputW takes a pointer to a 2D CHAR_INFO array  https://docs.microsoft.com/en-us/windows/console/writeconsoleoutput
+
+typedef struct _CHAR_INFO { // https://docs.microsoft.com/en-us/windows/console/char-info-str
+  union {
+    WCHAR UnicodeChar;
+    CHAR  AsciiChar;
+  } Char;
+  WORD  Attributes;
+} CHAR_INFO, *PCHAR_INFO;
+
+"The WCHAR data type contains a 16-bit Unicode character."  https://docs.microsoft.com/en-us/windows/win32/extensible-storage-engine/wchar
+
+So if only "a 16-bit Unicode character" can be written to the console using this
+API, what of the "above 64K" unicode Code Points?  It seems to be the case that
+this subsystem will never support "above 64K" Code Points (since this API is
+being superseded by MS new "Console Virtual Terminal Sequences"-based Console
+API...  Perhaps it's true that ANSI-hating Unicode/UTF8 touting programmers will
+be satisfied with (only) first-64K-code-points support, but it seems plausible
+that this stance is equally bigoted.
