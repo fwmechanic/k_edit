@@ -648,11 +648,11 @@ public:
        , d_colorAttribute(colorAttribute)
        { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszPrompt );
        }
-   auto Write()   const -> void;
-   auto UnWrite() const -> void { CursorLocnOutsideView_Unset(); }
+   void Write()   const;
+   void UnWrite() const { CursorLocnOutsideView_Unset(); }
    };
 
-auto EditPrompt::Write() const -> void  { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszPrompt );
+void EditPrompt::Write() const { 0 && DBG( "%p %s: '%s'", this, __func__, d_pszPrompt );
    const auto promptLen( Strlen( d_pszPrompt ) );
    auto oEditText( std::max( 0, d_xCursor - EditScreenCols() + promptLen + 1 ) );
    auto editTextLen( Strlen( d_pszEditText ) );
@@ -677,14 +677,14 @@ class GetTextargString_CMD_reader : public CMD_reader
    {
    const EditPrompt &d_ep;
 protected:
-   auto VWritePrompt()   -> void override { d_ep.Write  (); }
-   auto VUnWritePrompt() -> void override { d_ep.UnWrite(); }
+   void VWritePrompt()   override { d_ep.Write  (); }
+   void VUnWritePrompt() override { d_ep.UnWrite(); }
 public:
    GetTextargString_CMD_reader( const EditPrompt &ep ) : d_ep( ep ) {}
-   auto GetNextCMD( bool fGetKbInput ) -> PCCMD; // OVERRIDE parent-class method
+   PCCMD GetNextCMD( bool fGetKbInput ); // OVERRIDE parent-class method
    };
 
-auto GetTextargString_CMD_reader::GetNextCMD( bool fKbInputOnly ) -> PCCMD {
+PCCMD GetTextargString_CMD_reader::GetNextCMD( bool fKbInputOnly ) {
    if( fKbInputOnly ) {
       VWritePrompt();
       d_fAnyInputFromKbd = true;
@@ -883,11 +883,11 @@ class TabCompletion_filesystem {
    std::unique_ptr<DirMatches> d_pDirContent;
    std::string                 d_pbTabxBase;
 public:
-   auto Deactivate() -> void {
+   void Deactivate() {
       delete d_pDirContent.release();
       d_pbTabxBase.clear(); // forget prev used WC
       }
-   auto GetNext( std::string &stb, COL &xCursor ) -> void {
+   void GetNext( std::string &stb, COL &xCursor ) {
       if( !d_pDirContent ) {
          if( d_pbTabxBase.empty() ) { // no prev'ly used WC?
             d_pbTabxBase = stb;   // create based on curr content
@@ -909,7 +909,7 @@ public:
          d_fBellAndFreezeKbInput = true;
          }
       }
-   auto BellAndFreezeKbInputIfExhausted() -> void {
+   void BellAndFreezeKbInputIfExhausted() {
       // BUGBUG GetTextargString_CMD_reader may prevent the following
       // d_fBellAndFreezeKbInput code from achieving it's intended task
       //
