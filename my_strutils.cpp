@@ -251,7 +251,7 @@ ERR_NOTHING:
       errno_ = EDOM; // "Mathematics argument out of domain of function."  http://pubs.opengroup.org/onlinepubs/000095399/basedefs/errno.h.html
       return stref( sr.data(), 0 );
       }
-   auto isBasePrefix = [&numberBase]( UI bs, char xfix, typeof(sr.cbegin()) &it, typeof(sr.cbegin()) itend ) {
+   auto isBasePrefix = [&numberBase]( UI bs, char xfix, decltype(sr.cbegin()) &it, decltype(sr.cbegin()) itend ) {
       if( (  10 == numberBase  // default?
           || bs == numberBase  // explicit bs?
           ) && (*it=='0')
