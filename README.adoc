@@ -12,7 +12,7 @@ toc::[]
 
 K is my personal programmer's text editor, whose design is derived from Microsoft's http://www.texteditors.org/cgi-bin/wiki.pl?M[M editor] (a.k.a. "Microsoft Editor") which was itself derived from the http://www.texteditors.org/cgi-bin/wiki.pl?Z[Z] http://www.applios.com/z/z.html[editor].
 
-K builds to a 64-bit binary/exe for Win32 (Console) and Linux (ncurses) platforms.  K is written in C++17 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
+K builds to a 64-bit binary/exe for Win32 (Console) and Linux (ncurses) platforms.  K is written in C++20 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
 
 ## Features
 
@@ -55,13 +55,13 @@ The K source code distro contains, and K incorporates, by building and static li
 
 ### External Build Dependencies
 
- * `GCC` >= 9.2.0
+ * `GCC` >= 11
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
  ** `boost::filesystem`: a small subset only
  * http://www.pcre.org/[`PCRE`] "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
- * https://ctags.io/[`Universal Ctags`]) is invoked to rebuild the "tags database" at the close of each successful build of K.
+ * https://ctags.io/[`Universal Ctags`] is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread` libraries
- * Windows-only: https://www.7-zip.org/download.html[`7zip.exe`] is used to create release files when building the `make rls` target (in the same circumstance, Linux creates `.tgz` files using standard utilities).
+ * Windows-only: https://www.7-zip.org/download.html[`7zip.exe`] is used to create release files when building the `make rls` target (in the same circumstance, the Linux build creates `.tgz` files using standard utilities).
 
 #### Windows-specific Build-Prep Instructions
 
@@ -76,10 +76,11 @@ The K source code distro contains, and K incorporates, by building and static li
 ##### *ubuntu >= 14.04 (and presumably any contemporary Debian release)
 
  * after cloning this repo, run `sudo ./install_build_tools_ubuntu.sh` to install the necessary packages.
+ * ensure that GCC >= 11 is available to provide for C++20 support; this requires https://stackoverflow.com/a/70653945[additional installation steps on Ubuntu 20.04].
 
 ### To build
 
-make targets:
+`make` targets:
 
   * `all`: (default) build everything; the build is parallel-make-safe
   * `clean`: clean K-core C++ build outputs only
@@ -278,18 +279,18 @@ K development started (in spirit) in 1988 when I started link:historical_scans_f
 
 2014/10: an employment transition into an (effectively) Linux-only environment (willingly) forced me to port K to (x64) Linux; I had wanted to do this for years, but lacked the motivation: the prospect of working daily on a platform w/o K provided the needed motivation!
 
-2014/11: I just discovered http://www.schulenberg.com/page2.htm["Q" Text Editor], another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!
+2014/11: +++<del>+++I just discovered http://www.schulenberg.com/page2.htm["Q" Text Editor], another (Win32+x64) re-implementation of the "M" Editor, written in FORTRAN using the QuickWin framework!+++</del>+++ As of 22.01 this has disappeared.
 
 2017/09: See link:docs/musings.adoc[Musings]
 
-### Toolchain notes
+### Toolchain-related Historical Notes
 
 Until 2012/06, I compiled K using the free, copy and run (no installer needed) "Microsoft Visual C\++ Toolkit 2003" containing MSVC++ 7.1 32-bit command line build tools (since withdrawn, replaced by Visual Studio Express Edition).  During the time when I used these MS build tools, I used http://en.wikipedia.org/wiki/WinDbg[WinDbg] to debug crashes.
 
 I have no fondness for massive IDE's (e.g.  Visual Studio), nor for installers, so when I finally found http://news.ycombinator.com/item?id=4112374[a reliable way to obtain MinGW]
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
-advantage of the major generic features of C\+++11; consequently K no longer compiles with MSVC+++ 7.1.
+advantage of the major generic features of C\+++11 (and beyond); consequently K no longer compiles with MSVC+++ 7.1.
 
-Per http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx[Visual-Studio-Why-is-there-No-64-bit-Version] the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but given STL's removal of support for 32-bit MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and 64-bit Linux K has no known anomalies).
+Per http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx[Visual-Studio-Why-is-there-No-64-bit-Version] the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but since STL (creator of Nuwen MinGW distro) no longer provides 32-bit versions Nuwen MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and 64-bit Linux K has no known anomalies).
 
 https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/[AsciiDoc Quick Reference]

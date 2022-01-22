@@ -252,8 +252,8 @@ namespace ThisProcessInfo {
 //
 
 // from http://stackoverflow.com/questions/8268243/porting-interlockedexchange-using-gcc-intrinsics-only
-typedef WL( Win32::LONG              ,                           uint32_t ) InterlockedExchangeRetval;
-typedef WL( InterlockedExchangeRetval, volatile InterlockedExchangeRetval ) InterlockedExchangeOperand;
+typedef WL( Win32::LONG, uint32_t ) InterlockedExchangeRetval;
+typedef InterlockedExchangeRetval InterlockedExchangeOperand;
 
 STIL InterlockedExchangeRetval InterlockedExchange_( InterlockedExchangeOperand& data, InterlockedExchangeOperand& new_val ) {
 #if defined(_WIN32)
