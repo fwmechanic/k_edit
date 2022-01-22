@@ -669,7 +669,7 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
    //
    // the warning IS generated...
    //
-   auto PutLastLine_( [=]( PCChar pline ) { PutLastLogLine( d_pfLogBuf, pline ); } );
+   auto PutLastLine_( [=,this]( PCChar pline ) { PutLastLogLine( d_pfLogBuf, pline ); } );
    if( g_fMsgflush ) {
       WhileHoldingGlobalVariableLock gvlock;     // wait until we own the I/O
       d_pfLogBuf->MakeEmpty();

@@ -324,8 +324,7 @@ public:
 //------------------------------------------------------------------------------
 
 template <class MsgType>
-class MsgQ
-   {
+class MsgQ {
 public:
    enum { MSG_Q_WAIT_FOREVER = INFINITE };
 private:
@@ -336,7 +335,7 @@ private:
    DLinkHead<MsgType>  d_QHead         ;  // mega-hack: MQ_dlink is a necessary/assumed hard-coded field of every MsgType class
    Win32::HANDLE       d_semHandles[2] ;
 public:
-   MsgQ<MsgType>( Win32::DWORD maxMsg )
+   MsgQ( Win32::DWORD maxMsg )
       : d_maxMsg(maxMsg)
       , d_msgCount(0)
       , d_binarySem(1,1)

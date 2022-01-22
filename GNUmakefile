@@ -271,7 +271,7 @@ PCRE_LIB :=
 endif
 
 # 20140821 this flag needs to be used when _compiling_ .cpp files as well as when (w/gcc 4.9.1) using gcc to generate .makedeps
-CXX_D_FLAGS = -std=gnu++17 -DUSE_PCRE=$(USE_PCRE) $(APP_IN_DLL_CPP)
+CXX_D_FLAGS = -std=gnu++20 -DUSE_PCRE=$(USE_PCRE) $(APP_IN_DLL_CPP)
 
 #####################################################################################################################
 # Set variables used in GNU Make builtin rules (run `make -p > rules` in a dir w/o any makefile to see these rules).
