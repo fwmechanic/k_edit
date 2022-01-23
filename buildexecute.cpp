@@ -581,7 +581,7 @@ bool ARG::Invoke() { 0 && DBG( "%s %s", FUNC, CmdName() );
    STATIC_VAR int s_nestLevel;
    if( MONITOR_INVOCATION ) {
       ++s_nestLevel;
-      enum { NEST_CHARS = 6 };
+      constexpr int NEST_CHARS = 6;
       const auto ixEos( s_nestLevel * NEST_CHARS );
       if( 0 && g_fLogcmds && !d_pCmd->isCursorOrWindowFunc() && ixEos < sizeof(linebuf)-1 ) {
          linebuf lbuf;

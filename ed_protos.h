@@ -289,7 +289,7 @@ extern   void  CreateWindow0();
 extern   void  InitNewWin( PCChar pC );
 extern   void  SetWindow0();
 
-enum { MIN_WIN_WIDTH = 10, MIN_WIN_HEIGHT = 10 };
+constexpr int MIN_WIN_WIDTH = 10, MIN_WIN_HEIGHT = 10;
 extern   int   cmp_win( PCWin pw1, PCWin pw2 );
 
 extern   PWin  SplitCurWnd( bool fSplitVertical, int columnOrLineToSplitAt );
@@ -311,7 +311,7 @@ extern   bool  SetSwitch( stref pszSwitchName, stref pszNewValue );
 extern void  SetCurDelims( stref param );
 
 extern   void  AssignLogTag( PCChar tag );
-enum { RSRCFILE_COMMENT_DELIM = '#' };
+constexpr char RSRCFILE_COMMENT_DELIM = '#';
 #define        AssignStrOk( str )   AssignStrOk_( str, __FUNCTION__ )
 extern   bool  AssignStrOk_( stref src, CPCChar __function__ );
 #define        TruncComment_AssignStrOk( str )  TruncComment_AssignStrOk_( str, __FUNCTION__ )

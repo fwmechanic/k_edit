@@ -1,5 +1,5 @@
 //
-// Copyright 2015 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -55,7 +55,7 @@ namespace Path {
    template<typename CharPtr> STIL CharPtr StrToNextPathSepOrEos(  CharPtr pszToSearch          ) { return StrToNextOrEos ( pszToSearch , DIRSEP_SRCH_STR ); }
    template<typename CharPtr> STIL CharPtr StrToPrevPathSepOrNull( CharPtr pBuf, CharPtr pInBuf ) { return StrToPrevOrNull( pBuf, pInBuf, DIRSEP_SRCH_STR ); }
 
-   enum chars : char { chEnvSep = ';', chDirSepMS = '\\', chDirSepPosix = '/' };
+   constexpr char chEnvSep = ';', chDirSepMS = '\\', chDirSepPosix = '/';
 #if defined(_WIN32)
    bool   STIL  IsDirSepCh( int ch )  { return ch == chDirSepMS || ch == chDirSepPosix; }
 #else

@@ -403,7 +403,7 @@ bool ARG::vrepeat() { enum {SD=0};
          }
       const auto ixMaxDigit( pe - fillseg.c_str() - 1 ); // pe points at char AFTER digits
       const auto ixMinDigit( FirstDigitOrEnd( fillseg ) ); if( atEnd( fillseg, ixMinDigit ) ) { return Msg( "internal error, no first digit?" ); }
-      enum { MAX_INT_PRINT_CHARS = 9 };
+      constexpr int MAX_INT_PRINT_CHARS = 9;
       const auto fLead0( '0' == fillseg[ixMinDigit] );
       const auto width_DueToArgWidth( fillseg.length() );  SD && DBG( "width_DueToArgWidth=%" PR_SIZET, width_DueToArgWidth );
       decltype(width_DueToArgWidth) width_DueToArgHeight( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  SD && DBG( "width_DueToArgHeight=%" PR_SIZET, width_DueToArgHeight );

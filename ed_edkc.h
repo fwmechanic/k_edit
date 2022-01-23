@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -86,12 +86,12 @@ typedef uint16_t EdKC;
 
 //-----------------------------------------------------------------------------
 
-enum { EdKC_Count = 256+272+91
+constexpr int EdKC_Count = 256+272+91
 #ifdef fn_argselkeymap
                               + (26*2)
                               + 42
 #endif
-   };
+   ;
 
 enum EdKeyCodes
    {
@@ -564,12 +564,12 @@ enum EdKeyCodes
    , EdKC_COUNT
    };
 
-enum { correct_edKC_f1_val =  0x100
+constexpr int correct_edKC_f1_val = 0x100
 #ifdef fn_argselkeymap
      + (26*2)
      + 42
 #endif
-   };
+   ;
 
 static_assert( EdKC_f1 == correct_edKC_f1_val, "EdKeyCodes::EdKC_f1 == correct_edKC_f1_val" );
 static_assert( EdKC_Count == EdKC_COUNT, "EdKC_Count == enum EdKeyCodes" );

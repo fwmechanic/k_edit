@@ -532,7 +532,7 @@ void View::SetStrHiLite( const Point &pt, COL Cols, ColorTblIdx color ) {
 void View::SetMatchHiLite( const Point &pt, COL Cols, bool fErrColor ) {
    const auto colorIdx( fErrColor ? ColorTblIdx::ERRM : ColorTblIdx::SEL );
    const auto hiliteWidth( Cols > 0 ? Cols : 1 );
-   enum { MWHOSMHL = 0 }; // -> MASK_WUC_HILITES_ON_SEARCH_MATCH_HILIT_LINE
+   constexpr bool MWHOSMHL = false;  // -> MASK_WUC_HILITES_ON_SEARCH_MATCH_HILIT_LINE
    if( MWHOSMHL && pt.col > 0 ) { InsHiLite1Line( ColorTblIdx::CXY, pt.lin, 0                   , pt.col               - 1 ); }
                                   InsHiLite1Line( colorIdx        , pt.lin, pt.col              , pt.col + hiliteWidth - 1 );
    if( MWHOSMHL               ) { InsHiLite1Line( ColorTblIdx::CXY, pt.lin, pt.col + hiliteWidth, COL_MAX                  ); }

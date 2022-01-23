@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -1820,7 +1820,7 @@ IS_EOL:
       if( numLFs > 0 && numCRs == numLFs ) { d_EolMode = EolCRLF; }
 #endif
       d_Entab = ENTAB_0_NO_CONV;
-      enum { PERCENT_LEAD_BLANK_TO_CAUSE_ENTAB_MODE = 50 };
+      constexpr int PERCENT_LEAD_BLANK_TO_CAUSE_ENTAB_MODE = 50;
       if(  tabStats.leadBlankLines > 0
         && (    (tabStats.lead_Tab_Lines > (MAX_LINES / 100))  // mk sure no ovflw
            || (((tabStats.lead_Tab_Lines * 100) / tabStats.leadBlankLines) > PERCENT_LEAD_BLANK_TO_CAUSE_ENTAB_MODE )

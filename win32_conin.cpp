@@ -28,13 +28,13 @@
 
 STATIC_FXN bool IsInterestingKeyEvent( const Win32::KEY_EVENT_RECORD &KER );
 struct conin_statics {
-   enum { CIB_DFLT_ELEMENTS = 32, CIB_MIN_ELEMENTS = 64 };
    Win32::HANDLE         hStdin;
    Win32::DWORD          InitialConsoleInputMode;
    Win32::DWORD          CIB_ValidElements;
    Win32::DWORD          CIB_IdxRead;
    std::mutex            mutex;
    std::vector<Win32::INPUT_RECORD> CIB;
+   static constexpr decltype(CIB)::size_type CIB_DFLT_ELEMENTS = 32, CIB_MIN_ELEMENTS = 64;
    conin_statics() : mutex() {};
    void ClearBuf() { CIB_IdxRead = CIB_ValidElements = 0; }
    bool ScanConinBufForKeyDowns() {
@@ -237,7 +237,7 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
       }
    if( 0 == s_Conin.CIB_ValidElements ) {
       if( s_Conin.CIB.size() > conin_statics::CIB_MIN_ELEMENTS ) {
-         0 && DBG( "s_Conin.CIB.size() was %" PR_SIZET ", now %d", s_Conin.CIB.size(), conin_statics::CIB_MIN_ELEMENTS );
+         0 && DBG( "s_Conin.CIB.size() was %" PR_SIZET ", now %" PR_SIZET, s_Conin.CIB.size(), conin_statics::CIB_MIN_ELEMENTS );
          auto dummy(false);  GotHereDialog( &dummy );  // it's doubtful this is ever executed?
          s_Conin.CIB.resize( conin_statics::CIB_MIN_ELEMENTS );
          }

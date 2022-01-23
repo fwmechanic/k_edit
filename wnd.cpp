@@ -25,8 +25,8 @@ GLOBAL_VAR TGlobalStructs g__;
 
 GLOBAL_VAR PFBUF s_curFBuf;       // not literally static (s_), but s/b treated as such!
 
-enum { BORDER_WIDTH =  1 };
-enum { MAX_WINDOWS  = 10 };
+constexpr int BORDER_WIDTH =  1;
+constexpr int MAX_WINDOWS  = 10;
 
 STIL bool CanCreateWin()  { return g_WindowCount() < MAX_WINDOWS; }
 STIL bool WidxInRange( int widx )  {  return widx >= 0 && widx < g_WindowCount(); }

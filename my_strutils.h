@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -70,10 +70,7 @@ constexpr char chRSQ = ']';
 constexpr int MIN_TAB_WIDTH = 1;
 constexpr int MAX_TAB_WIDTH = 8;  // we don't support > MAX_TAB_WIDTH cols per tab!
 
-enum {
-       TICK     = 0x27,
-       BACKTICK = 0x60,
-   };
+constexpr char TICK = 0x27, BACKTICK = 0x60;
 
 // blank vs. space:
 // http://www.cplusplus.com/reference/cctype/isblank/

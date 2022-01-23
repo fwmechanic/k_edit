@@ -611,7 +611,7 @@ void Win32ConsoleFontChanger::GetFontInfo() {
    }
 
 // 20090724 kgoodwin for my work and home PC's, MAX_CON_WR_BYTES = 128K
-enum { MAX_CON_WR_BYTES = 128 * 1024 };
+constexpr int MAX_CON_WR_BYTES = 128 * 1024;
 
 void Win32ConsoleFontChanger::SetFont( Win32::DWORD idx ) {
    if( validFontIdx( idx ) && idx != d_setFont ) {
@@ -880,7 +880,8 @@ typedef struct
 // with various C++11 mods and cleanup
 
 Win32::HANDLE ghConsoleSection = nullptr;
-enum { gnConsoleSectionSize = sizeof(CONSOLE_INFO)+1024 };
+
+constexpr int gnConsoleSectionSize = sizeof(CONSOLE_INFO) + 1024;
 
 bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
    Win32::DWORD dwConsoleOwnerPid; // Retrieve the process which "owns" the console
@@ -981,7 +982,7 @@ bool TConsoleOutputControl::SetConsolePalette( const unsigned palette[16] ) { en
    // updt: not exactly; the font IS changed when this is executed; the "to what" means
    // the change isn't always NOTICED...
    // arg "LOGFONT structure lfWeight" google
-   enum { FontWeight_UNCHANGED = 1000+1 };  // 0 does NOT have the same effect as 1000+1
+   constexpr int FontWeight_UNCHANGED = 1000+1;  // 0 does NOT have the same effect as 1000+1
    ci.FontWeight = FontWeight_UNCHANGED;
    ci.FaceName[0] = L'\0';
    }
@@ -1054,13 +1055,13 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
    const Point src_size( parentCsbi.srWindow().Bottom, parentCsbi.BufferSize().col );
    SD && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET " bytes) = %" PR_SIZET " bytes", src_size.col, src_size.lin, sizeof(ScreenCell), src_size.col * src_size.lin * sizeof(ScreenCell) );
    if( g_pFBufConsole->LineCount() == 0 ) {
-      enum { maxReadConsoleBufsize = 48*1024 };
+      constexpr int maxReadConsoleBufsize = 48*1024;
       // Documented maxReadConsoleBufsize is 64KB, however experiments and
       // http://www.tech-archive.net/Archive/Development/microsoft.public.win32.programmer.kernel/2005-12/msg00292.html
       // indicate that the limit is "somewhat smaller", so I said "fine, I'll
       // assume the limit is much smaller than the documented limit and be
       // done with it."  20090818 kgoodwin
-      Win32::COORD dest_buf_size;
+      Win32::COORD dest_buf_size;  // WARNING WARNING WARNING dest_buf_size members (X, Y) are of type Win32::SHORT (sint16_t) !!!
       dest_buf_size.X  = src_size.col;
       dest_buf_size.Y  = ( maxReadConsoleBufsize / (src_size.col * sizeof(ScreenCell)) );
       SD && DBG( "dest_buf_size.Y = %u, %" PR_SIZET " bytes", dest_buf_size.Y, dest_buf_size.Y * src_size.col * sizeof(ScreenCell) );

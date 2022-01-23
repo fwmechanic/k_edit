@@ -951,7 +951,7 @@ std::string FBOP::DeduceFType( PCFBUF pfb ) {
    }
 
 STATIC_CONST char s_sftype_prefix[] = "ftype:";
-enum { SIZEOF_MAX_FTYPE=51 };
+constexpr int SIZEOF_MAX_FTYPE = 51;
 STATIC_VAR char s_cur_FtypeSectionNm[ SIZEOF_MAX_FTYPE + KSTRLEN(s_sftype_prefix) ];
 
 STATIC_FXN void FtypeRestoreDefaults() {
