@@ -1,5 +1,5 @@
 // -*- c is foobar -*-
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -32,18 +32,18 @@
 // All inlines that alloc mem call this (terminating) function in their error-path
 //
 void Abend_MemAllocFailed( PCChar szFile, int nLine, size_t byteCount ) {
-   Msg(             "%s:%d heap-alloc of %ju bytes failed", szFile, nLine, static_cast<uintmax_t>(byteCount) );
-   fprintf( stderr, "%s:%d heap-alloc of %ju bytes failed", szFile, nLine, static_cast<uintmax_t>(byteCount) );
+   Msg(             "%s:%d heap-alloc of %ju bytes failed"  , szFile, nLine, static_cast<uintmax_t>(byteCount) );
+   fprintf( stderr, "%s:%d heap-alloc of %ju bytes failed\n", szFile, nLine, static_cast<uintmax_t>(byteCount) );
    SW_CBP();
-   fprintf( stderr, "aborting" );
+   fprintf( stderr, "aborting\n" );
    abort();
    }
 
 void Abend_UintMulOvflow( PCChar szFile, int nLine, uintmax_t nelems, uintmax_t elsize, uintmax_t maxAllowed ) {
    Msg(             "%s:%d unsigned multiply overflow (%ju * %ju) > %ju", szFile, nLine, nelems, elsize, maxAllowed );
-   fprintf( stderr, "%s:%d unsigned multiply overflow (%ju * %ju) > %ju", szFile, nLine, nelems, elsize, maxAllowed );
+   fprintf( stderr, "%s:%d unsigned multiply overflow (%ju * %ju) > %ju\n", szFile, nLine, nelems, elsize, maxAllowed );
    SW_CBP();
-   fprintf( stderr, "aborting" );
+   fprintf( stderr, "aborting\n" );
    abort();
    }
 
@@ -293,7 +293,7 @@ bool FileStat::Refresh( int fd ) {
       }
    }
 
-FileStat GetFileStat( PCChar pszFilename ) { enum { DB=0 };
+FileStat GetFileStat( PCChar pszFilename ) { enum { SD=0 };
    FileStat rv;
    // Why is the file size reported incorrectly for files that are still being written to?
    // http://blogs.msdn.com/b/oldnewthing/archive/2011/12/26/10251026.aspx
@@ -302,7 +302,7 @@ FileStat GetFileStat( PCChar pszFilename ) { enum { DB=0 };
    if( !fio::OpenFileFailed( &fh, pszFilename, false ) ) {
       const auto fbytes( fio::SeekEoF( fh ) );
       rv.Refresh( fh );
-      fio::Close( fh );                      DB && DBG("%s: %" WL( PR__i64 "u", "jd" ) " bytes", pszFilename, fbytes );
+      fio::Close( fh );                      SD && DBG("%s: %" WL( PR__i64 "u", "jd" ) " bytes", pszFilename, fbytes );
       }
    return rv;
    }
@@ -418,9 +418,9 @@ bool FBUF::private_RemovedFBuf() { // adjusts g_CurFBuf() as necessary: does NOT
 // active window.  The file is moved to the top of the file instance list for
 // the active window (its file history).
 //
-PView FBUF::PutFocusOn() { enum { DB=0 };           DB && DBG( "%s+ %s", __func__, this->Name() );
+PView FBUF::PutFocusOn() { enum { SD=0 };           SD && DBG( "%s+ %s", __func__, this->Name() );
    {
-   bool fContentChanged;                            DB && DBG( "%s+ %s %sHasLines %sIsAutoRead", __func__, this->Name(), this->HasLines()?"":"!", this->IsAutoRead()?"":"!" );
+   bool fContentChanged;                            SD && DBG( "%s+ %s %sHasLines %sIsAutoRead", __func__, this->Name(), this->HasLines()?"":"!", this->IsAutoRead()?"":"!" );
    if( !this->HasLines() || this->IsAutoRead() ) {
       if( this->ReadDiskFileAllowCreateFailed() ) { // content read (wildcard buffer expansion=FBufRead_Wildcard->ExpandWildcard) failed?
          // 20110917 made this change (comment out DeleteAllViewsOntoFbuf)...
@@ -433,7 +433,7 @@ PView FBUF::PutFocusOn() { enum { DB=0 };           DB && DBG( "%s+ %s", __func_
          // few seconds)?
          DeleteAllViewsOntoFbuf( this );
          return nullptr;
-         }                                          DB && DBG( "%s+ %s %sHasLines %sIsAutoRead", __func__, this->Name(), this->HasLines()?"":"!", this->IsAutoRead()?"":"!" );
+         }                                          SD && DBG( "%s+ %s %sHasLines %sIsAutoRead", __func__, this->Name(), this->HasLines()?"":"!", this->IsAutoRead()?"":"!" );
       fContentChanged = true;
       }
    else {
@@ -444,7 +444,7 @@ PView FBUF::PutFocusOn() { enum { DB=0 };           DB && DBG( "%s+ %s", __func_
       Assert( g_CurView() && g_CurView()->FBuf() == this );
       g_CurView()->PutFocusOn();  // necessary for all_window_WUC_hiliting to unhilite when switching windows
       return g_CurView();
-      }                                             DB && DBG( "%s is %s will be %s", __func__, g_CurFBuf()?g_CurFBuf()->Name():"", this->Name() );
+      }                                             SD && DBG( "%s is %s will be %s", __func__, g_CurFBuf()?g_CurFBuf()->Name():"", this->Name() );
    g_UpdtCurFBuf( this ); //##########################################################################
    // Assert( this == g_CurFBuf() );
    FBOP::CurFBuf_AssignMacros_RsrcLd(); // note that some assignments map to g_CurFBuf() so g_UpdtCurFBuf( this ) above is an absolute prerequisite
@@ -457,7 +457,7 @@ PView FBUF::PutFocusOn() { enum { DB=0 };           DB && DBG( "%s+ %s", __func_
    }
    const auto pCurView( this->PutFocusOnView() );
    DispNeedsRedrawCurWin();
-   LuaCtxt_ALL::call_EventHandler( "GETFOCUS" );    DB && DBG( "%s- %s", __func__, this->Name() );
+   LuaCtxt_ALL::call_EventHandler( "GETFOCUS" );    SD && DBG( "%s- %s", __func__, this->Name() );
    return pCurView;
    }
 
@@ -484,17 +484,17 @@ STIL int NextIndent( int curIndent, int indentIncr ) {
 
 STIL int PrevIndent( int curIndent, int indentIncr )  { return ((curIndent-indentIncr) / indentIncr) * indentIncr; }
 
-STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl, sridx ixNonb, COL xNonb ) { enum { DB=0 };
+STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl, sridx ixNonb, COL xNonb ) { enum { SD=0 };
    auto indent( fb->IndentIncrement() );
    if( indent == 0 ) {
       indent = fb->TabWidth();
       if( indent == 0 ) {
          indent = 4;
          }
-      }                                       DB && DBG( "%s 1 %" PR_BSR "'", __func__, BSR(rl) );
-   rl.remove_prefix( ixNonb );                DB && DBG( "%s 2 %" PR_BSR "'", __func__, BSR(rl) );
-   rmv_trail_blanks( rl );                    DB && DBG( "%s 3 %" PR_BSR "'", __func__, BSR(rl) );
-   if( rl.ends_with( "{" ) ) {                DB && DBG( "%s rl.ends_with( \"{\" )", __func__ );
+      }                                       SD && DBG( "%s 1 %" PR_BSR "'", __func__, BSR(rl) );
+   rl.remove_prefix( ixNonb );                SD && DBG( "%s 2 %" PR_BSR "'", __func__, BSR(rl) );
+   rmv_trail_blanks( rl );                    SD && DBG( "%s 3 %" PR_BSR "'", __func__, BSR(rl) );
+   if( rl.ends_with( "{" ) ) {                SD && DBG( "%s rl.ends_with( \"{\" )", __func__ );
       return xNonb + indent;
       }
    STATIC_VAR stref c_statement_names[] = {
@@ -511,10 +511,10 @@ STATIC_FXN COL SoftcrForCFiles( PCFBUF fb, COL xCurIndent, LINE yStart, stref rl
       };
    for( const auto &sr : c_statement_names ) {
       if( rl.starts_with( sr ) && (rl.length()==sr.length() || (rl.length()>sr.length() && !isalpha( rl[sr.length()]) ) ) ) {
-                                              DB && DBG( "%s c_statement_names[%" PR_BSR "]", __func__, BSR(sr) );
+                                              SD && DBG( "%s c_statement_names[%" PR_BSR "]", __func__, BSR(sr) );
          return xNonb + indent;
          }
-      }                                       DB && DBG( "%s eoFxn, -1", __func__ );
+      }                                       SD && DBG( "%s eoFxn, -1", __func__ );
    return -1;
    }
 
@@ -974,8 +974,8 @@ STATIC_FXN bool DefineStrMacro( stref name, stref strval ) {       0 && DBG( "%s
    return rv;
    }
 
-void FBOP::CurFBuf_AssignMacros_RsrcLd() { enum{DB=0};
-   const auto fb( g_CurFBuf() );                                      DB && DBG( "%s+ '%s'", __func__, fb->Name() );
+void FBOP::CurFBuf_AssignMacros_RsrcLd() { enum{SD=0};
+   const auto fb( g_CurFBuf() );                                      SD && DBG( "%s+ '%s'", __func__, fb->Name() );
    if( g_pFBufAssignLog ) { g_pFBufAssignLog->FmtLastLine( "##### %s -> %s", __func__, fb->Name() ); }
    // 1. assigns "curfile..." macros based on g_CurFBuf()->Namestr()
    // 2. loads rsrc file section for [extension and] ftype of g_CurFBuf()
@@ -989,12 +989,12 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { enum{DB=0};
   #endif
    DefineStrMacro( "curfilename", Path::RefFnm  ( fb->Namestr() ) );
    DefineStrMacro( "curfileext" , Path::RefExt  ( fb->Namestr() ) );
-   DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );  DB && DBG( "%s SetFType()+", __func__ );
-   fb->SetFType();                                                    DB && DBG( "%s SetFType()-", __func__ );
+   DefineStrMacro( "curfilepath", Path::RefDirnm( fb->Namestr() ) );  SD && DBG( "%s SetFType()+", __func__ );
+   fb->SetFType();                                                    SD && DBG( "%s SetFType()-", __func__ );
    if( !fb->IsRsrcLdBlocked() ) { // ONLY AFTER curfile, curfilepath, curfilename, curfileext assigned:
-      const auto ftype( fb->FTypeName() );                            DB && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
+      const auto ftype( fb->FTypeName() );                            SD && DBG( "%s '%" PR_BSR "' '%s' =======", __func__, BSR(ftype), fb->Name() );
       RsrcFileLdSectionFtype( ftype );
-      }                                                               DB && DBG( "%s- '%s'", __func__, fb->Name() );
+      }                                                               SD && DBG( "%s- '%s'", __func__, fb->Name() );
    }
 
 STATIC_FXN Path::str_t xlat_fnm( PCChar pszName ) {
@@ -1017,26 +1017,26 @@ STATIC_FXN Path::str_t xlat_fnm( PCChar pszName ) {
 //   * OpenFileNotDir_CreateSilently
 // instead.
 //
-PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heavily patterned after fChangeFile, but w/o reliance on global vars
-                                                         DP && DBG( "OFND+     '%s'", pszName );
+PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { SD=0 }; // heavily patterned after fChangeFile, but w/o reliance on global vars
+                                                         SD && DBG( "OFND+     '%s'", pszName );
    const auto fnamebuf( xlat_fnm( pszName ) );
    if( fnamebuf.empty() ) {
       return nullptr;
       }
    auto pFBuf( FindFBufByName( fnamebuf ) );
-   CPCChar pFnm( fnamebuf.c_str() );                     DP && DBG( "OFND xlat='%s'", pFnm );
+   CPCChar pFnm( fnamebuf.c_str() );                     SD && DBG( "OFND xlat='%s'", pFnm );
    if( !pFBuf ) {
       if( !FBUF::FnmIsPseudo( pFnm ) ) {
          FileAttribs fa( pFnm );
          if( fa.Exists() ) {
-            if( fa.IsDir() ) {                           DP && DBG( "OFND! isD '%s'", pFnm );
+            if( fa.IsDir() ) {                           SD && DBG( "OFND! isD '%s'", pFnm );
                Msg( "%s does not open directories like %s", __func__, pFnm );
                return nullptr;
                }
             }
          else {
             if( !fCreateOk ) {
-               Msg( "File '%s' does not exist", pFnm );  DP && DBG( "OFND! NoD '%s'", pFnm );
+               Msg( "File '%s' does not exist", pFnm );  SD && DBG( "OFND! NoD '%s'", pFnm );
                return nullptr;
                }
             }
@@ -1044,11 +1044,11 @@ PFBUF OpenFileNotDir_( PCChar pszName, bool fCreateOk ) { enum { DP=0 }; // heav
       pFBuf = AddFBuf( pFnm );
       }
    if( !pFBuf->HasLines() && pFBuf->ReadDiskFileAllowCreateFailed( fCreateOk ) ) {
-                                                         DP && DBG( "OFND! !rd '%s'", pFnm );
+                                                         SD && DBG( "OFND! !rd '%s'", pFnm );
       DeleteAllViewsOntoFbuf( pFBuf );
       return nullptr;
       }
-                                                         DP && DBG( "OFND- ok  '%s'", pFnm );
+                                                         SD && DBG( "OFND- ok  '%s'", pFnm );
    return pFBuf;
    }
 
@@ -1651,7 +1651,7 @@ STATIC_FXN bool FileWrErr( int hFile_Write, PCChar pszDestName, PCChar Dialog_fm
 
 PCChar EolName( Eol_t eol ) { return eol==EolLF ? "LF" : "CRLF"; }
 
-STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB=0}; // hidden/private FBUF method
+STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {SD=0}; // hidden/private FBUF method
    wrNoiseOpen();
    int hFile_Write;
    const auto create_mode( pFBuf->GetLastFileStat().d_mode );
@@ -1692,7 +1692,7 @@ STATIC_FXN bool FBUF_WriteToDiskOk( PFBUF pFBuf, PCChar pszDestName ) { enum {DB
       return FileWrErr( hFile_Write, pszDestName, ExecutionHaltRequested() ? "User break writing '%s'" : "Out of space on '%s'" );
       }
    fio::Fsync( hFile_Write );
-   fio::Close( hFile_Write );              DB && DBG( "disk-wrote '%s'", pszDestName );
+   fio::Close( hFile_Write );              SD && DBG( "disk-wrote '%s'", pszDestName );
    return true;
    }
 

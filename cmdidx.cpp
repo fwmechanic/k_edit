@@ -831,22 +831,22 @@ STATIC_FXN void sv_idx( PCCMD pCmd, void *pCtxt ) {
    }
 
 void cmdusage_updt() {
-   enum { DB = 0 };                                                            DB && DBG( "%s+", __func__ );
+   enum { SD = 0 };                                                            SD && DBG( "%s+", __func__ );
    auto origfnm( StateFilename( "cmdusg" ) );
    const auto ifh( fopen( origfnm.c_str(), "rt" ) );
    const auto fOrigFExists( ifh != nullptr );
-   if( ifh ) {                                                                 DB && DBG( "%s: opened ifh = '%s'", __func__, origfnm.c_str() );
+   if( ifh ) {                                                                 SD && DBG( "%s: opened ifh = '%s'", __func__, origfnm.c_str() );
       auto entries(0);
       for(;;) {
          char buf[300];
          auto p( fgets( BSOB(buf), ifh ) );
          if( !p ) {
             break;
-            }                                                                  DB && DBG( "%s: '%s'", __func__, p );
+            }                                                                  SD && DBG( "%s: '%s'", __func__, p );
          pathbuf  savedCmdnm;
          unsigned savedCount;
          if( (2 == sscanf( p, "%u %s", &savedCount, savedCmdnm )) && *savedCmdnm ) {
-            ++entries;                                                         DB && DBG( "%s:>%u '%s'", __func__, savedCount, savedCmdnm );
+            ++entries;                                                         SD && DBG( "%s:>%u '%s'", __func__, savedCount, savedCmdnm );
             const PCCMD pCmd( CmdFromName( savedCmdnm ) );
             if( pCmd ) {
                pCmd->d_gCallCount = savedCount + pCmd->d_callCount;
@@ -854,16 +854,16 @@ void cmdusage_updt() {
                }
             }
          }
-      fclose( ifh );                                                           DB && DBG( "%s: closed ifh = '%s'; read %d entries", __func__, origfnm.c_str(), entries );
+      fclose( ifh );                                                           SD && DBG( "%s: closed ifh = '%s'; read %d entries", __func__, origfnm.c_str(), entries );
       }
-   auto tmpfnm( StateFilename( "cmdusg_" ) );                                  DB && DBG( "%s:%s", __func__, tmpfnm.c_str() );
+   auto tmpfnm( StateFilename( "cmdusg_" ) );                                  SD && DBG( "%s:%s", __func__, tmpfnm.c_str() );
    const auto ofh = fopen( tmpfnm.c_str(), "wt" );
-   if( ofh ) {                                                                 DB && DBG( "%s: opened ofh = '%s'", __func__, tmpfnm.c_str() );
+   if( ofh ) {                                                                 SD && DBG( "%s: opened ofh = '%s'", __func__, tmpfnm.c_str() );
       WalkAllCMDs( ofh, sv_idx );
-      fclose( ofh );                                                           DB && DBG( "%s: closed ofh = '%s'", __func__, tmpfnm.c_str() );
+      fclose( ofh );                                                           SD && DBG( "%s: closed ofh = '%s'", __func__, tmpfnm.c_str() );
       const auto doRename( !fOrigFExists || unlinkOk( origfnm.c_str() ) );
       if( doRename ) {
-         const auto renmOk( rename( tmpfnm.c_str(), origfnm.c_str() ) == 0 );  DB && DBG( "%s: did rename, %s", __func__, renmOk ? "ok" : "FAILED" );
+         const auto renmOk( rename( tmpfnm.c_str(), origfnm.c_str() ) == 0 );  SD && DBG( "%s: did rename, %s", __func__, renmOk ? "ok" : "FAILED" );
          }
-      }                                                                        DB && DBG( "%s-", __func__ );
+      }                                                                        SD && DBG( "%s-", __func__ );
    }

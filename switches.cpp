@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -229,7 +229,7 @@ class SWI_intf_base {
    AHELP( const stref d_help; )
    std::unique_ptr<SWI_intf> d_intf;
  public:
-   enum { DB=0 };
+   enum { SD=0 };
    SWI_intf_base( PCChar name_, SWI_intf * intf_ _AHELP( PCChar help_ ) ) : d_name( name_ ) _AHELP( d_help( help_ ) ), d_intf(intf_) {}
    SWI_intf_base(const SWI_intf_base&  mE) = default;
    SWI_intf_base(      SWI_intf_base&& mE) = default;

@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -742,12 +742,12 @@ public:
    CheckNextRetval GetUserApproval( PFBUF pFBuf, IdxCol_cached &rlc, Point *curPt, sridx ixMatchMin, sridx ixMatchMax );
    };
 
-CheckNextRetval CharWalkerReplace::GetUserApproval( PFBUF pFBuf, IdxCol_cached &rlc, Point *curPt, sridx ixMatchMin, sridx ixMatchMax ) { enum { DB=0 };
+CheckNextRetval CharWalkerReplace::GetUserApproval( PFBUF pFBuf, IdxCol_cached &rlc, Point *curPt, sridx ixMatchMin, sridx ixMatchMax ) { enum { SD=0 };
    const auto pView( pFBuf->PutFocusOn() );
    // rlc_post_focus exists (vs rlc) because pFBuf->TabWidth() may have changed (vs rlc.tw()) due to side effects of PutFocusOn()
    IdxCol_cached rlc_post_focus( pFBuf->TabWidth(), rlc.sr() );
    const auto xMatchMin( rlc_post_focus.i2c( ixMatchMin ) );
-   const auto xMatchMax( rlc_post_focus.i2c( ixMatchMax ) );   DB && rlc.tw() != rlc_post_focus.tw() && DBG( "%s tw=%d->%d ix[%" PR_SIZET "..%" PR_SIZET "] col[%d..%d]", __func__, rlc.tw(), rlc_post_focus.tw(), ixMatchMin, ixMatchMax, xMatchMin, xMatchMax );
+   const auto xMatchMax( rlc_post_focus.i2c( ixMatchMax ) );   SD && rlc.tw() != rlc_post_focus.tw() && DBG( "%s tw=%d->%d ix[%" PR_SIZET "..%" PR_SIZET "] col[%d..%d]", __func__, rlc.tw(), rlc_post_focus.tw(), ixMatchMin, ixMatchMax, xMatchMin, xMatchMax );
    auto adv_continue = [&]() {
       curPt->col = rlc_post_focus.ColOfNextChar( curPt->col );
       return CONTINUE_SEARCH;
@@ -792,7 +792,7 @@ CheckNextRetval CharWalkerReplace::GetUserApproval( PFBUF pFBuf, IdxCol_cached &
       }
    }
 
-CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, const sridx ixLastPossibleLastMatchChar ) { enum { DB=0 };
+CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, const sridx ixLastPossibleLastMatchChar ) { enum { SD=0 };
    const auto ixMatchMin( d_captures[0].offset() + ixBOL );  // d_captures[0] describes the overall match
    const auto ixMatchMax( ixMatchMin + d_captures[0].value().length() - 1 );
    if( ixMatchMax > ixLastPossibleLastMatchChar ) {  // match lies partially OUTSIDE a BOXARG: skip (isn't this impossible?)
@@ -808,15 +808,15 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
       ++d_iReplacementsPoss;  //##### it's A REPLACEABLE MATCH
       }
    // perform replacement...
-   const auto destMatchChars( ixMatchMax - ixMatchMin + 1 );          DB && DBG("DFPoR+ y=%d ixMaxValid=%" PR_PTRDIFFT " ixMaxPossMatch=%" PR_PTRDIFFT " ixMatch[%" PR_PTRDIFFT ",%" PR_PTRDIFFT "] L=%" PR_PTRDIFFT, curPt->lin, rlc.sr().length()-1, ixLastPossibleLastMatchChar, ixMatchMax, ixMatchMin, destMatchChars );
+   const auto destMatchChars( ixMatchMax - ixMatchMin + 1 );          SD && DBG("DFPoR+ y=%d ixMaxValid=%" PR_PTRDIFFT " ixMaxPossMatch=%" PR_PTRDIFFT " ixMatch[%" PR_PTRDIFFT ",%" PR_PTRDIFFT "] L=%" PR_PTRDIFFT, curPt->lin, rlc.sr().length()-1, ixLastPossibleLastMatchChar, ixMatchMax, ixMatchMin, destMatchChars );
    d_sbuf.assign( rlc.sr() );
-   d_sbuf.replace( ixMatchMin, destMatchChars, srReplace );           DB && DBG("DFPoR+ cursor=(%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
+   d_sbuf.replace( ixMatchMin, destMatchChars, srReplace );           SD && DBG("DFPoR+ cursor=(%d,%d) LR=%" PR_SIZET " LoSB=%" PR_PTRDIFFT, curPt->lin, curPt->col, srReplace.length(), d_sbuf.length() );
    pFBuf->PutLineEntab( curPt->lin, d_sbuf, d_stmp );  // ... and commit
    ++d_iReplacementsMade;
    // replacement done: adjust starting, limit point for next iteration
    IdxCol_cached conv( pFBuf->TabWidth(), d_sbuf );
    const auto ixCurcol( ixMatchMin                  + srReplace.length() );
-   const auto ixLPMC  ( ixLastPossibleLastMatchChar + srReplace.length() - destMatchChars );  DB && DBG("DFPoR: ix: cur=%" PR_PTRDIFFT " ixLPMC=%" PR_PTRDIFFT, ixCurcol, ixLPMC );
+   const auto ixLPMC  ( ixLastPossibleLastMatchChar + srReplace.length() - destMatchChars );  SD && DBG("DFPoR: ix: cur=%" PR_PTRDIFFT " ixLPMC=%" PR_PTRDIFFT, ixCurcol, ixLPMC );
    if( ixCurcol < ixLPMC ) {
       curPt->col                = conv.i2c( ixCurcol );
       *colLastPossibleMatchChar = conv.i2c( ixLPMC   );
@@ -824,27 +824,27 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
    else {
       *colLastPossibleMatchChar = conv.i2c( ixLPMC   );
       curPt->col                = conv.i2c( ixCurcol );
-      }                                                               DB && DBG("DFPoR- cursor=(%d,%d),%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
+      }                                                               SD && DBG("DFPoR- cursor=(%d,%d),%d", curPt->lin, curPt->col, *colLastPossibleMatchChar );
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 
-CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, const bool fWholeLine ) { enum { DB=0 };
+CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, const bool fWholeLine ) { enum { SD=0 };
    if( d_CheckNextCallCount != SIZE_MAX ) { ++d_CheckNextCallCount; }
-   if( d_lastLineVisited != curPt->lin ) {  DB && DBG( "d_lastLineVisited != curPt->lin: %d != %d", d_lastLineVisited, curPt->lin );
+   if( d_lastLineVisited != curPt->lin ) {  SD && DBG( "d_lastLineVisited != curPt->lin: %d != %d", d_lastLineVisited, curPt->lin );
        d_lastLineVisited  = curPt->lin;
        ++d_linesVisited;
        }
    const sridx ix_curPt_Col( rlc.c2ci( curPt->col ) );
    const auto srRawSearch( d_ss.SrchStr() );
    const auto ixLastPossibleLastMatchChar( fWholeLine ? rlc.sr().length()-1 : rlc.c2ci( *colLastPossibleMatchChar ) );
-   d_captures.clear();                             DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rlc.sr()) );
+   d_captures.clear();                             SD && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in raw '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(rlc.sr()) );
    const auto haystack( rlc.sr().substr( ixBOL, ixLastPossibleLastMatchChar + 1 - ixBOL ) );
-                                                   DB && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(haystack) );
+                                                   SD && DBG( "%s ( %d, %d L %" PR_SIZET " ) for '%" PR_BSR "' in hsk '%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, srRawSearch.length(), BSR(srRawSearch), BSR(haystack) );
    const auto ixHaystackCurCol( ix_curPt_Col - ixBOL );  // leading ix_curPt_Col chars will not be searched
 #if USE_PCRE
    if( d_ss.IsRegex() ) {
    // const auto pcre_exec_flags( ixHaystackCurCol == 0 ? 0 : PCRE_NOTBOL ); // !/PCRE_NOTBOL describes haystack[0], not haystack[ixHaystackCurCol] (in Regex_Match call), so
-      const auto pcre_exec_flags(                         0               ); DB && DBG( "%s (%d,%d) for '%" PR_BSR "' in '%" PR_BSR "[%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, BSR(srRawSearch), BSR(haystack.substr(0,ixHaystackCurCol)), BSR(haystack.substr(ixHaystackCurCol)) );
+      const auto pcre_exec_flags(                         0               ); SD && DBG( "%s (%d,%d) for '%" PR_BSR "' in '%" PR_BSR "[%" PR_BSR "'", __PRETTY_FUNCTION__, curPt->lin, curPt->col, BSR(srRawSearch), BSR(haystack.substr(0,ixHaystackCurCol)), BSR(haystack.substr(ixHaystackCurCol)) );
       const auto rv( Regex_Match( d_ss.re(), d_captures, haystack, ixHaystackCurCol, pcre_exec_flags ) );
       if( rv == 0 || !d_captures[0].valid() ) {      // no match this line?
          curPt->col = *colLastPossibleMatchChar + 1; // next check next line
@@ -861,13 +861,13 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, c
          return CONTINUE_SEARCH;
          }
       d_captures.emplace_back( ixHaystackCurCol + relIxMatch, hsTail.substr( relIxMatch, srRawSearch.length() ) );
-      }                                                               DB && DbgDumpCaptures( d_captures, "?" );
+      }                                                               SD && DbgDumpCaptures( d_captures, "?" );
    return DoReplace( pFBuf, rlc, ixBOL, curPt, colLastPossibleMatchChar, ixLastPossibleLastMatchChar );
    }
 
-STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point start, CharWalkerReplace &walker ) { enum { DB=0 };
+STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point start, CharWalkerReplace &walker ) { enum { SD=0 };
    const bool fWholeLine( within.flMax.col == COL_MAX );
-   DB && DBG( "%s: within=LINEs(%d-%d) COLs(%d,%d)", __func__, within.flMin.lin, within.flMax.lin, within.flMin.col, within.flMax.col );
+   SD && DBG( "%s: within=LINEs(%d-%d) COLs(%d,%d)", __func__, within.flMin.lin, within.flMax.lin, within.flMin.col, within.flMax.col );
    const auto tw( pFBuf->TabWidth() );
    for( Point curPt( start ) ; curPt.lin <= within.flMax.lin ; ++curPt.lin, curPt.col = within.flMin.col ) {
       if( ExecutionHaltRequested() ) {
@@ -877,7 +877,7 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
       IdxCol_cached  rlc( tw, pFBuf->PeekRawLine( curPt.lin ) );
       auto ixBOL( rlc.c2ci( within.flMin.col ) );
       auto colLastPossibleMatchChar( std::min( rlc.i2c_nocache( rlc.sr().length()-1 ), within.flMax.col ) );
-      while( ( DB && DBG( "COL: cur %d vs %d lastPoss ixLastCh %" PR_SIZET, curPt.col, colLastPossibleMatchChar, rlc.sr().length()-1 ), curPt.col <= colLastPossibleMatchChar ) ) {
+      while( ( SD && DBG( "COL: cur %d vs %d lastPoss ixLastCh %" PR_SIZET, curPt.col, colLastPossibleMatchChar, rlc.sr().length()-1 ), curPt.col <= colLastPossibleMatchChar ) ) {
          const auto rv( walker.CheckNext( pFBuf, rlc, ixBOL, &curPt, &colLastPossibleMatchChar, fWholeLine ) );
          if( STOP_SEARCH == rv ) { return true; }
          if( REREAD_LINE_CONTINUE_SEARCH == rv ) {
@@ -1116,11 +1116,11 @@ std::string DupTextMacroValue( PCChar macroName ) {
    return std::string( unquote( val ) );
    }
 
-STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
+STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { SD=0 };
    {
    const auto srcNm("mffile");
    const auto macroVal( DupTextMacroValue( srcNm ) );
-   if( !IsStringBlank( macroVal ) ) {                                             DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
+   if( !IsStringBlank( macroVal ) ) {                                             SD && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
       const auto pFBufMfspec( FindFBufByName( macroVal.c_str() ) );
       if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
          if( FBOP::IsBlank( pFBufMfspec ) ) {
@@ -1144,9 +1144,9 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
    }
    auto txtMacro2CFG = [&] ( PCChar srcNm ) -> PathStrGenerator * {
       const auto macroVal( DupTextMacroValue( srcNm ) );
-      if( !IsStringBlank( macroVal ) ) {                                          DB && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
+      if( !IsStringBlank( macroVal ) ) {                                          SD && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
          Path::str_t macroPVal( macroVal );
-         LuaCtxt_Edit::ExpandEnvVarsOk( macroPVal );                              DB && DBG( "ExpandEnvVarsOk( %" PR_BSR " )", BSR(macroPVal) );
+         LuaCtxt_Edit::ExpandEnvVarsOk( macroPVal );                              SD && DBG( "ExpandEnvVarsOk( %" PR_BSR " )", BSR(macroPVal) );
          return new CfxFilenameGenerator( std::string(srcNm) + " (macro) = " + macroPVal, macroPVal, ONLY_FILES );
          }
       return nullptr;
@@ -1156,7 +1156,7 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { DB=0 };
    return nullptr;
    }
 
-STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( bool retry_after_refreshing_taggedfiles=true ) { enum { DB=0 };
+STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( bool retry_after_refreshing_taggedfiles=true ) { enum { SD=0 };
    auto rv( MultiFileGrepFnmGenerator_() );  // try to dereference any user-preconfigured "mf..." macros.
    if( !rv && retry_after_refreshing_taggedfiles ) {
       // Typical scenario: user HAS NOT preconfigured any of the "mf..." macros,
@@ -1717,7 +1717,7 @@ FileSearcher::FindStrRslt  FileSearcherFast::VFindStr_( stref src, sridx src_off
 
 //===============================================
 
-void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START  y=%d, x=%d", d_sm.d_fSearchForward?'+':'-', d_start.lin, d_start.col ); )
+void FileSearcher::VFindMatches_() { enum { SD=0 };  VS_( DBG( "%csearch: START  y=%d, x=%d", d_sm.d_fSearchForward?'+':'-', d_start.lin, d_start.col ); )
    const auto tw( d_pFBuf->TabWidth() );
    if( d_sm.d_fSearchForward ) {                     VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
@@ -1735,8 +1735,8 @@ void FileSearcher::VFindMatches_() { enum { DB=0 };  VS_( DBG( "%csearch: START 
                break; // no matches on this line!
                }
             //*****  HOUSTON, WE HAVE A MATCH  *****
-            const auto matchSr( srMatch.sr() );                                                               DB && DBG( "curPt.col0=%d", curPt.col );
-            curPt.col  =          conv.i2c( (matchSr.data() - rl.data())                    )              ;  DB && DBG( "curPt.col1=%d", curPt.col );
+            const auto matchSr( srMatch.sr() );                                                               SD && DBG( "curPt.col0=%d", curPt.col );
+            curPt.col  =          conv.i2c( (matchSr.data() - rl.data())                    )              ;  SD && DBG( "curPt.col1=%d", curPt.col );
             const auto matchCols( conv.i2c( (matchSr.data() - rl.data()) + matchSr.length() ) - curPt.col );
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) {
                return;
@@ -2080,7 +2080,6 @@ bool ARG::mword() { return PMword( false,                                     d_
 
 class CGrepper {
 private:
-   enum { ED=0 };
    const LINE        d_InfLines;
    std::vector<bool> d_MatchingLines;
    PFBUF             d_SrchFile;
@@ -2140,10 +2139,10 @@ LINE CGrepper::WriteOutput
    ( PCChar thisMetaLine // MetaLine (string) to be concatenated for this search
    , PCChar origSrchfnm  // if file searched THIS TIME is not file which line#s refer to
    )
-   { enum { DB=0 };
-   std::string sbuf( d_SrchFile->Namestr() );                            DB && DBG( " ->%s|", sbuf.c_str() );
+   { enum {SD=0};
+   std::string sbuf( d_SrchFile->Namestr() );                            SD && DBG( " ->%s|", sbuf.c_str() );
    if( LuaCtxt_Edit::from_C_lookup_glock( sbuf ) && !sbuf.empty() ) {
-      const auto gbnm( sbuf.c_str() );                                   DB && DBG( "LuaCtxt_Edit::from_C_lookup_glock ->%s|", gbnm );
+      const auto gbnm( sbuf.c_str() );                                   SD && DBG( "LuaCtxt_Edit::from_C_lookup_glock ->%s|", gbnm );
       const auto outfile( OpenFileNotDir_NoCreate( gbnm ) );
       if( !outfile )                                                    { Msg(    "nonexistent buffer '%s' from LuaCtxt_Edit::from_C_lookup_glock?", gbnm ); return 0; }
       Path::str_t GrepFBufname; int grepHdrLines;
@@ -2176,7 +2175,7 @@ LINE CGrepper::WriteOutput
    auto outfile( PseudoBuf( ePseudoBufType::GREP, true ) );
    outfile->MakeEmpty();
    outfile->SetTabWidth( d_SrchFile->TabWidth() ); // inherit tabwidth from searched file
-                                                           ED && DBG( "WriteOutput: thisMetaLine='%s', origSrchfnm='%s' => '%s'", thisMetaLine, origSrchfnm?origSrchfnm:"", outfile->Name() );
+                                                           SD && DBG( "WriteOutput: thisMetaLine='%s', origSrchfnm='%s' => '%s'", thisMetaLine, origSrchfnm?origSrchfnm:"", outfile->Name() );
    //
    // data BUFFER SIZE CALC phase
    //
@@ -2189,10 +2188,10 @@ LINE CGrepper::WriteOutput
          imgBufBytes += d_SrchFile->LineLength( iy );
          ++MetaLinesToCopy;
          RmvLine( iy );
-         }                                                 ED && DBG( "d_MetaLineCount=%i,MetaLinesToCopy=%i", d_MetaLineCount, MetaLinesToCopy );
+         }                                                 SD && DBG( "d_MetaLineCount=%i,MetaLinesToCopy=%i", d_MetaLineCount, MetaLinesToCopy );
       }
    SprintfBuf Line1( "*GREP* %s", origSrchfnm ? origSrchfnm : d_SrchFile->UserName().c_str() );
-   const stref srLine1( Line1 );                           ED && DBG( "%s", Line1.c_str() );
+   const stref srLine1( Line1 );                           SD && DBG( "%s", Line1.c_str() );
    imgBufBytes += srLine1.length();
    auto numberedMatches(0);
    for( auto iy(0); iy < d_InfLines; ++iy ) {
@@ -2215,7 +2214,7 @@ LINE CGrepper::WriteOutput
    // data COPYING phase
    //
    outfile->ImgBufAppendLine( srLine1 );
-   for( auto iy(1); iy < d_MetaLineCount; ++iy ) {  ED && DBG( "auxhd=%i", iy );
+   for( auto iy(1); iy < d_MetaLineCount; ++iy ) {  SD && DBG( "auxhd=%i", iy );
       outfile->ImgBufAppendLine( d_SrchFile->PeekRawLine( iy ) );
       }
    outfile->ImgBufAppendLine( srLastMetaLine );
@@ -2239,7 +2238,7 @@ LINE CGrepper::WriteOutput
 //***************************************************************************************************
 //***************************************************************************************************
 
-bool ARG::grep() { enum { ED=0 };
+bool ARG::grep() {
    if( !SearchSpecifierOK( *this ) ) {
       return false;
       }
@@ -2274,7 +2273,7 @@ bool ARG::grep() { enum { ED=0 };
    return Matches > 0;
    }
 
-bool ARG::fg() { enum { ED=0 }; // fgrep
+bool ARG::fg() { enum {SD=0}; // fgrep
    PFBUF srchfile;
    auto  metaLines( 0 ); // params that govern how...
    auto  curfile( g_CurFBuf() );
@@ -2313,7 +2312,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
                                           , curfile->Name()
                                                   , g_fCase ? "sen" : "ign"
                        );
-                                                ED && DBG( "'%s'", auxHdrBuf.c_str() );
+                                                SD && DBG( "'%s'", auxHdrBuf.c_str() );
    auto keyLen(2); // for alternation header (2 chars)
    for( auto line(metaLines); line < curfile->LineCount(); ++line ) {
       const auto rl( curfile->PeekRawLine( line ) );
@@ -2340,7 +2339,7 @@ bool ARG::fg() { enum { ED=0 }; // fgrep
    if( !keySep ) {
       return Msg( "%s: cumulative key contains all possible separators [,|.]", __func__ );
       }
-                                                ED && DBG( "KEY=%s", pszKey );
+                                                SD && DBG( "KEY=%s", pszKey );
    auto pastEnd( pszKey+keyLen );
    for( auto pC(pszKey) ; pC < pastEnd ; ++pC ) {
       if( chNUL == *pC ) {

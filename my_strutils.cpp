@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -305,10 +305,10 @@ SOMETHING: // not necessarily an error
    return stref( sr.data() + oFirst, oLast - oFirst + 1 );
    }
 
-std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase ) { enum { DB=0 }; // DBG wrapper
+std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase ) { enum { SD=0 }; // DBG wrapper
    auto errno_( 0 ); uintmax_t rslt( 0 ); auto baseActual( numberBase );
    const auto srused( conv_u_( errno_, rslt, sr, baseActual ) );
-   DB && DBG( "conv_u: '%" PR_BSR "': e=%d '%" PR_BSR "' rv=%ju ", BSR(sr), errno_, BSR(srused), rslt );
+   SD && DBG( "conv_u: '%" PR_BSR "': e=%d '%" PR_BSR "' rv=%ju ", BSR(sr), errno_, BSR(srused), rslt );
    return std::make_tuple( errno_, rslt, srused, baseActual );
    }
 

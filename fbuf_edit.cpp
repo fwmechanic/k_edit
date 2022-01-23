@@ -34,7 +34,7 @@ public:
    bool ColAtTabStop           ( int col ) const { return (col % d_tabWidth) == 0; }
    };
 
-void FBUF::SetTabWidth_( COL newTabWidth, PCChar funcnm_ ) { enum { DB=0 }; DB && DBG( "%s:%s %d <- %s", __func__, Name(), newTabWidth, funcnm_ );
+void FBUF::SetTabWidth_( COL newTabWidth, PCChar funcnm_ ) { enum { SD=0 }; SD && DBG( "%s:%s %d <- %s", __func__, Name(), newTabWidth, funcnm_ );
    const auto inRange( newTabWidth >= MIN_TAB_WIDTH && newTabWidth <= MAX_TAB_WIDTH );
    if( inRange ) {
       d_TabWidth = newTabWidth;
@@ -788,7 +788,7 @@ bool ARG::xquote() { // Xquote
 
 #endif
 
-bool ARG::graphic() { enum { DB=0 };
+bool ARG::graphic() { enum { SD=0 };
    const char usrChar( d_pCmd->d_argData.chAscii() );
    // <000612> klg Finally did this!  Been needing it for YEARS!
    // g_delims, g_delimMirrors
@@ -815,13 +815,13 @@ bool ARG::graphic() { enum { DB=0 };
          for( auto curLine( d_boxarg.flMin.lin ); curLine <= d_boxarg.flMax.lin ; ++curLine ) {
             auto xMax( d_boxarg.flMax.col+1 );
             if( fConformRight ) {
-               const auto rl( pf->PeekRawLine( curLine ) );                       DB && DBG( "rl='%" PR_BSR "'", BSR(rl) );
+               const auto rl( pf->PeekRawLine( curLine ) );                       SD && DBG( "rl='%" PR_BSR "'", BSR(rl) );
                IdxCol_cached conv( tw, rl );
                const auto ixMin( conv.c2fi( d_boxarg.flMin.col ) );
                if( ixMin < rl.length() ) {
                   const auto ixMax( conv.c2fi( xMax ) );
-                  auto rlSeg( rl.substr( ixMin, ixMax-ixMin ) );                  DB && DBG( "rlSeg='%" PR_BSR "'", BSR(rlSeg) );
-                  rmv_trail_blanks( rlSeg );                                      DB && DBG( "rlSeg='%" PR_BSR "'", BSR(rlSeg) );
+                  auto rlSeg( rl.substr( ixMin, ixMax-ixMin ) );                  SD && DBG( "rlSeg='%" PR_BSR "'", BSR(rlSeg) );
+                  rmv_trail_blanks( rlSeg );                                      SD && DBG( "rlSeg='%" PR_BSR "'", BSR(rlSeg) );
                   xMax = conv.i2c( ixMin + rlSeg.length() );
                   }
                }
@@ -1171,17 +1171,17 @@ void FBUF::DupLineSeg( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl
 //    original dest[xIns] is moved to dest[xIns+insertCols]
 // if insertCols == 0 && dest[xIns] is not filled by existing content, spaces will be added [..xIns); dest[xIns] = 0
 //
-void FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { DB=0 };
+void FBUF::DupLineForInsert( std::string &dest, const LINE yLine, COL xIns, COL insertCols ) const { enum { SD=0 };
    DupLineTabs2Spcs( dest, yLine );
    const auto tw       ( TabWidth() );
-   const auto lineCols ( StrCols( tw, dest ) );                   DB && DBG( "%s: %" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
+   const auto lineCols ( StrCols( tw, dest ) );                   SD && DBG( "%s: %" PR_BSR "| L %d (%d)", __func__, BSR(dest), lineCols, xIns );
    if( xIns > lineCols ) {                 // line shorter than insert point?
       dest.append( xIns - lineCols, ' ' ); // append spaces thru dest[xIns-1]; dest[xIns] == 0
       }
    if( insertCols > 0 ) {
-      const auto ixIns( FreeIdxOfCol( tw, dest, xIns ) );         DB && DBG( "%s: %" PR_BSR "| L %d (%d) [%" PR_SIZET "]", __func__, BSR(dest), lineCols, xIns, ixIns );
+      const auto ixIns( FreeIdxOfCol( tw, dest, xIns ) );         SD && DBG( "%s: %" PR_BSR "| L %d (%d) [%" PR_SIZET "]", __func__, BSR(dest), lineCols, xIns, ixIns );
       dest.insert( ixIns, insertCols, ' ' );  // BUGBUG: inefficient: memmove's the trailing part of dest which was just copied into dest by DupLineTabs2Spcs
-      }                                                           DB && DBG( "%s: %" PR_BSR "| L %" PR_SIZET " (%d)", __func__, BSR(dest), dest.length(), xIns );
+      }                                                           SD && DBG( "%s: %" PR_BSR "| L %" PR_SIZET " (%d)", __func__, BSR(dest), dest.length(), xIns );
    }
 
 //--------------------------------------------------------------------------------------------------

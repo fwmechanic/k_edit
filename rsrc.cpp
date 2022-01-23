@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -45,24 +45,24 @@ STATIC_FXN stref IsolateTagStr( stref src ) {
    return src.substr( 0, ixRSQ );
    }
 
-STATIC_FXN LINE FindRsrcTag( stref srKey, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) { enum { DB=0 };
-                                                                 DB && DBG( "FindRsrcTag: '%" PR_BSR "'", BSR(srKey) );
+STATIC_FXN LINE FindRsrcTag( stref srKey, PFBUF pFBuf, const LINE startLine, bool fHiLiteTag=false ) { enum { SD=0 };
+                                                                 SD && DBG( "FindRsrcTag: '%" PR_BSR "'", BSR(srKey) );
    for( auto yLine(startLine) ; yLine <= pFBuf->LastLine(); ++yLine ) {
       const auto rl( pFBuf->PeekRawLine( yLine ) );
       const stref tag( IsolateTagStr( rl ) );
-      if( !tag.empty() ) {                                       DB && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
+      if( !tag.empty() ) {                                       SD && DBG( "tag---------------------------=%" PR_BSR "|", BSR(tag) );
          for( sridx ix( 0 ); ix < tag.length() ; ) {
             const auto ix0( FirstNonBlankOrEnd( tag, ix  ) );
             const auto ix1( FirstBlankOrEnd   ( tag, ix0 ) );
             const auto taglen( ix1 - ix0 );
-            const auto atag( tag.substr( ix0, taglen ) );        DB && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
+            const auto atag( tag.substr( ix0, taglen ) );        SD && DBG( "%s ? '%" PR_BSR "'", FUNC, BSR(atag) );
             if( 0==cmpi( atag, srKey ) ) {
                if( fHiLiteTag ) {
                   const auto pView( pFBuf->PutFocusOn() );
-                  const auto iox0( isri2osri( rl, tag, ix0 ) );  DB && DBG( "%s! tagging y=%d x=%" PR_SIZET " L %" PR_SIZET "u", __func__, yLine, iox0, taglen );
+                  const auto iox0( isri2osri( rl, tag, ix0 ) );  SD && DBG( "%s! tagging y=%d x=%" PR_SIZET " L %" PR_SIZET "u", __func__, yLine, iox0, taglen );
                   pView->SetMatchHiLite( Point(yLine,iox0), taglen, true );
                   }
-               const auto rv( yLine + 1 );                       DB && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
+               const auto rv( yLine + 1 );                       SD && DBG( "%s! %d * '%" PR_BSR "'", __func__, rv, BSR(atag) );
                return rv;
                }
             ix = ix1;

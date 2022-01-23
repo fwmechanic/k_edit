@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -28,10 +28,10 @@
 #include "win32_base.h"
 #endif
 
-int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
-   DB && DBG( "SFMG+ '%s'", pszFileName );
+int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { SD=0 };
+   SD && DBG( "SFMG+ '%s'", pszFileName );
    struct_stat stat_buf;
-   if( func_stat( pszFileName, &stat_buf ) == -1 ) { DB && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
+   if( func_stat( pszFileName, &stat_buf ) == -1 ) { SD && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
       return SFMG_NO_SRCFILE;
       }
    auto dest( std::string(Path::RefDirnm( pszFileName )) + kszBakDirNm );
@@ -64,13 +64,13 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
    char tbuf[32];
    if( fOk ) { strftime( BSOB(tbuf), "%Y%m%d_%H%M%S", &tt ); }
    else      { bcpy( tbuf, "XlocaltimeX" ); }
-   const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  DB && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
+   const auto filenameNoPath( Path::RefFnameExt( pszFileName ) );  SD && DBG("SFMG  B '%" PR_BSR "'", BSR(filenameNoPath) );
    dest.append( (DIRSEP_STR + std::string( filenameNoPath ) + "." + tbuf ) );
   #if defined(_WIN32)
    unlinkOk( dest.c_str() );
   #endif
    if( rename( pszFileName, dest.c_str() ) ) {
-      DB && DBG( "SFMG! [2] mv '%s' -> '%s' failed", pszFileName, dest.c_str() );
+      SD && DBG( "SFMG! [2] mv '%s' -> '%s' failed", pszFileName, dest.c_str() );
       if( mkdirLen ) { // something to undo?
          dest.resize( mkdirLen ); // retrieve dirname as ASCIZ
          WL( _rmdir, rmdir )( dest.c_str() ); // undo mkdir
@@ -78,6 +78,6 @@ int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { DB=0 };
       return SFMG_CANT_MV_ORIG;
       }
 
-   DB && DBG( "SFMG- [0]" );
+   SD && DBG( "SFMG- [0]" );
    return SFMG_OK;
    }

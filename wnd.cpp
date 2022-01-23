@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -370,20 +370,20 @@ STATIC_FXN bool CloseWnd( PWin pWinToClose ) { 0 && DBG( "%s+ %d of %" PR_SIZET,
 // note that it is used at editor startup to discard any leading filenames (whether from cmdline or history), as
 // well as when switching between windows post-startup
 //
-void SetWindowSetValidView( int widx ) { enum { DD=0 };
+void SetWindowSetValidView( int widx ) { enum { SD=0 };
    if( WidxInRange( widx ) ) {
       SetWindowIdx( widx );
       }
    const auto  iw( g_CurWindowIdx() );
    const auto  pWin( g_CurWin() );
-         auto &vh( g_CurViewHd() );            DD && DBG( "%s Win[%" PR_SIZET "]", __func__, iw );
+         auto &vh( g_CurViewHd() );            SD && DBG( "%s Win[%" PR_SIZET "]", __func__, iw );
    for( auto try_(0); !vh.empty(); ++try_ ) {
-      const auto fb( vh.front()->FBuf() );     DD && DBG( "%s try %d=%s", __func__, try_, fb->Name() );
-      if( fChangeFile( fb->Name() ) ) {        DD && DBG( "%s try %d successful!", __func__, try_ );  // fb->PutFocusOn() also works
+      const auto fb( vh.front()->FBuf() );     SD && DBG( "%s try %d=%s", __func__, try_, fb->Name() );
+      if( fChangeFile( fb->Name() ) ) {        SD && DBG( "%s try %d successful!", __func__, try_ );  // fb->PutFocusOn() also works
          Assert( g_CurView() != nullptr );
          return;
          }
-      }                                        DD && DBG( "%s Win[%" PR_SIZET "] giving up, adding %s", __func__, iw, kszNoFile );
+      }                                        SD && DBG( "%s Win[%" PR_SIZET "] giving up, adding %s", __func__, iw, kszNoFile );
    fChangeFile( kszNoFile );
    Assert( g_CurView() != nullptr );
    }
@@ -550,7 +550,7 @@ void Wins_WriteStateFile( FILE *ofh ) {
       }
    }
 
-   enum { DV=0 };
+   enum { SD=0 };
    class {
       PCView  d_pVw;
    public:
@@ -563,11 +563,11 @@ void Wins_WriteStateFile( FILE *ofh ) {
          const auto notDiskNm( !fbuf.FnmIsDiskWritable() );     const auto chNotOnDisk     ( notDiskNm      ? 'D' : '-' );
          const auto explicitForget( fbuf.ToForgetOnExit() );    const auto chExplicitForget( explicitForget ? 'F' : '-' );
          const auto skip( alreadySaved || notDiskNm || explicitForget );
-         DV && DBG( "%c=%c%c%c %s", (skip?'1':'0'), chAlreadySaved, chNotOnDisk, chExplicitForget, fbuf.Name() );
+         SD && DBG( "%c=%c%c%c %s", (skip?'1':'0'), chAlreadySaved, chNotOnDisk, chExplicitForget, fbuf.Name() );
          return skip;
          }
       void Next()             { d_pVw = DLINK_NEXT( d_pVw, d_dlinkViewsOfWindow ); }
-      void ToSaveCand()       { while( skip_( d_pVw ) ) { DV && DBG("skipping %s", d_pVw->FBuf()->Name() );
+      void ToSaveCand()       { while( skip_( d_pVw ) ) { SD && DBG("skipping %s", d_pVw->FBuf()->Name() );
                                    Next();
                                    }
                               }
@@ -596,14 +596,14 @@ void Wins_WriteStateFile( FILE *ofh ) {
       not_anon best;
       for( auto ix(0) ; ix < hdsMax; ++ix ) {
          hds[ix].ToSaveCand();
-         if( hds[ix].View() ) {          DV && DBG("hds[%d] %8" PR_TIMET " %s", ix, hds[ix].View()->TmFocusedOn(), hds[ix].View()->FBuf()->Name() );
+         if( hds[ix].View() ) {          SD && DBG("hds[%d] %8" PR_TIMET " %s", ix, hds[ix].View()->TmFocusedOn(), hds[ix].View()->FBuf()->Name() );
             best.cmp( ix, hds[ix].View()->TmFocusedOn() );
             }
          }
       if( best.is_empty() ) { break; /*################################################*/ }
       // we have an entry to write to the statefile
       auto &hd( hds[ best.get_idx() ] );
-      const auto pv( hd.View() );        DV && DBG("hds[%d] %8" PR_TIMET " %s  *** SAVING ***", best.get_idx(), pv->TmFocusedOn(), pv->FBuf()->Name() );
+      const auto pv( hd.View() );        SD && DBG("hds[%d] %8" PR_TIMET " %s  *** SAVING ***", best.get_idx(), pv->TmFocusedOn(), pv->FBuf()->Name() );
       pv->Write( ofh );  ++iFilesSaved;
       pv->FBuf()->SetSavedToStateFile(); // prevent saving state for this file again
       hd.Next();

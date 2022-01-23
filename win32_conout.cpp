@@ -262,9 +262,9 @@ void TConsoleOutputControl::SetCursorSize( bool fBigCursor ) {
    SetConsoleCursorInfo();
    }
 
-bool TConsoleOutputControl::SetCursorVisibilityChanged( bool fVisible ) { enum { DV=0 };
-   if( !fVisible &&  d_fCursorVisible ) { DV && DBG( "**************** Making CURSOR INVISIBLE *********************" ); }
-   if(  fVisible && !d_fCursorVisible ) { DV && DBG( "**************** Making CURSOR   VISIBLE *********************" ); }
+bool TConsoleOutputControl::SetCursorVisibilityChanged( bool fVisible ) { enum { SD=0 };
+   if( !fVisible &&  d_fCursorVisible ) { SD && DBG( "**************** Making CURSOR INVISIBLE *********************" ); }
+   if(  fVisible && !d_fCursorVisible ) { SD && DBG( "**************** Making CURSOR   VISIBLE *********************" ); }
    const auto retVal( d_fCursorVisible != fVisible );
    d_fCursorVisible = fVisible;
    SetConsoleCursorInfo();
@@ -933,8 +933,7 @@ bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
    return true;
    }
 
-bool TConsoleOutputControl::SetConsolePalette( const unsigned palette[16] ) {
-   enum { DM=0 };
+bool TConsoleOutputControl::SetConsolePalette( const unsigned palette[16] ) { enum { SD=0 };
    auto hwndConsole( Win32::GetConsoleWindow() );
    CONSOLE_INFO ci = { sizeof(ci) };
    // stuff that seems to be working OK:
@@ -962,14 +961,14 @@ bool TConsoleOutputControl::SetConsolePalette( const unsigned palette[16] ) {
    Win32::GetConsoleScreenBufferInfo( d_hConsoleScreenBuffer, &csbi );
    ci.ScreenBufferSize = csbi.dwSize;
    ci.WindowSize.X     = csbi.srWindow.Right  - csbi.srWindow.Left + 1;
-   ci.WindowSize.Y     = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;  DM && DBG( "%s: %ux%u", __func__, ci.WindowSize.X, ci.WindowSize.Y );
+   ci.WindowSize.Y     = csbi.srWindow.Bottom - csbi.srWindow.Top  + 1;  SD && DBG( "%s: %ux%u", __func__, ci.WindowSize.X, ci.WindowSize.Y );
    ci.WindowPosX       = csbi.srWindow.Left;
    ci.WindowPosY       = csbi.srWindow.Top;
    }
    { // this DOES NOT work OK: only in Vista+ is GetCurrentConsoleFontEx available to obtain FontFamily & FontWeight
    Win32::CONSOLE_FONT_INFO cfi;
-   auto curFont( Win32::GetCurrentConsoleFont( d_hConsoleScreenBuffer, FALSE, &cfi ) ? cfi.nFont : 0xFFFF );  DM && DBG( "CurFont=%lu", curFont );
-   auto fsize( Win32::GetConsoleFontSize( d_hConsoleScreenBuffer, curFont ) );                                DM && DBG( "FontSiz=%u x %u", fsize.X,fsize.Y );
+   auto curFont( Win32::GetCurrentConsoleFont( d_hConsoleScreenBuffer, FALSE, &cfi ) ? cfi.nFont : 0xFFFF );  SD && DBG( "CurFont=%lu", curFont );
+   auto fsize( Win32::GetConsoleFontSize( d_hConsoleScreenBuffer, curFont ) );                                SD && DBG( "FontSiz=%u x %u", fsize.X,fsize.Y );
 #if 1
    ci.FontSize = fsize;
 #else
@@ -1049,11 +1048,11 @@ bool ARG::ctwk() {
 //   BEGIN INIT_N_MISC  BEGIN INIT_N_MISC  BEGIN INIT_N_MISC  BEGIN INIT_N_MISC  BEGIN INIT_N_MISC  BEGIN INIT_N_MISC
 //
 
-STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, const ConsoleScreenBufferInfo &parentCsbi ) { enum { CON_DBG = 0 };
+STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, const ConsoleScreenBufferInfo &parentCsbi ) { enum {SD=0};
    // scrollback buffer may be vast, and is absolutely empty below parentCsbi.srWindow().Bottom,
    // so to save time and RAM, don't read below parentCsbi.srWindow().Bottom
    const Point src_size( parentCsbi.srWindow().Bottom, parentCsbi.BufferSize().col );
-   CON_DBG && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET " bytes) = %" PR_SIZET " bytes", src_size.col, src_size.lin, sizeof(ScreenCell), src_size.col * src_size.lin * sizeof(ScreenCell) );
+   SD && DBG( "parentCsbi seems to be valid, buf = (%dx%d) (x %" PR_SIZET " bytes) = %" PR_SIZET " bytes", src_size.col, src_size.lin, sizeof(ScreenCell), src_size.col * src_size.lin * sizeof(ScreenCell) );
    if( g_pFBufConsole->LineCount() == 0 ) {
       enum { maxReadConsoleBufsize = 48*1024 };
       // Documented maxReadConsoleBufsize is 64KB, however experiments and
@@ -1064,7 +1063,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
       Win32::COORD dest_buf_size;
       dest_buf_size.X  = src_size.col;
       dest_buf_size.Y  = ( maxReadConsoleBufsize / (src_size.col * sizeof(ScreenCell)) );
-      CON_DBG && DBG( "dest_buf_size.Y = %u, %" PR_SIZET " bytes", dest_buf_size.Y, dest_buf_size.Y * src_size.col * sizeof(ScreenCell) );
+      SD && DBG( "dest_buf_size.Y = %u, %" PR_SIZET " bytes", dest_buf_size.Y, dest_buf_size.Y * src_size.col * sizeof(ScreenCell) );
       ScreenCell *dest_buf;
       AllocArrayNZ( dest_buf, dest_buf_size.Y * src_size.col );
       std::string chbuf;
@@ -1073,13 +1072,13 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
          if( lcnt > src_size.lin - iy ) {
              lcnt = src_size.lin - iy;
              }
-         Win32::COORD bufPos = {0,0};          // const for all iterations, but since Win32 API does not take as const, best to rewrite each iter
+         Win32::COORD bufPos = {0,0};    // const for all iterations, but since Win32 API does not take as const, best to rewrite each iter
          Win32::SMALL_RECT srcRgn;
          srcRgn.Left   = 0;              // const for all iterations, but Win32 API documents this as "[in, out]", we must rewrite each iter
          srcRgn.Right  = src_size.col-1; // const for all iterations, but Win32 API documents this as "[in, out]", we must rewrite each iter
          srcRgn.Top    = iy;
          srcRgn.Bottom = iy + lcnt - 1;
-         CON_DBG && DBG( "ReadConsoleOutputA srcRgn: Y=(%4d,%4d), X=(%d,%d)", srcRgn.Top, srcRgn.Bottom, srcRgn.Left, srcRgn.Right );
+         SD && DBG( "ReadConsoleOutputA srcRgn: Y=(%4d,%4d), X=(%d,%d)", srcRgn.Top, srcRgn.Bottom, srcRgn.Left, srcRgn.Right );
          if( Win32::ReadConsoleOutputA( hConout, dest_buf, dest_buf_size, bufPos, &srcRgn ) == 0 ) {
             linebuf oseb;
             g_pFBufConsole->FmtLastLine( "***/\n*** Win32::ReadConsoleOutputA FAILED: %s ***\n***\\", OsErrStr( BSOB(oseb) ) );

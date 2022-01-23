@@ -160,10 +160,10 @@ int TPipeReader::RdChar() {
    return rv;
    }
 
-bool TPipeReader::GetlineEof( std::string &dest ) { enum { DB=0 };
+bool TPipeReader::GetlineEof( std::string &dest ) { enum { SD=0 };
    dest.clear();
    while( 1 ) {
-      const auto lastCh( RdChar() );               DB && DBG("   %d", lastCh );
+      const auto lastCh( RdChar() );               SD && DBG("   %d", lastCh );
       const auto atEof( lastCh == EMPTY );
       if( !atEof ) {
          dest.push_back( lastCh );

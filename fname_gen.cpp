@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -155,9 +155,9 @@ int FBOP::GetLineIsolateFilename( PCFBUF fb, Path::str_t &st, LINE yLine, COL xC
 // ...Generator object
 //
 
-bool WildcardFilenameGenerator::VGetNextName( Path::str_t &dest ) { enum { DB=0 };
+bool WildcardFilenameGenerator::VGetNextName( Path::str_t &dest ) { enum { SD=0 };
    RTN_false_ON_BRK;
-   dest = d_dm.GetNext();  DB && DBG( "%s '%s'", __PRETTY_FUNCTION__, dest.c_str() );
+   dest = d_dm.GetNext();  SD && DBG( "%s '%s'", __PRETTY_FUNCTION__, dest.c_str() );
    return !dest.empty();
    }
 
@@ -387,14 +387,14 @@ void DirListGenerator::AddName( stref name ) {
 
 DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
    : PathStrGenerator( src )
-   { enum { DB=0 };
+   { enum { SD=0 };
    const Path::str_t pStartDir( dirName ? dirName : Path::GetCwd() );
-   AddName( pStartDir );  DB && DBG( "%s StartDir ='%s'", __PRETTY_FUNCTION__, pStartDir.c_str() );
+   AddName( pStartDir );  SD && DBG( "%s StartDir ='%s'", __PRETTY_FUNCTION__, pStartDir.c_str() );
    Path::str_t pbuf;
    while( auto pNxt=d_input.remove_first() ) {
       pbuf = Path::str_t( pNxt->ref() ) + (DIRSEP_STR "*");
       FreeStringListEl( pNxt );
-      DB && DBG( "%s Looking in ='%s'", __PRETTY_FUNCTION__, pbuf.c_str() );
+      SD && DBG( "%s Looking in ='%s'", __PRETTY_FUNCTION__, pbuf.c_str() );
       WildcardFilenameGenerator wcg( __PRETTY_FUNCTION__, pbuf.c_str(), ONLY_DIRS );
       while( wcg.VGetNextName( pbuf ) ) {
          if( !(  Path::IsDotOrDotDot( pbuf )
@@ -402,7 +402,7 @@ DirListGenerator::DirListGenerator( std::string &&src, PCChar dirName )
               )
            ) {
             AddName( pbuf );
-            }                                                    DB && DBG( "%s   PBUF='%s' DBUF='%" PR_BSR "'", __PRETTY_FUNCTION__, pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
+            }                                                    SD && DBG( "%s   PBUF='%s' DBUF='%" PR_BSR "'", __PRETTY_FUNCTION__, pbuf.c_str(), BSR(Path::RefFnm( pbuf )) );
          }
       }
    }
@@ -433,7 +433,7 @@ bool ARG::wct() {
    }
 #endif
 
-enum { MFSPEC_D=0 };
+enum { MFSPEC_DB=0 };
 
 CfxFilenameGenerator::CfxFilenameGenerator( std::string &&src, stref macroText, WildCardMatchMode matchMode )
    : PathStrGenerator( src )
@@ -441,7 +441,7 @@ CfxFilenameGenerator::CfxFilenameGenerator( std::string &&src, stref macroText, 
    , d_matchMode( matchMode )
    {
    // d_splitLine.DBG();
-   MFSPEC_D && DBG( "%s::'%" PR_BSR "' (INCOMPLETE)", __func__, BSR(macroText) );
+   MFSPEC_DB && DBG( "%s::'%" PR_BSR "' (INCOMPLETE)", __func__, BSR(macroText) );
    // d_splitLine.DBG();
    }
 
@@ -456,7 +456,7 @@ bool CfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    if( d_pWcGen ) {
 NEXT_WILDCARD_MATCH:
       if( d_pWcGen->VGetNextName( dest ) ) {
-         MFSPEC_D && DBG( "%s+ '%s'", __func__, dest.c_str() );
+         MFSPEC_DB && DBG( "%s+ '%s'", __func__, dest.c_str() );
          return true;
          }
       Delete0( d_pWcGen );
@@ -464,7 +464,7 @@ NEXT_WILDCARD_MATCH:
    if( d_pSSG ) {
 NEXT_SSG_COMBINATION:
       if( d_pSSG->GetNextString( dest ) ) {
-         MFSPEC_D && DBG( "%s+ WcGen <= '%s'", __func__, dest.c_str() );
+         MFSPEC_DB && DBG( "%s+ WcGen <= '%s'", __func__, dest.c_str() );
          d_pWcGen = new WildcardFilenameGenerator( __PRETTY_FUNCTION__, dest.c_str(), d_matchMode );
          goto NEXT_WILDCARD_MATCH;
          }
@@ -472,12 +472,12 @@ NEXT_SSG_COMBINATION:
       }
    d_pszEntrySuffix = d_splitLine.GetNext( d_pszEntrySuffix );
    if( d_pszEntrySuffix ) {
-      MFSPEC_D && DBG( "%s+ ENVMAP <= '%s'", __func__, d_pszEntrySuffix );
+      MFSPEC_DB && DBG( "%s+ ENVMAP <= '%s'", __func__, d_pszEntrySuffix );
       d_pSSG = new StrSubstituterGenerator;
       CFX_to_SSG( d_pszEntrySuffix, d_pSSG );
       goto NEXT_SSG_COMBINATION;
       }
-   MFSPEC_D && DBG( "%s- Exhausted", __func__ );
+   MFSPEC_DB && DBG( "%s- Exhausted", __func__ );
    return false;
    }
 
@@ -604,21 +604,21 @@ void SearchEnvDirListForFile( Path::str_t &st, bool fKeepNameWildcard ) {
    SearchEnvDirListForFile( st, tmp, fKeepNameWildcard );
    }
 
-Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { DB=0 };
-   if( FBUF::FnmIsPseudo( pszSrc ) ) {                               DB && DBG( "%s- (FnmIsPseudo) '%s'", __func__, pszSrc );
+Path::str_t CompletelyExpandFName_wEnvVars( PCChar pszSrc ) { enum { SD=0 };
+   if( FBUF::FnmIsPseudo( pszSrc ) ) {                               SD && DBG( "%s- (FnmIsPseudo) '%s'", __func__, pszSrc );
       return pszSrc;
       }
    Path::str_t st( pszSrc );
-   if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {                       DB && DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
+   if( LuaCtxt_Edit::ExpandEnvVarsOk( st ) ) {                       SD && DBG( "%s post-Lua expansion='%s'->'%s'", __func__, pszSrc, st.c_str() );
       }
    else {
       if( '$' == pszSrc[0] ) { SearchEnvDirListForFile( st ); }
       else                   { st = pszSrc; }
-      }                                                              DB && DBG( "%s post-expansion='%s'", __func__, st.c_str() );
+      }                                                              SD && DBG( "%s post-expansion='%s'", __func__, st.c_str() );
    if( isQuotedStr( st ) ) {  // Path::Absolutize misbehaves when given a quoted filename, so flag and give up
       ErrorDialogBeepf( "%s internal error: quoted '%s'", __func__, st.c_str() );
       return pszSrc;
       }
-   st = Path::Absolutize( st.c_str() );                              DB && DBG( "%s- '%s'", __func__, st.c_str() );
+   st = Path::Absolutize( st.c_str() );                              SD && DBG( "%s- '%s'", __func__, st.c_str() );
    return st;
    }

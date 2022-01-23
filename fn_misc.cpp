@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -106,11 +106,11 @@ bool ARG::mergefilenames() {
 
 #ifdef fn_nonseq_gap
 
-STATIC_FXN bool strs_diff_by_1( stref s1, stref s2, UI base=10 ) { enum { DB=1 };
+STATIC_FXN bool strs_diff_by_1( stref s1, stref s2, UI base=10 ) { enum { SD=1 };
    int e1; uintmax_t v1; stref a1; UI b1; std::tie( e1, v1, a1, b1 ) = conv_u( s1, base );
    int e2; uintmax_t v2; stref a2; UI b2; std::tie( e2, v2, a2, b2 ) = conv_u( s2, base );
    const bool rv( e1 || e2 ? false : ((v1+1 == v2) || (v1 == v2+1)) );
-   DB && DBG( "%s: %d '%" PR_BSR "'!'%" PR_BSR "'=%ju;%d vs '%" PR_BSR "'!'%" PR_BSR "'=%ju;%d", __func__, rv, BSR(s1), BSR(a1), v1, e1, BSR(s2), BSR(a2), v2, e2 );
+   SD && DBG( "%s: %d '%" PR_BSR "'!'%" PR_BSR "'=%ju;%d vs '%" PR_BSR "'!'%" PR_BSR "'=%ju;%d", __func__, rv, BSR(s1), BSR(a1), v1, e1, BSR(s2), BSR(a2), v2, e2 );
    return rv;
    }
 

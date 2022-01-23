@@ -1,5 +1,5 @@
 //
-// Copyright 2018-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2018-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -149,10 +149,10 @@ int FindMatchingTagsLines(
 #else
                            lua_State *L
 #endif
-                         ) { enum { DB=0 };
+                         ) { enum { SD=0 };
 #ifdef UNITTEST
    auto rv_append_string = []( stref sr ) { printf( "%" PR_BSR "\n", BSR(sr) ); };
-   auto rv_setfield_string = []( PCChar fieldNm, stref sr ) { DB && fprintf( stderr, "%s=%" PR_BSR "\n", fieldNm, BSR(sr) ); };
+   auto rv_setfield_string = []( PCChar fieldNm, stref sr ) { SD && fprintf( stderr, "%s=%" PR_BSR "\n", fieldNm, BSR(sr) ); };
 #else
    auto  fnm( S_(1) );
    stref tag( S_(2) );
@@ -235,7 +235,7 @@ int FindMatchingTagsLines(
 #endif
          }
       else { // normal mode: binary search for all tags named src
-         DB && ::DBG( "%s: -----> '%" PR_BSR "'", __func__, BSR(src) );
+         SD && ::DBG( "%s: -----> '%" PR_BSR "'", __func__, BSR(src) );
          tfrdr.fseekFailed( 0, SEEK_END ); auto oMax( tfrdr.ftell() );
          tfrdr.fseekFailed( 0, SEEK_SET ); auto oMin( tfrdr.ftell() );
          if( oMin < 0 || oMax < 0 ) {  // CID 184286 fix
@@ -247,11 +247,11 @@ int FindMatchingTagsLines(
          constexpr decltype(oMin) START_OF_FILE( 0 );
          auto getLnCmp = [&tfrdr,&line,&src]() {
             if( !tfrdr.getline() ) { // will be full unless @ EOL
-               DB && ::DBG( "getline() failed" );
+               SD && ::DBG( "getline() failed" );
                return -1;
                }
             auto cand( tagFromLine( line ) );
-            DB && ::DBG( "cand '%" PR_BSR "'", BSR(cand) );
+            SD && ::DBG( "cand '%" PR_BSR "'", BSR(cand) );
             return cmp( src, cand );
             };
          auto seekGetLnCmp = [&tfrdr,&getLnCmp]( decltype(oMin) skTgt ) {
@@ -273,7 +273,7 @@ int FindMatchingTagsLines(
 #endif
             //===========================================================
             auto cmpTgt( oMin + ((oMax - oMin) / 2) );  // overflow-proof version
-            DB && ::DBG( "min/pt/max=%ld/%ld/%ld", oMin, cmpTgt, oMax );
+            SD && ::DBG( "min/pt/max=%ld/%ld/%ld", oMin, cmpTgt, oMax );
             const auto rslt( seekGetLnCmp( cmpTgt ) );
             if( rslt < 0 ) { /* handle unsigned underflow/wraparound */
                if( cmpTgt == START_OF_FILE ) {
@@ -287,7 +287,7 @@ int FindMatchingTagsLines(
                }
             //===========================================================
             if( rslt == 0 ) { // HIT!  But perhaps not FIRST hit.  mvBack until we see a non-match, then linear-search fwd to (and past) matches.
-               DB && ::DBG( "Match after %d probes: %" PR_BSR "'", probes, BSR(line) );
+               SD && ::DBG( "Match after %d probes: %" PR_BSR "'", probes, BSR(line) );
                // linear search phase: move back then search fwd to find NON-matching line, then fwd (first) to matching line(s)
                for( auto movesBack(1) ; ; ++movesBack ) {
                   const auto mvBackAmount( (1+move_back_lines)*(1+line.length()) );
@@ -332,7 +332,7 @@ int FindMatchingTagsLines(
       return 1;
       };
 
-   DB && ::DBG( "tag '%" PR_BSR "'", BSR(tag) );
+   SD && ::DBG( "tag '%" PR_BSR "'", BSR(tag) );
    auto ifh( fopen( fnm, "rt" ) );
    if( ifh != nullptr ) {
       bsearch_sorted_tagsfile( ifh, tag );

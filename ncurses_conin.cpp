@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -77,7 +77,7 @@ STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int 
 //
 STATIC_VAR uint16_t ncurses_ch_to_EdKC[600]; // indexed by ncurses_ch
 
-STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, uint16_t edkc ) { enum { DB=0 };
+STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, uint16_t edkc ) { enum { SD=0 };
    /* if terminfo defines a capability named cap_nm (as an escseqstr), _and_ ncurses maps that escseqstr
       to an ncurses_ch (which getch() returns), then add an entry ncurses_ch_to_EdKC[ncurses_ch] = EdKC #
       where EdKC is the EDITOR KEYCODE which corresponds to cap_nm
@@ -87,16 +87,16 @@ STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, uint16_t edkc ) { enum
       xterm+pce3|fragment with modifyCursorKeys:3,
               kDC=\E[3;2~,                               key=cap_nm=kDC, value=escseqstr=\E[>3;2~
    */
-   auto keyNm( KeyNmOfEdkc( edkc ) );            DB && DBG( "tigetstr+ %s", cap_nm );
-   const char *escseqstr( tigetstr( cap_nm ) );  DB && DBG( "tigetstr- %s", cap_nm ); // tigetstr() <- "retrieves a capability from the terminfo database"
+   auto keyNm( KeyNmOfEdkc( edkc ) );            SD && DBG( "tigetstr+ %s", cap_nm );
+   const char *escseqstr( tigetstr( cap_nm ) );  SD && DBG( "tigetstr- %s", cap_nm ); // tigetstr() <- "retrieves a capability from the terminfo database"
    if( !escseqstr || (long)(escseqstr) == -1 ) {
 #define KEYMAPFMT  "0%04o=0d%d <= %-5s => %-8s => %s"
       0 && DBG( KEYMAPFMT, 0, 0, cap_nm, "", keyNm.c_str() );
       return;
       }
    char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, escseqstr, Strlen(escseqstr) );
-                                                    DB && DBG( "key_defined+ %s", tib );
-   const auto ncurses_ch( key_defined(escseqstr) ); DB && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
+                                                    SD && DBG( "key_defined+ %s", tib );
+   const auto ncurses_ch( key_defined(escseqstr) ); SD && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
    DBG( KEYMAPFMT, ncurses_ch, ncurses_ch, cap_nm, tib, keyNm.c_str() );
    if( ncurses_ch > 0 ) {
       if( ncurses_ch < ELEMENTS( ncurses_ch_to_EdKC ) ) {

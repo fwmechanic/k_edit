@@ -1,5 +1,5 @@
 //
-// Copyright 2015,2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015,2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -128,15 +128,15 @@ Path::str_t::size_type Path::CommonPrefixLen( stref s1, stref s2 ) {
 
 //----------------
 
-Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
+Path::str_t Path::Union( stref s1, stref s2 ) { enum { SD=0 };
    // dest = (Path::CpyDirnm( s1 ) || Path::CpyDirnm( s2 ))
    //      + (Path::CpyFnm  ( s1 ) || Path::CpyFnm  ( s2 ))
    //      + (Path::CpyExt  ( s1 ) || Path::CpyExt  ( s2 ))
-   auto dir( Path::RefDirnm( s1 ) ); if( dir.empty() ) { dir = Path::RefDirnm( s2 ); } // DB && DBG( "RExt:dir '%s'", dir.c_str() );
-   auto fnm( Path::RefFnm  ( s1 ) ); if( fnm.empty() ) { fnm = Path::RefFnm  ( s2 ); } // DB && DBG( "RExt:fnm '%s'", fnm.c_str() );
+   auto dir( Path::RefDirnm( s1 ) ); if( dir.empty() ) { dir = Path::RefDirnm( s2 ); } // SD && DBG( "RExt:dir '%s'", dir.c_str() );
+   auto fnm( Path::RefFnm  ( s1 ) ); if( fnm.empty() ) { fnm = Path::RefFnm  ( s2 ); } // SD && DBG( "RExt:fnm '%s'", fnm.c_str() );
    stref ext;
    if( !Path::IsDotOrDotDot( fnm ) ) {
-      ext =  Path::RefExt  ( s1 )  ; if( ext.empty() ) { ext = Path::RefExt  ( s2 ); } // DB && DBG( "RExt:f+x '%s'", fnm.c_str() );
+      ext =  Path::RefExt  ( s1 )  ; if( ext.empty() ) { ext = Path::RefExt  ( s2 ); } // SD && DBG( "RExt:f+x '%s'", fnm.c_str() );
       }
    Path::str_t rv;
    rv.reserve( dir.length() + fnm.length() + ext.length() + 1 );
@@ -153,7 +153,7 @@ Path::str_t Path::Union( stref s1, stref s2 ) { enum { DB=0 };
    if( rv.back() == '.' ) {
       rv.pop_back();
       }
-   // DB && DBG( "RExt: '%s' + '%s' -> '%s+%s'", s2, s1, dir.c_str(), fnm.c_str() );
+   // SD && DBG( "RExt: '%s' + '%s' -> '%s+%s'", s2, s1, dir.c_str(), fnm.c_str() );
    return rv;
    }
 

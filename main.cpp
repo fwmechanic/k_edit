@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -220,7 +220,7 @@ STATIC_CONST struct {
       { "DST"       , recovDST     , saveDST      },
    };
 
-STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
+STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum {SD=0};
    auto fSyncd( false );
    Xbuf xb( BUFBYTES+10 );  // as long as an editor line, plus room for tmpfile line prefixes (e.g. "SRCH:")
    int ix(0);
@@ -233,7 +233,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
       DBG( "%s couldn't find first reader in stateF_lineprocessor", FUNC );
       return;
       }
-   DBG_RECOV && DBG( "first reader is %s", stateF_lineprocessor[ ix ].description );
+   SD && DBG( "first reader is %s", stateF_lineprocessor[ ix ].description );
    while( 1 ) {
       if( !fgotline( &xb, ifh ) ) {
          DBG( "%s hit EOF (or rd err) while trying to sync at line %d of tmpfile", FUNC, ix+1 );
@@ -241,8 +241,8 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
          }
       const auto buf( xb.c_str() );
       if( !stateF_lineprocessor[ ix ].lpRecov( buf ) ) {
-         DBG_RECOV && DBG( "recover %s syncd on line %d", stateF_lineprocessor[ ix ].description, ix+1 );
-         DBG_RECOV && DBG( "recover %s syncd on: '%s'"  , stateF_lineprocessor[ ix ].description, buf );
+         SD && DBG( "recover %s syncd on line %d", stateF_lineprocessor[ ix ].description, ix+1 );
+         SD && DBG( "recover %s syncd on: '%s'"  , stateF_lineprocessor[ ix ].description, buf );
          break;
          }
       }
@@ -269,7 +269,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
    auto winCnt(0);
    while( winCnt <= 1 && fgotline( &xb, ifh ) ) {
       const auto buf( xb.wbuf() );
-      DBG_RECOV && DBG( "%s %s", FUNC, buf );
+      SD && DBG( "%s %s", FUNC, buf );
       switch( buf[0] ) {
          break;default :                             // ignore blank line
          break;case '.':                             // ignore EoF marker
@@ -285,7 +285,7 @@ STATIC_FXN void RecoverFromStateFile( FILE *ifh ) { enum { DBG_RECOV = 0 };
        s_ForgetAbsentFiles.logfb->UnDirty();
        Msg( "done forgetting %d files", s_ForgetAbsentFiles.logfb->LineCount() );
        }
-   DBG_RECOV && DBG( "%s done", FUNC );
+   SD && DBG( "%s done", FUNC );
    }
 
 Path::str_t RsrcFilename( PCChar ext ) {
@@ -341,46 +341,46 @@ void WriteStateFile() {
       }
    }
 
-STATIC_FXN void InitFromStateFile() { enum { DD=0 };   DD && DBG( "%s+", FUNC );
+STATIC_FXN void InitFromStateFile() { enum {SD=0};    SD && DBG( "%s+", FUNC );
    RecoverFromStateFile();
-   SetWindow0();                                       DD && DBG( "%s %" PR_SIZET " windows", FUNC, g_WindowCount() );
+   SetWindow0();                                      SD && DBG( "%s %" PR_SIZET " windows", FUNC, g_WindowCount() );
    if( !SwitchToNextCmdlineFile()
        && USER_INTERRUPT == ExecutionHaltRequested()
      ) {
       EditorExit( 1, false );
       }
-   for( auto iw(0) ; iw < g_WindowCount() ; ++iw ) {  DD && DBG( "%s Win[%d]", FUNC, iw );
+   for( auto iw(0) ; iw < g_WindowCount() ; ++iw ) {  SD && DBG( "%s Win[%d]", FUNC, iw );
       SetWindowSetValidView( iw );
-      }                                               DD && DBG( "%s back to Win[0]", FUNC );
+      }                                               SD && DBG( "%s back to Win[0]", FUNC );
    SetWindowSetValidView( 0 );  // so global ops work on this window's View list
-   DD && DBG( "%s-", FUNC );
+   SD && DBG( "%s-", FUNC );
    }
 
 //*************************************************************************************************
 //*************************************************************************************************
 //*************************************************************************************************
 
-void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
-   if( processExitCode != 0 ) {                          DV && DBG("%s invoking SW_BP", __func__ );
+void EditorExit( int processExitCode, bool fWriteStateFile ) { enum {SD=1};
+   if( processExitCode != 0 ) {                          SD && DBG("%s invoking SW_BP", __func__ );
       SW_BP;  // sw breakpoint
       }
    Msg( nullptr );
-   if( fWriteStateFile ) {                               DV && DBG("%s LuaCtxt_ALL::call_EventHandler( \"EXIT\" );", __func__ );
-      LuaCtxt_ALL::call_EventHandler( "EXIT" );          DV && DBG("%s WriteStateFile();", __func__ );
+   if( fWriteStateFile ) {                               SD && DBG("%s LuaCtxt_ALL::call_EventHandler( \"EXIT\" );", __func__ );
+      LuaCtxt_ALL::call_EventHandler( "EXIT" );          SD && DBG("%s WriteStateFile();", __func__ );
       WriteStateFile();
       cmdusage_updt();
       }
-                                                         DV && DBG("%s LuaClose();", __func__ );
+                                                         SD && DBG("%s LuaClose();", __func__ );
    LuaClose();
-                                                         DV && DBG("%s FreeAllMacroDefs();", __func__ );
-   FreeAllMacroDefs();                                   DV && DBG("%s CmdIdxClose();", __func__ );
+                                                         SD && DBG("%s FreeAllMacroDefs();", __func__ );
+   FreeAllMacroDefs();                                   SD && DBG("%s CmdIdxClose();", __func__ );
    CmdIdxClose();
-                                                         DV && DBG("%s CloseFTypeSettings();", __func__ );
+                                                         SD && DBG("%s CloseFTypeSettings();", __func__ );
    CloseFTypeSettings();
-                                                         DV && DBG("%s DestroyViewList(%" PR_SIZET ");", __func__, g_WindowCount() );
+                                                         SD && DBG("%s DestroyViewList(%" PR_SIZET ");", __func__, g_WindowCount() );
    for( auto &win : g__.aWindow ) {
       DestroyViewList( &win->d_ViewHd );
-      }                                                  DV && DBG("%s RemoveFBufOnly();", __func__ );
+      }                                                  SD && DBG("%s RemoveFBufOnly();", __func__ );
 #if FBUF_TREE
 
 #else
@@ -389,7 +389,7 @@ void EditorExit( int processExitCode, bool fWriteStateFile ) { enum { DV=1 };
       }
 #endif
    // finally, garbage-collect the bits and pieces:
-                                                         DV && DBG("%s ConIO_Shutdown();", __func__ );
+                                                         SD && DBG("%s ConIO_Shutdown();", __func__ );
    ConIO_Shutdown();
                                                                DBG("%s calling exit(%d);", __func__, processExitCode );
    exit( processExitCode );
@@ -485,7 +485,7 @@ bool mkdir_failed( PCChar dirname ) {
    return true;
    }
 
-STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
+STATIC_FXN void InitEnvRelatedSettings() { enum {SD=1};  // c_str()
    PutEnvOk( "K_RUNNING?", "yes" );
    PutEnvOk( "KINIT"     , ThisProcessInfo::ExePath() );
    auto mkdir_stf = [&]() {
@@ -494,7 +494,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
          fprintf( stderr, "mkdir(%s) failed: %s\n", dirname, strerror( errno ) );
          exit( 1 );
          }
-      s_EditorStateDir.append( DIRSEP_STR );  0 && DD && DBG( "%s", s_EditorStateDir.c_str() );
+      s_EditorStateDir.append( DIRSEP_STR );  0 && SD && DBG( "%s", s_EditorStateDir.c_str() );
       };
    #define  HOME_SUBDIR_NM  "k_edit"
 #if defined(_WIN32)
@@ -502,8 +502,8 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    const PCChar appdataVal( getenv( HOME_ENVVAR_NM ) );
    if( !(appdataVal && appdataVal[0]) )  { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% is not defined???\n"                      ); exit( 1 ); }
    if( !IsDir( appdataVal ) )            { fprintf( stderr, "%%" HOME_ENVVAR_NM "%% (%s) is not a directory???\n", appdataVal ); exit( 1 ); }
-   s_EditorStateDir.assign( appdataVal );                    0 && DD && DBG( "1: %s", s_EditorStateDir.c_str() );
-   s_EditorStateDir.append( DIRSEP_STR HOME_SUBDIR_NM );     0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
+   s_EditorStateDir.assign( appdataVal );                    0 && SD && DBG( "1: %s", s_EditorStateDir.c_str() );
+   s_EditorStateDir.append( DIRSEP_STR HOME_SUBDIR_NM );     0 && SD && DBG( "2: %s", s_EditorStateDir.c_str() );
    #undef   HOME_ENVVAR_NM
 #else
    //
@@ -530,7 +530,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
       s_EditorStateDir.append( DIRSEP_STR HOME_ENVVAR_SUFFIXNM ); // fprintf( stderr, "$" HOME_ENVVAR_NM "/" HOME_ENVVAR_SUFFIXNM " %s\n", s_EditorStateDir.c_str() );
       mkdir_stf();
       }
-   s_EditorStateDir.append( HOME_SUBDIR_NM );   0 && DD && DBG( "2: %s", s_EditorStateDir.c_str() );
+   s_EditorStateDir.append( HOME_SUBDIR_NM );   0 && SD && DBG( "2: %s", s_EditorStateDir.c_str() );
    #undef   HOME_ENVVAR_NM
 #endif
    #undef   HOME_SUBDIR_NM
@@ -539,7 +539,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum { DD=1 };  // c_str()
    { // in case homedir is an NFS mount: add a level of indirection (hostname) to store editor state per-host
    const auto hostname( ThisProcessInfo::hostname() );
    if( hostname[0] ) {
-      s_EditorStateDir.append( hostname );      0 && DD && DBG( "3: %s", s_EditorStateDir.c_str() );
+      s_EditorStateDir.append( hostname );      0 && SD && DBG( "3: %s", s_EditorStateDir.c_str() );
       mkdir_stf();
       // since I am often sudo'd, and since the root-associated edit-fileset often can't be accessed (and root-written state files
       // can't be rewritten) by non-root, track them separately by adding a username level of indirection
@@ -793,12 +793,11 @@ int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 #else
 DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint from K.EXE
 #endif
-   {
+   { enum {SD=1};
    // extern void test_CaptiveIdxOfCol();
    //             test_CaptiveIdxOfCol();
    ConstructStatics();
-   enum { DBGFXN=1 };
-   DBGFXN && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT, __func__, memdelta() );
+   SD && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT, __func__, memdelta() );
    // for( auto argi(0); argi < argc; ++argi ) { DBG( "argv[%d] = '%s'", argi, argv[argi] ); }
    CmdIdxInit();
    SwitblInit();
@@ -828,10 +827,10 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
        break;case 'x': cmdlineMacro = opt.optarg();
        }
      }
-   {                             DBGFXN && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT, __func__, memdelta() );
+   {                             SD && DBG( "### %s t=0 mem+=%7" PR_PTRDIFFT, __func__, memdelta() );
    MainThreadPerfCounter pc;
    if( !ConIO_InitOK( fForceNewConsole ) ) { exit( 1 ); }
-                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ConIO_InitOK"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+                                 SD && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ConIO_InitOK"    , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    CreateWindow0();
    s_pFbufLog->PutFocusOn();
    {
@@ -840,7 +839,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
       AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb.c_str() ) );
       MainThreadPerfCounter px;
       LuaCtxt_Edit::InitOk( pb.c_str() );
-                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT " LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
+                                 SD && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT " LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
       }
    }
    {
@@ -849,15 +848,15 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
       AssignLogTag( FmtStr<_MAX_PATH+19>( "compiling+running %s", pb.c_str() ) );
       MainThreadPerfCounter px;
       LuaCtxt_State::InitOk( pb.c_str() );
-                                 DBGFXN && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT " LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
+                                 SD && DBG( "### %s t=%6.3f S mem+=%7" PR_PTRDIFFT " LuaCtxt_Edit::InitOk %s", __func__, px.Capture(), memdelta(), pb.c_str() );
       }
    }
    register_atexit_search();
-   ReinitializeMacros( false );  DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-   InitFromStateFile();          DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   ReinitializeMacros( false );  SD && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ReinitializeMacros", __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+   InitFromStateFile();          SD && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru ReadStateFile"     , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
    // MsgClr(); // hack this is the earliest that it will actually have the effect of clearing the dialog line on startup (which is REALLY necessary in dialogtop mode)
-   DetachIdleThread();           DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru DetachIdleThread"  , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
-                                 DBGFXN && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " done"                   , __func__, pc.Capture(), memdelta() );
+   DetachIdleThread();           SD && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " thru DetachIdleThread"  , __func__, pc.Capture(), memdelta() );  CleanupAnyExecutionHaltRequest();
+                                 SD && DBG( "### %s t=%6.3f mem+=%7" PR_PTRDIFFT " done"                   , __func__, pc.Capture(), memdelta() );
    }
    win_fully_on_desktop();
    if( CmdFromName( "autostart" ) ) {

@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -476,7 +476,7 @@ bool ARG::wr0() {
    return false;
    }
 
-STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "%s", FUNC );
+STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {SD=0}; SD && DBG( "%s", FUNC );
    auto count( 0u );
    {
 #if FBUF_TREE
@@ -505,7 +505,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
 #if FBUF_TREE
       auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      if( pFBuf->get_tmLastWrToDisk() > 0 ) { DB && DBG( "[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->get_tmLastWrToDisk() );
+      if( pFBuf->get_tmLastWrToDisk() > 0 ) { SD && DBG( "[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->get_tmLastWrToDisk() );
          fbufs[ix++] = pFBuf;
          }
       }
@@ -513,7 +513,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {DB=0}; DB && DBG( "
    qsort( fbufs, count, sizeof(*fbufs), qsort_cmp_fbuf_wrtime );
    for( ix=0u ; ix < count ; ++ix ) {
       PCFBUF pFBuf( fbufs[ix] );
-      dest->PutLastLineRaw( pFBuf->Name() ); DB && DBG( "s[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->get_tmLastWrToDisk() );
+      dest->PutLastLineRaw( pFBuf->Name() ); SD && DBG( "s[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->get_tmLastWrToDisk() );
       }
    Free0( fbufs );
    Msg( "%u files have been written to disk", count );
@@ -555,7 +555,7 @@ STATIC_FXN void CallFbufReader( PFBUF pFBuf, FbufReaderFxn readerFxn, int instan
    pFBuf->SetAutoRead();
    }
 
-bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, pFBuf->Name() );
+bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {SD=0};  SD && DBG( "%s %s'", FUNC, pFBuf->Name() );
    /* shortcoming  BUGBUG
 
       This ALWAYS causes *pFBuf to be rewritten, and all associated views'
@@ -569,7 +569,7 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, 
       edits be unrecoverably wiped out
 
     */
-   if( LuaCtxt_Edit::ReadPseudoFileOk( pFBuf ) ) {  DB && DBG( "%s %s' Lua read it", FUNC, pFBuf->Name() );
+   if( LuaCtxt_Edit::ReadPseudoFileOk( pFBuf ) ) {  SD && DBG( "%s %s' Lua read it", FUNC, pFBuf->Name() );
       return true;
       }
    STATIC_CONST struct {
@@ -585,9 +585,9 @@ bool ReadPseudoFileOk( PFBUF pFBuf ) { enum {DB=0};  DB && DBG( "%s %s'", FUNC, 
          { "<most_recently_written_files>" , FBufRead_WrToDisk      },
          { "<ascii>"   , FBufRead_AsciiTbl      },
       };
-                                                     DB && DBG( "%s %s' looping", FUNC, pFBuf->Name() );
+                                                     SD && DBG( "%s %s' looping", FUNC, pFBuf->Name() );
    for( const auto &pfR : pseudofileReaders ) {
-      if( pFBuf->NameMatch( pfR.name ) ) {           DB && DBG( "%s %s' matches %s", FUNC, pFBuf->Name(), pfR.name );
+      if( pFBuf->NameMatch( pfR.name ) ) {           SD && DBG( "%s %s' matches %s", FUNC, pFBuf->Name(), pfR.name );
          CallFbufReader( pFBuf, pfR.readerFxn, 0 );
          return true;
          }

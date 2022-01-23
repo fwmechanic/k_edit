@@ -385,10 +385,10 @@ STATIC_FXN int32_t strtol_er( rtl_errno_t &conv_errno, PCChar nptr, PCChar &endp
    return rv;
    }
 
-bool ARG::vrepeat() { enum {DB=0};
+bool ARG::vrepeat() { enum {SD=0};
    auto lx( d_boxarg.flMin.lin );
    std::string fillseg; g_CurFBuf()->DupLineSeg( fillseg, lx, d_boxarg.flMin.col, d_boxarg.flMax.col ); // get line containing fill segment
-   std::string t0,t1;                                 DB && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, fillseg.c_str() );
+   std::string t0,t1;                                 SD && DBG( "fillseg [%d..%d] = '%s'", d_boxarg.flMin.col, d_boxarg.flMax.col, fillseg.c_str() );
    if( !d_fMeta ) {
       const auto fInsertArg( d_cArg < 2 );
       for( ++lx ; lx <= d_boxarg.flMax.lin; ++lx ) { // each line in boxarg
@@ -405,13 +405,13 @@ bool ARG::vrepeat() { enum {DB=0};
       const auto ixMinDigit( FirstDigitOrEnd( fillseg ) ); if( atEnd( fillseg, ixMinDigit ) ) { return Msg( "internal error, no first digit?" ); }
       enum { MAX_INT_PRINT_CHARS = 9 };
       const auto fLead0( '0' == fillseg[ixMinDigit] );
-      const auto width_DueToArgWidth( fillseg.length() );  DB && DBG( "width_DueToArgWidth=%" PR_SIZET, width_DueToArgWidth );
-      decltype(width_DueToArgWidth) width_DueToArgHeight( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  DB && DBG( "width_DueToArgHeight=%" PR_SIZET, width_DueToArgHeight );
+      const auto width_DueToArgWidth( fillseg.length() );  SD && DBG( "width_DueToArgWidth=%" PR_SIZET, width_DueToArgWidth );
+      decltype(width_DueToArgWidth) width_DueToArgHeight( uint_log_10( val + (1 + d_boxarg.flMax.lin - d_boxarg.flMin.lin) ) );  SD && DBG( "width_DueToArgHeight=%" PR_SIZET, width_DueToArgHeight );
       const auto width( std::max( width_DueToArgHeight, width_DueToArgWidth ) );
       if( width > MAX_INT_PRINT_CHARS ) { return Msg( "internal error, width %" PR_SIZET " > %d", width, MAX_INT_PRINT_CHARS ); }
 
-      FmtStr<7>fmts( "%%%s%" PR_SIZET "d", fLead0 ? "0":"", width ); const auto fmt( fmts.c_str() );   DB && DBG( "fmt='%s'", fmt );
-      FmtStr<1+MAX_INT_PRINT_CHARS> st0( fmt, val ); auto ps0 = st0.c_str();  DB && DBG( "st0='%s'", ps0 );
+      FmtStr<7>fmts( "%%%s%" PR_SIZET "d", fLead0 ? "0":"", width ); const auto fmt( fmts.c_str() );   SD && DBG( "fmt='%s'", fmt );
+      FmtStr<1+MAX_INT_PRINT_CHARS> st0( fmt, val ); auto ps0 = st0.c_str();  SD && DBG( "st0='%s'", ps0 );
       const auto xMax( d_boxarg.flMin.col+width-1 );
       bool ins;
       if( xMax == d_boxarg.flMax.col ) {

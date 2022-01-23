@@ -105,7 +105,7 @@ static inline int  IsPRBHDValid ( const RbNode *p) { return IsPRBNValid(p) && is
 
 #define DBGf      printf
 
-enum { VB=0 };
+enum { SD=0 };
 
 #if !defined(_WIN32)
 
@@ -230,7 +230,7 @@ int main( int argc, char *argv[] ) {
    rb_traverse(ptr, u16tree) {
       auto cur = static_cast<PNode>( rb_val(ptr) );
       assert( cur->key == cur->bkupKey );
-      VB && DBGf( "%5u\n", cur->key );
+      SD && DBGf( "%5u\n", cur->key );
       }
 
    for( size_t ix=0;ix<0x8000;ix++ ) {
@@ -250,7 +250,7 @@ int main( int argc, char *argv[] ) {
    rb_traverse(ptr, u16tree) {
       auto cur = static_cast<PNode>( rb_val(ptr) );
       assert( cur->key == cur->bkupKey );
-      VB && DBGf( "%5u\n", cur->key );
+      SD && DBGf( "%5u\n", cur->key );
       }
    u16tree = rb_dealloc_treev( u16tree, nullptr, Free );
 

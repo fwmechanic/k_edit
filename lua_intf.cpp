@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -326,22 +326,22 @@ STIL bool getTblVal( lua_State *L, PCChar key, size_t keylen, bool gettingGlobal
    return true;
    }
 
-STATIC_FXN bool gotTblVal( lua_State *L, PCChar tbdescr ) { enum {DB=0};
+STATIC_FXN bool gotTblVal( lua_State *L, PCChar tbdescr ) { enum {SD=0};
    const size_t tdsclen = Strlen( tbdescr );
    auto pst( tbdescr );
    for( auto pc(tbdescr); pc < tbdescr + tdsclen; ++pc ) {
       if( *pc == '.' ) {
-         if( !getTblVal( L, pst, pc - pst, pst == tbdescr ) ) {  DB && DBG( "%s- !getTblVal '%"   PR_BSR "'", __func__, static_cast<int>(pc - tbdescr), tbdescr );
+         if( !getTblVal( L, pst, pc - pst, pst == tbdescr ) ) {  SD && DBG( "%s- !getTblVal '%"   PR_BSR "'", __func__, static_cast<int>(pc - tbdescr), tbdescr );
             return false;
             }
-         if( !lua_istable( L, -1 ) ) {                           DB && DBG( "%s- !lua_istable '%" PR_BSR "'", __func__, static_cast<int>(pc - tbdescr), tbdescr );
+         if( !lua_istable( L, -1 ) ) {                           SD && DBG( "%s- !lua_istable '%" PR_BSR "'", __func__, static_cast<int>(pc - tbdescr), tbdescr );
             return false;
             }
          pst = pc+1;
          }
       }
    const auto rv( getTblVal( L, pst, (tbdescr + tdsclen) - pst, pst == tbdescr ) );
-                                                                 DB && !rv && DBG( "%s- !last getTblVal '%" PR_BSR "'", __func__, static_cast<int>(tdsclen), tbdescr );
+                                                                 SD && !rv && DBG( "%s- !last getTblVal '%" PR_BSR "'", __func__, static_cast<int>(tdsclen), tbdescr );
    return rv;  // *** caller is responsible for converting TOS to appropriate C value ***  if table lookup failed here, lua_isnil(L,-1) is true
    }
 
@@ -435,19 +435,19 @@ STATIC_FXN int traceback (lua_State *L) {
 }
 
 // stolen from lua-5.1/src/lua.c, except nres param to lua_pcall is passed directly
-STATIC_FXN int lh_pcall_inout (lua_State *L, int narg, int nres) { enum { DB=0 };
+STATIC_FXN int lh_pcall_inout (lua_State *L, int narg, int nres) { enum { SD=0 };
   const auto top( lua_gettop(L) );  /* function index */
   const auto base( top - narg );  /* function index */
-                                                                  DB && DBG(   "lh_pcall_inout(%d/%d,%d,%d)", narg, top, nres, base );
-                                                                  DB && LDS( "+ lh_pcall_inout:pre-ins-traceback-fxn", L );
+                                                                  SD && DBG(   "lh_pcall_inout(%d/%d,%d,%d)", narg, top, nres, base );
+                                                                  SD && LDS( "+ lh_pcall_inout:pre-ins-traceback-fxn", L );
   lua_pushcfunction(L, traceback);  /* push traceback function */
   lua_insert(L, base);  /* put it under chunk and args */
 //signal(SIGINT, laction);
-                                                                  DB && LDS( "+ lh_pcall_inout:lua_pcall", L );
-  const auto pcall_rv( lua_pcall(L, narg, nres, base) );          DB && LDS( "- lh_pcall_inout:lua_pcall", L );
+                                                                  SD && LDS( "+ lh_pcall_inout:lua_pcall", L );
+  const auto pcall_rv( lua_pcall(L, narg, nres, base) );          SD && LDS( "- lh_pcall_inout:lua_pcall", L );
 
 //signal(SIGINT, SIG_DFL);
-  lua_remove(L, base);  /* remove traceback function */           DB && LDS( "+ lh_pcall_inout:post-rmv-traceback-fxn", L );
+  lua_remove(L, base);  /* remove traceback function */           SD && LDS( "+ lh_pcall_inout:post-rmv-traceback-fxn", L );
   /* force a complete garbage collection in case of errors */
   if (pcall_rv != 0) { lua_gc(L, LUA_GCCOLLECT, 0); }
   return pcall_rv;
@@ -514,7 +514,7 @@ STATIC_FXN void lh_handle_pcall_err( lua_State *L, bool fCompileErr=false ) { //
 LREGI(EvtHandlerEnabled)
 LREGP(cleanup,void *)
 
-STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) { enum { DB=0 };
+STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) { enum { SD=0 };
    if( !L || LREGI_get_EvtHandlerEnabled( L ) < 1 ) {
       return;
       }
@@ -524,7 +524,7 @@ STATIC_FXN void call_EventHandler( lua_State *L, PCChar eventName ) { enum { DB=
    if( lh_push_global_function( L, "CallEventHandlers" ) ) {
       return;
       }
-   const auto failed( lh_pcall_inout( L, lh_push( L, eventName ), 0 ) );  DB && DBG( "C calling CallEventHandlers(%s)", eventName );
+   const auto failed( lh_pcall_inout( L, lh_push( L, eventName ), 0 ) );  SD && DBG( "C calling CallEventHandlers(%s)", eventName );
    if( failed ) {
       LREGI_set_EvtHandlerEnabled( L, 0 );         // don't want avalanche of errors
       lh_handle_pcall_err( L );
@@ -537,7 +537,7 @@ void LuaCtxt_ALL::call_EventHandler( PCChar eventName ) {
    call_EventHandler( L_restore_save, eventName );
    }
 
-bool ARG::ExecLuaFxn() { enum { DB=0 };
+bool ARG::ExecLuaFxn() { enum { SD=0 };
    // Using ARG::CmdName(), we discover the name of the fxn being invoked.
    // We will call the Lua function of the same name.  If the Lua entity of
    // that name is a table rather than a function, we will attempt to call
@@ -546,7 +546,7 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
    //
    // 20060309 klg
    //
-   const auto cmdName( CmdName() );                                              DB && DBG( "%s: '%s'", __func__, cmdName );
+   const auto cmdName( CmdName() );                                              SD && DBG( "%s: '%s'", __func__, cmdName );
    const auto L( L_edit );
    LuaCallCleanup( L );
    // table=GetEdFxn_FROM_C(cmdName)    -- 20110216 kgoodwin replaced old scheme which wrote all cmd tables into k.lua._G (!!!)
@@ -557,13 +557,13 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
       }
    {
    const auto failed( lh_pcall_inout( L, lh_push( L, cmdName ), 1 ) );
-   if( failed ) {                                                                DB && DBG( "%s: docall GetEdFxn_FROM_C(%s) failed", __func__, cmdName );
+   if( failed ) {                                                                SD && DBG( "%s: docall GetEdFxn_FROM_C(%s) failed", __func__, cmdName );
       return Msg( "docall GetEdFxn_FROM_C(%s) failed", cmdName );
       }
    }
-   const auto funcIsTable( lua_istable( L, -1 ) );                               DB && DBG( "%s: '%s' %d", __func__, "funcIsTable", funcIsTable );
-   auto argTypeNm( ArgTypeName() );                                              DB && DBG( "%s: '%s', ARG=%s, 0x%X", __func__, cmdName, argTypeNm, d_argType );
-   if( funcIsTable ) { /* support Lua decomposition, e.g. edfxn.BOXARG */        DB && DBG( "%s: '%s' is table", __func__, cmdName );
+   const auto funcIsTable( lua_istable( L, -1 ) );                               SD && DBG( "%s: '%s' %d", __func__, "funcIsTable", funcIsTable );
+   auto argTypeNm( ArgTypeName() );                                              SD && DBG( "%s: '%s', ARG=%s, 0x%X", __func__, cmdName, argTypeNm, d_argType );
+   if( funcIsTable ) { /* support Lua decomposition, e.g. edfxn.BOXARG */        SD && DBG( "%s: '%s' is table", __func__, cmdName );
       lua_getfield(L, -1, argTypeNm);
       if( !lua_isfunction( L, -1 ) ) { // edfxn.ANYARG is last chance/catchall
          lua_pop( L, 1 );
@@ -603,7 +603,7 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
                        setfield( L, "minX", 1+d_boxarg.flMin.col );
                        setfield( L, "maxX", 1+d_boxarg.flMax.col );
                        break;
-      case TEXTARG   : setfield( L, "text"   , d_textarg.pText ); DB && DBG( "TEXTARG = %s", d_textarg.pText );
+      case TEXTARG   : setfield( L, "text"   , d_textarg.pText ); SD && DBG( "TEXTARG = %s", d_textarg.pText );
                        ATTR_FALLTHRU;
       case NOARG     :
       case NULLARG   :{const int xAll( 1+g_CursorCol () );
@@ -615,12 +615,12 @@ bool ARG::ExecLuaFxn() { enum { DB=0 };
                        setfield( L, "minY"   , yAll );
                        setfield( L, "maxY"   , yAll );
                       }break;
-      }                                                                          DB && DBG( ".%s = %d", "type", actualArg );
+      }                                                                          SD && DBG( ".%s = %d", "type", actualArg );
    setfield( L, "argCount", d_cArg );
    setfield( L, "type"    , actualArg );
    l_construct_FBUF( L, g_CurFBuf() );  lua_setfield( L, -2, "fbuf" );
    l_View_function_cur( L );            lua_setfield( L, -2, "view" );
-   lua_pushboolean( L, d_fMeta );       lua_setfield( L, -2, "fMeta" );          DB && DBG( ".%s = %s", "fMeta", d_fMeta?"true":"false" );
+   lua_pushboolean( L, d_fMeta );       lua_setfield( L, -2, "fMeta" );          SD && DBG( ".%s = %s", "fMeta", d_fMeta?"true":"false" );
    const auto failed( lh_pcall_inout( L, 1, 1 ) );
    if( failed ) {
       UnhideCursor();
@@ -686,18 +686,18 @@ STATIC_FXN lua_State *init_lua_ok( void (*cleanup)(lua_State *L), void (*openlib
    return L;
    }
 
-STATIC_FXN bool loadLuaFileOk( lua_State *L, PCChar fnm ) { enum { DB=0 };
-   auto fLoadOK(false);                                        DB && DBG( "%s+1 L=%p fnm='%s'",  __func__, L, fnm );
-   const auto luaRC( luaL_loadfile( L, fnm ) );                DB && DBG( "%s+2 L=%p luaRC=%u",  __func__, L, luaRC );
+STATIC_FXN bool loadLuaFileOk( lua_State *L, PCChar fnm ) { enum { SD=0 };
+   auto fLoadOK(false);                                        SD && DBG( "%s+1 L=%p fnm='%s'",  __func__, L, fnm );
+   const auto luaRC( luaL_loadfile( L, fnm ) );                SD && DBG( "%s+2 L=%p luaRC=%u",  __func__, L, luaRC );
    switch( luaRC ) {
       break;case LUA_ERRFILE:    DBG( "LUA_ERRFILE"   ); lh_handle_pcall_err( L, true );
       break;case LUA_ERRSYNTAX:  DBG( "LUA_ERRSYNTAX" ); lh_handle_pcall_err( L, true );
       break;case LUA_ERRMEM:     Msg( "Lua memory error while loading '%s'"     , fnm );
       break;default:             Msg( "Unknown Lua error %d loading '%s'", luaRC, fnm );
-      break;case 0:              DB && LDS( "loadLuaFileOk luaL_loadfile() OK", L );
+      break;case 0:              SD && LDS( "loadLuaFileOk luaL_loadfile() OK", L );
            {
            const auto failed( lh_pcall_inout( L, 0, 0 ) );
-           if( failed ) {                                      DB && DBG( "%s L=%p docall() Failed",  __func__, L );
+           if( failed ) {                                      SD && DBG( "%s L=%p docall() Failed",  __func__, L );
               // NB!  The above lh_pcall_inout() runtime includes the COMPILE phase
               //      of any modules require()'d by 'fnm'.  As such, even if
               //      we get here, we could be facing a compile error, so we call
@@ -712,8 +712,8 @@ STATIC_FXN bool loadLuaFileOk( lua_State *L, PCChar fnm ) { enum { DB=0 };
               fLoadOK = true;
               }
            }
-      }                                                        DB && DBG( "%s+3 L=%p fLoadOK=%c",  __func__, L, fLoadOK?'t':'f' );
-   !fLoadOK && DBG( "%s failed", __func__ );                   DB && DBG( "%s- L=%p fLoadOK=%c",  __func__, L, fLoadOK?'t':'f' );
+      }                                                        SD && DBG( "%s+3 L=%p fLoadOK=%c",  __func__, L, fLoadOK?'t':'f' );
+   !fLoadOK && DBG( "%s failed", __func__ );                   SD && DBG( "%s- L=%p fLoadOK=%c",  __func__, L, fLoadOK?'t':'f' );
    return fLoadOK;
    }
 
@@ -724,7 +724,7 @@ STATIC_FXN bool LuaCtxt_InitOk(
    , void (*cleanup)  (lua_State *L)
    , void (*openlibs) (lua_State *L)
    , void (*post_load)(lua_State *L)
-   ) { enum {DB=0};                                            DB && DBG( "%s+ %s",  __func__, filename );
+   ) { enum {SD=0};                                            SD && DBG( "%s+ %s",  __func__, filename );
    //
    // Design note: if loadLuaFileOk fails while processing source file(s) for LuaCtxt_Edit (syntax error, assert),
    // *L remains non-null but defectively constructed lua_State, and a panic (causing process crash) will occur
@@ -735,16 +735,16 @@ STATIC_FXN bool LuaCtxt_InitOk(
    // Solution: construct local L and DON'T assign to Linout UNTIL successful construction concludes
    //
    auto L( init_lua_ok( cleanup, openlibs ) );
-   if( !L ) {                                                  DB && DBG( "%s- init_lua_ok() failed",  __func__ );
+   if( !L ) {                                                  SD && DBG( "%s- init_lua_ok() failed",  __func__ );
       return false;  // w/Linout undisturbed
       }
-   if( !loadLuaFileOk( L, filename ) ) {                       DB && DBG( "%s- loadLuaFileOk() failed",  __func__ );
+   if( !loadLuaFileOk( L, filename ) ) {                       SD && DBG( "%s- loadLuaFileOk() failed",  __func__ );
       cleanup_lua( L );
       return false;  // w/Linout undisturbed
       }
    cleanup_plua( Linout );  // only now are we committed... zap the now-redundant previous instance
    dupdFnm.assign( filename );
-   Linout = L; /* post_load may depend on this being set!!! */ DB && DBG( "%s- OK",  __func__ );
+   Linout = L; /* post_load may depend on this being set!!! */ SD && DBG( "%s- OK",  __func__ );
    post_load( L ); // Lua environment-loaded hook-outs
    return true;
    }
@@ -936,37 +936,37 @@ COL FBOP::GetSoftcrIndentLua( PFBUF fb, LINE yLine ) {
    return rv - 1;
    }
 
-STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout, bool fClearInoutOnFail=true ) { enum { DB=0 };
-   constexpr bool rv_fail = false;                                           DB && DBG( "%s+ %s %s", __func__, functionName, inout.c_str() );
+STIL bool Lua_S2S( lua_State *L, PCChar functionName, Path::str_t &inout, bool fClearInoutOnFail=true ) { enum { SD=0 };
+   constexpr bool rv_fail = false;                                           SD && DBG( "%s+ %s %s", __func__, functionName, inout.c_str() );
    if( !L ) { return rv_fail; }
    lua_settop( L, 0 );      // clear the stack
    LuaCallCleanup( L ); // clear the stack on function return
    if( lh_push_global_function( L, functionName ) ) {
       if( fClearInoutOnFail ) {
          inout.clear();
-         }                                                                   DB && DBG( "%s- %s FAIL-findfxn %s", __func__, functionName, inout.c_str() );
+         }                                                                   SD && DBG( "%s- %s FAIL-findfxn %s", __func__, functionName, inout.c_str() );
       return rv_fail;
       }
    if( lh_pcall_inout( L, lh_push( L, inout ), 1 ) != 0 ) {  // do the call
       lh_handle_pcall_err( L );
       if( fClearInoutOnFail ) {
          inout.clear();
-         }                                                                   DB && DBG( "%s- %s FAIL-pcall %s", __func__, functionName, inout.c_str() );
+         }                                                                   SD && DBG( "%s- %s FAIL-pcall %s", __func__, functionName, inout.c_str() );
       return rv_fail;
       }
-   lua_assigncppstring( L, -1, inout );                                      DB && DBG( "%s- %s %s", __func__, functionName, inout.c_str() );
+   lua_assigncppstring( L, -1, inout );                                      SD && DBG( "%s- %s %s", __func__, functionName, inout.c_str() );
    return true;
    }
 
 // functionName may contain '.' (table dereferences)
-STATIC_FXN bool LuaTblS2S( lua_State *L, PCChar functionName, Path::str_t &inout, bool fClearInoutOnFail=true ) { enum { DB=0 };
-   constexpr bool rv_fail = false;                                           DB && DBG( "%s+ %s<-%s", __func__, functionName, inout.c_str() );
+STATIC_FXN bool LuaTblS2S( lua_State *L, PCChar functionName, Path::str_t &inout, bool fClearInoutOnFail=true ) { enum { SD=0 };
+   constexpr bool rv_fail = false;                                           SD && DBG( "%s+ %s<-%s", __func__, functionName, inout.c_str() );
    if( !L ) { return rv_fail; }
    LuaCallCleanup( L );
-   if( !gotTblVal( L, functionName ) ) {                                     DB && DBG( "%s- %s FAIL-gotTblVal %s", __func__, functionName, inout.c_str() );
+   if( !gotTblVal( L, functionName ) ) {                                     SD && DBG( "%s- %s FAIL-gotTblVal %s", __func__, functionName, inout.c_str() );
       goto FAIL;
       }
-   if( !lua_isfunction( L, -1 ) ) {                                          DB && DBG( "%s- %s FAIL-gotTblVal!=fxn %s", __func__, functionName, inout.c_str() );
+   if( !lua_isfunction( L, -1 ) ) {                                          SD && DBG( "%s- %s FAIL-gotTblVal!=fxn %s", __func__, functionName, inout.c_str() );
       goto FAIL;
       }
    if( lh_pcall_inout( L, lh_push( L, inout ), 1 ) != 0 ) {  // do the call
@@ -974,10 +974,10 @@ STATIC_FXN bool LuaTblS2S( lua_State *L, PCChar functionName, Path::str_t &inout
 FAIL:
       if( fClearInoutOnFail ) {
          inout.clear();
-         }                                                                   DB && DBG( "%s- %s FAIL-pcall %s", __func__, functionName, inout.c_str() );
+         }                                                                   SD && DBG( "%s- %s FAIL-pcall %s", __func__, functionName, inout.c_str() );
       return rv_fail;
       }
-   lua_assigncppstring( L, -1, inout );                                      DB && DBG( "%s- %s->%s", __func__, functionName, inout.c_str() );
+   lua_assigncppstring( L, -1, inout );                                      SD && DBG( "%s- %s->%s", __func__, functionName, inout.c_str() );
    return true;
    }
 
@@ -1021,8 +1021,8 @@ STATIC_FXN int LuaTbl2Int( lua_State *L, PCChar tableDescr, int dfltVal ) {
 // returns dfltVal if any errors
 int LuaCtxt_Edit::Tbl2Int( PCChar tableDescr, int dfltVal ) { return LuaTbl2Int( L_edit, tableDescr, dfltVal ); }
 
-bool LuaCtxt_Edit::TblKeyExists( PCChar tableDescr ) { enum { DB=1 };
-   const auto rv( LuaTblKeyExists( L_edit, tableDescr ) );  DB && DBG( "%s %s '%s'", __func__, rv ? "EXISTS " : "MISSING", tableDescr );
+bool LuaCtxt_Edit::TblKeyExists( PCChar tableDescr ) { enum { SD=1 };
+   const auto rv( LuaTblKeyExists( L_edit, tableDescr ) );  SD && DBG( "%s %s '%s'", __func__, rv ? "EXISTS " : "MISSING", tableDescr );
    return rv;
    }
 

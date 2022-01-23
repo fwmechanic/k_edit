@@ -44,8 +44,8 @@ void AssignLogTag( PCChar tag ) {   0 && DBG( "===== %s ====================", t
        }
    }
 
-bool AssignStrOk_( stref src, CPCChar caller ) { enum {DB=0};   DB && DBG( "%s 0(%" PR_BSR ")", caller, BSR(src) );
-   src.remove_prefix( FirstNonBlankOrEnd( src ) );              DB && DBG( "%s 1(%" PR_BSR ")", caller, BSR(src) );
+bool AssignStrOk_( stref src, CPCChar caller ) { enum {SD=0};   SD && DBG( "%s 0(%" PR_BSR ")", caller, BSR(src) );
+   src.remove_prefix( FirstNonBlankOrEnd( src ) );              SD && DBG( "%s 1(%" PR_BSR ")", caller, BSR(src) );
    if( src.length() == 0 ) {
       return Msg( "(from %s) entirely blank", caller );
       }
@@ -53,22 +53,22 @@ bool AssignStrOk_( stref src, CPCChar caller ) { enum {DB=0};   DB && DBG( "%s 0
    if( stref::npos == ixColon ) {
       return Msg( "(from %s) missing ':' in %" PR_BSR, caller, BSR(src) );
       }
-   auto name( src.substr( 0, ixColon ) );                  0 && DB && DBG( "%s 2 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
-   rmv_trail_blanks( name );                               0 && DB && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
-   src.remove_prefix( FirstNonBlankOrEnd( src, ixColon+1 ) );   DB && DBG( "%s 4 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
-   rmv_trail_blanks( src );                                     DB && DBG( "%s 5 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
+   auto name( src.substr( 0, ixColon ) );                  0 && SD && DBG( "%s 2 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
+   rmv_trail_blanks( name );                               0 && SD && DBG( "%s 3 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
+   src.remove_prefix( FirstNonBlankOrEnd( src, ixColon+1 ) );   SD && DBG( "%s 4 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
+   rmv_trail_blanks( src );                                     SD && DBG( "%s 5 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
    if( '=' == src[0] ) {
-      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        DB && DBG( "%s 6 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
-      const auto rv( DefineMacro( name, src ) );                DB && DBG( "DefineMacro(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
+      src.remove_prefix( FirstNonBlankOrEnd( src, 1 ) );        SD && DBG( "%s 6 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );
+      const auto rv( DefineMacro( name, src ) );                SD && DBG( "DefineMacro(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
       return rv;
       }
    if( !CmdFromName( name ) ) {
-      auto rv( SetSwitch( name, src ) );                        DB && DBG( "SetSwitch(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
+      auto rv( SetSwitch( name, src ) );                        SD && DBG( "SetSwitch(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
       return rv;
       }
    const auto BK_rv( BindKeyToCMD( name, src ) );
    switch( BK_rv ) {
-      case SetKeyRV_OK    :                                     DB && DBG( "key %" PR_BSR " ->CMD %" PR_BSR, BSR(src), BSR(name) );
+      case SetKeyRV_OK    :                                     SD && DBG( "key %" PR_BSR " ->CMD %" PR_BSR, BSR(src), BSR(name) );
                             return true;
       case SetKeyRV_BADKEY: return Msg( "%" PR_BSR " is an unknown key", BSR(src) );
       case SetKeyRV_BADCMD: return Msg( "%" PR_BSR " is an unknown CMD", BSR(name) );
@@ -475,11 +475,11 @@ STIL void RecordCmd( PCCMD pCmd ) {
    SaveCMDInMacroRecordFbuf( pCmd );
    }
 
-PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const eOnMacHalt onMacHalt ) { enum{DB=0}; DB && DBG( "+%s", __func__ );
+PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const eOnMacHalt onMacHalt ) { enum{SD=0}; SD && DBG( "+%s", __func__ );
    while(1) {
-      if( eOnMacHalt::Return==onMacHalt && s_fRtndFrom_fExecuted_macro ) { DB && DBG( "-%s 0", __func__ );
+      if( eOnMacHalt::Return==onMacHalt && s_fRtndFrom_fExecuted_macro ) { SD && DBG( "-%s 0", __func__ );
          return nullptr;
-         }                                                      DB && DBG( ":%s %s", __func__, Interpreter::Interpreting() ? "MACRO?" : "KB?" );
+         }                                                      SD && DBG( ":%s %s", __func__, Interpreter::Interpreting() ? "MACRO?" : "KB?" );
       // much of the complexity that follows is due to the difficulty of
       // deciding which CMD's need to be recorded-to-macro, or not
       // (see "How we record a command stream into a macro" above)
@@ -513,7 +513,7 @@ PCCMD CMD_reader::GetNextCMD_ExpandAnyMacros( const eOnMacHalt onMacHalt ) { enu
             //
             if( !fInterpreting_VariableMacro ) { // we DON'T want to record the expansion of VariableMacros ...
                RecordCmd( pCmd );                // as these are typically situation-(time-)dependent
-               }                                                DB && DBG( "-%s %s", __func__, pCmd->Name() );
+               }                                                SD && DBG( "-%s %s", __func__, pCmd->Name() );
             return pCmd;                       // caller will execute
             }
          if( !pCmd->IsRealMacro() && !fInterpreting_VariableMacro ) {

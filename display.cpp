@@ -213,7 +213,7 @@ STATIC_FXN char GenAltHiliteColor( const char color ) {
 STATIC_FXN inline PFTypeSetting IdxNodeToFTS( RbNode *pNd ) { return static_cast<PFTypeSetting>( rb_val(pNd) ); }  // type-safe conversion function
 
 struct FTypeSetting {
-   enum { DB=0 };
+   enum { SD=0 };
    std::string d_ftypeName;  // rbtree key
    std::string d_hiliteName;
    colorval_t  d_colors[ to_underlying(ColorTblIdx::VIEW_COLOR_COUNT) ];
@@ -232,7 +232,7 @@ struct FTypeSetting {
 
 STATIC_VAR RbTree *s_FTS_idx;
 STATIC_FXN int Show_FTypeSettings() {
-   if( FTypeSetting::DB ) {                      DBG( "%s+ ----------------------------------------------", __func__ );
+   if( FTypeSetting::SD ) {                      DBG( "%s+ ----------------------------------------------", __func__ );
       rb_traverse( pNd, s_FTS_idx ) {
          const auto pFTS( IdxNodeToFTS( pNd ) ); DBG( "%s  %" PR_BSR "=%" PR_BSR, __func__, BSR(pFTS->ftypeName()), BSR(pFTS->hiliteName()) );
          }                                       DBG( "%s- ----------------------------------------------", __func__ );
@@ -250,12 +250,12 @@ void FTypeSetting::Update() {
       }
 
    w2.cpy( ".eolCommentDelim" );
-   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf.c_str(), "" );     DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
+   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf.c_str(), "" );     SD && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
                                                                           0  && DBG( "%s: w0 %" PR_SIZET ", w1 %" PR_SIZET ", w2 %" PR_SIZET, __func__, w0.len(), w1.len(), w2.len() );
    {
    w2.cpy( ".hilite" );
    char hiliteNmBuf[21];
-   LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf.c_str(), "" );           DB && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
+   LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf.c_str(), "" );           SD && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
    d_hiliteName.assign( hiliteNmBuf );
    }
    {
@@ -276,33 +276,33 @@ void FTypeSetting::Update() {
    for( const auto &c2L : s_color2Lua ) {
       const auto ofs = to_underlying( c2L.ofs );
       w3.cpy( c2L.pLuaName );
-      d_colors[ ofs ] = orVal | LuaCtxt_Edit::Tbl2Int( kybuf.c_str(), c2L.dflt );   DB && DBG( "%s: %s = 0x%02X%s", __func__, kybuf.c_str(), d_colors[ ofs ], d_colors[ ofs ]==c2L.dflt?" (C++dflt)":"" );
+      d_colors[ ofs ] = orVal | LuaCtxt_Edit::Tbl2Int( kybuf.c_str(), c2L.dflt );   SD && DBG( "%s: %s = 0x%02X%s", __func__, kybuf.c_str(), d_colors[ ofs ], d_colors[ ofs ]==c2L.dflt?" (C++dflt)":"" );
       }
    }
 // d_colors[ ColorTblIdx::CXY ] = GenAltHiliteColor( d_colors[ ColorTblIdx::TXT ] );
    }
 
-void InitFTypeSettings() {                                              FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
+void InitFTypeSettings() {                                              FTypeSetting::SD && DBG( "%s+ ----------------------------------------------", __func__ );
    STATIC_VAR RbCtrl s_FTS_idx_RbCtrl = { AllocNZ_, Free_, };
-   s_FTS_idx = rb_alloc_tree( &s_FTS_idx_RbCtrl );                      FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
+   s_FTS_idx = rb_alloc_tree( &s_FTS_idx_RbCtrl );                      FTypeSetting::SD && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
-STATIC_FXN void DeleteFTS( void *pData, void *pExtra ) {                FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
+STATIC_FXN void DeleteFTS( void *pData, void *pExtra ) {                FTypeSetting::SD && DBG( "%s+ ----------------------------------------------", __func__ );
    auto pFTS( static_cast<PFTypeSetting>(pData) );
-   delete pFTS;                                                         FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
+   delete pFTS;                                                         FTypeSetting::SD && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
 void CloseFTypeSettings() {
    rb_dealloc_treev( s_FTS_idx, nullptr, DeleteFTS );
    }
 
-STATIC_FXN PCFTypeSetting Get_FTypeSetting( stref ftype ) {             FTypeSetting::DB && DBG( "%s+ ---------------------------------------------- PROBING [%" PR_BSR "]", __func__, BSR(ftype) );
+STATIC_FXN PCFTypeSetting Get_FTypeSetting( stref ftype ) {             FTypeSetting::SD && DBG( "%s+ ---------------------------------------------- PROBING [%" PR_BSR "]", __func__, BSR(ftype) );
    int equal;
    auto pNd( rb_find_gte_sri( &equal, s_FTS_idx, ftype ) );
-   if( equal ) {                                                        FTypeSetting::DB && DBG( "%s FOUND [%" PR_BSR "]", __func__, BSR(ftype) );
+   if( equal ) {                                                        FTypeSetting::SD && DBG( "%s FOUND [%" PR_BSR "]", __func__, BSR(ftype) );
       return IdxNodeToFTS( pNd );
       }
-   auto pNew( new FTypeSetting( ftype ) );                              FTypeSetting::DB && DBG( "%s CREATING [%" PR_BSR "]", __func__, BSR(ftype) );
+   auto pNew( new FTypeSetting( ftype ) );                              FTypeSetting::SD && DBG( "%s CREATING [%" PR_BSR "]", __func__, BSR(ftype) );
    rb_insert_before( s_FTS_idx, pNd, pNew->d_ftypeName.c_str(), pNew );
    return pNew;
    }
@@ -313,11 +313,11 @@ void FBUF::SetFType() {
       }
    }
 
-void Reread_FTypeSettings() {                                           FTypeSetting::DB && DBG( "%s+ ----------------------------------------------", __func__ );
+void Reread_FTypeSettings() {                                           FTypeSetting::SD && DBG( "%s+ ----------------------------------------------", __func__ );
    rb_traverse( pNd, s_FTS_idx ) {
-      const auto pFTS( IdxNodeToFTS( pNd ) );                           FTypeSetting::DB && DBG( "%s  [%" PR_BSR "]", __func__, BSR(pFTS->ftypeName()) );
+      const auto pFTS( IdxNodeToFTS( pNd ) );                           FTypeSetting::SD && DBG( "%s  [%" PR_BSR "]", __func__, BSR(pFTS->ftypeName()) );
       pFTS->Update();
-      }                                                                 FTypeSetting::DB && DBG( "%s- ----------------------------------------------", __func__ );
+      }                                                                 FTypeSetting::SD && DBG( "%s- ----------------------------------------------", __func__ );
    }
 
 colorval_t View::ColorIdxToColorval( ColorTblIdx cti ) const {
@@ -569,22 +569,22 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
    PrimeRefresh();                                                                                           // DBG_HL_EVENT && DBG( "WUC='%s'", wuc );
    }
 
-stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) { enum { DB=0 };
+stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) { enum { SD=0 };
    const auto yCursor( cursor->lin );
    const auto xCursor( cursor->col );
    const auto rl( pFBuf->PeekRawLine( yCursor ) );
-   if( !rl.empty() ) {                                              DB && DBG( "newln=%" PR_BSR, BSR(rl) );
+   if( !rl.empty() ) {                                              SD && DBG( "newln=%" PR_BSR, BSR(rl) );
       IdxCol_cached conv( pFBuf->TabWidth(), rl );   // abc   abc
       if( xCursor < conv.cols() ) {
          const auto ixC( conv.c2ci( xCursor ) );
          if( isWordChar( rl[ixC] ) ) {
             const auto ixFirst   ( IdxFirstHJCh     ( rl, ixC ) );
-            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  DB && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
+            const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  SD && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
             const auto xMin( conv.i2c( ixFirst      ) );
-            const auto xMax( conv.i2c( ixPastLast-1 ) );            DB && DBG( "x[%d..%d]", xMin, xMax );
+            const auto xMax( conv.i2c( ixPastLast-1 ) );            SD && DBG( "x[%d..%d]", xMin, xMax );
             const auto wordCols ( xMax - xMin + 1 );
             // this degree of paranoia only matters if the definition of a WORD includes a tab
-            const auto wordChars( ixPastLast - ixFirst );           DB && wordCols != wordChars && DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars );
+            const auto wordChars( ixPastLast - ixFirst );           SD && wordCols != wordChars && DBG( "%s wordCols=%d != wordChars=%" PR_PTRDIFFT, __func__, wordCols, wordChars );
             // return everything
             cursor->col = xMin;
             return stref( rl.data() + ixFirst, wordChars );
@@ -1834,10 +1834,10 @@ public:
    PCChar Name() const override { return "Bash_Comment"; }
    };
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, int nest ) { enum { SD=DBBASH };
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
-      for( const auto rl=pFile->PeekRawLine( pt.lin ) ; pt.col < rl.length() ; ++pt.col ) {  DB && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col );
+      for( const auto rl=pFile->PeekRawLine( pt.lin ) ; pt.col < rl.length() ; ++pt.col ) {  SD && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col );
          switch( rl[pt.col] ) {
             default:      break;
             case chQuot1: ++pt.col; return in_1Qstr;
@@ -1852,20 +1852,20 @@ NEXT_LINE: ;
    }
 
 #define def_find_end_str_nest( class, pri, sec ) \
-class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { enum { DB=DBBASH };                                                     \
-   const auto start( pt );                                                         DB && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
+class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { enum { SD=DBBASH };                                                     \
+   const auto start( pt );                                                         SD && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {                                                                                        \
-      for( const auto rl=pFile->PeekRawLine( pt.lin ) ; pt.col < rl.length() ; ++pt.col ) {  DB && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col ); \
+      for( const auto rl=pFile->PeekRawLine( pt.lin ) ; pt.col < rl.length() ; ++pt.col ) {  SD && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col ); \
          switch( rl[pt.col] ) {                                                                                                                       \
             default:      break;                                                                                                                      \
             case chESC:   ++pt.col; /* skip escaped char */ break;                                                                                    \
             case sec:     ++pt.col;                                                                                                                   \
-                          find_end_ ## sec( pFile, pt, nest+1 );                   DB && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
+                          find_end_ ## sec( pFile, pt, nest+1 );                   SD && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
                           --pt.col; /* compensate for ++pt.col in 3d for clause */                                                                    \
                           break;                                                                                                                      \
             case pri:     if( 0==nest ) {                                                                                                             \
                              add_litstr( start.lin, start.col, pt.lin, pt.col-1 );                                                                    \
-                             }                                                     DB && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
+                             }                                                     SD && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
                           ++pt.col;                                                                                                                   \
                           return in_code;                                                                                                             \
             }                                                                                                                                         \
@@ -2064,17 +2064,17 @@ STIL int ShowHilite( const HiLiteRec &hl, PCChar str ) {
    return 1;
    }
 
-const HiLiteRec *ViewHiLites::FirstHiLiteAtOrAfter( LINE yLine ) const { enum {DB=0}; DB && DBG( "FHAoA+ %d", yLine );
-   for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpeedTable.size() ; ++idx ) {  DB && DBG( "1NZ[%d] = %p", idx, d_SpeedTable[ idx ] );
-      if( d_SpeedTable[ idx ] ) {                                                   DB && DBG( "1NZ=%d", idx );
+const HiLiteRec *ViewHiLites::FirstHiLiteAtOrAfter( LINE yLine ) const { enum {SD=0}; SD && DBG( "FHAoA+ %d", yLine );
+   for( auto idx(SpeedTableIndex( yLine )) ; idx < d_SpeedTable.size() ; ++idx ) {  SD && DBG( "1NZ[%d] = %p", idx, d_SpeedTable[ idx ] );
+      if( d_SpeedTable[ idx ] ) {                                                   SD && DBG( "1NZ=%d", idx );
          for( auto pHL=d_SpeedTable[ idx ]; pHL ; pHL=DLINK_NEXT( pHL, dlink ) ) {
-            if( yLine <= pHL->rect.flMax.lin ) {                                    DB && ShowHilite( *pHL, "FHAoA-" );
+            if( yLine <= pHL->rect.flMax.lin ) {                                    SD && ShowHilite( *pHL, "FHAoA-" );
                return pHL;
                }
             }
          break;
          }
-      }                                                                             DB && DBG( "FHAoA-" );
+      }                                                                             SD && DBG( "FHAoA-" );
    return nullptr;
    }
 
@@ -3437,22 +3437,22 @@ void Win::GetLineForDisplay
 //
 //   ViewList manipulations    ViewList manipulations    ViewList manipulations
 //
-PView FBUF::PutFocusOnView() { enum{ DD=0 };
+PView FBUF::PutFocusOnView() { enum{ SD=0 };
    // if there is a View associated with this FBUF in the current Window's View list,
    // move it to the head of that list.  Else, create a new View.
    //
-   DD&&DBG("%s(%s)", __func__, Name() );
+   SD&&DBG("%s(%s)", __func__, Name() );
    PView myView( nullptr );
    {
    PView pNxtView;
    auto &cvwHd( g_CurViewHd() );
    DLINK_FIRST_TO_LAST( cvwHd, d_dlinkViewsOfWindow, myView, pNxtView ) { // remove(), push_front()
-      if( myView->FBuf() == this ) { DD&&DBG("%s(%s) found", __func__, Name() );
+      if( myView->FBuf() == this ) { SD&&DBG("%s(%s) found", __func__, Name() );
          DLINK_REMOVE( cvwHd, myView, d_dlinkViewsOfWindow );
          break;
          }
       }
-   if( !myView ) { DD&&DBG("%s(%s) not found, creating", __func__, Name() ); // a View for this was not found?  Create and insert at head
+   if( !myView ) { SD&&DBG("%s(%s) not found, creating", __func__, Name() ); // a View for this was not found?  Create and insert at head
       myView = new View( this, g_CurWinWr() );
       }
    DLINK_INSERT_FIRST( cvwHd, myView, d_dlinkViewsOfWindow );
