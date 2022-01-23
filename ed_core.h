@@ -1158,7 +1158,7 @@ public:
 private:
    FileStat       d_LastFileStat;
    void           SetLastFileStatFromDisk();
-   enum DiskFileVsFbufStatus { DISKFILE_NO_EXIST, DISKFILE_NEWERTHAN_FBUF, DISKFILE_SAME_AS_FBUF, DISKFILE_OLDERTHAN_FBUF };
+   enum class DiskFileVsFbufStatus { DISKFILE_NO_EXIST, DISKFILE_NEWERTHAN_FBUF, DISKFILE_SAME_AS_FBUF, DISKFILE_OLDERTHAN_FBUF };
    DiskFileVsFbufStatus checkDiskFileStatus() const;
    PView          PutFocusOnView();
    bool           FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently );

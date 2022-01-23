@@ -308,6 +308,7 @@ FileStat GetFileStat( PCChar pszFilename ) { enum { SD=0 };
    }
 
 FBUF::DiskFileVsFbufStatus FBUF::checkDiskFileStatus() const {
+   using enum DiskFileVsFbufStatus;
    if( !FnmIsDiskWritable() )          { return DISKFILE_SAME_AS_FBUF; }
    const auto pName( Name() );
    if( HasWildcard( pName ) )          { return DISKFILE_SAME_AS_FBUF; }
@@ -334,6 +335,7 @@ bool ARG::silentUpdate() {
 bool FBUF::UpdateFromDisk( bool fPromptBeforeRefreshing ) { // Returns true iff file changed, false if not
    auto why( "newer" );
    switch( checkDiskFileStatus() ) {
+    using enum DiskFileVsFbufStatus;
     default:                      return false;
     case DISKFILE_SAME_AS_FBUF:   return false;
     case DISKFILE_NO_EXIST:       return Msg( "File has been deleted" );

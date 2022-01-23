@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -526,11 +526,11 @@ STATIC_VAR PCMD s_Key2CmdTbl[] = // use this so assert @ end of initializer will
 
 static_assert( ELEMENTS( s_Key2CmdTbl ) == EdKC_COUNT, "ELEMENTS( s_Key2CmdTbl ) == EdKC_COUNT" );
 
-int BindKeyToCMD( stref pszCmdName, stref pszKeyName ) {
-   const auto edKC( EdkcOfKeyNm( pszKeyName ) ); if( !edKC ) { return SetKeyRV_BADKEY; }
-   const auto pCmd( CmdFromName( pszCmdName ) ); if( !pCmd ) { return SetKeyRV_BADCMD; }
+SetKeyRV BindKeyToCMD( stref cmdName, stref keyName ) {
+   const auto edKC( EdkcOfKeyNm( keyName ) ); if( !edKC ) { return SetKeyRV::SetKeyRV_BADKEY; }
+   const auto pCmd( CmdFromName( cmdName ) ); if( !pCmd ) { return SetKeyRV::SetKeyRV_BADCMD; }
    s_Key2CmdTbl[ edKC ] = pCmd;
-   return SetKeyRV_OK;
+   return SetKeyRV::SetKeyRV_OK;
    }
 
 void AssignSubstituteCmd( PCMD pOldCmd, PCMD pNewCmd ) {
@@ -817,7 +817,7 @@ void WalkAllCMDs( void *pCtxt, CmdVisit visit ) { 0 && DBG( "%s+", __func__ );
 
 #include "my_fio.h"
 
-enum { SEEN = 1<<31 };
+constexpr uint32_t SEEN = 1 << 31;
 
 STATIC_FXN void sv_idx( PCCMD pCmd, void *pCtxt ) {
    auto ofh( static_cast<FILE *>(pCtxt) );

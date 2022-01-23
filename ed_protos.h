@@ -318,8 +318,8 @@ extern   bool  AssignStrOk_( stref src, CPCChar __function__ );
 extern   bool  TruncComment_AssignStrOk_( stref src, CPCChar caller );
 extern   bool  DefineMacro( stref pszMacroName, stref pszMacroCode );
 extern   void  FreeAllMacroDefs();
-enum { SetKeyRV_OK, SetKeyRV_BADKEY, SetKeyRV_BADCMD };
-extern   int   BindKeyToCMD( stref pszCmdName, stref pszKeyName );
+enum class SetKeyRV { SetKeyRV_OK, SetKeyRV_BADKEY, SetKeyRV_BADCMD };
+extern   SetKeyRV BindKeyToCMD( stref cmdName, stref keyName );
 
 extern   void  UnbindMacrosFromKeys();
 extern   void  AssignShowKeyAssignment( const CMD &Cmd, PFBUF pFBufToWrite, std::string &tmp1, std::string &tmp2 );

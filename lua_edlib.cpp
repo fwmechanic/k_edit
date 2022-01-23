@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -74,7 +74,7 @@ namespace LExFx { // exported functions
    STATIC_FXN int l_AssignStrOk( lua_State *L )      { R_bool( ::AssignStrOk( S_(1) ) ); }
    STATIC_FXN int PushVariableMacro( lua_State *L )  { R_bool( ::PushVariableMacro( S_(1) ) ); }
    STATIC_FXN int CmdIdxAddLuaFunc( lua_State *L )   { ::CmdIdxAddLuaFunc( S_(1), fn_runLua(), I_(2)  _AHELP( S_(3) ) ); RZ; }
-   STATIC_FXN int BindKeyToCMD( lua_State *L )       { R_bool( ::BindKeyToCMD( S_(1), S_(2) ) ); }
+   STATIC_FXN int BindKeyToCMD( lua_State *L )       { R_bool( SetKeyRV::SetKeyRV_OK == ::BindKeyToCMD( S_(1), S_(2) ) ); }
    STATIC_FXN int fExecute( lua_State *L )           { R_bool( ::fExecute( S_(1) ) ); }
    STATIC_FXN int fChangeFile( lua_State *L )        { R_bool( ::fChangeFile( S_(1), true ) ); }
    STATIC_FXN int DBG( lua_State *L )                { ::DBG( "%s", S_(1) ); RZ; }

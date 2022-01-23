@@ -1,5 +1,5 @@
 //
-// Copyright 2015-2021 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
+// Copyright 2015-2022 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
 //
 // This file is part of K.
 //
@@ -66,8 +66,8 @@ bool AssignStrOk_( stref src, CPCChar caller ) { enum {SD=0};   SD && DBG( "%s 0
       auto rv( SetSwitch( name, src ) );                        SD && DBG( "SetSwitch(%" PR_BSR ")->%" PR_BSR " %s", BSR(name), BSR(src), rv?"true":"false" );
       return rv;
       }
-   const auto BK_rv( BindKeyToCMD( name, src ) );
-   switch( BK_rv ) {
+   switch( BindKeyToCMD( name, src ) ) {
+      using enum SetKeyRV;
       case SetKeyRV_OK    :                                     SD && DBG( "key %" PR_BSR " ->CMD %" PR_BSR, BSR(src), BSR(name) );
                             return true;
       case SetKeyRV_BADKEY: return Msg( "%" PR_BSR " is an unknown key", BSR(src) );
@@ -125,7 +125,7 @@ bool ARG::RunMacro() { 0 && DBG( "%s '%s':='%s'", __func__, CmdName(), d_pCmd->d
 
 namespace Interpreter {
    enum { MAX_MACRO_NESTING = 32 };  // allowing infinite nesting is not a service to the programmer...
-   STATIC_VAR  int                   s_ixPastTOS;
+   STATIC_VAR  int  s_ixPastTOS;
    class MacroRuntimeStkEntry {
       std::string d_macroText; // a _copy_ since it's possible for the macro value to be changed while the macro is running...
       PCChar d_pCurTxt;
@@ -170,10 +170,10 @@ namespace Interpreter {
          d_insideQuot2dString = false;
          Advance();
          }
-      enum eGot { Exhausted=0, GotLitCh, GotToken };
+      enum class eGot { Exhausted=0, GotLitCh, GotToken };
       eGot GetNextToken( std::string &dest ) {  0 && DBG("GetNxtTok+    %X '%s'",d_runFlags,d_pCurTxt);
          if( '\0' == d_pCurTxt[0] ) {           0 && DBG("GetNxtTok-    %X Exhausted",d_runFlags);
-            return Exhausted;
+            return eGot::Exhausted;
             }
          eGot rv;
          if( d_insideQuot2dString ) {
@@ -194,20 +194,20 @@ namespace Interpreter {
             #endif
                             0 && fEscaped && DBG( "ESCAPED '%c' !!!", d_pCurTxt[0] );  // stest:= "1 "" 2"""    " this is a test "
             dest.assign( 1, *d_pCurTxt++ );
-            rv = GotLitCh;
+            rv = eGot::GotLitCh;
             }
          else {
             while( '<' == d_pCurTxt[0] ) { // skip any Prompt Directive tokens
                d_pCurTxt = StrPastAnyBlanks( StrToNextBlankOrEos( d_pCurTxt ) );
                }
             if( '\0' == d_pCurTxt[0] ) {   0 && DBG("GetNxtTok-    %X Exhausted",d_runFlags);
-               return Exhausted;
+               return eGot::Exhausted;
                }
             const auto pPastEndOfToken( StrToNextBlankOrEos( d_pCurTxt ) );
             dest.assign( d_pCurTxt, pPastEndOfToken - d_pCurTxt );
             d_pCurTxt = pPastEndOfToken;
-            rv = GotToken;
-            }                              0 && DBG("GetNxtTok-%s %X '%s'",rv==GotToken?"tok":"lit",d_runFlags,dest.c_str());
+            rv = eGot::GotToken;
+            }                              0 && DBG("GetNxtTok-%s %X '%s'",rv==eGot::GotToken?"tok":"lit",d_runFlags,dest.c_str());
          Advance();
          return rv;
          }
@@ -226,9 +226,9 @@ namespace Interpreter {
          // if !rv, NO matching branch label was found!
          // pszBranchToken[0] = ':';     // pszBranchToken[0] is branch prefix char [=+-]; change to label-DEFINITION prefix
          d_pCurTxt = d_macroText.c_str();  // start from beginning
-         std::string token;  eGot got;
-         while( Exhausted != (got=GetNextToken( token )) ) {
-            if( GotToken==got && (':'==token[0]) && cmpi( pszBranchToken[1], token[1] ) == 0 ) {
+         std::string token; eGot got;
+         while( eGot::Exhausted != (got=GetNextToken( token )) ) {
+            if( eGot::GotToken==got && (':'==token[0]) && cmpi( pszBranchToken[1], token[1] ) == 0 ) {
                return true;
                }
             }
@@ -377,12 +377,12 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
    auto &tos( TOS() );
    std::string token;
    MacroRuntimeStkEntry::eGot got;
-   while( MacroRuntimeStkEntry::Exhausted != (got=tos.GetNextToken( token )) ) {
+   while( MacroRuntimeStkEntry::eGot::Exhausted != (got=tos.GetNextToken( token )) ) {
       if( ExecutionHaltRequested() ) {              // testme:= popd popd
          CleanupPendingMacroStream();
          return nullptr;
          }
-      if( MacroRuntimeStkEntry::GotLitCh==got ) {            0 && DBG( "%s LIT '%c'", __func__, token[0] );
+      if( MacroRuntimeStkEntry::eGot::GotLitCh==got ) {            0 && DBG( "%s LIT '%c'", __func__, token[0] );
          STATIC_VAR CMD macro_graphic = { .d_name="macro_graphic", .d_func=&ARG::graphic, .d_GTS_fxn=&GTS::graphic };
          macro_graphic.d_argData.eka.Ascii    = token[0];
          macro_graphic.d_argData.eka.EdKcEnum = token[0];
