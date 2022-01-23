@@ -115,7 +115,7 @@ static stref tagFromLine( stref line ) {
    }
 
 static bool srIsDunder( stref sr ) {
-   return sr.length() > 4 && starts_with(sr, "__") && ends_with(sr, "__");
+   return sr.length() > 4 && sr.starts_with("__") && sr.ends_with("__");
    }
 
 /*
@@ -201,7 +201,7 @@ int FindMatchingTagsLines(
          }
       stref line;  // set by tfrdr.getline()
       TxtFileLineReader tfrdr( ifh, line );
-      if( starts_with( src, "\t" ) ) { // linear scan returning all files of file tags
+      if( src.starts_with( "\t" ) ) { // linear scan returning all files of file tags
          // If src starts with '\t' (src is therefore an invalid tag), we will
          // return tag[1] (tag.fnm) of all tag records matching this field.  NB:
          // src must NOT contain a trailing '\t' character; this is supplied

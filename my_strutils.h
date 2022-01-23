@@ -240,14 +240,6 @@ extern   void  StrUnDoubleBackslashes( PChar pszString );
 
 STIL   bool  StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
 
-// C++17 std::string_view omits these boost::string_ref methods (arrrgh!)
-STIL bool starts_with(const stref haystack, const stref needle) {
-   return needle.size() <= haystack.size() && (needle == haystack.substr(0                              , needle.size()));
-   }
-STIL bool ends_with(const stref haystack, const stref needle) {
-   return needle.size() <= haystack.size() && (needle == haystack.substr(haystack.size() - needle.size(), needle.size()));
-   }
-
 STIL bool eq( stref s1, stref s2 ) {
    return s1 == s2;
    }

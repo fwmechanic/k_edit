@@ -137,7 +137,7 @@ STATIC_FXN void InitNewView_File( PChar viewPersistentText ) {
       }
    else {
      #if !defined(_WIN32)
-      if( starts_with( fnm, "/tmp/" ) && !FileAttribs( vp.filename ).Exists() ) {
+      if( fnm.starts_with( "/tmp/" ) && !FileAttribs( vp.filename ).Exists() ) {
          return;
          }
      #endif

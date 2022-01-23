@@ -71,7 +71,7 @@ STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, CPCChar *pC, size_t element
    }
 
 STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"
-   if( !(starts_with( pszName, "<win" ) && ends_with( pszName, ">" )) ) {
+   if( !(pszName.starts_with( "<win" ) && pszName.ends_with( ">" )) ) {
       return -1;
       }
    const auto numst( pszName.substr( 4, pszName.length()-4-1 ) );

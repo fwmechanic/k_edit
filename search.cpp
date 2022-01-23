@@ -1501,7 +1501,7 @@ void SearchSpecifier::CaseUpdt() {
    }
 
 SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex) {
-   d_fNegateMatch = starts_with( rawSrc, "!!" );
+   d_fNegateMatch = rawSrc.starts_with( "!!" );
    if( d_fNegateMatch ) {
       rawSrc.remove_prefix( 2 );
       }
@@ -2368,7 +2368,7 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
    {
    const stref srgp( "*GREP* " );
    auto rl( fb->PeekRawLine( 0 ) );
-   if( !starts_with( rl, srgp ) )      { goto FAIL; }
+   if( !rl.starts_with( srgp ) )       { goto FAIL; }
    rl.remove_prefix( srgp.length() );
    if( IsStringBlank( rl ) )           { goto FAIL; }
    dest.assign( unquote( rl ) );
@@ -2376,7 +2376,7 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
    auto iy(1);
    for( ; iy <= fb->LastLine() ; ++iy ) {
       auto rl( fb->PeekRawLine( iy ) );                    0 && DBG("[%d] %s' line=%" PR_BSR "'",iy, fb->Name(), BSR(rl) );
-      if( !starts_with( rl, "<grep." ) ) { break; }
+      if( !rl.starts_with( "<grep." ) ) { break; }
       }                                                    0 && DBG( "%s: %s final=[%d] '%s'", __func__, fb->Name(), iy, dest.c_str() );
    *pGrepHdrLines = iy;
    return dest.c_str();
