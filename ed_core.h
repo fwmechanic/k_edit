@@ -1222,13 +1222,10 @@ public:
                      }
    stref          PeekRawLineSeg( LINE yLine, COL xMinIncl, COL xMaxIncl=COL_MAX ) const; // returns RAW line content BY REFERENCE
                // Dup*: when an actual copy is needed:
-   void           DupRawLine( std::string &dest, LINE yLine ) const {
-                     const auto rv( PeekRawLine( yLine ) );
-                     dest.assign( rv.data(), rv.length() );
-                     }
-   void           DupLineTabs2Spcs      ( std::string &dest, LINE yLine ) const;
-   void           DupLineSeg            ( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const;
-   void           DupLineForInsert      ( std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
+   void           DupRawLine      ( std::string &dest, LINE yLine ) const { dest.assign( PeekRawLine( yLine ) ); }
+   void           DupLineTabs2Spcs( std::string &dest, LINE yLine ) const;
+   void           DupLineSeg      ( std::string &dest, LINE yLine, COL xMinIncl, COL xMaxIncl ) const;
+   void           DupLineForInsert( std::string &dest, LINE yLine, COL xIns , COL insertCols ) const;
    //************ PutLine
 public:
    void           PutLineRaw( LINE yLine, stref srSrc ); // same as Entab() == ENTAB_0_NO_CONV, requires no std::string &scratch buffer

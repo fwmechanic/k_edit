@@ -1508,7 +1508,7 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    }
 
 void FBUF::ChangeName( stref newName ) { 0 && DBG( "%s %" PR_BSR "'", __func__, BSR(newName) );
-   d_filename.assign( newName.data(), newName.length() ); // THE ONLY PLACE where FBUF::d_filename is changed!!!
+   d_filename.assign( newName ); // THE ONLY PLACE where FBUF::d_filename is changed!!!
    d_fFnmDiskWritable = ::Path::IsLegalFnm( Name() );
    }
 

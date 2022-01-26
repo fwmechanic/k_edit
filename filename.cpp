@@ -140,9 +140,9 @@ Path::str_t Path::Union( stref s1, stref s2 ) { enum { SD=0 };
       }
    Path::str_t rv;
    rv.reserve( dir.length() + fnm.length() + ext.length() + 1 );
-   rv.append( dir.data(), dir.length() );
-   rv.append( fnm.data(), fnm.length() );
-   rv.append( ext.data(), ext.length() );
+   rv.append( dir );
+   rv.append( fnm );
+   rv.append( ext );
    // following code was once commented out since this code
    //   converts "path\*." into "path\*", and "path\*" is equiv to "path\*.*",
    //   while "path\*." matches only extension-less files, which is sometimes

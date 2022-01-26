@@ -314,7 +314,7 @@ void TermNulleow( std::string &st ) {
 //     structured binding syntax (which is low-ceremony to write and understand).
 //     ref: see various implementations of ARG::longline
 // BUT (calling) CursorFuncPeekSelnS codegen is smaller than
-//     (calling)  CursorFuncPeekSeln codegen
+//     (calling) CursorFuncPeekSeln  codegen
 // which appears to mean that returning a struct (subject to copy elision), even
 // when that struct is "unpacked" via structured binding, is more efficient than
 // returning a same-data tuple which is identically "unpacked" via structured
@@ -397,7 +397,7 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
          if( !wuc.empty() ) {
             d_argType       = TEXTARG;
             d_textarg.ulc   = Cursor;
-            TextArgBuffer().assign( wuc.data(), wuc.length() );
+            TextArgBuffer().assign( wuc );
             d_textarg.pText = TextArgBuffer().c_str();                                        SD && DBG( "NOARGWUC='%s'", d_textarg.pText );
             return false; //==================================================================
             }
@@ -509,7 +509,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
       src.remove_prefix( FirstNonBlankOrEnd( src, 0 ) );
       if( !src.empty() ) {
          if( !dest.empty() ) { dest.append( " " ); }
-         dest.append( src.data(), src.length() ); // <-- could be replaced by multi-blank-eater
+         dest.append( src ); // <-- could be replaced by multi-blank-eater
          rmv_trail_blanks( dest );
          }
       };
@@ -1548,7 +1548,7 @@ bool ARG::execute() {
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {
                             aw.buf_erase( StrToNextMacroTermOrEos( aw.c_str() ) - aw.c_str() );  0 && DBG( "2: '%" PR_BSR "'", BSR( aw.lineref() ) );
-                            dest.append( aw.lineref().data(), aw.lineref().length() );
+                            dest.append( aw.lineref() );
                             dest.append( " " );
                             }
                          }

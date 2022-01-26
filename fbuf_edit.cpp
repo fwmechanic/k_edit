@@ -283,8 +283,8 @@ void FBUF::cat( PCChar pszNewLineData ) {  // used by Lua's method of same name
       if( first && !ln.empty() ) {
          const auto rl( PeekRawLine( LastLine() ) );
          std::string lbuf; lbuf.reserve( rl.length() + ln.length() );
-         lbuf.assign( rl.data(), rl.length() );
-         lbuf.append( ln.data(), ln.length() );
+         lbuf.assign( rl );
+         lbuf.append( ln );
          PutLineRaw( LastLine(), lbuf );
          }
       else {

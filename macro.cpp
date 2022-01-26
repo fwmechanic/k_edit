@@ -163,7 +163,7 @@ namespace Interpreter {
       void   CtorStringLiteral( stref src, int macroFlags ) {
          d_macroText.reserve( src.length() + 2 );
          d_macroText.assign( "\"" );
-         d_macroText.append( src.data(), src.length() );
+         d_macroText.append( src );
          d_macroText.append( "\"" );
          d_pCurTxt = d_macroText.c_str();
          d_runFlags = macroFlags;
