@@ -83,8 +83,11 @@ STIL     bool IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedByReco
 
 extern   void ClearArgAndSelection();
 extern   void ExtendSelectionHilite( const Point &pt );
+
+// CursorFuncPeekSeln & CursorFuncPeekSelnS are equiv fxns w/different return-value mechanisms
+// see ARG::longline() for point-of-call examples & discussion
 extern   std::tuple<bool,LINE,LINE,COL,COL> CursorFuncPeekSeln();
-         struct TCursorFuncPeekSeln { bool selnActive; LINE yMin, yMax; COL xMin, xMax; };
+struct   TCursorFuncPeekSeln { bool selnActive; LINE yMin, yMax; COL xMin, xMax; }; // analog to 'std::tuple<bool,LINE,LINE,COL,COL>'
 extern   TCursorFuncPeekSeln CursorFuncPeekSelnS();
 
 extern   void TermNulleow( std::string &st );

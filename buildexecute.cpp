@@ -311,8 +311,10 @@ void TermNulleow( std::string &st ) {
    }
 
 // NB: CursorFuncPeekSelnS and CursorFuncPeekSeln can both be CALLED using
-//     structured binding syntax (which is low-ceremony to write and understand).
+//     structured binding syntax (which is low-ceremony to write and understand)
+//     to collect return values.
 //     ref: see various implementations of ARG::longline
+//
 // BUT (calling) CursorFuncPeekSelnS codegen is smaller than
 //     (calling) CursorFuncPeekSeln  codegen
 // which appears to mean that returning a struct (subject to copy elision), even
@@ -325,10 +327,16 @@ void TermNulleow( std::string &st ) {
 // definition (in different files) is noisier (I can't say "more error prone"
 // because any mismatch in the tuple defs will cause a compile-time error)).
 //
-// The struct-return approach will improve when I fully adopt C++20 because at
-// that time 'designated initializers' will be in-scope (they effectively already
-// are due to GCC supporting designated initializers even in C++ effectively
-// forever...), allowing clear matching of return values with their assigned fields.
+// The struct-return approach leverages of C++20-new 'designated initializers'
+// to achieve self-documentation by naming each returned field.
+//
+// When possible returning a struct (leveraging RVO) is IMO preferable.
+// Returning tuples instead (only?) makes sense when templates are in play (i.e.
+// when types are not fixed), yet defining new struct types via template
+// expansions is normal.  So for example MinMax (template function) might define
+// a return-value struct type as part of its (template) expansion, and the
+// current example demonstrates that such a change would not preclude receiving
+// the returned values via structured binding.
 //
 // 20220102
 //
@@ -337,10 +345,10 @@ TCursorFuncPeekSeln CursorFuncPeekSelnS() { // intended use: selection-smart CUR
    if( Get_g_ArgCount() > 0 ) {
       const auto [xmin,xmax] = MinMax( s_SelAnchor.col, Cursor.col );
       const auto [ymin,ymax] = MinMax( s_SelAnchor.lin, Cursor.lin );
-      return { .selnActive=true, .yMin=ymin, .yMax=ymax, .xMin=xmin, .xMax=xmax }; // use designated initializers
+      return { .selnActive=true , .yMin=ymin      , .yMax=ymax      , .xMin=xmin      , .xMax=xmax       };
       }
    else {
-      return { false, Cursor.lin, Cursor.lin, Cursor.col, Cursor.col }; // don't use designated initializers: field order dependent init...
+      return { .selnActive=false, .yMin=Cursor.lin, .yMax=Cursor.lin, .xMin=Cursor.col, .xMax=Cursor.col };
       }
    }
 
