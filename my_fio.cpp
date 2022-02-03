@@ -60,7 +60,7 @@ bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int crea
    return fh == -1;
    }
 
-int fio::Read( int fh, PVoid pBuf, size_t bytesToRead ) {
+ssize_t fio::Read( int fh, PVoid pBuf, ssize_t bytesToRead ) {
    auto rv( WL( _read, read )( fh, pBuf, bytesToRead ) );
    if( rv == -1 ) {
        rv = 0;
@@ -68,11 +68,8 @@ int fio::Read( int fh, PVoid pBuf, size_t bytesToRead ) {
    return rv;
    }
 
-int fio::Write( int fh, PCVoid pBuf, size_t bytesToWrite ) {
+ssize_t fio::Write( int fh, PCVoid pBuf, ssize_t bytesToWrite ) {
    auto rv( WL( _write, write )( fh, pBuf, bytesToWrite ) );  0 && DBG( "%s [%d]: %" PR_PTRDIFFT " -> %" WL( "d", "ld" ), __func__, fh, bytesToWrite, rv );
-   if( rv == -1 ) {
-       rv = 0;
-       }
    return rv;
    }
 

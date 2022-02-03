@@ -37,8 +37,8 @@
 #define  DFLT_TEXTFILE_CREATE_MODE  0666
 
 class fio { // could use namespace vs. class but cannot declare private members of namespace
-   STATIC_FXN int Read ( int fh, PVoid  pBuf, size_t bytesToRead  );
-   STATIC_FXN int Write( int fh, PCVoid pBuf, size_t bytesToWrite );
+   STATIC_FXN ssize_t Read ( int fh, PVoid  pBuf, ssize_t bytesToRead  );
+   STATIC_FXN ssize_t Write( int fh, PCVoid pBuf, ssize_t bytesToWrite );
 
 public:
    STATIC_FXN bool     OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int create_mode=0 );
