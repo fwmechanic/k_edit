@@ -408,6 +408,58 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
       int ch1 = getCh();
       if( ch1 == ERR ) { return fCSI ? EdKC_a_LEFT_SQ : EdKC_a_o ; }
 
+      enum { mod_cas= 0          , // used by CAS5, etc.
+             mod_caS= mod_shift  ,
+             mod_cAs= mod_alt    ,
+             mod_Cas= mod_ctrl   ,
+             mod_CaS= mod_ctrl | mod_shift,
+           };
+
+      if( fCSI && ch1 == '[' ) { // CSI [ [A-E]  Linux console F1-F5 (with optional dup-esc prefix for alt+)
+         const auto mod( kbAlt ? mod_alt : 0 );
+         switch( getCh() ) {
+            default : return -1;
+            case 'A': CAS5( f1 );
+            case 'B': CAS5( f2 );
+            case 'C': CAS5( f3 );
+            case 'D': CAS5( f4 );
+            case 'E': CAS5( f5 );
+            }
+         }
+      if( fCSI && (ch1 == '1' || ch1 == '2') ) {  // Linux Console (incl ssh terminal) specific (reversed via ./odkey.sh)
+         const auto ch2 = getCh();
+         const auto endch = getCh();
+         auto mod( kbAlt ? mod_alt : 0 );
+         switch( endch ) {
+            break; case '^': mod |= mod_ctrl;
+            break; case '~':
+            break; default:                          DBG( "CSI %c ? followed by %c ?", ch1, endch );
+                             return -1;
+            }                                        DBG( "--> CSI %c %c (%c)", ch1, ch2, kbAlt?'A':'a' );
+         switch( ch1 ) {
+            case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
+               switch( ch2 ) {
+                  default : return -1;
+                  case '1': CAS5( f1  );
+                  case '2': CAS5( f2  );
+                  case '3': CAS5( f3  );
+                  case '4': CAS5( f4  );
+                  case '5': CAS5( f5  );
+                  case '7': CAS5( f6  );
+                  case '8': CAS5( f7  );
+                  case '9': CAS5( f8  );
+                  }
+            case '2': // CSI 2 [0134]  Linux console [Ctrl+]F[9-12] (with optional dup-esc prefix for alt+)
+               switch( ch2 ) {
+                  default : return -1;
+                  case '0': CAS5( f9  );
+                  case '1': CAS5( f10 );
+                  case '3': CAS5( f11 );
+                  case '4': CAS5( f12 );
+                  }
+            }
+         }
+
       // https://en.wikipedia.org/wiki/ANSI_escape_code
       // "Old versions of Terminator generate `SS3 1 ; modifiers char` when F1-F4 are
       // pressed with modifiers.  The faulty behavior was copied from GNOME Terminal."
@@ -437,12 +489,6 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          }
       auto mod( decode_modch( modch ) );
       if( kbAlt ) mod |= mod_alt;
-      enum { mod_cas= 0          ,
-             mod_caS= mod_shift  ,
-             mod_cAs= mod_alt    ,
-             mod_Cas= mod_ctrl   ,
-             mod_CaS= mod_ctrl | mod_shift,
-           };
       switch (endch) {
          default : return -1;
          case 'A': CAS5( up       ); break;
