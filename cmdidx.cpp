@@ -423,6 +423,19 @@ STATIC_VAR PCMD s_Key2CmdTbl[] = // use this so assert @ end of initializer will
    , IDX_EQ( EdKC_s_esc        )  pCMD_unassigned
    , IDX_EQ( EdKC_s_enter      )  pCMD_emacsnewl
 
+   , IDX_EQ( EdKC_ca_f1        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f2        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f3        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f4        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f5        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f6        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f7        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f8        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f9        )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f10       )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f11       )  pCMD_unassigned
+   , IDX_EQ( EdKC_ca_f12       )  pCMD_unassigned
+
    , IDX_EQ( EdKC_cs_bksp      )  pCMD_unassigned
    , IDX_EQ( EdKC_cs_tab       )  pCMD_unassigned
    , IDX_EQ( EdKC_cs_center    )  pCMD_unassigned

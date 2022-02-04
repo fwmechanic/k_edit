@@ -86,7 +86,7 @@ typedef uint16_t EdKC;
 
 //-----------------------------------------------------------------------------
 
-constexpr int EdKC_Count = 256+272+91
+constexpr int EdKC_Count = 256+272+91+12
 #ifdef fn_argselkeymap
                               + (26*2)
                               + 42
@@ -460,6 +460,19 @@ enum EdKeyCodes
    , EdKC_s_tab
    , EdKC_s_esc
    , EdKC_s_enter
+
+   , EdKC_ca_f1            //------------------ +EdKC_ca_...
+   , EdKC_ca_f2
+   , EdKC_ca_f3
+   , EdKC_ca_f4
+   , EdKC_ca_f5
+   , EdKC_ca_f6
+   , EdKC_ca_f7
+   , EdKC_ca_f8
+   , EdKC_ca_f9
+   , EdKC_ca_f10
+   , EdKC_ca_f11
+   , EdKC_ca_f12
 
    , EdKC_cs_bksp          //------------------ +EdKC_cs_...
    , EdKC_cs_tab

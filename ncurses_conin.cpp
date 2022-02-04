@@ -312,6 +312,17 @@ struct kpto_er {
       default:      return -1;            \
       }
 
+#define CAS6( kynm ) \
+   switch( mod ) { \
+      case mod_cas: return EdKC_##kynm;    \
+      case mod_Cas: return EdKC_c_##kynm;  \
+      case mod_cAs: return EdKC_a_##kynm;  \
+      case mod_caS: return EdKC_s_##kynm;  \
+      case mod_CaS: return EdKC_cs_##kynm; \
+      case mod_CAs: return EdKC_ca_##kynm; \
+      default:      return -1;            \
+      }
+
 // return -1 indicates that event should be ignored (resize event as an example)
 STATIC_FXN int ConGetEvent() {
    const auto ch( getch() );
@@ -413,9 +424,10 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
              mod_cAs= mod_alt    ,
              mod_Cas= mod_ctrl   ,
              mod_CaS= mod_ctrl | mod_shift,
+             mod_CAs= mod_ctrl | mod_alt,
            };
 
-      if( fCSI && ch1 == '[' ) { // CSI [ [A-E]  Linux console F1-F5 (with optional dup-esc prefix for alt+)
+      if( fCSI && ch1 == '[' ) { // CSI [ [A-E]  Linux Console (incl ssh terminal) F1-F5 (with optional dup-esc prefix for alt+)
          const auto mod( kbAlt ? mod_alt : 0 );
          switch( getCh() ) {
             default : return -1;
@@ -440,22 +452,22 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
             case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
                switch( ch2 ) {
                   default : return -1;
-                  case '1': CAS5( f1  );
-                  case '2': CAS5( f2  );
-                  case '3': CAS5( f3  );
-                  case '4': CAS5( f4  );
-                  case '5': CAS5( f5  );
-                  case '7': CAS5( f6  );
-                  case '8': CAS5( f7  );
-                  case '9': CAS5( f8  );
+                  case '1': CAS6( f1  );
+                  case '2': CAS6( f2  );
+                  case '3': CAS6( f3  );
+                  case '4': CAS6( f4  );
+                  case '5': CAS6( f5  );
+                  case '7': CAS6( f6  );
+                  case '8': CAS6( f7  );
+                  case '9': CAS6( f8  );
                   }
             case '2': // CSI 2 [0134]  Linux console [Ctrl+]F[9-12] (with optional dup-esc prefix for alt+)
                switch( ch2 ) {
                   default : return -1;
-                  case '0': CAS5( f9  );
-                  case '1': CAS5( f10 );
-                  case '3': CAS5( f11 );
-                  case '4': CAS5( f12 );
+                  case '0': CAS6( f9  );
+                  case '1': CAS6( f10 );
+                  case '3': CAS6( f11 );
+                  case '4': CAS6( f12 );
                   }
             }
          }
