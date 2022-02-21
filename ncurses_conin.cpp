@@ -438,47 +438,48 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
             case 'E': CAS5( f5 );
             }
          }
-      if( fCSI && (ch1 == '1' || ch1 == '2') ) {  // Linux Console (incl ssh terminal) specific (reversed via ./odkey.sh)
-         const auto ch2 = getCh();
-         const auto endch = getCh();
-         auto mod( kbAlt ? mod_alt : 0 );
-         switch( endch ) {
-            break; case '^': mod |= mod_ctrl;
-            break; case '~':
-            break; default:                          DBG( "CSI %c ? followed by %c ?", ch1, endch );
-                             return -1;
-            }                                        DBG( "--> CSI %c %c (%c)", ch1, ch2, kbAlt?'A':'a' );
-         switch( ch1 ) {
-            case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
-               switch( ch2 ) {
-                  default : return -1;
-                  case '1': CAS6( f1  );
-                  case '2': CAS6( f2  );
-                  case '3': CAS6( f3  );
-                  case '4': CAS6( f4  );
-                  case '5': CAS6( f5  );
-                  case '7': CAS6( f6  );
-                  case '8': CAS6( f7  );
-                  case '9': CAS6( f8  );
-                  }
-            case '2': // CSI 2 [0134]  Linux console [Ctrl+]F[9-12] (with optional dup-esc prefix for alt+)
-               switch( ch2 ) {
-                  default : return -1;
-                  case '0': CAS6( f9  );
-                  case '1': CAS6( f10 );
-                  case '3': CAS6( f11 );
-                  case '4': CAS6( f12 );
-                  }
-            }
-         }
 
       // https://en.wikipedia.org/wiki/ANSI_escape_code
       // "Old versions of Terminator generate `SS3 1 ; modifiers char` when F1-F4 are
       // pressed with modifiers.  The faulty behavior was copied from GNOME Terminal."
 
       auto endch(0);
-      if( /* fCSI && */ ch1 >= '1' && ch1 <= '8' ) { // CSI 1..8
+      if( ch1 >= '1' && ch1 <= '8' ) { // CSI/SS3 1..8
          endch = getCh();
+         if( fCSI && (ch1 == '1' || ch1 == '2') && isalnum(endch) ) {  // Linux Console (incl ssh terminal) specific (reversed via ./odkey.sh)
+            const auto ch2 = endch;
+            endch = getCh();
+            auto mod( kbAlt ? mod_alt : 0 );
+            switch( endch ) {
+               break; case '^': mod |= mod_ctrl;
+               break; case '~':
+               break; default:                          DBG( "CSI %c ? followed by %c ?", ch1, endch );
+                                return -1;
+               }                                        DBG( "--> CSI %c %c (%c)", ch1, ch2, kbAlt?'A':'a' );
+            switch( ch1 ) {
+               case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
+                  switch( ch2 ) {
+                     default : return -1;
+                     case '1': CAS6( f1  );
+                     case '2': CAS6( f2  );
+                     case '3': CAS6( f3  );
+                     case '4': CAS6( f4  );
+                     case '5': CAS6( f5  );
+                     case '7': CAS6( f6  );
+                     case '8': CAS6( f7  );
+                     case '9': CAS6( f8  );
+                     }
+               case '2': // CSI 2 [0134]  Linux console [Ctrl+]F[9-12] (with optional dup-esc prefix for alt+)
+                  switch( ch2 ) {
+                     default : return -1;
+                     case '0': CAS6( f9  );
+                     case '1': CAS6( f10 );
+                     case '3': CAS6( f11 );
+                     case '4': CAS6( f12 );
+                     }
+               }
+            return -1;
+            }
          if( endch == ERR ) { // //[n, not valid
             // TODO, should this be ALT-7 ?
             endch = '\0';
