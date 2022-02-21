@@ -456,7 +456,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
                break; case '~':
                break; default:                          DBG( "CSI %c ? followed by %c ?", ch1, endch );
                                 return -1;
-               }                                        DBG( "--> CSI %c %c (%c)", ch1, ch2, kbAlt?'A':'a' );
+               }                                        DBG( "--> CSI %c %c %c (%c)", ch1, ch2, endch, kbAlt?'A':'a' );
             switch( ch1 ) {
                case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
                   switch( ch2 ) {
