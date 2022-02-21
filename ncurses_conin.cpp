@@ -451,6 +451,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
             endch = getCh();
             auto mod( kbAlt ? mod_alt : 0 );
             switch( endch ) {
+               break; case '$': mod |= mod_shift;
                break; case '^': mod |= mod_ctrl;
                break; case '~':
                break; default:                          DBG( "CSI %c ? followed by %c ?", ch1, endch );
