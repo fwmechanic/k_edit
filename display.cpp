@@ -3107,7 +3107,7 @@ void DirectVidClear() {
    }
 
 void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr ) {
-   if( !(yLine >= 0 && yLine < ScreenLines()) ) { return; }
+   if( !(yLine >= 0 && yLine < ScreenLines() && xCol < ScreenCols()) ) { return; }
    if( xCol < 0 ) {
       sr.remove_prefix( -xCol );
       xCol = 0;

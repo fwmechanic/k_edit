@@ -1288,9 +1288,8 @@ void FBUF::PutLineSeg( const LINE yLine, stref ins, std::string &stmp, std::stri
    //         if !fInsert AND existing chars       to right of xRightIncl
    //         then ins is space padded to fill gap and will NOT terminate string.
    //      else ins is NOT space padded, will terminate string, perhaps to left of xRightIncl
-   if( !fInsert && xLeftIncl == 0 && xRightIncl >= FBOP::LineCols( this, yLine ) ) { // a two-parameter call?
-      DE && DBG( "%s- PutLineEntab(simple) )", __func__ );
-      PutLineEntab( yLine, ins, stmp ); // optimal/trivial line-replace case
+   if( xLeftIncl == 0 && FBOP::LineCols( this, yLine ) <= (fInsert ? 0 : xRightIncl+1) ) { DE && DBG( "%s- PutLineEntab(simple) )", __func__ );
+      PutLineEntab( yLine, ins, stmp );  // optimal/trivial line-replace case; a two-parameter call?
       }
    else { // segment ins/overwrite case
       const sridx holewidth( xRightIncl - xLeftIncl + 1 );
