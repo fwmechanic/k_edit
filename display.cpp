@@ -3106,7 +3106,11 @@ void DirectVidClear() {
    UpdtDisplay();
    }
 
-void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr ) {
+// DirectVidWrStrColorFlush was intended to allow e.g. Lua code to create e.g.
+// popup menus, and assumes that said code will not generate overlaps, thus it
+// doesn't handle partial overlaps (or anything else?) _optimally_.
+void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr ) { enum {DP=0};
+   // input check & normalize
    if( !(yLine >= 0 && yLine < ScreenLines() && xCol < ScreenCols()) ) { return; }
    if( xCol < 0 ) {
       sr.remove_prefix( -xCol );
@@ -3115,12 +3119,14 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr )
    if( sr.empty() ) { return; }
    if( xCol + sr.length() > ScreenCols() ) {
       sr.remove_suffix( (xCol + sr.length()) - ScreenCols() );
+      if( sr.empty() ) { return; }
       }
-   if( sr.empty() ) { return; }
+   // find insertion point and insert (or update-only if possible)
    const Point tgt( yLine, xCol );
    auto it( s_direct_vid_segs.begin() );
    for( ; it != s_direct_vid_segs.end() ; ++it ) {
       if( tgt == it->d_origin && it->d_str.length() == sr.length() ) {
+         // Same-length string exists at target location? Update d_colorval and/or d_str in place
          auto fChanged( false );
          if( it->d_colorval != attr ) {
             it->d_colorval = attr;
@@ -3128,7 +3134,7 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr )
             }
          if( !eq( it->d_str, sr ) ) {
             it->d_str.assign( sr ); // overwrite same-length string with new
-                           0 && DBG( "%s [%" PR_SIZET "]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorval, BSR(it->d_str) );
+                           DP && DBG( "%s [%" PR_SIZET "]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorval, BSR(it->d_str) );
             fChanged = true;
             }
          if( fChanged ) { // mark line dirty
@@ -3137,12 +3143,12 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr )
             }
          return;
          }
-      else if( tgt <= it->d_origin ) {
+      else if( tgt <= it->d_origin ) { // found it to insert in front of
          break;
          }
       }
    const auto new_it( s_direct_vid_segs.emplace( it, tgt, attr, sr ) );
-                           0 && DBG( "%s @[%" PR_SIZET "]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorval, BSR(new_it->d_str) );
+                           DP && DBG( "%s @[%" PR_SIZET "]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorval, BSR(new_it->d_str) );
    s_paScreenLineNeedsRedraw->SetBit( new_it->d_origin.lin );
    UpdtDisplay();
    }
