@@ -24,6 +24,8 @@ module( "Menu", package.seeall )
 -----------------------------------------------------------------------------
 
 local function FgBg( fg, bg ) return _bin.bitor( _bin.shiftl(bg,4), fg ) end
+-- color.fg = color.bg                            (color & 0xF0) | ((color >> 4) & 0xF)
+local function HideFg( color ) return _bin.bitor( _bin.bitand(color,0xF0), _bin.shiftr(color,4) ) end
 
 local Blk=0 Blu=1 Grn=2 Cyn=3 Red=4 Pnk=5 Brn=6 LGry=7 DGry=8 LBlu=9 LGrn=0xA LCyn=0xB LRd=0xC LPnk=0xD Yel=0xE Wht=0xF
 
@@ -38,6 +40,7 @@ local mbg = Pnk
 -- local color_popup = { frame=FgBg(Wht,mbg), header=FgBg(Blk,LGry), normal=FgBg(Wht,mbg), selected=FgBg(Wht,Grn) }
 -- local color_popup = { frame=FgBg(Wht,mbg), header=FgBg(Blk,LGry), normal=FgBg(Wht,mbg), selected=FgBg(Blk,Yel) } -- long-time favorite
    local color_popup = { frame=FgBg(Wht,Grn), header=FgBg(Wht,Red ), normal=FgBg(Wht,Grn), selected=FgBg(Wht,LBlu) } -- for a change, Christmas!
+color_popup.norm_hide = HideFg(color_popup.normal)
 
 local chHbar = "Í"
 local ulc, urc = "É", "»"
@@ -142,14 +145,41 @@ function MenuProto_:frame()
    vid_wrYX(    llc .. bar:sub(1,ac.maxlen)  .. lrc, ac.minY + ac.numVisibleChoices + 1, ac.minX, color )
    end
 
-
+--[[ 20220305 works but probably ultimately suboptimal vs old-impl (see old-impl comments below)
 function MenuProto_:update( curChoice )
    local ac = self.aboutChoices
+   local bx   = ac.minX + 1  -- constant
    local curY = ac.minY + 1
    for ix = ac.minVisibleChoice, ac.minVisibleChoice + ac.numVisibleChoices - 1 do
-      local color, ls, rs = color_popup.normal, "  ", "  "
-      if ix == curChoice then color = color_popup.selected  ls,rs = chevr, chevl end
-      vid_wrYX( ls..self.paddedChoices[ ix ]..rs, curY, ac.minX+1, color )
+      -- broken into 3 vid_wrYX calls per line w/constant chevr text in order
+      -- to leverage dup-text and color-change-only optimizations in vid_wrYX
+      local colorChoice = ix == curChoice and color_popup.selected or color_popup.normal
+      local colorChevr  = ix == curChoice and color_popup.selected or color_popup.norm_hide
+      local text = self.paddedChoices[ ix ]
+      vid_wrYX( chevr           , curY, bx             , colorChevr  )
+      vid_wrYX(       text      , curY, bx+#chevr      , colorChoice )
+      vid_wrYX(            chevl, curY, bx+#chevr+#text, colorChevr  )
+      curY = curY + 1
+      end
+   -- DispRefreshWholeScreenNow()
+   end
+--]]
+
+function MenuProto_:update( curChoice )
+   -- update of old version that minimizes # of vid_wrYX calls
+   -- This is probably optimal as the one vid_wrYX per choice is always the same
+   -- length, with string content and color varying; any such variation will
+   -- cause a vid rewrite of that region.  Few large-region updates are probably
+   -- more efficient than many small-region updates as the above "3 vid_wrYX
+   -- calls per line" impl causes (it also causes 3x s_direct_vid_segs vector
+   -- elements per choice line, vs 1x for this impl).
+   local ac = self.aboutChoices  -- constant
+   local bx   = ac.minX + 1      -- constant
+   local curY = ac.minY + 1
+   for ix = ac.minVisibleChoice, ac.minVisibleChoice + ac.numVisibleChoices - 1 do
+      if ix == curChoice then  vid_wrYX( chevr..self.paddedChoices[ ix ]..chevl, curY, bx, color_popup.selected )
+      else                     vid_wrYX( "  " ..self.paddedChoices[ ix ].. "  ", curY, bx, color_popup.normal   )
+         end
       curY = curY + 1
       end
    -- DispRefreshWholeScreenNow()
