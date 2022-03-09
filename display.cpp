@@ -2729,27 +2729,22 @@ STATIC_FXN void RedrawScreen() {
    ShowDraws( DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom ); )
    const HiLiteRec *pFirstPossibleHiLite(nullptr);
    auto dvsit( s_direct_vid_segs.cbegin() );
-   for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) { ShowDraws( char ch = ' '; )
-      if( s_paScreenLineNeedsRedraw->IsBitSet( yLine ) ) {
-         ShowDraws( ch = '0' + (yLine % 10); )
-         LineColorvals lcvs;
-         { FULL_DB && DBG( "%s y=%d", FUNC, yLine );
+   for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) {     ShowDraws( char ch = ' '; )
+      if( s_paScreenLineNeedsRedraw->IsBitSet( yLine ) ) {  ShowDraws( ch = '0' + (yLine % 10); )  FULL_DB && DBG( "%s y=%d", FUNC, yLine );
          buf.assign( scrnCols, H__ ); //***** initial assumption: this line is a horizontal border ('Í')
+         LineColorvals lcvs;
          lcvs.PutColorval( 0, scrnCols, g_colorWndBorder );
          for( auto ix(0) ; ix < g_WindowCount(); ++ix ) {
             g_Win(ix)->GetLineForDisplay( ix, buf, lcvs, pFirstPossibleHiLite, yLine );
             }
-         }
          for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin <  yLine ; ++dvsit ) {
             }
          for( ; dvsit != s_direct_vid_segs.cend() && dvsit->d_origin.lin == yLine ; ++dvsit ) {
-            buf.replace ( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
+            buf.replace(      dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
             lcvs.PutColorval( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorval );
-            }
-         (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
+            }                                    (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
          VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &lcvs, eFlush::doFlush );
-         }
-      ShowDraws( *pLbf++ = ch; )
+         }                                                  ShowDraws( *pLbf++ = ch; )
       }
    s_paScreenLineNeedsRedraw->ClrAllBits();
    #if SHOW_DRAWS
