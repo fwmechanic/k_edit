@@ -79,30 +79,36 @@ void DbgHilite_( char ch, PCChar func ) {
 */
 
 class LineColorvals {
-   enum { END_MARKER=0, ELEMENTS_=BUFBYTES };  // one simplifying assumption: color==0 is not used (used for EOS)
-   colorval_t d_acv[ ELEMENTS_+1 ];
+   enum { END_MARKER=0 };  // one simplifying assumption: color==0 is not used (used for EOS)
+   typedef std::array<colorval_t,BUFBYTES> acv;
+   acv d_acv;
 public:
-   bool       inRange( int ix ) const { return ix < ELEMENTS(d_acv); }
-   colorval_t colorAt( int ix ) const { return d_acv[ ix ]; }
-   int        cols()            const { return Strlen( PCChar(&d_acv[0]) ); }  // BUGBUG assumes END_MARKER == 0 !
-   LineColorvals( colorval_t initcolor=END_MARKER ) {
-      for( auto &ch : d_acv ) { ch = initcolor; }
-      d_acv[ ELEMENTS_ ] = END_MARKER;
-      }
-   int runLength( int ix ) const {
-      if( !inRange( ix ) ) { return 0; }
+   bool       inRange( acv::size_type ix ) const { return ix < d_acv.size(); }
+   colorval_t colorAt( acv::size_type ix ) const { return d_acv[ ix ]; }
+   acv::size_type cols() const { return std::distance( d_acv.cbegin(), std::find( d_acv.cbegin(), d_acv.cend(), END_MARKER ) ); }
+   LineColorvals() { d_acv.fill( END_MARKER ); }
+   int runLength( acv::size_type ix ) const {
       const auto ix0( ix );
-      const auto color( colorAt( ix ) );
-      for( ++ix ; inRange( ix ) && colorAt( ix ) == color ; ++ix ) {}
+      if( inRange( ix0 ) ) {
+         const auto color0( colorAt( ix0 ) );
+         for( ++ix ; inRange( ix ) && colorAt( ix ) == color0 ; ++ix ) {}
+         }
       return ix - ix0;
       }
-   void PutColorval( int ix, int len, colorval_t color ) {
-      const auto maxIx( ix+len );
-      for( ; ix < maxIx && inRange( ix ) ; ++ix ) {
+   void PutColorval( acv::size_type ix, acv::size_type len, colorval_t color ) {
+      const auto past( std::min( ix+len, d_acv.size() ) );
+      for( ; ix < past ; ++ix ) {
          d_acv[ ix ] = color;
          }
       }
-   void Cat( const LineColorvals &rhs );
+   void Cat( const LineColorvals &rhs ) {  0 && DBG( "CAT[%3lld]", cols() );
+      const auto srclen( rhs.cols() );
+      const auto dix( cols() );
+      const auto count( std::min( srclen, d_acv.size() - dix ) );
+      for( auto iy(0) ; iy < count ; ++iy ) {
+         d_acv[ dix + iy ] = rhs.colorAt( iy );
+         }
+      }
    };
 
 class LineColorsClipped {
@@ -452,7 +458,7 @@ public:
 /* 20110516 kgoodwin
    sb_t is a envp-style sequence of WUC needles so that calc'd derivatives of
    the actual WUC can be highlighted.  In particular, the MWDT elfdump disasm
-   shows 0xhexaddress in intruction operands, but each instruction's address is
+   shows 0xhexaddress in instruction operands, but each instruction's address is
    shown as hexaddress (and I want the latter to be highlighted when the former
    is WUC). */
 
@@ -2743,7 +2749,7 @@ STATIC_FXN void RedrawScreen() {
             buf.replace(      dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
             lcvs.PutColorval( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorval );
             }                                    (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
-         VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, &lcvs, eFlush::doFlush );
+         VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, lcvs, eFlush::doFlush );
          }                                                  ShowDraws( *pLbf++ = ch; )
       }
    s_paScreenLineNeedsRedraw->ClrAllBits();
@@ -2910,13 +2916,13 @@ void DispRefreshWholeScreenNow_()            { DispNeedsRedrawTotal_(); DispDoPe
 
 // NOTE: xCol & yLine are WITHIN CONSOLE WINDOW !!!
 
-STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColorvals * lcvs, eFlush fFlushNow ) {
+STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColorvals &lcvs, eFlush fFlushNow ) {
    VideoFlusher vf( fFlushNow==eFlush::doFlush );
    FULL_DB && DBG( "%s+", __func__ );
    auto lastColor(0);
-   for( auto ix(0) ; maxCharsToDisp > 0 && lcvs->inRange( ix ) ; ) {
-      lastColor = lcvs->colorAt( ix );
-      const auto segLen( std::min( lcvs->runLength( ix ), maxCharsToDisp ) );
+   for( auto ix(0u) ; maxCharsToDisp > 0 && lcvs.inRange( ix ) ; ) {
+      lastColor = lcvs.colorAt( ix );
+      const auto segLen( std::min( lcvs.runLength( ix ), maxCharsToDisp ) );
       FULL_DB && DBG( "%s Len=%d", __func__, segLen );
       VidWrStrColor( yLine, xCol, pszStringToDisp, segLen, lastColor, ePad::noPad );
       ix              += segLen;
@@ -2931,13 +2937,6 @@ STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, 
    }
 
 // STATIC_CONST char EntabDispChar[] = "nyY"; static_assert( KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID, "KSTRLEN(EntabDispChar) == MAX_ENTAB_INVALID" );
-
-void LineColorvals::Cat( const LineColorvals &rhs ) {  0 && DBG( "CAT[%3d]", cols() );
-   auto iy(0);
-   for( auto ix(cols()) ; inRange( ix ) && rhs.inRange( iy ) && (END_MARKER != rhs.colorAt( iy )) ; ++ix, ++iy ) {
-      d_acv[ ix ] = rhs.colorAt( iy );
-      }
-   }
 
 COL VidWrColoredStrefs( LINE yLine, COL xCol, const ColoredStrefs &csrs, eFlush fFlushNow ) {
    VideoFlusher vf( fFlushNow==eFlush::doFlush );
@@ -2960,7 +2959,7 @@ public:
    int  textcols() const { return d_curLen; }
    void Cat( ColorTblIdx ColorIdx, stref src );
    void Cat( const ColoredLine &rhs );
-   void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), &d_lcvs, eFlush::doFlush ); }
+   void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), d_lcvs, eFlush::doFlush ); }
    };
 
 void ColoredLine::Cat( ColorTblIdx ColorIdx, stref src ) {
@@ -3254,7 +3253,7 @@ STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, colorval_t, ePad
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
-STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, const LineColorvals *, eFlush fFlushNow ) {
+STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, const LineColorvals &, eFlush fFlushNow ) {
    fprintf( stderr, "%s\n", src );
    return Strlen( src );
    }
