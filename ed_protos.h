@@ -205,7 +205,7 @@ struct DisplayDriverApi {
    void  (*DisplayNoise)( PCChar buffer );
    void  (*DisplayNoiseBlank)();
    COL   (*VidWrStrColor    )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, colorval_t colorAttribute, ePad pad );
-   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColorvals * alc, eFlush doFlush );
+   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColorvals & alc, eFlush doFlush );
    };
 
 extern DisplayDriverApi g_DDI;
