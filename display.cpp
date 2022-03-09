@@ -895,7 +895,6 @@ int HiliteAddin_cond_CPP::close_level( int level_ix, int yLast ) {
    for( auto bump(0) ; level_ix > -1 ; level_ix = d_PerViewableLine[ level_ix ].level.containing_level_idx, bump += 2 ) {
       auto &cont_level( d_PerViewableLine[ level_ix ].level );
       cont_level.xBox = std::max( cont_level.xBox, level.xBox + bump );
-   // NoLessThan( &cont_level.xBox, level.xBox + bump );
       }
    return level.containing_level_idx;
    }
@@ -2428,25 +2427,11 @@ bool ViewPersistentInitOk( ViewPersistent &vp, PChar viewSaveRec ) {
    return true;
    }
 
-struct direct_vid_seg {
-   Point       d_origin;
-   colorval_t  d_colorval;
-   std::string d_str;
-   direct_vid_seg( Point origin, colorval_t colorval, stref sr )
-     : d_origin( origin )
-     , d_colorval( colorval )
-     , d_str( sr )
-     {}
-   };
-
-STATIC_VAR std::vector<direct_vid_seg> s_direct_vid_segs;
-
 STATIC_FXN bool AddLineDelta( LINE &yLineVar, LINE yLine, LINE lineDelta ) {
    const auto fAffected( yLine <= yLineVar );
    if( fAffected ) {
       yLineVar += lineDelta;
       yLineVar = std::max( yLineVar, 0 );
-   // NoLessThan( &yLineVar, 0 );
       }
    return fAffected;
    }
@@ -2637,7 +2622,6 @@ STATIC_FXN void conDisplayNoise( PCChar buffer ) {
    if( show_noise() ) {
       const auto len( Strlen( buffer ) );
       s_dispNoiseMaxLen = std::max( s_dispNoiseMaxLen, len );
-   // NoLessThan( &s_dispNoiseMaxLen, len );
       VidWrStrColorFlush( StatusLine(), EditScreenCols() - len, buffer, len, g_colorError, ePad::padWSpcsToEol );
       }
    }
@@ -2715,6 +2699,19 @@ void Win::DispNeedsRedrawAllLines() const { FULL_DB && DBG( "%s All=0..%d", FUNC
       s_paScreenLineNeedsRedraw->SetBit( yLine );
       }
    }
+
+struct direct_vid_seg {
+   Point       d_origin;
+   colorval_t  d_colorval;
+   std::string d_str;
+   direct_vid_seg( Point origin, colorval_t colorval, stref sr )
+     : d_origin( origin )
+     , d_colorval( colorval )
+     , d_str( sr )
+     {}
+   };
+
+STATIC_VAR std::vector<direct_vid_seg> s_direct_vid_segs;
 
 STATIC_FXN void RedrawScreen() {
 // #define  SHOW_DRAWS  defined(_WIN32)
