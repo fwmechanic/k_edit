@@ -2609,47 +2609,16 @@ AddEdFxn{ name = "lblankdel", help = "delete lines matching ...", attr = MODIFIE
    , BOXARG  = function( arg ) DelBlankLines( arg.fMeta, arg ) end
    }
 
----------------------------------------------------------------------------------------------------
-
-function boxContent( arg )
-   local fbuf, vw, y0, y1, xLeft, xRight = arg2box( arg )
-   local rv = {}
-   for iy = y0,y1 do  rv[1+#rv] = fbuf:GetLineSeg( iy, xLeft, xRight )  end
-   return rv
-   end
-
-function sum_cols_dope( ary )
-   local fHexCh, fLeading0s, fw = false, false, 0
-   for _,st in ipairs(ary) do
-      if st:match( "^%s*0%d"  ) then fLeading0s = true end
-      if st:match( "[a-fA-F]" ) then fHexCh     = true end
-      local fp = st:match( "%.(%d+)%s*$" )
-      if fp then
-         fw = Max( fw, #fp )  -- fracWidth
-         end
-      end
-   return (fHexCh or fLeading0s) and 16 or 10, fLeading0s, fw
-   end
-
-function sum_ary_numstrs( ary, base )
-   local sum, count, min, minAt
-   for _,st in ipairs(ary) do
-      local num = tonumber( st, base )
-      if num then
-         sum   = (sum   or 0) + num
-         if num < 0 and (min or sum) >= sum then
-            min = sum
-            minAt = num
-            end
-         count = (count or 0) + 1
-         end
-      end
-   return sum, count, min, minAt
-   end
+--[[ reimplement same-named C++ functions
+   // this may be a mistake!  English language is unorthogonal in the extreme!
+  ]]
+local function Add_es( count ) return 1 == count and "" or "es" end
+local function Add_s(  count ) return 1 == count and "" or  "s" end
 
 local _b2fns = { [10]='d', [16]='X' }
-function fmtNum( num, fw, base, width, fLeading0s )
+local function fmtNum( num, fw, base, fSign, width, fLeading0s )
    base = base or 10
+   fSign = fSign and base == 10  -- sign only makes sense w/decimal numbers?
    width = width or ''
    fLeading0s = fLeading0s or false
    if fw > 0 then  -- any floating-point input?
@@ -2657,63 +2626,114 @@ function fmtNum( num, fw, base, width, fLeading0s )
       end
    local fns = _b2fns[base]
    if fns then
-      return fmt( "%"..(fLeading0s and "0" or "")..width..fns, num )
+      return fmt( "%"..(fSign and '+' or '')..(fLeading0s and '0' or '')..width..fns, num )
       end
    error( "cannot fmtNum to base="..base )
    end
 
---     00500cc
---     00500cc
---     00500cc
---     00500cc
-
-local function sum_extracted_anums( bc )
-   local sum, count, ctSfx
-   for _,ln in ipairs(bc) do
-      for st,sfx in ln:gmatch "a([1-9]%d*)([._]?)" do  -- print( "hey! " .. sfx or "?" )
-         sum   = (sum   or 0) + st
-         count = (count or 0) + 1
-         ctSfx = (ctSfx or 0) + (#sfx > 0 and 1 or 0)
+---------------------------------------------------------------------------------------------------
+do -- sumcol impl scope
+   local function sum_cols_dope( ary )
+      local fHexCh, fLeading0s, fw = false, false, 0
+      for _,st in ipairs(ary) do
+         if st:match( "^%s*0%d"  ) then fLeading0s = true end
+         if st:match( "[a-fA-F]" ) then fHexCh     = true end
+         local fp = st:match( "%.(%d+)%s*$" )
+         if fp then
+            fw = Max( fw, #fp )  -- fracWidth
+            end
          end
+      return (fHexCh or fLeading0s) and 16 or 10, fLeading0s, fw
       end
-   return sum, count, ctSfx
-   end
 
---[[ reimplement same-named C++ functions
-   // this may be a mistake!  English language is unorthogonal in the extreme!
-  ]]
-local function Add_es( count ) return 1 == count and "" or "es" end
-local function Add_s(  count ) return 1 == count and "" or  "s" end
-
-
-AddEdFxn{ name = "sumcol", attr = MODIFIES+BOXARG, key = "alt+num+", help = ""
-   , BOXARG  = function( arg )
-      local bc = boxContent( arg )
-      local minInd = arg.minX-1
-      local sum, count, ctSfx = sum_extracted_anums( bc )
-      if sum and count and ctSfx and (count - ctSfx) <= 3 then  -- magic-coupled to _reconcile.txt content
-         arg.fbuf:InsLine( arg.maxY+1, (" "):rep( minInd ) .. sum .. fmt( " (%d check%s)", count, Add_s(count) ) )
+   local function sum_ary_numstrs( ary, base, balFirst )
+      local balance, min, minAt = 0
+      local count, sum, pos, neg = 0, 0, 0, 0
+      for _,st in ipairs(ary) do
+         local num = tonumber( st, base )
+         if num then
+            if balFirst then
+               balFirst = false
+               balance = num  -- capture and return balance separately
+            else  -- any (NZ) num (including at count==0) is either credit (pos) and debit (neg)
+               if num > 0 then pos = pos + num end
+               if num < 0 then neg = neg + num end
+               end
+            sum = sum + num  -- all num participate in min determination
+            if num < 0 and (min or sum) >= sum then
+               min = sum
+               minAt = num
+               end
+            count = count + 1
+            end
+         end
+      if min and min < sum then
+         return count, balance, pos, neg, min, minAt
       else
-         local base, leading0s, fw = sum_cols_dope( bc )
-         local min, minAt
-         sum, count, min, minAt = sum_ary_numstrs( bc, base )
-         if not sum then return Msg( "no summable content" ) end
-         local width = arg.maxX - arg.minX + 1
-         local st = fmtNum( sum, fw, base, width, leading0s )
-         local nummsg = (" "):rep( minInd-(#st - width) ) .. st
-         if min then
-            nummsg = nummsg .. ' min ' .. fmtNum( min, fw, base, false, false ) .. ' @ ' .. fmtNum( minAt, fw, base, false, false )
-            end
-         local msg = fmt( "summed %d base %d entries", count, base )
-         if arg.fMeta then
-            arg.fbuf:InsLine( arg.maxY+1, nummsg .. " @ " .. msg )
-         else
-            arg.fbuf:InsLine( arg.maxY+1, nummsg )
-            Msg( msg )
-            end
+         return count, balance, pos, neg
          end
       end
-   }
+
+   --     00500cc
+   --     00500cc
+   --     00500cc
+   --     00500cc
+
+   local function sum_extracted_anums( bc )
+      local sum, count, ctSfx
+      for _,ln in ipairs(bc) do
+         for st,sfx in ln:gmatch "a([1-9]%d*)([._]?)" do  -- print( "hey! " .. sfx or "?" )
+            sum   = (sum   or 0) + st
+            count = (count or 0) + 1
+            ctSfx = (ctSfx or 0) + (#sfx > 0 and 1 or 0)
+            end
+         end
+      return sum, count, ctSfx
+      end
+
+   local function sumColBoxContent( arg )
+      local fbuf, vw, y0, y1, xLeft, xRight = arg2box( arg )
+      local rv = {}
+      for iy = y0,y1 do  rv[1+#rv] = fbuf:GetLineSeg( iy, xLeft, xRight )  end
+      return rv, fbuf:GetLineSeg( y0, xRight+1, xRight+1+99999 )
+      end
+
+   AddEdFxn{ name = "sumcol", attr = MODIFIES+BOXARG, key = "alt+num+", help = ""
+      , BOXARG  = function( arg )
+         local bc, trailingL0 = sumColBoxContent( arg )
+         local minInd = arg.minX-1
+         local sum, count, ctSfx = sum_extracted_anums( bc )
+         if sum and count and ctSfx and (count - ctSfx) <= 3 then  -- magic-coupled to _reconcile.txt content
+            arg.fbuf:InsLine( arg.maxY+1, (" "):rep( minInd ) .. sum .. fmt( " (%d check%s)", count, Add_s(count) ) )
+         else
+            local base, leading0s, fw = sum_cols_dope( bc )
+            local entries, balance, pos, neg, min, minAt = sum_ary_numstrs( bc, base, trailingL0:match("%s*[Bb][Aa][Ll][Aa][Nn][Cc][Ee]") )
+            if entries==0 then return Msg( "no summable content" ) end
+            local width = arg.maxX - arg.minX + 1
+            local st = fmtNum( balance + pos+neg, fw, base, false, width, leading0s )
+            local nummsg = (" "):rep( minInd-(#st - width) ) .. st
+            if balance~=0 or (pos~=0 and neg~=0) then
+               if balance~=0 then
+                  nummsg = nummsg .. ' = ' .. fmtNum( balance, fw, base ) .. fmtNum( pos+neg, fw, base, true )
+               else
+                  nummsg = nummsg .. ' '
+                  end
+               nummsg = nummsg .. '(=' .. fmtNum( pos, fw, base ) .. fmtNum( neg, fw, base, true ) .. ')'
+               end
+            if min then
+               nummsg = nummsg .. ' min ' .. fmtNum( min, fw, base ) .. ' @ ' .. fmtNum( minAt, fw, base )
+               end
+            local msg = fmt( "summed %d base %d entries", entries, base )
+            if arg.fMeta then
+               arg.fbuf:InsLine( arg.maxY+1, nummsg .. " @ " .. msg )
+            else
+               arg.fbuf:InsLine( arg.maxY+1, nummsg )
+               Msg( msg )
+               end
+            end
+         end
+      }
+end
 
 function mtFBUF:swap_lines( y0, y1, xLeft, xRight )
 
