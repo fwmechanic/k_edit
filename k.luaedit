@@ -2736,16 +2736,11 @@ do -- sumcol impl scope
 end
 
 function mtFBUF:swap_lines( y0, y1, xLeft, xRight )
-
-   -- [5932] K! 1755 < 1756
-   -- [5932] K! GetLineSeg [1754,021E94B4 L 55][37..2147483646]P:021E94D9,021E94EA (19)
-   -- [5932] K! PutLineSeg L 1754 [37..2147483646] <= '' )
-
    xLeft  = xLeft  or 1
    xRight = xRight or MAXCOL
-   while y0 < y1 do  -- DBG( tostring(y0).." < "..tostring(y1) )
-      local seg0 = self:GetLineSeg( y0, xLeft, xRight )  -- print( "seg0="..seg0.."|" )
-      local seg1 = self:GetLineSeg( y1, xLeft, xRight )  -- print( "seg1="..seg1.."|" )
+   while y0 <= self:LastLine() and y0 < y1 do  -- DBG( tostring(y0).." < "..tostring(y1) )
+      local seg0 = self:GetLineSeg( y0, xLeft, xRight )        -- print( "seg0="..seg0.."|" )
+      local seg1 = self:GetLineSeg( y1, xLeft, xRight ) or ''  -- print( "seg1="..seg1.."|" )
       self:PutLineSeg( y0, seg1, xLeft, xRight, false )
       self:PutLineSeg( y1, seg0, xLeft, xRight, false )
       y0 = y0 + 1
