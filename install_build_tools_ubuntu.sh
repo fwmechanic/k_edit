@@ -44,6 +44,7 @@ if [ "$ID" = "ubuntu" ] ; then
       libpcre3-dev            \
       ncurses-term            \
       libreadline-dev         \
+      universal-ctags         \
       xclip
    complete
 fi
