@@ -189,6 +189,7 @@ CWARN := -Wall -Werror -Wextra -W \
 -Wreturn-local-addr \
 -Wshadow \
 -Wundef \
+-Wvla \
 
 
 CXXWARN := \
