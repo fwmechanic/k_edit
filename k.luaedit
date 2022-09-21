@@ -2783,26 +2783,26 @@ local function xform_linearg( arg, gsubfunc )
    local total = 0
    for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
       local line = arg.fbuf:GetLine( iy )
-      local new, cnt = gsubfunc( line )
-      if cnt > 0 then
+      local new = gsubfunc( line )
+      if new ~= line then
          arg.fbuf:PutLine( iy, new )
-         total = total + cnt
+         total = 1+total
          end
       end
-   Msgf( "%d replacements made", total )
+   Msgf( "%d lines changed", total )
    end
 
 local function xform_boxarg( arg, gsubfunc )
    local total = 0
    for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
       local line = arg.fbuf:GetLineSeg( iy, arg.minX, arg.maxX )
-      local new, cnt = gsubfunc( line )
-      if cnt > 0 then
-         arg.fbuf:PutLineSeg( iy, new, arg.minX, arg.maxX, false )
-         total = total + cnt
+      local new = gsubfunc( line )
+      if new ~= line then
+         arg.fbuf:PutLineSeg( iy, new, arg.minX, arg.minX+#new-1, true )
+         total = 1+total
          end
       end
-   Msgf( "%d replacements made", total )
+   Msgf( "%d lines changed", total )
    end
 
 local function gsub_URL_escape( s )
@@ -4972,10 +4972,11 @@ do
       end
 
    local function eval08X( lseg ) return fmt( "0x%08X", load_str( lseg ) ), 1 end
+   local function eval_rslt( lseg ) return lseg ..' = '..tostring( load_str( lseg ) ) end
 
    AddEdFxn{ name = "eval", help = "evaluate Lua string", attr = TEXTARG+BOXSTR+BOXARG , key = "F12"
       , TEXTARG = function(arg) local rslt = assert( load_str_msg( arg.text ) )  Clipboard_PutText( rslt ) Msg( rslt .." -> clipboard" ) end
-      , BOXARG =  function(arg) xform_boxarg( arg,  eval08X ) end
+      , BOXARG =  function(arg) xform_boxarg( arg, arg.fMeta and eval08X or eval_rslt ) end
       }
 
    function load_lua_env( fnm, env ) -- TODO this is NEARLY identical to compileWorkspace; see if they can be collapsed
