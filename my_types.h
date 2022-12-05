@@ -155,7 +155,7 @@ typedef signed long       FilesysTime;
 #define  NewScope
 
 // returns the number of elements in an array
-#define  ELEMENTS(array)  (sizeof(array)/sizeof(array[0]))
+#define  ELEMENTS(array)  std::size(array)
 
 // from Meyers Effective Modern C++
 // Attempts to instantiate this template

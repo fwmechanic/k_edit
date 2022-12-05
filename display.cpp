@@ -225,8 +225,8 @@ struct FTypeSetting {
    enum { SD=0 };
    std::string d_ftypeName;  // rbtree key
    std::string d_hiliteName;
-   colorval_t  d_colors[ to_underlying(ColorTblIdx::VIEW_COLOR_COUNT) ];
-   constexpr STATIC_FXN int d_colors_ELEMENTS() { return ELEMENTS(d_colors); }
+   constexpr STATIC_VAR auto d_colors_ELEMENTS = to_underlying(ColorTblIdx::VIEW_COLOR_COUNT);
+   colorval_t  d_colors[ d_colors_ELEMENTS ];
    char        d_eolCommentDelim[5]; // the longest eol-comment I know of is "rem " ...
    void  Update();
    stref ftypeName()  const { return d_ftypeName ; }
@@ -279,7 +279,7 @@ void FTypeSetting::Update() {
       SINIT( com , ColorTblIdx::COM , fb( fg::MGR, bg::BLK ) ),
       SINIT( str , ColorTblIdx::STR , fb( fg::BRN, bg::BLU ) ),
    #undef SINIT
-      }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS(), "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS()" );
+      }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS, "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS" );
    const auto w3( w2.cpy( ".colors." ) );
    const colorval_t orVal( g_fBrightFg ? FGhi : 0 );
    for( const auto &c2L : s_color2Lua ) {
@@ -332,7 +332,7 @@ void Reread_FTypeSettings() {                                           FTypeSet
 colorval_t View::ColorIdxToColorval( ColorTblIdx cti ) const {
    auto colorIdx = to_underlying(cti);
    if( colorIdx >= 0 ) {
-      if( colorIdx < FTypeSetting::d_colors_ELEMENTS() ) {
+      if( colorIdx < FTypeSetting::d_colors_ELEMENTS ) {
          constexpr auto unknownColor( bgBLU|fgCYN|FGhi );
          const auto pFTS( CFBuf()->GetFTypeSettings() );
          return pFTS ? pFTS->d_colors[ colorIdx ] : unknownColor;
@@ -342,8 +342,8 @@ colorval_t View::ColorIdxToColorval( ColorTblIdx cti ) const {
          &g_colorStatus    ,
          &g_colorWndBorder ,
          &g_colorError     ,
-         }; static_assert( ELEMENTS(s_colorVars) == (to_underlying(ColorTblIdx::COLOR_COUNT) - FTypeSetting::d_colors_ELEMENTS()), "ELEMENTS(s_colorVars) == ColorTblIdx::COLOR_COUNT" );
-      colorIdx -= FTypeSetting::d_colors_ELEMENTS();
+         }; static_assert( ELEMENTS(s_colorVars) == (to_underlying(ColorTblIdx::COLOR_COUNT) - FTypeSetting::d_colors_ELEMENTS), "ELEMENTS(s_colorVars) == ColorTblIdx::COLOR_COUNT" );
+      colorIdx -= FTypeSetting::d_colors_ELEMENTS;
       if( colorIdx < ELEMENTS(s_colorVars) ) {
          return *s_colorVars[ colorIdx ];
          }
