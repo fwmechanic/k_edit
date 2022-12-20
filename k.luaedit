@@ -4948,8 +4948,7 @@ do
          end
       }
 
-   function load_str( str, env )
-      local fxn = assert( loadstring( "return " .. str ) )         -- print( "compiled something" )
+   local function run_loaded_string( fxn, env )
       env = env or {}
       env._G = env
       setfenv( fxn, env )
@@ -4958,7 +4957,21 @@ do
       return rv
       end
 
-   function load_str_msg( str, env )
+   local function load_stmts( stmts, env )
+      stmts[#stmts] = "return " .. stmts[#stmts]
+      local fxn = assert( loadstring( table.concat(stmts, ';') ) )         -- print( "compiled something" )
+      return run_loaded_string( fxn, env )
+      end
+
+   local function load_str( str, env )
+      -- "support" multi-stmt expr eval while returning final stmt value
+      local stmts = split_ch_tbl( str, ';' )  -- ultra hack ignores possibility of string literals (that might contain ';')
+      stmts[#stmts] = "return " .. stmts[#stmts]
+      local fxn = assert( loadstring( table.concat(stmts, ';') ) )         -- print( "compiled something" )
+      return run_loaded_string( fxn, env )
+      end
+
+   local function load_str_msg( str, env )
       local rv = load_str( str, env )
       if type(rv)=="number" then
          local fw = 0  -- fracWidth
@@ -4973,9 +4986,23 @@ do
 
    local function eval08X( lseg ) return fmt( "0x%08X", load_str( lseg ) ), 1 end
 
-   AddEdFxn{ name = "eval", help = "evaluate Lua string", attr = TEXTARG+BOXSTR+BOXARG , key = "F12"
+   local function eval_linearg( arg )
+      local stmts = {}
+      for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
+         local line = arg.fbuf:GetLine( iy )
+         if not line:match('^%s*$') then
+            for _,stmt in ipairs( split_ch_tbl( line, ';' ) ) do  -- ultra hack ignores possibility of string literals (that might contain ';')
+               stmts[1+#stmts] = stmt
+               end
+            end
+         end
+      return load_stmts( stmts )
+      end
+
+   AddEdFxn{ name = "eval", help = "evaluate Lua string", attr = TEXTARG+BOXSTR+BOXARG+LINEARG , key = "F12"
       , TEXTARG = function(arg) local rslt = assert( load_str_msg( arg.text ) )  Clipboard_PutText( rslt ) Msg( rslt .." -> clipboard" ) end
-      , BOXARG =  function(arg) xform_boxarg( arg,  eval08X ) end
+      , LINEARG = function(arg) local rslt = assert( eval_linearg( arg )      )  Clipboard_PutText( rslt ) Msg( rslt .." -> clipboard" ) end
+      , BOXARG  = function(arg) xform_boxarg( arg,  eval08X ) end
       }
 
    function load_lua_env( fnm, env ) -- TODO this is NEARLY identical to compileWorkspace; see if they can be collapsed
