@@ -2615,42 +2615,31 @@ AddEdFxn{ name = "lblankdel", help = "delete lines matching ...", attr = MODIFIE
 local function Add_es( count ) return 1 == count and "" or "es" end
 local function Add_s(  count ) return 1 == count and "" or  "s" end
 
-local _b2fns = { [10]='d', [16]='X' }
-local function fmtNum( num, fw, base, fSign, width, fLeading0s )
-   base = base or 10
-   fSign = fSign and base == 10  -- sign only makes sense w/decimal numbers?
+local function fmtNum( num, fracWidth, fSign, width )
    width = width or ''
-   fLeading0s = fLeading0s or false
-   if fw > 0 then  -- any floating-point input?
-      return fmt( "%"..width.."."..fw.."f", num )
+   if fracWidth > 0 then  -- any floating-point input?
+      return fmt( "%"..width.."."..fracWidth.."f", num )
       end
-   local fns = _b2fns[base]
-   if fns then
-      return fmt( "%"..(fSign and '+' or '')..(fLeading0s and '0' or '')..width..fns, num )
-      end
-   error( "cannot fmtNum to base="..base )
+   return fmt( "%"..(fSign and '+' or '')..width..'d', num )
    end
 
 ---------------------------------------------------------------------------------------------------
 do -- sumcol impl scope
-   local function sum_cols_dope( ary )
-      local fHexCh, fLeading0s, fw = false, false, 0
+   local function sum_cols_fracWidth( ary )
+      local fracWidth = 0
       for _,st in ipairs(ary) do
-         if st:match( "^%s*0%d"  ) then fLeading0s = true end
-         if st:match( "[a-fA-F]" ) then fHexCh     = true end
-         local fp = st:match( "%.(%d+)%s*$" )
-         if fp then
-            fw = Max( fw, #fp )  -- fracWidth
+         for fp in st:gmatch "%.(%d+)" do
+            fracWidth = Max( fracWidth, #fp )
             end
          end
-      return (fHexCh or fLeading0s) and 16 or 10, fLeading0s, fw
+      return fracWidth
       end
 
-   local function sum_ary_numstrs( ary, base, balFirst )
+   local function sum_ary_numstrs( ary, balFirst )
       local balance, min, minAt = 0
       local count, sum, pos, neg = 0, 0, 0, 0
       for _,st in ipairs(ary) do
-         local num = tonumber( st, base )
+         local num = tonumber( st )
          if num then
             if balFirst then
                balFirst = false
@@ -2702,28 +2691,29 @@ do -- sumcol impl scope
       , BOXARG  = function( arg )
          local bc, trailingL0 = sumColBoxContent( arg )
          local minInd = arg.minX-1
-         local sum, count, ctSfx = sum_extracted_anums( bc )
+         local sum, count, ctSfx = sum_extracted_anums( bc )  -- try matching, summing aNNN'ish _reconcile.txt content
          if sum and count and ctSfx and (count - ctSfx) <= 3 then  -- magic-coupled to _reconcile.txt content
             arg.fbuf:InsLine( arg.maxY+1, (" "):rep( minInd ) .. sum .. fmt( " (%d check%s)", count, Add_s(count) ) )
          else
-            local base, leading0s, fw = sum_cols_dope( bc )
-            local entries, balance, pos, neg, min, minAt = sum_ary_numstrs( bc, base, trailingL0:match("%s*[Bb][Aa][Ll][Aa][Nn][Cc][Ee]") )
+            local entries, balance, pos, neg, min, minAt = sum_ary_numstrs( bc, trailingL0:match("%s*[Bb][Aa][Ll][Aa][Nn][Cc][Ee]") )
             if entries==0 then return Msg( "no summable content" ) end
             local width = arg.maxX - arg.minX + 1
-            local st = fmtNum( balance + pos+neg, fw, base, false, width, leading0s )
+            local fw = sum_cols_fracWidth( bc )
+            local fn = function( num, fSign, ww ) return fmtNum( num, fw, fSign, ww ) end  -- rmv fw from call param lists by capturing it
+            local st = fn( balance + pos+neg, false, width )
             local nummsg = (" "):rep( minInd-(#st - width) ) .. st
             if balance~=0 or (pos~=0 and neg~=0) then
                if balance~=0 then
-                  nummsg = nummsg .. ' = ' .. fmtNum( balance, fw, base ) .. fmtNum( pos+neg, fw, base, true )
+                  nummsg = nummsg .. ' = ' .. fn( balance ) .. fn( pos+neg, true )
                else
                   nummsg = nummsg .. ' '
                   end
-               nummsg = nummsg .. '(=' .. fmtNum( pos, fw, base ) .. fmtNum( neg, fw, base, true ) .. ')'
+               nummsg = nummsg .. '(=' .. fn( pos ) .. fn( neg, true ) .. ')'
                end
             if min then
-               nummsg = nummsg .. ' min ' .. fmtNum( min, fw, base ) .. ' @ ' .. fmtNum( minAt, fw, base )
+               nummsg = nummsg .. ' min ' .. fn( min ) .. ' @ ' .. fn( minAt )
                end
-            local msg = fmt( "summed %d base %d entries", entries, base )
+            local msg = fmt( "summed %d entries", entries )
             if arg.fMeta then
                arg.fbuf:InsLine( arg.maxY+1, nummsg .. " @ " .. msg )
             else
