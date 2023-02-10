@@ -2595,19 +2595,22 @@ end
 //   FUTURE: if 3 args, delete only from char to left of box to start of line?
 // --]]
 
-local function DelBlankLines( fInvert, arg, xMin, xMax )
-   local fbuf, view, y0, y1, xLeft, xRight = arg2box( arg )
-   xMin = xMin or xLeft
-   xMax = xMax or xRight
-   local pat = fInvert and "%S" or "^%s*$"
-   DeleteLinesMatching( function( st ) return string.match( st:sub( xMin, xMax ), pat ) end, fbuf, view, y0, y1 )
-   end
+do
+   local function DelBlankLines( arg, xMin, xMax )
+      local fInvert = arg.fMeta
+      local fbuf, view, y0, y1, xLeft, xRight = arg2box( arg )
+      xMin = xMin or xLeft
+      xMax = xMax or xRight
+      local pat = fInvert and "%S" or "^%s*$"
+      DeleteLinesMatching( function( st ) return string.match( st:sub( xMin, xMax ), pat ) end, fbuf, view, y0, y1 )
+      end
 
-AddEdFxn{ name = "lblankdel", help = "delete lines matching ...", attr = MODIFIES+NOARG+BOXARG+LINEARG, key = "alt+o"
-   , NOARG   = function( arg ) DelBlankLines( arg.fMeta, arg, 1, MAXCOL ) end
-   , LINEARG = function( arg ) DelBlankLines( arg.fMeta, arg ) end
-   , BOXARG  = function( arg ) DelBlankLines( arg.fMeta, arg ) end
-   }
+   AddEdFxn{ name = "lblankdel", help = "delete lines matching ...", attr = MODIFIES+NOARG+BOXARG+LINEARG, key = "alt+o"
+      , NOARG   = function( arg ) DelBlankLines( arg, 1, MAXCOL ) end
+      , LINEARG = function( arg ) DelBlankLines( arg ) end
+      , BOXARG  = function( arg ) DelBlankLines( arg ) end
+      }
+end
 
 --[[ reimplement same-named C++ functions
    // this may be a mistake!  English language is unorthogonal in the extreme!
@@ -5247,7 +5250,7 @@ print( filesettings.ftype_map.clang and ("filesettings.ftype_map.clang DEFINED: 
 
 --########################################################################################################################################
 
-user = require "user"  -- compile & execute %~dp0user.lua
+user = require "user"  -- compile & execute %~dp0/user.lua
 
 -- "sled" = Site Local Editor Directory: where site-/user-specific/owned (i.e. exo-k_edit-worktree) editor-extending files are sought
 do
