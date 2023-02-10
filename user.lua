@@ -121,7 +121,7 @@ local function goSiteSrch( site )
 local URL_StartPage      = goUrl( "https://startpage.com/do/search?q=".. UrlSrchTag )
 -- local URL_Google         = goUrl( googl.."search?hl=en&as_q=" .. UrlSrchTag )
 local URL_Google         = goUrl( googl.."search?q=" .. UrlSrchTag )
-local URL_CMake_docs     = goUrl( "https://cmake.org/cmake/help/v3.13/search.html?q=" .. UrlSrchTag )
+local URL_HomeServer     = goUrl( "http://192.168.0.22/cgi/search-files?Submit=Find+Matches&search_keys=" .. UrlSrchTag )
 local URL_Epinions       = goSiteSrch( "www.epinions.com" )
 local URL_Bing           = goUrl( "http://www.bing.com/search?q=" .. UrlSrchTag )
 local URL_DuckDuckGo     = goUrl( "https://duckduckgo.com/" .. UrlSrchTag )
@@ -142,6 +142,7 @@ local URL_GoogleNews     = goUrl( "http://news.google.com/news?hl=en&q=" .. UrlS
 local URL_GoogleCode     = goUrl( googl.."codesearch?q=" .. UrlSrchTag .. "&btnG=Search+Code" )
 
 AddEdStringFxn( "google"         , URL_Google        )
+AddEdStringFxn( "searchhomeserver", URL_HomeServer   )
 AddEdStringFxn( "epinions"       , URL_Epinions      )
 AddEdStringFxn( "DuckDuckGo"     , URL_DuckDuckGo    )
 AddEdStringFxn( "bobistheoilguy" , URL_GoogBobOil    )
@@ -173,7 +174,7 @@ do
       , choices = {
           default = 1
         , { "Google"            , URL_Google        }
-        , { "CMake-DocSearch"   , URL_CMake_docs    }
+        , { "Home-Server"       , URL_HomeServer    }
         , { "StartPage"         , URL_StartPage     }
         , { "DuckDuckGo"        , URL_DuckDuckGo    }
         , { "s=epinions"        , URL_Epinions      }
@@ -388,5 +389,5 @@ do
 end
 
 return {
-   URL_CMake_docs = URL_CMake_docs,
+   URL_HomeServer = URL_HomeServer,
    }
