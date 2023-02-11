@@ -430,9 +430,11 @@ void constexpr rmv_trail_blanks( strlval &inout ) {
       }
    }
 
+// exists         because std::string_view lacks pop_back()
+// not a template because std::string      lacks remove_suffix( n )
 STIL constexpr void rmv_trail_blanks( stref &inout ) {
    auto trailSpcs( 0u );
-   for( auto it( inout.crbegin() ) ; it != inout.crend() && *it == ' ' ; ++it ) {
+   for( auto it( inout.crbegin() ) ; it != inout.crend() && isblank( *it ) ; ++it ) {
       ++trailSpcs;
       }
    inout.remove_suffix( trailSpcs );
