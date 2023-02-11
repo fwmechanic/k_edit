@@ -461,12 +461,8 @@ bool ARG::erasebuf() {
    if( !delfl ) {
       return fnMsg( "buffer '%s' doesn't exist", d_textarg.pText );
       }
-   auto curfile( g_CurFBuf() );
    delfl->MakeEmpty();
-   delfl->MoveCursorToBofAllViews();   // BUGBUG this is wierd: port to Lua?
-   delfl->PutFocusOn();              // BUGBUG this is wierd: port to Lua?
-   g_CurView()->MoveCursor( 0, 0 );  // BUGBUG this is wierd: port to Lua?
-   curfile->PutFocusOn();
+   delfl->MoveCursorToBofAllViews();
    return true;
    }
 
