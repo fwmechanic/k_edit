@@ -2619,11 +2619,7 @@ local function Add_es( count ) return 1 == count and "" or "es" end
 local function Add_s(  count ) return 1 == count and "" or  "s" end
 
 local function fmtNum( num, fracWidth, fSign, width )
-   width = width or ''
-   if fracWidth > 0 then  -- any floating-point input?
-      return fmt( "%"..width.."."..fracWidth.."f", num )
-      end
-   return fmt( "%"..(fSign and '+' or '')..width..'d', num )
+   return fmt( '%' .. (fSign and '+' or '') .. (width or '') .. ((fracWidth > 0) and ('.'..fracWidth..'f') or 'd'), num )
    end
 
 ---------------------------------------------------------------------------------------------------
