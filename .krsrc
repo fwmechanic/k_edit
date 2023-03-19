@@ -108,6 +108,9 @@
    dos:=cancel arg arg seteol
    # forceplateol:yes # sledgehammer
 
+   cal:=cancel arg "https://calendar.google.com/" setfile
+   kp:=cancel arg "https://keep.google.com/" setfile
+
    con:=cancel arg "<console>" setfile
    wr:=cancel arg "<most_recently_written_files>" setfile
 
@@ -554,7 +557,8 @@
    worklog:=cancel Arg notesdnm "work.kdb" SetFile
 
    worklog:= meta arg cur_y4 "_wk" cur_woy ".log" SetFile -> tslog
-   worklog:Alt+4
+   # worklog:Alt+4
+   searchhomeserver:Alt+4
 
    diary:=cancel Arg "${K_DIARY_FILE:-${K_NOTES_DIR:-${HOME:-${USERPROFILE}}/my/repos/pers/daily_notes.kdb}}${K_NOTES_DIR:+/daily_notes.kdb}" SetFile -> tslog
    diary:Alt+5
