@@ -3383,7 +3383,7 @@ do
       -- browser settings (FireFox: Options|Advanced ...)
 
       local ext = strToExecute:match( "%.([^.]+)$" )
-      if ext and exts[ ext:lower() ] then
+      if ext and exts[ ext:lower() ] and _dir.name_isfile( strToExecute ) then
          StartShellExecuteProcess( strToExecute )
          return true
          end
@@ -3478,7 +3478,7 @@ do
    function goUrl( url ) -- NB:  url param should contain a magic string (UrlSrchTag) which is replaced with the escaped str value
       return function(str)
          str = str or ""
-         do  --[[
+         do --[[
             Double-quote any {{was(except first), now ALL}} search term beginning with '-' (which
             w/o quoting google interprets as "exclude matches containing this term").
             Rationale: 99.9% of my searches containing such terms are querying about
