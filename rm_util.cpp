@@ -28,12 +28,8 @@
 #include "win32_base.h"
 #endif
 
-int SaveFileMultiGenerationBackup( PCChar pszFileName ) { enum { SD=0 };
+int SaveFileMultiGenerationBackup( PCChar pszFileName, const struct_stat &stat_buf ) { enum { SD=0 };
    SD && DBG( "SFMG+ '%s'", pszFileName );
-   struct_stat stat_buf;
-   if( func_stat( pszFileName, &stat_buf ) == -1 ) { SD && DBG( "SFMG! [2] stat of '%s' FAILED!", pszFileName );
-      return SFMG_NO_SRCFILE;
-      }
    auto dest( std::string(Path::RefDirnm( pszFileName )) + kszBakDirNm );
    auto mkdirLen( dest.length() );
    NewScope { // validity of dirname

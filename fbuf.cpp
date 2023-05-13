@@ -1378,6 +1378,13 @@ STATIC_FXN PCChar kszBackupMode( int backupMode ) {
 enum { VERBOSE_WRITE = 1 };
 STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
    VERBOSE_WRITE && DBG( "FWr: bkup[%s] start d='%s'", kszBackupMode( backupMode ), fnmToBkup );
+   struct_stat stat_buf;
+   if( func_stat( fnmToBkup, &stat_buf ) == -1 ) { VERBOSE_WRITE && DBG( "FWr: bkup[%s] stat FAILED!", fnmToBkup );
+      return Msg( "Can't backup %s: stat FAILED: %s", fnmToBkup, strerror( errno ) );
+      }
+   if( 0 == stat_buf.st_size ) {  // OpenFileFailed when called to open a nonexistent file creates a 0-byte file.
+      backupMode = bkup_NONE;     // Backing up any such empty file serves no purpose; instead simply delete/overwrite it.
+      }
    switch( backupMode ) {
     case bkup_BAK:   { VERBOSE_WRITE && DBG( "FWr: bkup_BAK" );  // the extension of the previous version of the file is changed to .BAK
                      const auto BAK_FileNm( Path::Union( ".bak", fnmToBkup ) );
@@ -1402,10 +1409,9 @@ STATIC_FXN bool backupOldDiskFile( PCChar fnmToBkup, int backupMode ) {
                      } break;
     case bkup_UNDEL: // The old file is moved to a child directory.  The number of copies saved is
                      { VERBOSE_WRITE && DBG( "FWr: bkup_UNDEL" ); // specified by the Undelcount switch.
-                     const auto rc( SaveFileMultiGenerationBackup( fnmToBkup ) );
+                     const auto rc( SaveFileMultiGenerationBackup( fnmToBkup, stat_buf ) );
                      switch( rc ) {
                         case SFMG_OK             : break;
-                        case SFMG_NO_SRCFILE     : break; // return Msg( "Can't stat %s", fnmToBkup );
                         case SFMG_CANT_MV_ORIG   : return Msg( "Can't move %s", fnmToBkup );
                         case SFMG_CANT_MK_BAKDIR : return Msg( "Can't create dest dir" );
                         default:                   return Msg( "unknown SFMG error %d", rc );
