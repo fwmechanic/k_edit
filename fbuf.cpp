@@ -145,16 +145,11 @@ bool FBUF::CantModify() const {
    }
 
 // BUGBUG this should really be a AllViewsOntoFbuf event dispatcher
-void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf ) {
-   for( auto wix(0) ; wix < g_WindowCount(); ++wix ) {
-      const auto pWin( g_Win( wix ) );
-      DLINKC_FIRST_TO_LASTA( pWin->d_ViewHd, d_dlinkViewsOfWindow, pv ) {
-         if( pv->FBuf() == pFBuf ) {
-            if( pv->LineCompile_Valid() ) {
-                pv->Set_LineCompile( 0 );
-                }
-            }
-         }
+void FBUF::ResetAllViews() { // NB: this affects _all Views_ referencing this!
+   DLINKC_FIRST_TO_LASTA( d_dhdViewsOfFBUF, d_dlinkViewsOfFBUF, pv ) {
+      if( pv->LineCompile_Valid() ) {
+          pv->Set_LineCompile( 0 );
+          }
       }
    }
 
@@ -162,12 +157,12 @@ void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf ) {
 // is heretofore unloaded, but for which we have View information (from a
 // state-file), will cause the cursor position to be reset to (0,0) (i.e.
 // we effectively LOSE the cursor position info saved in the state file).
-// fResetCursorPosition s/b set for psudofiles which are rewritten from
+// fResetCursorPosition s/b set for pseudofiles which are rewritten from
 // scratch with generated content (thus any prior cursor position is
 // meaningless)
 //
 void FBUF::MakeEmpty() {
-   // CAREFUL!  - MakeEmpty is NOT a good place to set the cursor-line to 0,
+   // CAREFUL!  MakeEmpty is NOT a good place to set the cursor-line to 0,
    // because, in the frequent case of editor-filled buffers, we call MakeEmpty,
    // then refill the buffer.  Sometimes (like when using the InsLineSorted...
    // methods) this means calling InsertLines__(), which calls FBufEvent_LineInsDel,
@@ -181,7 +176,7 @@ void FBUF::MakeEmpty() {
    FreeLinesAndUndoInfo();
    Undo_Init();
    ForgetFType();
-   MakeEmptyAllViewsOntoFbuf( this );
+   ResetAllViews();
    }
 
 //============================================================================

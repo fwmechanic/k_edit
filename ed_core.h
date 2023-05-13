@@ -808,8 +808,6 @@ typedef  DLinkHead<NamedPoint>  NamedPointHead;
 
 extern bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ); // a very friendly (with FBUF) function
 
-extern void MakeEmptyAllViewsOntoFbuf( PFBUF pFBuf );
-
 typedef bool (*ForFBufCallbackDone)( const FBUF &fbuf, void *pContext );
 enum eEntabModes { ENTAB_0_NO_CONV, ENTAB_1_LEADING_SPCS_TO_TABS, ENTAB_2_SPCS_NOTIN_QUOTES_TO_TABS, ENTAB_3_ALL_SPC_TO_TABS, MAX_ENTAB_INVALID };
 enum eBlankDispSrcs { BlankDispSrc_DIRTY=BIT(0), BlankDispSrc_SEL=BIT(1), BlankDispSrc_ALL_ALWAYS=BIT(2), BlankDispSrc_USER_ALWAYS=BIT(3), MAX_BlankDispSrc_INVALID=BIT(4) };
@@ -1161,6 +1159,7 @@ private:
    enum class DiskFileVsFbufStatus { DISKFILE_NO_EXIST, DISKFILE_NEWERTHAN_FBUF, DISKFILE_SAME_AS_FBUF, DISKFILE_OLDERTHAN_FBUF };
    DiskFileVsFbufStatus checkDiskFileStatus() const;
    PView          PutFocusOnView();
+   void           ResetAllViews();
    bool           FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently );
    bool           ReadDiskFileFailed( int hFile );
    bool           UpdateFromDisk( bool fPromptBeforeRefreshing );
