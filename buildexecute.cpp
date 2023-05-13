@@ -1144,7 +1144,7 @@ STATIC_FXN bool GetTextargStringNXeq( std::string &str, int cArg, COL xCursor ) 
       IncArgCnt_DropAnchor();
       }
    bool fGotAnyInputFromKbd;
-   const auto pCmd( GetTextargString( str, FmtStr<25>( "Arg [%d]: ", Get_g_ArgCount() ), xCursor, nullptr, gts_DfltResponse, &fGotAnyInputFromKbd ) );
+   const auto pCmd( GetTextargString( str, FmtStr<25>( "Arg [%d]: ", Get_g_ArgCount() ), xCursor, nullptr, 0, &fGotAnyInputFromKbd ) );
    if( !pCmd ) { // DO NOT filter-out 'cancel' here; needs to go thru remainder of ARG buildup so that 'lasttext' works
       return false;
       }
@@ -1164,7 +1164,7 @@ bool ARG::cliptext() { // patterned after lasttext
       break;case NOARG:     cArg = 1;
       }
    WinClipGetFirstLine( TextArgBuffer() );
-   return GetTextargStringNXeq( TextArgBuffer(), cArg, 0 );
+   return GetTextargStringNXeq( TextArgBuffer(), cArg, TextArgBuffer().length() );
    }
 #endif
 
