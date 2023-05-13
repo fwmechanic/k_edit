@@ -3474,23 +3474,24 @@ do
    -- used in %~dp0user.lua
    UrlSrchTag = "$sstr$"
    local UrlSrchTagEscaped = LuaPat_escape( UrlSrchTag )
+   local massage_search_string = function( str )
+      --[[
+      Double-quote any {{was(except first), now ALL}} search term beginning with
+      '-' (which w/o quoting google interprets as "exclude matches containing
+      this term").  Rationale: 99.9% of my searches containing such terms are
+      querying about cmdline options) when googling cmdline options, I invariably
+      begin the query string w/the program name (hopefully not being too tricky
+      here!) ]]
+      local ar = {}
+      for ix,term in ipairs(split_ch_tbl( str:gsub('%s+',' '), " " )) do
+         ar[1+#ar] = --[[ (ix==1) and term or ]] term:gsub( '^(%-.*)', '"%1"' )
+         end
+      return gsub_URL_escape( table.concat( ar, ' ' ) )
+      end
    -- used in %~dp0user.lua
    function goUrl( url ) -- NB:  url param should contain a magic string (UrlSrchTag) which is replaced with the escaped str value
       return function(str)
-         str = str or ""
-         do --[[
-            Double-quote any {{was(except first), now ALL}} search term beginning with '-' (which
-            w/o quoting google interprets as "exclude matches containing this term").
-            Rationale: 99.9% of my searches containing such terms are querying about
-            cmdline options) when googling cmdline options, I invariably begin the query
-            string w/the program name (hopefully not being too tricky here!) ]]
-            local ar = {}
-            for ix,term in ipairs(split_ch_tbl( str:gsub('%s+',' '), " " )) do
-               ar[1+#ar] = --[[ (ix==1) and term or ]] term:gsub( '^(%-.*)', '"%1"' )
-               end
-            str = gsub_URL_escape( table.concat( ar, ' ' ) )
-         end
-         str = LuaPat_escape( str )
+         str = str and LuaPat_escape( massage_search_string(str) ) or ""
          printf( ": '%s'", str )
          local fnm = url:gsub( UrlSrchTagEscaped , str )  printf( ": '%s'", fnm )
          shex( fnm )  printf( ": '%s'", fnm )
