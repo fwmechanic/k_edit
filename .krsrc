@@ -464,7 +464,7 @@
 
    accum:=Copy accbuf Endfile Paste Setfile
    #accum:alt+num+
-   sumcol:alt+=
+   #sumcol:alt+=
 
    clrbuf:=Begfile Arg Endfile meta delete ldelete Begfile setfile
    clraccbuf:=accbuf clrbuf
@@ -738,7 +738,7 @@
 
 [ftype:unknown] # USED IF NO EXISTING FILE-EXTENSION TAGS MATCH
    wordchars:_
-   hljoinchars:_
+   hljoinchars:_.
 
 [ftype:markdown]
    wordchars:_-/.:
@@ -812,12 +812,6 @@
    jentry:=endfile begline cur_y2md " " cur_hms " "
    jentry:alt+j
 
-[.cash]
-   ftype:cash
-[ftype:cash]
- # wordchars:$_
-   hljoinchars: :.
-
 [ftype:pascal]
    wordchars:_
    hljoinchars: .^
@@ -852,7 +846,7 @@
    wordchars:_
    hljoinchars: :.>
    wucminlen:1
-   dquc:alt+4
+   #dquc:alt+4
    #IdentDelim:,.:#()[]{}<>'"+-*/%&|^$#@!=
    #tabwidth:3
     tabwidth:4
