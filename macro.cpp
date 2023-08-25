@@ -50,7 +50,7 @@ bool AssignStrOk_( stref src, CPCChar caller ) { enum {SD=0};   SD && DBG( "%s 0
       return Msg( "(from %s) entirely blank", caller );
       }
    const auto ixColon( src.find( ':' ) );
-   if( stref::npos == ixColon ) {
+   if( eosr == ixColon ) {
       return Msg( "(from %s) missing ':' in %" PR_BSR, caller, BSR(src) );
       }
    auto name( src.substr( 0, ixColon ) );                  0 && SD && DBG( "%s 2 %" PR_BSR "->%" PR_BSR "'", caller, BSR(name), BSR(src) );

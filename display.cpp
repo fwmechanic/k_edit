@@ -499,12 +499,12 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
    { // add leaf-name of compound thing   clss::xWUCX clss::xWUCX xWUCX xWUCX clss.xWUCX clss.xWUCX
    STATIC_CONST std::array<stref,2> compound_seps{ "::", "." };
-   auto maxIx( stref::npos );
+   auto maxIx( eosr );
    for( auto sep : compound_seps ) {
       const auto rfrv( wuc.rfind( sep ) );  // find last instance of sep
-      if( rfrv != stref::npos ) { maxIx = (maxIx == stref::npos) ? rfrv : std::max( maxIx, rfrv ); }
-      }                          // NB: rfind returns "index [from start of wuc] of first ch of match", which is the LAST char of the match char in wuc ...
-   if( maxIx != stref::npos ) {  // when looked at from a non-reverse perspective; thus regardless of key length, the index
+      if( rfrv != eosr ) { maxIx = (maxIx == eosr) ? rfrv : std::max( maxIx, rfrv ); }
+      }                   // NB: rfind returns "index [from start of wuc] of first ch of match", which is the LAST char of the match char in wuc ...
+   if( maxIx != eosr ) {  // when looked at from a non-reverse perspective; thus regardless of key length, the index
       d_sb.AddString( wuc.substr( maxIx + 1 ) ); // of the first char after the match is always (maxIx + 1)
       }
    }
@@ -752,21 +752,21 @@ STATIC_FXN bool HilitWucLineSegs
             const stref rl( rlAll.data(), maxLen );
             IdxCol_cached conv( tw, rl );
             for( size_t ixStart( minIxClip > (maxNeedleLen-1) ? minIxClip - (maxNeedleLen-1) : 0 ) ; ixStart < rl.length() ; ) {
-               auto ixFirstMatch( stref::npos ); auto mlen( 0u ); bool fMatchesFirstNeedle( false ); bool fTestingFirstNeedle( true );
+               auto ixFirstMatch( eosr ); auto mlen( 0u ); bool fMatchesFirstNeedle( false ); bool fTestingFirstNeedle( true );
                auto haystack( rl ); haystack.remove_prefix( ixStart );
                for( auto pNeedle(keyStart) ; *pNeedle ; ) {
                   const stref needle( pNeedle );
                   auto ixFind( haystack.find( needle ) );
-                  if( ixFind != stref::npos ) {
+                  if( ixFind != eosr ) {
                      ixFind += ixStart;
-                     if( ixFirstMatch == stref::npos || ixFind < ixFirstMatch ) {
+                     if( ixFirstMatch == eosr || ixFind < ixFirstMatch ) {
                         fMatchesFirstNeedle = fTestingFirstNeedle;
                         ixFirstMatch = ixFind; mlen = needle.length();
                         }
                      } // xWUCX xWUCX xWUCX clss::xWUCX clss::xWUCX objx.xWUCX objy.xWUCX objx.xWUCX xWUCX xWUCX xWUCX xWUCX
                   pNeedle += needle.length() + 1; fTestingFirstNeedle = false;
                   }
-               if( ixFirstMatch == stref::npos ) { break; }
+               if( ixFirstMatch == eosr ) { break; }
                const auto xFound( conv.i2c( ixFirstMatch ) );
                0&&(xFound > xMaxToDisp) && DBG( "xFound > xMaxToDisp (%d > %d) maxNeedleLen=%" PR_BSRSIZET "", xFound, xMaxToDisp, maxNeedleLen );
                if( xFound > xMaxToDisp ) { break; } // hit if undisplayable match found in (xMaxToDisp..xMaxToDisp+(maxNeedleLen-1)] (maxNeedleLen may be longer than you think)
@@ -1095,12 +1095,12 @@ bool HiliteAddin_EolComment::VHilitLine( LINE yLine, COL xIndent, LineColorsClip
          children do this and are thus preferred if/when the language of the file
          is known */
       auto ixTgt( rl.find( d_eolCommentDelim ) );
-      if( ixTgt == stref::npos && !d_eolCommentDelimWOTrailSpcs.empty() ) {
+      if( ixTgt == eosr && !d_eolCommentDelimWOTrailSpcs.empty() ) {
          if( rl.ends_with( d_eolCommentDelimWOTrailSpcs ) ) {
             ixTgt = rl.length() - d_eolCommentDelimWOTrailSpcs.length();
             }
          }
-      if( ixTgt != stref::npos ) {
+      if( ixTgt != eosr ) {
          IdxCol_cached conv( CFBuf()->TabWidth(), rl );
          const auto xC  ( conv.i2c( ixTgt                         ) );
          const auto xPWS( conv.i2c( rl.find_last_not_of( SPCTAB ) ) );

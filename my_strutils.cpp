@@ -216,7 +216,7 @@ int snprintf_full( char **ppBuf, size_t *pBufBytesRemaining, PCChar fmt, ... ) {
 //    auto signofs( src[0] == '-' || src[0] == '+' ? 1 : 0 );
 //    auto declook( src.substr( signofs ) );
 //    const auto ixPast( declook.find_first_not_of( "0123456789" ) );
-//    if( ixPast == stref::npos ) { return ""; }
+//    if( ixPast == eosr ) { return ""; }
 //    return src.substr( 0, signofs + ixPast );
 //    }
 
@@ -266,9 +266,9 @@ ERR_NOTHING:
       return false;
       };
 
-   sridx oFirst( stref::npos ), oLast( stref::npos );
+   sridx oFirst( eosr ), oLast( eosr );
    for( auto it( sr.cbegin() ) ; it != sr.cend() ; ++it ) {
-      if( oFirst == stref::npos ) { // leading ...
+      if( oFirst == eosr ) { // leading ...
          if( isblank(*it) ) { // ? skip
             continue;
             }
@@ -280,15 +280,15 @@ ERR_NOTHING:
             }
          }
       const auto chVal( v2v.find( tolower(*it) ) );
-      if( chVal == stref::npos || chVal > numberBase-1 ) { // not blank and not valid char in numberBase
-         if( oFirst == stref::npos ) { // seen NO valid chars in numberBase?
+      if( chVal == eosr || chVal > numberBase-1 ) { // not blank and not valid char in numberBase
+         if( oFirst == eosr ) { // seen NO valid chars in numberBase?
             goto ERR_NOTHING;
             }
          break;
          }
       // *it (chVal) is valid in numberBase
       oLast = std::distance( sr.cbegin(), it );
-      if( oFirst == stref::npos ) {
+      if( oFirst == eosr ) {
          oFirst = oLast;
          }
       const auto rv0( rv );
@@ -298,7 +298,7 @@ ERR_NOTHING:
          goto SOMETHING;
          }
       }
-   if( oFirst == stref::npos ) { // no valid chars in numberBase in sr (prior to an INvalid char)
+   if( oFirst == eosr ) { // no valid chars in numberBase in sr (prior to an INvalid char)
       goto ERR_NOTHING;
       }
 SOMETHING: // not necessarily an error

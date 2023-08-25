@@ -798,7 +798,7 @@ bool ARG::graphic() { enum { SD=0 };
    STATIC_CONST char chClosingDelim[]    = "*_%'\")>}]`";
    STATIC_CONST char chClosingDelim_m4[] = "*_%'\")>}]'";
    const auto ixMatch( stref(chOpeningDelim).find( usrChar ) );
-   const char chClosing( ixMatch==stref::npos ? '\0' : (g_fM4backtickquote ? chClosingDelim_m4 : chClosingDelim)[ ixMatch ] );
+   const char chClosing( ixMatch==eosr ? '\0' : (g_fM4backtickquote ? chClosingDelim_m4 : chClosingDelim)[ ixMatch ] );
    std::string tmp1, tmp2;
    if( d_argType == BOXARG ) {
       if( usrChar == ' ' ) { // insert spaces

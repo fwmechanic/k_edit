@@ -34,12 +34,12 @@ STATIC_FXN bool OpenRsrcFileFailed() {
 
 STATIC_FXN stref IsolateTagStr( stref src ) {
    const auto ixLSQ( src.find_first_not_of( SPCTAB ) );
-   if( stref::npos==ixLSQ || src[ixLSQ] != chLSQ ) {
+   if( eosr==ixLSQ || src[ixLSQ] != chLSQ ) {
       return stref();
       }
    src.remove_prefix( ixLSQ+1 );
    const auto ixRSQ( src.find( chRSQ ) );
-   if( stref::npos==ixRSQ ) {
+   if( eosr==ixRSQ ) {
       return stref();
       }
    return src.substr( 0, ixRSQ );

@@ -94,7 +94,7 @@ STATIC_FXN bool IsolateFilename( sridx *pMin, sridx *pMax, stref rl ) {
          // choose a delim which isn't found in the filename itself,
          // it's a reasonable assumption to make.
          //
-      && ((ixEnd=ToNextOrEnd( rl[0], rl, 1 )), rl[0]==rl[ixEnd])
+      && ((ixEnd=rl.find( rl[0], 1 )), ixEnd != eosr)
      ) {
       ixStart = 1;
       }

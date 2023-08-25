@@ -25,7 +25,7 @@
 
 STATIC_FXN sridx DirnmLen( stref pPath ) { // a.k.a. IdxOfFnm()
    const auto rv( pPath.find_last_of( DIRSEP_SRCH_STR ":" ) );
-   if( stref::npos == rv ) {
+   if( eosr == rv ) {
       return 0;
       }
    else {
@@ -44,7 +44,7 @@ stref Path::RefFnameExt( stref src ) {
 stref Path::RefFnm( stref src ) { // a.k.a. IdxOfFnm()
    auto fx( Path::RefFnameExt( src ) );
    const auto idxDot( fx.find_last_of( '.' ) );
-   if( idxDot == stref::npos || idxDot == 0 ) {
+   if( idxDot == eosr || idxDot == 0 ) {
       return fx;
       }
    return fx.substr( 0, idxDot );
@@ -53,7 +53,7 @@ stref Path::RefFnm( stref src ) { // a.k.a. IdxOfFnm()
 stref Path::RefExt( stref src ) { // a.k.a. IdxOfFnm()
    auto fx( Path::RefFnameExt( src ) );
    const auto idxDot( fx.find_last_of( '.' ) );
-   if( idxDot == stref::npos || idxDot == 0 ) {
+   if( idxDot == eosr || idxDot == 0 ) {
       return stref( "", 0 );
       }
    return fx.substr( idxDot );
@@ -194,7 +194,7 @@ Path::str_t Path::GetCwd_ps() {
    }
 
 bool Path::IsLegalFnm( stref name ) {
-   return name.find_first_of( Path::InvalidFnmChars() ) == stref::npos;
+   return name.find_first_of( Path::InvalidFnmChars() ) == eosr;
    }
 
 bool Path::IsAbsolute( stref name ) {

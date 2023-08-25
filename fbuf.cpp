@@ -850,7 +850,7 @@ STATIC_FXN stref shebang_binary_name( PCFBUF pfb ) { // should be simple, right?
    const auto i1( FirstBlankOrEnd( rl0, ib ) );    // assume: no spaces in path of binary
    rl0.remove_suffix( rl0.length() - i1 );         // strip command tail
    const auto ls( rl0.find_last_of( "/" ) );       // assume: unix dirsep, regardless of platform
-   const auto i0( ls != stref::npos ? ls+1 : ib ); // could be bare binary name (i.e. filetype)
+   const auto i0( ls != eosr ? ls+1 : ib );        // could be bare binary name (i.e. filetype)
    if( i0 >= i1 ) { return ""; }                   // nothing at all?
    const auto shebang( rl0.substr( i0, i1 - i0 ) );    0 && DBG( "%" PR_BSR "<=shebang", BSR(shebang) );
    if( shebang == "env" ) {
@@ -1124,9 +1124,9 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum {DP=0};  DP && DBG( "%s
 
 char Path::DelimChar( PCChar fnm ) { // BUGBUG this needs to be (a) purpose-clarified, (b) made per OS (shell?)
    const stref srfnm( fnm );
-   if( atEnd( srfnm, ToNextOrEnd( stref(" ,&;^"), srfnm, 0 ) ) ) { return 0; }   // no delim needed
-   if( atEnd( srfnm, ToNextOrEnd( chQuot2       , srfnm, 0 ) ) ) { return chQuot2; } // "
-   if( atEnd( srfnm, ToNextOrEnd( chQuot1       , srfnm, 0 ) ) ) { return chQuot1; } // '
+   if( eosr == srfnm.find( stref(" ,&;^") ) ) { return 0; }       // no delim needed
+   if( eosr == srfnm.find( chQuot2        ) ) { return chQuot2; } // "
+   if( eosr == srfnm.find( chQuot1        ) ) { return chQuot1; } // '
    return '|'; // last ditch: ugly, but NEVER a valid filename char(?)
    }
 

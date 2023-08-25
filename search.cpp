@@ -57,7 +57,7 @@ STATIC_FXN sridx strnstr( stref haystack, stref needle ) {
 
 STATIC_FXN sridx strnstri( stref haystack, stref needle ) {
    const auto pos( std::search( haystack.cbegin(), haystack.cend(), needle.cbegin(), needle.cend(), eqi_ ) );
-   return pos == haystack.cend() ? stref::npos : std::distance( haystack.cbegin(), pos );
+   return pos == haystack.cend() ? eosr : std::distance( haystack.cbegin(), pos );
    }
 
 
@@ -856,7 +856,7 @@ CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, c
       {
       const auto hsTail( haystack.substr( ixHaystackCurCol ) );
       const auto relIxMatch( d_pfxStrnstr( hsTail, srRawSearch ) );
-      if( relIxMatch == stref::npos ) {              // no match this line?
+      if( relIxMatch == eosr ) {              // no match this line?
          curPt->col = *colLastPossibleMatchChar + 1; // next check next line
          return CONTINUE_SEARCH;
          }
@@ -1573,7 +1573,7 @@ FileSearcherString::FileSearcherString( const SearchScanMode &sm, const SearchSp
 FileSearcher::FindStrRslt FileSearcherString::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
    stref offset_eaten( src ); offset_eaten.remove_prefix( src_offset );
    const auto ixMatch( d_pfxStrnstr( offset_eaten, d_searchKey ) );
-   if( ixMatch == stref::npos ) {
+   if( ixMatch == eosr ) {
       return 0;
       }
    return offset_eaten.substr( ixMatch, d_searchKey.length() ); // MATCH!
@@ -1685,7 +1685,7 @@ SEARCH_REMAINDER_OF_LINE_AGAIN:
          for( const auto &needleSr : d_pNeedles ) {  // if( ExecutionHaltRequested() ) break;
             if( needleSr.length() <= rl.length() - curPt.col ) {
                const auto relIxMatch( d_pfxStrnstr( stref( rl.data() + curPt.col, rl.length() - curPt.col ), needleSr ) );
-               if( relIxMatch != stref::npos ) {
+               if( relIxMatch != eosr ) {
                   const auto ixMatch( curPt.col + relIxMatch );
                   0 && DBG( "%s L=%d Needle[%d]=%" PR_BSR " ixM=%" PR_BSRSIZET, d_pFBuf->Name(), curPt.lin, lix, BSR(needleSr), ixMatch ); ++lix;
                   // To prevent the highlight from being misaligned,

@@ -106,70 +106,18 @@ STIL constexpr char isQuoteCh   ( char inCh ) { return chQuot2==inCh || chQuot1=
 // many stref (and std::string) methods return "index or npos" (the latter
 // indicating a "not found" condition); I have chosen to signify a "not found"
 // condition with the index equivalent of the cend() iterator value:
-STIL sridx nposToEnd(       stref        str, sridx from ) { return from == stref::npos ? str.length() : from; }
+STIL sridx nposToEnd(       stref        str, sridx from ) { return from == eosr ? str.length() : from; }
 STIL bool  atEnd    (       stref        str, sridx idx  ) { return idx == str.length(); }
 STIL bool  atEnd    ( const std::string &str, sridx idx  ) { return idx == str.length(); }
 
 // INNER stringref index to OUTER stringref index
 STIL sridx isri2osri( stref osr, stref isr, sridx isri ) { return isri + (isr.data()-osr.data()); }
 
-STIL sridx find( stref this_, stref key, sridx start=0 ) {
-   this_.remove_prefix( start );
-   const auto rv( this_.find( key ) );
-   return rv == eosr ? eosr : rv + start ;
-   }
-
 template < typename cont_inst, typename Pred >
 typename cont_inst::size_type ToNextOrEnd( Pred pred, cont_inst src, typename cont_inst::size_type start ) {
    if( start < src.length() ) {
       for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
          if( pred( *it ) ) {
-            return std::distance( src.cbegin(), it );
-            }
-         }
-      }
-   return std::distance( src.cbegin(), src.cend() );
-   }
-
-// following (ToNext...OrEnd() with key param) exist largely because boost::string_ref find (etc.) methods do not include a start param!
-
-template < typename cont_inst >
-typename cont_inst::size_type ToNextOrEnd( const char key, cont_inst src, typename cont_inst::size_type start ) {
-   if( start < src.length() ) {
-      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         if( key == *it ) {
-            return std::distance( src.cbegin(), it );
-            }
-         }
-      }
-   return std::distance( src.cbegin(), src.cend() );
-   }
-
-template < typename cont_inst >
-typename cont_inst::size_type ToNextOrEnd( stref key, cont_inst src, typename cont_inst::size_type start ) {
-   if( start < src.length() ) {
-      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         for( const auto kch : key ) {
-            if( kch == *it ) {
-               return std::distance( src.cbegin(), it );
-               }
-            }
-         }
-      }
-   return std::distance( src.cbegin(), src.cend() );
-   }
-
-template < typename cont_inst >
-typename cont_inst::size_type ToNextNotOrEnd( stref key, cont_inst src, typename cont_inst::size_type start ) {
-   if( start < src.length() ) {
-      for( auto it( src.cbegin() + start ) ; it != src.cend() ; ++it ) {
-         auto hits( 0 );
-         for( const auto kch : key ) {
-            if( kch == *it ) {
-               ++hits;
-               }
-            }
-         if( 0 == hits ) {
             return std::distance( src.cbegin(), it );
             }
          }
@@ -273,7 +221,7 @@ STIL int cmp( stref s1, stref s2 ) {
          return rv;
          }
       }
-   if( s1.length() == s2.length() ) return 0;
+   if( s1.length() == s2.length() ) { return 0; }
    return s1.length() < s2.length() ? -1 : +1;
    }
 
@@ -285,14 +233,14 @@ STIL int cmpi( stref s1, stref s2 ) {
          return rv;
          }
       }
-   if( s1.length() == s2.length() ) return 0;
+   if( s1.length() == s2.length() ) { return 0; }
    return s1.length() < s2.length() ? -1 : +1;
    }
 
 // the Blank family...
 
 STIL bool IsStringBlank( stref src ) { // note that empty strings are Blank strings!
-   return std::all_of( src.cbegin(), src.cend(), []( char ch ){ return isblank( ch ); } );
+   return std::all_of( src.cbegin(), src.cend(), isblank );
    }
 
 //--------------------------------------------------------------------------------
@@ -347,9 +295,6 @@ struct CharMap {
 extern CharMap g_WordChars;
 extern CharMap g_HLJChars;
 
-STIL PCChar Strchr( PCChar psz, int ch ) { return       strchr( psz, ch ); }
-STIL PChar  Strchr( PChar  psz, int ch ) { return PChar(strchr( psz, ch )); }
-
 #if !defined(_WIN32)
 
 extern  PChar _strupr( PChar buf );
@@ -379,9 +324,7 @@ extern sridx FirstNonBlankOrEnd( stref src, sridx start=0 );
 extern sridx FirstBlankOrEnd   ( stref src, sridx start=0 );
 
 extern sridx FirstNonWordOrEnd( stref src, sridx start=0 );
-extern sridx IdxFirstWordCh( stref src, sridx start=0 );
 extern sridx IdxFirstHJCh  ( stref src, sridx start=0 );
-extern sridx StrLastWordCh(  stref src );
 
 //-----------------
 
@@ -390,8 +333,6 @@ extern int Quot2_strcspn( PCChar pszToSearch, PCChar pszToSearchFor );
 TF_Ptr STIL Ptr Quot2StrToNextOrEos( Ptr  pszToSearch, PCChar pszToSearchFor ) { return pszToSearch + Quot2_strcspn( pszToSearch, pszToSearchFor ); }
 
 TF_Ptr STIL Ptr StrToNextMacroTermOrEos( Ptr pszToSearch ) { return Quot2StrToNextOrEos( pszToSearch, "#" ); }
-
-template<typename strlval> void string_tolower( strlval &inout ) { std::transform( inout.begin(), inout.end(), inout.begin(), ::tolower ); }
 
 template<typename strlval>
 STIL void trim( strlval &inout ) { // remove leading and trailing whitespace
