@@ -514,7 +514,7 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
       return dest;
       }
    auto append_dest = [&dest]( stref src ) {
-      src.remove_prefix( FirstNonBlankOrEnd( src, 0 ) );
+      src.remove_prefix( FirstNonBlankOrEnd( src ) );
       if( !src.empty() ) {
          if( !dest.empty() ) { dest.append( " " ); }
          dest.append( src ); // <-- could be replaced by multi-blank-eater

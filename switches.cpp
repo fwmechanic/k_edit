@@ -206,22 +206,6 @@ sridx IdxFirstHJCh( stref src, sridx start ) {
    return 0;
    }
 
-sridx IdxFirstWordCh( stref src, sridx start ) {
-   if( start >= src.length() ) { return stref::npos; }
-   for( auto it( src.crbegin() + (src.length() - start - 1) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
-      if( !isWordChar(*it) )  { return src.length() - std::distance( src.crbegin(), it ); }
-      }
-   return 0;
-   }
-
-sridx StrLastWordCh( stref src ) {
-   for( auto it( src.cbegin() ) ; it != src.cend() ; ++it ) {
-      if( !isWordChar(*it) )  { return std::distance( src.cbegin(), it ) - 1; }
-      }
-   return src.length() - 1;
-   }
-
-
 //--------------------------------------------------------------
 
 class SWI_intf_base {
