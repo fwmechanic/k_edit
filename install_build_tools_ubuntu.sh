@@ -32,7 +32,7 @@ complete() {
 
 . /etc/os-release
 
-if [ "$ID" = "ubuntu" ] ; then
+if [[ "$ID" = "ubuntu" || "$ID" = "pop" ]] ; then
    echo "${hdr}STARTING"
    sudo apt-get install -yq   \
       build-essential         \
