@@ -2700,6 +2700,7 @@ do -- sumcol impl scope
             local fw = sum_cols_fracWidth( bc )
             local fn = function( num, fSign, ww ) return fmtNum( num, fw, fSign, ww ) end  -- rmv fw from call param lists by capturing it
             local st = fn( balance + pos+neg, false, width )
+                  st = st:gsub( '^(%s+)%s(%S)', function( s, ns ) return ('*'):rep(s:len()) .. ' ' .. ns end )
             local nummsg = (" "):rep( minInd-(#st - width) ) .. st
             if balance~=0 or (pos~=0 and neg~=0) then
                if balance~=0 then
