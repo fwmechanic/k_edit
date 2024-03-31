@@ -134,6 +134,8 @@
 
    comf:=arg "<compile>" setfile
 
+   a:=cancel arg "<ascii>" setfile
+
    # kk:=comf arg "kk" compile
    # kk_cmd:="kk.pl && regr_test"
    # kk_outf:=
