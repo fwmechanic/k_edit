@@ -69,6 +69,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <array>
 
 //*****************                                 *****************
 //*****************  begin project-header includes  *****************

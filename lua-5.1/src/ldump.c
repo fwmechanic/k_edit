@@ -60,7 +60,8 @@ static void DumpVector(const void* b, int n, size_t size, DumpState* D)
 
 static void DumpString(const TString* s, DumpState* D)
 {
- if (s==NULL || getstr(s)==NULL)
+ if (s==NULL /* || getstr(s)==NULL  20240401 kgoodwin GCC 13.2.0 warns this is an always-false expression: non-NULL pointer + small constant will never be NULL */
+    )
  {
   size_t size=0;
   DumpVar(size,D);
