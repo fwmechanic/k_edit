@@ -3505,16 +3505,16 @@ bool DeleteAllViewsOntoFbuf( PFBUF pFBuf ) {
    return fEntirelyRmvd;
    }
 
-void Display_hilite_regex_err( PCChar errMsg, PCChar searchStr, int errOffset ) {
-   const auto searchStrLen( Strlen(searchStr) );
-   const auto tail( searchStrLen > errOffset+1 );
-   ColoredStrefs         csrs;csrs.reserve( 6 );
-                         csrs.emplace_back( g_colorStatus, "Regex err" );
-                         csrs.emplace_back( g_colorError , errMsg );
-                         csrs.emplace_back( g_colorStatus, ": " );
-   if( errOffset > 1 ) { csrs.emplace_back( g_colorInfo  , stref( searchStr            , errOffset -1 )        ); } // leading OK part of pattern
-                         csrs.emplace_back( g_colorError , stref( searchStr+errOffset  , 1            ), !tail ? ePad::padWSpcsToEol : ePad::noPad );   // err char of pattern
-   if( tail )          { csrs.emplace_back( g_colorInfo  , searchStr+errOffset+1                       ,  tail ? ePad::padWSpcsToEol : ePad::noPad ); } // post-err part of pattern
+void Display_hilite_regex_err( PCChar errMsg, stref searchStr, int errOffset ) {
+   const auto tail( searchStr.length() > errOffset+1 );
+   ColoredStrefs         csrs;csrs.reserve( 7 );
+                         csrs.emplace_back( g_colorError , "Regex err " );
+                         csrs.emplace_back( g_colorStatus, errMsg );
+                         csrs.emplace_back( g_colorError , ": " );
+   if( errOffset > 0 ) { csrs.emplace_back( g_colorInfo  , searchStr.substr( 0, errOffset    ) ); } // leading OK part of pattern
+                         csrs.emplace_back( g_colorStatus, searchStr.substr(    errOffset, 1 ), !tail ? ePad::padWSpcsToEol : ePad::noPad );   // err char of pattern
+   if( tail )          { csrs.emplace_back( g_colorInfo  , searchStr.substr(    errOffset +1 ),  tail ? ePad::padWSpcsToEol : ePad::noPad ); } // post-err part of pattern
+                         csrs.emplace_back( g_colorError , "", ePad::padWSpcsToEol );
    VidWrColoredStrefs( DialogLine(), 0, csrs );
    }
 

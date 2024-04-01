@@ -147,19 +147,20 @@ CompiledRegex *Regex_Delete0( CompiledRegex *pcr ) {
    return nullptr;
    }
 
-CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase ) {  0 && DBG( "Regex_Compile! %s", pszSearchStr );
+CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) {  1 && DBG( "Regex_Compile! %" PR_BSR, BSR(pszSearchStr) );
    PCRE_API_INIT();
    const int options( fCase ? 0 : PCRE2_CASELESS );
    int errCode;
    PCRE2_SIZE errOffset;
-   auto pcreCode( pcre2_compile( reinterpret_cast<PCRE2_SPTR>(pszSearchStr), Strlen(pszSearchStr), options, &errCode, &errOffset, nullptr ) );
+   auto pcreCode( pcre2_compile( reinterpret_cast<PCRE2_SPTR>(pszSearchStr.data()), pszSearchStr.length(), options, &errCode, &errOffset, nullptr ) );
    if( !pcreCode ) {
       uint8_t errMsg[150];
       if( PCRE2_ERROR_BADDATA == pcre2_get_error_message( errCode, BSOB(errMsg) ) ) {
          Msg( "pcre2_compile returned unknown error %d", errCode );
          return nullptr;
          }
-      Display_hilite_regex_err( reinterpret_cast<PCChar>(errMsg), pszSearchStr,errOffset );
+      1 && DBG( "Regex_Compile! Display_hilite_regex_err" );
+      Display_hilite_regex_err( reinterpret_cast<PCChar>(errMsg), pszSearchStr, errOffset );
       return nullptr;
       }
    auto pcreMatchData = pcre2_match_data_create_from_pattern( pcreCode, nullptr );

@@ -1042,7 +1042,7 @@ STATIC_FXN bool SearchSpecifierOK( const ARG &arg ) {
       break;case TEXTARG: SearchLogSwap();
                           AddToSearchLog( arg.d_textarg.pText );
                           if( !SetNewSearchSpecifierOK( arg.d_textarg.pText, arg.d_cArg >= 2 ) ) {
-                             return ErrorDialogBeepf( "bad search specifier '%s'", arg.d_textarg.pText );
+                             return false; // no ErrorDialogBeepf here to avoid masking error dialogs from Regex_Compile
                              }
       break;case NOARG:   if( s_searchSpecifier ) {
                               s_searchSpecifier->CaseUpdt();

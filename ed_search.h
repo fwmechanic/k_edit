@@ -37,7 +37,7 @@ extern int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag );
 #include "pcre2.h"
 
 class  CompiledRegex;
-extern CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase );
+extern CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase );
 extern CompiledRegex *Regex_Delete0( CompiledRegex *pcr );
 extern RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
 extern void register_atexit_search();

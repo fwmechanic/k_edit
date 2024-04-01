@@ -164,7 +164,7 @@ extern void DispDoPendingRefreshes_()              ;
 extern void DispDoPendingRefreshesIfNotInMacro_()  ;
 extern void DispRefreshWholeScreenNow_()           ;
 
-extern void Display_hilite_regex_err( PCChar errMsg, PCChar pszSearchStr, int errOffset );
+extern void Display_hilite_regex_err( PCChar errMsg, stref pszSearchStr, int errOffset );
 
 #define  TRACE_DISP_NEEDS  0
 #if      TRACE_DISP_NEEDS
