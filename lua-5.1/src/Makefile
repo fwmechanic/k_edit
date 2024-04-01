@@ -26,10 +26,9 @@ MY_LPEG_O= lpcap.o lpcode.o lpprint.o lptree.o lpvm.o
 
 # next ifdef syms defined in %~dp0../../GNUmakefile
 ifdef USE_PCRE
-# changes @ PCRE 8.37 -> 8.38 require -DPCRE_STATIC
-CPPFLAGS += -DPCRE_STATIC
-MY_LPCRE_O = lpcre.o lpcre_f.o lpcre_common.o
-PCRE_LIB := -lpcre
+PCRE_LIB := -lpcre2-8
+MY_LPCRE_O = lpcre2.o lpcre2_f.o lpcre2_common.o
+$(MY_LPCRE_O) : CPPFLAGS += -DPCRE2_STATIC -DPCRE2_CODE_UNIT_WIDTH=8 -DVERSION=\"2.9.2\"
 endif
 
 MYCFLAGS=

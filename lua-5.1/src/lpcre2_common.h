@@ -6,6 +6,11 @@
 
 #include "lua.h"
 
+#if LUA_VERSION_NUM > 501
+# define lua_objlen lua_rawlen
+  int luaL_typerror (lua_State *L, int narg, const char *tname);
+#endif
+
 /* REX_API can be overridden from the command line or Makefile */
 #ifndef REX_API
 #  define REX_API LUALIB_API
@@ -27,10 +32,12 @@ typedef struct {            /* compile arguments */
   size_t       patlen;
   void       * ud;
   int          cflags;
-  const char * locale;            /* PCRE, Oniguruma */
-  const unsigned char * tables;   /* PCRE */
-  int          tablespos;         /* PCRE */
-  void       * syntax;            /* Oniguruma */
+  const char * locale;             /* PCRE, Oniguruma */
+  const unsigned char * tables;    /* PCRE */
+  int          tablespos;          /* PCRE */
+  void       * syntax;             /* Oniguruma */
+  const unsigned char * translate; /* GNU */
+  int          gnusyn;             /* GNU */
 } TArgComp;
 
 typedef struct {            /* exec arguments */
@@ -78,11 +85,19 @@ void buffer_pushresult (TBuffer *buf);
 
 void bufferZ_putrepstring (TBuffer *buf, int reppos, int nsub);
 int  bufferZ_next (TBuffer *buf, size_t *iter, size_t *len, const char **str);
+void bufferZ_addlstring (TBuffer *buf, const void *src, size_t len);
+void bufferZ_addnum (TBuffer *buf, size_t num);
 
 int  get_int_field (lua_State *L, const char* field);
 void set_int_field (lua_State *L, const char* field, int val);
 int  get_flags (lua_State *L, const flag_pair **arr);
 const char *get_flag_key (const flag_pair *fp, int val);
 void *Lmalloc (lua_State *L, size_t size);
+void *Lrealloc (lua_State *L, void *p, size_t osize, size_t nsize);
+void Lfree (lua_State *L, void *p, size_t size);
+
+#ifndef REX_NOEMBEDDEDTEST
+int newmembuffer (lua_State *L);
+#endif
 
 #endif
