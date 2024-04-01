@@ -261,11 +261,12 @@ endif
 #
 BOOST_LIBS := $(call LINK_LIB_STATIC,-lboost_filesystem -lboost_system)
 
-USE_PCRE := 1
-export USE_PCRE
+export USE_PCRE := 1
 ifneq "0" "$(USE_PCRE)"
+export PCRE2_CODE_UNIT_WIDTH := 8
 PCRE_OBJ := pcre_intf.o
-PCRE_LIB := $(call LINK_LIB_STATIC,-lpcre)
+PCRE_LIB := $(call LINK_LIB_STATIC,-lpcre2-$(PCRE2_CODE_UNIT_WIDTH))
+CPPFLAGS += -DPCRE2_STATIC -DPCRE2_CODE_UNIT_WIDTH=$(PCRE2_CODE_UNIT_WIDTH)
 else
 PCRE_OBJ :=
 PCRE_LIB :=

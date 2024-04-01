@@ -625,7 +625,7 @@ void l_OpenStdLibs( lua_State *L ) {
       { LUA_DBLIBNAME     ,  luaopen_debug   },
       { LUA_KLIBNAME      ,  luaopen_klib    },
 #if USE_PCRE
-      { "pcre"            ,  luaopen_rex_pcre }, // 20080105 kgoodwin apparent 32K cost
+      { "pcre"            ,  luaopen_rex_pcre2 }, // 20080105 kgoodwin apparent 32K cost
 #endif
       { "lpeg"            ,  luaopen_lpeg    },  // 20081110 kgoodwin apparent 36K cost
       // add your libraries here

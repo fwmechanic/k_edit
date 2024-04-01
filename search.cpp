@@ -1762,7 +1762,7 @@ void FileSearcher::VFindMatches_() { enum { SD=0 };  VS_( DBG( "%csearch: START 
          // case, it keeps finding the EOL under the cursor (doesn't move to
          // prev one)
        #if USE_PCRE
-         #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == rl.length() ? 0 : PCRE_NOTBOL)
+         #define  SET_HaystackHas(startOfs)  (startOfs+maxCharsToSearch == rl.length() ? 0 : PCRE2_NOTBOL)
        #else
          #define  SET_HaystackHas(startOfs)  (0)
        #endif

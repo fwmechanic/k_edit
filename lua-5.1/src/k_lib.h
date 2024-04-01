@@ -59,5 +59,5 @@ extern unsigned GetUint_Hack( lua_State *L, int n );
 
 #define LUA_KLIBNAME "klib"
 LUALIB_API int luaopen_klib (lua_State *L);
-LUALIB_API int luaopen_rex_pcre (lua_State *L);
+LUALIB_API int luaopen_rex_pcre2 (lua_State *L);
 LUALIB_API int luaopen_lpeg (lua_State *L);

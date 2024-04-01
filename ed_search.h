@@ -34,8 +34,7 @@ extern int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag );
 
 #if USE_PCRE
 
-#define PCRE_STATIC
-#include "pcre.h"
+#include "pcre2.h"
 
 class  CompiledRegex;
 extern CompiledRegex *Regex_Compile( PCChar pszSearchStr, bool fCase );

@@ -27,7 +27,7 @@ static const luaL_Reg lualibs[] = {
   {LUA_DBLIBNAME, luaopen_debug},
   {LUA_KLIBNAME, luaopen_klib},        /* 20060825 kgoodwin private library (k_lib.c) */
   {"lpack", luaopen_pack },            /* 20070313 kgoodwin PubDomain code (lpack.c) */
-//{"pcre", luaopen_rex_pcre },         /* 20080105 kgoodwin PubDomain code (lrexlib w/significant hacks to static compile) */
+//{"pcre", luaopen_rex_pcre2 },        /* 20080105 kgoodwin PubDomain code (lrexlib w/significant hacks to static compile) */
   {"lpeg", luaopen_lpeg },             /* 20081110 kgoodwin PubDomain code (lpeg.c) */
   {NULL, NULL}
 };

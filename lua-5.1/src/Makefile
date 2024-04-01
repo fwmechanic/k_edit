@@ -26,9 +26,10 @@ MY_LPEG_O= lpcap.o lpcode.o lpprint.o lptree.o lpvm.o
 
 # next ifdef syms defined in %~dp0../../GNUmakefile
 ifdef USE_PCRE
-PCRE_LIB := -lpcre2-8
+# PCRE2_CODE_UNIT_WIDTH exported from %~dp0../../GNUmakefile
+PCRE_LIB := -lpcre2-$(PCRE2_CODE_UNIT_WIDTH)
 MY_LPCRE_O = lpcre2.o lpcre2_f.o lpcre2_common.o
-$(MY_LPCRE_O) : CPPFLAGS += -DPCRE2_STATIC -DPCRE2_CODE_UNIT_WIDTH=8 -DVERSION=\"2.9.2\"
+$(MY_LPCRE_O) : CPPFLAGS += -DPCRE2_STATIC -DPCRE2_CODE_UNIT_WIDTH=$(PCRE2_CODE_UNIT_WIDTH) -DVERSION=\"2.9.2\"
 endif
 
 MYCFLAGS=
