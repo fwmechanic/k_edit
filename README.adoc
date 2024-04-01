@@ -58,7 +58,7 @@ The K source code distro contains, and K incorporates, by building and static li
  * `GCC` >= 11
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
  ** `boost::filesystem`: a small subset only
- * http://www.pcre.org/[`PCRE`] "Perl Compatible Regular Expressions" (the "legacy" 8.x version) used in search/replace editor-functions and occasionally internally.
+ * https://github.com/PCRE2Project/pcre2[`PCRE2`] Perl Compatible Regular Expressions are used in search/replace editor-functions and occasionally internally.
  * https://ctags.io/[`Universal Ctags`] is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread` libraries
  * Windows-only: https://www.7-zip.org/download.html[`7zip.exe`] is used to create release files when building the `make rls` target (in the same circumstance, the Linux build creates `.tgz` files using standard utilities).
@@ -227,7 +227,7 @@ K implements a large number of editor-functions, all of which the user can invok
  ** Aside: at the end of each successful build of K, to facilitate development of K, `ctags` is invoked to rebuild the "K tags database".
  ** the set of tags navigated to are added to a linklist which is traversed via `alt+left` and `alt+right`.  Locations hyperlinked from are also added to this list, allowing easy return.
  ** those functions appearing in the "Intrinsic Functions" section of <CMD-SWI-Keys> are methods of `ARG::` and can be tags-looked up (providing the best possible documentation to the user: the source code!).
- * PCRE Regular-expression (regex) search & replace: all search and replace functions, when prefixed with `arg arg` (2-arg), operate in regex mode.
+ * PCRE2 Regular-expression (regex) search & replace: all search and replace functions, when prefixed with `arg arg` (2-arg), operate in regex mode.
  * `psearch` (`F3`) / `msearch` (`F4`) (referred to as `xsearch` in the following text) search forward / backward from the cursor position.
  ** `alt+F3` opens a buffer containing previous search keys.
  ** `xsearch` (w/o arg) searches for the next match of the current search key.
@@ -235,14 +235,14 @@ K implements a large number of editor-functions, all of which the user can invok
  ** `arg` "searchkey" `xsearch` changes the current search key to "searchkey" and searches for the next match.
  ** `grep` (`ctrl+F3`) creates a new buffer containing one line for each line matching the search key.  `gotofileline` (`alt+g`) comprehends this file format, allowing you to hyperlink back to the match in the grepped file.
  ** `mfgrep` (`shift+F4`) creates a new buffer containing one line for each line, from a set of files, matching the search key.  The "set of files" is initialized the first time the user invokes the tags function (there are other ways of course).
- ** In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression.
+ ** In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE2 regular expression.
  * text-replace functions (note: these functions take three arguments: region to perform the replace, search-key, replace string, and the latter two arguments are required to be entered interactively by the user)
  ** noarg `replace` (`ctrl+L`) performs a unconditional (noninteractive) replace from the cursor position to the bottom of the buffer (or throughout a BOX/LINE/STREAMARG selection).
  ** noarg `qreplace` (`ctrl+5`) performs a query-driven (i.e. interactive) replace from the cursor position to the bottom of the buffer (or throughout a BOX/LINE/STREAMARG selection).
  ** if a selection arg (line, box, stream) is prefixed to `replace` or `qreplace`, only the content of that selection region is subject to the replace operation.
  ** `mfreplace` (`F11`) performs a query-driven (i.e. interactive) replace operation across multiple entire files.
- ** Regular-expression (PCRE) replace is supported: in regex mode (when prefixed with `arg arg`) the search string is treated as a regular expression, and replace functions support the replacement string ; insertion of regex captures in the replacement string via `\n` where `n` is the capture number.
- ** In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE regular expression, and the replacement string may reference regex captures in the replacement string via `\n` where `n` is the (single-digit) capture number.
+ ** Regular-expression (PCRE2) replace is supported: in regex mode (when prefixed with `arg arg`) the search string is treated as a regular expression, and replace functions support the replacement string ; insertion of regex captures in the replacement string via `\n` where `n` is the capture number.
+ ** In regex mode (when prefixed with `arg arg`) the search string is treated as a PCRE2 regular expression, and the replacement string may reference regex captures in the replacement string via `\n` where `n` is the (single-digit) capture number.
  * the cursor keys (alone and chorded with shift, ctrl and alt keys) should all work as expected, and serve to move the cursor (and extend the arg selection if one is active).
  * `sort` (`alt+9`) sort contiguous range of lines.  Sort key is either BOXARG-selected substring of each line, or (if LINEARG) each entire line.  After `sort` is invoked, a series of menu prompts allow the user to choose ascending/descending, case (in)sensitive, keep/discard duplicates.
  * `websearch` (`alt+6`): perform web search on string (opens in default browser)
