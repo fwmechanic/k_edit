@@ -41,7 +41,7 @@ if [[ "$ID" = "ubuntu" || "$ID" = "pop" ]] ; then
       libboost-filesystem-dev \
       libboost-system-dev     \
       libncurses5-dev         \
-      libpcre3-dev            \
+      libpcre2-dev            \
       ncurses-term            \
       libreadline-dev         \
       universal-ctags         \
@@ -52,7 +52,7 @@ fi
 if [ "$ID" = "centos" ] ; then
    echo "${hdr}STARTING"
    yum -yq groupinstall "Development Tools"   &&
-   yum -yq install boost-devel ncurses-devel pcre-devel ncurses-term readline-devel &&
+   yum -yq install boost-devel ncurses-devel pcre2-devel pcre2-static ncurses-term readline-devel &&
    yum -yq install exuberant-ctags &&
    yum -yq install xclip
    complete
