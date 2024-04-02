@@ -21,48 +21,9 @@
 
 #include "attr_format.h"
 
-enum { // these are COLOR CODES!
-   fgBLK =  0x0,
-   fgBLU =  0x1,
-   fgGRN =  0x2,
-   fgCYN =  0x3,
-   fgRED =  0x4,
-   fgPNK =  0x5,
-   fgBRN =  0x6,
-   fgDGR =  0x7,
-   fgMGR =  0x8,
-   fgLBL =  0x9,
-   fgLGR =  0xA,
-   fgLCY =  0xB,
-   fgLRD =  0xC,
-   fgLPK =  0xD,
-   fgYEL =  0xE,
-   fgWHT =  0xF,
-   //------------
-   bgBLK = (fgBLK<<4),
-   bgBLU = (fgBLU<<4),
-   bgGRN = (fgGRN<<4),
-   bgCYN = (fgCYN<<4),
-   bgRED = (fgRED<<4),
-   bgPNK = (fgPNK<<4),
-   bgBRN = (fgBRN<<4),
-   bgDGR = (fgDGR<<4),
-   bgMGR = (fgMGR<<4),
-   bgLBL = (fgLBL<<4),
-   bgLGR = (fgLGR<<4),
-   bgLCY = (fgLCY<<4),
-   bgLRD = (fgLRD<<4),
-   bgLPK = (fgLPK<<4),
-   bgYEL = (fgYEL<<4),
-   bgWHT = (fgWHT<<4),
+typedef uint8_t colorval_t;  // as comprehended by the system's conio API; a.k.a. color attribute a.k.a. attr
 
-   //------------ masks
-   FGmask=0x0F, BGmask=0xF0,
-   FGhi  =0x08, BGhi  =0x80,
-   FGbase=0x07, BGbase=0x70,
-   };
-
-enum class fg: uint8_t {
+enum class fg: colorval_t {
    BLK =  0x0,
    BLU =  0x1,
    GRN =  0x2,
@@ -79,31 +40,41 @@ enum class fg: uint8_t {
    LPK =  0xD,
    YEL =  0xE,
    WHT =  0xF,
+   mask=  0xF,
+   hi  =  0x8,
+   lo  =  0x0,
    };
 
-enum class bg: uint8_t {
+enum class bg: colorval_t {
    //------------
-   BLK = (to_underlying(fg::BLK)<<4),
-   BLU = (to_underlying(fg::BLU)<<4),
-   GRN = (to_underlying(fg::GRN)<<4),
-   CYN = (to_underlying(fg::CYN)<<4),
-   RED = (to_underlying(fg::RED)<<4),
-   PNK = (to_underlying(fg::PNK)<<4),
-   BRN = (to_underlying(fg::BRN)<<4),
-   DGR = (to_underlying(fg::DGR)<<4),
-   MGR = (to_underlying(fg::MGR)<<4),
-   LBL = (to_underlying(fg::LBL)<<4),
-   LGR = (to_underlying(fg::LGR)<<4),
-   LCY = (to_underlying(fg::LCY)<<4),
-   LRD = (to_underlying(fg::LRD)<<4),
-   LPK = (to_underlying(fg::LPK)<<4),
-   YEL = (to_underlying(fg::YEL)<<4),
-   WHT = (to_underlying(fg::WHT)<<4),
+   BLK  = to_underlying(fg::BLK)<<4,
+   BLU  = to_underlying(fg::BLU)<<4,
+   GRN  = to_underlying(fg::GRN)<<4,
+   CYN  = to_underlying(fg::CYN)<<4,
+   RED  = to_underlying(fg::RED)<<4,
+   PNK  = to_underlying(fg::PNK)<<4,
+   BRN  = to_underlying(fg::BRN)<<4,
+   DGR  = to_underlying(fg::DGR)<<4,
+   MGR  = to_underlying(fg::MGR)<<4,
+   LBL  = to_underlying(fg::LBL)<<4,
+   LGR  = to_underlying(fg::LGR)<<4,
+   LCY  = to_underlying(fg::LCY)<<4,
+   LRD  = to_underlying(fg::LRD)<<4,
+   LPK  = to_underlying(fg::LPK)<<4,
+   YEL  = to_underlying(fg::YEL)<<4,
+   WHT  = to_underlying(fg::WHT)<<4,
+   mask = to_underlying(fg::mask)<<4,
+   hi   = to_underlying(fg::hi  )<<4,
+   lo   = to_underlying(fg::lo  )<<4,
    };
-
-typedef uint8_t colorval_t;  // as comprehended by the system's conio API; a.k.a. color attribute a.k.a. attr
 
 STIL constexpr colorval_t fb( fg ff, bg bb ) { return to_underlying( ff ) | to_underlying( bb ); }
+STIL constexpr fg   get_fg( colorval_t color ) { return static_cast<fg>(color & to_underlying(fg::mask)); }
+STIL constexpr bg   get_bg( colorval_t color ) { return static_cast<bg>(color & to_underlying(bg::mask)); }
+STIL constexpr bool is_fghi( fg ff ) { return (to_underlying(ff) & to_underlying(fg::hi)) != 0; }
+STIL constexpr bool is_bghi( bg bb ) { return (to_underlying(bb) & to_underlying(bg::hi)) != 0; }
+STIL constexpr fg   xor_fg( fg ff1, fg ff2 ) { return static_cast<fg>(to_underlying(ff1) ^ to_underlying(ff2)); }
+STIL constexpr bg   xor_bg( bg bb1, bg bb2 ) { return static_cast<bg>(to_underlying(bb1) ^ to_underlying(bb2)); }
 
 struct YX_t {
    int  lin;

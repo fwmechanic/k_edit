@@ -144,10 +144,10 @@ CompileTimeAssert( to_underlying(ColorTblIdx::COLOR_COUNT) <= 16 ); // all Color
 
 #include "conio.h"
 
-GLOBAL_VAR inline colorval_t g_colorInfo      = 0x1e; // INF
-GLOBAL_VAR inline colorval_t g_colorStatus    = 0x1e; // STA
-GLOBAL_VAR inline colorval_t g_colorWndBorder = 0xa0; // WND
-GLOBAL_VAR inline colorval_t g_colorError     = 0x1e; // ERR
+GLOBAL_VAR inline colorval_t g_colorInfo      = fb(fg::YEL,bg::BLU); // INF
+GLOBAL_VAR inline colorval_t g_colorStatus    = fb(fg::YEL,bg::BLU); // STA
+GLOBAL_VAR inline colorval_t g_colorWndBorder = fb(fg::BLK,bg::LGR); // WND
+GLOBAL_VAR inline colorval_t g_colorError     = fb(fg::YEL,bg::BLU); // ERR
 
 struct Point {   // file location
    LINE    lin = 0;

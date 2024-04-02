@@ -204,17 +204,17 @@ constexpr auto DBG_HL_EVENT( false );
 
 //-----------------------------------------------------------------------------------------------------------
 
-STATIC_FXN char GenAltHiliteColor( const char color ) {
+STATIC_FXN char GenAltHiliteColor( const colorval_t color ) {
    // algorithm ATTEMPTS to choose a _readable_ hilite-alternative-color for a given color
-   const char fgColor( (color & FGmask)    );
-   const char bgColor( (color & BGmask)    );
-   if( bgBLK == bgColor ) { return ( fgColor | (bgColor ^ 0x10) ); }
-   const auto fgBrite( (color & FGhi) != 0 );
-   const auto bgBrite( (color & BGhi) != 0 );
-   if(        fgBrite &&  bgBrite ) { return ( color ^ BGhi ); }
-   else if(   fgBrite && !bgBrite ) { return ( color ^ BGhi ); }
-   else if(  !fgBrite &&  bgBrite ) { return ( color ^ FGhi ); }
-   else                             { return ( color ^ BGhi ); }
+   const auto fgColor( get_fg(color) );
+   const auto bgColor( get_bg(color) );
+   if( bg::BLK == bgColor ) { return fb( fgColor, xor_bg(bgColor, bg::BLU) ); }
+   const auto fgBrite( is_fghi(fgColor) );
+   const auto bgBrite( is_bghi(bgColor) );
+   if(        fgBrite &&  bgBrite ) { return fb( fgColor                , xor_bg(bgColor, bg::hi) ); }
+   else if(   fgBrite && !bgBrite ) { return fb( fgColor                , xor_bg(bgColor, bg::hi) ); }
+   else if(  !fgBrite &&  bgBrite ) { return fb( xor_fg(fgColor, fg::hi), bgColor                 ); }
+   else                             { return fb( fgColor                , xor_bg(bgColor, bg::hi) ); }
    }
 
 //--------------------------------------------------------------------------------------------------------------------------
@@ -281,7 +281,7 @@ void FTypeSetting::Update() {
    #undef SINIT
       }; static_assert( ELEMENTS( s_color2Lua ) == d_colors_ELEMENTS, "ELEMENTS( s_color2Lua ) != d_colors_ELEMENTS" );
    const auto w3( w2.cpy( ".colors." ) );
-   const colorval_t orVal( g_fBrightFg ? FGhi : 0 );
+   const colorval_t orVal( fb(g_fBrightFg ? fg::hi : fg::lo, bg::lo ) );
    for( const auto &c2L : s_color2Lua ) {
       const auto ofs = to_underlying( c2L.ofs );
       w3.cpy( c2L.pLuaName );
@@ -333,7 +333,7 @@ colorval_t View::ColorIdxToColorval( ColorTblIdx cti ) const {
    auto colorIdx = to_underlying(cti);
    if( colorIdx >= 0 ) {
       if( colorIdx < FTypeSetting::d_colors_ELEMENTS ) {
-         constexpr auto unknownColor( bgBLU|fgCYN|FGhi );
+         constexpr auto unknownColor( fb(fg::LCY, bg::BLU) );
          const auto pFTS( CFBuf()->GetFTypeSettings() );
          return pFTS ? pFTS->d_colors[ colorIdx ] : unknownColor;
          }
@@ -348,7 +348,7 @@ colorval_t View::ColorIdxToColorval( ColorTblIdx cti ) const {
          return *s_colorVars[ colorIdx ];
          }
       }
-   constexpr auto unknownColor( bgRED|fgPNK|FGhi );
+   constexpr auto unknownColor( fb(fg::LPK,bg::RED) );
    return unknownColor;
    }
 
@@ -1923,8 +1923,8 @@ bool HiliteAddin_Diff::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &a
    const auto rl( CFBuf()->PeekRawLine( yLine ) );
    if( !rl.empty() ) {
       switch( rl[0] ) {
-         case '+': alcc.PutColorval( 0, COL_MAX, bgBLK|fgGRN|FGhi ); /*DBG( "+" );*/ break;
-         case '-': alcc.PutColorval( 0, COL_MAX, bgBLK|fgRED|FGhi ); /*DBG( "-" );*/ break;
+         case '+': alcc.PutColorval( 0, COL_MAX, fb(fg::LGR,bg::BLK) ); /*DBG( "+" );*/ break;
+         case '-': alcc.PutColorval( 0, COL_MAX, fb(fg::LRD,bg::BLK) ); /*DBG( "-" );*/ break;
          default: break;
          }
       }
@@ -3363,7 +3363,7 @@ void View::GetLineForDisplay
    const auto isActiveLine( isActiveWindow && g_CursorLine() == yLineOfFile );
    dest.replace( xLeft, xWidth, xWidth, ' ' ); // dflt for line seg is spaces (overwrites border-assign: buf.assign( scrnCols, H__ ))
    if( yLineOfFile > CFBuf()->LastLine() ) {
-      alcc.PutColorval( Origin().col, xWidth, bgBLK|fgDGR );
+      alcc.PutColorval( Origin().col, xWidth, fb(fg::DGR,bg::BLK) );
       dest[xLeft] = (0 == g_chTrailLineDisp || 255 == g_chTrailLineDisp) ? ' ' : g_chTrailLineDisp;
       }
    else {
@@ -3391,7 +3391,7 @@ void View::GetLineForDisplay
       , alcc, pFirstPossibleHiLite, isActiveWindow, isActiveLine
       );
    if( xPctposWidth ) {
-      alcc.PutColorval( xPctposLeft, xPctposWidth, bgBLK|fgDGR );
+      alcc.PutColorval( xPctposLeft, xPctposWidth, fb(fg::DGR,bg::BLK) );
       }
    }
 

@@ -199,8 +199,8 @@ public:
    };
 
 void FindPrevNextMatchHandler::DrawDialog( PCChar hdr, PCChar trlr ) {
-   const auto de_color( 0x5f );
-   const auto ss_color( g_fCase ? (bgRED|fgWHT) : (bgGRN|fgWHT) );
+   const decltype(g_colorInfo) de_color{ fb(fg::PNK,bg::WHT) };
+   const decltype(g_colorInfo) ss_color{ g_fCase ? fb(fg::WHT,bg::RED) : fb(fg::WHT,bg::GRN) };
    STATIC_CONST char s_chRex = '/';
    ColoredStrefs csrs; csrs.reserve( d_fIsRegex ? 5 : 3 );
                       csrs.emplace_back( g_colorInfo , hdr );
