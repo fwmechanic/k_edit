@@ -140,8 +140,6 @@ enum class ColorTblIdx { // see color2Lua // these are ARRAY _INDICES_!
 
 CompileTimeAssert( to_underlying(ColorTblIdx::COLOR_COUNT) <= 16 ); // all ColorTblIdx:: must fit into a nibble
 
-#define  HILITE_CPP_CONDITIONALS  1
-
 #include "conio.h"
 
 GLOBAL_VAR inline colorval_t g_colorInfo      = fb(fg::YEL,bg::BLU); // INF
