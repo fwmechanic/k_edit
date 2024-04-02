@@ -116,9 +116,6 @@ typedef  FmtStr<2*BUFBYTES>  Sprintf2xBuf;
 
 //=============================================================================
 
-#define  USE_CURSORLINE_HILITE       1
-#define  USE_CURSORLINE_VERT_HILITE  1
-
 // Editor color table indicies
 enum class ColorTblIdx { // see color2Lua // these are ARRAY _INDICES_!
    TXT,  // foreground (normal)
