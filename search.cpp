@@ -106,9 +106,9 @@ class FileSearchMatchHandler {
       int  GetMatchActions() const { return d_actionCount; }
       };
 protected:
-   int         d_lifetimeFileCount;
-   int         d_lifetimeFileCountMatch      ;
-   int         d_lifetimeFileCountMatchAction;
+   int         d_lifetimeFileCount            = 0;
+   int         d_lifetimeFileCountMatch       = 0;
+   int         d_lifetimeFileCountMatchAction = 0;
    SearchStats d_lifetimeStats;
    SearchStats d_curFileStats;
    FBufLocn    d_flToScroll;
@@ -116,9 +116,6 @@ protected:
    MainThreadPerfCounter d_pc;
 public:
    FileSearchMatchHandler()
-      : d_lifetimeFileCount           (0)
-      , d_lifetimeFileCountMatch      (0)
-      , d_lifetimeFileCountMatchAction(0)
       { g_CurView()->FreeHiLiteRects(); }
    virtual ~FileSearchMatchHandler() {}
    // External Event Hooks
@@ -2338,9 +2335,8 @@ bool ARG::fg() { enum {SD=0}; // fgrep
       );
    if( !keySep ) {
       return Msg( "%s: cumulative key contains all possible separators [,|.]", __func__ );
-      }
-                                                SD && DBG( "KEY=%s", pszKey );
-   auto pastEnd( pszKey+keyLen );
+      }                                         SD && DBG( "KEY=%s", pszKey );
+   const auto pastEnd( pszKey+keyLen );
    for( auto pC(pszKey) ; pC < pastEnd ; ++pC ) {
       if( chNUL == *pC ) {
          *pC = keySep;
@@ -2372,7 +2368,7 @@ FAIL: // dest gets filename of CURRENT buffer!  But generation is 0
    if( IsStringBlank( rl ) )           { goto FAIL; }
    dest.assign( unquote( rl ) );
    }
-   auto iy(1);
+   decltype( fb->LastLine() ) iy{1};
    for( ; iy <= fb->LastLine() ; ++iy ) {
       auto rl( fb->PeekRawLine( iy ) );                    0 && DBG("[%d] %s' line=%" PR_BSR "'",iy, fb->Name(), BSR(rl) );
       if( !rl.starts_with( "<grep." ) ) { break; }

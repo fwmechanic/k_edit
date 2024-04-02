@@ -32,8 +32,15 @@ private:
    pcre2_match_data  *d_pcreMatchData;
 public:
    // User code SHOULD NOT call this ctor, _SHOULD_ CREATE CompiledRegex via Regex_Compile!
-   CompiledRegex( pcre2_code *pcreCode, pcre2_match_data *pcreMatchData ); // called ONLY by Regex_Compile (when it is successful)
-   ~CompiledRegex();
+   CompiledRegex( pcre2_code *pcreCode, pcre2_match_data *pcreMatchData )  // called ONLY by Regex_Compile (when it is successful)
+      : d_pcreCode(pcreCode)
+      , d_pcreMatchData( pcreMatchData )
+      {
+      }
+   ~CompiledRegex() {
+      pcre2_code_free( d_pcreCode );
+      pcre2_match_data_free( d_pcreMatchData );
+      }
    RegexMatchCaptures::size_type Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
    };
 
@@ -55,17 +62,6 @@ stref RegexVersion() {
 
 //------------------------------------------------------------------------------
 
-CompiledRegex::CompiledRegex( pcre2_code *pcreCode, pcre2_match_data *pcreMatchData )
-   : d_pcreCode(pcreCode)
-   , d_pcreMatchData( pcreMatchData )
-   {
-   }
-
-CompiledRegex::~CompiledRegex() {
-   pcre2_code_free( d_pcreCode );
-   pcre2_match_data_free( d_pcreMatchData );
-   }
-
 int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag ) {
    auto ix(0);
    for( const auto &el : captures ) {
@@ -76,6 +72,7 @@ int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag ) {
 
 RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options ) {
    0 && DBG( "CompiledRegex::Match called!" );
+   captures.clear(); // before any return
    // http://www.pcre.org/original/doc/html/pcreapi.html#SEC17  "MATCHING A PATTERN: THE TRADITIONAL FUNCTION" describes pcre_exec()
    const int rc( pcre2_match(
            d_pcreCode
@@ -87,20 +84,9 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
          , nullptr             // pcre2_match_context *  (nullptr == use default behaviors)
          )
       );                                                   0 && DBG( "CompiledRegex::Match returned %d", rc );
-   // The first pair of integers, ovector[0] and ovector[1], identify the portion of the subject string matched by
-   // the entire pattern.  The next pair is used for the first capturing subpattern, and so on.  The value returned
-   // by pcre_exec() is one more than the highest numbered pair that has been set.  For example, if two substrings
-   // have been captured, the returned value is 3.  If there are no capturing subpatterns, the return value from a
-   // successful match is 1, indicating that just the first pair of offsets has been set.
-
-   captures.clear(); // before any return
-
    if( rc <= 0 ) {
       switch( rc ) {
          break;case PCRE2_ERROR_NOMATCH:  // the only "expected" error: be silent
-         break;case 0:  // if PCRE returns 0, it says there were more captures than we gave him space for (sizeof(d_pcreMatchData) / sizeof(int)).
-                        // This is an internal error.
-                        ErrorDialogBeepf( "PCRE2: ???" );
          break;default: {
                         uint8_t errMsg[150];
                         if( PCRE2_ERROR_BADDATA == pcre2_get_error_message( rc, BSOB(errMsg) ) ) {
@@ -111,21 +97,24 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
                            }
                         }
          }
-      return 0;
-      }                                                    0 && DBG( "CompiledRegex::Match count=%d", rc );
-   if( rc > 0 ) {
-      uint32_t ovector_els = pcre2_get_ovector_count( d_pcreMatchData );
+      }
+   else {                                                  0 && DBG( "CompiledRegex::Match count=%d", rc );
+      // The first pair of integers, ovector[0] and ovector[1], identify the portion of the subject string matched by
+      // the entire pattern (Perl's $0).  The next pair is used for the first capturing subpattern (Perl's $1), and so
+      // on.  The value returned by pcre2_match() is one more than the highest numbered pair that has been set.  For
+      // example, if two substrings have been captured, the returned value is 3.  If there are no capturing subpatterns,
+      // the return value from a successful match is 1, indicating that just the first pair of offsets has been set.
+      //
+      const auto ovector_els = pcre2_get_ovector_count( d_pcreMatchData );
       captures.reserve( ovector_els );
       auto ovector = pcre2_get_ovector_pointer( d_pcreMatchData );
-      for( auto ix(0); ix < ovector_els; ++ix ) {
+      for( std::remove_const_t<decltype(ovector_els)> ix{0}; ix < ovector_els; ++ix ) {
          const auto oFirst    = *ovector++;
          const auto oPastLast = *ovector++;
-         // It is possible for an capturing subpattern number n+1 to match some
-         // part of the subject when subpattern n has not been used at all.  For
-         // example, if the string "abc" is matched against the pattern
-         // (a|(z))(bc) subpatterns 1 and 3 are matched, but 2 is not.  When
-         // this happens, both offset values corresponding to the unused
-         // subpattern are set to PCRE2_UNSET.
+         // It is possible for an capturing subpattern number n+1 to match some part of the subject when subpattern n
+         // has not been used at all.  For example, if the string "abc" is matched against the pattern (a|(z))(bc)
+         // subpatterns 1 and 3 are matched, but 2 is not.  When this happens, both offset values corresponding to the
+         // unused subpattern are set to PCRE2_UNSET.
          //
          if( oFirst == PCRE2_UNSET && oPastLast == PCRE2_UNSET ) {
             captures.emplace_back();
@@ -147,7 +136,7 @@ CompiledRegex *Regex_Delete0( CompiledRegex *pcr ) {
    return nullptr;
    }
 
-CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) {  1 && DBG( "Regex_Compile! %" PR_BSR, BSR(pszSearchStr) );
+CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) {  0 && DBG( "Regex_Compile! %" PR_BSR, BSR(pszSearchStr) );
    PCRE_API_INIT();
    const int options( fCase ? 0 : PCRE2_CASELESS );
    int errCode;
@@ -159,7 +148,7 @@ CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) {  1 && DBG( "Reg
          Msg( "pcre2_compile returned unknown error %d", errCode );
          return nullptr;
          }
-      1 && DBG( "Regex_Compile! Display_hilite_regex_err" );
+      0 && DBG( "Regex_Compile! Display_hilite_regex_err" );
       Display_hilite_regex_err( reinterpret_cast<PCChar>(errMsg), pszSearchStr, errOffset );
       return nullptr;
       }
