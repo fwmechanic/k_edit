@@ -113,7 +113,10 @@ int FBOP::GetLineIsolateFilename( PCFBUF fb, Path::str_t &st, LINE yLine, COL xC
       return -1;
       }
    auto rl( fb->PeekRawLine( yLine ) );
-   const auto ixCol( FreeIdxOfCol( fb->TabWidth(), rl, xCol ) );
+   if( 0==rl.length() ) {
+      return -1;
+      }
+   const auto ixCol( FreeIdxOfCol( fb->TabWidth(), rl, xCol ) );  0 && DBG( "ixCol %" PR_SIZET ", rl.length() %" PR_SIZET, ixCol, rl.length() );
    if( ixCol > rl.length()-1 ) {
       return -1;
       }
