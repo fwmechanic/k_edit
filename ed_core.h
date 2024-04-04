@@ -413,9 +413,6 @@ constexpr ArgType_t ACTUAL_ARGS = NOARG | TEXTARG | NULLARG | LINEARG | BOXARG |
 // CMD's w/ANY of these SET need additional ARG processing when Invoke()'ed
 constexpr ArgType_t TAKES_ARG   = ACTUAL_ARGS | NOARGWUC | NULLEOW | NULLEOL | NUMARG;
 
-// note that 'mark' fxn does NOT have NUMARG set!
-#define IS_NUMARG    (d_argType == LINEARG)
-#define NUMARG_VALUE (d_linearg.yMax - d_linearg.yMin + 1)
 
 struct CMD;
 typedef       CMD *         PCMD;
