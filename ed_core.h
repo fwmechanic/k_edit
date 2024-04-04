@@ -50,8 +50,8 @@
   #error undefined PTRDIFF_MAX
   #endif
 
-typedef ptrdiff_t   COL ;     // column or position within line
-typedef ptrdiff_t   LINE;     // line number within file
+typedef ptrdiff_t   COL ;     // 0-based column or position within line
+typedef ptrdiff_t   LINE;     // 0-based line number within file
 constexpr LINE MAX_LINES = PTRDIFF_MAX;
 
 #else
@@ -64,8 +64,8 @@ constexpr LINE MAX_LINES = PTRDIFF_MAX;
   //    prefixes in instructions" leads to better icache effects.
   // [So this will probably remain the status quo for as long as x64 is the dominant platform]
 
-typedef int COL ;     // column or position within line
-typedef int LINE;     // line number within file
+typedef int COL ;     // 0-based column or position within line
+typedef int LINE;     // 0-based line number within file
 constexpr LINE MAX_LINES = INT_MAX;
 constexpr COL  COL_MAX   = INT_MAX - 1; // -1 is a HACK to avoid integer overflow in cases like alcc->PutColor( xMin, xMax-xMin+1, ColorTblIdx::COM ); where xMin==0 and xMax==COL_MAX
 
@@ -92,10 +92,20 @@ STIL   PFBUF OpenFileNotDir_CreateSilently( PCChar pszName ) { return OpenFileNo
 LINELEN is the maximum line length that can be passed or will be returned by any
 editor API.
 
-   [2014]: a concerted effort has been made in recent years to remove this
-   (line-length) limitation everywhere thru use of XBuf, therefore the preceding
-   statement has become nearly ubiquitously false.  However use of the linebuf
-   and Linebuf types has not been eradicated :-(
+   [2014]: a concerted effort has been made in recent years to remove the
+           *line-length limitation* associated with LINELEN and its derivatives
+           everywhere thru use of XBuf, therefore limitations on edited-file
+           line-length have essentially disappeared: line-length is now
+           constrained only by sizeof(COL) and occasionally by O(col^2)
+           highlighting pathologies.
+
+           However internal use of stack-based fixed-length buffers having types
+           based on BUFBYTES etc (e.g. linebuf, Linebuf, SprintfBuf,
+           Sprintf2xBuf) continues.  In essence, BUFBYTES has become
+           MAX_DISPLAYABLE_COL (and similar concepts).
+
+   [2024]: after inlining it in the one place it was used, the definition of
+           LINELEN "(512)+1" has been removed.
 
 BUFBYTES is the size of a buffer that can hold such a line w/a
 terminating NUL.
@@ -105,8 +115,7 @@ terminating NUL.
   BUFBYTES number of bytes in a buffer, including space for the terminating NUL
 
 */
-constexpr COL LINELEN  = (512)+1  ;    // DEPRECATED
-constexpr COL BUFBYTES = LINELEN+1;    // DEPRECATED
+constexpr COL BUFBYTES = (512)+1+1;    // DEPRECATED
 typedef char linebuf[BUFBYTES];    // DEPRECATED line buffer
 typedef char pathbuf[_MAX_PATH+1]; // DEPRECATED Pathname buffer
 typedef  FixedCharArray<BUFBYTES> Linebuf; // DEPRECATED
@@ -1477,5 +1486,6 @@ STIL void         g_UpdtCurFBuf( PFBUF pfb ) {        s_curFBuf = pfb; }
 #define PCF        const auto pcf( g_CurFBuf() )
 #define PCFV  PCV; PCF
 
+// these impl's deferred until g_CurWin(), g_CurFBuf() defined:
 inline bool View::isActive()      const { return g_CurWin()  == Win(); }
 inline bool FBufLocn::InCurFBuf() const { return g_CurFBuf() == d_pFBuf; }
