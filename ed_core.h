@@ -189,7 +189,7 @@ class FBufLocn { // dflt ctor leaves locn empty; must be Set() later
    Point d_pt;
    COL   d_width = 1;
 public:
-   FBufLocn() : d_pFBuf(nullptr) {}
+   FBufLocn() {}
    FBufLocn( PFBUF pFBuf, const Point &pt, COL width=1 ) : d_pFBuf(pFBuf), d_pt(pt), d_width(width) {}
    void Set( PFBUF pFBuf, Point pt, COL width=1 ) { d_pFBuf=pFBuf, d_pt=pt, d_width=width; }
    bool         ScrollToOk() const;
@@ -323,25 +323,23 @@ class LineInfo { // LineInfo is a standalone class since it is used by both FBUF
    friend class FBUF;
    NO_COPYCTOR(LineInfo);
    NO_ASGN_OPR(LineInfo);
-   PCChar d_pLineData;           // CAN be -1 when REPLACEREC is for line that didn't exist
-   COL    d_iLineLen;
+   PCChar d_pLineData = nullptr ;         // CAN be -1 when REPLACEREC is for line that didn't exist
+   COL    d_iLineLen  = 0       ;
 public:
-   void clear() {
-      d_pLineData = nullptr;
-      d_iLineLen  = 0;
+   LineInfo() {}  // default ctor
+   friend void swap(LineInfo& first, LineInfo& second) noexcept {  // https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom/3279550#3279550
+      using std::swap;  // enable ADL (not necessary in our case, but good practice)
+
+      swap(first.d_pLineData, second.d_pLineData);
+      swap(first.d_iLineLen , second.d_iLineLen );
       }
-   LineInfo(LineInfo&& rhs)               // move constructor     so we can std::swap(), std::move() these
-      : d_pLineData( rhs.d_pLineData )
-      , d_iLineLen ( rhs.d_iLineLen  )
+   LineInfo(LineInfo&& other) noexcept      // move constructor
+      : LineInfo() // initialize via default constructor
       {
-      rhs.clear();
+      swap(*this, other);
       }
-   LineInfo& operator=(LineInfo&& rhs) {  // move assignment op   so we can std::swap() these
-      if( this != &rhs ) {
-         d_pLineData = rhs.d_pLineData ;
-         d_iLineLen  = rhs.d_iLineLen  ;
-         rhs.clear();
-         }
+   LineInfo& operator=(LineInfo&& other) {  // move assignment op   so we can std::swap() these
+      swap(*this, other);
       return *this;
       }
    void   PutContent( stref src );
@@ -1179,8 +1177,9 @@ private:
    void           IncLineCount( LINE delta ) { d_LineCount += delta; }
    void           LineInfoClearRange( LINE yMin, LINE numToInit ) {
                      auto pLi( d_paLineInfo + yMin );
-                     for( const auto pLiPastEnd( pLi + numToInit ) ; pLi < pLiPastEnd ; ++pLi )
-                        pLi->clear();
+                     for( const auto pLiPastEnd( pLi + numToInit ) ; pLi < pLiPastEnd ; ++pLi ) {
+                        *pLi = {};  // assign default-constructed (empty) LineInfo
+                        }
                      }
    void           LineInfoSetCapacity( LINE capacity ) { d_naLineInfoElements = capacity; }  // low-level!
 private:
