@@ -1266,12 +1266,11 @@ bool ARG::csort() {
 
 //--------------------------------------------------------------------------------------------------
 
-void LineInfo::PutContent( stref src ) { // assume previous content has been destroyed!
-   if( src.length() == 0 ) {
-      clear();
+void LineInfo::PutContent( stref src ) { // ignore/overwrite any previous content!
+   if( (d_iLineLen=src.length()) == 0 ) {
+      d_pLineData = nullptr;
       }
    else {
-      d_iLineLen = src.length();
       AllocBytesNZ( d_pLineData, d_iLineLen );
       memcpy( CAST_AWAY_CONST(PChar)(d_pLineData), src.data(), d_iLineLen );
       }
