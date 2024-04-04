@@ -79,7 +79,7 @@ void DbgHilite_( char ch, PCChar func ) {
 */
 
 class LineColorvals {
-   enum { END_MARKER=0 };  // one simplifying assumption: color==0 is not used (used for EOS)
+   enum { END_MARKER=0 };  // one simplifying assumption: color==0 is not used (denotes EOS)
    typedef std::array<colorval_t,BUFBYTES> acv;
    acv d_acv;
 public:
