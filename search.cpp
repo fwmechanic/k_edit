@@ -929,13 +929,20 @@ STATIC_FXN bool CharWalkRectReplace( PFBUF pFBuf, const Rect &within, Point star
 //  False: Operation not initiated
 //
 #ifdef fn_waitcompiledone
+// Following #defines are a vestige of certain edfxns (EX: mark, formerly) deducing a numeric argument from the cursor position.
+// note that 'mark' fxn does NOT have NUMARG set!
+#define IS_NUMARG return (d_argType == LINEARG)
+#define NUMARG_VALUE (d_linearg.yMax - d_linearg.yMin + 1)
+
 bool ARG::waitcompiledone() {
-   const auto tov( IS_NUMARG ? (NUMARG_VALUE * 1000) : 20000 );
+   const auto tov( (d_argType == LINEARG) ? (NUMARG_VALUE * 1000) : 20000 );
    Msg( "%s waiting %d mS", __func__, tov );
    const auto rv( !CompileJobQueueWaitExeDoneTimedout( tov ) );
    Msg( "%s %s", __func__, rv ? "OK" : "timed out!" );
    return rv;
    }
+#undef NUMARG_VALUE
+#undef IS_NUMARG
 #endif
 
 int FBUF::SyncWriteIfDirty_Wrote() {
