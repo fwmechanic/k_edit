@@ -63,6 +63,9 @@
    #include "strings.h"
 #endif
 
+// validate -funsigned-char in effect
+static_assert( CHAR_MAX > SCHAR_MAX, "char not unsigned" );
+
 // std C++ headers
 #include <memory>
 #include <utility>  // for std::move,std::swap

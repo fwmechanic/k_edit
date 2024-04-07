@@ -17,9 +17,9 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <cstdarg>
-#include <cstdio>
-#include <cctype>
+#include <cstdarg>     // va_list
+#include <cstdio>      // vsnprintf
+#include <cctype>      // is...
 #include <algorithm>
 #include <string>
 #include "my_types.h"

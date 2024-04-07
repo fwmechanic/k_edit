@@ -19,8 +19,6 @@
 
 #pragma once
 
-// static_assert( CHAR_MAX > SCHAR_MAX, "char not unsigned" );
-
 //
 // MACRO_BACKSLASH_ESCAPES - Affects escape char defn and behavior in macro
 //                           string literals:
