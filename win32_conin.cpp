@@ -23,9 +23,9 @@
 
 //--------------------------------------------------------------------------------------------
 
-STATIC_VAR bool s_fVerbose = false;
-void ConIn::log_verbose() { s_fVerbose = true ; }
-void ConIn::log_quiet  () { s_fVerbose = false; }
+STATIC_VAR bool s_fDbg = false;
+void ConIn::log_verbose() { s_fDbg = true ; }
+void ConIn::log_quiet  () { s_fDbg = false; }
 
 // see for good explanations:
 // http://www.adrianxw.dk/SoftwareSite/Consoles/Consoles5.html
