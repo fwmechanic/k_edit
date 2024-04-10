@@ -798,7 +798,7 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
    //             test_CaptiveIdxOfCol();
    ConstructStatics();
    SD && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT, __func__, memdelta() );
-   // for( auto argi(0); argi < argc; ++argi ) { DBG( "argv[%d] = '%s'", argi, argv[argi] ); }
+   for( auto argi(0); argi < argc; ++argi ) { DBG( "argv[%d] = '%s'", argi, argv[argi] ); }
    CmdIdxInit();
    SwitblInit();
    InitFTypeSettings();

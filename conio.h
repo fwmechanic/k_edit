@@ -130,4 +130,6 @@ namespace ConIn {
    bool  FlushKeyQueueAnythingFlushed();
    void  WaitForKey();
    bool  KbHit();
+   void  log_verbose();
+   void  log_quiet  ();
    }

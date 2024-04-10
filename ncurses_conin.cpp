@@ -23,6 +23,9 @@
 #include "ed_main.h"
 #include "conio.h"
 
+STATIC_VAR bool s_fVerbose = false;
+void ConIn::log_verbose() { s_fVerbose = true ; }
+void ConIn::log_quiet  () { s_fVerbose = false; }
 
 STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
    switch( ch ) {
@@ -324,12 +327,11 @@ struct kpto_er {
       }
 
 // return -1 indicates that event should be ignored (resize event as an example)
-STATIC_FXN int ConGetEvent() {
+STATIC_FXN int ConGetEvent() {                             s_fVerbose && DBG( "++++++ ConGetEvent()" );
    const auto ch( getch() );
    if( ch < 0 )                      { return -1; }
    if( ch < ELEMENTS(ncurses_ch_to_EdKC) && ncurses_ch_to_EdKC[ ch ] ) {
-      const auto rv( ncurses_ch_to_EdKC[ ch ] );
-      // DBG( "ncurses_ch_to_EdKC[ %d ] => %s", ch, KeyNmOfEdkc( rv ).c_str() );
+      const auto rv( ncurses_ch_to_EdKC[ ch ] );           s_fVerbose && DBG( "ncurses_ch_to_EdKC[ %d ] => %s", ch, KeyNmOfEdkc( rv ).c_str() );
       return rv;
       }
    if( ch <= 0xFF ) {
@@ -341,23 +343,24 @@ STATIC_FXN int ConGetEvent() {
             int newch = getch();
             if( newch >= 0 && chinIx < ELEMENTS(chin) ) {
                chin[ chinIx++ ] = newch;
-               }
+               }                                           s_fVerbose && DBG( "newch => %c (0x%02X)", newch, newch );
             return newch;
             };
 
-         kpto_er kpto_cleaner;
-         const auto rv( DecodeEscSeq_xterm( getCh ) );
+         kpto_er kpto_cleaner;                             s_fVerbose && DBG( "+++ DecodeEscSeq_xterm" );
+         const auto rv( DecodeEscSeq_xterm( getCh ) );     s_fVerbose && DBG( "--- DecodeEscSeq_xterm => %d", rv );
 
          char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, chin, chinIx );
          if( rv < 0 ) { Msg( "unrecognized escseq %s\n", tib ); }
-         else { 0 && DBG( "escseq: %s=%s", KeyNmOfEdkc( rv ).c_str(), tib ); }
+         else { s_fVerbose && DBG( "escseq: %s=%s", KeyNmOfEdkc( rv ).c_str(), tib ); }
          return rv;
          }
 
-      if( ch == '\r' || ch == '\n' ) { return EdKC_enter; }
-      if( ch == '\t' )               { return EdKC_tab; }
-      if( ch >= 28 && ch <= 31 )     { return EdKC_c_4 + (ch - 28); }
-      if( ch < 27 )                  { return EdKC_c_a + (ch -  1); }
+      if( ch == '\r' || ch == '\n' ) { s_fVerbose && DBG( "ch == '\r' || ch == '\n' => EdKC_enter" ); return EdKC_enter; }
+      if( ch == '\t' )               { s_fVerbose && DBG( "ch == '\t' => EdKC_tab"                 ); return EdKC_tab; }
+      if( ch >= 28 && ch <= 31 )     { auto rv = EdKC_c_4 + (ch - 28); s_fVerbose && DBG( "ch >= 28 && ch <= 31 => %s", KeyNmOfEdkc( rv ).c_str() ); return rv; }
+      if( ch < 27 )                  { auto rv = EdKC_c_a + (ch -  1); s_fVerbose && DBG( "ch < 27 => %s"   , KeyNmOfEdkc( rv ).c_str() ); return rv; }
+                                        s_fVerbose && DBG( "(dflt) => %c (0x%02X)", ch, ch );
       return ch;
       }
    switch (ch) { // translate "active" ncurses keycodes:
@@ -367,12 +370,12 @@ STATIC_FXN int ConGetEvent() {
       case KEY_SF:       KEvent->Code = kfShift | kbDown;  break;
       case KEY_SR:       KEvent->Code = kfShift | kbUp;    break;
       case KEY_SRIGHT:   KEvent->Code = kfShift | kbRight; */
-           // Msg( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
+                                       s_fVerbose && DBG( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
            return -1;
 
       default:
            // fprintf(stderr, "Unknown 0%o %d\n", ch, ch);
-           // Msg( "%s Unknown event 0%o %d\n", __func__, ch, ch );
+                                       s_fVerbose && DBG( "%s Unknown event 0x%x 0%o %d\n", __func__, ch, ch, ch );
            return -1;
       }
    }
@@ -401,7 +404,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          break;case '6': mod = mod_ctrl +    0    + mod_shift;
          break;case '7': mod = mod_ctrl + mod_alt +    0     ;
          break;case '8': mod = mod_ctrl + mod_alt + mod_shift;
-         }
+         }                                        s_fVerbose && DBG( "decode_modch => 0x%02X", mod );
       return mod;
       };
 
@@ -411,13 +414,16 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
    if( ch == 27 ) { // 2nd consecutive ESC?
       ch = getCh();
       if( ch == '[' || ch == 'O' ) {
-         kbAlt = true;
+         kbAlt = true;                            s_fVerbose && DBG( "kbAlt = true" );
          }
       }
    if( ch == '[' || ch == 'O' ) { // decode CSI and SS3 sequences; 98% identical
-      const auto fSS3( ch == 'O' ); const auto fCSI( !fSS3 );
-      int ch1 = getCh();
-      if( ch1 == ERR ) { return fCSI ? EdKC_a_LEFT_SQ : EdKC_a_o ; }
+      const auto fSS3( ch == 'O' ); const auto fCSI( !fSS3 );        s_fVerbose && DBG( "fSS3=%d", fSS3 );
+      int ch1 = getCh();                                             s_fVerbose && DBG( "ch1=%c", ch1 );
+      if( ch1 == ERR ) {
+         auto rv = fCSI ? EdKC_a_LEFT_SQ : EdKC_a_o;        s_fVerbose && DBG( "ch1 == ERR, rv => %s", KeyNmOfEdkc( rv ).c_str() );
+         return rv;
+         }
 
       enum { mod_cas= 0          , // used by CAS5, etc.
              mod_caS= mod_shift  ,
@@ -428,7 +434,8 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
            };
 
       if( fCSI && ch1 == '[' ) { // CSI [ [A-E]  Linux Console (incl ssh terminal) F1-F5 (with optional dup-esc prefix for alt+)
-         const auto mod( kbAlt ? mod_alt : 0 );
+
+         const auto mod( kbAlt ? mod_alt : 0 );     s_fVerbose && DBG( "fCSI && ch1 == '[', mod=0x%02X", mod );
          switch( getCh() ) {
             default : return -1;
             case 'A': CAS5( f1 );
@@ -441,15 +448,16 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
       if( fCSI && (ch1 == '1' || ch1 == '2') ) {  // Linux Console (incl ssh terminal) specific (reversed via ./odkey.sh)
          const auto ch2 = getCh();
          const auto endch = getCh();
-         auto mod( kbAlt ? mod_alt : 0 );
+         auto mod( kbAlt ? mod_alt : 0 );            s_fVerbose && DBG( "fCSI && (ch1 == '1' || ch1 == '2'), mod=0x%02X", mod );
          switch( endch ) {
             break; case '^': mod |= mod_ctrl;
             break; case '~':
-            break; default:                          DBG( "CSI %c ? followed by %c ?", ch1, endch );
+            break; default:                          s_fVerbose && DBG( "CSI %c ? followed by %c ?", ch1, endch );
                              return -1;
-            }                                        DBG( "--> CSI %c %c (%c)", ch1, ch2, kbAlt?'A':'a' );
+            }                                        s_fVerbose && DBG( "--> CSI %c %c, mod=0x%02X", ch1, ch2, mod );
          switch( ch1 ) {
             case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
+                                                     s_fVerbose && DBG( "CSI 1 [1-57-9], mod=0x%02X", mod );
                switch( ch2 ) {
                   default : return -1;
                   case '1': CAS6( f1  );
@@ -462,6 +470,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
                   case '9': CAS6( f8  );
                   }
             case '2': // CSI 2 [0134]  Linux console [Ctrl+]F[9-12] (with optional dup-esc prefix for alt+)
+                                                     s_fVerbose && DBG( "CSI 2 [0134], mod=0x%02X", mod );
                switch( ch2 ) {
                   default : return -1;
                   case '0': CAS6( f9  );
@@ -500,7 +509,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          ch1 = '\0';
          }
       auto mod( decode_modch( modch ) );
-      if( kbAlt ) mod |= mod_alt;
+      if( kbAlt ) { mod |= mod_alt; }                s_fVerbose && DBG( "switch (endch=%c), mod=0x%02X", endch, mod );
       switch (endch) {
          default : return -1;
          case 'A': CAS5( up       ); break;
@@ -526,7 +535,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          case 'd': return (mod & mod_ctrl) ? EdKC_cs_left  : EdKC_s_left;
                    //----------------------------------------------------
          case '$': mod |= mod_shift;  /* FALL THRU!!! */
-         case '~':
+         case '~':                                   s_fVerbose && DBG( "CSI %c ~, mod=0x%02X", ch1, mod );
              switch (ch1) { // CSI n ~
                 default : return -1;
                 case '1': CAS5( home ); break;
@@ -560,9 +569,11 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          else if( ch == ']'  )             { return EdKC_a_RIGHT_SQ;       }
          else if( ch == '`'  )             { return EdKC_a_BACKTICK;       }
          else if( ch == 127  )             { return EdKC_a_bksp;           }
-         else                              { return ch;                    }
+         else                              {                                 s_fVerbose && DBG( "return ch=%c", ch );
+            return ch;
+            }
          }
       }
-
+                                                                             s_fVerbose && DBG( "return ERR=%c", ERR );
    return ERR;
    }
