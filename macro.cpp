@@ -599,7 +599,9 @@ bool ARG::tell() {
    switch( d_argType ) {
     break;default:      return BadArg();
     break;case NOARG:   Msg( "Press key to tell about:" );
+                        ConIn::log_verbose();
                         pCmd = CmdFromKbdForInfo( keystringBuffer );
+                        ConIn::log_quiet  ();
     break;case TEXTARG: pCmd = CmdFromName( d_textarg.pText );
                         if( !pCmd ) { return Msg( "%s is not an editor function or macro", d_textarg.pText ); }
     }
