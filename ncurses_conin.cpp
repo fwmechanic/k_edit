@@ -23,9 +23,11 @@
 #include "ed_main.h"
 #include "conio.h"
 
-STATIC_VAR bool s_fVerbose = false;
-void ConIn::log_verbose() { s_fVerbose = true ; }
-void ConIn::log_quiet  () { s_fVerbose = false; }
+STATIC_VAR bool s_fDbg = false;
+void ConIn::log_verbose() { s_fDbg = true ; }
+void ConIn::log_quiet  () { s_fDbg = false; }
+
+#define stESC "\x1b"
 
 STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
    switch( ch ) {
@@ -46,18 +48,30 @@ STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
       }
    }
 
-STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, const int *ach, int numCh ) {
+STATIC_FXN PChar terminfo_str( PChar dest, size_t sizeofDest, const int *ach, int numCh ) {
    for( auto ix(0) ; ix < numCh ; ++ix ) {
       terminfo_ch( dest, sizeofDest, ach[ ix ] );
       }
    return dest;
    }
 
-STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int numCh ) {
+STATIC_FXN PChar terminfo_str( PChar dest, size_t sizeofDest, PCChar ach, int numCh ) {
    for( auto ix(0) ; ix < numCh ; ++ix ) {
       terminfo_ch( dest, sizeofDest, ach[ ix ] );
       }
    return dest;
+   }
+
+STATIC_FXN int  DBG_keybound( int ch ) {
+   for( auto ix=0; ; ++ix ) {
+      auto tinm = keybound( ch, ix );
+      if( !tinm ) { return 1; }
+      const auto tinm_len = Strlen(tinm);
+      char tib[65]; terminfo_str( BSOB(tib), tinm, tinm_len );
+      DBG( "0%04o=0x%04x=0d%3d; keybound[%d] = '%s' L %d (0x%x)", ch, ch, ch, ix, tib, tinm_len, tinm_len > 0 ? tinm[0] : 0 );
+      free( tinm );
+      }
+   return 1; // for && chaining
    }
 
 // http://emacswiki.org/emacs/PuTTY  seems a goldmine for the enigma that is putty
@@ -78,43 +92,68 @@ STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int 
 //       7       Alt + Control
 //       8       Shift + Alt + Control
 //
-STATIC_VAR uint16_t ncurses_ch_to_EdKC[600]; // indexed by ncurses_ch
 
-STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, uint16_t edkc ) { enum { SD=0 };
-   /* if terminfo defines a capability named cap_nm (as an escseqstr), _and_ ncurses maps that escseqstr
-      to an ncurses_ch (which getch() returns), then add an entry ncurses_ch_to_EdKC[ncurses_ch] = EdKC #
-      where EdKC is the EDITOR KEYCODE which corresponds to cap_nm
+//
+// ncfkt: NCurses Function Key Token.
+//
+// When ncurses translates a keystroke directly to a unique KEY_ code (ncfkt)
+// returned by *a single call to* getch(), ncurses docs call this value a
+// "Function Key Token", which I have abbreviated "ncfkt".  Note that ncfkt have
+// values > 0xFF. ncfkt may be either #defined as KEY_* in e.g. curses.h (see
+// above), or apparently can be dynamically defined by e.g. terminfo (or
+// termcap).
+//
+// If defined, an ncfkt is always returned in lieu of its associated escseqstr
+// being coughed up char by char by getch() when its associated key is pressed.
+//
+// (ncurses') curses.h #define's KEY_MAX, which is apparently the max numeric
+// value of any KEY_* macro defined therein.  However because ncfkt's can be
+// dynamically defined, and these are apparently always given values > KEY_MAX,
+// any static mapping tables indexed by ncfkt should have ELEMENTS >> KEY_MAX.
+//
+STATIC_VAR uint16_t ncfkt_to_EdKC[KEY_MAX+400]; // indexed by ncfkt; note that first 256 elements map to "regular" characters
+
+STATIC_FXN void escseqstr_to_ncfkt( const char *escseqstr, uint16_t edkc, const char *cap_nm ) { enum { SD=0 };
+   auto keyNm = KeyNmOfEdkc( edkc );
+   if( !escseqstr || (long)(escseqstr) == -1 ) {
+#define KEYMAPFMT  "0%04o=0x%04x=0d%3d cap=%-5s ; tistr=%-8s ; EdkeyNm=%s"
+      1 && DBG( KEYMAPFMT, 0, 0, 0, cap_nm, "?", keyNm.c_str() );
+      return;
+      }
+   char tib[65]; terminfo_str( BSOB(tib), escseqstr, Strlen(escseqstr) );
+                                               SD && DBG( "key_defined+ %s", tib );
+   const auto ncfkt = key_defined(escseqstr);  SD && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
+   DBG( KEYMAPFMT, ncfkt, ncfkt, ncfkt, cap_nm, tib, keyNm.c_str() );
+   if( ncfkt > 0 && has_key( ncfkt ) ) {  // `has_key( ncfkt )` may be redundant to `ncfkt = key_defined(escseqstr)`
+      if( ncfkt < ELEMENTS( ncfkt_to_EdKC ) ) {
+         if( ncfkt_to_EdKC[ ncfkt ] != edkc ) {
+            if( ncfkt_to_EdKC[ ncfkt ] ) {
+               keyNm = KeyNmOfEdkc( ncfkt_to_EdKC[ ncfkt ] );
+               DBG( "0%04o=0d%d EdKC=%s overridden!", ncfkt, ncfkt, keyNm.c_str() );
+               }
+            ncfkt_to_EdKC[ ncfkt ] = edkc;
+            }
+         }
+      else {
+         Msg( "INTERNAL ERROR: ncfkt=%d exceeds capacity of ncfkt_to_EdKC[%lu]!", ncfkt, ELEMENTS( ncfkt_to_EdKC ) );
+         }
+      }
+   }
+
+STATIC_FXN void cap_nm_to_ncfkt( const char *cap_nm, uint16_t edkc ) { enum { SD=0 };
+   /* if terminfo defines (as an escseqstr) a capability named cap_nm, _and_
+      ncurses maps that escseqstr to an ncfkt (which getch() returns), then add
+      an entry ncfkt_to_EdKC[ncfkt] = EdKC where EdKC is the EDITOR KEYCODE which
+      corresponds to cap_nm.
 
       cap_nm is a terminfo "capability name", the key of a key=value mapping defined in a terminfo file
       see http://invisible-island.net/xterm/terminfo-contents.html  ; EX:
       xterm+pce3|fragment with modifyCursorKeys:3,
               kDC=\E[3;2~,                               key=cap_nm=kDC, value=escseqstr=\E[>3;2~
    */
-   auto keyNm( KeyNmOfEdkc( edkc ) );            SD && DBG( "tigetstr+ %s", cap_nm );
+                                                 SD && DBG( "tigetstr+ %s", cap_nm );
    const char *escseqstr( tigetstr( cap_nm ) );  SD && DBG( "tigetstr- %s", cap_nm ); // tigetstr() <- "retrieves a capability from the terminfo database"
-   if( !escseqstr || (long)(escseqstr) == -1 ) {
-#define KEYMAPFMT  "0%04o=0d%d <= %-5s => %-8s => %s"
-      0 && DBG( KEYMAPFMT, 0, 0, cap_nm, "", keyNm.c_str() );
-      return;
-      }
-   char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, escseqstr, Strlen(escseqstr) );
-                                                    SD && DBG( "key_defined+ %s", tib );
-   const auto ncurses_ch( key_defined(escseqstr) ); SD && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
-   DBG( KEYMAPFMT, ncurses_ch, ncurses_ch, cap_nm, tib, keyNm.c_str() );
-   if( ncurses_ch > 0 ) {
-      if( ncurses_ch < ELEMENTS( ncurses_ch_to_EdKC ) ) {
-         if( ncurses_ch_to_EdKC[ ncurses_ch ] != edkc ) {
-            if( ncurses_ch_to_EdKC[ ncurses_ch ] ) {
-               keyNm = KeyNmOfEdkc( ncurses_ch_to_EdKC[ ncurses_ch ] );
-               DBG( "0%04o=0d%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, keyNm.c_str() );
-               }
-            ncurses_ch_to_EdKC[ ncurses_ch ] = edkc;
-            }
-         }
-      else {
-         Msg( "INTERNAL ERROR: ncurses_ch=%d out of range of ncurses_ch_to_EdKC[]!", ncurses_ch );
-         }
-      }
+   escseqstr_to_ncfkt( escseqstr, edkc, cap_nm );
    }
 
 STATIC_VAR bool s_keypad_mode;
@@ -126,61 +165,10 @@ GLOBAL_VAR int  g_iConin_nonblk_rd_tmout = 10;
 STATIC_FXN void conin_nonblocking_read() { timeout(g_iConin_nonblk_rd_tmout); s_conin_blocking_read = false; } // getCh blocks for (10) milliseconds, returns ERR if there is still no input
 STATIC_FXN void conin_blocking_read()    { timeout(  -1                    ); s_conin_blocking_read = true;  } // getCh blocks waiting for next char
 
-void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
-   noecho();              // we do not change
-   nonl();                // we do not change
-   conin_blocking_read();
-   keypad_mode_enable();
-   meta(stdscr, 1);       // we do not change
-
-   STATIC_VAR const struct { short nckc; uint16_t edkc; } s_nckc2edkc[] = {
-      {KEY_RIGHT     , EdKC_right }, {KEY_SRIGHT    , EdKC_s_right },
-      {KEY_LEFT      , EdKC_left  }, {KEY_SLEFT     , EdKC_s_left  },
-      {KEY_DC        , EdKC_del   }, {KEY_SDC       , EdKC_s_del   },
-      {KEY_IC        , EdKC_ins   }, {KEY_SIC       , EdKC_s_ins   },
-      {KEY_HOME      , EdKC_home  }, {KEY_SHOME     , EdKC_s_home  },
-      {KEY_END       , EdKC_end   }, {KEY_SEND      , EdKC_s_end   },
-      {KEY_NPAGE     , EdKC_pgdn  }, {KEY_SNEXT     , EdKC_s_pgdn  },
-      {KEY_PPAGE     , EdKC_pgup  }, {KEY_SPREVIOUS , EdKC_s_pgup  },
-      {KEY_UP        , EdKC_up    },
-      {KEY_DOWN      , EdKC_down  },
-      {KEY_BACKSPACE , EdKC_bksp  },
-
-      {KEY_LL   , EdKC_end }, // used in old termcap/infos
-
-      // see also capabilities ka1, ka3, kb2, kc1, kc3 above
-      {KEY_A1, EdKC_home },                       {KEY_A3, EdKC_pgup },
-                            {KEY_B2, EdKC_center},
-      {KEY_C1, EdKC_end  },                       {KEY_C3, EdKC_pgdn },
-
-      {KEY_ENTER, EdKC_enter }, // mimic Win32 behavior
-
-      // replaced (possibly unnecessarily}, by cap_nm_to_ncurses_ch(},
-      {KEY_F( 1), EdKC_f1 }, {KEY_F(13), EdKC_s_f1 },  {KEY_F(25), EdKC_c_f1 }, {KEY_F(49), EdKC_a_f1 },
-      {KEY_F( 2), EdKC_f2 }, {KEY_F(14), EdKC_s_f2 },  {KEY_F(26), EdKC_c_f2 }, {KEY_F(50), EdKC_a_f2 },
-      {KEY_F( 3), EdKC_f3 }, {KEY_F(15), EdKC_s_f3 },  {KEY_F(27), EdKC_c_f3 }, {KEY_F(51), EdKC_a_f3 }, // decoded elsewhere too
-      {KEY_F( 4), EdKC_f4 }, {KEY_F(16), EdKC_s_f4 },  {KEY_F(28), EdKC_c_f4 }, {KEY_F(52), EdKC_a_f4 }, // decoded elsewhere too
-      {KEY_F( 5), EdKC_f5 }, {KEY_F(17), EdKC_s_f5 },  {KEY_F(29), EdKC_c_f5 }, {KEY_F(53), EdKC_a_f5 },
-      {KEY_F( 6), EdKC_f6 }, {KEY_F(18), EdKC_s_f6 },  {KEY_F(30), EdKC_c_f6 }, {KEY_F(54), EdKC_a_f6 },
-      {KEY_F( 7), EdKC_f7 }, {KEY_F(19), EdKC_s_f7 },  {KEY_F(31), EdKC_c_f7 }, {KEY_F(55), EdKC_a_f7 },
-      {KEY_F( 8), EdKC_f8 }, {KEY_F(20), EdKC_s_f8 },  {KEY_F(32), EdKC_c_f8 }, {KEY_F(56), EdKC_a_f8 },
-      {KEY_F( 9), EdKC_f9 }, {KEY_F(21), EdKC_s_f9 },  {KEY_F(33), EdKC_c_f9 }, {KEY_F(57), EdKC_a_f9 },
-      {KEY_F(10), EdKC_f10}, {KEY_F(22), EdKC_s_f10},  {KEY_F(34), EdKC_c_f10}, {KEY_F(58), EdKC_a_f10},
-      {KEY_F(11), EdKC_f11}, {KEY_F(23), EdKC_s_f11},  {KEY_F(35), EdKC_c_f11}, {KEY_F(59), EdKC_a_f11},
-      {KEY_F(12), EdKC_f12}, {KEY_F(24), EdKC_s_f12},  {KEY_F(36), EdKC_c_f12}, {KEY_F(60), EdKC_a_f12},
-      };
-   DBG( "%s", "" );
-   for( auto &el : s_nckc2edkc ) {
-      if( has_key( el.nckc ) ) {
-         ncurses_ch_to_EdKC[ el.nckc ] = el.edkc;
-         DBG( KEYMAPFMT, el.nckc, el.nckc, "nckc#", "?", KeyNmOfEdkc( el.edkc ).c_str() );
-         }
-      }
-   DBG( "%s", "" );
-
+STATIC_FXN void init_kn2edkc() {
+   DBG( "init_kn2edkc" );
    STATIC_VAR const struct { const char *cap_nm; uint16_t edkc; } s_kn2edkc[] = {
       // early/leading instances are overridden by later
-
       //------------------------------------------------------------------------------
       // from (any?) terminfo(5) man page   man 5 terminfo
       // "In addition, if the keypad has a 3 by 3 array of keys including the
@@ -233,9 +221,130 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       // putty-sco terminfo is probably installed (on ubuntu) by installing the ncurses-term package
       };
    for( auto &el : s_kn2edkc ) {
-      cap_nm_to_ncurses_ch( el.cap_nm, el.edkc );
+      cap_nm_to_ncfkt( el.cap_nm, el.edkc );
       }
-   DBG( "%s", "" );
+   }
+
+STATIC_FXN void init_ncfkt2edkc() {
+   DBG( "init_ncfkt2edkc" );
+   STATIC_VAR const struct { short ncfkt; uint16_t edkc; } s_ncfkt2edkc[] = {
+      {KEY_RIGHT     , EdKC_right }, {KEY_SRIGHT    , EdKC_s_right },
+      {KEY_LEFT      , EdKC_left  }, {KEY_SLEFT     , EdKC_s_left  },
+      {KEY_DC        , EdKC_del   }, {KEY_SDC       , EdKC_s_del   },
+      {KEY_IC        , EdKC_ins   }, {KEY_SIC       , EdKC_s_ins   },
+      {KEY_HOME      , EdKC_home  }, {KEY_SHOME     , EdKC_s_home  },
+      {KEY_END       , EdKC_end   }, {KEY_SEND      , EdKC_s_end   },
+      {KEY_NPAGE     , EdKC_pgdn  }, {KEY_SNEXT     , EdKC_s_pgdn  },
+      {KEY_PPAGE     , EdKC_pgup  }, {KEY_SPREVIOUS , EdKC_s_pgup  },
+      {KEY_UP        , EdKC_up    },
+      {KEY_DOWN      , EdKC_down  },
+      {KEY_BACKSPACE , EdKC_bksp  },
+
+      {KEY_LL   , EdKC_end }, // used in old termcap/infos
+
+      // see also capabilities ka1, ka3, kb2, kc1, kc3 above
+      {KEY_A1, EdKC_home },                       {KEY_A3, EdKC_pgup },
+                            {KEY_B2 , EdKC_center},
+                            {KEY_BEG, EdKC_center},  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      {KEY_C1, EdKC_end  },                       {KEY_C3, EdKC_pgdn },
+
+      {KEY_ENTER, EdKC_enter }, // mimic Win32 behavior
+
+      // replaced (possibly unnecessarily}, by cap_nm_to_ncfkt(},
+      {KEY_F( 1), EdKC_f1 }, {KEY_F(13), EdKC_s_f1 },  {KEY_F(25), EdKC_c_f1 }, {KEY_F(49), EdKC_a_f1 },
+      {KEY_F( 2), EdKC_f2 }, {KEY_F(14), EdKC_s_f2 },  {KEY_F(26), EdKC_c_f2 }, {KEY_F(50), EdKC_a_f2 },
+      {KEY_F( 3), EdKC_f3 }, {KEY_F(15), EdKC_s_f3 },  {KEY_F(27), EdKC_c_f3 }, {KEY_F(51), EdKC_a_f3 }, // decoded elsewhere too
+      {KEY_F( 4), EdKC_f4 }, {KEY_F(16), EdKC_s_f4 },  {KEY_F(28), EdKC_c_f4 }, {KEY_F(52), EdKC_a_f4 }, // decoded elsewhere too
+      {KEY_F( 5), EdKC_f5 }, {KEY_F(17), EdKC_s_f5 },  {KEY_F(29), EdKC_c_f5 }, {KEY_F(53), EdKC_a_f5 },
+      {KEY_F( 6), EdKC_f6 }, {KEY_F(18), EdKC_s_f6 },  {KEY_F(30), EdKC_c_f6 }, {KEY_F(54), EdKC_a_f6 },
+      {KEY_F( 7), EdKC_f7 }, {KEY_F(19), EdKC_s_f7 },  {KEY_F(31), EdKC_c_f7 }, {KEY_F(55), EdKC_a_f7 },
+      {KEY_F( 8), EdKC_f8 }, {KEY_F(20), EdKC_s_f8 },  {KEY_F(32), EdKC_c_f8 }, {KEY_F(56), EdKC_a_f8 },
+      {KEY_F( 9), EdKC_f9 }, {KEY_F(21), EdKC_s_f9 },  {KEY_F(33), EdKC_c_f9 }, {KEY_F(57), EdKC_a_f9 },
+      {KEY_F(10), EdKC_f10}, {KEY_F(22), EdKC_s_f10},  {KEY_F(34), EdKC_c_f10}, {KEY_F(58), EdKC_a_f10},
+      {KEY_F(11), EdKC_f11}, {KEY_F(23), EdKC_s_f11},  {KEY_F(35), EdKC_c_f11}, {KEY_F(59), EdKC_a_f11},
+      {KEY_F(12), EdKC_f12}, {KEY_F(24), EdKC_s_f12},  {KEY_F(36), EdKC_c_f12}, {KEY_F(60), EdKC_a_f12},
+
+      // 20240410 how these magic #s (e.g. 0x23f) were discovered, then superseded by "something better":
+      // ("Oh, the humanity!")
+      // * execute EdFxn tell, hit key, and if necessary hit a defined key to finish decode and complete tell.
+      // * consult editor log to find which logging corresponds to that an unrecognized key:
+      //
+      // A. if "Unknown event" followed by a line dumping a (probably 16-bit)
+      //    int value > 0xFF in octal=hex=dec followed by an escseqstr, then
+      //    ncurses translated the keystroke directly to a ncfkt.  If the ncfkt >
+      //    KEY_MAX, it was dynamically defined by e.g. terminfo (or termcap).  I
+      //    am unaware of how to discover the capability name (cap_nm) associated
+      //    with such an ncfkt, thus as an expedient I first hard-coded the
+      //    numeric value of ncfkt seen in the editor log back into the editor
+      //    source code:
+
+      // following "work" for as long as the number to key mapping persists.  Disabled as keying on escseqstr seems slightly more long-lived...
+      // {0x23f, EdKC_numPlus },  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      // {0x241, EdKC_numSlash},  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      // {0x243, EdKC_numStar },  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      // {0x244, EdKC_numMinus},  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+
+      //    This "worked" but is obviously horrendously bad practice and bound
+      //    to break in the future when the mapping changes.
+
+      //    A variant implementation (see below, s_escseqstr2edkc) performs
+      //    runtime lookup of the ncfkt associated with a hard-coded escseqstr
+      //    gleaned from the editor log (using ncurses key_defined()), and using
+      //    this ncfkt create an entry into ncfkt_to_EdKC.  This approach is
+      //    preferred/used because escseqstr seems a more stable key value (but
+      //    who can be sure!?).
+
+      // B. An escseqstr, being the escape sequence for a single keystroke (or
+      //    chorded combo) has been read (7- or 8-bit) character by (7- or
+      //    8-bit) character at a time via a sequence of calls to getch(), and
+      //    the editor has failed to decode it.  In this case by definition
+      //    ncurses is not providing a ncfkt in lieu of the escseqstr, and the
+      //    (fairly unpleasant) editor escape sequence decoding code
+      //    (DecodeEscSeq_xterm) needs to be updated to translate the received
+      //    escseqstr to the desired EdKC.
+      //
+      // Note that all described above "works" *only* in dflt desktop-terminal
+      // of the distro I'm running: `lsb_release -a`: "Pop!_OS 22.04 LTS". and
+      // may or may not work on any other Linux distro.
+      //
+      // Also, *I can say from first-hand experience* that many of these key
+      // mappings *do not work* when ssh'ing in to run k on my Ubuntu 22.04 LTS
+      // server from Windows 10 using the git-for-windows bash toolset.
+      };
+   for( auto &el : s_ncfkt2edkc ) {
+      if( has_key( el.ncfkt ) ) {
+         ncfkt_to_EdKC[ el.ncfkt ] = el.edkc;
+         DBG( KEYMAPFMT, el.ncfkt, el.ncfkt, el.ncfkt, "?", "?", KeyNmOfEdkc( el.edkc ).c_str() );
+         }
+      }
+   }
+
+STATIC_FXN void init_escseqstr2edkc() {
+   DBG( "init_escseqstr2edkc" );
+   STATIC_VAR const struct { const char *escseqstr; uint16_t edkc; } s_escseqstr2edkc[] = {
+      { stESC "Ok", EdKC_numPlus  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { stESC "Oo", EdKC_numSlash },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { stESC "Oj", EdKC_numStar  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { stESC "Om", EdKC_numMinus },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      };
+   for( auto &el : s_escseqstr2edkc ) {
+      escseqstr_to_ncfkt( el.escseqstr, el.edkc, "?" );
+      }
+   }
+
+void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
+   DBG( "%s ++++++++++++++++", __func__ );
+   noecho();              // we do not change
+   nonl();                // we do not change
+   conin_blocking_read();
+   keypad_mode_enable();
+   meta(stdscr, 1);       // we do not change
+
+   init_kn2edkc();
+   init_ncfkt2edkc();
+   init_escseqstr2edkc();
+
+   DBG( "%s ----------------", __func__ );
    }
 
 // get keyboard event
@@ -303,6 +412,69 @@ struct kpto_er {
       }
    };
 
+// return -1 indicates that event should be ignored (resize event as an example)
+STATIC_FXN int ConGetEvent() {                             0 && DBG( "++++++ ConGetEvent()" );
+   const auto ch( getch() );
+   if( ch < 0 )                      { return -1; }
+   if( ch < ELEMENTS(ncfkt_to_EdKC) && ncfkt_to_EdKC[ ch ] ) {
+      const auto rv( ncfkt_to_EdKC[ ch ] );           s_fDbg && DBG( "ncfkt_to_EdKC[ %d ] => %s", ch, KeyNmOfEdkc( rv ).c_str() );
+      return rv;
+      }
+   if( ch <= 0xFF ) {
+      if( ch == 27 ) {
+         char chin[32];
+         int wrIx = 0;
+         chin[ wrIx++ ] = ch;
+         auto getCh = [&chin, &wrIx]() {
+            int newch = getch();
+            if( newch > 0xFF ) {  DBG( "INTERNAL ERROR: getch returned non-8-bit value: 0x%x", newch );
+               return newch;
+               }
+            if( newch >= 0 ) {
+               if( wrIx < ELEMENTS(chin) ) {
+                  chin[ wrIx++ ] = newch;        s_fDbg && DBG( "getCh => %c (0x%02X)", newch, newch );
+                  }
+               else {                                      DBG( "INTERNAL ERROR: getCh BUFFER OVERRUN" );
+                  }
+               }
+            return newch;
+            };
+         kpto_er kpto_cleaner;
+         while( getCh() >= 0 ) {}  // slurp entire escseq
+         int rdIx = 1; // skip initial esc
+         auto rdCh = [&chin,&wrIx,&rdIx]() {
+            const int newch = rdIx < wrIx ? chin[ rdIx++ ] : ERR;  s_fDbg && DBG( "rdCh => %c (0x%02X)", newch, newch );
+            return newch;
+            };
+         char tib[65]; terminfo_str( BSOB(tib), chin, wrIx );            s_fDbg && DBG( "+++ DecodeEscSeq_xterm %s", tib );
+         const auto rv( DecodeEscSeq_xterm( rdCh  ) );
+         if( rv < 0 ) { DBG( "unrecognized escseq %s", tib ); }
+         else { 1 && DBG( "--- escseq %s = %s (%d)", tib, KeyNmOfEdkc( rv ).c_str(), rv ); }
+         return rv;
+         }
+
+      if( ch == '\r' || ch == '\n' ) { s_fDbg && DBG( "ch == '\r' || ch == '\n' => EdKC_enter" ); return EdKC_enter; }
+      if( ch == '\t' )               { s_fDbg && DBG( "ch == '\t' => EdKC_tab"                 ); return EdKC_tab; }
+      if( ch >= 28 && ch <= 31 )     { auto rv = EdKC_c_4 + (ch - 28); s_fDbg && DBG( "ch >= 28 && ch <= 31 => %s", KeyNmOfEdkc( rv ).c_str() ); return rv; }
+      if( ch < 27 )                  { auto rv = EdKC_c_a + (ch -  1); s_fDbg && DBG( "ch < 27 => %s"   , KeyNmOfEdkc( rv ).c_str() ); return rv; }
+                                        s_fDbg && DBG( "(dflt) => %c (0x%02X)", ch, ch );
+      return ch;
+      }
+   switch (ch) { // translate "active" ncurses keycodes:
+      case KEY_RESIZE:   ConOut::Resize();  return -1;
+      case KEY_MOUSE:  /*Event->What = evNone;
+                         ConGetMouseEvent(Event);  break;
+      case KEY_SF:       KEvent->Code = kfShift | kbDown;  break;
+      case KEY_SR:       KEvent->Code = kfShift | kbUp;    break;
+      case KEY_SRIGHT:   KEvent->Code = kfShift | kbRight; */
+                                       s_fDbg && DBG( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
+           return -1;
+
+      default:                         s_fDbg && DBG( "%s Unknown event", __func__ ) && DBG_keybound( ch );
+           return -1;
+      }
+   }
+
 #define CR( is, rv )  case is: return rv;
 
 #define CAS5( kynm ) \
@@ -326,61 +498,8 @@ struct kpto_er {
       default:      return -1;            \
       }
 
-// return -1 indicates that event should be ignored (resize event as an example)
-STATIC_FXN int ConGetEvent() {                             s_fVerbose && DBG( "++++++ ConGetEvent()" );
-   const auto ch( getch() );
-   if( ch < 0 )                      { return -1; }
-   if( ch < ELEMENTS(ncurses_ch_to_EdKC) && ncurses_ch_to_EdKC[ ch ] ) {
-      const auto rv( ncurses_ch_to_EdKC[ ch ] );           s_fVerbose && DBG( "ncurses_ch_to_EdKC[ %d ] => %s", ch, KeyNmOfEdkc( rv ).c_str() );
-      return rv;
-      }
-   if( ch <= 0xFF ) {
-      if( ch == 27 ) {
-         int chin[32];
-         int chinIx( 0 );
-         chin[ chinIx++ ] = ch;
-         auto getCh = [&chin, &chinIx]() {
-            int newch = getch();
-            if( newch >= 0 && chinIx < ELEMENTS(chin) ) {
-               chin[ chinIx++ ] = newch;
-               }                                           s_fVerbose && DBG( "newch => %c (0x%02X)", newch, newch );
-            return newch;
-            };
-
-         kpto_er kpto_cleaner;                             s_fVerbose && DBG( "+++ DecodeEscSeq_xterm" );
-         const auto rv( DecodeEscSeq_xterm( getCh ) );     s_fVerbose && DBG( "--- DecodeEscSeq_xterm => %d", rv );
-
-         char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, chin, chinIx );
-         if( rv < 0 ) { Msg( "unrecognized escseq %s\n", tib ); }
-         else { s_fVerbose && DBG( "escseq: %s=%s", KeyNmOfEdkc( rv ).c_str(), tib ); }
-         return rv;
-         }
-
-      if( ch == '\r' || ch == '\n' ) { s_fVerbose && DBG( "ch == '\r' || ch == '\n' => EdKC_enter" ); return EdKC_enter; }
-      if( ch == '\t' )               { s_fVerbose && DBG( "ch == '\t' => EdKC_tab"                 ); return EdKC_tab; }
-      if( ch >= 28 && ch <= 31 )     { auto rv = EdKC_c_4 + (ch - 28); s_fVerbose && DBG( "ch >= 28 && ch <= 31 => %s", KeyNmOfEdkc( rv ).c_str() ); return rv; }
-      if( ch < 27 )                  { auto rv = EdKC_c_a + (ch -  1); s_fVerbose && DBG( "ch < 27 => %s"   , KeyNmOfEdkc( rv ).c_str() ); return rv; }
-                                        s_fVerbose && DBG( "(dflt) => %c (0x%02X)", ch, ch );
-      return ch;
-      }
-   switch (ch) { // translate "active" ncurses keycodes:
-      case KEY_RESIZE:   ConOut::Resize();  return -1;
-      case KEY_MOUSE:  /*Event->What = evNone;
-                         ConGetMouseEvent(Event);  break;
-      case KEY_SF:       KEvent->Code = kfShift | kbDown;  break;
-      case KEY_SR:       KEvent->Code = kfShift | kbUp;    break;
-      case KEY_SRIGHT:   KEvent->Code = kfShift | kbRight; */
-                                       s_fVerbose && DBG( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
-           return -1;
-
-      default:
-           // fprintf(stderr, "Unknown 0%o %d\n", ch, ch);
-                                       s_fVerbose && DBG( "%s Unknown event 0x%x 0%o %d\n", __func__, ch, ch, ch );
-           return -1;
-      }
-   }
-
-STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-PC-Style-Function-Keys
+// http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-PC-Style-Function-Keys
+STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) {
    enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
    auto decode_modch = []( int ch ) {
       // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-PC-Style-Function-Keys
@@ -404,7 +523,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          break;case '6': mod = mod_ctrl +    0    + mod_shift;
          break;case '7': mod = mod_ctrl + mod_alt +    0     ;
          break;case '8': mod = mod_ctrl + mod_alt + mod_shift;
-         }                                        s_fVerbose && DBG( "decode_modch => 0x%02X", mod );
+         }                                        s_fDbg && DBG( "decode_modch => 0x%02X", mod );
       return mod;
       };
 
@@ -414,14 +533,14 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
    if( ch == 27 ) { // 2nd consecutive ESC?
       ch = getCh();
       if( ch == '[' || ch == 'O' ) {
-         kbAlt = true;                            s_fVerbose && DBG( "kbAlt = true" );
+         kbAlt = true;                            s_fDbg && DBG( "kbAlt = true" );
          }
       }
    if( ch == '[' || ch == 'O' ) { // decode CSI and SS3 sequences; 98% identical
-      const auto fSS3( ch == 'O' ); const auto fCSI( !fSS3 );        s_fVerbose && DBG( "fSS3=%d", fSS3 );
-      int ch1 = getCh();                                             s_fVerbose && DBG( "ch1=%c", ch1 );
+      const auto fSS3( ch == 'O' ); const auto fCSI( !fSS3 );        s_fDbg && DBG( "fSS3=%d", fSS3 );
+      int ch1 = getCh();                                             s_fDbg && DBG( "ch1=%c", ch1 );
       if( ch1 == ERR ) {
-         auto rv = fCSI ? EdKC_a_LEFT_SQ : EdKC_a_o;        s_fVerbose && DBG( "ch1 == ERR, rv => %s", KeyNmOfEdkc( rv ).c_str() );
+         auto rv = fCSI ? EdKC_a_LEFT_SQ : EdKC_a_o;        s_fDbg && DBG( "ch1 == ERR, rv => %s", KeyNmOfEdkc( rv ).c_str() );
          return rv;
          }
 
@@ -433,9 +552,12 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
              mod_CAs= mod_ctrl | mod_alt,
            };
 
+#define LINUX_CONSOLE 0
+
+#if LINUX_CONSOLE
       if( fCSI && ch1 == '[' ) { // CSI [ [A-E]  Linux Console (incl ssh terminal) F1-F5 (with optional dup-esc prefix for alt+)
 
-         const auto mod( kbAlt ? mod_alt : 0 );     s_fVerbose && DBG( "fCSI && ch1 == '[', mod=0x%02X", mod );
+         const auto mod( kbAlt ? mod_alt : 0 );     s_fDbg && DBG( "fCSI && ch1 == '[', mod=0x%02X", mod );
          switch( getCh() ) {
             default : return -1;
             case 'A': CAS5( f1 );
@@ -448,16 +570,16 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
       if( fCSI && (ch1 == '1' || ch1 == '2') ) {  // Linux Console (incl ssh terminal) specific (reversed via ./odkey.sh)
          const auto ch2 = getCh();
          const auto endch = getCh();
-         auto mod( kbAlt ? mod_alt : 0 );            s_fVerbose && DBG( "fCSI && (ch1 == '1' || ch1 == '2'), mod=0x%02X", mod );
+         auto mod( kbAlt ? mod_alt : 0 );            s_fDbg && DBG( "fCSI && (ch1 == '1' || ch1 == '2'), mod=0x%02X", mod );
          switch( endch ) {
             break; case '^': mod |= mod_ctrl;
             break; case '~':
-            break; default:                          s_fVerbose && DBG( "CSI %c ? followed by %c ?", ch1, endch );
+            break; default:                          s_fDbg && DBG( "CSI %c ? followed by %c ?", ch1, endch );
                              return -1;
-            }                                        s_fVerbose && DBG( "--> CSI %c %c, mod=0x%02X", ch1, ch2, mod );
+            }                                        s_fDbg && DBG( "--> CSI %c %c, mod=0x%02X", ch1, ch2, mod );
          switch( ch1 ) {
             case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
-                                                     s_fVerbose && DBG( "CSI 1 [1-57-9], mod=0x%02X", mod );
+                                                     s_fDbg && DBG( "CSI 1 [1-57-9], mod=0x%02X", mod );
                switch( ch2 ) {
                   default : return -1;
                   case '1': CAS6( f1  );
@@ -470,7 +592,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
                   case '9': CAS6( f8  );
                   }
             case '2': // CSI 2 [0134]  Linux console [Ctrl+]F[9-12] (with optional dup-esc prefix for alt+)
-                                                     s_fVerbose && DBG( "CSI 2 [0134], mod=0x%02X", mod );
+                                                     s_fDbg && DBG( "CSI 2 [0134], mod=0x%02X", mod );
                switch( ch2 ) {
                   default : return -1;
                   case '0': CAS6( f9  );
@@ -480,6 +602,8 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
                   }
             }
          }
+#endif  // if LINUX_CONSOLE
+
 
       // https://en.wikipedia.org/wiki/ANSI_escape_code
       // "Old versions of Terminator generate `SS3 1 ; modifiers char` when F1-F4 are
@@ -509,7 +633,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          ch1 = '\0';
          }
       auto mod( decode_modch( modch ) );
-      if( kbAlt ) { mod |= mod_alt; }                s_fVerbose && DBG( "switch (endch=%c), mod=0x%02X", endch, mod );
+      if( kbAlt ) { mod |= mod_alt; }                s_fDbg && DBG( "switch (endch=%c), mod=0x%02X", endch, mod );
       switch (endch) {
          default : return -1;
          case 'A': CAS5( up       ); break;
@@ -535,7 +659,7 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          case 'd': return (mod & mod_ctrl) ? EdKC_cs_left  : EdKC_s_left;
                    //----------------------------------------------------
          case '$': mod |= mod_shift;  /* FALL THRU!!! */
-         case '~':                                   s_fVerbose && DBG( "CSI %c ~, mod=0x%02X", ch1, mod );
+         case '~':                                   s_fDbg && DBG( "CSI %c ~, mod=0x%02X", ch1, mod );
              switch (ch1) { // CSI n ~
                 default : return -1;
                 case '1': CAS5( home ); break;
@@ -569,11 +693,11 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
          else if( ch == ']'  )             { return EdKC_a_RIGHT_SQ;       }
          else if( ch == '`'  )             { return EdKC_a_BACKTICK;       }
          else if( ch == 127  )             { return EdKC_a_bksp;           }
-         else                              {                                 s_fVerbose && DBG( "return ch=%c", ch );
+         else                              {                                 s_fDbg && DBG( "return ch=%c", ch );
             return ch;
             }
          }
       }
-                                                                             s_fVerbose && DBG( "return ERR=%c", ERR );
+                                                                             s_fDbg && DBG( "return ERR=%c", ERR );
    return ERR;
    }
