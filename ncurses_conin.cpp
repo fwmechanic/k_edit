@@ -27,6 +27,8 @@ STATIC_VAR bool s_fVerbose = false;
 void ConIn::log_verbose() { s_fVerbose = true ; }
 void ConIn::log_quiet  () { s_fVerbose = false; }
 
+#define stESC "\x1b"
+
 STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
    switch( ch ) {
       break;case '\200' : snprintf_full( &dest, &sizeofDest, "\\0"  );
@@ -60,6 +62,18 @@ STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int 
    return dest;
    }
 
+STATIC_FXN int  DBG_keybound( int ch ) {
+   for( auto ix=0; ; ++ix ) {
+      auto tinm = keybound( ch, ix );
+      if( !tinm ) { return 1; }
+      const auto tinm_len = Strlen(tinm);
+      char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, tinm, tinm_len );
+      DBG( "0%04o=0x%04x=0d%3d; keybound[%d] = '%s' L %d (0x%x)", ch, ch, ch, ix, tib, tinm_len, tinm_len > 0 ? tinm[0] : 0 );
+      free( tinm );
+      }
+   return 1; // for && chaining
+   }
+
 // http://emacswiki.org/emacs/PuTTY  seems a goldmine for the enigma that is putty
 //
 // from http://invisible-island.net/xterm/terminfo.html  "terminfo for XTERM"
@@ -78,11 +92,46 @@ STATIC_FXN PChar terminfo_str( PChar &dest, size_t &sizeofDest, PCChar ach, int 
 //       7       Alt + Control
 //       8       Shift + Alt + Control
 //
-STATIC_VAR uint16_t ncurses_ch_to_EdKC[600]; // indexed by ncurses_ch
 
-STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, uint16_t edkc ) { enum { SD=0 };
-   /* if terminfo defines a capability named cap_nm (as an escseqstr), _and_ ncurses maps that escseqstr
-      to an ncurses_ch (which getch() returns), then add an entry ncurses_ch_to_EdKC[ncurses_ch] = EdKC #
+// NB: (ncurses') curses.h #define's KEY_MAX, which one might *assume* would be
+// the max possible nckc returned by getch(), however simply by perusing the
+// editor log as it processes s_kn2edkc, one can see that this is an invalid
+// assumption.  Therefore I have defined the nckc_to_EdKC array to have a
+// hard-numeric-coded # of elements substantially larger than KEY_MAX (and am
+// runtime checking that this hard-coded limit is not exceeded).
+//
+STATIC_VAR uint16_t nckc_to_EdKC[600]; // indexed by nckc
+
+STATIC_FXN void escseqstr_to_nckc( const char *escseqstr, uint16_t edkc, const char *cap_nm ) { enum { SD=0 };
+   auto keyNm( KeyNmOfEdkc( edkc ) );
+   if( !escseqstr || (long)(escseqstr) == -1 ) {
+#define KEYMAPFMT  "0%04o=0x%04x=0d%3d cap=%-5s ; tistr=%-8s ; EdkeyNm=%s"
+      1 && DBG( KEYMAPFMT, 0, 0, 0, cap_nm, "?", keyNm.c_str() );
+      return;
+      }
+   char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, escseqstr, Strlen(escseqstr) );
+                                                    SD && DBG( "key_defined+ %s", tib );
+   const auto nckc( key_defined(escseqstr) ); SD && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
+   DBG( KEYMAPFMT, nckc, nckc, nckc, cap_nm, tib, keyNm.c_str() );
+   if( nckc > 0 ) {
+      if( nckc < ELEMENTS( nckc_to_EdKC ) ) {
+         if( nckc_to_EdKC[ nckc ] != edkc ) {
+            if( nckc_to_EdKC[ nckc ] ) {
+               keyNm = KeyNmOfEdkc( nckc_to_EdKC[ nckc ] );
+               DBG( "0%04o=0d%d EdKC=%s overridden!", nckc, nckc, keyNm.c_str() );
+               }
+            nckc_to_EdKC[ nckc ] = edkc;
+            }
+         }
+      else {
+         Msg( "INTERNAL ERROR: nckc=%d exceeds capacity of nckc_to_EdKC[%lu]!", nckc, ELEMENTS( nckc_to_EdKC ) );
+         }
+      }
+   }
+
+STATIC_FXN void cap_nm_to_nckc( const char *cap_nm, uint16_t edkc ) { enum { SD=0 };
+   /* if terminfo defines (as an escseqstr) a capability named cap_nm, _and_ ncurses maps that escseqstr
+      to an nckc (which getch() returns), then add an entry nckc_to_EdKC[nckc] = EdKC
       where EdKC is the EDITOR KEYCODE which corresponds to cap_nm
 
       cap_nm is a terminfo "capability name", the key of a key=value mapping defined in a terminfo file
@@ -90,31 +139,9 @@ STATIC_FXN void cap_nm_to_ncurses_ch( const char *cap_nm, uint16_t edkc ) { enum
       xterm+pce3|fragment with modifyCursorKeys:3,
               kDC=\E[3;2~,                               key=cap_nm=kDC, value=escseqstr=\E[>3;2~
    */
-   auto keyNm( KeyNmOfEdkc( edkc ) );            SD && DBG( "tigetstr+ %s", cap_nm );
+                                                 SD && DBG( "tigetstr+ %s", cap_nm );
    const char *escseqstr( tigetstr( cap_nm ) );  SD && DBG( "tigetstr- %s", cap_nm ); // tigetstr() <- "retrieves a capability from the terminfo database"
-   if( !escseqstr || (long)(escseqstr) == -1 ) {
-#define KEYMAPFMT  "0%04o=0d%d <= %-5s => %-8s => %s"
-      0 && DBG( KEYMAPFMT, 0, 0, cap_nm, "", keyNm.c_str() );
-      return;
-      }
-   char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, escseqstr, Strlen(escseqstr) );
-                                                    SD && DBG( "key_defined+ %s", tib );
-   const auto ncurses_ch( key_defined(escseqstr) ); SD && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
-   DBG( KEYMAPFMT, ncurses_ch, ncurses_ch, cap_nm, tib, keyNm.c_str() );
-   if( ncurses_ch > 0 ) {
-      if( ncurses_ch < ELEMENTS( ncurses_ch_to_EdKC ) ) {
-         if( ncurses_ch_to_EdKC[ ncurses_ch ] != edkc ) {
-            if( ncurses_ch_to_EdKC[ ncurses_ch ] ) {
-               keyNm = KeyNmOfEdkc( ncurses_ch_to_EdKC[ ncurses_ch ] );
-               DBG( "0%04o=0d%d EdKC=%s overridden!", ncurses_ch, ncurses_ch, keyNm.c_str() );
-               }
-            ncurses_ch_to_EdKC[ ncurses_ch ] = edkc;
-            }
-         }
-      else {
-         Msg( "INTERNAL ERROR: ncurses_ch=%d out of range of ncurses_ch_to_EdKC[]!", ncurses_ch );
-         }
-      }
+   escseqstr_to_nckc( escseqstr, edkc, cap_nm );
    }
 
 STATIC_VAR bool s_keypad_mode;
@@ -127,6 +154,7 @@ STATIC_FXN void conin_nonblocking_read() { timeout(g_iConin_nonblk_rd_tmout); s_
 STATIC_FXN void conin_blocking_read()    { timeout(  -1                    ); s_conin_blocking_read = true;  } // getCh blocks waiting for next char
 
 void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
+   DBG( "%s ++++++++++++++++", __func__ );
    noecho();              // we do not change
    nonl();                // we do not change
    conin_blocking_read();
@@ -150,12 +178,13 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
 
       // see also capabilities ka1, ka3, kb2, kc1, kc3 above
       {KEY_A1, EdKC_home },                       {KEY_A3, EdKC_pgup },
-                            {KEY_B2, EdKC_center},
+                            {KEY_B2 , EdKC_center},
+                            {KEY_BEG, EdKC_center},  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
       {KEY_C1, EdKC_end  },                       {KEY_C3, EdKC_pgdn },
 
       {KEY_ENTER, EdKC_enter }, // mimic Win32 behavior
 
-      // replaced (possibly unnecessarily}, by cap_nm_to_ncurses_ch(},
+      // replaced (possibly unnecessarily}, by cap_nm_to_nckc(},
       {KEY_F( 1), EdKC_f1 }, {KEY_F(13), EdKC_s_f1 },  {KEY_F(25), EdKC_c_f1 }, {KEY_F(49), EdKC_a_f1 },
       {KEY_F( 2), EdKC_f2 }, {KEY_F(14), EdKC_s_f2 },  {KEY_F(26), EdKC_c_f2 }, {KEY_F(50), EdKC_a_f2 },
       {KEY_F( 3), EdKC_f3 }, {KEY_F(15), EdKC_s_f3 },  {KEY_F(27), EdKC_c_f3 }, {KEY_F(51), EdKC_a_f3 }, // decoded elsewhere too
@@ -168,19 +197,70 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       {KEY_F(10), EdKC_f10}, {KEY_F(22), EdKC_s_f10},  {KEY_F(34), EdKC_c_f10}, {KEY_F(58), EdKC_a_f10},
       {KEY_F(11), EdKC_f11}, {KEY_F(23), EdKC_s_f11},  {KEY_F(35), EdKC_c_f11}, {KEY_F(59), EdKC_a_f11},
       {KEY_F(12), EdKC_f12}, {KEY_F(24), EdKC_s_f12},  {KEY_F(36), EdKC_c_f12}, {KEY_F(60), EdKC_a_f12},
+
+      // 20240410 how these magic #s (e.g. 0x23f) were discovered, then superseded by "something better":
+      // ("Oh, the humanity!")
+      // * execute EdFxn tell, hit key, and if necessary hit a defined key to finish decode and complete tell.
+      // * consult editor log to find which logging corresponds to that an unrecognized key:
+      //
+      // A. if "Unknown event" followed by a line dumping a (probably 16-bit) int
+      //    value in octal=hex=dec followed by an escseqstr, then ncurses
+      //    translated the keystroke directly to a ncurses KEY_ code (nckc)
+      //    returned by *a single call to* getch(); the nckc is always returned in lieu of
+      //    the escseqstr being coughed up char by char.  These nckc may be either #defined as KEY_* in e.g.
+      //    curses.h (see above), or apparently can be dynamically defined by
+      //    e.g. terminfo (or termcap).  In the latter case, I am unaware of how
+      //    we can discover a maintained symbolic definition for the nckc mapped
+      //    to a particular key or key-combo, thus as an expedient I hard-coded
+      //    the numeric value of nckc seen in the editor log back into the editor
+      //    source code.  This is obviously horrendously bad practice and bound
+      //    to break in the future when the mapping changes.
+
+      // following "work" for as long as the number to key mapping persists.  Disabled as keying on escseqstr seems slightly more long-lived...
+      // {0x23f, EdKC_numPlus },  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      // {0x241, EdKC_numSlash},  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      // {0x243, EdKC_numStar },  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      // {0x244, EdKC_numMinus},  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      //
+      //    A variant (implemented below, see s_escseqstr2edkc) performs runtime
+      //    lookup of the nckc associated with a hard-coded escseqstr (using
+      //    ncurses key_defined()), and using the dynamically discovered nckc to
+      //    index into nckc_to_EdKC.  Rationale: escseqstr seems a more
+      //    stable key value (but who can be sure!?), thus for now this approach
+      //    is being preferred/used.
+      //
+      // B. An escseqstr, being the escape sequence for a single keystroke (or
+      //    chorded combo) has been read (7- or 8-bit) character by (7- or
+      //    8-bit) character at a time via a sequence of calls to getch(), and
+      //    the editor has failed to decode it.  In this case by definition
+      //    ncurses is not providing a nckc in lieu of the escseqstr. and the
+      //    (fairly unpleasant) editor escape sequence decoding code
+      //    (DecodeEscSeq_xterm) needs to be updated to translate the received
+      //    escseqstr to the desired EdKC.
+      //
+      // Unfortunately, this all seems to be incredibly fragile.
+      //
+      // Note that all described above "works" *only* in the context of the
+      // current version of PopOS, that I'm running (`lsb_release -a`: "Pop!_OS
+      // 22.04 LTS"), using the default "desktop" terminal for that
+      // distro+version (Gnome terminal???) and may not work on any other Linux
+      // distro, or *might* work on another Linux distro derived from debian
+      // Linux (i.e. ubuntu, etc.)!
+      //
+      // Also, *I can say from first-hand experience* that many of these key
+      // mappings *do not work* when ssh'ing in to run k on my Ubuntu 22.04 LTS
+      // server from Windows 10 using the git-for-windows bash toolset.
       };
    DBG( "%s", "" );
    for( auto &el : s_nckc2edkc ) {
       if( has_key( el.nckc ) ) {
-         ncurses_ch_to_EdKC[ el.nckc ] = el.edkc;
-         DBG( KEYMAPFMT, el.nckc, el.nckc, "nckc#", "?", KeyNmOfEdkc( el.edkc ).c_str() );
+         nckc_to_EdKC[ el.nckc ] = el.edkc;
+         DBG( KEYMAPFMT, el.nckc, el.nckc, el.nckc, "?", "?", KeyNmOfEdkc( el.edkc ).c_str() );
          }
       }
-   DBG( "%s", "" );
 
    STATIC_VAR const struct { const char *cap_nm; uint16_t edkc; } s_kn2edkc[] = {
       // early/leading instances are overridden by later
-
       //------------------------------------------------------------------------------
       // from (any?) terminfo(5) man page   man 5 terminfo
       // "In addition, if the keypad has a 3 by 3 array of keys including the
@@ -233,9 +313,19 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
       // putty-sco terminfo is probably installed (on ubuntu) by installing the ncurses-term package
       };
    for( auto &el : s_kn2edkc ) {
-      cap_nm_to_ncurses_ch( el.cap_nm, el.edkc );
+      cap_nm_to_nckc( el.cap_nm, el.edkc );
       }
-   DBG( "%s", "" );
+
+   STATIC_VAR const struct { const char *escseqstr; uint16_t edkc; } s_escseqstr2edkc[] = {
+      { stESC "Ok", EdKC_numPlus  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { stESC "Oo", EdKC_numSlash },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { stESC "Oj", EdKC_numStar  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { stESC "Om", EdKC_numMinus },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      };
+   for( auto &el : s_escseqstr2edkc ) {
+      escseqstr_to_nckc( el.escseqstr, el.edkc, "?" );
+      }
+   DBG( "%s ----------------", __func__ );
    }
 
 // get keyboard event
@@ -330,8 +420,8 @@ struct kpto_er {
 STATIC_FXN int ConGetEvent() {                             s_fVerbose && DBG( "++++++ ConGetEvent()" );
    const auto ch( getch() );
    if( ch < 0 )                      { return -1; }
-   if( ch < ELEMENTS(ncurses_ch_to_EdKC) && ncurses_ch_to_EdKC[ ch ] ) {
-      const auto rv( ncurses_ch_to_EdKC[ ch ] );           s_fVerbose && DBG( "ncurses_ch_to_EdKC[ %d ] => %s", ch, KeyNmOfEdkc( rv ).c_str() );
+   if( ch < ELEMENTS(nckc_to_EdKC) && nckc_to_EdKC[ ch ] ) {
+      const auto rv( nckc_to_EdKC[ ch ] );           s_fVerbose && DBG( "nckc_to_EdKC[ %d ] => %s", ch, KeyNmOfEdkc( rv ).c_str() );
       return rv;
       }
    if( ch <= 0xFF ) {
@@ -351,7 +441,7 @@ STATIC_FXN int ConGetEvent() {                             s_fVerbose && DBG( "+
          const auto rv( DecodeEscSeq_xterm( getCh ) );     s_fVerbose && DBG( "--- DecodeEscSeq_xterm => %d", rv );
 
          char tib[65]; auto pob( tib ); auto nob( sizeof( tib ) ); terminfo_str( pob, nob, chin, chinIx );
-         if( rv < 0 ) { Msg( "unrecognized escseq %s\n", tib ); }
+         if( rv < 0 ) { DBG( "unrecognized escseq %s", tib ); }
          else { s_fVerbose && DBG( "escseq: %s=%s", KeyNmOfEdkc( rv ).c_str(), tib ); }
          return rv;
          }
@@ -373,9 +463,7 @@ STATIC_FXN int ConGetEvent() {                             s_fVerbose && DBG( "+
                                        s_fVerbose && DBG( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
            return -1;
 
-      default:
-           // fprintf(stderr, "Unknown 0%o %d\n", ch, ch);
-                                       s_fVerbose && DBG( "%s Unknown event 0x%x 0%o %d\n", __func__, ch, ch, ch );
+      default:                         s_fVerbose && DBG( "%s Unknown event", __func__ ) && DBG_keybound( ch );
            return -1;
       }
    }
@@ -433,6 +521,9 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
              mod_CAs= mod_ctrl | mod_alt,
            };
 
+#define LINUX_CONSOLE 0
+
+#if LINUX_CONSOLE
       if( fCSI && ch1 == '[' ) { // CSI [ [A-E]  Linux Console (incl ssh terminal) F1-F5 (with optional dup-esc prefix for alt+)
 
          const auto mod( kbAlt ? mod_alt : 0 );     s_fVerbose && DBG( "fCSI && ch1 == '[', mod=0x%02X", mod );
@@ -480,6 +571,8 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) { // http://invi
                   }
             }
          }
+#endif  // if LINUX_CONSOLE
+
 
       // https://en.wikipedia.org/wiki/ANSI_escape_code
       // "Old versions of Terminator generate `SS3 1 ; modifiers char` when F1-F4 are
