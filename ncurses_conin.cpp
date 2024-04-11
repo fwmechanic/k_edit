@@ -100,7 +100,7 @@ STATIC_FXN int  DBG_keybound( int ch ) {
 // hard-numeric-coded # of elements substantially larger than KEY_MAX (and am
 // runtime checking that this hard-coded limit is not exceeded).
 //
-STATIC_VAR uint16_t nckc_to_EdKC[600]; // indexed by nckc
+STATIC_VAR uint16_t nckc_to_EdKC[700]; // indexed by nckc; note that first 256 elements map to "regular" characters
 
 STATIC_FXN void escseqstr_to_nckc( const char *escseqstr, uint16_t edkc, const char *cap_nm ) { enum { SD=0 };
    auto keyNm( KeyNmOfEdkc( edkc ) );
