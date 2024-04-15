@@ -63,13 +63,16 @@ STATIC_FXN PChar terminfo_str( PChar dest, size_t sizeofDest, PCChar ach, int nu
    return dest;
    }
 
+#define NCFKT3 "0%04o=0x%04x=0d%3d"
+#define NCFKT3ARGS(fkt)  (fkt), (fkt), (fkt)
+
 STATIC_FXN int  DBG_keybound( int ch ) {
    for( auto ix=0; ; ++ix ) {
       auto tinm = keybound( ch, ix );
       if( !tinm ) { return 1; }
       const auto tinm_len = Strlen(tinm);
       char tib[65]; terminfo_str( BSOB(tib), tinm, tinm_len );
-      DBG( "0%04o=0x%04x=0d%3d; keybound[%d] = '%s' L %d (0x%x)", ch, ch, ch, ix, tib, tinm_len, tinm_len > 0 ? tinm[0] : 0 );
+      DBG( NCFKT3 "; keybound[%d] = '%s' L %d (0x%x)", NCFKT3ARGS(ch), ix, tib, tinm_len, tinm_len > 0 ? tinm[0] : 0 );
       free( tinm );
       }
    return 1; // for && chaining
@@ -114,31 +117,50 @@ STATIC_FXN int  DBG_keybound( int ch ) {
 //
 STATIC_VAR uint16_t ncfkt_to_EdKC[KEY_MAX+400]; // indexed by ncfkt; note that first 256 elements map to "regular" characters
 
+STATIC_FXN PCChar set_ncfkt_to_EdKC_ok( int ncfkt, uint16_t edkc ) {
+   if( ncfkt < 0 ) {
+      return "INVALID NCFKT";
+      }
+   if( !has_key( ncfkt ) ) {  // `has_key( ncfkt )` may be redundant to `ncfkt = key_defined(escseqstr)`
+      return "!has_key( ncfkt )";
+      }
+   if( ncfkt < ELEMENTS( ncfkt_to_EdKC ) ) {
+      const auto keyNm = KeyNmOfEdkc( ncfkt_to_EdKC[ ncfkt ] );
+      if( ncfkt_to_EdKC[ ncfkt ] != edkc ) {
+         PCChar rv;
+         if( ncfkt_to_EdKC[ ncfkt ] ) {
+            DBG( "existing mapping " NCFKT3 " = EdkeyNm=%-16s is remapped to...", NCFKT3ARGS(ncfkt), keyNm.c_str() );
+            rv = "ok, reassignment! ";
+            }
+         else {
+            rv = "ok, new";
+            }
+         ncfkt_to_EdKC[ ncfkt ] = edkc;
+         return rv;
+         }
+      else {
+         return "ok, dup";
+         }
+      }
+   else {
+      Msg( "INTERNAL ERROR: ncfkt=" NCFKT3 " exceeds capacity of ncfkt_to_EdKC[%lu]!", NCFKT3ARGS(ncfkt), ELEMENTS( ncfkt_to_EdKC ) );
+      return "RANGE ERROR";
+      }
+   }
+
 STATIC_FXN void escseqstr_to_ncfkt( const char *escseqstr, uint16_t edkc, const char *cap_nm ) { enum { SD=0 };
    auto keyNm = KeyNmOfEdkc( edkc );
    if( !escseqstr || (long)(escseqstr) == -1 ) {
-#define KEYMAPFMT  "0%04o=0x%04x=0d%3d cap=%-5s ; tistr=%-8s ; EdkeyNm=%s"
-      1 && DBG( KEYMAPFMT, 0, 0, 0, cap_nm, "?", keyNm.c_str() );
+      1 && DBG( "cap=%-5s      no mapping                            (EdkeyNm=%s)", cap_nm, keyNm.c_str() );
       return;
       }
    char tib[65]; terminfo_str( BSOB(tib), escseqstr, Strlen(escseqstr) );
                                                SD && DBG( "key_defined+ %s", tib );
    const auto ncfkt = key_defined(escseqstr);  SD && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
-   DBG( KEYMAPFMT, ncfkt, ncfkt, ncfkt, cap_nm, tib, keyNm.c_str() );
-   if( ncfkt > 0 && has_key( ncfkt ) ) {  // `has_key( ncfkt )` may be redundant to `ncfkt = key_defined(escseqstr)`
-      if( ncfkt < ELEMENTS( ncfkt_to_EdKC ) ) {
-         if( ncfkt_to_EdKC[ ncfkt ] != edkc ) {
-            if( ncfkt_to_EdKC[ ncfkt ] ) {
-               keyNm = KeyNmOfEdkc( ncfkt_to_EdKC[ ncfkt ] );
-               DBG( "0%04o=0d%d EdKC=%s overridden!", ncfkt, ncfkt, keyNm.c_str() );
-               }
-            ncfkt_to_EdKC[ ncfkt ] = edkc;
-            }
-         }
-      else {
-         Msg( "INTERNAL ERROR: ncfkt=%d exceeds capacity of ncfkt_to_EdKC[%lu]!", ncfkt, ELEMENTS( ncfkt_to_EdKC ) );
-         }
-      }
+   PCChar rsltMsg = set_ncfkt_to_EdKC_ok( ncfkt, edkc );
+   DBG( "cap=%-7s => tistr=%-8s => " NCFKT3 " = EdkeyNm=%-16s %s", cap_nm, tib, NCFKT3ARGS(ncfkt), keyNm.c_str()
+      , rsltMsg
+      );
    }
 
 STATIC_FXN void cap_nm_to_ncfkt( const char *cap_nm, uint16_t edkc ) { enum { SD=0 };
@@ -250,42 +272,43 @@ STATIC_FXN void init_kn2edkc() {
 
 STATIC_FXN void init_ncfkt2edkc() {
    DBG( "init_ncfkt2edkc" );
-   STATIC_VAR const struct { short ncfkt; uint16_t edkc; } s_ncfkt2edkc[] = {
-      {KEY_RIGHT     , EdKC_right }, {KEY_SRIGHT    , EdKC_s_right },
-      {KEY_LEFT      , EdKC_left  }, {KEY_SLEFT     , EdKC_s_left  },
-      {KEY_DC        , EdKC_del   }, {KEY_SDC       , EdKC_s_del   },
-      {KEY_IC        , EdKC_ins   }, {KEY_SIC       , EdKC_s_ins   },
-      {KEY_HOME      , EdKC_home  }, {KEY_SHOME     , EdKC_s_home  },
-      {KEY_END       , EdKC_end   }, {KEY_SEND      , EdKC_s_end   },
-      {KEY_NPAGE     , EdKC_pgdn  }, {KEY_SNEXT     , EdKC_s_pgdn  },
-      {KEY_PPAGE     , EdKC_pgup  }, {KEY_SPREVIOUS , EdKC_s_pgup  },
-      {KEY_UP        , EdKC_up    },
-      {KEY_DOWN      , EdKC_down  },
-      {KEY_BACKSPACE , EdKC_bksp  },
+   STATIC_VAR const struct { uint16_t ncfkt; uint16_t edkc; const char *KEY_nm; } s_ncfkt2edkc[] = {
+   #define KEY2EDKC( nm, edkc )  { nm, edkc, #nm }
+      KEY2EDKC(KEY_RIGHT     , EdKC_right ), KEY2EDKC(KEY_SRIGHT    , EdKC_s_right ),
+      KEY2EDKC(KEY_LEFT      , EdKC_left  ), KEY2EDKC(KEY_SLEFT     , EdKC_s_left  ),
+      KEY2EDKC(KEY_DC        , EdKC_del   ), KEY2EDKC(KEY_SDC       , EdKC_s_del   ),
+      KEY2EDKC(KEY_IC        , EdKC_ins   ), KEY2EDKC(KEY_SIC       , EdKC_s_ins   ),
+      KEY2EDKC(KEY_HOME      , EdKC_home  ), KEY2EDKC(KEY_SHOME     , EdKC_s_home  ),
+      KEY2EDKC(KEY_END       , EdKC_end   ), KEY2EDKC(KEY_SEND      , EdKC_s_end   ),
+      KEY2EDKC(KEY_NPAGE     , EdKC_pgdn  ), KEY2EDKC(KEY_SNEXT     , EdKC_s_pgdn  ),
+      KEY2EDKC(KEY_PPAGE     , EdKC_pgup  ), KEY2EDKC(KEY_SPREVIOUS , EdKC_s_pgup  ),
+      KEY2EDKC(KEY_UP        , EdKC_up    ),
+      KEY2EDKC(KEY_DOWN      , EdKC_down  ),
+      KEY2EDKC(KEY_BACKSPACE , EdKC_bksp  ),
 
-      {KEY_LL   , EdKC_end }, // used in old termcap/infos
+      KEY2EDKC(KEY_LL   , EdKC_end ), // used in old termcap/infos
 
       // see also capabilities ka1, ka3, kb2, kc1, kc3 above
-      {KEY_A1, EdKC_home },                       {KEY_A3, EdKC_pgup },
-                            {KEY_B2 , EdKC_center},
-                            {KEY_BEG, EdKC_center},  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      {KEY_C1, EdKC_end  },                       {KEY_C3, EdKC_pgdn },
+      KEY2EDKC(KEY_A1, EdKC_home ),                       KEY2EDKC(KEY_A3, EdKC_pgup ),
+                            KEY2EDKC(KEY_B2 , EdKC_center),
+                            KEY2EDKC(KEY_BEG, EdKC_center),  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      KEY2EDKC(KEY_C1, EdKC_end  ),                       KEY2EDKC(KEY_C3, EdKC_pgdn ),
 
-      {KEY_ENTER, EdKC_enter }, // mimic Win32 behavior
+      KEY2EDKC(KEY_ENTER, EdKC_enter ), // mimic Win32 behavior
 
-      // replaced (possibly unnecessarily}, by cap_nm_to_ncfkt(},
-      {KEY_F( 1), EdKC_f1 }, {KEY_F(13), EdKC_s_f1 },  {KEY_F(25), EdKC_c_f1 }, {KEY_F(49), EdKC_a_f1 },
-      {KEY_F( 2), EdKC_f2 }, {KEY_F(14), EdKC_s_f2 },  {KEY_F(26), EdKC_c_f2 }, {KEY_F(50), EdKC_a_f2 },
-      {KEY_F( 3), EdKC_f3 }, {KEY_F(15), EdKC_s_f3 },  {KEY_F(27), EdKC_c_f3 }, {KEY_F(51), EdKC_a_f3 }, // decoded elsewhere too
-      {KEY_F( 4), EdKC_f4 }, {KEY_F(16), EdKC_s_f4 },  {KEY_F(28), EdKC_c_f4 }, {KEY_F(52), EdKC_a_f4 }, // decoded elsewhere too
-      {KEY_F( 5), EdKC_f5 }, {KEY_F(17), EdKC_s_f5 },  {KEY_F(29), EdKC_c_f5 }, {KEY_F(53), EdKC_a_f5 },
-      {KEY_F( 6), EdKC_f6 }, {KEY_F(18), EdKC_s_f6 },  {KEY_F(30), EdKC_c_f6 }, {KEY_F(54), EdKC_a_f6 },
-      {KEY_F( 7), EdKC_f7 }, {KEY_F(19), EdKC_s_f7 },  {KEY_F(31), EdKC_c_f7 }, {KEY_F(55), EdKC_a_f7 },
-      {KEY_F( 8), EdKC_f8 }, {KEY_F(20), EdKC_s_f8 },  {KEY_F(32), EdKC_c_f8 }, {KEY_F(56), EdKC_a_f8 },
-      {KEY_F( 9), EdKC_f9 }, {KEY_F(21), EdKC_s_f9 },  {KEY_F(33), EdKC_c_f9 }, {KEY_F(57), EdKC_a_f9 },
-      {KEY_F(10), EdKC_f10}, {KEY_F(22), EdKC_s_f10},  {KEY_F(34), EdKC_c_f10}, {KEY_F(58), EdKC_a_f10},
-      {KEY_F(11), EdKC_f11}, {KEY_F(23), EdKC_s_f11},  {KEY_F(35), EdKC_c_f11}, {KEY_F(59), EdKC_a_f11},
-      {KEY_F(12), EdKC_f12}, {KEY_F(24), EdKC_s_f12},  {KEY_F(36), EdKC_c_f12}, {KEY_F(60), EdKC_a_f12},
+      // replaced (possibly unnecessarily}, by cap_nm_to_ncfkt(),
+      {KEY_F( 1), EdKC_f1 ,"KEY_F1" }, {KEY_F(13), EdKC_s_f1 ,"KEY_F13"}, {KEY_F(25), EdKC_c_f1 ,"KEY_F25"}, {KEY_F(49), EdKC_a_f1 ,"KEY_F49"},
+      {KEY_F( 2), EdKC_f2 ,"KEY_F2" }, {KEY_F(14), EdKC_s_f2 ,"KEY_F14"}, {KEY_F(26), EdKC_c_f2 ,"KEY_F26"}, {KEY_F(50), EdKC_a_f2 ,"KEY_F50"},
+      {KEY_F( 3), EdKC_f3 ,"KEY_F3" }, {KEY_F(15), EdKC_s_f3 ,"KEY_F15"}, {KEY_F(27), EdKC_c_f3 ,"KEY_F27"}, {KEY_F(51), EdKC_a_f3 ,"KEY_F51"}, // decoded elsewhere too
+      {KEY_F( 4), EdKC_f4 ,"KEY_F4" }, {KEY_F(16), EdKC_s_f4 ,"KEY_F16"}, {KEY_F(28), EdKC_c_f4 ,"KEY_F28"}, {KEY_F(52), EdKC_a_f4 ,"KEY_F52"}, // decoded elsewhere too
+      {KEY_F( 5), EdKC_f5 ,"KEY_F5" }, {KEY_F(17), EdKC_s_f5 ,"KEY_F17"}, {KEY_F(29), EdKC_c_f5 ,"KEY_F29"}, {KEY_F(53), EdKC_a_f5 ,"KEY_F53"},
+      {KEY_F( 6), EdKC_f6 ,"KEY_F6" }, {KEY_F(18), EdKC_s_f6 ,"KEY_F18"}, {KEY_F(30), EdKC_c_f6 ,"KEY_F30"}, {KEY_F(54), EdKC_a_f6 ,"KEY_F54"},
+      {KEY_F( 7), EdKC_f7 ,"KEY_F7" }, {KEY_F(19), EdKC_s_f7 ,"KEY_F19"}, {KEY_F(31), EdKC_c_f7 ,"KEY_F31"}, {KEY_F(55), EdKC_a_f7 ,"KEY_F55"},
+      {KEY_F( 8), EdKC_f8 ,"KEY_F8" }, {KEY_F(20), EdKC_s_f8 ,"KEY_F20"}, {KEY_F(32), EdKC_c_f8 ,"KEY_F32"}, {KEY_F(56), EdKC_a_f8 ,"KEY_F56"},
+      {KEY_F( 9), EdKC_f9 ,"KEY_F9" }, {KEY_F(21), EdKC_s_f9 ,"KEY_F21"}, {KEY_F(33), EdKC_c_f9 ,"KEY_F33"}, {KEY_F(57), EdKC_a_f9 ,"KEY_F57"},
+      {KEY_F(10), EdKC_f10,"KEY_F10"}, {KEY_F(22), EdKC_s_f10,"KEY_F22"}, {KEY_F(34), EdKC_c_f10,"KEY_F34"}, {KEY_F(58), EdKC_a_f10,"KEY_F58"},
+      {KEY_F(11), EdKC_f11,"KEY_F11"}, {KEY_F(23), EdKC_s_f11,"KEY_F23"}, {KEY_F(35), EdKC_c_f11,"KEY_F35"}, {KEY_F(59), EdKC_a_f11,"KEY_F59"},
+      {KEY_F(12), EdKC_f12,"KEY_F12"}, {KEY_F(24), EdKC_s_f12,"KEY_F24"}, {KEY_F(36), EdKC_c_f12,"KEY_F36"}, {KEY_F(60), EdKC_a_f12,"KEY_F60"},
 
       // 20240410 how these magic #s (e.g. 0x23f) were discovered, then superseded by "something better":
       // ("Oh, the humanity!")
@@ -335,10 +358,10 @@ STATIC_FXN void init_ncfkt2edkc() {
       // server from Windows 10 using the git-for-windows bash toolset.
       };
    for( auto &el : s_ncfkt2edkc ) {
-      if( has_key( el.ncfkt ) ) {
-         ncfkt_to_EdKC[ el.ncfkt ] = el.edkc;
-         DBG( KEYMAPFMT, el.ncfkt, el.ncfkt, el.ncfkt, "?", "?", KeyNmOfEdkc( el.edkc ).c_str() );
-         }
+      PCChar rsltMsg = set_ncfkt_to_EdKC_ok( el.ncfkt, el.edkc );
+      DBG( "%-14s = " NCFKT3 " = EdkeyNm=%-16s %s", el.KEY_nm, NCFKT3ARGS(el.ncfkt), KeyNmOfEdkc( el.edkc ).c_str()
+         , rsltMsg
+         );
       }
    }
 
@@ -443,7 +466,7 @@ STATIC_FXN int ConGetEvent() {                             0 && DBG( "++++++ Con
    const auto ch( getch() );
    if( ch < 0 ) { return -1; }
    if( ch < ELEMENTS(ncfkt_to_EdKC) && ncfkt_to_EdKC[ ch ] ) {
-      const auto rv( ncfkt_to_EdKC[ ch ] );           s_fDbg && DBG( "ncfkt_to_EdKC[ %d ] => %s", ch, KeyNmOfEdkc( rv ).c_str() );
+      const auto rv( ncfkt_to_EdKC[ ch ] );           s_fDbg && DBG( "ncfkt_to_EdKC[ " NCFKT3 " ] => %s", NCFKT3ARGS(ch), KeyNmOfEdkc( rv ).c_str() );
       return rv;
       }
    if( ch == 27 ) { // escseq ...
