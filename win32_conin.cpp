@@ -26,6 +26,7 @@
 STATIC_VAR bool s_fDbg = false;
 void ConIn::log_verbose() { s_fDbg = true ; }
 void ConIn::log_quiet  () { s_fDbg = false; }
+int  ConIn::DecodeErrCount() { return 0; }
 
 // see for good explanations:
 // http://www.adrianxw.dk/SoftwareSite/Consoles/Consoles5.html
