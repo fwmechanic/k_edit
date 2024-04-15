@@ -3051,6 +3051,11 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
             , IsMacroRecordingActive() ? (IsCmdXeqInhibitedByRecord() ? " NOX-RECORDING" : " RECORDING") : ""
             ).c_str()
          );
+   ColoredLine pre;
+   const auto dcdErrCount = ConIn::DecodeErrCount();
+   if( dcdErrCount ) {
+      pre.Cat( ColorTblIdx::ERRM, FmtStr<20>( "%d " , dcdErrCount ).c_str() );
+      }
    //-----------------------------------------------------------------------
    // Display that part of pfh->Namestr() which is common with the cwd in a
    // different color than the remainder of pfh->Namestr().  Display any part
@@ -3070,7 +3075,8 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    //
    //-----------------------------------------------------------------------
    ColoredLine out;
-   const auto maxFnLen( EditScreenCols() - cl.textcols() );
+   out.Cat( pre );
+   const auto maxFnLen( EditScreenCols() - cl.textcols() - out.textcols() );
    if( fnLen > maxFnLen ) {
       // _WIN32: _DO NOT_ try to use PathCompactPathEx here http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=203814&SiteID=1
       // TODO copy pfh->Name() into pathbuf, adjust commonLen, uniqLen accordingly, fall into else case

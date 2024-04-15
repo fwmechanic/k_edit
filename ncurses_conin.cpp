@@ -23,6 +23,14 @@
 #include "ed_main.h"
 #include "conio.h"
 
+STATIC_VAR int  s_DecodeErrCount = 0;
+int  ConIn::DecodeErrCount() { return s_DecodeErrCount; }
+STATIC_FXN int IncrDecodeErrCount() {
+   ++s_DecodeErrCount;
+   DispNeedsRedrawStatLn();
+   return 1;  // for && chaining
+   }
+
 STATIC_VAR bool s_fDbg = false;
 void ConIn::log_verbose() { s_fDbg = true ; }
 void ConIn::log_quiet  () { s_fDbg = false; }
@@ -46,13 +54,6 @@ STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
       break;default     : if( ch >= 1 && ch <= 26 ) { snprintf_full( &dest, &sizeofDest, "^%c", ch-1+'A' ); }
                           else                      { snprintf_full( &dest, &sizeofDest, isprint( ch ) ? "%c" : "\\%03o", ch ); }
       }
-   }
-
-STATIC_FXN PChar terminfo_str( PChar dest, size_t sizeofDest, const int *ach, int numCh ) {
-   for( auto ix(0) ; ix < numCh ; ++ix ) {
-      terminfo_ch( dest, sizeofDest, ach[ ix ] );
-      }
-   return dest;
    }
 
 STATIC_FXN PChar terminfo_str( PChar dest, size_t sizeofDest, PCChar ach, int numCh ) {
@@ -351,7 +352,7 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
 STATIC_FXN int ConGetEvent();
 // get extended event (more complex keystrokes)
 
-STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh );
+STATIC_FXN int DecodeEscSeq_xterm( stref escseq, std::function<int()> getCh );
 
 bool ConIn::FlushKeyQueueAnythingFlushed(){ return flushinp(); }
 
@@ -412,49 +413,85 @@ struct kpto_er {
       }
    };
 
+#define CR( is, rv )  break;case is: return rv;
+
 // return -1 indicates that event should be ignored (resize event as an example)
 STATIC_FXN int ConGetEvent() {                             0 && DBG( "++++++ ConGetEvent()" );
    const auto ch( getch() );
-   if( ch < 0 )                      { return -1; }
+   if( ch < 0 ) { return -1; }
    if( ch < ELEMENTS(ncfkt_to_EdKC) && ncfkt_to_EdKC[ ch ] ) {
       const auto rv( ncfkt_to_EdKC[ ch ] );           s_fDbg && DBG( "ncfkt_to_EdKC[ %d ] => %s", ch, KeyNmOfEdkc( rv ).c_str() );
       return rv;
       }
-   if( ch <= 0xFF ) {
-      if( ch == 27 ) {
-         char chin[32];
-         int wrIx = 0;
-         chin[ wrIx++ ] = ch;
-         auto getCh = [&chin, &wrIx]() {
-            int newch = getch();
-            if( newch > 0xFF ) {  DBG( "INTERNAL ERROR: getch returned non-8-bit value: 0x%x", newch );
-               return newch;
-               }
-            if( newch >= 0 ) {
-               if( wrIx < ELEMENTS(chin) ) {
-                  chin[ wrIx++ ] = newch;        s_fDbg && DBG( "getCh => %c (0x%02X)", newch, newch );
-                  }
-               else {                                      DBG( "INTERNAL ERROR: getCh BUFFER OVERRUN" );
-                  }
-               }
+   if( ch == 27 ) { // escseq ...
+      char chin[32];
+      int wrIx = 0;
+      chin[ wrIx++ ] = ch;
+      auto getCh = [&chin, &wrIx]() {
+         int newch = getch();
+         if( newch > 0xFF ) {  DBG( "INTERNAL ERROR: getch returned non-8-bit value: 0x%x", newch );
             return newch;
-            };
-         kpto_er kpto_cleaner;
-         while( getCh() >= 0 ) {}  // slurp entire escseq
-         int rdIx = 1; // skip initial esc
-         auto rdCh = [&chin,&wrIx,&rdIx]() {
+            }
+         if( newch >= 0 ) {
+            if( wrIx < ELEMENTS(chin) ) {
+               chin[ wrIx++ ] = newch;        s_fDbg && DBG( "getCh => %c (0x%02X)", newch, newch );
+               }
+            else {                                      DBG( "INTERNAL ERROR: getCh BUFFER OVERRUN" );
+               }
+            }
+         return newch;
+         };
+      kpto_er kpto_cleaner;
+      while( getCh() >= 0 ) {}  // slurp entire escseq
+      char tib[5*ELEMENTS(chin)]; terminfo_str( BSOB(tib), chin, wrIx ); // 5 is worst-case '\o000' encoding
+      auto slurped = stref(chin,wrIx);
+
+      // "simple" escseq's are not treated as exceptional for logging purposes
+      if( slurped.length() == 1 ) { return EdKC_esc; }
+      if( slurped.length() == 2 && slurped[1] < 0x80 ) { // 7-bit alt chars (8-bit are exceptional, handled in DecodeEscSeq_xterm)
+         const auto altCh = slurped[1];
+         switch( altCh ) {
+            CR( 127 , EdKC_a_bksp      );
+            CR( '\r', EdKC_a_enter     );
+            CR( '\n', EdKC_a_enter     );
+            CR( '\t', EdKC_a_tab       );
+            CR( '\'', EdKC_a_TICK      );
+            CR( '\\', EdKC_a_BACKSLASH );
+            CR( ',' , EdKC_a_COMMA     );
+            CR( '-' , EdKC_a_MINUS     );
+            CR( '.' , EdKC_a_DOT       );
+            CR( '/' , EdKC_a_SLASH     );
+            CR( ';' , EdKC_a_SEMICOLON );
+            CR( '=' , EdKC_a_EQUAL     );
+            CR( '[' , EdKC_a_LEFT_SQ   );   // CID128049
+            CR( ']' , EdKC_a_RIGHT_SQ  );
+            CR( '`' , EdKC_a_BACKTICK  );
+            break;default: // ranges follow ...
+            if     ( altCh < ' ' )                  { DBG( "DECODE ERROR: unmapped ctrl-alt ch=0x%02x", altCh ); IncrDecodeErrCount(); return -1; } // alt + ctr + key;  unsupported by 'K'
+            else if( altCh >= '0' && altCh <= '9' ) { return EdKC_a_0 + (altCh - '0'); }
+            else if( altCh >= 'a' && altCh <= 'z' ) { return EdKC_a_a + (altCh - 'a'); }
+            else if( altCh >= 'A' && altCh <= 'Z' ) { return EdKC_a_a + (altCh - 'A'); } // Alt-A == Alt-a
+            else                              { DBG( "DECODE ERROR: unmapped 7-bit alt ch=%c", altCh ); IncrDecodeErrCount();
+                                                return -1;
+                                              }
+            }
+         }                                                         s_fDbg && DBG( "+++ DecodeEscSeq_xterm %s", tib );
+      int rdIx = 1; // skip initial esc
+      const auto rv = DecodeEscSeq_xterm( slurped, [&chin,&wrIx=std::as_const(wrIx),&rdIx]() {
             const int newch = rdIx < wrIx ? chin[ rdIx++ ] : ERR;  s_fDbg && DBG( "rdCh => %c (0x%02X)", newch, newch );
             return newch;
-            };
-         char tib[65]; terminfo_str( BSOB(tib), chin, wrIx );            s_fDbg && DBG( "+++ DecodeEscSeq_xterm %s", tib );
-         const auto rv( DecodeEscSeq_xterm( rdCh  ) );
-         if( rv < 0 ) { DBG( "unrecognized escseq %s", tib ); }
-         else { 1 && DBG( "--- escseq %s = %s (%d)", tib, KeyNmOfEdkc( rv ).c_str(), rv ); }
-         return rv;
-         }
+            }
+         );
+      if( rv < 0 ) { DBG( "DECODE ERROR: unrecognized escseq %s", tib ); IncrDecodeErrCount(); }
+      else { DBG( "--- escseq %s = %s (%d)", tib, KeyNmOfEdkc( rv ).c_str(), rv ); }
+      return rv;
+      }
 
+   if( ch <= 0xFF ) {
       if( ch == '\r' || ch == '\n' ) { s_fDbg && DBG( "ch == '\r' || ch == '\n' => EdKC_enter" ); return EdKC_enter; }
       if( ch == '\t' )               { s_fDbg && DBG( "ch == '\t' => EdKC_tab"                 ); return EdKC_tab; }
+      s_fDbg && DBG( "ch == '\\x%02x'", ch );
+      if( ch == 0 )                  { return -1; }
       if( ch >= 28 && ch <= 31 )     { auto rv = EdKC_c_4 + (ch - 28); s_fDbg && DBG( "ch >= 28 && ch <= 31 => %s", KeyNmOfEdkc( rv ).c_str() ); return rv; }
       if( ch < 27 )                  { auto rv = EdKC_c_a + (ch -  1); s_fDbg && DBG( "ch < 27 => %s"   , KeyNmOfEdkc( rv ).c_str() ); return rv; }
                                         s_fDbg && DBG( "(dflt) => %c (0x%02X)", ch, ch );
@@ -470,36 +507,48 @@ STATIC_FXN int ConGetEvent() {                             0 && DBG( "++++++ Con
                                        s_fDbg && DBG( "%s KEY_MOUSE event 0%o %d\n", __func__, ch, ch );
            return -1;
 
-      default:                         s_fDbg && DBG( "%s Unknown event", __func__ ) && DBG_keybound( ch );
+      default:                         DBG( "DECODE ERROR: %s Unknown event", __func__ ) && DBG_keybound( ch ) && IncrDecodeErrCount();
            return -1;
       }
    }
 
-#define CR( is, rv )  case is: return rv;
-
 #define CAS5( kynm ) \
    switch( mod ) { \
-      case mod_cas: return EdKC_##kynm;    \
-      case mod_Cas: return EdKC_c_##kynm;  \
-      case mod_cAs: return EdKC_a_##kynm;  \
-      case mod_caS: return EdKC_s_##kynm;  \
-      case mod_CaS: return EdKC_cs_##kynm; \
-      default:      return -1;            \
+      default:     return -1;        \
+      CR( mod_cas, EdKC_##kynm    )  \
+      CR( mod_Cas, EdKC_c_##kynm  )  \
+      CR( mod_cAs, EdKC_a_##kynm  )  \
+      CR( mod_caS, EdKC_s_##kynm  )  \
+      CR( mod_CaS, EdKC_cs_##kynm )  \
       }
 
 #define CAS6( kynm ) \
    switch( mod ) { \
-      case mod_cas: return EdKC_##kynm;    \
-      case mod_Cas: return EdKC_c_##kynm;  \
-      case mod_cAs: return EdKC_a_##kynm;  \
-      case mod_caS: return EdKC_s_##kynm;  \
-      case mod_CaS: return EdKC_cs_##kynm; \
-      case mod_CAs: return EdKC_ca_##kynm; \
-      default:      return -1;            \
+      default:     return -1;       \
+      CR( mod_cas, EdKC_##kynm    ) \
+      CR( mod_Cas, EdKC_c_##kynm  ) \
+      CR( mod_cAs, EdKC_a_##kynm  ) \
+      CR( mod_caS, EdKC_s_##kynm  ) \
+      CR( mod_CaS, EdKC_cs_##kynm ) \
+      CR( mod_CAs, EdKC_ca_##kynm ) \
       }
 
 // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-PC-Style-Function-Keys
-STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) {
+STATIC_FXN int DecodeEscSeq_xterm( stref escseq, std::function<int()> getCh ) {
+   if( escseq.length() == 2 ) { // 8-bit alt chars (7-bit were handled by caller)
+      DBG( "DECODE ERROR: unmapped 8-bit alt ch=%c (0x%02x)", escseq[1], escseq[1] );
+      return -1;
+      }
+
+   if( escseq.length() == 3 && escseq[1] == 'O' ) {  // backup in case s_escseqstr2edkc ncfkt mappings have not been assigned
+      switch( escseq[1] ) {
+         CR( 'k', EdKC_numPlus  );
+         CR( 'o', EdKC_numSlash );
+         CR( 'j', EdKC_numStar  );
+         CR( 'm', EdKC_numMinus );
+         }
+      }
+
    enum {mod_ctrl=0x4,mod_alt=0x2,mod_shift=0x1};
    auto decode_modch = []( int ch ) {
       // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-PC-Style-Function-Keys
@@ -529,18 +578,21 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) {
 
    bool kbAlt = false;
    int ch = getCh();
-   if( ch == ERR ) { return EdKC_esc; }
    if( ch == 27 ) { // 2nd consecutive ESC?
       ch = getCh();
       if( ch == '[' || ch == 'O' ) {
-         kbAlt = true;                            s_fDbg && DBG( "kbAlt = true" );
+         kbAlt = true;                DBG( "2nd consecutive ESC + [O: kbAlt = true" );
+         }
+      else {                          DBG( "DECODE ERROR: 2nd consecutive ESC + ![O: ???" );
+         return -1;
          }
       }
    if( ch == '[' || ch == 'O' ) { // decode CSI and SS3 sequences; 98% identical
-      const auto fSS3( ch == 'O' ); const auto fCSI( !fSS3 );        s_fDbg && DBG( "fSS3=%d", fSS3 );
-      int ch1 = getCh();                                             s_fDbg && DBG( "ch1=%c", ch1 );
+      const auto fCSI( ch == '[' );
+      const auto fSS3( ch == 'O' );                  s_fDbg && fSS3 && DBG( "SS3" );
+      int ch1 = getCh();                             s_fDbg && DBG( "ch1=%c", ch1 );
       if( ch1 == ERR ) {
-         auto rv = fCSI ? EdKC_a_LEFT_SQ : EdKC_a_o;        s_fDbg && DBG( "ch1 == ERR, rv => %s", KeyNmOfEdkc( rv ).c_str() );
+         auto rv = fCSI ? EdKC_a_LEFT_SQ : EdKC_a_o; s_fDbg && DBG( "ch1 == ERR, rv => %s", KeyNmOfEdkc( rv ).c_str() );
          return rv;
          }
 
@@ -553,18 +605,16 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) {
            };
 
 #define LINUX_CONSOLE 0
-
 #if LINUX_CONSOLE
       if( fCSI && ch1 == '[' ) { // CSI [ [A-E]  Linux Console (incl ssh terminal) F1-F5 (with optional dup-esc prefix for alt+)
-
          const auto mod( kbAlt ? mod_alt : 0 );     s_fDbg && DBG( "fCSI && ch1 == '[', mod=0x%02X", mod );
          switch( getCh() ) {
-            default : return -1;
-            case 'A': CAS5( f1 );
-            case 'B': CAS5( f2 );
-            case 'C': CAS5( f3 );
-            case 'D': CAS5( f4 );
-            case 'E': CAS5( f5 );
+            break;default : return -1;
+            break;case 'A': CAS5( f1 );
+            break;case 'B': CAS5( f2 );
+            break;case 'C': CAS5( f3 );
+            break;case 'D': CAS5( f4 );
+            break;case 'E': CAS5( f5 );
             }
          }
       if( fCSI && (ch1 == '1' || ch1 == '2') ) {  // Linux Console (incl ssh terminal) specific (reversed via ./odkey.sh)
@@ -572,38 +622,37 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) {
          const auto endch = getCh();
          auto mod( kbAlt ? mod_alt : 0 );            s_fDbg && DBG( "fCSI && (ch1 == '1' || ch1 == '2'), mod=0x%02X", mod );
          switch( endch ) {
-            break; case '^': mod |= mod_ctrl;
-            break; case '~':
-            break; default:                          s_fDbg && DBG( "CSI %c ? followed by %c ?", ch1, endch );
-                             return -1;
-            }                                        s_fDbg && DBG( "--> CSI %c %c, mod=0x%02X", ch1, ch2, mod );
+            break;case '^': mod |= mod_ctrl;
+            break;case '~':
+            break;default:                          s_fDbg && DBG( "CSI %c ? followed by %c ?", ch1, endch );
+                            return -1;
+            }                                       s_fDbg && DBG( "--> CSI %c %c, mod=0x%02X", ch1, ch2, mod );
          switch( ch1 ) {
-            case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
+            break;case '1': // CSI 1 [1-57-9]  Linux console [Ctrl+]F[1-8] (with optional dup-esc prefix for alt+)
                                                      s_fDbg && DBG( "CSI 1 [1-57-9], mod=0x%02X", mod );
                switch( ch2 ) {
-                  default : return -1;
-                  case '1': CAS6( f1  );
-                  case '2': CAS6( f2  );
-                  case '3': CAS6( f3  );
-                  case '4': CAS6( f4  );
-                  case '5': CAS6( f5  );
-                  case '7': CAS6( f6  );
-                  case '8': CAS6( f7  );
-                  case '9': CAS6( f8  );
+                  break;default : return -1;
+                  break;case '1': CAS6( f1  );
+                  break;case '2': CAS6( f2  );
+                  break;case '3': CAS6( f3  );
+                  break;case '4': CAS6( f4  );
+                  break;case '5': CAS6( f5  );
+                  break;case '7': CAS6( f6  );
+                  break;case '8': CAS6( f7  );
+                  break;case '9': CAS6( f8  );
                   }
-            case '2': // CSI 2 [0134]  Linux console [Ctrl+]F[9-12] (with optional dup-esc prefix for alt+)
+            break;case '2': // CSI 2 [0134]  Linux console [Ctrl+]F[9-12] (with optional dup-esc prefix for alt+)
                                                      s_fDbg && DBG( "CSI 2 [0134], mod=0x%02X", mod );
                switch( ch2 ) {
-                  default : return -1;
-                  case '0': CAS6( f9  );
-                  case '1': CAS6( f10 );
-                  case '3': CAS6( f11 );
-                  case '4': CAS6( f12 );
+                  break;default : return -1;
+                  break;case '0': CAS6( f9  );
+                  break;case '1': CAS6( f10 );
+                  break;case '3': CAS6( f11 );
+                  break;case '4': CAS6( f12 );
                   }
             }
          }
 #endif  // if LINUX_CONSOLE
-
 
       // https://en.wikipedia.org/wiki/ANSI_escape_code
       // "Old versions of Terminator generate `SS3 1 ; modifiers char` when F1-F4 are
@@ -632,72 +681,45 @@ STATIC_FXN int DecodeEscSeq_xterm( std::function<int()> getCh ) {
          modch = ch1;
          ch1 = '\0';
          }
-      auto mod( decode_modch( modch ) );
-      if( kbAlt ) { mod |= mod_alt; }                s_fDbg && DBG( "switch (endch=%c), mod=0x%02X", endch, mod );
-      switch (endch) {
-         default : return -1;
-         case 'A': CAS5( up       ); break;
-         case 'B': CAS5( down     ); break;
-         case 'C': CAS5( right    ); break;
-         case 'D': CAS5( left     ); break;
-         case 'E': CAS5( center   ); break;
-         case 'F': CAS5( end      ); break;
-         case 'G': CAS5( center   ); break;  // TERM=screen (only mod_cas==mod seen)
-         case 'H': CAS5( home     ); break;
-         case 'M': CAS5( enter    ); break; // hack for PuTTY
-         case 'P': CAS5( f1       ); break; // SS3 P
-         case 'Q': CAS5( f2       ); break; // SS3 Q
-         case 'R': CAS5( f3       ); break; // SS3 R
-         case 'S': CAS5( f4       ); break; // SS3 S
-         case 'j': CAS5( numStar  ); break;
-         case 'k': CAS5( numPlus  ); break;
-         case 'm': CAS5( numMinus ); break;
-         case 'o': CAS5( numSlash ); break;
-         case 'a': return (mod & mod_ctrl) ? EdKC_cs_up    : EdKC_s_up;
-         case 'b': return (mod & mod_ctrl) ? EdKC_cs_down  : EdKC_s_down;
-         case 'c': return (mod & mod_ctrl) ? EdKC_cs_right : EdKC_s_right;
-         case 'd': return (mod & mod_ctrl) ? EdKC_cs_left  : EdKC_s_left;
+      auto mod = decode_modch( modch ) | (kbAlt ? mod_alt : 0);  s_fDbg && DBG( "switch (endch=%c), mod=0x%02X", endch, mod );
+      switch( endch ) {
+         break;default : DBG( "DECODE ERROR: 'switch( endch )' %c", endch ); return -1;
+         break;case 'A': CAS5( up       );
+         break;case 'B': CAS5( down     );
+         break;case 'C': CAS5( right    );
+         break;case 'D': CAS5( left     );
+         break;case 'E': CAS5( center   );
+         break;case 'F': CAS5( end      );
+         break;case 'G': CAS5( center   );  // TERM=screen (only mod_cas==mod seen)
+         break;case 'H': CAS5( home     );
+         break;case 'M': CAS5( enter    );  // hack for PuTTY
+         break;case 'P': CAS5( f1       );  // SS3 P
+         break;case 'Q': CAS5( f2       );  // SS3 Q
+         break;case 'R': CAS5( f3       );  // SS3 R
+         break;case 'S': CAS5( f4       );  // SS3 S
+         break;case 'j': CAS5( numStar  );
+         break;case 'k': CAS5( numPlus  );
+         break;case 'm': CAS5( numMinus );
+         break;case 'o': CAS5( numSlash );
+         break;case 'a': return (mod & mod_ctrl) ? EdKC_cs_up    : EdKC_s_up;
+         break;case 'b': return (mod & mod_ctrl) ? EdKC_cs_down  : EdKC_s_down;
+         break;case 'c': return (mod & mod_ctrl) ? EdKC_cs_right : EdKC_s_right;
+         break;case 'd': return (mod & mod_ctrl) ? EdKC_cs_left  : EdKC_s_left;
                    //----------------------------------------------------
-         case '$': mod |= mod_shift;  /* FALL THRU!!! */
-         case '~':                                   s_fDbg && DBG( "CSI %c ~, mod=0x%02X", ch1, mod );
+         break;case '$': mod |= mod_shift;  /* FALL THRU!!! */
+         /*!*/ case '~':                                   s_fDbg && DBG( "CSI %c ~, mod=0x%02X", ch1, mod );
              switch (ch1) { // CSI n ~
-                default : return -1;
-                case '1': CAS5( home ); break;
-                case '7': CAS5( home ); break;
-                case '4': CAS5( end  ); break;
-                case '8': CAS5( end  ); break;
-                case '2': CAS5( ins  ); break;
-                case '3': CAS5( del  ); break; // CSI 3 ~
-                case '5': CAS5( pgup ); break;
-                case '6': CAS5( pgdn ); break;
+                break;default : DBG( "DECODE ERROR: 'endch = %c, switch( ch1 )' %c", endch, ch1 ); return -1;
+                break;case '1': CAS5( home );
+                break;case '7': CAS5( home );
+                break;case '4': CAS5( end  );
+                break;case '8': CAS5( end  );
+                break;case '2': CAS5( ins  );
+                break;case '3': CAS5( del  );  // CSI 3 ~
+                break;case '5': CAS5( pgup );
+                break;case '6': CAS5( pgdn );
                 }
-             break;
          }
-   } else { // alt+...
-      if (ch == '\r' || ch == '\n')        { return EdKC_a_enter; }
-      else if( ch == '\t' )                { return EdKC_a_tab;   }
-      else if( ch < ' '   )                { return -1; } // alt + ctr + key;  unsupported by 'K'
-      else {
-         if     ( ch >= '0' && ch <= '9' ) { return EdKC_a_0 + (ch - '0'); }
-         else if( ch >= 'a' && ch <= 'z' ) { return EdKC_a_a + (ch - 'a'); }
-         else if( ch >= 'A' && ch <= 'Z' ) { return EdKC_a_a + (ch - 'A'); } // Alt-A == Alt-a
-         else if( ch == '\'' )             { return EdKC_a_TICK;           }
-         else if( ch == ','  )             { return EdKC_a_COMMA;          }
-         else if( ch == '-'  )             { return EdKC_a_MINUS;          }
-         else if( ch == '.'  )             { return EdKC_a_DOT;            }
-         else if( ch == '/'  )             { return EdKC_a_SLASH;          }
-         else if( ch == ';'  )             { return EdKC_a_SEMICOLON;      }
-         else if( ch == '='  )             { return EdKC_a_EQUAL;          }
-      // else if( ch == '['  )             { return EdKC_a_LEFT_SQ;        } CID128049
-         else if( ch == '\\' )             { return EdKC_a_BACKSLASH;      }
-         else if( ch == ']'  )             { return EdKC_a_RIGHT_SQ;       }
-         else if( ch == '`'  )             { return EdKC_a_BACKTICK;       }
-         else if( ch == 127  )             { return EdKC_a_bksp;           }
-         else                              {                                 s_fDbg && DBG( "return ch=%c", ch );
-            return ch;
-            }
-         }
-      }
-                                                                             s_fDbg && DBG( "return ERR=%c", ERR );
-   return ERR;
+      } // decode CSI and SS3 sequences; 98% identical
+   return -1;
    }

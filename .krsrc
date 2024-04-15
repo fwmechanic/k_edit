@@ -446,8 +446,9 @@
    #metapbal:=meta pbal +> arg "balancing {+( not found" message
    #metapbal:ctrl+]
    #argpbal:= arg  pbal +> arg "balancing )+} not found" message
-   balch:ctrl+9
-   balln:ctrl+[
+   #balch:ctrl+9  N/A on Linux
+   balch:alt+]
+   balln:alt+[
 
    # close all windows except the one the cursor is currently in:
    1window:= :>nxtwin window -> meta window =>nxtwin
@@ -877,8 +878,8 @@
    l0:= arg arg "^[~ \t]" grep
    fnhd:= arg arg "^(:i:b)*:i\(" grep  # finds all function decl lines
 
-   nwblock:=tab linsert "}" begline linsert "{"
-   nwblock:alt+]
+   #nwblock:=tab linsert "}" begline linsert "{"
+   #nwblock:alt+]
 
    # bcc:alt+,
    # ecc:alt+.

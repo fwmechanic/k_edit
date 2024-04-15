@@ -132,4 +132,5 @@ namespace ConIn {
    bool  KbHit();
    void  log_verbose();
    void  log_quiet  ();
+   int   DecodeErrCount();
    }
