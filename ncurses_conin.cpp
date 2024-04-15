@@ -179,6 +179,28 @@ STATIC_FXN void init_kn2edkc() {
       { "ka1"  , EdKC_home, },                           { "ka3", EdKC_pgup },
                                { "kb2"  , EdKC_center },
       { "kc1"  , EdKC_end,  },                           { "kc3", EdKC_pgdn },
+
+      //------------------------------------------------------------------------------
+      //
+      // 20240415: The following were initially observed (on 20240410 on PopOS
+      // 22.04 LTS) as undecoded ncfkt's (whose associated escseq was dumped by
+      // DBG_keybound), however the ncfkt's, being > KEY_MAX, were clearly not
+      // associated with KEY_ ncurses #define's, and `infocmp` output revealed no
+      // cap_nm's associated with the observed escseq's, so in the interim I
+      // concocted escseqstr_to_ncfkt to translate the escseq into its ncfkt (on
+      // the theory that the escseq was less likely to change than its associated
+      // ncfkt, a mere number whose source remains unknown).  After days of
+      // seeking (and pure trial and error) the associated cap_nm's of these
+      // escseq's, today I discovered that `infocmp -x` ("print[s] information for
+      // user-defined capabilities") output contains them!!!:
+      //
+      // https://man.archlinux.org/man/core/ncurses/infocmp.1m.en
+      // https://man.archlinux.org/man/user_caps.5.en
+      //
+      { "kpADD",  EdKC_numPlus   },  // stESC "Ok"  PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { "kpDIV",  EdKC_numSlash  },  // stESC "Oo"  PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { "kpMUL",  EdKC_numStar   },  // stESC "Oj"  PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { "kpSUB",  EdKC_numMinus  },  // stESC "Om"  PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
       //------------------------------------------------------------------------------
 
       { "kDC"  , EdKC_del    }, { "kDC3" , EdKC_a_del   }, { "kDC5" , EdKC_c_del   }, { "kDC6" , EdKC_cs_del  },
@@ -323,10 +345,11 @@ STATIC_FXN void init_ncfkt2edkc() {
 STATIC_FXN void init_escseqstr2edkc() {
    DBG( "init_escseqstr2edkc" );
    STATIC_VAR const struct { const char *escseqstr; uint16_t edkc; } s_escseqstr2edkc[] = {
-      { stESC "Ok", EdKC_numPlus  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      { stESC "Oo", EdKC_numSlash },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      { stESC "Oj", EdKC_numStar  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      { stESC "Om", EdKC_numMinus },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      // 20240415: superseded by entries in s_kn2edkc thanks to `infocmp -x`
+      // { stESC "Ok", EdKC_numPlus  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color   kpADD
+      // { stESC "Oo", EdKC_numSlash },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color   kpDIV
+      // { stESC "Oj", EdKC_numStar  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color   kpMul
+      // { stESC "Om", EdKC_numMinus },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color   kpSUB
       };
    for( auto &el : s_escseqstr2edkc ) {
       escseqstr_to_ncfkt( el.escseqstr, el.edkc, "?" );
