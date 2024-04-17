@@ -3,11 +3,13 @@
 
 Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corresponding key, and reading the dialog line to obtain the key name.
 
+20240417: Updated due to recent amount of effort adapting to PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color.
+
 ## Legend for EdKC -> ncurses Table
 
  * `y`: working as expected
  * `hooked`: not seen by ncurses K because intercepted by WM, DE, or other
- * `no response`: no visible respose (systemwide) to key being struck.
+ * `no response`: no visible respose (systemwide), no editor log activity to key being struck.
  * `is X, s/b A`: when the key is struck, EdKC==X is received when ==A is expected
  * `is X`: when the key is struck, EdKC==X is received (implicitly: when another is expected)
  * `ascii 'X'`: when the key is struck, EdKC==EdKC_a (where a is an ASCII code) is received (implicitly: when another is expected);
@@ -24,7 +26,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_f8           | y |
 | EdKC_f9           | y |
 | EdKC_f10          | y |
-| EdKC_f11          | Hooked |
+| EdKC_f11          | y |
 | EdKC_f12          | y |
 | EdKC_home         | y |
 | EdKC_end          | y |
@@ -92,7 +94,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_x          | y |
 | EdKC_a_y          | y |
 | EdKC_a_z          | y |
-| EdKC_a_f1         | hooked: Lubuntu start menu? |
+| EdKC_a_f1         | y |
 | EdKC_a_f2         | hooked: run dialog box |
 | EdKC_a_f3         | y |
 | EdKC_a_f4         | hooked: CLOSES TERMINAL and all processes in session! |
@@ -115,8 +117,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_COMMA      | y |
 | EdKC_a_DOT        | y |
 | EdKC_a_SLASH      | y |
-| EdKC_a_home       | is home (IMPOSSIBLE) |
-| EdKC_a_end        | is end (IMPOSSIBLE) |
+| EdKC_a_home       | y |
+| EdKC_a_end        | y |
 | EdKC_a_left       | y |
 | EdKC_a_right      | y |
 | EdKC_a_up         | y |
@@ -125,7 +127,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_pgdn       | y |
 | EdKC_a_ins        | y |
 | EdKC_a_del        | y |
-| EdKC_a_center     | is center (IMPOSSIBLE) |
+| EdKC_a_center     | y |
 | EdKC_a_num0       |  |
 | EdKC_a_num1       |  |
 | EdKC_a_num2       |  |
@@ -136,11 +138,11 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_num7       |  |
 | EdKC_a_num8       |  |
 | EdKC_a_num9       |  |
-| EdKC_a_numMinus   | is num+ |
-| EdKC_a_numPlus    | is num- |
-| EdKC_a_numStar    | is num* |
-| EdKC_a_numSlash   | is num/ |
-| EdKC_a_numEnter   | is enter |
+| EdKC_a_numMinus   | y |
+| EdKC_a_numPlus    | y |
+| EdKC_a_numStar    | y |
+| EdKC_a_numSlash   | y |
+| EdKC_a_numEnter   | is alt+enter |
 | EdKC_a_space      | hooked by DM/WM |
 | EdKC_a_bksp       | y |
 | EdKC_a_tab        | hooked by DM/WM |
@@ -148,14 +150,14 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_a_enter      | y  |
 | EdKC_c_0          | is ascii '0' (IMPOSSIBLE)|
 | EdKC_c_1          | is ascii '1' (IMPOSSIBLE)|
-| EdKC_c_2          | is ctrl+9 (IMPOSSIBLE)|
+| EdKC_c_2          | is '\x00' (IMPOSSIBLE)|
 | EdKC_c_3          | is esc (IMPOSSIBLE)|
 | EdKC_c_4          | y |
 | EdKC_c_5          | y |
 | EdKC_c_6          | y |
 | EdKC_c_7          | y |
 | EdKC_c_8          | is bkspc (IMPOSSIBLE) |
-| EdKC_c_9          | is ascii '9'(IMPOSSIBLE) |
+| EdKC_c_9          | is ascii '9' (IMPOSSIBLE) |
 | EdKC_c_a          | y |
 | EdKC_c_b          | y |
 | EdKC_c_c          | y |
@@ -182,7 +184,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_x          | y |
 | EdKC_c_y          | y |
 | EdKC_c_z          | y |
-| EdKC_c_f1         | no response |
+| EdKC_c_f1         | y |
 | EdKC_c_f2         | y |
 | EdKC_c_f3         | y |
 | EdKC_c_f4         | y |
@@ -191,11 +193,11 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_f7         | hooked: blanked the entire screen |
 | EdKC_c_f8         | y |
 | EdKC_c_f9         | y |
-| EdKC_c_f10        | no response |
-| EdKC_c_f11        | no response |
+| EdKC_c_f10        | y |
+| EdKC_c_f11        | y |
 | EdKC_c_f12        | y |
-| EdKC_c_BACKTICK   | is ctrl+9 (IMPOSSIBLE)|
-| EdKC_c_MINUS      | ascii '-' (IMPOSSIBLE)|
+| EdKC_c_BACKTICK   | '\x00' (IMPOSSIBLE)|
+| EdKC_c_MINUS      | is ctrl+7 (IMPOSSIBLE)|
 | EdKC_c_EQUAL      | ascii '=' (IMPOSSIBLE)|
 | EdKC_c_LEFT_SQ    | is esc (IMPOSSIBLE)|
 | EdKC_c_RIGHT_SQ   | is ctrl+5 (IMPOSSIBLE)|
@@ -205,8 +207,8 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_COMMA      | ascii ',' (IMPOSSIBLE)|
 | EdKC_c_DOT        | ascii '.' (IMPOSSIBLE)|
 | EdKC_c_SLASH      | is ctrl+7 (IMPOSSIBLE)|
-| EdKC_c_home       | is home (IMPOSSIBLE) |
-| EdKC_c_end        | is end (IMPOSSIBLE) |
+| EdKC_c_home       | y |
+| EdKC_c_end        | y |
 | EdKC_c_left       | y |
 | EdKC_c_right      | y |
 | EdKC_c_up         | y |
@@ -215,7 +217,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_pgdn       | y |
 | EdKC_c_ins        | no response (IMPOSSIBLE)|
 | EdKC_c_del        | y |
-| EdKC_c_center     | is center (IMPOSSIBLE)|
+| EdKC_c_center     | y |
 | EdKC_c_num0       | is '0' (IMPOSSIBLE)|
 | EdKC_c_num1       | is '1' (IMPOSSIBLE)|
 | EdKC_c_num2       | is '2' (IMPOSSIBLE)|
@@ -226,15 +228,15 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_c_num7       | is '7' (IMPOSSIBLE)|
 | EdKC_c_num8       | is '8' (IMPOSSIBLE)|
 | EdKC_c_num9       | is '9' (IMPOSSIBLE)|
-| EdKC_c_numMinus   |  |
-| EdKC_c_numPlus    |  |
-| EdKC_c_numStar    |  |
-| EdKC_c_numSlash   |  |
-| EdKC_c_numEnter   |  |
-| EdKC_c_space      | is space |
-| EdKC_c_bksp       | is bksp |
+| EdKC_c_numMinus   | no response |
+| EdKC_c_numPlus    | no response |
+| EdKC_c_numStar    | y |
+| EdKC_c_numSlash   | y |
+| EdKC_c_numEnter   | is ctrl+enter |
+| EdKC_c_space      | '\x00' |
+| EdKC_c_bksp       | is ctrl+h |
 | EdKC_c_tab        | is tab |
-| EdKC_c_esc        |  |
+| EdKC_c_esc        | is esc |
 | EdKC_c_enter      | is enter |
 | EdKC_s_f1         | y |
 | EdKC_s_f2         | y |
@@ -248,17 +250,17 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_s_f10        | y |
 | EdKC_s_f11        | y |
 | EdKC_s_f12        | y |
-| EdKC_s_home       | is '7' |
-| EdKC_s_end        | is '1' |
-| EdKC_s_left       | is '2' |
-| EdKC_s_right      | is '4' |
-| EdKC_s_up         | is '8' |
-| EdKC_s_down       | is '2' |
-| EdKC_s_pgup       | is '9' |
-| EdKC_s_pgdn       | is '3' |
-| EdKC_s_ins        | is '0' |
-| EdKC_s_del        | is '.' |
-| EdKC_s_center     | is '5' |
+| EdKC_s_home       | y |
+| EdKC_s_end        | y |
+| EdKC_s_left       | y |
+| EdKC_s_right      | y |
+| EdKC_s_up         | y |
+| EdKC_s_down       | y |
+| EdKC_s_pgup       | y |
+| EdKC_s_pgdn       | y |
+| EdKC_s_ins        | chirps system bell? |
+| EdKC_s_del        | y |
+| EdKC_s_center     | y |
 | EdKC_s_num0       |  |
 | EdKC_s_num1       |  |
 | EdKC_s_num2       |  |
@@ -273,13 +275,13 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_s_numPlus    | no response |
 | EdKC_s_numStar    | no response |
 | EdKC_s_numSlash   | no response |
-| EdKC_s_numEnter   | is enter |
-| EdKC_s_space      |  |
+| EdKC_s_numEnter   | is shift+enter |
+| EdKC_s_space      | is space |
 | EdKC_s_bksp       | is bksp |
-| EdKC_s_tab        | no response |
+| EdKC_s_tab        | y |
 | EdKC_s_esc        | is esc |
-| EdKC_s_enter      |  |
-| EdKC_cs_bksp      |  |
+| EdKC_s_enter      | is enter |
+| EdKC_cs_bksp      | is ctrl+h |
 | EdKC_cs_tab       |  |
 | EdKC_cs_center    |  |
 | EdKC_cs_enter     |  |
@@ -378,9 +380,14 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 | EdKC_s_scroll     |  |
 
 
-# Top 60 editor functions used, mapped to EdKC
+### Top 60 editor functions used, mapped to Windows EdKC (to assess the degree of Linux support):
 
-20150115_0742 X rate=21/59=36%
+### Result checkpoints
+
+| Date     | y   | X  | X/y %   | Comments                                 |
+|----------|----:|---:|--------:|------------------|
+| 20240417 | 59  | 4  |   6.8%  | Major forward progress has been made!!!  |
+| 20150115 | 59  | 21 |  35.6%  | Functional w/workarounds, but not great  |
 
 | count  | ARG::name        |?| EdKC             |
 |--------|------------------|-|------------------|
@@ -400,7 +407,7 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 |  36816 | udelete          |y| EdKC_numMINUS    |
 |  31729 | ppage            |y| EdKC_pgdn        |
 |  29793 | psearch          |y| EdKC_f3          |
-|  ????? | selword          |X| EdKC_c_center    |
+|  ????? | selword          |y| EdKC_c_center    |
 |  24858 | paste            |y| EdKC_ins         |
 |  16908 | copy             |y| EdKC_numPLUS     |
 |  16852 | exit             |X| EdKC_a_f4        |
@@ -410,35 +417,34 @@ Data in following table gathered by hitting ctrl+t (ARG::tell), hitting the corr
 |   8615 | cancel           |y| EdKC_esc         |
 |   6145 | ppara            |y| EdKC_c_down      |
 |   5982 | files            |X| EdKC_a_f2        |
-|   4727 | endfile          |X| EdKC_c_pgdn      |
+|   4727 | endfile          |y| EdKC_c_pgdn      |
 |   4610 | execute          |y| EdKC_c_x         |
 |   3914 | window           |y| EdKC_f6          |
 |   3108 | meta             |y| EdKC_f9          |
-|   2602 | begfile          |X| EdKC_c_pgup      |
+|   2602 | begfile          |y| EdKC_c_pgup      |
 |   2556 | nextmsg          |y| EdKC_a_n         |
 |   2435 | redo             |X| EdKC_c_bksp      |
 |   2177 | mfgrep           |y| EdKC_s_f4        |
 |   2167 | vrepeat          |y| EdKC_a_v         |
 |   1778 | flipcase         |y| EdKC_a_c         |
-|   1354 | home             |X| EdKC_c_home      |
+|   1354 | home             |y| EdKC_c_home      |
 |   1187 | replace          |y| EdKC_c_l         |
-|   1132 | assign           |X| EdKC_a_EQUAL     |
+|   1132 | assign           |y| EdKC_a_EQUAL     |
 |    883 | qreplace         |X| EdKC_c_BACKSLASH |
 |    858 | fromwinclip      |y| EdKC_c_v         |
-|    731 | grep             |X| EdKC_c_f3        |
+|    731 | grep             |y| EdKC_c_f3        |
 |    693 | towinclip        |y| EdKC_c_c         |
-|    668 | longline         |X| EdKC_a_BACKSLASH |
+|    668 | longline         |y| EdKC_a_BACKSLASH |
 |    527 | mpara            |y| EdKC_c_up        |
 |    519 | tags             |y| EdKC_a_u         |
-|    474 | selword          |X| EdKC_c_center    |
-|    425 | searchlog        |X| EdKC_a_f3        |
+|    425 | searchlog        |y| EdKC_a_f3        |
 |    406 | del_no_clip      |y| EdKC_del         |
 |    323 | justify          |y| EdKC_c_b         |
 |    309 | lua              |y| EdKC_a_l         |
 |    266 | lastselect       |y| EdKC_a_s         |
 |    251 | gotofileline     |y| EdKC_a_g         |
 |    246 | lasttext         |y| EdKC_a_d         |
-|    221 | mfreplace        |X| EdKC_f11         |
+|    221 | mfreplace        |y| EdKC_f11         |
 |    159 | aligncol         |y| EdKC_a_a         |
 |    141 | backtravlocnlist |y| EdKC_a_left      |
 |    137 | traverselocnlist |y| EdKC_a_right     |
