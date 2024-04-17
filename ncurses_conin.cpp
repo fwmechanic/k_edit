@@ -219,10 +219,12 @@ STATIC_FXN void init_kn2edkc() {
       // https://man.archlinux.org/man/core/ncurses/infocmp.1m.en
       // https://man.archlinux.org/man/user_caps.5.en
       //
-      { "kpADD",  EdKC_numPlus   },  // stESC "Ok"  PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      { "kpDIV",  EdKC_numSlash  },  // stESC "Oo"  PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      { "kpMUL",  EdKC_numStar   },  // stESC "Oj"  PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      { "kpSUB",  EdKC_numMinus  },  // stESC "Om"  PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      { "kpADD",  EdKC_numPlus   },  // stESC "Ok"  PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
+      { "kpDIV",  EdKC_numSlash  },  // stESC "Oo"  PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
+      { "kpMUL",  EdKC_numStar   },  // stESC "Oj"  PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
+      { "kpSUB",  EdKC_numMinus  },  // stESC "Om"  PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
+      { "kcbt" ,  EdKC_s_tab     },  // stESC "[Z"  PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
+      { "cbt"  ,  EdKC_s_tab     },  // stESC "[Z"  PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
       //------------------------------------------------------------------------------
 
       { "kDC"  , EdKC_del    }, { "kDC3" , EdKC_a_del   }, { "kDC5" , EdKC_c_del   }, { "kDC6" , EdKC_cs_del  },
@@ -291,7 +293,7 @@ STATIC_FXN void init_ncfkt2edkc() {
       // see also capabilities ka1, ka3, kb2, kc1, kc3 above
       KEY2EDKC(KEY_A1, EdKC_home ),                       KEY2EDKC(KEY_A3, EdKC_pgup ),
                             KEY2EDKC(KEY_B2 , EdKC_center),
-                            KEY2EDKC(KEY_BEG, EdKC_center),  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+                            KEY2EDKC(KEY_BEG, EdKC_center),  // PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
       KEY2EDKC(KEY_C1, EdKC_end  ),                       KEY2EDKC(KEY_C3, EdKC_pgdn ),
 
       KEY2EDKC(KEY_ENTER, EdKC_enter ), // mimic Win32 behavior
@@ -325,10 +327,10 @@ STATIC_FXN void init_ncfkt2edkc() {
       //    source code:
 
       // following "work" for as long as the number to key mapping persists.  Disabled as keying on escseqstr seems slightly more long-lived...
-      // {0x23f, EdKC_numPlus },  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      // {0x241, EdKC_numSlash},  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      // {0x243, EdKC_numStar },  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
-      // {0x244, EdKC_numMinus},  //  ULTRA HACK!!! PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color
+      // {0x23f, EdKC_numPlus },  //  ULTRA HACK!!! PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
+      // {0x241, EdKC_numSlash},  //  ULTRA HACK!!! PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
+      // {0x243, EdKC_numStar },  //  ULTRA HACK!!! PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
+      // {0x244, EdKC_numMinus},  //  ULTRA HACK!!! PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color
 
       //    This "worked" but is obviously horrendously bad practice and bound
       //    to break in the future when the mapping changes.
@@ -369,10 +371,10 @@ STATIC_FXN void init_escseqstr2edkc() {
    DBG( "init_escseqstr2edkc" );
    STATIC_VAR const struct { const char *escseqstr; uint16_t edkc; } s_escseqstr2edkc[] = {
       // 20240415: superseded by entries in s_kn2edkc thanks to `infocmp -x`
-      // { stESC "Ok", EdKC_numPlus  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color   kpADD
-      // { stESC "Oo", EdKC_numSlash },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color   kpDIV
-      // { stESC "Oj", EdKC_numStar  },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color   kpMul
-      // { stESC "Om", EdKC_numMinus },  // PopOS 22.04 LTS, dflt desktop terminal, TERM=xterm-256color   kpSUB
+      // { stESC "Ok", EdKC_numPlus  },  // PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color   kpADD
+      // { stESC "Oo", EdKC_numSlash },  // PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color   kpDIV
+      // { stESC "Oj", EdKC_numStar  },  // PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color   kpMul
+      // { stESC "Om", EdKC_numMinus },  // PopOS 22.04 LTS, Gnome Terminal 3.44.0, TERM=xterm-256color   kpSUB
       };
    for( auto &el : s_escseqstr2edkc ) {
       escseqstr_to_ncfkt( el.escseqstr, el.edkc, "?" );
