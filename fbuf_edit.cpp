@@ -1632,14 +1632,12 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    rdNoiseAllc();
    PChar fileBuf;  AllocBytesNZ( fileBuf, fileBytes+1 );
    fileBuf[fileBytes] = '\0'; // so wcslen works
-   VR_(
-      DBG( "ReadDiskFile %s: %" WL( PR__i64 "u", "ld" ) "KB buf=[%p..%p)"
-         , Name()
-         , fileBytes/1024
-         , fileBuf
-         , fileBuf + fileBytes
-         );
-      )
+   VERBOSE_READ && DBG( "ReadDiskFile %s: %" WL( PR__i64 "u", "ld" ) "KB buf=[%p..%p)"
+                      , Name()
+                      , fileBytes/1024
+                      , fileBuf
+                      , fileBuf + fileBytes
+                      );
    rdNoiseRead();
    if( !fio::ReadOk( hFile, fileBuf, fileBytes ) ) {
       Free0( fileBuf );
@@ -1705,7 +1703,7 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    NewScope {
       const auto initial_sample_lines( d_cbOrigFileImage == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
                                                               : 508 );   // slightly less than a power of 2
-      VR_( DBG( "ReadDiskFile LineInfo       0 -> %7d", initial_sample_lines ); )
+      VERBOSE_READ && DBG( "ReadDiskFile LineInfo       0 -> %7d", initial_sample_lines );
       LineInfo *pNewLi;  AllocArrayNZ( pNewLi, initial_sample_lines );
       FreeUp( d_paLineInfo, pNewLi );
       LineInfoSetCapacity( initial_sample_lines );
@@ -1735,13 +1733,11 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                                               );
                }
             const auto newLineCntEstimate( static_cast<LINE>(dNewLineCntEstimate) );
-            VR_(
-               DBG( "ReadDiskFile LineInfo %7d -> %7d (avg=%4.1f)"
-                  , LineInfoCapacity()
-                  , newLineCntEstimate
-                  , avgBytesPerLine
-                  );
-               )
+            VERBOSE_READ && DBG( "ReadDiskFile LineInfo %7d -> %7d (avg=%4.1f)"
+                               , LineInfoCapacity()
+                               , newLineCntEstimate
+                               , avgBytesPerLine
+                               );
             NewScope {
                const auto linesToAlloc( std::min( INT_MAX, newLineCntEstimate ) );
                LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc );

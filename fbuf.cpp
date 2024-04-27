@@ -1241,7 +1241,7 @@ STATIC_FXN bool DontRecreateDeletedFile( stref fnm ) {
    }
 
 bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
-   VR_( DBG( "FRd+ %s", Name() ); )
+   VERBOSE_READ && DBG( "FRd+ %s", Name() );
 // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
       {
       DialogLdFile( Name() );
@@ -1289,7 +1289,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       if( fio::OpenFileFailed( &hFile, Name(), false, DFLT_TEXTFILE_CREATE_MODE ) ) {
          return Msg( "Cannot create %s - %s", Name(), strerror( errno ) );
          }
-      VR_( DBG( "FRd: created newfile '%s'", Name() ); )
+      VERBOSE_READ && DBG( "FRd: created newfile '%s'", Name() );
       PutLineRaw( 0, "" );
       }
    else {
@@ -1323,25 +1323,25 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          }
       // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
       DialogLddFile( Name(), d_cbOrigFileImage );
-      VR_( DBG( "FRd: VMRead done" ); )
+      VERBOSE_READ && DBG( "FRd: VMRead done" );
       }
    fio::Close( hFile );
    ClrNoEdit();
   #if defined(_WIN32)
    if( IsFileReadonly( Name() ) ) {
-      VR_( DBG( "FRd: is RO_FILE" ); )
+      VERBOSE_READ && DBG( "FRd: is RO_FILE" );
       SetDiskRO();
       if( !g_fEditReadonly ) {
          SetNoEdit();
          }
       }
    else {
-      VR_( DBG( "FRd: is NOT RO_FILE" ); )
+      VERBOSE_READ && DBG( "FRd: is NOT RO_FILE" );
       SetDiskRW();
       }
   #endif
    SetLastFileStatFromDisk();
-   VR_( DBG( "FRd- OK" ); )
+   VERBOSE_READ && DBG( "FRd- OK" );
    return true;
    }
 

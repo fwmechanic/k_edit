@@ -29,21 +29,6 @@
 #define  FULL_DB   0
 #endif
 
-#if DBGHILITE
-void DbgHilite_( char ch, PCChar func ) {
-   DBG( "%c%s SavedHL=[%p] FileHL=[%p] (%s)"
-      , ch
-      , func
-      , s_savedHiLiteList.dl_first
-      , g_CurView()->pFBuf->d_pHiLiteList.dl_first
-      , g_CurView()->pFBuf->Name()
-      );
-   }
-#define  DbgHilite( c )  DbgHilite_( c, __func__ )
-#else
-#define  DbgHilite( c )
-#endif
-
 /*
    the OLD refresh model
 
@@ -2110,8 +2095,18 @@ void ViewHiLites::UpdtSpeedTbl( HiLiteRec *pThis ) {
         }
    }
 
+STATIC_FXN int DbgHilite_( char ch, PCChar func ) {
+   return
+   DBG( "%c%s (%s)"
+      , ch
+      , func
+      , g_CurView()->FBuf()->Name()
+      );
+   }
+#define  DbgHilite( c )  DbgHilite_( c, __func__ )
+
 void ViewHiLites::vhInsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
-   DbgHilite( '+' );
+   DBGHILITE && DbgHilite( '+' );
    FBOP::PrimeRedrawLineRangeAllWin( &d_FBuf, newRgn.flMin.lin, newRgn.flMax.lin );
    DBGHILITE && DBG( "SetHiLite   c=%02X [%d-%d] [%d-%d]", to_underlying(newColorIdx), newRgn.flMin.lin, newRgn.flMax.lin, newRgn.flMin.col, newRgn.flMax.col );
    auto &Head( d_HiLiteList );
@@ -2123,11 +2118,11 @@ void ViewHiLites::vhInsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
          if( newRgn.contains( thisRn ) ) {
             thisRn = newRgn;  // expand
             UpdtSpeedTbl( pThis );
-            DbgHilite( '-' );
+            DBGHILITE && DbgHilite( '-' );
             return;
             }
          if( thisRn.contains( newRgn ) ) { // already exists: do nothing
-            DbgHilite( '-' );
+            DBGHILITE && DbgHilite( '-' );
             return;
             }
          }
@@ -2135,14 +2130,14 @@ void ViewHiLites::vhInsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
          auto pNew( new HiLiteRec( newRgn, newColorIdx ) );
          DLINK_INSERT_AFTER( Head, pThis, pNew, dlink );
          UpdtSpeedTbl( pNew );
-         DbgHilite( '-' );
+         DBGHILITE && DbgHilite( '-' );
          return;
          }
       }
    auto pNew( new HiLiteRec( newRgn, newColorIdx ) );
    DLINK_INSERT_FIRST( Head, pNew, dlink );
    UpdtSpeedTbl( pNew );
-   DbgHilite( '-' );
+   DBGHILITE && DbgHilite( '-' );
    }
 
 void View::InsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
@@ -2735,7 +2730,7 @@ STATIC_FXN void RedrawScreen() {
    const auto scrnCols( EditScreenCols() );
    STATIC_VAR std::string buf;
    const auto yTop(0), yBottom( EditScreenLines() );
-   ShowDraws( DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom ); )
+   SHOW_DRAWS && DBG( "%s+ [%2d..%2d)", __func__, yTop, yBottom );
    const HiLiteRec *pFirstPossibleHiLite(nullptr);
    auto dvsit( s_direct_vid_segs.cbegin() );
    for( auto yLine(yTop) ; yLine < yBottom; ++yLine ) {     ShowDraws( char ch = ' '; )
