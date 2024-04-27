@@ -29,6 +29,18 @@ GLOBAL_VAR CMD g_CmdTable[] = { // *** THIS IS GLOBAL, NOT STATIC, BECAUSE #defi
    };
 
 #ifdef __GNUC__
+
+// Use GCC-only "[out-of-order] designated initialization of arrays" feature if available.
+//
+// NB: even though C++20 added "designated initializers",
+//
+//    "Note: out-of-order designated initialization, nested designated
+//    initialization, mixing of designated initializers and regular initializers,
+//    and designated initialization of arrays are all supported in the C
+//    programming language, but are not allowed in C++20."
+//
+//    Source: https://en.cppreference.com/w/cpp/language/aggregate_initialization#Designated_initializers
+
 #define  IDX_EQ( idx_val )  [ idx_val ] =
 #else
 #error
