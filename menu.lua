@@ -217,7 +217,7 @@ function MenuProto_:PickOne( initialChoice )
    local curChoice,theChoice = initialChoice or 1
    while true do
       self:update( curChoice )  -- redraw the contents of the menu
-      local  key = GetKey()     -- DBG(  "KEY="..key )
+      local  key = GetKey()        DBG(  "KEY="..key )
       if     key=="esc"   then                       break
       elseif key=="enter" then theChoice = curChoice break
       elseif key=="up"    then curChoice = curChoice - 1
