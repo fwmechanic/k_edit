@@ -61,6 +61,7 @@ mkabat.bat
 
 _buildtime.i
 datetime.i
+unittest_tagfind
 
 # coverity data collection file
 k_edit.tgz

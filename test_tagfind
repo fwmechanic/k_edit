@@ -30,7 +30,7 @@ last_tag="$(tail -n 1 "$tagfnm" | cut -f 1)"
 before_first="${first_tag%?}"  # remove last char of first_tag  https://unix.stackexchange.com/a/259042
 after_last="${last_tag}_nonexistent"
 
-tgtexe=unittest_tagfind.exe
+tgtexe="${1:?}"
 
 make "$tgtexe" || die
 
