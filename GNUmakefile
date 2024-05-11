@@ -541,7 +541,7 @@ krbtree_unittest.o: krbtree.cpp
 	$(BLD_CXX)
 
 run_unittest_tagfind: unittest_tagfind$(EXE_EXT)
-	./test_tagfind
+	./test_tagfind $<
 
 unittest_tagfind$(EXE_EXT): unittest_tagfind.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
