@@ -1323,7 +1323,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
          }
       // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
       DialogLddFile( Name(), d_cbOrigFileImage );
-      VERBOSE_READ && DBG( "FRd: VMRead done" );
+      0 && VERBOSE_READ && DBG( "FRd: VMRead done" );
       }
    fio::Close( hFile );
    ClrNoEdit();

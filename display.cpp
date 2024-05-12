@@ -75,7 +75,7 @@ public:
       return static_cast<acv::size_type>( rv > 0 ? rv : 0 );
       }
    LineColorvals() { d_acv.fill( END_MARKER ); }
-   int runLength( acv::size_type ix ) const {
+   acv::size_type runLength( acv::size_type ix ) const {
       const auto ix0( ix );
       if( inRange( ix0 ) ) {
          const auto color0( colorAt( ix0 ) );
@@ -162,13 +162,13 @@ enum WinBorderChars
    { // H -> both horiz edges, V -> both vertical edges, T -> top edge, B -> bottom edge, L -> left edge, R -> right edge
 #define    LINEDRAW_WIN  8
 #if    (0==LINEDRAW_WIN)
-                         HV_=uint8_t('Å'), LV_=uint8_t('´'), RV_=uint8_t('Ã'), _V_=uint8_t('³'), H__=uint8_t('Ä'), HT_=uint8_t('Á'), HB_=uint8_t('Â'),  // "ÚÄ¿ÀÙ³Ã´ÂÁÅ",
+                         HV_=uint8_t('Å'), LV_=uint8_t('´'), RV_=uint8_t('Ã'), _V_=uint8_t('³'), H__=uint8_t('Ä'), HT_=uint8_t('Á'), HB_=uint8_t('Â'),  // "ÚÄ¿ÀÙ³Ã´ÂÁÅ"
 #elif  (1==LINEDRAW_WIN)
-                         HV_=uint8_t('×'), LV_=uint8_t('¶'), RV_=uint8_t('Ç'), _V_=uint8_t('º'), H__=uint8_t('Ä'), HT_=uint8_t('Ð'), HB_=uint8_t('Ò'),  // "ÖÄ·Ó½ºÇ¶ÒÐ×",
+                         HV_=uint8_t('×'), LV_=uint8_t('¶'), RV_=uint8_t('Ç'), _V_=uint8_t('º'), H__=uint8_t('Ä'), HT_=uint8_t('Ð'), HB_=uint8_t('Ò'),  // "ÖÄ·Ó½ºÇ¶ÒÐ×"
 #elif  (2==LINEDRAW_WIN)
                          HV_=uint8_t('Ø'), LV_=uint8_t('µ'), RV_=uint8_t('Æ'), _V_=uint8_t('³'), H__=uint8_t('Í'), HT_=uint8_t('Ï'), HB_=uint8_t('Ñ'),  // "ÕÍ¸Ô¾³ÆµÑÏØ"
 #elif  (3==LINEDRAW_WIN)
-                         HV_=uint8_t('Î'), LV_=uint8_t('¹'), RV_=uint8_t('Ì'), _V_=uint8_t('º'), H__=uint8_t('Í'), HT_=uint8_t('Ê'), HB_=uint8_t('Ë'),  // "ÉÍ»È¼ºÌ¹ËÊÎ",
+                         HV_=uint8_t('Î'), LV_=uint8_t('¹'), RV_=uint8_t('Ì'), _V_=uint8_t('º'), H__=uint8_t('Í'), HT_=uint8_t('Ê'), HB_=uint8_t('Ë'),  // "ÉÍ»È¼ºÌ¹ËÊÎ"
 #elif  (4==LINEDRAW_WIN)
                          HV_=uint8_t('°'), LV_=HV_,     RV_=HV_,     _V_=HV_,     H__=HV_,     HT_=HV_,     HB_=HV_,      // "°°°°°°°°°°°"
 #elif  (5==LINEDRAW_WIN)
@@ -2539,13 +2539,13 @@ STATIC_FXN void DispErrMsg( PCChar emsg ) { DBG( "!!! '%s'", emsg );
    ConOut::Bell();
    ConIn::FlushKeyQueueAnythingFlushed();
    // HideCursor();
-   VidWrStrColorFlush( DialogLine(), 0, emsg, Strlen(emsg), g_colorError, ePad::padWSpcsToEol );
+   VidWrStrColorFlush( DialogLine(), 0, emsg, g_colorError, ePad::padWSpcsToEol );
    if( g_fErrPrompt ) {
       STATIC_CONST char szPAK[] = "Press any key...";
-      VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, szPAK, KSTRLEN(szPAK), g_colorError, ePad::padWSpcsToEol );
+      VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, szPAK, g_colorError, ePad::padWSpcsToEol );
       ConIn::WaitForKey();
-    //VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, " ", 1, g_colorError, ePad::padWSpcsToEol );
-    //VidWrStrColorFlush( DialogLine(), 0, " ", 1, g_colorError, ePad::padWSpcsToEol );
+    //VidWrStrColorFlush( DialogLine(), EditScreenCols() - KSTRLEN(szPAK) - 1, " ", g_colorError, ePad::padWSpcsToEol );
+    //VidWrStrColorFlush( DialogLine(), 0                                    , " ", g_colorError, ePad::padWSpcsToEol );
       }
    else {
       WaitForKey( 1 );
@@ -2571,7 +2571,7 @@ bool ErrorDialogBeepf( PCChar format, ... ) {
 
 int DispRawDialogStr( PCChar st ) {
    const auto showCols( std::min( Strlen( st ), EditScreenCols() ) );
-   VidWrStrColorFlush( DialogLine(), 0, st, showCols, g_colorInfo, ePad::padWSpcsToEol );
+   VidWrStrColorFlush( DialogLine(), 0, stref(st, showCols), g_colorInfo, ePad::padWSpcsToEol );
    return showCols;
    }
 
@@ -2626,14 +2626,14 @@ STATIC_FXN void conDisplayNoise( PCChar buffer ) {
    if( show_noise() ) {
       const auto len( Strlen( buffer ) );
       s_dispNoiseMaxLen = std::max( s_dispNoiseMaxLen, len );
-      VidWrStrColorFlush( StatusLine(), EditScreenCols() - len, buffer, len, g_colorError, ePad::padWSpcsToEol );
+      VidWrStrColorFlush( StatusLine(), EditScreenCols() - len, stref(buffer, len), g_colorError, ePad::padWSpcsToEol );
       }
    }
 
 STATIC_FXN void conDisplayNoiseBlank() {
    if( show_noise() ) {
       if( s_dispNoiseMaxLen && EditScreenCols() > s_dispNoiseMaxLen ) {
-         VidWrStrColorFlush( StatusLine(), EditScreenCols() - s_dispNoiseMaxLen, "", 0, g_colorInfo, ePad::padWSpcsToEol );
+         VidWrStrColorFlush( StatusLine(), EditScreenCols() - s_dispNoiseMaxLen, "", g_colorInfo, ePad::padWSpcsToEol );
          s_dispNoiseMaxLen = 0;
          }
       }
@@ -2747,7 +2747,7 @@ STATIC_FXN void RedrawScreen() {
             buf.replace(      dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_str        ); 0 && DBG( "%" PR_BSR "'", BSR(dvsit->d_str) );
             lcvs.PutColorval( dvsit->d_origin.col, dvsit->d_str.length(), dvsit->d_colorval );
             }                                    (buf.length() != scrnCols) && DBG( "buf.length() != scrnCols: %" PR_SIZET "!=%u", buf.length(), scrnCols );
-         VidWrStrColors( yDispMin+yLine, 0, buf.data(), scrnCols, lcvs, eFlush::doFlush );
+         VidWrStrColors( yDispMin+yLine, 0, stref(buf.data(), scrnCols), lcvs, eFlush::doFlush );
          }                                                  ShowDraws( *pLbf++ = ch; )
       }
    s_paScreenLineNeedsRedraw->ClrAllBits();
@@ -2914,22 +2914,20 @@ void DispRefreshWholeScreenNow_()            { DispNeedsRedrawTotal_(); DispDoPe
 
 // NOTE: xCol & yLine are WITHIN CONSOLE WINDOW !!!
 
-STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColorvals &lcvs, eFlush fFlushNow ) {
+STATIC_FXN COL conVidWrStrColors( LINE yLine, COL xCol, stref src, const LineColorvals &lcvs, eFlush fFlushNow ) {
    VideoFlusher vf( fFlushNow==eFlush::doFlush );
    FULL_DB && DBG( "%s+", __func__ );
    auto lastColor(0);
-   for( auto ix(0u) ; maxCharsToDisp > 0 && lcvs.inRange( ix ) ; ) {
+   for( auto ix(0u) ; src.length() > 0 && lcvs.inRange( ix ) ; ) {
       lastColor = lcvs.colorAt( ix );
-      const auto segLen( std::min( lcvs.runLength( ix ), maxCharsToDisp ) );
-      FULL_DB && DBG( "%s Len=%d", __func__, segLen );
-      VidWrStrColor( yLine, xCol, pszStringToDisp, segLen, lastColor, ePad::noPad );
+      const auto segLen( std::min( lcvs.runLength( ix ), src.length() ) );                  FULL_DB && DBG( "%s Len=%" PR_FILESIZET, __func__, segLen );
+      VidWrStrColor( yLine, xCol, stref(src.data(), segLen), lastColor, ePad::noPad );
       ix              += segLen;
       xCol            += segLen;
-      pszStringToDisp += segLen;
-      maxCharsToDisp  -= segLen;
+      src.remove_prefix( segLen );
       }
-   if( ScreenCols() > xCol ) { VidWrStrColor( yLine, xCol, " "    , 1, lastColor, ePad::padWSpcsToEol ); }
-// else                      { VidWrStrColor( yLine, xCol, nullptr, 0, lastColor, ePad::noPad ); }
+   if( ScreenCols() > xCol ) { VidWrStrColor( yLine, xCol, " ", lastColor, ePad::padWSpcsToEol ); }
+// else                      { VidWrStrColor( yLine, xCol, "" , lastColor, ePad::noPad ); }
    FULL_DB && DBG( "%s-", __func__ );
    return xCol;
    }
@@ -2957,7 +2955,7 @@ public:
    int  textcols() const { return d_curLen; }
    void Cat( ColorTblIdx ColorIdx, stref src );
    void Cat( const ColoredLine &rhs );
-   void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, d_charBuf, textcols(), d_lcvs, eFlush::doFlush ); }
+   void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, stref(d_charBuf, textcols()), d_lcvs, eFlush::doFlush ); }
    };
 
 void ColoredLine::Cat( ColorTblIdx ColorIdx, stref src ) {
@@ -3104,31 +3102,31 @@ void DirectVidClear() {
 // DirectVidWrStrColorFlush was intended to allow e.g. Lua code to create e.g.
 // popup menus, and assumes that said code will not generate overlaps, thus it
 // doesn't handle partial overlaps (or anything else?) _optimally_.
-void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr ) { enum {DP=0};
+void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref src, colorval_t attr ) { enum {DP=0};
    // input check & normalize
    if( !(yLine >= 0 && yLine < ScreenLines() && xCol < ScreenCols()) ) { return; }
    if( xCol < 0 ) {
-      sr.remove_prefix( -xCol );
+      src.remove_prefix( -xCol );
       xCol = 0;
       }
-   if( sr.empty() ) { return; }
-   if( xCol + sr.length() > ScreenCols() ) {
-      sr.remove_suffix( (xCol + sr.length()) - ScreenCols() );
-      if( sr.empty() ) { return; }
+   if( src.empty() ) { return; }
+   if( xCol + src.length() > ScreenCols() ) {
+      src.remove_suffix( (xCol + src.length()) - ScreenCols() );
+      if( src.empty() ) { return; }
       }
    // find insertion point and insert (or update-only if possible)
    const Point tgt( yLine, xCol );
    auto it( s_direct_vid_segs.begin() );
    for( ; it != s_direct_vid_segs.end() ; ++it ) {
-      if( tgt == it->d_origin && it->d_str.length() == sr.length() ) {
+      if( tgt == it->d_origin && it->d_str.length() == src.length() ) {
          // Same-length string exists at target location? Update d_colorval and/or d_str in place
          auto fChanged( false );
          if( it->d_colorval != attr ) {
             it->d_colorval = attr;
             fChanged = true;
             }
-         if( !eq( it->d_str, sr ) ) {
-            it->d_str.assign( sr ); // overwrite same-length string with new
+         if( !eq( it->d_str, src ) ) {
+            it->d_str.assign( src ); // overwrite same-length string with new
                            DP && DBG( "%s [%" PR_SIZET "]=y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), it ), it->d_origin.lin, it->d_origin.col, it->d_colorval, BSR(it->d_str) );
             fChanged = true;
             }
@@ -3142,7 +3140,7 @@ void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr )
          break;
          }
       }
-   const auto new_it( s_direct_vid_segs.emplace( it, tgt, attr, sr ) );
+   const auto new_it( s_direct_vid_segs.emplace( it, tgt, attr, src ) );
                            DP && DBG( "%s @[%" PR_SIZET "]^y/x=%d/%d C=%02X '%" PR_BSR "'", __func__, std::distance( s_direct_vid_segs.begin(), new_it ), new_it->d_origin.lin, new_it->d_origin.col, new_it->d_colorval, BSR(new_it->d_str) );
    s_paScreenLineNeedsRedraw->SetBit( new_it->d_origin.lin );
    UpdtDisplay();
@@ -3232,9 +3230,9 @@ VideoFlusher::~VideoFlusher() {
       }
    }
 
-STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL srcChars, colorval_t attr, ePad pad ) { WL( 0, 0 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3d C=%02X pad=%d '%s'", yConsole, xConsole, srcChars, attr, pad==ePad::padWSpcsToEol, src );
-   if( src ) {
-      const auto charsWritten( ConOut::BufferWriteString( src, srcChars, yConsole, xConsole, attr, pad==ePad::padWSpcsToEol ) );
+STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, stref src, colorval_t attr, ePad pad ) { WL( 0, 0 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3" PR_FILESIZET " C=%02X pad=%d '%" PR_BSR "'", yConsole, xConsole, src.length(), attr, pad==ePad::padWSpcsToEol, BSR(src) );
+   if( !src.empty() ) {
+      const auto charsWritten( ConOut::BufferWriteString( src, yConsole, xConsole, attr, pad==ePad::padWSpcsToEol ) );
       if( charsWritten ) {
          DISP_LL_STAT_COLLECT(++d_stats.screenRedraws);
          s_VideoFlushData.fDidVideoWrite = true;
@@ -3244,22 +3242,22 @@ STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, PCChar src, COL sr
    return 0;
    }
 
-COL VidWrStrColorFlush( LINE yConsole, COL xConsole, PCChar src, size_t srcChars, colorval_t attr, ePad pad ) {
+COL VidWrStrColorFlush( LINE yConsole, COL xConsole, stref src, colorval_t attr, ePad pad ) {
    VideoFlusher vf;
-   return VidWrStrColor( yConsole, xConsole, src, srcChars, attr, pad );
+   return VidWrStrColor( yConsole, xConsole, src, attr, pad );
    }
 
 //***********************************************************************************************
 
 STATIC_FXN void streamDisplayNoise( PCChar buffer ) {}
 STATIC_FXN void streamDisplayNoiseBlank() {}
-STATIC_FXN COL streamVidWrStrColor( LINE, COL, PCChar src, COL, colorval_t, ePad ) {
-   fprintf( stderr, "%s\n", src );
-   return Strlen( src );
+STATIC_FXN COL streamVidWrStrColor( LINE, COL, stref src, colorval_t, ePad ) {
+   fprintf( stderr, "%" PR_BSR "\n", BSR(src) );
+   return src.length();
    }
-STATIC_FXN COL streamVidWrStrColors( LINE, COL, PCChar src, COL, const LineColorvals &, eFlush fFlushNow ) {
-   fprintf( stderr, "%s\n", src );
-   return Strlen( src );
+STATIC_FXN COL streamVidWrStrColors( LINE, COL, stref src, const LineColorvals &, eFlush fFlushNow ) {
+   fprintf( stderr, "%" PR_BSR "\n", BSR(src) );
+   return src.length();
    }
 
 GLOBAL_VAR DisplayDriverApi g_DDI =

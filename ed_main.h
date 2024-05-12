@@ -83,7 +83,7 @@ static_assert( CHAR_MAX > SCHAR_MAX, "char not unsigned" );
 #define  OLDGREP  0
 #define  DBGHILITE  0
 #define  MOUSE_SUPPORT  WL(1,0)
-#define  VARIABLE_WINBORDER  WL(1,0)
+#define  VARIABLE_WINBORDER  WL(1,1)
 #define  USE_STAT64 0
 
 #if defined(_WIN32)

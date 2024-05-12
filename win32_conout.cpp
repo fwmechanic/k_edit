@@ -94,7 +94,7 @@ public: //**************************************************
    void  SetCursorLocn( LINE yLine, COL xCol );
    void  SetCursorSize( bool fBigCursor );
    bool  SetCursorVisibilityChanged( bool fVisible );
-   COL   WriteLineSegToConsoleBuffer( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
+   COL   WriteLineSegToConsoleBuffer( stref src, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
    void  FlushConsoleBufferToScreen();
    void  ScrollConsole( LINE ulc_yLine, COL ulc_xCol, LINE lrc_yLine, COL lrc_xCol, LINE deltaLine );
    bool  SetConsolePalette( const unsigned palette[16] );
@@ -305,21 +305,21 @@ void TConsoleOutputControl::SetCursorLocn( LINE yLine, COL xCol ) {
       }
    }
 
-COL ConOut::BufferWriteString( PCChar pszStringToDisp, COL StringLen, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs ) {
-   return s_EditorScreen ? s_EditorScreen->WriteLineSegToConsoleBuffer( pszStringToDisp, StringLen, yLineWithinConsoleWindow, xColWithinConsoleWindow, colorAttribute, fPadWSpcs ) : 0;
+COL ConOut::BufferWriteString( stref src, LINE yLineWithinConsoleWindow, int xColWithinConsoleWindow, int pcattr, bool fPadWSpcs ) {
+   return s_EditorScreen ? s_EditorScreen->WriteLineSegToConsoleBuffer( src, yLineWithinConsoleWindow, xColWithinConsoleWindow, pcattr, fPadWSpcs ) : 0;
    }
 
-COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars, LINE yConsole, int xConsole, const int attr, bool fPadWSpcs ) {
+COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( stref src, LINE yConsole, int xConsole, const int attr, bool fPadWSpcs ) {
    std::scoped_lock<std::mutex> mtx( d_mutex );
    if(   yConsole  >= d_xyState.size.lin
       || xConsole  >= d_xyState.size.col
-      || (srcChars == 0 && !fPadWSpcs)
+      || (src.empty() && !fPadWSpcs)
      ) {
       0 && DBG( "%s BAILS!", __func__ );
       return 0;
       }
-   const auto maxConChars( d_xyState.size.col - xConsole );
-   srcChars = std::min( srcChars, maxConChars );
+   const stref::size_type maxConChars( d_xyState.size.col - xConsole );
+   const auto srcChars = std::min( src.length(), maxConChars );
    const auto padLen( fPadWSpcs ? maxConChars - srcChars : 0 );
    auto updtdCells(0);
    auto &lc( d_vLineControl[ yConsole ] );
@@ -334,7 +334,7 @@ COL TConsoleOutputControl::WriteLineSegToConsoleBuffer( PCChar src, COL srcChars
       ++updtdCells;
       };
    for( auto ix(0); ix < srcChars; ++ix, ++pCI, ++xConsole ) {
-      UpdtCell( *src++ );
+      UpdtCell( src[ix] );
       }
    for( auto ix(0); ix < padLen; ++ix, ++pCI, ++xConsole ) {
       UpdtCell( ' ' ); // pad
