@@ -382,6 +382,13 @@ STATIC_FXN void init_escseqstr2edkc() {
       }
    }
 
+STATIC_FXN void init_conout_capability() {
+   const auto cap_nm = "initc";
+   const char *escseqstr( tigetstr( cap_nm ) );  // tigetstr() <- "retrieves a capability from the terminfo database"
+   char tib[65]; terminfo_str( BSOB(tib), escseqstr, Strlen(escseqstr) );
+                                                 1 && DBG( "cap=%-7s => tistr=%s", cap_nm, tib );
+   }
+
 void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    DBG( "%s ++++++++++++++++", __func__ );
    noecho();              // we do not change
@@ -390,6 +397,7 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    keypad_mode_enable();
    meta(stdscr, 1);       // we do not change
 
+   init_conout_capability();
    init_kn2edkc();
    init_ncfkt2edkc();
    init_escseqstr2edkc();
