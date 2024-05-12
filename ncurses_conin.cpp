@@ -278,7 +278,8 @@ STATIC_FXN void init_ncfkt2edkc() {
    #define KEY2EDKC( nm, edkc )  { nm, edkc, #nm }
       KEY2EDKC(KEY_RIGHT     , EdKC_right ), KEY2EDKC(KEY_SRIGHT    , EdKC_s_right ),
       KEY2EDKC(KEY_LEFT      , EdKC_left  ), KEY2EDKC(KEY_SLEFT     , EdKC_s_left  ),
-      KEY2EDKC(KEY_DC        , EdKC_del   ), KEY2EDKC(KEY_SDC       , EdKC_s_del   ),
+      KEY2EDKC(KEY_DC        , EdKC_del   ), // Gnome Terminal: Preferences / [choose active profile] / Compatibility / Delete key generates = "Escape sequence" (dflt on PopOS?)
+                                             KEY2EDKC(KEY_SDC       , EdKC_s_del   ),
       KEY2EDKC(KEY_IC        , EdKC_ins   ), KEY2EDKC(KEY_SIC       , EdKC_s_ins   ),
       KEY2EDKC(KEY_HOME      , EdKC_home  ), KEY2EDKC(KEY_SHOME     , EdKC_s_home  ),
       KEY2EDKC(KEY_END       , EdKC_end   ), KEY2EDKC(KEY_SEND      , EdKC_s_end   ),
@@ -286,7 +287,7 @@ STATIC_FXN void init_ncfkt2edkc() {
       KEY2EDKC(KEY_PPAGE     , EdKC_pgup  ), KEY2EDKC(KEY_SPREVIOUS , EdKC_s_pgup  ),
       KEY2EDKC(KEY_UP        , EdKC_up    ),
       KEY2EDKC(KEY_DOWN      , EdKC_down  ),
-      KEY2EDKC(KEY_BACKSPACE , EdKC_bksp  ),
+      KEY2EDKC(KEY_BACKSPACE , EdKC_bksp  ), // Gnome Terminal: Preferences / [choose active profile] / Compatibility / Backspace Generates = "ASCII DEL" (dflt on PopOS?)
 
       KEY2EDKC(KEY_LL   , EdKC_end ), // used in old termcap/infos
 
