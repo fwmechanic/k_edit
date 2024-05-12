@@ -100,6 +100,15 @@ CPPFLAGS += -DWINVER=0x0501
 
 else
 
+# https://stackoverflow.com/a/43835225
+NCURSES_WIDE := w
+
+NCURSES_CONFIG := ncurses$(NCURSES_WIDE)5-config
+NCURSES_CFLAGS := $(shell $(NCURSES_CONFIG) --cflags)
+$(info NCURSES_CFLAGS: '$(NCURSES_CFLAGS)')
+NCURSES_LIBS := $(shell $(NCURSES_CONFIG) --libs)
+$(info NCURSES_LIBS: '$(NCURSES_LIBS)')
+
 # CMDTBL_PLAT is ONLY to control cmdtbl processing
 CMDTBL_PLAT = linux
 
@@ -109,9 +118,10 @@ DBG_BUILD := x
 EXE_EXT :=
 DLL_EXT := .so
 OBJDUMP_BINARY = echo "objdumping $@" && objdump -p $@ > $@.exp && readelf -d $@ | grep NEEDED | grep -Fvf std.dynlib.linux
+# CPPFLAGS += -pthread $(NCURSES_CFLAGS)
 CPPFLAGS += -pthread
 # NB: once certain C++ _compiles_ see CPPFLAGS, should remove -lpthread
-OS_LIBS := -lncurses -lpthread -ldl
+OS_LIBS := $(NCURSES_LIBS) -lpthread -ldl
 PLAT_LINK_OPTS=
 
 endif
@@ -247,6 +257,9 @@ PLAT_OBJS := \
  ncurses_conin.o  \
  ncurses_conout.o \
  $(WINDRES_O)     \
+
+ncurses_conin.o:  CPPFLAGS += $(NCURSES_CFLAGS)
+ncurses_conout.o: CPPFLAGS += $(NCURSES_CFLAGS)
 
 endif
 
