@@ -204,8 +204,8 @@ enum class ePad { noPad, padWSpcsToEol };
 struct DisplayDriverApi {
    void  (*DisplayNoise)( PCChar buffer );
    void  (*DisplayNoiseBlank)();
-   COL   (*VidWrStrColor    )( LINE yLine, COL xCol, PCChar pszStringToDisp, int StringLen, colorval_t colorAttribute, ePad pad );
-   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, PCChar pszStringToDisp, COL maxCharsToDisp, const LineColorvals & alc, eFlush doFlush );
+   COL   (*VidWrStrColor    )( LINE yLine, COL xCol, stref src, colorval_t colorAttribute, ePad pad );
+   COL   (*VidWrStrColors   )( LINE yLine, COL xCol, stref src, const LineColorvals & alc, eFlush doFlush );
    };
 
 extern DisplayDriverApi g_DDI;
@@ -214,10 +214,10 @@ extern void ConIO_Shutdown();
 
 #define DisplayNoise( buffer )   (g_DDI.DisplayNoise( buffer ))
 #define DisplayNoiseBlank()      (g_DDI.DisplayNoiseBlank())
-#define VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, pad )\
- (g_DDI.VidWrStrColor(  yLine, xCol, pszStringToDisp, StringLen, colorIndex, pad ))
-#define VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fFlushNow )\
- (g_DDI.VidWrStrColors( yLine, xCol, pszStringToDisp, maxCharsToDisp, alc, fFlushNow ))
+#define VidWrStrColor(  yLine, xCol, src, colorIndex, pad )\
+ (g_DDI.VidWrStrColor(  yLine, xCol, src, colorIndex, pad ))
+#define VidWrStrColors( yLine, xCol, src, alc, fFlushNow )\
+ (g_DDI.VidWrStrColors( yLine, xCol, src, alc, fFlushNow ))
 
 class ColoredStref_ {
    const ePad    d_pad;
@@ -226,7 +226,7 @@ class ColoredStref_ {
 public:
    ColoredStref_( uint8_t color_, stref sr_, ePad pad_=ePad::noPad ) : d_pad(pad_), d_color(color_), d_sr(sr_) {}
    COL VidWr( LINE yLine, COL xCol ) const {
-      VidWrStrColor( yLine, xCol, d_sr.data(), d_sr.length(), d_color, d_pad );
+      VidWrStrColor( yLine, xCol, d_sr, d_color, d_pad );
       return d_sr.length();
       }
    };
@@ -255,8 +255,8 @@ struct hl_rgn_t {
 //    it will be switched to, newSize will be updated, "OK" status will be returned
 extern bool  VideoSwitchModeToXYOk( Point &newSize );
 
-extern COL   VidWrStrColorFlush(       LINE yLine, COL xCol, PCChar pszStringToDisp, size_t StringLen, colorval_t attr, ePad pad );
-extern void  DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref sr, colorval_t attr );
+extern COL   VidWrStrColorFlush(       LINE yLine, COL xCol, stref src, colorval_t attr, ePad pad );
+extern void  DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref src, colorval_t attr );
 extern void  DirectVidClear();
 
 class VideoFlusher {

@@ -116,7 +116,7 @@ namespace ConOut {
    void  SetCursorSize( bool fBigCursor );
    bool  SetCursorVisibilityChanged( bool fVisible );
 
-   int   BufferWriteString( const char *pszStringToDisp, int StringLen, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int colorAttribute, bool fPadWSpcs );
+   int   BufferWriteString( stref src, int yLineWithinConsoleWindow, int xColWithinConsoleWindow, int pcattr, bool fPadWSpcs );
    void  BufferFlushToScreen();
 
    bool  WriteToFileOk( FILE *ofh );

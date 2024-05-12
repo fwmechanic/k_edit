@@ -94,6 +94,7 @@ GLOBAL_VAR inline bool  g_fSoftCr           = true ;
 GLOBAL_VAR inline bool  g_fTabAlign         = false;
 GLOBAL_VAR inline bool  g_fTrailLineWrite   = false;
 GLOBAL_VAR inline bool  g_fTrailSpace       = false;
+GLOBAL_VAR inline bool  g_fXlatCP437        = true;
 #if MOUSE_SUPPORT
 GLOBAL_VAR inline bool  g_fUseMouse         = false;
 #endif

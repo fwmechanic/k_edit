@@ -1700,10 +1700,11 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    const auto tmIO( pc.Capture() );
 #endif
    d_EolMode = platform_eol;
+   enum { DBLI=0 };
    NewScope {
       const auto initial_sample_lines( d_cbOrigFileImage == 0 ? 1        // alloc dummy so HasLines() will be true, preventing repetitive disk rereads
                                                               : 508 );   // slightly less than a power of 2
-      VERBOSE_READ && DBG( "ReadDiskFile LineInfo       0 -> %7d", initial_sample_lines );
+      VERBOSE_READ && DBLI && DBG( "ReadDiskFile LineInfo       0 -> %7d", initial_sample_lines );
       LineInfo *pNewLi;  AllocArrayNZ( pNewLi, initial_sample_lines );
       FreeUp( d_paLineInfo, pNewLi );
       LineInfoSetCapacity( initial_sample_lines );
@@ -1733,11 +1734,11 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
                                               );
                }
             const auto newLineCntEstimate( static_cast<LINE>(dNewLineCntEstimate) );
-            VERBOSE_READ && DBG( "ReadDiskFile LineInfo %7d -> %7d (avg=%4.1f)"
-                               , LineInfoCapacity()
-                               , newLineCntEstimate
-                               , avgBytesPerLine
-                               );
+            VERBOSE_READ && DBLI && DBG( "ReadDiskFile LineInfo %7d -> %7d (avg=%4.1f)"
+                                       , LineInfoCapacity()
+                                       , newLineCntEstimate
+                                       , avgBytesPerLine
+                                       );
             NewScope {
                const auto linesToAlloc( std::min( INT_MAX, newLineCntEstimate ) );
                LineInfo *pNewLi;  AllocArrayNZ( pNewLi, linesToAlloc );
@@ -1832,16 +1833,16 @@ IS_EOL:
          STATIC_VAR unsigned PredLC        ;  PredLC        += LineInfoCapacity() ;
          STATIC_VAR unsigned actualLC      ;  actualLC      += LineCount()        ;
          STATIC_VAR unsigned files         ;  files         += 1                  ;
-      // DBG( "ReadDiskFile Done  scan/IO=%4.1f%%  %7d (avg=%4.1f) LIuse=%d of %" PR__i64 "uKB (%4.1f%%) cum=%dKB (%4.1f%%), %dKB per %d files"
-         DBG( "ReadDiskFile Done  scan/IO=%4.1f%%  %7d "          "LI now{use=%4.1f%% waste=%5dKB} cum{use=%4.1f%% waste=%5dKB %dKB per file}"
+      // DBG( "ReadDiskFile Done  scan/IO=%4.1f%% %7d (avg=%4.1f) LIuse=%d of %" PR__i64 "uKB (%4.1f%%) cum=%dKB (%4.1f%%), %dKB per %d files"
+         DBG( "ReadDiskFile Done  scan/IO=%4.1f%% %7d "          "LI now{use=%4.1f%% waste=%5dKB} cum{use=%4.1f%% waste=%5dKB %dKB per file}"
                                           , pctSCAN
-                                                   , LineCount()
-                                                         // , (static_cast<double>(d_cbOrigFileImage) - numBytesToProcessInImageBuf) / static_cast<double>(LineCount())
-                                                                              , (100.0 * LineCount()) / static_cast<double>(LineInfoCapacity())
-                                                                                            , wastedLIbytesNow / 1024
-                                                                                                           , (100.0 * actualLC) / static_cast<double>(PredLC)
-                                                                                                                         , wastedLIbytes / 1024
-                                                                                                                               , (wastedLIbytes / 1024) / files
+                                                  , LineCount()
+                                                        // , (static_cast<double>(d_cbOrigFileImage) - numBytesToProcessInImageBuf) / static_cast<double>(LineCount())
+                                                                             , (100.0 * LineCount()) / static_cast<double>(LineInfoCapacity())
+                                                                                           , wastedLIbytesNow / 1024
+                                                                                                          , (100.0 * actualLC) / static_cast<double>(PredLC)
+                                                                                                                        , wastedLIbytes / 1024
+                                                                                                                              , (wastedLIbytes / 1024) / files
             );
          }
 #endif

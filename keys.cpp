@@ -699,9 +699,9 @@ void WaitForKey( int secondsToWait ) {
       FmtStr<71> msg( " You have %c%2" PR_TIMET "%c seconds to press any key ", spinner, (timeEnd - timeNow), spinner );
       const auto mlen( msg.Len() );
       NoLessThan( &maxWidth, mlen );
-      VidWrStrColorFlush( DialogLine(), EditScreenCols() - mlen, msg.c_str(), mlen, g_colorError, ePad::padWSpcsToEol );
+      VidWrStrColorFlush( DialogLine(), EditScreenCols() - mlen, stref(msg.c_str(), mlen), g_colorError, ePad::padWSpcsToEol );
       } while( timeNow < timeEnd );
-   VidWrStrColorFlush( DialogLine(), EditScreenCols() - maxWidth, "", 0, g_colorInfo, ePad::padWSpcsToEol );
+   VidWrStrColorFlush( DialogLine(), EditScreenCols() - maxWidth, "", g_colorInfo, ePad::padWSpcsToEol );
    }
 
 #ifdef fn_waitkey15
