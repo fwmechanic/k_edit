@@ -264,7 +264,7 @@ ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    diff         = diff_settings                        ,
    sprintascii  = sprintascii_settings                 ,
    tex          = tex_settings                         ,
-   [""]         = { colors = stdColors }               ,
+   [""]         = { colors = darkColors }              ,
    }
 
 print( ftype_map.clang and "ftype_map.clang DEFINED" or "ftype_map.clang UNdefined" )
