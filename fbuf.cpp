@@ -765,6 +765,28 @@ STATIC_FXN std::string is_content_grep( PCFBUF pFile ) { 0 && DBG( "%s called on
    return "";
    }
 
+STATIC_FXN std::string is_content_git_edit( PCFBUF pFile ) { 0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
+   STATIC_CONST char s_gitdir    [] =  "/.git/" ;
+   STATIC_CONST char s_gitdir_DOS[] = "\\.git\\";
+   CompileTimeAssert( KSTRLEN(s_gitdir) == KSTRLEN(s_gitdir_DOS) );
+   sridx match;
+   if( (  eosr != (match=pFile->Namesr().find( s_gitdir     ))
+       || eosr != (match=pFile->Namesr().find( s_gitdir_DOS ))
+       )
+      && isupper( pFile->Namesr()[match+KSTRLEN(s_gitdir)] )
+     ) {
+      auto poundLines = 0;
+      for( auto lnum=0; lnum <= pFile->LastLine(); ++lnum ) {
+         stref rl = pFile->PeekRawLine( lnum );
+         if( !rl.empty() && rl[0] == '#' ) {
+            ++poundLines;
+            }
+         }
+      if( poundLines > 0 ) { return "gitedit"; }
+      }
+   return "";
+   }
+
 STATIC_FXN std::string is_content_diff( PCFBUF pFile ) { 0 && DBG( "%s called on %s %s", __PRETTY_FUNCTION__, pFile->HasLines()?"LINE-FUL":"LINE-LESS", pFile->Name() );
    auto lnum(0);
    stref rl;
@@ -911,6 +933,7 @@ STATIC_FXN std::string FType_deduce_from_content( PCFBUF pfb ) {
    STATIC_CONST FType_deducer_t FType_deducers[] = {
       is_content_grep     ,
       is_content_diff     ,
+      is_content_git_edit ,
       emacs_major_mode    ,
       ShebangToFType_lua  ,
       };
