@@ -253,6 +253,7 @@ ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    cmake        = cmake_settings                       ,
    kdb          = text_settings                        ,
    krsrc        = krsrc_settings                       ,
+   gitedit      = krsrc_settings                       ,
    text         = text_settings                        ,
    sh           = ushell_settings                      ,
    bash         = ushell_settings                      ,
