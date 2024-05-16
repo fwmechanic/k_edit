@@ -477,7 +477,7 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       return;          // over a WUC (in which case WUC-UC (under-cursor) is now HL'd, and needs to become un-HL'd)
       }
    d_sb.clear(); // aaa aaa aaa aaa
-   stref wuc( d_sb.AddString( src ) );
+   auto wuc( d_sb.AddString( src ) );
    if( wuc.empty() || lin < 0 ) {                                                                               DBG_HL_EVENT && DBG( "%s toolong", __func__);
       PrimeRefresh();
       return;
@@ -525,14 +525,14 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
    constexpr size_t MAX_WUC_HEXNUM_LEN(16);  // up to 64-bit
    if( MAX_WUC_HEXNUM_LEN > 0 ) { // hexnum variations: 0xdeadbeef, deadbeef, 0xdead_beef (old MWDT elfdump format)
       constexpr auto   SUPPORT_0xdead_beef(true);  // 32-bit only
-      if( (wuc.length() > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {  // 0xhexnum ?
-         auto hex( wuc ); hex.remove_prefix( 2 );
+      if( (wuc.length() > 2) && (wuc.starts_with("0x") || wuc.starts_with("0X")) ) {  // 0xhexnum ?
+         auto hex( wuc.substr( 2 ) );
          const auto xrun( consec_xdigits( hex ) );
          if( hex.length() == xrun ) {  // no hex.length() <= MAX_WUC_HEXNUM_LEN check here since no intermed buffer required
             d_sb.AddString( hex );
             }  // 0x123 123 0x123 123  0x01234 01234 0x01234 01234 0x0123456789abcde 0123456789abcde
          else if( SUPPORT_0xdead_beef && (9==hex.length()) && (4==xrun) && ('_'==hex[4]) && (4==consec_xdigits( hex.data()+5 )) ) {
-            char kb[] = { hex[0], hex[1], hex[2], hex[3], hex[5], hex[6], hex[7], hex[8], 0 };
+            char kb[] = { hex[0], hex[1], hex[2], hex[3], /*skip[4]*/ hex[5], hex[6], hex[7], hex[8], 0 };
             d_sb.AddString( kb );
             }
          }

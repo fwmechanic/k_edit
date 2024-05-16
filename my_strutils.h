@@ -171,9 +171,6 @@ NO_MATCH:
 
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
 
-extern int  strnicmp_LenOfFirstStr( stref s1, stref s2 );
-extern int  strncmp_LenOfFirstStr( stref s1, stref s2 );
-
 extern   bool   StrSpnSignedInt( PCChar pszString );
 extern   std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase=10 );
 
@@ -503,16 +500,16 @@ public:
 // sample that adds strings to the sequence
 //
 //    Reset();                                      // clear the sequence
-//    CPCChar wuc = AddKey( snew, snewEos );        // add a string and rtn ptr to it
+//    stref wuc = AddKey( snew, snewEos );          // add a string and rtn ptr to it
 //    if( !wuc ) {                                  // NULL return is "string doesn't fit"
 //       DBG_HL_EVENT && DBG(__func__" toolong");
 //       return false;
 //       }
 //
-//    if( (lin >= 0) && (d_wucLen > 2) && 0==strnicmp_LenOfFirstStr( "0x", wuc ) ) {
-//       const int xrun( consec_xdigits( wuc+2 ) );
-//       if( (d_wucLen==10) && (8==xrun) ) {
-//          PCChar key = AddKey( wuc+2 );
+//    if( (lin >= 0) && (wuc.length() > 2) && wuc.starts_with( "0x" ) ) {
+//       const int xrun( consec_xdigits( wuc.substr( 2 ) ) );
+//       if( (wuc.length()==10) && (8==xrun) ) {
+//          PCChar key = AddKey( wuc.substr( 2 ) );
 //          }
 //
 // sample that scans the strings in sequence
@@ -550,7 +547,7 @@ public:
       d_buf[1] = chNUL;  // not ABSOLUTELY necessary, but cheap insurance...
       d_nxtS = d_buf;
       }
-   PCChar AddString( stref sr ) {
+   stref AddString( stref sr ) {
       const auto len( sr.length() );
       if( len + 2 > sizeof(d_buf) - (d_nxtS-d_buf) ) {
          return "";
@@ -560,7 +557,7 @@ public:
        d_nxtS += len;
       *d_nxtS++ = chNUL;
       *d_nxtS   = chNUL;
-      return rv;
+      return stref( rv, len );
       }
    };
 
