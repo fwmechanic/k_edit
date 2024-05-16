@@ -482,12 +482,15 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
       PrimeRefresh();
       return;
       }                                                                                                         DBG_HL_EVENT && DBG( "wuc=%" PR_BSR, BSR(wuc) );
-   { // add leaf-name of compound thing   clss::xWUCX clss::xWUCX xWUCX xWUCX clss.xWUCX clss.xWUCX
-   STATIC_CONST std::array<stref,2> compound_seps{ "::", "." };
+   { // add leaf-name of compound thing   clss::xWUCX ptr->xWUCX clss::xWUCX ptr->xWUCX xWUCX xWUCX clss.xWUCX clss.xWUCX
+   STATIC_CONST stref compound_seps[]{ "->", "::", "." };
    auto maxIx( eosr );
    for( auto sep : compound_seps ) {
-      const auto rfrv( wuc.rfind( sep ) );  // find last instance of sep
-      if( rfrv != eosr ) { maxIx = (maxIx == eosr) ? rfrv : std::max( maxIx, rfrv ); }
+      auto rfrv( wuc.rfind( sep ) );  // find last instance of sep
+      if( rfrv != eosr ) {
+         rfrv += sep.length() - 1;
+         maxIx = (maxIx == eosr) ? rfrv : std::max( maxIx, rfrv );
+         }
       }                   // NB: rfind returns "index [from start of wuc] of first ch of match", which is the LAST char of the match char in wuc ...
    if( maxIx != eosr ) {  // when looked at from a non-reverse perspective; thus regardless of key length, the index
       d_sb.AddString( wuc.substr( maxIx + 1 ) ); // of the first char after the match is always (maxIx + 1)
@@ -748,7 +751,7 @@ STATIC_FXN bool HilitWucLineSegs
                         fMatchesFirstNeedle = fTestingFirstNeedle;
                         ixFirstMatch = ixFind; mlen = needle.length();
                         }
-                     } // xWUCX xWUCX xWUCX clss::xWUCX clss::xWUCX objx.xWUCX objy.xWUCX objx.xWUCX xWUCX xWUCX xWUCX xWUCX
+                     } // xWUCX xWUCX xWUCX clss::xWUCX clss::xWUCX ptr->xWUCX objx.xWUCX ptr->xWUCX objy.xWUCX objx.xWUCX xWUCX xWUCX xWUCX xWUCX
                   pNeedle += needle.length() + 1; fTestingFirstNeedle = false;
                   }
                if( ixFirstMatch == eosr ) { break; }
