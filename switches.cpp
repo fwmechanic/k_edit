@@ -189,7 +189,7 @@ sridx IdxFirstHJCh( stref src, sridx start ) {
    for( auto it( src.crbegin() + (src.length() - start) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );
       if( isHJChar(*it) ) {
          if( '>' == *it ) {  // hack: '>' (in hljoinchars) means '->'
-            if( std::distance( src.crend(), it ) > 1 && '-' == *(it+1) ) {
+            if( std::distance( it, src.crend() ) > 1 && '-' == *(it+1) ) {
                ++it;  // include "->" in HJChar seq by skipping '-'
                }
             else {  // treat '>' not preceded by '-' as a non HJChar
