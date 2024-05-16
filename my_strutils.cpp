@@ -94,9 +94,6 @@ sridx scpy( PChar dest, size_t sizeof_dest, stref src ) {
    return destCharsToWr > 0 ? destCharsToWr-1 : 0;
    }
 
-int strnicmp_LenOfFirstStr( stref s1, stref s2 )                   { return Strnicmp( s1.data(), s2.data(), s1.length()         ); }
-int strncmp_LenOfFirstStr ( stref s1, stref s2 )                   { return strncmp ( s1.data(), s2.data(), s1.length()         ); }
-
 #define Strnspn_def( fxnm, EQ_OP )                           \
 size_t fxnm  ( PCChar str1, PCChar eos1, PCChar needle ) {   \
    if( !eos1 ) { eos1 = Eos( str1 ); }                       \
