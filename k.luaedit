@@ -2694,7 +2694,7 @@ do -- sumcol impl scope
          if sum and count and ctSfx and (count - ctSfx) <= 3 then  -- magic-coupled to _reconcile.txt content
             arg.fbuf:InsLine( arg.maxY+1, (" "):rep( minInd ) .. sum .. fmt( " (%d check%s)", count, Add_s(count) ) )
          else
-            local entries, balance, pos, neg, min, minAt = sum_ary_numstrs( bc, trailingL0:match("%s*[Bb][Aa][Ll][Aa][Nn][Cc][Ee]") )
+            local entries, balance, pos, neg, min, minAt = sum_ary_numstrs( bc, trailingL0:match('%s*'..pat_nocase('balance')) or trailingL0:match('%s*'..pat_nocase('available')) )
             if entries==0 then return Msg( "no summable content" ) end
             local width = arg.maxX - arg.minX + 1
             local fw = sum_cols_fracWidth( bc )
