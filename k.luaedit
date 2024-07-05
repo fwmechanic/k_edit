@@ -2725,6 +2725,102 @@ do -- sumcol impl scope
       }
 end
 
+local function xform_boxarg( arg, xform )
+   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
+      local old = arg.fbuf:GetLineSeg( iy, arg.minX, arg.maxX )
+      local new = xform( old )
+      if new ~= old then
+         arg.fbuf:PutLineSeg( iy, new, arg.minX, arg.maxX, false )
+         end
+      end
+   end
+
+local function xform_linearg( arg, xform )
+   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
+      local old = arg.fbuf:GetLine( iy )
+      local new = xform( old )
+      if new ~= old then
+         arg.fbuf:PutLine( iy, new )
+         end
+      end
+   end
+
+--[[  incmon: Rationale
+
+   I maintain multiple forward-looking textual (bank account) "registers" to
+   predict upcoming balance minima (using 'sumcol').  The freeform register
+   entries contain dates in format "mm/dd" (and occasionally "yy.mm/").
+
+   A complex monthly maintenance task is creating the next month's worth of
+   register entries (NMRE) by appending a copy of the current month's register
+   entries and incrementing all of the mm's (mnums) in the copy (NMRE).
+
+   "Incrementing all of the mnums in the NMRE" was formerly done via a complex
+   manual editing process: mentally determining the range of mnums present in the
+   NMRE, then performing a series of (incrementing) search and replace operations
+   (SnR) on the entries (ordered such that the same post- and pre-increment mnum
+   values never momentarily coexist).  For instance, if the newly cloned NMRE
+   contained 11/ 12/ 01/ 02/, the increment operation would involve these SnR's:
+
+         lastselect replace "02/" newline "03/" newline ->
+         lastselect replace "01/" newline "02/" newline ->
+         lastselect replace "12/" newline "01/" newline ->
+         lastselect replace "11/" newline "12/" newline
+
+   NB: a range of 4 mnums is typical, as NMRE (nominally spanning one month, ie
+   31 days up, thus possibly 2 mnums) may contain references to CC bills whose
+   charges occurred in the 2 prior mnums.
+
+   My initial "helper" impl "simply", given the range of months involved,
+   generated & inserted (into a new single line in the file) the above
+   macro/command sequence.  Usage: once this macro line was generated, the user
+   would select the line range, cancel, cursor up to the generated macro line,
+   and run:
+
+         arg <nullarg> execute
+
+   which executes the generated *1-line* macro w/o affecting lastselect's memory
+   of the user's earlier (canceled) selection of the targeted line range.
+
+   However a fully-integrated command based upon this approach was doomed by (a)
+   high complexity associated with automatically deducing the (possibly TWO)
+   contiguous mnum ranges, and (b) the low efficiency of unnecessarily performing
+   multiple SnR passes.
+
+   Sequentially visiting & incrementing each "mm/" in a single pass ('incmon'
+   below) is a simpler and more efficient alternative, but executing arbitrary
+   code per match cannot be done in editor macro code --]]
+
+AddEdFxn{ name = "incmon", attr = MODIFIES+LINEARG, help = "use selcmd (F1) to invoke"
+   , LINEARG = function( arg )
+      local repls = 0
+      xform_linearg( arg, function( st )
+         return st:gsub( '(%d%d)/', function( mnum )
+            repls = 1+repls
+            return fmt( '%02d/', ( -- slight trickiness:
+                  tonumber(mnum) --[[ actually 'tonumber(mnum) -1 +1': -1 converts mnum to 0-based range, +1 increments ]]
+                  % 12
+                  ) +1 --[[ converts incremented mnum back to 1-based range ]]
+               )
+            end
+            )
+         end
+         )
+      Msgf( "%d replacements", repls )
+      end
+   }
+
+--[[  test register, elided
+01/02
+01/20  [11/23..12/22]
+01/23  [11/27..12/26]
+02/01
+02/01  [12/05..01/04]
+02/20  [12/23..01/22]
+02/23  [12/27..01/26]
+03/01
+03/01  [01/05..02/04]    --]]
+
 function mtFBUF:swap_lines( y0, y1, xLeft, xRight )
    xLeft  = xLeft  or 1
    xRight = xRight or MAXCOL
@@ -2755,44 +2851,6 @@ local function for_LINEBOX( arg, ... )
          fx( arg.fbuf:GetLineSeg( iy, arg.minX, arg.maxX ) )
          end
       end
-   end
-
-local function gsub_linearg( arg, pat, replacement )
-   local total = 0
-   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
-      local new, cnt = (arg.fbuf:GetLine( iy )):gsub( dirsep_class..not_dirsep_class.."+$", "" )
-      if cnt > 0 then
-         arg.fbuf:PutLine( iy, new )
-         total = total + cnt
-         end
-      end
-   Msgf( "%d replacements made", total )
-   end
-
-local function xform_linearg( arg, gsubfunc )
-   local total = 0
-   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
-      local line = arg.fbuf:GetLine( iy )
-      local new, cnt = gsubfunc( line )
-      if cnt > 0 then
-         arg.fbuf:PutLine( iy, new )
-         total = total + cnt
-         end
-      end
-   Msgf( "%d replacements made", total )
-   end
-
-local function xform_boxarg( arg, gsubfunc )
-   local total = 0
-   for iy=arg.minY, Min( arg.maxY, arg.fbuf:LastLine() ) do
-      local line = arg.fbuf:GetLineSeg( iy, arg.minX, arg.maxX )
-      local new, cnt = gsubfunc( line )
-      if cnt > 0 then
-         arg.fbuf:PutLineSeg( iy, new, arg.minX, arg.maxX, false )
-         total = total + cnt
-         end
-      end
-   Msgf( "%d replacements made", total )
    end
 
 local function gsub_URL_escape( s )
