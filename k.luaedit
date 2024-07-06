@@ -176,6 +176,9 @@ print( "Lua calling!  Current file is " .. GetCurrentFilename() .."\n" )
 
 function Msgf(...)  Msg( fmt(...) )  end
 
+local wset = 'A-Za-z0-9_'  -- NB: includes _, which Lua's '%w' omits
+local wclass, Wclass = '['..wset..']', '[^'..wset..']'
+
 require "util"
 require "tu"
 require "menu"
@@ -2909,21 +2912,36 @@ do
       }
 end
 
-AddEdFxn{ name = "reverse", help = "NOARG: chars at cursor and to right of cursor are swapped; BOXSTR: selected string is reversed", attr = MODIFIES+NOARG+BOXARG, key = "ctrl+s"
-   , NOARG   = function( arg )
-      local seg = arg.fbuf:GetLineSeg( arg.cursorY, arg.cursorX, arg.cursorX+1 )
-      if seg then
-         arg.fbuf:PutLineSeg( arg.cursorY, string.char( seg:byte(2) or 0x20, seg:byte(1) or 0x20 ), arg.cursorX, arg.cursorX+1, false )
+do
+   local pat_wdw = '^('..wclass..'+)('..Wclass..'+)('..wclass..'+)$'
+   local pat_wdwdw = '^('..wclass..'+)('..Wclass..'+)('..wclass..'+)('..Wclass..'+)('..wclass..'+)$'
+   AddEdFxn{ name = "reverse", help = "NOARG: chars at cursor and to right of cursor are swapped; BOXSTR: selected string is reversed", attr = MODIFIES+NOARG+BOXARG, key = "ctrl+s"
+      , NOARG   = function( arg )
+         local seg = arg.fbuf:GetLineSeg( arg.cursorY, arg.cursorX, arg.cursorX+1 )
+         if seg then
+            arg.fbuf:PutLineSeg( arg.cursorY, string.char( seg:byte(2) or 0x20, seg:byte(1) or 0x20 ), arg.cursorX, arg.cursorX+1, false )
+            end
          end
-      end
-   , BOXARG  = function( arg )
-      if arg.minY ~= arg.maxY  then return Msg( "only single-line BOXARG supported" ) end
-      local seg = arg.fbuf:GetLineSeg( arg.minY, arg.minX, arg.maxX )
-      if seg then
-         arg.fbuf:PutLineSeg( arg.minY, seg:reverse(), arg.minX, arg.maxX, false )
+      , BOXARG  = function( arg )
+         if arg.minY ~= arg.maxY  then return Msg( "only single-line BOXARG supported" ) end
+         local seg = arg.fbuf:GetLineSeg( arg.minY, arg.minX, arg.maxX )
+         if seg then
+            local w1,delim1,w2,delim2,w3 = seg:match( pat_wdw )
+            if w2 then  -- magic: reverse 2 words
+               seg = w2..delim1..w1
+            else
+               w1,delim1,w2,delim2,w3 = seg:match( pat_wdwdw )
+               if w3 then  -- magic: reverse 3 words  (this is feeling a bit "brute force", but it's for a good cause!)
+                  seg = w3..delim2..w2..delim1..w1
+               else
+                  seg = seg:reverse()  -- dflt: simply reverse the characters of seg
+                  end
+               end
+            arg.fbuf:PutLineSeg( arg.minY, seg, arg.minX, arg.maxX, false )
+            end
          end
-      end
-   }
+      }
+end
 
 local function CurLocnStr()
    local fb, vw = FBUF.CurView()
