@@ -3234,13 +3234,11 @@ VideoFlusher::~VideoFlusher() {
    }
 
 STATIC_FXN COL conVidWrStrColor( LINE yConsole, COL xConsole, stref src, colorval_t attr, ePad pad ) { WL( 0, 0 ) && DBG( "VidWrStrColor Y=%3d X=%3d L %3" PR_FILESIZET " C=%02X pad=%d '%" PR_BSR "'", yConsole, xConsole, src.length(), attr, pad==ePad::padWSpcsToEol, BSR(src) );
-   if( !src.empty() ) {
-      const auto charsWritten( ConOut::BufferWriteString( src, yConsole, xConsole, attr, pad==ePad::padWSpcsToEol ) );
-      if( charsWritten ) {
-         DISP_LL_STAT_COLLECT(++d_stats.screenRedraws);
-         s_VideoFlushData.fDidVideoWrite = true;
-         return charsWritten;
-         }
+   const auto charsWritten( ConOut::BufferWriteString( src, yConsole, xConsole, attr, pad==ePad::padWSpcsToEol ) );
+   if( charsWritten ) {
+      DISP_LL_STAT_COLLECT(++d_stats.screenRedraws);
+      s_VideoFlushData.fDidVideoWrite = true;
+      return charsWritten;
       }
    return 0;
    }
