@@ -142,6 +142,16 @@ local URL_GoogleMaps     = goUrl( "http://maps.google.com/maps?f=q&hl=en&q=" .. 
 local URL_GoogleNews     = goUrl( "http://news.google.com/news?hl=en&q=" .. UrlSrchTag .. "&btnG=Search+News" )
 local URL_GoogleCode     = goUrl( googl.."codesearch?q=" .. UrlSrchTag .. "&btnG=Search+Code" )
 
+local function clean_mobi(st)
+   local ar = {}
+   for word in st:gmatch "%w%w+" do  -- NB: only 2+-letter words are passed thru!
+      ar[1+#ar] = word
+      end
+   return table.concat( ar, ' ' )
+   end
+
+local URL_MobiSrchAB     = goUrl( 'https://forum.mobilism.org/search.php?keywords='..UrlSrchTag..'&fid%5B%5D=124&sr=topics&sf=titleonly', clean_mobi )
+
 AddEdStringFxn( "google"         , URL_Google        )
 AddEdStringFxn( "searchhomeserver", URL_HomeServer   )
 AddEdStringFxn( "DuckDuckGo"     , URL_DuckDuckGo    )
@@ -160,6 +170,7 @@ AddEdStringFxn( "googlemaps"     , URL_GoogleMaps    )
 AddEdStringFxn( "googlenews"     , URL_GoogleNews    )
 AddEdStringFxn( "googlecode"     , URL_GoogleCode    )
 AddEdStringFxn( "adv"            , URL_GoogAdvRider  )
+AddEdStringFxn( "ab"             , URL_MobiSrchAB    , "alt+7" )
 
 local function frhed(fn) StartGuiProcess( '"c:/_tools/frhed/frhed.exe" ' .. fn ) end
 AddEdFxn{ name = "hex"                                                       ,
