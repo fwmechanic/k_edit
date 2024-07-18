@@ -3563,15 +3563,16 @@ do
       for ix,term in ipairs(split_ch_tbl( str:gsub('%s+',' '), " " )) do
          ar[1+#ar] = --[[ (ix==1) and term or ]] term:gsub( '^(%-.*)', '"%1"' )
          end
-      return gsub_URL_escape( table.concat( ar, ' ' ) )
+      return table.concat( ar, ' ' )
       end
    -- used in %~dp0user.lua
-   function goUrl( url ) -- NB:  url param should contain a magic string (UrlSrchTag) which is replaced with the escaped str value
+   function goUrl( url, str_cleaner ) -- NB:  url param should contain a magic string (UrlSrchTag) which is replaced with the escaped str value
+      str_cleaner = str_cleaner or massage_search_string
       return function(str)
-         str = str and LuaPat_escape( massage_search_string(str) ) or ""
-         printf( ": '%s'", str )
-         local fnm = url:gsub( UrlSrchTagEscaped , str )  printf( ": '%s'", fnm )
-         shex( fnm )  printf( ": '%s'", fnm )
+         str = str and LuaPat_escape( gsub_URL_escape( str_cleaner(str) ) ) or ""
+                                                                                   printf( ": '%s'", str )
+         local fnm = url:gsub( UrlSrchTagEscaped , str )                           printf( ": '%s'", fnm )
+         shex( fnm )                                                               printf( ": '%s'", fnm )
          end
       end
 
