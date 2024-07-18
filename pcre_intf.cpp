@@ -70,8 +70,9 @@ int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag ) {
    return 1;
    }
 
-RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options ) {
-   0 && DBG( "CompiledRegex::Match called!" );
+RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options ) { enum { SD=0 };
+   SD && DBG( "CompiledRegex::Match called!" );
+   SD && DBG( "CompiledRegex::Match %p %p %p", d_pcreCode, reinterpret_cast<PCRE2_SPTR>( haystack.data() ), d_pcreMatchData );
    captures.clear(); // before any return
    // http://www.pcre.org/original/doc/html/pcreapi.html#SEC17  "MATCHING A PATTERN: THE TRADITIONAL FUNCTION" describes pcre_exec()
    const int rc( pcre2_match(
@@ -83,7 +84,7 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
          , d_pcreMatchData
          , nullptr             // pcre2_match_context *  (nullptr == use default behaviors)
          )
-      );                                                   0 && DBG( "CompiledRegex::Match returned %d", rc );
+      );                                                   SD && DBG( "CompiledRegex::Match returned %d", rc );
    if( rc <= 0 ) {
       switch( rc ) {
          break;case PCRE2_ERROR_NOMATCH:  // the only "expected" error: be silent
@@ -98,7 +99,7 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
                         }
          }
       }
-   else {                                                  0 && DBG( "CompiledRegex::Match count=%d", rc );
+   else {                                                  SD && DBG( "CompiledRegex::Match count=%d", rc );
       // The first pair of integers, ovector[0] and ovector[1], identify the portion of the subject string matched by
       // the entire pattern (Perl's $0).  The next pair is used for the first capturing subpattern (Perl's $1), and so
       // on.  The value returned by pcre2_match() is one more than the highest numbered pair that has been set.  For
@@ -136,7 +137,7 @@ CompiledRegex *Regex_Delete0( CompiledRegex *pcr ) {
    return nullptr;
    }
 
-CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) {  0 && DBG( "Regex_Compile! %" PR_BSR, BSR(pszSearchStr) );
+CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) { enum { SD=0 }; SD && DBG( "Regex_Compile! %" PR_BSR, BSR(pszSearchStr) );
    PCRE_API_INIT();
    const int options( fCase ? 0 : PCRE2_CASELESS );
    int errCode;
@@ -148,7 +149,7 @@ CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) {  0 && DBG( "Reg
          Msg( "pcre2_compile returned unknown error %d", errCode );
          return nullptr;
          }
-      0 && DBG( "Regex_Compile! Display_hilite_regex_err" );
+      SD && DBG( "Regex_Compile! Display_hilite_regex_err" );
       Display_hilite_regex_err( reinterpret_cast<PCChar>(errMsg), pszSearchStr, errOffset );
       return nullptr;
       }
