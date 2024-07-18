@@ -22,11 +22,7 @@
 #include "fname_gen.h"
 
 // !0 == VERBOSE_SEARCH logging
-#if 0
-#  define  VS_( x ) x
-#else
-#  define  VS_( x )
-#endif
+#define VSLOG 0
 
 //
 // NEW FASTER GREP SEARCHER!!!
@@ -300,7 +296,7 @@ public:
 #endif
    bool   CanUseFastSearch() const { return d_fCanUseFastSearch && g_fFastsearch; }
    void   CaseUpdt(); // in case case switch has changed since CompiledRegex was compiled
-   void   Dbgf( PCChar tag ) const;
+   int    Dbgf( PCChar tag ) const;
    stref  SrchStr()    const { return d_rawStr; }
    };
 
@@ -372,7 +368,7 @@ public:
    void SetBoundsToEnd( Point StartPt );
    void SetBounds( Point StartPt, Point EndPt );
    void SetBounds( const ARG &arg );
-   void Dbgf() const;
+   int  Dbgf() const;
    stref SrchStr() const { return d_ss.SrchStr(); }
    bool IsRegex() const { return
 #if USE_PCRE
@@ -825,7 +821,7 @@ CheckNextRetval CharWalkerReplace::DoReplace( PFBUF pFBuf, IdxCol_cached &rlc, c
    return REREAD_LINE_CONTINUE_SEARCH;
    }
 
-CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, const bool fWholeLine ) { enum { SD=0 };
+CheckNextRetval CharWalkerReplace::CheckNext( PFBUF pFBuf, IdxCol_cached &rlc, const sridx ixBOL, Point *curPt, COL *colLastPossibleMatchChar, const bool fWholeLine ) { enum { SD=1 };
    if( d_CheckNextCallCount != SIZE_MAX ) { ++d_CheckNextCallCount; }
    if( d_lastLineVisited != curPt->lin ) {  SD && DBG( "d_lastLineVisited != curPt->lin: %d != %d", d_lastLineVisited, curPt->lin );
        d_lastLineVisited  = curPt->lin;
@@ -955,7 +951,7 @@ int FBUF::SyncWriteIfDirty_Wrote() {
    }
 
 STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
-   VS_( if( s_searchSpecifier ) { s_searchSpecifier->Dbgf( "befor" ); } )
+   VSLOG && s_searchSpecifier && s_searchSpecifier->Dbgf( "befor" );
    std::unique_ptr<SearchSpecifier> ssNew( new SearchSpecifier( src, fRegex ) );
 #if USE_PCRE
    const auto err( ssNew->HasError() );
@@ -965,7 +961,7 @@ STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
       DeleteUp( s_searchSpecifier, ssNew.release() );
       g_SavedSearchString_Buf.assign( src );  // HACK to let ARG::grep inherit prev search strings
       }
-   VS_( s_searchSpecifier->Dbgf( "after" ); )
+   VSLOG && s_searchSpecifier->Dbgf( "after" );
    return
 #if USE_PCRE
           !err
@@ -1526,7 +1522,7 @@ SearchSpecifier::~SearchSpecifier() {
 #endif
    }
 
-void SearchSpecifier::Dbgf( PCChar tag ) const {
+int SearchSpecifier::Dbgf( PCChar tag ) const {
   #if 1
    DBG( "SearchSpecifier %s: cs=%d, rex=%d, raw=%" PR_BSR "'"
       , tag
@@ -1541,6 +1537,7 @@ void SearchSpecifier::Dbgf( PCChar tag ) const {
       , BSR(d_rawStr)
       );
   #endif
+   return 1;
    }
 
 //===============================================
@@ -1553,16 +1550,15 @@ FileSearcher::FileSearcher( const SearchScanMode &sm, const SearchSpecifier &ss,
    {
    }
 
-void FileSearcher::Dbgf() const {
-   VS_(
-      DBG( "%p d_pFBuf=%p %c cs=%s"
+int FileSearcher::Dbgf() const {
+   VSLOG && DBG( "%p d_pFBuf=%p %c cs=%s"
          , this
          , d_pFBuf
          , d_sm.d_fSearchForward ? 'F' : 'f'
          , g_fCase ? "sen" : "ign"
          );
-      d_ss.Dbgf( "FileSearcher" );
-      )
+   VSLOG && d_ss.Dbgf( "FileSearcher" );
+   return 1;
    }
 
 //===============================================
@@ -1592,12 +1588,13 @@ FileSearcherRegex::FileSearcherRegex( const SearchScanMode &sm, const SearchSpec
    Assert( d_ss.IsRegex() );
    }
 
-FileSearcher::FindStrRslt FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) {
+FileSearcher::FindStrRslt FileSearcherRegex::VFindStr_( stref src, sridx src_offset, int pcre_exec_options ) { enum { SD=1 };
+                                                    SD && DBG( "RegEx:-> %p", src.data() );
    const auto rv( Regex_Match( d_ss.re(), d_captures, src, src_offset, pcre_exec_options ) );
    if( rv > 0 && d_captures[0].valid() ) {
-      const auto srMatch( d_captures[0].value() );  0 && DBG( "RegEx:->MATCH=(%" PR_PTRDIFFT " L %" PR_SIZET ")='%" PR_BSR "'", srMatch.data() - src.data(), srMatch.length(), BSR(srMatch) );
+      const auto srMatch( d_captures[0].value() );  SD && DBG( "RegEx:->MATCH=(%" PR_PTRDIFFT " L %" PR_SIZET ")='%" PR_BSR "'", srMatch.data() - src.data(), srMatch.length(), BSR(srMatch) );
       return srMatch;
-      }                                             0 && DBG( "RegEx:->NO MATCH" );
+      }                                             SD && DBG( "RegEx:->NO MATCH" );
    return FileSearcher::FindStrRslt( 0 );
    }
 #endif
@@ -1721,12 +1718,12 @@ FileSearcher::FindStrRslt  FileSearcherFast::VFindStr_( stref src, sridx src_off
 
 //===============================================
 
-void FileSearcher::VFindMatches_() { enum { SD=0 };  VS_( DBG( "%csearch: START  y=%d, x=%d", d_sm.d_fSearchForward?'+':'-', d_start.lin, d_start.col ); )
+void FileSearcher::VFindMatches_() { enum { SD=0 };  VSLOG && DBG( "%csearch: START  y=%d, x=%d", d_sm.d_fSearchForward?'+':'-', d_start.lin, d_start.col );
    const auto tw( d_pFBuf->TabWidth() );
-   if( d_sm.d_fSearchForward ) {                     VS_( DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
+   if( d_sm.d_fSearchForward ) {                     VSLOG && DBG( "+search: START  y=%d, x=%d", d_start.lin, d_start.col );
       for( auto curPt(d_start) ; curPt < d_end && !ExecutionHaltRequested() ; ++curPt.lin, curPt.col = 0 ) {
          //***** Search A LINE:
-         const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
+         const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );  VSLOG && DBG( "+search: y=%d, x=%d, rl.d=%p rl.l=%" PR_SIZET "", curPt.lin, curPt.col, rl.data(), rl.length() );
          IdxCol_cached conv( tw, rl );
          auto iC( conv.c2ci( curPt.col ) );
          if( conv.i2c( iC ) != curPt.col ) { // curPt.col is in a tab-spring, which means (a) curPt.col > 0, and (b) iC indexes a char outside (to the left of) the replace region[1]
@@ -1749,19 +1746,19 @@ void FileSearcher::VFindMatches_() { enum { SD=0 };  VS_( DBG( "%csearch: START 
             }
          }
       }
-   else { /* search backwards (only msearch uses this; ++complex, ++++overhead) */   VS_( DBG( "-search: START  y=%d, x=%d", d_start.lin, d_start.col ); )
+   else { /* search backwards (only msearch uses this; ++complex, ++++overhead) */   VSLOG && DBG( "-search: START  y=%d, x=%d", d_start.lin, d_start.col );
       for( auto curPt(d_start) ; curPt > d_end && !ExecutionHaltRequested() ; --curPt.lin, curPt.col = COL_MAX ) {
          if( curPt.col < 0 ) {
             continue;
             }
          const auto rl( d_pFBuf->PeekRawLine( curPt.lin ) );
          const IdxCol_nocache conv( tw, rl );
-         auto iC( conv.c2ci( curPt.col ) );                       VS_( DBG( "-search: newline: x=%d,y=%d=>[%d/%d]='%" PR_BSR "'", curPt.col, curPt.lin, iC, rl.length(), BSR(rl) ); )
+         auto iC( conv.c2ci( curPt.col ) );                       VSLOG && DBG( "-search: newline: x=%d,y=%d=>[%" PR_SIZET "/%" PR_SIZET "]='%" PR_BSR "'", curPt.col, curPt.lin, iC, rl.length(), BSR(rl) );
          if( iC < rl.length() ) { // if curPt.col is in middle of line...
             ++iC;                     // ... nd to incr to get correct maxCharsToSearch
             }
          const auto maxCharsToSearch( std::min( iC, rl.length() ) );
-         const stref haystack( rl.data(), maxCharsToSearch );   VS_( DBG( "-search: HAYSTACK='%" PR_BSR "'", BSR(haystack) ); )
+         const stref haystack( rl.data(), maxCharsToSearch );   VSLOG && DBG( "-search: HAYSTACK='%" PR_BSR "'", BSR(haystack) );
          // works _unless_ cursor is at EOL when 'arg arg "$" msearch'; in this
          // case, it keeps finding the EOL under the cursor (doesn't move to
          // prev one)
@@ -1774,10 +1771,10 @@ void FileSearcher::VFindMatches_() { enum { SD=0 };  VS_( DBG( "%csearch: START 
          if( !srMatch.noMatch() ) {
             COL goodMatchChars( srMatch.sr().length() );
             auto iGoodMatch( srMatch.sr().data() - haystack.data() );
-            /* line contains _A_ match? */  VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: LMATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
+            /* line contains _A_ match? */  { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); VSLOG && DBG( "-search: LMATCH y=%d (%" PR_PTRDIFFT " L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); }
             // find the rightmost match by repeatedly searching (left->right) until search fails, using the last good match
             while( iGoodMatch < maxCharsToSearch ) {
-               const auto startIdx( iGoodMatch + 1 );   VS_( { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); DBG( "-search: iAYSTACK=%" PR_SIZET " '%" PR_BSR "'", startIdx, BSR(newHaystack) ); } )
+               const auto startIdx( iGoodMatch + 1 );   { auto newHaystack( haystack ); newHaystack.remove_prefix( startIdx ); VSLOG && DBG( "-search: iAYSTACK=%" PR_SIZET " '%" PR_BSR "'", startIdx, BSR(newHaystack) ); }
                const auto srNextMatch( VFindStr_( haystack, startIdx, SET_HaystackHas(startIdx) ) );
                if( srNextMatch.noMatch() ) {
                   break;
@@ -1785,11 +1782,11 @@ void FileSearcher::VFindMatches_() { enum { SD=0 };  VS_( DBG( "%csearch: START 
                const auto iNextMatch( srNextMatch.sr().data() - haystack.data() );
                COL nextMatchChars( srNextMatch.sr().length() );
                iGoodMatch     = iNextMatch;
-               goodMatchChars = nextMatchChars;         VS_( { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); DBG( "-search: +MATCH y=%d (%d L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); } )
+               goodMatchChars = nextMatchChars;         { stref match( haystack.substr( iGoodMatch, goodMatchChars ) ); VSLOG && DBG( "-search: +MATCH y=%d (%" PR_PTRDIFFT " L %d)='%" PR_BSR "'", curPt.lin, iGoodMatch, goodMatchChars, BSR(match) ); }
                }
             curPt.col  =          conv.i2c( iGoodMatch                              )              ;
             const auto matchCols( conv.i2c( goodMatchChars + conv.c2ci( curPt.col ) ) - curPt.col );
-                                                        VS_( DBG( "-search: #MATCH y=%d (%d L %d)=>COL(%d L %d)", curPt.lin, iGoodMatch, goodMatchChars, curPt.col, matchCols ); )
+                                                        VSLOG && DBG( "-search: #MATCH y=%d (%" PR_PTRDIFFT " L %d)=>COL(%d L %d)", curPt.lin, iGoodMatch, goodMatchChars, curPt.col, matchCols );
             if( !d_mh.FoundMatchContinueSearching( d_pFBuf, curPt, matchCols, d_captures ) ) {
                return;
                }
@@ -1807,24 +1804,24 @@ STATIC_FXN FileSearcher *NewFileSearcher(
    , const SearchSpecifier             &ss
    , FileSearchMatchHandler            &mh
    )
-   {  VS_( DBG( "NewFileSearcher enter" ); )
+   {  VSLOG && DBG( "NewFileSearcher enter" );
    FileSearcher *rv;
 #if USE_PCRE
    if( ss.IsRegex() ) {
       if( ss.HasError() ) {
          return nullptr;
          }
-      rv = new FileSearcherRegex( sm, ss, mh );            VS_( DBG( "  FileSearcherRegex %p", rv ); )
+      rv = new FileSearcherRegex( sm, ss, mh );            VSLOG && DBG( "  FileSearcherRegex %p", rv );
       }
    else
 #endif
       {
       switch( type ) {
          break; default:                             Assert( 0 != 0 ); return nullptr;
-         break; case FileSearcher::fsTABSAFE_STRING: rv = new FileSearcherString( sm, ss, mh );   VS_( DBG( "  FileSearcherString %p", rv ); )
-         break; case FileSearcher::fsFAST_STRING:    rv = new FileSearcherFast( sm, ss, mh );     VS_( DBG( "  FileSearcherFast %p", rv ); )
+         break; case FileSearcher::fsTABSAFE_STRING: rv = new FileSearcherString( sm, ss, mh );   VSLOG && DBG( "  FileSearcherString %p", rv );
+         break; case FileSearcher::fsFAST_STRING:    rv = new FileSearcherFast( sm, ss, mh );     VSLOG && DBG( "  FileSearcherFast %p", rv );
          }
-      }                                              VS_( rv->Dbgf(); )
+      }                                              VSLOG && rv->Dbgf();
    return rv;
    }
 
