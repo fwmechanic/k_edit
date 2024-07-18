@@ -77,9 +77,9 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
    // http://www.pcre.org/original/doc/html/pcreapi.html#SEC17  "MATCHING A PATTERN: THE TRADITIONAL FUNCTION" describes pcre_exec()
    const int rc( pcre2_match(
            d_pcreCode
-         , reinterpret_cast<PCRE2_SPTR>( haystack.data() )
-         , haystack.length()   // length
-         , haystack_offset     // startoffset
+         , reinterpret_cast<PCRE2_SPTR>( haystack.length() > 0 ? haystack.data() : "" )  // pcre2_match returns PCRE2_ERROR_NULL if subject==NULL && length==0
+         , haystack.length()   // length                                                 // A stref (std::string_view) value is allowed to have data()==nullptr if length()==0
+         , haystack_offset     // startoffset                                            // ref: https://github.com/PCRE2Project/pcre2/blob/master/src/pcre2_match.c
          , pcre_exec_options   // options
          , d_pcreMatchData
          , nullptr             // pcre2_match_context *  (nullptr == use default behaviors)
