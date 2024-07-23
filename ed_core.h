@@ -1462,14 +1462,6 @@ STIL PWin         g_CurWinWr()     { return  g_WinWr( g_CurWindowIdx() ); }
 STIL ViewHead    &g_CurViewHd()    { return *(&g_CurWinWr()->d_ViewHd)  ; } // directly dependent on g__.ixCurrentWin
 STIL PView        g_CurView()      { return  g_CurViewHd().front()  ; } // NOT CACHED since can change independent of g__.ixCurrentWin changing
 
-// *** I'm not totally sure I like these, but it beats repeating g_CurWin() and g_CurView() multiple times in the code
-
-#define PCW        const auto pcw( g_CurWin()          )
-#define PCWr       const auto pcw( g_CurWinWr()        )
-#define PCV        const auto pcv( g_CurView()         )
-#define PCWV  PCW; const auto pcv( pcw->d_ViewHd.front() )
-#define PCWrV PCWr;const auto pcv( pcw->d_ViewHd.front() )
-
 STIL const Point &g_Cursor()       { return  g_CurView()->Cursor(); } // NOT CACHED since can change independent of g__.ixCurrentWin changing
 STIL LINE         g_CursorLine()   { return  g_Cursor().lin       ; } // NOT CACHED since can change independent of g__.ixCurrentWin changing
 STIL COL          g_CursorCol()    { return  g_Cursor().col       ; } // NOT CACHED since can change independent of g__.ixCurrentWin changing
@@ -1480,9 +1472,23 @@ GLOBAL_VAR extern PFBUF s_curFBuf; // not literally static (s_), but s/b treated
 STIL PFBUF        g_CurFBuf()                { return s_curFBuf; }
 STIL void         g_UpdtCurFBuf( PFBUF pfb ) {        s_curFBuf = pfb; }
 
-#define PCF        const auto pcf( g_CurFBuf() )
-#define PCFV  PCV; PCF
-
 // these impl's deferred until g_CurWin(), g_CurFBuf() defined:
 inline bool View::isActive()      const { return g_CurWin()  == Win(); }
 inline bool FBufLocn::InCurFBuf() const { return g_CurFBuf() == d_pFBuf; }
+
+// *** I'm not totally sure I like these, but it beats repeating g_CurWin() and g_CurView() multiple times in the code
+
+STIL auto PCWV() {
+   const auto pcw( g_CurWin() );
+   struct result { PCWin pcw; PView pcv; };
+   return result { pcw, pcw->d_ViewHd.front() };
+   }
+STIL auto PCWrV() {
+   const auto pcwr( g_CurWinWr() );
+   struct result { PWin pcwr; PView pcv; };
+   return result { pcwr, pcwr->d_ViewHd.front() };
+   }
+STIL auto PCVF() {
+   struct result { PView pcv; PFBUF pcf; };
+   return result { g_CurView(), g_CurFBuf() };
+   }

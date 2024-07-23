@@ -54,7 +54,8 @@ STATIC_VAR int      s_iArgCount; // write ONLY via Clr_g_ArgCount(), Inc_g_ArgCo
 STATIC_FXN int  Inc_g_ArgCount() { return ++s_iArgCount; }
 STATIC_FXN void Clr_g_ArgCount() {          s_iArgCount = 0; }
 
-void ClearArgAndSelection() { PCV;
+void ClearArgAndSelection() {
+   auto pcv = g_CurView();
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
    pcv->FreeHiLiteRects();
    s_SelEnd.lin = -1;
@@ -65,7 +66,8 @@ void ClearArgAndSelection() { PCV;
       }
    }
 
-void ExtendSelectionHilite( const Point &pt ) { PCV;
+void ExtendSelectionHilite( const Point &pt ) {
+   auto pcv = g_CurView();
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, true );
    pcv->FreeHiLiteRects();  // ###############################################################
    if( g_fBoxMode ) {
@@ -1068,7 +1070,8 @@ STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation
             // (IngestArgTextAndSelection() grabs TEXTARG string from TextArgBuffer() if s_fHaveLiteralTextarg).
             }
          }
-      else { PCV; // about to invoke pCmd on "selection in effect"; save the latter for ARG::lastselect()
+      else {
+         auto pcv = g_CurView(); // about to invoke pCmd on "selection in effect"; save the latter for ARG::lastselect()
          pcv->d_LastSelectAnchor   = s_SelAnchor;
          pcv->d_LastSelectCursor   = g_Cursor();
          pcv->d_LastSelect_isValid = true;
@@ -1104,7 +1107,7 @@ bool ARG::lastselect() {
    if( Get_g_ArgCount() > 0 ) {
       return false;
       }
-   PCV;
+   auto pcv = g_CurView();
    if( !pcv->d_LastSelect_isValid ) {
       return Msg( "view has no previous selection" );
       }
@@ -1599,7 +1602,7 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
       const auto xCol( VidWrColoredStrefs( DialogLine(), 0, csrs ) );
       CursorLocnOutsideView_Set( DialogLine(), xCol );
       ViewCursorRestorer cr;
-      PCV;
+      auto pcv = g_CurView();
       const auto yStart( pcv->Origin().lin );
       char fdbk[3] = { 0,'?',0 };
       do {
@@ -1652,7 +1655,7 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
       Msg( "%s", lbuf );  0 && DBG( "%s: '%s'", __func__, lbuf );
       CursorLocnOutsideView_Set( DialogLine(), xCol );
       ViewCursorRestorer cr;
-      PCV;
+      auto pcv = g_CurView();
       const auto yStart( pcv->Origin().lin );
       char fdbk[3] = { 0,'?',0 };
       do {

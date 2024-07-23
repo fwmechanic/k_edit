@@ -33,7 +33,8 @@ STIL COL CurLineCols() {
    return FBOP::LineCols( g_CurFBuf(), g_CursorLine() );
    }
 
-bool ARG::right() { PCWrV;
+bool ARG::right() {
+   auto [pcw, pcv] = PCWrV();
    const auto xNewCol( d_fMeta
                      ? pcw->d_Size.col + pcv->Origin().col - 1
                      : ConstrainCursorX_1( pcv->FBuf(), g_CursorLine(), g_CursorCol() )
@@ -62,7 +63,8 @@ bool ARG::endline() {
    return CurView_MoveCursor_fMoved( g_CursorLine(), d_fMeta || (g_CursorCol() == xEoLn) ? xEoWin : xEoLn );
    }
 
-bool ARG::home() { PCWrV;
+bool ARG::home() {
+   auto [pcw, pcv] = PCWrV();
    const FBufLocnNow cp;
    if( d_fMeta ) {
       pcv->MoveCursor(
@@ -76,10 +78,10 @@ bool ARG::home() { PCWrV;
    return cp.Moved();
    }
 
-bool ARG::left() { PCV ; return CurView_MoveCursor_fMoved( pcv->Cursor().lin, d_fMeta ? pcv->Origin().col : pcv->Cursor().col - 1 ); }
+bool ARG::left() { auto pcv = g_CurView()  ; return CurView_MoveCursor_fMoved( pcv->Cursor().lin, d_fMeta ? pcv->Origin().col : pcv->Cursor().col - 1 ); }
 
-bool ARG::up()   { PCV ; return CurView_MoveCursor_fMoved( d_fMeta ?                   pcv->Origin().lin     : g_CursorLine()-1, g_CursorCol() ); }
-bool ARG::down() { PCWV; return CurView_MoveCursor_fMoved( d_fMeta ? pcw->d_Size.lin + pcv->Origin().lin - 1 : g_CursorLine()+1, g_CursorCol() ); }
+bool ARG::up()   { auto pcv = g_CurView()  ; return CurView_MoveCursor_fMoved( d_fMeta ?                   pcv->Origin().lin     : g_CursorLine()-1, g_CursorCol() ); }
+bool ARG::down() { auto [pcw, pcv] = PCWV(); return CurView_MoveCursor_fMoved( d_fMeta ? pcw->d_Size.lin + pcv->Origin().lin - 1 : g_CursorLine()+1, g_CursorCol() ); }
 
 bool ARG::begfile() { return CurView_MoveCursor_fMoved( 0                       , g_CursorCol() ); }
 bool ARG::endfile() { return CurView_MoveCursor_fMoved( g_CurFBuf()->LineCount(), g_CursorCol() ); }
@@ -149,8 +151,8 @@ void View::MoveCursor_( LINE yCursor, COL xCursor, COL visibleCharsAtCursor, boo
 
 #if 0
 // BUGBUG need to define the appropriate place to "drop this anchor"!
-STATIC_FXN void CopyCurrentCursLocnToSaved() { PCV;
-   pcv->SavePrevCur();
+STATIC_FXN void CopyCurrentCursLocnToSaved() {
+   g_CurView()->SavePrevCur();
    }
 #endif
 
@@ -168,12 +170,13 @@ bool View::RestCur() { // selecting
    return saved;
    }
 
-bool ARG::savecur() { PCV;  // left here for macro programming
-   pcv->SaveCur();
+bool ARG::savecur() { // for macro programming
+   g_CurView()->SaveCur();
    return true;
    }
 
-bool ARG::restcur() { PCV;
+bool ARG::restcur() {
+   auto pcv = g_CurView();
    if( Get_g_ArgCount() > 0 ) {
       if( !pcv->RestCur() ) {
          return fnMsg( "no cursor location saved" );
@@ -191,7 +194,8 @@ bool ARG::newline() {
    return true;
    }
 
-bool ARG::setwindow() { PCV;
+bool ARG::setwindow() {
+   auto pcv = g_CurView();
    switch( d_argType ) {
     break;default:      DispNeedsRedrawTotal();  // bug-masker: if color is changed interactively or in a startup macro the change did not affect all lines w/o this change
     break;case NULLARG: pcv->ScrollOriginYX( g_CursorLine(), d_cArg == 1 ? g_CursorCol() : pcv->Origin().col );
@@ -199,7 +203,8 @@ bool ARG::setwindow() { PCV;
    return true;
    }
 
-bool ARG::pmlines( int direction ) { PCWrV;
+bool ARG::pmlines( int direction ) {
+   auto [pcw, pcv] = PCWrV();
    switch( d_argType ) {
     default:      return BadArg();
     case NULLARG: pcv->ScrollOrigin_Y_Abs( direction > 0 ? g_CursorLine() : g_CursorLine() - pcw->d_Size.lin + 1 );
