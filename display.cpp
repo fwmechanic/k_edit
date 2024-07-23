@@ -2839,7 +2839,7 @@ bool CursorLocnOutsideView_Get( Point *pt ) {
 STATIC_FXN void DrawStatusLine();
 STATIC_FXN void UpdtDisplay() { // NB! called by IdleThread, so must run to completion w/o blocking (calling anything that calls GlobalVariableLock)
    FULL_DB && DBG( "%s+", __func__ );
-   PCWV;
+   auto [pcw, pcv] = PCWV();
    if( !(g_CurFBuf() && pcv) ) {
       return;
       }

@@ -187,8 +187,7 @@ public:
    FindPrevNextMatchHandler( bool fSearchForward, bool fIsRegex, stref srchStr );
    ~FindPrevNextMatchHandler() {}
    bool VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL MatchCols, const RegexMatchCaptures &captures ) {
-      PCV;
-      pcv->SetMatchHiLite( cur, MatchCols, cur.lin != d_yAtStart );
+      g_CurView()->SetMatchHiLite( cur, MatchCols, cur.lin != d_yAtStart );
       return true;  // "action" taken!
       }
    void VShowResultsNoMacs() override;
@@ -1931,7 +1930,7 @@ bool View::PBalFindMatching( bool fVisibleOnly, Point *pPt ) {
 
 bool ARG::balch() {
    const FBufLocnNow cp;
-   PCV;
+   auto pcv = g_CurView();
    Point pt;
    if( pcv->PBalFindMatching( false, &pt ) ) {
        pcv->MoveCursor( pt.lin, pt.col );
@@ -1981,9 +1980,8 @@ bool View::prev_balln( LINE yStart, bool fStopOnElse ) {
 
 bool ARG::balln() {
    const FBufLocnNow cp;
-   PCV;
-   const auto pFbuf( g_CurFBuf() );
-   switch( FBOP::IsCppConditional( pFbuf, d_noarg.cursor.lin ) ) {
+   auto [pcv, pcf] = PCVF();
+   switch( FBOP::IsCppConditional( pcf, d_noarg.cursor.lin ) ) {
       break;case cppcNone : pcv->prev_balln( d_noarg.cursor.lin, true  );
       break;case cppcIf   : pcv->next_balln( d_noarg.cursor.lin, true  );
       break;case cppcElif : pcv->next_balln( d_noarg.cursor.lin, true  );
@@ -2296,7 +2294,7 @@ bool ARG::fg() { enum {SD=0}; // fgrep
          srchfile = OpenFileNotDir_NoCreate( origSrchFnm.c_str() );
          }
       else {
-         PCV;
+         auto pcv = g_CurView();
          auto nextview( DLINK_NEXT( pcv, d_dlinkViewsOfWindow ) );
          if( !nextview || !nextview->FBuf() ) {
             return Msg( "no next file!" );

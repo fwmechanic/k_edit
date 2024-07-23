@@ -683,7 +683,7 @@ STATIC_FXN bool RefreshCurFileIfMatchesPseudoName( PCChar pseudoName ) {
 bool ARG::refresh() {
    switch( d_argType ) {
     default:       return BadArg();
-    case NOARG:    { PCF;
+    case NOARG:    { const auto pcf( g_CurFBuf() );
                    if(  pcf->FnmIsDiskWritable() // no confirm if WC file
                      && pcf->IsDirty()           // only confirm if DIRTY file
                      && !ConIO::Confirm( "WARNING: current buffer has unsaved edits; are you SURE you want to reread this file? " )

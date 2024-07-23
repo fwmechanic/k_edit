@@ -364,7 +364,7 @@ public:
       }
    bool VUpdtFromBoundary() override {
       d_fDirty || (d_pFBuf->d_LastFileStat != d_LastFileStat) ? d_pFBuf->SetDirty() : d_pFBuf->UnDirty();
-      PCV;
+      auto pcv = g_CurView();
       if( pcv->FBuf() == d_pFBuf ) {
          pcv->ScrollOriginAndCursor( d_ViewOrigin, d_ViewCursor );
          DispNeedsRedrawStatLn();

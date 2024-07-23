@@ -108,7 +108,7 @@ public:
 
 bool ARG::flipcase() {
    std::string stbuf;
-   PCF;
+   const auto pcf( g_CurFBuf() );
    switch( d_argType ) {
       // case STREAMARG: someday!?
       case BOXARG: {
@@ -174,7 +174,7 @@ bool ARG::flipcase() {
 // 20220102
 //
 bool ARG::longline() {
-   PCFV;
+   auto [pcv, pcf] = PCVF();
  #if 0
    auto [selnActive,yMin,yMax,xMin,xMax] = CursorFuncPeekSeln();  // returned tuple  values referenced via structured binding to scalar vars
    #define VP
