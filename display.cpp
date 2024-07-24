@@ -567,13 +567,11 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
    }
 
 stref GetWordUnderPoint( PCFBUF pFBuf, Point *cursor ) { enum { SD=0 };
-   const auto yCursor( cursor->lin );
-   const auto xCursor( cursor->col );
-   const auto rl( pFBuf->PeekRawLine( yCursor ) );
+   const auto rl( pFBuf->PeekRawLine( cursor->lin ) );
    if( !rl.empty() ) {                                              SD && DBG( "newln=%" PR_BSR, BSR(rl) );
       IdxCol_cached conv( pFBuf->TabWidth(), rl );   // abc   abc
-      if( xCursor < conv.cols() ) {
-         const auto ixC( conv.c2ci( xCursor ) );
+      if( cursor->col < conv.cols() ) {
+         const auto ixC( conv.c2ci( cursor->col ) );
          if( isWordChar( rl[ixC] ) ) {
             const auto ixFirst   ( IdxFirstHJCh     ( rl, ixC ) );
             const auto ixPastLast( FirstNonWordOrEnd( rl, ixC ) );  SD && DBG( "ix[%" PR_SIZET "/%" PR_SIZET "/%" PR_SIZET "]", ixFirst, ixC, ixPastLast );
