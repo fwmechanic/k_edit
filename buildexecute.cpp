@@ -395,17 +395,18 @@ STATIC_VAR bool s_fHaveLiteralTextarg;
 
 // consumes g_ArgCount, s_fHaveLiteralTextarg
 bool ARG::IngestArgTextAndSelection() { enum {SD=0};                                          SD && DBG( "%s+", __func__ );
-   // capture some global values into locals:
+   // capture some global values into locals and reset the globals:
    const auto fHaveLiteralTextarg( s_fHaveLiteralTextarg );  s_fHaveLiteralTextarg = false;
    d_cArg = Get_g_ArgCount();                                Clr_g_ArgCount();
-   const auto Cursor( g_CurView()->Cursor() );
+   const auto pcv = g_CurView();
+   const auto startCursor( pcv->Cursor() );  // NB: Cursor() returns a reference, but startCursor is not a ref. NB: MoveCursor* is called below!!!
    if( d_cArg == 0 ) {
       if( d_pCmd->d_argType & NOARGWUC ) {
-         auto start( Cursor );
-         const auto wuc( GetWordUnderPoint( g_CurFBuf(), &start ) );
+         auto dummy( startCursor );
+         const auto wuc( GetWordUnderPoint( g_CurFBuf(), &dummy ) );
          if( !wuc.empty() ) {
             d_argType       = TEXTARG;
-            d_textarg.ulc   = Cursor;
+            d_textarg.ulc   = startCursor;
             TextArgBuffer().assign( wuc );
             d_textarg.pText = TextArgBuffer().c_str();                                        SD && DBG( "NOARGWUC='%s'", d_textarg.pText );
             return false; //==================================================================
@@ -413,12 +414,14 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
          }
       if( d_pCmd->d_argType & NOARG ) {
          d_argType      = NOARG;
-         d_noarg.cursor = Cursor;                                                             SD && DBG( "%s NOARG", __func__ );
+         d_noarg.cursor = startCursor;                                                        SD && DBG( "%s NOARG", __func__ );
          return false; //=====================================================================
          }                                                                                    SD && DBG( "%s !NOARG", __func__ );
       return true; //=========================================================================
       }
-   g_CurView()->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );
+   //##############################################################  MoveCursor* !!!
+   pcv->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col ); //startCursor is NOT updated (it is NOT a ref)!
+   //##############################################################  MoveCursor* !!!
    auto NumArg_value(0);
    if( fHaveLiteralTextarg ) {
       if( (d_pCmd->d_argType & NUMARG) && StrSpnSignedInt( TextArgBuffer().c_str() ) ) {
@@ -434,7 +437,7 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
          else { // enum { SD=1 };
             if( d_pCmd->d_argType & TEXTARG ) {
                d_argType       = TEXTARG;
-               d_textarg.ulc   = Cursor;
+               d_textarg.ulc   = startCursor;
                d_textarg.pText = TextArgBuffer().c_str();                                     SD && DBG( "TEXTARG='%s'", d_textarg.pText );
                return false; //===============================================================
                }                                                                              SD && DBG( "%s !TEXTARG", __func__ );
@@ -442,35 +445,35 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
             }
          }
       }
-   if( s_SelAnchor == Cursor && NumArg_value == 0 ) {
+   if( s_SelAnchor == startCursor && NumArg_value == 0 ) {
       if( d_pCmd->d_argType & (NULLEOL | NULLEOW) ) {
          g_CurFBuf()->DupLineSeg( TextArgBuffer(), s_SelAnchor.lin, s_SelAnchor.col, COL_MAX );
          if( d_pCmd->d_argType & NULLEOW ) { TermNulleow( TextArgBuffer() ); }
          d_argType       = TEXTARG;
-         d_textarg.ulc   = Cursor;
+         d_textarg.ulc   = startCursor;
          d_textarg.pText = TextArgBuffer().c_str();                                           SD && DBG( "NULLEO%c='%s'", (d_pCmd->d_argType & NULLEOW)?'W':'C', d_textarg.pText );
          return false; //=====================================================================
          }
       if( d_pCmd->d_argType & NULLARG ) {
          d_argType        = NULLARG;
-         d_nullarg.cursor = Cursor;                                                           SD && DBG( "NULLARG" );
+         d_nullarg.cursor = startCursor;                                                      SD && DBG( "NULLARG" );
          return false; //=====================================================================
          }                                                                                    SD && DBG( "%s !NULLARG", __func__ );
       return true; //=========================================================================
       }
-   const auto [xMin,xMax] = MinMax( s_SelAnchor.col, Cursor.col );
-   const auto [yMin,yMax] = MinMax( s_SelAnchor.lin, Cursor.lin );
-   if( (d_pCmd->d_argType & BOXSTR) && s_SelAnchor.lin == Cursor.lin ) {                      SD && DBG( "%s BOXSTR_to_TEXTARG", __func__ );
-      return BOXSTR_to_TEXTARG( Cursor.lin, xMin, xMax ); //==================================
+   const auto [xMin,xMax] = MinMax( s_SelAnchor.col, startCursor.col );
+   const auto [yMin,yMax] = MinMax( s_SelAnchor.lin, startCursor.lin );
+   if( (d_pCmd->d_argType & BOXSTR) && s_SelAnchor.lin == startCursor.lin ) {                 SD && DBG( "%s BOXSTR_to_TEXTARG", __func__ );
+      return BOXSTR_to_TEXTARG( startCursor.lin, xMin, xMax ); //==================================
       }
    if( g_fBoxMode ) {
-      if( (d_pCmd->d_argType & LINEARG) && s_SelAnchor.col == Cursor.col ) { // no movement in X (COL) direction
+      if( (d_pCmd->d_argType & LINEARG) && s_SelAnchor.col == startCursor.col ) { // no movement in X (COL) direction
          d_argType      = LINEARG;
          d_linearg.yMin = yMin;
          d_linearg.yMax = yMax;                                                               SD && DBG( "LINEARG [%d..%d]", d_linearg.yMin, d_linearg.yMax );
          return false; //=====================================================================
          }
-      if( (d_pCmd->d_argType & BOXARG) && s_SelAnchor.col != Cursor.col ) {
+      if( (d_pCmd->d_argType & BOXARG) && s_SelAnchor.col != startCursor.col ) {
          d_argType          = BOXARG;
          d_boxarg.flMin.col = xMin;
          d_boxarg.flMin.lin = yMin;
@@ -493,13 +496,13 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
       // This is the "stream" definition used by API's like DelStream and CopyStream
       //
       d_argType = STREAMARG;
-      const auto fFwdSel( s_SelAnchor < Cursor );
+      const auto fFwdSel( s_SelAnchor < startCursor );
       if( fFwdSel ) {
          d_streamarg.flMin = s_SelAnchor;
-         d_streamarg.flMax = Cursor     ;
+         d_streamarg.flMax = startCursor;
          }
       else {
-         d_streamarg.flMin = Cursor     ;
+         d_streamarg.flMin = startCursor;
          d_streamarg.flMax = s_SelAnchor;
          }                                                                                    SD && DBG( "stream (%d,%d), (%d,%d)", d_streamarg.flMin.lin, d_streamarg.flMin.col, d_streamarg.flMax.lin, d_streamarg.flMax.col );
       return false; //========================================================================
