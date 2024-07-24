@@ -426,7 +426,9 @@ typedef CMD const * const CPCCMD;
 
 struct ARG {
    ArgType_t d_argType;
-   int      d_cArg;    // count of <arg>s pressed: 0 for NOARG
+   int       d_cArg;   // count of <arg>s pressed: 0 for NOARG
+   bool      d_fMeta;
+   PCCMD     d_pCmd;
    struct {            // no argument specified
       Point cursor;    // - cursor
       } d_noarg;
@@ -443,9 +445,6 @@ struct ARG {
       } d_linearg;
    typedef Rect STREAMARG_t;  STREAMARG_t d_streamarg; // stream argument specified  (char at 'd_streamarg.flMax' is NOT INCLUDED in the selection)
    typedef Rect BOXARG_t;     BOXARG_t    d_boxarg;    // box argument specified
-   bool     d_fMeta;
-   PCCMD    d_pCmd;
-   PFBUF    d_pFBuf;
    //*******  END OF DATA
    void     BeginPt( Point *pPt ) const;
    void     EndPt( Point *pPt ) const;

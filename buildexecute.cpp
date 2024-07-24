@@ -383,7 +383,7 @@ stref View::GetWucOfSelection() {
    }
 
 bool ARG::BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax ) {
-   d_pFBuf->DupLineSeg( TextArgBuffer(), yOnly, xMin, xMax-1 );
+   g_CurFBuf()->DupLineSeg( TextArgBuffer(), yOnly, xMin, xMax-1 );
    d_argType         = TEXTARG;
    d_textarg.ulc.col = xMin;
    d_textarg.ulc.lin = yOnly;
@@ -398,12 +398,11 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
    // capture some global values into locals:
    const auto fHaveLiteralTextarg( s_fHaveLiteralTextarg );  s_fHaveLiteralTextarg = false;
    d_cArg = Get_g_ArgCount();                                Clr_g_ArgCount();
-   d_pFBuf = g_CurFBuf();
    const auto Cursor( g_CurView()->Cursor() );
    if( d_cArg == 0 ) {
       if( d_pCmd->d_argType & NOARGWUC ) {
          auto start( Cursor );
-         const auto wuc( GetWordUnderPoint( d_pFBuf, &start ) );
+         const auto wuc( GetWordUnderPoint( g_CurFBuf(), &start ) );
          if( !wuc.empty() ) {
             d_argType       = TEXTARG;
             d_textarg.ulc   = Cursor;
@@ -429,7 +428,7 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
          }
       else {
          FBufLocn locn;
-         if( (d_pCmd->d_argType & MARKARG) && d_pFBuf->FindMark( TextArgBuffer().c_str(), &locn ) ) {
+         if( (d_pCmd->d_argType & MARKARG) && g_CurFBuf()->FindMark( TextArgBuffer().c_str(), &locn ) ) {
             s_SelAnchor = locn.Pt();                                                          SD && DBG( "FillArgStruct MarkFound '%s'", TextArgBuffer().c_str() );
             }
          else { // enum { SD=1 };
@@ -445,7 +444,7 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
       }
    if( s_SelAnchor == Cursor && NumArg_value == 0 ) {
       if( d_pCmd->d_argType & (NULLEOL | NULLEOW) ) {
-         d_pFBuf->DupLineSeg( TextArgBuffer(), s_SelAnchor.lin, s_SelAnchor.col, COL_MAX );
+         g_CurFBuf()->DupLineSeg( TextArgBuffer(), s_SelAnchor.lin, s_SelAnchor.col, COL_MAX );
          if( d_pCmd->d_argType & NULLEOW ) { TermNulleow( TextArgBuffer() ); }
          d_argType       = TEXTARG;
          d_textarg.ulc   = Cursor;
@@ -1522,7 +1521,7 @@ void ARG::ColsOfArgLine( LINE yLine, COL *pxLeftIncl, COL *pxRightIncl ) const {
 COL ARG::GetLine( std::string &st, LINE yLine ) const { // setup x constraints and call DupLineSeg
    COL xLeftIncl, xRightIncl;
    ColsOfArgLine( yLine, &xLeftIncl, &xRightIncl );
-   d_pFBuf->DupLineSeg( st, yLine, xLeftIncl, xRightIncl );
+   g_CurFBuf()->DupLineSeg( st, yLine, xLeftIncl, xRightIncl );
    return st.length();
    }
 
