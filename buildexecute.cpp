@@ -510,13 +510,13 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
    return true; //============================================================================
    }
 
-// trims leading and trailing blanks of each contributing line, ensures lines' contrib sare joined by ONE blank
+// trims leading and trailing blanks of each contributing line, ensures lines' contribs are joined by ONE blank
 std::string StreamArgToString( PFBUF pfb, Rect stream ) {
-   std::string dest;
    const auto yMax( std::min( pfb->LastLine(), stream.flMax.lin ) );
    if( stream.flMin.lin > yMax ) {
-      return dest;
+      return std::string();
       }
+   std::string dest;
    auto append_dest = [&dest]( stref src ) {
       src.remove_prefix( FirstNonBlankOrEnd( src ) );
       if( !src.empty() ) {
@@ -528,7 +528,19 @@ std::string StreamArgToString( PFBUF pfb, Rect stream ) {
    if( stream.flMin.lin == yMax ) {
       append_dest( pfb->PeekRawLineSeg( stream.flMin.lin, stream.flMin.col, stream.flMax.col-1 ) );
       }
-   else {
+   else {  // stream spans at least 2 lines
+      //---- Pass 1: determine size, reserve (to avoid realloc during Pass 2)
+      {      //  NB: append_dest may append to dest fewer chars than src.length() (ie this may over-reserve)
+      size_t maxLen = 1; // 1 for NUL
+      auto yLine( stream.flMin.lin );
+      maxLen += pfb->PeekRawLineSeg( yLine, stream.flMin.col, COL_MAX ).length();
+      for( ++yLine ; yLine < yMax ; ++yLine ) {
+         maxLen += pfb->PeekRawLine( yLine ).length();
+         }
+      maxLen += pfb->PeekRawLineSeg( yLine, 0, stream.flMax.col-1 ).length();
+      dest.reserve( maxLen );
+      }
+      //---- Pass 2: append_dest
       auto yLine( stream.flMin.lin );
       append_dest( pfb->PeekRawLineSeg( yLine, stream.flMin.col, COL_MAX ) );
       for( ++yLine ; yLine < yMax ; ++yLine ) {
