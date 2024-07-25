@@ -347,7 +347,6 @@ public:
       STATIC_VAR const char chNoMatch;
       const stref d_sr;
    public:
-      FindStrRslt( PCChar data, size_t length ) : d_sr( data, length ) {}
       FindStrRslt( stref sr_ ) : d_sr( sr_ ) {}
       FindStrRslt( int ) : d_sr( &chNoMatch, 0 ) {} // chNoMatch
       FindStrRslt() : d_sr() {}
@@ -1594,7 +1593,7 @@ FileSearcher::FindStrRslt FileSearcherRegex::VFindStr_( stref src, sridx src_off
       const auto srMatch( d_captures[0].value() );  SD && DBG( "RegEx:->MATCH=(%" PR_PTRDIFFT " L %" PR_SIZET ")='%" PR_BSR "'", srMatch.data() - src.data(), srMatch.length(), BSR(srMatch) );
       return srMatch;
       }                                             SD && DBG( "RegEx:->NO MATCH" );
-   return FileSearcher::FindStrRslt( 0 );
+   return 0;
    }
 #endif
 
