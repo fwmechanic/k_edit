@@ -1144,7 +1144,7 @@ bool ARG::lastselect() {
 //  return value is that of the last-executed function.
 //
 
-bool fExecute( PCChar strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%s'", __func__, strToExecute );
+bool fExecute( stref strToExecute, bool fInternalExec ) { 0 && DBG( "%s '%" PR_BSR "'", __func__, BSR(strToExecute) );
    if( fInternalExec ) { ++g_fExecutingInternal; }
    if( Interpreter::PushMacroStringOk( strToExecute, Interpreter::breakOutHere ) ) {
       FetchAndExecuteCMDs( false );
@@ -1548,7 +1548,7 @@ bool ARG::execute() {
     case TEXTARG:  if( d_cArg == 1 ) { // meta is passed thru to macro invoked
                       std::string strToExecute( (d_fMeta?kszMeta_:"") + std::string( d_textarg.pText ) );  // *** MUST *** COPY d_textarg.pText to stack buffer (strToExecute)
                       strToExecute.erase( StrToNextMacroTermOrEos( strToExecute.c_str() ) - strToExecute.c_str() );
-                      rv = fExecute( strToExecute.c_str(), false );                                        //              else nested macros get broken!
+                      rv = fExecute( strToExecute, false );                                                //              else nested macros get broken!
                       }
                    else { // hacky-kludgy way to get direct access to shell cmds w/o a new key asgnmt: arg arg "ls -l" execute
                       Path::str_t cmd( d_textarg.pText );
@@ -1578,7 +1578,7 @@ bool ARG::execute() {
                       if( dest.empty() ) {
                          return false;
                          }
-                      rv = fExecute( dest.c_str(), false );
+                      rv = fExecute( dest, false );
                       }
                    else {
                       auto pSL( new StringList() );

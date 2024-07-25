@@ -353,13 +353,12 @@ namespace Interpreter {
    int   chGetAnyMacroPromptResponse();
 
    enum  macroRunFlags { variableMacro=BIT(0), breakOutHere=BIT(1) };
-   bool  PushMacroStringOk       ( PCChar pszMacroString, int macroRunFlags );
-   bool  PushMacroStringLiteralOk( PCChar pszMacroString, int macroRunFlags );
+   bool  PushMacroStringOk( stref macroStr, int macroFlags, bool fWrapStringLiteral=false );
    }
 
-extern   bool  fExecute( PCChar strToExecute, bool fInternalExec=true );
-extern   bool  fExecuteSafe( PCChar str );
-extern   bool  PushVariableMacro( PCChar strToExecute );
+extern   bool  fExecute( stref strToExecute, bool fInternalExec=true );
+extern   bool  fExecuteSafe( stref strToExecute );
+extern   bool  PushVariableMacro( stref pText );
 extern   std::string DupTextMacroValue( PCChar macroName );
 extern   stref ExtractAssignableText( stref src, bool &continues );
 extern   void  CleanupAnyExecutionHaltRequest(); // must NOT be declared _within_ Main, where it would get a DLLX attribute
