@@ -103,9 +103,9 @@ bool DefineMacro( stref pszMacroName, stref pszMacroCode ) { 0 && DBG( "%s '%" P
    return true;
    }
 
-bool PushVariableMacro( PCChar pText ) { 0 && DBG( "%s+ '%s'", __func__, pText );
+bool PushVariableMacro( stref pText ) { 0 && DBG( "%s+ '%" PR_BSR "'", __func__, BSR(pText) );
 #if MACRO_BACKSLASH_ESCAPES
-   const auto len( (2*Strlen( pText )) + 1 );
+   const auto len( (2*pText.length()) + 1 );
    const auto pBuf( PChar( alloca( len ) ) );
    // NB!: escapes every backslash in pText !!!
    //      This is a kludgy fix for the annoying requirement to escape '\' with
@@ -113,9 +113,9 @@ bool PushVariableMacro( PCChar pText ) { 0 && DBG( "%s+ '%s'", __func__, pText )
    //
    const auto newlen( DoubleBackslashes( pBuf, len-1, pText ) );
    0 && DBG( "%s- '%s'", __func__, pBuf );
-   return Interpreter::PushMacroStringLiteralOk( pBuf, Interpreter::variableMacro );
+   return Interpreter::PushMacroStringOk( pBuf , Interpreter::variableMacro, true );
 #else
-   return Interpreter::PushMacroStringLiteralOk( pText, Interpreter::variableMacro );
+   return Interpreter::PushMacroStringOk( pText, Interpreter::variableMacro, true );
 #endif
    }
 
@@ -153,18 +153,13 @@ namespace Interpreter {
          clear();
          return rv;
          }
-      void   Ctor( PCChar pszMacroString, int macroFlags ) {
-         d_macroText.assign( StrPastAnyBlanks( pszMacroString ) );
-         d_pCurTxt = d_macroText.c_str();
-         d_runFlags = macroFlags;
-         d_insideQuot2dString = false;
-         Advance();
-         }
-      void   CtorStringLiteral( stref src, int macroFlags ) {
-         d_macroText.reserve( src.length() + 2 );
-         d_macroText.assign( "\"" );
+      void   Ctor( stref src, int macroFlags, bool fWrapStringLiteral=false ) {
+         if( !fWrapStringLiteral ) { trim( src ); }
+         d_macroText.reserve( src.length() + fWrapStringLiteral ? 2 : 0 );
+         d_macroText.clear();
+         if( fWrapStringLiteral ) { d_macroText.push_back( '\"' ); }
          d_macroText.append( src );
-         d_macroText.append( "\"" );
+         if( fWrapStringLiteral ) { d_macroText.push_back( '\"' ); }
          d_pCurTxt = d_macroText.c_str();
          d_runFlags = macroFlags;
          d_insideQuot2dString = false;
@@ -283,19 +278,11 @@ namespace Interpreter {
 // pszMacroString IS NOT EXECUTED by PushMacroStringOk!!! pszMacroString is
 // Strdup'd, to be consumed "on demand".
 //
-bool Interpreter::PushMacroStringOk( PCChar pszMacroString, int macroFlags ) {
+bool Interpreter::PushMacroStringOk( stref macroStr, int macroFlags, bool fWrapStringLiteral ) {
    if( ELEMENTS(s_MacroRuntimeStack) == ixPastTOS() ) {
       return ErrorDialogBeepf( "Macros nested too deep (%" PR_SIZET " levels)! recursive macro defn?", ELEMENTS(s_MacroRuntimeStack) );
-      }                                            0 && DBG( "PushMacStr[%d] '%s'", ixPastTOS(), pszMacroString );
-   s_MacroRuntimeStack[ s_ixPastTOS++ ].Ctor( pszMacroString, macroFlags );
-   return true;
-   }
-
-bool Interpreter::PushMacroStringLiteralOk( PCChar pszMacroString, int macroFlags ) {
-   if( ELEMENTS(s_MacroRuntimeStack) == ixPastTOS() ) {
-      return ErrorDialogBeepf( "Macros nested too deep (%" PR_SIZET " levels)! recursive macro defn?", ELEMENTS(s_MacroRuntimeStack) );
-      }                                            0 && DBG( "PushMacStr[%d] '%s'", ixPastTOS(), pszMacroString );
-   s_MacroRuntimeStack[ s_ixPastTOS++ ].CtorStringLiteral( pszMacroString, macroFlags );
+      }                                            0 && DBG( "PushMacStr[%d] '%" PR_BSR "'", ixPastTOS(), BSR(macroStr) );
+   s_MacroRuntimeStack[ s_ixPastTOS++ ].Ctor( macroStr, macroFlags, fWrapStringLiteral );
    return true;
    }
 
@@ -338,8 +325,8 @@ void CleanupAnyExecutionHaltRequest() {
       }
    }
 
-bool fExecuteSafe( PCChar str ) { // use ONLY when fExecute is _NOT_ called (even indirectly) by FetchAndExecuteCMDs(true)
-   const auto rv( fExecute( str ) );
+bool fExecuteSafe( stref strToExecute ) { // use ONLY when fExecute is _NOT_ called (even indirectly) by FetchAndExecuteCMDs(true)
+   const auto rv( fExecute( strToExecute ) );
    CleanupAnyExecutionHaltRequest();
    return rv;
    }
