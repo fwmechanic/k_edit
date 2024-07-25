@@ -47,27 +47,23 @@
 #endif
 
 STATIC_VAR Point s_SelAnchor;
-STATIC_VAR Point s_SelEnd;
 
 STATIC_VAR int      s_iArgCount; // write ONLY via Clr_g_ArgCount(), Inc_g_ArgCount(); read ONLY via Get_g_ArgCount()
            int  Get_g_ArgCount() { return   s_iArgCount; }
 STATIC_FXN int  Inc_g_ArgCount() { return ++s_iArgCount; }
 STATIC_FXN void Clr_g_ArgCount() {          s_iArgCount = 0; }
 
-void ClearArgAndSelection() {
-   auto pcv = g_CurView();
-   pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
-   pcv->FreeHiLiteRects();
-   s_SelEnd.lin = -1;
-   if( Get_g_ArgCount() > 0 ) {                                       0 && DBG( "%s+", __func__ );
-   //      MoveCursor
-      pcv->MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );  0 && DBG( "%s-", __func__ );
+void View::ClearArgAndSelection() {
+   FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, false );
+   FreeHiLiteRects();
+   if( Get_g_ArgCount() > 0 ) {                                  0 && DBG( "%s+", __func__ );
+   // MoveCursor
+      MoveCursor_NoUpdtWUC( s_SelAnchor.lin, s_SelAnchor.col );  0 && DBG( "%s-", __func__ );
       Clr_g_ArgCount();
       }
    }
 
-void ExtendSelectionHilite( const Point &pt ) {
-   auto pcv = g_CurView();
+void ExtendSelectionHilite( PView pcv, const Point &pt ) {
    pcv->FBuf()->BlankAnnoDispSrcEdge( BlankDispSrc_SEL, true );
    pcv->FreeHiLiteRects();  // ###############################################################
    if( g_fBoxMode ) {
@@ -148,7 +144,6 @@ void ExtendSelectionHilite( const Point &pt ) {
          pcv->InsHiLite1Line( ColorTblIdx::SEL, pt.lin, xFirst, xLast );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
          }
       }
-   s_SelEnd = pt;
    }
 
 //--------------------------------------------------------------
@@ -166,7 +161,7 @@ bool ARG::cancel() {               0 && DBG( "%s+", __func__ );
       break;default:    if( !Interpreter::Interpreting() ) {
                            fnMsg( "Argument cancelled" );
                            }
-                        ClearArgAndSelection();
+                        g_CurView()->ClearArgAndSelection();
                         // following does NOT work to restore the cursor to its initial position prior to selword macro execution
                         // why? because the selword macro moves the cursor to one end of the word BEFORE it begins the selection
                         // g_CurView()->MoveCursor( s_SelAnchor );
@@ -224,7 +219,7 @@ std::string ArgTypeNames( int argval ) {
    }
 
 bool ARG::BadArg() const {
-   ClearArgAndSelection();
+   g_CurView()->ClearArgAndSelection();
    return ErrorDialogBeepf( "'%s' Invalid Argument (%s)", CmdName(), ArgTypeName() );
    }
 
@@ -343,7 +338,7 @@ void TermNulleow( std::string &st ) {
 // 20220102
 //
 TCursorFuncPeekSeln CursorFuncPeekSelnS() { // intended use: selection-smart CURSORFUNC's
-   const auto Cursor( g_CurView()->Cursor() );                              0 && DBG( "Get_g_ArgCount = %d", Get_g_ArgCount() );
+   const auto Cursor( g_Cursor() );                              0 && DBG( "Get_g_ArgCount = %d", Get_g_ArgCount() );
    if( Get_g_ArgCount() > 0 ) {
       const auto [xmin,xmax] = MinMax( s_SelAnchor.col, Cursor.col );
       const auto [ymin,ymax] = MinMax( s_SelAnchor.lin, Cursor.lin );
@@ -355,7 +350,7 @@ TCursorFuncPeekSeln CursorFuncPeekSelnS() { // intended use: selection-smart CUR
    }
 
 std::tuple<bool,LINE,LINE,COL,COL> CursorFuncPeekSeln() { // intended use: selection-smart CURSORFUNC's
-   const auto Cursor( g_CurView()->Cursor() );                              0 && DBG( "Get_g_ArgCount = %d", Get_g_ArgCount() );
+   const auto Cursor( g_Cursor() );                              0 && DBG( "Get_g_ArgCount = %d", Get_g_ArgCount() );
    if( Get_g_ArgCount() > 0 ) {
       const auto [xmin,xmax] = MinMax( s_SelAnchor.col, Cursor.col );
       const auto [ymin,ymax] = MinMax( s_SelAnchor.lin, Cursor.lin );
@@ -394,16 +389,15 @@ bool ARG::BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax ) {
 STATIC_VAR bool s_fHaveLiteralTextarg;
 
 // consumes g_ArgCount, s_fHaveLiteralTextarg
-bool ARG::IngestArgTextAndSelection() { enum {SD=0};                                          SD && DBG( "%s+", __func__ );
+bool ARG::IngestArgTextAndSelection( PView pcv ) { enum {SD=0};                                          SD && DBG( "%s+", __func__ );
    // capture some global values into locals and reset the globals:
    const auto fHaveLiteralTextarg( s_fHaveLiteralTextarg );  s_fHaveLiteralTextarg = false;
    d_cArg = Get_g_ArgCount();                                Clr_g_ArgCount();
-   const auto pcv = g_CurView();
    const auto startCursor( pcv->Cursor() );  // NB: Cursor() returns a reference, but startCursor is not a ref. NB: MoveCursor* is called below!!!
    if( d_cArg == 0 ) {
       if( d_pCmd->d_argType & NOARGWUC ) {
          auto dummy( startCursor );
-         const auto wuc( GetWordUnderPoint( g_CurFBuf(), &dummy ) );
+         const auto wuc( GetWordUnderPoint( pcv->FBuf(), &dummy ) );
          if( !wuc.empty() ) {
             d_argType       = TEXTARG;
             d_textarg.ulc   = startCursor;
@@ -431,7 +425,7 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
          }
       else {
          FBufLocn locn;
-         if( (d_pCmd->d_argType & MARKARG) && g_CurFBuf()->FindMark( TextArgBuffer().c_str(), &locn ) ) {
+         if( (d_pCmd->d_argType & MARKARG) && pcv->FBuf()->FindMark( TextArgBuffer().c_str(), &locn ) ) {
             s_SelAnchor = locn.Pt();                                                          SD && DBG( "FillArgStruct MarkFound '%s'", TextArgBuffer().c_str() );
             }
          else { // enum { SD=1 };
@@ -447,7 +441,7 @@ bool ARG::IngestArgTextAndSelection() { enum {SD=0};                            
       }
    if( s_SelAnchor == startCursor && NumArg_value == 0 ) {
       if( d_pCmd->d_argType & (NULLEOL | NULLEOW) ) {
-         g_CurFBuf()->DupLineSeg( TextArgBuffer(), s_SelAnchor.lin, s_SelAnchor.col, COL_MAX );
+         pcv->FBuf()->DupLineSeg( TextArgBuffer(), s_SelAnchor.lin, s_SelAnchor.col, COL_MAX );
          if( d_pCmd->d_argType & NULLEOW ) { TermNulleow( TextArgBuffer() ); }
          d_argType       = TEXTARG;
          d_textarg.ulc   = startCursor;
@@ -582,18 +576,20 @@ bool ARG::meta() {
    return g_fMeta;
    }
 
-bool ARG::InitOk( PCCMD pCmd ) {
+bool ARG::InitOk( PView pcv, PCCMD pCmd ) {
    d_pCmd  = pCmd;
    d_fMeta = (d_pCmd->d_argType & KEEPMETA) ? false : ConsumeMeta();
    d_cArg  = 0;
-   d_argType      = NOARG;
-   d_noarg.cursor = g_CurView()->Cursor();
    if( d_pCmd->d_argType & TAKES_ARG ) { // arg, meta, CURSORFUNC's will FAIL this test
-      if( IngestArgTextAndSelection() ) {
-         ClearArgAndSelection();
+      if( IngestArgTextAndSelection( pcv ) ) {
+         pcv->ClearArgAndSelection();
          return ErrorDialogBeepf( "Bad argument: '%s' requires %s", CmdName(), ArgTypeNames( d_pCmd->d_argType ).c_str() );
          }
-      ClearArgAndSelection();
+      pcv->ClearArgAndSelection();
+      }
+   else {
+      d_argType      = NOARG;
+      d_noarg.cursor = pcv->Cursor();
       }
    return true;
    }
@@ -638,12 +634,13 @@ bool ARG::repeat() {
    }
 
 bool CMD::BuildExecute() const {  0 && DBG( "%s+ %s", __func__, Name() );
+   const auto pcv = g_CurView();
    if( (d_argType & MODIFIES) && g_CurFBuf()->CantModify() ) {
-      ClearArgAndSelection();
+      pcv->ClearArgAndSelection();
       return false;
       }
    ARG argStruct;
-   if( !argStruct.InitOk( this ) ) {
+   if( !argStruct.InitOk( pcv, this ) ) {
       return false;
       }
    if( IsCmdXeqInhibitedByRecord() && d_func != fn_record ) {
@@ -1045,8 +1042,8 @@ bool ARG::selkeymaptogl() {
    }
 #endif
 
-STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation (i.e. when Get_g_ArgCount()==0) of ARG::arg or ARG::Lastselect.
-   ExtendSelectionHilite( g_Cursor() ); // candidate for removal: IncArgCnt_DropAnchor() (called by ARG::arg()) already does this?
+STATIC_FXN bool CollectTextOrSelectArg_Execute( PView pcv ) { // Called on first invocation (i.e. when Get_g_ArgCount()==0) of ARG::arg or ARG::Lastselect.
+   ExtendSelectionHilite( pcv, pcv->Cursor() ); // candidate for removal: IncArgCnt_DropAnchor() (called by ARG::arg()) already does this?
    s_fSelectionActive = true;           // move to IncArgCnt_DropAnchor()?
    while( auto pCmd = CMD_reader().GetNextCMD() ) {
       if(   pCmd->d_func == fn_arg
@@ -1055,19 +1052,19 @@ STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation
        #endif
         ) { // ARG::arg* _IS NOT CALLED_: instead inline-execute here:
          Inc_g_ArgCount();
-         ExtendSelectionHilite( g_Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
+         ExtendSelectionHilite( pcv, pcv->Cursor() ); // selection hilite has not changed, however status line (displaying arg-count) must be updated
          continue; //================================================================
          }
       if( pCmd->isCursorFunc() || pCmd->d_func == fn_meta ) {
          // fn_meta and all CURSORFUNC's are called w/o ARG buildup and may alter the selection state
          g_fFuncRetVal = pCmd->BuildExecute();
-         ExtendSelectionHilite( g_Cursor() );
+         ExtendSelectionHilite( pcv, pcv->Cursor() );
          continue; //================================================================
          }
       // We HAVE a valid CMD that is not arg, meta, or a CURSORFUNC
       // We SHALL call pCmd->BuildExecute() and return from this function
       s_fSelectionActive = false; // this fn is consuming the selection
-      if( g_Cursor() == s_SelAnchor ) { // no selection in effect? (i.e. is NULLARG)
+      if( pcv->Cursor() == s_SelAnchor ) { // no selection in effect? (i.e. is NULLARG)
          if( pCmd->IsFnGraphic() ) {    // user typed a literal char?
             // Feed literal char embedded in CMD["graphic"] (pCmd) into GetTextargString
             TextArgBuffer().clear(); // arg NULLARG graphic starts with an empty TEXTARG buffer
@@ -1084,8 +1081,7 @@ STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation
             // (IngestArgTextAndSelection() grabs TEXTARG string from TextArgBuffer() if s_fHaveLiteralTextarg).
             }
          }
-      else {
-         auto pcv = g_CurView(); // about to invoke pCmd on "selection in effect"; save the latter for ARG::lastselect()
+      else { // about to invoke pCmd on "selection in effect"; save the latter for ARG::lastselect()
          pcv->d_LastSelectAnchor   = s_SelAnchor;
          pcv->d_LastSelectCursor   = g_Cursor();
          pcv->d_LastSelect_isValid = true;
@@ -1097,17 +1093,18 @@ STATIC_FXN bool CollectTextOrSelectArg_Execute() { // Called on first invocation
 
 STATIC_FXN void IncArgCnt_DropAnchor() {
    if( Inc_g_ArgCount() == 1 ) { // was 0, now 1?
-      s_SelAnchor = g_Cursor();
+      auto pcv = g_CurView();
+      s_SelAnchor = pcv->Cursor();
       Point tmp( s_SelAnchor );
       tmp.IncrOk();
-      ExtendSelectionHilite( tmp );
+      ExtendSelectionHilite( pcv, tmp );
       }
    }
 
 bool ARG::arg() { // can only be called with ...
    Assert( Get_g_ArgCount() == 0 );
    IncArgCnt_DropAnchor();
-   return CollectTextOrSelectArg_Execute();
+   return CollectTextOrSelectArg_Execute( g_CurView() );
    }
 
 #ifdef fn_argselkeymap
@@ -1128,7 +1125,7 @@ bool ARG::lastselect() {
    s_SelAnchor = pcv->d_LastSelectAnchor;
    pcv->MoveCursor( pcv->d_LastSelectCursor );
    Inc_g_ArgCount();
-   CollectTextOrSelectArg_Execute();
+   CollectTextOrSelectArg_Execute( pcv );
    return true;
    }
 
@@ -1428,7 +1425,8 @@ bool ARG::unassigned() {
 bool ARG::boxstream() {
    g_fBoxMode = !g_fBoxMode;
    if( Get_g_ArgCount() > 0 ) {
-      ExtendSelectionHilite( g_CurView()->Cursor() );
+      auto pcv = g_CurView();
+      ExtendSelectionHilite( pcv, pcv->Cursor() );
       }
    return g_fBoxMode;
    }

@@ -81,8 +81,7 @@ extern   int  Get_g_ArgCount();
 STIL     bool IsMacroRecordingActive()    { extern bool g_fMacroRecordingActive; return g_fMacroRecordingActive; }
 STIL     bool IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedByRecord; return g_fCmdXeqInhibitedByRecord; }
 
-extern   void ClearArgAndSelection();
-extern   void ExtendSelectionHilite( const Point &pt );
+extern   void ExtendSelectionHilite( PView pcv, const Point &pt );
 
 // CursorFuncPeekSeln & CursorFuncPeekSelnS are equiv fxns w/different return-value mechanisms
 // see ARG::longline() for point-of-call examples & discussion
