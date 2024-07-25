@@ -230,7 +230,7 @@ namespace Interpreter {
          return false;
          }
    private:
-      bool   Advance() {
+      void   Advance() {
          // Advance commentary: the active pointer (d_pCurTxt) is kept pointing at the
          // next token or character.  Advance is called at the end of GetNextToken,
          // just prior to the return.  Thus if GetNextToken is returning the
@@ -251,7 +251,6 @@ namespace Interpreter {
                d_pCurTxt++;
                }
             }
-         return 0 != d_pCurTxt[0];
          }
       bool   NON_ESCAPED_QUOT2() {
          return chQuot2 == d_pCurTxt[0]
