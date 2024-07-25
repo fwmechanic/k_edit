@@ -208,23 +208,23 @@ namespace Interpreter {
          }
       int chGetAnyMacroPromptResponse() { // return int so we can return AskUser==-1
          // see: arg "Macro Prompt Directives" edhelp arg "LIMITATION" psearch
-         0 && DBG("GetPrompt+ %X '%s'",d_runFlags,d_pCurTxt);
-         if( d_insideQuot2dString )   { return AskUser; }
+                                                            0 && DBG("GetPrompt+ %X '%s'",d_runFlags,d_pCurTxt);
+         if( d_insideQuot2dString )    { return AskUser; }
          if( d_pCurTxt[0] != '<' )     { return UseDflt; }
          const auto ch( d_pCurTxt[1] );
          if( '\0' == ch || ' ' == ch ) { return AskUser; }
          d_pCurTxt = StrPastAnyBlanks( d_pCurTxt + 1 );     0 && DBG( "macro prompt-response=%c!", ch );
          return ch;
          }
-      bool BranchToLabel( stref pszBranchToken ) {
+      bool BranchToLabel( stref brTok ) {
+         brTok.remove_prefix(1); // brTok was '[-+=]>label', now '>label'; we will search for ':>label'
          // if  rv, tos.d_pCurTxt points at token AFTER matching branch label
          // if !rv, NO matching branch label was found!
-         // pszBranchToken[0] = ':';     // pszBranchToken[0] is branch prefix char [=+-]; change to label-DEFINITION prefix
          d_pCurTxt = d_macroText.c_str();  // start from beginning
          std::string token; eGot got;
          while( eGot::Exhausted != (got=GetNextToken( token )) ) {
-            if( eGot::GotToken==got && (':'==token[0]) && cmpi( pszBranchToken[1], token[1] ) == 0 ) {
-               return true;
+            if( eGot::GotToken==got && token.length() > 1 && (':'==token[0]) && eqi( brTok, stref(token).substr(1) ) ) {
+               return true;  // =>abc :>a arg "bad" message => :>ab arg "bad" message => :>abcd arg "bad" message => :>abc arg "good" message
                }
             }
          return false;
@@ -390,8 +390,8 @@ STATIC_FXN PCCMD Interpreter::CmdFromCurMacro() {
                break;
                }
             if( !tos.BranchToLabel( token ) ) {
-               AbortUntilBreak( FmtStr<BUFBYTES>( "Cannot find label '%s'", token.c_str()+2 ) );
-               return nullptr;
+               AbortUntilBreak( FmtStr<BUFBYTES>( "Cannot find label :%s for branch '%s'", token.c_str()+1, token.c_str() ) );
+               return nullptr;  // =>abd :>a arg "bad" message => :>ab arg "bad" message => :>abcd arg "bad" message => :>abc arg "good" message
                }
             }
          continue; // branch not taken or branch-label defn
