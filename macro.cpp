@@ -124,29 +124,33 @@ bool ARG::RunMacro() { 0 && DBG( "%s '%s':='%s'", __func__, CmdName(), d_pCmd->d
    }
 
 namespace Interpreter {
+
+   STATIC_CONST stref s_stq2q2 = "\"\"";
    constexpr int MAX_MACRO_NESTING = 32;  // allowing infinite nesting is not a service to the programmer or user...
    STATIC_VAR  int  s_ixPastTOS;
    class MacroRuntimeStkEntry {
       std::string d_macroText; // a _copy_ since it's possible for the macro value to be changed while the macro is running...
-      PCChar d_pCurTxt;
+      stref  d_Remain;
       int    d_runFlags;
       bool   d_insideQuot2dString;
+      enum { SD=0 };
    public:
       void ShowStack( PFBUF pFBuf, int nestLevel ) const {
-         pFBuf->FmtLastLine( "[%d]%c%c%c='%s'"
+         pFBuf->FmtLastLine( "[%d]%c%c%c='%" PR_BSR "'"
              , nestLevel
              , d_insideQuot2dString ? chQuot2 : chQuot1
              , IsVariableMacro()    ? 'D'     : 'd'
              , Breaks()             ? 'B'     : 'b'
-             , d_pCurTxt
+             , BSR(d_Remain)
             );
          }
       bool   Breaks()          const { return ToBOOL(d_runFlags & breakOutHere ); }
       bool   IsVariableMacro() const { return ToBOOL(d_runFlags & variableMacro); }
       void   clear() {  0 && DBG( "Clear[%d]=%s|", s_ixPastTOS-1, d_macroText.c_str() );
          d_macroText.clear();
-         d_pCurTxt = nullptr;
+         d_Remain = {};
          d_runFlags = 0;
+         d_insideQuot2dString = false;
          }
       bool   ClearIsBreak() {
          const auto rv( Breaks() );
@@ -157,70 +161,74 @@ namespace Interpreter {
          if( !fWrapStringLiteral ) { trim( src ); }
          d_macroText.reserve( src.length() + fWrapStringLiteral ? 2 : 0 );
          d_macroText.clear();
-         if( fWrapStringLiteral ) { d_macroText.push_back( '\"' ); }
+         if( fWrapStringLiteral ) { d_macroText.push_back( chQuot2 ); }
          d_macroText.append( src );
-         if( fWrapStringLiteral ) { d_macroText.push_back( '\"' ); }
-         d_pCurTxt = d_macroText.c_str();
+         if( fWrapStringLiteral ) { d_macroText.push_back( chQuot2 ); }
+         d_Remain = d_macroText;
          d_runFlags = macroFlags;
          d_insideQuot2dString = false;
          Advance();
          }
       enum class eGot { Exhausted=0, GotLitCh, GotToken };
-      eGot GetNextToken( std::string &dest ) {  0 && DBG("GetNxtTok+    %X '%s'",d_runFlags,d_pCurTxt);
-         if( '\0' == d_pCurTxt[0] ) {           0 && DBG("GetNxtTok-    %X Exhausted",d_runFlags);
+      eGot GetNextToken( std::string &dest ) { SD && DBG("GetNxtTok+    %X '%" PR_BSR "'",d_runFlags,BSR(d_Remain));
+         if( d_Remain.empty() ) {              SD && DBG("GetNxtTok-    %X Exhausted",d_runFlags);
             return eGot::Exhausted;
             }
          eGot rv;
          if( d_insideQuot2dString ) {
             bool fEscaped = false;
             #if MACRO_BACKSLASH_ESCAPES
-               if( chESC == d_pCurTxt[0] ) {
-                  if( '\0' == d_pCurTxt[1] ) {
+               if( chESC == d_Remain[0] ) {
+                  if( d_Remain.length() == 1 ) {
                      return false;
                      }
-                  d_pCurTxt++;     // skip escaping char
+                  d_Remain.remove_prefix(1);     // skip escaping char
                   fEscaped = true;
                   }
             #else
-               if( chQuot2 == d_pCurTxt[0] && chQuot2 == d_pCurTxt[1] ) {
-                  d_pCurTxt++;     // skip escaping char
+               if( d_Remain.starts_with( s_stq2q2 ) ) {
+                  d_Remain.remove_prefix(1);     // skip escaping char
                   fEscaped = true;
                   }
             #endif
-                            0 && fEscaped && DBG( "ESCAPED '%c' !!!", d_pCurTxt[0] );  // stest:= "1 "" 2"""    " this is a test "
-            dest.assign( 1, *d_pCurTxt++ );
+                            SD && fEscaped && DBG( "ESCAPED '%c' !!!", d_Remain[0] );  // stest:= "1 "" 2"""    " this is a test "
+            dest.assign( 1, d_Remain[0] );
+            d_Remain.remove_prefix(1);
+
             rv = eGot::GotLitCh;
             }
          else {
-            while( '<' == d_pCurTxt[0] ) { // skip any Prompt Directive tokens
-               d_pCurTxt = StrPastAnyBlanks( StrToNextBlankOrEos( d_pCurTxt ) );
+            while( d_Remain.starts_with( '<' ) ) { // skip any Prompt Directive tokens
+               d_Remain.remove_prefix( FirstBlankOrEnd   ( d_Remain ) );
+               d_Remain.remove_prefix( FirstNonBlankOrEnd( d_Remain ) );
                }
-            if( '\0' == d_pCurTxt[0] ) {   0 && DBG("GetNxtTok-    %X Exhausted",d_runFlags);
+            if( d_Remain.empty() ) {       SD && DBG("GetNxtTok-    %X Exhausted",d_runFlags);
                return eGot::Exhausted;
                }
-            const auto pPastEndOfToken( StrToNextBlankOrEos( d_pCurTxt ) );
-            dest.assign( d_pCurTxt, pPastEndOfToken - d_pCurTxt );
-            d_pCurTxt = pPastEndOfToken;
+            const auto token = d_Remain.substr( 0, FirstBlankOrEnd( d_Remain ) );
+            dest.assign( token );
+            d_Remain.remove_prefix( token.length() );
             rv = eGot::GotToken;
-            }                              0 && DBG("GetNxtTok-%s %X '%s'",rv==eGot::GotToken?"tok":"lit",d_runFlags,dest.c_str());
+            }                              SD && DBG("GetNxtTok-%s %X '%s'",rv==eGot::GotToken?"tok":"lit",d_runFlags,dest.c_str());
          Advance();
          return rv;
          }
       int chGetAnyMacroPromptResponse() { // return int so we can return AskUser==-1
          // see: arg "Macro Prompt Directives" edhelp arg "LIMITATION" psearch
-                                                            0 && DBG("GetPrompt+ %X '%s'",d_runFlags,d_pCurTxt);
-         if( d_insideQuot2dString )    { return AskUser; }
-         if( d_pCurTxt[0] != '<' )     { return UseDflt; }
-         const auto ch( d_pCurTxt[1] );
-         if( '\0' == ch || ' ' == ch ) { return AskUser; }
-         d_pCurTxt = StrPastAnyBlanks( d_pCurTxt + 1 );     0 && DBG( "macro prompt-response=%c!", ch );
-         return ch;
+                                                                                    SD && DBG("GetPrompt+ %X '%" PR_BSR "'",d_runFlags,BSR(d_Remain));
+         if( d_insideQuot2dString )     /* should not happen? */ { return AskUser; }
+         if( !d_Remain.starts_with( '<' ) )                      { return UseDflt; }
+         if(  d_Remain.length() == 1 || isblank( d_Remain[1] ) ) { return AskUser; }
+         const auto rv( d_Remain[1] );                                              SD && DBG( "macro prompt-response=%c!", rv );
+         d_Remain.remove_prefix( FirstBlankOrEnd   ( d_Remain ) );  // past '<' and whatever might directly follow it
+         d_Remain.remove_prefix( FirstNonBlankOrEnd( d_Remain ) );  // cancel <yes < arg "ok" message <n
+         return rv;
          }
       bool BranchToLabel( stref brTok ) {
          brTok.remove_prefix(1); // brTok was '[-+=]>label', now '>label'; we will search for ':>label'
-         // if  rv, tos.d_pCurTxt points at token AFTER matching branch label
+         // if  rv, tos.d_Remain points at token AFTER matching branch label
          // if !rv, NO matching branch label was found!
-         d_pCurTxt = d_macroText.c_str();  // start from beginning
+         d_Remain = d_macroText;  // start from beginning
          std::string token; eGot got;
          while( eGot::Exhausted != (got=GetNextToken( token )) ) {
             if( eGot::GotToken==got && token.length() > 1 && (':'==token[0]) && eqi( brTok, stref(token).substr(1) ) ) {
@@ -231,31 +239,31 @@ namespace Interpreter {
          }
    private:
       void   Advance() {
-         // Advance commentary: the active pointer (d_pCurTxt) is kept pointing at the
+         // Advance commentary: the active pointer (d_Remain) is kept pointing at the
          // next token or character.  Advance is called at the end of GetNextToken,
          // just prior to the return.  Thus if GetNextToken is returning the
-         // last character of a literal string, d_pCurTxt will point outside that string,
+         // last character of a literal string, d_Remain will point outside that string,
          // at the next token/string in the macro stream.
          if( d_insideQuot2dString ) {
-            if( NON_ESCAPED_QUOT2() ) {                  0 && DBG("-DQ  '%s'",d_pCurTxt);
+            if( NON_ESCAPED_QUOT2() ) {                                SD && DBG("-DQ  '%" PR_BSR "'",BSR(d_Remain));
                d_insideQuot2dString = false;
-               d_pCurTxt++;
+               d_Remain.remove_prefix(1);
                goto TO_NXT_TOK;
                }
             }
          else {
-      TO_NXT_TOK:
-            d_pCurTxt = StrPastAnyBlanks( d_pCurTxt );
-            if( chQuot2 == d_pCurTxt[0] ) {              0 && DBG("+DQ1 '%s'",d_pCurTxt);
+      TO_NXT_TOK:                                                      SD && DBG("+Adv '%" PR_BSR "'",BSR(d_Remain));
+            d_Remain.remove_prefix( FirstNonBlankOrEnd( d_Remain ) );  SD && DBG(" Adv '%" PR_BSR "'",BSR(d_Remain));
+            if( d_Remain.starts_with( chQuot2 ) ) {                    SD && DBG("+DQ1 '%" PR_BSR "'",BSR(d_Remain));
                d_insideQuot2dString = true;
-               d_pCurTxt++;
+               d_Remain.remove_prefix(1);
                }
             }
          }
       bool   NON_ESCAPED_QUOT2() {
-         return chQuot2 == d_pCurTxt[0]
+         return  d_Remain.starts_with( chQuot2 )
 #if !MACRO_BACKSLASH_ESCAPES
-                                        && chQuot2 != d_pCurTxt[1]
+                                                 && (d_Remain.length() == 1 || (d_Remain.length() > 1 && chQuot2 != d_Remain[1]))
 #endif
             ;
          }
