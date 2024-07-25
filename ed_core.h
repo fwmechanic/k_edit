@@ -71,12 +71,35 @@ constexpr COL  COL_MAX   = INT_MAX - 1; // -1 is a HACK to avoid integer overflo
 
 #include "dlink.h"
 
+// forward decls:
+
 class FBUF;
 typedef       FBUF * PFBUF;
 typedef FBUF const * PCFBUF;
 typedef      PFBUF * PPFBUF;
 typedef     PCFBUF const * CPPFBUF;
 
+class                  EditRec;
+struct                 HiLiteRec;
+class                  View;
+   typedef View       *PView;
+   typedef View const *PCView;
+class                  ViewHiLites;
+class                  FileTypeSettings;
+struct                 Win;
+   typedef Win        *PWin;
+   typedef Win const  *PCWin;
+class                  HiliteAddin;
+
+typedef  DLinkHead<FBUF>         FBufHead;
+typedef  DLinkHead<View>         ViewHead;
+typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;
+
+extern void DestroyViewList( ViewHead *pViewHd );
+
+struct FTypeSetting;
+typedef FTypeSetting       *PFTypeSetting;
+typedef FTypeSetting const *PCFTypeSetting;
 
 // Use OpenFileNotDir_... in lieu of fChangeFile if you don't want to affect
 // PFBUF-stack-order and cwd
@@ -455,10 +478,10 @@ struct ARG {
    void     GetColumnRange( COL *pxMin, COL *pxMax ) const;
    int      GetLineRange( LINE *yTop, LINE *yBottom ) const;
 private:
-   bool     IngestArgTextAndSelection();
+   bool     IngestArgTextAndSelection( PView pcv );
    bool     BOXSTR_to_TEXTARG( LINE yOnly, COL xMin, COL xMax );
 public:
-   bool     InitOk( PCCMD pCmd );
+   bool     InitOk( PView pcv, PCCMD pCmd );
    void     SaveForRepeat() const;
    PCChar   CmdName() const;
    bool     Invoke();
@@ -585,30 +608,6 @@ struct CMD {              // function definition entry
    };
 
 inline PCChar ARG::CmdName() const { return d_pCmd->Name(); }
-
-// forward decls:
-
-class                  EditRec;
-struct                 HiLiteRec;
-class                  View;
-   typedef View       *PView;
-   typedef View const *PCView;
-class                  ViewHiLites;
-class                  FileTypeSettings;
-struct                 Win;
-   typedef Win        *PWin;
-   typedef Win const  *PCWin;
-class                  HiliteAddin;
-
-typedef  DLinkHead<FBUF>         FBufHead;
-typedef  DLinkHead<View>         ViewHead;
-typedef  DLinkHead<HiliteAddin>  HiliteAddinHead;
-
-extern void DestroyViewList( ViewHead *pViewHd );
-
-struct FTypeSetting;
-typedef FTypeSetting       *PFTypeSetting;
-typedef FTypeSetting const *PCFTypeSetting;
 
 // used to receive data decoded from state-save file string written by View::Write()
 struct ViewPersistent {
@@ -755,6 +754,7 @@ public:
                    , LINE               yLineOfFile
                    , bool               isActiveWindow
                    ) const;
+   void         ClearArgAndSelection();
 private:
    bool         d_LineCompile_isValid = false;
    LINE         d_LineCompile = -1;
@@ -1480,14 +1480,14 @@ inline bool FBufLocn::InCurFBuf() const { return g_CurFBuf() == d_pFBuf; }
 STIL auto PCWV() {
    const auto pcw( g_CurWin() );
    struct result { PCWin pcw; PView pcv; };
-   return result { pcw, pcw->d_ViewHd.front() };
+   return result { .pcw=pcw, .pcv=pcw->d_ViewHd.front() };
    }
 STIL auto PCWrV() {
    const auto pcwr( g_CurWinWr() );
    struct result { PWin pcwr; PView pcv; };
-   return result { pcwr, pcwr->d_ViewHd.front() };
+   return result { .pcwr=pcwr, .pcv=pcwr->d_ViewHd.front() };
    }
 STIL auto PCVF() {
    struct result { PView pcv; PFBUF pcf; };
-   return result { g_CurView(), g_CurFBuf() };
+   return result { .pcv=g_CurView(), .pcf=g_CurFBuf() };
    }

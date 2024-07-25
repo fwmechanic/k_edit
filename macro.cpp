@@ -367,7 +367,7 @@ void FetchAndExecuteCMDs( const bool fCatchExecutionHaltRequests ) {
 
 STATIC_FXN void Interpreter::AbortUntilBreak( PCChar emsg ) {
    ErrorDialogBeepf( "%s", emsg );
-   ClearArgAndSelection();
+   g_CurView()->ClearArgAndSelection();
    FlushKeyQueuePrimeScreenRedraw();
    CleanupPendingMacroStream();
    }
