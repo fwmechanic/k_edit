@@ -559,16 +559,17 @@ STATIC_FXN bool CharWalkToEnd( bool fWalkFwd, bool fVisibleOnly, PFBUF pFBuf, co
               }
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       // convert curPt.col from col to ix
-      Point curPt( start.lin, FreeIdxOfCol( tw, pFBuf->PeekRawLine( start.lin ), start.col + 1 ) );
-      for( ; curPt.lin <= yLast ; ++curPt.lin, curPt.col = 0 ) {
+      Point curPt( start.lin, FreeIdxOfCol( tw, pFBuf->PeekRawLine( start.lin ), start.col + 1 ) );  0 && DBG( "fwd%d: curPt( %d, %d ) L %ld", 1, curPt.lin, curPt.col, pFBuf->PeekRawLine( start.lin ).length() );
+      for( ; curPt.lin <= yLast ; ++curPt.lin, curPt.col = 0 ) {                                     0 && DBG( "fwd%d: curPt( %d, %d )", 2, curPt.lin, curPt.col );
          CHECK_BREAK;
          const auto rl( pFBuf->PeekRawLine( curPt.lin ) );
-         for( ; curPt.col < rl.length() ; ++curPt.col ) {
+         for( ; curPt.col < rl.length() ; ++curPt.col ) {                                            0 && DBG( "fwd%d: curPt( %d, %d ) = %c", 3, curPt.lin, curPt.col, rl[curPt.col] );
             if( STOP_SEARCH == walker.VCheckNext( rl, curPt, tw ) ) {
                return true;
                }
             }
          }
+      return false;
       }
    else { // -------------------- search BACKWARD --------------------
       Point curPt( start );                                                                          0 && DBG( "rvs%d: curPt( %d, %d )", ++dbgStep, curPt.lin, curPt.col );
@@ -584,8 +585,8 @@ STATIC_FXN bool CharWalkToEnd( bool fWalkFwd, bool fVisibleOnly, PFBUF pFBuf, co
                }
             }
          }
+      return false;
       }
-   return false;
    #undef CHECK_BREAK
    }
 
@@ -2023,15 +2024,15 @@ CheckNextRetval CharWalkerPMWord::VCheckNext( stref rl, const Point &curPtIx, CO
       if( curPtIx.col > 0 && firstCharOfWord( rl, curPtIx.col-1 ) ) {
          return CONTINUE_SEARCH;  // firstCharOfWord hack PART B: 'u' in "/usr/bin" IS NOT the first char of a word
          }
-MOV_TO_CURPT:
+MOV_TO_CURPT:                                                             0 && DBG( "MTC @ %d", curPtIx.col );
       g_CurView()->MoveCursor( Point( curPtIx.lin, ColOfFreeIdx( tabWidth, rl, curPtIx.col ) ) );
       return STOP_SEARCH;
       }
-   else { // rtn true iff curPt.col is LAST CHAR OF WORD
-      if( curPtIx.col <= 0 )                 { return CONTINUE_SEARCH; }
-      if( !isWordChar( rl[curPtIx.col-1] ) ) { return CONTINUE_SEARCH; }
-      if( !isWordChar( rl[curPtIx.col  ] ) ) { goto MOV_TO_CURPT; }
-      if( curPtIx.col != rl.length()-1 )     { return CONTINUE_SEARCH; }
+   else { // rtn true iff curPtIx.col is LAST CHAR OF WORD
+      if( curPtIx.col <= 0 )                 { return CONTINUE_SEARCH; }  0 && DBG( "rl[%d,%d] = %c %c", curPtIx.col-1, curPtIx.col, rl[curPtIx.col-1], rl[curPtIx.col] );
+      if( !isWordChar( rl[curPtIx.col-1] ) ) { 0 && DBG( "!iWC @ %d", curPtIx.col-1 ); return CONTINUE_SEARCH; }
+      if( !isWordChar( rl[curPtIx.col  ] ) ) { 0 && DBG( "!iWC @ %d", curPtIx.col )  ; goto MOV_TO_CURPT; }
+      if( curPtIx.col != rl.length()-1 )     { return CONTINUE_SEARCH; }  0 && DBG( "MTC+1 @ %d", curPtIx.col );
       g_CurView()->MoveCursor( Point( curPtIx.lin, ColOfFreeIdx( tabWidth, rl, curPtIx.col )+1 ) );
       return STOP_SEARCH;
       }
