@@ -458,8 +458,8 @@
    newhelp:=cancel arg "<CMD-SWI-Keys>" setfile
    newhelp:alt+h
 
-        # cur_y4md " kgoodwin "
-   dttag:=cur_y4md_hm " " cur_dow3
+        # dttag "kgoodwin "
+   dttag:=cur_y4md_hm " " cur_dow3 " "
    dttag:Ctrl+D
    compile:ctrl+z
 
@@ -555,7 +555,7 @@
    notesdnm:="${K_NOTES_DIR:-${HOME:-${USERPROFILE}}/my/repos/pers}/"
 
    kdb:=arg notesdnm "*.kdb" setfile
-   tslog:=endfile emacsnewl begline cur_y4md_hm " " cur_dow3
+   tslog:=endfile emacsnewl begline dttag
 
    worklog:=cancel Arg notesdnm "work.kdb" SetFile
 
