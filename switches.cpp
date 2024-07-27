@@ -180,10 +180,6 @@ int isHJChar( int ch ) {
    return g_HLJChars.is[static_cast<unsigned>(ch)];
    }
 
-sridx FirstNonWordOrEnd( stref src, sridx start ) {
-   return ToNextOrEnd( notWordChar, src, start );
-   }
-
 sridx IdxFirstHJCh( stref src, sridx start ) {
    if( start >= src.length() ) { return eosr; }
    for( auto it( src.crbegin() + (src.length() - start) ); it != src.crend() ; ++it ) { 0 && DBG("%c", *it );

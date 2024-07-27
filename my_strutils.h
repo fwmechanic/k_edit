@@ -319,8 +319,9 @@ TF_Ptr STIL Ptr  StrToNextBlankOrEos( Ptr pszToSearch ) { return StrToNextOrEos(
 // these are extern vs. inline because the requisite predicates are not public
 extern sridx FirstNonBlankOrEnd( stref src, sridx start=0 );
 extern sridx FirstBlankOrEnd   ( stref src, sridx start=0 );
-
 extern sridx FirstNonWordOrEnd( stref src, sridx start=0 );
+extern sridx FirstWordOrEnd   ( stref src, sridx start=0 );
+
 extern sridx IdxFirstHJCh  ( stref src, sridx start=0 );
 
 //-----------------
