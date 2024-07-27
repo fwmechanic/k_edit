@@ -1,0 +1,10 @@
+#!/bin/bash
+
+logfnm='./vk.log'
+valgrind --log-file="$logfnm" ./k "$@"
+esum="$(grep -Po "ERROR SUMMARY:.+$" -- "$logfnm")"
+if [ "$esum" == "ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)" ]; then
+   echo "ok"
+else
+   printf "%s\n%s\n" "$esum" "see $logfnm"
+   fi

@@ -63,5 +63,8 @@ _buildtime.i
 datetime.i
 unittest_tagfind
 
+# Valgrind logs etc.
+vk.log*
+
 # coverity data collection file
 k_edit.tgz

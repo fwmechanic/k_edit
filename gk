@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# https://stackoverflow.com/a/31206912
+
+gdb -ex run -n --args k "$@"
