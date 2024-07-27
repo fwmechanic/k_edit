@@ -1994,7 +1994,7 @@ bool ARG::balln() {
 //-------------------------- pword/mword
 
 class CharWalkerPMWord : public CharWalker_ {
-   bool d_fMeta;
+   bool  d_fMeta;
 public:
    CharWalkerPMWord( bool fPMWordSearchMeta ) : d_fMeta( fPMWordSearchMeta ) {}
    CheckNextRetval VCheckNext( stref rl, const Point &curPtIx, COL tabWidth ) override;
@@ -2045,7 +2045,79 @@ STATIC_FXN bool PMword( bool fSearchFwd, bool fMeta ) {
    return cp.Moved();
    }
 
-bool ARG::pword() { return PMword( true , (Get_g_ArgCount() > 0) ? !d_fMeta : d_fMeta ); }
+/*
+
+Pword: Moves the cursor forward one word and places the cursor on the beginning
+of the new word.
+
+Meta Pword: Moves cursor to immediate right of current word or, if not in a
+            word, to the right of the next word.
+
+Mword: Moves the cursor to the beginning of a word.  If not in a word or at the
+       first character, uses the previous word; otherwise, uses the current word.
+
+Meta Mword: Moves the cursor to the immediate right of the previous word
+
+ */
+
+STATIC_FXN bool Pword( PFBUF pFBuf, Point &curPt ) {
+   // true: cursor moved to 1st char of next word
+   const auto tw( pFBuf->TabWidth() );
+   const auto y0 = curPt.lin;
+   for( ; curPt.lin <= g_CurFBuf()->LastLine() ; ++curPt.lin, curPt.col = 0 ) {
+      const auto rl = pFBuf->PeekRawLine( curPt.lin );
+            auto ix = FreeIdxOfCol( tw, rl, curPt.col ); // conv col to ix
+      if( ix < rl.length() ) {
+         if( isWordChar( rl[ix] ) ) {
+            if( curPt.lin > y0 && ix==0 ) { // special case: (beginning of) new word at col 0 of subsequent line
+               curPt.col = 0; // conv ix to col
+               return true;
+               }
+            if( atEnd( rl, (ix=FirstNonWordOrEnd( rl, ix )) ) ) {
+               continue; // next line
+               }
+            }
+         // assert( !isWordChar(rl[ix]) );  // is true
+         if( atEnd( rl, (ix=FirstWordOrEnd( rl, ix )) ) ) {
+            continue; // End is NOT an actionable value; advance to next line
+            }
+         curPt.col = ColOfFreeIdx( tw, rl, ix ); // conv ix to col
+         return true;
+         }
+      }          // a
+   return false;
+   }
+
+STATIC_FXN bool metaPword( PFBUF pFBuf, Point &curPt ) {
+   const auto tw( pFBuf->TabWidth() );
+   for( ; curPt.lin <= g_CurFBuf()->LastLine() ; ++curPt.lin, curPt.col = 0 ) {
+      const auto rl = pFBuf->PeekRawLine( curPt.lin );
+            auto ix = FreeIdxOfCol( tw, rl, curPt.col ); // conv col to ix
+      if( ix < rl.length() ) {
+         if( !isWordChar( rl[ix] ) ) {
+            if( atEnd( rl, (ix=FirstWordOrEnd( rl, ix )) ) ) {
+               continue; // next line
+               }
+            }
+         // assert( isWordChar(rl[ix]) );   // is true
+         ix = FirstNonWordOrEnd( rl, ix );  // End is an actionable value
+         curPt.col = ColOfFreeIdx( tw, rl, ix ); // conv ix to col
+         return true;
+         }
+      }          // a
+   return false;
+   }
+
+bool ARG::pword() {
+   const auto effMeta = (Get_g_ArgCount() > 0) ? !d_fMeta : d_fMeta;
+   auto curPt = g_CurView()->Cursor();
+   if( (effMeta ? metaPword : Pword)( g_CurFBuf(), curPt ) ) {
+      g_CurView()->MoveCursor( curPt );
+      return true;
+      }
+   return false;
+   }
+
 bool ARG::mword() { return PMword( false,                                     d_fMeta ); }
 
 //********************************************************************************************

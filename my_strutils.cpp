@@ -364,6 +364,9 @@ PChar _strlwr( PChar buf ) {
 sridx FirstNonBlankOrEnd( stref src, sridx start ) { return ToNextOrEnd( notBlank, src, start ); }
 sridx FirstBlankOrEnd(    stref src, sridx start ) { return ToNextOrEnd( isblank , src, start ); }
 
+sridx FirstNonWordOrEnd ( stref src, sridx start ) { return ToNextOrEnd( notWordChar, src, start ); }
+sridx FirstWordOrEnd    ( stref src, sridx start ) { return ToNextOrEnd( isWordChar , src, start ); }
+
 stref lineIterator::next() {
    if( d_remainder.empty() ) { return d_remainder; }
    const auto len( d_remainder.find_first_of( "\n\r" ) );
