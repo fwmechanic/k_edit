@@ -2052,12 +2052,6 @@ of the new word.
 
 Meta Pword: Moves cursor to immediate right of current word or, if not in a
             word, to the right of the next word.
-
-Mword: Moves the cursor to the beginning of a word.  If not in a word or at the
-       first character, uses the previous word; otherwise, uses the current word.
-
-Meta Mword: Moves the cursor to the immediate right of the previous word
-
  */
 
 // #undef PWORD_PRED to use 2-param versions of Pword & metaPword (should be same as (PWORD_PRED == isWordChar))
@@ -2182,6 +2176,55 @@ bool ARG::pword() {
       }
    return false;
    }
+
+/*
+Mword: Moves the cursor to the beginning of a word.  If not in a word or at the
+       first character, uses the previous word; otherwise, uses the current word.
+
+Meta Mword: Moves the cursor to the immediate right of the previous word.
+ */
+
+#if 0
+
+template < typename cont_inst, typename Pred >
+typename cont_inst::size_type ToNextOrEnd( Pred pred, cont_inst src, typename cont_inst::size_type start ) {
+   start = start >= src.length() ? src.length() : src.length() - start;  // for reverse iteration
+   if( start < src.length() ) {
+      for( auto it( src.crbegin() + start ) ; it != src.crend() ; ++it ) {
+         if( pred( *it ) ) {
+            return std::distance( src.cbegin(), it );
+            }
+         }
+      }
+   return src.length() - std::distance( src.crbegin(), src.crend() );
+   }
+
+STATIC_FXN bool Mword( PFBUF pFBuf, Point &curPt ) {
+   // true: cursor moved to 1st char of current or previous word
+   const auto tw( pFBuf->TabWidth() );
+   for( ; curPt.lin <= 0 ; --curPt.lin, curPt.col = COL_MAX ) {
+      const auto rl = pFBuf->PeekRawLine( curPt.lin );
+      curPt.col = std::min( StrCols( tw, rl ), curPt.col );
+      auto ix = FreeIdxOfCol( tw, rl, curPt.col ); // conv col to ix
+
+                      CaptiveIdxOfCol ( COL tabWidth, stref content, const COL colTgt )
+      if( ix < rl.length() ) {
+         if( isWordChar( rl[ix] ) ) {
+            if( (ix=FirstNonWordOrEnd( rl, ix )) == rl.length() ) {
+               continue; // next line
+               }
+            }
+         // assert( !isWordChar(rl[ix]) );  // is true
+         if( (ix=FirstWordOrEnd( rl, ix )) == rl.length() ) {  // End is NOT an actionable value
+            continue; // next line
+            }
+         curPt.col = ColOfFreeIdx( tw, rl, ix ); // conv ix to col
+         return true;
+         }
+      }          // a
+   return false;
+   }
+#endif
 
 bool ARG::mword() { return PMword( false,                                     d_fMeta ); }
 
