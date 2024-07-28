@@ -260,7 +260,7 @@ STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
    }
 
 STATIC_FXN bool cmd_available( PCChar cmdnm ) {
-   FmtStr<11+256+1> cmdline( "command -v %s" , cmdnm );
+   FmtStr<11+256+1> cmdline( "command -v '%s'" , cmdnm );
    std::string dest;
    const auto rv( popen_rd_ok( dest, cmdline.c_str() ) );      DBG( "%s: '%s' -> '%s'", __func__, cmdline.c_str(), dest.c_str() );
    return rv;
@@ -276,7 +276,7 @@ STATIC_FXN bool xclip_read( std::string &dest ) {
          dest = "xclip not in PATH; apt-get install xclip needed?";
          return false;  // fatal error
          }
-      cli_fromxclip.append( "xclip -selection c -o" );
+      cli_fromxclip.append( "xclip -selection c -o 2>/dev/null" );
       if( ici ) { // I believe iconv is a CORE package, so this is not expected.  But check anyway.
          cli_fromxclip.append( " | iconv -f UTF8 -t US-ASCII//TRANSLIT" );
          }
