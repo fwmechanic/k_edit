@@ -34,6 +34,7 @@
 do
    --------------------------------------------------------------
    local shebangToFType_ = {
+      node    = "clang",
       perl6   = "perl",
       python2 = "python",
       python3 = "python",
@@ -93,6 +94,8 @@ do
       cc          = "clang"       ,
       c           = "clang"       ,
       go          = "clang"       ,
+      js          = "clang"       ,
+      ts          = "clang"       ,
       cmake       = "cmake"       ,
       diff        = "diff"        ,
       expect      = "expect"      ,
