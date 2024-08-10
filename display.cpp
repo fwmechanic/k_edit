@@ -1323,11 +1323,12 @@ void HiliteAddin_powershell::scan_pass( LINE yMaxScan ) {
 
 class HiliteAddin_clang : public HiliteAddin_StreamParse {
    void scan_pass( LINE yMaxScan ) override;
-   enum scan_rv { atEOF, in_code, in_1Qstr, in_2Qstr, in_comment };
+   enum scan_rv { atEOF, in_code, in_1Qstr, in_2Qstr, in_BTstr, in_comment };
    // scan_pass() methods; all must have same proto as called via pfx
    scan_rv find_end_code    ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_1Qstr   ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_2Qstr   ( PCFBUF pFile, Point &pt ) ;
+   scan_rv find_end_BTstr   ( PCFBUF pFile, Point &pt ) ;
    scan_rv find_end_comment ( PCFBUF pFile, Point &pt ) ;
    Point d_start_C; // where last /* comment started
 public:
@@ -1342,9 +1343,10 @@ HiliteAddin_clang::scan_rv HiliteAddin_clang::find_end_code( PCFBUF pFile, Point
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
       for( const auto rl=pFile->PeekRawLine( pt.lin ) ; pt.col < rl.length() ; ++pt.col ) {
          switch( rl[pt.col] ) {
-            default:      break;
-            case chQuot1: ++pt.col; return in_1Qstr;
-            case chQuot2: ++pt.col; return in_2Qstr;
+            default:         break;
+            case chQuot1:    ++pt.col; return in_1Qstr;
+            case chQuot2:    ++pt.col; return in_2Qstr;
+            case chBackTick: ++pt.col; return in_BTstr;
             case '/':     if( pt.col+1 < rl.length() ) switch( rl[pt.col+1] ) { default: break;
                              case '/': { // start of to-EOL comment?
                                 add_comment( pt.lin, pt.col, pt.lin, rl.length() );
@@ -1403,6 +1405,7 @@ class::scan_rv class::nm( PCFBUF pFile, Point &pt ) {                          \
    }
        find_end_Qstr( HiliteAddin_clang, find_end_1Qstr, chQuot1 )
        find_end_Qstr( HiliteAddin_clang, find_end_2Qstr, chQuot2 )
+       find_end_Qstr( HiliteAddin_clang, find_end_BTstr, chBackTick )
 #undef find_end_Qstr
 
 void HiliteAddin_clang::scan_pass( LINE yMaxScan ) {
@@ -1419,6 +1422,7 @@ void HiliteAddin_clang::scan_pass( LINE yMaxScan ) {
          case in_code    : findnext = &HiliteAddin_clang::find_end_code    ; break;
          case in_1Qstr   : findnext = &HiliteAddin_clang::find_end_1Qstr   ; break;
          case in_2Qstr   : findnext = &HiliteAddin_clang::find_end_2Qstr   ; break;
+         case in_BTstr   : findnext = &HiliteAddin_clang::find_end_BTstr   ; break;
          case in_comment : findnext = &HiliteAddin_clang::find_end_comment ; break;
          case atEOF      : if( in_comment==prevret ) { 0 && DBG( "atEOF+in_comment @y=%d x=%d", pt.lin, pt.col );
                               add_comment( d_start_C.lin, d_start_C.col, pt.lin, 0 );
