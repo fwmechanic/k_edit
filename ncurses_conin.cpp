@@ -385,8 +385,11 @@ STATIC_FXN void init_escseqstr2edkc() {
 STATIC_FXN void init_conout_capability() {
    const auto cap_nm = "initc";
    const char *escseqstr( tigetstr( cap_nm ) );  // tigetstr() <- "retrieves a capability from the terminfo database"
-   char tib[65]; terminfo_str( BSOB(tib), escseqstr, Strlen(escseqstr) );
-                                                 1 && DBG( "cap=%-7s => tistr=%s", cap_nm, tib );
+   if( escseqstr ) {
+      char tib[65]; terminfo_str( BSOB(tib), escseqstr, Strlen(escseqstr) ); 1 && DBG( "cap=%-7s => tistr=%s", cap_nm, tib );
+      }
+   else {                                                                    1 && DBG( "cap=%-7s => tistr=%s", cap_nm, escseqstr );
+      }
    }
 
 void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
