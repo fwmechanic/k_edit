@@ -1538,6 +1538,8 @@ COL ARG::GetLine( std::string &st, LINE yLine ) const { // setup x constraints a
    return st.length();
    }
 
+void StartInternalShellJob( PCChar cmd ) { StartInternalShellJob( new StringList( cmd ), false ); }  // called from Lua
+
 bool ARG::execute() {
    STATIC_CONST char kszMeta_[] = "meta ";
    bool rv;

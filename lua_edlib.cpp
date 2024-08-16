@@ -76,6 +76,7 @@ namespace LExFx { // exported functions
    STATIC_FXN int CmdIdxAddLuaFunc( lua_State *L )   { ::CmdIdxAddLuaFunc( S_(1), fn_runLua(), I_(2)  _AHELP( S_(3) ) ); RZ; }
    STATIC_FXN int BindKeyToCMD( lua_State *L )       { R_bool( SetKeyRV::SetKeyRV_OK == ::BindKeyToCMD( S_(1), S_(2) ) ); }
    STATIC_FXN int fExecute( lua_State *L )           { R_bool( ::fExecute( S_(1) ) ); }
+   STATIC_FXN int StartInternalShellJob( lua_State *L ) { ::StartInternalShellJob( S_(1) ); RZ; }
    STATIC_FXN int fChangeFile( lua_State *L )        { R_bool( ::fChangeFile( S_(1), true ) ); }
    STATIC_FXN int DBG( lua_State *L )                { ::DBG( "%s", S_(1) ); RZ; }
    STATIC_FXN int Msg( lua_State *L )         {
@@ -690,6 +691,7 @@ void l_RegisterEditorFuncs( lua_State *L ) {
        LUA_FUNC_I(DirectVidClear)
        LUA_FUNC_I(DirectVidWrStrColorFlush)
        LUA_FUNC_I(fExecute)
+       LUA_FUNC_I(StartInternalShellJob)
        LUA_FUNC_I(fChangeFile)
        LUA_FUNC_I(IsFile)
        LUA_FUNC_I(IsDir)
