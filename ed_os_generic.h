@@ -67,6 +67,7 @@ STIL int    StartConProcess( PCChar pFullCommandLine ) { return 1; }
 extern void   StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile=nullptr );
 
 extern PFBUF  StartInternalShellJob( StringList *sl, bool fAppend );
+extern void   StartInternalShellJob( PCChar cmd );
 extern void   DetachIdleThread();
 
 extern PCChar OsErrStr( PChar dest, size_t sizeofDest, int errorCode );

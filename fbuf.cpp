@@ -1264,7 +1264,7 @@ STATIC_FXN bool DontRecreateDeletedFile( stref fnm ) {
    }
 
 bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
-   VERBOSE_READ && DBG( "FRd+ %s", Name() );
+   0 && VERBOSE_READ && DBG( "FRd+ %s", Name() );
 // if( !Interpreter::Interpreting() )  20061003 klg commented out since calling mfgrep inside a macro (as I'm doing now) hides this, which I don't want.
       {
       DialogLdFile( Name() );
@@ -1364,7 +1364,7 @@ bool FBUF::FBufReadOk( bool fAllowDiskFileCreate, bool fCreateSilently ) {
       }
   #endif
    SetLastFileStatFromDisk();
-   VERBOSE_READ && DBG( "FRd- OK" );
+   0 && VERBOSE_READ && DBG( "FRd- OK" );
    return true;
    }
 

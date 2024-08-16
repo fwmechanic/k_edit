@@ -1783,7 +1783,32 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          end
       end
 
-end  -- local scope for private functions and data the implement tgs EdFxn
+end  -- local scope for private functions and data to implement tgs EdFxn
+
+do
+   local buildFnm = '.k_edit_buildcmd'
+   AddEdFxn{ name = "build", help = "run build command from "..buildFnm, attr = NOARG, key = "alt+e"
+      , NOARG   = function(arg)
+        fExecute( 'saveall' )
+        for dir in CwdToRoot() do
+           local ifnm = dir .. buildFnm
+           if IsFile( ifnm ) then
+              local ifh = assert( io.open( ifnm, "r" ) )
+              local buildline = assert( ifh:read('*l') )
+              local msg = ''
+              if _dir.current() ~= dir then
+                 _dir.chdir( dir )
+                 msg = '(cd '..dir..') '
+                 end
+              Msg( msg .. buildline )
+              StartInternalShellJob( buildline )
+              return true
+              end
+           end
+        Msg( 'did not find '..buildFnm..' in CwdToRoot' )
+        end
+      }
+end  -- local scope for private functions and data to implement tgs EdFxn
 
 -- TopN: iterator that accepts 'max' and a 'tbl' having the structure
 --       {

@@ -385,7 +385,7 @@ class InternalShellJobExecutor {
    NO_ASGN_OPR(InternalShellJobExecutor);
    STATIC_FXN void ChildProcessCtrlThread( InternalShellJobExecutor *pIsjx );
    PFBUF                       d_pfLogBuf;
-   StringList                 *d_pSL;
+   StringList                 *d_pSL;  // we take ownership of (delete)
    const size_t                d_numJobsRequested;
    int                         d_Pid;
    int                         d_ChildProcessExitCode;
