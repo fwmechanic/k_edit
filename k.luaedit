@@ -2903,6 +2903,33 @@ AddEdFxn{ name = "stat", key = "", attr = NOARG, help = "assumes curfile contain
 --]]
 end
 
+do -- rudimentary way to play the audio passage associated with the current line of the .lrc file you're viewing (editing); AMAZINGLY powerful!
+   local function ffplay( arg, duration )
+     duration = duration or 12
+     Msgf( 'duration: %d s', duration )
+     local fname = arg.fbuf:Name()
+     local noext = fname:gsub( '%.[^\.]+$', '' )              print( 'noext='..noext )
+     for _,ext in ipairs{'wav', 'm4a', 'ogg', 'mp3'} do
+        local cand = noext .. '.' .. ext
+        if _dir.name_isfile( cand ) then
+           fname = cand
+           break
+           end
+        end
+     local ln = arg.fbuf:GetLineSeg( arg.cursorY, 1, 13 )
+     local mins,secs = ln:match( '%[(%d%d+)%:(%d%d%.%d%d)%]' )
+     secs = secs + (mins * 60)
+     local cmd = 'ffplay -nodisp -autoexit -ss "'..secs..'" -t '..duration..' "'..fname..'" >/dev/null 2>&1'
+     print( cmd )
+     os.execute( cmd )
+     Msg( '' )
+     end
+
+   AddEdFxn{ name = "playaudio", help = "", attr = NOARG+TEXTARG, key = "alt+k"
+      , NOARG   = function( arg ) ffplay( arg                     ) end
+      , TEXTARG = function( arg ) ffplay( arg, tonumber(arg.text) ) end
+      }
+end
 
 do
    local function rmvTrailingPathComponent(st)  return st:gsub( dirsep_class..not_dirsep_class.."+$", "" )  end
