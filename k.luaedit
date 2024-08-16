@@ -854,7 +854,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       local ifnm, ifh, taglines
       local taglines = {}
       for dir in CwdToRoot() do
-         ifnm = dir .. "tags"
+         ifnm = dir .. "k_edit_tags"
          if IsFile( ifnm ) then
             Msgf( "searching %s%s", ifnm, (tag and fmt(" for tag '%s'", tag ) or "" ) )
             taglines = FindMatchingTagsLines( ifnm, tag )

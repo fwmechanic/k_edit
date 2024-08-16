@@ -391,12 +391,14 @@ TAGS_EXTRAS=+f
 TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=$(TAGS_FIELDS) --extras=$(TAGS_EXTRAS) --recurse
 # !!! SEE ALSO ctags.d/*.ctags
 
+TAGS_FNM_BASE := k_edit_tags
+
 .PHONY: tags
 tags : $(EXE_TGTS)
-	@$(TAGS_CMDLN) --list-fields         > tags_fields
-	@$(TAGS_CMDLN) --list-extras         > tags_extras
-	@$(TAGS_CMDLN) --list-kinds-full=C++ > tags_kinds
-	$(TAGS_CMDLN)
+	@$(TAGS_CMDLN) --list-fields         > $(TAGS_FNM_BASE)_fields
+	@$(TAGS_CMDLN) --list-extras         > $(TAGS_FNM_BASE)_extras
+	@$(TAGS_CMDLN) --list-kinds-full=C++ > $(TAGS_FNM_BASE)_kinds
+	$(TAGS_CMDLN) -o $(TAGS_FNM_BASE)
 
 $(CMDTBL_OUTPUTS): $(LUA_T) cmdtbl.dat bld_cmdtbl.lua
 	$(LUA_T) bld_cmdtbl.lua $(CMDTBL_PLAT) < cmdtbl.dat
