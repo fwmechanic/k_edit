@@ -221,6 +221,7 @@ function str_setlen( str, len, pad )  -- because string.format does not allow wi
    return str .. (pad:rep(pl)):sub(1,pl)
    end
 
+local inSituBaseFnm = ".k_edit_"
 ----------------------------------------------------------------------------------------------------
 
 function arg2box( arg )  return  arg.fbuf, arg.view, arg.minY, arg.maxY, arg.minX or 1, arg.maxX or MAXCOL  end
@@ -851,10 +852,10 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       end
 
    local function get_tags_matching( tag )  -- wrap C API FindMatchingTagsLines and manage 'tags-cache-related state' variables
-      local ifnm, ifh, taglines
+      local ifnm, ifh
       local taglines = {}
       for dir in CwdToRoot() do
-         ifnm = dir .. "k_edit_tags"
+         ifnm = dir .. inSituBaseFnm .. "tags"
          if IsFile( ifnm ) then
             Msgf( "searching %s%s", ifnm, (tag and fmt(" for tag '%s'", tag ) or "" ) )
             taglines = FindMatchingTagsLines( ifnm, tag )
@@ -1786,7 +1787,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
 end  -- local scope for private functions and data to implement tgs EdFxn
 
 do
-   local buildFnm = '.k_edit_buildcmd'
+   local buildFnm = inSituBaseFnm .. 'buildcmd'
    AddEdFxn{ name = "build", help = "run build command from "..buildFnm, attr = NOARG, key = "alt+e"
       , NOARG   = function(arg)
         fExecute( 'saveall' )
@@ -3203,6 +3204,13 @@ do
       -- ../../Source/system/rom/locincludes/AOM_rm_dstructs.h:122:2: #error "Use up-to-date Header Structure in Flashware"
       fnm, lnum, col, msg1 = lbuf:match( "^%s*(%S[^:%s]+):(%d+):(%d+):%s+(.+)" )
       if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, "MW C" ) then return fnm end
+
+      -- Node runtime: '   at genTranscriptionPrompt (/home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114)
+      msg1, msg2 = lbuf:match( "^%s+at%s+(%S+)%s(%b())$" )
+      if msg2 then
+         fnm, lnum, col = msg2:match( "^%(([^:]+):(%d+):(%d+)%)$" )
+         if col and GotoFileYX_Msg( fnm, lnum, col, msg1, "Node.JS" ) then return fnm end
+         end
 
       do
       local atag = LineToTagRec( lbuf )
