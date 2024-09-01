@@ -391,7 +391,7 @@ TAGS_EXTRAS=+f
 TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=$(TAGS_FIELDS) --extras=$(TAGS_EXTRAS) --recurse
 # !!! SEE ALSO ctags.d/*.ctags
 
-TAGS_FNM_BASE := k_edit_tags
+TAGS_FNM_BASE := .k_edit_tags
 
 .PHONY: tags
 tags : $(EXE_TGTS)

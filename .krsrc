@@ -614,7 +614,7 @@
    cd2file:=cancel arg meta curfilepath setfile  # set cwd to dir of current file
    cd:=cd2file invalidate_tags
 #  cd:=cd2file dropfile invalidate_tags  # preferred, but dropfile has not been written yet
-   tf:=cancel readtagsfile -> arg "<tagged-files>" setfile
+   tf:=arg "<tagged-files>" setfile
 
    eth:= cancel arg "http://www.speedtest.net/" setfile \
          cancel Arg notesdnm "etheric.kdb" setfile endfile emacsnewl begline cur_y4md "_" cur_hms " ping,down,up =   mS, Mbs,  Mbs (from my laptop using Ubiquiti WLAN)"
