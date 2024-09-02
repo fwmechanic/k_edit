@@ -183,6 +183,7 @@
 
    show_asgn:=_spush _sdup arg _spop assign arg _spop !
 
+   w :=cancel arg "wordsearch:INVERT" show_asgn
    c :=cancel arg "case:INVERT" show_asgn
    cy:=cancel arg "case:YES" show_asgn
    cn:=cancel arg "case:NO"  show_asgn

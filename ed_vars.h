@@ -100,6 +100,7 @@ GLOBAL_VAR inline bool  g_fUseMouse         = false;
 #endif
 GLOBAL_VAR inline bool  g_fViewOnly         = false;
 GLOBAL_VAR inline bool  g_fWordwrap         = false;
+GLOBAL_VAR inline bool  g_fWordSearch       = false;
 GLOBAL_VAR inline bool  g_fWcShowDotDir     = false;
 
 

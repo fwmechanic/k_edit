@@ -1499,15 +1499,24 @@ void SearchSpecifier::CaseUpdt() {
 #endif
    }
 
+#define rexWordBoundary "\\b"
 SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex) {
    d_fNegateMatch = rawSrc.starts_with( "!!" );
    if( d_fNegateMatch ) {
       rawSrc.remove_prefix( 2 );
       }
-   const auto fPromotingPlainSearchToRegex( !d_fRegex && g_fPcreAlways );
-   d_rawStr.assign( fPromotingPlainSearchToRegex ? "\\Q" : "" );
-   d_fRegex = d_fRegex || fPromotingPlainSearchToRegex;
-   d_rawStr.append( rawSrc );
+   if( g_fWordSearch ) {
+      d_fRegex = true;
+      d_rawStr.assign( fRegex ? rexWordBoundary : rexWordBoundary "\\Q" );
+      d_rawStr.append( rawSrc );
+      d_rawStr.append( fRegex ? rexWordBoundary : "\\E" rexWordBoundary );
+      }
+   else {
+      const auto fPromotingPlainSearchToRegex( !d_fRegex && g_fPcreAlways );
+      d_rawStr.assign( fPromotingPlainSearchToRegex ? "\\Q" : "" );
+      d_fRegex = d_fRegex || fPromotingPlainSearchToRegex;
+      d_rawStr.append( rawSrc );
+      }
    d_fCanUseFastSearch = !d_fRegex && std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
 #if USE_PCRE
    d_fRegexCase = g_fCase;

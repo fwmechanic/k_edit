@@ -290,6 +290,7 @@ void SwitblInit() {
    addswi( "wcshowdotdir"   , fc.SWIi_bv( g_fWcShowDotDir     ) _AHELP( "in recursive wildcard buffers show (yes) or hide (NO) dir (subtrees) whose names start with '.'" ) );
    addswi( "wordchars"      , fc.SWIsb( swidWordchars  , swixWordchars   )  _AHELP( "the set of valid word-component characters; [_a-zA-Z0-9] are always members" ) );
    addswi( "wordwrap"       , fc.SWIi_bv( g_fWordwrap         ) _AHELP( "the editor performs automatic word-wrapping as you type past rmargin" ) );
+   addswi( "wordsearch"     , fc.SWIi_bv( g_fWordSearch       ) _AHELP( "non-regex searches only match whole words" ) );
    addswi( "wucminlen"      , fc.SWIi_ci( [](){ return g_iWucMinLen; }, [](int v_){ g_iWucMinLen = v_; }, [](){ return 1; }, [](){ return 32                 ; }, false ) _AHELP( "minimum length of a word for it to qualify for 'word under the cursor' status" ) );
    addswi( "xlatcp437"      , fc.SWIi_bv( g_fXlatCP437        ) _AHELP( "ncurses conout: xlat CP437-unique chars to UTF-8" ) );
    }
