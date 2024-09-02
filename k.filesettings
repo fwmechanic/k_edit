@@ -251,6 +251,7 @@ ftype_map = {  -- ref'd from C, key source: .krsrc ftype: setting
    lua          = lua_settings                         ,
    expect       = expect_settings                      ,
    perl         = perl_settings                        ,
+   julia        = perl_settings                        ,
    python       = perl_settings                        ,
    make         = make_settings                        ,
    cmake        = cmake_settings                       ,
