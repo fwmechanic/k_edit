@@ -3028,6 +3028,7 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
                        //     g_fCase ? "E!=e" : "E==e"
                        //     g_fCase ? "Q!=q" : "Q==q"
    cl.Cat( ColorTblIdx::INF , g_fCase ? "A!=a" : "A==a" );
+   cl.Cat( ColorTblIdx::ERRM, g_fWordSearch ? "WORD":"string" );
    if( 0 ) { // 20150105 KG: seems superfluous
       if( g_pFbufClipboard && g_pFbufClipboard->LineCount() ) {
          PCChar st;
@@ -3044,11 +3045,13 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
          }
       cl.Cat( ColorTblIdx::INF, " " );
       }
-   cl.Cat( ColorTblIdx::INF, FmtStr<40>( "%s%s"
-            , g_fMeta                  ? " META"      : ""
-            , IsMacroRecordingActive() ? (IsCmdXeqInhibitedByRecord() ? " NOX-RECORDING" : " RECORDING") : ""
-            ).c_str()
-         );
+   {
+   FmtStr<40> tail_( "%s%s"
+      , g_fMeta                  ? " META"      : ""
+      , IsMacroRecordingActive() ? (IsCmdXeqInhibitedByRecord() ? " NOX-RECORDING" : " RECORDING") : ""
+      );
+   cl.Cat( ColorTblIdx::INF, tail_.Len()==0 ? " " : tail_.c_str() );
+   }
    ColoredLine pre;
    const auto dcdErrCount = ConIn::DecodeErrCount();
    if( dcdErrCount ) {
