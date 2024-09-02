@@ -1507,9 +1507,17 @@ SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex)
       }
    if( g_fWordSearch ) {
       d_fRegex = true;
-      d_rawStr.assign( fRegex ? rexWordBoundary : rexWordBoundary "\\Q" );
-      d_rawStr.append( rawSrc );
-      d_rawStr.append( fRegex ? rexWordBoundary : "\\E" rexWordBoundary );
+      int ch;
+      if( !fRegex && rawSrc.length() > 2 && (ch=rawSrc[0]) && (ch=='\''||ch=='"') && ch==rawSrc[rawSrc.length()-1] ) {
+         d_rawStr.assign( "(['\"])" "\\Q" );
+         d_rawStr.append( rawSrc.substr(1,rawSrc.length()-1-1) );
+         d_rawStr.append( "\\E" "\\1" );
+         }
+      else {
+         d_rawStr.assign( fRegex ? rexWordBoundary : rexWordBoundary "\\Q" );
+         d_rawStr.append( rawSrc );
+         d_rawStr.append( fRegex ? rexWordBoundary : "\\E" rexWordBoundary );
+         }
       }
    else {
       const auto fPromotingPlainSearchToRegex( !d_fRegex && g_fPcreAlways );
