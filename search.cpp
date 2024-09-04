@@ -951,6 +951,9 @@ int FBUF::SyncWriteIfDirty_Wrote() {
 
 STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
    VSLOG && s_searchSpecifier && s_searchSpecifier->Dbgf( "befor" );
+   if( src.empty() ) {                                DBG( "%s: ERROR, EMPTY src", FUNC );
+      return false;
+      }
    std::unique_ptr<SearchSpecifier> ssNew( new SearchSpecifier( src, fRegex ) );
 #if USE_PCRE
    const auto err( ssNew->HasError() );
@@ -1500,30 +1503,41 @@ void SearchSpecifier::CaseUpdt() {
    }
 
 #define rexWordBoundary "\\b"
+#define rexPLAINTEXT_BEGIN "\\Q"
+#define rexPLAINTEXT_END "\\E"
+
 SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex) {
    d_fNegateMatch = rawSrc.starts_with( "!!" );
    if( d_fNegateMatch ) {
       rawSrc.remove_prefix( 2 );
       }
    if( g_fWordSearch ) {
-      d_fRegex = true;
-      int ch;
-      if( !fRegex && rawSrc.length() > 2 && (ch=rawSrc[0]) && (ch=='\''||ch=='"') && ch==rawSrc[rawSrc.length()-1] ) {
-         d_rawStr.assign( "(['\"])" "\\Q" );
-         d_rawStr.append( rawSrc.substr(1,rawSrc.length()-1-1) );
-         d_rawStr.append( "\\E" "\\1" );
-         }
-      else {
-         d_rawStr.assign( fRegex ? rexWordBoundary : rexWordBoundary "\\Q" );
-         d_rawStr.append( rawSrc );
-         d_rawStr.append( fRegex ? rexWordBoundary : "\\E" rexWordBoundary );
+      if( !fRegex && rawSrc.length() > 0 ) { // if operand is quoted, search for any quoted string (any quote-delimiter) using RegEx
+         const auto first = rawSrc[0];
+         const auto last  = rawSrc[rawSrc.length()-1];
+         if( rawSrc.length() > 2 && first==last && (first=='\'' || first=='"' || first=='`') ) {
+            d_rawStr.assign( "(['\"`])" rexPLAINTEXT_BEGIN );
+            d_rawStr.append( rawSrc.substr(1,rawSrc.length()-1-1) );  // rawSrc w/quotes removed
+            d_rawStr.append( rexPLAINTEXT_END "\\1" );
+            d_fRegex = true;                                                             DBG( "wordsearch mode[quoted] RegEx='%s'", d_rawStr.c_str() );
+            }
+         else { // do a true word search by wrapping escaped rawSrc in rexWordBoundary.
+            const auto w0 = IsPcre2WordChar( first ); // However, rexWordBoundary will never match if adjacent character doesn't
+            const auto wN = IsPcre2WordChar( last  ); // match \w, so we have to precheck the first and last chars of rawSrc.
+            if( w0 + wN > 0 ) {
+               d_rawStr.assign( w0 ? rexWordBoundary rexPLAINTEXT_BEGIN : rexPLAINTEXT_BEGIN );
+               d_rawStr.append( rawSrc );
+               if( wN ) { d_rawStr.append( rexPLAINTEXT_END rexWordBoundary ); }
+               d_fRegex = true;                                                          DBG( "wordsearch mode RegEx='%s'", d_rawStr.c_str() );
+               }
+            }
          }
       }
-   else {
+   if( d_rawStr.empty() ) {
       const auto fPromotingPlainSearchToRegex( !d_fRegex && g_fPcreAlways );
-      d_rawStr.assign( fPromotingPlainSearchToRegex ? "\\Q" : "" );
+      d_rawStr.assign( fPromotingPlainSearchToRegex ? rexPLAINTEXT_BEGIN : "" );
       d_fRegex = d_fRegex || fPromotingPlainSearchToRegex;
-      d_rawStr.append( rawSrc );
+      d_rawStr.append( rawSrc );                         fPromotingPlainSearchToRegex && DBG( "pcrealways mode RegEx='%s'", d_rawStr.c_str() );
       }
    d_fCanUseFastSearch = !d_fRegex && std::string::npos==d_rawStr.find( ' ' ) && std::string::npos==d_rawStr.find( HTAB );
 #if USE_PCRE
