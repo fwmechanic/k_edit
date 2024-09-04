@@ -274,3 +274,23 @@ STATIC_FXN void test_rpc( PCChar szRawReplace ) {
          }
       }
    }
+
+int IsPcre2WordChar(char ch) {
+   STATIC_VAR pcre2_code *re = nullptr;
+   STATIC_VAR pcre2_match_data *match_data = nullptr;
+
+   // Compile the regex pattern and initialize match data only once
+   if( !re ) {
+      int errorcode;
+      PCRE2_SIZE erroroffset;
+      re = pcre2_compile( (PCRE2_SPTR)"\\w", PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroroffset, NULL );
+      if( !re ) {
+         return 0;
+         }
+      match_data = pcre2_match_data_create_from_pattern(re, NULL);
+      }
+
+   // Perform the match
+   const int rv = pcre2_match(re, (PCRE2_SPTR)&ch, 1, 0, 0, match_data, NULL);
+   return rv >= 0 ? 1 : 0;  // rv is summable
+   }

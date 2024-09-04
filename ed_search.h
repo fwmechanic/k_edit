@@ -42,6 +42,7 @@ extern CompiledRegex *Regex_Delete0( CompiledRegex *pcr );
 extern RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
 extern void register_atexit_search();
 extern stref RegexVersion();
+extern int IsPcre2WordChar(char ch);
 
 #else
 
