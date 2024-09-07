@@ -93,10 +93,14 @@ function new(obj)
 function MenuProto_:prepAboutChoices()
    self.opt = self.opt or {}
    self.color = self.color or FgBg( Wht, Brn )
-   self.aboutChoices = {}
+   self.aboutChoices = { lastChoice = 0 }  -- out of range
    local ac = self.aboutChoices
    local choices_ = {}
    local max = 0
+   if self.updateActions and type(self.updateActions) == 'table' and #self.updateActions == #self.choices then
+      ac.updateActions = self.updateActions  -- make updateActions available
+      DBG(  "ac.updateActions are live!" )
+      end
    for ix, val in ipairs( self.choices ) do
       local aval = type(val) == "table" and val[1] or val  -- DBG( "choices["..ix.."]="..aval )
       choices_[1+#choices_] = aval
@@ -115,9 +119,14 @@ function MenuProto_:prepAboutChoices()
    ac.minVisibleChoice  = 1
    ac.numVisibleChoices = Min( ac.count, ScreenLines() - 6 )  -- 6 = 2 (frame) + 2 (top & bottom gap) + 2 (dialog & status lines)
 
-   -- center the menu's window
    ac.minY = int( (ScreenLines() - ac.numVisibleChoices )/2-2 )  -- "-2" magic number to position max menu window correctly
-   ac.minX = int( (ScreenCols()  - ac.maxlen            )/2 )
+   if self.menuPosition and self.menuPosition == 'right' then
+      -- position the menu's window within 1 char of right border
+      ac.minX = ScreenCols() - ac.maxlen - 3
+   else
+      -- center the menu's window
+      ac.minX = int( (ScreenCols()  - ac.maxlen            )/2 )
+      end
    ac.titPre, ac.title,ac.titPost = prepTitle( ac.title, ac.maxlen, chHbar )
 
    self.paddedChoices = {}  -- array containing all choices padded to aboutChoices.maxlen
@@ -166,6 +175,18 @@ function MenuProto_:update( curChoice )
 --]]
 
 function MenuProto_:update( curChoice )
+   local ac = self.aboutChoices  -- constant
+   if self.lastChoice ~= curChoice then
+      if ac.updateActions then
+         ac.updateActions[curChoice]()
+         end
+      end
+
+   ac.minVisibleChoice = Max( ac.minVisibleChoice, curChoice - (ac.numVisibleChoices - 1) )
+   ac.minVisibleChoice = Min( ac.minVisibleChoice, curChoice )
+
+   -- DBG( "curChoice="..curChoice..", minVisibleChoice="..ac.minVisibleChoice )
+
    -- update of old version that minimizes # of vid_wrYX calls
    -- This is probably optimal as the one vid_wrYX per choice is always the same
    -- length, with string content and color varying; any such variation will
@@ -173,7 +194,6 @@ function MenuProto_:update( curChoice )
    -- more efficient than many small-region updates as the above "3 vid_wrYX
    -- calls per line" impl causes (it also causes 3x s_direct_vid_segs vector
    -- elements per choice line, vs 1x for this impl).
-   local ac = self.aboutChoices  -- constant
    local bx   = ac.minX + 1      -- constant
    local curY = ac.minY + 1
    for ix = ac.minVisibleChoice, ac.minVisibleChoice + ac.numVisibleChoices - 1 do
@@ -250,10 +270,6 @@ function MenuProto_:PickOne( initialChoice )
    -- DBG( curChoice..", "..ac.count )
       curChoice = Max( curChoice, 1 )
       curChoice = Min( curChoice, ac.count )
-
-      ac.minVisibleChoice = Max( ac.minVisibleChoice, curChoice - (ac.numVisibleChoices - 1) )
-      ac.minVisibleChoice = Min( ac.minVisibleChoice, curChoice )
-   -- DBG( "curChoice="..curChoice..", minVisibleChoice="..ac.minVisibleChoice )
       end
 
    vid_restore()

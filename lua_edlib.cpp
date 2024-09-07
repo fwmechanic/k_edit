@@ -608,6 +608,11 @@ namespace LView {
       pv->SetMatchHiLite( pt, Cols, false );
       RZ;
       }
+   STATIC_FXN int ClearHilites( lua_State *L ) { // params: int line, int col, int MatchCols
+      const auto pv    ( thisVw() );
+      pv->FreeHiLiteRects();
+      RZ;
+      }
    }
 
 #pragma GCC diagnostic pop
@@ -824,6 +829,7 @@ STATIC_FXN void l_register_View_object( lua_State *L ) {
       LUA_FUNC_I(Get_LineCompile)
       LUA_FUNC_I(Set_LineCompile)
       LUA_FUNC_I(HiliteMatch)
+      LUA_FUNC_I(ClearHilites)
       LUA_FUNC_I(FBuf)
       LUA_FUNC_I(FName)
       LUA_FUNC_I(Next)

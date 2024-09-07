@@ -185,6 +185,7 @@
 
    w :=cancel arg "wordsearch:INVERT" show_asgn
    c :=cancel arg "case:INVERT" show_asgn
+   p :=cancel arg "pcrealways:INVERT" show_asgn
    cy:=cancel arg "case:YES" show_asgn
    cn:=cancel arg "case:NO"  show_asgn
 
