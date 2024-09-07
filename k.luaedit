@@ -877,6 +877,248 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       return absfnm
       end
 
+   local lang_patchup_atags = {
+      ['C++'] = function( atag )
+         if atag.kind=='function' and atag.class then
+            atag.kind = 'method'
+            atag.eTag = atag.class..'::'..atag.tag  -- eTag="enhanced tag"
+            end
+         end,
+      }
+
+   do
+      local function Choice_Debug( atag )
+         local omit_atag_from_choice = {
+            line = true,
+            language = true,
+            kind = true,
+            }
+         local details = {}
+         for _,atnm in ipairs(atag) do
+            if not omit_atag_from_choice[atnm] then
+               local val = atnm .. ':' .. atag[atnm]
+               details[1+#details] = val
+               end
+            end
+         local suffix = table.concat( details, "|" )
+         return atag.language..' '..atag.kind..(#suffix > 0 and (' '..suffix) or '')
+         end
+
+      local function Choice_Cplusplus( atag )
+         local kind = atag.kind
+         local classnm = atag.class or atag.struct
+         if kind == "function" then
+            if classnm then
+               kind = classnm:match(":*"..atag.tag.."$") and "ctor " or "method"
+               end
+            classnm = classnm or atag.namespace
+            return  kind .." "
+                .. (classnm or "")
+                .. (atag.signature and ("\t" .. atag.signature) or "")
+            end
+         if kind == "class" or kind == "struct" then
+            classnm = classnm or atag.namespace
+            return  kind .." "
+                .. (classnm and (classnm.."::") or "")
+                .. atag.tag
+            end
+         end
+
+      local function Choice_Python( atag )
+         local kind = atag.kind
+         if kind=="class" then
+            -- TODO add new atag to current tagSet for __init__ (ctor)
+            return  kind .." "
+                .. (atag.class or "")
+            end
+         if kind=="function" or kind=="member" then
+            return  kind .." "
+                .. (atag.member or "")
+                .. (atag.class or "")
+            --  .. (atag.class and "class "..atag.class or "")
+                .. (atag['function'] or "")
+                .. (atag.signature and ("\t" .. atag.signature) or "")
+            end
+         if kind=="variable" then
+            return  kind .." "
+                .. (atag.member or "")
+                .. (atag.class or "")
+            --  .. (atag.class and "class "..atag.class or "")
+            end
+         end
+
+      local function Choice_TypeScript( atag )
+         local kind = atag.kind
+         local classnm = (atag.class and "class "..atag.class) or (atag.interface and "interface "..atag.interface)
+         if classnm then
+            if kind == "function" or kind == "method" or kind == "property" then return kind .. ' ' .. classnm end
+            end
+         return kind .. ' ' .. atag.tag
+         end
+
+      local lang_choicer = {
+         ["C++"]    = Choice_Cplusplus,
+           C        = Choice_Cplusplus,
+         Python     = Choice_Python,
+         TypeScript = Choice_TypeScript,
+         }
+
+      ChoiceTxtOfATag = function( atag )
+         return atag.choiceTxt or (lang_choicer[atag.language] and lang_choicer[atag.language]( atag )) or Choice_Debug( atag )
+         end
+   end
+
+   local lang_allowed_kinds = {
+      TypeScript = {
+      -- EXCLUDED:
+      -- constant
+      -- generator
+      -- alias
+      -- enumerator
+      -- local
+      -- variable
+      -- parameter
+      --
+      -- INCLUDED:
+         class        = 0,
+         ['function'] = 0,
+         enum         = 0,
+         interface    = 0,
+         method       = 3,
+         property     = 3,
+         },
+      ['C++'] = {
+         namespace    = 0,
+         struct       = 0,
+         union        = 0,
+         member       = 3,
+         enum         = 0,
+         class        = 0,
+         macro        = 0,
+         module       = 0,
+         ['function'] = 0,
+         }
+      }
+   local function atagAllowed( atag ) return lang_allowed_kinds[atag.language][atag.kind] end
+
+   local function ReadTagDopeForSourceFile( srcFnm, fRaw )
+      local wtSrcJustFnm = srcFnm:match "[^\\/]+$"
+      print( "wtSrcJustFnm " .. wtSrcJustFnm )
+      local srcFileTags = get_tags_matching( wtSrcJustFnm )
+      if not s_tagsFilename then
+         Msg( "<no tags file in CwdToRoot>" )
+         return nil
+         end
+      local ifh = assert( io.open( s_tagsFilename, "r" ) )
+      local language
+      for _,tagline in ipairs(srcFileTags) do  -- there should only be one tag/tagline matching our filename, but...
+         local atag = LineToTagRec( tagline )
+         if atag.kind=='file' then
+            language = assert( atag.language, "kind:file tag does not have language: ?" )
+            break
+            end
+         end
+      assert( language, "no file tag found" )
+      local allowed_kinds = assert( lang_allowed_kinds[language], "no lang_allowed_kinds for language=" .. language )
+      local wtSrcFnm = srcFnm:sub( #s_tagsFilepath+1 )
+      print( "wtSrcFnm " .. wtSrcFnm )
+      local kindMax, tagNmMax, lnumWMax = 0,0,0
+      local tagdefs = {}
+      for line in ifh:lines() do
+         if not line:match"^!_TAG_" then
+            local tag,fnm,lnum = line:match( '^([^\t]+)\t([^\t]+)\t(%d+);"' )  -- do this first for speed, since most tags will be disqualified by fnm
+            if lnum and fnm == wtSrcFnm and not tag:match('^__anon') then
+               local atag = LineToTagRec( line )
+               if lang_patchup_atags[atag.language] then lang_patchup_atags[atag.language]( atag ) end
+               local kind = atag.kind
+               if fRaw and kind~='file' or allowed_kinds[kind] then
+                  local lnum = tonumber(atag.lnum)
+                  lnumWMax = Max( lnumWMax, lnum and widthDecimal(lnum) or 0 )
+                  kind = (' '):rep(fRaw and 0 or allowed_kinds[kind]) .. kind
+                  kindMax = Max( kindMax, #kind )
+                  tagNmMax = Max( tagNmMax, #tag )
+                  tagdefs[1+#tagdefs] = atag
+                  end
+               end
+            end
+         end
+      ifh:close()
+      assert( #tagdefs > 0, "no tags found for "..wtSrcFnm.." found in "..s_tagsFilename )
+      table.sort( tagdefs, function(s1, s2) return s1.lnum < s2.lnum end )  -- sort by lnum
+      return tagdefs, wtSrcFnm, kindMax, tagNmMax, lnumWMax
+      end
+
+   local function findTagX( fb, lnum, tag )
+      -- printf( "lnum %d, tag = %s", lnum, tag )
+      local ldat = fb:GetLine( lnum )
+      if not ldat then
+         Msg( "tag refers to nonexistent line.  Are tags up to date?" )
+         return
+         end
+      local stx,endx = ldat:find( tag, 1, true )
+      if not stx then
+         Msg( "tag string '"..tag.."' not found: tags file out of sync (edits may have occurred)" )
+         return
+         end
+      return stx,endx
+      end
+
+   AddEdFxn{ name = "hltags", help = "(Lua) hilite all tags in current file", attr = NOARG
+      , NOARG   = function(arg)
+         local fb, vw = arg.fbuf, arg.view
+         vw:ClearHilites()
+         local hlCnt, tagdefs = 0, ReadTagDopeForSourceFile( fb:Name(), true )
+         for iy,atag in ipairs(tagdefs) do
+            local stx,endx = findTagX( fb, atag.lnum, atag.tag )
+            if endx then
+               vw:HiliteMatch( atag.lnum, stx, endx - stx + 1 )
+               hlCnt = 1+hlCnt
+               end
+            end
+         Msgf( "hilited %d of %d tags in '%s'", hlCnt, #tagdefs, fb:Name() )
+         end
+      }
+
+   local function TagDopeMenuForSourceFile( arg )
+      local fb, vw = arg.fbuf, arg.view
+      local tagdefs, wtSrcFnm, kindMax, tagNmMax, lnumWMax = ReadTagDopeForSourceFile( fb:Name() )
+      local mvCurTo = function( lnum, tag )
+         local stx,endx = findTagX( fb, lnum, tag )
+         if endx then
+            vw:ClearHilites()
+            vw:HiliteMatch( lnum, stx, endx - stx + 1 )
+            vw:MoveCursor(  lnum, stx )
+            end
+         end
+
+      local updateActions = {}
+      for iy,atag in ipairs(tagdefs) do
+         updateActions[1+#updateActions] = function() mvCurTo( atag.lnum, atag.tag ) end
+         end
+      local startTagIx = #tagdefs
+      for iy,atag in ipairs(tagdefs) do
+         if atag.lnum > arg.cursorY then
+            startTagIx = iy>1 and iy-1 or 1
+            break
+            end
+         end
+      local choices, pad = {}, ' '
+      for ix, atag in ipairs( tagdefs ) do  -- menu-setup loop
+         choices[1+#choices] = -- fmt( "%"..lnumWMax.."d ", atag.lnum)  ..
+                               str_setlen( atag.kind, kindMax )         ..
+                               ' '.. str_setlen( atag.tag, tagNmMax )
+         end
+         --------------------------------------------------------------------------------------------------------------------
+      if #tagdefs > 0 then  -- multiple choices available; solicit user choice via menu
+         assert( #tagdefs == #updateActions )
+         local selectedTagIx = Menu.new{ title=fmt( "%d tags for %s", #tagdefs, wtSrcFnm ), choices=choices, updateActions=updateActions, menuPosition='right' }:PickOne(startTagIx)
+         if not selectedTagIx then  -- user hit Esc?  Restore original cursor position.
+            vw:ClearHilites()
+            vw:MoveCursor( arg.cursorY, arg.cursorX )
+            end
+         end
+      end
+
    local function Msg_print( msg ) Msg( msg )  print( msg ) end
    read_tagged_files_from_tags_file = function( tfbuf )
       -- following is ONLY to provide default mffile (mfgrep, mfreplace) buffer (oh, and to provide tfbuf:LineCount() for Msg below)
@@ -899,7 +1141,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       end
 
    local ignored_atag = {
-      lang = {
+      language = {
          -- Man  = true,
          -- HTML = true,
          -- Markdown = true,
@@ -915,46 +1157,38 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       --]]
       }
 
-   local tag_field_nm_map = {
-      variable   = "var",
-      language   = "lang",
-      enumerator = "enum",
-      }
-   local function split_extension_field( dest, fieldVal )  -- DBG( "split_extension_field+ "..fieldVal )
-      local nm, val = fieldVal:match( "^([%w_]+):(.*)$" )  -- DBG( "split_extension_field- nm="..(nm or "nil").." vl="..(val or "nil") )
-      if val then
-         nm = tag_field_nm_map[nm] or nm
-         val = val:gsub( "::__anon%x+", "" )
-         dest[1+#dest] = nm
-         dest[nm] = val
-      else
-         tu.t_append( dest, "anon", fieldVal )
-         end
-      end
-
-   LineToTagRec = function( line )
-      -- dice a (possible) tags file record (line) into fields
-      local atag = {}
-      local fields = split_ch_tbl( line, "\t" )
-      if #fields < 4 then return nil end
-      local shift = function() return table.remove( fields, 1 ) end
-      -- first 3 fields are FIXED (always present) positional: 'tag name', 'input file', 'pattern' (see --list-fields output)
-      local tag = shift()  -- tag name
-      local fnm = norm_fnm_of_tag( shift() )  -- input file
-      local pat = shift()  -- pattern   ; when --excmd=number, pattern has the value 'n;"' where n is a decimal (line) number
-      local lnum = pat:match( '(%d+);"' )  -- PATTERN; when --excmd=number, this has the value 'n;"' where n is a decimal (line) number
+   local dbgLTTR = true
+   LineToTagRec = function( tagline )  -- dice a (possible) tags file record (tagline) into fields
+      if dbgLTTR then printf( 'LineToTagRec.raw=%s|', tagline ) end
+      local iter = tagline:gmatch("[^\t]+")  -- tagline fields are tab-separated
+      -- first 3 fields are FIXED (always present) positional: 'tag name', 'input file', 'pattern' (see ctags --list-fields output)
+      local tag,fnm,pat = iter(),iter(),iter()
+      if pat == nil then return nil end
+   -- fnm = norm_fnm_of_tag( fnm )  -- input file
+      pat = pat:match( '(%d+);"' ) -- PATTERN; when --excmd=number, this has the value 'n;"' where n is a decimal (line) number
       -- lnum/line# info can also be obtained from Extension field 'line:' (--field=+n);
-
+      local atag = { tag=tag, fnm=fnm, lnum=pat and tonumber(pat) }
+      if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'tag' , atag.tag  ) end
+      if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'fnm' , atag.fnm  ) end
+      if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'lnum', atag.lnum ) end
       -- kind field: is an optional universal-ctags field which it can manifest into tag record in two different ways:
       -- 1: as a 4th positional field (if (--field=+K OR --field=+k) AND NOT --field=+z)
       -- 2: in place of a 4th positional field, as the first Extension field 'kind:' (if --field=+K+z OR --field=+k+z)
       -- our code supports option 2 which is cleaner (the more self-identifying fields used, the better)
-      atag = { tag=tag, fnm=fnm, lnum=lnum }
       -- remaining fields are "Extension fields": "key:value"
-      for _,field in ipairs(fields) do  -- DBG( field )
-         split_extension_field( atag, field )
+      for fieldVal in iter do -- printf( "fieldVal='%s'", fieldVal )
+         local nm, val = string.match(fieldVal, "^(.+):([^:]+)$" )  -- DBG( "split_extension_field- nm="..(nm or "nil").." vl="..(val or "nil") )
+         if val then
+            -- val = val:gsub( "::__anon%x+", "" )
+            -- atag[1+#atag] = nm
+            atag[nm] = val
+            if dbgLTTR then printf( '%s=atag.%s=%s|', tag, nm, val ) end
+         else
+            if dbgLTTR then printf( '%s=atag.%s???', tag, fieldVal ) end
+            end
          end
       if atag.kind=='file' then
+         assert(atag.language)
          atag.lnum = nil
          end
       return atag
@@ -964,12 +1198,12 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       if not taglines or #taglines==0 then return end
       local cands = {}
       print( "filterTags: input=["..#taglines.."]" )
-      for ix,line in ipairs(taglines) do  -- DBG( line )
-         local atag = LineToTagRec( line )
+      for ix,tagline in ipairs(taglines) do  -- DBG( tagline )
+         local atag = LineToTagRec( tagline )
          local function ignored( tagat )
             return atag[tagat] and ignored_atag[tagat] and ignored_atag[tagat][atag[tagat]]
             end
-         if not (ignored 'lang' or ignored 'kind') then  -- TODO: move this filtering to the INPUT side (by adjusting ctags params/options)
+         if not (ignored 'language' or ignored 'kind') then  -- TODO: move this filtering to the INPUT side (by adjusting ctags params/options)
             cands[1+#cands] = atag
             end
          end
@@ -1562,6 +1796,9 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
    -- fs "%s_Vect"     ,  -- j o b-specific !!!
          identity      ,  -- *** IDENTITY ***  variants before supercede identity; tag_variants after tried iff DefinedTag(identity(tag)) fails
          rightident    ,  -- 'NOARG tags' defaults to WUC which today can yield 'x.y.z' (vs legacy 'z'); if DefinedTag('x.y.z') fails, try DefinedTag('z') here
+      fs "%s.ts"       ,  -- Typescript module name maps to file "${modnm}.ts"
+      fs "%s.js"       ,  -- Javascript module name maps to file "${modnm}.js"
+      fs "%s.vue"      ,  -- Vue module name maps to file "${modnm}.vue"
       fs "%s.py"       ,  -- python module name maps to file "${modnm}.py"
       fs "%s.cmake"    ,
       fs "l_edfunc_%s" ,  -- lua fxn wr in C?  (hardly works since macros mask true fxn names)
@@ -1571,80 +1808,9 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       cmake_ident      ,
       cmake_globalvar  ,
       }
-   do
-      local function Choice_Debug( at )
-         local omit_atag_from_choice = {
-            line = true,
-            lang = true,
-            kind = true,
-            }
-         local details = {}
-         for _,atnm in ipairs(at) do
-            if not omit_atag_from_choice[atnm] then
-               local val = atnm .. ':' .. at[atnm]
-               details[1+#details] = val
-               end
-            end
-         local suffix = table.concat( details, "|" )
-         return at.lang..' '..at.kind..(#suffix > 0 and (' '..suffix) or '')
-         end
-
-      local function Choice_Cplusplus( at )
-         local kind = at.kind
-         local classnm = at.class or at.struct
-         if kind == "function" then
-            if classnm then
-               kind = classnm:match(":*"..at.tag.."$") and "ctor " or "method"
-               end
-            classnm = classnm or at.namespace
-            return  kind .." "
-                .. (classnm or "")
-                .. (at.signature and ("\t" .. at.signature) or "")
-            end
-         if kind == "class" or kind == "struct" then
-            classnm = classnm or at.namespace
-            return  kind .." "
-                .. (classnm and (classnm.."::") or "")
-                .. at.tag
-            end
-         end
-
-      local function Choice_Python( at )
-         local kind = at.kind
-         if kind=="class" then
-            -- TODO add new atag to current tagSet for __init__ (ctor)
-            return  kind .." "
-                .. (at.class or "")
-            end
-         if kind=="function" or kind=="member" then
-            return  kind .." "
-                .. (at.member or "")
-                .. (at.class or "")
-            --  .. (at.class and "class "..at.class or "")
-                .. (at['function'] or "")
-                .. (at.signature and ("\t" .. at.signature) or "")
-            end
-         if kind=="variable" then
-            return  kind .." "
-                .. (at.member or "")
-                .. (at.class or "")
-            --  .. (at.class and "class "..at.class or "")
-            end
-         end
-
-      local lang_choicer = {
-         ["C++"] = Choice_Cplusplus,
-           C     = Choice_Cplusplus,
-         Python  = Choice_Python,
-         }
-
-      ChoiceTxtOfATag = function( atag )
-         return atag.choiceTxt or lang_choicer[atag.lang] and lang_choicer[atag.lang]( atag ) or Choice_Debug( atag )
-         end
-   end
 
    local s_prevTagLookedUp  -- user/command state
-   local function gotoTag( tagStr, fSaveCurLocn )  -- fSaveCurLocn s/b false for a recursive call (see "alias tags" in k_all.awk...)
+   local function gotoTag( arg, tagStr, fSaveCurLocn )  -- fSaveCurLocn s/b false for a recursive call (see "alias tags" in k_all.awk...)
       AddToSearchLog( tagStr )
       local tagdefs
       for _,fxn in ipairs(tag_variants) do
@@ -1673,8 +1839,10 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       s_prevTagLookedUp = tagStr
       local cands = {}
       for ix,atag in ipairs(tagdefs) do
-         atag.choiceTxt = ChoiceTxtOfATag( atag )
-         cands[(atag.file and 'z' or 'a')..atag.choiceTxt..fmt("%03d",ix)] = atag  -- NB field 'file:' (w/value always '') signifies tagged entity is file-local; sort to bottom
+         if atagAllowed( atag ) then
+            atag.choiceTxt = ChoiceTxtOfATag( atag )
+            cands[(atag.file and 'z' or 'a')..atag.choiceTxt..fmt("%03d",ix)] = atag  -- NB field 'file:' (w/value always '') signifies tagged entity is file-local; sort to bottom
+            end
          end
       tagdefs = {}
       local ctWMax, lnumWMax, fnms = 0,0,{}
@@ -1724,17 +1892,17 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          end
       do
          local thisVCRepoCtxt = "."  -- todo replace with actual repo ctxt
-         local tagUriQySpec = ""  -- "?k=atag.kind&l=atag.lang&c=classnm"  whatever is needed to LATER choose the tag entry just chosen by the user, even if source code is edited in the interim (therefore .fnm && .lnum should NOT be used herein)
+         local tagUriQySpec = ""  -- "?k=atag.kind&l=atag.language&c=classnm"  whatever is needed to LATER choose the tag entry just chosen by the user, even if source code is edited in the interim (therefore .fnm && .lnum should NOT be used herein)
          DBG( fmt( "gotoTag ctag://%s/%s%s", thisVCRepoCtxt, tagStr, tagUriQySpec ) )
       end
       local theChoice = choices[selectedTagIx]:gsub( "%s*@.+$", "" ):gsub( "%s%s+", " " )
       Msgf( "%s[%d] %s", tagStr, selectedTagIx, theChoice )
       end
 
-   AddEdFxn{ name = "gototag", help = "Lua tags function", attr = NOARG+NOARGWUC+TEXTARG+BOXSTR, key = "alt+u"
-      , NOARG   = function(arg)  return gotoTag( s_prevTagLookedUp, true )  end
-      , TEXTARG = function(arg)  return gotoTag( arg.text         , true )  end
-   --  NULLARG+   , NULLARG = function(arg)  return s_tagsFilename and SwitchToFile( s_tagsFilename ) end
+   AddEdFxn{ name = "gototag", help = "(Lua) jump to tag; NULLARG: show menu of all tags in current file", attr = NOARG+NULLARG+NOARGWUC+TEXTARG+BOXSTR, key = "alt+u"
+      , NOARG   = function(arg)  return gotoTag( arg, s_prevTagLookedUp, true )  end
+      , TEXTARG = function(arg)  return gotoTag( arg, arg.text         , true )  end
+      , NULLARG = TagDopeMenuForSourceFile
       }
 
    GotoCtagsUri = function( uri )
