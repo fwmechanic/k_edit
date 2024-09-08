@@ -886,8 +886,8 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          end,
       }
 
-   do
-      local function Choice_Debug( atag )
+   do -- Choice/Choicer distinguish between different instances of the SAME TAG
+      local function Choice_Debug( atag )  -- fallback when language-specific choicer not yet created
          local omit_atag_from_choice = {
             line = true,
             language = true,
@@ -988,6 +988,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          property     = 3,
          },
       ['C++'] = {
+         typedef      = 0,
          namespace    = 0,
          struct       = 0,
          union        = 0,
@@ -999,7 +1000,16 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          ['function'] = 0,
          }
       }
-   local function atagAllowed( atag ) return lang_allowed_kinds[atag.language][atag.kind] end
+   local function atagAllowed_( atag )
+      if not lang_allowed_kinds[atag.language] then return 0 end
+      return lang_allowed_kinds[atag.language][atag.kind]
+      end
+
+   local function atagAllowed( atag )
+      local rv = atagAllowed_( atag )
+      -- printf( "atagAllowed( %s:%s ) = %s", atag.language, atag.kind, rv )
+      return rv
+      end
 
    local function ReadTagDopeForSourceFile( srcFnm, fRaw )
       local wtSrcJustFnm = srcFnm:match "[^\\/]+$"
@@ -1022,18 +1032,19 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       local allowed_kinds = assert( lang_allowed_kinds[language], "no lang_allowed_kinds for language=" .. language )
       local wtSrcFnm = srcFnm:sub( #s_tagsFilepath+1 )
       print( "wtSrcFnm " .. wtSrcFnm )
-      local kindMax, tagNmMax, lnumWMax = 0,0,0
+      local kindMax, tagNmMax, lineWMax = 0,0,0
       local tagdefs = {}
-      for line in ifh:lines() do
-         if not line:match"^!_TAG_" then
-            local tag,fnm,lnum = line:match( '^([^\t]+)\t([^\t]+)\t(%d+);"' )  -- do this first for speed, since most tags will be disqualified by fnm
-            if lnum and fnm == wtSrcFnm and not tag:match('^__anon') then
-               local atag = LineToTagRec( line )
+      for tagline in ifh:lines() do
+         if not tagline:match"^!_TAG_" then
+            local tag,fnm = tagline:match( '^([^\t]+)\t([^\t]+)\t' )  -- do this first for speed, since most tags will be disqualified by fnm
+            if fnm and fnm == wtSrcFnm and not tag:match('^__anon') then
+               local atag = LineToTagRec( tagline )
+               assert( atag.kind, "tag "..tag.." missing .kind" )
                if lang_patchup_atags[atag.language] then lang_patchup_atags[atag.language]( atag ) end
                local kind = atag.kind
                if fRaw and kind~='file' or allowed_kinds[kind] then
-                  local lnum = tonumber(atag.lnum)
-                  lnumWMax = Max( lnumWMax, lnum and widthDecimal(lnum) or 0 )
+                  assert( atag.line, "tag "..tag.." missing .line" )
+                  lineWMax = Max( lineWMax, widthDecimal(atag.line) or 0 )
                   kind = (' '):rep(fRaw and 0 or allowed_kinds[kind]) .. kind
                   kindMax = Max( kindMax, #kind )
                   tagNmMax = Max( tagNmMax, #tag )
@@ -1044,13 +1055,63 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          end
       ifh:close()
       assert( #tagdefs > 0, "no tags found for "..wtSrcFnm.." found in "..s_tagsFilename )
-      table.sort( tagdefs, function(s1, s2) return s1.lnum < s2.lnum end )  -- sort by lnum
-      return tagdefs, wtSrcFnm, kindMax, tagNmMax, lnumWMax
+      table.sort( tagdefs, function(s1, s2) return s1.line < s2.line end )  -- sort by line
+      return tagdefs, wtSrcFnm, kindMax, tagNmMax, lineWMax
       end
 
-   local function findTagX( fb, lnum, tag )
-      -- printf( "lnum %d, tag = %s", lnum, tag )
-      local ldat = fb:GetLine( lnum )
+   local function get_exc_pattern( atag )
+      local pat = atag.pattern
+      if not pat then return end
+      local st,en = pat:match( '^%^' ) or '', pat:match( '%$$' ) or ''
+      pat = st..LuaPat_escape( pat:sub(1+st:len(), pat:len()-en:len() ) )..en
+      local iTagBeg, iTagEnd = pat:find( atag.tag, 1, true )
+      if not iTagEnd then return end
+      printf( 'get_exc_pattern+ %s', pat )
+      pat = pat:sub(1,iTagBeg-1):gsub('%s+','%%s+')..'()'..pat:sub(iTagBeg,iTagEnd)..'()'..pat:sub(iTagEnd+1):gsub('%s+','%%s+')
+      printf( 'get_exc_pattern- %s', pat )
+      return pat
+      end
+
+   local function find_tag_by_pattern( fb, atag )
+      local pat = get_exc_pattern( atag )
+      if not pat then return end
+      local line = Min( atag.line, fb:LastLine() )
+      printf( "find_tag_by_pattern searching %s around %d", fb:Name(), line )
+      local function chk( iy )
+         printf( "find_tag_by_pattern probing line %d", iy )
+         local ldat = fb:GetLine( iy )
+         local stx,endx = ldat:match( pat )
+         if endx then
+            endx = endx-1
+            printf( 'find_tag_by_pattern.chk(%d) FOUND %s at [%d,%d]', iy, ldat:sub(stx, endx), stx,endx )
+            return stx,endx
+            end
+         end
+      local spread = 25
+      local yMin = Max( line-spread, 1 )
+      printf( 'find_tag_by_pattern.downloop [%d..%d]', line,yMin )
+      for iy=line, yMin, -1 do
+         local stx,endx = chk( iy )
+         if endx then return stx,endx end
+         end
+      local yMax = Min( line+spread+1, fb:LastLine() )
+      printf( 'find_tag_by_pattern.uploop [%d..%d]', line+1,yMax )
+      for iy=line+1, yMax do
+         local stx,endx = chk( iy )
+         if endx then return stx,endx end
+         end
+      end
+
+   local function findTagX( fb, atag )
+      local tag = assert( atag.tag )
+      local line = assert( atag.line )
+      -- printf( "line %d, tag = %s", line, tag )
+      local stx,endx = find_tag_by_pattern( fb, atag )
+      if endx then
+         return stx,endx
+         end
+
+      local ldat = fb:GetLine( line )
       if not ldat then
          Msg( "tag refers to nonexistent line.  Are tags up to date?" )
          return
@@ -1069,9 +1130,9 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          vw:ClearHilites()
          local hlCnt, tagdefs = 0, ReadTagDopeForSourceFile( fb:Name(), true )
          for iy,atag in ipairs(tagdefs) do
-            local stx,endx = findTagX( fb, atag.lnum, atag.tag )
+            local stx,endx = findTagX( fb, atag )
             if endx then
-               vw:HiliteMatch( atag.lnum, stx, endx - stx + 1 )
+               vw:HiliteMatch( atag.line, stx, endx - stx + 1 )
                hlCnt = 1+hlCnt
                end
             end
@@ -1081,30 +1142,30 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
 
    local function TagDopeMenuForSourceFile( arg )
       local fb, vw = arg.fbuf, arg.view
-      local tagdefs, wtSrcFnm, kindMax, tagNmMax, lnumWMax = ReadTagDopeForSourceFile( fb:Name() )
-      local mvCurTo = function( lnum, tag )
-         local stx,endx = findTagX( fb, lnum, tag )
+      local tagdefs, wtSrcFnm, kindMax, tagNmMax, lineWMax = ReadTagDopeForSourceFile( fb:Name() )
+      local mvCurTo = function( line, tag )
+         local stx,endx = findTagX( fb, {line=line, tag=tag} )
          if endx then
             vw:ClearHilites()
-            vw:HiliteMatch( lnum, stx, endx - stx + 1 )
-            vw:MoveCursor(  lnum, stx )
+            vw:HiliteMatch( line, stx, endx - stx + 1 )
+            vw:MoveCursor(  line, stx )
             end
          end
 
       local updateActions = {}
       for iy,atag in ipairs(tagdefs) do
-         updateActions[1+#updateActions] = function() mvCurTo( atag.lnum, atag.tag ) end
+         updateActions[1+#updateActions] = function() mvCurTo( atag.line, atag.tag ) end
          end
       local startTagIx = #tagdefs
       for iy,atag in ipairs(tagdefs) do
-         if atag.lnum > arg.cursorY then
+         if atag.line > arg.cursorY then
             startTagIx = iy>1 and iy-1 or 1
             break
             end
          end
-      local choices, pad = {}, ' '
+      local choices = {}
       for ix, atag in ipairs( tagdefs ) do  -- menu-setup loop
-         choices[1+#choices] = -- fmt( "%"..lnumWMax.."d ", atag.lnum)  ..
+         choices[1+#choices] = -- fmt( "%"..lineWMax.."d ", atag.line)  ..
                                str_setlen( atag.kind, kindMax )         ..
                                ' '.. str_setlen( atag.tag, tagNmMax )
          end
@@ -1157,27 +1218,38 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       --]]
       }
 
-   local dbgLTTR = true
+   local dbgLTTR = false
    LineToTagRec = function( tagline )  -- dice a (possible) tags file record (tagline) into fields
       if dbgLTTR then printf( 'LineToTagRec.raw=%s|', tagline ) end
       local iter = tagline:gmatch("[^\t]+")  -- tagline fields are tab-separated
-      -- first 3 fields are FIXED (always present) positional: 'tag name', 'input file', 'pattern' (see ctags --list-fields output)
-      local tag,fnm,pat = iter(),iter(),iter()
-      if pat == nil then return nil end
+      -- first 3 fields are FIXED (always present) positional: 'tag name', 'input file', 'ecx' (see ctags --list-fields output)
+      local tag,fnm,exc = iter(),iter(),iter()
+      if exc == nil then return nil end
    -- fnm = norm_fnm_of_tag( fnm )  -- input file
-      pat = pat:match( '(%d+);"' ) -- PATTERN; when --excmd=number, this has the value 'n;"' where n is a decimal (line) number
-      -- lnum/line# info can also be obtained from Extension field 'line:' (--field=+n);
-      local atag = { tag=tag, fnm=fnm, lnum=pat and tonumber(pat) }
+      local atag = { tag=tag, fnm=fnm, exc=exc }
       if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'tag' , atag.tag  ) end
       if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'fnm' , atag.fnm  ) end
-      if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'lnum', atag.lnum ) end
-      -- kind field: is an optional universal-ctags field which it can manifest into tag record in two different ways:
+      if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'exc' , atag.exc  ) end
+      -- fill-in (optional) exc-based fields
+      atag.line = exc:match( '^(%d+);' )  -- when --excmd=number/mixed/combined (anything but 'pattern'), this has (or leads with) lnum, the decimal (line) number
+      if atag.line then
+         if dbgLTTR then printf( '%s=atag.%s=%s|exc', tag, 'line', atag.line ) end
+         exc = exc:sub(atag.line:len()+2)
+         if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'exc' ,      exc  ) end
+         end
+      atag.pattern = exc:match( '^/(.+)/;"' )
+      if atag.pattern then
+         if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'pattern' , atag.pattern ) end
+         -- get_exc_pattern( atag )  -- for testing
+         end
+      -- remaining fields are "Extension fields": "key:value"
+      -- lnum/line# info can also be obtained from Extension field 'line:' (--field=+n);
+      -- kind field: is an optional Universal Ctags field which it can manifest into tag record in two different ways:
       -- 1: as a 4th positional field (if (--field=+K OR --field=+k) AND NOT --field=+z)
       -- 2: in place of a 4th positional field, as the first Extension field 'kind:' (if --field=+K+z OR --field=+k+z)
       -- our code supports option 2 which is cleaner (the more self-identifying fields used, the better)
-      -- remaining fields are "Extension fields": "key:value"
       for fieldVal in iter do -- printf( "fieldVal='%s'", fieldVal )
-         local nm, val = string.match(fieldVal, "^(.+):([^:]+)$" )  -- DBG( "split_extension_field- nm="..(nm or "nil").." vl="..(val or "nil") )
+         local nm, val = fieldVal:match( "^(.+):([^:]+)$" )  -- DBG( "split_extension_field- nm="..(nm or "nil").." vl="..(val or "nil") )
          if val then
             -- val = val:gsub( "::__anon%x+", "" )
             -- atag[1+#atag] = nm
@@ -1189,7 +1261,10 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          end
       if atag.kind=='file' then
          assert(atag.language)
-         atag.lnum = nil
+         atag.line = nil
+         end
+      if atag.line then
+         atag.line = tonumber(atag.line)
          end
       return atag
       end
@@ -1197,7 +1272,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
    local function filterTags( taglines )
       if not taglines or #taglines==0 then return end
       local cands = {}
-      print( "filterTags: input=["..#taglines.."]" )
+   -- print( "filterTags: input=["..#taglines.."]" )
       for ix,tagline in ipairs(taglines) do  -- DBG( tagline )
          local atag = LineToTagRec( tagline )
          local function ignored( tagat )
@@ -1207,7 +1282,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
             cands[1+#cands] = atag
             end
          end
-      print( "filterTags: numtags=["..#cands.."]" )
+   -- print( "filterTags: numtags=["..#cands.."]" )
       return cands
       end
 
@@ -1837,62 +1912,58 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          end
       if fSaveCurLocn then LocnListInsertCursor() end
       s_prevTagLookedUp = tagStr
+
+      local selectedTagIx = 1
       local cands = {}
       for ix,atag in ipairs(tagdefs) do
-         if atagAllowed( atag ) then
+         local allowed = #tagdefs == 1 or atagAllowed( atag )
+         -- printf( "allowed = %s", tostring(allowed) )
+         if allowed then
+            -- print( "was allowed!" )
             atag.choiceTxt = ChoiceTxtOfATag( atag )
             cands[(atag.file and 'z' or 'a')..atag.choiceTxt..fmt("%03d",ix)] = atag  -- NB field 'file:' (w/value always '') signifies tagged entity is file-local; sort to bottom
             end
          end
       tagdefs = {}
-      local ctWMax, lnumWMax, fnms = 0,0,{}
-      for _,atag in tu.PairsBySortedKeys(cands) do
+      local ctWMax, lineWMax, fnms = 0,0,{}
+      for _,atag in tu.PairsBySortedKeys(cands) do  -- reconstruct tagdefs ARRAY from cands TABLE
          tagdefs[1+#tagdefs] = atag
          fnms[1+#fnms] = atag.fnm  -- print( "anm=" .. atag.fnm )
          ctWMax   = Max( ctWMax  , #atag.choiceTxt )
-         lnumWMax = Max( lnumWMax, atag.lnum and widthDecimal(atag.lnum) or 0 )
+         lineWMax = Max( lineWMax, atag.line and widthDecimal(atag.line) or 0 )
          end
       local commonLeadingPath, fnm_suffix_ary, nmWMax = FactorOutCommonLeadingPath( fnms )
-      local choices, pad = {}, ' '
+      local choices = {}
       for ix, atag in ipairs( tagdefs ) do  -- menu-setup loop
-         local cs = atag.choiceTxt:gsub( "\t", (pad:rep(ctWMax - #atag.choiceTxt + 1)), 1 )
+         local cs = atag.choiceTxt:gsub( "\t", (' '):rep(ctWMax - #atag.choiceTxt + 1), 1 )
          choices[1+#choices] = str_setlen( cs, ctWMax )
                             .. " @ "
                             .. str_setlen( fnm_suffix_ary[ ix ], nmWMax )
-                            .. (atag.lnum and fmt( " %"..lnumWMax.."d", atag.lnum) or '')
+                            .. (atag.line and fmt( " %"..lineWMax.."d", atag.line) or '')
          end
+      -- printf("choices.size == %d", #choices )
+      if #choices > 1 then  -- multiple choices available; solicit user choice via menu
          --------------------------------------------------------------------------------------------------------------------
-      local selectedTagIx = 1
-      if #tagdefs > 1 then  -- multiple choices available; solicit user choice via menu
          selectedTagIx = Menu.new{ title=fmt( "Tags for '%s' in %s", tagStr, commonLeadingPath ), choices=choices }:PickOne()
-         end
          --------------------------------------------------------------------------------------------------------------------
+         end
       if not selectedTagIx then
          return false
          end
-      local theTag = assert( tagdefs[ selectedTagIx ], tagStr .."[".. selectedTagIx.."] is undefined" )
-      local fb,vw = GotoFileLineCol( theTag.fnm, theTag.lnum, 1 )
+      local atag = assert( tagdefs[ selectedTagIx ], tagStr .."[".. selectedTagIx.."] is undefined "..#tagdefs )
+      local fb,vw = GotoFileView( atag.fnm )
       if not fb then
-         Msg( "cannot open file "..theTag.fnm )
+         Msg( "cannot open file "..atag.fnm )
          return
          end
-      if theTag.lnum then
-         local ldat = fb:GetLine( theTag.lnum )
-         if not ldat then
-            Msg( "tag refers to nonexistent line.  Are tags up to date?" )
-            return
-            end
-         local stx,endx = ldat:find( tagStr, 1, true )
-         if not stx then
-            Msg( "tag string '"..tagStr.."' not found: tags file out of sync (edits may have occurred)" )
-            return
-            end
-         vw:HiliteMatch( theTag.lnum, stx, endx - stx + 1 )
-         vw:MoveCursor(  theTag.lnum, stx )
+      if atag.kind ~= 'file' then
+         local stx,endx = findTagX( fb, atag )
+         vw:HiliteMatch( atag.line, stx, endx - stx + 1 )
+         vw:MoveCursor(  atag.line, stx )
          end
       do
          local thisVCRepoCtxt = "."  -- todo replace with actual repo ctxt
-         local tagUriQySpec = ""  -- "?k=atag.kind&l=atag.language&c=classnm"  whatever is needed to LATER choose the tag entry just chosen by the user, even if source code is edited in the interim (therefore .fnm && .lnum should NOT be used herein)
+         local tagUriQySpec = ""  -- "?k=atag.kind&l=atag.language&c=classnm"  whatever is needed to LATER choose the tag entry just chosen by the user, even if source code is edited in the interim (therefore .fnm && .line should NOT be used herein)
          DBG( fmt( "gotoTag ctag://%s/%s%s", thisVCRepoCtxt, tagStr, tagUriQySpec ) )
       end
       local theChoice = choices[selectedTagIx]:gsub( "%s*@.+$", "" ):gsub( "%s%s+", " " )
@@ -3349,7 +3420,7 @@ do
             Msgf( "tag decode OK but %s is not a file", atag.fnm )
             return nil
             end
-         if GotoFileYX_Msg( atag.fnm, atag.lnum, 1, theChoice, "tagrec" ) then return atag.fnm end
+         if GotoFileYX_Msg( atag.fnm, atag.line, 1, theChoice, "tagrec" ) then return atag.fnm end
          end
       end
 
