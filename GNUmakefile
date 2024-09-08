@@ -388,7 +388,8 @@ TAGS_FIELDS=+K+z+S+l+n
 TAGS_EXTRAS=+f
 #            f           Include [a tag record] for the base file name of every input file
 
-TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=number --fields=$(TAGS_FIELDS) --extras=$(TAGS_EXTRAS) --recurse
+TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=combine --fields=$(TAGS_FIELDS) --extras=$(TAGS_EXTRAS) --recurse
+TAGS_CMDLN = ctags --totals=yes --tag-relative=yes --excmd=pattern --fields=$(TAGS_FIELDS) --extras=$(TAGS_EXTRAS) --recurse
 # !!! SEE ALSO ctags.d/*.ctags
 
 TAGS_FNM_BASE := .k_edit_tags
