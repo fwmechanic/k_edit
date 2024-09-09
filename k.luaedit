@@ -3129,9 +3129,7 @@ AddEdFxn{ name = "stat", key = "", attr = NOARG, help = "assumes curfile contain
 end
 
 do -- rudimentary way to play the audio passage associated with the current line of the .lrc file you're viewing (editing); AMAZINGLY powerful!
-   local function ffplay( arg, duration )
-     duration = duration or 12
-     Msgf( 'duration: %d s', duration )
+   local function ffplay( arg )
      local fname = arg.fbuf:Name()
      local noext = fname:gsub( '%.[^\.]+$', '' )              print( 'noext='..noext )
      for _,ext in ipairs{'wav', 'm4a', 'ogg', 'mp3'} do
@@ -3141,18 +3139,40 @@ do -- rudimentary way to play the audio passage associated with the current line
            break
            end
         end
-     local ln = arg.fbuf:GetLineSeg( arg.cursorY, 1, 13 )
-     local mins,secs = ln:match( '%[(%d%d+)%:(%d%d%.%d%d)%]' )
-     secs = secs + (mins * 60)
-     local cmd = 'ffplay -nodisp -autoexit -ss "'..secs..'" -t '..duration..' "'..fname..'" >/dev/null 2>&1'
+     local function getSecs( lnum )
+        local ln = arg.fbuf:GetLineSeg( lnum, 1, 13 )
+        if ln then
+           local all, mins,secs = ln:match( '(%[(%d%d+)%:(%d%d%.%d%d)%])' )
+           if secs then
+              secs = secs + (mins * 60)
+              printf( 'getSecs@%d %s = %d', lnum, all, secs )
+              return secs
+              end
+           end
+        end
+
+     local minDuration, duration = 12
+     local secs = getSecs( arg.minY or arg.cursorY )
+     if not secs then return Msg( 'could not decode LRC timestamp' ) end
+     local startY = (arg.maxY or arg.cursorY) + 1
+     for iy=startY,  Min( startY + 8, arg.fbuf:LastLine() ) do
+        local nxtSecs = getSecs( iy )
+        if nxtSecs then
+           duration = (nxtSecs - secs) * 1
+           break
+           end
+        end
+     duration = Max( minDuration, duration or 1 )
+
+     local cmd = 'ffplay -nodisp -autoexit -ss "'..secs..'" -t '..duration..' "'..fname..'" >/dev/null 2>&1 &'
      print( cmd )
      os.execute( cmd )
      Msg( '' )
      end
 
-   AddEdFxn{ name = "playaudio", help = "", attr = NOARG+TEXTARG, key = "alt+k"
-      , NOARG   = function( arg ) ffplay( arg                     ) end
-      , TEXTARG = function( arg ) ffplay( arg, tonumber(arg.text) ) end
+   AddEdFxn{ name = "playaudio", help = "", attr = NOARG+LINEARG, key = "alt+k"
+      , NOARG   = function( arg ) ffplay( arg ) end
+      , LINEARG = function( arg ) ffplay( arg ) end
       }
 end
 
