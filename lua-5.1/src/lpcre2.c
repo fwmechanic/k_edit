@@ -241,7 +241,7 @@ static int compile_regex (lua_State *L, const TArgComp *argC, TPcre2 **pud) {
   }
 
   if (0 != pcre2_pattern_info (ud->pr, PCRE2_INFO_CAPTURECOUNT, &ud->ncapt)) //###
-    return luaL_error (L, "could not get pattern info");
+    return luaL_error (L, "could not get PCRE2_INFO_CAPTURECOUNT");
 
   /* need (2 ints per capture, plus one for substring match) * 3/2 */
   ud->match_data = pcre2_match_data_create(ud->ncapt+1, NULL); //### CHECK ALL
@@ -261,11 +261,14 @@ static void do_named_subpatterns (lua_State *L, TPcre2 *ud, const char *text) {
   PCRE2_SPTR tabptr;
 
   /* do named subpatterns - NJG */
-  pcre2_pattern_info (ud->pr, PCRE2_INFO_NAMECOUNT, &namecount);
+  if (0 != pcre2_pattern_info (ud->pr, PCRE2_INFO_NAMECOUNT, &namecount))
+    luaL_error (L, "could not get PCRE2_INFO_NAMECOUNT");
   if (namecount <= 0)
     return;
-  pcre2_pattern_info (ud->pr, PCRE2_INFO_NAMETABLE, &name_table);
-  pcre2_pattern_info (ud->pr, PCRE2_INFO_NAMEENTRYSIZE, &name_entry_size);
+  if (0 != pcre2_pattern_info (ud->pr, PCRE2_INFO_NAMETABLE, &name_table))
+    luaL_error (L, "could not get PCRE2_INFO_NAMETABLE");
+  if (0 != pcre2_pattern_info (ud->pr, PCRE2_INFO_NAMEENTRYSIZE, &name_entry_size))
+    luaL_error (L, "could not get PCRE2_INFO_NAMEENTRYSIZE");
   tabptr = name_table;
   for (i = 0; i < namecount; i++) {
     int n = (tabptr[0] << 8) | tabptr[1]; /* number of the capturing parenthesis */
