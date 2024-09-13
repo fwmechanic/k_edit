@@ -2149,7 +2149,7 @@ void View::InsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
    if( !d_pHiLites ) {
         d_pHiLites = new ViewHiLites( CFBuf() );
         }
-   d_pHiLites->vhInsHiLiteBox( newColorIdx, newRgn );
+   d_pHiLites->vhInsHiLiteBox( newColorIdx, std::move(newRgn) );
    }
 
 void View::InsHiLite1Line( ColorTblIdx newColorIdx, LINE yLine, COL xLeft, COL xRight ) {
