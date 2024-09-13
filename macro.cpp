@@ -159,7 +159,7 @@ namespace Interpreter {
          }
       void   Ctor( stref src, int macroFlags, bool fWrapStringLiteral=false ) {
          if( !fWrapStringLiteral ) { trim( src ); }
-         d_macroText.reserve( src.length() + fWrapStringLiteral ? 2 : 0 );
+         d_macroText.reserve( src.length() + (fWrapStringLiteral ? 2 : 0) );
          d_macroText.clear();
          if( fWrapStringLiteral ) { d_macroText.push_back( chQuot2 ); }
          d_macroText.append( src );
