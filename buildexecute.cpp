@@ -118,7 +118,7 @@ void ExtendSelectionHilite( PView pcv, const Point &pt ) {
             }
          DispRawDialogStr( buf.c_str() );
          }
-      pcv->InsHiLiteBox( ColorTblIdx::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+      pcv->InsHiLiteBox( ColorTblIdx::SEL, std::move(hilite) );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
       }
    else { // STREAM mode
       if( s_SelAnchor.lin == pt.lin ) { // 1-LINE STREAM
