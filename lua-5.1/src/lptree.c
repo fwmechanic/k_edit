@@ -338,7 +338,9 @@ static Pattern *getpattern (lua_State *L, int idx) {
 
 
 static int getsize (lua_State *L, int idx) {
-  return (lua_rawlen(L, idx) - sizeof(Pattern)) / sizeof(TTree) + 1;
+  size_t rl = lua_rawlen(L, idx);
+  if( 0 == rl ) luaL_error(L, "getsize on invalid ttype");
+  return (rl - sizeof(Pattern)) / sizeof(TTree) + 1;
 }
 
 
