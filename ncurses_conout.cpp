@@ -145,7 +145,7 @@ STATIC_FXN int xlat_first_CP437_char( int ix, stref sseg, wchar_t_duo &wc2 ) {
       };
    for( ; ix < sseg.length(); ++ix ) {
       const unsigned ch = sseg[ix];
-      if( ch <= ELEMENTS(xlat_cp437) && xlat_cp437[ch] && ch != xlat_cp437[ch] ) {
+      if( ch < ELEMENTS(xlat_cp437) && xlat_cp437[ch] && ch != xlat_cp437[ch] ) {
          wc2[0] = xlat_cp437[ch];    0 && DBG( "%s at %d found 0x%02x -> 0x%04x", __func__, ix, ch, wc2[0] );
          wc2[1] = 0;  // nul
          break;
@@ -296,6 +296,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    show_color_defs();
    // modify_colors();
    conin_ncurses_init();
+   MaximizeTerminal();
    ConOut::Resize();
    return true;
    }
