@@ -135,7 +135,7 @@ void ExtendSelectionHilite( PView pcv, const Point &pt ) {
             hilite.flMax.lin = std::max( s_SelAnchor.lin, pt.lin ) - 1;
             hilite.flMin.col = 0;
             hilite.flMax.col = COL_MAX;
-            pcv->InsHiLiteBox( ColorTblIdx::SEL, hilite );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+            pcv->InsHiLiteBox( ColorTblIdx::SEL, std::move(hilite) );  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             }
          // redraw CURSOR-line hilite
          COL xFirst, xLast;
