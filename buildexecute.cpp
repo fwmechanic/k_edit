@@ -920,7 +920,7 @@ public:
          nxt = d_pDirContent->GetNext();
          } while( Path::IsDotOrDotDot( nxt ) );
       if( !nxt.empty() ) {
-         stb = nxt;
+         stb = std::move(nxt);
          xCursor = stb.length();  // past end
          }
       else {
