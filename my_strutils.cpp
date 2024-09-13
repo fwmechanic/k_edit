@@ -59,6 +59,7 @@ PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) {
 
 sridx scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( 0==destLen && sizeof_dest > 0 && dest[0] ) { destLen = Strlen( dest ); }
+   if( destLen >= sizeof_dest ) { return sizeof_dest > 0 ? sizeof_dest - 1 : 0; }  // basically an assertion condition: there is already an overrun of BSOB(dest,sizeof_dest)
    size_t truncd( 0 );
    auto cpyLen( src.length() );
    if( destLen + cpyLen + 1 > sizeof_dest ) {
@@ -72,7 +73,7 @@ sridx scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( truncd ) {
       StrTruncd_( __func__, truncd, src.data(), dest );
       }
-   return destLen + cpyLen;
+   return destLen + cpyLen; // new destLen
    }
 
 sridx scpy( PChar dest, size_t sizeof_dest, stref src ) {
