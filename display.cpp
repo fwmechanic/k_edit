@@ -2157,7 +2157,7 @@ void View::InsHiLite1Line( ColorTblIdx newColorIdx, LINE yLine, COL xLeft, COL x
    newRgn.flMin.lin = newRgn.flMax.lin = yLine;
    newRgn.flMin.col = xLeft;
    newRgn.flMax.col = xRight;
-   InsHiLiteBox( newColorIdx, newRgn );
+   InsHiLiteBox( newColorIdx, std::move(newRgn) );
    }
 
 //-----------------------------------------------------------------------------
