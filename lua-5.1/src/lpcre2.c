@@ -212,7 +212,9 @@ static int compile_regex (lua_State *L, const TArgComp *argC, TPcre2 **pud) {
 
   if (argC->locale) {
     char old_locale[256];
-    strcpy (old_locale, setlocale (LC_CTYPE, NULL));  /* store the locale */
+    const char *src = setlocale (LC_CTYPE, NULL);
+    strncpy(old_locale, src, sizeof(old_locale) - 1); /* store the locale */
+    old_locale[sizeof(old_locale) - 1] = '\0';        /* store the locale */
     if (NULL == setlocale (LC_CTYPE, argC->locale))   /* set new locale */
       return luaL_error (L, "cannot set locale");
     ud->tables = pcre2_maketables (NULL); /* make tables with new locale */ //### argument NULL
