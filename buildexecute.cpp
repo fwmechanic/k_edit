@@ -420,7 +420,7 @@ bool ARG::IngestArgTextAndSelection( PView pcv ) { enum {SD=0};                 
    if( fHaveLiteralTextarg ) {
       if( (d_pCmd->d_argType & NUMARG) && StrSpnSignedInt( TextArgBuffer().c_str() ) ) {
          if( (NumArg_value = atoi( TextArgBuffer().c_str() )) ) {
-            s_SelAnchor.lin = std::max( 0, s_SelAnchor.lin + NumArg_value + (NumArg_value > 0) ? (-1) : (+1) );
+            s_SelAnchor.lin = std::max( 0, s_SelAnchor.lin + NumArg_value + (NumArg_value > 0 ? -1 : +1) );
             }
          }
       else {
