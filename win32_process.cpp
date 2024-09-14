@@ -1056,6 +1056,8 @@ bool RunChildSpawnOrSystem( PCChar pCmdStr ) {
    return false;
    }
 
+void MaximizeTerminal() {}
+
 #ifdef fn_shell
 
 // 20091216 kgoodwin this seems superfluous so have disabled it
