@@ -157,8 +157,8 @@ STATIC_FXN int xlat_first_CP437_char( int ix, stref sseg, wchar_t_duo &wc2 ) {
 int ConOut::BufferWriteString( stref src, int yLine, int xCol, int pcattr, bool fPadWSpcs ) {
    enum { DB=0 };
    int sizeY, sizeX;  getmaxyx( stdscr, sizeY, sizeX );
-   if( yLine >= sizeY ) { return 0; }
-   if( xCol  >= sizeX ) { return 0; }   DB && DBG( "%s@%d,%d=%" PR_BSR "'", __func__, yLine, xCol, BSR(src) );
+   if( yLine < 0 || yLine >= sizeY ) { return 0; }
+   if( xCol  < 0 || xCol  >= sizeX ) { return 0; }   DB && DBG( "%s@%d,%d=%" PR_BSR "'", __func__, yLine, xCol, BSR(src) );
 
    pcattr &= 0x7F; // we don't use ncurses' "blink" ("high intensity" background) or A_BLINK attr, so mask it
    STATIC_VAR unsigned char s_last_pcattr;
