@@ -751,7 +751,7 @@
    wordchars:_-/.:
 
 [ftype:log]
-   wordchars:_-/.:
+   # wordchars:_-/.:
 
 [ftype:cmake]
    wordchars:_-.
