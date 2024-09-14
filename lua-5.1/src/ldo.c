@@ -93,6 +93,7 @@ static void resetstack (lua_State *L, int status) {
 }
 
 
+//coverity[+kill]
 void luaD_throw (lua_State *L, int errcode) {
   if (L->errorJmp) {
     L->errorJmp->status = errcode;
