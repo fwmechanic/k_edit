@@ -827,7 +827,7 @@ function GotoFileLineCol( fnm, line, column )
    return fb,vw
    end
 
-local GotoCtagsUri, LineToTagRec, ChoiceTxtOfATag, read_tagged_files_from_tags_file
+local GotoCtagsUri, LineToTagRec, ChoiceTxtOfATag, read_tagged_files_from_tags_file, GetTagsFilepath
 do -- local scope for private functions and data that implement EdFxn "tgs"
 
    -- Read Exuberant Tags output file
@@ -855,6 +855,11 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
             end
          end
       return {}
+      end
+
+   GetTagsFilepath = function()
+      get_tags_matching( 'Solzhenitsyn' )  -- force initialization
+      return s_tagsFilepath
       end
 
    local function norm_fnm_of_tag( tfnm )
@@ -1225,7 +1230,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       -- first 3 fields are FIXED (always present) positional: 'tag name', 'input file', 'ecx' (see ctags --list-fields output)
       local tag,fnm,exc = iter(),iter(),iter()
       if exc == nil then return nil end
-   -- fnm = norm_fnm_of_tag( fnm )  -- input file
+      fnm = norm_fnm_of_tag( fnm )  -- input file
       local atag = { tag=tag, fnm=fnm, exc=exc }
       if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'tag' , atag.tag  ) end
       if dbgLTTR then printf( '%s=atag.%s=%s|', tag, 'fnm' , atag.fnm  ) end
@@ -1989,7 +1994,7 @@ do
    local buildFnm = inSituBaseFnm .. 'buildcmd'
    AddEdFxn{ name = "build", help = "run build command from "..buildFnm, attr = NOARG, key = "alt+e"
       , NOARG   = function(arg)
-        fExecute( 'saveall' )
+        fExecute( 'saveall' )  -- no matter what; the user might have cwd outside curfile but edits have been made and need to be saved
         for dir in CwdToRoot() do
            local ifnm = dir .. buildFnm
            if IsFile( ifnm ) then
@@ -3151,7 +3156,7 @@ do -- rudimentary way to play the audio passage associated with the current line
            end
         end
 
-     local minDuration, duration = 12
+     local duration
      local secs = getSecs( arg.minY or arg.cursorY )
      if not secs then return Msg( 'could not decode LRC timestamp' ) end
      local startY = (arg.maxY or arg.cursorY) + 1
@@ -3162,7 +3167,7 @@ do -- rudimentary way to play the audio passage associated with the current line
            break
            end
         end
-     duration = Max( minDuration, duration or 1 )
+     duration = duration or 12
 
      local cmd = 'ffplay -nodisp -autoexit -ss "'..secs..'" -t '..duration..' "'..fname..'" >/dev/null 2>&1 &'
      print( cmd )
@@ -3424,12 +3429,34 @@ do
       fnm, lnum, col, msg1 = lbuf:match( "^%s*(%S[^:%s]+):(%d+):(%d+):%s+(.+)" )
       if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, "MW C" ) then return fnm end
 
+      -- JS/TS import: 'import { zodResponseFormat } from "openai/helpers/zod";'
+      msg1 = lbuf:match( '^%s*import%s.*from%s+"([^.]+)"' )  -- differing quotes!
+      msg2 = lbuf:match( "^%s*import%s.*from%s+'([^.]+)'" )  -- differing quotes!
+      if msg1 or msg2 then
+         local tagsFilepath = GetTagsFilepath()
+         if tagsFilepath then
+            fnm = tagsFilepath .. 'node_modules/' .. (msg1 or msg2) .. '*'
+            fChangeFile( fnm )
+            return fnm
+            end
+         end
+
       -- Node runtime: '   at genTranscriptionPrompt (/home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114)
       msg1, msg2 = lbuf:match( "^%s+at%s+(%S+)%s(%b())$" )
       if msg2 then
          fnm, lnum, col = msg2:match( "^%(([^:]+):(%d+):(%d+)%)$" )
-         if col and GotoFileYX_Msg( fnm, lnum, col, msg1, "Node.JS" ) then return fnm end
+         if col and GotoFileYX_Msg( fnm, lnum, col, msg1, "Node.JS stack" ) then return fnm end
          end
+      -- Node runtime: '   at async genTranscriptionPrompt (/home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114)
+      msg1, msg2 = lbuf:match( "^%s+at%s+async%s+(%S+)%s(%b())$" )
+      if msg2 then
+         fnm, lnum, col = msg2:match( "^%(([^:]+):(%d+):(%d+)%)$" )
+         if col and GotoFileYX_Msg( fnm, lnum, col, msg1, "Node.JS stack async" ) then return fnm end
+         end
+
+      -- Node runtime: ' at /home/kg/devicepros/repos/web/server/ai/processor.ts:156:43'
+      fnm, lnum, col = lbuf:match( "^%s+at%s+([^:]+):(%d+):(%d+)$" )
+      if col and GotoFileYX_Msg( fnm, lnum, col, '?', "Node.JS" ) then return fnm end
 
       do
       local atag = LineToTagRec( lbuf )
