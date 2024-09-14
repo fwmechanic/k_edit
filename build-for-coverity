@@ -1,15 +1,20 @@
+#!/usr/bin/env bash
+
+die() { printf %s "${@+$@$'\n'}" 1>&2 ; exit 1 ; }
+see() ( { set -x; } 2>/dev/null ; "$@" )
+
 # after "installing" (untarring) the coverity tool (which creates directory $coverity_version/), need to create a symlink:
 # ln -s $HOME/coverity/$coverity_version $HOME/coverity/cov
-cov_bin="$HOME/coverity/cov"     ; [ -L "$cov_bin" ] || { printf "symlink $cov_bin does not exist" ; exit 1 ; }
-cov_bin="$HOME/coverity/cov/bin" ; [ -d "$cov_bin" ] || { printf "dir $cov_bin does not exist" ; exit 1 ; }
+cov_bin="$HOME/coverity/cov"     ; [ -L "$cov_bin" ] || die "symlink $cov_bin does not exist"
+cov_bin="$HOME/coverity/cov/bin" ; [ -d "$cov_bin" ] || die "dir $cov_bin does not exist"
 PATH="$PATH:$cov_bin"
-cov_bin="$cov_bin/cov-build"     ; [ -x "$cov_bin" ] || { printf "$cov_bin is not executable" ; exit 1 ; }
+cov_bin="$cov_bin/cov-build"     ; [ -x "$cov_bin" ] || die "$cov_bin is not executable"
 
 # apparently the tarball filename MUST BE same as the Coverity Project Name?
 my_cov_projnm=k_edit
 tarball=${my_cov_projnm}.tgz
 cov_output_dir=cov-int
-k_make_cmd="make -j 6"
+k_make_cmd="make -j"
 
    rm -rf $cov_output_dir \
 && rm -f $tarball \
