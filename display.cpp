@@ -3518,8 +3518,8 @@ void Display_hilite_regex_err( PCChar errMsg, stref searchStr, int errOffset ) {
                          csrs.emplace_back( g_colorStatus, errMsg );
                          csrs.emplace_back( g_colorError , ": " );
    if( errOffset > 0 ) { csrs.emplace_back( g_colorInfo  , searchStr.substr( 0, errOffset    ) ); } // leading OK part of pattern
-                         csrs.emplace_back( g_colorStatus, searchStr.substr(    errOffset, 1 ), !tail ? ePad::padWSpcsToEol : ePad::noPad );   // err char of pattern
-   if( tail )          { csrs.emplace_back( g_colorInfo  , searchStr.substr(    errOffset +1 ),  tail ? ePad::padWSpcsToEol : ePad::noPad ); } // post-err part of pattern
+                         csrs.emplace_back( g_colorStatus, searchStr.substr(    errOffset, 1 ) );   // err char of pattern
+   if( tail )          { csrs.emplace_back( g_colorInfo  , searchStr.substr(    errOffset +1 ) ); } // post-err part of pattern
                          csrs.emplace_back( g_colorError , "", ePad::padWSpcsToEol );
    VidWrColoredStrefs( DialogLine(), 0, csrs );
    }
