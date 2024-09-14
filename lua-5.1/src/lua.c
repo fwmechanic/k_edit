@@ -244,8 +244,7 @@ static int handle_script (lua_State *L, char **argv, int n) {
   fname = argv[n];
   if (strcmp(fname, "-") == 0 && strcmp(argv[n-1], "--") != 0) 
     fname = NULL;  /* stdin */
-
-  { /* 20090520 kgoodwin support LUA_PRISCRDIR */
+  else { /* 20090520 kgoodwin support LUA_PRISCRDIR */
     // cd arg "*.h;*.c" setfile mfx setfile
     extern int lib_patch_package_paths_PRISCRDIR( lua_State *L );
     const char *eopf = strrchr(fname, '/' );
