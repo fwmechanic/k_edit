@@ -183,6 +183,8 @@
 
    show_asgn:=_spush _sdup arg _spop assign arg _spop !
 
+   ht:=hltags
+   ft:=cancel arg gototag  # filetagsmenu
    w :=cancel arg "wordsearch:INVERT" show_asgn
    c :=cancel arg "case:INVERT" show_asgn
    p :=cancel arg "pcrealways:INVERT" show_asgn
