@@ -716,8 +716,11 @@ STATIC_FXN bool HilitWucLineSegs
    ,       LINE            yLine
    , LineColorsClipped    &alcc
    ) {
-   const auto keyStart( !d_sb.empty() ? d_sb.data() : (d_stSel.empty() ? nullptr : d_stSel.c_str()) );
-   if( keyStart ) {
+   const auto keyStart(  !d_sb   .empty() ? d_sb   .data()
+                      : (!d_stSel.empty() ? d_stSel.c_str()
+                      : nullptr)
+                      );
+   if( keyStart && *keyStart ) {
       const auto rlAll( fb->PeekRawLine( yLine ) );
       if( !rlAll.empty() ) {
          const auto tw( fb->TabWidth() );
@@ -725,13 +728,11 @@ STATIC_FXN bool HilitWucLineSegs
          const auto minIxClip( convAll.c2fi( alcc.GetMinColInDisp() ) );
          if( minIxClip < rlAll.length() ) {
             decltype( rlAll.length() ) maxNeedleLen( 0 );
-            {
             for( auto pNeedle(keyStart) ; *pNeedle ; ) {
                const stref needle( pNeedle );                          0 && DBG( "needle %" PR_BSR "'", BSR(needle) );
                maxNeedleLen = std::max( maxNeedleLen, needle.length() );
                pNeedle += needle.length() + 1;
                }
-            }
             const auto xMaxToDisp( alcc.GetMaxColInDisp() );
             const auto maxIxClip( convAll.c2fi( xMaxToDisp ) + (maxNeedleLen-1) );
             const auto maxLen( std::min( rlAll.length(), maxIxClip+1 ) ); // +1 to conv ix to length
