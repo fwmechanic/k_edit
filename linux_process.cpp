@@ -469,7 +469,6 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
          }
       FreeStringListEl( pEl );
       } //**************** outerthreadloop ****************
-   ConOut::Bell();
    }
 
 STATIC_CONST auto cpct_start_fmts = "%s::CPCT vvvvvvvvvvvvvvvvvv THREAD STARTS vvvvvvvvvvvvvvvvvv";
