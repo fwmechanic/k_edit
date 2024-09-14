@@ -65,6 +65,7 @@ STIL int    StartGuiProcess( PCChar pFullCommandLine ) { return 1; }
 STIL int    StartConProcess( PCChar pFullCommandLine ) { return 1; }
 #endif
 extern void   StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile=nullptr );
+extern void   MaximizeTerminal();
 
 extern PFBUF  StartInternalShellJob( StringList *sl, bool fAppend );
 extern void   StartInternalShellJob( PCChar cmd );

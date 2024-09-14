@@ -376,6 +376,16 @@ void StartShellExecuteProcess( PCChar pFullCmdLn, PCChar pExeFile ) {
    system_detached( cli.c_str() );
    }
 
+void MaximizeTerminal() {
+   const auto wc( cmd_available( "wmctrl" ) );
+   if( !wc ) {
+      Msg( "wmctrl is not installed: `apt install wmctrl`" );
+      return;
+      }
+   // unfortunately, the `sleep` command is MANDATORY to avoid a race condition
+   system_detached( "sleep 0.1 ; wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz" );
+   }
+
 //#################################################################################################################################
 //#################################################################################################################################
 //#################################################################################################################################
