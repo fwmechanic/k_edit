@@ -880,7 +880,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          -- hack to tentatively support independent callability of LineToTagRec (which calls us)
          local basepath = s_tagsFilepath
          if not basepath then
-            get_tags_matching( 'Solzhenitsyn' )  -- force initialization
+            GetTagsFilepath()
             -- get_tags_matching may fail or new s_tagsFilepath value may mismatch that of tags file context from which 'line' param of LineToTagRec was taken)
             basepath = s_tagsFilepath or "<no tags file in CwdToRoot>"
             end
