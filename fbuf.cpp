@@ -1511,9 +1511,12 @@ bool FBUF::write_to_disk( PCChar destFileNm ) {
    set_tmLastWrToDisk( time( nullptr ) ); // note this is not == stat mtime, thus not comparable to same
    wrNoiseBak();
    const auto abs_dest( Path::Absolutize( destFileNm ) );
-   if( !backupOldDiskFile( abs_dest.c_str(), d_backupMode==bkup_USE_SWITCH ? g_iBackupMode : d_backupMode ) ) {
-      unlinkOk( tmpFnm.c_str() );
-      return false;
+
+   if( !(FnmIsPseudo() || IsSysPseudo()) ) { // can't backup a pseudofile
+      if( !backupOldDiskFile( abs_dest.c_str(), d_backupMode==bkup_USE_SWITCH ? g_iBackupMode : d_backupMode ) ) {
+         unlinkOk( tmpFnm.c_str() );
+         return false;
+         }
       }
    wrNoiseRenm();
    if( !MoveFileOk( tmpFnm.c_str(), destFileNm ) ) {
