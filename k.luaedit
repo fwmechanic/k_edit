@@ -1231,7 +1231,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       --]]
       }
 
-   local dbgLTTR = false
+   local dbgLTTR = true
    LineToTagRec = function( tagline )  -- dice a (possible) tags file record (tagline) into fields
       if dbgLTTR then printf( 'LineToTagRec.raw=%s|', tagline ) end
       local iter = tagline:gmatch("[^\t]+")  -- tagline fields are tab-separated
@@ -3407,6 +3407,39 @@ do
          end
       end
 
+   local function isF( dir, fnm, ... )
+      if fnm then
+         fnm = (dir or '') .. fnm
+         local suffixes = {...}
+         for _, suffix in ipairs(suffixes) do
+            local cand = fnm .. suffix
+            local rv = cand and _dir.name_isfile( cand ) and cand
+            printf("%sF %s", rv and 'is' or 'no', cand )
+            if rv then return rv end
+            end
+         end
+      end
+
+   local function isD( dir, fnm )
+      if fnm then
+         fnm = (dir or '') .. fnm
+         local rv = fnm and _dir.name_isdir( fnm ) and fnm
+         printf("%sD %s", rv and 'is' or 'no', fnm )
+         return rv
+         end
+      end
+
+   function match_chain(str, ...)
+      local patterns = {...}
+      for _, pattern in ipairs(patterns) do
+         local results = {string.match(str, pattern)}
+         if #results > 0 then
+            return results
+            end
+         end
+      return {}  -- Return an empty table if no matches
+      end
+
    function gofileline( grepSrcFnm, lbuf, fSaveLocn, fnmToNotMatch )
       fnm_to_f_in_tree = nil
 
@@ -3437,16 +3470,75 @@ do
       fnm, lnum, col, msg1 = lbuf:match( "^%s*(%S[^:%s]+):(%d+):(%d+):%s+(.+)" )
       if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, "MW C" ) then return fnm end
 
+      -- ERROR in src/DevChat.vue:307:13
+      -- /home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114
+      fnm, lnum, col = lbuf:match( '([%.%w/_]+):(%d+):(%d+)' )
+      if col and GotoFileYX_Msg( fnm, lnum, col, '', "generic fnm:l:n" ) then return fnm end
+
       -- JS/TS import: 'import { zodResponseFormat } from "openai/helpers/zod";'
-      msg1 = lbuf:match( '^%s*import%s.*from%s+"([^.]+)"' )  -- differing quotes!
-      msg2 = lbuf:match( "^%s*import%s.*from%s+'([^.]+)'" )  -- differing quotes!
-      if msg1 or msg2 then
-         local tagsFilepath = GetTagsFilepath()
-         if tagsFilepath then
-            fnm = tagsFilepath .. 'node_modules/' .. (msg1 or msg2) .. '*'
-            fChangeFile( fnm )
-            return fnm
+      local tagsFilepath = GetTagsFilepath()  -- presumed TS/JS build rootdir
+      printf( 'tagsFilepath = %s', tagsFilepath or '!' )
+      if tagsFilepath then
+         local nmod, cand = tagsFilepath .. 'node_modules/'
+         local mm = match_chain( lbuf, '^%s*import%s.*from%s+"(.+)"'
+                                     , "^%s*import%s.*from%s+'(.+)'" )
+         if next(mm) then
+            printf( 'mm: %s', mm[1] )  -- @openai/realtime-api-beta/dist/lib/client.js
+            local cand = isF( nmod, mm[1] )
+            if cand then
+               fChangeFile( cand )
+               return cand
+               end
+            cand = isD( nmod, mm[1] )
+            if cand then
+               cand = isF( nmod, msg1, '/index.ts'
+                                     , '/index.d.ts'
+                                     , '/index.js'   )
+                   or isD( nmod, mm[1] )  -- this will always match
+               fChangeFile( cand )
+               return cand
+               end
+
+            -- what's left is to hunt for other-extension files... (JS and TS are *weird*!!!)
+            local p,f,x = mm[1]:match( '^(.-)([^/\\]+)(%.[^/\\]+)$' )
+            if x then
+               if x == '.js' then
+                  cand = isF( nmod, p..f, '.ts'
+                                        , '.d.ts' )
+                  if cand then
+                     fChangeFile( cand )
+                     return cand
+                     end
+                  end
+               end
+            --[[
+            local mn = match_chain( mm[1], '^(.-)([^/\\]+)(%.[^/\\]+)$'
+                                         , '^(.-)([^/\\]+)$' )
+            if #mn == 3 then  -- have ext
+               local p,f,x = unpack( mn )
+               printf( 'p: %s f: %s x: %s', p or '?',f or '?',x or '?' )
+            ]]
+            if msg1 then
+               fnm = nmod .. msg1 .. '*'
+               fChangeFile( fnm )
+               return fnm
+               end
             end
+         end
+
+      local curfilepath = StrExpandEnvVars('${curfilepath}') ; printf("curfilepath=%s",curfilepath)
+      -- JS/TS import: 'import { instructions } from '../utils/conversation_config.js';'   relative
+      msg1 =         lbuf:match( '^%s*import%s.*from%s+"(%..+)"' )  -- differing quotes!
+      msg1 = msg1 or lbuf:match( "^%s*import%s.*from%s+'(%..+)'" )  -- differing quotes!
+      msg1 = isF( curfilepath, msg1, ''
+                                   , '.ts'
+                                   , '/index.ts'
+                                   , '/index.d.ts'
+                                   , '/index.js'
+                                   , '.js'         )
+      if msg1 then
+         fChangeFile( msg1 )
+         return fnm
          end
 
       -- Node runtime: '   at genTranscriptionPrompt (/home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114)

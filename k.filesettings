@@ -96,6 +96,7 @@ do
       go          = "clang"       ,
       js          = "clang"       ,
       ts          = "clang"       ,
+      vue         = "clang"       ,
       cmake       = "cmake"       ,
       diff        = "diff"        ,
       expect      = "expect"      ,
