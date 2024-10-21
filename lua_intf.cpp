@@ -680,7 +680,8 @@ STATIC_FXN lua_State *init_lua_ok( void (*cleanup)(lua_State *L), void (*openlib
    // override package.path so required Lua code is only looked for in sm dir as editor exe
    // (I used to setenv("LUA_PATH") but that impacted child processes that ran Lua.exe)
    lua_getglobal( L, "package" );  Assert( lua_istable( L, -1 ) );  // NB: package table does not exist until l_OpenStdLibs() has been called!
-   setfield( L, "path", FmtStr<_MAX_PATH>( "%s?.lua", getenv( "KINIT" ) ) );
+   const auto ki = getenv( "KINIT" );
+   setfield( L, "path", FmtStr<_MAX_PATH>( "%sluaexts/?.lua;%s?.lua", ki, ki ) );
    LREGP_set_cleanup( L, reinterpret_cast<void *>(cleanup) );
    0 && DBG( "%s- %p", __func__, L );
    return L;
