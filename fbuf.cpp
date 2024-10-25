@@ -1106,16 +1106,66 @@ bool ARG::popd() { // arg "_sdup" _spush arg "fn" _spush arg _spop _spop msearch
    return FBOP::PopFirstLine( ts, g_pFBufCwd ) ? fChangeFile( ts.c_str(), false ) : ErrPause( "empty cwd stack" );
    }
 
+// "fnm.cpp:12:6" seems to have become a fairly common syntax for specifying filename:line#:col#
+// ExtractOptPoint will extract this information from the end of a filename string.  With this
+// support I can easily copy+paste such a filename:line#:col# as a cmdline param (or setfile on it)
+
+struct optPoint {
+   sridx  sfxLen;
+   Point  pt;
+   };
+
+optPoint ExtractOptPoint( stref fnm ) {
+   optPoint rv = { sfxLen: 0 };
+   UI uvi = 0;
+   uintmax_t uval[2] = {0,0};
+   uintmax_t place[2] = {1,1};  // Track decimal place value for each number
+   for( auto it = fnm.crbegin() ; it != fnm.crend() ; ++it ) {
+      if( isdigit(*it) ) {
+         const auto digit = (*it - '0');
+         // Check for overflow before adding
+         if(   place[uvi] > UINTMAX_MAX / 10                      // place value would overflow?
+            || uval[uvi] > UINTMAX_MAX - (digit * place[uvi]) ) { // result would overflow?
+            return rv;
+         }
+         uval[uvi] += digit * place[uvi];
+         place[uvi] *= 10;
+         }
+      else if( *it == ':' ) {
+         if( ++uvi >= 2 ) {
+            if(  (uval[1] > 0) && (uval[1] <= MAX_LINES)
+              && (uval[0] > 0) && (uval[0] <= COL_MAX  )
+              ) {
+               rv.pt.lin = uval[1] - 1;
+               rv.pt.col = uval[0] - 1;
+               rv.sfxLen = std::distance( fnm.crbegin(), it+1 );
+               return rv;
+               }
+            break;
+            }
+         }
+      else { return rv; }
+      }
+   return rv;
+   }
+
 // The fChangeFile function changes the current file, drive, or directory to
 // the specified pszName and returns true if successful.
 //
 // SEE ALSO: OpenFileNotDir_
 //
-bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum {DP=0};  DP && DBG( "%s+ '%s'", __func__, pszName );
-   const auto fnamebuf( xlat_fnm( pszName ) );
+
+bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum {DP=1};  DP && DBG( "%s+ '%s'", __func__, pszName );
+   auto fnamebuf( xlat_fnm( pszName ) );
    if( fnamebuf.empty() ) {                                       DP && DBG( "%s- xlat_fnm FAIL '%s'", __func__, pszName );
       return false;
       }
+
+   auto op = ExtractOptPoint( fnamebuf );
+   if( op.sfxLen ) {                                               DP && DBG( "%s ExtractOptPoint %" PR_SIZET ": (%d,%d)", __func__, op.sfxLen, op.pt.lin, op.pt.col );
+      fnamebuf.erase(fnamebuf.length() - op.sfxLen);               DP && DBG( "%s ExtractOptPoint '%s'", __func__, fnamebuf.c_str() );
+      }
+
    CPCChar pFnm( fnamebuf.c_str() );
    auto pFBuf( FindFBufByName( fnamebuf ) );                      DP && DBG( "%s '%s' -->PFBUF %p", __func__, pFnm, pFBuf );
    if( !pFBuf ) {
@@ -1124,12 +1174,15 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum {DP=0};  DP && DBG( "%s
          if( fCwdChanged ) { // if cwd changed, display new cwd's contents
             DP && DBG( "%s recurse", __func__ );
             fChangeFile( "*", false ); // recursive, but will only nest ONE level
-            }                                                     DP && DBG( "%s- SetCwdOk '%s'", __func__, pszName );
+            }                                                     DP && DBG( "%s- SetCwdOk '%s'", __func__, fnamebuf.c_str() );
          return true;
          }
       pFBuf = AddFBuf( pFnm );                                    DP && DBG( "%s AddFBuf'%s' -->PFBUF %p", __func__, pFnm, pFBuf );
       }
-   const auto rv( nullptr != pFBuf->PutFocusOn() );               DP && DBG( "%s- PutFocusOn=%c '%s'", __func__, rv?'t':'f', pszName );
+   const auto rv( nullptr != pFBuf->PutFocusOn() );               DP && DBG( "%s- PutFocusOn=%c '%s'", __func__, rv?'t':'f', fnamebuf.c_str() );
+   if( rv && op.sfxLen ) {
+      g_CurView()->MoveCursor( op.pt );
+      }
    return rv; // pFBuf == g_CurFBuf() == g_CurView()->FBuf()
    }
 
