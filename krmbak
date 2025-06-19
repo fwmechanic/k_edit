@@ -6,12 +6,17 @@ show() (
    fct="$(find . -path "$dinpath" -type f | wc -l)"
    echo "$1 $fct files in $dct $dnm dirs"
    )
+dlist() (
+   find . -type d -name "$dnm" | LC_ALL=C sort
+   )
 list() (
-   find . -path "$dinpath" -type f | sort -i
+   find . -path "$dinpath" -type f | LC_ALL=C sort -i
    )
 case "$1" in
    rmall)    show "deleting" ;
              find . -type d -name "$dnm" -exec rm -r {} +
+           ;;
+   dlist)     dlist
            ;;
    list)     list
            ;;
