@@ -38,6 +38,7 @@ do
       perl6   = "perl",
       python2 = "python",
       python3 = "python",
+      uv      = "python",
       }
    function ShebangToFType( shebang )  -- called from C++ !!!  DO NOT RENAME!!!  CHANGE WITH CAUTION!
       return shebangToFType_[shebang] or shebang
