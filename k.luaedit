@@ -2915,11 +2915,6 @@ do
       fnm, lnum, col, msg1 = lbuf:match( "^%s*(%S[^:%s]+):(%d+):(%d+):%s+(.+)" )
       if msg1 and GotoFileYX_Msg( fnm, lnum, col, msg1, "MW C" ) then return fnm end
 
-      -- ERROR in src/DevChat.vue:307:13
-      -- /home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114
-      fnm, lnum, col = lbuf:match( '([%.%w/_]+):(%d+):(%d+)' )
-      if col and GotoFileYX_Msg( fnm, lnum, col, '', "generic fnm:l:n" ) then return fnm end
-
       -- JS/TS import: 'import { zodResponseFormat } from "openai/helpers/zod";'
       local tagsFilepath = GetTagsFilepath()  -- presumed TS/JS build rootdir
       printf( 'tagsFilepath = %s', tagsFilepath or '!' )
@@ -2986,22 +2981,35 @@ do
          return fnm
          end
 
+      -- Node runtime: '   at WebSocket.<anonymous> (file:///home/kg/devicepros/repos/web/server/node_modules/@openai/realtime-api-beta/lib/api.js:129:14)
       -- Node runtime: '   at genTranscriptionPrompt (/home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114)
       msg1, msg2 = lbuf:match( "^%s+at%s+(%S+)%s(%b())$" )
       if msg2 then
+         msg2 = msg2:gsub('file://','')
          fnm, lnum, col = msg2:match( "^%(([^:]+):(%d+):(%d+)%)$" )
-         if col and GotoFileYX_Msg( fnm, lnum, col, msg1, "Node.JS stack" ) then return fnm end
+         if col then
+            if GotoFileYX_Msg( fnm, lnum, col, msg1, "Node.JS stack" ) then return fnm end
+            end
          end
       -- Node runtime: '   at async genTranscriptionPrompt (/home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114)
       msg1, msg2 = lbuf:match( "^%s+at%s+async%s+(%S+)%s(%b())$" )
       if msg2 then
+         msg2 = msg2:gsub('file://','')
          fnm, lnum, col = msg2:match( "^%(([^:]+):(%d+):(%d+)%)$" )
          if col and GotoFileYX_Msg( fnm, lnum, col, msg1, "Node.JS stack async" ) then return fnm end
          end
 
       -- Node runtime: ' at /home/kg/devicepros/repos/web/server/ai/processor.ts:156:43'
       fnm, lnum, col = lbuf:match( "^%s+at%s+([^:]+):(%d+):(%d+)$" )
-      if col and GotoFileYX_Msg( fnm, lnum, col, '?', "Node.JS" ) then return fnm end
+      if col then
+         if GotoFileYX_Msg( fnm, lnum, col, '?', "Node.JS" ) then return fnm end
+         end
+
+      -- ERROR in src/DevChat.vue:307:13
+      -- /home/kg/devicepros/repos/web/server/dist/whisper/transcriptionWrapper.js:49:114
+      fnm, lnum, col = lbuf:match( '([%.%w/_]+):(%d+):(%d+)' )
+      if col and GotoFileYX_Msg( fnm, lnum, col, '', "generic fnm:l:n" ) then return fnm end
+
 
       do
       local atag = LineToTagRec( lbuf )
