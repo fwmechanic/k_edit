@@ -3028,7 +3028,8 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    cl.Cat( ColorTblIdx::ERRM, FmtStr<30>( "%ce%dw%u"     , g_fRealtabs?'R':'r', pfh->Entab(), pfh->TabWidth()                         ).c_str() );
                        //     g_fCase ? "E!=e" : "E==e"
                        //     g_fCase ? "Q!=q" : "Q==q"
-   cl.Cat( ColorTblIdx::INF , g_fCase ? "A!=a" : "A==a" );
+   cl.Cat( ColorTblIdx::SEL , g_fReplaceCase ? "r!R" : "r=R" );
+   cl.Cat( ColorTblIdx::INF , g_fCase ? "s!S" : "s=S" );
    cl.Cat( ColorTblIdx::ERRM, g_fWordSearch ? "WORD":"string" );
    if( 0 ) { // 20150105 KG: seems superfluous
       if( g_pFbufClipboard && g_pFbufClipboard->LineCount() ) {
