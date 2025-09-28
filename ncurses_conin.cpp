@@ -24,7 +24,7 @@
 #include "conio.h"
 
 STATIC_VAR int  s_DecodeErrCount = 0;
-int  ConIn::DecodeErrCount() { return s_DecodeErrCount; }
+STATIC_FXN int  NcursesDecodeErrCount() { return s_DecodeErrCount; }
 STATIC_FXN int IncrDecodeErrCount() {
    ++s_DecodeErrCount;
    DispNeedsRedrawStatLn();
@@ -32,8 +32,9 @@ STATIC_FXN int IncrDecodeErrCount() {
    }
 
 STATIC_VAR bool s_fDbg = false;
-void ConIn::log_verbose() { s_fDbg = true ; }
-void ConIn::log_quiet  () { s_fDbg = false; }
+STATIC_FXN void NcursesLogVerbose() { s_fDbg = true ; }
+STATIC_FXN void NcursesLogQuiet  () { s_fDbg = false; }
+STATIC_VAR bool s_ncursesBackendInitialized;
 
 #define stESC "\x1b"
 
@@ -392,7 +393,10 @@ STATIC_FXN void init_conout_capability() {
       }
    }
 
-void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
+STATIC_FXN bool NcursesInitialize() {  // this MIGHT need to be made $TERM-specific
+   if( s_ncursesBackendInitialized ) {
+      return true;
+      }
    DBG( "%s ++++++++++++++++", __func__ );
    noecho();              // we do not change
    nonl();                // we do not change
@@ -406,6 +410,8 @@ void conin_ncurses_init() {  // this MIGHT need to be made $TERM-specific
    init_escseqstr2edkc();
 
    DBG( "%s ----------------", __func__ );
+   s_ncursesBackendInitialized = true;
+   return true;
    }
 
 // get keyboard event
@@ -414,7 +420,7 @@ STATIC_FXN int ConGetEvent();
 
 STATIC_FXN int DecodeEscSeq_xterm( stref escseq, std::function<int()> getCh );
 
-bool ConIn::FlushKeyQueueAnythingFlushed(){ return flushinp(); }
+STATIC_FXN bool NcursesFlushKeyQueueAnythingFlushed(){ return flushinp(); }
 
 int ConIO::DbgPopf( PCChar fmt, ... ){ return 0; }
 
@@ -448,15 +454,15 @@ STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API
       }
    }
 
-void ConIn::WaitForKey() {
+STATIC_FXN void NcursesWaitForKey() {
    GetEdKC_Ascii( true );
    }
 
-EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey() {
+STATIC_FXN EdKC_Ascii NcursesEdKC_Ascii_FromNextKey() {
    return GetEdKC_Ascii( false );
    }
 
-EdKC_Ascii ConIn::EdKC_Ascii_FromNextKey_Keystr( std::string &dest ) {
+STATIC_FXN EdKC_Ascii NcursesEdKC_Ascii_FromNextKey_Keystr( std::string &dest ) {
    const auto rv( GetEdKC_Ascii( false ) );
    dest.assign( KeyNmOfEdkc( rv.EdKcEnum ) );
    return rv;
@@ -783,3 +789,26 @@ STATIC_FXN int DecodeEscSeq_xterm( stref escseq, std::function<int()> getCh ) {
       } // decode CSI and SS3 sequences; 98% identical
    return -1;
    }
+
+namespace {
+const ConIn::BackendOps s_ncursesBackendOps {
+   .Initialize                    = NcursesInitialize,
+   .Shutdown                      = nullptr,
+   .log_verbose                   = NcursesLogVerbose,
+   .log_quiet                     = NcursesLogQuiet,
+   .DecodeErrCount                = NcursesDecodeErrCount,
+   .FlushKeyQueueAnythingFlushed  = NcursesFlushKeyQueueAnythingFlushed,
+   .WaitForKey                    = NcursesWaitForKey,
+   .EdKC_Ascii_FromNextKey        = NcursesEdKC_Ascii_FromNextKey,
+   .EdKC_Ascii_FromNextKey_Keystr = NcursesEdKC_Ascii_FromNextKey_Keystr,
+   .KbHit                         = nullptr,
+   };
+
+struct NcursesBackendRegistration {
+   NcursesBackendRegistration() {
+      ConIn::RegisterBackend( ConIn::BackendId::Ncurses, s_ncursesBackendOps );
+      }
+   };
+
+STATIC_VAR NcursesBackendRegistration s_registerNcursesBackend;
+}
