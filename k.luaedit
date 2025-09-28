@@ -2588,13 +2588,17 @@ end
 
 do -- rudimentary way to play the audio passage associated with the current line of the .lrc file you're viewing (editing); AMAZINGLY powerful!
    local function ffplay( arg )
-     local fname = arg.fbuf:Name()
-     local noext = fname:gsub( '%.[^\.]+$', '' )              print( 'noext='..noext )
-     for _,ext in ipairs{'wav', 'm4a', 'ogg', 'mp3'} do
-        local cand = noext .. '.' .. ext
-        if _dir.name_isfile( cand ) then
-           fname = cand
-           break
+     local fnm = arg.fbuf:Name()
+     local audFnm
+     while audFnm==nil and fnm:len() > 0 and fnm:match('%.') do
+        local shorter = fnm:gsub( '%.[^\.]+$', '' )   print( 'fnm='..fnm .. ' -> ' .. shorter )
+        fnm = shorter
+        for _,ext in ipairs{'wav', 'm4a', 'ogg', 'mp3'} do
+           local cand = fnm .. '.' .. ext             print( 'cand='..cand )
+           if _dir.name_isfile( cand ) then
+              audFnm = cand
+              break
+              end
            end
         end
      local function getSecs( lnum )
@@ -2621,11 +2625,17 @@ do -- rudimentary way to play the audio passage associated with the current line
            end
         end
      duration = duration or 12
+     duration = Max(duration,5)
 
-     local cmd = 'ffplay -nodisp -autoexit -ss "'..secs..'" -t '..duration..' "'..fname..'" >/dev/null 2>&1 &'
-     print( cmd )
-     os.execute( cmd )
-     Msg( '' )
+     if audFnm then
+     --local cmd = 'ffplay -nodisp -autoexit -ss "'..secs..'" -t '..duration..' "'..audFnm..'"'
+       local cmd = 'ffplay -nodisp -autoexit -ss "'..secs..'" -t '..duration..' "'..audFnm..'" >/dev/null 2>&1 &'
+       print( cmd )
+       os.execute( cmd )
+       Msg( '' )
+     else
+       Msg( 'did not find audFnm for current file' )
+       end
      end
 
    AddEdFxn{ name = "playaudio", help = "", attr = NOARG+LINEARG, key = "alt+k"
