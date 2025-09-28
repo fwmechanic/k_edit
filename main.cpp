@@ -21,6 +21,7 @@
 #include "ed_search.h"
 #include "my_fio.h"
 #include "getopt.h"
+#include "conio.h"
 
 //--------------------------------------
 
@@ -710,7 +711,11 @@ stref CompilerVersion() {
 void kGetopt::VErrorOut( PCChar msg ) {
    printf(
 "\n%s  Copyright KLG 2015-%4.4s\n%s, built %s with\n  %" PR_BSR "\n  %" PR_BSR "\n  %" PR_BSR "\n\n"
-"Usage: %s [-acdh?nv] [-e n=v] [-x mac] [-t] filename\n\n"
+"Usage: %s [-acdh?nv"
+#ifndef _WIN32
+" -I backend"
+#endif
+"] [-e n=v] [-x mac] [-t] filename\n\n"
 " -a     write assign-log pseudofile %s\n"
 " -c     clean: remove non-existent files from tmpfile at init-time\n"
 " -d     don't read .krsrc or the status file at startup\n"
@@ -719,6 +724,9 @@ void kGetopt::VErrorOut( PCChar msg ) {
 " -n     force New console\n"
 " -v     start in no-edit mode: by dflt you cannot make changes to files\n"
 " -e N=V set environment variable N=V within the editor and it's children\n"
+#ifndef _WIN32
+" -I backend select input backend (ncurses|kitty)\n"
+#endif
 " -x mac eXecute a function or macro at startup\n"
 " -t fn  edit file fn, which will forgotten by next editor session\n"
       , ProgramVersion()
@@ -809,7 +817,11 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
    DBGNL();
    auto fForceNewConsole(false);
    PCChar cmdlineMacro(nullptr);
+#ifdef _WIN32
    kGetopt opt( argc, argv, "acde:h?nt:vx:" );
+#else
+   kGetopt opt( argc, argv, "acde:h?nt:vx:I:" );
+#endif
    while( char ch=opt.NextOptCh() ) {  0 && DBG( "opt='%c'", ch );
      switch( ch ) {
        break;default:  opt.VErrorOut( FmtStr<60>( "internal error: unsupported option -%c\n", ch ) );
@@ -819,6 +831,28 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
        break;case 'c': s_ForgetAbsentFiles.fDoIt = true;
        break;case 'd': g_CLI_fUseRsrcFile = false; // don't read .krsrc or the status file.
        break;case 'e': PutEnvChkOk( opt.optarg() );
+#ifndef _WIN32
+       break;case 'I': {
+          const auto backendArg = opt.optarg();
+          if( !backendArg ) {
+             opt.VErrorOut( "option -I requires a backend name" );
+          }
+          ConIn::BackendId backend;
+          if( 0 == Stricmp( backendArg, "ncurses" ) ) {
+             backend = ConIn::BackendId::Ncurses;
+          }
+          else if( 0 == Stricmp( backendArg, "kitty" ) ) {
+             backend = ConIn::BackendId::Kitty;
+          }
+          else {
+             opt.VErrorOut( FmtStr<80>( "unknown input backend '%s'", backendArg ) );
+          }
+          if( !ConIn::SelectBackend( backend ) ) {
+             opt.VErrorOut( FmtStr<128>( "input backend '%s' is not available in this build", backendArg ) );
+          }
+          break;
+          }
+#endif
        break;case '?': opt.VErrorOut( nullptr );
        break;case 'h': opt.VErrorOut( nullptr );
        break;case 'n': fForceNewConsole = true;

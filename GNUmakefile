@@ -254,6 +254,7 @@ WINDRES_O=
 PLAT_OBJS := \
  linux_api.o      \
  linux_process.o  \
+ conin_backend.o  \
  ncurses_conin.o  \
  ncurses_conout.o \
  $(WINDRES_O)     \

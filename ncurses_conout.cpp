@@ -265,7 +265,6 @@ STATIC_FXN void modify_colors() {
    show_color_defs();
    }
 
-extern void conin_ncurses_init();
 bool ConIO::StartupOk( bool fForceNewConsole ) {
    auto lc_ctype_orig = setlocale(LC_CTYPE, nullptr);
    //
@@ -295,7 +294,11 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    start_color();  DBG( "\nlc_ctype_orig=%s\nlc_ctype=%s\nTERM=%s\ncurses_version()=\"%s\"\ncan_change_color() = %d\nKEY_MIN=%d, KEY_MAX=%d\nCOLORS = %d\nCOLOR_PAIRS = %d\nCCHARW_MAX = %d", lc_ctype_orig, lc_ctype, getenv("TERM"), curses_version(), can_change_color(), KEY_MIN, KEY_MAX, COLORS, COLOR_PAIRS, CCHARW_MAX );
    show_color_defs();
    // modify_colors();
-   conin_ncurses_init();
+   if( !ConIn::EnsureBackendInitialized() ) {
+      endwin();
+      DBG( "ConIn::EnsureBackendInitialized failed" );
+      return false;
+      }
    MaximizeTerminal();
    ConOut::Resize();
    return true;

@@ -133,4 +133,30 @@ namespace ConIn {
    void  log_verbose();
    void  log_quiet  ();
    int   DecodeErrCount();
+#ifndef _WIN32
+   enum class BackendId {
+      Ncurses,
+      Kitty,
+      Count
+      };
+
+   struct BackendOps {
+      bool        (*Initialize)();
+      void        (*Shutdown)();
+      void        (*log_verbose)();
+      void        (*log_quiet)();
+      int         (*DecodeErrCount)();
+      bool        (*FlushKeyQueueAnythingFlushed)();
+      void        (*WaitForKey)();
+      EdKC_Ascii  (*EdKC_Ascii_FromNextKey)();
+      EdKC_Ascii  (*EdKC_Ascii_FromNextKey_Keystr)( std::string &dest );
+      bool        (*KbHit)();
+      };
+
+   bool        RegisterBackend( BackendId id, const BackendOps &ops );
+   bool        SelectBackend ( BackendId id );
+   bool        BackendRegistered( BackendId id );
+   BackendId   ActiveBackend();
+   bool        EnsureBackendInitialized();
+#endif
    }
