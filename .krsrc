@@ -91,9 +91,9 @@
    ta1:=cancel arg "tabalign:yes" assign
    rt0:=cancel arg "realtabs:no"  assign
    rt1:=cancel arg "realtabs:yes" assign
-   et0:=cancel arg "entab:0" assign
-   et1:=cancel arg "entab:1" assign
-   et3:=cancel arg "entab:3" assign
+   et0:=cancel arg "entab:none" assign
+   et1:=cancel arg "entab:leading" assign
+   et3:=cancel arg "entab:all" assign
    r0e0:=cancel rt0 et0
    r0e1:=cancel rt0 et1
    r1e0:=cancel rt1 et0
@@ -572,6 +572,9 @@
    diary:=cancel Arg "${K_DIARY_FILE:-${K_NOTES_DIR:-${HOME:-${USERPROFILE}}/my/repos/pers/daily_notes.kdb}}${K_NOTES_DIR:+/daily_notes.kdb}" SetFile -> tslog
    diary:Alt+5
 
+   tech:=cancel Arg "${K_DIARY_FILE:-${K_NOTES_DIR:-${HOME:-${USERPROFILE}}/my/repos/pers/quickref.kdb}}${K_NOTES_DIR:+/quickref.kdb}" SetFile
+   tech:Alt+8
+
    exts :=arg "%.[^.\\]+$" matches
 
    #*************************************************************************
@@ -752,7 +755,7 @@
    wordchars:_-/.:
 
 [ftype:log]
-   # wordchars:_-/.:
+   wordchars:_-
 
 [ftype:cmake]
    wordchars:_-.
