@@ -1,0 +1,12 @@
+Kitty Keyboard Protocol (KKP) Reference
+
+Upstream Documentation (official):
+- Latest HTML: https://sw.kovidgoyal.net/kitty/keyboard-protocol/
+- Source (example tag v0.20.0):
+  https://raw.githubusercontent.com/kovidgoyal/kitty/refs/tags/v0.20.0/docs/keyboard-protocol.rst
+
+Notes:
+- Confirmed in use with kitty 0.42.2.
+- We enable KKP with CSI = 25 ; 1 u (disambiguate + report_all_keys + report_text).
+- We query current flags with CSI ? u and expect CSI ? <flags> u.
+
