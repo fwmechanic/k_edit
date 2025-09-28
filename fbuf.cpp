@@ -1106,12 +1106,12 @@ bool ARG::popd() { // arg "_sdup" _spush arg "fn" _spush arg _spop _spop msearch
    return FBOP::PopFirstLine( ts, g_pFBufCwd ) ? fChangeFile( ts.c_str(), false ) : ErrPause( "empty cwd stack" );
    }
 
-// "fnm.cpp:12:6" seems to have become a fairly common syntax for specifying filename:line#:col#
+// "filename:12:6" seems to have become a fairly common syntax for specifying filename+cursor location ":line#:col#".
 // ExtractOptPoint will extract this information from the end of a filename string.  With this
 // support I can easily copy+paste such a filename:line#:col# as a cmdline param (or setfile on it)
 
 struct optPoint {
-   sridx  sfxLen;
+   sridx  sfxLen; // # of trailing chars used by cursor location suffix
    Point  pt;
    };
 
@@ -1119,17 +1119,17 @@ optPoint ExtractOptPoint( stref fnm ) {
    optPoint rv = { sfxLen: 0 };
    UI uvi = 0;
    uintmax_t uval[2] = {0,0};
-   uintmax_t place[2] = {1,1};  // Track decimal place value for each number
+   uintmax_t place = 1;  // Track decimal place value
    for( auto it = fnm.crbegin() ; it != fnm.crend() ; ++it ) {
       if( isdigit(*it) ) {
          const auto digit = (*it - '0');
          // Check for overflow before adding
-         if(   place[uvi] > UINTMAX_MAX / 10                      // place value would overflow?
-            || uval[uvi] > UINTMAX_MAX - (digit * place[uvi]) ) { // result would overflow?
+         if(   place > UINTMAX_MAX / 10                      // place value would overflow?
+            || uval[uvi] > UINTMAX_MAX - (digit * place) ) { // result would overflow?
             return rv;
          }
-         uval[uvi] += digit * place[uvi];
-         place[uvi] *= 10;
+         uval[uvi] += digit * place;
+         place *= 10;
          }
       else if( *it == ':' ) {
          if( ++uvi >= 2 ) {
@@ -1143,6 +1143,7 @@ optPoint ExtractOptPoint( stref fnm ) {
                }
             break;
             }
+         place = 1;
          }
       else { return rv; }
       }
@@ -1161,9 +1162,9 @@ bool fChangeFile( PCChar pszName, bool fCwdSave ) { enum {DP=1};  DP && DBG( "%s
       return false;
       }
 
-   auto op = ExtractOptPoint( fnamebuf );
-   if( op.sfxLen ) {                                               DP && DBG( "%s ExtractOptPoint %" PR_SIZET ": (%d,%d)", __func__, op.sfxLen, op.pt.lin, op.pt.col );
-      fnamebuf.erase(fnamebuf.length() - op.sfxLen);               DP && DBG( "%s ExtractOptPoint '%s'", __func__, fnamebuf.c_str() );
+   const auto op = ExtractOptPoint( fnamebuf );
+   if( op.sfxLen ) {                                              DP && DBG( "%s ExtractOptPoint %" PR_SIZET ": (%d,%d)", __func__, op.sfxLen, op.pt.lin, op.pt.col );
+      fnamebuf.erase(fnamebuf.length() - op.sfxLen);              DP && DBG( "%s ExtractOptPoint '%s'", __func__, fnamebuf.c_str() );
       }
 
    CPCChar pFnm( fnamebuf.c_str() );
