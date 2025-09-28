@@ -59,7 +59,9 @@ do
       if kroot then
          AddInDir(                                 kroot
                  , { "Lua Reference Manual"     , fkroot.."lua-5.1/doc/contents.html" }
+                 , { "std::basic_string_view Manual", "https://en.cppreference.com/w/cpp/string/basic_string_view" }
                  , { "std::string_view Manual"  , "https://en.cppreference.com/w/cpp/header/string_view" }
+                 , { "std::basic_string Manual", "https://en.cppreference.com/w/cpp/string/basic_string" }
                  , { "Lua PiL 2e"               , fkroot.."lua-5.1/doc/Programming.in.Lua.2e.pdf" }
                  , { "Lpeg Reference Manual"    , fkroot.."lua-5.1/src/lpeg.html"     }
                  , { "Lpeg.re Reference Manual" , fkroot.."lua-5.1/src/re.html"       }
