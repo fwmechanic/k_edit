@@ -1,3 +1,5 @@
+local ipairs = ipairs
+
 module(...)
 
 local cmk_globalvars = {             -- "oh, the humanity!"  (or: "the abomination known as CMake")

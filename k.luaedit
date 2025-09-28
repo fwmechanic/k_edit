@@ -999,6 +999,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
          interface    = 0,
          method       = 3,
          property     = 3,
+         alias        = 0,
          },
       ['C++'] = {
          typedef      = 0,
@@ -1323,6 +1324,7 @@ do -- local scope for private functions and data that implement EdFxn "tgs"
       fs "%s.ts"       ,  -- Typescript module name maps to file "${modnm}.ts"
       fs "%s.js"       ,  -- Javascript module name maps to file "${modnm}.js"
       fs "%s.vue"      ,  -- Vue module name maps to file "${modnm}.vue"
+      fs "%s.lua"      ,  -- Lua module name maps to file "${modnm}.lua"
       fs "%s.py"       ,  -- python module name maps to file "${modnm}.py"
       fs "%s.cmake"    ,
       fs "l_edfunc_%s" ,  -- lua fxn wr in C?  (hardly works since macros mask true fxn names)
@@ -2372,7 +2374,7 @@ do -- sumcol impl scope
       return rv, fbuf:GetLineSeg( y0, xRight+1, xRight+1+99999 )
       end
 
-   AddEdFxn{ name = "sumcol", attr = MODIFIES+BOXARG, key = "alt+num+", help = ""
+   AddEdFxn{ name = "sumcol", attr = MODIFIES+BOXARG, key = "alt+num+", help = "amounts followed by 'balance' receive special treatment"
       , BOXARG  = function( arg )
          local bc, trailingL0 = sumColBoxContent( arg )
          local minInd = arg.minX-1
@@ -2541,7 +2543,7 @@ local function for_LINEBOX( arg, ... )
 
 local function gsub_URL_escape( s )
    local cnt1,cnt2
-   s,cnt1 = s:gsub( '[#&="+%%%c%s]', function(c) return string.format( "%%%02X", c:byte() ) end )
+   s,cnt1 = s:gsub( '['.."'"..'#&="+%%%c%s]', function(c) return string.format( "%%%02X", c:byte() ) end )
    s,cnt2 = s:gsub( " ", "+" )
    return s, cnt1+cnt2
    end
@@ -3430,7 +3432,14 @@ do
       here!) ]]
       local ar = {}
       for ix,term in ipairs(split_ch_tbl( str:gsub('%s+',' '), " " )) do
-         ar[1+#ar] = --[[ (ix==1) and term or ]] term:gsub( '^(%-.*)', '"%1"' )
+         local q1, q2, lmin = term:match("'"), term:match('"'), term:match('^(%-.*)')
+         if q1 or lmin then
+            ar[1+#ar] = '"'..term..'"'
+         elseif q2 then
+            ar[1+#ar] = "'"..term.."'"
+         else
+            ar[1+#ar] = term
+            end
          end
       return table.concat( ar, ' ' )
       end
