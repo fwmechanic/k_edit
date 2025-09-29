@@ -14,6 +14,22 @@ K is my personal programmer's text editor, whose design is derived from Microsof
 
 K builds to a 64-bit binary/exe for Win32 (Console) and Linux (ncurses) platforms.  K is written in C++20 with http://www.lua.org/versions.html#5.1[Lua 5.1] embedded.
 
+### Terminal Input Backends (Linux)
+
+On Linux K supports two input backends:
+
+- ncurses (default) — legacy escape decoding using terminfo.
+- Kitty Keyboard Protocol (KKP) — CSI u decoding for precise key reporting.
+
+When running inside a Kitty terminal, K auto‑detects KKP and enables it. You can also select explicitly via the command line:
+
+- `-I ncurses` — force the ncurses backend
+- `-I kitty` — force the Kitty KKP backend
+
+With KKP enabled K requests the following progressive enhancements from Kitty: disambiguate, report_all_keys, and report_text. This makes printable keys, function keys, and numeric keypad operators report as CSI u events with modifiers, allowing robust decoding of combinations such as `ctrl+alt+num*`.
+
+See also: `doclinks/kitty_keyboard_protocol.txt` for upstream KKP documentation links.
+
 ## Features
 
  * *Z*: "Reverse-polish" editor-function execution mode wherein the user creates an editor-function argument ("xARG") using various selection or data-entry modes or argtypes, _prior to_ invoking the editor-function; the editor-function's execution behavior adapts to the actual argtype it receives.
