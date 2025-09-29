@@ -294,11 +294,24 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    start_color();  DBG( "\nlc_ctype_orig=%s\nlc_ctype=%s\nTERM=%s\ncurses_version()=\"%s\"\ncan_change_color() = %d\nKEY_MIN=%d, KEY_MAX=%d\nCOLORS = %d\nCOLOR_PAIRS = %d\nCCHARW_MAX = %d", lc_ctype_orig, lc_ctype, getenv("TERM"), curses_version(), can_change_color(), KEY_MIN, KEY_MAX, COLORS, COLOR_PAIRS, CCHARW_MAX );
    show_color_defs();
    // modify_colors();
-   if( !ConIn::EnsureBackendInitialized() ) {
+   // Try Kitty KKP first if available; fall back to ncurses if probe/init fails
+   bool ok = false;
+   if( ConIn::BackendRegistered( ConIn::BackendId::Kitty ) ) {
+      ConIn::SelectBackend( ConIn::BackendId::Kitty );
+      ok = ConIn::EnsureBackendInitialized();
+      if( !ok ) {
+         DBG( "Kitty-KKP backend not available; falling back to ncurses" );
+         ConIn::SelectBackend( ConIn::BackendId::Ncurses );
+      }
+   }
+   if( !ok ) {
+      ok = ConIn::EnsureBackendInitialized();
+   }
+   if( !ok ) {
       endwin();
       DBG( "ConIn::EnsureBackendInitialized failed" );
       return false;
-      }
+   }
    MaximizeTerminal();
    ConOut::Resize();
    return true;

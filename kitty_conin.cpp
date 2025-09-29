@@ -35,6 +35,43 @@ void KittySendSequence( const char *seq ) {
    std::fflush( stdout );
    }
 
+// Return true if the terminal responds to CSI ? u (KKP flags) within a short window.
+// Per spec, send CSI ? u (query flags) and immediately send CSI c (Primary DA).
+// If a CSI ? <digits> u reply is seen, KKP is supported.
+static bool KittyProbeKKPSupported() {
+   KittySendSequence( "\x1b[?u" );  // query flags
+   KittySendSequence( "\x1b[c"   ); // primary device attributes
+   const int old_delay = g_iConin_nonblk_rd_tmout;
+   timeout( 200 );
+   std::string buf;
+   auto sawKKP = false;
+   for( int i=0; i<256; ++i ) {
+      int ch = getch();
+      if( ch == ERR ) { break; }
+      buf.push_back( static_cast<char>(ch) );
+      // crude scan: look for ESC '[' '?' <digits> 'u'
+      if( ch == 'u' ) {
+         // try to parse the tail of buf
+         size_t n = buf.size();
+         size_t ix = (n >= 16) ? (n - 16) : 0;
+         for( ; ix + 4 <= n; ++ix ) {
+            if( static_cast<unsigned char>(buf[ix])   == 0x1b
+             && (ix+1) < n && buf[ix+1] == '['
+             && (ix+2) < n && buf[ix+2] == '?' ) {
+               size_t j = ix + 3; bool got=false;
+               int v=0;
+               for( ; j < n && std::isdigit( static_cast<unsigned char>(buf[j]) ); ++j ) { got=true; v = v*10 + (buf[j]-'0'); }
+               if( got && j < n && buf[j] == 'u' ) { sawKKP = true; break; }
+               }
+            }
+         if( sawKKP ) { break; }
+         }
+      }
+   timeout( old_delay );
+   DBG( "Kitty-KKP probe raw='%.*s' -> %s", (int)buf.size(), buf.data(), sawKKP ? "KKP" : "no-KKP" );
+   return sawKKP;
+   }
+
 void KittyEnterProtocol() {
    // Request progressive enhancements only (KKP proper):
    //  0b00001 (1)  = disambiguate
@@ -760,8 +797,7 @@ bool KittyKbHit() {
 
 bool KittyInitialize() {
    if( s_initialized ) { return true; }
-   if( std::getenv("KITTY_WINDOW_ID") == nullptr ) {
-      Msg( "Kitty backend unavailable: KITTY_WINDOW_ID not set" );
+   if( !KittyProbeKKPSupported() ) {
       return false;
       }
    noecho();
@@ -815,9 +851,6 @@ const ConIn::BackendOps s_kittyBackendOps {
 struct KittyBackendRegistration {
    KittyBackendRegistration() {
       ConIn::RegisterBackend( ConIn::BackendId::Kitty, s_kittyBackendOps );
-      if( std::getenv( "KITTY_WINDOW_ID" ) ) {
-         ConIn::SelectBackend( ConIn::BackendId::Kitty );
-         }
       }
    };
 
