@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
+#include <unistd.h>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -35,12 +36,16 @@ void KittySendSequence( const char *seq ) {
    std::fflush( stdout );
    }
 
+#define QueryKkpFlags            "\x1b[?u"
+#define QueryPrimaryDeviceAttrs  "\x1b[c"
+
 // Return true if the terminal responds to CSI ? u (KKP flags) within a short window.
 // Per spec, send CSI ? u (query flags) and immediately send CSI c (Primary DA).
 // If a CSI ? <digits> u reply is seen, KKP is supported.
 static bool KittyProbeKKPSupported() {
-   KittySendSequence( "\x1b[?u" );  // query flags
-   KittySendSequence( "\x1b[c"   ); // primary device attributes
+   static constexpr char query[] = QueryKkpFlags QueryPrimaryDeviceAttrs;
+   ::write( STDOUT_FILENO, query, sizeof(query) - 1 );
+
    const int old_delay = g_iConin_nonblk_rd_tmout;
    timeout( 200 );
    std::string buf;
@@ -81,7 +86,7 @@ void KittyEnterProtocol() {
    KittySendSequence( "\x1b[=25;1u" );
    KDBG( "KittyEnterProtocol" );
    // Query current flags: CSI ? u -> CSI ? flags u
-   KittySendSequence( "\x1b[?u" );
+   KittySendSequence( QueryKkpFlags );
    int old_delay = g_iConin_nonblk_rd_tmout;
    timeout( 200 );
    std::string buf;
@@ -797,11 +802,19 @@ bool KittyKbHit() {
 
 bool KittyInitialize() {
    if( s_initialized ) { return true; }
+   bool restoreEcho = false;
+   bool restoreNl   = false;
+   if( curscr ) {
+      noecho();
+      restoreEcho = true;
+      nonl();
+      restoreNl = true;
+      }
    if( !KittyProbeKKPSupported() ) {
+      if( restoreEcho ) { echo(); }
+      if( restoreNl   ) { nl();   }
       return false;
       }
-   noecho();
-   nonl();
    keypad( stdscr, FALSE );
    meta( stdscr, TRUE );
    conin_blocking_read();
