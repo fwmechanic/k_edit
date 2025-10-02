@@ -20,6 +20,8 @@
 -- Component in K build process: reads cmdtbl.dat, writes 4 output files.
 -- For more details see hdr of cmdtbl.dat
 
+package.path = "./luaexts/?.lua;" .. package.path
+
 -- require "strict"
 require "util"
 require "tu"
