@@ -85,6 +85,13 @@ bool EnsureBackendInitialized() {
    return require_active_ops() != nullptr;
    }
 
+void ShutdownActiveBackend() {
+   if( s_backendInitialized ) {
+      call_shutdown( active_ops_noinit() );
+      s_backendInitialized = false;
+      }
+   }
+
 void log_verbose() {
    if( auto *ops = require_active_ops(); ops && ops->log_verbose ) {
       ops->log_verbose();

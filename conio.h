@@ -158,5 +158,6 @@ namespace ConIn {
    bool        BackendRegistered( BackendId id );
    BackendId   ActiveBackend();
    bool        EnsureBackendInitialized();
+   void        ShutdownActiveBackend();
 #endif
    }

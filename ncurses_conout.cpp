@@ -317,5 +317,6 @@ bool ConIO::StartupOk( bool fForceNewConsole ) {
    return true;
    }
 void ConIO::Shutdown() {
+   ConIn::ShutdownActiveBackend();
    endwin();
    }
