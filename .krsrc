@@ -102,6 +102,8 @@
    mfr:=cancel mfreplace
    mfrx:=cancel arg arg mfreplace
 
+   gitrmargin:=cancel arg "rmargin:66" assign
+
    bdm4:=cancel rt0 arg "blankdispmask:4" assign
 
    unix:=cancel arg seteol
