@@ -32,7 +32,7 @@ complete() {
 
 . /etc/os-release
 
-if [[ "$ID" = "ubuntu" || "$ID" = "pop" ]] ; then
+if [[ "$ID" = "debian" || "$ID" = "ubuntu" || "$ID" = "pop" ]] ; then
    echo "${hdr}STARTING"
    sudo apt-get install -yq   \
       build-essential         \
@@ -40,7 +40,7 @@ if [[ "$ID" = "ubuntu" || "$ID" = "pop" ]] ; then
       libboost-dev            \
       libboost-filesystem-dev \
       libboost-system-dev     \
-      libncurses5-dev         \
+      libncurses-dev          \
       libpcre2-dev            \
       ncurses-term            \
       libreadline-dev         \

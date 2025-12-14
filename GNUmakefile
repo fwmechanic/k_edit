@@ -101,9 +101,17 @@ CPPFLAGS += -DWINVER=0x0501
 else
 
 # https://stackoverflow.com/a/43835225
-NCURSES_WIDE := w
+NCURSES_CONFIG := $(shell \
+  for c in ncursesw6-config ncursesw5-config ncurses6-config ncurses5-config; do \
+    command -v $$c >/dev/null 2>&1 && { echo $$c; exit; }; \
+  done \
+)
 
-NCURSES_CONFIG := ncurses$(NCURSES_WIDE)5-config
+ifeq ($(strip $(NCURSES_CONFIG)),)
+  $(error Could not find ncurses*-config. Install libncurses-dev)
+  # if this fails, likely need to add ncurses[w]7 to the above command-candidate list
+endif
+
 NCURSES_CFLAGS := $(shell $(NCURSES_CONFIG) --cflags)
 $(info NCURSES_CFLAGS: '$(NCURSES_CFLAGS)')
 NCURSES_LIBS := $(shell $(NCURSES_CONFIG) --libs)
