@@ -112,6 +112,8 @@ local ebySpecEndingFirst = "EndSort"
 local ebySpecNewlyListed = "NewSort&SortOrder=d&pb=&ebaytag1=ebayreg&ht=1"
 local ebyTail1           = "&query="
 local ebyTail2           = "&ebaytag1code=0"
+local HomeServer         = "https://files.home.arpa/"
+local HomeJellyfin       = "https://media.home.arpa/"
 
 local googl = "https://www.google.com/"
 local function goSiteSrch( site )
@@ -123,7 +125,8 @@ local function goSiteSrch( site )
 local URL_StartPage      = goUrl( "https://startpage.com/do/search?q=".. UrlSrchTag )
 -- local URL_Google         = goUrl( googl.."search?hl=en&as_q=" .. UrlSrchTag )
 local URL_Google         = goUrl( googl.."search?q=" .. UrlSrchTag )
-local URL_HomeServer     = goUrl( "https://files.home.arpa/cgi/search-files?Submit=Find+Matches&search_keys=" .. UrlSrchTag )
+local URL_HomeServer     = goUrl( HomeServer.."cgi/search-files?Submit=Find+Matches&search_keys=" .. UrlSrchTag )
+local URL_HomeJellyfin   = goUrl( HomeJellyfin )
 local URL_Epinions       = goSiteSrch( "www.epinions.com" )
 local URL_Bing           = goUrl( "http://www.bing.com/search?q=" .. UrlSrchTag )
 local URL_DuckDuckGo     = goUrl( "https://duckduckgo.com/search?q=" .. UrlSrchTag )
