@@ -796,16 +796,79 @@ STATIC_FXN void ConstructStatics() {
 //
 GLOBAL_VAR char ** &g_envp = WL( _environ, environ );
 
+#ifdef _WIN32
+// If hosted by Windows Terminal (or another non-conhost terminal host that
+// sets WT_SESSION), re-launch ourselves under conhost.exe so k.exe gets the
+// legacy Win32 Console behaviors it depends on (no Ctrl+V / Ctrl+Shift+*
+// hijacking, native mouse-wheel scroll, full-screen console resize, per-EXE
+// "Use legacy console" / QuickEdit console-properties registry settings).
+// Waits for the re-launched instance and propagates its exit code, so e.g.
+// Total Commander's "wait for editor to exit" semantics still hold.
+// Set env var K_NO_CONHOST_RELAUNCH=1 to disable.
+STATIC_FXN void RelaunchInConhostIfHostedByWT() {
+   if( !getenv( "WT_SESSION" ) )            return;  // not under WT
+   if(  getenv( "K_NO_CONHOST_RELAUNCH" ) ) return;  // escape hatch
+
+   char self[ MAX_PATH ];
+   const auto selflen( Win32::GetModuleFileNameA( nullptr, self, sizeof self ) );
+   if( selflen == 0 || selflen >= sizeof self ) return;
+
+   // Find where args (after the program name) begin in the raw command line,
+   // so we preserve the user's exact quoting of filename args, paths, etc.
+   PCChar args_start( Win32::GetCommandLineA() );
+   if( *args_start == '"' ) {
+      for( ++args_start; *args_start && *args_start != '"'; ++args_start ) {}
+      if( *args_start == '"' ) { ++args_start; }
+      }
+   else {
+      while( *args_start && *args_start != ' ' && *args_start != '\t' ) { ++args_start; }
+      }
+   while( *args_start == ' ' || *args_start == '\t' ) { ++args_start; }
+
+   std::string cmdline( "conhost.exe \"" );
+   cmdline += self;
+   cmdline += "\"";
+   if( *args_start ) {
+      cmdline += ' ';
+      cmdline += args_start;
+      }
+
+   // Clear WT_SESSION so the conhost-hosted child doesn't itself attempt a
+   // relaunch (it's no longer under WT).  Flag the child that it was
+   // relaunched so its startup DBG can log visible evidence in the logfile.
+   Win32::SetEnvironmentVariableA( "WT_SESSION", nullptr );
+   Win32::SetEnvironmentVariableA( "K_RELAUNCHED_FROM_WT", "1" );
+
+   Win32::STARTUPINFO si = { sizeof si };
+   Win32::PROCESS_INFORMATION pi = {};
+   if( !Win32::CreateProcessA( nullptr, cmdline.data(), nullptr, nullptr,
+                               FALSE, CREATE_NEW_CONSOLE, nullptr, nullptr,
+                               &si, &pi ) ) {
+      return;  // Fall through; run normally under WT.
+      }
+   Win32::CloseHandle( pi.hThread );
+   Win32::WaitForSingleObject( pi.hProcess, INFINITE );
+   Win32::DWORD ec( 0 );
+   Win32::GetExitCodeProcess( pi.hProcess, &ec );
+   Win32::CloseHandle( pi.hProcess );
+   Win32::ExitProcess( ec );
+   }
+#endif
+
 #ifndef APP_IN_DLL
 int CDECL__ main( int argc, const char *argv[], const char *envp[] )
 #else
 DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint from K.EXE
 #endif
    { enum {SD=1};
+#ifdef _WIN32
+   RelaunchInConhostIfHostedByWT();
+#endif
    // extern void test_CaptiveIdxOfCol();
    //             test_CaptiveIdxOfCol();
    ConstructStatics();
    SD && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT, __func__, memdelta() );
+   DBG( "conhost-relaunch: WT_SESSION=%d K_RELAUNCHED_FROM_WT=%d", !!getenv("WT_SESSION"), !!getenv("K_RELAUNCHED_FROM_WT") );
    for( auto argi(0); argi < argc; ++argi ) { DBG( "argv[%d] = '%s'", argi, argv[argi] ); }
    CmdIdxInit();
    SwitblInit();

@@ -133,6 +133,7 @@ Use: decompress the release file in an empty directory and run `k.exe` (Linux: `
 
  * x64 build, first supported 2014.02, is in active use on Win 8.1 and Win 10.
  * i386 build was removed 2021.08.
+ * *Hosted under Windows Terminal* (the Win11 default): on startup k.exe detects the `WT_SESSION` environment variable and transparently re-launches itself under `conhost.exe`, then waits for that instance and propagates its exit code.  This gets back all the legacy-console behaviors K depends on (no Ctrl+V hijacking by WT, native mouse-wheel scrolling, full-screen console resize, honor of per-EXE "Use legacy console" / QuickEdit registry settings).  Set environment variable `K_NO_CONHOST_RELAUNCH=1` to disable (e.g. for debugging k.exe under WT).
 
 ### Linux key-decoding status quo
 
