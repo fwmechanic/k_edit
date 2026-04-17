@@ -283,7 +283,7 @@ int IsPcre2WordChar(char ch) {
    if( !re ) {
       int errorcode;
       PCRE2_SIZE erroroffset;
-      re = pcre2_compile( (PCRE2_SPTR)"\\w", PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroroffset, NULL );
+      re = pcre2_compile( reinterpret_cast<PCRE2_SPTR>("\\w"), PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroroffset, NULL );
       if( !re ) {
          return 0;
          }
@@ -291,6 +291,6 @@ int IsPcre2WordChar(char ch) {
       }
 
    // Perform the match
-   const int rv = pcre2_match(re, (PCRE2_SPTR)&ch, 1, 0, 0, match_data, NULL);
+   const int rv = pcre2_match(re, reinterpret_cast<PCRE2_SPTR>(&ch), 1, 0, 0, match_data, NULL);
    return rv >= 0 ? 1 : 0;  // rv is summable
    }

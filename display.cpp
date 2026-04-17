@@ -636,8 +636,8 @@ std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
                "hello
                   there"
                 */
-         auto ixDnstream = [&]( stref rl, const sridx ixC ) {   0&&DBG( "dn0 %ld [%" PR_BSR "]", ixC, BSR(rl) );
-            for( auto ix(ixC) ; ix < rl.length()-1 ; ++ix ) {  0&&DBG( "dn[%ld]>%c", ixC, rl[ixC] );
+         auto ixDnstream = [&]( stref rl, const sridx ixC ) {   0&&DBG( "dn0 %" PR_BSRSIZET " [%" PR_BSR "]", ixC, BSR(rl) );
+            for( auto ix(ixC) ; ix < rl.length()-1 ; ++ix ) {  0&&DBG( "dn[%" PR_BSRSIZET "]>%c", ixC, rl[ixC] );
                if( !isspace( rl[ix] ) && ('"'==rl[ix+1]) ) {
                   const auto rlDn( rl.substr(ixC,ix-ixC+1) );     DBG( "dn=%" PR_BSR "'", BSR(rlDn) );
                   cat_rv( rlDn );

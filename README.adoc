@@ -71,7 +71,7 @@ The K source code distro contains, and K incorporates, by building and static li
 
 ### External Build Dependencies
 
- * `GCC` >= 11
+ * `GCC` >= 12 (for adequate C++23 support)
  * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
  ** `boost::filesystem`: a small subset only
  * https://github.com/PCRE2Project/pcre2[`PCRE2`] Perl Compatible Regular Expressions are used in search/replace editor-functions and occasionally internally.
@@ -81,18 +81,30 @@ The K source code distro contains, and K incorporates, by building and static li
 
 #### Windows-specific Build-Prep Instructions
 
- * The http://nuwen.net/mingw.html[nuwen.net distribution of MinGW] provides _all_ of the Windows External Build Dependencies except `ctags.exe`.  The MinGW downloads are self-extracting-GUI 7zip archives which contain bat files (I use `set_distro_paths.bat` below) which add the appropriate environment variable values sufficient to use gcc from the cmdline.  I use the following 1-line bat files (stored outside the K repo because their content is dependent on where the MinGW packages are extracted) to setup MinGW for building K (or any other C/C++ project):
- ** `mingw.bat` (x64): `c:\_tools\mingw\64\mingw\set_distro_paths.bat`
- * `ctags.exe` from https://github.com/universal-ctags/ctags[Universal Ctags] must be deployed in `PATH`; https://community.chocolatey.org/packages/universal-ctags[Chocolatey] closely tracks https://github.com/universal-ctags/ctags-win32/releases[ctags-win32 releases]).
+ * As of 2026 the build uses https://www.msys2.org/[MSYS2] UCRT64.  (Previously http://nuwen.net/mingw.html[nuwen.net MinGW]; the transition was driven by nuwen dropping PCRE2 in late 2025.)
+ * Install https://www.msys2.org/[MSYS2] (default location `C:\msys64`), launch the *MSYS2 UCRT64* shell (Start menu: "MSYS2 UCRT64"), and install the toolchain plus project dependencies:
++
+----
+pacman -Syu                            # update base packages; re-run if prompted to re-launch the shell
+pacman -S --needed \
+  mingw-w64-ucrt-x86_64-gcc \
+  mingw-w64-ucrt-x86_64-boost \
+  mingw-w64-ucrt-x86_64-pcre2 \
+  mingw-w64-ucrt-x86_64-universal-ctags \
+  mingw-w64-ucrt-x86_64-7zip \
+  make
+# optional: mingw-w64-ucrt-x86_64-gdb  (for crash debugging)
+----
+ * Build: from the UCRT64 shell run `make -j`.  Alternatively, from any other bash shell (e.g. Git-for-Windows bash), invoke `./msys2_build_run.sh` in this repo; it re-execs itself under MSYS2 UCRT64 bash and sets `TMP`/`TEMP`/`TMPDIR` to a Windows-style path (native `gcc.exe` doesn't grok MSYS-style `/tmp`).
 
- * FYI: http://mingw-users.1079350.n2.nabble.com/2-Question-on-Mingw-td7578166.html[MinGW gcc non-optionally dyn-links to MSVCRT.DLL] which it assumes is already present on any Windows PC (this seems akin to Linux's glibc).
+ * FYI: MSYS2 UCRT64 binaries dynamically link to `ucrtbase.dll` and its `api-ms-win-crt-*.dll` ApiSet stubs (shipped with every Windows 10+ install; the modern successor to the ancient `msvcrt.dll`).  `libwinpthread-1.dll` is an additional runtime dep introduced by GCC's POSIX threading model; the Makefile auto-copies it next to `k.exe` at build time (and includes it in `make rls`).  Full-static linking of winpthread is not viable in current MSYS2 packaging because libstdc++'s `thread.o` references `nanosleep64`, which exists only in the DLL.
 
 #### Linux-specific Build-Prep Instructions
 
 ##### *ubuntu >= 14.04 (and presumably any contemporary Debian release)
 
  * after cloning this repo, run `sudo ./install_build_tools_ubuntu.sh` to install the necessary packages.
- * ensure that GCC >= 11 is available to provide for C++20 support; this requires https://stackoverflow.com/a/70653945[additional installation steps on Ubuntu 20.04].
+ * ensure that GCC >= 12 is available to provide for C++23 support; on Ubuntu 22.04 install `g++-12` via apt (the default is GCC 11).
 
 ### To build
 
@@ -180,7 +192,7 @@ are tried.  See variable `sled_childenv` in `k.luaedit` for a list of the Lua-co
 
 Logfile $K_LOGFNM, having session-unique name is stored in $K_LOGDIR which == "$K_STATEDIR/log", contains output from DBG macros which are sprinkled liberally throughout the source code.  I am grateful for GCC's printf format-string+argument-type checking which makes saves _a lot_ of crash-debugging.
 
-The newest nuwen.net (64-bit-only) MinGW distros include `gdb`, and I have used it a couple of times.  I generally only use a debugger to debug crashes, so if `gdb` is unavailable (e.g. when nuwen.net MinGW distros omitted `gdb`) I use https://github.com/jrfonseca/drmingw[DrMinGW] as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
+On Windows, MSYS2 provides `gdb` via the optional `mingw-w64-ucrt-x86_64-gdb` package.  I generally only use a debugger to debug crashes, so when `gdb` is not installed I use https://github.com/jrfonseca/drmingw[DrMinGW] as a minimalist way of obtaining a useful stack-trace when a crash occurs.  In order to use either DrMinGW or `gdb` it is necessary to build K w/full debug information; open GNUmakefile, search for "DBG_BUILD" for instructions on how to modify that file to build K most suitably for DrMinGW and `gdb`.
 
 ## Tutorial
 
@@ -308,5 +320,7 @@ and didn't have to pay a significant code-size price for doing so (updt: K.exe's
 advantage of the major generic features of C\+++11 (and beyond); consequently K no longer compiles with MSVC+++ 7.1.
 
 Per http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx[Visual-Studio-Why-is-there-No-64-bit-Version] the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but since STL (creator of Nuwen MinGW distro) no longer provides 32-bit versions Nuwen MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and 64-bit Linux K has no known anomalies).
+
+2026/04: Migrated the Windows toolchain from http://nuwen.net/mingw.html[nuwen.net MinGW] to https://www.msys2.org/[MSYS2] UCRT64.  nuwen dropped PCRE2 in late 2025, and since PCRE2 is central to K's regex functionality, continuing with nuwen was untenable.  The switch to UCRT64 also brings K from the 1990s-era `msvcrt.dll` to the modern `ucrtbase.dll` (UCRT, shipped with every Windows 10+ install), with a new runtime dep on `libwinpthread-1.dll` from GCC's POSIX threading model.
 
 https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/[AsciiDoc Quick Reference]

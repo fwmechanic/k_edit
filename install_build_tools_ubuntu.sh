@@ -39,7 +39,6 @@ if [[ "$ID" = "debian" || "$ID" = "ubuntu" || "$ID" = "pop" ]] ; then
       g++                     \
       libboost-dev            \
       libboost-filesystem-dev \
-      libboost-system-dev     \
       libncurses-dev          \
       libpcre2-dev            \
       ncurses-term            \

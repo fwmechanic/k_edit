@@ -96,7 +96,7 @@ DLL_EXT := .dll
 OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:" $@.exp | grep -Fivf std.dynlib.mingw
 OS_LIBS := -lpsapi -lbcrypt
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
-CPPFLAGS += -DWINVER=0x0501
+CPPFLAGS += -DWINVER=0x0601 -D_WIN32_WINNT=0x0601 -D_UCRT
 
 else
 
@@ -282,7 +282,14 @@ endif
 #   library, it stops.  And if only one version is present, it uses that one,
 #   regardless.
 #
-BOOST_LIBS := $(call LINK_LIB_STATIC,-lboost_filesystem -lboost_system)
+# Boost.System has been header-only since Boost 1.69 (2018), and Boost.Filesystem
+# stopped linking against it around 1.74; it is no longer required as a link lib.
+# MSYS2's mingw-w64 boost packages suffix lib names with '-mt'; Debian/Ubuntu do not.
+ifdef K_WINDOWS
+BOOST_LIBS := $(call LINK_LIB_STATIC,-lboost_filesystem-mt)
+else
+BOOST_LIBS := $(call LINK_LIB_STATIC,-lboost_filesystem)
+endif
 
 export USE_PCRE := 1
 ifneq "0" "$(USE_PCRE)"
@@ -369,7 +376,7 @@ THISDIR := ./
 
 LUA_T=$(LUA_DIR)/lua$(EXE_EXT)
 
-CLEAN_ARGS = $(OBJS) *.makedeps *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLSPKG_FNMS) *_unittest *_unittest.o
+CLEAN_ARGS = $(OBJS) *.makedeps *.s *.ii $(CMDTBL_OUTPUTS) _buildtime.o $(TGT)_res.o $(TGT).o *.map $(RLSPKG_FNMS) *_unittest *_unittest.o $(K_WIN_DEPLOY_DLLS)
 
 ZAP_ARGS := $(EXE_TGTS) $(LUA_T) $(LUA_A)
 
@@ -451,6 +458,17 @@ $(WINDRES_O): $(TGT).rc  # http://sourceware.org/binutils/docs/binutils/windres.
 endif
 
 ifdef K_WINDOWS
+# MSYS2 UCRT64 GCC uses the posix-threads model, making k.exe runtime-depend
+# on libwinpthread-1.dll; can't be statically linked because libstdc++'s
+# thread.o references nanosleep64 (DLL-only in MSYS2's winpthread).  Deploy
+# the DLL alongside k.exe so the build tree is "copy-and-run" complete and so
+# the DLL is captured by `make rls`.
+K_WIN_DEPLOY_DLLS := libwinpthread-1.dll
+libwinpthread-1.dll: ; @cp /c/msys64/ucrt64/bin/$@ $@
+all: $(K_WIN_DEPLOY_DLLS)
+endif
+
+ifdef K_WINDOWS
 RLSPKG_ARCHIVE = $(TGT)_rls.7z
 RLSPKG_SFX = $(TGT)_rls.exe
 else
@@ -494,6 +512,10 @@ $(TGT)$(EXE_EXT): $(OBJS) $(WINDRES_O)
 	$(LINK_EXE)
 	@$(SHOW_BINARY)
 
+endif
+
+ifdef K_WINDOWS
+BUILT_RLS_FILES += $(K_WIN_DEPLOY_DLLS)
 endif
 
 RLS_FILES = $(BUILT_RLS_FILES) $(UNBUILT_RLS_FILES)

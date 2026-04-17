@@ -559,7 +559,7 @@ STATIC_FXN bool CharWalkToEnd( bool fWalkFwd, bool fVisibleOnly, PFBUF pFBuf, co
               }
    if( fWalkFwd ) { // -------------------- search FORWARD --------------------
       // convert curPt.col from col to ix
-      Point curPt( start.lin, FreeIdxOfCol( tw, pFBuf->PeekRawLine( start.lin ), start.col + 1 ) );  0 && DBG( "fwd%d: curPt( %d, %d ) L %ld", 1, curPt.lin, curPt.col, pFBuf->PeekRawLine( start.lin ).length() );
+      Point curPt( start.lin, FreeIdxOfCol( tw, pFBuf->PeekRawLine( start.lin ), start.col + 1 ) );  0 && DBG( "fwd%d: curPt( %d, %d ) L %" PR_BSRSIZET, 1, curPt.lin, curPt.col, pFBuf->PeekRawLine( start.lin ).length() );
       for( ; curPt.lin <= yLast ; ++curPt.lin, curPt.col = 0 ) {                                     0 && DBG( "fwd%d: curPt( %d, %d )", 2, curPt.lin, curPt.col );
          CHECK_BREAK;
          const auto rl( pFBuf->PeekRawLine( curPt.lin ) );
