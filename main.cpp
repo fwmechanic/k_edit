@@ -797,17 +797,54 @@ STATIC_FXN void ConstructStatics() {
 GLOBAL_VAR char ** &g_envp = WL( _environ, environ );
 
 #ifdef _WIN32
-// If hosted by Windows Terminal (or another non-conhost terminal host that
-// sets WT_SESSION), re-launch ourselves under conhost.exe so k.exe gets the
-// legacy Win32 Console behaviors it depends on (no Ctrl+V / Ctrl+Shift+*
-// hijacking, native mouse-wheel scroll, full-screen console resize, per-EXE
-// "Use legacy console" / QuickEdit console-properties registry settings).
-// Waits for the re-launched instance and propagates its exit code, so e.g.
-// Total Commander's "wait for editor to exit" semantics still hold.
+// Fills 'out' with the basename of the console-window owner process, or a
+// "?<reason>" sentinel string if the lookup failed at any step.  Used for
+// both the hosting detection and for logging diagnostic info.
+STATIC_FXN void GetConsoleHostProcessName( char *out, size_t outsz ) {
+   const auto cpy( [&]( PCChar s ) { std::strncpy( out, s, outsz - 1 ); out[outsz - 1] = '\0'; } );
+   if( outsz == 0 ) return;
+   const auto hwnd( Win32::GetConsoleWindow() );
+   if( !hwnd ) { cpy( "?no-console-window" ); return; }
+   Win32::DWORD pid( 0 );
+   Win32::GetWindowThreadProcessId( hwnd, &pid );
+   if( pid == 0 ) { cpy( "?no-pid" ); return; }
+   const auto hProc( Win32::OpenProcess( PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid ) );
+   if( !hProc ) { cpy( "?openprocess-failed" ); return; }
+   char path[ MAX_PATH ];
+   Win32::DWORD pathlen( sizeof path );
+   const auto ok( Win32::QueryFullProcessImageNameA( hProc, 0, path, &pathlen ) );
+   Win32::CloseHandle( hProc );
+   if( !ok ) { cpy( "?image-name-failed" ); return; }
+   const auto base( strrchr( path, '\\' ) );
+   cpy( base ? base + 1 : path );
+   }
+
+// Return true iff the console is currently hosted by conhost.exe.
+// Reliable discriminator: IsWindowVisible( GetConsoleWindow() ).  Real
+// conhost creates a visible console window; ConPTY (WT, OpenConsole, other
+// VT emulators) attaches an INvisible pseudo-window to the client process.
+// Note: the window-owner PID reported by GetWindowThreadProcessId is the
+// attached client process (k.exe) in BOTH conhost and ConPTY cases, so
+// owner-name comparison can't distinguish them -- don't use it.
+STATIC_FXN bool IsHostedByConhost() {
+   const auto hwnd( Win32::GetConsoleWindow() );
+   if( !hwnd ) return true;  // no console at all -- don't interfere
+   return 0 != Win32::IsWindowVisible( hwnd );
+   }
+
+// If hosted by a non-conhost terminal (Windows Terminal via either direct-
+// pane-spawn or Win11 default-terminal routing, or any other VT emulator),
+// re-launch ourselves under conhost.exe so k.exe gets the legacy Win32
+// Console behaviors it depends on (no Ctrl+V / Ctrl+Shift+* hijacking, native
+// mouse-wheel scroll, full-screen console resize, per-EXE "Use legacy console"
+// / QuickEdit console-properties registry settings).  Waits for the re-
+// launched instance and propagates its exit code, so e.g. Total Commander's
+// "wait for editor to exit" semantics still hold.
 // Set env var K_NO_CONHOST_RELAUNCH=1 to disable.
-STATIC_FXN void RelaunchInConhostIfHostedByWT() {
-   if( !getenv( "WT_SESSION" ) )            return;  // not under WT
-   if(  getenv( "K_NO_CONHOST_RELAUNCH" ) ) return;  // escape hatch
+STATIC_FXN void EnsureHostedByConhost() {
+   if( getenv( "K_RELAUNCHED_FROM_WT" ) )  return;  // we ARE the relaunched child (loop guard)
+   if( getenv( "K_NO_CONHOST_RELAUNCH" ) ) return;  // escape hatch
+   if( IsHostedByConhost() )               return;  // already hosted by conhost
 
    char self[ MAX_PATH ];
    const auto selflen( Win32::GetModuleFileNameA( nullptr, self, sizeof self ) );
@@ -833,10 +870,9 @@ STATIC_FXN void RelaunchInConhostIfHostedByWT() {
       cmdline += args_start;
       }
 
-   // Clear WT_SESSION so the conhost-hosted child doesn't itself attempt a
-   // relaunch (it's no longer under WT).  Flag the child that it was
-   // relaunched so its startup DBG can log visible evidence in the logfile.
-   Win32::SetEnvironmentVariableA( "WT_SESSION", nullptr );
+   // Breadcrumb: infinite-loop guard + makes the relaunch visible in the
+   // child's session logfile via the startup DBG immediately below main's
+   // ConstructStatics().
    Win32::SetEnvironmentVariableA( "K_RELAUNCHED_FROM_WT", "1" );
 
    Win32::STARTUPINFO si = { sizeof si };
@@ -844,7 +880,7 @@ STATIC_FXN void RelaunchInConhostIfHostedByWT() {
    if( !Win32::CreateProcessA( nullptr, cmdline.data(), nullptr, nullptr,
                                FALSE, CREATE_NEW_CONSOLE, nullptr, nullptr,
                                &si, &pi ) ) {
-      return;  // Fall through; run normally under WT.
+      return;  // Fall through; run normally in the non-conhost host.
       }
    Win32::CloseHandle( pi.hThread );
    Win32::WaitForSingleObject( pi.hProcess, INFINITE );
@@ -862,13 +898,18 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
 #endif
    { enum {SD=1};
 #ifdef _WIN32
-   RelaunchInConhostIfHostedByWT();
+   EnsureHostedByConhost();
 #endif
    // extern void test_CaptiveIdxOfCol();
    //             test_CaptiveIdxOfCol();
    ConstructStatics();
    SD && DBG( "### %s @ENTRY mem =%7" PR_PTRDIFFT, __func__, memdelta() );
-   DBG( "conhost-relaunch: WT_SESSION=%d K_RELAUNCHED_FROM_WT=%d", !!getenv("WT_SESSION"), !!getenv("K_RELAUNCHED_FROM_WT") );
+#ifdef _WIN32
+   { char conhost[ 64 ]; GetConsoleHostProcessName( conhost, sizeof conhost );
+     const auto hwnd( Win32::GetConsoleWindow() );
+     DBG( "conhost-relaunch: host=%s visible=%d WT_SESSION=%d K_RELAUNCHED_FROM_WT=%d", conhost, hwnd && Win32::IsWindowVisible( hwnd ), !!getenv("WT_SESSION"), !!getenv("K_RELAUNCHED_FROM_WT") );
+   }
+#endif
    for( auto argi(0); argi < argc; ++argi ) { DBG( "argv[%d] = '%s'", argi, argv[argi] ); }
    CmdIdxInit();
    SwitblInit();
