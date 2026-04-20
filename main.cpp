@@ -820,16 +820,19 @@ STATIC_FXN void GetConsoleHostProcessName( char *out, size_t outsz ) {
    }
 
 // Return true iff the console is currently hosted by conhost.exe.
-// Reliable discriminator: IsWindowVisible( GetConsoleWindow() ).  Real
-// conhost creates a visible console window; ConPTY (WT, OpenConsole, other
-// VT emulators) attaches an INvisible pseudo-window to the client process.
-// Note: the window-owner PID reported by GetWindowThreadProcessId is the
-// attached client process (k.exe) in BOTH conhost and ConPTY cases, so
-// owner-name comparison can't distinguish them -- don't use it.
+// Reliable discriminator: the console-window CLASS NAME.
+//   real conhost        -> "ConsoleWindowClass"
+//   WT/ConPTY (any VT)  -> "PseudoConsoleWindow"
+// Other signals (IsWindowVisible, window rect, owner-process name) are NOT
+// reliable: WT's pseudo-window has WS_VISIBLE set in at least some config-
+// urations, its rect may be non-zero, and the window-owner PID resolves to
+// the attached client (k.exe) in BOTH conhost and ConPTY cases.
 STATIC_FXN bool IsHostedByConhost() {
    const auto hwnd( Win32::GetConsoleWindow() );
    if( !hwnd ) return true;  // no console at all -- don't interfere
-   return 0 != Win32::IsWindowVisible( hwnd );
+   char cls[ 64 ];
+   if( !Win32::GetClassNameA( hwnd, cls, sizeof cls ) ) return true;  // fail-safe
+   return 0 == _stricmp( cls, "ConsoleWindowClass" );
    }
 
 // If hosted by a non-conhost terminal (Windows Terminal via either direct-
@@ -907,7 +910,17 @@ DLLX void Main( int argc, const char **argv, const char **envp ) // Entrypoint f
 #ifdef _WIN32
    { char conhost[ 64 ]; GetConsoleHostProcessName( conhost, sizeof conhost );
      const auto hwnd( Win32::GetConsoleWindow() );
-     DBG( "conhost-relaunch: host=%s visible=%d WT_SESSION=%d K_RELAUNCHED_FROM_WT=%d", conhost, hwnd && Win32::IsWindowVisible( hwnd ), !!getenv("WT_SESSION"), !!getenv("K_RELAUNCHED_FROM_WT") );
+     char cls[ 64 ] = "";
+     Win32::RECT rc = {};
+     int vis = 0;
+     if( hwnd ) {
+        Win32::GetClassNameA( hwnd, cls, sizeof cls );
+        Win32::GetWindowRect( hwnd, &rc );
+        vis = Win32::IsWindowVisible( hwnd ) ? 1 : 0;
+        }
+     DBG( "conhost-relaunch: host=%s class=%s visible=%d rect=%ldx%ld+%ld+%ld WT_SESSION=%d K_RELAUNCHED_FROM_WT=%d",
+          conhost, cls, vis, rc.right - rc.left, rc.bottom - rc.top, rc.left, rc.top,
+          !!getenv("WT_SESSION"), !!getenv("K_RELAUNCHED_FROM_WT") );
    }
 #endif
    for( auto argi(0); argi < argc; ++argi ) { DBG( "argv[%d] = '%s'", argi, argv[argi] ); }
