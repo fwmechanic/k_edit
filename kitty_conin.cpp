@@ -241,7 +241,8 @@ constexpr KittyVariants esc_variants {
 
 constexpr KittyVariants space_variants {
    static_cast<uint16_t>(' '),
-   static_cast<uint16_t>(EdKC_s_space),
+   static_cast<uint16_t>(' '),
+// static_cast<uint16_t>(EdKC_s_space),
    static_cast<uint16_t>(EdKC_a_space),
    static_cast<uint16_t>(EdKC_c_space),
    static_cast<uint16_t>(EdKC_cs_space)
