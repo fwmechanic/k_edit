@@ -718,11 +718,24 @@ int KittyMapPlainChar( int ch ) {
    return ch;
    }
 
+// Sentinel returned by KittyGetEvent() to request a screen-resize.  We do NOT
+// call ConOut::Resize() here: getch() (hence this fxn) runs with the
+// GlobalVariableLock released (see GetEdKC_Ascii), but Event_ScreenSizeChanged
+// mutates editor-global display state that the IdleThread reads under that lock.
+// So we defer the resize to the caller, which reacquires the lock first.
+constexpr int kKittyEventResize = -2;
+
 int KittyGetEvent() {
    int ch = getch();
    if( ch == ERR ) { return -1; }
 
     KDBG( "KittyGetEvent first byte=0x%02x", ch );
+
+   // ncurses synthesizes KEY_RESIZE from SIGWINCH and delivers it via getch()
+   // even with keypad() disabled (the KKP backend's config); see ncurses
+   // _nc_wgetch.  Without this, KEY_RESIZE (0632) falls within the EdKC range
+   // and would be mis-decoded as a spurious keystroke.
+   if( ch == KEY_RESIZE ) { return kKittyEventResize; }
 
    if( ch == 0x9b ) { // 8-bit CSI
       return KittyDecodeCSI();
@@ -761,6 +774,10 @@ EdKC_Ascii GetEdKC_Ascii( bool freezeOtherThreads ) {
       if( passLock ) { MainThreadGiveUpGlobalVariableLock(); }
       const auto ev = KittyGetEvent();
       if( passLock ) { MainThreadWaitForGlobalVariableLock(); }
+      if( ev == kKittyEventResize ) { // now holding the lock: safe to mutate display state
+         ConOut::Resize();
+         continue;
+         }
       if( ev >= 0 ) {
          if( ev < EdKC_COUNT ) {
             if( ev == 0 ) {

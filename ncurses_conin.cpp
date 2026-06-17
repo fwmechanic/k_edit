@@ -418,6 +418,13 @@ STATIC_FXN bool NcursesInitialize() {  // this MIGHT need to be made $TERM-speci
 STATIC_FXN int ConGetEvent();
 // get extended event (more complex keystrokes)
 
+// Sentinel returned by ConGetEvent() to request a screen-resize.  ConGetEvent()
+// runs with the GlobalVariableLock released (see GetEdKC_Ascii), but
+// Event_ScreenSizeChanged mutates editor-global display state that the
+// IdleThread reads under that lock, so the resize is deferred to the caller,
+// which reacquires the lock first.
+constexpr int kNcursesEventResize = -2;
+
 STATIC_FXN int DecodeEscSeq_xterm( stref escseq, std::function<int()> getCh );
 
 STATIC_FXN bool NcursesFlushKeyQueueAnythingFlushed(){ return flushinp(); }
@@ -431,6 +438,10 @@ STATIC_FXN EdKC_Ascii GetEdKC_Ascii( bool fFreezeOtherThreads ) { // PRIMARY API
       0 && DBG( "%s %s", __func__, fPassThreadBaton ? "passing" : "holding" );
       const auto ev( ConGetEvent() );
       if( fPassThreadBaton ) { MainThreadWaitForGlobalVariableLock(); }
+      if( ev == kNcursesEventResize ) { // now holding the lock: safe to mutate display state
+         ConOut::Resize();
+         continue;
+         }
       if( ev >= 0 ) {
          if( ev < EdKC_COUNT ) {
             if( ev == 0 ) { // (ev == 0) corresponds to keys we currently do not decode
@@ -481,7 +492,8 @@ struct kpto_er {
 
 #define CR( is, rv )  break;case is: return rv;
 
-// return -1 indicates that event should be ignored (resize event as an example)
+// return -1 indicates that event should be ignored; kNcursesEventResize
+// requests a (deferred) screen-resize (see GetEdKC_Ascii)
 STATIC_FXN int ConGetEvent() {                             0 && DBG( "++++++ ConGetEvent()" );
    const auto ch( getch() );
    if( ch < 0 ) { return -1; }
@@ -564,7 +576,7 @@ STATIC_FXN int ConGetEvent() {                             0 && DBG( "++++++ Con
       return ch;
       }
    switch (ch) { // translate "active" ncurses keycodes:
-      case KEY_RESIZE:   ConOut::Resize();  return -1;
+      case KEY_RESIZE:   return kNcursesEventResize;  // resize handled by caller under the GlobalVariableLock
       case KEY_MOUSE:  /*Event->What = evNone;
                          ConGetMouseEvent(Event);  break;
       case KEY_SF:       KEvent->Code = kfShift | kbDown;  break;

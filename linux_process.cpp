@@ -24,10 +24,25 @@
 #include <mutex>
 
 #include <signal.h>
+#include <pthread.h>
 #include <fcntl.h>
 #include <sys/wait.h>
 
 enum { INVALID_ProcessId = 0, INVALID_fd = -1, PIPE_RD=0, PIPE_WR=1 };
+
+// SIGWINCH (terminal-resize) must be handled by the MAIN thread: that is the
+// thread blocked in ncurses getch()/read(), and ncurses only synthesizes
+// KEY_RESIZE when SIGWINCH interrupts that read() (its have_sigwinch test lives
+// solely in getch()'s post-read ERR path).  A process-directed signal can be
+// delivered to ANY thread that does not block it, so we block SIGWINCH in every
+// thread we spawn, leaving the main thread as the sole eligible recipient.  See
+// the KEY_RESIZE handling in kitty_conin.cpp / ncurses_conin.cpp.
+STATIC_FXN void SetSigwinchBlockedInThisThread( bool blocked ) {
+   sigset_t set;
+   sigemptyset( &set );
+   sigaddset( &set, SIGWINCH );
+   pthread_sigmask( blocked ? SIG_BLOCK : SIG_UNBLOCK, &set, nullptr );
+   }
 
 class piped_forker {
    int     d_fd  =  INVALID_fd;
@@ -81,6 +96,7 @@ bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'
                return false;
 
       case 0: {signal( SIGPIPE, SIG_DFL );  /* child */  // FIXME: close other opened descriptor
+               SetSigwinchBlockedInThisThread( false );  // don't impose our worker-thread SIGWINCH block on the spawned program
                close( pipefds[PIPE_RD] );
                close( 0 );
                const int nevdullfh( open("/dev/null", O_RDONLY) ); Assert( nevdullfh == 0 );
@@ -512,6 +528,7 @@ STATIC_CONST auto cpct_start_fmts = "%s::CPCT vvvvvvvvvvvvvvvvvv THREAD STARTS v
 STATIC_CONST auto cpct_exit_fmts  = "%s::CPCT ^^^^^^^^^^^^^^^^^^ THREAD EXITS  ^^^^^^^^^^^^^^^^^^";
 
 void InternalShellJobExecutor::ChildProcessCtrlThread( InternalShellJobExecutor *pIsjx ) {
+   SetSigwinchBlockedInThisThread( true );  // route SIGWINCH to the main (getch) thread
    0 && DBG( cpct_start_fmts, "ISJE" );
                                         pIsjx->ThreadFxnRunAllJobs();
    0 && DBG( cpct_exit_fmts , "ISJE" );
@@ -590,6 +607,7 @@ bool ARG::compile() {
 STATIC_VAR bool g_fSystemShutdownOrLogoffRequested = false;
 
 STATIC_FXN void IdleThread() {
+   SetSigwinchBlockedInThisThread( true );  // route SIGWINCH to the main (getch) thread
    1 && DBG( "*** %s STARTING***", __func__ );
    while( true ) {
       std::this_thread::sleep_for( std::chrono::milliseconds(100) ); // was 50 @ 20130101
