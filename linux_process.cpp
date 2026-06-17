@@ -266,33 +266,66 @@ STATIC_FXN bool cmd_available( PCChar cmdnm ) {
    return rv;
    }
 
-STATIC_FXN bool xclip_read( std::string &dest ) {
-   STATIC_VAR std::string cli_fromxclip;
-   if( cli_fromxclip.empty() ) {
-      std::string emsg, em_xclip, em_iconv;
-      const auto xci( cmd_available( "xclip" ) );
-      const auto ici( cmd_available( "iconv" ) );
-      if( !xci ) {
-         dest = "xclip not in PATH; apt-get install xclip needed?";
-         return false;  // fatal error
+// Linux clipboard backend selection.  Wayland (wl-clipboard: wl-copy/wl-paste)
+// is preferred when the session is actually Wayland-native; X11 (xclip) is the
+// fallback.
+//
+// Detection is ENV-first, binary-presence-second: having wl-clipboard installed
+// does NOT imply a running compositor (an Xorg login session, ssh, or a bare tty
+// all leave wl-copy/wl-paste present but unable to connect).  WAYLAND_DISPLAY
+// being set is the signal that there is a compositor to talk to.  On Wayland,
+// XWayland usually leaves DISPLAY set too, so xclip remains a working fallback.
+//
+enum class ClipBe { none, wayland, x11 };
+
+STATIC_FXN ClipBe clip_backend() {
+   STATIC_VAR ClipBe be( ClipBe::none );
+   STATIC_VAR bool   probed( false );
+   if( !probed ) {
+      probed = true;
+      const auto wld( getenv( "WAYLAND_DISPLAY" ) );
+      const auto xd ( getenv( "DISPLAY" ) );
+      if(      wld && *wld && cmd_available( "wl-paste" ) && cmd_available( "wl-copy" ) ) { be = ClipBe::wayland; }
+      else if( xd  && *xd  && cmd_available( "xclip" ) )                                  { be = ClipBe::x11;     }
+      }
+   return be;
+   }
+
+STATIC_FXN PCChar clip_be_name() {
+   switch( clip_backend() ) {
+      case ClipBe::wayland: return "Wayland";
+      case ClipBe::x11:     return "X11";
+      case ClipBe::none:    break;
+      }
+   return "no";
+   }
+
+STATIC_FXN bool clip_read( std::string &dest ) {
+   STATIC_VAR std::string cli;
+   if( cli.empty() ) {
+      switch( clip_backend() ) {
+         case ClipBe::wayland: cli = "wl-paste -n 2>/dev/null";           break; // -n: suppress wl-paste's appended newline (match xclip)
+         case ClipBe::x11:     cli = "xclip -selection c -o 2>/dev/null";  break;
+         case ClipBe::none:
+            dest = "no clipboard reader: install wl-clipboard (Wayland) or xclip (X11)";
+            return false;  // fatal error
          }
-      cli_fromxclip.append( "xclip -selection c -o 2>/dev/null" );
-      if( ici ) { // I believe iconv is a CORE package, so this is not expected.  But check anyway.
-         cli_fromxclip.append( " | iconv -f UTF8 -t US-ASCII//TRANSLIT" );
+      if( cmd_available( "iconv" ) ) { // I believe iconv is a CORE package, so this is not expected.  But check anyway.
+         cli.append( " | iconv -f UTF8 -t US-ASCII//TRANSLIT" );
          }
       }
-   if( popen_rd_ok( dest, cli_fromxclip.c_str() ) ) {
+   if( popen_rd_ok( dest, cli.c_str() ) ) {
       return true;
       }
-   dest = "X clipboard read (xclip -selection c -o) failed?";
+   dest = "clipboard read failed";
    return false;
    }
 
 bool ARG::fromwinclip() {
    std::string dest;
-   if( xclip_read( dest ) ) {
+   if( clip_read( dest ) ) {
       Clipboard_PutText_Multiline( dest );
-      Msg( "X clipboard -> <clipboard> ok" );
+      Msg( "%s clipboard -> <clipboard> ok", clip_be_name() );
       return true;
       }
    Msg( "%s", dest.c_str() );
@@ -300,7 +333,7 @@ bool ARG::fromwinclip() {
    }
 
 void WinClipGetFirstLine( std::string &dest ) {
-   if( xclip_read( dest ) ) {
+   if( clip_read( dest ) ) {
       const auto eol( StrToNextOrEos( dest.c_str(), "\n" ) );
       dest.resize( eol - dest.c_str() );
       }
@@ -330,8 +363,6 @@ STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
 
 // NB!  following are referenced by impl_towinclip.h
 //
-STATIC_CONST char cli_toxclip  [] = "xclip -selection c";
-
 typedef  PChar  hglbCopy_t;
 
 STATIC_FXN bool ToWinClipMetaSingleLineXlat( std::string &stbuf ) {
@@ -344,9 +375,15 @@ STATIC_FXN PChar PrepClip( long size, hglbCopy_t &hglbCopy ) {
    }
 
 STATIC_FXN PCChar WrToClipEMsg( hglbCopy_t hglbCopy ) {
-   const auto wrOk( popen_wr_ok( cli_toxclip, hglbCopy ) );
+   PCChar cli( nullptr );
+   switch( clip_backend() ) {
+      case ClipBe::wayland: cli = "wl-copy";            break; // default selection is CLIPBOARD; no -n, preserve bytes like xclip
+      case ClipBe::x11:     cli = "xclip -selection c"; break;
+      case ClipBe::none:    break;
+      }
+   const auto wrOk( cli && popen_wr_ok( cli, hglbCopy ) );
    free( hglbCopy );
-   return wrOk ? nullptr : "xclip write failed" ;
+   return wrOk ? nullptr : "clipboard write failed (install wl-clipboard or xclip)";
    }
 
 STATIC_FXN size_t sizeof_eol() { return 1; }
@@ -354,7 +391,7 @@ STATIC_FXN void cat_eol( PChar &bufptr ) {
    *bufptr++ = '\n';
    }
 
-STATIC_FXN PCChar DestNm() { return "X"; }
+STATIC_FXN PCChar DestNm() { return clip_be_name(); }
 
 #include "impl_towinclip.h"
 
