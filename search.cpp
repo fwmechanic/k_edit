@@ -67,7 +67,9 @@ bool FBufLocn::ScrollToOk() const {
    if( !IsSet() ) {
       return false;
       }
-   d_pFBuf->PutFocusOn();
+   if( !InCurFBuf() ) {
+      d_pFBuf->PutFocusOn();
+      }
    g_CurView()->MoveCursor( d_pt.lin, d_pt.col, d_width+1 );
    DispNeedsRedrawAllLinesAllWindows();
    return true;
