@@ -28,6 +28,14 @@
 #endif
 #include "my_log.h"
 #include <sys/stat.h>
+#include <atomic>
+#include <chrono>
+#include <filesystem>
+#if defined(_WIN32)
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
 
 STATIC_FXN int openFailed( PCChar pszFileName, int flags, int create_mode ) {
    create_mode &= 0777;  // mask bits extraneous to our use (e.g. from stat st_mode)
@@ -95,50 +103,56 @@ bool unlinkOk_( PCChar filename, PCChar caller ) {
    }
 
 bool CopyFileManuallyOk_( PCChar pszCurFileName, PCChar pszNewFilename, PCChar caller ) { DBG( "%s: manually copying", caller );
-   auto cur_FILE( fopen( pszCurFileName, "rb" ) );
-   if( cur_FILE == nullptr ) {  DBG( "%s(%s -> %s) fopen of src FAILED", caller, pszCurFileName, pszNewFilename );
+   auto cur_FILE( fopen_ptr( pszCurFileName, "rb" ) );
+   if( !cur_FILE ) {  DBG( "%s(%s -> %s) fopen of src FAILED", caller, pszCurFileName, pszNewFilename );
       return false;
       }
-   auto new_FILE( fopen( pszNewFilename, "w" ) );
-   if( new_FILE == nullptr ) {  DBG( "%s(%s -> %s) fopen of dest FAILED", caller, pszCurFileName, pszNewFilename );
-      fclose( cur_FILE );
+   auto new_FILE( fopen_ptr( pszNewFilename, "wb" ) );
+   if( !new_FILE ) {  DBG( "%s(%s -> %s) fopen of dest FAILED", caller, pszCurFileName, pszNewFilename );
       return false;
       }
    char copyBuf[32 * 1024];
    auto fOk(true);
    size_t bytesRead;
-   while( (bytesRead=fread( copyBuf, sizeof copyBuf, 1, cur_FILE )) != 0 ) {
-      if( bytesRead != fwrite( copyBuf, 1, bytesRead, new_FILE ) ) {  DBG( "%s(%s, %s) fwrite FAILED", caller, pszCurFileName, pszNewFilename );
+   while( (bytesRead=fread( copyBuf, 1, sizeof copyBuf, cur_FILE.get() )) != 0 ) {
+      if( bytesRead != fwrite( copyBuf, 1, bytesRead, new_FILE.get() ) ) {  DBG( "%s(%s, %s) fwrite FAILED", caller, pszCurFileName, pszNewFilename );
          fOk = false;
          break;
          }
       }
-   fclose( cur_FILE );
-   fclose( new_FILE );
+   if( ferror( cur_FILE.get() ) ) {
+      DBG( "%s(%s, %s) fread FAILED", caller, pszCurFileName, pszNewFilename );
+      fOk = false;
+      }
+   if( fflush( new_FILE.get() ) != 0 || ferror( new_FILE.get() ) ) {
+      DBG( "%s(%s, %s) fflush FAILED", caller, pszCurFileName, pszNewFilename );
+      fOk = false;
+      }
    return fOk;
    }
 
-#include <boost/filesystem/operations.hpp>
-// https://www.boost.org/doc/libs/1_54_0/libs/filesystem/doc/reference.html
-
 tempfile::tempfile( PCChar mode )
-   : d_fh( nullptr )
    {
-   auto tempPath( boost::filesystem::temp_directory_path() );  // https://www.boost.org/doc/libs/1_54_0/libs/filesystem/doc/reference.html#temp_directory_path
-   for( auto ix=0 ; ix<10 ; ++ix ) {
-      auto upath( boost::filesystem::unique_path() );  // https://stackoverflow.com/questions/43316527/what-is-the-c17-equivalent-to-boostfilesystemunique-path
-      auto thepath( tempPath / upath );                        0 && DBG( "try %d: '%s'", ix, thepath.string().c_str() );
-      const auto fd( openFailed( thepath.string().c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRWXU ) );
+   STATIC_VAR std::atomic<uint64_t> s_tempSequence;
+   const auto tempPath( std::filesystem::temp_directory_path() );
+   const auto processId( WL( _getpid, getpid )() );
+   const auto tick( std::chrono::steady_clock::now().time_since_epoch().count() );
+   for( auto ix=0 ; ix<100 ; ++ix ) {
+      const auto sequence( s_tempSequence.fetch_add( 1, std::memory_order_relaxed ) );
+      char leaf[96];
+      snprintf( BSOB(leaf), "k-%x-%" PRIx64 "-%" PRIx64 ".tmp", unsigned(processId), uint64_t(tick), sequence );
+      const auto thepath( tempPath / leaf );
+      const auto pathString( thepath.string() );                0 && DBG( "try %d: '%s'", ix, pathString.c_str() );
+      const auto fd( openFailed( pathString.c_str(), O_RDWR | O_CREAT | O_EXCL, S_IRWXU ) );
       if( fd != -1 ) {
-         d_fh = fdopen( fd, mode );
+         d_fh.reset( fdopen( fd, mode ) );
          if( !d_fh ) {                                         0 && DBG( "%s fdopen w/mode='%s' FAILED: %s", __func__, mode, strerror( errno ) );
             ::close( fd );
             return;
             }
-         d_name.assign( thepath.string() );
+         d_name.assign( pathString );
          return;
          }
-      SleepMs( ix*10 );
       }
    }
 

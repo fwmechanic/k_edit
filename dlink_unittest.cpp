@@ -18,7 +18,7 @@
 //
 
 #include <assert.h>
-#include <iostream>
+#include <cstdio>
 #include <stdlib.h>
 #include "my_types.h"
 #include "dlink.h"
@@ -35,19 +35,19 @@ typedef DLinkHead<inta> head_t;
 
 void assert_inta( const head_t &hd, const int arr[], const size_t els, const char *nm ) {
    if( els != hd.length() ) {
-      std::cerr << nm << ": count miscmp: " << els << " != " << hd.length() << "\n";
+      fprintf( stderr, "%s: count miscmp: %" PR_SIZET " != %u\n", nm, els, hd.length() );
       exit(1);
       }
    auto ix = 0u;
    DLINKC_FIRST_TO_LASTA( hd, dlink, pEl ) {
       if( pEl->a != arr[ix] ) {
-         std::cerr << nm << "[" << ix << "]: miscmp: " << pEl->a << " != " << arr[ix] << "\n";
+         fprintf( stderr, "%s[%u]: miscmp: %d != %d\n", nm, ix, pEl->a, arr[ix] );
          exit(1);
          }
       ++ix;
       }
    if( els != ix ) {
-      std::cerr << nm << ": overrun: " << els << " != " << ix << "\n";
+      fprintf( stderr, "%s: overrun: %" PR_SIZET " != %u\n", nm, els, ix );
       exit(1);
       }
    }
@@ -78,6 +78,6 @@ int main() {
    DLINK_INSERT_FIRST( Hd, new inta( 22 ), dlink );           { const int ref9[] = { 22,21,20 }; assert_inta( Hd, AEOB( ref9 ) ); }
    DLINK_JOIN(Hd, Hd2, dlink);                                { const int refA[] = { 22,21,20,-1,-2,12,1,2,0,3 }; assert_inta( Hd, AEOB( refA ) ); }
                                                               assert( Hd2.empty() );
-   std::cout << "PASS\n";
+   puts( "PASS" );
    return 0;
    }

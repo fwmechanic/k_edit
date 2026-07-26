@@ -176,7 +176,7 @@ public:
       {
       IF_UNDO_REDO_MARKS( d_MarkListHd = updateMarksForLineDeletion_DupMarks( d_pFBuf, lineNum, lineNum ); )
       }
-   ~EdOpAltLineContent() { d_li.FreeContent( *d_pFBuf ); }
+   ~EdOpAltLineContent() { d_li.FreeContent(); }
    void VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const override {
       snprintf_full( ppBuf, pBufBytes, DBG_EDOP( "%03X " ) "Replace Line %3d      "
    #if USE_DBGF_EDOPS
@@ -278,7 +278,7 @@ EdOpLineRangeDelete::~EdOpLineRangeDelete() {
    // Thus cleanup is unconditional without aliases, reference counts, or any
    // allocations beyond the LineInfo array already required by this record.
    for( auto line(0); line < d_linesDeleted; ++line ) {
-      d_paLi[line].FreeContent( *d_pFBuf );
+      d_paLi[line].FreeContent();
       }
    }
 
@@ -521,7 +521,7 @@ void FBUF::UndoIns_EditLine( LINE lineNum, stref newContent ) {  0 && DBG( "%s+ 
    const auto pLineInfo( d_paLineInfo + lineNum );
    if( d_pNewestEdit->VIsAltContentOfLine( lineNum ) ) {
       // multiple sequential edits on the same line are effectively coalesced into an EditRec containing the oldest pLineData
-      pLineInfo->FreeContent( *this );  // free (and therefore eternally forget) intermediate-edit *pLineInfo (line content)
+      pLineInfo->FreeContent();  // free (and therefore eternally forget) intermediate-edit *pLineInfo (line content)
       }
    else {
       // this is the first sequential edit on this line: MOVE current *pLineInfo

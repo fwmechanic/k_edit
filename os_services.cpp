@@ -216,25 +216,13 @@ HaltReason ExecutionHaltRequested_( PCChar ident ) {
    }
 
 
-#if defined(_WIN32)
-
-PerfCounter::TCapture PerfCounter::FxnQueryPerformanceFrequency() {
-   TCapture rv;
-   /* Win32::*/QueryPerformanceFrequency( &rv );
-   return rv;
-   }
-
-const PerfCounter::TCapture PerfCounter::s_PcFreq( FxnQueryPerformanceFrequency() );
-
-#endif
-
 DLinkHead <MainThreadPerfCounter> MainThreadPerfCounter::dhead;
 
 void MainThreadPerfCounter::PauseAll() {
    TCapture now;
    GetTOD( &now );
    DLINKC_FIRST_TO_LASTA(MainThreadPerfCounter::dhead,dlink,pCur) {
-      pCur->Capture_( now, paused );
+      pCur->Capture_( now, State::paused );
       }
    }
 
@@ -242,7 +230,7 @@ void MainThreadPerfCounter::ResumeAll() {
    TCapture now;
    GetTOD( &now );
    DLINKC_FIRST_TO_LASTA(MainThreadPerfCounter::dhead,dlink,pCur) {
-      if( pCur->state() == paused ) {
+      if( pCur->state() == State::paused ) {
           pCur->Start_( now );
           }
       }

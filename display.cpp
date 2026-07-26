@@ -2049,7 +2049,7 @@ ViewHiLites::~ViewHiLites() {
    }
 
 void View::FreeHiLiteRects() {
-   Delete0( d_pHiLites );
+   d_pHiLites.reset();
    }
 
 //-----------------------------------------------------------------------------
@@ -2148,7 +2148,7 @@ void ViewHiLites::vhInsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
 
 void View::InsHiLiteBox( ColorTblIdx newColorIdx, Rect newRgn ) {
    if( !d_pHiLites ) {
-        d_pHiLites = new ViewHiLites( CFBuf() );
+        d_pHiLites.reset( new ViewHiLites( CFBuf() ) );
         }
    d_pHiLites->vhInsHiLiteBox( newColorIdx, std::move(newRgn) );
    }

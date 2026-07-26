@@ -72,8 +72,6 @@ The K source code distro contains, and K incorporates, by building and static li
 ### External Build Dependencies
 
  * `GCC` >= 12 (for adequate C++23 support)
- * `Boost` >= 1.54 (2016/05: some major Linux distros do not meet this requirement by default; see below); used only for
- ** `boost::filesystem`: a small subset only
  * https://github.com/PCRE2Project/pcre2[`PCRE2`] Perl Compatible Regular Expressions are used in search/replace editor-functions and occasionally internally.
  * https://ctags.io/[`Universal Ctags`] is invoked to rebuild the "tags database" at the close of each successful build of K.
  * Linux-only: `ncurses`, `pthread` libraries
@@ -88,7 +86,6 @@ The K source code distro contains, and K incorporates, by building and static li
 pacman -Syu                            # update base packages; re-run if prompted to re-launch the shell
 pacman -S --needed \
   mingw-w64-ucrt-x86_64-gcc \
-  mingw-w64-ucrt-x86_64-boost \
   mingw-w64-ucrt-x86_64-pcre2 \
   mingw-w64-ucrt-x86_64-universal-ctags \
   mingw-w64-ucrt-x86_64-7zip \

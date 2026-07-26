@@ -23,8 +23,10 @@
 
 #pragma once
 
+#include <cstddef>
 #include "my_types.h"
 #include <cstdio>
+#include <memory>
 
 #if defined(_WIN32)
 #include <direct.h>
@@ -35,6 +37,38 @@
 #include <errno.h>
 
 #define  DFLT_TEXTFILE_CREATE_MODE  0666
+
+struct FileCloser {
+   void operator()( FILE *fh ) const noexcept {
+      if( fh ) {
+         fclose( fh );
+         }
+      }
+   };
+
+using file_ptr = std::unique_ptr<FILE, FileCloser>;
+
+static_assert( sizeof(file_ptr) == sizeof(FILE *) );
+
+[[nodiscard]] inline file_ptr fopen_ptr( PCChar filename, PCChar mode ) {
+   return file_ptr( fopen( filename, mode ) );
+   }
+
+struct PipeFileCloser {
+   void operator()( FILE *fh ) const noexcept {
+      if( fh ) {
+#if defined(_WIN32)
+         _pclose( fh );
+#else
+         pclose( fh );
+#endif
+         }
+      }
+   };
+
+using pipe_file_ptr = std::unique_ptr<FILE, PipeFileCloser>;
+
+static_assert( sizeof(pipe_file_ptr) == sizeof(FILE *) );
 
 class fio { // could use namespace vs. class but cannot declare private members of namespace
    STATIC_FXN ssize_t Read ( int fh, PVoid  pBuf, ssize_t bytesToRead  );
@@ -58,10 +92,10 @@ public:
    STIL       void     SeekBoF( int fh ) {        Lseek( fh, 0, SEEK_SET ); }
    };
 
-extern bool MoveFileOk( PCChar pszCurFileName, PCChar pszNewFilename );
+[[nodiscard]] extern bool MoveFileOk( PCChar pszCurFileName, PCChar pszNewFilename );
 
 #define     CopyFileManuallyOk( pszCurFileName, pszNewFilename )  CopyFileManuallyOk_( pszCurFileName, pszNewFilename, __func__ )
-extern bool CopyFileManuallyOk_( PCChar pszCurFileName, PCChar pszNewFilename, PCChar caller );
+[[nodiscard]] extern bool CopyFileManuallyOk_( PCChar pszCurFileName, PCChar pszNewFilename, PCChar caller );
 
 #define  VERBOSE_READ  1
 

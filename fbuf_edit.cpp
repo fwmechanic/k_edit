@@ -1275,12 +1275,15 @@ bool ARG::csort() {
 //--------------------------------------------------------------------------------------------------
 
 void LineInfo::PutContent( stref src ) { // ignore/overwrite any previous content!
+   FreeContent();
    if( (d_iLineLen=src.length()) == 0 ) {
       d_pLineData = nullptr;
+      d_storage = Storage::empty;
       }
    else {
       AllocBytesNZ( d_pLineData, d_iLineLen );
       memcpy( CAST_AWAY_CONST(PChar)(d_pLineData), src.data(), d_iLineLen );
+      d_storage = Storage::owned;
       }
    }
 
@@ -1327,10 +1330,13 @@ void FBUF::PutLineSeg( const LINE yLine, stref ins, std::string &stmp, std::stri
       }
    }
 
-void LineInfo::FreeContent( const FBUF &fbuf ) {
-   if( fCanFree_pLineData( fbuf ) ) {
+void LineInfo::FreeContent() {
+   if( d_storage == Storage::owned ) {
       Free0( d_pLineData );
       }
+   d_pLineData = nullptr;
+   d_iLineLen = 0;
+   d_storage = Storage::empty;
    }
 
 void FBUF::DirtyFBufAndDisplay() {
@@ -1421,7 +1427,7 @@ void FBUF::DeleteLines__( LINE firstLine, LINE lastLine, bool fSaveUndoInfo ) { 
 void FBUF::FreeLinesAndUndoInfo() { // purely destructive!
    DestroyMarks();
    for( auto iy(0) ; iy < LineCount() ; ++iy ) {
-      d_paLineInfo[iy].FreeContent( *this );
+      d_paLineInfo[iy].FreeContent();
       }
    SetLineCount( 0 );
    FreeUp( d_paLineInfo );
@@ -1810,8 +1816,7 @@ IS_EOL:
             MoveCursorToBofAllViews();
             return true;
             }
-         pLi->d_pLineData = pLineStart;
-         pLi->d_iLineLen = (pCurImageBuf - pLineStart) - cbEOL;    0 && DBG( "ReadDiskFile %s: L %d = %p L %d", Name(), curLineNum, pLi->d_pLineData, pLi->d_iLineLen );
+         pLi->SetBorrowedContent( pLineStart, (pCurImageBuf - pLineStart) - cbEOL );    0 && DBG( "ReadDiskFile %s: L %d = %p L %d", Name(), curLineNum, pLi->d_pLineData, pLi->d_iLineLen );
          ++pLi;
          ++curLineNum;
          } // while( pCurImageBuf < pPastImageBufEnd )
@@ -1875,11 +1880,11 @@ void FBUF::ImgBufAppendLine( stref st0, stref st1 ) {
          LineInfoReserve( LineCount()+1 );
          auto &rv( d_paLineInfo[ LineCount() ] );
          if( LineCount() == 0 ) {
-            rv.d_pLineData = d_pOrigFileImage;
+            rv.SetBorrowedContent( d_pOrigFileImage, 0 );
             }
          else {
             auto &preLI( d_paLineInfo[ LastLine() ] );
-            rv.d_pLineData = preLI.d_pLineData + preLI.d_iLineLen;
+            rv.SetBorrowedContent( preLI.d_pLineData + preLI.d_iLineLen, 0 );
             }
          IncLineCount( 1 );  // LineCount() NOT CHANGED UNTIL HERE
          return rv;

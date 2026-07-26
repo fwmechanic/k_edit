@@ -21,6 +21,9 @@
 
 #pragma once
 
+#include <chrono>
+#include <thread>
+
 #if defined(_WIN32)
    #define FNM_CASE_SENSITIVE 0
 #else
@@ -70,11 +73,7 @@ STIL int SW_CBP()  { if( g_fBpEnabled ) { SW_BP } return 1; }
 #endif
 
 STIL void SleepMs( int ms ) {
-#if defined(_WIN32)
-   Win32::Sleep( ms );
-#else
-   usleep( ms * 1000 );
-#endif
+   std::this_thread::sleep_for( std::chrono::milliseconds(ms) );
    }
 
 enum {
@@ -160,45 +159,35 @@ STIL   bool   FnmIsLogicalWildcard( stref sr )        { return stref::npos != sr
 class PerfCounter {
 
 protected:
-   typedef WL( Win32::LARGE_INTEGER, struct timeval ) TCapture;
-
-private:
-
-#if defined(_WIN32)
-   STATIC_CONST TCapture s_PcFreq;
-   STATIC_FXN TCapture FxnQueryPerformanceFrequency();
-#else
-   STATIC_FXN double TCapture_to_double( const TCapture &tval ) {
-      return double( tval.tv_sec ) + double( tval.tv_usec / 1e6 );
-      }
-#endif
+   using Clock = std::chrono::steady_clock;
+   using TCapture = Clock::time_point;
 
 protected:
 
-   typedef enum  { stopped, running, paused } ePCstate;
+   enum class State { stopped, running, paused };
 
 private:
 
-   ePCstate d_state;
+   State d_state;
 
    double               d_acc;    // accumulated time prior to most recent d_start capture
    TCapture d_start;
 
    double Interval( TCapture begin, TCapture end ) const {
-      return WL( (double(end.QuadPart - begin.QuadPart) / s_PcFreq.QuadPart), (TCapture_to_double(end) - TCapture_to_double(begin)) );
+      return std::chrono::duration<double>( end - begin ).count();
       }
 protected:
    STATIC_FXN void GetTOD( TCapture *dest ) {
-      WL( QueryPerformanceCounter( dest ), gettimeofday( dest, nullptr ) );
+      *dest = Clock::now();
       }
 
    protected:
 
-   ePCstate state() const { return d_state; }
-   void   Start_    ( const TCapture &now ) { d_state = running;  d_start = now; }
-   double Capture_  ( const TCapture &now, ePCstate new_state=running )
+   State state() const { return d_state; }
+   void   Start_    ( const TCapture &now ) { d_state = State::running;  d_start = now; }
+   double Capture_  ( const TCapture &now, State new_state=State::running )
                     {
-                    if( d_state == running )
+                    if( d_state == State::running )
                        {
                        d_acc += Interval( d_start, now );
                        d_start = now;  // reset starting point for next nowure
@@ -210,11 +199,11 @@ protected:
    public: //===================================================================
 
    PerfCounter() { Reset(); }
-   virtual ~PerfCounter() {}
+   virtual ~PerfCounter() = default;
 
    void   Start()   { TCapture now; GetTOD( &now ); Start_( now ); }
    void   Reset()   { d_acc = 0; Start(); }
-   void   Pause()   { Capture();  d_state = paused; }
+   void   Pause()   { Capture();  d_state = State::paused; }
    void   Resume()  { Start(); }
    double Capture() { TCapture now; GetTOD( &now ); return Capture_( now ); }
 

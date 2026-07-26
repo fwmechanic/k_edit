@@ -20,8 +20,10 @@
 #include "ed_main.h"
 
 #include "win32_pvt.h"
+#include "my_fio.h"
 
 // #include <functional>
+#include <atomic>
 
 //--------------------------------------------------------------------------------------------
 
@@ -451,6 +453,7 @@ enum CP_PIPED_RC {
 
 STATIC_FXN CP_PIPED_RC CreateProcess_piped
    ( Win32::PROCESS_INFORMATION *pPI
+   , std::atomic<Win32::DWORD> *pProcessId
    , Win32::DWORD *pd_hProcessExitCode
    , PFBUF pfLogBuf
    , PCChar pS
@@ -506,6 +509,9 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    #endif
    const auto d_fChildProcessStarted( Win32::CreateProcessA( nullptr, pXeq, nullptr, nullptr, TRUE, CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, csh.StartHandlesSwapCriticalSection(), pPI ) );
    csh.EndHandlesSwapCriticalSection();
+   if( pProcessId ) {
+      pProcessId->store( d_fChildProcessStarted ? pPI->dwProcessId : INVALID_dwProcessId, std::memory_order_release );
+      }
    #if USE_ConsoleInputModeRestorer
    // The following FAILS to restore this process' cim (to solve the "ctrl+c/+s
    // going away" problem) for the time period while the child process is
@@ -530,7 +536,9 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
             } // as long as data isn't exhausted, don't even check for process death
          else if( 0 == Win32::WaitForSingleObject( pPI->hProcess, 0 ) ) { // NO WAIT, CHECK ONLY!
             // process has terminated;
-            pPI->dwProcessId = INVALID_dwProcessId; // BUGBUG RACE!
+            if( pProcessId ) {
+               pProcessId->store( INVALID_dwProcessId, std::memory_order_release );
+               }
             // now try to retrieve its exitcode
             if( 0 == Win32::GetExitCodeProcess( pPI->hProcess, pd_hProcessExitCode ) ) { // API failed?
                PutLastLogLine( pfLogBuf, "GetExitCodeProcess failed" );
@@ -694,7 +702,7 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
       DLINK_REMOVE_FIRST(d_jobQHead, pEl, d_dlinkJobsOfPty); //*** job has been taken from Queue, held in pEl
       --d_numJobRequestsPending;
       } // ##################### LockTheJobQueue ######################
-      const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_hProcessExitCode, d_pfLogBuf, pEl->d_PtyXeqParam.get(), pEl->d_cmdFlags, &x1, &x2 ) );
+      const auto cp_rc( CreateProcess_piped( &d_processInfo, nullptr, &d_hProcessExitCode, d_pfLogBuf, pEl->d_PtyXeqParam.get(), pEl->d_cmdFlags, &x1, &x2 ) );
       if( CP_PIPED_RC_OK == cp_rc ) {
          if( d_hProcessExitCode ) {
             if( pEl->d_cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;                             }
@@ -793,20 +801,32 @@ bool IsCompileJobQueueThreadActive() {
 //#################################################################################################################################
 
 class InternalShellJobExecutor {
-   NO_COPYCTOR(InternalShellJobExecutor);
-   NO_ASGN_OPR(InternalShellJobExecutor);
+   InternalShellJobExecutor( const InternalShellJobExecutor & ) = delete;
+   InternalShellJobExecutor &operator=( const InternalShellJobExecutor & ) = delete;
+   STATIC_FXN void ChildProcessCtrlThread( InternalShellJobExecutor *executor );
    PFBUF                       d_pfLogBuf;
    std::unique_ptr<StringList> d_pSL;
-   const size_t                d_numJobsRequested;
-   Win32::PROCESS_INFORMATION  d_processInfo;
-   Win32::HANDLE               d_hThread;
-   Win32::DWORD                d_hProcessExitCode;
-   std::mutex                  d_jobQueueMtx;
-   Win32::ManualClrEvent       d_AllJobsDone;
+   size_t                      d_numJobsRequested = 0;
+   Win32::PROCESS_INFORMATION  d_processInfo{};
+   std::atomic<Win32::DWORD>   d_processId{ INVALID_dwProcessId };
+   Win32::DWORD                d_hProcessExitCode = 0;
+   mutable std::mutex          d_jobQueueMtx;
+   std::atomic<bool>           d_active{ false };
+   std::thread                 d_workerThread;  // should be LAST
 public:
-   InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl, bool fViewsActivelyTailOutput );
+   InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl );
    ~InternalShellJobExecutor();
+   bool IsActive() const { return d_active.load( std::memory_order_acquire ); }
+   bool Restart( std::unique_ptr<StringList> sl );
+   void RequestStop() { KillAllJobsInBkgndProcessQueue(); }
+   bool Joinable() const { return d_workerThread.joinable(); }
+   void Join() {
+      if( d_workerThread.joinable() ) {
+         d_workerThread.join();
+         }
+      }
    void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const {
+      std::scoped_lock lock( d_jobQueueMtx );
       *pNumRequested  = d_numJobsRequested;
       *pNumNotStarted = d_pSL->length();
       }
@@ -816,49 +836,66 @@ private:
    int  DeleteAllEnqueuedJobs_locks();
    };
 
-InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl, bool fViewsActivelyTailOutput )
-   : d_pfLogBuf         ( pfb )
-   , d_pSL              ( std::move(sl) )
-   , d_numJobsRequested ( d_pSL->length() )
-   , d_hThread          ( nullptr )
-   , d_hProcessExitCode ( 0 )
+InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl )
+   : d_pfLogBuf( pfb )
    {
-   std::thread rajt( InternalShellJobExecutor::ThreadFxnRunAllJobs, this ); rajt.detach();
+   Restart( std::move(sl) );
    }
 
 InternalShellJobExecutor::~InternalShellJobExecutor() {
    KillAllJobsInBkgndProcessQueue();
+   Join();
+   }
+
+bool InternalShellJobExecutor::Restart( std::unique_ptr<StringList> sl ) {
+   if( IsActive() ) {
+      return false;
+      }
+   Join();
+   if( g_fMsgflush ) {
+      d_pfLogBuf->MakeEmpty();
+      }
+   {
+      std::scoped_lock lock( d_jobQueueMtx );
+      d_pSL = std::move(sl);
+      d_numJobsRequested = d_pSL->length();
+      d_hProcessExitCode = 0;
+      d_processId.store( INVALID_dwProcessId, std::memory_order_release );
+   }
+   d_active.store( true, std::memory_order_release );
+   try {
+      d_workerThread = std::thread( InternalShellJobExecutor::ChildProcessCtrlThread, this );
+      }
+   catch( ... ) {
+      d_active.store( false, std::memory_order_release );
+      throw;
+      }
+   return true;
    }
 
 void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS!!!
-   if( g_fMsgflush ) {
-      WhileHoldingGlobalVariableLock gvlock;     // wait until we own the I/O
-      d_pfLogBuf->MakeEmpty();
-      }
    auto failedJobsIgnored(0);
    auto unstartedJobCnt(0);
    PerfCounter pc;
    Xbuf x1, x2;
-   Win32::AutoSignalEvent amce( d_AllJobsDone );
    while( true ) { //**************** outerthreadloop ****************
       StringListEl *pEl;
       {
-      std::scoped_lock<std::mutex> LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
-      d_processInfo.dwProcessId = INVALID_dwProcessId;
+      std::scoped_lock lock( d_jobQueueMtx );
       DispNeedsRedrawStatLn(); // ???
-      if( !(pEl=d_pSL->remove_first()) ) { // ONLY EXIT FROM THREAD IS HERE!!!
+      pEl = d_pSL->remove_first();
+      }
+      if( !pEl ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
          PutLastLogLine( d_pfLogBuf, showTermReason( span{buf}, d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_hProcessExitCode = 0;
-         d_hThread = nullptr;
-         return; // ##################### LockTheJobQueue ######################
+         return;
          }
-      } // ##################### LockTheJobQueue ######################
       auto cmdFlags(0);
       auto pS( pEl->string + xlat_cmdline_flag_chars( pEl->string, &cmdFlags ) );
       if( *pS ) {
          prep_cmdline( pS, cmdFlags, __func__ );
-         const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_hProcessExitCode, d_pfLogBuf, pS, cmdFlags, &x1, &x2 ) );
+         const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_processId, &d_hProcessExitCode, d_pfLogBuf, pS, cmdFlags, &x1, &x2 ) );
          if( CP_PIPED_RC_OK == cp_rc ) {
             if( d_hProcessExitCode ) {
                if( cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;  }
@@ -871,6 +908,11 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
    ConOut::Bell();
    }
 
+void InternalShellJobExecutor::ChildProcessCtrlThread( InternalShellJobExecutor *executor ) {
+   executor->ThreadFxnRunAllJobs();
+   executor->d_active.store( false, std::memory_order_release );
+   }
+
 PFBUF StartInternalShellJob( std::unique_ptr<StringList> sl, bool fAppend ) {
    STATIC_VAR size_t s_nxt_shelljob_output_FBUF_num;
    if( !fAppend ) {
@@ -880,9 +922,15 @@ NEXT_OUTBUF:
    char fnm[30];
    auto pFB( FBOP::FindOrAddFBuf( safeSprintf( span{fnm}, "<shell_output-%03" PR_SIZET ">", s_nxt_shelljob_output_FBUF_num ) ) );
    if( pFB ) {
-      if( pFB->d_pInternalShellJobExecutor ) goto NEXT_OUTBUF; // don't want to append to an FBUF currently in use by a d_pInternalShellJobExecutor
+      auto &executor( pFB->d_pInternalShellJobExecutor );
+      if( executor && executor->IsActive() ) goto NEXT_OUTBUF;
       pFB->PutFocusOn();
-      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, std::move(sl), true );
+      if( executor ) {
+         executor->Restart( std::move(sl) );
+         }
+      else {
+         executor.reset( new InternalShellJobExecutor( pFB, std::move(sl) ) );
+         }
       }
    return pFB;
    }
@@ -896,23 +944,44 @@ int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
 
 int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
-   if(   INVALID_dwProcessId != d_processInfo.dwProcessId
-      && ConIO::Confirm( FmtStr<55>( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), d_processInfo.dwProcessId ) )
-      && INVALID_dwProcessId != d_processInfo.dwProcessId
+   const auto processId( d_processId.load( std::memory_order_acquire ) );
+   if(   INVALID_dwProcessId != processId
+      && ConIO::Confirm( FmtStr<55>( "Kill background %s process (PID=%ld)?", d_pfLogBuf->Name(), processId ) )
+      && processId == d_processId.load( std::memory_order_acquire )
       ) {
       PCChar msg;
-      switch( Win32::TerminateApp( d_processInfo.dwProcessId, 2000 ) ) {
+      switch( Win32::TerminateApp( processId, 2000 ) ) {
          break;default                      : msg = "WTF!?"                   ;
          break;case TA_FAILED               : msg = "TA_FAILED"               ;
          break;case TA_SUCCESS_CTRL_BREAK   : msg = "TA_SUCCESS_CTRL_BREAK"   ;
          break;case TA_SUCCESS_WM_CLOSE     : msg = "TA_SUCCESS_WM_CLOSE"     ;
          break;case TA_SUCCESS_TERM_PROCESS : msg = "TA_SUCCESS_TERM_PROCESS" ;
          }
-      d_processInfo.dwProcessId = INVALID_dwProcessId;
+      d_processId.store( INVALID_dwProcessId, std::memory_order_release );
       Msg( "Win32::TerminateApp returned %s", msg );
       return 1;
       }
    return 1; // !IsThreadActive();
+   }
+
+void InternalShellJobExecutorDeleter::operator()( InternalShellJobExecutor *executor ) const noexcept {
+   delete executor;
+   }
+
+void StopInternalShellJobExecutor( PFBUF pFBuf ) {
+   auto &executor( pFBuf->d_pInternalShellJobExecutor );
+   if( !executor ) {
+      return;
+      }
+   executor->RequestStop();
+   if( executor->Joinable() ) {
+      // FBUF destruction runs on the main thread while it owns the editor
+      // state lock. Let the worker finish its final buffered writes.
+      MainThreadGiveUpGlobalVariableLock();
+      executor->Join();
+      MainThreadWaitForGlobalVariableLock();
+      }
+   executor.reset();
    }
 
 STATIC_FXN void IdleThread() {
@@ -1090,13 +1159,13 @@ bool ARG::shell() {
 
 bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
    dest.clear();
-   auto fp( _popen( szcmdline, "r" ) );
-   if( fp != NULL ) {
+   pipe_file_ptr fp( _popen( szcmdline, "r" ) );
+   if( fp ) {
       char buf[8192];
-      while( fgets( buf, sizeof buf, fp ) != NULL ) {
+      while( fgets( buf, sizeof buf, fp.get() ) != NULL ) {
          dest.append( buf );
          }
-      const auto status( _pclose(fp) );
+      const auto status( _pclose(fp.release()) );
       if( status == -1 ) { /* Error reported by pclose() */
          }
       else {

@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "my_fio.h"
+
 #ifndef INT_MAX
 #error undefined INT_MAX
 #endif
@@ -72,7 +74,6 @@ STIL bool EditorFilesystemNoneDirty() { return EditorFilesStatus().dirtyFBufs ==
 extern PCChar ProgramVersion();
 extern PCChar ExecutableFormat();
 extern stref  CompilerVersion();
-extern stref  BoostVersion();
 
 //----------- Arg and Selection
 
@@ -83,11 +84,14 @@ STIL     bool IsCmdXeqInhibitedByRecord() { extern bool g_fCmdXeqInhibitedByReco
 
 extern   void ExtendSelectionHilite( PView pcv, const Point &pt );
 
-// CursorFuncPeekSeln & CursorFuncPeekSelnS are equiv fxns w/different return-value mechanisms
-// see ARG::longline() for point-of-call examples & discussion
-extern   std::tuple<bool,LINE,LINE,COL,COL> CursorFuncPeekSeln();
-struct   TCursorFuncPeekSeln { bool selnActive; LINE yMin, yMax; COL xMin, xMax; }; // analog to 'std::tuple<bool,LINE,LINE,COL,COL>'
-extern   TCursorFuncPeekSeln CursorFuncPeekSelnS();
+struct TCursorFuncPeekSeln {
+   bool selnActive;
+   LINE yMin;
+   LINE yMax;
+   COL  xMin;
+   COL  xMax;
+   };
+[[nodiscard]] extern TCursorFuncPeekSeln CursorFuncPeekSelnS();
 
 extern   void TermNulleow( std::string &st );
 
@@ -421,25 +425,28 @@ extern bool unlinkOk_( PCChar filename, PCChar caller );
 
 class tempfile {
    std::string d_name;
-   FILE       *d_fh;
+   file_ptr    d_fh;
 public:
    tempfile( PCChar mode );
-   FILE * fh() { return d_fh; }  // d_name fopened in "wx" mode (or nullptr if closed)
-   PCChar name() { return d_name.c_str(); }
+   tempfile( const tempfile & ) = delete;
+   tempfile &operator=( const tempfile & ) = delete;
+   tempfile( tempfile && ) = delete;
+   tempfile &operator=( tempfile && ) = delete;
+   FILE * fh() const { return d_fh.get(); }  // d_name fopened in "wx" mode (or nullptr if closed)
+   PCChar name() const { return d_name.c_str(); }
    bool   close() {
       if( d_fh ) {
-         fclose( d_fh );
-         d_fh = nullptr;
-         return true;
+         return fclose( d_fh.release() ) == 0;
          }
       return false;
       }
    bool   unlink() {
       if( !d_name.empty() ) {
          close();
-         unlinkOk( d_name.c_str() );
-         d_name.clear();
-         return true;
+         if( unlinkOk( d_name.c_str() ) ) {
+            d_name.clear();
+            return true;
+            }
          }
       return false;
       }

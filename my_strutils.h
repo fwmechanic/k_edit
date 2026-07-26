@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <cstdarg>
 #include <cstring>
-#include <tuple>
 
 #include "my_types.h"
 #include "ed_mem.h" // for Strdup()
@@ -172,7 +171,13 @@ NO_MATCH:
 extern int  strcmp4humans( PCChar s1, PCChar s2 );
 
 extern   bool   StrSpnSignedInt( PCChar pszString );
-extern   std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase=10 );
+struct ConvUResult {
+   int       errorNumber;
+   uintmax_t value;
+   stref     converted;
+   UI        base;
+   };
+[[nodiscard]] extern ConvUResult conv_u( stref sr, UI numberBase=10 );
 
 extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );

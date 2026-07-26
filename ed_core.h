@@ -256,33 +256,38 @@ class Xbuf {
    // ever-growing line buffer intended to be used for all lines touched over
    // the duration of a command or operation, in lieu of malloc'ing a buffer for
    // each line touched.
-   PChar           d_buf;
-   size_t          d_buf_bytes;
-   STIL char ds_empty = 0;
+   malloc_ptr<char[]> d_buf;
+   size_t             d_buf_bytes = 0;
+   STIL char          ds_empty = 0;
 public:
-   Xbuf()                          : d_buf (&ds_empty), d_buf_bytes( 0 ) {}
-   Xbuf( size_t size )             : d_buf ( nullptr ), d_buf_bytes( 0 ) { wresize( size ); }
-   Xbuf( PCChar str )              : d_buf ( nullptr ), d_buf_bytes( 0 ) { assign( str ); }
-   Xbuf( PCChar str, size_t len_ ) : d_buf ( nullptr ), d_buf_bytes( 0 ) { assign( str, len_ ); }
-   ~Xbuf() { if( &ds_empty!=d_buf ) { Free_( d_buf ); } }
+   Xbuf() = default;
+   Xbuf( size_t size )             { wresize( size ); }
+   Xbuf( PCChar str )              { assign( str ); }
+   Xbuf( PCChar str, size_t len_ ) { assign( str, len_ ); }
+   Xbuf( const Xbuf & ) = delete;
+   Xbuf &operator=( const Xbuf & ) = delete;
+   Xbuf( Xbuf && ) = delete;
+   Xbuf &operator=( Xbuf && ) = delete;
 public:
-   PChar    wbuf()      const { return d_buf;       }
-   PCChar   c_str()     const { return d_buf;       }
+   PChar    wbuf()      const { return d_buf ? d_buf.get() : &ds_empty; }
+   PCChar   c_str()     const { return wbuf();       }
    size_t   buf_bytes() const { return d_buf_bytes; }
    void     clear()           { poke( 0, '\0' );    }
    PChar wresize( size_t size ) {
       if( d_buf_bytes < size ) {
           d_buf_bytes = ROUNDUP_TO_NEXT_POWER2( size, 512 );
-          if( &ds_empty==d_buf ) { d_buf = nullptr; }
-          ReallocArray( d_buf, d_buf_bytes );
+          auto rawBuf( d_buf.release() );
+          ReallocArray( rawBuf, d_buf_bytes );
+          d_buf.reset( rawBuf );
          }
-      return d_buf;
+      return wbuf();
       }
    size_t length() const {
-      const auto pnul( PChar( memchr( d_buf, 0, d_buf_bytes ) ) );
-      return pnul ? pnul - d_buf : 0;
+      const auto buf( wbuf() );
+      const auto pnul( PChar( memchr( buf, 0, d_buf_bytes ) ) );
+      return pnul ? pnul - buf : 0;
       }
-   stref sr() const { return stref( d_buf, length() ); }
+   stref sr() const { return stref( c_str(), length() ); }
    PCChar push_back( char ch ) {
       const auto slen( length() );
       const auto rv( wresize( slen+2 ) );
@@ -295,7 +300,7 @@ public:
       }
 private:
    PCChar cat( PCChar str, size_t len_ ) {
-      const auto len0( d_buf ? Strlen(d_buf) : 0 );
+      const auto len0( d_buf ? Strlen(d_buf.get()) : 0 );
       const auto rv( wresize( 1+len0+len_ ) );
       memcpy( rv+len0, str, len_ );
       rv[len0+len_] = '\0';
@@ -344,15 +349,23 @@ class LineInfo { // LineInfo is a standalone class since it is used by both FBUF
    friend class FBUF;
    NO_COPYCTOR(LineInfo);
    NO_ASGN_OPR(LineInfo);
-   PCChar d_pLineData = nullptr ;         // CAN be -1 when REPLACEREC is for line that didn't exist
-   COL    d_iLineLen  = 0       ;
+   enum class Storage : unsigned char { empty, borrowed, owned };
+   PCChar  d_pLineData = nullptr;
+   COL     d_iLineLen  = 0;
+   Storage d_storage   = Storage::empty;
+   void SetBorrowedContent( PCChar data, COL length ) {
+      d_pLineData = data;
+      d_iLineLen = length;
+      d_storage = Storage::borrowed;
+      }
 public:
-   LineInfo() {}  // default ctor
+   LineInfo() = default;
    friend void swap(LineInfo& first, LineInfo& second) noexcept {  // https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom/3279550#3279550
       using std::swap;  // enable ADL (not necessary in our case, but good practice)
 
       swap(first.d_pLineData, second.d_pLineData);
       swap(first.d_iLineLen , second.d_iLineLen );
+      swap(first.d_storage  , second.d_storage  );
       }
    LineInfo(LineInfo&& other) noexcept      // move constructor
       : LineInfo() // initialize via default constructor
@@ -364,10 +377,9 @@ public:
       return *this;
       }
    void   PutContent( stref src );
-   void   FreeContent( const FBUF &fbuf );
+   void   FreeContent();
    PCChar GetLineRdOnly()                        const { return d_pLineData; }
    COL    GetLineLen()                           const { return d_iLineLen;  }
-   bool   fCanFree_pLineData( const FBUF &fbuf ) const;
    };
 
 //-----------------------------------------------------------------------------
@@ -660,7 +672,7 @@ private:
                 View()               = delete; // NO dflt CTOR !
    const PWin   d_pWin;      // back pointer, needed cuz our owning Win knows things we don't, but need
    const PFBUF  d_vwToPFBuf; // back pointer; DO NOT REFERENCE DIRECTLY!!! USE CFBuf() && FBuf() !!!
-   ViewHiLites *d_pHiLites = nullptr; // we own this!
+   std::unique_ptr<ViewHiLites> d_pHiLites;
    void         CommonInit();
    time_t       d_tmFocusedOn = 0; // http://en.wikipedia.org/wiki/Year_2038_problem
    PCWin        Win()    const { return d_pWin ; }
@@ -828,6 +840,11 @@ enum cppc
 enum bkupMode { bkup_USE_SWITCH, bkup_UNDEL, bkup_BAK, bkup_NONE };
 
 class InternalShellJobExecutor;
+struct InternalShellJobExecutorDeleter {
+   void operator()( InternalShellJobExecutor *executor ) const noexcept;
+   };
+using InternalShellJobExecutorPtr = std::unique_ptr<InternalShellJobExecutor, InternalShellJobExecutorDeleter>;
+extern void StopInternalShellJobExecutor( PFBUF pFBuf );
 
 struct FileStat {
    FilesysTime    d_ModifyTime = 0;
@@ -980,7 +997,6 @@ public:
    bool           KnownLine( LINE lineNum )  const { return lineNum >= 0 && lineNum < LineCount(); }
    LINE           LastLine()                 const { return LineCount() - 1; }
    COL            LineLength( LINE lineNum ) const { return d_paLineInfo[lineNum].d_iLineLen; }
-   bool           PtrWithinOrigFileImage( PCChar pc ) const { return pc >= d_pOrigFileImage && pc < (d_pOrigFileImage + d_cbOrigFileImage); }
    filesize_t     cbOrigFileImage() const { return d_cbOrigFileImage; }
    void           LineInfoReserve( LINE linesNeeded );
    LINE           LineInfoCapacity() const { return d_naLineInfoElements; }
@@ -1260,14 +1276,12 @@ public:
    //************ misc junk
 public:
    int            DbgCheck();
-   InternalShellJobExecutor *d_pInternalShellJobExecutor = nullptr;
+   InternalShellJobExecutorPtr d_pInternalShellJobExecutor;
    }; // end of class FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF FBUF
 
 STIL PFBUF AddFBuf( stref pBufferName, PFBUF *ppGlobalPtr=nullptr ) {
    return FBUF::AddFBuf( pBufferName, ppGlobalPtr );
    }
-
-inline bool LineInfo::fCanFree_pLineData( const FBUF &fbuf ) const { return !fbuf.PtrWithinOrigFileImage( d_pLineData ); }
 
 inline bool View::LineCompileOk() const { return d_LineCompile_isValid && d_LineCompile >= 0 && d_LineCompile < CFBuf()->LineCount(); }
 

@@ -120,8 +120,8 @@ namespace Win32 { // Win32::
 
 class Win32ConsoleFontChanger {
    // 20090613 kgoodwin added per http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
-   Win32::PCONSOLE_FONT_INFO d_pFonts; // does double duty as "valid" flag
-   Win32::PCOORD             d_pFontSizes;
+   malloc_ptr<Win32::CONSOLE_FONT_INFO[]> d_pFonts; // does double duty as "valid" flag
+   malloc_ptr<Win32::COORD[]>             d_pFontSizes;
 
    Win32::DWORD              d_origFont;
    Win32::DWORD              d_setFont;
@@ -138,7 +138,7 @@ class Win32ConsoleFontChanger {
    public: //===================================================================
 
     Win32ConsoleFontChanger();
-   ~Win32ConsoleFontChanger();
+   ~Win32ConsoleFontChanger() = default;
    Win32::DWORD    OrigFont() const { return d_pFonts ? d_origFont  : 0; }
    Win32::DWORD    NumFonts() const { return d_pFonts ? d_num_fonts : 0; }
    void            GetFontInfo();

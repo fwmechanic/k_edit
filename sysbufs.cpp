@@ -78,14 +78,14 @@ STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"
          return -1;
          }
       }
-   int errno_; uintmax_t wnum; stref txtConvd; UI bs; std::tie( errno_, wnum, txtConvd, bs ) = conv_u( numst, 10 );
-   if( errno_ ) {
+   const auto converted( conv_u( numst, 10 ) );
+   if( converted.errorNumber ) {
       return -1;
       }
-   if( !(wnum < g_WindowCount()) ) {
+   if( !(converted.value < g_WindowCount()) ) {
       return -2;
       }
-   return wnum;
+   return converted.value;
    }
 
 //==========================================================================================
@@ -174,18 +174,6 @@ void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
    pFBuf->FmtLastLine( "\n#-------------------- %d %s", count, subhd );
    }
 
-stref BoostVersion() {
-   STATIC_VAR char s_BoostVer[31] = { '\0', };
-   if( '\0' == s_BoostVer[0] ) {
-      safeSprintf( span{s_BoostVer}, "Boost %d.%d.%d"
-                 , BOOST_VERSION / 100000
-                 , BOOST_VERSION / 100 % 1000
-                 , BOOST_VERSION % 100
-         );
-      }
-   return s_BoostVer;
-   }
-
 STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    pFBuf->SetBlockRsrcLd();
    pFBuf->FmtLastLine( "%s, %s, built %s, git clone %s", ProgramVersion(), ExecutableFormat(), kszDtTmOfBuild, kszMasterRepo );
@@ -194,7 +182,6 @@ STATIC_FXN void FBufRead_Assign( PFBUF pFBuf, int ) {
    if( !rexinfo.empty() ) {
       pFBuf->FmtLastLine( "  %" PR_BSR, BSR(rexinfo) );
       }
-   pFBuf->FmtLastLine( "  %" PR_BSR, BSR(BoostVersion()) );
    pFBuf->PutLastLineRaw( "" );
    FBufRead_Assign_OsInfo( pFBuf );
    pFBuf->FmtLastLine( " \n#-------------------- %s\npgmdir   %s\nstatedir %s\n", "Metadata", ThisProcessInfo::ExePath(), EditorStateDir() );
@@ -364,24 +351,19 @@ STATIC_FXN void FBufRead_Environment( PFBUF pFBuf, int ) {
       }
    }
 
-STATIC_FXN int CDECL__ qsort_cmp_env( PCVoid pA, PCVoid pB ) {
-   return Stricmp( *static_cast<CPPCChar>(pA), *static_cast<CPPCChar>(pB) );
-   }
-
 STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
    auto envEntries(0);
    for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
       ++envEntries;
       }
-   PPCChar lines;  AllocArrayNZ( lines, envEntries );
-   for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
-      lines[ix] =  g_envp[ ix ];
-      }
-   qsort( lines, envEntries, sizeof(*lines), qsort_cmp_env );
+   std::vector<PCChar> lines( g_envp, g_envp + envEntries );
+   std::ranges::sort( lines, []( PCChar lhs, PCChar rhs ) {
+      return Stricmp( lhs, rhs ) < 0;
+      } );
    auto bytes(0);
    std::string sbuf;
-   for( auto ix(0) ; g_envp[ ix ] ; ++ix ) {
-      ALLOCA_STRDUP( envstr, len, lines[ix], Strlen( lines[ix] ) );
+   for( const auto line : lines ) {
+      ALLOCA_STRDUP( envstr, len, line, Strlen( line ) );
       bytes += len + 1;
       PCChar pEos( envstr + len );
       PCChar pFirstSeg( envstr );
@@ -410,7 +392,6 @@ STATIC_FXN void FBufRead_MyEnvironment( PFBUF pFBuf, int ) {
          }
       }
    Msg( "environment size = %d bytes", bytes );
-   Free0( lines );
    }
 
 struct UsageCtxt {
@@ -444,14 +425,6 @@ STATIC_FXN void ShowCalls( PCCMD Cmd, void *pCtxt ) {
          }
       FBOP::InsLineSortedDescending( uc->fbOut, 0, uc->dest.c_str() );
       }
-   }
-
-STATIC_FXN int CDECL__ qsort_cmp_fbuf_wrtime( PCVoid pA, PCVoid pB ) {
-   const auto pFA( *static_cast<CPPFBUF>(pA) ); const auto tA( pFA->get_tmLastWrToDisk() );
-   const auto pFB( *static_cast<CPPFBUF>(pB) ); const auto tB( pFB->get_tmLastWrToDisk() );
-   const auto rv( tA==tB ? 0 : tA>tB ? -1 : 1 ); // descending sort: greatest first/top
-   0 && DBG( "%s %" PR_TIMET ", %s %" PR_TIMET " = %d", pFA->Name(), tA, pFB->Name(), tB, rv );
-   return rv;
    }
 
 bool ARG::wr0() {
@@ -491,7 +464,7 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {SD=0}; SD && DBG( "
          }
       }
    }
-   PPFBUF fbufs;  AllocArrayNZ( fbufs, count );
+   std::vector<PFBUF> fbufs( count );
    auto ix( 0u );
    {
 #if FBUF_TREE
@@ -508,12 +481,14 @@ STATIC_FXN void FBufRead_WrToDisk( PFBUF dest, int ) { enum {SD=0}; SD && DBG( "
          }
       }
    }
-   qsort( fbufs, count, sizeof(*fbufs), qsort_cmp_fbuf_wrtime );
-   for( ix=0u ; ix < count ; ++ix ) {
-      PCFBUF pFBuf( fbufs[ix] );
+   std::ranges::sort( fbufs, []( PCFBUF lhs, PCFBUF rhs ) {
+      return lhs->get_tmLastWrToDisk() > rhs->get_tmLastWrToDisk();
+      } );
+   ix = 0;
+   for( const auto pFBuf : fbufs ) {
       dest->PutLastLineRaw( pFBuf->Name() ); SD && DBG( "s[%u] %s %" PR_TIMET, ix, pFBuf->Name(), pFBuf->get_tmLastWrToDisk() );
+      ++ix;
       }
-   Free0( fbufs );
    Msg( "%u files have been written to disk", count );
    }
 

@@ -858,13 +858,13 @@ STATIC_FXN void sv_idx( PCCMD pCmd, void *pCtxt ) {
 void cmdusage_updt() {
    enum { SD = 0 };                                                            SD && DBG( "%s+", __func__ );
    auto origfnm( StateFilename( "cmdusg" ) );
-   const auto ifh( fopen( origfnm.c_str(), "rt" ) );
-   const auto fOrigFExists( ifh != nullptr );
+   auto ifh( fopen_ptr( origfnm.c_str(), "rt" ) );
+   const auto fOrigFExists{ bool(ifh) };
    if( ifh ) {                                                                 SD && DBG( "%s: opened ifh = '%s'", __func__, origfnm.c_str() );
       auto entries(0);
       for(;;) {
          char buf[300];
-         auto p( fgets( BSOB(buf), ifh ) );
+         auto p( fgets( BSOB(buf), ifh.get() ) );
          if( !p ) {
             break;
             }                                                                  SD && DBG( "%s: '%s'", __func__, p );
@@ -879,13 +879,13 @@ void cmdusage_updt() {
                }
             }
          }
-      fclose( ifh );                                                           SD && DBG( "%s: closed ifh = '%s'; read %d entries", __func__, origfnm.c_str(), entries );
+      ifh.reset();                                                             SD && DBG( "%s: closed ifh = '%s'; read %d entries", __func__, origfnm.c_str(), entries );
       }
    auto tmpfnm( StateFilename( "cmdusg_" ) );                                  SD && DBG( "%s:%s", __func__, tmpfnm.c_str() );
-   const auto ofh = fopen( tmpfnm.c_str(), "wt" );
+   auto ofh( fopen_ptr( tmpfnm.c_str(), "wt" ) );
    if( ofh ) {                                                                 SD && DBG( "%s: opened ofh = '%s'", __func__, tmpfnm.c_str() );
-      WalkAllCMDs( ofh, sv_idx );
-      fclose( ofh );                                                           SD && DBG( "%s: closed ofh = '%s'", __func__, tmpfnm.c_str() );
+      WalkAllCMDs( ofh.get(), sv_idx );
+      ofh.reset();                                                             SD && DBG( "%s: closed ofh = '%s'", __func__, tmpfnm.c_str() );
       const auto doRename( !fOrigFExists || unlinkOk( origfnm.c_str() ) );
       if( doRename ) {
          const auto renmOk( rename( tmpfnm.c_str(), origfnm.c_str() ) == 0 );  SD && DBG( "%s: did rename, %s", __func__, renmOk ? "ok" : "FAILED" );

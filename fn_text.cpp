@@ -166,40 +166,23 @@ bool ARG::flipcase() {
 
 //=================================================================================================
 
-// multiple implementations of ARG::longline test 3 different combinations of
-// calling 2 different implementations of CursorFuncPeekSeln (returning either
-// tuple or struct).  The two impls which call CursorFuncPeekSelnS() have
-// smaller codegen than the tuple-returning call impl.  See
-// CursorFuncPeekSeln/CursorFuncPeekSelnS for further details.
-// 20220102
-//
 bool ARG::longline() {
    auto [pcv, pcf] = PCVF();
- #if 0
-   auto [selnActive,yMin,yMax,xMin,xMax] = CursorFuncPeekSeln();  // returned tuple  values referenced via structured binding to scalar vars
-   #define VP
- #elif 0
-   auto [selnActive,yMin,yMax,xMin,xMax] = CursorFuncPeekSelnS(); // returned struct fields referenced via structured binding to scalar vars
-   #define VP
- #else
-   auto sl = CursorFuncPeekSelnS();  // return struct and reference struct fields explicitly
-   #define VP sl.
- #endif
-   if( !VP selnActive ) {
-      VP yMin = 0;
-      VP yMax = pcf->LineCount();
+   auto selection( CursorFuncPeekSelnS() );
+   if( !selection.selnActive ) {
+      selection.yMin = 0;
+      selection.yMax = pcf->LineCount();
       }
    auto max_lnum( 0 );  auto max_len ( 0 );
-   for( auto iy(VP yMin); iy <= VP yMax; ++iy ) {
+   for( auto iy(selection.yMin); iy <= selection.yMax; ++iy ) {
       if( const auto len( FBOP::LineCols( pcf, iy ) ); len > max_len ) {
          max_lnum = iy;
          max_len  = len;
          }
       }
    const Point Cursor( pcv->Cursor() );
-   pcv->MoveCursor( !VP selnActive ? max_lnum : Cursor.lin, max_len );
+   pcv->MoveCursor( !selection.selnActive ? max_lnum : Cursor.lin, max_len );
    return true;
-#undef VP
    }
 
 //=================================================================================================

@@ -18,6 +18,7 @@
 //
 
 #include "lua_intf_common.h"
+#include "my_fio.h"
 #include <cmath>  // for std::log2
 #ifdef UNITTEST
 #include <cassert>
@@ -342,10 +343,9 @@ int FindMatchingTagsLines(
       };
 
    SD && ::DBG( "tag '%" PR_BSR "'", BSR(tag) );
-   auto ifh( fopen( fnm, "rt" ) );
-   if( ifh != nullptr ) {
-      bsearch_sorted_tagsfile( ifh, tag );
-      fclose( ifh );
+   auto ifh( fopen_ptr( fnm, "rt" ) );
+   if( ifh ) {
+      bsearch_sorted_tagsfile( ifh.get(), tag );
       }
    return 1;  // return the table
    }

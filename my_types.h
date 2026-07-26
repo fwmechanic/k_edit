@@ -97,8 +97,6 @@ typedef const void *        PCVoid;
 
 typedef std::back_insert_iterator<std::string> string_back_inserter;
 
-#include <boost/version.hpp>
-
 // driven by https://news.ycombinator.com/item?id=8704318 I've deployed
 // std::string_view to minimize gratuitious std::string mallocs/copies
 #include <string_view>

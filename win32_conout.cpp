@@ -19,6 +19,7 @@
 
 #include "ed_main.h"
 #include "win32_pvt.h"
+#include "my_fio.h"
 
 //--------------------------------------------------------------------------------------------
 
@@ -81,6 +82,7 @@ class TConsoleOutputControl {
    W32_ScreenSize_CursorLocn d_xyState; // height of CSB-mapped window
 public: //**************************************************
    TConsoleOutputControl( int yHeight, int xWidth );
+   ~TConsoleOutputControl() { Win32::CloseHandle( d_hConsoleScreenBuffer ); }
    bool WriteToFileOk( FILE *ofh ); // debug/test facility
    Win32::HANDLE GetConsoleScreenBufferHandle() const { return d_hConsoleScreenBuffer; }
    void NullifyUpdtLineRange() {
@@ -104,7 +106,7 @@ private://**************************************************
    void  SetConsoleCursorInfo();
    };
 
-STATIC_VAR TConsoleOutputControl *s_EditorScreen;
+STATIC_VAR std::unique_ptr<TConsoleOutputControl> s_EditorScreen;
 
 void VidInitApiError( PCChar errmsg ) {
    ConIO::DbgPopf(         "%s", errmsg );
@@ -552,14 +554,7 @@ SIZE_OK:
 // "single-point of reference" docs being superseded elsewhere with no way of knowing that fact (or where
 // "elsewhere" is)).
 
-Win32ConsoleFontChanger::~Win32ConsoleFontChanger() {
-   Free0( d_pFonts     );
-   Free0( d_pFontSizes );
-   }
-
 Win32ConsoleFontChanger::Win32ConsoleFontChanger()
-   : d_pFonts(nullptr)
-   , d_pFontSizes(nullptr)
    { enum { SHOWDBG=1 };
    auto hmod( Win32::GetModuleHandleA("KERNEL32.DLL") );
    if(  !hmod
@@ -576,9 +571,13 @@ Win32ConsoleFontChanger::Win32ConsoleFontChanger()
    d_num_fonts = d_GetNumberOfConsoleFonts();
    SHOWDBG && DBG( "d_num_fonts = %lu", d_num_fonts );
    if( d_num_fonts > 0 ) {
-      AllocArrayNZ( d_pFonts, d_num_fonts );
+      Win32::PCONSOLE_FONT_INFO fonts;
+      AllocArrayNZ( fonts, d_num_fonts );
+      d_pFonts.reset( fonts );
       GetFontInfo();
-      AllocArrayNZ( d_pFontSizes, d_num_fonts );
+      Win32::PCOORD fontSizes;
+      AllocArrayNZ( fontSizes, d_num_fonts );
+      d_pFontSizes.reset( fontSizes );
       for( auto idx(0); idx < d_num_fonts; ++idx ) {
          d_pFontSizes[idx] = Win32::GetConsoleFontSize(d_hConout, d_pFonts[idx].nFont);
          SHOWDBG && DBG( "%cfont[%2d]: XxY = %3dx%3d"
@@ -606,7 +605,7 @@ double Win32ConsoleFontChanger::GetFontAspectRatio( int idx ) const {
 void Win32ConsoleFontChanger::GetFontInfo() {
    if( d_pFonts ) {
       const Win32::BOOL fMaxWin = TRUE; // 20090614 kgoodwin this param seems to be ignored
-      d_GetConsoleFontInfo( d_hConout, fMaxWin, d_num_fonts, d_pFonts );
+      d_GetConsoleFontInfo( d_hConout, fMaxWin, d_num_fonts, d_pFonts.get() );
       }
    }
 
@@ -802,10 +801,10 @@ bool ConOut::WriteToFileOk( FILE *ofh ) {
 
 STATIC_FXN bool savescreen( CPCChar ofnm ) {
    enum { SHOWDBG=0 };
-   const auto ofh( fopen( ofnm, "wb" ) );
+   auto ofh( fopen_ptr( ofnm, "wb" ) );
    if( !ofh ) { return Msg("open of file \"%s\" FAILED", ofnm ); }   SHOWDBG && DBG( "%s: opened ofh = '%s'", __func__, ofnm );
-   const auto rv( ConOut::WriteToFileOk( ofh ) );
-   fclose( ofh );                                                    SHOWDBG && DBG( "%s: closed ofh = '%s'", __func__, ofnm );
+   const auto rv( ConOut::WriteToFileOk( ofh.get() ) );
+   ofh.reset();                                                    SHOWDBG && DBG( "%s: closed ofh = '%s'", __func__, ofnm );
    Msg( "wrote \"%s\"", ofnm );
    return rv;
    }
@@ -1065,8 +1064,9 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
       dest_buf_size.X  = src_size.col;
       dest_buf_size.Y  = ( maxReadConsoleBufsize / (src_size.col * sizeof(ScreenCell)) );
       SD && DBG( "dest_buf_size.Y = %u, %" PR_SIZET " bytes", dest_buf_size.Y, dest_buf_size.Y * src_size.col * sizeof(ScreenCell) );
-      ScreenCell *dest_buf;
-      AllocArrayNZ( dest_buf, dest_buf_size.Y * src_size.col );
+      ScreenCell *dest_buf_raw;
+      AllocArrayNZ( dest_buf_raw, dest_buf_size.Y * src_size.col );
+      malloc_ptr<ScreenCell[]> dest_buf( dest_buf_raw );
       std::string chbuf;
       auto lcnt( dest_buf_size.Y );
       for( auto iy(0) ; iy < src_size.lin ; iy += lcnt ) {
@@ -1080,12 +1080,12 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
          srcRgn.Top    = iy;
          srcRgn.Bottom = iy + lcnt - 1;
          SD && DBG( "ReadConsoleOutputA srcRgn: Y=(%4d,%4d), X=(%d,%d)", srcRgn.Top, srcRgn.Bottom, srcRgn.Left, srcRgn.Right );
-         if( Win32::ReadConsoleOutputA( hConout, dest_buf, dest_buf_size, bufPos, &srcRgn ) == 0 ) {
+         if( Win32::ReadConsoleOutputA( hConout, dest_buf.get(), dest_buf_size, bufPos, &srcRgn ) == 0 ) {
             linebuf oseb;
             g_pFBufConsole->FmtLastLine( "***/\n*** Win32::ReadConsoleOutputA FAILED: %s ***\n***\\", OsErrStr( span{oseb} ) );
             }
          else {
-            auto pc( dest_buf );
+            auto pc( dest_buf.get() );
             for( auto jy(0); jy < lcnt; ++jy ) {
                chbuf.clear();
                for( auto jx(0) ; jx < src_size.col ; ++jx ) {
@@ -1095,7 +1095,6 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
                }
             }
          }
-      Free0( dest_buf );
       g_pFBufConsole->Undo_Reinit();
       g_pFBufConsole->UnDirty();
       }
@@ -1212,7 +1211,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
       if( fAllocConOK ) {  CON_DBG && DBG( "Win32::AllocConsole() succeeded" ); }
       else { linebuf oseb; CON_DBG && DBG( "Win32::AllocConsole() FAILED: %s", OsErrStr( span{oseb} ) ); }
       }                                                                                    CON_DBG&&DBG( "%s 40", __PRETTY_FUNCTION__ );
-   s_EditorScreen = new TConsoleOutputControl( initialWinSize.lin, initialWinSize.col );   CON_DBG&&DBG( "%s 50", __PRETTY_FUNCTION__ );
+   s_EditorScreen = std::make_unique<TConsoleOutputControl>( initialWinSize.lin, initialWinSize.col );   CON_DBG&&DBG( "%s 50", __PRETTY_FUNCTION__ );
    Conin_Init();                                                                           CON_DBG&&DBG( "%s 60", __PRETTY_FUNCTION__ );
    UpdateConsoleTitle_Init();
    UpdateConsoleTitle();
@@ -1227,6 +1226,7 @@ void ConIO::Shutdown() {
    if( s_atStartupConsoleCP       != s_invalid_CP && s_atStartupConsoleCP       != Win32::GetConsoleCP()       ) { Win32::SetConsoleCP      ( s_atStartupConsoleCP       ); }
    if( s_atStartupConsoleOutputCP != s_invalid_CP && s_atStartupConsoleOutputCP != Win32::GetConsoleOutputCP() ) { Win32::SetConsoleOutputCP( s_atStartupConsoleOutputCP ); }
    ConinRelease();
+   s_EditorScreen.reset();
    }
 //
 //#############################################################################################################################

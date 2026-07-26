@@ -53,6 +53,21 @@ specializations remain exactly one machine pointer wide.
   start therefore cannot leak its command list.
 - Existing `unique_ptr(new T)` and `delete owner.release()` idioms were replaced
   with `make_unique` and `reset`.
+- Follow-up work gave each `FBUF` sole ownership of its internal shell-job
+  executor. The worker is joinable, completed executors are reused without
+  another allocation, and `FBUF` destruction stops and joins the worker before
+  releasing line storage.
+- `View` highlighting, Windows console-font arrays, the Windows screen
+  controller and its screen-buffer handle, and transient screen-copy storage
+  now have automatic ownership.
+- Locally owned C `FILE` and pipe streams use pointer-sized unique owners while
+  preserving raw `FILE *` at C API boundaries.
+
+### Explicit mixed storage
+
+- `LineInfo` now records whether its data is empty, borrowed from the original
+  file image, or separately owned. Cleanup no longer infers ownership by
+  relationally comparing unrelated pointers.
 
 ### Bounded non-owning views
 
@@ -79,20 +94,6 @@ and do not allocate.
 - Lua callbacks, allocator callbacks, PCRE call arguments, C stdio handles,
   Windows handles, ncurses values, and polymorphic command-function pointers
   must preserve the external ABI.
-- `LineInfo::d_pLineData` is a tagged-by-invariant value: it can own a separate
-  allocation, borrow a slice of `FBUF::d_pOrigFileImage`, or contain a sentinel.
-  Converting that field alone to `unique_ptr` would be incorrect. A safe future
-  redesign would make these states an explicit tagged type.
-- `FBUF::d_pInternalShellJobExecutor` has apparent ownership but also hands
-  `this` to a live background thread. It has no join-and-clear destruction
-  protocol today. Making the field a `unique_ptr` before defining that protocol
-  would turn the existing leak/lifetime ambiguity into termination or a
-  use-after-free.
-- `View::d_pHiLites`, Windows console-font arrays, the Windows screen
-  controller, and the screen-redraw `BitVector` owner are valid remaining
-  `unique_ptr`/`malloc_ptr` candidates. They are isolated owners, but they live
-  in platform or legacy-encoded translation units and should be converted with
-  their platform build/runtime checks.
 - Raw C/OS file, time, PCRE, hostname, and Win32 calls still receive separate
   pointer and byte-count arguments through `BSOB`. Internal C++ buffer
   interfaces use `span<std::byte>` or `span<char>`.
@@ -115,12 +116,13 @@ The relevant verification commands are:
 ```sh
 make -j2 k
 make -j2 run_unittests
+make sanitize
 ```
 
 On the same `./k -?` startup/help path, Valgrind reports 150 total heap
-allocations for both `master` and this branch. The branch increases completed
-frees from 121 to 123 and reports zero definite, indirect, or possible leaks
-and zero memory errors.
+allocations for both the original baseline and the current follow-up. The
+current code increases completed frees from 121 to 124 and reports zero
+definite, indirect, or possible leaks and zero memory errors.
 
 The optimized (`DBG_BUILD=`) configuration has a pre-existing
 `-Werror=unused-result` failure in `kitty_conin.cpp` on both `master` and this

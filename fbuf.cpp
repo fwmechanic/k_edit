@@ -83,6 +83,7 @@ FBUF::FBUF( stref filename, PPFBUF ppGlobalPtr )
    }
 
 FBUF::~FBUF() {
+   StopInternalShellJobExecutor( this );
    FreeLinesAndUndoInfo();
    }
 

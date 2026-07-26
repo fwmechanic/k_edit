@@ -310,9 +310,9 @@ Path::str_t StateFilename( PCChar ext ) {
    return rv;
    }
 
-STATIC_FXN FILE *fopen_tmpfile( PCChar pModeStr ) {
+STATIC_FXN file_ptr fopen_tmpfile( PCChar pModeStr ) {
    auto fnm( StateFilename( "tmp" ) );
-   auto rv( fopen( fnm.c_str(), pModeStr ) );
+   auto rv( fopen_ptr( fnm.c_str(), pModeStr ) );
    DBG( "%s -%c-> '%s'", FUNC, rv ? '-' : 'X', fnm.c_str() );
    return rv;
    }
@@ -320,8 +320,7 @@ STATIC_FXN FILE *fopen_tmpfile( PCChar pModeStr ) {
 STATIC_FXN void RecoverFromStateFile() {
    const auto ifh( fopen_tmpfile( "rt" ) );
    if( ifh ) {
-      RecoverFromStateFile( ifh );
-      fclose( ifh );
+      RecoverFromStateFile( ifh.get() );
       }
    }
 
@@ -337,8 +336,7 @@ STATIC_FXN void WriteStateFile( FILE *ofh ) {
 void WriteStateFile() {
    auto ofh( fopen_tmpfile( "wt" ) );
    if( ofh ) {
-      WriteStateFile( ofh );
-      fclose( ofh );
+      WriteStateFile( ofh.get() );
       }
    }
 
@@ -557,7 +555,7 @@ STATIC_FXN void InitEnvRelatedSettings() { enum {SD=1};  // c_str()
 
 #if !NO_LOG
 
-STATIC_VAR FILE *ofh_DBG;
+STATIC_VAR file_ptr ofh_DBG;
 STATIC_VAR time_t log_t0;
 
 constexpr auto LOG_STRFTIME = true;
@@ -595,16 +593,16 @@ void DBG_init() {
       logfnm.append( DIRSEP_STR );
       PutEnvOk( "K_LOGDIR", logfnm.c_str() );
       logfnm.append( fnmbuf     );
-      ofh_DBG = fopen( logfnm.c_str(), "w" );
-      if( ofh_DBG == nullptr ) {
+      ofh_DBG = fopen_ptr( logfnm.c_str(), "w" );
+      if( !ofh_DBG ) {
          fprintf( stderr, "DBG_init() fopen(%s): %s", logfnm.c_str(), strerror(errno) );
          exit(EXIT_FAILURE);
          }
       if( LOG_STRFTIME ) {
-         fprintf( ofh_DBG, "%s logging to %s\n", tmstr, logfnm.c_str() );
+         fprintf( ofh_DBG.get(), "%s logging to %s\n", tmstr, logfnm.c_str() );
          }
       else {
-         fprintf( ofh_DBG, "%" PR_TIMET " %s logging to %s\n", log_t0, tmstr, logfnm.c_str() );
+         fprintf( ofh_DBG.get(), "%" PR_TIMET " %s logging to %s\n", log_t0, tmstr, logfnm.c_str() );
          }
       PutEnvOk( "K_LOGFNM", logfnm.c_str() );
    // fprintf( stderr , "logging to %s\n", logfnm.c_str() );
@@ -622,7 +620,7 @@ STATIC_FXN void wr_nl_flush( FILE *ofh ) {
 void DBGNL() {
    if( fDBGNL_last ) { return; }
    fDBGNL_last = true;
-   auto ofh( ofh_DBG ? ofh_DBG : stdout );
+   auto ofh( ofh_DBG ? ofh_DBG.get() : stdout );
    wr_nl_flush( ofh );
    }
 
@@ -653,7 +651,7 @@ static void strftime_us( stbuf buf ) {  // based on https://stackoverflow.com/a/
 #endif
 
 int DBG( char const *kszFormat, ...  ) {
-   auto ofh( ofh_DBG ? ofh_DBG : stdout );
+   auto ofh( ofh_DBG ? ofh_DBG.get() : stdout );
    if( LOG_STRFTIME ) {
       char tmstr[100];
 #if defined(_WIN32)
@@ -715,7 +713,7 @@ stref CompilerVersion() {
 
 void kGetopt::VErrorOut( PCChar msg ) {
    printf(
-"\n%s  Copyright KLG 2015-%4.4s\n%s, built %s with\n  %" PR_BSR "\n  %" PR_BSR "\n  %" PR_BSR "\n\n"
+"\n%s  Copyright KLG 2015-%4.4s\n%s, built %s with\n  %" PR_BSR "\n  %" PR_BSR "\n\n"
 "Usage: %s [-acdh?nv"
 #ifndef _WIN32
 " -I backend"
@@ -740,7 +738,6 @@ void kGetopt::VErrorOut( PCChar msg ) {
       , kszDtTmOfBuild
       , BSR(CompilerVersion())
       , BSR(RegexVersion())
-      , BSR(BoostVersion())
       , d_pgm.c_str()
       , kszAssignLog
       );

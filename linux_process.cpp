@@ -18,10 +18,12 @@
 //
 
 #include "ed_main.h"
+#include "my_fio.h"
 
 // #include <functional>
 #include <thread>
 #include <mutex>
+#include <atomic>
 
 #include <signal.h>
 #include <pthread.h>
@@ -46,12 +48,16 @@ STATIC_FXN void SetSigwinchBlockedInThisThread( bool blocked ) {
 
 class piped_forker {
    int     d_fd  =  INVALID_fd;
-   int     d_pid =  INVALID_ProcessId;
+   std::atomic<int> d_pid{ INVALID_ProcessId };
    int     d_exit_status = -1;
    int     ReapChild();
 public:
-   piped_forker() {}
+   piped_forker() = default;
+   piped_forker( const piped_forker & ) = delete;
+   piped_forker &operator=( const piped_forker & ) = delete;
    bool    ForkChildOk( const char *command );
+   int     ProcessId() const { return d_pid.load( std::memory_order_acquire ); }
+   bool    TerminateProcessGroup();
    int     Status() const {  1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
       return d_exit_status;
       }
@@ -63,15 +69,33 @@ int piped_forker::ReapChild() {
       close( d_fd );
       d_fd = INVALID_fd;
       }
-   if( d_pid != INVALID_ProcessId ) {
-      kill( d_pid, SIGHUP );
+   const auto pid( d_pid.exchange( INVALID_ProcessId, std::memory_order_acq_rel ) );
+   if( pid != INVALID_ProcessId ) {
+      kill( pid, SIGHUP );
       alarm(1);
       int status;
-      waitpid( d_pid, &status, 0 );               1 && DBG( "%s waitpid status=%d", __func__, status );
+      waitpid( pid, &status, 0 );                 1 && DBG( "%s waitpid status=%d", __func__, status );
       alarm(0);
-      d_exit_status = WEXITSTATUS( status );      1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
+      if( WIFEXITED(status) ) {
+         d_exit_status = WEXITSTATUS( status );
+         }
+      else if( WIFSIGNALED(status) ) {
+         d_exit_status = 128 + WTERMSIG( status );
+         }
+                                                    1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
       }
    return d_exit_status;
+   }
+
+bool piped_forker::TerminateProcessGroup() {
+   const auto pid( ProcessId() );
+   if( pid == INVALID_ProcessId ) {
+      return false;
+      }
+   kill( -pid, SIGTERM );
+   std::this_thread::sleep_for( std::chrono::seconds(2) );
+   kill( -pid, SIGKILL );
+   return true;
    }
 
 ssize_t piped_forker::Read( stbuf dest ) {
@@ -84,15 +108,20 @@ ssize_t piped_forker::Read( stbuf dest ) {
    }
 
 bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'", __func__, getpid(), command );
-   d_pid = INVALID_ProcessId;
+   d_pid.store( INVALID_ProcessId, std::memory_order_release );
    int pipefds[2];
    if( pipe( pipefds ) == -1 ) {
       perror( "pipe" );
       return false;
       }
 
-   switch( (d_pid=fork()) ) {
-      case -1: perror( "fork" );  /* fail */
+   const auto pid( fork() );
+   d_pid.store( pid, std::memory_order_release );
+   switch( pid ) {
+      case -1: d_pid.store( INVALID_ProcessId, std::memory_order_release );
+               close( pipefds[PIPE_RD] );
+               close( pipefds[PIPE_WR] );
+               perror( "fork" );  /* fail */
                return false;
 
       case 0: {signal( SIGPIPE, SIG_DFL );  /* child */  // FIXME: close other opened descriptor
@@ -110,7 +139,7 @@ bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'
       default: close(  pipefds[PIPE_WR] );  /* parent */
                // fcntl(  pipefds[PIPE_RD], F_SETFL, O_NONBLOCK );
                d_fd = pipefds[PIPE_RD];
-               DBG( "%s-(from %d) fork parent; child=%d, d_fd=%d; '%s'", __func__, getpid(), d_pid, d_fd, command );
+               DBG( "%s-(from %d) fork parent; child=%d, d_fd=%d; '%s'", __func__, getpid(), pid, d_fd, command );
                return true;
       }
    }
@@ -253,13 +282,13 @@ int qx( std::string &dest, PCChar system_param ) {
 
 STATIC_FXN bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
    dest.clear();
-   auto fp( popen( szcmdline, "r" ) );
-   if( fp != NULL ) {
+   pipe_file_ptr fp( popen( szcmdline, "r" ) );
+   if( fp ) {
       char buf[8192];
-      while( fgets( buf, sizeof buf, fp ) != NULL ) {
+      while( fgets( buf, sizeof buf, fp.get() ) != NULL ) {
          dest.append( buf );
          }
-      const auto status( pclose(fp) );
+      const auto status( pclose(fp.release()) );
       if( status == -1 ) { /* Error reported by pclose() */
          }
       else {
@@ -356,10 +385,12 @@ void WinClipGetFirstLine( std::string &dest ) {
    }
 
 STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
-   auto fp( popen( szcmdline, "w" ) );
-   if( fp != NULL ) {
-      fwrite( sr.data(), sr.length(), 1, fp ); // ignore error here as it will show up when we pclose()
-      const auto status( pclose(fp) );
+   pipe_file_ptr fp( popen( szcmdline, "w" ) );
+   if( fp ) {
+      if( !sr.empty() ) {
+         fwrite( sr.data(), 1, sr.length(), fp.get() ); // ignore error here as it will show up when we pclose()
+         }
+      const auto status( pclose(fp.release()) );
       if( status == -1 ) { /* Error reported by pclose() */
          }
       else {
@@ -444,21 +475,31 @@ void MaximizeTerminal() {
 //#################################################################################################################################
 
 class InternalShellJobExecutor {
-   NO_COPYCTOR(InternalShellJobExecutor);
-   NO_ASGN_OPR(InternalShellJobExecutor);
+   InternalShellJobExecutor( const InternalShellJobExecutor & ) = delete;
+   InternalShellJobExecutor &operator=( const InternalShellJobExecutor & ) = delete;
    STATIC_FXN void ChildProcessCtrlThread( InternalShellJobExecutor *pIsjx );
    PFBUF                       d_pfLogBuf;
    std::unique_ptr<StringList> d_pSL;
-   const size_t                d_numJobsRequested;
-   int                         d_Pid;
-   int                         d_ChildProcessExitCode;
-   std::mutex                  d_jobQueueMtx;
-   // Win32::ManualClrEvent       d_AllJobsDone;  BUGBUG
-   std::thread                 d_hThread;  // should be LAST!!!
+   size_t                      d_numJobsRequested = 0;
+   int                         d_ChildProcessExitCode = 0;
+   mutable std::mutex          d_jobQueueMtx;
+   piped_forker                d_piper;
+   std::atomic<bool>           d_active{ false };
+   std::thread                 d_workerThread;  // should be LAST
 public:
-   InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl, bool fViewsActivelyTailOutput );
+   InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl );
    ~InternalShellJobExecutor();
+   bool IsActive() const { return d_active.load( std::memory_order_acquire ); }
+   bool Restart( std::unique_ptr<StringList> sl );
+   void RequestStop() { KillAllJobsInBkgndProcessQueue(); }
+   bool Joinable() const { return d_workerThread.joinable(); }
+   void Join() {
+      if( d_workerThread.joinable() ) {
+         d_workerThread.join();
+         }
+      }
    void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const {
+      std::scoped_lock lock( d_jobQueueMtx );
       *pNumRequested  = d_numJobsRequested;
       *pNumNotStarted = d_pSL->length();
       }
@@ -468,25 +509,43 @@ private:
    int  DeleteAllEnqueuedJobs_locks();
    };
 
-InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl, bool fViewsActivelyTailOutput )
-   : d_pfLogBuf         ( pfb )
-   , d_pSL              ( std::move(sl) )
-   , d_numJobsRequested ( d_pSL->length() )
-   , d_Pid              ( INVALID_ProcessId )
-   , d_ChildProcessExitCode ( 0 )
-   , d_hThread          ( InternalShellJobExecutor::ChildProcessCtrlThread, this )
+InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl )
+   : d_pfLogBuf( pfb )
    {
+   Restart( std::move(sl) );
    }
 
 InternalShellJobExecutor::~InternalShellJobExecutor() {
    KillAllJobsInBkgndProcessQueue();
+   Join();
+   }
+
+bool InternalShellJobExecutor::Restart( std::unique_ptr<StringList> sl ) {
+   if( IsActive() ) {
+      return false;
+      }
+   Join();
+   if( g_fMsgflush ) {
+      d_pfLogBuf->MakeEmpty();
+      }
+   {
+      std::scoped_lock lock( d_jobQueueMtx );
+      d_pSL = std::move(sl);
+      d_numJobsRequested = d_pSL->length();
+      d_ChildProcessExitCode = 0;
+   }
+   d_active.store( true, std::memory_order_release );
+   try {
+      d_workerThread = std::thread( InternalShellJobExecutor::ChildProcessCtrlThread, this );
+      }
+   catch( ... ) {
+      d_active.store( false, std::memory_order_release );
+      throw;
+      }
+   return true;
    }
 
 void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS!!!
-   if( g_fMsgflush ) {
-      WhileHoldingGlobalVariableLock gvlock;     // wait until we own the I/O
-      d_pfLogBuf->MakeEmpty();
-      }
    auto failedJobsIgnored(0);
    auto unstartedJobCnt(0);
    PerfCounter pc;
@@ -495,23 +554,21 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
    while( true ) { //**************** outerthreadloop ****************
       StringListEl *pEl;
       {
-      // std::scoped_lock LockTheJobQueue( d_jobQueueMtx ); // ##################### LockTheJobQueue ######################
-      d_Pid = INVALID_ProcessId;
+      std::scoped_lock lock( d_jobQueueMtx );
       DispNeedsRedrawStatLn(); // ???
-      if( !(pEl=d_pSL->remove_first()) ) { // ONLY EXIT FROM THREAD IS HERE!!!
+      pEl = d_pSL->remove_first();
+      }
+      if( !pEl ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
          PutLastLogLine( d_pfLogBuf, showTermReason( span{buf}, d_ChildProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_ChildProcessExitCode = 0;
-         // d_hThread = nullptr;
-         return; // ##################### LockTheJobQueue ######################
+         return;
          }
-      } // ##################### LockTheJobQueue ######################
       auto cmdFlags(0);
       auto pS( pEl->string + xlat_cmdline_flag_chars( pEl->string, &cmdFlags ) );
       if( *pS ) {
          prep_cmdline( pS, cmdFlags, __func__ );
-         piped_forker piper;
-         const auto cp_rc( CreateProcess_piped( piper, &d_ChildProcessExitCode, d_pfLogBuf, pS, cmdFlags, x2 ) );
+         const auto cp_rc( CreateProcess_piped( d_piper, &d_ChildProcessExitCode, d_pfLogBuf, pS, cmdFlags, x2 ) );
          if( CP_PIPED_RC_OK == cp_rc ) {
             if( d_ChildProcessExitCode ) {
                if( cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;  }
@@ -531,15 +588,19 @@ void InternalShellJobExecutor::ChildProcessCtrlThread( InternalShellJobExecutor 
    0 && DBG( cpct_start_fmts, "ISJE" );
                                         pIsjx->ThreadFxnRunAllJobs();
    0 && DBG( cpct_exit_fmts , "ISJE" );
-   // equivalent to ExitThread( 0 );
+   pIsjx->d_active.store( false, std::memory_order_release );
    }
 
 bool StartInternalShellJob( std::unique_ptr<StringList> sl, bool fAppend, PFBUF pFB ) {
-   if( pFB && !pFB->d_pInternalShellJobExecutor ) {
-      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, std::move(sl), true );
-      return true;
+   if( !pFB ) {
+      return false;
       }
-   return false;
+   auto &executor( pFB->d_pInternalShellJobExecutor );
+   if( executor ) {
+      return executor->Restart( std::move(sl) );
+      }
+   executor.reset( new InternalShellJobExecutor( pFB, std::move(sl) ) );
+   return true;
    }
 
 PFBUF StartInternalShellJob( std::unique_ptr<StringList> sl, bool fAppend ) {
@@ -551,15 +612,21 @@ NEXT_OUTBUF:
    char fnm[30];
    auto pFB( FBOP::FindOrAddFBuf( safeSprintf( span{fnm}, "<shell_output-%03" PR_SIZET ">", s_nxt_shelljob_output_FBUF_num ) ) );
    if( pFB ) {
-      if( pFB->d_pInternalShellJobExecutor ) { goto NEXT_OUTBUF; } // don't want to append to an FBUF currently in use by a d_pInternalShellJobExecutor
+      auto &executor( pFB->d_pInternalShellJobExecutor );
+      if( executor && executor->IsActive() ) { goto NEXT_OUTBUF; }
       pFB->PutFocusOn();
-      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, std::move(sl), true );
+      if( executor ) {
+         executor->Restart( std::move(sl) );
+         }
+      else {
+         executor.reset( new InternalShellJobExecutor( pFB, std::move(sl) ) );
+         }
       }
    return pFB;
    }
 
 int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
-   // std::scoped_lock LockTheJobQueue( d_jobQueueMtx );
+   std::scoped_lock lock( d_jobQueueMtx );
    auto &d_jobQHead = d_pSL->d_head;
    const auto rmCnt( d_jobQHead.length() );
    while( auto pEl = d_jobQHead.front() ) {
@@ -571,18 +638,36 @@ int InternalShellJobExecutor::DeleteAllEnqueuedJobs_locks() {
 
 int InternalShellJobExecutor::KillAllJobsInBkgndProcessQueue() {
    DeleteAllEnqueuedJobs_locks();
-   if(   INVALID_ProcessId != d_Pid
-      && ConIO::Confirm( Sprintf2xBuf( "Kill background %s process (PID=%d)?", d_pfLogBuf->Name(), d_Pid ) )
-      && INVALID_ProcessId != d_Pid
+   const auto pid( d_piper.ProcessId() );
+   if(   INVALID_ProcessId != pid
+      && ConIO::Confirm( Sprintf2xBuf( "Kill background %s process (PID=%d)?", d_pfLogBuf->Name(), pid ) )
+      && pid == d_piper.ProcessId()
       ) {
-      kill( -d_Pid, SIGTERM );
-      sleep( 2 );
-      kill( -d_Pid, SIGKILL );
-      Msg( "killed pid=%d", d_Pid );
-      d_Pid = INVALID_ProcessId;
+      d_piper.TerminateProcessGroup();
+      Msg( "killed pid=%d", pid );
       return 1;
       }
    return 1; // !IsThreadActive();
+   }
+
+void InternalShellJobExecutorDeleter::operator()( InternalShellJobExecutor *executor ) const noexcept {
+   delete executor;
+   }
+
+void StopInternalShellJobExecutor( PFBUF pFBuf ) {
+   auto &executor( pFBuf->d_pInternalShellJobExecutor );
+   if( !executor ) {
+      return;
+      }
+   executor->RequestStop();
+   if( executor->Joinable() ) {
+      // FBUF destruction runs on the main thread while it owns the editor
+      // state lock. Let the worker finish its final buffered writes.
+      MainThreadGiveUpGlobalVariableLock();
+      executor->Join();
+      MainThreadWaitForGlobalVariableLock();
+      }
+   executor.reset();
    }
 
 bool ARG::compile() {

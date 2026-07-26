@@ -45,16 +45,16 @@ STATIC_FXN std::string defnBool( bool &fChanged, bool &val, stref newValue ) {
 
 STATIC_FXN std::string dispInt( int val ) { return FmtStr<20>( "%d", val ).c_str(); }
 STATIC_FXN std::string defnInt( stref newValue, bool &fChanged, int &val, int min=INT_MIN, int max=INT_MAX, bool fUseConstrained=true ) {
-   int errno_; uintmax_t numVal_ull; stref txtConvd; UI bs; std::tie( errno_, numVal_ull, txtConvd, bs ) = conv_u( newValue, 10 );
-   if( errno_ || numVal_ull > INT_MAX ) {
-      if( txtConvd == newValue ) {
+   const auto converted( conv_u( newValue, 10 ) );
+   if( converted.errorNumber || converted.value > INT_MAX ) {
+      if( converted.converted == newValue ) {
          return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).c_str();
          }
       else {
-         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(txtConvd), BSR(newValue) ).c_str();
+         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(converted.converted), BSR(newValue) ).c_str();
          }
       }
-   int numVal_int( numVal_ull );
+   int numVal_int( converted.value );
    int constrVal( numVal_int );
    Constrain( min, &constrVal, max );
    if( !fUseConstrained && constrVal != numVal_int ) {
@@ -69,16 +69,16 @@ STATIC_FXN std::string defnInt( stref newValue, bool &fChanged, int &val, int mi
 
 STATIC_FXN std::string dispUInt( int val ) { return FmtStr<20>( "%d", val ).c_str(); }
 STATIC_FXN std::string defnUInt( stref newValue, bool &fChanged, UI &val, UI min=0, UI max=INT_MAX, bool fUseConstrained=true ) {
-   int errno_; uintmax_t numVal_ull; stref txtConvd; UI bs; std::tie( errno_, numVal_ull, txtConvd, bs ) = conv_u( newValue, 10 );
-   if( errno_ || numVal_ull > UINT_MAX ) {
-      if( txtConvd == newValue ) {
+   const auto converted( conv_u( newValue, 10 ) );
+   if( converted.errorNumber || converted.value > UINT_MAX ) {
+      if( converted.converted == newValue ) {
          return FmtStr<200>( "could not convert '%" PR_BSR "' to int", BSR(newValue) ).c_str();
          }
       else {
-         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(txtConvd), BSR(newValue) ).c_str();
+         return FmtStr<200>( "could not convert '%" PR_BSR "' (of '%" PR_BSR "') to int", BSR(converted.converted), BSR(newValue) ).c_str();
          }
       }
-   UI numVal_uint( numVal_ull );
+   UI numVal_uint( converted.value );
    UI constrVal( numVal_uint );
    Constrain( min, &constrVal, max );
    if( !fUseConstrained && constrVal != numVal_uint ) {
@@ -185,15 +185,15 @@ class SWI_color : public SWI_intf {
  public:
    SWI_color( uint8_t &var_ ) : d_var(var_) {}
    std::string defn( stref newValue ) override {
-      int errno_; uintmax_t newVal; stref txtConvd; UI bs; std::tie( errno_, newVal, txtConvd, bs ) = conv_u( newValue, 16 );
-      if( errno_ ) {
+      const auto converted( conv_u( newValue, 16 ) );
+      if( converted.errorNumber ) {
          return FmtStr<200>( "could not convert %" PR_BSR "", BSR(newValue) ).c_str();
          }
-      if( newVal > UCHAR_MAX ) {
-         return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).c_str();
+      if( converted.value > UCHAR_MAX ) {
+         return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", converted.value, UCHAR_MAX ).c_str();
          }
-      if( d_var != newVal ) {
-         d_var = newVal;
+      if( d_var != converted.value ) {
+         d_var = converted.value;
          DispNeedsRedrawTotal();  // if color is changed interactively or in a startup macro the change did not affect all lines w/o this change
          }
       return "";
@@ -208,15 +208,15 @@ class SWI_chdisp : public SWI_intf {
  public:
    SWI_chdisp( char &var_ ) : d_var(var_) {}
    std::string defn( stref newValue ) override {
-      int errno_; uintmax_t newVal; stref txtConvd; UI bs; std::tie( errno_, newVal, txtConvd, bs ) = conv_u( newValue, 10 );
-      if( errno_ ) {
+      const auto converted( conv_u( newValue, 10 ) );
+      if( converted.errorNumber ) {
          d_var = newValue.length() == 1 ? newValue[0] : ' ';
          }
       else {
-         if( newVal > UCHAR_MAX ) {
-            return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", newVal, UCHAR_MAX ).c_str();
+         if( converted.value > UCHAR_MAX ) {
+            return FmtStr<200>( "value 0x%jX exceeds max allowed (0x%X)", converted.value, UCHAR_MAX ).c_str();
             }
-         d_var = newVal;
+         d_var = converted.value;
          }
       DispNeedsRedrawAllLinesAllWindows();
       return "";

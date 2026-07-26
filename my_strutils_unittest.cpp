@@ -19,7 +19,7 @@
 
 #include <cassert>
 #include <cstring>
-#include <iostream>
+#include <cstdio>
 
 #include "my_strutils.h"
 
@@ -97,6 +97,6 @@ int main() {
    xlatStr( span{inPlace}, inPlace, upperAscii );
    assert( 0 == strcmp( inPlace, "ABC" ) );
 
-   std::cout << "PASS\n";
+   puts( "PASS" );
    return 0;
    }

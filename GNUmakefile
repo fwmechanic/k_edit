@@ -232,8 +232,17 @@ else
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_) -Wl,--dynamicbase
   else
 LINK_OPTS_COMMON := $(LINK_OPTS_COMMON_)
-  endif
+endif
 
+endif
+
+ifeq "$(SANITIZE)" "1"
+ifdef K_WINDOWS
+$(error SANITIZE=1 is currently supported only on Linux)
+endif
+SANITIZE_FLAGS := -fsanitize=address,undefined -fno-sanitize-recover=all
+C_OPTS_COMMON += $(SANITIZE_FLAGS)
+LINK_OPTS_COMMON += $(SANITIZE_FLAGS)
 endif
 
 LINK_MAP = -Wl,--cref -Wl,-Map=$(subst .,_,$@).map
@@ -273,24 +282,6 @@ ncurses_conout.o: CPPFLAGS += $(NCURSES_CFLAGS)
 
 endif
 
-# http://stackoverflow.com/questions/14605362/linking-statically-only-boost-library-g
-#
-#   The only time g++ will make a decision (and take into account the
-#   -Bstatic and -Bdynamic) is if it finds both in the same directory.  It
-#   searches the directories in the given order, and when it finds a
-#   directory which has either the static or the dynamic version of the
-#   library, it stops.  And if only one version is present, it uses that one,
-#   regardless.
-#
-# Boost.System has been header-only since Boost 1.69 (2018), and Boost.Filesystem
-# stopped linking against it around 1.74; it is no longer required as a link lib.
-# MSYS2's mingw-w64 boost packages suffix lib names with '-mt'; Debian/Ubuntu do not.
-ifdef K_WINDOWS
-BOOST_LIBS := $(call LINK_LIB_STATIC,-lboost_filesystem-mt)
-else
-BOOST_LIBS := $(call LINK_LIB_STATIC,-lboost_filesystem)
-endif
-
 export USE_PCRE := 1
 ifneq "0" "$(USE_PCRE)"
 export PCRE2_CODE_UNIT_WIDTH := 8
@@ -314,7 +305,7 @@ CXXFLAGS = $(C_OPTS_COMMON) $(CXXWARN) $(CXX_D_FLAGS) $(USE_EXCEPTIONS) -fno-rtt
 #####################################################################################################################
 
 LUA_A := $(LUA_DIR)/liblua.a
-LIBS   := -static-libgcc -static-libstdc++ -lgcc $(LUA_A) $(BOOST_LIBS) $(PCRE_LIB) $(OS_LIBS) #  -lmcheck (seems not to exist in MinGW)
+LIBS   := -static-libgcc -static-libstdc++ -lgcc $(LUA_A) $(PCRE_LIB) $(OS_LIBS) #  -lmcheck (seems not to exist in MinGW)
 
 CPP_OPTS:=
 
@@ -565,16 +556,30 @@ khelp.html: khelp.txt
 	khelp.html
 
 
-UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_my_strutils_unittest run_unittest_tagfind
+UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_my_strutils_unittest run_my_fio_unittest run_unittest_tagfind
 .PHONY: run_unittests $(UNITTEST_RUNTGTS)
 
 run_unittests: $(UNITTEST_RUNTGTS)
+
+.PHONY: sanitize
+ASAN_OPTIONS ?= detect_leaks=1
+UBSAN_OPTIONS ?= halt_on_error=1
+sanitize:
+	$(MAKE) clean
+	ASAN_OPTIONS=$(ASAN_OPTIONS) UBSAN_OPTIONS=$(UBSAN_OPTIONS) $(MAKE) SANITIZE=1 k run_unittests
 
 run_my_strutils_unittest: my_strutils_unittest$(EXE_EXT)
 	./my_strutils_unittest$(EXE_EXT)
 
 my_strutils_unittest$(EXE_EXT): CXXFLAGS += -Werror
 my_strutils_unittest$(EXE_EXT): my_strutils_unittest.o my_strutils.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+run_my_fio_unittest: my_fio_unittest$(EXE_EXT)
+	./my_fio_unittest$(EXE_EXT)
+
+my_fio_unittest$(EXE_EXT): CXXFLAGS += -Werror
+my_fio_unittest$(EXE_EXT): my_fio_unittest.o my_fio.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_dlink_unittest: dlink_unittest$(EXE_EXT)
