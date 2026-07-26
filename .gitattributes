@@ -1,0 +1,12 @@
+* text=auto eol=lf
+
+# Keep scripts consumed directly by cmd.exe in their native form.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Do not subject known binary formats to text conversion.
+*.gif binary
+*.ico binary
+*.jpg binary
+*.pdf binary
+*.png binary
