@@ -82,18 +82,6 @@ STATIC_FXN int delimMirror( int ch ) {
       }
    }
 
-typedef int (*chXlat)( int ch );
-
-void xlatStr( span<char> dest, PCChar src, chXlat fxn ) {
-   const auto len( std::min( dest.size() - 1, size_t( Strlen(src) )) );
-   const auto end( src + len );
-   auto out( dest.begin() );
-   while( src < end ) {
-      *out++ = fxn( *src++ );
-      }
-   *out = '\0';
-   }
-
 GLOBAL_VAR linebuf g_delims, g_delimMirrors;
 
 void swidDelims( span<char> dest ) {

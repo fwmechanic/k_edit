@@ -258,6 +258,17 @@ STIL constexpr int Strlen( PCChar pc ) { // this MAY be faster than RTL version 
 
 TF_Ptr STIL Ptr  Eos( Ptr psz ) { return psz + Strlen( psz ); }
 
+using chXlat = int (*)( int ch );
+
+STIL void xlatStr( span<char> dest, PCChar src, chXlat fxn ) {
+   if( dest.empty() ) {
+      return;
+      }
+   const auto len( std::min( dest.size() - 1, size_t( Strlen(src) ) ) );
+   std::transform( src, src + len, dest.begin(), fxn );
+   dest[len] = '\0';
+   }
+
 //--------------------------------------------------------------------------------
 
 extern sridx scpy( PChar dest, size_t sizeof_dest, stref src );

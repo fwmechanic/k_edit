@@ -63,12 +63,9 @@ bool ARG::nextselbuf() {
    }
 
 STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, span<const PCChar> names ) {
-   for( const auto name : names ) {
-      if( pFBuf->NameMatch( name ) ) {
-         return true;
-         }
-      }
-   return false;
+   return std::ranges::any_of( names, [pFBuf]( PCChar name ) {
+      return pFBuf->NameMatch( name );
+      } );
    }
 
 STATIC_FXN int IsWFilesName( stref pszName ) { // pszName matches "<win4>"

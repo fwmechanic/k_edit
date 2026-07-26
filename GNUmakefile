@@ -565,10 +565,17 @@ khelp.html: khelp.txt
 	khelp.html
 
 
-UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_unittest_tagfind
+UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_my_strutils_unittest run_unittest_tagfind
 .PHONY: run_unittests $(UNITTEST_RUNTGTS)
 
 run_unittests: $(UNITTEST_RUNTGTS)
+
+run_my_strutils_unittest: my_strutils_unittest$(EXE_EXT)
+	./my_strutils_unittest$(EXE_EXT)
+
+my_strutils_unittest$(EXE_EXT): CXXFLAGS += -Werror
+my_strutils_unittest$(EXE_EXT): my_strutils_unittest.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_dlink_unittest: dlink_unittest$(EXE_EXT)
 	./dlink_unittest$(EXE_EXT)

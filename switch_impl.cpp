@@ -248,24 +248,21 @@ class SWI_enum : public SWI_intf {
          }
       }
    std::string defn( stref newValue ) override {
-      for( const auto &entry : d_enums ) {
-         if( 0==cmpi( newValue, entry.name ) ) {
-            if( d_get() != entry.val ) {
-               d_set( entry.val );
-               }
-            return "";
+      const auto entry( std::ranges::find_if( d_enums, [newValue]( const enum_nm &candidate ) {
+         return 0==cmpi( newValue, candidate.name );
+         } ) );
+      if( entry != d_enums.end() ) {
+         if( d_get() != entry->val ) {
+            d_set( entry->val );
             }
+         return "";
          }
       return FmtStr<200>( "value %" PR_BSR " not in %" PR_BSR "", BSR(newValue), BSR(d_str_allowed_names) ).c_str();
       }
    std::string disp() override {
       const auto val( d_get() );
-      for( const auto &entry : d_enums ) {
-         if( 0==cmpi( val, entry.val ) ) {
-            return entry.name;
-            }
-         }
-      return "?";
+      const auto entry( std::ranges::find( d_enums, val, &enum_nm::val ) );
+      return entry != d_enums.end() ? entry->name : "?";
       }
    };
 
