@@ -105,17 +105,17 @@ class SWIs : public SWI_intf {
    };
 
 class SWIsb : public SWI_intf {
-   void  (* const d_dsp)( PChar dest, size_t sizeofDest );
+   void  (* const d_dsp)( span<char> dest );
    void  (* const d_set)( stref );
  public:
-   SWIsb( void (*dsp_)( PChar dest, size_t sizeofDest ), void (* set_)( stref ) )
+   SWIsb( void (*dsp_)( span<char> dest ), void (* set_)( stref ) )
       : d_dsp(dsp_)
       , d_set(set_)
       {}
    std::string defn( stref newValue ) override { d_set( newValue ); return ""; }
    std::string disp() override {
       linebuf lbuf; lbuf[0] = '\0';
-      d_dsp( BSOB(lbuf) );
+      d_dsp( span{lbuf} );
       return lbuf;
       }
    };
@@ -229,19 +229,17 @@ class SWI_chdisp : public SWI_intf {
 class SWI_enum : public SWI_intf {
    int   (* const d_get)();
    void  (* const d_set)(int);
-   const enum_nm *d_enums;
-   const size_t   d_num_enums;
+   const span<const enum_nm> d_enums;
    std::string    d_str_allowed_names;
  public:
-   SWI_enum( int (*get_)(), void (*set_)(int), const enum_nm *enums_, size_t num_enums_ )
+   SWI_enum( int (*get_)(), void (*set_)(int), span<const enum_nm> enums_ )
       : d_get(get_)
       , d_set(set_)
       , d_enums(enums_)
-      , d_num_enums(num_enums_)
       {
       d_str_allowed_names = "{ ";
-      for( auto ix(0) ; ix < d_num_enums ; ++ix ) {
-         d_str_allowed_names += d_enums[ix].name;
+      for( const auto &entry : d_enums ) {
+         d_str_allowed_names += entry.name;
          d_str_allowed_names += ", ";
          }
       if( d_str_allowed_names.length() > 2 ) {
@@ -250,10 +248,10 @@ class SWI_enum : public SWI_intf {
          }
       }
    std::string defn( stref newValue ) override {
-      for( auto ix(0) ; ix < d_num_enums ; ++ix ) {
-         if( 0==cmpi( newValue, d_enums[ix].name ) ) {
-            if( d_get() != d_enums[ix].val ) {
-               d_set( d_enums[ix].val );
+      for( const auto &entry : d_enums ) {
+         if( 0==cmpi( newValue, entry.name ) ) {
+            if( d_get() != entry.val ) {
+               d_set( entry.val );
                }
             return "";
             }
@@ -262,9 +260,9 @@ class SWI_enum : public SWI_intf {
       }
    std::string disp() override {
       const auto val( d_get() );
-      for( auto ix(0) ; ix < d_num_enums ; ++ix ) {
-         if( 0==cmpi( val, d_enums[ix].val ) ) {
-            return d_enums[ix].name;
+      for( const auto &entry : d_enums ) {
+         if( 0==cmpi( val, entry.val ) ) {
+            return entry.name;
             }
          }
       return "?";
@@ -272,11 +270,11 @@ class SWI_enum : public SWI_intf {
    };
 
 
-SWI_intf * SWI_impl_factory::SWIs( stref (* get_)(), stref (* set_)( stref ) )                                                { return new ::SWIs( get_,set_ )                                   ; }
-SWI_intf * SWI_impl_factory::SWIsb( void (*dsp_)( PChar dest, size_t sizeofDest ), void (* set_)( stref ) )                   { return new ::SWIsb( dsp_, set_ )                                 ; }
-SWI_intf * SWI_impl_factory::SWIi_bv( bool &var_ )                                                                            { return new ::SWIi_bv( var_ )                                     ; }
-SWI_intf * SWI_impl_factory::SWIi_iv( int &var_ )                                                                             { return new ::SWIi_iv( var_ )                                     ; }
-SWI_intf * SWI_impl_factory::SWIi_ci( int (*get_)(), void (*set_)(int), int (*min_)(), int (*max_)(), bool fUseConstrained_ ) { return new ::SWIi_ci( get_, set_, min_, max_, fUseConstrained_ ) ; }
-SWI_intf * SWI_impl_factory::SWI_color( uint8_t &var_ )                                                                       { return new ::SWI_color( var_ )                                   ; }
-SWI_intf * SWI_impl_factory::SWI_chdisp( char &var_ )                                                                         { return new ::SWI_chdisp( var_ )                                  ; }
-SWI_intf * SWI_impl_factory::SWI_enum( int (*get_)(), void (*set_)(int), const enum_nm *enums_, size_t num_enums_ )           { return new ::SWI_enum( get_, set_, enums_, num_enums_ )          ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWIs( stref (* get_)(), stref (* set_)( stref ) )                                                { return std::make_unique<::SWIs>( get_,set_ )                                   ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWIsb( void (*dsp_)( span<char> dest ), void (* set_)( stref ) )                           { return std::make_unique<::SWIsb>( dsp_, set_ )                                 ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWIi_bv( bool &var_ )                                                                            { return std::make_unique<::SWIi_bv>( var_ )                                     ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWIi_iv( int &var_ )                                                                             { return std::make_unique<::SWIi_iv>( var_ )                                     ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWIi_ci( int (*get_)(), void (*set_)(int), int (*min_)(), int (*max_)(), bool fUseConstrained_ ) { return std::make_unique<::SWIi_ci>( get_, set_, min_, max_, fUseConstrained_ ) ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWI_color( uint8_t &var_ )                                                                       { return std::make_unique<::SWI_color>( var_ )                                   ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWI_chdisp( char &var_ )                                                                         { return std::make_unique<::SWI_chdisp>( var_ )                                  ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWI_enum( int (*get_)(), void (*set_)(int), span<const enum_nm> enums_ )                    { return std::make_unique<::SWI_enum>( get_, set_, enums_ )                      ; }

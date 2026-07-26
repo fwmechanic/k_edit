@@ -24,25 +24,36 @@
 
 //----------- CompiledRegex
 // For simple Regex string searches (vs. search-thru-file-until-next-match) ops, use Regex_Compile + CompiledRegex::Match
+struct PcreCodeDeleter {
+   void operator()( pcre2_code *code ) const noexcept { pcre2_code_free( code ); }
+   };
+struct PcreMatchDataDeleter {
+   void operator()( pcre2_match_data *data ) const noexcept { pcre2_match_data_free( data ); }
+   };
+using PcreCodePtr = std::unique_ptr<pcre2_code, PcreCodeDeleter>;
+using PcreMatchDataPtr = std::unique_ptr<pcre2_match_data, PcreMatchDataDeleter>;
+static_assert( sizeof(PcreCodePtr) == sizeof(pcre2_code *) );
+static_assert( sizeof(PcreMatchDataPtr) == sizeof(pcre2_match_data *) );
+
 class CompiledRegex {
    NO_ASGN_OPR(CompiledRegex);
    NO_COPYCTOR(CompiledRegex);
 private:
-   pcre2_code        *d_pcreCode;
-   pcre2_match_data  *d_pcreMatchData;
+   PcreCodePtr       d_pcreCode;
+   PcreMatchDataPtr  d_pcreMatchData;
 public:
    // User code SHOULD NOT call this ctor, _SHOULD_ CREATE CompiledRegex via Regex_Compile!
-   CompiledRegex( pcre2_code *pcreCode, pcre2_match_data *pcreMatchData )  // called ONLY by Regex_Compile (when it is successful)
-      : d_pcreCode(pcreCode)
-      , d_pcreMatchData( pcreMatchData )
+   CompiledRegex( PcreCodePtr pcreCode, PcreMatchDataPtr pcreMatchData )  // called ONLY by Regex_Compile (when it is successful)
+      : d_pcreCode( std::move(pcreCode) )
+      , d_pcreMatchData( std::move(pcreMatchData) )
       {
-      }
-   ~CompiledRegex() {
-      pcre2_code_free( d_pcreCode );
-      pcre2_match_data_free( d_pcreMatchData );
       }
    RegexMatchCaptures::size_type Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
    };
+
+void CompiledRegexDeleter::operator()( CompiledRegex *pcr ) const noexcept {
+   delete pcr;
+   }
 
 void PCRE_API_INIT() {
    STATIC_VAR BoolOneShot first;
@@ -55,7 +66,7 @@ stref RegexVersion() {
    if( '\0' == s_RegexVer[0] ) {
       char pcre2_version[25];
       pcre2_config( PCRE2_CONFIG_VERSION, pcre2_version );   1 && DBG( "PCRE version '%s'", pcre2_version );
-      safeSprintf( BSOB(s_RegexVer), "PCRE %s", pcre2_version );
+      safeSprintf( span{s_RegexVer}, "PCRE %s", pcre2_version );
       }
    return s_RegexVer;
    }
@@ -72,16 +83,16 @@ int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag ) {
 
 RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options ) { enum { SD=0 };
    SD && DBG( "CompiledRegex::Match called!" );
-   SD && DBG( "CompiledRegex::Match %p %p %p", d_pcreCode, reinterpret_cast<PCRE2_SPTR>( haystack.data() ), d_pcreMatchData );
+   SD && DBG( "CompiledRegex::Match %p %p %p", d_pcreCode.get(), reinterpret_cast<PCRE2_SPTR>( haystack.data() ), d_pcreMatchData.get() );
    captures.clear(); // before any return
    // http://www.pcre.org/original/doc/html/pcreapi.html#SEC17  "MATCHING A PATTERN: THE TRADITIONAL FUNCTION" describes pcre_exec()
    const int rc( pcre2_match(
-           d_pcreCode
+           d_pcreCode.get()
          , reinterpret_cast<PCRE2_SPTR>( haystack.length() > 0 ? haystack.data() : "" )  // pcre2_match returns PCRE2_ERROR_NULL if subject==NULL && length==0
          , haystack.length()   // length                                                 // A stref (std::string_view) value is allowed to have data()==nullptr if length()==0
          , haystack_offset     // startoffset                                            // ref: https://github.com/PCRE2Project/pcre2/blob/master/src/pcre2_match.c
          , pcre_exec_options   // options
-         , d_pcreMatchData
+         , d_pcreMatchData.get()
          , nullptr             // pcre2_match_context *  (nullptr == use default behaviors)
          )
       );                                                   SD && DBG( "CompiledRegex::Match returned %d", rc );
@@ -106,9 +117,9 @@ RegexMatchCaptures::size_type CompiledRegex::Match( RegexMatchCaptures &captures
       // example, if two substrings have been captured, the returned value is 3.  If there are no capturing subpatterns,
       // the return value from a successful match is 1, indicating that just the first pair of offsets has been set.
       //
-      const auto ovector_els = pcre2_get_ovector_count( d_pcreMatchData );
+      const auto ovector_els = pcre2_get_ovector_count( d_pcreMatchData.get() );
       captures.reserve( ovector_els );
-      auto ovector = pcre2_get_ovector_pointer( d_pcreMatchData );
+      auto ovector = pcre2_get_ovector_pointer( d_pcreMatchData.get() );
       for( std::remove_const_t<decltype(ovector_els)> ix{0}; ix < ovector_els; ++ix ) {
          const auto oFirst    = *ovector++;
          const auto oPastLast = *ovector++;
@@ -132,17 +143,12 @@ RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCapture
    return pcr->Match( captures, haystack, haystack_offset, pcre_exec_options );
    }
 
-CompiledRegex *Regex_Delete0( CompiledRegex *pcr ) {
-   delete pcr;
-   return nullptr;
-   }
-
-CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) { enum { SD=0 }; SD && DBG( "Regex_Compile! %" PR_BSR, BSR(pszSearchStr) );
+CompiledRegexPtr Regex_Compile( stref pszSearchStr, bool fCase ) { enum { SD=0 }; SD && DBG( "Regex_Compile! %" PR_BSR, BSR(pszSearchStr) );
    PCRE_API_INIT();
    const int options( fCase ? 0 : PCRE2_CASELESS );
    int errCode;
    PCRE2_SIZE errOffset;
-   auto pcreCode( pcre2_compile( reinterpret_cast<PCRE2_SPTR>(pszSearchStr.data()), pszSearchStr.length(), options, &errCode, &errOffset, nullptr ) );
+   PcreCodePtr pcreCode( pcre2_compile( reinterpret_cast<PCRE2_SPTR>(pszSearchStr.data()), pszSearchStr.length(), options, &errCode, &errOffset, nullptr ) );
    if( !pcreCode ) {
       uint8_t errMsg[150];
       if( PCRE2_ERROR_BADDATA == pcre2_get_error_message( errCode, BSOB(errMsg) ) ) {
@@ -153,13 +159,12 @@ CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase ) { enum { SD=0 }; 
       Display_hilite_regex_err( reinterpret_cast<PCChar>(errMsg), pszSearchStr, errOffset );
       return nullptr;
       }
-   auto pcreMatchData = pcre2_match_data_create_from_pattern( pcreCode, nullptr );
+   PcreMatchDataPtr pcreMatchData( pcre2_match_data_create_from_pattern( pcreCode.get(), nullptr ) );
    if( !pcreMatchData ) {
-      pcre2_code_free( pcreCode );
       Msg( "pcre2_match_data_create_from_pattern returned NULL" );
       return nullptr;
       }
-   return new CompiledRegex( pcreCode, pcreMatchData );
+   return CompiledRegexPtr( new CompiledRegex( std::move(pcreCode), std::move(pcreMatchData) ) );
    }
 
 //
@@ -196,7 +201,7 @@ struct GenericList {
    GenericList() {}
    virtual ~GenericList();
    void Cat( int num );
-   void Cat( PCChar src, size_t len );
+   void Cat( stref src );
    };
 
 GenericList::~GenericList() {
@@ -215,21 +220,18 @@ void GenericList::Cat( int num ) {
    DLINK_INSERT_LAST(d_head, rv, dlink);
    }
 
-void GenericList::Cat( PCChar src, size_t len ) {
-   if( len == 0 ) {
-       len = Strlen( src );
-       }
+void GenericList::Cat( stref src ) {
    GenericListEl *rv = static_cast<GenericListEl *>( // cannot use auto due to 'sizeof( *rv )'
          AllocNZ_(
            sizeof( *rv )     // needed control struct
-         + len+1             // space to store string value
+         + src.length()+1    // space to store string value
          - sizeof(rv->value) // space within control struct that is used to store string value
          )
       );
    rv->dlink.clear();
    rv->d_typeof = GenericListEl::IS_STRING;
-   memcpy( rv->value.str, src, len );
-   rv->value.str[len] = '\0';
+   memcpy( rv->value.str, src.data(), src.length() );
+   rv->value.str[src.length()] = '\0';
    DLINK_INSERT_LAST(d_head, rv, dlink);
    }
 
@@ -244,11 +246,11 @@ ReplaceWithCaptures::ReplaceWithCaptures( PCChar src ) {
       const char *q;
       for (q = p; q < end && *q != '%'; ++q)
          {}
-      if( q != p )            { Cat( p, q - p ); }
+      if( q != p )            { Cat( stref( p, q - p ) ); }
       if( q < end ) {
          if( ++q < end ) { // skip %
             if( isdigit(*q) ) { Cat( *q - '0' ); }
-            else              { Cat( q, 1 );     }
+            else              { Cat( stref( q, 1 ) ); }
             }
          p = q + 1;
          }

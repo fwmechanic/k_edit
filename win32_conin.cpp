@@ -74,7 +74,7 @@ bool ConIn::FlushKeyQueueAnythingFlushed() {
    0 && DBG( "s_Conin.CIB_ValidElements = %ld", s_Conin.CIB_ValidElements );
    if( !ok ) {
       linebuf oseb;
-      DBG( "Win32::ReadConsoleInputA failed: %s", OsErrStr( BSOB(oseb) ) );
+      DBG( "Win32::ReadConsoleInputA failed: %s", OsErrStr( span{oseb} ) );
       Assert( ok );
       }
    rv = rv || s_Conin.ScanConinBufForKeyDowns();
@@ -134,18 +134,18 @@ STATIC_FXN Win32::DWORD GetConsoleInputMode() {
 #if 0
       if( s_Conin.hStdin == Win32::Invalid_Handle_Value() ) {
          linebuf oseb;
-         VidInitApiError( FmtStr<120>( "Win32::GetStdHandle( STD_INPUT_HANDLE ) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+         VidInitApiError( FmtStr<120>( "Win32::GetStdHandle( STD_INPUT_HANDLE ) FAILED: %s", OsErrStr( span{oseb} ) ) );
          exit( 1 );
          }
 #endif
       if( !Win32::GetConsoleMode( s_Conin.hStdin, &dwMode ) ) {
          linebuf oseb;
-         VidInitApiError( FmtStr<120>( "Win32::GetConsoleMode on new CONIN$ FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+         VidInitApiError( FmtStr<120>( "Win32::GetConsoleMode on new CONIN$ FAILED: %s", OsErrStr( span{oseb} ) ) );
          exit( 1 );
          }
       if( !Win32::SetStdHandle( Win32::Std_Input_Handle(), s_Conin.hStdin ) ) {
          linebuf oseb;
-         VidInitApiError( FmtStr<120>( "Win32::SetStdHandle on new CONIN$ FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+         VidInitApiError( FmtStr<120>( "Win32::SetStdHandle on new CONIN$ FAILED: %s", OsErrStr( span{oseb} ) ) );
          exit( 1 );
          }
       DBG( "%s ********************** REALLOCATED CONIN$ **********************", __func__ );
@@ -158,7 +158,7 @@ STATIC_FXN Win32::DWORD GetConsoleInputMode() {
 STATIC_FXN void SetConsoleInputMode_( Win32::DWORD dwMode, PCChar caller ) {
    if( 0 == Win32::SetConsoleMode( s_Conin.hStdin, dwMode ) ) {
       linebuf oseb;
-      DBG( "%s: %s FAILED <- %lX (is %lX) %s *****************************", caller, __func__, dwMode, GetConsoleInputMode(), OsErrStr( BSOB(oseb) ) );
+      DBG( "%s: %s FAILED <- %lX (is %lX) %s *****************************", caller, __func__, dwMode, GetConsoleInputMode(), OsErrStr( span{oseb} ) );
       }
    else {
       0 && DBG( "%s: %s Ok <- %lX *****************************", caller, __func__, dwMode );
@@ -295,7 +295,7 @@ STATIC_FXN Win32::PINPUT_RECORD ReadNextUsefulConsoleInputRecord() {
       if( !ok ) {
          1 && DBG( "%s s_Conin.hStdin=%p, GetStdHandle.Stdin=%p", __func__, s_Conin.hStdin, Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
          linebuf oseb;
-         DBG( "Win32::ReadConsoleInputA failed: %s", OsErrStr( BSOB(oseb) ) );
+         DBG( "Win32::ReadConsoleInputA failed: %s", OsErrStr( span{oseb} ) );
          Assert( ok );
          }
       mtx.lock(); //#########################################################

@@ -304,7 +304,7 @@ int TPipeReader::RdChar() { // see http://support.microsoft.com/kb/q190351/
         ) {
          if( SD ) {
             char erbuf[265]; auto winerr( Win32::GetLastError() );
-            DBG( "'%s' -> Win32::ReadFile FAILED: %lu %s", __func__, winerr, OsErrStr( BSOB(erbuf), winerr ) );
+            DBG( "'%s' -> Win32::ReadFile FAILED: %lu %s", __func__, winerr, OsErrStr( span{erbuf}, winerr ) );
             }
          // all write handles to the pipe are closed
          //
@@ -405,20 +405,20 @@ public:
    ~ConsoleSpawnHandles() {}
    };
 
-STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const Win32::DWORD hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
+STATIC_FXN PChar showTermReason( span<char> dest, const Win32::DWORD hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
    if( 0 == hProcessExitCode ) {
       FmtStr<30> ets( "in %.3f S", et );
-      if( failedJobsIgnored )   { _snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.c_str() ); }
-      else                      { _snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.c_str() );                                                                          }
+      if( failedJobsIgnored )   { _snprintf( dest.data(), dest.size(), "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.c_str() ); }
+      else                      { _snprintf( dest.data(), dest.size(), "--- processing successful %s ---", ets.c_str() );                                                                          }
       }
    else if( Win32::Status_Control_C_Exit() == hProcessExitCode ) {
-      _snprintf( dest, sizeofDest, "--- process TERMINATED with prejudice" );
+      _snprintf( dest.data(), dest.size(), "--- process TERMINATED with prejudice" );
       }
    else {
       STATIC_CONST char hdr[] = "--- process FAILED, last exit code=0x";
      #if 0
       char erbuf[265];
-      OsErrStr( BSOB(erbuf), hProcessExitCode );
+      OsErrStr( span{erbuf}, hProcessExitCode );
       if( erbuf[0] ) {
          if( unstartedJobCnt )  { _snprintf( dest, sizeofDest, "%s%lX (%s), %d job%s unstarted ---", hdr, hProcessExitCode, erbuf, unstartedJobCnt, Add_s( unstartedJobCnt ) ); }
          else                   { _snprintf( dest, sizeofDest, "%s%lX (%s) ---"                    , hdr, hProcessExitCode, erbuf );                                            }
@@ -426,11 +426,11 @@ STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const Win32::DWO
       else
      #endif
          {
-         if( unstartedJobCnt )  { _snprintf( dest, sizeofDest, "%s%lX, %d job%s unstarted ---"     , hdr, hProcessExitCode       , unstartedJobCnt, Add_s( unstartedJobCnt ) ); }
-         else                   { _snprintf( dest, sizeofDest, "%s%lX ---"                         , hdr, hProcessExitCode       );                                             }
+         if( unstartedJobCnt )  { _snprintf( dest.data(), dest.size(), "%s%lX, %d job%s unstarted ---"     , hdr, hProcessExitCode       , unstartedJobCnt, Add_s( unstartedJobCnt ) ); }
+         else                   { _snprintf( dest.data(), dest.size(), "%s%lX ---"                         , hdr, hProcessExitCode       );                                             }
          }
       }
-   return dest;
+   return dest.data();
    }
 
 #define  USE_ConsoleInputModeRestorer  0
@@ -482,7 +482,7 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    auto usingAShell( ToBOOL( shell[0] ) );
    auto shellopt( usingAShell ? " " : "" );  auto ndTempFile( usingAShell );
    if( Path::endsWith( shell, CMD_bin ) ) { shellopt = " /c "; ndTempFile = false; }
-   std::unique_ptr<tempfile> tempf( ndTempFile ? new tempfile( "w" ) : nullptr );
+   auto tempf( ndTempFile ? std::make_unique<tempfile>( "w" ) : nullptr );
    if( tempf && tempf->fh() ) {  // echo "$0"
       fputs( pS, tempf->fh() );
       tempf->close();
@@ -517,7 +517,7 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    auto rv( CP_PIPED_RC_OK );
    if( !d_fChildProcessStarted ) {
       char erbuf[265];
-      OsErrStr( BSOB(erbuf) );
+      OsErrStr( span{erbuf} );
       ErrorDialogBeepf( "%s: CreateProcess '%s' FAILED: %s!!!", __func__, pXeqConst, erbuf );
       rv = CP_PIPED_RC_ECREATEPROCESS;
       }
@@ -554,14 +554,13 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    }
 
 struct Win32pty_job_Q_el {
-   PChar    d_PtyXeqParam; // heap string owned by this object!
+   malloc_ptr<char[]> d_PtyXeqParam;
    int      d_cmdFlags;
    DLinkEntry<Win32pty_job_Q_el> d_dlinkJobsOfPty;
    Win32pty_job_Q_el( PChar PtyXeqParam, int cmdFlags )
       : d_PtyXeqParam( PtyXeqParam )
       , d_cmdFlags   ( cmdFlags )
       {}
-   ~Win32pty_job_Q_el() { Free0( d_PtyXeqParam ); }
    };
 
 class Win32_pty {
@@ -687,7 +686,7 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
       DispNeedsRedrawStatLn();
       if( d_jobQHead.empty() ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
-         PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
+         PutLastLogLine( d_pfLogBuf, showTermReason( span{buf}, d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_hProcessExitCode = 0;
          d_hThread = nullptr;
          return; // ##################### LockTheJobQueue ######################
@@ -695,7 +694,7 @@ void Win32_pty::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS
       DLINK_REMOVE_FIRST(d_jobQHead, pEl, d_dlinkJobsOfPty); //*** job has been taken from Queue, held in pEl
       --d_numJobRequestsPending;
       } // ##################### LockTheJobQueue ######################
-      const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_hProcessExitCode, d_pfLogBuf, pEl->d_PtyXeqParam, pEl->d_cmdFlags, &x1, &x2 ) );
+      const auto cp_rc( CreateProcess_piped( &d_processInfo, &d_hProcessExitCode, d_pfLogBuf, pEl->d_PtyXeqParam.get(), pEl->d_cmdFlags, &x1, &x2 ) );
       if( CP_PIPED_RC_OK == cp_rc ) {
          if( d_hProcessExitCode ) {
             if( pEl->d_cmdFlags & IGNORE_ERROR ) {  ++failedJobsIgnored;                             }
@@ -805,7 +804,7 @@ class InternalShellJobExecutor {
    std::mutex                  d_jobQueueMtx;
    Win32::ManualClrEvent       d_AllJobsDone;
 public:
-   InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput );
+   InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl, bool fViewsActivelyTailOutput );
    ~InternalShellJobExecutor();
    void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const {
       *pNumRequested  = d_numJobsRequested;
@@ -817,10 +816,10 @@ private:
    int  DeleteAllEnqueuedJobs_locks();
    };
 
-InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput )
+InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl, bool fViewsActivelyTailOutput )
    : d_pfLogBuf         ( pfb )
-   , d_pSL              ( sl )
-   , d_numJobsRequested ( sl->length() )
+   , d_pSL              ( std::move(sl) )
+   , d_numJobsRequested ( d_pSL->length() )
    , d_hThread          ( nullptr )
    , d_hProcessExitCode ( 0 )
    {
@@ -849,7 +848,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       DispNeedsRedrawStatLn(); // ???
       if( !(pEl=d_pSL->remove_first()) ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
-         PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
+         PutLastLogLine( d_pfLogBuf, showTermReason( span{buf}, d_hProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_hProcessExitCode = 0;
          d_hThread = nullptr;
          return; // ##################### LockTheJobQueue ######################
@@ -872,18 +871,18 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
    ConOut::Bell();
    }
 
-PFBUF StartInternalShellJob( StringList *sl, bool fAppend ) {
+PFBUF StartInternalShellJob( std::unique_ptr<StringList> sl, bool fAppend ) {
    STATIC_VAR size_t s_nxt_shelljob_output_FBUF_num;
    if( !fAppend ) {
 NEXT_OUTBUF:
       ++s_nxt_shelljob_output_FBUF_num;
       }
    char fnm[30];
-   auto pFB( FBOP::FindOrAddFBuf( safeSprintf( BSOB(fnm), "<shell_output-%03" PR_SIZET ">", s_nxt_shelljob_output_FBUF_num ) ) );
+   auto pFB( FBOP::FindOrAddFBuf( safeSprintf( span{fnm}, "<shell_output-%03" PR_SIZET ">", s_nxt_shelljob_output_FBUF_num ) ) );
    if( pFB ) {
       if( pFB->d_pInternalShellJobExecutor ) goto NEXT_OUTBUF; // don't want to append to an FBUF currently in use by a d_pInternalShellJobExecutor
       pFB->PutFocusOn();
-      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, sl, true );
+      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, std::move(sl), true );
       }
    return pFB;
    }
@@ -1015,7 +1014,7 @@ STATIC_FXN int StartChildProcess( PCChar pFullCommandLine, int extra_dwCreationF
       }
    else {
       linebuf oseb;
-      DBG( "'%s' -> CreateProcess FAILED: %s", pFullCommandLine, OsErrStr( BSOB(oseb) ) );
+      DBG( "'%s' -> CreateProcess FAILED: %s", pFullCommandLine, OsErrStr( span{oseb} ) );
       return 1;
       }
    }

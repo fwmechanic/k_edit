@@ -84,25 +84,26 @@ STATIC_FXN int delimMirror( int ch ) {
 
 typedef int (*chXlat)( int ch );
 
-void xlatStr( PChar dest, size_t sizeofDest, PCChar src, chXlat fxn ) {
-   const auto len( std::min( sizeofDest - 1, size_t( Strlen(src) )) );
+void xlatStr( span<char> dest, PCChar src, chXlat fxn ) {
+   const auto len( std::min( dest.size() - 1, size_t( Strlen(src) )) );
    const auto end( src + len );
+   auto out( dest.begin() );
    while( src < end ) {
-      *dest++ = fxn( *src++ );
+      *out++ = fxn( *src++ );
       }
-   *dest = '\0';
+   *out = '\0';
    }
 
 GLOBAL_VAR linebuf g_delims, g_delimMirrors;
 
-void swidDelims( PChar dest, size_t sizeofDest ) {
-   safeSprintf( dest, sizeofDest, "%s -> %s", g_delims, g_delimMirrors );
+void swidDelims( span<char> dest ) {
+   safeSprintf( dest, "%s -> %s", g_delims, g_delimMirrors );
    }
 
 void SetCurDelims( stref param ) {
    bcpy( g_delims, param );
-   xlatStr(    BSOB(g_delims      ), g_delims, delimNorm   );
-   xlatStr(    BSOB(g_delimMirrors), g_delims, delimMirror );
+   xlatStr( span{g_delims}, g_delims, delimNorm   );
+   xlatStr( span{g_delimMirrors}, g_delims, delimMirror );
    }
 
 //--------------------------------------------------------------
@@ -128,11 +129,11 @@ GLOBAL_VAR CharMap g_HLJChars;
 
 STATIC_CONST char s_dfltWordChars[] = "_0123456789abcdefghijlkmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ";
 
-STATIC_FXN void swidCharMap( PChar dest, size_t sizeofDest, const CharMap &chMap ) {
-   scpy( dest, sizeofDest, chMap.disp );
+STATIC_FXN void swidCharMap( span<char> dest, const CharMap &chMap ) {
+   scpy( dest, chMap.disp );
    }
-STATIC_FXN void swidWordchars  ( PChar dest, size_t sizeofDest ) { swidCharMap( dest, sizeofDest, g_WordChars ); }
-STATIC_FXN void swidHLJoinchars( PChar dest, size_t sizeofDest ) { swidCharMap( dest, sizeofDest, g_HLJChars  ); }
+STATIC_FXN void swidWordchars  ( span<char> dest ) { swidCharMap( dest, g_WordChars ); }
+STATIC_FXN void swidHLJoinchars( span<char> dest ) { swidCharMap( dest, g_HLJChars  ); }
 
 STATIC_FXN void swixSetChars( CharMap &chMap, stref pS ) { 0 && DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    if( 0==cmpi( "nonwhite", pS ) ) {
@@ -210,7 +211,7 @@ class SWI_intf_base {
    std::unique_ptr<SWI_intf> d_intf;
  public:
    enum { SD=0 };
-   SWI_intf_base( PCChar name_, SWI_intf * intf_ _AHELP( PCChar help_ ) ) : d_name( name_ ) _AHELP( d_help( help_ ) ), d_intf(intf_) {}
+   SWI_intf_base( PCChar name_, std::unique_ptr<SWI_intf> intf_ _AHELP( PCChar help_ ) ) : d_name( name_ ) _AHELP( d_help( help_ ) ), d_intf(std::move(intf_)) {}
    SWI_intf_base(const SWI_intf_base&  mE) = default;
    SWI_intf_base(      SWI_intf_base&& mE) = default;
    SWI_intf_base& operator=(const SWI_intf_base&  mE) = default;
@@ -225,8 +226,8 @@ class SWI_intf_base {
 
 typedef std::vector< SWI_intf_base > SWI_vector;
 STATIC_VAR SWI_vector s_switbl;
-STATIC_FXN void addswi( PCChar name_, SWI_intf *intf_ _AHELP( PCChar help_ ) ) {
-   s_switbl.emplace_back( name_, intf_ _AHELP( help_ ) );
+STATIC_FXN void addswi( PCChar name_, std::unique_ptr<SWI_intf> intf_ _AHELP( PCChar help_ ) ) {
+   s_switbl.emplace_back( name_, std::move(intf_) _AHELP( help_ ) );
    }
 
 void SwitblInit() {
@@ -245,19 +246,19 @@ void SwitblInit() {
 #if !defined(_WIN32)
    addswi( "conin_tmout"    , fc.SWIi_iv( g_iConin_nonblk_rd_tmout ) _AHELP( "value passed to ncurses::timeout( value ) when nonblocking ncurses::getch() is configured" ) );
 #endif
-   addswi( "cursorsize"     , fc.SWI_enum( [](){ return g_iCursorSize ; }, [](int v_){ g_iCursorSize = v_; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); }, AEOA(cursorsize_enums) ) _AHELP( "small, large" ) );
+   addswi( "cursorsize"     , fc.SWI_enum( [](){ return g_iCursorSize ; }, [](int v_){ g_iCursorSize = v_; ConOut::SetCursorSize( ToBOOL(g_iCursorSize) ); }, cursorsize_enums ) _AHELP( "small, large" ) );
    addswi( "delims"         , fc.SWIsb( swidDelims     , SetCurDelims    )  _AHELP( "string containing delimiters" ) );
    addswi( "dialogtop"      , fc.SWIi_bv( g_fDialogTop        ) _AHELP( "dialog & status lines placed at top (yes) or bottom (no) of screen" ) );
    addswi( "logcmds"        , fc.SWIi_bv( g_fLogcmds          ) _AHELP( "log non-cursor-movement cmds" ) );
    addswi( "editreadonly"   , fc.SWIi_bv( g_fEditReadonly     ) _AHELP( "allow (yes) or prevent (no) editing of files which are not writable on disk" ) );
-   addswi( "entab"          , fc.SWI_enum( []()->int { return g_CurFBuf()->Entab(); }, [](int v_){ g_CurFBuf()->SetEntabOk( v_ ); }, AEOA(entab_enums) )     _AHELP( "when lines are modified, convert 0/none,1/leading,2/exoquote,3/all spaces to tabs" ) );
+   addswi( "entab"          , fc.SWI_enum( []()->int { return g_CurFBuf()->Entab(); }, [](int v_){ g_CurFBuf()->SetEntabOk( v_ ); }, entab_enums )     _AHELP( "when lines are modified, convert 0/none,1/leading,2/exoquote,3/all spaces to tabs" ) );
    addswi( "errprompt"      , fc.SWIi_bv( g_fErrPrompt        ) _AHELP( "error message display pauses with \"Press any key...\" prompt" ) );
    addswi( "fastsearch"     , fc.SWIi_bv( g_fFastsearch       ) _AHELP( "use fast search algorithm (when key contains no spaces)" ) );
    addswi( "forceplateol"   , fc.SWIi_bv( g_fForcePlatformEol ) _AHELP(  kszHelpPlatEoL ) );
    addswi( "hike"           , fc.SWIi_iv( g_iHike             ) _AHELP( "the distance from the cursor to the top/bottom of the window if you move the cursor out of the window by more than the number of lines specified by vscroll, as percent of window size" ) );
    addswi( "hljoinchars"    , fc.SWIsb( swidHLJoinchars, swixHLJoinchars )  _AHELP( "Hierarchial Left Join charset: chars that, when seen to the left of the cursor, join other identifiers further left to the word under cursor for WUC highlighting purposes; [_a-zA-Z0-9] are always members; > means ->" ) );
    addswi( "hscroll"        , fc.SWIi_ci( [](){ return g_iHscroll  ; }, [](int v_){ g_iHscroll   = v_; }, [](){ return 1; }, [](){ return EditScreenCols ()-1; }, false ) _AHELP( "the number of columns that the editor scrolls the text left or right when you move the cursor out of the window" ) );
-   addswi(  kszBackup       , fc.SWI_enum( [](){ return g_iBackupMode ; }, [](int v_){ g_iBackupMode = v_; }, AEOA(bkup_enums)  )     _AHELP( "choices are 'undel', 'bak' or 'none'; see online help for details" ) );
+   addswi(  kszBackup       , fc.SWI_enum( [](){ return g_iBackupMode ; }, [](int v_){ g_iBackupMode = v_; }, bkup_enums  )     _AHELP( "choices are 'undel', 'bak' or 'none'; see online help for details" ) );
    addswi( "langhilites"    , fc.SWIi_bv( g_fLangHilites      ) _AHELP( "enable (yes) partial language-aware hilighting" ) );
    addswi( "logflush"       , fc.SWIi_bv( g_fLogFlush         ) _AHELP( "fflush after every line-write to editor logfile" ) );
    addswi( "luagcstep"      , fc.SWIi_iv( g_iLuaGcStep        ) _AHELP( "in the idle thread, if $luagcstep > 0 then lua_gc( L, LUA_GCSTEP, $luagcstep )" ) );

@@ -905,7 +905,7 @@ class TabCompletion_filesystem {
    std::string                 d_pbTabxBase;
 public:
    void Deactivate() {
-      delete d_pDirContent.release();
+      d_pDirContent.reset();
       d_pbTabxBase.clear(); // forget prev used WC
       }
    void GetNext( std::string &stb, COL &xCursor ) {
@@ -924,7 +924,7 @@ public:
          xCursor = stb.length();  // past end
          }
       else {
-         delete d_pDirContent.release();
+         d_pDirContent.reset();
          stb = d_pbTabxBase;
          xCursor = ixFirstWildcardOrEos( stb ); // show user seed in case he wants to edit or iterate again thru WC expansion loop
          d_fBellAndFreezeKbInput = true;
@@ -1538,7 +1538,7 @@ COL ARG::GetLine( std::string &st, LINE yLine ) const { // setup x constraints a
    return st.length();
    }
 
-void StartInternalShellJob( PCChar cmd ) { StartInternalShellJob( new StringList( cmd ), false ); }  // called from Lua
+void StartInternalShellJob( PCChar cmd ) { StartInternalShellJob( std::make_unique<StringList>( cmd ), false ); }  // called from Lua
 
 bool ARG::execute() {
    STATIC_CONST char kszMeta_[] = "meta ";
@@ -1557,7 +1557,7 @@ bool ARG::execute() {
                       LuaCtxt_Edit::ExpandEnvVarsOk( cmd ); // BEFORE fChangeFile so curfile envvar expansions are correct
                       0 && DBG( "execute (%" PR_SIZET ") '%s'", cmd.length(), cmd.c_str() );
                       if( 1 ) {
-                         StartInternalShellJob( new StringList( cmd.c_str() ), false );
+                         StartInternalShellJob( std::make_unique<StringList>( cmd.c_str() ), false );
                          rv = true;
                          }
                       else {
@@ -1583,13 +1583,13 @@ bool ARG::execute() {
                       rv = fExecute( dest, false );
                       }
                    else {
-                      auto pSL( new StringList() );
+                      auto pSL( std::make_unique<StringList>() );
                       for( ArgLineWalker aw( this ); !aw.Beyond() ; aw.NextLine() ) {
                          if( aw.GetLine() ) {                                                    1 && DBG( "--- '%" PR_BSR "'", BSR( aw.lineref() ) );
                             pSL->push_back( aw.lineref() );
                             }
                          }
-                      StartInternalShellJob( pSL, false );
+                      StartInternalShellJob( std::move(pSL), false );
                       rv = true;
                       }
                    break;

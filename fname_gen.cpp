@@ -171,12 +171,12 @@ bool FilelistCfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
          if( d_pCfxGen->VGetNextName( dest ) ) {
             return true;
             }
-         Delete0( d_pCfxGen );
+         d_pCfxGen.reset();
          }
       RTN_false_ON_BRK;
       const auto glif_rv( FBOP::GetLineIsolateFilename( d_pFBuf, d_sbuf, d_curLine++, 0 ) );
       if( glif_rv < 0 ) { return false; } // no more lines
-      if( glif_rv > 0 ) { d_pCfxGen = new CfxFilenameGenerator( __PRETTY_FUNCTION__, d_sbuf, ONLY_FILES ); }
+      if( glif_rv > 0 ) { d_pCfxGen = std::make_unique<CfxFilenameGenerator>( __PRETTY_FUNCTION__, d_sbuf, ONLY_FILES ); }
       }
    }
 
@@ -195,14 +195,10 @@ class StrSubstituterGenerator {
       const int  d_replLen;
       int        d_valueIdx;
       int        d_nValues;
-      PPCChar    d_values;
+      malloc_ptr<char[]>   d_valueStorage;
+      malloc_ptr<PCChar[]> d_values;
       SubStrSubstituter( PCChar pValue, int chValDelim, const int xReplStart_, const int replLen_ );
-      ~SubStrSubstituter() {
-         if( d_values ) {
-            Free0( d_values[0] ); // d_values[1..n] point within same alloc as d_values[0]
-            Free0( d_values    );
-            }
-         }
+      ~SubStrSubstituter() = default;
       };
    bool                         d_fCombinationsExhaused;
    Path::str_t                  d_pBaseString;
@@ -222,15 +218,17 @@ StrSubstituterGenerator::SubStrSubstituter::SubStrSubstituter( PCChar pValue, in
    , d_replLen(replLen_)
    , d_valueIdx(0)
    , d_nValues(1)
-   , d_values(nullptr)
    {
-   auto pVal( Strdup( pValue ) );
+   d_valueStorage.reset( Strdup( pValue ) );
+   auto pVal( d_valueStorage.get() );
    for( auto pc( pValue ) ; *pc ; ++pc ) {
       if( *pc == chValDelim ) { ++d_nValues; }
       }
-   AllocArrayNZ( d_values, d_nValues );
+   PCChar *values;
+   AllocArrayNZ( values, d_nValues );
+   d_values.reset( values );
    for( auto iy(0) ; ; ++iy ) {
-      d_values[ iy ] = pVal;  // [0] is the Strdup()'d string itself, which must be freed later!
+      d_values[ iy ] = pVal;
       const auto pSep( strchr( pVal, chValDelim ) );
       if( !pSep ) {
          break;
@@ -367,7 +365,7 @@ bool ARG::cfx() {
    CFX_to_SSG( d_textarg.pText, &ssg );
    pathbuf pbuf;
    auto ix(0);
-   while( ssg.GetNextString( BSOB(pbuf) ) ) {
+   while( ssg.GetNextString( span{pbuf} ) ) {
       DBG( "[%d] %s", ix++, pbuf );
       }
    return true;
@@ -423,12 +421,12 @@ bool ARG::wct() {
    DirListGenerator dirs;
    pathbuf pbuf;
    const auto pF( g_CurFBuf() );
-   while( dirs.VGetNextName( BSOB(pbuf) ) ) {
+   while( dirs.VGetNextName( span{pbuf} ) ) {
       // if( !Path::IsDotOrDotDot( pbuf.c_str() ) )
       //    pF->FmtLastLine( pbuf );
       WildcardFilenameGenerator wcg( FmtStr<MAX_PATH>( "%s" DIRSEP_STR "%s", pbuf, searchSpec ), ONLY_FILES );
       pathbuf fbuf;
-      while( wcg.VGetNextName( BSOB(fbuf) ) ) {
+      while( wcg.VGetNextName( span{fbuf} ) ) {
          pF->PutLastLineRaw( fbuf );
          }
       }
@@ -448,10 +446,7 @@ CfxFilenameGenerator::CfxFilenameGenerator( std::string &&src, stref macroText, 
    // d_splitLine.DBG();
    }
 
-CfxFilenameGenerator::~CfxFilenameGenerator() {
-   Delete0( d_pWcGen );
-   Delete0( d_pSSG );
-   }
+CfxFilenameGenerator::~CfxFilenameGenerator() = default;
 
 bool CfxFilenameGenerator::VGetNextName( Path::str_t &dest ) {
    RTN_false_ON_BRK;
@@ -462,22 +457,22 @@ NEXT_WILDCARD_MATCH:
          MFSPEC_DB && DBG( "%s+ '%s'", __func__, dest.c_str() );
          return true;
          }
-      Delete0( d_pWcGen );
+      d_pWcGen.reset();
       }
    if( d_pSSG ) {
 NEXT_SSG_COMBINATION:
       if( d_pSSG->GetNextString( dest ) ) {
          MFSPEC_DB && DBG( "%s+ WcGen <= '%s'", __func__, dest.c_str() );
-         d_pWcGen = new WildcardFilenameGenerator( __PRETTY_FUNCTION__, dest.c_str(), d_matchMode );
+         d_pWcGen = std::make_unique<WildcardFilenameGenerator>( __PRETTY_FUNCTION__, dest.c_str(), d_matchMode );
          goto NEXT_WILDCARD_MATCH;
          }
-      Delete0( d_pSSG );
+      d_pSSG.reset();
       }
    d_pszEntrySuffix = d_splitLine.GetNext( d_pszEntrySuffix );
    if( d_pszEntrySuffix ) {
       MFSPEC_DB && DBG( "%s+ ENVMAP <= '%s'", __func__, d_pszEntrySuffix );
-      d_pSSG = new StrSubstituterGenerator;
-      CFX_to_SSG( d_pszEntrySuffix, d_pSSG );
+      d_pSSG = std::make_unique<StrSubstituterGenerator>();
+      CFX_to_SSG( d_pszEntrySuffix, d_pSSG.get() );
       goto NEXT_SSG_COMBINATION;
       }
    MFSPEC_DB && DBG( "%s- Exhausted", __func__ );

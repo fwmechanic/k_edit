@@ -355,6 +355,9 @@ STATIC_FXN PChar CopyLuaString( PChar dest, size_t sizeof_dest, lua_State *L, in
       }
    return dest;
    }
+STATIC_FXN PChar CopyLuaString( span<char> dest, lua_State *L, int stackLevel ) {
+   return CopyLuaString( dest.data(), dest.size(), L, stackLevel );
+   }
 
 // returns false if any errors
 STATIC_FXN bool LuaTblKeyExists( lua_State *L, PCChar tableDescr ) { 0 && DBG( "+%s '%s'? (%p)", __func__ , tableDescr, L );
@@ -395,10 +398,11 @@ STATIC_FXN PChar LuaTbl2S( lua_State *L, PChar dest, size_t sizeof_dest, PCChar 
 
 // returns empty string if any errors
 PChar LuaCtxt_Edit::Tbl2S( PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ) { return LuaTbl2S( L_edit, dest, sizeof_dest, tableDescr, pszDflt ); }
+PChar LuaCtxt_Edit::Tbl2S( span<char> dest, PCChar tableDescr, PCChar pszDflt ) { return Tbl2S( dest.data(), dest.size(), tableDescr, pszDflt ); }
 
 STATIC_FXN int lua_atpanic_handler( lua_State *L ) {
    linebuf msg;
-   CopyLuaString( BSOB(msg), L, -1 );
+   CopyLuaString( span{msg}, L, -1 );
    DBG( "########################################## %s called ##########################################", __func__ );
    DBG( "###  %s", msg );
    DBG( "########################################## %s called ##########################################", __func__ );
@@ -455,7 +459,7 @@ STATIC_FXN int lh_pcall_inout (lua_State *L, int narg, int nres) { enum { SD=0 }
 
 STATIC_FXN void lh_handle_pcall_err( lua_State *L, bool fCompileErr=false ) { // c:\klg\sn\k\util.lua:107: variable 'at' is not declared
    linebuf msg;
-   CopyLuaString( BSOB(msg), L, -1 );
+   CopyLuaString( span{msg}, L, -1 );
    DBG( "L=%p, LuaMsg='%s'", L, msg );
    const auto tp( fCompileErr?"compile ":"run" );
    // STATIC_CONST char rtErrTmplt[] = "*** Lua %stime error";

@@ -20,6 +20,8 @@
 #pragma once
 
 #include <limits>  // std::numeric_limits<unsigned int>::max()
+#include <cstdlib>
+#include <memory>
 #ifndef  SIZE_MAX
 #define  SIZE_MAX  std::numeric_limits<size_t>::max()
 #endif
@@ -43,6 +45,22 @@ extern PVoid AllocNZ_  (           size_t bytes );
 extern PVoid Alloc0d_  (           size_t bytes );
 extern PVoid ReallocNZ_( PVoid pv, size_t bytes );
 extern void  Free_     ( PVoid pv               );
+
+// Pointer-sized ownership for storage obtained from the malloc family.
+// The stateless deleter lets unique_ptr use empty-base optimization, so this
+// carries exactly the same runtime state as the raw pointer it replaces.
+struct FreeDeleter {
+   template<typename T>
+   void operator()( T *ptr ) const noexcept {
+      std::free( ptr );
+      }
+   };
+
+template<typename T>
+using malloc_ptr = std::unique_ptr<T, FreeDeleter>;
+
+static_assert( sizeof(malloc_ptr<char>) == sizeof(char *) );
+static_assert( sizeof(malloc_ptr<char[]>) == sizeof(char *) );
 
 STIL   PVoid AllocNZ   (           size_t bytes )   { return AllocNZ_  (     bytes ); }
 STIL   PVoid Alloc0d   (           size_t bytes )   { return Alloc0d_  (     bytes ); }

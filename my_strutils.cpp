@@ -57,6 +57,14 @@ PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) {
    return dest;
    }
 
+PChar safeSprintf( span<char> dest, PCChar format, ... ) {
+   va_list val;
+   va_start(val, format);
+   chkdVsnprintf( dest, format, val );
+   va_end(val);
+   return dest.data();
+   }
+
 sridx scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
    if( 0==destLen && sizeof_dest > 0 && dest[0] ) { destLen = Strlen( dest ); }
    if( destLen >= sizeof_dest ) { return sizeof_dest > 0 ? sizeof_dest - 1 : 0; }  // basically an assertion condition: there is already an overrun of BSOB(dest,sizeof_dest)

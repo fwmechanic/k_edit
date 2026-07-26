@@ -37,8 +37,13 @@ extern int DbgDumpCaptures( RegexMatchCaptures &captures, PCChar tag );
 #include "pcre2.h"
 
 class  CompiledRegex;
-extern CompiledRegex *Regex_Compile( stref pszSearchStr, bool fCase );
-extern CompiledRegex *Regex_Delete0( CompiledRegex *pcr );
+struct CompiledRegexDeleter {
+   void operator()( CompiledRegex *pcr ) const noexcept;
+   };
+using CompiledRegexPtr = std::unique_ptr<CompiledRegex, CompiledRegexDeleter>;
+static_assert( sizeof(CompiledRegexPtr) == sizeof(CompiledRegex *) );
+
+extern CompiledRegexPtr Regex_Compile( stref pszSearchStr, bool fCase );
 extern RegexMatchCaptures::size_type Regex_Match( CompiledRegex *pcr, RegexMatchCaptures &captures, stref haystack, COL haystack_offset, int pcre_exec_options );
 extern void register_atexit_search();
 extern stref RegexVersion();

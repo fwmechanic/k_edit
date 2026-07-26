@@ -87,7 +87,7 @@ bool ARG::mergefilenames() {
    switch( d_argType ) {
       case TEXTARG: {
            linebuf lbuf;
-           Path::Union( BSOB(lbuf), d_textarg.pText, g_CurFBuf()->Name() );
+           Path::Union( span{lbuf}, d_textarg.pText, g_CurFBuf()->Name() );
            Msg( "%s", lbuf );
            return true;
            }

@@ -22,13 +22,12 @@
 struct NamedPoint {
    DLinkEntry<NamedPoint> dlink;
    Point                  d_pt;
-   PChar                  d_pszName;
+   malloc_ptr<char[]>     d_pszName;
 
    NamedPoint( const Point& pt, PCChar name ) : d_pt(pt), d_pszName( Strdup(name) ) {}
-   ~NamedPoint() { Free0( d_pszName ); }
 
-   bool         NameMatch( PCChar pszName ) const { return strcmp( d_pszName, pszName ) == 0; }
-   PCChar       Name()                      const { return d_pszName; }
+   bool         NameMatch( PCChar pszName ) const { return strcmp( d_pszName.get(), pszName ) == 0; }
+   PCChar       Name()                      const { return d_pszName.get(); }
    const Point &Pt()                        const { return d_pt; }
    void         AddLineDelta( int delta )         {        d_pt.lin += delta; }
    };

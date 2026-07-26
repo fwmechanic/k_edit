@@ -57,11 +57,13 @@ STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
       }
    }
 
-STATIC_FXN PChar terminfo_str( PChar dest, size_t sizeofDest, PCChar ach, int numCh ) {
+STATIC_FXN PChar terminfo_str( span<char> dest, PCChar ach, int numCh ) {
+   auto out( dest.data() );
+   auto remaining( dest.size() );
    for( auto ix(0) ; ix < numCh ; ++ix ) {
-      terminfo_ch( dest, sizeofDest, ach[ ix ] );
+      terminfo_ch( out, remaining, ach[ ix ] );
       }
-   return dest;
+   return dest.data();
    }
 
 #define NCFKT3 "0%04o=0x%04x=0d%3d"
@@ -72,7 +74,7 @@ STATIC_FXN int  DBG_keybound( int ch ) {
       auto tinm = keybound( ch, ix );
       if( !tinm ) { return 1; }
       const auto tinm_len = Strlen(tinm);
-      char tib[65]; terminfo_str( BSOB(tib), tinm, tinm_len );
+      char tib[65]; terminfo_str( span{tib}, tinm, tinm_len );
       DBG( NCFKT3 "; keybound[%d] = '%s' L %d (0x%x)", NCFKT3ARGS(ch), ix, tib, tinm_len, tinm_len > 0 ? tinm[0] : 0 );
       free( tinm );
       }
@@ -155,7 +157,7 @@ STATIC_FXN void escseqstr_to_ncfkt( const char *escseqstr, uint16_t edkc, const 
       1 && DBG( "cap=%-5s      no mapping                            (EdkeyNm=%s)", cap_nm, keyNm.c_str() );
       return;
       }
-   char tib[65]; terminfo_str( BSOB(tib), escseqstr, Strlen(escseqstr) );
+   char tib[65]; terminfo_str( span{tib}, escseqstr, Strlen(escseqstr) );
                                                SD && DBG( "key_defined+ %s", tib );
    const auto ncfkt = key_defined(escseqstr);  SD && DBG( "key_defined- %s", tib ); // key_defined() <- ncurses
    PCChar rsltMsg = set_ncfkt_to_EdKC_ok( ncfkt, edkc );
@@ -387,7 +389,7 @@ STATIC_FXN void init_conout_capability() {
    const auto cap_nm = "initc";
    const char *escseqstr( tigetstr( cap_nm ) );  // tigetstr() <- "retrieves a capability from the terminfo database"
    if( escseqstr ) {
-      char tib[65]; terminfo_str( BSOB(tib), escseqstr, Strlen(escseqstr) ); 1 && DBG( "cap=%-7s => tistr=%s", cap_nm, tib );
+      char tib[65]; terminfo_str( span{tib}, escseqstr, Strlen(escseqstr) ); 1 && DBG( "cap=%-7s => tistr=%s", cap_nm, tib );
       }
    else {                                                                    1 && DBG( "cap=%-7s => tistr=%s", cap_nm, escseqstr );
       }
@@ -521,7 +523,7 @@ STATIC_FXN int ConGetEvent() {                             0 && DBG( "++++++ Con
          };
       kpto_er kpto_cleaner;
       while( getCh() >= 0 ) {}  // slurp entire escseq
-      char tib[5*ELEMENTS(chin)]; terminfo_str( BSOB(tib), chin, wrIx ); // 5 is worst-case '\o000' encoding
+      char tib[5*ELEMENTS(chin)]; terminfo_str( span{tib}, chin, wrIx ); // 5 is worst-case '\o000' encoding
       auto slurped = stref(chin,wrIx);
 
       // "simple" escseq's are not treated as exceptional for logging purposes

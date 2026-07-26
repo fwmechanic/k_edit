@@ -67,7 +67,7 @@ STATIC_CONST char kszTmpFBufMagic[] = "FMT0";
 PCChar ProgramVersion() {
    STATIC_VAR char szProgramVersion[40];
    if( !szProgramVersion[0] ) {
-      safeSprintf( BSOB(szProgramVersion), "Kevin's Editor %s", kszThisProgVersion );
+      safeSprintf( span{szProgramVersion}, "Kevin's Editor %s", kszThisProgVersion );
       }
    return szProgramVersion;
    }
@@ -644,6 +644,9 @@ static void strftime_us( char *buf, size_t sizeof_buf ) {  // based on https://s
       snprintf( buf+sftLen, sizeof_buf-sftLen, ".%06ld" " ", 0L );
       }
    }
+static void strftime_us( span<char> buf ) {
+   strftime_us( buf.data(), buf.size() );
+   }
 
 #endif
 
@@ -658,7 +661,7 @@ int DBG( char const *kszFormat, ...  ) {
       if( fOk ) { strftime( BSOB(tmstr), LOG_STRFTIME_FMT " ", &tt ); }
       else      { bcpy(          tmstr , LOG_STRFTIME_FMT " " ); }
 #else
-      strftime_us( BSOB(tmstr) );
+      strftime_us( span{tmstr} );
 #endif
       fputs( tmstr, ofh );
       }
@@ -693,7 +696,7 @@ public:
 stref CompilerVersion() {
    STATIC_VAR char s_GccVer[81] = { '\0', };
    if( '\0' == s_GccVer[0] ) {
-      safeSprintf( BSOB(s_GccVer), "GCC %d.%d.%d"
+      safeSprintf( span{s_GccVer}, "GCC %d.%d.%d"
    #ifdef __MINGW32_MAJOR_VERSION
                                 " + MinGW runtime %d.%d"
    #endif

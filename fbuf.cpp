@@ -1002,7 +1002,7 @@ void FBOP::CurFBuf_AssignMacros_RsrcLd() { enum{SD=0};
   #if MACRO_BACKSLASH_ESCAPES
    dbllinebuf dblbuf;
    Pathbuf pbuf( fb->Name() );
-   DoubleBackslashes( BSOB(dblbuf), pbuf );
+   DoubleBackslashes( span{dblbuf}, pbuf );
    DefineStrMacro( "curfile", dblbuf );
   #else
    DefineStrMacro( "curfile", fb->Namestr() );

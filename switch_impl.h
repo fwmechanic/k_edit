@@ -19,6 +19,9 @@
 
 #pragma once
 
+#include <memory>
+#include <span>
+
 // Disable a picky gcc-8 compiler warning
 #if defined(__GNUC__) && (__GNUC__ >= 8)
 #pragma GCC diagnostic ignored "-Wcast-function-type"
@@ -39,12 +42,17 @@ class SWI_intf {
 struct enum_nm { int val; PCChar name; };
 
 struct SWI_impl_factory {
-   SWI_intf *SWIs( stref (* get_)(), stref (* set_)( stref ) );
-   SWI_intf *SWIsb( void (*dsp_)( PChar dest, size_t sizeofDest ), void (* set_)( stref ) );
-   SWI_intf *SWIi_bv( bool &var_ );
-   SWI_intf *SWIi_iv( int &var_ );
-   SWI_intf *SWIi_ci( int (*get_)(), void (*set_)(int), int (*min_)(), int (*max_)(), bool fUseConstrained_=true );
-   SWI_intf *SWI_color( uint8_t &var_ );
-   SWI_intf *SWI_chdisp( char &var_ );
-   SWI_intf *SWI_enum( int (*get_)(), void (*set_)(int), const enum_nm *enums_, size_t num_enums_ );
+   using Ptr = std::unique_ptr<SWI_intf>;
+
+   Ptr SWIs( stref (* get_)(), stref (* set_)( stref ) );
+   Ptr SWIsb( void (*dsp_)( span<char> dest ), void (* set_)( stref ) );
+   Ptr SWIi_bv( bool &var_ );
+   Ptr SWIi_iv( int &var_ );
+   Ptr SWIi_ci( int (*get_)(), void (*set_)(int), int (*min_)(), int (*max_)(), bool fUseConstrained_=true );
+   Ptr SWI_color( uint8_t &var_ );
+   Ptr SWI_chdisp( char &var_ );
+   Ptr SWI_enum( int (*get_)(), void (*set_)(int), span<const enum_nm> enums_ );
    };
+
+static_assert( sizeof(SWI_impl_factory::Ptr) == sizeof(SWI_intf *) );
+static_assert( sizeof(span<char>) == sizeof(char *) + sizeof(size_t) );

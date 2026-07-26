@@ -154,35 +154,31 @@ OsEnv::OsEnv() {
       }
    size_t bufbytes = PATH_MAX;
    for(;;) {
-      char *linkname = static_cast<PChar>( malloc( bufbytes ) );
+      malloc_ptr<char[]> linkname( static_cast<PChar>( malloc( bufbytes ) ) );
       if( !linkname ) {
          perror( "readlink(/proc/self/exe) memory exhausted" );
-         free( linkname );
          return;
          }
-      ssize_t r = readlink( s_link_nm, linkname, bufbytes );
+      ssize_t r = readlink( s_link_nm, linkname.get(), bufbytes );
       if( r < 0 ) {
          perror( "readlink(/proc/self/exe) < 0" );
-         free( linkname );
          return;
          }
       if( r < bufbytes ) {
          linkname[r] = '\0';
-         d_exe_path.assign( Path::RefDirnm( linkname ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
-         d_exe_name.assign( Path::RefFnm  ( linkname ) ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
-         free( linkname );
+         d_exe_path.assign( Path::RefDirnm( linkname.get() ) ); 0 && DBG( "d_exe_path=%s\n", d_exe_path.c_str() );
+         d_exe_name.assign( Path::RefFnm  ( linkname.get() ) ); 0 && DBG( "d_exe_name=%s\n", d_exe_name.c_str() );
          return;
          }
-      free( linkname );
       bufbytes *= 2;
       }
 #endif
    }
 
-COMPLEX_STATIC_VAR OsEnv *g_Process;
+COMPLEX_STATIC_VAR std::unique_ptr<OsEnv> g_Process;
 
 void ThisProcessInfo::Init() {
-   g_Process = new OsEnv();
+   g_Process = std::make_unique<OsEnv>();
    }
 
 PCChar ThisProcessInfo::ExePath()  { return g_Process->ExePath(); }  // includes trailing '\'

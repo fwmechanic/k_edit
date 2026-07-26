@@ -538,6 +538,7 @@ namespace LuaCtxt_Edit {
    // table readers
    extern bool  TblKeyExists( PCChar tableDescr );
    extern PChar Tbl2S(   PChar dest, size_t sizeof_dest, PCChar tableDescr, PCChar pszDflt ); // if any errors, return pszDflt or empty string
+   extern PChar Tbl2S(   span<char> dest, PCChar tableDescr, PCChar pszDflt );
    extern int   Tbl2Int( PCChar tableDescr, int dfltVal );                  // if any errors, returns dfltVal
    }
 

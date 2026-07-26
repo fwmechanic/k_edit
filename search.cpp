@@ -277,7 +277,7 @@ class SearchSpecifier {
    std::string  d_rawStr;
 #if USE_PCRE
    bool   d_fRegexCase;   // state when last (re-)init'd
-   CompiledRegex *d_re;
+   CompiledRegexPtr d_re;
 #endif
    bool   d_fNegateMatch; // same as grep's -v option
    bool   d_fCanUseFastSearch;
@@ -286,7 +286,7 @@ public:
    ~SearchSpecifier();
    bool   MatchNegated() const { return d_fNegateMatch; };
 #if USE_PCRE
-   CompiledRegex *re() const { return d_re; }
+   CompiledRegex *re() const { return d_re.get(); }
    bool   IsRegex()  const { return d_fRegex; }
    bool   HasError() const { return d_fRegex && !d_re; }
    int    MinHaystackLen() const { return IsRegex() ? 1 : d_rawStr.length(); }
@@ -301,11 +301,11 @@ public:
    stref  SrchStr()    const { return d_rawStr; }
    };
 
-STATIC_VAR SearchSpecifier *s_searchSpecifier;
+STATIC_VAR std::unique_ptr<SearchSpecifier> s_searchSpecifier;
 
 #if USE_PCRE
 static void CDECL__ atexit_Search() {
-   Delete0( s_searchSpecifier );
+   s_searchSpecifier.reset();
    }
 
 void register_atexit_search() {
@@ -445,7 +445,7 @@ void MFGrepMatchHandler::InitLogFile( const FileSearcher &FSearcher, stref src )
    LuaCtxt_Edit::nextmsg_newsection_ok( sbuf.c_str() );
    }
 
-STATIC_FXN FileSearcher *NewFileSearcher( FileSearcher::StringSearchVariant type, const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
+STATIC_FXN std::unique_ptr<FileSearcher> NewFileSearcher( FileSearcher::StringSearchVariant type, const SearchScanMode &sm, const SearchSpecifier &ss, FileSearchMatchHandler &mh );
 
 class  FileSearcherString : public FileSearcher {
    std::string        d_searchKey;
@@ -956,13 +956,13 @@ STATIC_FXN bool SetNewSearchSpecifierOK( stref src, bool fRegex ) {
    if( src.empty() ) {                                DBG( "%s: ERROR, EMPTY src", FUNC );
       return false;
       }
-   std::unique_ptr<SearchSpecifier> ssNew( new SearchSpecifier( src, fRegex ) );
+   auto ssNew( std::make_unique<SearchSpecifier>( src, fRegex ) );
 #if USE_PCRE
    const auto err( ssNew->HasError() );
    if( !err )
 #endif
       {
-      DeleteUp( s_searchSpecifier, ssNew.release() );
+      s_searchSpecifier = std::move(ssNew);
       g_SavedSearchString_Buf.assign( src );  // HACK to let ARG::grep inherit prev search strings
       }
    VSLOG && s_searchSpecifier->Dbgf( "after" );
@@ -1120,7 +1120,7 @@ std::string DupTextMacroValue( PCChar macroName ) {
    return std::string( unquote( val ) );
    }
 
-STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { SD=0 };
+STATIC_FXN std::unique_ptr<PathStrGenerator> MultiFileGrepFnmGenerator_() { enum { SD=0 };
    {
    const auto srcNm("mffile");
    const auto macroVal( DupTextMacroValue( srcNm ) );
@@ -1134,7 +1134,7 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { SD=0 };
                }
             }
          else {
-            return new FilelistCfxFilenameGenerator( std::string(srcNm) + "=" + pFBufMfspec->Namestr(), pFBufMfspec );
+            return std::make_unique<FilelistCfxFilenameGenerator>( std::string(srcNm) + "=" + pFBufMfspec->Namestr(), pFBufMfspec );
             }
          }
       }
@@ -1143,24 +1143,24 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator_() { enum { SD=0 };
    const auto srcNm("<mfspec>");
    const auto pFBufMfspec( FindFBufByName( srcNm ) );
    if( pFBufMfspec && !FBOP::IsBlank( pFBufMfspec ) ) {
-      return new FilelistCfxFilenameGenerator( std::string(srcNm) + " (buffer)", pFBufMfspec );
+      return std::make_unique<FilelistCfxFilenameGenerator>( std::string(srcNm) + " (buffer)", pFBufMfspec );
       }
    }
-   auto txtMacro2CFG = [&] ( PCChar srcNm ) -> PathStrGenerator * {
+   auto txtMacro2CFG = [&] ( PCChar srcNm ) -> std::unique_ptr<PathStrGenerator> {
       const auto macroVal( DupTextMacroValue( srcNm ) );
       if( !IsStringBlank( macroVal ) ) {                                          SD && DBG( "%s: FindFBufByName[%s]( %" PR_BSR " )?", __func__, srcNm, BSR(macroVal) );
          Path::str_t macroPVal( macroVal );
          LuaCtxt_Edit::ExpandEnvVarsOk( macroPVal );                              SD && DBG( "ExpandEnvVarsOk( %" PR_BSR " )", BSR(macroPVal) );
-         return new CfxFilenameGenerator( std::string(srcNm) + " (macro) = " + macroPVal, macroPVal, ONLY_FILES );
+         return std::make_unique<CfxFilenameGenerator>( std::string(srcNm) + " (macro) = " + macroPVal, macroPVal, ONLY_FILES );
          }
       return nullptr;
       };
-   { const auto rv( txtMacro2CFG("mfspec"  ) ); if( rv ) { return rv; } }
-   { const auto rv( txtMacro2CFG("mfspec_" ) ); if( rv ) { return rv; } }
+   { auto rv( txtMacro2CFG("mfspec"  ) ); if( rv ) { return rv; } }
+   { auto rv( txtMacro2CFG("mfspec_" ) ); if( rv ) { return rv; } }
    return nullptr;
    }
 
-STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( bool retry_after_refreshing_taggedfiles=true ) { enum { SD=0 };
+STATIC_FXN std::unique_ptr<PathStrGenerator> MultiFileGrepFnmGenerator( bool retry_after_refreshing_taggedfiles=true ) { enum { SD=0 };
    auto rv( MultiFileGrepFnmGenerator_() );  // try to dereference any user-preconfigured "mf..." macros.
    if( !rv && retry_after_refreshing_taggedfiles ) {
       // Typical scenario: user HAS NOT preconfigured any of the "mf..." macros,
@@ -1185,7 +1185,7 @@ STATIC_FXN PathStrGenerator *MultiFileGrepFnmGenerator( bool retry_after_refresh
 
 #ifdef fn_mgl
 bool ARG::mgl() {
-   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator( false ) );
+   auto pGen( MultiFileGrepFnmGenerator( false ) );
    if( pGen ) {
       auto ix(0);
       Path::str_t pbuf;
@@ -1206,7 +1206,7 @@ bool ARG::mfgrep() {
       return false;
       }
    MFGrepMatchHandler mh( g_pFBufSearchRslts );
-   std::unique_ptr<FileSearcher> pSrchr( NewFileSearcher
+   auto pSrchr( NewFileSearcher
       ( s_searchSpecifier->CanUseFastSearch() ? FileSearcher::fsFAST_STRING : FileSearcher::fsTABSAFE_STRING
       , mh.sm()
       , *s_searchSpecifier
@@ -1215,7 +1215,7 @@ bool ARG::mfgrep() {
    if( !pSrchr ) {
       return false;
       }
-   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator() );
+   auto pGen( MultiFileGrepFnmGenerator() );
    if( !pGen ) {
       // ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil && no tags" );
       return false;
@@ -1315,7 +1315,7 @@ STATIC_FXN bool GenericReplace_CollectInputs( bool fRegex, bool fInteractive, bo
 
 STATIC_FXN void DoMultiFileReplace( CharWalkerReplace &mrcw ) {
    const auto startingTopFbuf( g_CurFBuf() );
-   std::unique_ptr<PathStrGenerator>pGen( MultiFileGrepFnmGenerator() );
+   auto pGen( MultiFileGrepFnmGenerator() );
    if( !pGen ) {
       ErrorDialogBeepf( "MultiFileGrepFnmGenerator -> nil" );
       }
@@ -1498,7 +1498,6 @@ void SearchSpecifier::CaseUpdt() {
    if( d_fRegex && (d_fRegexCase != g_fCase) ) {
       d_fRegexCase = g_fCase;
       // recompile
-      d_re = Regex_Delete0( d_re );
       d_re = Regex_Compile( d_rawStr.c_str(), d_fRegexCase );
       }
 #endif
@@ -1548,11 +1547,7 @@ SearchSpecifier::SearchSpecifier( stref rawSrc, bool fRegex ) : d_fRegex(fRegex)
 #endif
    }
 
-SearchSpecifier::~SearchSpecifier() {
-#if USE_PCRE
-   d_re = Regex_Delete0( d_re );
-#endif
-   }
+SearchSpecifier::~SearchSpecifier() = default;
 
 int SearchSpecifier::Dbgf( PCChar tag ) const {
   #if 1
@@ -1830,28 +1825,28 @@ void FileSearcher::VFindMatches_() { enum { SD=0 };  VSLOG && DBG( "%csearch: ST
 
 // not my proudest moment, but replicating the code below everywhere would be immoral!
 
-STATIC_FXN FileSearcher *NewFileSearcher(
+STATIC_FXN std::unique_ptr<FileSearcher> NewFileSearcher(
      FileSearcher::StringSearchVariant  type
    , const SearchScanMode              &sm
    , const SearchSpecifier             &ss
    , FileSearchMatchHandler            &mh
    )
    {  VSLOG && DBG( "NewFileSearcher enter" );
-   FileSearcher *rv;
+   std::unique_ptr<FileSearcher> rv;
 #if USE_PCRE
    if( ss.IsRegex() ) {
       if( ss.HasError() ) {
          return nullptr;
          }
-      rv = new FileSearcherRegex( sm, ss, mh );            VSLOG && DBG( "  FileSearcherRegex %p", rv );
+      rv = std::make_unique<FileSearcherRegex>( sm, ss, mh );            VSLOG && DBG( "  FileSearcherRegex %p", rv.get() );
       }
    else
 #endif
       {
       switch( type ) {
          break; default:                             Assert( 0 != 0 ); return nullptr;
-         break; case FileSearcher::fsTABSAFE_STRING: rv = new FileSearcherString( sm, ss, mh );   VSLOG && DBG( "  FileSearcherString %p", rv );
-         break; case FileSearcher::fsFAST_STRING:    rv = new FileSearcherFast( sm, ss, mh );     VSLOG && DBG( "  FileSearcherFast %p", rv );
+         break; case FileSearcher::fsTABSAFE_STRING: rv = std::make_unique<FileSearcherString>( sm, ss, mh );   VSLOG && DBG( "  FileSearcherString %p", rv.get() );
+         break; case FileSearcher::fsFAST_STRING:    rv = std::make_unique<FileSearcherFast>( sm, ss, mh );     VSLOG && DBG( "  FileSearcherFast %p", rv.get() );
          }
       }                                              VSLOG && rv->Dbgf();
    return rv;
@@ -1865,8 +1860,8 @@ STATIC_FXN bool FindNextMatch( const ARG &arg, const SearchScanMode &sm ) {
    if(      &smBackwd == &sm ) { curPt.DecrOk(); }
    else if( &smFwd    == &sm ) { curPt.IncrOk(); }
    else                        { Assert( !"invalid sm value" ); }
-   std::unique_ptr<FindPrevNextMatchHandler> mh( new FindPrevNextMatchHandler( sm.d_fSearchForward, s_searchSpecifier->IsRegex(), s_searchSpecifier->SrchStr() ) );
-   std::unique_ptr<FileSearcher> pSrchr( NewFileSearcher( FileSearcher::fsTABSAFE_STRING, sm, *s_searchSpecifier, *mh ) );
+   auto mh( std::make_unique<FindPrevNextMatchHandler>( sm.d_fSearchForward, s_searchSpecifier->IsRegex(), s_searchSpecifier->SrchStr() ) );
+   auto pSrchr( NewFileSearcher( FileSearcher::fsTABSAFE_STRING, sm, *s_searchSpecifier, *mh ) );
    if( !pSrchr ) {
       return false;
       }
@@ -2339,7 +2334,7 @@ bool CGrepperMatchHandler::VMatchActionTaken( PFBUF pFBuf, const Point &cur, COL
 
 void CGrepper::FindAllMatches() {
    CGrepperMatchHandler mh( *this );
-   std::unique_ptr<FileSearcher> pSrchr( NewFileSearcher( FileSearcher::fsFAST_STRING, mh.sm(), *s_searchSpecifier, mh ) );
+   auto pSrchr( NewFileSearcher( FileSearcher::fsFAST_STRING, mh.sm(), *s_searchSpecifier, mh ) );
    if( pSrchr ) {
        pSrchr->SetInputFile( d_SrchFile );
        pSrchr->SetBoundsToEnd( Point( d_MetaLineCount, 0 ) );

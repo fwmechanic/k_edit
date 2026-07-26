@@ -55,7 +55,7 @@ public:
    int     Status() const {  1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
       return d_exit_status;
       }
-   ssize_t Read( void *dest, ssize_t sizeofDest );
+   ssize_t Read( span<char> dest );
    };
 
 int piped_forker::ReapChild() {
@@ -74,11 +74,11 @@ int piped_forker::ReapChild() {
    return d_exit_status;
    }
 
-ssize_t piped_forker::Read( void *dest, ssize_t sizeofDest ) {
+ssize_t piped_forker::Read( span<char> dest ) {
    if( d_fd == INVALID_fd ) {
       return 0;
       }
-   const auto rv( read( d_fd, dest, sizeofDest ) );  0 && DBG( "%s-[%d] %ld", __func__, d_fd, rv );
+   const auto rv( read( d_fd, dest.data(), dest.size() ) );  0 && DBG( "%s-[%d] %ld", __func__, d_fd, rv );
    if( rv <= 0 ) { ReapChild(); }
    return rv;
    }
@@ -125,22 +125,22 @@ STATIC_FXN void prep_cmdline( PCChar pc, int cmdFlags, PCChar func__ ) {
       );
    }
 
-STATIC_FXN PChar showTermReason( PChar dest, size_t sizeofDest, const int hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
+STATIC_FXN PChar showTermReason( span<char> dest, const int hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
    enum { USER_BREAK = 99999999 }; // bugbug this MADE UP
    if( 0 == hProcessExitCode ) {
       FmtStr<30> ets( "in %.3f S", et );
-      if( failedJobsIgnored ) { snprintf( dest, sizeofDest, "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.c_str() ); }
-      else                    { snprintf( dest, sizeofDest, "--- processing successful %s ---", ets.c_str() ); }
+      if( failedJobsIgnored ) { snprintf( dest.data(), dest.size(), "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.c_str() ); }
+      else                    { snprintf( dest.data(), dest.size(), "--- processing successful %s ---", ets.c_str() ); }
       }
    else if( USER_BREAK == hProcessExitCode ) {
-      snprintf( dest, sizeofDest, "--- process TERMINATED with prejudice" );
+      snprintf( dest.data(), dest.size(), "--- process TERMINATED with prejudice" );
       }
    else {
       STATIC_CONST char hdr[] = "--- process FAILED, last exit code=0x";
-      if( unstartedJobCnt ) { snprintf( dest, sizeofDest, "%s%X, %d job%s unstarted ---", hdr, hProcessExitCode , unstartedJobCnt, Add_s( unstartedJobCnt ) ); }
-      else                  { snprintf( dest, sizeofDest, "%s%X ---"                    , hdr, hProcessExitCode );                                             }
+      if( unstartedJobCnt ) { snprintf( dest.data(), dest.size(), "%s%X, %d job%s unstarted ---", hdr, hProcessExitCode , unstartedJobCnt, Add_s( unstartedJobCnt ) ); }
+      else                  { snprintf( dest.data(), dest.size(), "%s%X ---"                    , hdr, hProcessExitCode );                                             }
       }
-   return dest;
+   return dest.data();
    }
 
 STATIC_FXN void PutLastLogLine( PFBUF d_pfLogBuf, stref s0 ) {
@@ -165,7 +165,7 @@ public:
 
 int TPipeReader::RdChar() {
    if( d_bytesInRawBuffer == 0 ) {
-      d_bytesInRawBuffer = d_piper.Read( BSOB(d_rawBuffer) );
+      d_bytesInRawBuffer = d_piper.Read( span{d_rawBuffer} );
       if( 0 == d_bytesInRawBuffer ) {
          return EMPTY;
          }
@@ -212,7 +212,7 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
    //  -ls -l
    //  -ls -l && echo sleep 10 && sleep 10
    if( !piper.ForkChildOk( pS ) ) {
-      char erbuf[265]; OsErrStr( BSOB(erbuf) );
+      char erbuf[265]; OsErrStr( span{erbuf} );
       ErrorDialogBeepf( "%s: piper.ForkChildOk '%s' FAILED: %s!!!", __func__, pS, erbuf );
       return CP_PIPED_RC_ECREATEPROCESS;
       }
@@ -241,7 +241,7 @@ int qx( std::string &dest, PCChar system_param ) {
 
    while( true ) {
       char buffer[1024];
-      const auto bc( piper.Read( BSOB(buffer) ) );
+      const auto bc( piper.Read( span{buffer} ) );
       if( bc <= 0 ) {
          return piper.Status();
          }
@@ -448,7 +448,7 @@ class InternalShellJobExecutor {
    NO_ASGN_OPR(InternalShellJobExecutor);
    STATIC_FXN void ChildProcessCtrlThread( InternalShellJobExecutor *pIsjx );
    PFBUF                       d_pfLogBuf;
-   StringList                 *d_pSL;  // we take ownership of (delete)
+   std::unique_ptr<StringList> d_pSL;
    const size_t                d_numJobsRequested;
    int                         d_Pid;
    int                         d_ChildProcessExitCode;
@@ -456,7 +456,7 @@ class InternalShellJobExecutor {
    // Win32::ManualClrEvent       d_AllJobsDone;  BUGBUG
    std::thread                 d_hThread;  // should be LAST!!!
 public:
-   InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput );
+   InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl, bool fViewsActivelyTailOutput );
    ~InternalShellJobExecutor();
    void GetJobStatus( size_t *pNumRequested, size_t *pNumNotStarted ) const {
       *pNumRequested  = d_numJobsRequested;
@@ -468,10 +468,10 @@ private:
    int  DeleteAllEnqueuedJobs_locks();
    };
 
-InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, bool fViewsActivelyTailOutput )
+InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, std::unique_ptr<StringList> sl, bool fViewsActivelyTailOutput )
    : d_pfLogBuf         ( pfb )
-   , d_pSL              ( sl )
-   , d_numJobsRequested ( sl->length() )
+   , d_pSL              ( std::move(sl) )
+   , d_numJobsRequested ( d_pSL->length() )
    , d_Pid              ( INVALID_ProcessId )
    , d_ChildProcessExitCode ( 0 )
    , d_hThread          ( InternalShellJobExecutor::ChildProcessCtrlThread, this )
@@ -480,7 +480,6 @@ InternalShellJobExecutor::InternalShellJobExecutor( PFBUF pfb, StringList *sl, b
 
 InternalShellJobExecutor::~InternalShellJobExecutor() {
    KillAllJobsInBkgndProcessQueue();
-   Delete0( d_pSL );
    }
 
 void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TRANSIENT THREADS!!!
@@ -501,7 +500,7 @@ void InternalShellJobExecutor::ThreadFxnRunAllJobs() { // RUNS ON ONE OR MORE TR
       DispNeedsRedrawStatLn(); // ???
       if( !(pEl=d_pSL->remove_first()) ) { // ONLY EXIT FROM THREAD IS HERE!!!
          linebuf buf;
-         PutLastLogLine( d_pfLogBuf, showTermReason( BSOB(buf), d_ChildProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
+         PutLastLogLine( d_pfLogBuf, showTermReason( span{buf}, d_ChildProcessExitCode, unstartedJobCnt, failedJobsIgnored, pc.Capture() ) );
          d_ChildProcessExitCode = 0;
          // d_hThread = nullptr;
          return; // ##################### LockTheJobQueue ######################
@@ -535,26 +534,26 @@ void InternalShellJobExecutor::ChildProcessCtrlThread( InternalShellJobExecutor 
    // equivalent to ExitThread( 0 );
    }
 
-bool StartInternalShellJob( StringList *sl, bool fAppend, PFBUF pFB ) {
+bool StartInternalShellJob( std::unique_ptr<StringList> sl, bool fAppend, PFBUF pFB ) {
    if( pFB && !pFB->d_pInternalShellJobExecutor ) {
-      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, sl, true );
+      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, std::move(sl), true );
       return true;
       }
    return false;
    }
 
-PFBUF StartInternalShellJob( StringList *sl, bool fAppend ) {
+PFBUF StartInternalShellJob( std::unique_ptr<StringList> sl, bool fAppend ) {
    STATIC_VAR size_t s_nxt_shelljob_output_FBUF_num;
    if( !fAppend ) {
 NEXT_OUTBUF:
       ++s_nxt_shelljob_output_FBUF_num;
       }
    char fnm[30];
-   auto pFB( FBOP::FindOrAddFBuf( safeSprintf( BSOB(fnm), "<shell_output-%03" PR_SIZET ">", s_nxt_shelljob_output_FBUF_num ) ) );
+   auto pFB( FBOP::FindOrAddFBuf( safeSprintf( span{fnm}, "<shell_output-%03" PR_SIZET ">", s_nxt_shelljob_output_FBUF_num ) ) );
    if( pFB ) {
       if( pFB->d_pInternalShellJobExecutor ) { goto NEXT_OUTBUF; } // don't want to append to an FBUF currently in use by a d_pInternalShellJobExecutor
       pFB->PutFocusOn();
-      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, sl, true );
+      pFB->d_pInternalShellJobExecutor = new InternalShellJobExecutor( pFB, std::move(sl), true );
       }
    return pFB;
    }

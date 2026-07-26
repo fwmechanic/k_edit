@@ -29,10 +29,10 @@ class TxtFileLineReader {
       functionality (a C++ std::ifstream implemetation having been tried and
       found wanting in the areas of code size (1.3MB?!) and portability between
       versions of GCC).
-    */
+   */
    FILE  *d_ifh;
    stref &d_line;  // ref to stref var in client's scope which we update upon successful getline call
-   char  *d_buf = nullptr;
+   malloc_ptr<char[]> d_buf;
    size_t d_bufsize = 0;
    const size_t d_buf_alloc_incr;
 #ifdef UNITTEST
@@ -40,7 +40,6 @@ class TxtFileLineReader {
 #endif
 public:
    TxtFileLineReader( FILE *ifh_, stref &line_, size_t buf_alloc_incr=2*1024 ) : d_ifh( ifh_ ), d_line(line_), d_buf_alloc_incr(buf_alloc_incr) {}
-   ~TxtFileLineReader() { free( d_buf ); d_buf = nullptr; d_bufsize = 0; }
    // NB: fgetpos/fsetpos CANNOT be used (in lieu of fseet/ftell) because arithmetic on fpos_t is not defined https://stackoverflow.com/a/21042679
    typedef decltype( ::ftell( stdin ) ) ftell_rv_t;  // avoid having to declare type of ::ftell as it may change (e.g. ftello...)
    ftell_rv_t ftell() { return ::ftell( d_ifh ); }
@@ -58,10 +57,13 @@ public:
    stref line() const { return d_line; }
    bool getline() {
       if( !d_buf ) {
-         d_buf = static_cast<char *>( malloc( d_buf_alloc_incr ) );
+         d_buf.reset( static_cast<char *>( malloc( d_buf_alloc_incr ) ) );
+         if( !d_buf ) {
+            return false;
+            }
          d_bufsize = d_buf_alloc_incr;
          }
-      auto pinb( d_buf );
+      auto pinb( d_buf.get() );
       auto avail( d_bufsize );
       for( ; ; ) {
          if( fgets( pinb, avail, d_ifh ) == nullptr ) { // eof, error?
@@ -76,17 +78,24 @@ public:
          const auto segLen( strlen( pinb ) );
          if( segLen == 0 || pinb[segLen-1] != '\n' ) {
             pinb += segLen;  // *pinb == '\0'
-            const auto bchars( (pinb - d_buf) + 1 );  // include '\0'
+            const auto bchars( (pinb - d_buf.get()) + 1 );  // include '\0'
             if( bchars == d_bufsize ) {
-               d_bufsize += d_buf_alloc_incr;
-               d_buf = static_cast<char *>( realloc( d_buf, d_bufsize ) );
-               pinb = d_buf + bchars - 1;
+               const auto newBufsize( d_bufsize + d_buf_alloc_incr );
+               auto oldBuf( d_buf.release() );
+               auto newBuf( static_cast<char *>( realloc( oldBuf, newBufsize ) ) );
+               if( !newBuf ) {
+                  d_buf.reset( oldBuf );
+                  return false;
+                  }
+               d_buf.reset( newBuf );
+               d_bufsize = newBufsize;
+               pinb = d_buf.get() + bchars - 1;
                }
-            avail = d_bufsize - (pinb - d_buf);
+            avail = d_bufsize - (pinb - d_buf.get());
             continue;
             }
          // we have finished reading a line (to a '\n', OR hit EoF before a trailing '\n')
-         stref rv( d_buf, (pinb - d_buf) + segLen );
+         stref rv( d_buf.get(), (pinb - d_buf.get()) + segLen );
 #ifdef UNITTEST
          d_bytesRead += rv.length();
 #endif

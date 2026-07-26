@@ -667,7 +667,7 @@ PCCMD CmdFromKbdForExec() {
 #if 0 // to get every (valid) keystroke to display
    else {
       char kystr[50];
-      KeyNmOfEdkc( BSOB(kystr), cmddata.EdKcEnum );          DBG( "EdKc=%s", kystr );
+      KeyNmOfEdkc( span{kystr}, cmddata.EdKcEnum );          DBG( "EdKc=%s", kystr );
       }
 #endif
    const auto pCmd( s_Key2CmdTbl[ cmddata.EdKcEnum ] );

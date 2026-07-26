@@ -52,10 +52,10 @@ bool IsWin7OrLater() {
    return (major > 6) || ((major == 6) && (minor >= 1));
    }
 
-PChar GetCPName( PChar buf, size_t sizeofBuf, Win32::UINT cp ) {
+PChar GetCPName( span<char> buf, Win32::UINT cp ) {
    Win32::CPINFOEX cpix;
-   scpy( buf, sizeofBuf, Win32::GetCPInfoEx( cp, 0, &cpix ) ? cpix.CodePageName : "?" );
-   return buf;
+   scpy( buf, Win32::GetCPInfoEx( cp, 0, &cpix ) ? cpix.CodePageName : "?" );
+   return buf.data();
    }
 
 void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
@@ -63,11 +63,11 @@ void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
    pFBuf->FmtLastLine( "OsVerStr                 = %s" , OsVerStr() );
    // To set a console's input code page, use the SetConsoleCP function. To set and query a console's output code page, use the SetConsoleOutputCP and GetConsoleOutputCP functions.
    pathbuf pbuf;
-   pFBuf->FmtLastLine( "Console INPUT  Code Page = Win32::GetConsoleCP()       = %s" , GetCPName( BSOB(pbuf), Win32::GetConsoleCP() ) );
-   pFBuf->FmtLastLine( "Console OUTPUT Code Page = Win32::GetConsoleOutputCP() = %s" , GetCPName( BSOB(pbuf), Win32::GetConsoleOutputCP() ) );
+   pFBuf->FmtLastLine( "Console INPUT  Code Page = Win32::GetConsoleCP()       = %s" , GetCPName( span{pbuf}, Win32::GetConsoleCP() ) );
+   pFBuf->FmtLastLine( "Console OUTPUT Code Page = Win32::GetConsoleOutputCP() = %s" , GetCPName( span{pbuf}, Win32::GetConsoleOutputCP() ) );
    pFBuf->FmtLastLine( "Misc Code Pages:" );
-   pFBuf->FmtLastLine( "  Win32::GetOEMCP()           = %s" , GetCPName( BSOB(pbuf), Win32::GetOEMCP() ) );
-   pFBuf->FmtLastLine( "  Win32::GetACP() (ANSI)      = %s" , GetCPName( BSOB(pbuf), Win32::GetACP() )   );
+   pFBuf->FmtLastLine( "  Win32::GetOEMCP()           = %s" , GetCPName( span{pbuf}, Win32::GetOEMCP() ) );
+   pFBuf->FmtLastLine( "  Win32::GetACP() (ANSI)      = %s" , GetCPName( span{pbuf}, Win32::GetACP() )   );
    }
 
 PCChar OsErrStr( PChar dest, size_t sizeofDest, int errorCode ) {

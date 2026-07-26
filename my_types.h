@@ -102,6 +102,8 @@ typedef std::back_insert_iterator<std::string> string_back_inserter;
 // driven by https://news.ycombinator.com/item?id=8704318 I've deployed
 // std::string_view to minimize gratuitious std::string mallocs/copies
 #include <string_view>
+#include <span>
+using std::span;
 typedef std::string_view stref; // https://en.cppreference.com/w/cpp/header/string_view
 typedef stref::size_type sridx;
 constexpr auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::npos )' syntax is used!
@@ -166,10 +168,9 @@ template<typename T> class TD;
 // TD<decltype(x)> xType; // elicit errors containing
 // TD<decltype(y)> yType; // x's and y's types
 
-// Since I've adopted a tactic of always including a trailing 'sizeof buffer'
-// parameter whenever specifying a PChar (destination) parameter, here is a macro
-// that will save some typing in circumstances where an array variable name (vs. a
-// pointer) is passed to such a function:
+// Internal C++ interfaces use span{buffer} to carry a buffer and its
+// extent together. Raw C APIs still require the two separate arguments
+// produced by BSOB.
 //
 // BSOB => "Buffer, SizeOf Buffer"
 // AEOA => "Array , ElementsOf Array"

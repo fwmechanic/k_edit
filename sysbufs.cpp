@@ -22,6 +22,7 @@
 
 #include "ed_main.h"
 #include "ed_search.h"   // for RegexVersion()
+#include <span>
 
 STATIC_VAR CPCChar s_InvisibleFilenames[] = {
    kszClipboard  ,
@@ -61,9 +62,9 @@ bool ARG::nextselbuf() {
    return true;
    }
 
-STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, CPCChar *pC, size_t elements ) {
-   for( decltype(elements) ix(0) ; ix < elements ; ++ix ) {
-      if( pFBuf->NameMatch( pC[ix] ) ) {
+STATIC_FXN bool FileMatchesNameInList( PCFBUF pFBuf, span<const PCChar> names ) {
+   for( const auto name : names ) {
+      if( pFBuf->NameMatch( name ) ) {
          return true;
          }
       }
@@ -103,23 +104,23 @@ bool FBUF::IsInvisibleFile( int widx ) const {
    if( widx >= 0 && IsWFilesName( Namestr() ) == widx ) {
       return true;
       }
-   return FileMatchesNameInList( this, s_InvisibleFilenames, ELEMENTS( s_InvisibleFilenames ) );
+   return FileMatchesNameInList( this, s_InvisibleFilenames );
    }
 
 bool FBUF::IsInterestingFile( int widx ) const {
    if( widx >= 0 && IsWFilesName( Namestr() ) == widx ) {
       return false;
       }
-   return !FileMatchesNameInList( this, s_UninterestingFilenames, ELEMENTS( s_UninterestingFilenames ) );
+   return !FileMatchesNameInList( this, s_UninterestingFilenames );
    }
 
-STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFBufs[], int pFBufsEls ) {
-   auto ix( 0 );
+STATIC_FXN size_t NextNInterestingFiles( int widx, bool fFromWinViewList, span<PFBUF> fbufs ) {
+   size_t ix( 0 );
    if( fFromWinViewList ) {
       DLINKC_FIRST_TO_LASTA( g_CurViewHd(), d_dlinkViewsOfWindow, pv ) // find
          if( pv->FBuf()->IsInterestingFile( widx ) ) {
-            pFBufs[ix++] = pv->FBuf();
-            if( !(ix < pFBufsEls) ) {
+            fbufs[ix++] = pv->FBuf();
+            if( !(ix < fbufs.size()) ) {
                break;
                }
             }
@@ -135,8 +136,8 @@ STATIC_FXN int NextNInterestingFiles( int widx, bool fFromWinViewList, PFBUF pFB
          auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
          if( pFBuf->IsInterestingFile( widx ) ) {
-            pFBufs[ix++] = pFBuf;
-            if( !(ix < pFBufsEls) ) {
+            fbufs[ix++] = pFBuf;
+            if( !(ix < fbufs.size()) ) {
                break;
                }
             }
@@ -162,7 +163,7 @@ bool ARG::files() {  // bound to alt+f2
    //
    //////////////////////////////////////////////////////////////////////////
    PFBUF pFBufs[2];
-   if( ELEMENTS(pFBufs) != NextNInterestingFiles( winIdx, fWinFiles, pFBufs, ELEMENTS(pFBufs) ) ) {
+   if( ELEMENTS(pFBufs) != NextNInterestingFiles( winIdx, fWinFiles, pFBufs ) ) {
       return Msg( "not enough files" );
       }
    0 && DBG( "%s: [0]=%s, [1]=%s", __func__, pFBufs[0]->Name(), pFBufs[1]->Name() );
@@ -179,7 +180,7 @@ void FBufRead_Assign_SubHd( PFBUF pFBuf, PCChar subhd, int count ) {
 stref BoostVersion() {
    STATIC_VAR char s_BoostVer[31] = { '\0', };
    if( '\0' == s_BoostVer[0] ) {
-      safeSprintf( BSOB(s_BoostVer), "Boost %d.%d.%d"
+      safeSprintf( span{s_BoostVer}, "Boost %d.%d.%d"
                  , BOOST_VERSION / 100000
                  , BOOST_VERSION / 100 % 1000
                  , BOOST_VERSION % 100

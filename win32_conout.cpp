@@ -140,7 +140,7 @@ ConsoleScreenBufferInfo::ConsoleScreenBufferInfo( Win32::HANDLE hCSB, PCChar nam
    if( d_maxSize.X == 0 || d_maxSize.Y == 0 || !GetConsoleScreenBufferInfo( d_hCSB, &d_csbi ) ) {
       d_isValid = false;
       if( name && !fFailQuietly ) {
-         linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::GetConsoleScreenBufferInfo on %s FAILED: %s", name, OsErrStr( BSOB(oseb) ) ) );
+         linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::GetConsoleScreenBufferInfo on %s FAILED: %s", name, OsErrStr( span{oseb} ) ) );
          }
       }
    else {
@@ -178,7 +178,7 @@ STATIC_FXN Win32::HANDLE NewConsoleScreenBuffer( PCChar tag ) {
    0 && DBG( "%s+ from %s", __func__, tag );
    const auto hcsb( Win32::CreateConsoleScreenBuffer( (GENERIC_READ | GENERIC_WRITE), (FILE_SHARE_READ|FILE_SHARE_WRITE), nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr ) );
    if( hcsb == Win32::Invalid_Handle_Value() ) {
-      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::CreateConsoleScreenBuffer FAILED: 0x%08lX=%s", Win32::GetLastError(), OsErrStr( BSOB(oseb) ) ) );
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::CreateConsoleScreenBuffer FAILED: 0x%08lX=%s", Win32::GetLastError(), OsErrStr( span{oseb} ) ) );
       exit( 1 );
       }
    0 && DBG( "%s- from %s", __func__, tag );
@@ -193,7 +193,7 @@ TConsoleOutputControl::TConsoleOutputControl( int yHeight, int xWidth )
    // associate d_hConsoleScreenBuffer w/"the window" FIRST so that csbi, which
    // is derived from d_hConsoleScreenBuffer, will return correct window dims
    if( Win32::SetConsoleActiveScreenBuffer( d_hConsoleScreenBuffer ) == 0 ) {
-      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleActiveScreenBuffer FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleActiveScreenBuffer FAILED: %s", OsErrStr( span{oseb} ) ) );
       exit( 1 );
       }
    YX_t newSize; newSize.lin=yHeight; newSize.col=xWidth;
@@ -368,7 +368,7 @@ STATIC_FXN bool SetConsoleWindowSizeOk( const Win32::HANDLE d_hConsoleScreenBuff
       );
    if( !Win32::SetConsoleWindowInfo( d_hConsoleScreenBuffer, 1, &newWinMapRect ) ) {
       linebuf oseb;
-      DBG( "%s FAILED: %s", __func__, OsErrStr( BSOB(oseb) ) );
+      DBG( "%s FAILED: %s", __func__, OsErrStr( span{oseb} ) );
       return false;
       }
    return true;
@@ -414,7 +414,7 @@ void win_fully_on_desktop() { enum { SHOWDBG = 1 };
       SHOWDBG && DBG( "winnew X=[%4ld,....], Y=[%4ld,....]", rcWinNew.left , rcWinNew.top );
       if( !Win32::SetWindowPos( hwnd, nullptr, rcWinNew.left, rcWinNew.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER ) ) {
          linebuf oseb;
-         DBG( "%s: Win32::SetWindowPos FAILED: %s", __func__, OsErrStr( BSOB(oseb) ) );
+         DBG( "%s: Win32::SetWindowPos FAILED: %s", __func__, OsErrStr( span{oseb} ) );
          }
       }
    }
@@ -428,7 +428,7 @@ STATIC_FXN bool SetConsoleBufferSizeOk( const Win32::HANDLE d_hConsoleScreenBuff
    if( !Win32::SetConsoleScreenBufferSize( d_hConsoleScreenBuffer, dwSize ) ) {
       // *** ConsoleScreenBuffer resize failed (likely too small): restore window mapping and exit
       linebuf oseb;
-      DBG( "%s FAILED: %s", __func__, OsErrStr( BSOB(oseb) ) );
+      DBG( "%s FAILED: %s", __func__, OsErrStr( span{oseb} ) );
       return false;
       }
    return true;
@@ -682,7 +682,7 @@ int  TConsoleOutputControl::WriteConsoleOutput_wrap( LINE yMin, LINE yMax, COL x
            , &destRect      // ON INPUT , the structure members specify the upper-left and lower-right coordinates of the console screen buffer rectangle to write to.
                             // ON OUTPUT, the structure members specify the actual rectangle that was used.
            )
-     ) { linebuf oseb; DBG( "%s FAILED: %s", "WriteConsoleOutput", OsErrStr( BSOB(oseb) ) ); }
+     ) { linebuf oseb; DBG( "%s FAILED: %s", "WriteConsoleOutput", OsErrStr( span{oseb} ) ); }
    if( LOG_CONSOLE_WRITES &&
        (  before.Top    != destRect.Top
        || before.Bottom != destRect.Bottom
@@ -896,7 +896,7 @@ bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
    if( !ghConsoleSection ) {
       ghConsoleSection = Win32::CreateFileMapping( Win32::Invalid_Handle_Value(), nullptr, PAGE_READWRITE, 0, gnConsoleSectionSize, nullptr );
       if( !ghConsoleSection ) {
-         linebuf oseb; DBG( "'%s' -> Can't CreateFileMapping(ghConsoleSection): %s", __func__, OsErrStr( BSOB(oseb) ) );
+         linebuf oseb; DBG( "'%s' -> Can't CreateFileMapping(ghConsoleSection): %s", __func__, OsErrStr( span{oseb} ) );
          return false;
          }
       }
@@ -904,7 +904,7 @@ bool SetConsoleInfo( Win32::HWND hwndConsole, CONSOLE_INFO *pci ) {
    //
    const auto ptrView( Win32::MapViewOfFile( ghConsoleSection, FILE_MAP_WRITE|FILE_MAP_READ, 0, 0, gnConsoleSectionSize ) );
    if( !ptrView ) {
-      linebuf oseb;  DBG( "'%s' -> Can't MapViewOfFile: %s", __func__, OsErrStr( BSOB(oseb) ) );
+      linebuf oseb;  DBG( "'%s' -> Can't MapViewOfFile: %s", __func__, OsErrStr( span{oseb} ) );
       return false;
       }
 #define  RESTORE_WIN_VISIBILITY  0
@@ -1082,7 +1082,7 @@ STATIC_FXN void Copy_CSBI_content_to_g_pFBufConsole( Win32::HANDLE hConout, cons
          SD && DBG( "ReadConsoleOutputA srcRgn: Y=(%4d,%4d), X=(%d,%d)", srcRgn.Top, srcRgn.Bottom, srcRgn.Left, srcRgn.Right );
          if( Win32::ReadConsoleOutputA( hConout, dest_buf, dest_buf_size, bufPos, &srcRgn ) == 0 ) {
             linebuf oseb;
-            g_pFBufConsole->FmtLastLine( "***/\n*** Win32::ReadConsoleOutputA FAILED: %s ***\n***\\", OsErrStr( BSOB(oseb) ) );
+            g_pFBufConsole->FmtLastLine( "***/\n*** Win32::ReadConsoleOutputA FAILED: %s ***\n***\\", OsErrStr( span{oseb} ) );
             }
          else {
             auto pc( dest_buf );
@@ -1143,21 +1143,21 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
    }
    if( CON_DBG ) {
       char pbuf[81];
-      PRTF_IT( "Console INPUT  Code Page = Win32::GetConsoleCP()       = %s" , GetCPName( BSOB(pbuf), Win32::GetConsoleCP() ) );
-      PRTF_IT( "Console OUTPUT Code Page = Win32::GetConsoleOutputCP() = %s" , GetCPName( BSOB(pbuf), Win32::GetConsoleOutputCP() ) );
+      PRTF_IT( "Console INPUT  Code Page = Win32::GetConsoleCP()       = %s" , GetCPName( span{pbuf}, Win32::GetConsoleCP() ) );
+      PRTF_IT( "Console OUTPUT Code Page = Win32::GetConsoleOutputCP() = %s" , GetCPName( span{pbuf}, Win32::GetConsoleOutputCP() ) );
       PRTF_IT( "Misc Code Pages:" );
-      PRTF_IT( "  Win32::GetOEMCP()           = %s" , GetCPName( BSOB(pbuf), Win32::GetOEMCP() ) );
-      PRTF_IT( "  Win32::GetACP() (ANSI)      = %s" , GetCPName( BSOB(pbuf), Win32::GetACP() )   );
+      PRTF_IT( "  Win32::GetOEMCP()           = %s" , GetCPName( span{pbuf}, Win32::GetOEMCP() ) );
+      PRTF_IT( "  Win32::GetACP() (ANSI)      = %s" , GetCPName( span{pbuf}, Win32::GetACP() )   );
       }
 #undef   PRTF_IT
    CON_DBG&&DBG( "%s 1", __PRETTY_FUNCTION__ );
    {
    const auto OemCP( Win32::GetOEMCP() );
    if( (s_atStartupConsoleCP=Win32::GetConsoleCP())             != OemCP && !Win32::SetConsoleCP(OemCP) ) {
-      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleCP(OemCP) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleCP(OemCP) FAILED: %s", OsErrStr( span{oseb} ) ) );
       }
    if( (s_atStartupConsoleOutputCP=Win32::GetConsoleOutputCP()) != OemCP && !Win32::SetConsoleOutputCP(OemCP) ) {
-      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleOutputCP(OemCP) FAILED: %s", OsErrStr( BSOB(oseb) ) ) );
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::SetConsoleOutputCP(OemCP) FAILED: %s", OsErrStr( span{oseb} ) ) );
       }
    }
    // following is VERY sequence-dependent code
@@ -1166,7 +1166,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
    { // close any pipes that idiot spawning processes (like Accurev) may have bound to our STDHANDLES
    const auto hStdin( Win32::GetStdHandle( Win32::Std_Input_Handle() ) );
    if( Win32::Invalid_Handle_Value() == hStdin ) {
-      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::GetStdHandle( STD_INPUT_HANDLE ) FAILED: returned INVALID_HANDLE_VALUE %s", OsErrStr( BSOB(oseb) ) ) );
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::GetStdHandle( STD_INPUT_HANDLE ) FAILED: returned INVALID_HANDLE_VALUE %s", OsErrStr( span{oseb} ) ) );
       exit( 1 );
       }
    if( nullptr != hStdin ) {                                                              // VidInitApiError( "Win32::GetStdHandle( STD_INPUT_HANDLE ) FAILED: returned NULL" );
@@ -1183,7 +1183,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
    {
    const auto hConout( Win32::GetStdHandle( Win32::Std_Output_Handle() ) );
    if( Win32::Invalid_Handle_Value() == hConout ) {
-      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::GetStdHandle( STD_OUTPUT_HANDLE ) FAILED: returned INVALID_HANDLE_VALUE %s", OsErrStr( BSOB(oseb) ) ) );
+      linebuf oseb; VidInitApiError( FmtStr<120>( "Win32::GetStdHandle( STD_OUTPUT_HANDLE ) FAILED: returned INVALID_HANDLE_VALUE %s", OsErrStr( span{oseb} ) ) );
       exit( 1 );
       }
    if( nullptr != hConout ) {                                                             // VidInitApiError( "Win32::GetStdHandle( STD_INPUT_HANDLE ) FAILED: returned NULL" );
@@ -1210,7 +1210,7 @@ bool ConIO::StartupOk( bool fForceNewConsole ) { enum { CON_DBG = 0 }; CON_DBG&&
                                                                                            CON_DBG&&DBG( "Win32::FreeConsole() %s" , fFreeConOK  ? "succeeded" : "FAILED" );
       const auto fAllocConOK( Win32::AllocConsole() != 0 ); // attach to a new console
       if( fAllocConOK ) {  CON_DBG && DBG( "Win32::AllocConsole() succeeded" ); }
-      else { linebuf oseb; CON_DBG && DBG( "Win32::AllocConsole() FAILED: %s", OsErrStr( BSOB(oseb) ) ); }
+      else { linebuf oseb; CON_DBG && DBG( "Win32::AllocConsole() FAILED: %s", OsErrStr( span{oseb} ) ); }
       }                                                                                    CON_DBG&&DBG( "%s 40", __PRETTY_FUNCTION__ );
    s_EditorScreen = new TConsoleOutputControl( initialWinSize.lin, initialWinSize.col );   CON_DBG&&DBG( "%s 50", __PRETTY_FUNCTION__ );
    Conin_Init();                                                                           CON_DBG&&DBG( "%s 60", __PRETTY_FUNCTION__ );

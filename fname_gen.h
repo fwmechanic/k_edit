@@ -63,7 +63,7 @@ public:
       : DiceableString( str )
       {
       extern void ChopAscizzOnDelim( PChar cur, PCChar pszDelim );
-      ChopAscizzOnDelim( d_heapString, pszDelims );
+      ChopAscizzOnDelim( d_heapString.get(), pszDelims );
       }
    };
 
@@ -72,8 +72,8 @@ class StrSubstituterGenerator;  // "static"
 class CfxFilenameGenerator : public PathStrGenerator {
    NO_COPYCTOR(CfxFilenameGenerator);
    NO_ASGN_OPR(CfxFilenameGenerator);
-   WildcardFilenameGenerator *d_pWcGen = nullptr;
-   StrSubstituterGenerator   *d_pSSG = nullptr;
+   std::unique_ptr<WildcardFilenameGenerator> d_pWcGen;
+   std::unique_ptr<StrSubstituterGenerator>   d_pSSG;
    DicedOnDelimString         d_splitLine;
    WildCardMatchMode          d_matchMode;
    PCChar d_pszEntrySuffix = nullptr;
@@ -90,7 +90,7 @@ class FilelistCfxFilenameGenerator : public PathStrGenerator {
    NO_ASGN_OPR( FilelistCfxFilenameGenerator );
    PFBUF                  d_pFBuf;
    LINE                   d_curLine = 0;
-   CfxFilenameGenerator  *d_pCfxGen = nullptr;
+   std::unique_ptr<CfxFilenameGenerator> d_pCfxGen;
    Path::str_t            d_sbuf;
    std::string            d_nmBuf;
 public:
@@ -100,7 +100,7 @@ public:
       , d_nmBuf( src )
       {}
    bool VGetNextName( Path::str_t &dest ) override;
-   virtual ~FilelistCfxFilenameGenerator() { Delete0( d_pCfxGen ); }
+   ~FilelistCfxFilenameGenerator() override = default;
    };
 
 //-----------------------------------

@@ -937,7 +937,7 @@ bool ARG::paste() {
                                 cmdstrbuf.Strcpy( pSrcFnm );
                                 }
                              else {
-                                CompletelyExpandFName_wEnvVars( BSOB(cmdstrbuf), pSrcFnm );
+                                CompletelyExpandFName_wEnvVars( span{cmdstrbuf}, pSrcFnm );
                                 }
                              const auto pFBuf( FindFBufByName( cmdstrbuf ) );
                              if( pFBuf ) {

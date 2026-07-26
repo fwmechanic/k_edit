@@ -28,6 +28,9 @@
 #include "ed_mem.h" // for Strdup()
 
 extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val );
+STIL void chkdVsnprintf( span<char> buf, PCChar format, va_list val ) {
+   chkdVsnprintf( buf.data(), buf.size(), format, val );
+   }
 #define   use_vsnprintf  chkdVsnprintf
 
 #ifndef WL
@@ -259,11 +262,18 @@ TF_Ptr STIL Ptr  Eos( Ptr psz ) { return psz + Strlen( psz ); }
 
 extern sridx scpy( PChar dest, size_t sizeof_dest, stref src );
 extern sridx scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
+STIL sridx scpy( span<char> dest, stref src ) {
+   return scpy( dest.data(), dest.size(), src );
+   }
+STIL sridx scat( span<char> dest, stref src, size_t destLen=0 ) {
+   return scat( dest.data(), dest.size(), src, destLen );
+   }
 
-#define    bcpy( d, s )     scpy( BSOB(d), s )
-#define    bcat( l, d, s )  scat( BSOB(d), s, l )
+#define    bcpy( d, s )     scpy( span{d}, s )
+#define    bcat( l, d, s )  scat( span{d}, s, l )
 
 extern PChar  safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) ATTR_FORMAT(3,4);
+extern PChar  safeSprintf( span<char> dest, PCChar format, ... ) ATTR_FORMAT(2,3);
 
 STIL std::string & PadRight( std::string &inout, sridx width, char padCh=' ' ) {
    if( width > inout.length() ) { // trail-pad with spaces to width
@@ -432,7 +442,7 @@ public:
    stref  sr()    const { return stref( d_buf, std::min( elements-1, Strlen( d_buf ) ) ); }
    PCChar c_str() const { return d_buf; }
    void Vsprintf( PCChar format, va_list val ) { // yes, part of the PUBLIC interface!
-      use_vsnprintf( BSOB(d_buf), format, val );
+      use_vsnprintf( span{d_buf}, format, val );
       }
    PCChar Sprintf( PCChar format, ... ) ATTR_FORMAT(2,3) {
       va_list args; va_start(args, format);
@@ -572,19 +582,19 @@ public:
 class DiceableString {
    // a heap string containing an ascizz string (an ASCII string with TWO (2) trailing NUL chars)
 protected:
-   PChar d_heapString;
+   malloc_ptr<char[]> d_heapString;
 public:
    DiceableString( stref src )
       : d_heapString( Strdup( src, 1 ) ) // tricky: d_heapString is created with 2 trailing NULs
       {}
    void DBG() const;
-   virtual ~DiceableString() { Free0( d_heapString ); }
+   virtual ~DiceableString() = default;
 #if DBG_DiceableString
    PCChar GetNext_( PCChar cur ) const {
 #else
    PCChar GetNext( PCChar cur ) const {
 #endif
-      if( !cur ) return *d_heapString ? d_heapString : nullptr;
+      if( !cur ) return d_heapString[0] ? d_heapString.get() : nullptr;
       const auto rv( Eos( cur ) + 1 );
       return *rv ? rv : nullptr;
       }

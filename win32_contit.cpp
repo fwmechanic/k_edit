@@ -87,7 +87,7 @@ bool EdFilesStatus::Changed() { // BUGBUG this is near-identical to EditorFilesy
    const auto now( EditorFilesStatus() );
    if( d_efs != now ) {
       d_efs = now;
-      safeSprintf( BSOB(d_buf), "%" PR_SIZET "/%" PR_SIZET "", d_efs.dirtyFBufs, d_efs.openFBufs );
+      safeSprintf( span{d_buf}, "%" PR_SIZET "/%" PR_SIZET "", d_efs.dirtyFBufs, d_efs.openFBufs );
       return true;
       }
    return false;
@@ -164,7 +164,7 @@ bool BatteryStatus::Changed() {
       }
    }
    if( fChanged ) {
-      safeSprintf( BSOB(d_buf), "--- Battery=%d%%", newVal );
+      safeSprintf( span{d_buf}, "--- Battery=%d%%", newVal );
       }
    return fChanged;
    }
@@ -184,7 +184,7 @@ size_t GetProcessMem() {
 bool MemStatus::Changed() {
    dbuf dbnew;
    const auto showSize( GetProcessMem() / (1024*(g_fShowMemUseInK ? 1 : 1024)) );
-   safeSprintf( BSOB(dbnew), "%s.ProcessMem=%" PR_SIZET "%ci", ExecutableFormat(), showSize, (g_fShowMemUseInK ? 'K' : 'M') );
+   safeSprintf( span{dbnew}, "%s.ProcessMem=%" PR_SIZET "%ci", ExecutableFormat(), showSize, (g_fShowMemUseInK ? 'K' : 'M') );
    if( 0!=strcmp( d_buf, dbnew ) ) {
       bcpy( d_buf, dbnew );
       return true;
@@ -206,7 +206,7 @@ bool LuaMemStatus::Changed() {
    if( rv ) {
       const auto lheapsz( d_Size / 1024 );
       if( d_Size ) {
-         safeSprintf( BSOB(d_buf), "LuaHeap=%iKi", lheapsz );
+         safeSprintf( span{d_buf}, "LuaHeap=%iKi", lheapsz );
          }
       else {
          d_buf[0] = '\0';
@@ -226,7 +226,7 @@ bool CursMoves::Changed() {
    const auto newVal( DispCursorMoves() );
    const auto rv( d_prev != newVal );
    d_prev = newVal;
-   if( rv ) { safeSprintf( BSOB(d_buf), ", CursMv=%d", newVal ); }
+   if( rv ) { safeSprintf( span{d_buf}, ", CursMv=%d", newVal ); }
    return rv;
    }
 //------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ bool StatLnUpdts::Changed() {
    const auto newVal( DispStatLnUpdates() );
    const auto rv( d_prev != newVal );
    d_prev = newVal;
-   if( rv ) { safeSprintf( BSOB(d_buf), ", StLnW=%d", newVal ); }
+   if( rv ) { safeSprintf( span{d_buf}, ", StLnW=%d", newVal ); }
    return rv;
    }
 //------------------------------------------------------------------------------
@@ -256,35 +256,35 @@ bool ScreenRefreshes::Changed() {
    const auto newVal( g_WriteConsoleOutputLines );
    const auto rv( d_prev != newVal );
    d_prev = newVal;
-   if( rv ) { safeSprintf( BSOB(d_buf), ", ScrLnW=%d:%d", g_WriteConsoleOutputCalls, g_WriteConsoleOutputLines ); }
+   if( rv ) { safeSprintf( span{d_buf}, ", ScrLnW=%d:%d", g_WriteConsoleOutputCalls, g_WriteConsoleOutputLines ); }
    return rv;
    }
 #endif//DISP_LL_STATS
 
-STATIC_VAR std::vector<TitleBarContributor *> s_tbcs;
+STATIC_VAR std::vector<std::unique_ptr<TitleBarContributor>> s_tbcs;
 
 void UpdateConsoleTitle_Init() {
-   s_tbcs.push_back( new EdFilesStatus()   );
-   s_tbcs.push_back( new CwdStatus()       );
-   s_tbcs.push_back( new MemStatus()       );
-   s_tbcs.push_back( new LuaMemStatus()    );
+   s_tbcs.push_back( std::make_unique<EdFilesStatus>() );
+   s_tbcs.push_back( std::make_unique<CwdStatus>() );
+   s_tbcs.push_back( std::make_unique<MemStatus>() );
+   s_tbcs.push_back( std::make_unique<LuaMemStatus>() );
 #if     DISP_LL_STATS
-   s_tbcs.push_back( new CursMoves()       );
-   s_tbcs.push_back( new StatLnUpdts()     );
-   s_tbcs.push_back( new ScreenRefreshes() );
+   s_tbcs.push_back( std::make_unique<CursMoves>() );
+   s_tbcs.push_back( std::make_unique<StatLnUpdts>() );
+   s_tbcs.push_back( std::make_unique<ScreenRefreshes>() );
 #endif//DISP_LL_STATS
-   s_tbcs.push_back( new BatteryStatus()   );
+   s_tbcs.push_back( std::make_unique<BatteryStatus>() );
    }
 
 void UpdateConsoleTitle() {
    auto changed( 0 );
-   for( auto tbc : s_tbcs ) {
+   for( const auto &tbc : s_tbcs ) {
       changed += tbc->Changed();
       }
    if( changed ) {
       std::string buf;
       BoolOneShot first;
-      for( auto tbc : s_tbcs ) {
+      for( const auto &tbc : s_tbcs ) {
          if( !first ) { buf += " "; }
          buf += tbc->Str();
          }

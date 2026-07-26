@@ -232,7 +232,7 @@ class EdOpLineRangeDelete : public EditRec {
    const LINE      d_LineCount;  // length of file beforehand
    const LINE      d_firstLine;  // number of first line that was operated on
    const LINE      d_linesDeleted;  // number of lines deleted
-         LineInfo *d_paLi;
+   malloc_ptr<LineInfo[]> d_paLi; // owns only the array, not content referenced by its elements
    IF_UNDO_REDO_MARKS( NamedPointHead  d_MarkListHd; )
 public:
    EdOpLineRangeDelete( PFBUF fb, LINE firstLine_, LINE lastLine )
@@ -247,7 +247,7 @@ public:
    ~EdOpLineRangeDelete();
    void VUndo() override {
       d_pFBuf->InsertLines__ForUndoRedo( d_firstLine        , d_linesDeleted );
-      MoveArray( d_pFBuf->d_paLineInfo + d_firstLine, d_paLi, d_linesDeleted );
+      MoveArray( d_pFBuf->d_paLineInfo + d_firstLine, d_paLi.get(), d_linesDeleted );
       d_pFBuf->SetLineCount( d_LineCount );
       IF_UNDO_REDO_MARKS( copyUndoMarks( d_pFBuf, d_MarkListHd, d_firstLine ); )
       }
@@ -259,9 +259,7 @@ public:
    };
 
 EdOpLineRangeDelete::~EdOpLineRangeDelete() {
-#if 1
-   Free0( d_paLi ); // DON'T free what d_paLi[..] points to!
-#else
+#if 0
    // This ...
    //
    DestroyLineInfoArray( paLi, &cLine );

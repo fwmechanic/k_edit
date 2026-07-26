@@ -52,7 +52,7 @@ namespace LExFx { // exported functions
    STATIC_FXN int StartShellExecuteProcess( lua_State *L ) {  ::StartShellExecuteProcess( S_(1), So0_(2) ); RZ; }
    STATIC_FXN int StartConProcess( lua_State *L )    { R_int( ::StartConProcess( S_(1) ) ); }
    STATIC_FXN int StartGuiProcess( lua_State *L )    { R_int( ::StartGuiProcess( S_(1) ) ); }
-   STATIC_FXN int OsErrStr( lua_State *L )           { linebuf lb; ::OsErrStr( BSOB(lb) ); R_str( lb ); }
+   STATIC_FXN int OsErrStr( lua_State *L )           { linebuf lb; ::OsErrStr( span{lb} ); R_str( lb ); }
    STATIC_FXN int OsName( lua_State *L )             { R_str( ::OsName() ); }
    STATIC_FXN int OsVer( lua_State *L )              { R_str( ::OsVerStr() ); }
    STATIC_FXN int rmargin( lua_State *L )            { R_int( g_iRmargin ); }

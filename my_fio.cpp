@@ -151,7 +151,7 @@ tempfile::tempfile( PCChar mode )
 //  wrtempfile:alt+t
 //
 bool ARG::wrtempfile() {
-   std::unique_ptr<tempfile> tf( new tempfile( "w" ) );
+   auto tf( std::make_unique<tempfile>( "w" ) );
    if( !tf->fh() ) {
       Msg( "tempfile failed" );
       return false;

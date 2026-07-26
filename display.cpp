@@ -244,12 +244,12 @@ void FTypeSetting::Update() {
       }
 
    w2.cpy( ".eolCommentDelim" );
-   LuaCtxt_Edit::Tbl2S( BSOB(d_eolCommentDelim), kybuf.c_str(), "" );     SD && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
+   LuaCtxt_Edit::Tbl2S( span{d_eolCommentDelim}, kybuf.c_str(), "" );     SD && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
                                                                           0  && DBG( "%s: w0 %" PR_SIZET ", w1 %" PR_SIZET ", w2 %" PR_SIZET, __func__, w0.len(), w1.len(), w2.len() );
    {
    w2.cpy( ".hilite" );
    char hiliteNmBuf[21];
-   LuaCtxt_Edit::Tbl2S( BSOB(hiliteNmBuf), kybuf.c_str(), "" );           SD && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
+   LuaCtxt_Edit::Tbl2S( span{hiliteNmBuf}, kybuf.c_str(), "" );           SD && DBG( "%s: %s = %s", __func__, kybuf.c_str(), d_eolCommentDelim );
    d_hiliteName.assign( hiliteNmBuf );
    }
    {
@@ -541,7 +541,7 @@ void WucState::SetNewWuc( stref src, LINE lin, COL col, PCView wucSrc ) {
               && (wuc.length() == consec_xdigits( wuc ))  // hexnum?
              ) {  // 0x12345678 12345678 0x12345678 12345678  0x0123456789abcdef 0123456789abcdef 0x0123456789abcdef 0123456789abcdef
          char kb[3+MAX_WUC_HEXNUM_LEN] = { '0', 'x', chNUL }; // 3=sizeof(chNUL)+strlen("0x")
-         scat( BSOB(kb), wuc );
+         scat( span{kb}, wuc );
          d_sb.AddString( kb );
          if( SUPPORT_0xdead_beef && 8==wuc.length() ) {
             auto ix( 6 );
@@ -2561,7 +2561,7 @@ STATIC_FXN void DispErrMsg( PCChar emsg ) { DBG( "!!! '%s'", emsg );
 
 void VErrorDialogBeepf( PCChar format, va_list args ) {
    linebuf buffer;
-   chkdVsnprintf( BSOB(buffer), format, args );
+   chkdVsnprintf( span{buffer}, format, args );
    DispErrMsg( buffer );
    }
 
@@ -2569,7 +2569,7 @@ bool ErrorDialogBeepf( PCChar format, ... ) {
    linebuf buffer;
    va_list args;
    va_start(args, format);
-   chkdVsnprintf( BSOB(buffer), format, args );
+   chkdVsnprintf( span{buffer}, format, args );
    va_end(args);
    DispErrMsg( buffer );
    return false;
