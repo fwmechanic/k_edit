@@ -574,7 +574,7 @@ run_my_strutils_unittest: my_strutils_unittest$(EXE_EXT)
 	./my_strutils_unittest$(EXE_EXT)
 
 my_strutils_unittest$(EXE_EXT): CXXFLAGS += -Werror
-my_strutils_unittest$(EXE_EXT): my_strutils_unittest.o
+my_strutils_unittest$(EXE_EXT): my_strutils_unittest.o my_strutils.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_dlink_unittest: dlink_unittest$(EXE_EXT)

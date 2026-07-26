@@ -192,8 +192,11 @@ bool FileOrDirExists( PCChar pszFileName ) {
    return true; // basically, anything by this name gets in the way of a file write
    }
 
-PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
-   return strerror_r( errno, dest, sizeofDest );
+PCChar OsErrStr( stbuf dest ) {
+   if( dest.empty() ) {
+      return dest.data();
+      }
+   return strerror_r( errno, dest.data(), dest.size() );
    }
 
 int ThisProcessInfo::umask() { const auto rv( ::umask( 0 ) ); ::umask( rv ); return rv; }

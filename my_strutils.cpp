@@ -26,16 +26,19 @@
 #include "my_strutils.h"
 #include "my_log.h"
 
-void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val ) {
-   buf[ bufBytes - 1 ] = '\0';
-   const auto rv( WL( vsnprintf, vsnprintf )( buf, bufBytes, format, val ) );
-   if( rv == -1 || buf[ bufBytes - 1 ] != 0 ) {
-      buf[ bufBytes - 1 ] = '\0';
+void chkdVsnprintf( stbuf buf, PCChar format, va_list val ) {
+   if( buf.empty() ) {
+      return;
+      }
+   buf.back() = '\0';
+   const auto rv( WL( vsnprintf, vsnprintf )( buf.data(), buf.size(), format, val ) );
+   if( rv == -1 || buf.back() != 0 ) {
+      buf.back() = '\0';
       STATIC_CONST char fmt[] = "%s: STRING TRUNCATED: '%s'";
    // STATIC_VAR bool alerted;
    // if( !alerted )  ConIO::DbgPopf( fmt, __func__, buf );
    // else
-                      DBG(     fmt, __func__, buf );
+                      DBG(     fmt, __func__, buf.data() );
    // alerted = true;
       }
    }
@@ -49,15 +52,7 @@ STATIC_FXN void StrTruncd_( PCChar fxnm, int truncd, stref src, stref dst ) {
 
 #define  StrTruncd( truncd, src, dst )  StrTruncd_( __func__, truncd, src, dest );
 
-PChar safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) {
-   va_list val;
-   va_start(val, format);
-   chkdVsnprintf( dest, sizeofDest, format, val );
-   va_end(val);
-   return dest;
-   }
-
-PChar safeSprintf( span<char> dest, PCChar format, ... ) {
+PChar safeSprintf( stbuf dest, PCChar format, ... ) {
    va_list val;
    va_start(val, format);
    chkdVsnprintf( dest, format, val );
@@ -65,40 +60,60 @@ PChar safeSprintf( span<char> dest, PCChar format, ... ) {
    return dest.data();
    }
 
-sridx scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen ) {
-   if( 0==destLen && sizeof_dest > 0 && dest[0] ) { destLen = Strlen( dest ); }
-   if( destLen >= sizeof_dest ) { return sizeof_dest > 0 ? sizeof_dest - 1 : 0; }  // basically an assertion condition: there is already an overrun of BSOB(dest,sizeof_dest)
+int DoubleBackslashes( stbuf dest, stref src ) {
+   if( dest.empty() ) {
+      return 0;
+      }
+   auto out( dest.begin() );
+   const auto last( dest.end() - 1 );
+   for( const auto ch : src ) {
+      if( out == last ) {
+         break;
+         }
+      *out++ = ch;
+      if( ch == '\\' && out != last ) {
+         *out++ = '\\';
+         }
+      }
+   *out = '\0';
+   return out - dest.begin();
+   }
+
+sridx scat( stbuf dest, stref src, size_t destLen ) {
+   if( 0==destLen && !dest.empty() && dest[0] ) { destLen = Strlen( dest.data() ); }
+   if( destLen >= dest.size() ) { return !dest.empty() ? dest.size() - 1 : 0; } // basically an assertion condition: there is already an overrun of dest
    size_t truncd( 0 );
    auto cpyLen( src.length() );
-   if( destLen + cpyLen + 1 > sizeof_dest ) {
-      truncd = cpyLen - (sizeof_dest - destLen - 1);
-      cpyLen = sizeof_dest - destLen - 1;
+   if( destLen + cpyLen + 1 > dest.size() ) {
+      truncd = cpyLen - (dest.size() - destLen - 1);
+      cpyLen = dest.size() - destLen - 1;
       }
    if( cpyLen > 0 ) {
-      memcpy( dest + destLen, src.data(), cpyLen );
+      memcpy( dest.data() + destLen, src.data(), cpyLen );
       dest[ destLen + cpyLen ] = '\0';
       }
    if( truncd ) {
-      StrTruncd_( __func__, truncd, src.data(), dest );
+      StrTruncd_( __func__, truncd, src, stref(dest.data(), destLen + cpyLen) );
       }
    return destLen + cpyLen; // new destLen
    }
 
-sridx scpy( PChar dest, size_t sizeof_dest, stref src ) {
+sridx scpy( stbuf dest, stref src ) {
    auto truncd( 0 );
    const auto fullCpyChars( src.length()+1 );
-   const auto destCharsToWr( std::min( sizeof_dest, fullCpyChars ) );
+   const auto destCharsToWr( std::min( dest.size(), fullCpyChars ) );
    if( fullCpyChars > destCharsToWr ) {
       truncd = fullCpyChars - destCharsToWr;
       }
    if( destCharsToWr > 1 ) {
-      memcpy( dest, src.data(), destCharsToWr-1 );
+      memcpy( dest.data(), src.data(), destCharsToWr-1 );
       }
    if( destCharsToWr > 0 ) {
       dest[ destCharsToWr-1 ] = '\0';
       }
    if( truncd > 0 ) {
-      StrTruncd_( __func__, truncd, src.data(), dest );
+      const auto dst( destCharsToWr > 0 ? stref(dest.data(), destCharsToWr-1) : stref{} );
+      StrTruncd_( __func__, truncd, src, dst );
       }
    return destCharsToWr > 0 ? destCharsToWr-1 : 0;
    }

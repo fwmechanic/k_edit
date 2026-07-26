@@ -104,6 +104,7 @@ typedef std::back_insert_iterator<std::string> string_back_inserter;
 #include <string_view>
 #include <span>
 using std::span;
+using stbuf = span<char>;
 typedef std::string_view stref; // https://en.cppreference.com/w/cpp/header/string_view
 typedef stref::size_type sridx;
 constexpr auto eosr = stref::npos; // tag not generated if 'const auto eosr( stref::npos )' syntax is used!

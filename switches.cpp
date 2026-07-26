@@ -84,7 +84,7 @@ STATIC_FXN int delimMirror( int ch ) {
 
 GLOBAL_VAR linebuf g_delims, g_delimMirrors;
 
-void swidDelims( span<char> dest ) {
+void swidDelims( stbuf dest ) {
    safeSprintf( dest, "%s -> %s", g_delims, g_delimMirrors );
    }
 
@@ -117,11 +117,11 @@ GLOBAL_VAR CharMap g_HLJChars;
 
 STATIC_CONST char s_dfltWordChars[] = "_0123456789abcdefghijlkmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ";
 
-STATIC_FXN void swidCharMap( span<char> dest, const CharMap &chMap ) {
+STATIC_FXN void swidCharMap( stbuf dest, const CharMap &chMap ) {
    scpy( dest, chMap.disp );
    }
-STATIC_FXN void swidWordchars  ( span<char> dest ) { swidCharMap( dest, g_WordChars ); }
-STATIC_FXN void swidHLJoinchars( span<char> dest ) { swidCharMap( dest, g_HLJChars  ); }
+STATIC_FXN void swidWordchars  ( stbuf dest ) { swidCharMap( dest, g_WordChars ); }
+STATIC_FXN void swidHLJoinchars( stbuf dest ) { swidCharMap( dest, g_HLJChars  ); }
 
 STATIC_FXN void swixSetChars( CharMap &chMap, stref pS ) { 0 && DBG("%s+ %" PR_BSR, __func__, BSR(pS) );
    if( 0==cmpi( "nonwhite", pS ) ) {

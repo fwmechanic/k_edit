@@ -26,8 +26,8 @@ STATIC_CONST char ClipUnavail[] = "Windows Clipboard Unavailable";
 
 typedef  Win32::HGLOBAL  hglbCopy_t;
 
-STATIC_FXN bool ToWinClipMetaSingleLineXlat( std::string &stbuf ) {
-   return cygpath_xlat( stbuf );
+STATIC_FXN bool ToWinClipMetaSingleLineXlat( std::string &textbuf ) {
+   return cygpath_xlat( textbuf );
    }
 
 STATIC_FXN PChar PrepClip( long size, hglbCopy_t &hglbCopy ) {

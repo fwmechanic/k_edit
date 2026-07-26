@@ -27,10 +27,7 @@
 #include "my_types.h"
 #include "ed_mem.h" // for Strdup()
 
-extern void chkdVsnprintf( PChar buf, size_t bufBytes, PCChar format, va_list val );
-STIL void chkdVsnprintf( span<char> buf, PCChar format, va_list val ) {
-   chkdVsnprintf( buf.data(), buf.size(), format, val );
-   }
+extern void chkdVsnprintf( stbuf buf, PCChar format, va_list val );
 #define   use_vsnprintf  chkdVsnprintf
 
 #ifndef WL
@@ -180,7 +177,7 @@ extern   std::tuple<int, uintmax_t, stref, UI> conv_u( stref sr, UI numberBase=1
 extern PCChar  Add_es( int count );
 extern PCChar  Add_s(  int count );
 extern   int   FlipCase( int ch );
-extern   int   DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc );
+extern   int   DoubleBackslashes( stbuf dest, stref src );
 extern   void  StrUnDoubleBackslashes( PChar pszString );
 
 STIL   bool  StrContainsTabs( stref src )       { return ToBOOL(memchr( src.data(), HTAB, src.length() )); }
@@ -260,7 +257,7 @@ TF_Ptr STIL Ptr  Eos( Ptr psz ) { return psz + Strlen( psz ); }
 
 using chXlat = int (*)( int ch );
 
-STIL void xlatStr( span<char> dest, PCChar src, chXlat fxn ) {
+STIL void xlatStr( stbuf dest, PCChar src, chXlat fxn ) {
    if( dest.empty() ) {
       return;
       }
@@ -271,20 +268,13 @@ STIL void xlatStr( span<char> dest, PCChar src, chXlat fxn ) {
 
 //--------------------------------------------------------------------------------
 
-extern sridx scpy( PChar dest, size_t sizeof_dest, stref src );
-extern sridx scat( PChar dest, size_t sizeof_dest, stref src, size_t destLen=0 );
-STIL sridx scpy( span<char> dest, stref src ) {
-   return scpy( dest.data(), dest.size(), src );
-   }
-STIL sridx scat( span<char> dest, stref src, size_t destLen=0 ) {
-   return scat( dest.data(), dest.size(), src, destLen );
-   }
+extern sridx scpy( stbuf dest, stref src );
+extern sridx scat( stbuf dest, stref src, size_t destLen=0 );
 
 #define    bcpy( d, s )     scpy( span{d}, s )
 #define    bcat( l, d, s )  scat( span{d}, s, l )
 
-extern PChar  safeSprintf( PChar dest, size_t sizeofDest, PCChar format, ... ) ATTR_FORMAT(3,4);
-extern PChar  safeSprintf( span<char> dest, PCChar format, ... ) ATTR_FORMAT(2,3);
+extern PChar  safeSprintf( stbuf dest, PCChar format, ... ) ATTR_FORMAT(2,3);
 
 STIL std::string & PadRight( std::string &inout, sridx width, char padCh=' ' ) {
    if( width > inout.length() ) { // trail-pad with spaces to width
@@ -436,7 +426,7 @@ public:
    FmtStr( PCChar format, ... ) ATTR_FORMAT(2,3) { // this is ambiguous vs 'FixedCharArray( PCChar src )'
       va_list val;
       va_start(val, format);
-      use_vsnprintf( b, sizeof(b), format, val );
+      use_vsnprintf( span{b}, format, val );
       va_end(val);
       }
    operator PCChar() const { return b; }
@@ -465,7 +455,7 @@ public:
       const auto len( Strlen( d_buf ) );
       if( len < sizeof( d_buf ) - 1 ) {
          va_list args; va_start(args, format);
-         use_vsnprintf( d_buf+len, sizeof( d_buf )-len, format, args );
+         use_vsnprintf( span{d_buf}.subspan( len ), format, args );
          va_end(args);
          }
       return d_buf;
@@ -485,7 +475,7 @@ public:
       // only public interface: copy stref into (trailing segment of d_buf described by) this and
       // return a new wref describing the trailing empty segment of d_buf that remains
       wref cpy( stref src ) const {
-         const auto newLen( scpy( d_bp, d_len, src ) );    // index of first un-scpy-written char in d_buf
+         const auto newLen( scpy( span<char>{d_bp, d_len}, src ) ); // index of first un-scpy-written char in d_buf
          return wref{ d_bp + newLen, d_len - newLen -1 };  // -1 for ASCIZ len to sizeof conversion
          }
       // following (bp(), len(), wref()) are FOR Catbuf IMPLEMENTATION (and debug) USE ONLY!

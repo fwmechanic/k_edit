@@ -628,7 +628,10 @@ void DBGNL() {
 
 #if !defined(_WIN32)
 
-static void strftime_us( char *buf, size_t sizeof_buf ) {  // based on https://stackoverflow.com/a/2409054
+static void strftime_us( stbuf buf ) {  // based on https://stackoverflow.com/a/2409054
+   if( buf.empty() ) {
+      return;
+      }
    struct timeval tv;
    time_t nowtime;
    gettimeofday( &tv, nullptr );
@@ -636,16 +639,15 @@ static void strftime_us( char *buf, size_t sizeof_buf ) {  // based on https://s
    struct tm tt;
    const auto fOk( nullptr != localtime_r( &nowtime, &tt ) );
    if( fOk ) {
-      const size_t sftLen( strftime( buf, sizeof_buf, LOG_STRFTIME_FMT, &tt ) );
-      snprintf( buf+sftLen, sizeof_buf-sftLen, ".%06ld" " ", tv.tv_usec );
+      const size_t sftLen( strftime( buf.data(), buf.size(), LOG_STRFTIME_FMT, &tt ) );
+      const auto remaining( buf.subspan( sftLen ) );
+      snprintf( remaining.data(), remaining.size(), ".%06ld" " ", tv.tv_usec );
       }
    else {
-      const auto sftLen( scpy( buf, sizeof_buf, LOG_STRFTIME_FMT ) );
-      snprintf( buf+sftLen, sizeof_buf-sftLen, ".%06ld" " ", 0L );
+      const auto sftLen( scpy( buf, LOG_STRFTIME_FMT ) );
+      const auto remaining( buf.subspan( sftLen ) );
+      snprintf( remaining.data(), remaining.size(), ".%06ld" " ", 0L );
       }
-   }
-static void strftime_us( span<char> buf ) {
-   strftime_us( buf.data(), buf.size() );
    }
 
 #endif

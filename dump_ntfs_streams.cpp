@@ -58,9 +58,9 @@ void dumphdr( WIN32_STREAM_ID & wsi )
 		case BACKUP_REPARSE_DATA   : pid = "BACKUP_REPARSE_DATA"   ; break;
 		case BACKUP_SPARSE_BLOCK   : pid = "BACKUP_SPARSE_BLOCK"   ; break;
 		default:                     {
-			static char stbuf[32];
-			_snprintf( stbuf, sizeof stbuf, "StreamID=0x%08X", wsi.dwStreamId );
-			pid = stbuf;
+				static char streamIdBuf[32];
+				_snprintf( streamIdBuf, sizeof streamIdBuf, "StreamID=0x%08X", wsi.dwStreamId );
+				pid = streamIdBuf;
 			break;
 			}
 	}

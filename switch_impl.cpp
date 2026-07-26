@@ -105,10 +105,10 @@ class SWIs : public SWI_intf {
    };
 
 class SWIsb : public SWI_intf {
-   void  (* const d_dsp)( span<char> dest );
+   void  (* const d_dsp)( stbuf dest );
    void  (* const d_set)( stref );
  public:
-   SWIsb( void (*dsp_)( span<char> dest ), void (* set_)( stref ) )
+   SWIsb( void (*dsp_)( stbuf dest ), void (* set_)( stref ) )
       : d_dsp(dsp_)
       , d_set(set_)
       {}
@@ -268,7 +268,7 @@ class SWI_enum : public SWI_intf {
 
 
 SWI_impl_factory::Ptr SWI_impl_factory::SWIs( stref (* get_)(), stref (* set_)( stref ) )                                                { return std::make_unique<::SWIs>( get_,set_ )                                   ; }
-SWI_impl_factory::Ptr SWI_impl_factory::SWIsb( void (*dsp_)( span<char> dest ), void (* set_)( stref ) )                           { return std::make_unique<::SWIsb>( dsp_, set_ )                                 ; }
+SWI_impl_factory::Ptr SWI_impl_factory::SWIsb( void (*dsp_)( stbuf dest ), void (* set_)( stref ) )                           { return std::make_unique<::SWIsb>( dsp_, set_ )                                 ; }
 SWI_impl_factory::Ptr SWI_impl_factory::SWIi_bv( bool &var_ )                                                                            { return std::make_unique<::SWIi_bv>( var_ )                                     ; }
 SWI_impl_factory::Ptr SWI_impl_factory::SWIi_iv( int &var_ )                                                                             { return std::make_unique<::SWIi_iv>( var_ )                                     ; }
 SWI_impl_factory::Ptr SWI_impl_factory::SWIi_ci( int (*get_)(), void (*set_)(int), int (*min_)(), int (*max_)(), bool fUseConstrained_ ) { return std::make_unique<::SWIi_ci>( get_, set_, min_, max_, fUseConstrained_ ) ; }

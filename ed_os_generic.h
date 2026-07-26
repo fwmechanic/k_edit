@@ -33,7 +33,7 @@ extern bool   RunChildSpawnOrSystem( PCChar pCmdStr );
 extern bool   KillAllBkgndProcesses();
 
 extern bool   popen_rd_ok( std::string &dest, PCChar szcmdline );
-extern bool   cygpath_xlat( std::string &stbuf );
+extern bool   cygpath_xlat( std::string &path );
 
 extern size_t GetProcessMem();
 
@@ -71,7 +71,5 @@ extern PFBUF  StartInternalShellJob( std::unique_ptr<StringList> sl, bool fAppen
 extern void   StartInternalShellJob( PCChar cmd );
 extern void   DetachIdleThread();
 
-extern PCChar OsErrStr( PChar dest, size_t sizeofDest, int errorCode );
-extern PCChar OsErrStr( PChar dest, size_t sizeofDest );
-STIL PCChar OsErrStr( span<char> dest, int errorCode ) { return OsErrStr( dest.data(), dest.size(), errorCode ); }
-STIL PCChar OsErrStr( span<char> dest )                { return OsErrStr( dest.data(), dest.size()            ); }
+extern PCChar OsErrStr( stbuf dest, int errorCode );
+extern PCChar OsErrStr( stbuf dest );

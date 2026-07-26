@@ -20,7 +20,7 @@
 bool ARG::towinclip() {
    hglbCopy_t      hglbCopy;
    PChar           bufptr; // this WILL TRAVERSE a buffer
-   std::string     stbuf;
+   std::string     textbuf;
    if(  d_argType == NOARG
      || d_argType == NULLARG
      || d_argType == LINEARG
@@ -41,8 +41,8 @@ bool ARG::towinclip() {
          }
       else if( d_argType == NULLARG ) {
          if( d_cArg == 1 ) { // NULLEOW
-            pFBuf->DupLineSeg( stbuf, d_nullarg.cursor.lin, d_nullarg.cursor.col, COL_MAX );
-            TermNulleow( stbuf );
+            pFBuf->DupLineSeg( textbuf, d_nullarg.cursor.lin, d_nullarg.cursor.col, COL_MAX );
+            TermNulleow( textbuf );
             goto SINGLE_LINE; // HACK O'RAMA!
             }
          else { // d_cArg > 1
@@ -62,14 +62,14 @@ bool ARG::towinclip() {
          yMax   = d_boxarg.flMax.lin;
          }
       if( yMax == yMin ) {
-         pFBuf->DupLineSeg( stbuf, yMin, xLeft, xRight ); // read line into our buffer
+         pFBuf->DupLineSeg( textbuf, yMin, xLeft, xRight ); // read line into our buffer
          goto SINGLE_LINE; // HACK O'RAMA!
          }
       { // determine # of chars on each line
       long size(0);
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
-         pFBuf->DupLineSeg( stbuf, lineNum, xLeft, xRight );
-         size += stbuf.length() + sizeof_eol();
+         pFBuf->DupLineSeg( textbuf, lineNum, xLeft, xRight );
+         size += textbuf.length() + sizeof_eol();
          }
       Msg( "%s (%d lines, %ld bytes)->%sClip", srcNm ? srcNm : ArgTypeName(), (yMax - yMin)+1, size, DestNm() );
       if( nullptr == (bufptr=PrepClip( 1+size, hglbCopy )) ) { // 1+ for trailing '\0'
@@ -78,27 +78,27 @@ bool ARG::towinclip() {
       }
       // copy source data into into *bufptr
       for( auto lineNum(yMin); lineNum <= yMax; ++lineNum ) {
-         pFBuf->DupLineSeg( stbuf, lineNum, xLeft, xRight );
-         memcpy( bufptr, stbuf.c_str(), stbuf.length() );
-         bufptr += stbuf.length();
+         pFBuf->DupLineSeg( textbuf, lineNum, xLeft, xRight );
+         memcpy( bufptr, textbuf.c_str(), textbuf.length() );
+         bufptr += textbuf.length();
          cat_eol( bufptr );
          }
       *bufptr++ = '\0'; // buffer terminator
       }
    else if( d_argType == STREAMARG ) {
-      stbuf = StreamArgToString( g_CurFBuf(), d_streamarg );
+      textbuf = StreamArgToString( g_CurFBuf(), d_streamarg );
       goto SINGLE_LINE; // HACK O'RAMA!
       }
    else if( d_argType == TEXTARG ) {
-      stbuf = d_textarg.pText;
+      textbuf = d_textarg.pText;
 SINGLE_LINE: // HACK O'RAMA!
-      if( d_fMeta ) { ToWinClipMetaSingleLineXlat( stbuf ); }
-      const auto blen( stbuf.length() );
-      Msg( "%s(%" PR_SIZET ")->%sClip:\"%s\"", ArgTypeName(), blen, DestNm(), stbuf.c_str() );
+      if( d_fMeta ) { ToWinClipMetaSingleLineXlat( textbuf ); }
+      const auto blen( textbuf.length() );
+      Msg( "%s(%" PR_SIZET ")->%sClip:\"%s\"", ArgTypeName(), blen, DestNm(), textbuf.c_str() );
       if( nullptr == (bufptr=PrepClip( 1+blen, hglbCopy )) ) {
          return false;
          }
-      memcpy( bufptr, stbuf.c_str(), 1+blen );
+      memcpy( bufptr, textbuf.c_str(), 1+blen );
       }
    else {
       return BadArg();

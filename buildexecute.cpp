@@ -1663,7 +1663,7 @@ int chGetCmdPromptResponse( PCChar szAllowedResponses, int chDfltInteractiveResp
       char lbuf[_MAX_PATH+1];
       va_list val;
       va_start(val, pszPrompt);
-      use_vsnprintf( lbuf, sizeof(lbuf), pszPrompt, val );
+      use_vsnprintf( span{lbuf}, pszPrompt, val );
       va_end(val);
       const auto xCol( Strlen( lbuf ) );
       Msg( "%s", lbuf );  0 && DBG( "%s: '%s'", __func__, lbuf );

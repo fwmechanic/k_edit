@@ -25,8 +25,9 @@
 
 #define  CALLING_GetVolumeInformation  0
 #if      CALLING_GetVolumeInformation
-bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
-   if( sizeofDest < 4 ) { return false; }
+bool GetRootpathOk( stbuf dest, PCChar pSrcFullname ) {
+   if( dest.size() < 4 ) { return false; }
+   const auto pDestBuf( dest.data() );
    const auto ps1( Path::StrToNextPathSepOrEos( pSrcFullname ) );
    if( !*ps1 ) {
       DBG( "%s '%s' !1", __func__, pSrcFullname );
@@ -49,9 +50,9 @@ bool GetRootpathOk( PChar pDestBuf, size_t sizeofDest, PCChar pSrcFullname ) {
          return false;
          }
       const auto ps3( Path::StrToNextPathSepOrEos( ps2 ) ); // "\\...\...\..."
-      const auto len( scpy( pDestBuf, sizeofDest, pSrcFullname, ps3 - pSrcFullname ) );
+      const auto len( scpy( dest, stref(pSrcFullname, ps3 - pSrcFullname) ) );
       if( !*ps3 ) {
-         scat( pDestBuf, sizeofDest, len, DIRSEP_STR, Strlen( DIRSEP_STR ) );
+         scat( dest, DIRSEP_STR, len );
          }
       DBG( "%s '%s' -> '%s'", __func__, pSrcFullname, pDestBuf );
       return true;

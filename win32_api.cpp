@@ -52,7 +52,7 @@ bool IsWin7OrLater() {
    return (major > 6) || ((major == 6) && (minor >= 1));
    }
 
-PChar GetCPName( span<char> buf, Win32::UINT cp ) {
+PChar GetCPName( stbuf buf, Win32::UINT cp ) {
    Win32::CPINFOEX cpix;
    scpy( buf, Win32::GetCPInfoEx( cp, 0, &cpix ) ? cpix.CodePageName : "?" );
    return buf.data();
@@ -70,21 +70,24 @@ void FBufRead_Assign_OsInfo( PFBUF pFBuf ) {
    pFBuf->FmtLastLine( "  Win32::GetACP() (ANSI)      = %s" , GetCPName( span{pbuf}, Win32::GetACP() )   );
    }
 
-PCChar OsErrStr( PChar dest, size_t sizeofDest, int errorCode ) {
+PCChar OsErrStr( stbuf dest, int errorCode ) {
+   if( dest.empty() ) {
+      return dest.data();
+      }
    dest[0] = '\0';
    if( errorCode ) {
       Win32::FormatMessage(
            0x1000 // Win32::FORMAT_MESSAGE_FROM_SYSTEM
          | 0x0200 // Win32::FORMAT_MESSAGE_IGNORE_INSERTS
          | 0x00FF // Win32::FORMAT_MESSAGE_MAX_WIDTH_MASK
-         , nullptr, errorCode, 0, dest, sizeofDest, nullptr
+         , nullptr, errorCode, 0, dest.data(), dest.size(), nullptr
          );
       }
-   return dest;
+   return dest.data();
    }
 
-PCChar OsErrStr( PChar dest, size_t sizeofDest ) {
-   return OsErrStr( dest, sizeofDest, Win32::GetLastError() );
+PCChar OsErrStr( stbuf dest ) {
+   return OsErrStr( dest, Win32::GetLastError() );
    }
 
 //#############################################################################################################################

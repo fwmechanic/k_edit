@@ -1231,7 +1231,7 @@ void FBOP::SortLineRange( PFBUF fb, const LINE yMin, const LINE yMax, const bool
       pLSR->yLine = yY;
       const auto chars( fb->getLineTabx( pLSR->lbuf, yY ) );
       if( chars > yMin ) {
-         scpy( pLSR->keydata, keyBytes, pLSR->lbuf + xMin );
+         scpy( span{pLSR->keydata, keyBytes}, pLSR->lbuf + xMin );
          if( !fCase ) { _strlwr( pLSR->keydata ); }
          }
       else {

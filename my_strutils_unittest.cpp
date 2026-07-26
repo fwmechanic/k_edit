@@ -23,11 +23,55 @@
 
 #include "my_strutils.h"
 
+int isWordChar( int ) {
+   return false;
+   }
+
+int DBG( PCChar, ... ) {
+   return 0;
+   }
+
 STATIC_FXN int upperAscii( int ch ) {
    return ch >= 'a' && ch <= 'z' ? ch - 'a' + 'A' : ch;
    }
 
 int main() {
+   char sprintfDest[20];
+   assert( safeSprintf( span{sprintfDest}, "%s:%d", "value", 3 ) == sprintfDest );
+   assert( 0 == strcmp( sprintfDest, "value:3" ) );
+
+   char sprintfUntouched = 'x';
+   assert( safeSprintf( stbuf( &sprintfUntouched, 0 ), "ignored" ) == &sprintfUntouched );
+   assert( sprintfUntouched == 'x' );
+
+   char doubled[8];
+   assert( DoubleBackslashes( span{doubled}, "a\\b" ) == 4 );
+   assert( 0 == strcmp( doubled, "a\\\\b" ) );
+
+   char doubledTruncated[4];
+   assert( DoubleBackslashes( span{doubledTruncated}, "a\\b" ) == 3 );
+   assert( 0 == strcmp( doubledTruncated, "a\\\\" ) );
+
+   char doubleUntouched = 'x';
+   assert( DoubleBackslashes( stbuf( &doubleUntouched, 0 ), "a\\b" ) == 0 );
+   assert( doubleUntouched == 'x' );
+
+   char copyDest[4];
+   assert( scpy( span{copyDest}, "abcde" ) == 3 );
+   assert( 0 == strcmp( copyDest, "abc" ) );
+
+   char appendDest[6] = "ab";
+   assert( scat( span{appendDest}, "cdef" ) == 5 );
+   assert( 0 == strcmp( appendDest, "abcde" ) );
+
+   char explicitLenDest[6] = { 'a', 'b', 'x', 'x', 'x', 'x' };
+   assert( scat( span{explicitLenDest}, "cd", 2 ) == 4 );
+   assert( 0 == strcmp( explicitLenDest, "abcd" ) );
+
+   char copyUntouched = 'x';
+   assert( scpy( span<char>( &copyUntouched, 0 ), "abc" ) == 0 );
+   assert( copyUntouched == 'x' );
+
    char untouched = 'x';
    xlatStr( span<char>( &untouched, 0 ), "abc", upperAscii );
    assert( untouched == 'x' );

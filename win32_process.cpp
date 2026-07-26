@@ -405,7 +405,7 @@ public:
    ~ConsoleSpawnHandles() {}
    };
 
-STATIC_FXN PChar showTermReason( span<char> dest, const Win32::DWORD hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
+STATIC_FXN PChar showTermReason( stbuf dest, const Win32::DWORD hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
    if( 0 == hProcessExitCode ) {
       FmtStr<30> ets( "in %.3f S", et );
       if( failedJobsIgnored )   { _snprintf( dest.data(), dest.size(), "--- processing successful, %d job-failure%s ignored %s ---", failedJobsIgnored, Add_s( failedJobsIgnored ), ets.c_str() ); }
@@ -1108,12 +1108,12 @@ bool popen_rd_ok( std::string &dest, PCChar szcmdline ) {
    return false;
    }
 
-bool cygpath_xlat( std::string &stbuf ) {
-   std::string cmdline { "cygpath '" + stbuf + "'" };
-   const auto rv( popen_rd_ok( stbuf, cmdline.c_str() ) );
-   const auto ix( stbuf.find_first_of( '\n' ) );
+bool cygpath_xlat( std::string &path ) {
+   std::string cmdline { "cygpath '" + path + "'" };
+   const auto rv( popen_rd_ok( path, cmdline.c_str() ) );
+   const auto ix( path.find_first_of( '\n' ) );
    if( std::string::npos != ix ) {
-      stbuf.resize( ix );
+      path.resize( ix );
       }
    return rv;
    }

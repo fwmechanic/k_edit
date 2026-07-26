@@ -150,4 +150,4 @@ extern void UpdateConsoleTitle_Init();
 extern void UpdateConsoleTitle();
 extern bool IsWin7();
 extern bool IsWin7OrLater();
-extern PChar GetCPName( span<char> buf, Win32::UINT cp );
+extern PChar GetCPName( stbuf buf, Win32::UINT cp );

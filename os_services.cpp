@@ -43,7 +43,8 @@ bool PutEnvOk( PCChar varName, PCChar varValue ) { // params canNOT be stref sin
    const auto lv( Strlen(varValue) );
    const auto bs( ln + lv + (1+1) ); // (1+1) = ('=' + '\0')
    auto bp( PChar( alloca( bs ) ) );
-   scat( bp, bs, stref(varValue,lv), scat( bp, bs, "=", scpy( bp, bs, stref(varName,ln) ) ) );
+   const stbuf buf( bp, bs );
+   scat( buf, stref(varValue,lv), scat( buf, "=", scpy( buf, stref(varName,ln) ) ) );
    const auto ok( 0 == _putenv( bp ) );
 #else
    // posix putenv NOT USED because parameter becomes part of process-duration environment of process (therefore should never pass auto buffers to it)

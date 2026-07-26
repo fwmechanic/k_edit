@@ -107,7 +107,7 @@ public:
 #endif
 
 bool ARG::flipcase() {
-   std::string stbuf;
+   std::string textbuf;
    const auto pcf( g_CurFBuf() );
    switch( d_argType ) {
       // case STREAMARG: someday!?
@@ -119,7 +119,7 @@ bool ARG::flipcase() {
          // locate first alphabetic char in box
          char zc;
          do {
-            const auto inbuf( DupLineSeg_( pcf, stbuf, yMin, xMin, xMax ) );
+            const auto inbuf( DupLineSeg_( pcf, textbuf, yMin, xMin, xMax ) );
             zc = first_alpha( inbuf );
             } while( (zc == '\0') && (++yMin <= yMax) );
          if( zc == '\0' ) {
@@ -128,7 +128,7 @@ bool ARG::flipcase() {
          auto pfx_casexlat( ToBOOL( islower(zc) ) ? _strupr : _strlwr );
          std::string t0,t1;
          for( ; yMin <= yMax; ++yMin ) {
-            const auto inbuf( DupLineSeg_( pcf, stbuf, yMin, xMin, xMax ) );
+            const auto inbuf( DupLineSeg_( pcf, textbuf, yMin, xMin, xMax ) );
             pfx_casexlat(inbuf);
             pcf->PutLineSeg( yMin, inbuf, t0,t1, xMin, xMax );
             }

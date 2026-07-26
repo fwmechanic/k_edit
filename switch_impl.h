@@ -45,7 +45,7 @@ struct SWI_impl_factory {
    using Ptr = std::unique_ptr<SWI_intf>;
 
    Ptr SWIs( stref (* get_)(), stref (* set_)( stref ) );
-   Ptr SWIsb( void (*dsp_)( span<char> dest ), void (* set_)( stref ) );
+   Ptr SWIsb( void (*dsp_)( stbuf dest ), void (* set_)( stref ) );
    Ptr SWIi_bv( bool &var_ );
    Ptr SWIi_iv( int &var_ );
    Ptr SWIi_ci( int (*get_)(), void (*set_)(int), int (*min_)(), int (*max_)(), bool fUseConstrained_=true );
@@ -55,4 +55,4 @@ struct SWI_impl_factory {
    };
 
 static_assert( sizeof(SWI_impl_factory::Ptr) == sizeof(SWI_intf *) );
-static_assert( sizeof(span<char>) == sizeof(char *) + sizeof(size_t) );
+static_assert( sizeof(stbuf) == sizeof(char *) + sizeof(size_t) );

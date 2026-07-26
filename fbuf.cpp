@@ -726,19 +726,6 @@ bool ARG::refresh() {
     }
    }
 
-int DoubleBackslashes( PChar pDest, size_t sizeofDest, PCChar pSrc ) {
-   const auto rv( pDest );
-   const auto pLastNul( pDest + sizeofDest - 1 );
-   while( pDest < pLastNul && (*pDest++ = *pSrc) != 0 ) {
-      if( *pSrc == '\\' ) {
-         *pDest++ = '\\';
-         }
-      ++pSrc;
-      }
-   *pLastNul = '\0';
-   return pDest - rv; // strlen of resulting string
-   }
-
 void StrUnDoubleBackslashes( PChar pszString ) {
    if( !pszString || *pszString == 0 ) {
       return;

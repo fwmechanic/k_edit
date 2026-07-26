@@ -111,7 +111,7 @@ bool PushVariableMacro( stref pText ) { 0 && DBG( "%s+ '%" PR_BSR "'", __func__,
    //      This is a kludgy fix for the annoying requirement to escape '\' with
    //      '\' in macro text strings...
    //
-   const auto newlen( DoubleBackslashes( pBuf, len-1, pText ) );
+   const auto newlen( DoubleBackslashes( stbuf{pBuf, len-1}, pText ) );
    0 && DBG( "%s- '%s'", __func__, pBuf );
    return Interpreter::PushMacroStringOk( pBuf , Interpreter::variableMacro, true );
 #else

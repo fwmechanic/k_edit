@@ -57,7 +57,7 @@ STATIC_FXN void terminfo_ch( PChar &dest, size_t &sizeofDest, int ch ) {
       }
    }
 
-STATIC_FXN PChar terminfo_str( span<char> dest, PCChar ach, int numCh ) {
+STATIC_FXN PChar terminfo_str( stbuf dest, PCChar ach, int numCh ) {
    auto out( dest.data() );
    auto remaining( dest.size() );
    for( auto ix(0) ; ix < numCh ; ++ix ) {

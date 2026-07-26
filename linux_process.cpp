@@ -55,7 +55,7 @@ public:
    int     Status() const {  1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
       return d_exit_status;
       }
-   ssize_t Read( span<char> dest );
+   ssize_t Read( stbuf dest );
    };
 
 int piped_forker::ReapChild() {
@@ -74,7 +74,7 @@ int piped_forker::ReapChild() {
    return d_exit_status;
    }
 
-ssize_t piped_forker::Read( span<char> dest ) {
+ssize_t piped_forker::Read( stbuf dest ) {
    if( d_fd == INVALID_fd ) {
       return 0;
       }
@@ -125,7 +125,7 @@ STATIC_FXN void prep_cmdline( PCChar pc, int cmdFlags, PCChar func__ ) {
       );
    }
 
-STATIC_FXN PChar showTermReason( span<char> dest, const int hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
+STATIC_FXN PChar showTermReason( stbuf dest, const int hProcessExitCode, const int unstartedJobCnt, const int failedJobsIgnored, double et ) {
    enum { USER_BREAK = 99999999 }; // bugbug this MADE UP
    if( 0 == hProcessExitCode ) {
       FmtStr<30> ets( "in %.3f S", et );
@@ -381,7 +381,7 @@ STATIC_FXN bool popen_wr_ok( PCChar szcmdline, stref sr ) {
 //
 typedef  PChar  hglbCopy_t;
 
-STATIC_FXN bool ToWinClipMetaSingleLineXlat( std::string &stbuf ) {
+STATIC_FXN bool ToWinClipMetaSingleLineXlat( std::string &textbuf ) {
    return true;
    }
 
