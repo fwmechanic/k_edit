@@ -232,8 +232,17 @@ class EdOpLineRangeDelete : public EditRec {
    const LINE      d_LineCount;  // length of file beforehand
    const LINE      d_firstLine;  // number of first line that was operated on
    const LINE      d_linesDeleted;  // number of lines deleted
-   malloc_ptr<LineInfo[]> d_paLi; // owns only the array, not content referenced by its elements
+   malloc_ptr<LineInfo[]> d_paLi;
+         bool      d_fDeletionApplied = true; // d_paLi owns line content iff true; otherwise the FBUF does
    IF_UNDO_REDO_MARKS( NamedPointHead  d_MarkListHd; )
+   void swapLineContentOwnership() {
+      for( auto line(0); line < d_linesDeleted; ++line ) {
+         swap( d_paLi[line], d_pFBuf->d_paLineInfo[d_firstLine + line] );
+         }
+      }
+   const LineInfo &savedLineInfo( int line ) const {
+      return d_fDeletionApplied ? d_paLi[line] : d_pFBuf->d_paLineInfo[d_firstLine + line];
+      }
 public:
    EdOpLineRangeDelete( PFBUF fb, LINE firstLine_, LINE lastLine )
       : EditRec        ( fb )
@@ -246,12 +255,17 @@ public:
       }
    ~EdOpLineRangeDelete();
    void VUndo() override {
+      Assert( d_fDeletionApplied );
       d_pFBuf->InsertLines__ForUndoRedo( d_firstLine        , d_linesDeleted );
-      MoveArray( d_pFBuf->d_paLineInfo + d_firstLine, d_paLi.get(), d_linesDeleted );
+      swapLineContentOwnership();
+      d_fDeletionApplied = false;
       d_pFBuf->SetLineCount( d_LineCount );
       IF_UNDO_REDO_MARKS( copyUndoMarks( d_pFBuf, d_MarkListHd, d_firstLine ); )
       }
    void VRedo() override {
+      Assert( !d_fDeletionApplied );
+      swapLineContentOwnership();
+      d_fDeletionApplied = true;
       d_pFBuf->DeleteLines__ForUndoRedo( d_firstLine, d_firstLine + d_linesDeleted - 1 );
       d_pFBuf->SetLineCount( d_LineCount - d_linesDeleted );
       }
@@ -259,27 +273,13 @@ public:
    };
 
 EdOpLineRangeDelete::~EdOpLineRangeDelete() {
-#if 0
-   // This ...
-   //
-   DestroyLineInfoArray( paLi, &cLine );
-   //
-   // ...  would seem to be correct (in terms of avoiding memory leakage), BUT
-   // LEADS TO A CRASH when you paste a line past eof, then delete it, then undo
-   // everything and type a graphic (to trigger undo-list garbage collection).
-   //
-   // The issue: there can be an EdOpAltLineContent instance which, when in
-   // undone state, contains a LineInfo which is also in a later (orig xeq time)
-   // EdOpLineRangeDelete.d_paLi.  When, after undo'ing some/all, we execute a
-   // modifying CMD, the "undone side" of the EditRec list is destroyed (using
-   // Undo_RmvOneEdOp_fNextIsBoundary in d_pFBuf->Undo_AddNewEditOpToListHead( this )
-   // within EditRec(pFBuf)).  In this case the EdOpLineRangeDelete is destroyed
-   // first; when the EdOpAltLineContent is destroyed, a double free occurs.
-   //
-   // The current solution is to NOT FREE paLi in ~EdOpLineRangeDelete().  But
-   // in the normal case this causes a MEMORY LEAK.
-   //
-#endif
+   // When deletion is applied, d_paLi owns the removed line content.  When it
+   // is undone, VUndo swaps that content into the FBUF and leaves d_paLi empty.
+   // Thus cleanup is unconditional without aliases, reference counts, or any
+   // allocations beyond the LineInfo array already required by this record.
+   for( auto line(0); line < d_linesDeleted; ++line ) {
+      d_paLi[line].FreeContent( *d_pFBuf );
+      }
    }
 
 void EdOpLineRangeDelete::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *pBufBytes, int fIsCur ) const {
@@ -294,13 +294,13 @@ void EdOpLineRangeDelete::VShow( OutputWriter const &ow, PPChar ppBuf, size_t *p
    // , d_LineCount
       );
    if( d_linesDeleted > 0 ) {
-      getLineInfoStr( ppBuf, pBufBytes, d_paLi[0] );
+      getLineInfoStr( ppBuf, pBufBytes, savedLineInfo(0) );
       for( auto line(1); line < d_linesDeleted; ++line ) {
          ow.VWriteLn( savepBuf );
          *ppBuf     = savepBuf;
          *pBufBytes = saveBufBytes;
          snprintf_full(  ppBuf, pBufBytes, kszSpcs );
-         getLineInfoStr( ppBuf, pBufBytes, d_paLi[line] );
+         getLineInfoStr( ppBuf, pBufBytes, savedLineInfo(line) );
          }
       }
    }
