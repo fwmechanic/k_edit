@@ -19,13 +19,9 @@
 #
 
 #
-# When building on Windows, uses
-#  * GCC from http://nuwen.net/mingw.html
-#     * needs to be in PATH
-#     * with equivalent of its SET_DISTRO_PATHS.BAT executed
-#  * 'git for Windows' for MinGW environment (including bash)
-#     #### make MUST be run from 'git for Windows' bash shell,
-#     ####        ***NOT*** from CMD.exe (Windows "DOS shell")
+# Windows builds use the MinGW-w64 GCC toolchain supplied by MSYS2 UCRT64.
+# Run make from an MSYS2 UCRT64 shell, or use msys2_build_run.sh to re-exec
+# the build under UCRT64 from another bash environment.
 #
 # When building on (*ubuntu) Linux,
 #   . install_build_tools.sh
@@ -85,7 +81,7 @@ CMDTBL_PLAT = mingw
 # DBG_BUILD := x
 
 #######################################################################################
-# patch GNU make 4.0 (or nuwen-11.6+ GCC distro) disconnect by replacing dflt .c compile rule
+# Retain an explicit .c compile rule for compatibility with older GNU make/toolchain combinations.
 CC = gcc
 export CC
 # end patch
@@ -95,6 +91,7 @@ EXE_EXT := .exe
 DLL_EXT := .dll
 OBJDUMP_BINARY = echo objdumping $@&& objdump -p $@ > $@.exp && grep "DLL Name:" $@.exp | grep -Fivf std.dynlib.mingw
 OS_LIBS := -lpsapi -lbcrypt
+DLOPEN_LIB :=
 PLAT_LINK_OPTS=-Wl,--enable-auto-image-base -Wl,--nxcompat
 CPPFLAGS += -DWINVER=0x0601 -D_WIN32_WINNT=0x0601 -D_UCRT
 
@@ -130,6 +127,7 @@ OBJDUMP_BINARY = echo "objdumping $@" && objdump -p $@ > $@.exp && readelf -d $@
 CPPFLAGS += -pthread
 # NB: once certain C++ _compiles_ see CPPFLAGS, should remove -lpthread
 OS_LIBS := $(NCURSES_LIBS) -lpthread -ldl
+DLOPEN_LIB := -ldl
 PLAT_LINK_OPTS=
 
 endif
@@ -455,7 +453,10 @@ ifdef K_WINDOWS
 # the DLL alongside k.exe so the build tree is "copy-and-run" complete and so
 # the DLL is captured by `make rls`.
 K_WIN_DEPLOY_DLLS := libwinpthread-1.dll
-libwinpthread-1.dll: ; @cp /c/msys64/ucrt64/bin/$@ $@
+K_WIN_TOOLCHAIN_BIN := $(dir $(shell command -v $(firstword $(CXX))))
+libwinpthread-1.dll:
+	@test -n "$(K_WIN_TOOLCHAIN_BIN)" || ( echo "Cannot locate C++ compiler '$(firstword $(CXX))'" >&2; false )
+	@cp "$(K_WIN_TOOLCHAIN_BIN)$@" "$@"
 all: $(K_WIN_DEPLOY_DLLS)
 endif
 
@@ -590,7 +591,7 @@ run_lua_split_unittest: lua_split_unittest$(EXE_EXT)
 
 lua_split_unittest.o: CXXFLAGS += -Werror -ffunction-sections -fdata-sections
 lua_split_unittest$(EXE_EXT): lua_split_unittest.o $(LUA_A)
-	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -Wl,--gc-sections -ldl -lm -o $@
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -Wl,--gc-sections $(DLOPEN_LIB) -lm -o $@
 
 run_linux_process_unittest: linux_process_unittest$(EXE_EXT)
 	./linux_process_unittest$(EXE_EXT)

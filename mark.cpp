@@ -90,10 +90,8 @@ STATIC_FXN void NamedPointListAddLineOfsPast( NamedPointHead &hd, const LINE yTh
 // ARG::showmarks ("mks"): show all marks defined, per file
 //
 
-STATIC_FXN int NamedPointListDump( const NamedPointHead &hd, PFBUF ofile, PCChar pszFilename ) {
-   auto markCount(0);
+STATIC_FXN void NamedPointListDump( const NamedPointHead &hd, PFBUF ofile, PCChar pszFilename ) {
    DLINKC_FIRST_TO_LASTA( hd, dlink, pNP ) {
-      ++markCount;
       ofile->FmtLastLine( "%s %u %uL1: %s"
          , pszFilename
          , pNP->Pt().lin + 1
@@ -101,7 +99,6 @@ STATIC_FXN int NamedPointListDump( const NamedPointHead &hd, PFBUF ofile, PCChar
          , pNP->Name()
          );
       }
-   return markCount;
    }
 
 
@@ -110,7 +107,6 @@ bool ARG::showmarks() {
    auto ofile( OpenFileNotDir_NoCreate( FmtStr<25>( "<marks_%u>", markdump_ctr++ ) ) );
    ofile->MakeEmpty();
 
-   auto totalMarks(0);
 #if FBUF_TREE
    rb_traverse( pNd, g_FBufIdx )
 #else
@@ -120,7 +116,7 @@ bool ARG::showmarks() {
 #if FBUF_TREE
       auto pFBuf( IdxNodeToFBUF( pNd ) );
 #endif
-      totalMarks += NamedPointListDump( pFBuf->d_MarkHead, ofile, pFBuf->Name() );
+      NamedPointListDump( pFBuf->d_MarkHead, ofile, pFBuf->Name() );
       }
    ofile->Undo_Reinit();
    ofile->UnDirty();

@@ -299,7 +299,7 @@ int FindMatchingTagsLines(
             if( rslt == 0 ) { // HIT!  But perhaps not FIRST hit.  mvBack until we see a non-match, then linear-search fwd to (and past) matches.
                SD && ::DBG( "Match after %d probes: %" PR_BSR "'", probes, BSR(line) );
                // linear search phase: move back then search fwd to find NON-matching line, then fwd (first) to matching line(s)
-               for( auto movesBack(1) ; ; ++movesBack ) {
+               for( [[maybe_unused]] auto movesBack(1) ; ; ++movesBack ) {
                   const auto mvBackAmount( (1+move_back_lines)*(1+line.length()) );
                   cmpTgt = (cmpTgt > mvBackAmount) ? cmpTgt - mvBackAmount : START_OF_FILE;
                   auto mnum( 0u );
@@ -307,7 +307,7 @@ int FindMatchingTagsLines(
                      ++mnum;
                      rv_append_string( line );
                      };
-                  auto linMiss( 0u );  // debug/algo verification
+                  [[maybe_unused]] auto linMiss( 0u );  // debug/algo verification
                   if( 0 == seekGetLnCmp(cmpTgt) ) { // still matching after mvBack?  May not be first match
                      if( cmpTgt != START_OF_FILE ) {  // can mvBack further?
                         continue;  // mvBack further

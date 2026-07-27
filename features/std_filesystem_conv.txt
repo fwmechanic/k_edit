@@ -132,8 +132,9 @@ Outlook 20220105
 
 Regarding K's future adoption of the utf8everywhere.org
 approach to using WIDE Win32 API's with UTF8 params, this could be done
-gradually: the Nuwen MinGW environment provides Boost which has long contained
-the boost/nowide components (as will boost on Linux).  Initially such work will
+gradually.  Historical context: the former Nuwen MinGW environment provided
+Boost, which had long contained the boost/nowide components (as did Boost on
+Linux).  Initially such work will
 bear little/no fruit, as the input strings are unlikely to ever contain non-ANSI
 UTF8 chars.  But as a (low priority) foundational effort, work could start
 immediately.  There is of course a race condition (or two): I might decide to

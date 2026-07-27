@@ -79,7 +79,7 @@ The K source code distro contains, and K incorporates, by building and static li
 
 #### Windows-specific Build-Prep Instructions
 
- * As of 2026 the build uses https://www.msys2.org/[MSYS2] UCRT64.  (Previously http://nuwen.net/mingw.html[nuwen.net MinGW]; the transition was driven by nuwen dropping PCRE2 in late 2025.)
+ * The primary Windows build uses the MinGW-w64 GCC toolchain supplied by https://www.msys2.org/[MSYS2] UCRT64.  Before April 2026, K used the now-retired http://nuwen.net/mingw.html[Nuwen MinGW] distribution; that historical toolchain was replaced after it dropped PCRE2 in late 2025.
  * Install https://www.msys2.org/[MSYS2] (default location `C:\msys64`), launch the *MSYS2 UCRT64* shell (Start menu: "MSYS2 UCRT64"), and install the toolchain plus project dependencies:
 +
 ----
@@ -94,7 +94,7 @@ pacman -S --needed \
 ----
  * Build: from the UCRT64 shell run `make -j`.  Alternatively, from any other bash shell (e.g. Git-for-Windows bash), invoke `./msys2_build_run.sh` in this repo; it re-execs itself under MSYS2 UCRT64 bash and sets `TMP`/`TEMP`/`TMPDIR` to a Windows-style path (native `gcc.exe` doesn't grok MSYS-style `/tmp`).
 
- * FYI: MSYS2 UCRT64 binaries dynamically link to `ucrtbase.dll` and its `api-ms-win-crt-*.dll` ApiSet stubs (shipped with every Windows 10+ install; the modern successor to the ancient `msvcrt.dll`).  `libwinpthread-1.dll` is an additional runtime dep introduced by GCC's POSIX threading model; the Makefile auto-copies it next to `k.exe` at build time (and includes it in `make rls`).  Full-static linking of winpthread is not viable in current MSYS2 packaging because libstdc++'s `thread.o` references `nanosleep64`, which exists only in the DLL.
+ * FYI: MSYS2 UCRT64 binaries dynamically link to `ucrtbase.dll` and its `api-ms-win-crt-*.dll` ApiSet stubs (shipped with every Windows 10+ install; the modern successor to the ancient `msvcrt.dll`).  `libwinpthread-1.dll` is an additional runtime dep introduced by GCC's POSIX threading model; the Makefile locates it beside the active C++ compiler and copies it next to `k.exe` at build time (and includes it in `make rls`).  Full-static linking of winpthread is not viable in current MSYS2 packaging because libstdc++'s `thread.o` references `nanosleep64`, which exists only in the DLL.
 
 #### Linux-specific Build-Prep Instructions
 
@@ -317,8 +317,8 @@ I have no fondness for massive IDE's (e.g.  Visual Studio), nor for installers, 
 and didn't have to pay a significant code-size price for doing so (updt: K.exe's disk footprint has grown significantly since then, mostly at the hands of GCC, though adopting `std::string` and other STL bits has doubtless contributed greatly...), I was thrilled!  Since then I have extensively modified the K code to take great
 advantage of the major generic features of C\+++11 (and beyond); consequently K no longer compiles with MSVC+++ 7.1.
 
-Per http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx[Visual-Studio-Why-is-there-No-64-bit-Version] the 32-bit version of K may be the better (more efficient) one (unless your use case includes editing > 2GB files), but since STL (creator of Nuwen MinGW distro) no longer provides 32-bit versions Nuwen MinGW, we will "follow suit."  And of course, Linux in 2014+ is almost universally 64-bit (and 64-bit Linux K has no known anomalies).
+Per http://blogs.msdn.com/b/ricom/archive/2009/06/10/visual-studio-why-is-there-no-64-bit-version.aspx[Visual-Studio-Why-is-there-No-64-bit-Version], a 32-bit K might be more efficient unless editing files larger than 2GB.  Historically, however, K's Windows build became 64-bit-only when the former Nuwen MinGW distribution stopped providing 32-bit releases.  The current MSYS2 UCRT64/MinGW-w64 build remains 64-bit-only.  Linux in 2014+ is likewise almost universally 64-bit, and 64-bit Linux K has no known anomalies.
 
-2026/04: Migrated the Windows toolchain from http://nuwen.net/mingw.html[nuwen.net MinGW] to https://www.msys2.org/[MSYS2] UCRT64.  nuwen dropped PCRE2 in late 2025, and since PCRE2 is central to K's regex functionality, continuing with nuwen was untenable.  The switch to UCRT64 also brings K from the 1990s-era `msvcrt.dll` to the modern `ucrtbase.dll` (UCRT, shipped with every Windows 10+ install), with a new runtime dep on `libwinpthread-1.dll` from GCC's POSIX threading model.
+Historical toolchain note — 2026/04: Migrated the Windows build from the former http://nuwen.net/mingw.html[Nuwen MinGW] distribution to https://www.msys2.org/[MSYS2] UCRT64.  Nuwen dropped PCRE2 in late 2025, and since PCRE2 is central to K's regex functionality, continuing with that distribution was untenable.  The switch to UCRT64 also moved K from the 1990s-era `msvcrt.dll` to the modern `ucrtbase.dll` (UCRT, shipped with every Windows 10+ install), with a new runtime dependency on `libwinpthread-1.dll` from GCC's POSIX threading model.
 
 https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/[AsciiDoc Quick Reference]

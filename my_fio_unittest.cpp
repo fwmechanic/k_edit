@@ -72,7 +72,7 @@ STATIC_FXN void test_copy_size( size_t bytes ) {
 STATIC_FXN void test_counted_io() {
    constexpr auto filename = "my_fio_unittest-io.tmp";
    const std::vector<unsigned char> expected{ 0, 1, 2, 3, 0xfe, 0xff };
-   int fh;
+   int fh(-1);
    assert( !fio::OpenFileFailed( &fh, filename, true, 0600 ) );
    assert( fio::WriteOk( fh, expected.data(), expected.size() ) );
    assert( fio::Close( fh ) == 0 );

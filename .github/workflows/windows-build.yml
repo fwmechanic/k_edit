@@ -1,0 +1,41 @@
+name: Windows build
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.configuration.name }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - name: Debug
+            make_args: "DBG_BUILD=1"
+          - name: Optimized
+            make_args: ""
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-pcre2
+            mingw-w64-ucrt-x86_64-universal-ctags
+            make
+
+      - name: Build and test
+        shell: msys2 {0}
+        run: |
+          make -j2 ${{ matrix.configuration.make_args }} all run_unittests
+          test -f k.exe
+          test -f libwinpthread-1.dll

@@ -233,7 +233,7 @@ HANDLE_CTRL_CLOSE_EVENT( volatile bool g_fProcessExitRequested; )
   #ifdef __cplusplus
     extern "C" {
   #endif
-      // NB: these are officially supported Win32 APIs, however last-released nuwen 32-bit mingw gcc does not provide their prototypes:
+      // Historical compatibility: the last 32-bit Nuwen MinGW GCC release did not provide prototypes for these supported Win32 APIs:
       BOOL WINAPI GetCurrentConsoleFont(HANDLE hConsoleOutput,BOOL bMaximumWindow,PCONSOLE_FONT_INFO lpConsoleCurrentFont);
       COORD WINAPI GetConsoleFontSize(HANDLE hConsoleOutput,DWORD nFont);
   #ifdef __cplusplus

@@ -176,7 +176,8 @@ I even begin to create an installable K package for Windows (another thing I
 absolutely loathe is Windows Installers (of the executable kind)!).  K already
 has a "release package" which can be built: it spits out (on Windows) a 7z
 archive and a self-extracting (.exe) version of the same.  The latter is
-essentially the same thing as the "packaging" of the Nuwen MinGW GCC toolset.
+essentially the same thing as the packaging of the then-current Nuwen MinGW
+GCC toolset (a historical predecessor of today's MSYS2 UCRT64 toolchain).
 Will this be acceptable to corporate IT who may govern my reality?  I have no
 idea what their policy might be now, nor what it might become later when they
 decide to change it.  It won't have my interests first and foremost anyway, and
@@ -189,7 +190,7 @@ to create and maintain K.  Obviously.  But it's a labor of love, and a long-term
 investment that has paid off for me.  And the long term investment has been
 secured by some major achievements I've made comparatively recently:
 
-1. Switch to compile for Windows using GCC.  This was (is still) enabled by the Nuwen MinGW GCC package which I discovered some years ago (thanks STL!!!).  Once this was accomplished, it set the stage for...
+1. Switch to compiling for Windows using GCC.  The original port used the now-retired Nuwen MinGW GCC distribution (thanks STL!!!); the current Windows build uses MinGW-w64 GCC supplied by MSYS2 UCRT64.  Once the original port was accomplished, it set the stage for...
 1. Ability to build K as a Linux ncurses app (on Ubuntu Linux).  The ability to build K on the two most dominant OS platforms of the day (and with the number of these declining rather than increasing) means I (or anyone who might choose) will be able to continue to use K for as long as either platform and the GCC implementation of the C++ language continue to be mainstream platforms.
 
 Does this mean I can "rest on my laurels"?  Well, the only "laurel" is having K available to me, but: YES.

@@ -28,7 +28,7 @@
 // NOTE!  Applying ATTR_FORMAT to printf-like function extern declarations
 //        DOES NOT GUARANTEE that said function will honor 'gnu_printf' style
 //        format strings e.g.  PR_SIZET!!!
-//   e.g. MinGW GCC 4.8.1 (last 32-bit Nuwen MinGW GCC release):
+//   historical example: MinGW GCC 4.8.1 (the last 32-bit Nuwen MinGW GCC release):
 //           vfprintf DOES NOT honor 'gnu_printf', while
 //           vsnprintf DOES honor 'gnu_printf'
 //        UNLESS: must

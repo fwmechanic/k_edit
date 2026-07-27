@@ -40,7 +40,7 @@ MYLIB_O = $(MY_LPEG_O) lpack.o $(MY_LPCRE_O) k_lib.o
 # == END OF USER SETTINGS. NO NEED TO CHANGE ANYTHING BELOW THIS LINE =========
 
 #######################################################################################
-# patch GNU make 4.0 (or nuwen GCC 11.6 distro) bug by replacing dflt .c compile rule
+# Retain an explicit .c compile rule for compatibility with older GNU make/toolchain combinations.
 
 %.o: %.c
 #  recipe to execute (built-in):
