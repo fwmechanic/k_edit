@@ -31,6 +31,7 @@
 #include <atomic>
 #include <chrono>
 #include <filesystem>
+#include <limits>
 #if defined(_WIN32)
 #include <process.h>
 #else
@@ -68,17 +69,40 @@ bool fio::OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int crea
    return fh == -1;
    }
 
-ssize_t fio::Read( int fh, PVoid pBuf, ssize_t bytesToRead ) {
-   auto rv( WL( _read, read )( fh, pBuf, bytesToRead ) );
-   if( rv == -1 ) {
-       rv = 0;
-       }
-   return rv;
+bool fio::ReadOk( int fh, PVoid pBuffer, size_t bytes ) {
+   auto dst( static_cast<unsigned char *>(pBuffer) );
+   while( bytes != 0 ) {
+      const auto chunk( static_cast<unsigned int>( std::min( bytes, size_t(std::numeric_limits<int>::max()) ) ) );
+      const auto rv( WL( _read, read )( fh, dst, chunk ) );
+      if( rv > 0 ) {
+         dst += rv;
+         bytes -= static_cast<size_t>(rv);
+         continue;
+         }
+      if( rv < 0 && errno == EINTR ) {
+         continue;
+         }
+      return false;
+      }
+   return true;
    }
 
-ssize_t fio::Write( int fh, PCVoid pBuf, ssize_t bytesToWrite ) {
-   auto rv( WL( _write, write )( fh, pBuf, bytesToWrite ) );  0 && DBG( "%s [%d]: %" PR_PTRDIFFT " -> %" WL( "d", "ld" ), __func__, fh, bytesToWrite, rv );
-   return rv;
+bool fio::WriteOk( int fh, PCVoid pBuffer, size_t bytes ) {
+   auto src( static_cast<const unsigned char *>(pBuffer) );
+   while( bytes != 0 ) {
+      const auto chunk( static_cast<unsigned int>( std::min( bytes, size_t(std::numeric_limits<int>::max()) ) ) );
+      const auto rv( WL( _write, write )( fh, src, chunk ) );  0 && DBG( "%s [%d]: %u -> %" WL( "d", "ld" ), __func__, fh, chunk, rv );
+      if( rv > 0 ) {
+         src += rv;
+         bytes -= static_cast<size_t>(rv);
+         continue;
+         }
+      if( rv < 0 && errno == EINTR ) {
+         continue;
+         }
+      return false;
+      }
+   return true;
    }
 
 //-----------------

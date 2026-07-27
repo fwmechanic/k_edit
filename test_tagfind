@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -uo pipefail
 
 #
 # Copyright 2015-2019 by Kevin L. Goodwin [fwmechanic@gmail.com]; All rights reserved
@@ -19,32 +20,57 @@
 # with K.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-die() { printf %s "${@+$@$'\n'}" 1>&2 ; exit 1 ; }
+die() { printf '%s\n' "$*" 1>&2 ; exit 1 ; }
 
-export LC_ALL="en_US.utf8"  # fix `grep -P`
-num_rand_tags=50  # test param
+export LC_ALL=C
 
-tagfnm=tags
-first_tag="$(head -n 1 "$tagfnm" | cut -f 1)"
-last_tag="$(tail -n 1 "$tagfnm" | cut -f 1)"
+(( $# >= 1 )) || die "usage: $0 TAGFIND_TEST_EXECUTABLE"
+tgtexe="$1"
+[[ -x "./$tgtexe" ]] || die "test executable is missing or not executable: $tgtexe"
+
+tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/k-tagfind-test.XXXXXX")" \
+   || die "failed to create temporary directory"
+trap 'rm -rf -- "$tmpdir"' EXIT \
+   || die "failed to install temporary-directory cleanup"
+tagfnm="$tmpdir/tags"
+printf '%s\n' \
+   $'Alpha\talpha.cpp\t/^Alpha$/;"\tkind:function' \
+   $'Beta\tbeta.cpp\t/^Beta$/;"\tkind:function' \
+   $'Beta\tbeta_overload.cpp\t/^Beta(int)$/;"\tkind:function' \
+   $'Gamma\tgamma.cpp\t/^Gamma$/;"\tkind:function' \
+   $'Omega\tomega.cpp\t1;"\tkind:file' \
+   $'Zeta\tzeta.cpp\t1;"\tkind:file' \
+   > "$tagfnm" \
+   || die "failed to write tags fixture"
+[[ -s "$tagfnm" ]] || die "failed to create tags fixture"
+
+first_tag="$(head -n 1 "$tagfnm" | cut -f 1)" \
+   || die "failed to read first fixture tag"
+last_tag="$(tail -n 1 "$tagfnm" | cut -f 1)" \
+   || die "failed to read last fixture tag"
+[[ -n "$first_tag" && -n "$last_tag" ]] || die "tags fixture has empty boundary tags"
 before_first="${first_tag%?}"  # remove last char of first_tag  https://unix.stackexchange.com/a/259042
 after_last="${last_tag}_nonexistent"
 
-tgtexe="${1:?}"
-
-make "$tgtexe" || die
-
 chk_tagfind() {
-   local ans ; ans="$(grep --count -P '^\Q'"$1"'\E\t' "$tagfnm")"
+   local ans
+   ans="$(awk -F '\t' -v tag="$1" '$1 == tag { ++count } END { print count + 0 }' "$tagfnm")" \
+      || die "failed to calculate expected count for tag: $1"
    # echo "$1: expect $ans"
-   local lc ; lc="$(./"$tgtexe" "$1" | wc -l)" ; ((lc==ans)) || die "FAIL: for T=$1, expected $ans, got $lc"
+   local lc
+   lc="$(./"$tgtexe" "$1" "$tagfnm" | wc -l)" \
+      || die "tag finder failed for tag: $1"
+   ((lc==ans)) || die "FAIL: for T=$1, expected $ans, got $lc"
    }
 chk_tagfind "$before_first"
 chk_tagfind "$first_tag"
 chk_tagfind "$last_tag"
 chk_tagfind "$after_last"
 
-readarray -t test_tags <<<"$( cut -f 1 "$tagfnm" | sort -u | sort -R | head -n "$num_rand_tags" )"  # https://unix.stackexchange.com/a/322505
+tag_list="$(cut -f 1 "$tagfnm" | sort -u)" \
+   || die "failed to enumerate fixture tags"
+readarray -t test_tags <<< "$tag_list" \
+   || die "failed to load fixture tags"
 # echo "${test_tags[@]}"
 
 for tag in "${test_tags[@]}"; do
@@ -53,10 +79,15 @@ for tag in "${test_tags[@]}"; do
 done
 
 chk_tagged_files() {
-   local file_tag_field ; file_tag_field=$'\t'"kind:file"
-   local ref ; ref="$(grep -P "$file_tag_field"'(\t|$)' tags | cut -f2 | sort -u | wc -l)"
-   local tst ; tst="$(./"$tgtexe" "$file_tag_field" | wc -l)"
-   ((tst==ref)) || die "FAIL: chk_tagged_files, expected $ref, got $lc"
+   local file_tag_field
+   file_tag_field=$'\t'"kind:file"
+   local ref
+   ref="$(awk -F '\t' '{ for (ix=3; ix<=NF; ++ix) if ($ix == "kind:file") ++count } END { print count + 0 }' "$tagfnm")" \
+      || die "failed to calculate expected tagged-file count"
+   local tst
+   tst="$(./"$tgtexe" "$file_tag_field" "$tagfnm" | wc -l)" \
+      || die "tag finder failed for tagged-file query"
+   ((tst==ref)) || die "FAIL: chk_tagged_files, expected $ref, got $tst"
    }
 
 chk_tagged_files

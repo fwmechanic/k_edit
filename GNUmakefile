@@ -428,13 +428,13 @@ BLD_LUA_T = $(MAKE) -C $(LUA_DIR) clean && $(MAKE) -C $(LUA_DIR) test
 $(LUA_T):
 	$(MAKE) -C $(LUA_DIR)
 
+$(LUA_A): | $(LUA_T)
+	@test -f $@ || $(MAKE) -C $(LUA_DIR) liblua.a
+
 .PHONY: lua
 lua:
 	$(BLD_LUA_T)
 	@ls -l $(LUA_T)
-
-# $(LUA_A):  NOT needed since target $(LUA_T) builds $(LUA_A)
-# 	$(MAKE) -C $(LUA_DIR) liblua.a
 
 clean:
 	$(RM) $(CLEAN_ARGS) $(LUA_T)
@@ -556,7 +556,10 @@ khelp.html: khelp.txt
 	khelp.html
 
 
-UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_my_strutils_unittest run_my_fio_unittest run_unittest_tagfind
+UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_my_strutils_unittest run_my_fio_unittest run_lua_split_unittest run_unittest_tagfind
+ifndef K_WINDOWS
+UNITTEST_RUNTGTS += run_linux_process_unittest run_os_services_unittest
+endif
 .PHONY: run_unittests $(UNITTEST_RUNTGTS)
 
 run_unittests: $(UNITTEST_RUNTGTS)
@@ -580,6 +583,27 @@ run_my_fio_unittest: my_fio_unittest$(EXE_EXT)
 
 my_fio_unittest$(EXE_EXT): CXXFLAGS += -Werror
 my_fio_unittest$(EXE_EXT): my_fio_unittest.o my_fio.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+run_lua_split_unittest: lua_split_unittest$(EXE_EXT)
+	./lua_split_unittest$(EXE_EXT)
+
+lua_split_unittest.o: CXXFLAGS += -Werror -ffunction-sections -fdata-sections
+lua_split_unittest$(EXE_EXT): lua_split_unittest.o $(LUA_A)
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -Wl,--gc-sections -ldl -lm -o $@
+
+run_linux_process_unittest: linux_process_unittest$(EXE_EXT)
+	./linux_process_unittest$(EXE_EXT)
+
+linux_process_unittest.o: CXXFLAGS += -Werror
+linux_process_unittest$(EXE_EXT): linux_process_unittest.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -pthread -o $@
+
+run_os_services_unittest: os_services_unittest$(EXE_EXT)
+	./os_services_unittest$(EXE_EXT)
+
+os_services_unittest.o: CXXFLAGS += -Werror
+os_services_unittest$(EXE_EXT): os_services_unittest.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_dlink_unittest: dlink_unittest$(EXE_EXT)

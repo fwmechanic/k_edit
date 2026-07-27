@@ -1637,7 +1637,10 @@ bool FBUF::ReadDiskFileFailed( int hFile ) {
    auto MBCS_skip( 0 );
    {
    auto fileBytes( fio::SeekEoF( hFile ) );         0 && DBG( "fio::SeekEoF returns %8" WL( PR__i64 "u", "ld" ), fileBytes );
-   Assert( fileBytes >= 0 );
+   if( fileBytes < 0 ) {
+      ErrorDialogBeepf( "Unable to determine file size: %s", strerror(errno) );
+      return true;
+      }
    fio::SeekBoF( hFile );
    if( fileBytes > UINT_MAX ) {
       Msg( "filesize is larger than UINT_MAX" );

@@ -17,6 +17,27 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#ifdef UNITTEST_LINUX_PROCESS
+#include <atomic>
+#include <cerrno>
+#include <chrono>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <fcntl.h>
+#include <span>
+#include <string>
+#include <thread>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/wait.h>
+using PCChar = const char *;
+using stbuf = std::span<char>;
+#define STATIC_FXN static
+#define STATIC_CONST static const
+#define DBG(...) 0
+#else
 #include "ed_main.h"
 #include "my_fio.h"
 
@@ -24,13 +45,61 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <chrono>
 
 #include <signal.h>
 #include <pthread.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#endif
 
 enum { INVALID_ProcessId = 0, INVALID_fd = -1, PIPE_RD=0, PIPE_WR=1 };
+
+#ifdef UNITTEST_LINUX_PROCESS
+STATIC_CONST auto ChildExitGracePeriod = std::chrono::milliseconds(100);
+STATIC_CONST auto ChildHangupGracePeriod = std::chrono::milliseconds(100);
+STATIC_CONST auto ChildTerminateGracePeriod = std::chrono::milliseconds(100);
+STATIC_CONST auto ChildKillGracePeriod = std::chrono::milliseconds(500);
+#else
+STATIC_CONST auto ChildExitGracePeriod = std::chrono::seconds(1);
+STATIC_CONST auto ChildHangupGracePeriod = std::chrono::seconds(1);
+STATIC_CONST auto ChildTerminateGracePeriod = std::chrono::seconds(2);
+STATIC_CONST auto ChildKillGracePeriod = std::chrono::seconds(1);
+#endif
+
+enum class ChildWaitResult {
+   Reaped,
+   TimedOut,
+   Failed,
+   };
+
+STATIC_FXN ChildWaitResult WaitForChildUntil( int pid, int *status, std::chrono::steady_clock::time_point deadline ) {
+   while( true ) {
+      const auto rv( waitpid( pid, status, WNOHANG ) );
+      if( rv == pid ) {
+         return ChildWaitResult::Reaped;
+         }
+      if( rv < 0 ) {
+         if( errno == EINTR ) {
+            continue;
+            }
+         DBG( "%s: waitpid(%d) failed: %s", __func__, pid, strerror(errno) );
+         return ChildWaitResult::Failed;
+         }
+      if( std::chrono::steady_clock::now() >= deadline ) {
+         return ChildWaitResult::TimedOut;
+         }
+      std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+      }
+   }
+
+STATIC_FXN bool SignalProcessGroup( int pid, int signalNumber ) {
+   if( kill( -pid, signalNumber ) == 0 || errno == ESRCH ) {
+      return true;
+      }
+   DBG( "%s: kill(%d, %d) failed: %s", __func__, -pid, signalNumber, strerror(errno) );
+   return false;
+   }
 
 // SIGWINCH (terminal-resize) must be handled by the MAIN thread: that is the
 // thread blocked in ncurses getch()/read(), and ncurses only synthesizes
@@ -50,6 +119,9 @@ class piped_forker {
    int     d_fd  =  INVALID_fd;
    std::atomic<int> d_pid{ INVALID_ProcessId };
    int     d_exit_status = -1;
+#ifdef UNITTEST_LINUX_PROCESS
+   bool    d_ignoreGracefulSignals = false;
+#endif
    int     ReapChild();
 public:
    piped_forker() = default;
@@ -62,6 +134,10 @@ public:
       return d_exit_status;
       }
    ssize_t Read( stbuf dest );
+#ifdef UNITTEST_LINUX_PROCESS
+   int ReapForTest() { return ReapChild(); }
+   void IgnoreGracefulSignalsForTest() { d_ignoreGracefulSignals = true; }
+#endif
    };
 
 int piped_forker::ReapChild() {
@@ -71,18 +147,30 @@ int piped_forker::ReapChild() {
       }
    const auto pid( d_pid.exchange( INVALID_ProcessId, std::memory_order_acq_rel ) );
    if( pid != INVALID_ProcessId ) {
-      kill( pid, SIGHUP );
-      alarm(1);
-      int status;
-      waitpid( pid, &status, 0 );                 1 && DBG( "%s waitpid status=%d", __func__, status );
-      alarm(0);
-      if( WIFEXITED(status) ) {
-         d_exit_status = WEXITSTATUS( status );
+      int status = 0;
+      auto waitResult( WaitForChildUntil( pid, &status, std::chrono::steady_clock::now() + ChildExitGracePeriod ) );
+      if( waitResult == ChildWaitResult::TimedOut ) {
+         SignalProcessGroup( pid, SIGHUP );
+         waitResult = WaitForChildUntil( pid, &status, std::chrono::steady_clock::now() + ChildHangupGracePeriod );
          }
-      else if( WIFSIGNALED(status) ) {
-         d_exit_status = 128 + WTERMSIG( status );
+      if( waitResult == ChildWaitResult::TimedOut ) {
+         SignalProcessGroup( pid, SIGTERM );
+         waitResult = WaitForChildUntil( pid, &status, std::chrono::steady_clock::now() + ChildTerminateGracePeriod );
          }
-                                                    1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
+      if( waitResult == ChildWaitResult::TimedOut ) {
+         SignalProcessGroup( pid, SIGKILL );
+         waitResult = WaitForChildUntil( pid, &status, std::chrono::steady_clock::now() + ChildKillGracePeriod );
+         }
+      if( waitResult == ChildWaitResult::Reaped ) {
+         1 && DBG( "%s waitpid status=%d", __func__, status );
+         if( WIFEXITED(status) ) {
+            d_exit_status = WEXITSTATUS( status );
+            }
+         else if( WIFSIGNALED(status) ) {
+            d_exit_status = 128 + WTERMSIG( status );
+            }
+         }
+      1 && DBG( "%s d_exit_status=%d", __func__, d_exit_status );
       }
    return d_exit_status;
    }
@@ -92,17 +180,22 @@ bool piped_forker::TerminateProcessGroup() {
    if( pid == INVALID_ProcessId ) {
       return false;
       }
-   kill( -pid, SIGTERM );
-   std::this_thread::sleep_for( std::chrono::seconds(2) );
-   kill( -pid, SIGKILL );
-   return true;
+   if( !SignalProcessGroup( pid, SIGTERM ) ) {
+      return false;
+      }
+   std::this_thread::sleep_for( ChildTerminateGracePeriod );
+   return pid != ProcessId() || SignalProcessGroup( pid, SIGKILL );
    }
 
 ssize_t piped_forker::Read( stbuf dest ) {
    if( d_fd == INVALID_fd ) {
       return 0;
       }
-   const auto rv( read( d_fd, dest.data(), dest.size() ) );  0 && DBG( "%s-[%d] %ld", __func__, d_fd, rv );
+   ssize_t rv;
+   do {
+      rv = read( d_fd, dest.data(), dest.size() );
+      } while( rv < 0 && errno == EINTR );
+   0 && DBG( "%s-[%d] %ld", __func__, d_fd, rv );
    if( rv <= 0 ) { ReapChild(); }
    return rv;
    }
@@ -116,7 +209,6 @@ bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'
       }
 
    const auto pid( fork() );
-   d_pid.store( pid, std::memory_order_release );
    switch( pid ) {
       case -1: d_pid.store( INVALID_ProcessId, std::memory_order_release );
                close( pipefds[PIPE_RD] );
@@ -125,25 +217,63 @@ bool piped_forker::ForkChildOk( const char *command ) {  DBG( "%s+(from %d) '%s'
                return false;
 
       case 0: {signal( SIGPIPE, SIG_DFL );  /* child */  // FIXME: close other opened descriptor
+#ifdef UNITTEST_LINUX_PROCESS
+               if( d_ignoreGracefulSignals ) {
+                  signal( SIGHUP, SIG_IGN );
+                  signal( SIGTERM, SIG_IGN );
+                  }
+#endif
                SetSigwinchBlockedInThisThread( false );  // don't impose our worker-thread SIGWINCH block on the spawned program
                close( pipefds[PIPE_RD] );
                close( 0 );
-               const int nevdullfh( open("/dev/null", O_RDONLY) ); Assert( nevdullfh == 0 );
-               dup2(  pipefds[PIPE_WR], 1 );
-               dup2(  pipefds[PIPE_WR], 2 );
+               const int nevdullfh( open("/dev/null", O_RDONLY) );
+               if( nevdullfh != 0
+                || dup2( pipefds[PIPE_WR], STDOUT_FILENO ) == -1
+                || dup2( pipefds[PIPE_WR], STDERR_FILENO ) == -1
+                || setpgid( 0, 0 ) == -1 ) {
+                  _exit( 127 );
+                  }
                close( pipefds[PIPE_WR] );
-               setpgid(0, 0);  // http://stackoverflow.com/questions/15692275/how-to-kill-a-process-tree-programmatically-on-linux-using-c
-               exit( system( command ) );
+               const auto systemStatus( system(command) );
+               const auto exitStatus( systemStatus == -1 ? 127
+                                    : WIFEXITED(systemStatus) ? WEXITSTATUS(systemStatus)
+                                    : WIFSIGNALED(systemStatus) ? 128 + WTERMSIG(systemStatus)
+                                    : 127 );
+               _exit( exitStatus );
               }return false; // keep compiler happy
 
       default: close(  pipefds[PIPE_WR] );  /* parent */
+               // Establish the group before publishing the PID so an immediate
+               // termination request cannot race the child's matching call.
+               if( setpgid( pid, pid ) == -1 && errno != EACCES && errno != ESRCH ) {
+                  DBG( "%s: setpgid(%d) failed: %s", __func__, pid, strerror(errno) );
+                  }
                // fcntl(  pipefds[PIPE_RD], F_SETFL, O_NONBLOCK );
                d_fd = pipefds[PIPE_RD];
+               d_pid.store( pid, std::memory_order_release );
                DBG( "%s-(from %d) fork parent; child=%d, d_fd=%d; '%s'", __func__, getpid(), pid, d_fd, command );
                return true;
       }
    }
 
+int qx( std::string &dest, PCChar system_param ) {
+   dest.clear();
+   piped_forker piper;
+   if( !piper.ForkChildOk( system_param ) ) {
+      return -1;
+      }
+
+   while( true ) {
+      char buffer[1024];
+      const auto bc( piper.Read( std::span{buffer} ) );
+      if( bc <= 0 ) {
+         return piper.Status();
+         }
+      dest.append( buffer, static_cast<size_t>(bc) );
+      }
+   }
+
+#ifndef UNITTEST_LINUX_PROCESS
 STATIC_FXN void prep_cmdline( PCChar pc, int cmdFlags, PCChar func__ ) {
    0 && DBG( "%s: %s%s%s: %s"
       , func__
@@ -258,23 +388,6 @@ STATIC_FXN CP_PIPED_RC CreateProcess_piped
             }
          return CP_PIPED_RC_OK;
          }
-      }
-   }
-
-int qx( std::string &dest, PCChar system_param ) {
-   dest.clear();
-   piped_forker piper;
-   if( !piper.ForkChildOk( system_param ) ) {
-      return -1;
-      }
-
-   while( true ) {
-      char buffer[1024];
-      const auto bc( piper.Read( span{buffer} ) );
-      if( bc <= 0 ) {
-         return piper.Status();
-         }
-      dest.append( buffer, bc );
       }
    }
 
@@ -737,3 +850,4 @@ WhileHoldingGlobalVariableLock::~WhileHoldingGlobalVariableLock() { GiveUpGlobal
 
 void MainThreadGiveUpGlobalVariableLock()  { ASSERT_MAIN_THREAD();  /* MainThreadPerfCounter::PauseAll() ; */  GiveUpGlobalVariableLock() ; }
 void MainThreadWaitForGlobalVariableLock() { ASSERT_MAIN_THREAD();  WaitForGlobalVariableLock()       ;  /* MainThreadPerfCounter::ResumeAll()   ; */ }
+#endif

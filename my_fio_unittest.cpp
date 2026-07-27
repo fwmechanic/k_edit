@@ -69,6 +69,27 @@ STATIC_FXN void test_copy_size( size_t bytes ) {
    remove( dst );
    }
 
+STATIC_FXN void test_counted_io() {
+   constexpr auto filename = "my_fio_unittest-io.tmp";
+   const std::vector<unsigned char> expected{ 0, 1, 2, 3, 0xfe, 0xff };
+   int fh;
+   assert( !fio::OpenFileFailed( &fh, filename, true, 0600 ) );
+   assert( fio::WriteOk( fh, expected.data(), expected.size() ) );
+   assert( fio::Close( fh ) == 0 );
+
+   assert( !fio::OpenFileFailed( &fh, filename, false ) );
+   std::vector<unsigned char> actual( expected.size() );
+   assert( fio::ReadOk( fh, actual.data(), actual.size() ) );
+   assert( actual == expected );
+   assert( fio::Close( fh ) == 0 );
+
+   assert( !fio::OpenFileFailed( &fh, filename, false ) );
+   actual.resize( expected.size() + 1 );
+   assert( !fio::ReadOk( fh, actual.data(), actual.size() ) );
+   assert( fio::Close( fh ) == 0 );
+   remove( filename );
+   }
+
 int main() {
    test_copy_size( 0 );
    test_copy_size( 1 );
@@ -76,6 +97,7 @@ int main() {
    test_copy_size( 32 * 1024 );
    test_copy_size( 32 * 1024 + 1 );
    test_copy_size( 3 * 32 * 1024 + 17 );
+   test_counted_io();
    puts( "PASS" );
    return 0;
    }

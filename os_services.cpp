@@ -17,6 +17,23 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#ifdef UNITTEST_OS_SERVICES
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
+#include <alloca.h>
+using PCChar = const char *;
+using PChar = char *;
+#define STATIC_FXN static
+#define DBG(...) 0
+#define FUNC __func__
+#define ALLOCA_STRDUP(NmOf_pDest, NmOf_strlenVar, pSrcStr, pSrcStrlen) \
+   const int NmOf_strlenVar(pSrcStrlen);                              \
+   PChar NmOf_pDest = static_cast<PChar>(alloca(NmOf_strlenVar + 1)); \
+   memcpy(NmOf_pDest, pSrcStr, NmOf_strlenVar);                       \
+   NmOf_pDest[NmOf_strlenVar] = '\0';
+STATIC_FXN int ErrorDialogBeepf( PCChar, ... ) { return 0; }
+#else
 #include "ed_main.h"
 
 void ConOut::Bell() {
@@ -30,6 +47,7 @@ PCChar Getenv( stref varnm ) {
    ALLOCA_STRDUP( buf, slen, varnm.data(), varnm.length() )    0 && DBG("Getenv '%s'", buf );
    return getenv( buf );
    }
+#endif
 
 //------------------------------------------------
 
@@ -66,7 +84,7 @@ STATIC_FXN bool PutEnvOk( PCChar szNameEqualsVal ) {
    if( pEQ == nullptr ) {
       return PutEnvOk( szNameEqualsVal, "" );
       }
-   ALLOCA_STRDUP( nm, nmLen, szNameEqualsVal, pEQ - szNameEqualsVal - 1 );
+   ALLOCA_STRDUP( nm, nmLen, szNameEqualsVal, pEQ - szNameEqualsVal );
    return PutEnvOk( nm, pEQ + 1 );
    }
 
@@ -81,6 +99,7 @@ bool PutEnvChkOk( PCChar szNameEqualsVal ) {
       }
    }
 
+#ifndef UNITTEST_OS_SERVICES
 #ifdef fn_setenv
 bool ARG::setenv() {
    switch( d_argType ) {
@@ -252,3 +271,4 @@ PAST_OPTS: ;
    0 && DBG( "%s- fl=0x%X '%s'", __func__, *flags,  pCmdln );
    return pCmdln - p0;
    }
+#endif

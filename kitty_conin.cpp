@@ -1,6 +1,7 @@
 #ifndef _WIN32
 
 #include <cctype>
+#include <cerrno>
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
@@ -44,7 +45,19 @@ void KittySendSequence( const char *seq ) {
 // If a CSI ? <digits> u reply is seen, KKP is supported.
 static bool KittyProbeKKPSupported() {
    static constexpr char query[] = QueryKkpFlags QueryPrimaryDeviceAttrs;
-   ::write( STDOUT_FILENO, query, sizeof(query) - 1 );
+   size_t bytesWritten = 0;
+   while( bytesWritten < sizeof(query) - 1 ) {
+      const auto rv( ::write( STDOUT_FILENO, query + bytesWritten, sizeof(query) - 1 - bytesWritten ) );
+      if( rv > 0 ) {
+         bytesWritten += static_cast<size_t>(rv);
+         continue;
+         }
+      if( rv < 0 && errno == EINTR ) {
+         continue;
+         }
+      DBG( "%s: terminal query write failed after %" PR_SIZET " bytes: %s", __func__, bytesWritten, rv < 0 ? strerror(errno) : "short write" );
+      return false;
+      }
 
    const int old_delay = g_iConin_nonblk_rd_tmout;
    timeout( 200 );

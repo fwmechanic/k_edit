@@ -17,6 +17,22 @@
 // with K.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#ifdef UNITTEST_LUA_SPLIT
+#include <climits>
+#include <cstring>
+extern "C" {
+   #include <lua.h>
+   #include <lauxlib.h>
+   #include <lualib.h>
+   #include <k_lib.h>
+}
+using PCChar = const char *;
+#define STATIC_FXN static
+#define DBG(...) 0
+STATIC_FXN int Strlen( PCChar text ) { return static_cast<int>(strlen(text)); }
+STATIC_FXN PCChar Eos( PCChar text ) { return text + strlen(text); }
+STATIC_FXN PCChar StrToNextOrEos( PCChar text, PCChar chars ) { return text + strcspn( text, chars ); }
+#else
 #include "lua_intf_common.h"
 
 #pragma GCC diagnostic push
@@ -156,6 +172,7 @@ namespace LExFx { // exported functions
    STATIC_FXN int WordCharSet_push( lua_State *L ) { ::WordCharSet_push(); RZ; }
    STATIC_FXN int WordCharSet_pop( lua_State *L ) { R_bool( ::WordCharSet_pop() ); }
    } // namespace LExFx
+#endif
 
 //------------------------------------------------------------------------------
 typedef PCChar (*TLuaSplitFxn)( PCChar pszToSearch, PCChar pszToSearchFor, int *matchLen );
@@ -182,25 +199,43 @@ STATIC_FXN PCChar FindStr_( PCChar pszToSearch, PCChar pszToSearchFor, int *matc
 // C with maximum efficiency, and plain-string search key strings lead to more
 // readable Lua code.
 //
-// NB: lua_split_rtn_mult can return a potentially unlimited number of values
-//     on the lua_State stack which is a fixed size which we can overflow!!!
+// Multi-value splits reserve their complete result stack before pushing.  This
+// both avoids partial results and converts Lua's fixed-stack limit into an
+// ordinary Lua error.
 
 STATIC_FXN int lua_split_rtn_mult( lua_State *L, TLuaSplitFxn sf ) {
    auto strToSplit = S_(1);
    auto sep = S_(2);
-   auto ix  = 1;
+   auto resultCount = 1;
+   {
+   auto remainder = strToSplit;
+   PCChar pastEnd;
+   int sepLen(0);
+   while( *(pastEnd=sf( remainder, sep, &sepLen )) != '\0' ) {
+      if( sepLen <= 0 ) {
+         return luaL_argerror( L, 2, "separator must not be empty" );
+         }
+      if( resultCount == INT_MAX ) {
+         return luaL_error( L, "too many split results" );
+         }
+      ++resultCount;
+      remainder = pastEnd + sepLen;
+      }
+   }
+   if( !lua_checkstack( L, resultCount ) ) {
+      return luaL_error( L, "too many split results (%d)", resultCount );
+      }
    // repeat for each separator
    PCChar pastEnd;
    int sepLen(0);
    while( *(pastEnd=sf( strToSplit, sep, &sepLen )) != '\0' ) {
       lua_pushlstring( L, strToSplit, pastEnd - strToSplit );  // push substring
-      ++ix;
       strToSplit = pastEnd + sepLen;  // skip separator
       }
    // push last substring
    lua_pushstring( L, strToSplit );
-   0 && DBG( "%s rtns %d", __func__, ix );
-   return ix;  // return number of strings pushed
+   0 && DBG( "%s rtns %d", __func__, resultCount );
+   return resultCount;  // return number of strings pushed
    }
 
 STATIC_FXN int lua_split_rtn_tbl( lua_State *L, TLuaSplitFxn sf ) {
@@ -226,9 +261,16 @@ STATIC_FXN int lua_split_rtn_tbl( lua_State *L, TLuaSplitFxn sf ) {
 namespace LExFx {
    STATIC_FXN int split_ch( lua_State *L )      { return lua_split_rtn_mult( L, StrToNextOrEos_ ); }
    STATIC_FXN int split_ch_tbl( lua_State *L )  { return lua_split_rtn_tbl(  L, StrToNextOrEos_ ); }
-   STATIC_FXN int split_str( lua_State *L )     { return lua_split_rtn_mult( L, FindStr_ );        }
-   STATIC_FXN int split_str_tbl( lua_State *L ) { return lua_split_rtn_tbl(  L, FindStr_ );        }
+   STATIC_FXN int split_str( lua_State *L )     {
+      if( !*S_(2) ) { return luaL_argerror( L, 2, "separator must not be empty" ); }
+      return lua_split_rtn_mult( L, FindStr_ );
+      }
+   STATIC_FXN int split_str_tbl( lua_State *L ) {
+      if( !*S_(2) ) { return luaL_argerror( L, 2, "separator must not be empty" ); }
+      return lua_split_rtn_tbl( L, FindStr_ );
+      }
 
+#ifndef UNITTEST_LUA_SPLIT
    STATIC_FXN PChar nib2bitstr_( PChar p5, int nib ) {
       p5[4] = '\0';
       for( int ix=3; ix>=0; --ix ) {
@@ -296,8 +338,10 @@ namespace LExFx {
       CompilePty_CmdsAsyncExec( sl, true );
       RZ;
       }
+#endif
    } // namespace LExFx
 
+#ifndef UNITTEST_LUA_SPLIT
 STATIC_CONST char KevinsMetatable_FBUF[] = "KevinsMetatable.FBUF";
 struct lua_FBUF { PFBUF pFBuf; };
 
@@ -939,3 +983,4 @@ void l_register_EdLib( lua_State *L ) {
    l_RegisterEditorFuncs    ( L );
    l_register_Editor_objects( L );
    }
+#endif

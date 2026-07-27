@@ -113,7 +113,7 @@ public:
 
 static bool tagfieldValInTagrec( stref line, stref fieldVal ) {
    auto oField( line.find( fieldVal ) );
-   return eosr != oField && ( oField += fieldVal.length(), oField+1==line.length() || '\t'==line[oField] );
+   return eosr != oField && ( oField += fieldVal.length(), oField==line.length() || '\t'==line[oField] );
    }
 
 static stref tagFromLine( stref line ) {
@@ -353,7 +353,8 @@ int FindMatchingTagsLines(
 #ifdef UNITTEST
 
 int main(int argc, char *argv[]) {
-   return FindMatchingTagsLines( argc > 2 ? argv[2] : "tags", argc > 1 ? argv[1] : "EdOpBoundary" );
+   FindMatchingTagsLines( argc > 2 ? argv[2] : "tags", argc > 1 ? argv[1] : "EdOpBoundary" );
+   return 0;
    }
 
 int DBG( char const *kszFormat, ... ) {

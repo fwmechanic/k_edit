@@ -71,13 +71,10 @@ using pipe_file_ptr = std::unique_ptr<FILE, PipeFileCloser>;
 static_assert( sizeof(pipe_file_ptr) == sizeof(FILE *) );
 
 class fio { // could use namespace vs. class but cannot declare private members of namespace
-   STATIC_FXN ssize_t Read ( int fh, PVoid  pBuf, ssize_t bytesToRead  );
-   STATIC_FXN ssize_t Write( int fh, PCVoid pBuf, ssize_t bytesToWrite );
-
 public:
    STATIC_FXN bool     OpenFileFailed( int *pfh, PCChar pszFileName, bool fWrAccess, int create_mode=0 );
-   STIL       bool     ReadOk(  int fh, PVoid  pBuffer, int bytes ) { return Read(  fh, pBuffer, bytes ) == bytes; }
-   STIL       bool     WriteOk( int fh, PCVoid pBuffer, int bytes ) { return Write( fh, pBuffer, bytes ) == bytes; }
+   STATIC_FXN bool     ReadOk(  int fh, PVoid  pBuffer, size_t bytes );
+   STATIC_FXN bool     WriteOk( int fh, PCVoid pBuffer, size_t bytes );
 #if defined(_WIN32)
    STIL       int      Close(   int fh ) { return _close( fh ); }   // -1 == error, 0 == success
    STIL       int      Fsync(   int fh ) { return _commit( fh ); }  // -1 == error, 0 == success

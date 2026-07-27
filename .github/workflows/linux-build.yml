@@ -1,0 +1,32 @@
+name: Linux build
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.configuration.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - name: Debug
+            make_args: ""
+          - name: Optimized
+            make_args: "DBG_BUILD="
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential libncurses-dev libpcre2-dev libreadline-dev
+
+      - name: Build and test
+        run: make -j2 ${{ matrix.configuration.make_args }} k run_unittests
