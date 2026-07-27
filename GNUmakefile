@@ -638,5 +638,5 @@ unittest_tagfind$(EXE_EXT): unittest_tagfind.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 unittest_tagfind.o: CPPFLAGS += -DUNITTEST
-unittest_tagfind.o: tagfind.cpp
+unittest_tagfind.o: tagfind.cpp $(CMDTBL_OUTPUTS)
 	$(BLD_CXX)
