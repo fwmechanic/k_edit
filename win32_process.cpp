@@ -81,7 +81,7 @@ namespace Win32 { // Win32::
 //#############################################################################################################################
 //
 
-enum { INVALID_dwProcessId = 0 }; // arg "win32 getprocessidofthread" google  "If the function fails, the return value is zero."  http://blogs.msdn.com/b/oldnewthing/archive/2004/02/23/78395.aspx
+constexpr Win32::DWORD INVALID_dwProcessId = 0; // arg "win32 getprocessidofthread" google  "If the function fails, the return value is zero."  http://blogs.msdn.com/b/oldnewthing/archive/2004/02/23/78395.aspx
 
 
 // based almost entirely on MSKB Q178893
