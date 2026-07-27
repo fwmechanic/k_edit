@@ -36,6 +36,7 @@ class BitVector {
    typedef       T *P;
    enum { BITS_PER_EL = 8*sizeof(T), ALLBITS = ~static_cast<T>(0) };
 
+   const size_t          d_bit_count;
    const size_t          d_T_els;
    const malloc_ptr<T[]> d_bits;
 
@@ -49,17 +50,19 @@ private:
 
    size_t bitnum( size_t bn ) const { return bn % BITS_PER_EL; }
    size_t elenum( size_t bn ) const { return bn / BITS_PER_EL; }
+   bool   inRange( size_t bn ) const { return bn < d_bit_count; }
 
 public:
 
    BitVector( size_t bits )
-   : d_T_els( (bits+BITS_PER_EL-1)/BITS_PER_EL )
+   : d_bit_count( bits )
+   , d_T_els( bits/BITS_PER_EL + (0 != bits%BITS_PER_EL) )
    , d_bits( AllocBits( d_T_els ) )
    {}
 
-   void SetBit  ( size_t bn )       {         d_bits[ elenum( bn ) ] |=  BIT( bitnum( bn ) ); }
-   void ClrBit  ( size_t bn )       {         d_bits[ elenum( bn ) ] &= ~BIT( bitnum( bn ) ); }
-   bool IsBitSet( size_t bn ) const { return (d_bits[ elenum( bn ) ] &   BIT( bitnum( bn ) )) != 0; }
+   void SetBit  ( size_t bn )       { if( inRange( bn ) ) {         d_bits[ elenum( bn ) ] |=  BIT( bitnum( bn ) ); } }
+   void ClrBit  ( size_t bn )       { if( inRange( bn ) ) {         d_bits[ elenum( bn ) ] &= ~BIT( bitnum( bn ) ); } }
+   bool IsBitSet( size_t bn ) const { return inRange( bn ) && (d_bits[ elenum( bn ) ] & BIT( bitnum( bn ) )) != 0; }
    bool IsAnyBitSet() const { // _this_ is the reason for this class existing: fast search for any bit being set
       const P pastEnd( d_bits.get() + d_T_els );
       for( P pel=d_bits.get() ; pel < pastEnd ; ++pel ) {

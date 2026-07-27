@@ -556,7 +556,7 @@ khelp.html: khelp.txt
 	khelp.html
 
 
-UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_my_strutils_unittest run_my_fio_unittest run_lua_split_unittest run_unittest_tagfind
+UNITTEST_RUNTGTS = run_krbtree_unittest run_dlink_unittest run_bitvector_unittest run_my_strutils_unittest run_my_fio_unittest run_lua_split_unittest run_unittest_tagfind
 ifndef K_WINDOWS
 UNITTEST_RUNTGTS += run_linux_process_unittest run_os_services_unittest
 endif
@@ -611,6 +611,13 @@ run_dlink_unittest: dlink_unittest$(EXE_EXT)
 
 dlink_unittest$(EXE_EXT): CXXFLAGS += -Werror
 dlink_unittest$(EXE_EXT): dlink_unittest.o
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+run_bitvector_unittest: bitvector_unittest$(EXE_EXT)
+	./bitvector_unittest$(EXE_EXT)
+
+bitvector_unittest$(EXE_EXT): CXXFLAGS += -Werror
+bitvector_unittest$(EXE_EXT): bitvector_unittest.o
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 run_krbtree_unittest: krbtree_unittest$(EXE_EXT)

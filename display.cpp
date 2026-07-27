@@ -89,10 +89,10 @@ public:
          d_acv[ ix ] = color;
          }
       }
-   void Cat( const LineColorvals &rhs ) {  0 && DBG( "CAT[%3" PR_SIZET "]", cols() );
+   void Cat( const LineColorvals &rhs, acv::size_type maxCount ) {  0 && DBG( "CAT[%3" PR_SIZET "]", cols() );
       const auto srclen( rhs.cols() );
       const auto dix( cols() );
-      const auto count( std::min( srclen, d_acv.size() - dix ) );
+      const auto count( std::min( std::min( srclen, maxCount ), d_acv.size() - dix ) );
       for( auto iy(0) ; iy < count ; ++iy ) {
          d_acv[ dix + iy ] = rhs.colorAt( iy );
          }
@@ -615,6 +615,7 @@ std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
             };
          {
          auto ixUpstream = [&]( stref rl, const sridx ixC ) {
+            if( rl.empty() || ixC >= rl.length() ) { return false; }
             for( auto ix(ixC) ; ix > 0 ; --ix ) {
                if( !isspace( rl[ix] ) && ('"'==rl[ix-1]) ) {
                   const auto rlUp( rl.substr( ix, ixC-ix+1 ) );   DBG( "up=%" PR_BSR "'", BSR(rlUp) );
@@ -637,6 +638,7 @@ std::string GetDQuotedStringUnderPoint( PCFBUF pFBuf, const Point &cursor ) {
                   there"
                 */
          auto ixDnstream = [&]( stref rl, const sridx ixC ) {   0&&DBG( "dn0 %" PR_BSRSIZET " [%" PR_BSR "]", ixC, BSR(rl) );
+            if( rl.length() < 2 || ixC >= rl.length()-1 ) { return false; }
             for( auto ix(ixC) ; ix < rl.length()-1 ; ++ix ) {  0&&DBG( "dn[%" PR_BSRSIZET "]>%c", ixC, rl[ixC] );
                if( !isspace( rl[ix] ) && ('"'==rl[ix+1]) ) {
                   const auto rlDn( rl.substr(ixC,ix-ixC+1) );     DBG( "dn=%" PR_BSR "'", BSR(rlDn) );
@@ -880,7 +882,7 @@ private:
    };
 
 int HiliteAddin_cond_CPP::close_level( int level_ix, int yLast ) {
-   if( level_ix < 0 ) { return -1; } // CID128055
+   if( level_ix < 0 || static_cast<size_t>(level_ix) >= d_PerViewableLine.size() ) { return -1; }
    auto &level( d_PerViewableLine[ level_ix ].level );
    level.yMax = yLast;
    for( auto ixLine(level.yMin) ; ixLine <= level.yMax ; ++ixLine ) {
@@ -899,7 +901,6 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
    // pass 1: fill in line.{ xMax, cppc?, xPound? }
    auto maxUnIfdEnds(0);
    {
-   auto not_elses(0), elses(0);
    auto upDowns(0);
    auto fb( CFBuf() );
    const auto tw( fb->TabWidth() );
@@ -915,16 +916,11 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
          switch( line.acppc ) {
             break; default:
             break; case cppcIf  : --upDowns;
-                                  ++not_elses;
             break; case cppcEnd : ++upDowns; maxUnIfdEnds = std::max( maxUnIfdEnds, upDowns );
-                                  ++not_elses;
-            break; case cppcElif: ++elses;
-            break; case cppcElse: ++elses;
+            break; case cppcElif: maxUnIfdEnds = std::max( maxUnIfdEnds, upDowns+1 );
+            break; case cppcElse: maxUnIfdEnds = std::max( maxUnIfdEnds, upDowns+1 );
             }
          }
-      }
-   if( 0 == not_elses && elses > 0 ) {
-      maxUnIfdEnds = 1;
       }
    }
    // pass 2:
@@ -953,28 +949,25 @@ void HiliteAddin_cond_CPP::refresh( LINE, LINE ) {
    }
 
 bool HiliteAddin_cond_CPP::VHilitLine( LINE yLine, COL xIndent, LineColorsClipped &alcc ) {
-   try {
-      if( d_need_refresh ) { // BUGBUG fix this!!!!!!!!!!
-         refresh( 0, 0 );
-         }
-      const auto lineInWindow( yLine - MinVisibleFbufLine() );
-      Assert( lineInWindow >= 0 && lineInWindow < ViewLines() );
-      const auto &line( d_PerViewableLine[ lineInWindow ].line );
-      // highlight any CPPcond that occurs on this line
-      if( cppcNone != line.acppc ) {
-         alcc.PutColorTblIdx( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, ColorTblIdx::CPP );
-         }
-      // continue any "surrounds" of other highlit CPPconds above/below
-      for( auto level_idx(line.level_ix) ; level_idx > -1 ; level_idx = d_PerViewableLine[ level_idx ].level.containing_level_idx ) {
-         const auto xBar( d_PerViewableLine[ level_idx ].level.xBox );
-         alcc.PutColorTblIdx( xBar, 1, ColorTblIdx::CPP );
-         }
+   if( d_need_refresh ) { // BUGBUG fix this!!!!!!!!!!
+      refresh( 0, 0 );
       }
-   catch( const std::out_of_range& exc ) {
-      Msg( "%s caught std::out_of_range %s", __func__, exc.what() );
+   const auto lineInWindow( yLine - MinVisibleFbufLine() );
+   if( lineInWindow < 0 || static_cast<size_t>(lineInWindow) >= d_PerViewableLine.size() ) {
+      return false;
       }
-   catch( ... ) {
-      Msg( "%s caught other exception", __func__ );
+   const auto levelInRange = [&]( int level_idx ) {
+      return level_idx >= 0 && static_cast<size_t>(level_idx) < d_PerViewableLine.size();
+      };
+   const auto &line( d_PerViewableLine[ lineInWindow ].line );
+   // highlight any CPPcond that occurs on this line
+   if( cppcNone != line.acppc && levelInRange( line.level_ix ) ) {
+      alcc.PutColorTblIdx( line.xPound, d_PerViewableLine[ line.level_ix ].level.xBox - line.xPound, ColorTblIdx::CPP );
+      }
+   // continue any "surrounds" of other highlit CPPconds above/below
+   for( auto level_idx(line.level_ix) ; levelInRange( level_idx ) ; level_idx = d_PerViewableLine[ level_idx ].level.containing_level_idx ) {
+      const auto xBar( d_PerViewableLine[ level_idx ].level.xBox );
+      alcc.PutColorTblIdx( xBar, 1, ColorTblIdx::CPP );
       }
    return false;
    }
@@ -1824,16 +1817,17 @@ class HiliteAddin_bash : public HiliteAddin_StreamParse {
       in_2Qstr    ,
       };
    // scan_pass() methods; all must have same proto as called via pfx
-   scan_rv find_end_code    ( PCFBUF pFile, Point &pt, int nest );
-   scan_rv find_end_chQuot1 ( PCFBUF pFile, Point &pt, int nest );
-   scan_rv find_end_chQuot2 ( PCFBUF pFile, Point &pt, int nest );
+   scan_rv find_end_code       ( PCFBUF pFile, Point &pt );
+   scan_rv find_end_chQuot1    ( PCFBUF pFile, Point &pt );
+   scan_rv find_end_chQuot2    ( PCFBUF pFile, Point &pt );
+   scan_rv find_end_nested_str ( PCFBUF pFile, Point &pt, char outerQuote );
 public:
    HiliteAddin_bash( PView pView ) : HiliteAddin_StreamParse( pView ) { refresh(); }
    ~HiliteAddin_bash() {}
    PCChar Name() const override { return "Bash_Comment"; }
    };
 
-HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt, int nest ) { enum { SD=DBBASH };
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_code( PCFBUF pFile, Point &pt ) { enum { SD=DBBASH };
    0 && DBG("FNNC @y=%d x=%d", pt.lin, pt.col );
    for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
       for( const auto rl=pFile->PeekRawLine( pt.lin ) ; pt.col < rl.length() ; ++pt.col ) {  SD && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col );
@@ -1850,42 +1844,47 @@ NEXT_LINE: ;
    return atEOF;
    }
 
-#define def_find_end_str_nest( class, pri, sec ) \
-class::scan_rv class::find_end_ ## pri( PCFBUF pFile, Point &pt, int nest ) { enum { SD=DBBASH };                                                     \
-   const auto start( pt );                                                         SD && DBG( "%s[+%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
-   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {                                                                                        \
-      for( const auto rl=pFile->PeekRawLine( pt.lin ) ; pt.col < rl.length() ; ++pt.col ) {  SD && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col ); \
-         switch( rl[pt.col] ) {                                                                                                                       \
-            default:      break;                                                                                                                      \
-            case chESC:   ++pt.col; /* skip escaped char */ break;                                                                                    \
-            case sec:     ++pt.col;                                                                                                                   \
-                          find_end_ ## sec( pFile, pt, nest+1 );                   SD && DBG( "%s[=%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
-                          --pt.col; /* compensate for ++pt.col in 3d for clause */                                                                    \
-                          break;                                                                                                                      \
-            case pri:     if( 0==nest ) {                                                                                                             \
-                             add_litstr( start.lin, start.col, pt.lin, pt.col-1 );                                                                    \
-                             }                                                     SD && DBG( "%s[-%d] y/x=%d,%d", __func__, nest, pt.lin, pt.col );  \
-                          ++pt.col;                                                                                                                   \
-                          return in_code;                                                                                                             \
-            }                                                                                                                                         \
-         }                                                                                                                                            \
-      }                                                                                                                                               \
-   return atEOF;                                                                                                                                      \
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_nested_str( PCFBUF pFile, Point &pt, char outerQuote ) { enum { SD=DBBASH };
+   const auto start( pt );
+   std::vector<char> quoteStack{ outerQuote };
+   for( ; pt.lin <= pFile->LastLine() ; ++pt.lin, pt.col=0 ) {
+      for( const auto rl=pFile->PeekRawLine( pt.lin ) ; pt.col < rl.length() ; ++pt.col ) {  SD && DBG( "%s[:%c] y/x=%d,%d", __func__, rl[pt.col], pt.lin, pt.col );
+         const auto ch( rl[pt.col] );
+         if( chESC == ch ) {
+            ++pt.col; // skip escaped char
+            }
+         else if( quoteStack.back() == ch ) {
+            quoteStack.pop_back();
+            if( quoteStack.empty() ) {
+               add_litstr( start.lin, start.col, pt.lin, pt.col-1 );
+               ++pt.col;
+               return in_code;
+               }
+            }
+         else if( chQuot1 == ch || chQuot2 == ch ) {
+            quoteStack.push_back( ch );
+            }
+         }
+      }
+   return atEOF;
    }
 
-def_find_end_str_nest( HiliteAddin_bash, chQuot2, chQuot1 )
-def_find_end_str_nest( HiliteAddin_bash, chQuot1, chQuot2 )
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_chQuot1( PCFBUF pFile, Point &pt ) {
+   return find_end_nested_str( pFile, pt, chQuot1 );
+   }
 
-#undef def_find_end_str_nest
+HiliteAddin_bash::scan_rv HiliteAddin_bash::find_end_chQuot2( PCFBUF pFile, Point &pt ) {
+   return find_end_nested_str( pFile, pt, chQuot2 );
+   }
 
 void HiliteAddin_bash::scan_pass( LINE yMaxScan ) {
    auto fb( CFBuf() );
    Point pt( 0, 0 );  // start @ top of file
-   typedef scan_rv (HiliteAddin_bash::*pfx_findnext)( PCFBUF pFile, Point &pt, int nest );
+   typedef scan_rv (HiliteAddin_bash::*pfx_findnext)( PCFBUF pFile, Point &pt );
    pfx_findnext findnext = &HiliteAddin_bash::find_end_code;
    scan_rv prevret = in_code;
    while( pt.lin <= yMaxScan ) {
-      const auto ret( CALL_METHOD( *this, findnext )( fb, pt, 0 ) );
+      const auto ret( CALL_METHOD( *this, findnext )( fb, pt ) );
       DBBASH && DBG( "@y=%d x=%d: %d", pt.lin, pt.col, ret );
       if( prevret == ret ) {    DBG("internal error seql==rv" )           ; return; }
       switch( ret ) { default : DBG("internal error unknwn ret" )         ; return;
@@ -2953,12 +2952,13 @@ class ColoredLine {
    linebuf       d_charBuf;
    LineColorvals d_lcvs;
 public:
+   static constexpr size_t MaxTextCols() { return BUFBYTES-1; }
    ColoredLine()
       : d_curLen( 0 )
       {
       d_charBuf[0] = '\0';
       }
-   int  textcols() const { return d_curLen; }
+   size_t textcols() const { return d_curLen; }
    void Cat( ColorTblIdx ColorIdx, stref src );
    void Cat( const ColoredLine &rhs );
    void VidWrLine( LINE line ) const { VidWrStrColors( line, 0, stref(d_charBuf, textcols()), d_lcvs, eFlush::doFlush ); }
@@ -2966,7 +2966,7 @@ public:
 
 void ColoredLine::Cat( ColorTblIdx ColorIdx, stref src ) {
    const auto attr( g_CurView()->ColorIdxToColorval( ColorIdx ) );
-   const auto cpyLen( std::min( src.length(), (int(sizeof(d_charBuf))-1) - d_curLen) );
+   const auto cpyLen( std::min( src.length(), MaxTextCols() - d_curLen ) );
    if( cpyLen > 0 ) { 0 && DBG( "Cat:PC=[%3" PR_SIZET "..%3" PR_SIZET "] %02X %" PR_BSR "", d_curLen, d_curLen+cpyLen-1, attr, BSR(src) );
       d_lcvs.PutColorval( d_curLen, cpyLen, attr );
       memcpy( d_charBuf + d_curLen, src.data(), cpyLen );
@@ -2976,10 +2976,13 @@ void ColoredLine::Cat( ColorTblIdx ColorIdx, stref src ) {
    }
 
 void ColoredLine::Cat( const ColoredLine &rhs ) {
-   memcpy( d_charBuf + d_curLen, rhs.d_charBuf, rhs.d_curLen );
-   d_curLen += rhs.d_curLen;
-   d_charBuf[ d_curLen ] = '\0';
-   d_lcvs.Cat( rhs.d_lcvs );
+   const auto cpyLen( std::min( rhs.d_curLen, MaxTextCols() - d_curLen ) );
+   if( cpyLen > 0 ) {
+      memcpy( d_charBuf + d_curLen, rhs.d_charBuf, cpyLen );
+      d_lcvs.Cat( rhs.d_lcvs, cpyLen );
+      d_curLen += cpyLen;
+      d_charBuf[ d_curLen ] = '\0';
+      }
    }
 
 STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" );
@@ -3079,16 +3082,19 @@ STATIC_FXN void DrawStatusLine() { FULL_DB && DBG( "*************> UpdtStatLn" )
    //-----------------------------------------------------------------------
    ColoredLine out;
    out.Cat( pre );
-   const auto maxFnLen( EditScreenCols() - cl.textcols() - out.textcols() );
+   const auto screenCols( EditScreenCols() > 0 ? static_cast<size_t>(EditScreenCols()) : 0 );
+   const auto maxOutLen( std::min( screenCols, ColoredLine::MaxTextCols() ) );
+   const auto fixedLen( std::min( maxOutLen, cl.textcols() + out.textcols() ) );
+   const auto maxFnLen( maxOutLen - fixedLen );
    if( fnLen > maxFnLen ) {
       // _WIN32: _DO NOT_ try to use PathCompactPathEx here http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=203814&SiteID=1
       // TODO copy pfh->Name() into pathbuf, adjust commonLen, uniqLen accordingly, fall into else case
       STATIC_CONST char s_dot3[] = "...";
-      const auto truncBy( fnLen - (maxFnLen - KSTRLEN(s_dot3)) );
-      if( truncBy > fnLen ) {
-         out.Cat( ColorTblIdx::TXT, s_dot3 );
+      if( maxFnLen <= KSTRLEN(s_dot3) ) {
+         out.Cat( ColorTblIdx::TXT, stref(s_dot3, maxFnLen) );
          }
       else {
+         const auto truncBy( fnLen - (maxFnLen - KSTRLEN(s_dot3)) );
          out.Cat( ColorTblIdx::TXT, FmtStr<_MAX_PATH>( "%s%s", s_dot3, pfh->Name()+truncBy ).c_str() );
          }
       }
@@ -3114,15 +3120,18 @@ void DirectVidClear() {
 // doesn't handle partial overlaps (or anything else?) _optimally_.
 void DirectVidWrStrColorFlush( LINE yLine, COL xCol, stref src, colorval_t attr ) { enum {DP=0};
    // input check & normalize
-   if( !(yLine >= 0 && yLine < ScreenLines() && xCol < ScreenCols()) ) { return; }
+   const auto screenCols( ScreenCols() );
+   if( !(screenCols > 0 && yLine >= 0 && yLine < EditScreenLines() && xCol < screenCols) ) { return; }
    if( xCol < 0 ) {
-      src.remove_prefix( -xCol );
+      const auto columnsToSkip( size_t(0) - static_cast<size_t>(xCol) );
+      if( columnsToSkip >= src.length() ) { return; }
+      src.remove_prefix( columnsToSkip );
       xCol = 0;
       }
    if( src.empty() ) { return; }
-   if( xCol + src.length() > ScreenCols() ) {
-      src.remove_suffix( (xCol + src.length()) - ScreenCols() );
-      if( src.empty() ) { return; }
+   const auto columnsRemaining( static_cast<size_t>(screenCols - xCol) );
+   if( src.length() > columnsRemaining ) {
+      src.remove_suffix( src.length() - columnsRemaining );
       }
    // find insertion point and insert (or update-only if possible)
    const Point tgt( yLine, xCol );
@@ -3383,7 +3392,8 @@ void View::GetLineForDisplay
          );
       constexpr decltype(xWidth) PCT_WIDTH( 7 );
       if( DrawVerticalCursorHilite() && (xWidth > PCT_WIDTH) && isActiveLine ) {
-         const auto percent( static_cast<UI>((100.0 * yLineOfFile) / CFBuf()->LastLine()) );
+         const auto lastLine( CFBuf()->LastLine() );
+         const auto percent( lastLine > 0 ? static_cast<UI>((100.0 * yLineOfFile) / lastLine) : 100u );
          FmtStr<PCT_WIDTH+1> pctst( " %u%% ", percent );
          stref pct( pctst.c_str() );
          xPctposWidth = pct.length();
@@ -3410,6 +3420,7 @@ void Win::GetLineForDisplay
    , const LINE         yLineOfDisplay
    ) const {
    const auto oRightBorder( d_UpLeft.col + d_Size.col );  0 && DBG( "L%05d w%d [%03d..%03d]", yLineOfDisplay, winNum, this->d_UpLeft.col, oRightBorder - 1 );
+   const auto hasRightBorder( oRightBorder >= 0 && static_cast<size_t>(oRightBorder) < dest.length() );
    if( VisibleOnDisplayLine( yLineOfDisplay ) ) {
       NewScope {
          const auto pView( this->CurView() );
@@ -3424,17 +3435,19 @@ void Win::GetLineForDisplay
                 ||chLeftBorder == HV_ ) { chLeftBorder = uint8_t(LV_); } // 'Î' -> '¹'
          else if( chLeftBorder == RV_ ) { chLeftBorder = uint8_t(_V_); } // 'Ì' -> 'º'
          }
-      auto    &chRightBorder( dest[ oRightBorder ] );
-      if     ( chRightBorder == H__                                 // 'Í' -> 'Ì'
-             ||chRightBorder == HV_ ) { chRightBorder = uint8_t(RV_); }  // 'Î' -> 'Ì'
-      else if( chRightBorder == LV_ ) { chRightBorder = uint8_t(_V_); }  // '¹' -> 'º'
+      if( hasRightBorder ) {
+         auto    &chRightBorder( dest[ oRightBorder ] );
+         if     ( chRightBorder == H__                                 // 'Í' -> 'Ì'
+                ||chRightBorder == HV_ ) { chRightBorder = uint8_t(RV_); }  // 'Î' -> 'Ì'
+         else if( chRightBorder == LV_ ) { chRightBorder = uint8_t(_V_); }  // '¹' -> 'º'
+         }
       }
-   else if( yLineOfDisplay == d_UpLeft.lin - 1 ) {  // window's top border line?
+   else if( hasRightBorder && yLineOfDisplay == d_UpLeft.lin - 1 ) {  // window's top border line?
       auto    &chRightBorder( dest[ oRightBorder ] );
       if     ( chRightBorder == H__ ) { chRightBorder = uint8_t(HB_); }  // 'Í' -> 'Ë'
       else if( chRightBorder == HT_ ) { chRightBorder = uint8_t(HV_); }  // 'Ê' -> 'Î'
       }
-   else if( yLineOfDisplay == d_UpLeft.lin + d_Size.lin ) { // window's bottom border line?
+   else if( hasRightBorder && yLineOfDisplay == d_UpLeft.lin + d_Size.lin ) { // window's bottom border line?
       auto    &chRightBorder( dest[ oRightBorder ] );
       if     ( chRightBorder == H__ ) { chRightBorder = uint8_t(HT_); }  // 'Í' -> 'Ê'
       else if( chRightBorder == HB_ ) { chRightBorder = uint8_t(HV_); }  // 'Ë' -> 'Î'
